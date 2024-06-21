@@ -1,133 +1,49 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{
-    global_store::Store,
-    utils::fs_host::{self, resolve_globs_dirs},
-};
-use common::typegraph::{
-    runtimes::{deno::ModuleMatData, Artifact},
-    utils::{map_from_object, object_from_map},
-    Materializer, Typegraph,
-};
+use common::typegraph::runtimes::deno::ModuleMatData;
+use common::typegraph::utils::map_from_object;
+use common::typegraph::{utils::object_from_map, Typegraph};
 use std::path::PathBuf;
 
-use crate::utils::postprocess::PostProcessor;
+use crate::utils::{artifacts::ArtifactsExt, fs::FsContext, postprocess::PostProcessor};
 
-pub struct ResolveModuleOuput {
-    tg_artifacts: Vec<Artifact>,
-    tg_deps_paths: Vec<PathBuf>,
-}
-
-pub struct DenoProcessor;
-
-impl PostProcessor for DenoProcessor {
-    fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
-        for mat in tg.materializers.iter_mut() {
-            if mat.name.as_str() == "module" {
-                match Self::resolve_module(mat)? {
-                    Some(ResolveModuleOuput {
-                        tg_deps_paths: dep_paths,
-                        tg_artifacts: artifacts,
-                    }) => {
-                        for i in 0..artifacts.len() {
-                            let artifact = &artifacts[i];
-                            let dep_path = &dep_paths[i];
-                            tg.deps.push(dep_path.clone());
-                            tg.meta
-                                .artifacts
-                                .insert(artifact.path.clone(), artifact.clone());
-                        }
-                    }
-                    None => continue,
-                }
-            }
-        }
-        Ok(())
-    }
+pub struct DenoProcessor {
+    typegraph_dir: PathBuf,
 }
 
 impl DenoProcessor {
-    pub fn resolve_module(mat: &mut Materializer) -> Result<Option<ResolveModuleOuput>, String> {
-        let mut mat_data: ModuleMatData =
-            object_from_map(std::mem::take(&mut mat.data)).map_err(|e| e.to_string())?;
+    pub fn new(typegraph_dir: PathBuf) -> Self {
+        Self { typegraph_dir }
+    }
+}
 
-        let deno_module_path = mat_data
-            .deno_artifact
-            .get("path")
-            .unwrap()
-            .as_str()
-            .unwrap();
+impl PostProcessor for DenoProcessor {
+    fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
+        let fs_ctx = FsContext::new(self.typegraph_dir);
+        let mut materializers = std::mem::take(&mut tg.materializers);
+        for mat in materializers.iter_mut() {
+            if mat.name.as_str() == "module" {
+                let mat_data = std::mem::take(&mut mat.data);
+                let mut mat_data: ModuleMatData =
+                    object_from_map(mat_data).map_err(|e| e.to_string())?;
 
-        let path = PathBuf::from(deno_module_path);
+                fs_ctx.register_artifact(mat_data.entry_point.clone(), tg)?;
 
-        // main_path can be either relative or absolute,
-        // if relative => make it absolute
-        // fs::canonicalize wouldn't work in this setup
-        let main_path = fs_host::make_absolute(&path)?;
-
-        let mut tg_deps_paths = vec![];
-        let mut tg_artifacts = vec![];
-        match fs_host::path_exists(&main_path)? {
-            true => {
-                let (module_hash, size) = fs_host::hash_file(&main_path.clone())?;
-
-                let deno_artifact = Artifact {
-                    hash: module_hash.clone(),
-                    size,
-                    path: path.clone(),
-                };
-                tg_deps_paths.push(main_path);
-
-                let deps = mat_data.deps.clone();
-
-                // resolve globs and dirs
-                let resolved_deps = resolve_globs_dirs(deps)?;
-
-                for dep_rel_path in resolved_deps {
-                    let dep_abs_path = fs_host::make_absolute(&dep_rel_path)?;
-
-                    let (dep_hash, dep_size) = fs_host::hash_file(&dep_abs_path)?;
-                    let dep_artifact = Artifact {
-                        path: dep_rel_path.clone(),
-                        hash: dep_hash,
-                        size: dep_size,
-                    };
-                    tg_artifacts.push(dep_artifact);
-                    tg_deps_paths.push(dep_abs_path);
+                let deps = std::mem::take(&mut mat_data.deps);
+                for artifact in deps.into_iter() {
+                    let artifacts = fs_ctx.list_files(&[artifact.to_string_lossy().to_string()]);
+                    for artifact in artifacts.iter() {
+                        fs_ctx.register_artifact(artifact.clone(), tg)?;
+                    }
+                    mat_data.deps.extend(artifacts);
                 }
 
-                // update post process results
-                mat_data.deno_artifact = map_from_object(Artifact {
-                    hash: module_hash.clone(),
-                    size,
-                    path,
-                })
-                .map_err(|e| e.to_string())?;
-
-                mat_data.deps_meta = Some(
-                    tg_artifacts
-                        .iter()
-                        .map(|dep| map_from_object(dep).map_err(|e| e.to_string()))
-                        .collect::<Result<Vec<_>, _>>()?,
-                );
-                tg_artifacts.push(deno_artifact);
-            }
-            false => {
-                if !Store::get_codegen_flag() {
-                    return Err(format!(
-                        "could not resolve module {:?}",
-                        main_path.display()
-                    ));
-                } // else cli codegen
+                mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
             }
         }
 
-        mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
-
-        Ok(Some(ResolveModuleOuput {
-            tg_artifacts,
-            tg_deps_paths,
-        }))
+        tg.materializers = materializers;
+        Ok(())
     }
 }

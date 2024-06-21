@@ -4,7 +4,6 @@
 use crate::interlude::*;
 
 use crate::utils::clap::UrlValueParser;
-use actix_web::dev::ServerHandle;
 use clap::Parser;
 use clap::Subcommand;
 use clap_verbosity_flag::Verbosity;
@@ -53,8 +52,14 @@ pub struct ConfigArgs {
 }
 
 impl ConfigArgs {
-    pub fn dir(&self) -> PathBuf {
-        self.dir.normalize().unwrap_or_log().into_path_buf()
+    pub fn dir(&self) -> Result<PathBuf> {
+        Ok(self
+            .dir
+            .normalize()
+            .wrap_err(
+                "error normalizing working directory, make sure any override working dir exists.",
+            )?
+            .into_path_buf())
     }
 }
 
@@ -86,7 +91,7 @@ pub(crate) enum Commands {
 #[async_trait]
 #[enum_dispatch(Commands)]
 pub trait Action {
-    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()>;
+    async fn run(&self, args: ConfigArgs) -> Result<()>;
 }
 
 #[derive(Parser, Debug, Clone)]

@@ -1,0 +1,13 @@
+query {
+  remix(
+    title: "Lovefool"
+    artist: "The Cardigans"
+    releaseTime: "1996-06-29T10:30:40.340Z"
+    mp3Url: "https://mus.ic/lovefool.mp3"
+  ) {
+    title
+    artist
+    releaseTime
+    mp3Url
+  }
+}

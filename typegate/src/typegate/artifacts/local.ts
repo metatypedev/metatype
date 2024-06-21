@@ -21,9 +21,13 @@ import { BaseError, ErrorKind } from "@typegate/errors.ts";
 
 const logger = getLogger(import.meta);
 
-class UnknownUploadUrl extends BaseError {
-  constructor(url: URL) {
-    super(import.meta, ErrorKind.User, `Unknown upload URL: ${url.toString()}`);
+class InvalidUploadToken extends BaseError {
+  constructor(token: string) {
+    super(
+      import.meta,
+      ErrorKind.User,
+      `Unknown upload token: ${token.toString()}`,
+    );
   }
 }
 
@@ -126,32 +130,22 @@ class LocalUploadEndpointManager implements UploadEndpointManager {
     await Promise.resolve(void null);
   }
 
-  async prepareUpload(
-    meta: ArtifactMeta,
-    origin: URL,
-    persistence: ArtifactPersistence,
-  ) {
+  async prepareUpload(meta: ArtifactMeta, persistence: ArtifactPersistence) {
     if (await persistence.has(meta.hash)) {
       return null;
     }
-    const url = await ArtifactStore.createUploadUrl(
-      origin,
-      meta.typegraphName,
-      this.expireSec,
-    );
-    const token = url.searchParams.get("token")!;
+    const token = await ArtifactStore.createUploadToken(this.expireSec);
     this.#mapToMeta.set(token, meta);
     this.#expirationQueue.push([token, jwt.getNumericDate(this.expireSec)]);
 
-    return url.toString();
+    return token;
   }
 
-  async takeUploadUrl(url: URL) {
-    const token = await ArtifactStore.validateUploadUrl(url);
-
+  async takeArtifactMeta(token: string) {
+    await ArtifactStore.validateUploadToken(token);
     const meta = this.#mapToMeta.get(token);
     if (!meta) {
-      throw new UnknownUploadUrl(url);
+      throw new InvalidUploadToken(token);
     }
 
     this.#mapToMeta.delete(token);

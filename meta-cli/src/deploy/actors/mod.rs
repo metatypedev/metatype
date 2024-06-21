@@ -3,5 +3,7 @@
 
 pub mod console;
 pub mod discovery;
-pub mod loader;
+pub mod task;
+mod task_io;
+pub mod task_manager;
 pub mod watcher;

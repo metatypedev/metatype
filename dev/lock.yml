@@ -78,9 +78,9 @@ dev:
     examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
     examples/**/package.json:
-      '(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)': PUBLISHED_VERSION
+      '(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)': METATYPE_VERSION
     examples/**/*.ts:
-      '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': PUBLISHED_VERSION
+      '(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)': METATYPE_VERSION
     typegate/import_map.json:
       '(\s*"@typegraph\/sdk"\s*:\s*"npm:@typegraph\/sdk@).+(",?)': METATYPE_VERSION
       '(\s*"@typegraph\/sdk\/"\s*:\s*"npm:/@typegraph\/sdk@).+(\/",?)': METATYPE_VERSION
@@ -100,7 +100,7 @@ dev:
     WASMTIME_VERSION: 21.0.0
     WASMTIME_PY_VERSION: 21.0.0
     TYPEGRAPH_VERSION: 0.0.3
-    PRISMA_VERSION: 5.5.2
+    PRISMA_VERSION: 5.6.0
     METATYPE_VERSION: 0.4.3-0
     PUBLISHED_VERSION: 0.4.2
     WASM_OPT_VERSION: 0.116.1

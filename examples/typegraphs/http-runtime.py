@@ -12,7 +12,7 @@ from typegraph.runtimes import HttpRuntime
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
     # skip:end
 )
-def http_example(g: Graph):
+def http_runtime(g: Graph):
     pub = Policy.public()
 
     # highlight-next-line

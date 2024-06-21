@@ -41,8 +41,8 @@ class WasmRuntimeWire extends WasmRuntime {
   >(
     inp: I,
     out: O,
-    { func, effect = fx.read() }: {
-      func: string;
+    { name, effect = fx.read() }: {
+      name: string;
       effect?: Effect;
     },
   ): t.Func<I, O, WireHandlerWasmMat> {
@@ -52,14 +52,14 @@ class WasmRuntimeWire extends WasmRuntime {
         effect,
       },
       {
-        funcName: func,
+        funcName: name,
       },
     );
 
     return t.func(inp, out, {
       _id: matId,
       effect,
-      funcName: func,
+      funcName: name,
     });
   }
 }
@@ -73,14 +73,14 @@ class WasmRuntimeReflected extends WasmRuntime {
     );
   }
 
-  fromExport<
+  export<
     I extends t.Typedef = t.Typedef,
     O extends t.Typedef = t.Typedef,
   >(
     inp: I,
     out: O,
-    { func, effect = fx.read() }: {
-      func: string;
+    { name, effect = fx.read() }: {
+      name: string;
       effect?: Effect;
     },
   ): t.Func<I, O, ReflectedFuncWasmMat> {
@@ -90,14 +90,14 @@ class WasmRuntimeReflected extends WasmRuntime {
         effect,
       },
       {
-        funcName: func,
+        funcName: name,
       },
     );
 
     return t.func(inp, out, {
       _id: matId,
       effect,
-      funcName: func,
+      funcName: name,
     });
   }
 }

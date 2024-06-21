@@ -1,26 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::interlude::*;
-
+use self::actors::task::deploy::{DeployAction, DeployActionGenerator};
+use self::actors::task_manager::{self, StopReason};
 use super::{Action, ConfigArgs, NodeArgs};
-use crate::com::store::{Command, Endpoint, MigrationAction, ServerStore};
 use crate::config::Config;
 use crate::deploy::actors;
-use crate::deploy::actors::console::{Console, ConsoleActor};
-use crate::deploy::actors::discovery::DiscoveryActor;
-use crate::deploy::actors::loader::{
-    self, LoaderActor, LoaderEvent, ReloadModule, ReloadReason, StopBehavior,
-};
-use crate::deploy::actors::watcher::WatcherActor;
-use crate::deploy::push::pusher::PushResult;
+use crate::deploy::actors::console::ConsoleActor;
+use crate::interlude::*;
 use crate::secrets::{RawSecrets, Secrets};
-use actix::prelude::*;
-use actix_web::dev::ServerHandle;
 use clap::Parser;
-use normpath::PathExt;
-use owo_colors::OwoColorize;
-use tokio::sync::mpsc;
+use common::node::Node;
 
 #[derive(Parser, Debug)]
 pub struct DeploySubcommand {
@@ -62,10 +52,6 @@ impl DeploySubcommand {
 
 #[derive(Parser, Default, Debug, Clone)]
 pub struct DeployOptions {
-    /// Generate type/function definitions for external modules (Deno)
-    #[clap(long, default_value_t = false)]
-    pub codegen: bool,
-
     // TODO incompatible with create_migration, allow_dirty and allow_destructive
     /// Do not apply prisma migrations
     #[clap(long, default_value_t = false)]
@@ -95,17 +81,18 @@ pub struct DeployOptions {
 #[derive(Debug)]
 pub struct Deploy {
     config: Arc<Config>,
+    node: Node,
     base_dir: Arc<Path>,
     options: DeployOptions,
     secrets: RawSecrets,
-    file: Option<Arc<Path>>,
+    file: Option<PathBuf>,
     max_parallel_loads: Option<usize>,
 }
 
 impl Deploy {
     #[tracing::instrument]
     pub async fn new(deploy: &DeploySubcommand, args: &ConfigArgs) -> Result<Self> {
-        let dir = args.dir();
+        let dir: Arc<Path> = args.dir()?.into();
 
         let config_path = args.config.clone();
         let config = Arc::new(Config::load_or_find(config_path, &dir)?);
@@ -119,24 +106,7 @@ impl Deploy {
             .await
             .context("error while building node from config")?;
 
-        ServerStore::with(Some(Command::Deploy), Some(config.as_ref().to_owned()));
-        ServerStore::set_migration_action_glob(MigrationAction {
-            create: deploy.options.create_migration,
-            reset: deploy.options.allow_destructive, // reset on drift
-        });
-        ServerStore::set_endpoint(Endpoint {
-            typegate: node.base_url.clone().into(),
-            auth: node.auth.clone(),
-        });
-        ServerStore::set_prefix(node_config.prefix);
-        ServerStore::set_codegen_flag(deploy.options.codegen);
-
-        let file = deploy
-            .file
-            .as_ref()
-            .map(|f| f.normalize())
-            .transpose()?
-            .map(|f| f.into_path_buf());
+        let file = deploy.file.clone();
         if let Some(file) = &file {
             if let Err(err) = crate::config::ModuleType::try_from(file.as_path()) {
                 bail!("file is not a valid module type: {err:#}")
@@ -144,24 +114,20 @@ impl Deploy {
         }
         Ok(Self {
             config,
-            base_dir: dir.into(),
+            node,
+            base_dir: dir.clone(),
             options,
             secrets,
-            file: file.map(|path| path.into()),
+            file: file.clone(),
             max_parallel_loads: deploy.max_parallel_loads,
         })
     }
 }
 
-struct CtrlCHandlerData {
-    watcher: Addr<WatcherActor>,
-    loader: Addr<LoaderActor>,
-}
-
 #[async_trait]
 impl Action for DeploySubcommand {
     #[tracing::instrument]
-    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
+    async fn run(&self, args: ConfigArgs) -> Result<()> {
         let deploy = Deploy::new(self, &args).await?;
 
         if !self.options.allow_dirty {
@@ -181,382 +147,169 @@ impl Action for DeploySubcommand {
             }
         }
 
-        if deploy.options.watch {
+        let status = if deploy.options.watch {
+            info!("running in watch mode");
             // watch the content of a folder
             if self.file.is_some() {
                 bail!("Cannot use --file in watch mode");
             }
             watch_mode::enter_watch_mode(deploy).await?;
+
+            ExitStatus::Failure
         } else {
+            trace!("running in default mode");
             // deploy a single file
-            let deploy = default_mode::DefaultMode::init(deploy).await?;
-            deploy.run().await?;
 
-            server_handle.unwrap().stop(true).await;
+            default_mode::run(deploy).await?
+        };
+
+        match status {
+            ExitStatus::Success => Ok(()),
+            ExitStatus::Failure => Err(eyre::eyre!("failed")),
         }
-
-        Ok(())
     }
+}
+
+enum ExitStatus {
+    Success,
+    Failure,
 }
 
 mod default_mode {
     //! non-watch mode
-    use default_mode::actors::loader::LoadModule;
-    use futures::channel::oneshot;
+
+    use task_manager::{TaskManagerInit, TaskSource};
+
+    use crate::config::PathOption;
 
     use super::*;
 
-    pub struct DefaultMode {
-        deploy: Deploy,
-        console: Addr<ConsoleActor>,
-        loader: Addr<LoaderActor>,
-        loader_event_rx: mpsc::UnboundedReceiver<LoaderEvent>,
-    }
+    pub async fn run(deploy: Deploy) -> Result<ExitStatus> {
+        let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
 
-    impl DefaultMode {
-        pub async fn init(deploy: Deploy) -> Result<Self> {
-            let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
+        let mut secrets = deploy.secrets.clone();
+        secrets.apply_overrides(&deploy.options.secrets)?;
 
-            let mut secrets = deploy.secrets.clone();
-            secrets.apply_overrides(&deploy.options.secrets)?;
+        let action_generator = DeployActionGenerator::new(
+            deploy.node.into(),
+            // TODO no hydrate here
+            secrets.hydrate(deploy.base_dir.clone()).await?.into(),
+            deploy.config.dir().unwrap_or_log().into(),
+            deploy.base_dir.clone(),
+            deploy
+                .config
+                .prisma_migrations_base_dir(PathOption::Absolute)
+                .into(),
+            deploy.options.create_migration,
+            deploy.options.allow_destructive,
+        );
 
-            ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
-
-            let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
-
-            let loader = LoaderActor::new(
-                Arc::clone(&deploy.config),
-                console.clone(),
-                loader_event_tx,
-                deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
-            )
-            .auto_stop()
-            .start();
-
-            Ok(Self {
-                deploy,
-                console,
-                loader,
-                loader_event_rx,
-            })
-        }
-
-        pub async fn run(self) -> Result<()> {
-            debug!(file = ?self.deploy.file);
-
-            {
-                let loader = self.loader.clone();
-                ctrlc::set_handler(move || {
-                    loader.do_send(loader::TryStop(StopBehavior::ExitSuccess));
-                })
-            }
-            .context("setting Ctrl-C handler")?;
-            let _discovery = if let Some(file) = self.deploy.file.clone() {
-                self.loader.do_send(LoadModule(file.to_path_buf().into()));
-                None
+        let mut init = TaskManagerInit::<DeployAction>::new(
+            deploy.config.clone(),
+            action_generator,
+            console.clone(),
+            if let Some(file) = &deploy.file {
+                TaskSource::Static(vec![file.clone()])
             } else {
-                Some(
-                    DiscoveryActor::new(
-                        Arc::clone(&self.deploy.config),
-                        self.loader.clone(),
-                        self.console.clone(),
-                        Arc::clone(&self.deploy.base_dir),
-                    )
-                    .start(),
-                )
-            };
+                TaskSource::Discovery(deploy.base_dir)
+            },
+        )
+        .retry(3, None);
 
-            let loader = self.loader.clone();
-            let stopped = loader::stopped(loader);
-            self.handle_loaded_typegraphs().await??;
-
-            match stopped.await {
-                Ok(StopBehavior::Restart) => unreachable!("LoaderActor should not restart"),
-                Ok(StopBehavior::ExitSuccess) => Ok(()),
-                Ok(StopBehavior::ExitFailure(msg)) => bail!("LoaderActor exit failure: {msg}"),
-                Err(err) => panic!("Loader actor stopped unexpectedly: {err:?}"),
-            }
+        if let Some(max_parallel_loads) = deploy.max_parallel_loads {
+            init = init.max_parallel_tasks(max_parallel_loads);
         }
+        let report = init.run().await;
 
-        #[tracing::instrument(skip(self))]
-        fn handle_loaded_typegraphs(self) -> oneshot::Receiver<Result<()>> {
-            let mut event_rx = self.loader_event_rx;
-            let console = self.console.clone();
-            let (tx, rx) = oneshot::channel();
-            let fut = async move {
-                let mut errors = vec![];
-                while let Some(event) = event_rx.recv().await {
-                    match event {
-                        LoaderEvent::Typegraph(tg_infos) => {
-                            let responses = match tg_infos.get_responses_or_fail() {
-                                Ok(val) => val,
-                                Err(err) => {
-                                    console.error(format!(
-                                        "failed pushing typegraph at {:?}: {err:#}",
-                                        tg_infos.path.display().cyan(),
-                                    ));
-                                    errors.push((tg_infos.path.clone(), err));
-                                    continue;
-                                }
-                            };
-                            for (name, res) in responses.iter() {
-                                match PushResult::new(
-                                    self.console.clone(),
-                                    self.loader.clone(),
-                                    res.clone(),
-                                ) {
-                                    Ok(push) => push.finalize().await.unwrap(),
-                                    Err(err) => {
-                                        console.error(format!(
-                                            "failed pushing typegraph {:?} at {:?}: {err:#}",
-                                            name.yellow(),
-                                            tg_infos.path.display().cyan(),
-                                        ));
-                                        errors.push((tg_infos.path.clone(), err));
-                                    }
-                                }
-                            }
-                        }
-                        LoaderEvent::Stopped(b) => {
-                            if let StopBehavior::ExitFailure(msg) = b {
-                                error!("LoaderActor exit failure: {}", msg.red());
-                            }
-                        }
-                    }
-                }
-                trace!("typegraph channel closed.");
-                if errors.is_empty() {
-                    tx.send(Ok(())).unwrap_or_log();
+        let summary = report.summary();
+        println!("Result:\n{}", summary.text);
+
+        match report.stop_reason {
+            StopReason::Natural => {
+                if summary.success {
+                    Ok(ExitStatus::Success)
                 } else {
-                    tx.send(Err(errors.into_iter().fold(
-                        ferr!("loader encountered errors").suppress_backtrace(true),
-                        |report, (path, err)| {
-                            report.section(
-                                format!("{}", format!("{err:#}").red())
-                                    .header(format!("{}:", path.display().purple())),
-                            )
-                        },
-                    )))
-                    .unwrap_or_log();
+                    Ok(ExitStatus::Failure)
                 }
-                // pusher address will be dropped when both loops are done
-            };
-            Arbiter::current().spawn(fut.in_current_span());
-            rx
+            }
+            StopReason::Restart => {
+                unreachable!("TaskManager should not restart on the default mode")
+            }
+            StopReason::Manual => {
+                if summary.success {
+                    Ok(ExitStatus::Success)
+                } else {
+                    Ok(ExitStatus::Failure)
+                }
+            } // TODO read report
+            StopReason::ManualForced => Ok(ExitStatus::Failure),
+            StopReason::Error => {
+                // error should have already been reported
+                Ok(ExitStatus::Failure)
+            }
         }
     }
 }
 
 mod watch_mode {
+    use task_manager::{TaskManagerInit, TaskSource};
 
-    use watch_mode::actors::loader::LoadModule;
-
-    use crate::deploy::push::pusher::RetryManager;
+    use crate::config::PathOption;
 
     use super::*;
 
     #[tracing::instrument]
     pub async fn enter_watch_mode(deploy: Deploy) -> Result<()> {
+        if deploy.file.is_some() {
+            bail!("Cannot use --file in watch mode");
+        }
+
         let console = ConsoleActor::new(Arc::clone(&deploy.config)).start();
 
-        let ctrlc_handler_data = Arc::new(Mutex::new(None));
+        let mut secrets = deploy.secrets.clone();
+        secrets.apply_overrides(&deploy.options.secrets)?;
 
-        let data = ctrlc_handler_data.clone();
-        ctrlc::set_handler(move || {
-            let mut data = data.lock().unwrap();
-            if let Some(CtrlCHandlerData { watcher, loader }) = data.take() {
-                watcher.do_send(actors::watcher::Stop);
-                loader.do_send(loader::TryStop(StopBehavior::ExitSuccess));
+        let action_generator = DeployActionGenerator::new(
+            deploy.node.into(),
+            // TODO no hydrate here
+            secrets.hydrate(deploy.base_dir.clone()).await?.into(),
+            deploy.config.dir().unwrap_or_log().into(),
+            deploy.base_dir.clone(),
+            deploy
+                .config
+                .prisma_migrations_base_dir(PathOption::Absolute)
+                .into(),
+            deploy.options.create_migration,
+            deploy.options.allow_destructive,
+        );
+
+        let mut init = TaskManagerInit::<DeployAction>::new(
+            deploy.config.clone(),
+            action_generator.clone(),
+            console.clone(),
+            TaskSource::DiscoveryAndWatch(deploy.base_dir),
+        )
+        .retry(3, None);
+
+        if let Some(max_parallel_loads) = deploy.max_parallel_loads {
+            init = init.max_parallel_tasks(max_parallel_loads);
+        }
+        let report = init.run().await;
+
+        match report.stop_reason {
+            StopReason::Natural => {
+                unreachable!("TaskManager should not stop naturally on watch mode")
             }
-        })
-        .context("setting Ctrl-C handler")?;
-
-        loop {
-            let mut secrets = deploy.secrets.clone();
-            secrets.apply_overrides(&deploy.options.secrets)?;
-
-            ServerStore::set_secrets(secrets.hydrate(deploy.base_dir.clone()).await?);
-
-            let (loader_event_tx, loader_event_rx) = mpsc::unbounded_channel();
-
-            let loader = LoaderActor::new(
-                Arc::clone(&deploy.config),
-                console.clone(),
-                loader_event_tx,
-                deploy.max_parallel_loads.unwrap_or_else(num_cpus::get),
-            )
-            .start();
-
-            let _discovery = DiscoveryActor::new(
-                Arc::clone(&deploy.config),
-                loader.clone(),
-                console.clone(),
-                Arc::clone(&deploy.base_dir),
-            )
-            .start();
-
-            let (watch_event_tx, watch_event_rx) = mpsc::unbounded_channel();
-
-            let watcher = WatcherActor::new(
-                Arc::clone(&deploy.config),
-                deploy.base_dir.clone(),
-                watch_event_tx,
-                console.clone(),
-            )?
-            .start();
-
-            let actor_system = ActorSystem {
-                console: console.clone(),
-                watcher,
-                loader: loader.clone(),
-            };
-
-            actor_system.handle_loaded_typegraphs(loader_event_rx);
-            actor_system.handle_watch_events(watch_event_rx);
-            actor_system.update_ctrlc_handler(ctrlc_handler_data.clone());
-
-            // TODO wait for push lifecycle
-            match loader::stopped(loader).await {
-                Ok(StopBehavior::ExitSuccess) => {
-                    break;
-                }
-                Ok(StopBehavior::Restart) => {
-                    continue;
-                }
-                Ok(StopBehavior::ExitFailure(_)) => {
-                    break;
-                }
-                Err(e) => {
-                    panic!("Loader actor stopped unexpectedly: {e:?}");
-                }
+            StopReason::Restart => {
+                unreachable!("Restarting should not stop the TaskManager")
             }
-        }
-
-        Ok(())
-    }
-
-    struct ActorSystem {
-        console: Addr<ConsoleActor>,
-        watcher: Addr<WatcherActor>,
-        loader: Addr<LoaderActor>,
-    }
-
-    impl ActorSystem {
-        #[tracing::instrument(skip(self))]
-        fn handle_loaded_typegraphs(&self, event_rx: mpsc::UnboundedReceiver<LoaderEvent>) {
-            let console = self.console.clone();
-            let loader = self.loader.clone();
-            let fut = async move {
-                let mut event_rx = event_rx;
-                while let Some(event) = event_rx.recv().await {
-                    match event {
-                        LoaderEvent::Typegraph(tg_infos) => {
-                            let responses = ServerStore::get_responses_or_fail(&tg_infos.path)
-                                .unwrap_or_log()
-                                .as_ref()
-                                .to_owned();
-                            for (name, response) in responses.into_iter() {
-                                match PushResult::new(console.clone(), loader.clone(), response) {
-                                    Ok(push) => {
-                                        if let Err(err) = push.finalize().await {
-                                            panic!("{err:#}");
-                                        }
-                                        RetryManager::clear_counter(&tg_infos.path);
-                                    }
-                                    Err(err) => {
-                                        let tg_path = tg_infos.path.clone();
-                                        console.error(format!(
-                                            "failed pushing typegraph {name:?} at {tg_path:?}: {err:#}",
-                                        ));
-                                        if let Some(delay) = RetryManager::next_delay(&tg_path) {
-                                            console.info(format!(
-                                                "retry {}/{}, retrying after {}s of {:?}",
-                                                delay.retry,
-                                                delay.max,
-                                                delay.duration.as_secs(),
-                                                tg_path.display(),
-                                            ));
-                                            tokio::time::sleep(delay.duration).await;
-                                            loader.do_send(LoadModule(Arc::new(tg_path)));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        LoaderEvent::Stopped(b) => {
-                            if let StopBehavior::ExitFailure(msg) = b {
-                                panic!("{msg}");
-                            }
-                        }
-                    }
-                }
-                trace!("Typegraph channel closed.");
-                // pusher address will be dropped when both loops are done
-            };
-            Arbiter::current().spawn(fut.in_current_span());
-        }
-
-        #[tracing::instrument(skip(self))]
-        fn handle_watch_events(
-            &self,
-            watch_event_rx: mpsc::UnboundedReceiver<actors::watcher::Event>,
-        ) {
-            let console = self.console.clone();
-            let watcher = self.watcher.clone();
-            let loader = self.loader.clone();
-            let fut = async move {
-                let mut watch_event_rx = watch_event_rx;
-                while let Some(event) = watch_event_rx.recv().await {
-                    use actors::watcher::Event as E;
-                    match event {
-                        E::ConfigChanged => {
-                            RetryManager::reset();
-
-                            console.warning("metatype configuration file changed".to_string());
-                            console.warning("reloading everything".to_string());
-
-                            loader.do_send(loader::TryStop(StopBehavior::Restart));
-                            watcher.do_send(actors::watcher::Stop);
-                        }
-                        E::TypegraphModuleChanged { typegraph_module } => {
-                            RetryManager::clear_counter(&typegraph_module);
-                            loader.do_send(ReloadModule(
-                                typegraph_module.into(),
-                                ReloadReason::FileChanged,
-                            ));
-                        }
-                        E::TypegraphModuleDeleted { typegraph_module } => {
-                            RetryManager::clear_counter(&typegraph_module);
-
-                            // TODO internally by the watcher??
-                            watcher.do_send(actors::watcher::RemoveTypegraph(
-                                typegraph_module.clone(),
-                            ));
-                            // TODO delete typegraph in typegate??
-                        }
-                        E::DependencyChanged {
-                            typegraph_module,
-                            dependency_path,
-                        } => {
-                            RetryManager::clear_counter(&typegraph_module);
-
-                            loader.do_send(ReloadModule(
-                                typegraph_module.into(),
-                                ReloadReason::DependencyChanged(dependency_path),
-                            ));
-                        }
-                    }
-                }
-                trace!("watcher event channel closed");
-            };
-            Arbiter::current().spawn(fut.in_current_span());
-        }
-
-        fn update_ctrlc_handler(&self, data: Arc<Mutex<Option<CtrlCHandlerData>>>) {
-            *data.lock().unwrap() = Some(CtrlCHandlerData {
-                watcher: self.watcher.clone(),
-                loader: self.loader.clone(),
-            });
+            StopReason::Manual => {
+                return Err(eyre::eyre!("tasks manually stopped"));
+            }
+            StopReason::ManualForced => {
+                return Err(eyre::eyre!("tasks manually stopped (forced)"));
+            }
+            StopReason::Error => return Err(eyre::eyre!("failed")),
         }
     }
 }

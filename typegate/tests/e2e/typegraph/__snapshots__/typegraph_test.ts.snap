@@ -398,8 +398,8 @@ snapshot[`typegraphs creation 2`] = `
           "idempotent": true
         },
         "data": {
-          "name": "sha256_ca4c84007bbe1e2253363df3d2da8605fc21e36c4c280cbb335b7daf5ce0dc73",
-          "fn": "(lambda x: (x['first'] + x['second']))"
+          "name": "sha256_5ac5ebaa386435a02b0a96c48af3bf5d26e4d9ce29e5c9b54660b88b6dc3eea6",
+          "fn": "lambda x: (x['first'] + x['second'])"
         }
       },
       {
@@ -684,13 +684,8 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "denoArtifact": {
-            "path": "scripts/three.ts",
-            "hash": "564fe4792102c50aac9801faeb3c6402c49b1f7c7cbb22dc6d54886e45cfa3b2",
-            "size": 307
-          },
-          "deps": [],
-          "depsMeta": []
+          "entryPoint": "scripts/three.ts",
+          "deps": []
         }
       },
       {
@@ -1443,13 +1438,8 @@ snapshot[`typegraphs creation 6`] = `
           "idempotent": true
         },
         "data": {
-          "denoArtifact": {
-            "path": "scripts/three.ts",
-            "hash": "564fe4792102c50aac9801faeb3c6402c49b1f7c7cbb22dc6d54886e45cfa3b2",
-            "size": 307
-          },
-          "deps": [],
-          "depsMeta": []
+          "entryPoint": "scripts/three.ts",
+          "deps": []
         }
       },
       {

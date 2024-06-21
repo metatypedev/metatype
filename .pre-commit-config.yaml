@@ -1,6 +1,12 @@
 repos:
   - repo: local
     hooks:
+      - id: version
+        name: "Resolve ghjk installs"
+        always_run: true
+        language: system
+        entry: bash -c 'ghjk p resolve'
+        pass_filenames: false
       - id: poetry-lock
         name: "Check poetry lock"
         always_run: true
@@ -17,13 +23,13 @@ repos:
         name: "Lock versions"
         always_run: true
         language: system
-        entry: bash -c 'deno run -A dev/lock.ts --check'
+        entry: bash -c 'ghjk x lock-sed --check'
         pass_filenames: false
       - id: clean-deno-lock
         name: "Clean deno.lock"
         always_run: true
         language: system
-        entry: ghjk x clean-deno-lock
+        entry: ghjk x lock-clean-deno
         pass_filenames: false
       - id: deno-fmt
         name: Deno format
@@ -69,6 +75,13 @@ repos:
         types:
           - ts
         files: ^meta-lsp/
+      # - id: cargo-udeps
+      #   name: Check for unused cargo dependencies
+      #   language: system
+      #   entry: bash -c '[ -z "${CI+x}" ] && cargo-udeps udeps'
+      #   pass_filenames: false
+      #   types:
+      #     - toml
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -132,6 +145,7 @@ repos:
           - --license-filepath=dev/license-header-Elastic-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
+          - "--skip-license-insertion-comment=@generated"
         types_or:
           - ts
         files: ^(typegate|dev)/

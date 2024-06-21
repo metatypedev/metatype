@@ -12,7 +12,7 @@ pub struct GenStubOptions {}
 pub fn gen_stub(
     fun: &StubbedFunction,
     mod_stub_traits: &mut GenDestBuf,
-    type_names: &HashMap<u32, Arc<str>>,
+    type_names: &HashMap<u32, Rc<str>>,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<String> {
     let TypeNode::Function { base, data } = &fun.node else {
@@ -87,7 +87,7 @@ mod test {
     #[test]
     fn stub_test() -> anyhow::Result<()> {
         let tg_name = "my_tg".to_string();
-        let tg = Typegraph {
+        let tg = Box::new(Typegraph {
             path: None,
             policies: vec![],
             deps: vec![],
@@ -147,7 +147,7 @@ mod test {
                     },
                 },
             ],
-        };
+        });
         let generator = Generator::new(MdkRustGenConfig {
             base: crate::config::MdkGeneratorConfigBase {
                 path: "/".into(),

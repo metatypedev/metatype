@@ -30,7 +30,9 @@ Meta.test(
     }
 
     await metaTest.should("work after deploying artifact", async (t) => {
-      const engine = await metaTest.engine("runtimes/wasm_wire/wasm_wire.ts");
+      await using engine = await metaTest.engine(
+        "runtimes/wasm_wire/wasm_wire.ts",
+      );
 
       await t.step("wit bindings", async () => {
         await gql`
@@ -191,7 +193,9 @@ Meta.test(
       currentDir: `${import.meta.dirname!}/rust`,
     });
 
-    const e = await metaTest.engine("runtimes/wasm_wire/wasm_duplicate.ts");
+    await using e = await metaTest.engine(
+      "runtimes/wasm_wire/wasm_duplicate.ts",
+    );
 
     await metaTest.should(
       "work after referencing wasm artifact twice",

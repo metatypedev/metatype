@@ -14,7 +14,9 @@ import { syncConfigFromEnv } from "./sync/config.ts";
 const logger = getLogger(import.meta);
 
 try {
-  logger.debug(Deno.inspect(config));
+  logger.debug(
+    Deno.inspect({ ...config, tg_admin_password: "***", tg_secret: "***" }),
+  );
   logger.info(`typegate v${config.version} starting`);
 
   Sentry.init({

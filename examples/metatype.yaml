@@ -1,9 +1,11 @@
 typegates:
   dev:
-    url: "http://localhost:7890"
+    url: "http://localhost:7891"
     username: admin
     password: password
     secrets:
+      quick-start-project:
+        POSTGRES: postgresql://postgres:password@localhost:5432/db?schema=quick_start_project
       basic-authentication:
         BASIC_admin: "password"
       jwt-authentication:
@@ -54,7 +56,7 @@ typegates:
         BASIC_andim: hunter2
       roadmap-reduce:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_reduce"
-        BASIC_andim: hunter2
+        BASIC_andim: "password"
       roadmap-execute:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_execute"
         BASIC_andim: hunter2
@@ -67,13 +69,15 @@ typegates:
       roadmap:
         BASIC_andim: hunter2
       func-gql:
-        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=func_ctx"
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=func_gql"
 
   prd:
     url: https://demo.metatype.dev
     username: admin
     password: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ADMIN_PASSWORD
     secrets:
+      quick-start-project:
+        POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_QUICK_START_PROJECT_POSTGRES
       basic-authentication:
         BASIC_admin: "password"
       jwt-authentication:
@@ -112,10 +116,10 @@ typegates:
         GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
         GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
       files-upload:
-        S3_HOST: http://localhost:9000
-        S3_REGION: local
-        S3_ACCESS_KEY: minio
-        S3_SECRET_KEY: password
+        S3_HOST: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/S3_HOST
+        S3_REGION: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/S3_REGION
+        S3_ACCESS_KEY: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/S3_ACCESS_KEY
+        S3_SECRET_KEY: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/S3_SECRET_KEY
       roadmap-prisma:
         POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ROADMAP_PRISMA_POSTGRES
         BASIC_andim: hunter2
@@ -136,12 +140,37 @@ typegates:
         BASIC_andim: hunter2
       roadmap:
         BASIC_andim: hunter2
+      func-gql:
+        POSTGRES: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_FUNC_GQL_POSTGRES
 
 typegraphs:
   materializers:
     prisma:
       migrations_path: "migrations"
+  python:
+    exclude:
+      - "**/*"
+      - "typegraphs/temporal.py"
+  typescript:
+    exclude:
+      - "typegraphs/temporal.ts"
+    include:
+      - "typegraphs/*.ts"
+  javascript:
+    exclude:
+      - "**/*"
 
 metagen:
   targets:
-    main:
+    metagen_deno:
+      - generator: mdk_typescript
+        path: ./typegraphs/metagen/ts/
+        typegraph_path: ./typegraphs/metagen-deno.ts
+    metagen_py:
+      - generator: mdk_python
+        path: ./typegraphs/metagen/py/
+        typegraph_path: ./typegraphs/metagen-py.ts
+    metagen_rs:
+      - generator: mdk_rust
+        path: ./typegraphs/metagen/rs/
+        typegraph_path: ./typegraphs/metagen-rs.ts

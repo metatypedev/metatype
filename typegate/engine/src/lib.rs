@@ -5,7 +5,6 @@ mod ext;
 mod runtimes;
 // mod snapshot;
 mod typegraph;
-mod typescript;
 
 #[allow(unused_imports)]
 mod interlude {

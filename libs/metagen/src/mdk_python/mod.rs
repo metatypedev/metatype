@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+// TODO: keyword filtering
+
 use garde::external::compact_str::CompactStringExt;
 use heck::ToPascalCase;
 
@@ -87,14 +89,15 @@ impl crate::Plugin for Generator {
         tera.add_raw_template("types_template", include_str!("static/types.py.jinja"))?;
         tera.add_raw_template("struct_template", include_str!("static/struct.py.jinja"))?;
 
-        let stubbed_funs = filter_stubbed_funcs(tg, &["python".to_string()])?;
+        let stubbed_funs = filter_stubbed_funcs(tg, &["python".to_string()])
+            .wrap_err("error collecting materializers for \"python\" runtime")?;
         for fun in &stubbed_funs {
             if fun.mat.data.get("mod").is_none() {
                 continue;
             }
             let (_, script_path) = get_module_infos(fun, tg)?;
-            let base_path = self.config.base.path.clone();
-            let entry_point_path = if base_path.as_os_str().to_string_lossy().trim() == "" {
+            let target_path = self.config.base.path.clone();
+            let entry_point_path = if target_path.as_os_str().to_string_lossy().trim() == "" {
                 self.config
                     .base
                     .typegraph_path
@@ -105,7 +108,11 @@ impl crate::Plugin for Generator {
             } else if script_path.is_absolute() {
                 script_path
             } else {
-                base_path.join(&script_path)
+                target_path.join(
+                    script_path
+                        .file_name()
+                        .expect("invalid script path set for python runtime"),
+                )
             };
 
             let required = gen_required_objects(&tera, fun, tg)?;
@@ -170,9 +177,8 @@ fn get_module_infos(fun: &StubbedFunction, tg: &Typegraph) -> anyhow::Result<(St
             .unwrap()
             .clone(),
     )?;
-    let script_path = serde_json::from_value::<String>(
-        tg.materializers[idx].data["pythonArtifact"]["path"].clone(),
-    )?;
+    let script_path =
+        serde_json::from_value::<String>(tg.materializers[idx].data["entryPoint"].clone())?;
     let script_path = PathBuf::from(script_path.clone());
 
     Ok((mod_name, script_path))

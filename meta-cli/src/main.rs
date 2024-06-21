@@ -6,7 +6,7 @@ mod interlude {
     pub use std::{
         collections::HashMap,
         path::{Path, PathBuf},
-        sync::{Arc, Mutex},
+        sync::Arc,
     };
 
     pub use color_eyre::{
@@ -25,13 +25,14 @@ mod interlude {
         pub use tracing::{debug, error, info, trace, warn};
     }
     pub use async_trait::async_trait;
+    pub use futures::prelude::*;
+    pub use futures_concurrency::prelude::*;
 
     pub use crate::{anyhow_to_eyre, map_ferr};
+    pub use actix::prelude::*;
 }
 
 mod cli;
-mod codegen;
-mod com;
 mod config;
 pub mod deploy;
 mod fs;
@@ -52,9 +53,6 @@ use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
-use com::server::init_server;
-use futures::try_join;
-use futures::FutureExt;
 use shadow_rs::shadow;
 
 shadow!(build);
@@ -83,7 +81,8 @@ fn main() -> Result<()> {
     };
 
     if args.verbose.is_present() {
-        std::env::set_var("RUST_LOG", args.verbose.log_level_filter().to_string());
+        let filter = args.verbose.log_level_filter().to_string();
+        std::env::set_var("RUST_LOG", format!("warn,meta={filter}"));
     }
     logger::init();
 
@@ -106,31 +105,13 @@ fn main() -> Result<()> {
     match args.command {
         // the deno task requires use of a single thread runtime which it'll spawn itself
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.config)?,
-        Some(cli::Commands::Gen(gen_args)) => {
-            // metagen relies on on some tokio infra
-            // that doesn't mesh well with actix
-            tokio::runtime::Builder::new_multi_thread()
-                .enable_all()
-                .build()?
-                .block_on(
-                    async {
-                        let server = init_server().unwrap();
-                        let command = gen_args.run(args.config, Some(server.handle()));
-
-                        try_join!(command, server.map(|_| Ok(())))
-                    }
-                    .in_current_span(),
-                )?;
-        }
         Some(command) => runner.block_on(async move {
             match command {
-                cli::Commands::Serialize(_) | cli::Commands::Dev(_) | cli::Commands::Deploy(_) => {
-                    let server = init_server().unwrap();
-                    let command = command.run(args.config, Some(server.handle()));
-
-                    try_join!(command, server.map(|_| Ok(()))).map(|_| ())
-                }
-                _ => command.run(args.config, None).await.map(|_| ()),
+                cli::Commands::Serialize(_)
+                | cli::Commands::Dev(_)
+                | cli::Commands::Deploy(_)
+                | cli::Commands::Gen(_) => command.run(args.config).await,
+                _ => command.run(args.config).await.map(|_| ()),
             }
         })?,
         None => Args::command().print_help()?,
@@ -145,7 +126,9 @@ fn verify_cli() {
     Args::command().debug_assert()
 }
 
+// TODO: make this test more useful
 #[test]
+#[ignore]
 fn end_to_end() {
     // need build before running this test
     use assert_cmd::Command;

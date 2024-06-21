@@ -8,6 +8,8 @@
     "typegate",
     "dev",
     "examples/templates/deno",
+    "ghjk.ts",
+    ".ghjk"
   ],
   "deno.unstable": true,
   "typescript.suggest.completeFunctionCalls": true,
@@ -56,8 +58,6 @@
     "wasmedge"
   ],
   "python.languageServer": "Pylance",
-  "python.analysis.extraPaths": [
-    "typegraph/python"
-  ],
-  "prettier.proseWrap": "never",
+  "python.analysis.extraPaths": ["typegraph/python"],
+  "prettier.proseWrap": "never"
 }

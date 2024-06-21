@@ -10,8 +10,6 @@ import {
   generateValidator,
   ResultValidationCompiler,
 } from "../../src/engine/typecheck/result.ts";
-import * as native from "native";
-import { nativeResult } from "../../src/utils.ts";
 
 Meta.test("typecheck", async (t) => {
   const e = await t.engine("typecheck/typecheck.py");
@@ -86,14 +84,7 @@ Meta.test("typecheck", async (t) => {
   await t.should("generate validation code for valid queries", async () => {
     const code = getValidationCode(queryGetPosts);
 
-    const formattedCode = nativeResult(
-      native.typescript_format_code({
-        source: code,
-      }),
-    )!.formatted_code;
-
-    console.log("asserting snapshot", { formattedCode });
-    await t.assertSnapshot(formattedCode);
+    await t.assertSnapshot(code);
   });
 
   const post1 = {

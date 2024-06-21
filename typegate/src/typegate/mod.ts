@@ -107,9 +107,7 @@ export class Typegate implements AsyncDisposable {
     } else {
       logger.info("Entering sync mode...");
       if (customRegister) {
-        throw new Error(
-          "Custom register is not supported in sync mode",
-        );
+        throw new Error("Custom register is not supported in sync mode");
       }
 
       await using stack = new AsyncDisposableStack();
@@ -120,10 +118,7 @@ export class Typegate implements AsyncDisposable {
         await limiter.terminate();
       });
 
-      const artifactStore = await createSharedArtifactStore(
-        tmpDir,
-        syncConfig,
-      );
+      const artifactStore = await createSharedArtifactStore(tmpDir, syncConfig);
       stack.use(artifactStore);
 
       const typegate = new Typegate(
@@ -225,12 +220,22 @@ export class Typegate implements AsyncDisposable {
       }
 
       if (!engineName || ignoreList.has(engineName)) {
-        return notFound();
+        logger.error("engine not found on request url {}", {
+          engineName,
+          ignored: ignoreList.has(engineName),
+          url: request.url,
+        });
+        return notFound("engine name required on url");
       }
 
       const engine = this.register.get(engineName);
       if (!engine) {
-        return notFound();
+        logger.error("engine not found for request {}", {
+          engineName,
+          url: request.url,
+          engines: this.register.list().map((en) => en.name),
+        });
+        return notFound(`engine not found for typegraph '${engineName}'`);
       }
 
       const cors = engine.tg.cors(request);
@@ -283,14 +288,7 @@ export class Typegate implements AsyncDisposable {
         return methodNotAllowed();
       }
 
-      return handleGraphQL(
-        request,
-        engine,
-        context,
-        info,
-        limit,
-        headers,
-      );
+      return handleGraphQL(request, engine, context, info, limit, headers);
     } catch (e) {
       Sentry.captureException(e);
       console.error(e);
@@ -320,10 +318,7 @@ export class Typegate implements AsyncDisposable {
       }
     }
 
-    const secretManager = new SecretManager(
-      tgJson,
-      secrets,
-    );
+    const secretManager = new SecretManager(tgJson, secrets);
 
     const pushResponse = new PushResponse();
     logger.info("Handling onPush hooks");
@@ -350,22 +345,19 @@ export class Typegate implements AsyncDisposable {
     );
 
     const oldArtifacts = new Set(
-      Object.values(this.register.get(name)?.tg.tg.meta.artifacts ?? {})
-        .map((m) => m.hash),
+      Object.values(this.register.get(name)?.tg.tg.meta.artifacts ?? {}).map(
+        (m) => m.hash,
+      ),
     );
 
     logger.info(`Registering engine '${name}'`);
     await this.register.add(engine);
 
     const newArtifacts = new Set(
-      Object.values(engine.tg.tg.meta.artifacts)
-        .map((m) => m.hash),
+      Object.values(engine.tg.tg.meta.artifacts).map((m) => m.hash),
     );
 
-    await this.artifactStore.updateRefCounts(
-      newArtifacts,
-      oldArtifacts,
-    );
+    await this.artifactStore.updateRefCounts(newArtifacts, oldArtifacts);
 
     return {
       name,
@@ -383,8 +375,7 @@ export class Typegate implements AsyncDisposable {
     await this.register.remove(name);
 
     const artifacts = new Set(
-      Object.values(engine.tg.tg.meta.artifacts)
-        .map((m) => m.hash),
+      Object.values(engine.tg.tg.meta.artifacts).map((m) => m.hash),
     );
     await this.artifactStore.updateRefCounts(new Set(), artifacts);
     await this.artifactStore.runArtifactGC();
@@ -406,11 +397,7 @@ export class Typegate implements AsyncDisposable {
         introspectionDef,
         new SecretManager(introspectionDef, {}),
         {
-          typegraph: TypeGraphRuntime.init(
-            tgDS,
-            [],
-            {},
-          ),
+          typegraph: TypeGraphRuntime.init(tgDS, [], {}),
         },
         null,
       )

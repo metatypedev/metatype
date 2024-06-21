@@ -1,0 +1,18 @@
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+
+metagen:
+  targets:
+    main:
+      - generator: mdk_rust
+        path: ./rs/
+        typegraph_path: ../identities.py
+      - generator: mdk_python
+        path: ./py/
+        typegraph_path: ../identities.py
+      - generator: mdk_typescript
+        path: ./ts/
+        typegraph_path: ../identities.py

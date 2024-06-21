@@ -11,9 +11,9 @@ def wasm_reflected(g: Graph):
     wasm = WasmRuntime.reflected("rust.wasm")
 
     g.expose(
-        test=wasm.from_export(
+        test=wasm.export(
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
-            func="add",
+            name="add",
         ).with_policy(pub),
     )

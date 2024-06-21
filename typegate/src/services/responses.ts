@@ -37,11 +37,13 @@ export const jsonError = (
 };
 
 export const badRequest = (message: string) => {
-  return new BaseError(null, ErrorKind.User, message).withType("BadRequest")
+  return new BaseError(null, ErrorKind.User, message)
+    .withType("BadRequest")
     .toResponse();
 };
-export const notFound = () =>
-  new BaseError(null, ErrorKind.User, "not found", 404).withType("NotFound")
+export const notFound = (message = "not found") =>
+  new BaseError(null, ErrorKind.User, message, 404)
+    .withType("NotFound")
     .toResponse();
 
 export const methodNotAllowed = () =>
@@ -51,5 +53,6 @@ export const methodNotAllowed = () =>
 
 export const serverError = () => {
   return new BaseError(null, ErrorKind.Service, "internal server error")
-    .withType("ServerError").toResponse();
+    .withType("ServerError")
+    .toResponse();
 };

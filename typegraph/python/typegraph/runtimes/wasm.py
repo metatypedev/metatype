@@ -49,7 +49,7 @@ class WasmRuntimeWire(WasmRuntime):
         inp: "t.struct",
         out: "t.typedef",
         *,
-        func: str,
+        name: str,
         effect: Optional[Effect] = None,
     ):
         effect = effect or EffectRead()
@@ -57,7 +57,7 @@ class WasmRuntimeWire(WasmRuntime):
         mat_id = runtimes.from_wasm_wire_handler(
             store,
             BaseMaterializer(runtime=self.id, effect=effect),
-            MaterializerWasmWireHandler(func_name=func),
+            MaterializerWasmWireHandler(func_name=name),
         )
 
         if isinstance(mat_id, Err):
@@ -66,7 +66,7 @@ class WasmRuntimeWire(WasmRuntime):
         return t.func(
             inp,
             out,
-            WireWasmMat(id=mat_id.value, func_name=func, effect=effect),
+            WireWasmMat(id=mat_id.value, func_name=name, effect=effect),
         )
 
 
@@ -86,12 +86,12 @@ class WasmRuntimeReflected(WasmRuntime):
 
         super().__init__(runtime_id.value)
 
-    def from_export(
+    def export(
         self,
         inp: "t.struct",
         out: "t.typedef",
         *,
-        func: str,
+        name: str,
         effect: Optional[Effect] = None,
     ):
         effect = effect or EffectRead()
@@ -99,7 +99,7 @@ class WasmRuntimeReflected(WasmRuntime):
         mat_id = runtimes.from_wasm_reflected_func(
             store,
             BaseMaterializer(runtime=self.id, effect=effect),
-            MaterializerWasmReflectedFunc(func_name=func),
+            MaterializerWasmReflectedFunc(func_name=name),
         )
 
         if isinstance(mat_id, Err):
@@ -108,5 +108,5 @@ class WasmRuntimeReflected(WasmRuntime):
         return t.func(
             inp,
             out,
-            ReflectedWasmMat(id=mat_id.value, func_name=func, effect=effect),
+            ReflectedWasmMat(id=mat_id.value, func_name=name, effect=effect),
         )

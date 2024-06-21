@@ -42,11 +42,7 @@ globalThis.Meta = {
     workflowQuery: getOp("op_temporal_workflow_query"),
     workflowDescribe: getOp("op_temporal_workflow_describe"),
   },
-  deno: {
-    transformTypescript: getOp("op_deno_transform_typescript"),
-  },
   version: getOp("op_get_version"),
-  typescriptFormatCode: getOp("op_typescript_format_code"),
   typegraphValidate: getOp("op_typegraph_validate"),
   validatePrismaRuntimeData: getOp("op_validate_prisma_runtime_data"),
   wasmtimeWit: getOp("op_wasmtime_wit"),

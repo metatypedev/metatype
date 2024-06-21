@@ -1,35 +1,48 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { ArtifactResolutionConfig } from "./gen/interfaces/metatype-typegraph-core.js";
+import {
+  MigrationAction,
+  SerializeParams,
+} from "./gen/interfaces/metatype-typegraph-core.js";
 import { ArtifactUploader } from "./tg_artifact_upload.js";
 import { TypegraphOutput } from "./typegraph.js";
 import { wit_utils } from "./wit.js";
+import { execRequest } from "./utils/func_utils.js";
+import { log } from "./io.js";
 
 export class BasicAuth {
-  constructor(public username: string, public password: string) {
-  }
+  constructor(
+    public username: string,
+    public password: string,
+  ) {}
   asHeaderValue(): string {
     return `Basic ${btoa(this.username + ":" + this.password)}`;
   }
 }
 
-export interface TypegraphDeployParams {
-  typegraphPath: string;
-  baseUrl: string;
+export interface TypegateConnectionOptions {
+  url: string;
   auth?: BasicAuth;
-  artifactsConfig: ArtifactResolutionConfig;
-  secrets: Record<string, string>;
+}
+
+export interface TypegraphDeployParams {
+  typegate: TypegateConnectionOptions;
+  typegraphPath: string;
+  prefix?: string;
+  secrets?: Record<string, string>;
+  migrationsDir?: string;
+  migrationActions?: Record<string, MigrationAction>;
+  defaultMigrationAction?: MigrationAction;
 }
 
 export interface TypegraphRemoveParams {
-  baseUrl: string;
-  auth?: BasicAuth;
+  typegate: TypegateConnectionOptions;
 }
 
 export interface DeployResult {
   serialized: string;
-  typegate: Record<string, any> | string;
+  response: Record<string, any>;
 }
 
 export interface RemoveResult {
@@ -47,43 +60,72 @@ export async function tgDeploy(
   typegraph: TypegraphOutput,
   params: TypegraphDeployParams,
 ): Promise<DeployResult> {
-  const { baseUrl, secrets, auth, artifactsConfig } = params;
-  const serialized = typegraph.serialize(artifactsConfig);
+  const serializeParams = {
+    typegraphPath: params.typegraphPath,
+    prefix: params.prefix,
+    artifactResolution: true,
+    codegen: false,
+    prismaMigration: {
+      migrationsDir: params.migrationsDir ?? "prisma-migrations",
+      migrationActions: Object.entries(params.migrationActions ?? {}),
+      defaultMigrationAction: params.defaultMigrationAction ?? {
+        apply: true,
+        create: false,
+        reset: false,
+      },
+    },
+    pretty: false,
+  } satisfies SerializeParams;
+  const serialized = typegraph.serialize(serializeParams);
   const tgJson = serialized.tgJson;
   const refArtifacts = serialized.ref_artifacts;
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
-  if (auth) {
-    headers.append("Authorization", auth.asHeaderValue());
+  const typegate = params.typegate;
+  if (typegate.auth) {
+    headers.append("Authorization", typegate.auth.asHeaderValue());
   }
 
   if (refArtifacts.length > 0) {
     // upload the artifacts
     const artifactUploader = new ArtifactUploader(
-      baseUrl,
+      typegate.url,
       refArtifacts,
       typegraph.name,
-      auth,
+      typegate.auth,
       headers,
       params.typegraphPath,
     );
     await artifactUploader.uploadArtifacts();
+  } else {
+    log.debug("no artifacts to upload");
   }
 
   // deploy the typegraph
-  const response = await execRequest(new URL("/typegate", baseUrl), {
-    method: "POST",
-    headers,
-    body: wit_utils.gqlDeployQuery({
-      tg: tgJson,
-      secrets: Object.entries(secrets ?? {}),
-    }),
-  });
+  const response = await execRequest(
+    new URL("/typegate", typegate.url),
+    {
+      method: "POST",
+      headers,
+      body: wit_utils.gqlDeployQuery({
+        tg: tgJson,
+        secrets: Object.entries(params.secrets ?? {}),
+      }),
+    },
+    `tgDeploy failed to deploy typegraph ${typegraph.name}`,
+  );
+
+  if (response.errors) {
+    for (const err of response.errors) {
+      console.error(err.message);
+    }
+    throw new Error(`failed to deploy typegraph ${typegraph.name}`);
+  }
 
   return {
     serialized: tgJson,
-    typegate: response,
+    response: response.data.addTypegraph,
   };
 }
 
@@ -91,7 +133,7 @@ export async function tgRemove(
   typegraph: TypegraphOutput,
   params: TypegraphRemoveParams,
 ): Promise<RemoveResult> {
-  const { baseUrl, auth } = params;
+  const { url, auth } = params.typegate;
 
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
@@ -99,27 +141,15 @@ export async function tgRemove(
     headers.append("Authorization", auth.asHeaderValue());
   }
 
-  const response = await execRequest(new URL("/typegate", baseUrl), {
-    method: "POST",
-    headers,
-    body: wit_utils.gqlRemoveQuery([typegraph.name]),
-  });
+  const response = await execRequest(
+    new URL("/typegate", url),
+    {
+      method: "POST",
+      headers,
+      body: wit_utils.gqlRemoveQuery([typegraph.name]),
+    },
+    `tgRemove failed to remove typegraph ${typegraph.name}`,
+  );
 
   return { typegate: response };
-}
-
-/**
- * Simple fetch wrapper with more verbose errors
- */
-async function execRequest(url: URL, reqInit: RequestInit) {
-  try {
-    const response = await fetch(url, reqInit);
-    if (response.headers.get("Content-Type") == "application/json") {
-      return await response.json();
-    }
-    throw Error(`expected json object, got "${await response.text()}"`);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : err;
-    throw Error(`error executing request to ${url.toString()}: ${message}`);
-  }
 }

@@ -19,7 +19,7 @@ def deno(g: Graph):
         t.struct({"n": t.float()}),
         t.struct({"res": t.integer(), "ms": t.float()}),
         code="""
-        ({ n }) => {
+            ({ n }) => {
                 let a = 0, b = 1, c;
                 const start = performance.now();
                 for (

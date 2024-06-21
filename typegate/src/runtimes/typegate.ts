@@ -14,7 +14,6 @@ import { closestWord } from "../utils.ts";
 import { Type, TypeNode } from "../typegraph/type_node.ts";
 import { StringFormat } from "../typegraph/types.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import { applyPostProcessors } from "../postprocess.ts";
 import { PrismaRT, PrismaRuntime } from "./prisma/mod.ts";
 import { SingleQuery } from "./prisma/prisma.ts";
 
@@ -188,7 +187,6 @@ export class TypeGateRuntime extends Runtime {
     }
 
     const tgJson = await TypeGraph.parseJson(fromString);
-    applyPostProcessors([tgJson]);
 
     const { engine, response, name } = await this.typegate.pushTypegraph(
       tgJson,

@@ -4,6 +4,7 @@
 mod conversion;
 mod errors;
 mod global_store;
+mod logger;
 mod params;
 mod runtimes;
 mod t;
@@ -31,9 +32,9 @@ use types::{
 
 use utils::clear_name;
 use wit::core::{
-    Artifact, ArtifactResolutionConfig, ContextCheck, Policy, PolicyId, PolicySpec, TransformData,
-    TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger,
-    TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
+    Artifact, ContextCheck, Policy, PolicyId, PolicySpec, SerializeParams, TransformData, TypeBase,
+    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
+    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
@@ -53,10 +54,8 @@ impl wit::core::Guest for Lib {
         typegraph::init(params)
     }
 
-    fn finalize_typegraph(
-        res_config: Option<ArtifactResolutionConfig>,
-    ) -> Result<(String, Vec<Artifact>)> {
-        typegraph::finalize(res_config)
+    fn serialize_typegraph(res_config: SerializeParams) -> Result<(String, Vec<Artifact>)> {
+        typegraph::serialize(res_config)
     }
 
     fn refb(name: String, attributes: Vec<(String, String)>) -> Result<CoreTypeId> {
@@ -551,8 +550,7 @@ mod tests {
     use crate::global_store::Store;
     use crate::t::{self, TypeBuilder};
     use crate::test_utils::setup;
-    use crate::wit::core::Cors;
-    use crate::wit::core::Guest;
+    use crate::wit::core::{Cors, Guest, MigrationAction, PrismaMigrationConfig, SerializeParams};
     use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
     use crate::TypegraphInitParams;
@@ -573,6 +571,27 @@ mod tests {
                     max_age_sec: None,
                 },
                 rate: None,
+            }
+        }
+    }
+
+    impl Default for SerializeParams {
+        fn default() -> Self {
+            Self {
+                typegraph_path: "some/dummy/path".to_string(),
+                prefix: None,
+                artifact_resolution: false,
+                codegen: false,
+                pretty: true,
+                prisma_migration: PrismaMigrationConfig {
+                    migrations_dir: "".to_string(),
+                    migration_actions: vec![],
+                    default_migration_action: MigrationAction {
+                        apply: false,
+                        create: false,
+                        reset: false,
+                    },
+                },
             }
         }
     }
@@ -623,7 +642,7 @@ mod tests {
             crate::test_utils::setup(Some("test-2")),
             Err(errors::nested_typegraph_context("test-1"))
         );
-        Lib::finalize_typegraph(None)?;
+        Lib::serialize_typegraph(Default::default())?;
         Ok(())
     }
 
@@ -636,7 +655,7 @@ mod tests {
         );
 
         assert!(
-            matches!(Lib::finalize_typegraph(None), Err(e) if e == errors::expected_typegraph_context())
+            matches!(Lib::serialize_typegraph(Default::default()), Err(e) if e == errors::expected_typegraph_context())
         );
 
         Ok(())
@@ -730,7 +749,7 @@ mod tests {
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::Read)?;
         Lib::expose(vec![("one".to_string(), t::func(s, b, mat)?.into())], None)?;
-        let typegraph = Lib::finalize_typegraph(None)?;
+        let typegraph = Lib::serialize_typegraph(Default::default())?;
         insta::assert_snapshot!(typegraph.0);
         Ok(())
     }

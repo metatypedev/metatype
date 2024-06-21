@@ -1,10 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
-
-use std::rc::Rc;
-
 use crate::errors::Result;
 use crate::runtimes::prisma::get_prisma_context;
 use crate::runtimes::{
@@ -28,9 +24,11 @@ use common::typegraph::runtimes::{
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
-use sha2::{Digest, Sha256};
-
 use serde_json::json;
+use sha2::{Digest, Sha256};
+use std::collections::HashMap;
+use std::rc::Rc;
+use unindent::Unindent;
 
 fn effect(typ: EffectType, idempotent: bool) -> Effect {
     Effect {
@@ -92,7 +90,10 @@ impl MaterializerConverter for DenoMaterializer {
                 let mut data = IndexMap::new();
                 data.insert(
                     "script".to_string(),
-                    serde_json::Value::String(format!("var _my_lambda = {}", &inline_fun.code)),
+                    serde_json::Value::String(format!(
+                        "var _my_lambda = {}",
+                        &inline_fun.code.unindent()
+                    )),
                 );
                 data.insert(
                     "secrets".to_string(),
@@ -102,11 +103,8 @@ impl MaterializerConverter for DenoMaterializer {
             }
             Module(module) => {
                 let data = serde_json::from_value(json!({
-                    "denoArtifact": json!({
-                        "path": module.file,
-                    }),
+                    "entryPoint": module.file,
                     "deps": module.deps,
-                    "depsMeta": None::<serde_json::Value>,
                 }))
                 .unwrap();
                 ("module".to_string(), data)
@@ -234,11 +232,8 @@ impl MaterializerConverter for PythonMaterializer {
             }
             Module(module) => {
                 let data = serde_json::from_value(json!({
-                    "pythonArtifact":json!({
-                        "path": module.file
-                    }),
+                    "entryPoint": module.file,
                     "deps": module.deps,
-                    "depsMeta": None::<serde_json::Value>,
                 }))
                 .map_err(|e| e.to_string())?;
 
