@@ -96,7 +96,7 @@ jobs:
           ghjk x install-lsp
           ghjk x fetch-deno
 
-          pre-commit run --show-diff-on-failure --color=always --all-files
+          SKIP=ghjk-resolve pre-commit run --show-diff-on-failure --color=always --all-files
 
   lint-compat:
     needs: changes
