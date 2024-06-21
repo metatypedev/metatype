@@ -1,7 +1,7 @@
 repos:
   - repo: local
     hooks:
-      - id: version
+      - id: ghjk-resolve
         name: "Resolve ghjk installs"
         always_run: true
         language: system
@@ -19,7 +19,7 @@ repos:
         language: system
         entry: bash -c 'poetry -C ./typegraph/python check --lock'
         pass_filenames: false
-      - id: version
+      - id: sed-lock
         name: "Lock versions"
         always_run: true
         language: system

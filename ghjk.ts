@@ -33,9 +33,9 @@ env("main")
     CLICOLOR_FORCE: "1",
   })
   .allowedBuildDeps(
+    ...stdDeps(),
     installs.python_latest,
     installs.node,
-    ...stdDeps(),
   );
 
 env("_rust")
@@ -102,7 +102,7 @@ env("ci")
   .inherit(["_rust", "_python", "_ecma", "_wasm"])
   .install(
     ports.pipi({ packageName: "pre-commit", version: "3.7.1" })[0],
-    ports.temporal_cli({ version: "v0.10.7" }),
+    ports.temporal_cli({ version: "v0.13.1" }),
     ports.cargobi({
       crateName: "cargo-insta",
       version: "1.33.0",
