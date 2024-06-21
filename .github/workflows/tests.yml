@@ -13,6 +13,14 @@ env:
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir
+  RUSTC_WRAPPER: "sccache"
+  SCCACHE_BUCKET: "metacache"
+  SCCACHE_ENDPOINT: "https://s3.pub1.infomaniak.cloud"
+  SCCACHE_REGION: "us-east-1"
+  SCCACHE_S3_USE_SSL: "true"
+  SCCACHE_CACHE_SIZE: "30G"
+  AWS_ACCESS_KEY_ID: ${{ secrets.SCCACHE_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.SCCACHE_AWS_SECRET_ACCESS_KEY }}
 
 jobs:
   changes:
@@ -62,11 +70,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: Swatinem/rust-cache@v2
+      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: denoland/setup-deno@v1
         with:
-          # use custom shared key to share cache across jobs
-          # default prefix includes job-id otherwise
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+          deno-version: ${{ env.DENO_VERSION }}
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         run: |
@@ -105,6 +112,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
+      - uses: mozilla-actions/sccache-action@v0.0.3
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
         with:
           # temporary fix
@@ -157,9 +165,7 @@ jobs:
           - platform: linux/amd64
             runner: custom-ubuntu-large
           - platform: linux/arm64
-            # FIXME: official darwin images don't have docker
-            # and nested virtualizaiton
-            runner: custom-macos
+            runner: custom-arm
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -186,7 +192,7 @@ jobs:
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
           # check target runs extra validation steps in the Dockerfile
           target: check
-          build-args: 'CARGO_PROFILE=dev'
+          build-args: "CARGO_PROFILE=dev"
       - name: Build without cache (external)
         uses: docker/build-push-action@v5
         if: "! steps.check.outputs.has-permission"
@@ -195,7 +201,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
-          build-args: 'CARGO_PROFILE=dev'
+          build-args: "CARGO_PROFILE=dev"
           target: check
 
   test-full:
@@ -213,9 +219,10 @@ jobs:
         with:
           detached: true
       - uses: dsherret/rust-toolchain-file@v1
-      # - uses: Swatinem/rust-cache@v2
-      #  with:
-      #    shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
       # - name: Cache deno dir
       #  uses: actions/cache@v4
       #  with:
