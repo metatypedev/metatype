@@ -195,7 +195,13 @@ export class PrismaRuntime extends Runtime {
     iterParentStages(stages, (stage, children) => {
       const mat = stage.props.materializer;
       if (mat == null) {
-        throw new Error("");
+        this.logger.error(
+          "Materializer not found during Query Planning for Operation:",
+          stage.props.operationName,
+        );
+        throw new Error("Materializer not found during Query Planning.", {
+          cause: `${stage.props.operationName} - ${stage.props.operationType}`,
+        });
       }
       const matData = mat.data as unknown as PrismaOperationMatData;
 
