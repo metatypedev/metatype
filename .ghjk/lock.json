@@ -1,6 +1,6 @@
 {
   "version": "0",
-  "platform": "aarch64-darwin",
+  "platform": "x86_64-linux",
   "moduleEntries": {
     "ports": {
       "version": "0",

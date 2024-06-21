@@ -37,7 +37,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         $.logger.info("virtual env created");
       }
       console.log($.env);
-      await $`bash -s`.stdinText(
+      await $`bash -sx`.stdinText(
         [
           `. .venv/bin/activate`,
           `poetry install --no-root`,

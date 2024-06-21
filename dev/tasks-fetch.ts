@@ -8,7 +8,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     inherit: "_ecma",
     desc: "Cache remote deno modules.",
     fn: ($) =>
-      $`bash -s`
+      $`bash -sx`
         .stdinText(
           "deno cache --import-map typegate/import_map.json " +
             [

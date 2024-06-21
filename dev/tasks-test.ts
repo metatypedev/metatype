@@ -36,7 +36,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
   "test-lsp": {
     inherit: "_ecma",
     fn: ($) =>
-      $`bash -s`.stdinText("node --test --import=tsx tests/*.test.ts")
+      $`bash -sx`.stdinText("node --test --import=tsx tests/*.test.ts")
         .cwd("meta-lsp/ts-language-server"),
   },
 };
