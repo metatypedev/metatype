@@ -220,7 +220,7 @@ export async function testE2e(
         // https://github.com/rust-lang/cargo/issues/10752
         continue;
       }
-      console.log(line);
+      $.log(line);
     }
 
     const { duration } = await run.promise;
