@@ -8,13 +8,38 @@ import { join } from "std/path/mod.ts";
 import { assert } from "std/assert/mod.ts";
 import { shell } from "test-utils/shell.ts";
 
+type LangRuntimeConfig<V> = {
+  python: V;
+  deno: V;
+  node: V;
+};
+
+const envs = {
+  python: {},
+  deno: { MCLI_DENO_IMPORT_MAP: "../../typegate/import_map.json" },
+  node: {},
+} as LangRuntimeConfig<Record<string, string>>;
+
 const install = {
   python: async (_dir: string) => {},
   deno: async (_dir: string) => {},
   node: async (dir: string) => {
-    await shell(["pnpm", "install"], { currentDir: dir });
+    const opt = { currentDir: dir };
+    // Remove original package
+    await shell("pnpm remove @typegraph/sdk".split(/\s+/), opt);
+
+    // Install tsx, etc.
+    await shell("pnpm install".split(/\s+/), opt);
+
+    // use local node
+    const localNodeSdk = join(dir, "../../typegraph/node");
+    if (!(await exists(localNodeSdk))) {
+      throw new Error(`Node sdk not found at ${localNodeSdk}`);
+    }
+    // await shell(`deno run -A typegraph/deno/dev/deno2node.ts`.split(/\s+/));
+    await shell(`pnpm install ${localNodeSdk}`.split(/\s+/), opt);
   },
-} as const;
+} as LangRuntimeConfig<(dir: string) => Promise<void>>;
 
 for (const template of ["python", "deno", "node"] as const) {
   Meta.test(
@@ -43,7 +68,10 @@ for (const template of ["python", "deno", "node"] as const) {
       await install[template](dir);
       // await modifiers[template](dir);
       const out = await Meta.cli(
-        { currentDir: dir },
+        {
+          currentDir: dir,
+          env: envs[template],
+        },
         "deploy",
         "--target",
         "dev",

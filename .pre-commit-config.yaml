@@ -26,7 +26,7 @@ repos:
         pass_filenames: false
         types:
           - ts
-        files: ^(typegate|dev|typegraph/node)/
+        files: ^(typegate|dev|typegraph/deno)/
       - id: deno-lint
         name: Deno lint
         language: system
@@ -35,16 +35,6 @@ repos:
         types:
           - ts
         files: ^(typegate|dev)/
-      - id: es-lint
-        name: Eslint typegraph
-        language: system
-        entry: bash -c 'cd typegraph/node/sdk && [ -f node_modules/.bin/eslint ] && pnpm eslint'
-        pass_filenames: false
-        types_or:
-          - ts
-          - tsx
-        files: ^typegraph/node/sdk
-        exclude: node_modules
       - id: es-lint
         name: Eslint website
         language: system
