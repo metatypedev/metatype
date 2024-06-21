@@ -30,10 +30,12 @@ interface GetResolverResult {
   (polIdx: PolicyIdx, effect: EffectType): Promise<boolean | null>;
 }
 
-type CheckResult = { authorized: true } | {
-  authorized: false;
-  policyIdx: PolicyIdx | null;
-};
+type CheckResult =
+  | { authorized: true }
+  | {
+    authorized: false;
+    policyIdx: PolicyIdx | null;
+  };
 
 export type OperationPoliciesConfig = {
   timer_policy_eval_retries: number;
@@ -105,17 +107,13 @@ export class OperationPolicies {
     }
   }
 
-  public async authorize(
-    context: Context,
-    info: Info,
-    verbose: boolean,
-  ) {
+  public async authorize(context: Context, info: Info, verbose: boolean) {
     const logger = getLogger("policies");
     const authorizedTypes: Record<EffectType, Set<TypeIdx>> = {
-      "read": new Set(),
-      "create": new Set(),
-      "update": new Set(),
-      "delete": new Set(),
+      read: new Set(),
+      create: new Set(),
+      update: new Set(),
+      delete: new Set(),
     };
 
     const cache = new Map<PolicyIdx, boolean | null>();
@@ -142,7 +140,7 @@ export class OperationPolicies {
         }'; effect=${effect}`,
       );
 
-      const res = await resolver!({
+      const res = (await resolver!({
         _: {
           parent: {},
           context,
@@ -150,7 +148,7 @@ export class OperationPolicies {
           variables: {},
           effect: effect === "read" ? null : effect,
         },
-      }) as boolean | null;
+      })) as boolean | null;
       cache.set(idx, res);
       verbose && logger.info(`> authorize: ${res}`);
       return res;
@@ -289,14 +287,13 @@ export class OperationPoliciesBuilder {
   subtrees: Map<StageId, SubtreeData> = new Map();
   current: SubtreeData | null = null;
 
-  constructor(private tg: TypeGraph, private config: OperationPoliciesConfig) {}
+  constructor(
+    private tg: TypeGraph,
+    private config: OperationPoliciesConfig,
+  ) {}
 
   // set current function stage
-  push(
-    stageId: StageId,
-    funcTypeIdx: TypeIdx,
-    argPolicies: ArgPolicies,
-  ) {
+  push(stageId: StageId, funcTypeIdx: TypeIdx, argPolicies: ArgPolicies) {
     const subtreeData = {
       stageId,
       funcTypeIdx,
