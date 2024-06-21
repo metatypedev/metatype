@@ -22,7 +22,22 @@ const envs = {
 
 const install = {
   python: async (_dir: string) => {},
-  deno: async (_dir: string) => {},
+  deno: async (dir: string) => {
+    for await (
+      const { path } of expandGlob("./**/*.ts", {
+        root: dir,
+        includeDirs: false,
+        globstar: true,
+      })
+    ) {
+      const content = await Deno.readTextFile(path);
+      const rewrite = content.replace(
+        /"(npm:@typegraph\/sdk@[0-9]+\.[0-9]+\.[0-9]+)(-[0-9]+)?(.+)";/g,
+        (_m, _pref, _, mod) => `"@typegraph/sdk${mod}.ts"`,
+      );
+      await Deno.writeTextFile(path, rewrite);
+    }
+  },
   node: async (dir: string) => {
     const opt = { currentDir: dir };
     // Remove original package
