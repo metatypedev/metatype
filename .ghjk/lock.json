@@ -784,6 +784,30 @@
           "crateName": "cargo-udeps",
           "profile": "dev",
           "locked": true
+        },
+        "4c401f528bf0e02299e12f0033d8a2fbfc9a4681229f6ab8ac35d36294167fd6": {
+          "version": "3.28.0",
+          "depConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.2",
+              "depConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "depConfigs": {},
+                  "portRef": "tar_aa@0.1.0"
+                },
+                "zstd_aa": {
+                  "version": "v1.5.5,",
+                  "depConfigs": {},
+                  "portRef": "zstd_aa@0.1.0"
+                }
+              },
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240224"
+            }
+          },
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "cmake"
         }
       }
     },
