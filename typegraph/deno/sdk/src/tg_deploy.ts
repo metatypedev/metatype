@@ -100,7 +100,7 @@ export async function tgDeploy(
   }
 
   // deploy the typegraph
-  const response = await execRequest(
+  const response = (await execRequest(
     new URL("/typegate", typegate.url),
     {
       method: "POST",
@@ -111,7 +111,7 @@ export async function tgDeploy(
       }),
     },
     `tgDeploy failed to deploy typegraph ${typegraph.name}`,
-  );
+  )) as Record<string, any>;
 
   if (response.errors) {
     for (const err of response.errors) {
@@ -138,7 +138,7 @@ export async function tgRemove(
     headers.append("Authorization", auth.asHeaderValue());
   }
 
-  const response = await execRequest(
+  const response = (await execRequest(
     new URL("/typegate", url),
     {
       method: "POST",
@@ -146,7 +146,7 @@ export async function tgRemove(
       body: wit_utils.gqlRemoveQuery([typegraph.name]),
     },
     `tgRemove failed to remove typegraph ${typegraph.name}`,
-  );
+  )) as Record<string, any>;
 
   return { typegate: response };
 }

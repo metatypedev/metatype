@@ -29,7 +29,7 @@ export class ArtifactUploader {
     artifactMetas: UploadArtifactMeta[],
   ): Promise<Array<string | null>> {
     const artifactsJson = JSON.stringify(artifactMetas);
-    const uploadUrls: Array<string | null> = await execRequest(
+    const uploadUrls = (await execRequest(
       new URL(`${this.tgName}/artifacts/prepare-upload`, this.baseUrl),
       {
         method: "POST",
@@ -37,7 +37,7 @@ export class ArtifactUploader {
         body: artifactsJson,
       },
       `tgDeploy failed to get upload urls`,
-    );
+    )) as Array<string | null>;
 
     // if (!response.ok) {
     //   log.debug("response", response);

@@ -47,7 +47,7 @@ await dnt.build({
   },
   test: false,
   scriptModule: false, // only generate ESM
-  typeCheck: false,
+  typeCheck: "single",
   packageManager: "pnpm",
   package: {
     name: "@typegraph/sdk",
