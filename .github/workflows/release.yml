@@ -16,7 +16,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "ad7c8ba"
+  GHJK_VERSION: "0.2.0"
   GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
 
@@ -236,6 +236,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:latest
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
       - run: |
           mkdir -p ./digests
           digest="${{ steps.build.outputs.digest }}"

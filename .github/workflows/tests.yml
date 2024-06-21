@@ -1,4 +1,11 @@
 on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
   push:
     branches:
       - main
@@ -9,7 +16,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "ad7c8ba"
+  GHJK_VERSION: "0.2.0"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir
@@ -21,6 +28,9 @@ env:
   SCCACHE_CACHE_SIZE: "30G"
   AWS_ACCESS_KEY_ID: ${{ secrets.SCCACHE_AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.SCCACHE_AWS_SECRET_ACCESS_KEY }}
+  # used by ghjk
+  # TODO: add logic to setup-ghjk
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   changes:
@@ -192,7 +202,9 @@ jobs:
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
           # check target runs extra validation steps in the Dockerfile
           target: check
-          build-args: "CARGO_PROFILE=dev"
+          build-args: |
+            CARGO_PROFILE=dev
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
       - name: Build without cache (external)
         uses: docker/build-push-action@v5
         if: "! steps.check.outputs.has-permission"
@@ -201,7 +213,9 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
-          build-args: "CARGO_PROFILE=dev"
+          build-args: |
+            CARGO_PROFILE=dev
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           target: check
 
   test-full:
@@ -215,6 +229,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup tmate session
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         uses: mxschmitt/action-tmate@v3
         with:
           detached: true
