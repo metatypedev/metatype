@@ -14,9 +14,9 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            runner: ubuntu-latest
+            runner: custom-ubuntu-large
           - platform: linux/arm64
-            runner: custom-macos
+            runner: custom-arm
 
     steps:
       - uses: actions/checkout@v4
