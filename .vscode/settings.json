@@ -8,6 +8,7 @@
     "typegate",
     "dev",
     "examples/templates/deno",
+    "examples/typegraphs",
     "typegraph/deno/dev",
     "typegraph/deno/sdk",
     "ghjk.ts",

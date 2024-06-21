@@ -1,6 +1,6 @@
 {
   "version": "0",
-  "platform": "aarch64-darwin",
+  "platform": "x86_64-linux",
   "moduleEntries": {
     "ports": {
       "version": "0",
@@ -833,6 +833,7 @@
             "69cc04434a8b51a9d34210383f1a931646772e3b",
             "8e5e02544073c4733d8f2156c404a0dd524cdaaf",
             "54eba38cb79f88fca14cd3185e5bec0c3dd02682",
+            "e05f859f4a734a85fd3439f9b0fc0de1e733bdac",
             "38285a3b335e394ccce5ac5d59e15f660bfa4cc9",
             "7bbf00da8e265c56c2bff5bb7d89ba806e2590d2",
             "14fd3752a984c5d82e1451f7388c73a21fcce705",
@@ -1355,6 +1356,25 @@
           },
           "crateName": "cross",
           "locked": true
+        },
+        "e05f859f4a734a85fd3439f9b0fc0de1e733bdac": {
+          "version": "v2.4.0",
+          "port": {
+            "ty": "denoWorker@v1",
+            "name": "mold_ghrel",
+            "platforms": [
+              "aarch64-linux",
+              "x86_64-linux"
+            ],
+            "version": "0.1.0",
+            "deps": [
+              {
+                "name": "tar_aa"
+              }
+            ],
+            "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/2725af8/ports/mold.ts"
+          },
+          "replaceLd": false
         },
         "38285a3b335e394ccce5ac5d59e15f660bfa4cc9": {
           "version": "3.8.18",

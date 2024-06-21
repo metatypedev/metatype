@@ -73,6 +73,7 @@ const prepare = {
         (
           await t.shell("bash build.sh".split(" "), {
             currentDir: "examples/typegraphs/metagen/rs",
+            env: { MCLI_DENO_IMPORT_MAP: "../typegate/import_map.json" }, // !
           })
         ).code,
         0,
@@ -128,7 +129,7 @@ for (const name of list) {
         const { stdout } = await Meta.cli(
           {
             currentDir: "examples",
-            env: { MCLI_DENO_IMPORT_MAP: "../typegate/import_map.json" },
+            env: { MCLI_DENO_IMPORT_MAP: "../typegate/import_map.json" }, // !
           },
           "serialize",
           "-f",
@@ -151,9 +152,14 @@ async function toComparable(t: MetaTest, tg: TypeGraphDS) {
   await Promise.all(
     tg.materializers.map(async (mat) => {
       if (mat.name === "function") {
-        const res = await t.shell("deno fmt -".split(" "), {
-          stdin: mat.data.script as string,
-        });
+        // FIXME: deno fmt sometimes no-ops on code formatted by prettier
+        // having very opinionated configs to enforce the formatting looks sufficient for now
+        const res = await t.shell(
+          "deno fmt --no-semicolons --line-width 10 -".split(" "),
+          {
+            stdin: mat.data.script as string,
+          },
+        );
         mat.data.script = res.stdout;
       }
     }),

@@ -37,15 +37,14 @@ await typegraph(
             context: t.string(),
           }),
           {
+            // modeling arbitrary associative arrays in
+            // graphql is difficult so we return a listified format.
+            // Follow the link for alternative solutions
+            // https://github.com/graphql/graphql-spec/issues/101#issuecomment-170170967
             code: (_: any, ctx: any) => ({
               ...ctx,
               parent: JSON.stringify(ctx.parent),
               context: JSON.stringify(ctx.context),
-
-              // modeling arbitrary associative arrays in
-              // graphql is difficult so we return a listified format.
-              // Follow the link for alternative solutions
-              // https://github.com/graphql/graphql-spec/issues/101#issuecomment-170170967
               headers: Object.entries(ctx.headers),
               secrets: Object.entries(ctx.secrets),
             }),
