@@ -1,4 +1,3 @@
-
 import TGExample from "@site/src/components/TGExample";
 import SDKTabs from "@site/src/components/SDKTabs";
 import TabItem from "@theme/TabItem";
@@ -6,37 +5,37 @@ import TabItem from "@theme/TabItem";
 # Random
 
 ## Random runtime
-The Random runtime allows you to produce *structured* datas randomly.
+
+The Random runtime allows you to produce _structured_ datas randomly.
 
 One use case is to use this runtime as way of testing, for example you can rapidly draft a small backend that produces structured data for your frontend application.
 
 The `seed` parameter ensures repeatability if set.
 
 <TGExample
-    python={require("../../../../../examples/typegraphs/roadmap-random.py")}
-    typescript={require("!!code-loader!../../../../../examples/typegraphs/roadmap-random.ts")}
-    typegraph="roadmap-random"
-    query={require("./random.graphql")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/roadmap-random.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/roadmap-random.ts")}
+  typegraph="roadmap-random"
+  query={require("./random.graphql")}
 />
 
-
-
 Another use case is to inject random values to a function input
+
 <TGExample
-    typegraph="random-field"
-    python={require("!!code-loader!../../../../../examples/typegraphs/random-field.py")}
-    typescript={require("!!code-loader!../../../../../examples/typegraphs/random-field.ts")}
-    query={require("./random-field.graphql")}
+  typegraph="random-field"
+  python={require("!!code-loader!../../../../../examples/typegraphs/random-field.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/random-field.ts")}
+  query={require("./random-field.graphql")}
 />
 
 ## Generators
-Here is a list of some standard generators that you can attach to your type, if *unspecifed*, it will default on generating any values that the associated type can hold.
 
-|            Type            |                                               Generator config                                               |
-| -------------------------- | :----------------------------------------------------------------------------------------------------------: |
-| `t.string()`               | `name`, `address`, `postcode`, `country`, `email`, `uuid`, `uri`, `hostname`, `date`, `time`, `phone`, `ean` |
-| `t.integer()`, `t.float()` |                                                    `age`                                                     |
+Here is a list of some standard generators that you can attach to your type, if _unspecifed_, it will default on generating any values that the associated type can hold.
 
+| Type | Generator config |
+| --- | :-: |
+| `t.string()` | `name`, `address`, `postcode`, `country`, `email`, `uuid`, `uri`, `hostname`, `date`, `time`, `phone`, `ean` |
+| `t.integer()`, `t.float()` | `age` |
 
 <SDKTabs>
     <TabItem value="python">
@@ -80,5 +79,3 @@ const user = t.struct(
 ```
     </TabItem>
 </SDKTabs>
-
-

@@ -271,7 +271,7 @@ function TryIt(): JSX.Element {
       </div>
       <div className="w-full">
         <TGExample
-          python={require("../../../examples/typegraphs/index.py")}
+          python={require("!!code-loader!../../../examples/typegraphs/index.py")}
           typescript={require("!!code-loader!../../../examples/typegraphs/index.ts")}
           typegraph="homepage"
           variables={{ email: "fill-me", message: "Great tool!" }}

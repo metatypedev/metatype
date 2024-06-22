@@ -69,15 +69,15 @@ repos:
         types:
           - ts
         files: ^meta-lsp/
-      # - id: cargo-udeps
-      #   name: Check for unused cargo dependencies
-      #   language: system
-      #   entry: bash -c '[ -z "${CI+x}" ] && cargo-udeps udeps'
-      #   pass_filenames: false
-      #   types:
-      #     - toml
+      #- id: cargo-udeps
+      #  name: Check for unused cargo dependencies
+      #  language: system
+      #  entry: bash -c '[ -z "${CI+x}" ] && cargo-udeps sudep'
+      #  pass_filenames: false
+      #  types:
+      #    - toml
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
       - id: check-added-large-files
         args:
@@ -99,7 +99,7 @@ repos:
           |website/docs/reference/
           |libs/pyrt_wit_wire/pyrt)
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.4
+    rev: v1.5.5
     hooks:
       - id: insert-license
         name: "License MPL-2.0 python"
@@ -166,17 +166,17 @@ repos:
         files: ^website/
         exclude: website/typegraphs
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.27.2
+    rev: 0.28.5
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.1.7"
+    rev: "v0.4.10"
     hooks:
       - id: ruff
       - id: ruff-format
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v3.13.0
+    rev: v3.27.0
     hooks:
       - id: commitizen
         stages:

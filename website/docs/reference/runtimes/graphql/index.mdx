@@ -12,7 +12,7 @@ Update `typegraph.py` with the highlighted lines below:
 
 <TGExample
   typegraph="graphql"
-  python={require("../../../../../examples/typegraphs/graphql.py")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/graphql.py")}
   typescript={require("!!code-loader!../../../../../examples/typegraphs/graphql.ts")}
   query={require("./graphql.graphql")}
 />
@@ -30,19 +30,18 @@ Other type enforcement rules also exist:
 - The Entity which you fetch from the external API should have a matching _name_ to that specified in the external API. Taking the above example, you need to specify the name(_User_) of the type the external API uses in your entity definition. As you can see, the name `User` is included in the user type declared in the typegraph. This is crucial as the query engine uses this information when making the external GraphQL call.
 
   <SDKTabs>
-    <TabItem value="python">
-      ```python
-      user = t.struct(
-          {"id": t.string(), "name": t.string()}, name="User"
-        )
-      ```
-    </TabItem>
-    <TabItem  value="typescript">
-      ```typescript 
-      const user = t.struct({ "id": t.string(), "name": t.string() }, {name: "User"});
-      ```
-    </TabItem>
-  </SDKTabs>
-
+  <TabItem value="python">
+    ```python
+    user = t.struct(
+        {"id": t.string(), "name": t.string()}, name="User"
+      )
+    ```
+  </TabItem>
+  <TabItem  value="typescript">
+    ```typescript 
+    const user = t.struct({ "id": t.string(), "name": t.string() }, {name: "User"});
+    ```
+  </TabItem>
+</SDKTabs>
 
 You should now start to see the power provided by Metatype and might wonder how to integrate it step by step with your existing systems. Writing all those types by hand is tedious and error-prone. The next section will show you how to generate types from existing sources.

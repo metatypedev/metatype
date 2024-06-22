@@ -32,7 +32,7 @@ And can be imported/customized in your main typegraph file:
 <!--
 <TGExample
   typegraph="fcm"
-  python={require("./fcm.py")}
+  python={require("!!code-loader!./fcm.py")}
   query={require("./fcm.graphql")}
 />
 -->
