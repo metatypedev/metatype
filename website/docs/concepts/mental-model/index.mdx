@@ -5,7 +5,6 @@ sidebar_position: 2
 import Intro from "../../../shared/metatype-intro.mdx";
 import CodeBlock from "@theme/CodeBlock";
 import MiniQL from "@site/src/components/MiniQL";
-import gql from "graphql-tag";
 
 # Mental model
 
@@ -27,13 +26,13 @@ Metatype's vision is to enable everyone to build modular API with as little effo
 
 When developing a feature, the classical approach is to define what data will be at play, how to transform them, where the execution shall take place and who should be authorized. Instead, Metatype define an abstraction for each of those steps and put the emphasis on composing pre-defined APIs or defining re-usable ones when there is no existing solution.
 
-|  | Classical model | Metatype's model |
-| --- | --- | --- |
-| What (data) | fixed response defined by the logic | API clients selects what they need from [types](/docs/concepts/mental-model#types) |
-| How (transformations) | ad-hoc code logic | composed data with interchangeable [functions](/docs/concepts/mental-model#functions) |
-| Where (execution) | 1 code base + 1 database | orchestrate the request across multiple [runtimes](/docs/concepts/mental-model#runtimes) |
-| Who (authentication) | hard-coded rules or system | request context based and controlled by [policies](/docs/concepts/mental-model#policies) |
-| When (event) | request arrival | based on [triggers](/docs/concepts/mental-model#triggers) |
+|                       | Classical model                     | Metatype's model                                                                         | x   |
+| --------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------- | --- |
+| What (data)           | fixed response defined by the logic | API clients selects what they need from [types](/docs/concepts/mental-model#types)       |
+| How (transformations) | ad-hoc code logic                   | composed data with interchangeable [functions](/docs/concepts/mental-model#functions)    |
+| Where (execution)     | 1 code base + 1 database            | orchestrate the request across multiple [runtimes](/docs/concepts/mental-model#runtimes) |
+| Who (authentication)  | hard-coded rules or system          | request context based and controlled by [policies](/docs/concepts/mental-model#policies) |
+| When (event)          | request arrival                     | based on [triggers](/docs/concepts/mental-model#triggers)                                |
 
 This computing model brings numerous advantages:
 
@@ -65,7 +64,10 @@ This computing model brings numerous advantages:
 Types can also describe functions and **functions** define how the input type gets transformed into the output type. The input and output types are similar to a function signature, the runtime + configuration associated to it, to its implementation.
 
 <CodeBlock language="python">
-  {require("../../../../examples/typegraphs/functions.py").content}
+  {
+    require("!!code-loader!../../../../examples/typegraphs/functions.py")
+      .content
+  }
 </CodeBlock>
 
 ### Runtimes
@@ -75,7 +77,7 @@ Every type and function have a runtime associated to it. This runtime describes 
 In practice, function types are often not explicitly used and the usage of runtime sugar syntax is preferred.
 
 <CodeBlock language="python">
-  {require("../../../../examples/typegraphs/runtimes.py").content}
+  {require("!!code-loader!../../../../examples/typegraphs/runtimes.py").content}
 </CodeBlock>
 
 **Analogy in SQL**: a runtime is similar to a database instance running some requests.
@@ -91,7 +93,10 @@ The policy decision can be:
 - `null`: the access in inherited from the parent types
 
 <CodeBlock language="python">
-  {require("../../../../examples/typegraphs/policies-example.py").content}
+  {
+    require("!!code-loader!../../../../examples/typegraphs/policies-example.py")
+      .content
+  }
 </CodeBlock>
 
 **Analogy in SQL**: policies are similar to Row Security Policies (RSP) or Row Level Security (RLS) concepts.

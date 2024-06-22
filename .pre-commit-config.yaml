@@ -54,7 +54,7 @@ repos:
       - id: es-lint
         name: Eslint website
         language: system
-        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint'
+        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint && pnpm prettier'
         pass_filenames: false
         types_or:
           - ts
@@ -64,7 +64,7 @@ repos:
       - id: devtools-lint
         name: ESLint meta-lsp
         language: system
-        entry: bash -c 'cd meta-lsp && pnpm lint --fix'
+        entry: bash -c 'cd meta-lsp && pnpm lint'
         pass_filenames: false
         types:
           - ts

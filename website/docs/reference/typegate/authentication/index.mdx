@@ -35,7 +35,7 @@ The typegate supports the most frequently used algorithms for signing the JWT an
 const keys = await crypto.subtle.generateKey(
   { name: "ECDSA", namedCurve: "P-384" },
   true,
-  ["sign", "verify"]
+  ["sign", "verify"],
 );
 const publicKey = await crypto.subtle.exportKey("jwk", keys.publicKey);
 // save keys.privateKey for later use
@@ -71,11 +71,11 @@ OAuth2 allows a user to grant limited access to their resources on one site, to 
 
 Most of the time, the OAuth2 is managed by your identity provider and relies on the JWT authentication as explained above. However the typegate provides a simple way to handle the OAuth2 flow without IdP or when the system should be lightweight.
 
-| Components | Values |
-| --- | --- |
-| Secrets | `[authentication]_CLIENT_ID=client_id`, `[authentication]_CLIENT_SECRET=client_secret` |
-| Header | `Authorization: Bearer token` |
-| Context | `{ content_from_your_idp }` |
+| Components | Values                                                                                 |
+| ---------- | -------------------------------------------------------------------------------------- |
+| Secrets    | `[authentication]_CLIENT_ID=client_id`, `[authentication]_CLIENT_SECRET=client_secret` |
+| Header     | `Authorization: Bearer token`                                                          |
+| Context    | `{ content_from_your_idp }`                                                            |
 
 ### Take flow
 
@@ -88,7 +88,7 @@ const take = await fetch(
   "https://[typegate].metatype.cloud/[typegraph]/auth/take",
   {
     credentials: "include",
-  }
+  },
 );
 const { token } = await take.json();
 ```

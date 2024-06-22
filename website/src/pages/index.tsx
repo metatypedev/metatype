@@ -458,7 +458,7 @@ const order: Record<Profile, JSX.Element> = {
 export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   const [profile, setProfile] = useState<Profile>(
-    Object.keys(profiles)[0] as Profile
+    Object.keys(profiles)[0] as Profile,
   );
 
   return (

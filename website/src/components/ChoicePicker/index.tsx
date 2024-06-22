@@ -4,7 +4,7 @@
 import React, { PropsWithChildren } from "react";
 
 type NakedPickerP<T extends string> = PropsWithChildren<{
-  choices: Record<T, string>,
+  choices: Record<T, string>;
   choice: T;
   renderChoice?: (selectedChild: React.ReactNode) => React.ReactNode;
 }>;
@@ -41,34 +41,38 @@ export function ChoicePicker<T extends string>({
   children,
 }: ChoicePickerP<T>) {
   return (
-    <NakedPicker choices={choices} choice={choice} renderChoice={(selectedChild) => (
-      <>
-        <ul className={`pl-0 m-0 list-none text-sm ${className ?? ""}`}>
-          {Object.entries(choices).map(([value, key]) => (
-            <li
-              key={value}
-              className="inline-block rounded-md overflow-clip my-2 mr-2"
-            >
-              <div>
-                <label className="cursor-pointer">
-                  <input
-                    type="radio"
-                    value={value}
-                    checked={value === choice}
-                    onChange={() => onChange(value as T)}
-                    className="hidden peer"
-                  />
-                  <div className="px-3 py-1 bg-slate-100 peer-checked:bg-metared peer-checked:text-white">
-                    {key}
-                  </div>
-                </label>
-              </div>
-            </li>
-          ))}
-        </ul>
-        {selectedChild}
-      </>
-    )}>
+    <NakedPicker
+      choices={choices}
+      choice={choice}
+      renderChoice={(selectedChild) => (
+        <>
+          <ul className={`pl-0 m-0 list-none text-sm ${className ?? ""}`}>
+            {Object.entries(choices).map(([value, key]) => (
+              <li
+                key={value}
+                className="inline-block rounded-md overflow-clip my-2 mr-2"
+              >
+                <div>
+                  <label className="cursor-pointer">
+                    <input
+                      type="radio"
+                      value={value}
+                      checked={value === choice}
+                      onChange={() => onChange(value as T)}
+                      className="hidden peer"
+                    />
+                    <div className="px-3 py-1 bg-slate-100 peer-checked:bg-metared peer-checked:text-white">
+                      {key}
+                    </div>
+                  </label>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {selectedChild}
+        </>
+      )}
+    >
       {children}
     </NakedPicker>
   );

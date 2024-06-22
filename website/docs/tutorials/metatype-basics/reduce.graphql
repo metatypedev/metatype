@@ -1,5 +1,5 @@
 mutation CBucket {
-  create_bucket(data: {name:"Backlog"}){
+  create_bucket(data: { name: "Backlog" }) {
     id
     name
   }
@@ -8,10 +8,8 @@ mutation CBucket {
 mutation CIdea {
   create_idea(
     data: {
-      bucket: {
-        connect: {id: 1}
-      }, 
-      authorEmail: "deng@xi.ng", 
+      bucket: { connect: { id: 1 } }
+      authorEmail: "deng@xi.ng"
       name: "Add support for WASM Gc"
     }
   ) {

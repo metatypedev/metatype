@@ -38,7 +38,11 @@ The following runtimes can be used to run custom functions:
 
 ## Accessing function context
 
-:::warning Beta The following feature is currently only implemented for the `DenoRuntime`. :::
+:::warning Beta
+
+The following feature is currently only implemented for the `DenoRuntime`.
+
+:::
 
 On some runtimes, custom functions are passed to the context object along with the function inputs. This object provides access to all kinds of information about the context in which the function is running. The following example illustrates availaible fields:
 
@@ -53,7 +57,11 @@ Note, the typescript version of the sample uses a closure instead of a string sn
 
 ## Accessing the typegraph
 
-:::warning Beta The following feature is currently only implemented for the `DenoRuntime`. :::
+:::warning Beta
+
+The following feature is currently only implemented for the `DenoRuntime`.
+
+:::
 
 To do anything meaningful with custom functions, you'll want to access the rest of functionality implemented on your typegraph. The primary way of doing this is by sending GraphqQl queries from within your function. On the `DenoRuntime`, to make this easier, there's a `gql` object passed to all functions. The following exapmle illustrates how it functions:
 
@@ -72,7 +80,11 @@ And `scripts/createVote.ts` looks like:
 />
 ## Generating types
 
-:::warning Beta The following feature is not yet stable. :::
+:::warning Beta
+
+The following feature is not yet stable.
+
+:::
 
 Custom functions can be made smoother to develop or more robust to changes by using the [metagen](/docs/reference/metagen) to generate code for them. By using the generated types along with static analysis tools in your workflow, this allows you to avoid many cases of drift between your custom functions and your typegraph. Not to mention improving the development experience of writing custom functions. The code generated for Python and Rust targets also includes the serialization boilerplate and utilities that you'd need for those to even get started in those languages.
 

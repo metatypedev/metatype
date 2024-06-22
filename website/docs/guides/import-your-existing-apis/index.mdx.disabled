@@ -18,13 +18,13 @@ Importers are quite recent and likely to evolve as feedback is received. Your vo
 Importers are function call with a boolean re-writing the source code file where they live. As they can generate quite long type definition, the best practice is to separate them into a dedicated file that can be imported into your main typegraph. Let's create `google.py` and run `python google.py` to generate the types.
 
 <!--
-<CodeBlock language="python">{require("./importer.py").content}</CodeBlock>
+<CodeBlock language="python">{require("!!code-loader!./importer.py")}</CodeBlock>
 -->
 
 This should generate code similar to this:
 
 <!--
-<CodeBlock language="python">{require("./google.py").content}</CodeBlock>
+<CodeBlock language="python">{require("!!code-loader!./google.py")}</CodeBlock>
 -->
 
 And can be imported/customized in your main typegraph file:
@@ -63,7 +63,7 @@ The package currently includes:
 - Github
 
 <!--
-<CodeBlock language="python">{require("./typegraph_std.py").content}</CodeBlock>
+<CodeBlock language="python">{require("!!code-loader!./typegraph_std.py")}</CodeBlock>
 -->
 
 As you can see, it works pretty much the same way as importers.

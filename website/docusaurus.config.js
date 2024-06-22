@@ -103,16 +103,16 @@ const config = {
         },
         items: [
           {
-            to: "/docs/concepts/features-overview",
-            position: "left",
-            label: "Features",
-          },
-          {
             type: "docSidebar",
             docsPluginId: "use-cases",
             sidebarId: "useCases",
             position: "left",
             label: "Use cases",
+          },
+          {
+            to: "/docs/concepts/features-overview",
+            position: "left",
+            label: "Features",
           },
           {
             type: "docSidebar",

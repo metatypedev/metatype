@@ -22,7 +22,11 @@ The exact supported version can be found on their [documentation](https://www.pr
 
 Getting random data is great, but having some input variables and meaningful output is even better. The random runtime is usually used to quickly draft and iterate on an API prototype. Once the interface feels efficient and well-designed, it's time to move another runtime backed by some storage.
 
-:::tip Please share your feedback You can raise issues, suggest improvements, ask questions and share your feedback using comments below ↓, using private messages with the "Help, Feedback & Roadmap" button on the right → or directly using the [GitHub discussions](https://github.com/metatypedev/metatype/discussions). :::
+:::tip Please share your feedback
+
+You can raise issues, suggest improvements, ask questions and share your feedback using comments below ↓, using private messages with the "Help, Feedback & Roadmap" button on the right → or directly using the [GitHub discussions](https://github.com/metatypedev/metatype/discussions).
+
+:::
 
 ## Prisma runtime
 
@@ -113,11 +117,11 @@ Any `t.struct` that is passed to a generator of a `PrismaRuntime` defines a mode
 
 Here is the list of all the available configs for model fields:
 
-| Config | Effect |
-| --- | --- |
-| `id` | defines the field ID for the model (a.k.a. primary key) |
-| `auto` | the value of this field can be auto generated; supported for `t.integer()` (auto-increment) and `t.uuid()` |
-| `unique` | make this field unique among all instances of the model |
+| Config   | Effect                                                                                                     |
+| -------- | ---------------------------------------------------------------------------------------------------------- |
+| `id`     | defines the field ID for the model (a.k.a. primary key)                                                    |
+| `auto`   | the value of this field can be auto generated; supported for `t.integer()` (auto-increment) and `t.uuid()` |
+| `unique` | make this field unique among all instances of the model                                                    |
 
 ## Relationships
 
@@ -151,8 +155,8 @@ The `PrismaRuntime` supports two kinds of relationship between models.
 
 A one-to-one relationship must be in one of these two variants.
 
-| Cardinality | Field type in Model1     | Field type in Model2     |
-| ----------- | ------------------------ | ------------------------ |
+| Cardinality  | Field type in Model1     | Field type in Model2     |
+| ------------ | ------------------------ | ------------------------ |
 | 1..1 ↔ 0..1 | `g("Model2")`            | `g("Model1").optional()` |
 | 0..1 ↔ 0..1 | `g("Model2").optional()` | `g("Model1").optional()` |
 
@@ -165,8 +169,8 @@ For the optional (0..1 ↔ 0..1) one-to-one relationship, you need to indicate o
 
 A one-to-many relationship must be in one of these two variants.
 
-| Cardinality | Field type in Model1     | Field type in Model2  |
-| ----------- | ------------------------ | --------------------- |
+| Cardinality  | Field type in Model1     | Field type in Model2  |
+| ------------ | ------------------------ | --------------------- |
 | 1..1 ↔ 0..n | `g("Model2")`            | `t.list(g("Model1"))` |
 | 0..1 ↔ 0..n | `g("Model2").optional()` | `t.list(g("Model1"))` |
 

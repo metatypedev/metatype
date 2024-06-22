@@ -8,11 +8,15 @@ const projectDir = path.resolve(__dirname, "../..");
 const commentsPrefix = {
   py: "#",
   ts: "//",
+  rs: "//",
+  toml: "#",
 };
 
 const postTransformations = {
   py: (source) => source.replaceAll(/ {4}/g, "  "),
   ts: (source) => source,
+  rs: (source) => source,
+  toml: (source) => source,
 };
 
 module.exports = async function (source) {

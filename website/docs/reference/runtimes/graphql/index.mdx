@@ -29,18 +29,22 @@ Other type enforcement rules also exist:
 - `set(x)` to fill the input type with content `x`
 - The Entity which you fetch from the external API should have a matching _name_ to that specified in the external API. Taking the above example, you need to specify the name(_User_) of the type the external API uses in your entity definition. As you can see, the name `User` is included in the user type declared in the typegraph. This is crucial as the query engine uses this information when making the external GraphQL call.
 
-  <SDKTabs>
+<SDKTabs>
   <TabItem value="python">
+
     ```python
     user = t.struct(
         {"id": t.string(), "name": t.string()}, name="User"
       )
     ```
+
   </TabItem>
   <TabItem  value="typescript">
-    ```typescript 
+
+    ```typescript
     const user = t.struct({ "id": t.string(), "name": t.string() }, {name: "User"});
     ```
+
   </TabItem>
 </SDKTabs>
 
