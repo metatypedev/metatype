@@ -72,7 +72,7 @@ repos:
       #- id: cargo-udeps
       #  name: Check for unused cargo dependencies
       #  language: system
-      #  entry: bash -c '[ -z "${CI+x}" ] && cargo-udeps sudep'
+      #  entry: bash -c '[ -z "${CI+x}" ] && cargo-udeps udeps'
       #  pass_filenames: false
       #  types:
       #    - toml

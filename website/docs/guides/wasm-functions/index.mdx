@@ -20,12 +20,12 @@ The [`WasmRuntime`](/docs/reference/runtimes/wasm) enables one to use any langau
 We need to install several programs to be able to produce the components. The following checklist contains links to get you started:
 
 1. Rust compiler toolchain: this guide assumes moderate familiartiy of development with rust and won't spend many words on how to get it functional. In any case, you can get started with rust [here](https://www.rust-lang.org/learn/get-started).
-2. `wasm32-unknown-unknown` target for rustc: This is the backend that rustc uses to produce wasi compatible wasm components. If you&apos;re using `rustup` to manage your toolchain, Cargo will automatically install the target when you&apos;re building.
+2. `wasm32-unknown-unknown` target for rustc: This is the backend that rustc uses to produce wasi compatible wasm components. If you're using `rustup` to manage your toolchain, Cargo will automatically install the target when you're building.
 3. `wasm-tools`: this is the swiss army knife for working with wasm artifacts, courtesy of the [Bytecode Alliance](https://bytecodealliance.org/). Installation instructions can be found [here](https://github.com/bytecodealliance/wasm-tools/).
 
 ## Typegraph
 
-The `WasmRuntime` currently comes in two flavours that are both based on the wasm component spec. This guide focues on the `wire` flavour, where your component is expected to implement a standard WIT interface that's designed around a simple Json based RPC wire format. Thankfully, all of that boilerplate is easy to automate away and that&apos;s exactly what we'll do using [metagen](/docs/reference/metagen) to generate the binding code.
+The `WasmRuntime` currently comes in two flavours that are both based on the wasm component spec. This guide focues on the `wire` flavour, where your component is expected to implement a standard WIT interface that's designed around a simple Json based RPC wire format. Thankfully, all of that boilerplate is easy to automate away and that's exactly what we'll do using [metagen](/docs/reference/metagen) to generate the binding code.
 
 Before anything though, we need to author the typegraph:
 
@@ -35,7 +35,7 @@ Before anything though, we need to author the typegraph:
   disablePlayground
 />
 
-Note that the `WasmRuntime` constructor mentions a non-existent wasm file on disk. This won't be a problem for the metagen generators but we&apos;ll need to produce the artifact before we deploy the typegraph. We'll see what buliding the artifact entails in just a minute.
+Note that the `WasmRuntime` constructor mentions a non-existent wasm file on disk. This won't be a problem for the metagen generators but we'll need to produce the artifact before we deploy the typegraph. We'll see what buliding the artifact entails in just a minute.
 
 ## Metagen
 
@@ -84,8 +84,8 @@ The `mdk.rs` file contains all the glue code including the typegraph types.
 
 <details>
   <summary>
-    Code generation sample. It&apos;s collapsed here as it's for the most part
-    an uninteresting implementation detail.
+    Code generation sample. It's collapsed here as it's for the most part an
+    uninteresting implementation detail.
   </summary>
   <CodeBlock language="rust">
     {
@@ -97,7 +97,7 @@ The `mdk.rs` file contains all the glue code including the typegraph types.
 
 When working on the typegraph, we can run metagen again to regenerate this file and get the latest types.
 
-The generator also includes a sample `lib.rs` entrypoint file for our crate. We&apos;ll modify it now to implement our custom function.
+The generator also includes a sample `lib.rs` entrypoint file for our crate. We'll modify it now to implement our custom function.
 
 <CodeBlock language="rust">
   {

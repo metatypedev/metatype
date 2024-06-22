@@ -19,8 +19,8 @@ export function parse({ raw }: { raw: string }): string {
 
 We'll expose our module using the deno runtime.
 
-    <SDKTabs>
-              <TabItem value="typescript">
+<SDKTabs>
+  <TabItem value="typescript">
 
 ```typescript
 typegraph("roadmap", (g) => {
@@ -35,12 +35,12 @@ typegraph("roadmap", (g) => {
       }),
       // ..
     },
-    pub,
+    pub
   );
 });
 ```
 
-      </TabItem>
+  </TabItem>
 
   <TabItem value="python">
 
@@ -61,7 +61,14 @@ def roadmap(g: Graph):
 
 ```
 
-      </TabItem>
-                </SDKTabs>
+  </TabItem>
+</SDKTabs>
 
-We can now access our func through the GraphQl api. <TGExample typegraph="roadmap-func" python={require("!!code-loader!../../../../examples/typegraphs/func.py")} typescript={require("!!code-loader!../../../../examples/typegraphs/func.ts")} query={require("./func.graphql")} />
+We can now access our func through the GraphQl api.
+
+<TGExample
+  typegraph="roadmap-func"
+  python={require("!!code-loader!../../../../examples/typegraphs/func.py")}
+  typescript={require("!!code-loader!../../../../examples/typegraphs/func.ts")}
+  query={require("./func.graphql")}
+/>
