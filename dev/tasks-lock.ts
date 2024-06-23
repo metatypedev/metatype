@@ -49,7 +49,11 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       }
 
       if (dirty) {
-        await $`cargo generate-lockfile --offline`;
+        // have cargo generate lockfile
+        // we don't use the `generate-lockfile` command because
+        // "If the lockfile already exists, it will be rebuilt with the
+        // latest available version of every package."
+        await $`cargo verify-project`.stdout("piped");
       }
     },
   },
