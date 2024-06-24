@@ -21,18 +21,27 @@ module.exports = async function (source) {
   const prefix = commentsPrefix[ext];
 
   if (ext === "py") {
-    source = await new Promise((resolve) => {
+    source = await new Promise((resolve, reject) => {
       const child = spawn("ruff", ["format", "--line-length", "70", "-"]);
       child.stdin.write(source);
       child.stdin.end();
-      let buffer = "";
+      let stdout = "";
+      let stderr = "";
       child.stdout.on("data", (data) => {
-        buffer += data;
+        stdout += data;
+      });
+      child.stderr.on("data", (data) => {
+        stderr += data;
       });
       child.on("exit", function () {
-        resolve(buffer);
+        if (stderr.length > 0) {
+          reject(new Error(`Failed to format python code: ${stderr}`));
+        } else {
+          resolve(stdout);
+        }
       });
     });
+    console.log(this.resourcePath, source);
   }
 
   const ret = [];

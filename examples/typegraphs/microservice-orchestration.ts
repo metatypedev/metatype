@@ -15,20 +15,47 @@ function getEnvOrDefault(key: string, defaultValue: string) {
 }
 // skip:end
 
-typegraph({
-  name: "team-a",
-  // skip:next-line
-  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
-}, (g) => {
-  const pub = Policy.public();
+typegraph(
+  {
+    name: "team-a",
+    // skip:next-line
+    cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
+  },
+  (g) => {
+    const pub = Policy.public();
 
-  const deno = new DenoRuntime();
-  const records = new GraphQLRuntime(
-    getEnvOrDefault("TG_URL", "http://localhost:7890" + "/team-b"),
-  );
+    const deno = new DenoRuntime();
+    const records = new GraphQLRuntime(
+      getEnvOrDefault("TG_URL", "http://localhost:7890" + "/team-b")
+    );
 
-  g.expose({
-    version_team_b: records.query(t.struct({}), t.integer(), ["version"]),
-    version_team_a: deno.static(t.integer(), 3),
-  }, pub);
-});
+    g.expose(
+      {
+        version_team_b: records.query(t.struct({}), t.integer(), ["version"]),
+        version_team_a: deno.static(t.integer(), 3),
+      },
+      pub
+    );
+  }
+);
+
+typegraph(
+  {
+    name: "team-b",
+    // skip:next-line
+    cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
+  },
+  (g) => {
+    const pub = Policy.public();
+
+    const deno = new DenoRuntime();
+
+    g.expose(
+      {
+        version: deno.static(t.integer(), 12),
+        record: deno.static(t.struct({ weight: t.integer() }), { weight: 100 }),
+      },
+      pub
+    );
+  }
+);
