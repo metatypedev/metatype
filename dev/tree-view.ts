@@ -1,3 +1,5 @@
+#!/bin/env -S ghjk deno run -A --config=typegate/deno.jsonc
+
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
@@ -12,7 +14,7 @@
  *                  Default: 0
  */
 
-import { cyan, green, parseFlags } from "./deps.ts";
+import { cyan, green, parseArgs } from "./deps.ts";
 import { TypeGraphDS } from "../typegate/src/typegraph/mod.ts";
 import { visitType } from "../typegate/src/typegraph/visitor.ts";
 import { projectDir } from "./utils.ts";
@@ -32,7 +34,7 @@ export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
   }, { allowCircular: true });
 }
 
-const args = parseFlags(Deno.args, {
+const args = parseArgs(Deno.args, {
   string: ["depth", "root"],
 });
 

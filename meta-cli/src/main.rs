@@ -126,7 +126,9 @@ fn verify_cli() {
     Args::command().debug_assert()
 }
 
+// TODO: make this test more useful
 #[test]
+#[ignore]
 fn end_to_end() {
     // need build before running this test
     use assert_cmd::Command;

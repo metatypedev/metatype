@@ -250,6 +250,8 @@ Meta.test(
         "runtimes/deno/deno_dep.py",
       );
 
+      await sleep(5_000);
+
       await metaTest.should(
         `work on the typgate instance #${instanceNumber}`,
         async () => {

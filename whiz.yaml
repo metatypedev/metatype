@@ -1,9 +1,6 @@
 env:
   TYPEGRAPH_VERSION: "0.0.3"
   CLICOLOR_FORCE: "1"
-  RUST_LOG: "typegate=info,typegate_engine=info,mt_deno=info,swc_ecma_codegen=off,tracing::span=off,error"
-  NPM_CONFIG_REGISTRY: http://localhost:4873
-  WASMTIME_BACKTRACE_DETAILS: "1"
   TIMER_MAX_TIMEOUT_MS: "30000"
 
 gate1: &tp
@@ -11,32 +8,13 @@ gate1: &tp
     - "typegate/src/**/*.ts"
     - "typegate/{engine,standalone}/**/*.rs"
     - "libs/{xtask,deno}/**/*.rs"
-  env: &tpenv
-    TG_PORT: "7891"
-    PACKAGED: "false"
-    LOG_LEVEL: "DEBUG"
-    DEBUG: "true"
-    REDIS_URL: "redis://:password@localhost:6379/0"
-    TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
-    TG_ADMIN_PASSWORD: "password"
-    LD_LIBRARY_PATH: /data/home/metatype/.ghjk/envs/default/shims/lib
-  command: "cargo run -p typegate"
+  command: ghjk x dev-gate1
   pipe:
     "^.+DEBUG http .*$": whiz://http
 
 gate2:
   <<: *tp
-  env:
-    <<: *tpenv
-    SYNC_ENABLED: "true"
-    SYNC_REDIS_URL: redis://localhost:6379/0
-    SYNC_REDIS_PASSWORD: password
-    SYNC_S3_HOST: http://localhost:9000
-    SYNC_S3_REGION: local
-    SYNC_S3_ACCESS_KEY: minio
-    SYNC_S3_SECRET_KEY: password
-    SYNC_S3_BUCKET: gate2
-    TG_PORT: "7892"
+  command: ghjk x dev-gate2
 
 http:
   entrypoint: "/dev/null"
@@ -48,9 +26,9 @@ meta-cli:
     - "typegate/src/**/*.ts"
     - "typegate/core/**/*.rs"
     - "libs/deno/**/*"
-  command: "cargo run -p meta-cli -- -C examples/typegraphs dev --run-destructive-migrations -vvv"
   depends_on:
     - typegraph
+  command: ghjk x dev-eg-tgraphs
 
 typegraph:
   watch:
@@ -58,47 +36,15 @@ typegraph:
     - "typegraph/core/wit/*.wit"
     - "typegraph/node/sdk/src/**/*.ts"
     - "libs/metagen/**/*"
-  env:
-    WASM_FILE: target/wasm/release/typegraph_core.wasm
-  command: |
-    set -e
-    set -x
-    cargo build -p typegraph_core --target wasm32-unknown-unknown --release --target-dir target/wasm
-    wasm-tools component new target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE
-
-    rm -rf typegraph/node/sdk/src/gen typegraph/node/sdk/dist
-    jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
-
-    cd typegraph/node
-    pnpm install
-    pnpm run sdk-build
-    cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
-    cd ./sdk/dist
-    npm config set "//localhost:4873/:_authToken" fooBar
-    ln -s ../../../../README.md ./
-    npm unpublish @typegraph/sdk --force --registry http://localhost:4873 || true
-    npm publish --tag dev --no-git-checks --force --registry http://localhost:4873
-    cd ../../../..
-
-    ghjk x clean-deno-lock
-
-    rm -rf typegraph/python/typegraph/gen
-    poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
-    poetry run ruff check typegraph/python/typegraph
+  command: ghjk x build-tgraph
 
 system_graphs:
   watch:
     - typegate/src/typegraphs/*.py
     - typegraph/**/*.py
-  command: "deno run -A dev/serialize.ts"
   depends_on:
     - typegraph
-
-website:
-  workdir: website
-  command: "pnpm start --no-open"
-  env:
-    TG_URL: http://localhost:7890
+  command: ghjk x build-sys-tgraphs
 
 setup:
   workdir: .
@@ -106,13 +52,15 @@ setup:
     - typegraph/python/pyproject.toml
     - website/package.json
   env:
-    GHJK_VERSION: "2725af8"
+    GHJK_VERSION: "0.2.0"
   command: |
     set -e
     curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh |  bash
     . $(ghjk print share-dir-path)/env.sh
-    ghjk p sync
+    ghjk sync dev
     echo "cd ./. to refresh env vars"
-    [ -d .venv ] || python3 -m venv .venv && echo "virtual env created"
-    poetry install --sync --no-root
-    yes | pnpm install --recursive --filter ./website/... --filter ./typegraph/node/... --filter ./libs/metagen/tests/...
+    ghjk x install-py
+    ghjk x install-ts
+    ghjk x install-website
+    ghjk x install-lsp
+    ghjk x install-sys | bash

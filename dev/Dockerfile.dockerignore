@@ -1,9 +1,8 @@
 *
-!dev/deps.ts
-!dev/utils.ts
-!dev/update.ts
+!dev/*.ts
 !dev/LICENSE-Elastic-2.0.md
 !libs/
+libs/metagen/tests/
 !wit/
 !meta-cli/Cargo.toml
 !typegraph/core/

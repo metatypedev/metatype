@@ -15,6 +15,6 @@ wasm-tools component new \
   ../target/$TARGET/debug/$CRATE_NAME.wasm \
   -o ../target/rust-component.wasm \
   --adapt wasi_snapshot_preview1=$ADAPTOR
-wasm-tools component wit ../target/rust-component.wasm
+# wasm-tools component wit ../target/rust-component.wasm
 
 cp ../target/rust-component.wasm ../rust.wasm
