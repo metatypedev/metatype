@@ -2,26 +2,23 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { dnt, expandGlobSync, join, resolve } from "../../../dev/deps.ts";
-import { getLockfile, projectDir } from "../../../dev/utils.ts";
+import { projectDir } from "../../../dev/utils.ts";
+import { METATYPE_VERSION, TAGLINE } from "../../../dev/consts.ts";
 
 // Direct node users need to use module
 // module = Node16 or moduleResolution = Node16 inside tsconfig.json seems to be enough
 // https://github.com/denoland/dnt/issues/205
-
-const lockfile = await getLockfile();
 
 const srcDir = resolve(projectDir, "./typegraph/deno/sdk/src");
 const outDir = resolve(projectDir, "./typegraph/node");
 await dnt.emptyDir(outDir);
 
 const entryPoints: dnt.BuildOptions["entryPoints"] = [join(srcDir, "index.ts")];
-for (
-  const { name, path } of expandGlobSync("./**/*.ts", {
-    root: srcDir,
-    includeDirs: false,
-    globstar: true,
-  })
-) {
+for (const { name, path } of expandGlobSync("./**/*.ts", {
+  root: srcDir,
+  includeDirs: false,
+  globstar: true,
+})) {
   const relPath = path.replace(srcDir, ".");
   if (name !== "index.ts") {
     const entryPoint = {
@@ -51,8 +48,8 @@ await dnt.build({
   packageManager: "pnpm",
   package: {
     name: "@typegraph/sdk",
-    version: lockfile.dev.lock.METATYPE_VERSION,
-    description: lockfile.dev.lock.TAGLINE,
+    version: METATYPE_VERSION,
+    description: TAGLINE,
     license: "MPL-2.0",
     repository: {
       type: "git",

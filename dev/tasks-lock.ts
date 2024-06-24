@@ -1,13 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import {
-  copyLock,
-  DenoTaskDefArgs,
-  parseArgs,
-  ports,
-  sedLock,
-} from "./deps.ts";
+import { copyLock, DenoTaskDefArgs, parseArgs, sedLock } from "./deps.ts";
 import * as consts from "./consts.ts";
 
 const tasks: Record<string, DenoTaskDefArgs> = {
@@ -29,20 +23,16 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         `**/node_modules/**/Cargo.toml`,
       ];
 
-      let dirty = await sedLock(
-        $.workingDir,
-        {
-          lines: consts.sedLockLines,
-          ignores,
-        },
-      );
-      dirty = await copyLock($.workingDir, {
+      let dirty = await sedLock($.workingDir, {
+        lines: consts.sedLockLines,
+        ignores,
+      });
+      dirty = (await copyLock($.workingDir, {
         "dev/LICENSE-MPL-2.0.md": [
           "typegraph/python/LICENSE.md",
-          "typegraph/node/LICENSE.md",
-          "typegraph/node/sdk/LICENSE.md",
+          "typegraph/deno/LICENSE.md",
         ],
-      }) || dirty;
+      })) || dirty;
 
       if (args.check && dirty) {
         throw new Error("dirty on check");
@@ -55,22 +45,6 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         // latest available version of every package."
         await $`cargo verify-project`.stdout("piped");
       }
-    },
-  },
-
-  "lock-clean-deno": {
-    installs: ports.jq_ghrel(),
-    async fn($) {
-      const jqOp1 =
-        `del(.packages.specifiers["npm:@typegraph/sdk@${consts.METATYPE_VERSION}"])`;
-      const jqOp2 =
-        `del(.packages.npm["@typegraph/sdk@${consts.METATYPE_VERSION}"])`;
-      const jqOp = `${jqOp1} | ${jqOp2}`;
-      $.path(
-        "typegate/deno.lock",
-      ).writeText(
-        await $`jq ${jqOp} typegate/deno.lock`.text(),
-      );
     },
   },
 };
