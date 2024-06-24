@@ -1,7 +1,7 @@
 query {
-    get_idea {
-        id
-        # name
-        authorEmail
-    }
+  get_idea {
+    id
+    # name
+    authorEmail
+  }
 }

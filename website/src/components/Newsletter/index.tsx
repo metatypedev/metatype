@@ -26,7 +26,7 @@ export function useClient(gate: string) {
         uri: `${tgUrl}/${gate}`,
         cache: new InMemoryCache(),
       }),
-    [tgUrl]
+    [tgUrl],
   );
 
   return client;
@@ -45,7 +45,7 @@ export default function Newsletter() {
         variables: { email },
       });
       setMessage(
-        data?.newsletterSignUp?.id ? "Success!" : "Already subscribed!"
+        data?.newsletterSignUp?.id ? "Success!" : "Already subscribed!",
       );
     }
   };

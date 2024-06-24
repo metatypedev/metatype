@@ -28,11 +28,10 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/typegate",
         body: (
           <>
-            Expose select functions in your graph through a GraphQL API.
-            These root-functions will serve as the entry point to your graph
-            for any incoming request. The typegraph model is a great fit for
-            GraphQL semantics and this is the best supported way to consume
-            typegraphs.
+            Expose select functions in your graph through a GraphQL API. These
+            root-functions will serve as the entry point to your graph for any
+            incoming request. The typegraph model is a great fit for GraphQL
+            semantics and this is the best supported way to consume typegraphs.
           </>
         ),
       },
@@ -50,8 +49,8 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/guides/rest",
         body: (
           <>
-            You can expose select root functions through a simple REST API.
-            This is handy to serve endpoints for clients that are not GraphQl
+            You can expose select root functions through a simple REST API. This
+            is handy to serve endpoints for clients that are not GraphQl
             capable, even though it hampers access to some typegraph features.
             Inputs will be sourced from either HTTP bodies or search parameters
             according to HTTP verb.
@@ -87,9 +86,9 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         body: (
           <>
             Rate-limit parts of your graph to minimize abuse. The limits can be
-            configured granularly for each function and for custom time
-            windows. Use custom request identifiers, in addition to ip
-            addresses, to track limits counters.
+            configured granularly for each function and for custom time windows.
+            Use custom request identifiers, in addition to ip addresses, to
+            track limits counters.
           </>
         ),
       },
@@ -199,9 +198,9 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         body: (
           <>
             Injections resolve part of your graph inline instead of from
-            functions or provide defaults for incoming request data. This
-            can be used to set static values or source them from the context,
-            other parts of the graph...etc.
+            functions or provide defaults for incoming request data. This can be
+            used to set static values or source them from the context, other
+            parts of the graph...etc.
           </>
         ),
       },
@@ -224,10 +223,9 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "https://github.com/metatypedev/metatype/issues/721",
         body: (
           <>
-            Compose functions together by feeding the output of one as the
-            input of another. Encourages code reuse by allowing one to extract
-            common middleware logic from each function, all within the
-            typegraph layer.
+            Compose functions together by feeding the output of one as the input
+            of another. Encourages code reuse by allowing one to extract common
+            middleware logic from each function, all within the typegraph layer.
           </>
         ),
       },
@@ -239,8 +237,8 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/types/parameter-transformations#funcreducetree",
         body: (
           <>
-            <code>reduce</code> is useful to transform function input types
-            so that only certain struct fields are used, discarding the others.
+            <code>reduce</code> is useful to transform function input types so
+            that only certain struct fields are used, discarding the others.
             Required fields can be hidden from the user and can instead be
             injected from the request's context or a static default. This is
             useful for remixing generated or core domain types to more targeted
@@ -254,10 +252,9 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
         link: "/docs/reference/types/parameter-transformations#funcapplytree",
         body: (
           <>
-            <code>apply</code> allows the flattening of deeply nested
-            function input types to something friendlier. Injection can also
-            be used to substitute required fields in the original type from
-            another source.
+            <code>apply</code> allows the flattening of deeply nested function
+            input types to something friendlier. Injection can also be used to
+            substitute required fields in the original type from another source.
           </>
         ),
       },
@@ -313,7 +310,7 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
     ],
     [
       <TGExample
-        python={require("../../../../examples/typegraphs/deno.py")}
+        python={require("!!code-loader!../../../../examples/typegraphs/deno.py")}
         typescript={require("!!code-loader!../../../../examples/typegraphs/deno.ts")}
         disablePlayground
       />,
@@ -366,7 +363,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
   rows={[
     [
       <TGExample
-        python={require("../../../../examples/typegraphs/database.py")}
+        python={require("!!code-loader!../../../../examples/typegraphs/database.py")}
         typescript={require("!!code-loader!../../../../examples/typegraphs/database.ts")}
         disablePlayground
       />,
@@ -391,9 +388,9 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
         link: "/docs/reference/runtimes/prisma#generators",
         body: (
           <>
-            Easily generate functions for common create, update, read and
-            delete queries. Includes nested filtering and aggregration paramters
-            for efficent and targeted requests.
+            Easily generate functions for common create, update, read and delete
+            queries. Includes nested filtering and aggregration paramters for
+            efficent and targeted requests.
           </>
         ),
       },
@@ -456,7 +453,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
     ],
     [
       <TGExample
-        python={require("../../../../examples/typegraphs/policies.py")}
+        python={require("!!code-loader!../../../../examples/typegraphs/policies.py")}
         typescript={require("!!code-loader!../../../../examples/typegraphs/policies.ts")}
         disablePlayground
       />,
@@ -475,7 +472,7 @@ Access a myriad of databases directly from your typegraph. Run queries, mange it
         ),
       },
       <TGExample
-        python={require("../../../../examples/typegraphs/basic.py")}
+        python={require("!!code-loader!../../../../examples/typegraphs/basic.py")}
         typescript={require("!!code-loader!../../../../examples/typegraphs/basic.ts")}
         disablePlayground
       />,

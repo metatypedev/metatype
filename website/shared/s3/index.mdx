@@ -1,12 +1,9 @@
 import TGExample from "@site/src/components/TGExample";
 import CodeBlock from "@theme-original/CodeBlock";
 
-The [S3Runtime](/docs/reference/runtimes/s3) can be used to interact with object storage APIs that are S3 compatible.
-Object storages like S3 are commonly used to cover app needs around large blob data like uploading and serving images.
-Most object storage services provide S3 compatible APIs including the open-source [MinIO](https://min.io/) engine which you can run locally for development.
+The [S3Runtime](/docs/reference/runtimes/s3) can be used to interact with object storage APIs that are S3 compatible. Object storages like S3 are commonly used to cover app needs around large blob data like uploading and serving images. Most object storage services provide S3 compatible APIs including the open-source [MinIO](https://min.io/) engine which you can run locally for development.
 
-For the following example, you'll need to setup your S3 compatible store first.
-The following snippet can get you started using minio on docker compose:
+For the following example, you'll need to setup your S3 compatible store first. The following snippet can get you started using minio on docker compose:
 
 ```yaml
 services:
@@ -42,11 +39,11 @@ typegates:
 
 Our typegraph will then look something like:
 
-<TGExample 
+<TGExample
   typegraph="files-upload"
   typescript={require("!!code-loader!../../../examples/typegraphs/files-upload.ts")}
-  python={require("../../../examples/typegraphs/files-upload.py")} 
-  query={require('./files.graphql')} 
-  />
+  python={require("!!code-loader!../../../examples/typegraphs/files-upload.py")}
+  query={require("./files.graphql")}
+/>
 
 Peruse the [reference](/docs/reference/runtimes/s3) on the `S3Runtime` for more information.

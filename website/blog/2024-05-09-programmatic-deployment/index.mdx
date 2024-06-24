@@ -13,7 +13,6 @@ Before v0.4.x, we had to entirely rely on the [meta cli](/docs/reference/meta-cl
 
 This is no longer the case, as all core logic has been moved to the TypeScript/Python typegraph SDKs, both of which share the same WebAssembly-based **typegraph-core** behind the scenes. This provides some degree of assurance that you will have nearly identical experiences with each SDK.
 
-
 ## What are the use-cases?
 
 Since typegraphs can be written using the programming language your preferred SDK is based on, you can dynamically create typegraphs with ease.
@@ -22,7 +21,6 @@ The missing piece was having an interface natively backed inside the SDK for doi
 
 ### Programmatic deployment
 
-
 ### Initial setup
 
 Just like any other dependency in your favorite programming language, each SDKs can be installed with your favorite package manager.
@@ -30,21 +28,23 @@ Just like any other dependency in your favorite programming language, each SDKs 
 You can use one of the commands below to get started with the latest available version.
 
 <SDKTabs>
-    <TabItem value="typescript">
-        <UpgradeTsSDK />
-    </TabItem>
-    <TabItem value="python">
-        <UpgradePythonSDK />
-    </TabItem>
+  <TabItem value="typescript">
+    <UpgradeTsSDK />
+  </TabItem>
+  <TabItem value="python">
+    <UpgradePythonSDK />
+  </TabItem>
 </SDKTabs>
 
 #### Configuration
+
 This is analoguous to the yaml configuration file when you are using [meta cli](/docs/reference/meta-cli).
 
 It's the place where you tell which typegate you want to deploy to, how you want the artifacts to be resolved, among other settings.
 
 <SDKTabs>
     <TabItem value="python">
+
 ```python
 config_params = MigrationConfig(
     migration_dir= "path/to/prisma-migrations",
@@ -68,8 +68,10 @@ config = TypegraphDeployParams(
     secrets={"POSTGRES": "<DB_URL>"},
 )
 ```
+
     </TabItem>
     <TabItem value="typescript">
+
 ```typescript
 const artifactsConfig = {
   prismaMigration: {
@@ -79,7 +81,7 @@ const artifactsConfig = {
     },
     migrationDir: "path/to/prisma-migrations",
   },
- dir: "." // artifacts are resolved relative to this path
+  dir: ".", // artifacts are resolved relative to this path
 };
 
 const config = {
@@ -89,7 +91,9 @@ const config = {
   artifactsConfig,
 };
 ```
+
     </TabItem>
+
 </SDKTabs>
 
 ### Deploy/remove
@@ -115,7 +119,7 @@ export async function getTypegraphs() {
     {
       tg: await import("path/to/shop-stats"),
       location: "path/to/shop-stats.ts",
-    }
+    },
   ];
 }
 
@@ -125,7 +129,9 @@ export function getConfig(tgName: string, tgLocation: string) {
   return {
     baseUrl: TYPEGATE_URL,
     auth: BASIC_AUTH,
-    secrets: { /* .. */},
+    secrets: {
+      /* .. */
+    },
     artifactsConfig: {
       prismaMigration: {
         // ..
@@ -178,12 +184,12 @@ export async function undeployAll() {
 
 ### Going beyond
 
-With these new additions, you can automate virtually anything programmatically on the typegraph side.
-Starting from having highly dynamic APIs to providing ways to deploy and configure them, you can even build a custom framework around the ecosystem!
+With these new additions, you can automate virtually anything programmatically on the typegraph side. Starting from having highly dynamic APIs to providing ways to deploy and configure them, you can even build a custom framework around the ecosystem!
 
 Please tell us what you think and report any issues you found on [Github](https://github.com/metatypedev/metatype/issues).
 
 :::info Notes
 
 You can check the [Programmatic deployment](/docs/guides/programmatic-deployment) reference page for more information.
+
 :::
