@@ -24,7 +24,10 @@ This will create the necessary files for development, some of which are:
 The command also creates a directory called `api` where you will be building much of your applications's business logic. Inside the `api` directory, you will find a single file called `example.py` which defines a simple [Typegraph](/docs/reference/typegraph).
 
 <CodeBlock language="python">
-  {require("../../../examples/templates/python/api/example.py").content}
+  {
+    require("!!code-loader!../../../examples/templates/python/api/example.py")
+      .content
+  }
 </CodeBlock>
 
 Let's break down the above code snippet. The `example` function is where most of the logic lives. You need to decorate the function with `@typegraph()` from the typegraph SDK. Inside the function, you have different components of your application.
@@ -46,10 +49,10 @@ Now that you have runtimes to process data and you have specified access control
 ```python3
 # custom functions
 hello = python.from_lambda(
-        t.struct({"world": t.string()}),
-        t.string(),
-        lambda x: f"Hello {x['world']}!",
-    )
+  t.struct({"world": t.string()}),
+  t.string(),
+  lambda x: f"Hello {x['world']}!",
+)
 
 g.expose(public, hello=hello)
 ```
@@ -62,13 +65,13 @@ In order to exercise database capabilities, you need to build a table schema or 
 
 ```python3
 message = t.struct(
-        {
-            "id": t.integer(as_id=True, config=["auto"]),
-            "title": t.string(),
-            "body": t.string(),
-        },
-        name="message",
-    )
+  {
+    id"": t.integer(as_id=True, config=["auto"]),
+    "title": t.string(),
+    "body": t.string(),
+  },
+  name="message",
+)
 ```
 
 Great! Now you need a runtime which processes database requests. You will be using another runtime that comes out of the box with `Metatype`. i.e the [PrismaRuntime](/docs/reference/runtimes/prisma). Let's go ahead and introduce the `PrismaRuntime` to your app. You can add the following code below the `PythonRuntime` that was predefined.
@@ -84,24 +87,31 @@ Last, you need to expose a `Create` and `Read` endpoints to your database table.
 ```python3
 ...
 g.expose(
-        public,
-        hello=hello,
-        create_message=db.create(message),
-        list_messages=db.find_many(message),
-    )
+  public,
+  hello=hello,
+  create_message=db.create(message),
+  list_messages=db.find_many(message),
+)
 ```
 
 With these simple steps, you were able to build a basic backend with database capabilities. Finally, this is what your typegraph looks like in `example.py`.
 
 <CodeBlock language="python">
-  {require("../../../examples/typegraphs/quick-start-project.py").content}
+  {
+    require("!!code-loader!../../../examples/typegraphs/quick-start-project.py")
+      .content
+  }
 </CodeBlock>
 
-You are almost there to test your first `Metatype` application. You now need to spin a [Tyepgate](/docs/reference/typegate) and deploy your typegraph to the instance. You can leverage the embedded typegate that comes with the _Meta_CLI_. To run the embedded typegate, you can follow this [reference](/docs/reference/meta-cli/embedded-typegate). 
+You are almost there to test your first `Metatype` application. You now need to spin a [Tyepgate](/docs/reference/typegate) and deploy your typegraph to the instance. You can leverage the embedded typegate that comes with the _Meta_CLI_. To run the [embedded typegate](/docs/reference/meta-cli/embedded-typegate), execute the following command from your terminal.
+
+```shell
+meta typegate
+```
 
 Once you started your typegate instance using one of the available choice, if you open [localhost:7890](http://localhost:7890) in your browser, you will get a webpage similar to this one.
 
-<img src="/images/tutorial/running-typegate.png" alt="running typegate" />{" "}
+<img src="/images/tutorial/running-typegate.png" alt="running typegate" />
 
 To deploy your typegraph to the typegate engine, there are two approaces you can follow. You can either use [self-deploy](/docs/guides/programmatic-deployment) which comes with the typegraph SDK or the [Meta CLI](/docs/reference/meta-cli). For now, you will be deploying your typegraph using the `Meta CLI`. Execute the command below on your terminal to deploy the typegraph.
 
@@ -155,7 +165,8 @@ You should get a response from the typegate similar to then one below.
 
 You can also try out what you have built so far here on this playground.
 
-    <TGExample typegraph="quick-start-project"
-    python={require("../../../examples/typegraphs/quick-start-project.py")}
-    query={require('./first-project.graphql')}
-    />
+<TGExample
+  typegraph="quick-start-project"
+  python={require("!!code-loader!../../../examples/typegraphs/quick-start-project.py")}
+  query={require("./first-project.graphql")}
+/>

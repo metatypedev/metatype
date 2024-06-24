@@ -80,78 +80,80 @@ function MiniQLBrowser({
   // console.log(code);
   return (
     <div className="@container miniql mb-4">
-      {(defaultMode && !disablePlayground)
-        ? <ChoicePicker choices={modes} choice={mode!} onChange={setMode} />
-        : null}
+      {defaultMode && !disablePlayground ? (
+        <ChoicePicker choices={modes} choice={mode!} onChange={setMode} />
+      ) : null}
       <div
-        className={`${(defaultMode || disablePlayground) ? "" : "md:grid @2xl:grid-cols-2"
-          } gap-2 w-full order-first`}
+        className={`${
+          defaultMode || disablePlayground ? "" : "md:grid @2xl:grid-cols-2"
+        } gap-2 w-full order-first`}
       >
-        {disablePlayground || !defaultMode || mode === "typegraph"
-          ? (
-            <div className=" bg-slate-100 rounded-lg flex flex-col mb-2 md:mb-0 relative">
-              <ChoicePicker
-                // if only a single code file is given, we show it
-                // despite the set sdk value
-                choices={Object.fromEntries(code?.map(lang => [
+        {disablePlayground || !defaultMode || mode === "typegraph" ? (
+          <div className=" bg-slate-100 rounded-lg flex flex-col mb-2 md:mb-0 relative">
+            <ChoicePicker
+              // if only a single code file is given, we show it
+              // despite the set sdk value
+              choices={Object.fromEntries(
+                code?.map((lang) => [
                   lang.codeLanguage ?? "default",
                   {
                     typescript: "Typescript",
                     python: "Python",
                   }[lang.codeLanguage!] ?? "Default",
                 ]) ?? [
-                    ["typescript", "Typescript"],
-                    ["python", "Python"]
-                  ])
-                }
-                choice={code && code.length < 2 ? (code[0].codeLanguage ?? "default") as SDK : sdk}
-                onChange={setSDK}
-                className="ml-2"
-              >
-                {code?.map((lang) => (
-                  <TabItem key={lang.codeLanguage} value={lang.codeLanguage}>
-                    <Link
-                      href={`https://github.com/metatypedev/metatype/blob/main/${lang?.codeFileUrl}`}
-                      className={"absolute top-0 right-0 m-2 p-1"}
-                    >
-                      {lang?.codeFileUrl?.split("/").pop()} ↗
-                    </Link>
-                    <CodeBlock
-                      language={lang?.codeLanguage}
-                      wrap
-                      className="flex-1"
-                    >
-                      {lang.content}
-                    </CodeBlock>
-                  </TabItem>
-                ))}
-              </ChoicePicker>
-            </div>
-          )
-          : null}
-        {!disablePlayground && (!defaultMode || mode === "playground")
-          ? (
-            <GraphiQLProvider
-              fetcher={fetcher}
-              defaultQuery={query!.loc?.source.body.trim()}
-              defaultHeaders={JSON.stringify(headers)}
-              shouldPersistHeaders={true}
-              variables={JSON.stringify(variables)}
-              storage={storage}
+                  ["typescript", "Typescript"],
+                  ["python", "Python"],
+                ],
+              )}
+              choice={
+                code && code.length < 2
+                  ? ((code[0].codeLanguage ?? "default") as SDK)
+                  : sdk
+              }
+              onChange={setSDK}
+              className="ml-2"
             >
-              <div className="flex flex-col graphiql-container">
-                <div className="flex-1 graphiql-session">
-                  <GraphiQLInterface defaultTab={panel} noTool={noTool} />
-                </div>
-
-                <div className="flex-auto graphiql-response min-h-[200px] p-2 mt-2 bg-slate-100 rounded-lg">
-                  <Loader />
-                  <ResponseEditor />
-                </div>
+              {code?.map((lang) => (
+                <TabItem key={lang.codeLanguage} value={lang.codeLanguage}>
+                  <Link
+                    href={`https://github.com/metatypedev/metatype/blob/main/${lang?.codeFileUrl}`}
+                    className={"absolute top-0 right-0 m-2 p-1"}
+                  >
+                    {lang?.codeFileUrl?.split("/").pop()} ↗
+                  </Link>
+                  <CodeBlock
+                    language={lang?.codeLanguage}
+                    wrap
+                    className="flex-1"
+                  >
+                    {lang.content}
+                  </CodeBlock>
+                </TabItem>
+              ))}
+            </ChoicePicker>
+          </div>
+        ) : null}
+        {!disablePlayground && (!defaultMode || mode === "playground") ? (
+          <GraphiQLProvider
+            fetcher={fetcher}
+            defaultQuery={query!.loc?.source.body.trim()}
+            defaultHeaders={JSON.stringify(headers)}
+            shouldPersistHeaders={true}
+            variables={JSON.stringify(variables)}
+            storage={storage}
+          >
+            <div className="flex flex-col graphiql-container">
+              <div className="flex-1 graphiql-session">
+                <GraphiQLInterface defaultTab={panel} noTool={noTool} />
               </div>
-            </GraphiQLProvider>
-          )
-          : null}
+
+              <div className="flex-auto graphiql-response min-h-[200px] p-2 mt-2 bg-slate-100 rounded-lg">
+                <Loader />
+                <ResponseEditor />
+              </div>
+            </div>
+          </GraphiQLProvider>
+        ) : null}
       </div>
     </div>
   );

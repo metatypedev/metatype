@@ -1,6 +1,6 @@
 {
-  listObjects{
-    keys{
+  listObjects {
+    keys {
       key
       size
     }

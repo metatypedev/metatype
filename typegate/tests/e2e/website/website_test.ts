@@ -79,7 +79,7 @@ const prepare = {
             },
           })
         ).code,
-        0,
+        0
       );
     });
   },
@@ -122,7 +122,7 @@ for (const name of list) {
           { currentDir: "examples", env: { RUST_LOG: "trace" } },
           "serialize",
           "-f",
-          `typegraphs/${name}.py`,
+          `typegraphs/${name}.py`
         );
         pyVersion = stdout;
       });
@@ -140,7 +140,7 @@ for (const name of list) {
           },
           "serialize",
           "-f",
-          `typegraphs/${name}.ts`,
+          `typegraphs/${name}.ts`
         );
         tsVersion = stdout;
       });
@@ -151,7 +151,7 @@ for (const name of list) {
         await Promise.all([...py, ...ts].map((tg) => toComparable(t, tg)));
         assertEquals(py, ts);
       });
-    },
+    }
   );
 }
 
@@ -165,10 +165,10 @@ async function toComparable(t: MetaTest, tg: TypeGraphDS) {
           "deno fmt --no-semicolons --line-width 10 -".split(" "),
           {
             stdin: mat.data.script as string,
-          },
+          }
         );
         mat.data.script = res.stdout;
       }
-    }),
+    })
   );
 }

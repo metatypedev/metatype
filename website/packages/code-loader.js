@@ -2,7 +2,7 @@
 
 /** @type {import('@docusaurus/types').PluginModule} */
 module.exports = () => ({
-  name: "pyloader",
+  name: "custom-code-loader",
   configureWebpack() {
     return {
       externals: {
@@ -10,10 +10,6 @@ module.exports = () => ({
       },
       module: {
         rules: [
-          {
-            test: /\.py$/i,
-            use: ["code-loader"],
-          },
           {
             test: /\.(graphql|gql)$/,
             exclude: /node_modules/,

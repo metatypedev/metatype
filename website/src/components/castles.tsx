@@ -34,18 +34,18 @@ export function BuildingCastle() {
         const twoMoveDown = useLinearSpring(
           progress,
           [0.25, 0.5],
-          [0, blockMargin]
+          [0, blockMargin],
         );
         const twoMoveUp = useLinearSpring(
           progress,
           [0.25, 0.5],
-          [0, -blockMargin]
+          [0, -blockMargin],
         );
 
         const threeMoveLeft = useLinearSpring(
           progress,
           [0.5, 0.75],
-          [0, col1 - col2]
+          [0, col1 - col2],
         );
         const threeFadeIn = useLinearSpring(progress, [0.5, 0.75], [0, 1]);
 
@@ -53,12 +53,12 @@ export function BuildingCastle() {
         const fourModeDown = useLinearSpring(
           progress,
           [0.75, 1],
-          [0, blockMargin]
+          [0, blockMargin],
         );
         const fourMoveUp = useLinearSpring(
           progress,
           [0.75, 1],
-          [0, -blockMargin]
+          [0, -blockMargin],
         );
 
         return (
@@ -244,24 +244,24 @@ export function StableCastle() {
         const twoFadeOut = useLinearSpring(
           progress,
           [0.0, 0.25, 0.5],
-          [0, 1, 0]
+          [0, 1, 0],
         );
 
         const threeMoveDown = useLinearSpring(
           progress,
           [0.5, 0.75],
-          [0, blockMargin]
+          [0, blockMargin],
         );
         const threeMoveUp = useLinearSpring(
           progress,
           [0.5, 0.75],
-          [0, -blockMargin]
+          [0, -blockMargin],
         );
 
         const fourMoveLeft = useLinearSpring(
           progress,
           [0.75, 1],
-          [0, col2 - col3]
+          [0, col2 - col3],
         );
         const fourFadeIn = useLinearSpring(progress, [0.75, 1], [0, 1]);
 
@@ -415,7 +415,7 @@ export function ModulableCastle() {
         const twoFadeOut = useLinearSpring(
           progress,
           [0.0, 0.25, 0.5],
-          [0, 1, 0]
+          [0, 1, 0],
         );
 
         const threeFadeIn = useLinearSpring(progress, [0.5, 0.75], [0, 1]);
@@ -534,21 +534,21 @@ export function ReusableCastle() {
         const oneFadeInOut = useLinearSpring(
           progress,
           [0.0, 0.2, 0.45],
-          [0, 1, 0]
+          [0, 1, 0],
         );
 
         const twoFadeIn = useLinearSpring(progress, [0.25, 0.45], [0, 1]);
         const twoFadeInOut = useLinearSpring(
           progress,
           [0.25, 0.45, 0.7],
-          [0, 1, 0]
+          [0, 1, 0],
         );
 
         const threeFadeIn = useLinearSpring(progress, [0.5, 0.7], [0, 1]);
         const threeFadeInOut = useLinearSpring(
           progress,
           [0.5, 0.7, 1],
-          [0, 1, 0]
+          [0, 1, 0],
         );
 
         const fourFadeIn = useLinearSpring(progress, [0.75, 0.95], [0, 1]);

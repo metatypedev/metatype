@@ -1,7 +1,5 @@
 mutation CBucket {
-  create_bucket(
-    data: {name: "Backlog"}
-  ) {
+  create_bucket(data: { name: "Backlog" }) {
     id
     name
   }

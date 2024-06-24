@@ -54,7 +54,7 @@ Meta.test("temporal integ", async (t) => {
 
   greenFlag.push(waitForHealthy(
     temporalProc,
-    "Frontend is now healthy",
+    "Temporal server: ",
     "stdout",
   ));
 

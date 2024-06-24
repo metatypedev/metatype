@@ -2,33 +2,33 @@ import TGExample from "@site/src/components/TGExample";
 import SDKTabs from "@site/src/components/SDKTabs";
 import TabItem from "@theme/TabItem";
 
-# HTTP/REST 
+# HTTP/REST
 
 ## HTTP Runtime
+
 The HTTPRuntime allows your typegraphs to access external REST APIs.
 
 Common use cases (but not limited to):
+
 - Enable consuming one or more REST APIs through the same interface
 - Programmatically generate typegraphs from an existing [openapi specs](https://swagger.io/specification/) or similar
 
 Example:
+
 <TGExample
-    typegraph="http-runtime"
-    typescript={require("!!code-loader!../../../../../examples/typegraphs/http-runtime.ts")}
-    python={require("../../../../../examples/typegraphs/http-runtime.py")}
-    query={require("./http.graphql")}
+  typegraph="http-runtime"
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/http-runtime.ts")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/http-runtime.py")}
+  query={require("./http.graphql")}
 />
 
-
 ## Verbs
+
 This runtime supports `GET`, `POST`, `PUT`, `DELETE` http verbs.
 
-In most cases, queries are not limited to a simple query parameter or use the default `application/json` content type. 
-You can assign what parts of your request description each field in the input struct belongs to.
+In most cases, queries are not limited to a simple query parameter or use the default `application/json` content type. You can assign what parts of your request description each field in the input struct belongs to.
 
-In the example bellow, this endpoint corresponds to `POST <API_URL>/submit_user?form_type=..` with a body requiring the fields:
-`pseudo`, `age` and with header `accept` set as `application/json`.
-
+In the example bellow, this endpoint corresponds to `POST <API_URL>/submit_user?form_type=..` with a body requiring the fields: `pseudo`, `age` and with header `accept` set as `application/json`.
 
 <SDKTabs>
     <TabItem value="python">
