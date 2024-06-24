@@ -38,3 +38,24 @@ typegraph(
     );
   }
 );
+
+typegraph(
+  {
+    name: "team-b",
+    // skip:next-line
+    cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
+  },
+  (g) => {
+    const pub = Policy.public();
+
+    const deno = new DenoRuntime();
+
+    g.expose(
+      {
+        version: deno.static(t.integer(), 12),
+        record: deno.static(t.struct({ weight: t.integer() }), { weight: 100 }),
+      },
+      pub
+    );
+  }
+);

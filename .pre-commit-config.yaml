@@ -1,6 +1,12 @@
 repos:
   - repo: local
     hooks:
+      - id: ghjk-resolve
+        name: "Resolve ghjk installs"
+        always_run: true
+        language: system
+        entry: bash -c 'ghjk p resolve'
+        pass_filenames: false
       - id: poetry-lock
         name: "Check poetry lock"
         always_run: true
@@ -13,11 +19,11 @@ repos:
         language: system
         entry: bash -c 'poetry -C ./typegraph/python check --lock'
         pass_filenames: false
-      - id: version
+      - id: sed-lock
         name: "Lock versions"
         always_run: true
         language: system
-        entry: bash -c 'deno run -A dev/lock.ts --check'
+        entry: bash -c 'ghjk x lock-sed --check'
         pass_filenames: false
       - id: deno-fmt
         name: Deno format
@@ -38,7 +44,7 @@ repos:
       - id: es-lint
         name: Eslint website
         language: system
-        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint'
+        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint && pnpm prettier'
         pass_filenames: false
         types_or:
           - ts
@@ -48,20 +54,20 @@ repos:
       - id: devtools-lint
         name: ESLint meta-lsp
         language: system
-        entry: bash -c 'cd meta-lsp && pnpm lint --fix'
+        entry: bash -c 'cd meta-lsp && pnpm lint'
         pass_filenames: false
         types:
           - ts
         files: ^meta-lsp/
-      # - id: cargo-udeps
-      #   name: Check for unused cargo dependencies
-      #   language: system
-      #   entry: bash -c '[ -z "${CI+x}" ] && cargo-udeps udeps'
-      #   pass_filenames: false
-      #   types:
-      #     - toml
+      #- id: cargo-udeps
+      #  name: Check for unused cargo dependencies
+      #  language: system
+      #  entry: bash -c '[ -z "${CI+x}" ] && cargo-udeps udeps'
+      #  pass_filenames: false
+      #  types:
+      #    - toml
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
       - id: check-added-large-files
         args:
@@ -78,7 +84,7 @@ repos:
         # exclude all generated files
         exclude: (?x)( .ghjk/.* |.*deno.lock |.*\.snap$|typegate/src/typegraphs/.*\.json |website/docs/reference/ |libs/pyrt_wit_wire/pyrt)
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.4
+    rev: v1.5.5
     hooks:
       - id: insert-license
         name: "License MPL-2.0 python"
@@ -145,17 +151,17 @@ repos:
         files: ^website/
         exclude: website/typegraphs
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.27.2
+    rev: 0.28.5
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.1.7"
+    rev: "v0.4.10"
     hooks:
       - id: ruff
       - id: ruff-format
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v3.13.0
+    rev: v3.27.0
     hooks:
       - id: commitizen
         stages:

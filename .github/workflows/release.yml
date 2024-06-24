@@ -16,8 +16,8 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "2725af8"
-  DENO_VERSION: "1.43.6"
+  GHJK_VERSION: "0.2.0"
+  GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
           deno-version: v${{ env.DENO_VERSION }}
       - uses: kenji-miyake/setup-git-cliff@v2
       - run: |
-          VERSION=$(deno run -A dev/lock.ts --version)
+          VERSION=$(ghjk x version-print)
           if [[ "${{ steps.latest-tag.outputs.tag }}" != "v$VERSION" ]]; then
             echo "Tag ${{ steps.latest-tag.outputs.tag }} does not match code version v$VERSION, stopping."
             exit -1
@@ -94,10 +94,8 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       # some targets don't use cross so will require the deps in the host
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ runner.os }}-${{ matrix.target }}
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - uses: mozilla-actions/sccache-action@v0.0.3
       - run: |
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
@@ -162,44 +160,38 @@ jobs:
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      - uses: mozilla-actions/sccache-action@v0.0.3
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           WASM_FILE: target/release/typegraph_core.wasm
         run: |
-          cargo build -p typegraph_core --target wasm32-unknown-unknown --target-dir target/wasm --release
-          mkdir -p $(dirname $WASM_FILE)
-          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
-          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
+          ghjk x install-py
+          ghjk x install-ts
 
-          python3 -m venv .venv
+          WASM_OPT=1 ghjk x build-tgraph-core
+
           source .venv/bin/activate
-          poetry install --no-root
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
 
           cd typegraph/python
-          poetry install
           poetry build
           [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
             && poetry publish --skip-existing \
             || poetry publish
           cd ../..
 
-          npm install --global @bytecodealliance/jco@$JCO_VERSION
-          jco transpile $WASM_FILE -o typegraph/deno/sdk/src/gen --map metatype:typegraph/host=../host/host.mjs
-
-          deno run -A typegraph/deno/dev/fix-declarations.ts
-          deno run -A typegraph/deno/dev/deno2node.ts
-
           cd typegraph/node
+          pnpm install
+          pnpm run sdk-build
+          cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
+          cd ../..
+
+          cd typegraph/node/sdk/dist
           pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
           [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
             && pnpm publish --no-git-checks --force \
@@ -244,6 +236,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:latest
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
       - run: |
           mkdir -p ./digests
           digest="${{ steps.build.outputs.digest }}"
@@ -300,7 +294,7 @@ jobs:
           fetch-depth: 0
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         run: |
           cd meta-lsp
@@ -342,8 +336,8 @@ jobs:
       - uses: kenji-miyake/setup-git-cliff@v2
       - id: bump
         run: |
-          deno run -A dev/lock.ts --bump prerelease
-          echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
+          ghjk x verison-bump prerelease
+          echo "version=$(ghjk x version-print)" >> $GITHUB_OUTPUT
           git cliff --output CHANGELOG.md
       - uses: peter-evans/create-pull-request@v6
         with:

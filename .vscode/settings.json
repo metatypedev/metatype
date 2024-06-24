@@ -12,6 +12,7 @@
     "typegraph/deno/dev",
     "typegraph/deno/sdk",
     "ghjk.ts",
+    ".ghjk"
   ],
   "deno.importMap": "typegate/import_map.json",
   "deno.unstable": true,
