@@ -4,7 +4,7 @@ on:
       - checks_requested
 
 env:
-  GHJK_VERSION: "2725af8"
+  GHJK_VERSION: "0.2.0"
   DENO_VERSION: "1.43.6"
   RUST_BACKTRACE: "full"
   RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
@@ -87,7 +87,7 @@ jobs:
         with:
           path: .venv
           key: ${{ matrix.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
         with:
           # temporary fix
           cache-key-prefix: ${{ matrix.os }}

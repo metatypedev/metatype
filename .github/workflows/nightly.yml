@@ -14,9 +14,9 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            runner: ubuntu-latest
+            runner: custom-ubuntu-large
           - platform: linux/arm64
-            runner: custom-macos
+            runner: custom-arm
 
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +34,8 @@ jobs:
           target: dev
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:base
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
       - run: |
           mkdir -p digests/dev
           digest="${{ steps.dev.outputs.digest }}"
@@ -46,6 +48,8 @@ jobs:
           target: prd
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:nightly
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
       - run: |
           mkdir -p digests/prd
           digest="${{ steps.prd.outputs.digest }}"

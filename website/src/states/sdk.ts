@@ -22,13 +22,13 @@ const sdkQueryAtom = atom(
       ...prev,
       searchParams,
     }));
-  }
+  },
 );
 
 const sdkSessionAtom = atomWithStorage(
   key,
   defaultValue,
-  createJSONStorage(() => sessionStorage)
+  createJSONStorage(() => sessionStorage),
 );
 
 export function useSDK() {
@@ -46,7 +46,7 @@ export function useSDK() {
       setQuery(value);
       setSession(value);
     },
-    [setQuery, setSession]
+    [setQuery, setSession],
   );
 
   return [query ?? session, set] as const;

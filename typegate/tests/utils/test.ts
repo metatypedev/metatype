@@ -255,10 +255,11 @@ export class MetaTest {
     const secrets = opts.secrets ?? {};
     const secretsStr = JSON.stringify(secrets);
 
-    const cmd = [lang.toString()];
+    const cmd = [];
 
     if (lang === SDKLangugage.TypeScript) {
       cmd.push(
+        lang.toString(),
         "run",
         "--allow-all",
         "utils/tg_deploy_script.ts",
@@ -269,6 +270,10 @@ export class MetaTest {
       );
     } else {
       cmd.push(
+        ...(
+          Deno.env.get("MCLI_LOADER_PY")?.split(" ") ??
+            [lang.toString()]
+        ),
         "utils/tg_deploy_script.py",
         cwd,
         this.port.toString(),

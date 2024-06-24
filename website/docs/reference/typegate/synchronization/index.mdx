@@ -3,7 +3,9 @@
 <!-- The workloads can be shared accross multiple typegate instances. -->
 <!-- The shared data between instances are stored in -->
 <!-- a Redis database and a s3-compatible object store. -->
+
 The typegate run in either on of the following modes:
+
 - _Single instance mode:_ a single typegate instance runs all the workloads;
 - _Synchronized mode:_ the workloads can be shared accross multiple typegate instances.
 
@@ -11,70 +13,60 @@ The typegate run in either on of the following modes:
 
 To enable multiple typegate instance support, the system need the following services:
 
-|Service|Role|
-|---------|----|
-|Load balancer|Share the loads accross the different typegate instances|
-|Redis database|Used for synchronization between typegate instances|
-|S3 storage|Store all the shared files/artifacts for the typegate instances|
-|Typegate instances|_Obvious_|
-
+| Service            | Role                                                            |
+| ------------------ | --------------------------------------------------------------- |
+| Load balancer      | Share the loads accross the different typegate instances        |
+| Redis database     | Used for synchronization between typegate instances             |
+| S3 storage         | Store all the shared files/artifacts for the typegate instances |
+| Typegate instances | _Obvious_                                                       |
 
 <!-- ![System setup](/images/system_setup.drawio.svg) -->
-<img src="/images/system_setup.drawio.svg" alt="System setup" />
 
+<img src="/images/system_setup.drawio.svg" alt="System setup" />
 
 ### Load balancer
 
-The setup does not require a specific load balancer software/hardware.
-Any load balancer can do the job.
+The setup does not require a specific load balancer software/hardware. Any load balancer can do the job.
 
 ### Redis database
 
-A single redis instance can be shared by multiple systems, configured with
-different database numbers.
-
+A single redis instance can be shared by multiple systems, configured with different database numbers.
 
 ### S3 storage
 
 Any S3-compatible object store is supported for the file/artifact storage.
 
-One S3 storage might be shared by multiple systems.
-However, each system must be configured to use its own dedicated bucket.
+One S3 storage might be shared by multiple systems. However, each system must be configured to use its own dedicated bucket.
 
 ### Typegate instances
 
-The typegate instances are configured with environment variables.
-All the instances of the system must share the same value
-for the synchronization variables.
+The typegate instances are configured with environment variables. All the instances of the system must share the same value for the synchronization variables.
 
 See [configuration](#typegate-configuration) for details.
 
 ## Typegate configuration
 
-The typegate instances that at the core of the system must share
-the configuration variables.
+The typegate instances that at the core of the system must share the configuration variables.
 
 Synchronization variable names start with `SYNC_`.
 
 :::warning
-- If no `SYNC_*` variable is present, the typegate will run in the default
-single instance mode.
-- The typegate will fail to start if any of the `SYNC_*` variables is present
-and some required `SYNC_*` variable is missing.
+
+- If no `SYNC_*` variable is present, the typegate will run in the default single instance mode.
+- The typegate will fail to start if any of the `SYNC_*` variables is present and some required `SYNC_*` variable is missing.
+
 :::
 
-|Variable|Description|
-|--------|-----------|
-|SYNC_REDIS_URL (_Required_)|URL to the Redis database. Must include the database number.|
-|SYNC_REDIS_PASSWORD (_Optional_)|Redis database password, can be included in SYNC_REDIS_URL;|
-|SYNC_S3_HOST (_Required_)|Hostname of the S3 store;|
-|SYNC_S3_REGION (_Required_)|S3 region;|
-|SYNC_S3_ACCESS_KEY (_Required_)|Access key for the S3 store credentials;|
-|SYNC_S3_SECRET_KEY (_Required_)|Access key secret for the S3 store credentials;|
-|SYNC_S3_PATH_STYLE (_Optional_)|`true` or `false`, force path style if `true`.|
-|SYNC_S3_BUCKET (_Required_)|The bucket to be used for the system (dedicated).|
-
-
+| Variable                          | Description                                                  |
+| --------------------------------- | ------------------------------------------------------------ |
+| SYNC*REDIS_URL (\_Required*)      | URL to the Redis database. Must include the database number. |
+| SYNC*REDIS_PASSWORD (\_Optional*) | Redis database password, can be included in SYNC_REDIS_URL;  |
+| SYNC*S3_HOST (\_Required*)        | Hostname of the S3 store;                                    |
+| SYNC*S3_REGION (\_Required*)      | S3 region;                                                   |
+| SYNC*S3_ACCESS_KEY (\_Required*)  | Access key for the S3 store credentials;                     |
+| SYNC*S3_SECRET_KEY (\_Required*)  | Access key secret for the S3 store credentials;              |
+| SYNC*S3_PATH_STYLE (\_Optional*)  | `true` or `false`, force path style if `true`.               |
+| SYNC*S3_BUCKET (\_Required*)      | The bucket to be used for the system (dedicated).            |
 
 ## Synchronized mode features
 

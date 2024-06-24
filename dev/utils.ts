@@ -31,14 +31,6 @@ export async function runOrExit(
   }
 }
 
-export function relPath(path: string) {
-  let clean = path.replace(projectDir, "");
-  if (clean.startsWith("/")) {
-    clean = clean.slice(1);
-  }
-  return clean;
-}
-
 interface Lockfile {
   [channel: string]: {
     files: Record<string, string[]>;

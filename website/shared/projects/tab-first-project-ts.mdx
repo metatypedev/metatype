@@ -72,7 +72,7 @@ const message = t.struct(
     title: t.string(),
     body: t.string(),
   },
-  { name: "message" } // the name of your type
+  { name: "message" }, // the name of your type
 );
 ```
 
@@ -105,11 +105,15 @@ With these three simple steps, you were able to build a basic backend with datab
   }
 </CodeBlock>
 
-You are almost there to test your first `Metatype` application. You now need to spin a [Tyepgate](/docs/reference/typegate) and deploy your typegraph to the instance. You can leverage the embedded typegate that comes with the _Meta_CLI_. To run the embedded typegate, you can follow this [reference](/docs/reference/meta-cli/embedded-typegate).
+You are almost there to test your first `Metatype` application. You now need to spin a [Tyepgate](/docs/reference/typegate) and deploy your typegraph to the instance. You can leverage the embedded typegate that comes with the _Meta_CLI_. To run the [embedded typegate](/docs/reference/meta-cli/embedded-typegate), execute the following command from your terminal.
+
+```bash
+meta typegate
+```
 
 Once you started your typegate instance using one of the available choice, if you open [localhost:7890](http://localhost:7890) in your browser, you will get a webpage similar to this one.
 
-<img src="/images/tutorial/running-typegate.png" alt="running typegate" />{" "}
+<img src="/images/tutorial/running-typegate.png" alt="running typegate" />
 
 To deploy your typegraph to the typegate engine, there are two approaces you can follow. You can either use `self-deploy` which comes with the typegraph SDK or the [Meta CLI](/docs/reference/meta-cli). For now, you will be deploying your typegraph using the `Meta CLI`. Execute the command below on your terminal to deploy the typegraph.
 

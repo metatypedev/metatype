@@ -52,7 +52,7 @@ impl Test {
             allow_run: Some(
                 [
                     "cargo", "deno", "hostname", "meta", "git", "python3", "rm", "mkdir", "bash",
-                    "npm", "pnpm", "setsid", "temporal",
+                    "npm", "pnpm", "setsid", "temporal", "poetry",
                 ]
                 .into_iter()
                 .map(str::to_owned)
@@ -116,14 +116,8 @@ impl Bench {
         let permissions = mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
             allow_run: Some(
                 [
-                    "cargo",
-                    "hostname",
-                    "target/debug/meta",
-                    "git",
-                    "python3",
-                    "rm",
-                    "mkdir",
-                    "bash",
+                    "cargo", "hostname", "meta", "git", "python3", "rm", "mkdir", "bash", "npm",
+                    "pnpm", "setsid", "temporal", "deno", "poetry",
                 ]
                 .into_iter()
                 .map(str::to_owned)

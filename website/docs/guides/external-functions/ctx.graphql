@@ -3,7 +3,7 @@ query {
     parent
     context
     effect
-    meta{
+    meta {
       url
       token
     }

@@ -1,13 +1,22 @@
+#!/bin/env -S ghjk deno run -A --config=typegate/deno.jsonc
+
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { expandGlobSync, parseFlags, resolve, udd, WalkEntry } from "./deps.ts";
-import { projectDir, relPath, runOrExit } from "./utils.ts";
+import {
+  $,
+  expandGlobSync,
+  parseArgs,
+  resolve,
+  udd,
+  WalkEntry,
+} from "./deps.ts";
+import { projectDir, runOrExit } from "./utils.ts";
 
 const denoConfigPath = resolve(projectDir, "typegate/deno.jsonc");
 const devConfigPath = resolve(projectDir, "dev/deps.ts");
 
-const flags = parseFlags(Deno.args, {
+const flags = parseArgs(Deno.args, {
   boolean: ["outdated", "upgrade", "cache-only", "src-only"],
   default: {
     outdated: false,
@@ -20,7 +29,7 @@ const flags = parseFlags(Deno.args, {
 if (flags.outdated || flags.upgrade) {
   for await (const configPath of [denoConfigPath, devConfigPath]) {
     console.log(
-      `Checking for updates for ${relPath(configPath)}:`,
+      `Checking for updates for ${$.path(projectDir).relative(configPath)}:`,
     );
     const deps = await udd(configPath, { dryRun: flags.outdated });
     console.log();
