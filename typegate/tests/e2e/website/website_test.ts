@@ -73,7 +73,10 @@ const prepare = {
         (
           await t.shell("bash build.sh".split(" "), {
             currentDir: "examples/typegraphs/metagen/rs",
-            env: { MCLI_DENO_IMPORT_MAP: "../typegate/import_map.json" }, // !
+            env: {
+              MCLI_LOADER_CMD:
+                "deno run -A --import-map=../typegate/import_map.json {filepath}",
+            },
           })
         ).code,
         0,
@@ -129,7 +132,10 @@ for (const name of list) {
         const { stdout } = await Meta.cli(
           {
             currentDir: "examples",
-            env: { MCLI_DENO_IMPORT_MAP: "../typegate/import_map.json" }, // !
+            env: {
+              MCLI_LOADER_CMD:
+                "deno run -A --import-map=../typegate/import_map.json {filepath}",
+            },
           },
           "serialize",
           "-f",

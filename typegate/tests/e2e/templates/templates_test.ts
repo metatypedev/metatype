@@ -16,7 +16,10 @@ type LangRuntimeConfig<V> = {
 
 const envs = {
   python: {},
-  deno: { MCLI_DENO_IMPORT_MAP: "../../typegate/import_map.json" },
+  deno: {
+    MCLI_LOADER_CMD:
+      "deno run -A --import-map=../../typegate/import_map.json {filepath}",
+  },
   node: {},
 } as LangRuntimeConfig<Record<string, string>>;
 
