@@ -21,10 +21,7 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => args,
   true: () => true,
   false: () => false,
-  internal_policy: ({ _: { context } }) => {
-    console.log("internal_policy");
-    return context.provider === "internal";
-  },
+  internal_policy: ({ _: { context } }) => context.provider === "internal",
 };
 
 export class DenoRuntime extends Runtime {

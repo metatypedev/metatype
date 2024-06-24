@@ -68,7 +68,6 @@ export async function ensureJWT(
   headers: Headers,
 ): Promise<[Record<string, unknown>, Headers]> {
   const [kind, token] = (request.headers.get("Authorization") ?? "").split(" ");
-  console.log("authorization token", token, "kind=", kind);
   if (!token) {
     return [{}, headers];
   }
