@@ -52,25 +52,27 @@ RUN set -eux; \
     ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=2725af8
+ARG GHJK_VERSION=0.2.0
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
-RUN OCI=1 NO_PYTHON=1 ghjk ports sync
-ENV GHJK_ENV=/root/.local/share/ghjk/env.sh
+COPY dev/*.ts dev/
+ENV GHJK_ENV=oci
+ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
+RUN ghjk envs cook
 
 COPY --from=plan /app/recipe.json recipe.json
 
 ARG CARGO_PROFILE=release
 
-RUN . $GHJK_ENV \
+RUN . "$GHJK_ACTIVATE" \
     && cargo chef cook --recipe-path recipe.json --profile $CARGO_PROFILE --package typegate \
     && rm recipe.json
 
 COPY . .
 
-RUN . $GHJK_ENV \
+RUN . "$GHJK_ACTIVATE" \
     && cargo build --profile $CARGO_PROFILE --package typegate \
     && ( \
         [ $CARGO_PROFILE = 'release' ]  \
@@ -78,14 +80,14 @@ RUN . $GHJK_ENV \
             || cp target/debug/typegate typegate-bin \
     )
 
-RUN . $GHJK_ENV \
+RUN . "$GHJK_ACTIVATE" \
     && deno run -A dev/update.ts --cache-only --src-only \
     && mkdir -p typegate/tmp
 
 #
 FROM builder as dev
 
-RUN . $GHJK_ENV \
+RUN . "$GHJK_ACTIVATE" \
     && mv target /tmp/target \
     && rm -rf * \
     && mv /tmp/target .
@@ -98,7 +100,7 @@ ARG TARGETARCH
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH} /tini
 
-RUN . $GHJK_ENV \
+RUN . "$GHJK_ACTIVATE" \
     && chmod +x /tini \
     && mkdir -p /lib/sym \
     && ln -s /lib/aarch64-linux-gnu /lib/sym/arm64 \

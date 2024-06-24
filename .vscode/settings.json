@@ -4,7 +4,13 @@
     "website/.docusaurus": true,
     "website/node_modules": true
   },
-  "deno.enablePaths": ["typegate", "dev", "examples/templates/deno"],
+  "deno.enablePaths": [
+    "typegate",
+    "dev",
+    "examples/templates/deno",
+    "ghjk.ts",
+    ".ghjk"
+  ],
   "deno.unstable": true,
   "typescript.suggest.completeFunctionCalls": true,
   "typescript.inlayHints.variableTypes.enabled": true,

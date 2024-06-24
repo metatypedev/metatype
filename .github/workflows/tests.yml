@@ -1,4 +1,11 @@
 on:
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
   push:
     branches:
       - main
@@ -9,11 +16,21 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "2725af8"
-  DENO_VERSION: "1.43.6"
+  GHJK_VERSION: "0.2.0"
+  GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
-  RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off"
   DENO_DIR: deno-dir
+  RUSTC_WRAPPER: "sccache"
+  SCCACHE_BUCKET: "metacache"
+  SCCACHE_ENDPOINT: "https://s3.pub1.infomaniak.cloud"
+  SCCACHE_REGION: "us-east-1"
+  SCCACHE_S3_USE_SSL: "true"
+  SCCACHE_CACHE_SIZE: "30G"
+  AWS_ACCESS_KEY_ID: ${{ secrets.SCCACHE_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.SCCACHE_AWS_SECRET_ACCESS_KEY }}
+  # used by ghjk
+  # TODO: add logic to setup-ghjk
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   changes:
@@ -63,24 +80,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: Swatinem/rust-cache@v2
-        with:
-          # use custom shared key to share cache across jobs
-          # default prefix includes job-id otherwise
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      - uses: mozilla-actions/sccache-action@v0.0.3
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         run: |
-          sudo apt update
-          sudo apt install -y --no-install-recommends libclang-dev clang
-          pnpm -C website install --frozen-lockfile
-          pnpm -C meta-lsp install --frozen-lockfile --recursive
-          pnpm -C typegraph/node install --frozen-lockfile --recursive
-          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
-          pre-commit run --show-diff-on-failure --color=always --all-files
+          sudo apt update && sudo apt install -y --no-install-recommends libclang-dev clang
+
+          ghjk x install-ts
+          ls -osha typegraph/node/sdk
+          ls -osha typegraph/node/sdk/node_modules/.bin
+          ghjk x install-website
+          ghjk x install-lsp
+          ghjk x fetch-deno
+
+          # pre-resolve everything to disable resolutions
+          # changing the lockfile which would fail the hooks
+          ghjk p resolve
+          SKIP=ghjk-resolve pre-commit run --show-diff-on-failure --color=always --all-files
 
   lint-compat:
     needs: changes
@@ -106,7 +125,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
         with:
           # temporary fix
           cache-key-prefix: ${{ matrix.os }}
@@ -119,8 +139,6 @@ jobs:
           cross check --locked --all-features --all-targets --target ${{ matrix.target }}
       - if: ${{ matrix.cross != true }}
         shell: bash
-        env:
-          WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
 
@@ -130,15 +148,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
       # - name: Cache deno dir
       #   uses: actions/cache@v4
       #   with:
       #     path: ${{ env.DENO_DIR }}
       #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - name: Cache .venv dir
         uses: actions/cache@v4
         with:
@@ -146,13 +161,11 @@ jobs:
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
       - shell: bash
         run: |
-          python3 -m venv .venv
+          ghjk x install-py
           source .venv/bin/activate
-          poetry install --no-root
-          cd website
-          pnpm install --frozen-lockfile
-          pnpm lint
-          pnpm build
+
+          ghjk x install-website
+          ghjk x test-website
 
   bulid-docker:
     needs: changes
@@ -165,9 +178,7 @@ jobs:
           - platform: linux/amd64
             runner: custom-ubuntu-large
           - platform: linux/arm64
-            # FIXME: official darwin images don't have docker
-            # and nested virtualizaiton
-            runner: custom-macos
+            runner: custom-arm
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -194,7 +205,9 @@ jobs:
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
           # check target runs extra validation steps in the Dockerfile
           target: check
-          build-args: 'CARGO_PROFILE=dev'
+          build-args: |
+            CARGO_PROFILE=dev
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
       - name: Build without cache (external)
         uses: docker/build-push-action@v5
         if: "! steps.check.outputs.has-permission"
@@ -203,22 +216,28 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
-          build-args: 'CARGO_PROFILE=dev'
+          build-args: |
+            CARGO_PROFILE=dev
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
           target: check
 
   test-full:
     needs: changes
     if: ${{ needs.changes.outputs.full == 'true' }}
     runs-on:
+      # - ubuntu-latest
       - self-hosted # https://check-jsonschema.readthedocs.io/en/latest/faq.html#using-self-hosted-runners
       - custom-ubuntu-large
     timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
+      - name: Setup tmate session
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: true
       - uses: dsherret/rust-toolchain-file@v1
-      # - uses: Swatinem/rust-cache@v2
-      #  with:
-      #    shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      - uses: mozilla-actions/sccache-action@v0.0.3
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -238,74 +257,43 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
-        env:
-          WASM_FILE: target/release/typegraph_core.wasm
         run: |
-          echo pwd in $(pwd)
+          # we don't want bash sub shells to do ghjk_reload
+          # TODO: consider disabling ghjk_reload on non-interactive shells
+          # by default
+          unset BASH_ENV
 
-          sudo apt update
-          sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev perl make
-
-          python3 -m venv .venv
+          ghjk x install-sys | bash
+          ghjk x install-py
           source .venv/bin/activate
-          poetry install --no-root
 
-          # build typegraph_core wasm
-          cargo build -p typegraph_core --target wasm32-unknown-unknown --release --target-dir target/wasm
-          mkdir -p $(dirname $WASM_FILE)
-          wasm-opt -Oz target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm -o $WASM_FILE.opt
-          wasm-tools component new $WASM_FILE.opt -o $WASM_FILE
-
-          # build python sdk package
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen
-
-          # build node typegrap/sdk package
-          jco transpile $WASM_FILE -o typegraph/node/sdk/src/gen --map metatype:typegraph/host=../host/host.js
-          cd typegraph/node
-          pnpm install
-          pnpm run sdk-build
-          cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
-          cd -
+          # this doesn't publish it but only builds it
+          WASM_OPT=1 ghjk x build-tgraph-ts
 
           # start the docker containers
-          ghjk x dev env base prisma
+          ghjk x dev-compose base prisma
+          # wait for verdaccio to get started
+          sleep 10s
 
           export NPM_CONFIG_REGISTRY=http://localhost:4873
 
-          # publish the sdk to the local registry
-          cd typegraph/node/sdk/dist
-          npm config set "//localhost:4873/:_authToken" fooBar
-          npm publish --registry $NPM_CONFIG_REGISTRY
-          cd -
+          WASM_OPT=1 ghjk x build-tgraph
 
-          ghjk x clean-deno-lock
+          ghjk x lock-clean-deno
 
-          # install packages inside metatype examples
-          pnpm install -C examples/typegraphs
-          pnpm install -C libs/metagen/tests
+          ghjk x install-ts
 
-          deno cache --import-map typegate/import_map.json typegate/src/main.ts typegate/tests/utils/mod.ts
+          ghjk x fetch-deno
+          ghjk x dev update --cache-only
 
-          deno run -A dev/update.ts --cache-only
+          ghjk x test-rust
 
-          cargo build -p xtask # xtask and meta-cli are used by the test suite
-          cargo build -p meta-cli 
+          ghjk x lock-clean-deno
 
-          # from old test-meta-cli
-          cargo test --locked --package meta-cli
+          ghjk x test-e2e --threads 1 -- --coverage=coverage
 
-          # from old test-libs
-          cargo test --locked --exclude meta-cli --exclude typegate --exclude typegate_engine --exclude typegraph_core --exclude metagen_mdk_rust_static  --workspace
-
-          # from old test-typegraph-core
-          # test in native rust, not in wasm for a future rust SDK
-          # without --tests, the --doc is causing a link error "syntax error in VERSION script"
-          cargo test --locked --package typegraph_core --tests
-
-          ghjk x clean-deno-lock
-          deno run -A dev/test.ts --threads 1 -- --coverage=coverage
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
           deno cache --import-map typegate/import_map.json \
             typegate/src/main.ts \
@@ -315,6 +303,7 @@ jobs:
             typegate/tests/runtimes/python/*.ts \
             dev/deps.ts \
             dev/utils.ts
+
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 
       - uses: codecov/codecov-action@v4
@@ -327,17 +316,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
-      - uses: metatypedev/setup-ghjk@2e8bbf084060a18828338a7cdd43fde6feb2a3cc
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         run: |
-          cd meta-lsp
-          pnpm install --frozen-lockfile --recursive
-          cd ts-language-server
+          ghjk x install-lsp
+          ghjk x test-lsp
           # node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
-          node --test --import=tsx tests/*.test.ts
 
       # - uses: codecov/codecov-action@v4
       #   with:
