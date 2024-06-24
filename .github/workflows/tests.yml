@@ -80,7 +80,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: mozilla-actions/sccache-action@v0.0.5
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
@@ -125,7 +125,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: mozilla-actions/sccache-action@v0.0.5
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
         with:
           # temporary fix
@@ -195,7 +195,7 @@ jobs:
           username: zifeo
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build with cache (internal)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: steps.check.outputs.has-permission
         with:
           file: dev/Dockerfile
@@ -209,7 +209,7 @@ jobs:
             CARGO_PROFILE=dev
             GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
       - name: Build without cache (external)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: "! steps.check.outputs.has-permission"
         with:
           file: dev/Dockerfile
@@ -237,7 +237,7 @@ jobs:
         with:
           detached: true
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: mozilla-actions/sccache-action@v0.0.5
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
