@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const deindent = require("de-indent");
 const path = require("path");
-const { spawn } = require("child_process");
+//const { spawn } = require("child_process");
 
 const projectDir = path.resolve(__dirname, "../..");
 
@@ -13,7 +13,7 @@ const commentsPrefix = {
 };
 
 const postTransformations = {
-  py: (source) => source.replaceAll(/ {4}/g, "  "),
+  py: (source) => source, //.replaceAll(/ {4}/g, "  "),
   ts: (source) => source,
   rs: (source) => source,
   toml: (source) => source,
@@ -23,31 +23,6 @@ module.exports = async function (source) {
   const relPath = path.relative(projectDir, this.resourcePath);
   const ext = relPath.split(".").pop();
   const prefix = commentsPrefix[ext];
-
-  if (ext === "py") {
-    source = await new Promise((resolve, reject) => {
-      const child = spawn("ruff", ["format", "--line-length", "70", "-"]);
-      child.stdin.write(source);
-      child.stdin.end();
-      let stdout = "";
-      let stderr = "";
-      child.stdout.on("data", (data) => {
-        stdout += data;
-      });
-      child.stderr.on("data", (data) => {
-        stderr += data;
-      });
-      child.on("exit", function () {
-        if (stderr.length > 0) {
-          console.error(stderr);
-          reject(new Error(`Failed to format python code: ${stderr}`));
-        } else {
-          resolve(stdout);
-        }
-      });
-    });
-    console.log(this.resourcePath, source);
-  }
 
   const ret = [];
   let skipping = false;
