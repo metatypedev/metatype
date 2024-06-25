@@ -271,7 +271,7 @@ function TryIt(): JSX.Element {
       </div>
       <div className="w-full">
         <TGExample
-          python={require("../../../examples/typegraphs/index.py")}
+          python={require("!!code-loader!../../../examples/typegraphs/index.py")}
           typescript={require("!!code-loader!../../../examples/typegraphs/index.ts")}
           typegraph="homepage"
           variables={{ email: "fill-me", message: "Great tool!" }}
@@ -458,7 +458,7 @@ const order: Record<Profile, JSX.Element> = {
 export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   const [profile, setProfile] = useState<Profile>(
-    Object.keys(profiles)[0] as Profile
+    Object.keys(profiles)[0] as Profile,
   );
 
   return (

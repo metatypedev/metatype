@@ -49,7 +49,7 @@ const autoHeight = (codeMirror) => {
 export type Panel = "variables" | "headers" | "";
 
 export default function GraphiQLInterface(
-  props: GraphiQLInterfaceProps & { defaultTab: Panel; noTool: boolean }
+  props: GraphiQLInterfaceProps & { defaultTab: Panel; noTool: boolean },
 ) {
   const { queryEditor, variableEditor, headerEditor } = useEditorContext({
     nonNull: true,

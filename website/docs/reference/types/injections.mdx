@@ -1,38 +1,28 @@
 import TGExample from "@site/src/components/TGExample";
 
-
 # Injections
 
-Injection is a mechanism to get the value of a parameter from other sources than the graphql query.
-When a parameter is injected, no value is expected in the query, otherwise, the query will fail.
-They are specified at the type level for input types that are direct children of a `t.struct`.
-
+Injection is a mechanism to get the value of a parameter from other sources than the graphql query. When a parameter is injected, no value is expected in the query, otherwise, the query will fail. They are specified at the type level for input types that are direct children of a `t.struct`.
 
 ## Static
 
-**Description:**
-Static injection sets a static value to the parameter.
+**Description:** Static injection sets a static value to the parameter.
 
 **Method:** `.set(value)`
 
 **Parameter:** The value to be set, it must be compatible with the target type.
 
-
 ## Parent
 
-**Description:**
-Parent injection gets the value output of a sibling field in the parent struct.
-It adds a dependency to the sibling field, so make sure to prevent circular dependencies.
+**Description:** Parent injection gets the value output of a sibling field in the parent struct. It adds a dependency to the sibling field, so make sure to prevent circular dependencies.
 
 **Method:** `.from_parent(type_name)`
 
 **Parameter:** The type name of the sibling field in the parent struct.
 
-
 ## Context
 
-**Description:**
-Context injection gets the value from the request context that contains [authentication data](/docs/reference/typegate/authentication).
+**Description:** Context injection gets the value from the request context that contains [authentication data](/docs/reference/typegate/authentication).
 
 **Method:** `.from_context(prop_name)`
 
@@ -40,34 +30,30 @@ Context injection gets the value from the request context that contains [authent
 
 ## Secret
 
-**Description:**
-Secret injection gets the value from the [secrets](/docs/reference/meta-cli/configuration-file#named-secrets)
-defined when deploying the typegraph.
+**Description:** Secret injection gets the value from the [secrets](/docs/reference/meta-cli/configuration-file#named-secrets) defined when deploying the typegraph.
 
 **Method:** `.from_secret(secret_name)`
 
 **Parameter:** The name of the secret.
 
 ## Dynamic
-**Description:**
-Dynamic injection gets the value from a predefined generator evaluated at runtime.
+
+**Description:** Dynamic injection gets the value from a predefined generator evaluated at runtime.
 
 **Method:** `.inject(generator_name)`
 
 **Parameter:** The name of the generator.
 
 Available generators:
-- `now`: produces the current datetime as a valid [ISO](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
-string format.
-This value depends on the configuration of the typegate host machine.
 
+- `now`: produces the current datetime as a valid [ISO](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString) string format. This value depends on the configuration of the typegate host machine.
 
 ## Example
 
 <TGExample
-    typegraph="injection-example"
-    python={require("../../../../examples/typegraphs/injections.py")}
-    typescript={require("!!code-loader!../../../../examples/typegraphs/injections.ts")}
-    disablePlayground={true}
-    query={{content: ""}}
+  typegraph="injection-example"
+  python={require("!!code-loader!../../../../examples/typegraphs/injections.py")}
+  typescript={require("!!code-loader!../../../../examples/typegraphs/injections.ts")}
+  disablePlayground={true}
+  query={{ content: "" }}
 />

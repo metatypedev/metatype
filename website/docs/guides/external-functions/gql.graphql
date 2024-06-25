@@ -1,22 +1,24 @@
 # create idea first
 mutation createIdea {
-  createIdea(data: {
-    id: "c0ebb212-c94e-4fa5-a6ed-ae910d6cd9f5",
-    name: "PATENT #12343", 
-    authorEmail: "corp@abc.xyz",
-    desc: "Well, you can't use it so why do you care?"
-  }){
+  createIdea(
+    data: {
+      id: "c0ebb212-c94e-4fa5-a6ed-ae910d6cd9f5"
+      name: "PATENT #12343"
+      authorEmail: "corp@abc.xyz"
+      desc: "Well, you can't use it so why do you care?"
+    }
+  ) {
     id
     authorEmail
   }
 }
 
 # now try to vote using same email
-mutation createVote{
+mutation createVote {
   createVote(
-    authorEmail: "corp@abc.xyz",
+    authorEmail: "corp@abc.xyz"
     ideaId: "c0ebb212-c94e-4fa5-a6ed-ae910d6cd9f5"
-  ){
+  ) {
     vote {
       id
       authorEmail

@@ -96,51 +96,44 @@ Metatype is using a mono-repository approach. This means that all code is centra
 
 #### Dependencies
 
-Install the following global dependencies:
-
-- [Rust](https://www.rust-lang.org/tools/install)
-- [Python](https://www.python.org/downloads/)
-- [Pipx](https://pypa.github.io/pipx/installation/)
-- [PNPM](https://pnpm.io/installation)
-- [Deno](https://deno.com/manual/getting_started/installation)
-- [Node](https://nodejs.org/en/download/)
-
-And then more specific ones for the workspace:
+Ghjk is used for managing development environments.
+You can install it using the following instructions.
 
 ```bash
-# manage rust dependencies
-cargo install cargo-edit
-# task runner
-cargo install whiz
-# enforce style and good practice
-pipx install pre-commit
-# manange python dependencies
-pipx install poetry
-# grpc prerequisits
-brew install protobuf
-sudo apt-get install protobuf-compiler libprotobuf-dev
+# install ghjk
+GHJK_VERSION="0.2.0"
+GHJK_INSTALL_HOOK_SHELLS=bash # add more shells if needed
+curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | sh
+bash # re-open your shells to have the hooks register
+
+# this will activate the environment after installing
+# the required programs first
+ghjk sync
+
+# install system libraries
+ghjk x install-sys | bash 
+
+# enable pre-commit hook
+pre-commit install
 ```
 
 #### Running The Project
 
 ```bash
-# install git commit hooks
-pre-commit install
+ghjk sync dev
 # prepare python virtual environment
-python3 -m venv .venv
+ghjk x install-py
 source .venv/bin/activate # depends on your shell
-# run the task runner and it will install the remaining dependencies (see whiz.yaml and install step)
-whiz
 ```
 
 #### Environments And Tests
 
 ```bash
-deno run -A dev/env.ts all # or only the envs required (e.g. base prisma s3)
-cargo test --tests # there is a bug with wasm and doc testings
-deno run -A dev/test.ts # all tests
-deno run -A dev/test.ts runtimes/prisma/full_prisma_mapping_test.ts # isolated test
-deno run -A dev/env.ts # shutdown all envs
+ghjk x dev-compose all # or only the envs required (e.g. base prisma s3)
+ghjk x test-e2e # all tests
+ghjk x test-e2e runtimes/prisma/full_prisma_mapping_test.ts # isolated test
+ghjk x # more test tasks are availaible
+ghjk x dev-compsoe # shutdown all envs
 ```
 
 There are many more developer scripts in the `dev` folder, however most of them should only be needed for advanced tasks.
@@ -155,7 +148,9 @@ We recommend using [sccache](https://github.com/mozilla/sccache) giving a roughl
 
 #### Faster linking
 
-We recommend using [mold](https://github.com/rui314/mold) for Linux targets and macOS new parallel linker for faster linking. You can use them as aliases or configure them in your `~/.cargo/config.toml` file.
+[mold](https://github.com/rui314/mold) is enabled by default for Linux targets whithin the ghjk environments.
+For macOS, there's a new parallel linker available for faster linking. 
+You can use it through aliases or configure them in your `~/.cargo/config.toml` file.
 
 ```toml
 [target.aarch64-apple-darwin]
@@ -164,10 +159,12 @@ rustflags = [
     "-C", "link-arg=-ld_new" # makes sure the new parallel linker is used
 ]
 
-[target.x86_64-unknown-linux-gnu]
-rustflags = [
-    "-C", "link-arg=-fuse-ld=mold"
-]
+# ghjk aliases `ld` to `mold` by default so the following
+# is not necessary
+# [target.x86_64-unknown-linux-gnu]
+# rustflags = [
+#     "-C", "link-arg=-fuse-ld=/path/to/mold"
+# ]
 ```
 
 #### Local typegraph with Nodejs

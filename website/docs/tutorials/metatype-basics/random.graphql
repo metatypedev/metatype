@@ -1,5 +1,5 @@
 query {
-  get_idea{
+  get_idea {
     id
     name
     authorEmail

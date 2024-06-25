@@ -118,7 +118,7 @@ for (const name of list) {
       let pyVersion: string;
       await t.should("serialize python typegraph", async () => {
         const { stdout } = await Meta.cli(
-          { currentDir: "examples" },
+          { currentDir: "examples", env: { RUST_LOG: "trace" } },
           "serialize",
           "-f",
           `typegraphs/${name}.py`,
@@ -129,7 +129,7 @@ for (const name of list) {
       let tsVersion: string;
       await t.should("serialize typescript typegraph", async () => {
         const { stdout } = await Meta.cli(
-          { currentDir: "examples" },
+          { currentDir: "examples", env: { RUST_LOG: "trace" } },
           "serialize",
           "-f",
           `typegraphs/${name}.ts`,

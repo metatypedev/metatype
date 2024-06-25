@@ -12,10 +12,10 @@
  */
 
 import { basename, dirname, join } from "std/path/mod.ts";
-import { parseFlags, resolve } from "./deps.ts";
+import { parseArgs, resolve } from "./deps.ts";
 import { camelCase, Cursor, findCursors, nextMatch } from "./utils.ts";
 
-const args = parseFlags(Deno.args, {
+const args = parseArgs(Deno.args, {
   string: ["file"],
   boolean: ["force", "print"],
 });

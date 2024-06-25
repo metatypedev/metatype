@@ -1,25 +1,20 @@
 import BlogIntro from "@site/src/components/BlogIntro";
 import UpgradeMetatype from "../../shared/upgrade/index.mdx";
 
-
 # Emulating your server nodes locally
 
 <BlogIntro text="Metatype is a platform which allows developers to solely focus on functional aspect of their applications by powering them with rich declarative API development tools to program and deploy in a cloud first environment. One component of Metatype is the Typegate, a serverless GraphQL/REST gateway for processing queries. This post is about how we in metatype made a dev friendly access to a typegate instance namely Embedded Typegate." />
 
-
-
 ## Introducing the Embedded Typegate
 
-The embedded typegate is a feature that comes with the [Meta CLI](/docs/reference/meta-cli) which provides the option of spinning a typegate instance from the CLI with minimum configurations and installations needed from the developer. All that is required to access the _Embedded Typegate_ is to install _Meta_CLI_. The spawned typegate instance behaves similarly to cloud-deployed typegates. 
-
+The embedded typegate is a feature that comes with the [Meta CLI](/docs/reference/meta-cli) which provides the option of spinning a typegate instance from the CLI with minimum configurations and installations needed from the developer. All that is required to access the _Embedded Typegate_ is to install _Meta_CLI_. The spawned typegate instance behaves similarly to cloud-deployed typegates.
 
 ## The motive
 
-There are more than a couple of reasons why a developer would be tempted to use an emedded typegate. While developers can start a typegate instance using docker compose, the developer needs to install docker as a dependency to run the typegate container. Even though docker is familiar among many developers, it can sometimes be tricky and unbeknownst to some developers. We at metatype highly value the developer experience and one reason for adding the _embedded typegate_ feature to the _Meta_CLI_ is for users to have a smooth experience with our system by providing a docker compose free experience. 
+There are more than a couple of reasons why a developer would be tempted to use an emedded typegate. While developers can start a typegate instance using docker compose, the developer needs to install docker as a dependency to run the typegate container. Even though docker is familiar among many developers, it can sometimes be tricky and unbeknownst to some developers. We at metatype highly value the developer experience and one reason for adding the _embedded typegate_ feature to the _Meta_CLI_ is for users to have a smooth experience with our system by providing a docker compose free experience.
 This feature provides a great utility for developers to author and test typegraphs in their local machine before deploying them to production level typegate instances on the cloud.
 Additionally, developers need not concern themselves with deployment configurations which are needed only during deployment. The only need to focus their energy and time in developing the right application and easily test them on _embedded typegate_ running from the terminal. To add more to what is said, as the typegate engine keeps evolving, users will be abstracted away from the different configurations which might be added on the future. The _Meta_CLI_ will abstract much of what's not needed in a dev environment. Thus, leaving less headaches to developers on new changes.
-Ultimately, The _embedded typegate_ is designed to be a good dev environment friendly tool which faciliates development time. 
-
+Ultimately, The _embedded typegate_ is designed to be a good dev environment friendly tool which faciliates development time.
 
 ## Quick First hand example
 
@@ -28,43 +23,50 @@ Ultimately, The _embedded typegate_ is designed to be a good dev environment fri
 Either of the two [Typegraph](/docs/reference/typegraph) SDKs are needed to author typegraphs. For this example, the node SDK will be used.
 
 First, make sure the _Meta_CLI_ is installed.
+
 ```shell
 curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/installer.sh | bash
 ```
 
-Next, create a new node project using this command. 
+Next, create a new node project using this command.
+
 ```shell
 meta new --template node
 ```
 
-The above command will create a sample typegraph which you can use to test the embedded typegate. 
+The above command will create a sample typegraph which you can use to test the embedded typegate.
 
 Now, you need to install the typegraph SDK by running the command down below. The previous command generates a `package.json` with the SDK specified as a dependency.
+
 ```shell
 npm install
 ```
 
 Before deploying the typegraph to the embedded typegate, Run the following commands below.
 
-Execute this command to set `tg_secret` and `tg_admin_password` environment variables, which are neccessary for the typegate to run. 
+Execute this command to set `tg_secret` and `tg_admin_password` environment variables, which are neccessary for the typegate to run.
+
 ```shell
 export tg_secret=a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw== tg_admin_password=password
 ```
 
 Start the typegate instance.
+
 ```shell
 meta typegate
 ```
 
 Now that there is running instance of a typegate, you can deploy the example typegraph. From another terminal, run the command below.
+
 ```shell
 meta deploy -f api/example.ts --allow-dirty --create-migration --target dev --gate http://localhost:7890
 ```
 
 The typegate runs on port 7890 by default. If you access [http://localhost:7890/example](http://localhost:7890/example) on your browser, you can see an GraphQL interface to interact with the deployed typegraph. You can test the example typegraph using the following graphql query below.
+
 ```graphql
 query {
-    multilpy (first: 3, second: 5)
+  multilpy(first: 3, second: 5)
 }
 ```
 
