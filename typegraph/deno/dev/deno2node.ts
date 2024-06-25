@@ -1,9 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { dnt, expandGlobSync, join, resolve } from "../../../dev/deps.ts";
+import {
+  copySync,
+  dnt,
+  expandGlobSync,
+  join,
+  resolve,
+} from "../../../dev/deps.ts";
 import { projectDir } from "../../../dev/utils.ts";
-import { METATYPE_VERSION, TAGLINE } from "../../../dev/consts.ts";
+import {
+  METATYPE_VERSION,
+  SDK_PACKAGE_NAME_TS,
+  TAGLINE,
+} from "../../../dev/consts.ts";
 
 // Direct node users need to use module
 // module = Node16 or moduleResolution = Node16 inside tsconfig.json seems to be enough
@@ -23,12 +33,10 @@ for (
 ) {
   const relPath = path.replace(srcDir, ".");
   if (name !== "index.ts") {
-    const entryPoint = {
+    entryPoints.push({
       name: relPath.substring(0, relPath.lastIndexOf(".")), // strip extension
       path,
-    };
-    // console.log(" ", entryPoint.path, "=>", entryPoint.name);
-    entryPoints.push(entryPoint);
+    });
   } else {
     console.log("  Skipped", path);
   }
@@ -49,7 +57,7 @@ await dnt.build({
   typeCheck: "single",
   packageManager: "pnpm",
   package: {
-    name: "@typegraph/sdk",
+    name: SDK_PACKAGE_NAME_TS,
     version: METATYPE_VERSION,
     description: TAGLINE,
     license: "MPL-2.0",
@@ -62,15 +70,56 @@ await dnt.build({
     },
   },
   postBuild() {
-    const wasm = "./typegraph/deno/sdk/src/gen/typegraph_core.core.wasm";
-    const files = [
-      ["./dev/LICENSE-MPL-2.0.md", "./LICENSE.md"],
-      [wasm, "./esm/gen/typegraph_core.core.wasm"],
-    ];
-    for (const [src, dest] of files) {
-      Deno.copyFileSync(resolve(projectDir, src), resolve(outDir, dest));
-    }
-    // remove source (comment when debugging)
-    Deno.removeSync(resolve(outDir, "src"), { recursive: true });
+    // Copy assets
+    copySync(
+      resolve(projectDir, "./dev/LICENSE-MPL-2.0.md"),
+      resolve(outDir, "./LICENCE.md"),
+    );
+    copySync(
+      resolve(
+        projectDir,
+        "./typegraph/deno/sdk/src/gen/typegraph_core.core.wasm",
+      ),
+      join(outDir, "./esm/gen/typegraph_core.core.wasm"),
+    );
+
+    // FIXME:
+    // jco generated standalone .d.ts are never resolved?
+    // 1. `deno publish --dry-run` fails
+    // 2. dnt assumes .d.ts files are always linked to js files
+    //    so `pnpm dlx jsr publish --dry-run` doesn't work either
+
+    // build jsr.json
+
+    // const jsrExports = {} as Record<string, string>;
+    // for (const { path } of expandGlobSync("./**/*.*", {
+    //   root: srcDir,
+    //   includeDirs: false,
+    //   globstar: true,
+    // })) {
+    //   if (/.(d.ts|ts|js|mjs)$$/.test(path)) {
+    //     if (path.endsWith(".d.ts")) {
+    //       const relPath = path.replace(srcDir, ".");
+    //       jsrExports[relPath] = relPath;
+    //     } else {
+    //       const relPath = path.replace(srcDir, ".");
+    //       jsrExports[relPath] = relPath;
+    //     }
+    //   }
+    // }
+
+    // Deno.writeTextFileSync(
+    //   join(srcDir, "jsr.json"),
+    //   JSON.stringify(
+    //     {
+    //       name: SDK_PACKAGE_NAME_TS,
+    //       version: METATYPE_VERSION,
+    //       license: "MPL-2.0",
+    //       exports: jsrExports,
+    //     },
+    //     null,
+    //     2
+    //   )
+    // );
   },
 });

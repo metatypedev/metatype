@@ -186,16 +186,15 @@ jobs:
           cd ../..
 
           cd typegraph/node
-          pnpm install
-          pnpm run sdk-build
-          cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
-          cd ../..
-
-          cd typegraph/node/sdk/dist
           pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
           [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
             && pnpm publish --no-git-checks --force \
             || pnpm publish --no-git-checks
+
+          # TODO: publish to jsr similarly, remove --dry-run
+          # Requires auth
+          # pnpm dlx jsr publish --dry-run
+
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}

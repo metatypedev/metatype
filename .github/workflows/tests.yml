@@ -281,16 +281,12 @@ jobs:
 
           WASM_OPT=1 ghjk x build-tgraph
 
-          ghjk x lock-clean-deno
-
           ghjk x install-ts
 
           ghjk x fetch-deno
           ghjk x dev update --cache-only
 
           ghjk x test-rust
-
-          ghjk x lock-clean-deno
 
           ghjk x test-e2e --threads 1 -- --coverage=coverage
 
