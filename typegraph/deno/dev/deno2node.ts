@@ -14,11 +14,13 @@ const outDir = resolve(projectDir, "./typegraph/node");
 await dnt.emptyDir(outDir);
 
 const entryPoints: dnt.BuildOptions["entryPoints"] = [join(srcDir, "index.ts")];
-for (const { name, path } of expandGlobSync("./**/*.ts", {
-  root: srcDir,
-  includeDirs: false,
-  globstar: true,
-})) {
+for (
+  const { name, path } of expandGlobSync("./**/*.ts", {
+    root: srcDir,
+    includeDirs: false,
+    globstar: true,
+  })
+) {
   const relPath = path.replace(srcDir, ".");
   if (name !== "index.ts") {
     const entryPoint = {

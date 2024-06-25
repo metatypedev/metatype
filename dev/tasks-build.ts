@@ -13,7 +13,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
           .expandGlob("**/*.py", {
             includeDirs: false,
             globstar: true,
-          })
+          }),
       );
       for (const { path } of typegraphs) {
         const target = path.toString().replace(/\.py$/, ".json");
@@ -69,7 +69,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     inherit: ["build-tgraph-core", "_python"],
     async fn($) {
       await $.removeIfExists(
-        $.workingDir.join("typegraph/python/typegraph/gen")
+        $.workingDir.join("typegraph/python/typegraph/gen"),
       );
       await $`poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python/typegraph/gen`;
       await $`poetry run ruff check typegraph/python/typegraph`;
@@ -84,7 +84,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     async fn($) {
       await $.removeIfExists("./libs/pyrt_wit_wire/wit_wire");
       await $`componentize-py -d ../../wit/wit-wire.wit bindings .`.cwd(
-        "./libs/pyrt_wit_wire"
+        "./libs/pyrt_wit_wire",
       );
     },
   },

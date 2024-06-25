@@ -10,11 +10,11 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     fn: async ($) => {
       $.logger.info("pipe me to a shell");
       const uname = await $`uname -a`.text();
-      if (/(Ubuntu|Debian)/.test(uname)) {
+      if (/(Ubuntu|Debian|Linux pop-os)/.test(uname)) {
         console.log(
           `sudo apt update && ` +
             `sudo apt install -y --no-install-recommends ` +
-            `gcc-multilib pkg-config libssl-dev libclang-dev perl make`
+            `gcc-multilib pkg-config libssl-dev libclang-dev perl make`,
         );
       } else {
         $.logger.error("unable to determine platform");
@@ -43,7 +43,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
           `poetry install --no-root`,
           `cd typegraph/python`,
           `poetry install --no-root`,
-        ].join("\n")
+        ].join("\n"),
       );
     },
   },
@@ -57,7 +57,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
           --filter ./libs/metagen/tests/*...`.stdinText(
         Array(1000)
           .map(() => "y")
-          .join("\n")
+          .join("\n"),
       ),
   },
 
@@ -80,8 +80,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         action: async () =>
           await $.co(
             ["command", "reactor", "proxy"].map((kind) => {
-              const url =
-                `https://github.com/bytecodealliance/wasmtime` +
+              const url = `https://github.com/bytecodealliance/wasmtime` +
                 `/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.${kind}.wasm`;
               return $.request(url)
                 .showProgress()
@@ -89,9 +88,9 @@ const tasks: Record<string, DenoTaskDefArgs> = {
                   $.workingDir.join("tmp").join(std_url.basename(url)),
                   {
                     create: true,
-                  }
+                  },
                 );
-            })
+            }),
           ),
       });
     },

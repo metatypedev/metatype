@@ -11,7 +11,8 @@ export const TYPEGRAPH_VERSION = "0.0.3";
 export const PRISMA_VERSION = "5.6.0";
 export const METATYPE_VERSION = "0.4.4-0";
 export const PUBLISHED_VERSION = "0.4.2";
-export const TAGLINE = `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.`;
+export const TAGLINE =
+  `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.`;
 
 export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "rust-toolchain.toml": [[/(channel = ").+(")/, RUST_VERSION]],
@@ -87,16 +88,6 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "examples/**/*.ts": [
     [
       /(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)/,
-      METATYPE_VERSION,
-    ],
-  ],
-  "typegate/import_map.json": [
-    [
-      /(\s*"@typegraph\/sdk"\s*:\s*"npm:@typegraph\/sdk@).+(",?)/,
-      METATYPE_VERSION,
-    ],
-    [
-      /(\s*"@typegraph\/sdk\/"\s*:\s*"npm:\/@typegraph\/sdk@).+(\/",?)/,
       METATYPE_VERSION,
     ],
   ],
