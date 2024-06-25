@@ -39,6 +39,7 @@ module.exports = async function (source) {
       });
       child.on("exit", function () {
         if (stderr.length > 0) {
+          console.error(stderr);
           reject(new Error(`Failed to format python code: ${stderr}`));
         } else {
           resolve(stdout);
