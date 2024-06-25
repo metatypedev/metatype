@@ -133,7 +133,7 @@ ghjk x dev-compose all # or only the envs required (e.g. base prisma s3)
 ghjk x test-e2e # all tests
 ghjk x test-e2e runtimes/prisma/full_prisma_mapping_test.ts # isolated test
 ghjk x # more test tasks are availaible
-ghjk x dev-compsoe # shutdown all envs
+ghjk x dev-compoe # shutdown all envs
 ```
 
 There are many more developer scripts in the `dev` folder, however most of them should only be needed for advanced tasks.
