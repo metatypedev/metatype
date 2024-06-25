@@ -241,11 +241,7 @@ Meta.test(
     name: "Deno runtime: script reloading",
   },
   async (t) => {
-    const denoScript = path.join(
-      import.meta.dirname!,
-      "reload",
-      "template.ts",
-    );
+    const denoScript = path.join(import.meta.dirname!, "reload", "template.ts");
     const originalContent = await Deno.readTextFile(denoScript);
     const testReload = async (value: number) => {
       try {
@@ -341,9 +337,7 @@ Meta.test(
     name: "Deno runtime - Python SDK: with no artifacts in sync mode",
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/deno/deno_no_artifact.py",
-    );
+    const e = await t.engine("runtimes/deno/deno_no_artifact.py");
 
     await t.should("work with no artifacts in typegrpah", async () => {
       await gql`
@@ -387,9 +381,7 @@ Meta.test(
     name: "Deno runtime - Python SDK: with duplicate artifacts in sync mode",
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/deno/deno_duplicate_artifact.py",
-    );
+    const e = await t.engine("runtimes/deno/deno_duplicate_artifact.py");
 
     await t.should("work with duplicate artifacts in typegrpah", async () => {
       await gql`

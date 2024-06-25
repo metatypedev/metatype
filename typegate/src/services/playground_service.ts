@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "../config.ts";
+import { globalConfig } from "../config.ts";
 import { QueryEngine } from "../engine/query_engine.ts";
 import { baseUrl } from "./middlewares.ts";
 
@@ -10,7 +10,7 @@ export const handlePlaygroundGraphQL = (
   engine: QueryEngine,
 ): Response => {
   const url = `${baseUrl(request)}/${engine.name}`;
-  const auth = engine.name === "typegate" && config.debug
+  const auth = engine.name === "typegate" && globalConfig.debug
     ? "Basic YWRtaW46cGFzc3dvcmQ="
     : "";
 

@@ -66,7 +66,10 @@ export class Planner {
     private readonly tg: TypeGraph,
     private readonly verbose: boolean,
   ) {
-    this.policiesBuilder = new OperationPoliciesBuilder(tg);
+    const { timer_policy_eval_retries } = tg.typegate.config.base;
+    this.policiesBuilder = new OperationPoliciesBuilder(tg, {
+      timer_policy_eval_retries,
+    });
   }
 
   getPlan(): Plan {

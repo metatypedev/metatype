@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
-import config from "../config.ts";
+import { globalConfig } from "../config.ts";
 import * as semver from "std/semver/mod.ts";
 
 const typegraphVersion = "0.0.3";
@@ -62,7 +62,7 @@ export function upgradeTypegraph(typegraph: TypeGraphDS): TypeGraphDS {
     const migration = typegraphChangelog[currentVersion];
     if (!migration) {
       throw Error(
-        `typegate ${config.version} supports typegraph ${typegraphVersion} which is incompatible with ${typegraphName} ${meta.version} (max auto upgrade was ${currentVersion})`,
+        `typegate ${globalConfig.version} supports typegraph ${typegraphVersion} which is incompatible with ${typegraphName} ${meta.version} (max auto upgrade was ${currentVersion})`,
       );
     }
     typegraph = migration.transform(typegraph);

@@ -3,28 +3,29 @@
 
 import { init_native } from "native";
 
-import config from "./config.ts";
+import {
+  defaultTypegateConfigBase,
+  getTypegateConfig,
+  globalConfig,
+} from "./config.ts";
 import { Typegate } from "./typegate/mod.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
 import { init_runtimes } from "./runtimes/mod.ts";
-import { syncConfigFromEnv } from "./sync/config.ts";
 
 const logger = getLogger(import.meta);
 
 try {
-  logger.debug(
-    Deno.inspect({ ...config, tg_admin_password: "***", tg_secret: "***" }),
-  );
-  logger.info(`typegate v${config.version} starting`);
+  logger.debug(Deno.inspect(globalConfig));
+  logger.info(`typegate v${globalConfig.version} starting`);
 
   Sentry.init({
-    dsn: config.sentry_dsn,
-    release: config.version,
-    environment: config.debug ? "development" : "production",
-    sampleRate: config.sentry_sample_rate,
-    tracesSampleRate: config.sentry_traces_sample_rate,
+    dsn: globalConfig.sentry_dsn,
+    release: globalConfig.version,
+    environment: globalConfig.debug ? "development" : "production",
+    sampleRate: globalConfig.sentry_sample_rate,
+    tracesSampleRate: globalConfig.sentry_traces_sample_rate,
     integrations: [
       new Sentry.Integrations.Context({
         app: true,
@@ -48,17 +49,19 @@ try {
   // load all runtimes
   await init_runtimes();
 
-  const syncConfig = await syncConfigFromEnv(["vars", "args"]);
-  const typegate = await Typegate.init(syncConfig);
+  const config = getTypegateConfig({
+    base: defaultTypegateConfigBase,
+  });
+  const typegate = await Typegate.init(config);
 
-  await SystemTypegraph.loadAll(typegate, !config.packaged);
+  await SystemTypegraph.loadAll(typegate, !globalConfig.packaged);
 
   const server = Deno.serve(
-    { port: config.tg_port },
+    { port: globalConfig.tg_port },
     (req, connInfo) => typegate.handle(req, connInfo.remoteAddr),
   );
 
-  getLogger().info(`typegate ready on ${config.tg_port}`);
+  getLogger().info(`typegate ready on ${globalConfig.tg_port}`);
 
   await server.finished;
 } catch (err) {

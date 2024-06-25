@@ -42,7 +42,10 @@ export function initAuth(
         authParameters,
       );
     case "basic":
-      return BasicAuth.init(typegraphName, auth, secretManager, denoRuntime);
+      return BasicAuth.init(typegraphName, auth, secretManager, denoRuntime, {
+        tg_admin_password:
+          authParameters.tg.typegate.config.base.tg_admin_password,
+      });
     case "jwt":
       return JWTAuth.init(typegraphName, auth, secretManager, denoRuntime);
     default:
@@ -64,9 +67,7 @@ export async function ensureJWT(
   engine: QueryEngine,
   headers: Headers,
 ): Promise<[Record<string, unknown>, Headers]> {
-  const [kind, token] = (request.headers.get("Authorization") ?? "").split(
-    " ",
-  );
+  const [kind, token] = (request.headers.get("Authorization") ?? "").split(" ");
   if (!token) {
     return [{}, headers];
   }
@@ -92,10 +93,7 @@ export async function ensureJWT(
     return [{}, headers];
   }
 
-  const { claims, nextToken } = await auth.tokenMiddleware(
-    token,
-    request,
-  );
+  const { claims, nextToken } = await auth.tokenMiddleware(token, request);
   if (nextToken !== null) {
     // "" is valid as it signal to remove the token
     headers.set(nextAuthorizationHeader, nextToken);
@@ -113,10 +111,7 @@ export async function handleAuth(
   }
 
   const url = new URL(request.url);
-  const [providerName] = url.pathname.split("/").slice(
-    3,
-    4,
-  );
+  const [providerName] = url.pathname.split("/").slice(3, 4);
 
   if (providerName === "take") {
     return await routes.take({ request, engine, headers });
@@ -130,15 +125,13 @@ export async function handleAuth(
 
   const provider = engine.tg.auths.get(providerName);
   if (!provider) {
-    const providers = Array.from(engine.tg.auths.entries()).filter((
-      [name],
-    ) => name !== internalAuthName).map((
-      [name, _auth],
-    ) => ({
-      name,
-      uri:
-        `${url.protocol}//${url.host}/${engine.name}/auth/${name}?redirect_uri=${origin}`,
-    }));
+    const providers = Array.from(engine.tg.auths.entries())
+      .filter(([name]) => name !== internalAuthName)
+      .map(([name, _auth]) => ({
+        name,
+        uri:
+          `${url.protocol}//${url.host}/${engine.name}/auth/${name}?redirect_uri=${origin}`,
+      }));
     return new Response(JSON.stringify({ providers }), {
       headers: { "content-type": "application/json" },
     });
