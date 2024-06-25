@@ -54,7 +54,7 @@ export class WasmRuntimeWire extends Runtime {
     });
 
     logger.info("initializing wit wire messenger");
-    const token = await InternalAuth.emit();
+    const token = await InternalAuth.emit(typegate.cryptoKeys);
     const wire = await WitWireMessenger.init(
       await typegate.artifactStore.getLocalPath(artifactMeta),
       uuid,
@@ -87,42 +87,45 @@ export class WasmRuntimeWire extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     if (stage.props.node === "__typename") {
-      return [stage.withResolver(() => {
-        const { parent: parentStage } = stage.props;
-        if (parentStage != null) {
-          return parentStage.props.outType.title;
-        }
-        switch (stage.props.operationType) {
-          case ast.OperationTypeNode.QUERY:
-            return "Query";
-          case ast.OperationTypeNode.MUTATION:
-            return "Mutation";
-          default:
-            throw new Error(
-              `Unsupported operation type '${stage.props.operationType}'`,
-            );
-        }
-      })];
+      return [
+        stage.withResolver(() => {
+          const { parent: parentStage } = stage.props;
+          if (parentStage != null) {
+            return parentStage.props.outType.title;
+          }
+          switch (stage.props.operationType) {
+            case ast.OperationTypeNode.QUERY:
+              return "Query";
+            case ast.OperationTypeNode.MUTATION:
+              return "Mutation";
+            default:
+              throw new Error(
+                `Unsupported operation type '${stage.props.operationType}'`,
+              );
+          }
+        }),
+      ];
     }
 
     if (stage.props.materializer != null) {
       const mat = stage.props.materializer;
-      return [
-        stage.withResolver(this.delegate(mat)),
-      ];
+      return [stage.withResolver(this.delegate(mat))];
     }
 
     if (stage.props.outType.config?.__namespace) {
       return [stage.withResolver(() => ({}))];
     }
 
-    return [stage.withResolver(({ _: { parent } }) => {
-      if (stage.props.parent == null) { // namespace
-        return {};
-      }
-      const resolver = parent[stage.props.node];
-      return typeof resolver === "function" ? resolver() : resolver;
-    })];
+    return [
+      stage.withResolver(({ _: { parent } }) => {
+        if (stage.props.parent == null) {
+          // namespace
+          return {};
+        }
+        const resolver = parent[stage.props.node];
+        return typeof resolver === "function" ? resolver() : resolver;
+      }),
+    ];
   }
 
   delegate(mat: Materializer): Resolver {

@@ -18,6 +18,7 @@ import * as jwt from "jwt";
 import { join } from "std/path/join.ts";
 import { exists } from "std/fs/exists.ts";
 import { BaseError, ErrorKind } from "@typegate/errors.ts";
+import { TypegateCryptoKeys } from "../../crypto.ts";
 
 const logger = getLogger(import.meta);
 
@@ -107,7 +108,10 @@ class LocalUploadEndpointManager implements UploadEndpointManager {
   #expirationQueue: [string, number][];
   #expirationTimerId: number;
 
-  constructor(private expireSec = 5 * 60) {
+  constructor(
+    private cryptoKeys: TypegateCryptoKeys,
+    private expireSec = 5 * 60,
+  ) {
     this.#mapToMeta = new Map();
     this.#expirationQueue = [];
 
@@ -134,15 +138,17 @@ class LocalUploadEndpointManager implements UploadEndpointManager {
     if (await persistence.has(meta.hash)) {
       return null;
     }
-    const token = await ArtifactStore.createUploadToken(this.expireSec);
+    const token = await ArtifactStore.createUploadToken(
+      this.expireSec,
+      this.cryptoKeys,
+    );
     this.#mapToMeta.set(token, meta);
     this.#expirationQueue.push([token, jwt.getNumericDate(this.expireSec)]);
-
     return token;
   }
 
   async takeArtifactMeta(token: string) {
-    await ArtifactStore.validateUploadToken(token);
+    await ArtifactStore.validateUploadToken(token, this.cryptoKeys);
     const meta = this.#mapToMeta.get(token);
     if (!meta) {
       throw new InvalidUploadToken(token);
@@ -216,9 +222,10 @@ class InMemoryRefCounter implements RefCounter {
 
 export async function createLocalArtifactStore(
   baseDir: string,
+  cryptoKeys: TypegateCryptoKeys,
 ): Promise<ArtifactStore> {
   const persistence = await LocalArtifactPersistence.init(baseDir);
-  const uploadEndpoints = new LocalUploadEndpointManager();
+  const uploadEndpoints = new LocalUploadEndpointManager(cryptoKeys);
   const refCounter = new InMemoryRefCounter();
   return ArtifactStore.init(persistence, uploadEndpoints, refCounter);
 }

@@ -31,65 +31,68 @@ import {
 } from "./deps.ts";
 import { projectDir } from "./utils.ts";
 
-export async function testE2e(
-  args: {
-    files: string[];
-    filter?: string;
-    threads?: number;
-    flags?: string[];
-  },
-) {
+export async function testE2e(args: {
+  files: string[];
+  filter?: string;
+  threads?: number;
+  flags?: string[];
+}) {
   const { filter, threads = 4, flags = [] } = args;
   const wd = $.path(projectDir);
   const testFiles = [] as string[];
   if (args.files.length > 0) {
     await $.co(
-      args.files.map(
-        async (inPath) => {
-          let path = wd.resolve(inPath);
-          let stat = await path.stat();
+      args.files.map(async (inPath) => {
+        let path = wd.resolve(inPath);
+        let stat = await path.stat();
+        if (!stat) {
+          path = wd.resolve("typegate/tests", inPath);
+          stat = await path.stat();
           if (!stat) {
-            path = wd.resolve("typegate/tests", inPath);
-            stat = await path.stat();
-            if (!stat) {
-              throw new Error(`unable to resolve test files under "${inPath}"`);
-            }
+            throw new Error(`unable to resolve test files under "${inPath}"`);
           }
-          if (stat.isDirectory) {
-            testFiles.push(
-              ...(await Array.fromAsync(
-                path
-                  .expandGlob("**/*_test.ts", { globstar: true }),
-              )).map((ent) => ent.path.toString()),
-            );
-            return;
-          }
-          if (!stat.isFile) {
-            throw new Error(`Not a file: ${path}`);
-          }
-          if (path.basename().match(/_test\.ts$/) != null) {
-            testFiles.push(path.resolve().toString());
-          } else {
-            throw new Error(`Not a valid test file: ${path}`);
-          }
-        },
-      ),
+        }
+        if (stat.isDirectory) {
+          testFiles.push(
+            ...(
+              await Array.fromAsync(
+                path.expandGlob("**/*_test.ts", { globstar: true }),
+              )
+            ).map((ent) => ent.path.toString()),
+          );
+          return;
+        }
+        if (!stat.isFile) {
+          throw new Error(`Not a file: ${path}`);
+        }
+        if (path.basename().match(/_test\.ts$/) != null) {
+          testFiles.push(path.resolve().toString());
+        } else {
+          throw new Error(`Not a valid test file: ${path}`);
+        }
+      }),
     );
   } else {
     // run all the tests
     testFiles.push(
-      ...(await Array.fromAsync(
-        wd.join("typegate/tests")
-          .expandGlob("**/*_test.ts", { globstar: true }),
-      )).map((ent) => ent.path.toString()),
+      ...(
+        await Array.fromAsync(
+          wd
+            .join("typegate/tests")
+            .expandGlob("**/*_test.ts", { globstar: true }),
+        )
+      ).map((ent) => ent.path.toString()),
     );
   }
   const prefixLength = `${projectDir}/typegate/tests/`.length;
-  const fuse = new Fuse(testFiles.map((f) => f.slice(prefixLength)), {
-    includeScore: true,
-    useExtendedSearch: true,
-    threshold: 0.4,
-  });
+  const fuse = new Fuse(
+    testFiles.map((f) => f.slice(prefixLength)),
+    {
+      includeScore: true,
+      useExtendedSearch: true,
+      threshold: 0.4,
+    },
+  );
   const filtered = filter ? fuse.search(filter) : null;
   const filteredTestFiles = filtered?.map((res) => testFiles[res.refIndex]) ??
     testFiles;
@@ -100,25 +103,25 @@ export async function testE2e(
 
   const tmpDir = wd.join("tmp");
   const env: Record<string, string> = {
-    "CLICOLOR_FORCE": "1",
-    "RUST_LOG": "off,xtask=debug,meta=debug",
-    "RUST_SPANTRACE": "1",
+    CLICOLOR_FORCE: "1",
+    RUST_LOG: "off,xtask=debug,meta=debug",
+    RUST_SPANTRACE: "1",
     // "RUST_BACKTRACE": "short",
-    "RUST_MIN_STACK": "8388608",
-    "LOG_LEVEL": "DEBUG",
+    RUST_MIN_STACK: "8388608",
+    LOG_LEVEL: "DEBUG",
     // "NO_COLOR": "1",
-    "DEBUG": "true",
-    "PACKAGED": "false",
-    "TG_SECRET":
+    DEBUG: "true",
+    PACKAGED: "false",
+    TG_SECRET:
       "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
-    "TG_ADMIN_PASSWORD": "password",
-    "DENO_TESTING": "true",
-    "TMP_DIR": tmpDir.toString(),
-    "TIMER_MAX_TIMEOUT_MS": "30000",
-    "NPM_CONFIG_REGISTRY": "http://localhost:4873",
+    TG_ADMIN_PASSWORD: "password",
+    DENO_TESTING: "true",
+    TMP_DIR: tmpDir.toString(),
+    TIMER_MAX_TIMEOUT_MS: "30000",
+    NPM_CONFIG_REGISTRY: "http://localhost:4873",
     // NOTE: ordering of the variables is important as we want the
     // `meta` build to be resolved before any system meta builds
-    "PATH": `${wd.join("target/debug").toString()}:${Deno.env.get("PATH")}`,
+    PATH: `${wd.join("target/debug").toString()}:${Deno.env.get("PATH")}`,
   };
 
   if (await wd.join(".venv").exists()) {
@@ -128,9 +131,7 @@ export async function testE2e(
   await tmpDir.ensureDir();
   // remove non-vendored caches
   for await (const cache of tmpDir.readDir()) {
-    if (
-      cache.name.endsWith(".wasm") || cache.name == "libpython"
-    ) {
+    if (cache.name.endsWith(".wasm") || cache.name == "libpython") {
       continue;
     }
     await tmpDir.join(cache.name).remove({ recursive: true });
@@ -193,8 +194,7 @@ export async function testE2e(
   // launch a promise that doesnt get awaited
   (async () => {
     while (queues.length > 0) {
-      const current = Object
-        .values(runs)
+      const current = Object.values(runs)
         .filter((r) => !r.done)
         .map((r) => r.promise);
       if (current.length <= threads) {
@@ -209,8 +209,7 @@ export async function testE2e(
 
   let nexts = Object.keys(runs);
   do {
-    const file = nexts.find((f) => !runs[f].done) ??
-      nexts[0];
+    const file = nexts.find((f) => !runs[f].done) ?? nexts[0];
     const run = runs[file];
     run.streamed = true;
 
@@ -251,17 +250,11 @@ export async function testE2e(
     );
   }
 
-  $.log(
-    `  successes: ${successes.length}/${filteredTestFiles.length}`,
-  );
-  $.log(
-    `  failures: ${failures.length}/${filteredTestFiles.length}`,
-  );
+  $.log(`  successes: ${successes.length}/${filteredTestFiles.length}`);
+  $.log(`  failures: ${failures.length}/${filteredTestFiles.length}`);
   const filteredOutCount = testFiles.length - filteredTestFiles.length;
   if (filteredOutCount > 0) {
-    $.log(
-      `  ${filteredOutCount} test files were filtered out`,
-    );
+    $.log(`  ${filteredOutCount} test files were filtered out`);
   }
 
   $.log("");

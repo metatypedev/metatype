@@ -473,7 +473,7 @@ snapshot[`typegraphs creation 2`] = `
 `;
 
 snapshot[`typegraphs creation 3`] = `
-\`[
+'[
   {
     "types": [
       {
@@ -628,15 +628,14 @@ snapshot[`typegraphs creation 3`] = `
         }
       },
       {
-        "name": "function",
+        "name": "predefined_function",
         "runtime": 0,
         "effect": {
           "effect": "read",
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda = (_, { context }) => context.provider === 'internal'",
-          "secrets": []
+          "name": "internal_policy"
         }
       },
       {
@@ -751,7 +750,7 @@ snapshot[`typegraphs creation 3`] = `
       }
     }
   }
-]\`
+]'
 `;
 
 snapshot[`typegraphs creation 4`] = `
@@ -1227,7 +1226,7 @@ snapshot[`typegraphs creation 5`] = `
 `;
 
 snapshot[`typegraphs creation 6`] = `
-\`[
+'[
   {
     "types": [
       {
@@ -1382,15 +1381,14 @@ snapshot[`typegraphs creation 6`] = `
         }
       },
       {
-        "name": "function",
+        "name": "predefined_function",
         "runtime": 0,
         "effect": {
           "effect": "read",
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda = (_, { context }) => context.provider === 'internal'",
-          "secrets": []
+          "name": "internal_policy"
         }
       },
       {
@@ -1505,5 +1503,5 @@ snapshot[`typegraphs creation 6`] = `
       }
     }
   }
-]\`
+]'
 `;

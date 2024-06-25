@@ -1,8 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals, assertRejects } from "std/assert/mod.ts";
-import { syncConfigFromEnv } from "../../src/sync/config.ts";
+import { assert, assertEquals } from "std/assert/mod.ts";
+import {
+  defaultTypegateConfigBase,
+  getTypegateConfig,
+  SyncConfig,
+} from "@typegate/config.ts";
+import { ConfigError } from "../../src/config/loader.ts";
 
 function clearSyncVars() {
   for (const key of Object.keys(Deno.env.toObject())) {
@@ -12,21 +17,23 @@ function clearSyncVars() {
   }
 }
 
-Deno.test("test sync config", async (t) => {
-  await t.step(
-    "succeed to parse valid env vars for disabled sync",
-    async () => {
-      clearSyncVars();
-      const syncConfig = await syncConfigFromEnv(["vars"]);
-      assertEquals(syncConfig, null);
-    },
-  );
+function getSyncConfig(): SyncConfig | null {
+  return getTypegateConfig({
+    base: defaultTypegateConfigBase,
+    sync: {},
+  }).sync;
+}
 
-  await t.step("succeed to parse valid env vars for sync", async () => {
+Deno.test("test sync config", async (t) => {
+  await t.step("succeed to parse valid env vars for disabled sync", () => {
+    clearSyncVars();
+    assertEquals(getSyncConfig(), null);
+  });
+
+  await t.step("succeed to parse valid env vars for sync", () => {
     clearSyncVars();
     Deno.env.set("SYNC_ENABLED", "true");
-    Deno.env.set("SYNC_REDIS_URL", "redis://localhost:6379/0");
-    Deno.env.set("SYNC_REDIS_PASSWORD", "password");
+    Deno.env.set("SYNC_REDIS_URL", "redis://:password@localhost:6379/0");
 
     Deno.env.set("SYNC_S3_HOST", "https://s3.amazonaws.com");
     Deno.env.set("SYNC_S3_REGION", "us-west-1");
@@ -34,8 +41,7 @@ Deno.test("test sync config", async (t) => {
     Deno.env.set("SYNC_S3_SECRET_KEY", "secret_key");
     Deno.env.set("SYNC_S3_BUCKET", "bucket");
 
-    const syncConfig = await syncConfigFromEnv(["vars"]);
-    assertEquals(syncConfig, {
+    assertEquals(getSyncConfig(), {
       redis: {
         hostname: "localhost",
         port: "6379",
@@ -55,29 +61,51 @@ Deno.test("test sync config", async (t) => {
     });
   });
 
-  await t.step("fails for missing env vars", async () => {
+  await t.step("fails for missing env vars", () => {
     clearSyncVars();
     Deno.env.set("SYNC_REDIS_URL", "redis://localhost:6379");
-    await assertRejects(
-      () => syncConfigFromEnv(["vars"]),
-      Error,
-      "Environment variables required for sync: ",
+    assertInvalidSyncConfig(
+      [
+        "s3_host",
+        "s3_region",
+        "s3_bucket",
+        "s3_access_key",
+        "s3_secret_key",
+      ].map((k) => ({
+        code: "invalid_type",
+        expected: "string",
+        message: "Required",
+        path: [k],
+        received: "undefined",
+      })),
     );
 
     clearSyncVars();
     Deno.env.set("SYNC_ENABLED", "true");
-    Deno.env.set("SYNC_REDIS_URL", "redis://localhost:6379/0");
-    Deno.env.set("SYNC_REDIS_PASSWORD", "password");
+    Deno.env.set("SYNC_REDIS_URL", "redis://:password@localhost:6379/0");
 
     Deno.env.set("SYNC_S3_HOST", "https://s3.amazonaws.com");
     Deno.env.set("SYNC_S3_REGION", "us-west-1");
     Deno.env.set("SYNC_S3_ACCESS_KEY", "access_key");
     Deno.env.set("SYNC_S3_BUCKET", "bucket");
-
-    await assertRejects(
-      () => syncConfigFromEnv(["vars"]),
-      Error,
-      "Environment variables required for sync: SYNC_S3_SECRET_KEY.",
-    );
+    assertInvalidSyncConfig([
+      {
+        code: "invalid_type",
+        expected: "string",
+        message: "Required",
+        path: ["s3_secret_key"],
+        received: "undefined",
+      },
+    ]);
   });
 });
+
+function assertInvalidSyncConfig(issues: any[]) {
+  try {
+    getSyncConfig();
+    throw new Error("should have thrown");
+  } catch (e) {
+    assert(e instanceof ConfigError);
+    assertEquals(e.issues, issues);
+  }
+}

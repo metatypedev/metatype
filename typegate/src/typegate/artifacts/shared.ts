@@ -4,6 +4,7 @@
 import { connect, Redis, RedisConnectOptions } from "redis";
 import { getLogger } from "@typegate/log.ts";
 import { createHash } from "node:crypto";
+import { TypegateCryptoKeys } from "../../crypto.ts";
 import { S3 } from "aws-sdk/client-s3";
 import {
   ArtifactPersistence,
@@ -12,7 +13,7 @@ import {
 } from "./mod.ts";
 import { ArtifactMeta, ArtifactStore } from "./mod.ts";
 import { HashTransformStream } from "../../utils/hash.ts";
-import { SyncConfig } from "../../sync/config.ts";
+import { SyncConfig } from "../../config.ts";
 import { LocalArtifactPersistence } from "./local.ts";
 import { exists } from "std/fs/exists.ts";
 import { dirname } from "std/path/mod.ts";
@@ -171,13 +172,18 @@ class SharedArtifactPersistence implements ArtifactPersistence {
 }
 
 class SharedUploadEndpointManager implements UploadEndpointManager {
-  static async init(syncConfig: SyncConfig, expireSec = 5 * 60) {
+  static async init(
+    syncConfig: SyncConfig,
+    cryptoKeys: TypegateCryptoKeys,
+    expireSec = 5 * 60,
+  ) {
     const redis = await connect(syncConfig.redis);
-    return new SharedUploadEndpointManager(redis, expireSec);
+    return new SharedUploadEndpointManager(redis, cryptoKeys, expireSec);
   }
 
   private constructor(
     private redis: Redis,
+    private cryptoKeys: TypegateCryptoKeys,
     private expireSec: number,
   ) {}
 
@@ -194,7 +200,10 @@ class SharedUploadEndpointManager implements UploadEndpointManager {
       return null;
     }
 
-    const token = await ArtifactStore.createUploadToken(this.expireSec);
+    const token = await ArtifactStore.createUploadToken(
+      this.expireSec,
+      this.cryptoKeys,
+    );
     const _ = await this.redis.eval(
       /* lua */ `
         redis.call('SET', KEYS[1], ARGV[1])
@@ -208,7 +217,7 @@ class SharedUploadEndpointManager implements UploadEndpointManager {
   }
 
   async takeArtifactMeta(token: string): Promise<ArtifactMeta> {
-    await ArtifactStore.validateUploadToken(token);
+    await ArtifactStore.validateUploadToken(token, this.cryptoKeys);
     const meta = await this.redis.eval(
       /* lua */ `
         local meta = redis.call('GET', KEYS[1])
@@ -288,9 +297,13 @@ export class SharedArtifactRefCounter implements RefCounter {
 export async function createSharedArtifactStore(
   baseDir: string,
   syncConfig: SyncConfig,
+  cryptoKeys: TypegateCryptoKeys,
 ): Promise<ArtifactStore> {
   const persistence = await SharedArtifactPersistence.init(baseDir, syncConfig);
-  const uploadEndpoints = await SharedUploadEndpointManager.init(syncConfig);
+  const uploadEndpoints = await SharedUploadEndpointManager.init(
+    syncConfig,
+    cryptoKeys,
+  );
   const refCounter = await SharedArtifactRefCounter.init(syncConfig.redis);
   return ArtifactStore.init(persistence, uploadEndpoints, refCounter);
 }
