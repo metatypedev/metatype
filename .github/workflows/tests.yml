@@ -297,6 +297,8 @@ jobs:
             typegate/tests/runtimes/wasm_wire/*.ts \
             typegate/tests/runtimes/wasm_reflected/*.ts \
             typegate/tests/runtimes/python/*.ts \
+            typegate/tests/runtimes/python/*.ts \
+            typegate/tests/e2e/self_deploy/self_deploy.ts \
             dev/deps.ts \
             dev/utils.ts
 
