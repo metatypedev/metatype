@@ -269,12 +269,12 @@ jobs:
 
           # this doesn't publish it but only builds it
           WASM_OPT=1 ghjk x build-tgraph-ts
-          ls -osha typegraph/node
 
           # start the docker containers
           ghjk x dev-compose base prisma
 
           WASM_OPT=1 ghjk x build-tgraph
+          ls -osha typegraph/node
 
           ghjk x install-ts
 
