@@ -4,6 +4,7 @@
 import { Meta } from "test-utils/mod.ts";
 import { MetaTest } from "../../../utils/test.ts";
 import * as path from "std/path/mod.ts";
+import { assertEquals, assertExists } from "std/assert/mod.ts";
 
 Meta.test(
   {
@@ -16,34 +17,35 @@ Meta.test(
     await t.should("deploy python typegraph to typegate", async () => {
       const pythonDeploy = path.join(scriptsPath, "prog_deploy.py");
       const deployCommand = [
-        ...(
-          Deno.env.get("MCLI_LOADER_PY")?.split(" ") ??
-            ["python3"]
-        ),
+        ...(Deno.env.get("MCLI_LOADER_PY")?.split(" ") ?? ["python3"]),
         pythonDeploy,
-        port,
         scriptsPath,
+        port.toString(),
       ];
-      const deployResult = await t.meta(deployCommand);
+      const deployResult = await t.shell(deployCommand);
       if (deployResult.code !== 0) {
         console.error("Typegraph Deploy Script Failed: ", deployResult.stderr);
       }
+
+      assertExists(deployResult.stdout, "Typegraph is serialized");
     });
 
     await t.should("remove typegraph from typegate", async () => {
       const pythonRemove = path.join(scriptsPath, "prog_remove.py");
       const removeCommand = [
-        "deno",
-        "run",
-        "-A",
+        ...(Deno.env.get("MCLI_LOADER_PY")?.split(" ") ?? ["python3"]),
         pythonRemove,
         scriptsPath,
-        port,
+        port.toString(),
       ];
-      const removeResult = await t.meta(removeCommand);
+      const removeResult = await t.shell(removeCommand);
       if (removeResult.code !== 0) {
         console.error("Typegraph Remove Script Failed: ", removeResult.stderr);
       }
+      assertEquals(
+        removeResult.stdout,
+        "{'data': {'removeTypegraphs': True}}\n",
+      );
     });
   },
 );
@@ -64,9 +66,9 @@ Meta.test(
         "-A",
         tsDeploy,
         scriptsPath,
-        port,
+        port.toString(),
       ];
-      const deployResult = await t.meta(deployCommand);
+      const deployResult = await t.shell(deployCommand);
       if (deployResult.code !== 0) {
         console.error("Typegraph Deploy Script Failed: ", deployResult.stderr);
       }
@@ -80,9 +82,9 @@ Meta.test(
         "-A",
         tsRemove,
         scriptsPath,
-        port,
+        port.toString(),
       ];
-      const removeResult = await t.meta(removeCommand);
+      const removeResult = await t.shell(removeCommand);
       if (removeResult.code !== 0) {
         console.error("Typegraph Remove Script Failed: ", removeResult.stderr);
       }

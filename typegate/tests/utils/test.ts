@@ -382,7 +382,7 @@ export class MetaTest {
   }
 }
 
-function extractJsonFromStdout(stdout: string): string | null {
+export function extractJsonFromStdout(stdout: string): string | null {
   let jsonStart = null;
   let inJson = false;
 

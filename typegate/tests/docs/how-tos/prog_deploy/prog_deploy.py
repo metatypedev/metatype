@@ -1,6 +1,9 @@
 import os
 from os import path
+
+# skip:start
 import sys
+# skip:end
 
 from typegraph.gen.exports.core import MigrationAction
 from typegraph.graph.shared_types import BasicAuth
@@ -32,30 +35,33 @@ def example(g: Graph):
     )
 
 
-# Configure your deployment
+# skip:start
 cwd = sys.argv[1]
 PORT = sys.argv[2]
+# skip:end
 
 
+# Configure your deployment
 def deploy():
-    cwd = os.getcwd()
+    base_url = "<TYPEGATE_URL>"
+    auth = BasicAuth("<USERNAME>", "<PASSWORD>")
 
+    # skip:start
     base_url = f"http://localhost:{PORT}"
     auth = BasicAuth("admin", "password")
+    # skip:end
 
-    config: TypegraphDeployParams = (
-        TypegraphDeployParams(
-            typegate=TypegateConnectionOptions(url=base_url, auth=auth),
-            typegraph_path=os.path.join(cwd, "path-to-typegraph"),
-            prefix="<prefix>",
-            secrets={},
-            migrations_dir=path.join("prisma-migrations", example.name),
-            migration_actions=None,
-            default_migration_action=MigrationAction(
-                apply=True,
-                reset=True,  # allow destructive migrations
-                create=True,
-            ),
+    config: TypegraphDeployParams = TypegraphDeployParams(
+        typegate=TypegateConnectionOptions(url=base_url, auth=auth),
+        typegraph_path=os.path.join(cwd, "path-to-typegraph"),
+        prefix="",
+        secrets={},
+        migrations_dir=path.join("prisma-migrations", example.name),
+        migration_actions=None,
+        default_migration_action=MigrationAction(
+            apply=True,
+            reset=True,  # allow destructive migrations
+            create=True,
         ),
     )
 
@@ -65,3 +71,5 @@ def deploy():
 
 
 res = deploy()
+# skip:next-line
+print(res.serialized)

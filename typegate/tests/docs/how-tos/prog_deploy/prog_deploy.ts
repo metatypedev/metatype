@@ -31,8 +31,13 @@ const PORT = Deno.args[1];
 
 // Configure your deployment
 
-const baseUrl = `http://localhost:${PORT}`;
-const auth = new BasicAuth("admin", "password");
+let baseUrl = "<TYPEGATE_URL>";
+let auth = new BasicAuth("<USERNAME>", "<PASSWORD>");
+
+// skip:start
+baseUrl = `http://localhost:${PORT}`;
+auth = new BasicAuth("admin", "password");
+// skip: end
 
 const config = {
   typegate: {
