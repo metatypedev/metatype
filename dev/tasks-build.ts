@@ -46,7 +46,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       const denoSdkPath = $.workingDir.join("typegraph/deno/sdk");
       const genPath = await $.removeIfExists(denoSdkPath.join("src/gen"));
 
-      await $`jco transpile $WASM_FILE -o ${genPath} --map metatype:typegraph/host=../host/host.mjs`;
+      await $`jco transpile $WASM_FILE -o ${genPath} --map metatype:typegraph/host=../host/host.js`;
       await $`deno run -A typegraph/deno/dev/fix-declarations.ts`;
     },
   },
@@ -62,6 +62,12 @@ const tasks: Record<string, DenoTaskDefArgs> = {
           .join("README.md")
           .symlinkTo($.workingDir.join("README.md").toString()),
       ]);
+    },
+  },
+  "build-jsr-pub": {
+    async fn($) {
+      await $`deno run -A typegraph/deno/dev/jsr-gen.ts`;
+      await $`cd typegraph/deno/sdk && deno publish --dry-run --allow-slow-types --allow-dirty`;
     },
   },
   "build-tgraph-py": {

@@ -6,9 +6,9 @@ import {
   TgFinalizationResult,
   TypegraphOutput,
 } from "../typegraph.ts";
-import { ReducePath } from "../gen/interfaces/metatype-typegraph-utils.d.ts";
+import { ReducePath } from "../gen/typegraph_core.d.ts";
 import { serializeStaticInjection } from "./injection_utils.ts";
-import { SerializeParams } from "../gen/interfaces/metatype-typegraph-core.d.ts";
+import { SerializeParams } from "../gen/typegraph_core.d.ts";
 import { log } from "../io.ts";
 
 export function stringifySymbol(symbol: symbol) {

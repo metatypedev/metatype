@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { BasicAuth } from "./tg_deploy.ts";
-import { Artifact } from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { Artifact } from "./gen/typegraph_core.d.ts";
 import { dirname, join } from "node:path";
 import * as fsp from "node:fs/promises";
 import { log } from "./io.ts";

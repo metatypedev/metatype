@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { SerializeParams } from "./gen/interfaces/metatype-typegraph-core.d.ts";
-import { TypegraphOutput } from "./typegraph.ts";
-import { wit_utils } from "./wit.ts";
-import { freezeTgOutput } from "./utils/func_utils.ts";
 import {
   MdkConfig,
   MdkOutput,
-} from "./gen/interfaces/metatype-typegraph-utils.d.ts";
+  SerializeParams,
+} from "./gen/typegraph_core.d.ts";
+import { TypegraphOutput } from "./typegraph.ts";
+import { wit_utils } from "./wit.ts";
+import { freezeTgOutput } from "./utils/func_utils.ts";
 
 export class Metagen {
   constructor(private workspacePath: string, private genConfig: unknown) {}
@@ -41,7 +41,7 @@ export class Metagen {
 
   dryRun(tgOutput: TypegraphOutput, targetName: string, overwrite?: false) {
     const mdkConfig = this.getMdkConfig(tgOutput, targetName);
-    return wit_utils.metagenExec(mdkConfig).map((value) => ({
+    return wit_utils.metagenExec(mdkConfig).map((value: any) => ({
       ...value,
       overwrite: overwrite ?? value.overwrite,
     })) as Array<MdkOutput>;

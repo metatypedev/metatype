@@ -190,10 +190,15 @@ jobs:
           [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
             && pnpm publish --no-git-checks --force \
             || pnpm publish --no-git-checks
+          cd ../..
 
-          # TODO: publish to jsr similarly, remove --dry-run
+          cd typegraph/deno/sdk/src
           # Requires auth
-          # pnpm dlx jsr publish --dry-run
+          # jsr requires explicit type hints everytime (almost no inferences)
+          #  - https://jsr.io/docs/about-slow-types#explicit-types
+          #  - https://jsr.io/docs/about-slow-types#simple-inference
+          # deno publish --dry-run --allow-slow-types --allow-dirty
+          # Or pnpm dlx jsr publish --dry-run --allow-slow-types --allow-dirty
 
       - uses: svenstaro/upload-release-action@v2
         with:

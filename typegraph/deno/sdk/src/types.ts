@@ -15,9 +15,9 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
-} from "./gen/interfaces/metatype-typegraph-core.d.ts";
-import { Reduce } from "./gen/interfaces/metatype-typegraph-utils.d.ts";
-import { FuncParams } from "./gen/interfaces/metatype-typegraph-runtimes.d.ts";
+} from "./gen/typegraph_core.d.ts";
+import { Reduce } from "./gen/typegraph_core.d.ts";
+import { FuncParams } from "./gen/typegraph_core.d.ts";
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps/mod.ts";
 import Policy, { PolicyPerEffectObject } from "./policy.ts";

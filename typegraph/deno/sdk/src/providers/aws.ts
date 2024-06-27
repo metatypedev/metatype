@@ -7,7 +7,7 @@ import {
   S3PresignGetParams,
   S3PresignPutParams,
   S3RuntimeData,
-} from "../gen/interfaces/metatype-typegraph-aws.d.ts";
+} from "../gen/typegraph_core.d.ts";
 import { t } from "../index.ts";
 
 type S3PresignGetMat = Materializer & S3PresignGetParams;

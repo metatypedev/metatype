@@ -1,10 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import {
-  MigrationAction,
-  SerializeParams,
-} from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { MigrationAction, SerializeParams } from "./gen/typegraph_core.d.ts";
 import { ArtifactUploader } from "./tg_artifact_upload.ts";
 import { TypegraphOutput } from "./typegraph.ts";
 import { wit_utils } from "./wit.ts";

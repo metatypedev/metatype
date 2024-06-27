@@ -36,7 +36,9 @@ typegraph:
     - "typegraph/core/wit/*.wit"
     - "typegraph/node/sdk/src/**/*.ts"
     - "libs/metagen/**/*"
-  command: ghjk x build-tgraph
+  command: |
+    ghjk x build-tgraph
+    ghjk x build-jsr-pub
 
 system_graphs:
   watch:

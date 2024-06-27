@@ -1,10 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import {
-  ContextCheck,
-  MaterializerId,
-} from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { ContextCheck, MaterializerId } from "./gen/typegraph_core.d.ts";
 import { core } from "./wit.ts";
 
 interface PolicyPerEffectAlt {

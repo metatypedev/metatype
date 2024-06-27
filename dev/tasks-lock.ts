@@ -30,7 +30,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       dirty = (await copyLock($.workingDir, {
         "dev/LICENSE-MPL-2.0.md": [
           "typegraph/python/LICENSE.md",
-          "typegraph/deno/LICENSE.md",
+          "typegraph/deno/sdk/LICENSE.md",
         ],
       })) || dirty;
 

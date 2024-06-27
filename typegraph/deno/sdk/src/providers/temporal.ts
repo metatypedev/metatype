@@ -7,7 +7,7 @@ import { Func, Typedef } from "../types.ts";
 import {
   TemporalOperationData,
   TemporalOperationType,
-} from "../gen/interfaces/metatype-typegraph-runtimes.d.ts";
+} from "../gen/typegraph_core.d.ts";
 
 export class TemporalRuntime extends Runtime {
   name: string;

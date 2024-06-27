@@ -3,10 +3,7 @@
 
 import { dirname, fromFileUrl, resolve, yaml } from "./deps.ts";
 
-export const projectDir = resolve(
-  dirname(fromFileUrl(import.meta.url)),
-  "..",
-);
+export const projectDir = resolve(dirname(fromFileUrl(import.meta.url)), "..");
 
 export async function runOrExit(
   cmd: string[],
@@ -43,9 +40,7 @@ export const lockfileUrl = resolve(projectDir, "dev/lock.yml");
 
 export async function getLockfile() {
   const file = await Deno.readTextFile(lockfileUrl);
-  return yaml.parse(
-    file,
-  ) as Lockfile;
+  return yaml.parse(file) as Lockfile;
 }
 
 export type Cursor = {
@@ -62,7 +57,7 @@ export function upperFirst(str: string) {
 export function camelCase(str: string) {
   return str
     .split(/_+/g)
-    .map((chunk, idx) => idx > 0 ? upperFirst(chunk) : chunk)
+    .map((chunk, idx) => (idx > 0 ? upperFirst(chunk) : chunk))
     .join("");
 }
 
@@ -120,4 +115,12 @@ export function findCursors(
   }
 
   return matches;
+}
+
+/** Remove extension, will treat `.d.ts` as a whole for example */
+export function removeExtension(path: string) {
+  const known = /(\.d\.m?ts)$/;
+  return known.test(path.trim())
+    ? path.replace(path, "")
+    : path.substring(0, path.lastIndexOf("."));
 }

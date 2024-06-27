@@ -12,10 +12,7 @@ import {
 } from "./utils/injection_utils.ts";
 import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.ts";
 import { getPolicyChain } from "./types.ts";
-import {
-  Artifact,
-  SerializeParams,
-} from "./gen/interfaces/metatype-typegraph-core.d.ts";
+import { Artifact, SerializeParams } from "./gen/typegraph_core.d.ts";
 import { Manager } from "./tg_manage.ts";
 import { log } from "./io.ts";
 import { hasCliEnv } from "./envs/cli.ts";

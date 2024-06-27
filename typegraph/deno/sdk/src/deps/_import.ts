@@ -31,7 +31,7 @@ export interface Bind {
 
 export const up = 3;
 
-export function caller(this: Bind | any, levelUp = up) {
+export function caller(this: Bind | any, levelUp = up): string | undefined {
   const err = new Error();
   const stack = err.stack?.split("\n")[levelUp];
   if (stack) {
@@ -39,7 +39,7 @@ export function caller(this: Bind | any, levelUp = up) {
   }
 }
 
-export function getFile(this: Bind | any, stack: string) {
+export function getFile(this: Bind | any, stack: string): string {
   stack = stack.substr(stack.indexOf("at ") + 3);
   if (!stack.startsWith("file://")) {
     stack = stack.substr(stack.lastIndexOf("(") + 1);

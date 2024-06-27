@@ -7,6 +7,7 @@ import {
   resolve,
 } from "https://deno.land/std@0.224.0/path/mod.ts";
 import { expandGlobSync } from "https://deno.land/std@0.224.0/fs/mod.ts";
+import { join } from "../../../dev/deps.ts";
 
 export const thisDir = dirname(fromFileUrl(import.meta.url));
 
@@ -20,7 +21,7 @@ const basePath = "../sdk/src/gen";
 const replacements = [
   // Imports should refer to the actual file
   ...Array.from(
-    expandGlobSync(basePath + "/**/*.d.ts", {
+    expandGlobSync(join(basePath, "/**/*.d.ts"), {
       root: thisDir,
       includeDirs: false,
       globstar: true,
@@ -37,7 +38,8 @@ const replacements = [
   // Normalize native node imports
   {
     path: resolve(thisDir, basePath + "/typegraph_core.js"),
-    op: (s: string) => s.replaceAll("fs/promises", "node:fs/promises"),
+    op: (s: string) =>
+      s.replaceAll(/["']fs\/promises["']/g, "'node:fs/promises'"),
   },
 ] as Array<Replacer>;
 
@@ -56,3 +58,47 @@ for (const { path, op } of replacements) {
     Deno.writeTextFileSync(path, newText);
   }
 }
+
+console.log("Merge types");
+// Merge everything at interfaces/*
+const merged = Array.from(
+  expandGlobSync(join(basePath, "/interfaces/*.d.ts"), {
+    root: thisDir,
+    includeDirs: false,
+    globstar: true,
+  }),
+).reduce((curr, { path }) => {
+  console.log(`  < ${path}`);
+  const next = `
+// ${path}
+${
+    Deno.readTextFileSync(path)
+      .replaceAll(/import type {.+} from ['"].+\.d.ts['"];/g, (m) => `// ${m}`)
+      .replaceAll(/export {.+};/g, (m) => `// ${m}`)
+  }
+`;
+  return curr + next;
+}, "");
+
+// Dump all into typegraph_core.d.ts
+const hintMainPath = join(thisDir, basePath, "/typegraph_core.d.ts");
+const hintMain = Deno.readTextFileSync(hintMainPath).replaceAll(
+  /import {.+} from ['"].+\.d.ts['"];/g,
+  (m) => `// ${m}`,
+);
+
+Deno.writeTextFileSync(
+  hintMainPath,
+  `
+export type TypeId = number;
+
+// -------
+${merged}
+// -------
+
+${hintMain}
+`.replaceAll("export type TypeId = number;", "") +
+    "\n\nexport type TypeId = number;",
+);
+
+Deno.removeSync(join(thisDir, basePath, "/interfaces"), { recursive: true });
