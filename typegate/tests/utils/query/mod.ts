@@ -7,10 +7,10 @@ import {
   AssertionError,
   assertStringIncludes,
 } from "std/assert/mod.ts";
-import { QueryEngine } from "../../../src/engine/query_engine.ts";
-import { JSONValue } from "../../../src/utils.ts";
+import { QueryEngine } from "@typegate/engine/query_engine.ts";
+import { JSONValue } from "@typegate/utils.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
-import { signJWT } from "../../../src/crypto.ts";
+import { TypegateCryptoKeys } from "@typegate/crypto.ts";
 
 import { execute } from "../mod.ts";
 
@@ -19,10 +19,16 @@ import { MetaTest } from "../test.ts";
 export type Expect = (res: Response) => Promise<void> | void;
 export type Variables = Record<string, unknown>;
 export type Context = Record<string, unknown>;
-export type ContextEncoder = (context: Context) => Promise<string>;
+export type ContextEncoder = (
+  context: Context,
+  cryptoKeys: TypegateCryptoKeys,
+) => Promise<string>;
 
-export const defaultContextEncoder: ContextEncoder = async (context) => {
-  const jwt = await signJWT({ provider: "internal", ...context }, 5);
+export const defaultContextEncoder: ContextEncoder = async (
+  context,
+  crypto,
+) => {
+  const jwt = await crypto.signJWT({ provider: "internal", ...context }, 5);
   return `Bearer ${jwt}`;
 };
 
@@ -165,10 +171,16 @@ export abstract class Query {
     });
   }
 
-  abstract getRequest(url: string): Promise<Request>;
+  abstract getRequest(
+    url: string,
+    cryptoKeys: TypegateCryptoKeys,
+  ): Promise<Request>;
 
   async on(engine: QueryEngine, host = "http://typegate.local"): Promise<void> {
-    const request = await this.getRequest(`${host}/${engine.name}`);
+    const request = await this.getRequest(
+      `${host}/${engine.name}`,
+      engine.tg.typegate.cryptoKeys,
+    );
     const response = await execute(engine, request);
 
     for (const expect of this.expects) {

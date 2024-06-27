@@ -3,6 +3,7 @@
 
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
+import { Typegate } from "../../typegate/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { DenoRuntimeData } from "../../typegraph/types.ts";
@@ -11,7 +12,7 @@ import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
-import config from "../../config.ts";
+import { globalConfig as config } from "../../config.ts";
 import { getLogger } from "../../log.ts";
 
 const logger = getLogger(import.meta);
@@ -20,6 +21,7 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => args,
   true: () => true,
   false: () => false,
+  internal_policy: ({ _: { context } }) => context.provider === "internal",
 };
 
 export class DenoRuntime extends Runtime {
@@ -27,6 +29,7 @@ export class DenoRuntime extends Runtime {
     typegraphName: string,
     uuid: string,
     private tg: TypeGraphDS,
+    private typegate: Typegate,
     private w: DenoMessenger,
     private registry: Map<string, number>,
     private secrets: Record<string, string>,
@@ -64,7 +67,7 @@ export class DenoRuntime extends Runtime {
     const ops = new Map<number, Task>();
 
     const uuid = crypto.randomUUID();
-    const basePath = path.join(typegate.tmpDir, "artifacts");
+    const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
 
     let registryCount = 0;
     for (const mat of materializers) {
@@ -133,13 +136,22 @@ export class DenoRuntime extends Runtime {
       } as Deno.PermissionOptionsObject,
       false,
       ops,
+      typegate.config.base,
     );
 
     if (Deno.env.get("DENO_TESTING") === "true") {
       await w.disableLazyness();
     }
 
-    const rt = new DenoRuntime(typegraphName, uuid, tg, w, registry, secrets);
+    const rt = new DenoRuntime(
+      typegraphName,
+      uuid,
+      tg,
+      typegate,
+      w,
+      registry,
+      secrets,
+    );
 
     return rt;
   }
@@ -232,7 +244,7 @@ export class DenoRuntime extends Runtime {
         },
         ...args
       }) => {
-        const token = await InternalAuth.emit();
+        const token = await InternalAuth.emit(this.typegate.cryptoKeys);
 
         return await this.w.execute(
           op,
@@ -269,7 +281,7 @@ export class DenoRuntime extends Runtime {
         },
         ...args
       }) => {
-        const token = await InternalAuth.emit();
+        const token = await InternalAuth.emit(this.typegate.cryptoKeys);
 
         return await this.w.execute(
           op,

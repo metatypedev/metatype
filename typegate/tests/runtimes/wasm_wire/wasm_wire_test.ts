@@ -152,34 +152,31 @@ Meta.test(
           .on(engine);
       });
 
-      await t.step(
-        "hostcall works",
-        async () => {
-          await gql`
-            query {
-              hundred {
-                name
-                age
-                profile {
-                  level
-                  attributes
-                  category {
-                    tag
-                    value
-                  }
-                  metadatas
+      await t.step("hostcall works", async () => {
+        await gql`
+          query {
+            hundred {
+              name
+              age
+              profile {
+                level
+                attributes
+                category {
+                  tag
+                  value
                 }
+                metadatas
               }
             }
-          `
-            .expectBody((body) => {
-              assert(body.data.hundred);
-              assert(Array.isArray(body.data.hundred));
-              assertEquals(body.data.hundred.length, 100);
-            })
-            .on(engine);
-        },
-      );
+          }
+        `
+          .expectBody((body) => {
+            assert(body.data.hundred);
+            assert(Array.isArray(body.data.hundred));
+            assertEquals(body.data.hundred.length, 100);
+          })
+          .on(engine);
+      });
     });
   },
 );

@@ -39,10 +39,14 @@ const rootValue = {
   user: ({ id }: { id: number }) => {
     return generateUser(id);
   },
-  updateUser: (
-    { id, patch }: { id: number; patch: { name?: string; email?: string } },
-  ) => {
-    return ({ ...generateUser(id), ...patch });
+  updateUser: ({
+    id,
+    patch,
+  }: {
+    id: number;
+    patch: { name?: string; email?: string };
+  }) => {
+    return { ...generateUser(id), ...patch };
   },
 };
 
@@ -110,13 +114,16 @@ Meta.test("GraphQL variables", async (t) => {
     await gql`
       mutation PatchUser($id: Int!, $name: String) {
         updateUser(id: $id, patch: { name: $name }) {
-          id name email
+          id
+          name
+          email
         }
       }
-    `.withVars({
-      id: 15,
-      name: "John",
-    })
+    `
+      .withVars({
+        id: 15,
+        name: "John",
+      })
       .expectData({
         updateUser: { ...generateUser(15), name: "John" },
       })
