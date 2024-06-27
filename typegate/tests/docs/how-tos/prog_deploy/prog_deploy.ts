@@ -3,7 +3,9 @@
 
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
-import * as path from "path";
+// skip:start
+import * as path from "node:path";
+// skip:end
 
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
@@ -26,7 +28,6 @@ export const tg = await typegraph("example", (g) => {
 // skip:start
 const cwd = Deno.args[0];
 const PORT = Deno.args[1];
-
 // skip:end
 
 // Configure your deployment
@@ -45,7 +46,7 @@ const config = {
     auth: auth,
   },
   typegraphPath: path.join(cwd, "path-to-typegraph.ts"),
-  prefix: "<prefx>",
+  prefix: "",
   secrets: {},
   migrationsDir: path.join("prisma-migrations", tg.name),
   defaultMigrationAction: {

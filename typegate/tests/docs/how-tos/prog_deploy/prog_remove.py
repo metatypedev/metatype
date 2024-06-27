@@ -12,9 +12,8 @@ from typegraph.graph.shared_types import BasicAuth
 import sys
 # skip: end
 
+
 # Your typegraph
-
-
 @typegraph()
 def example(g: Graph):
     # ..
@@ -23,8 +22,7 @@ def example(g: Graph):
 
 
 # skip:start
-# cwd = sys.argv[1]
-PORT = sys.argv[2]
+PORT = sys.argv[1]
 # skip:end
 
 

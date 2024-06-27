@@ -35,7 +35,6 @@ Meta.test(
       const removeCommand = [
         ...(Deno.env.get("MCLI_LOADER_PY")?.split(" ") ?? ["python3"]),
         pythonRemove,
-        scriptsPath,
         port.toString(),
       ];
       const removeResult = await t.shell(removeCommand);
@@ -72,6 +71,8 @@ Meta.test(
       if (deployResult.code !== 0) {
         console.error("Typegraph Deploy Script Failed: ", deployResult.stderr);
       }
+      assertExists(deployResult.stdout, "Typegraph is serialized");
+      console.log(deployResult.stdout);
     });
 
     await t.should("remove typegraph from typegate", async () => {
@@ -81,13 +82,16 @@ Meta.test(
         "run",
         "-A",
         tsRemove,
-        scriptsPath,
         port.toString(),
       ];
       const removeResult = await t.shell(removeCommand);
       if (removeResult.code !== 0) {
         console.error("Typegraph Remove Script Failed: ", removeResult.stderr);
       }
+      assertEquals(
+        removeResult.stdout,
+        "{ data: { removeTypegraphs: true } }\n",
+      );
     });
   },
 );

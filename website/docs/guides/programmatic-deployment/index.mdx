@@ -23,118 +23,12 @@ You are required to provide the configurations and also handle migrations by you
   {require("!!code-loader!../../../../typegate/tests/docs/how-tos/prog_deploy/prog_deploy.py").content}
     </CodeBlock>
 
-{/* ```python
-import os
-from os import path
-
-from typegraph.gen.exports.core import MigrationAction
-from typegraph.graph.shared_types import BasicAuth
-from typegraph.graph.tg_deploy import (
-    TypegraphDeployParams,
-    tg_deploy,
-    TypegateConnectionOptions,
-)
-from typegraph.runtimes.deno import DenoRuntime
-
-from typegraph import Graph, Policy, t, typegraph
-
-# Your typegraph
-
-@typegraph()
-def example(g: Graph):
-    deno = DenoRuntime()
-    pub = Policy.public()
-
-    g.expose(
-        pub,
-        sayHello=deno.import_(
-            t.struct({"name": t.string()}),
-            t.string(),
-            module="path/to/say_hello.ts",
-            name="sayHello",
-        ),
-    )
-
-# Configure your deployment
-
-def deploy():
-    cwd = os.getcwd()
-
-    config: TypegraphDeployParams = TypegraphDeployParams(
-            typegate=TypegateConnectionOptions(
-                url="<TYPEGATE_URL>",
-                auth=BasicAuth("<USERNAME>", "<PASSWORD>")
-            ),
-            typegraph_path=os.path.join(cwd, "path/to/typegraph"),
-            prefix="<prefix>",
-            secrets={},
-            migrations_dir=path.join("prisma-migrations", example.name),
-            migration_actions=None,
-            default_migration_action=MigrationAction(
-                apply=True,
-                reset=True, # allow destructive migrations
-                create=True
-            ),
-        ),
-
-    # Deploy to typegate
-    result = tg_deploy(example, config) # pass your typegraph function name
-    return result
-
-res = deploy()
-``` */}
-
     </TabItem>
     <TabItem value="typescript">
 
     <CodeBlock language="typescript">
   {require("!!code-loader!../../../../typegate/tests/docs/how-tos/prog_deploy/prog_deploy.ts").content}
     </CodeBlock>
-
-{/* ```typescript
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
-import * as path from "path";
-
-import { wit_utils } from "@typegraph/sdk/wit.js";
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
-
-// Your typegraph
-const tg = await typegraph("example", (g) => {
-  const deno = new DenoRuntime();
-  const pub = Policy.public();
-
-  g.expose(
-    {
-      sayHello: deno.import(t.struct({ name: t.string() }), t.string(), {
-        module: "path/to/say_hello.ts",
-        name: "sayHello",
-      }),
-    },
-    pub,
-  );
-});
-
-// Configure your deployment
-
-const config = {
-  typegate: {
-    url: "<TYPEGATE_URL>",
-    auth: new BasicAuth("<USERNAME>", "<PASSWORD>"),
-  },
-  typegraphPath: "<absolute/path/to/typegraph>",
-  prefix: "<prefx>",
-  secrets: {},
-  migrationsDir: path.join("prisma-migrations", tg.name),
-  defaultMigrationAction: {
-    create: true,
-    reset: true, // allow destructive migrations
-  },
-};
-
-// Deploy to typegate
-const deployResult = await tgDeploy(tg, config);
-``` */}
 
     </TabItem>
 

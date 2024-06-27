@@ -71,5 +71,4 @@ def deploy():
 
 
 res = deploy()
-# skip:next-line
 print(res.serialized)
