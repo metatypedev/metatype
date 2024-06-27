@@ -192,13 +192,15 @@ jobs:
             || pnpm publish --no-git-checks
           cd ../..
 
-          cd typegraph/deno/sdk/src
+          cd typegraph/deno/sdk
+          ghjk x build-jsr-pub
+
           # Requires auth
           # jsr requires explicit type hints everytime (almost no inferences)
           #  - https://jsr.io/docs/about-slow-types#explicit-types
           #  - https://jsr.io/docs/about-slow-types#simple-inference
+
           # deno publish --dry-run --allow-slow-types --allow-dirty
-          # Or pnpm dlx jsr publish --dry-run --allow-slow-types --allow-dirty
 
       - uses: svenstaro/upload-release-action@v2
         with:

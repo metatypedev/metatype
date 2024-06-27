@@ -80,25 +80,26 @@ ${
   return curr + next;
 }, "");
 
-// Dump all into typegraph_core.d.ts
+// Dump everything into typegraph_core.d.ts
 const hintMainPath = join(thisDir, basePath, "/typegraph_core.d.ts");
 const hintMain = Deno.readTextFileSync(hintMainPath).replaceAll(
   /import {.+} from ['"].+\.d.ts['"];/g,
   (m) => `// ${m}`,
 );
 
-Deno.writeTextFileSync(
-  hintMainPath,
-  `
-export type TypeId = number;
-
-// -------
+let mergedContent = `
+// interfaces begin
 ${merged}
-// -------
+// interfaces end
 
 ${hintMain}
-`.replaceAll("export type TypeId = number;", "") +
-    "\n\nexport type TypeId = number;",
-);
+`;
 
+const dupDecl = ["export type TypeId = number;"];
+for (const dup of dupDecl) {
+  mergedContent = mergedContent.replaceAll(dup, "");
+}
+mergedContent += `\n${dupDecl.join("\n")}`;
+
+Deno.writeTextFileSync(hintMainPath, mergedContent);
 Deno.removeSync(join(thisDir, basePath, "/interfaces"), { recursive: true });
