@@ -81,18 +81,14 @@ ${
 }, "");
 
 // Dump everything into typegraph_core.d.ts
+// As of jco 1.2.4, typegraph_core.d.ts simply re-exports the types from interfaces/*.d.ts
 const hintMainPath = join(thisDir, basePath, "/typegraph_core.d.ts");
-const hintMain = Deno.readTextFileSync(hintMainPath).replaceAll(
-  /import {.+} from ['"].+\.d.ts['"];/g,
-  (m) => `// ${m}`,
-);
-
 let mergedContent = `
 // interfaces begin
 ${merged}
 // interfaces end
 
-${hintMain}
+// common
 `;
 
 const dupDecl = ["export type TypeId = number;"];

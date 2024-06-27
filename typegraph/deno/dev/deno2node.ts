@@ -26,14 +26,21 @@ await dnt.emptyDir(outDir);
 
 const entryPoints: dnt.BuildOptions["entryPoints"] = [join(srcDir, "index.ts")];
 for (
-  const { name, path } of expandGlobSync("./**/*.ts", {
+  const { name, path } of expandGlobSync("./**/*.*", {
     root: srcDir,
     includeDirs: false,
     globstar: true,
   })
 ) {
+  if (path.endsWith(".d.ts")) {
+    continue;
+  }
+  if (!/.(js|ts)/.test(path)) {
+    continue;
+  }
+
   const relPath = path.replace(srcDir, ".");
-  if (name !== "index.ts" && !relPath.startsWith("./gen")) {
+  if (name !== "index.ts") {
     entryPoints.push({
       name: removeExtension(relPath),
       path,
@@ -76,12 +83,12 @@ await dnt.build({
       resolve(projectDir, "./dev/LICENSE-MPL-2.0.md"),
       resolve(outDir, "./LICENCE.md"),
     );
-
-    // keep original gen folder
-    Deno.removeSync(join(outDir, "./esm/gen"), { recursive: true });
     copySync(
-      resolve(projectDir, "./typegraph/deno/sdk/src/gen"),
-      join(outDir, "./esm/gen"),
+      resolve(
+        projectDir,
+        "./typegraph/deno/sdk/src/gen/typegraph_core.core.wasm",
+      ),
+      join(outDir, "./esm/gen/typegraph_core.core.wasm"),
     );
   },
 });
