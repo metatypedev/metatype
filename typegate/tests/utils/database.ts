@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import pg from "npm:pg";
+import pg from "pg";
 import { removeMigrations } from "test-utils/migrations.ts";
 
 export async function dropSchema(schema: string) {
