@@ -8,13 +8,11 @@ import { Runtime } from "../runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "../utils.ts";
 import { typegraph_validate } from "native";
 import Chance from "chance";
-
 import {
   initAuth,
   internalAuthName,
   nextAuthorizationHeader,
 } from "../services/auth/mod.ts";
-
 import {
   isBoolean,
   isEither,
@@ -29,23 +27,21 @@ import {
   Type,
   TypeNode,
 } from "./type_node.ts";
-import { Batcher, TypeIdx } from "../types.ts";
-
+import { Batcher } from "../types.ts";
 import type {
   Cors,
-  EitherNode,
   Materializer as TypeMaterializer,
   Policy as TypePolicy,
   Rate,
   TGRuntime as TypeRuntime,
   Typegraph as TypeGraphDS,
-  UnionNode,
 } from "./types.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
 import randomizeRecursively from "../runtimes/random.ts";
 import { Typegate } from "../typegate/mod.ts";
+import { TypeUtils } from "./utils.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -100,6 +96,7 @@ export class TypeGraph implements AsyncDisposable {
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
   name: string;
+  readonly typeUtils: TypeUtils;
 
   private constructor(
     public typegate: Typegate,
@@ -119,6 +116,7 @@ export class TypeGraph implements AsyncDisposable {
       typeByName[tpe.title] = tpe;
     }
     this.typeByName = typeByName;
+    this.typeUtils = new TypeUtils(this);
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
@@ -537,98 +535,7 @@ export class TypeGraph implements AsyncDisposable {
   }
 
   // TODO TypeUtils class?
-  flattenUnionVariants(variants: TypeIdx[]): TypeIdx[] {
-    return variants.flatMap((idx) => {
-      const typeNode = this.type(idx);
-      switch (typeNode.type) {
-        case Type.UNION:
-          return this.flattenUnionVariants(typeNode.anyOf);
-        case Type.EITHER:
-          return this.flattenUnionVariants(typeNode.oneOf);
-        default:
-          return [idx];
-      }
-    });
-  }
-
-  getFlatUnionVariants(typeNode: UnionNode | EitherNode): TypeIdx[] {
-    switch (typeNode.type) {
-      case Type.UNION:
-        return this.flattenUnionVariants(typeNode.anyOf);
-      case Type.EITHER:
-        return this.flattenUnionVariants(typeNode.oneOf);
-      default:
-        throw new Error("unreachable");
-    }
-  }
-
-  // /**
-  //  * Get the variants of the union or either that does require a selection set
-  //  * at multiple levels (for union of unions...), in a record by name.
-  //  */
-  // getTypeSelectionsForVariants(
-  //   typeNode: UnionNode | EitherNode,
-  // ): Record<string, TypeIdx> {
-  //   const variants = this.getFlatUnionVariants(typeNode);
-  //   return Object.fromEntries(
-  //     variants.flatMap((idx) => {
-  //       if (this.isScalarOrListOfScalars(this.type(idx))) {
-  //         return [];
-  //       } else {
-  //         return [[this.type(idx).title, idx]];
-  //       }
-  //     }),
-  //   );
-  // }
-
-  isScalarOrListOfScalars(typeNode: TypeNode): boolean {
-    let unwrapped = typeNode;
-    while (true) {
-      if (unwrapped.type === Type.OPTIONAL) {
-        unwrapped = this.type(unwrapped.item);
-      } else if (unwrapped.type === Type.LIST) {
-        unwrapped = this.type(unwrapped.items);
-      } else {
-        return !NON_SCALAR_TYPES.includes(unwrapped.type);
-      }
-    }
-  }
-
-  traverseVirtualPath(
-    root: TypeNode,
-    getNext: (node: TypeNode) => TypeIdx | null,
-  ): TypeNode {
-    let current = root;
-    while (true) {
-      const next = getNext(current);
-      if (next == null) {
-        return current;
-      }
-      current = this.type(next);
-    }
-  }
-
-  unwrapQuantifier(typeNode: TypeNode): TypeNode {
-    return this.traverseVirtualPath(typeNode, (node) => {
-      switch (node.type) {
-        case Type.OPTIONAL:
-          return node.item;
-        case Type.LIST:
-          return node.items;
-        default:
-          return null;
-      }
-    });
-  }
 }
-
-const NON_SCALAR_TYPES: Array<TypeNode["type"]> = [
-  Type.OBJECT,
-  Type.LIST,
-  Type.UNION,
-  Type.EITHER,
-  Type.FUNCTION,
-];
 
 export type PossibleSelectionFields =
   | null

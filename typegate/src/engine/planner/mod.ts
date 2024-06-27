@@ -163,11 +163,11 @@ export class Planner {
 
     if (typ.type === Type.EITHER || typ.type === Type.UNION) {
       const stages: ComputeStage[] = [];
-      const variants = this.tg.getFlatUnionVariants(typ);
+      const variants = this.tg.typeUtils.getFlatUnionVariants(typ);
       const selectableVariants = new Map(
         variants.flatMap((idx) => {
           const typeNode = this.tg.type(idx);
-          if (this.tg.isScalarOrListOfScalars(typeNode)) {
+          if (this.tg.typeUtils.isScalarOrListOfScalars(typeNode)) {
             return [];
           } else {
             return [[typeNode.title, idx]];

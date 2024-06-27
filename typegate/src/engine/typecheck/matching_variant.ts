@@ -15,7 +15,7 @@ export function generateVariantMatcher(
   typeNode: UnionNode | EitherNode,
 ): VariantMatcher {
   // selectable variants
-  const variants = tg.getFlatUnionVariants(typeNode);
+  const variants = tg.typeUtils.getFlatUnionVariants(typeNode);
   // .filter((idx) => tg.isScalarOrListOfScalars(tg.type(idx)));
 
   const validators = new Function(

@@ -243,7 +243,6 @@ export class CodeGenerator {
 
     const variantCount = typeNode.anyOf.length;
     if (variantValidatorNames.length !== variantCount) {
-      console.log("variant validator names", variantValidatorNames);
       throw new Error(
         "The length of variantValidatorNames does not match to the variant count",
       );

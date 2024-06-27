@@ -326,9 +326,10 @@ export class ResultValidationCompiler {
     variants: number[],
     entry: QueueEntry,
   ): QueueEntry[] {
-    const multilevelVariants = this.tg.flattenUnionVariants(variants);
+    const multilevelVariants = this.tg.typeUtils.flattenUnionVariants(variants);
     const selectableVariants = multilevelVariants.filter(
-      (variant) => !this.tg.isScalarOrListOfScalars(this.tg.type(variant)),
+      (variant) =>
+        !this.tg.typeUtils.isScalarOrListOfScalars(this.tg.type(variant)),
     );
     if (entry.selectionSet == null) {
       if (selectableVariants.length > 0) {
@@ -365,7 +366,7 @@ export class ResultValidationCompiler {
     const entries: QueueEntry[] = variants.map((variantIdx) => {
       const typeNode = this.tg.type(variantIdx);
       const typeName = typeNode.title;
-      const unquantified = this.tg.unwrapQuantifier(typeNode);
+      const unquantified = this.tg.typeUtils.unwrapQuantifier(typeNode);
       switch (unquantified.type) {
         case Type.OBJECT: {
           const selectionSet = variantSelections.get(typeName)?.selectionSet;
@@ -385,7 +386,7 @@ export class ResultValidationCompiler {
         }
         case Type.UNION:
         case Type.EITHER: {
-          const nestedVariants = this.tg.getFlatUnionVariants(
+          const nestedVariants = this.tg.typeUtils.getFlatUnionVariants(
             typeNode as UnionNode | EitherNode,
           );
           return {
