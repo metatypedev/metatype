@@ -72,7 +72,6 @@ Meta.test(
         console.error("Typegraph Deploy Script Failed: ", deployResult.stderr);
       }
       assertExists(deployResult.stdout, "Typegraph is serialized");
-      console.log(deployResult.stdout);
     });
 
     await t.should("remove typegraph from typegate", async () => {
