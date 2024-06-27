@@ -308,3 +308,47 @@ Meta.test(
     });
   },
 );
+
+Meta.test.only("list variants", async (t) => {
+  const e = await t.engine("type_nodes/union_node.py");
+
+  await t.should("get list of scalars", async () => {
+    const data = [1, 2, 3, 4, 5];
+    await gql`
+      query Q($inp: [UnionOfListsIn]) {
+        union_of_lists(inp: $inp) {
+          ... on ListOfObject {
+            a
+          }
+        }
+      }
+    `
+      .withVars({
+        inp: data,
+      })
+      .expectData({
+        union_of_lists: data,
+      })
+      .on(e);
+  });
+
+  await t.should("get list of object", async () => {
+    const data = [{ a: "a" }, { a: "b" }, { a: "c" }];
+    await gql`
+      query Q($inp: [UnionOfListsIn]) {
+        union_of_lists(inp: $inp) {
+          ... on ListOfObject {
+            a
+          }
+        }
+      }
+    `
+      .withVars({
+        inp: data,
+      })
+      .expectData({
+        union_of_lists: data,
+      })
+      .on(e);
+  });
+});

@@ -19,7 +19,6 @@ def union_node(g: Graph):
         },
         name="RGBStruct",
     )
-
     hex = t.string(pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", name="HexColor")
 
     named_color = t.enum(
@@ -103,6 +102,8 @@ def union_node(g: Graph):
 
     scalar_union = t.union([t.boolean(), t.integer(), t.string()], name="ScalarUnion")
 
+    union_of_lists = t.either([t.list(t.integer()), t.list(t.struct({"a": t.string()}, name = "Object1"), name="ListOfObject")], name="UnionOfLists");
+
     public = Policy.public()
 
     g.expose(
@@ -123,4 +124,9 @@ def union_node(g: Graph):
             t.list(multilevel_union),
             code="({ inp }) => inp",
         ),
+        union_of_lists=deno.func(
+            t.struct({"inp": union_of_lists}),
+            union_of_lists,
+            code="({ inp }) => { console.log({inp}); return inp; }"
+        )
     )

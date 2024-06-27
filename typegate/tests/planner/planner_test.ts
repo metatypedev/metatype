@@ -4,6 +4,25 @@
 import { gql, Meta } from "../utils/mod.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterKeys } from "std/collections/filter_keys.ts";
+import { Plan } from "../../src/engine/planner/mod.ts";
+import { assertEquals } from "std/assert/mod.ts";
+
+function serializePlan(plan: Plan) {
+  return plan.stages.map((s) =>
+    [
+      s.id(),
+      s.props.node,
+      s.props.path.join("/"),
+      s.props.outType.type,
+      s.props.outType.title,
+      s.props.excludeResult ?? false,
+    ].join(" "),
+  );
+}
+
+function getPlanStageIds(plan: Plan) {
+  return plan.stages.map((s) => s.id());
+}
 
 Meta.test("planner", async (t) => {
   const e = await t.engine("planner/planner.py");
@@ -27,9 +46,8 @@ Meta.test("planner", async (t) => {
         id: s.id(),
         path: s.props.path,
         node: s.props.node,
-        type: filterKeys(
-          e.tg.type(s.props.typeIdx),
-          (k) => ["type", "title", "format"].includes(k),
+        type: filterKeys(e.tg.type(s.props.typeIdx), (k) =>
+          ["type", "title", "format"].includes(k),
         ),
       })),
     );
@@ -46,7 +64,9 @@ Meta.test("planner", async (t) => {
             Object.fromEntries(subtree.referencedTypes),
             (types) =>
               types.map((idx) =>
-                filterKeys(e.tg.type(idx), (k) => ["type", "title"].includes(k))
+                filterKeys(e.tg.type(idx), (k) =>
+                  ["type", "title"].includes(k),
+                ),
               ),
           ),
         };
@@ -122,6 +142,64 @@ Meta.test("planner", async (t) => {
         }
       }
     `.assertPlanSnapshot(t, e);
+  });
+
+  await t.should("union2", async () => {
+    const plan = await gql`
+      query {
+        one {
+          union2 {
+            ... on A {
+              a
+            }
+            ... on B {
+              b {
+                ... on C1 {
+                  c
+                }
+                ... on C2 {
+                  c
+                }
+              }
+            }
+          }
+          union3 {
+            ... on ListOfA {
+              a
+            }
+          }
+        }
+      }
+    `.planOn(e);
+    assertEquals(getPlanStageIds(plan), [
+      "one",
+      "one.union2",
+      "one.union2$A.a",
+      "one.union2$B.b",
+      "one.union2$B.b$C1.c",
+      "one.union2$B.b$C2.c",
+      "one.union3",
+      "one.union3$ListOfA.a",
+    ]);
+  });
+
+  await t.should("work with union of list", async () => {
+    const plan = await gql`
+      query {
+        one {
+          union3 {
+            ... on ListOfA {
+              a
+            }
+          }
+        }
+      }
+    `.planOn(e);
+    assertEquals(getPlanStageIds(plan), [
+      "one",
+      "one.union3",
+      "one.union3$ListOfA.a",
+    ]);
   });
 });
 

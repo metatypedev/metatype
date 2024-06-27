@@ -39,6 +39,7 @@ export function generateValidator(
     const errors: ErrorEntry[] = [];
     validator(value, "<value>", errors, validationContext);
     if (errors.length > 0) {
+      console.log("value", value);
       const messages = errors
         .map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
@@ -168,8 +169,8 @@ export class ResultValidationCompiler {
           }
 
           case "object": {
-            const childEntries: Record<string, QueueEntry> = this
-              .getChildEntries(typeNode, entry);
+            const childEntries: Record<string, QueueEntry> =
+              this.getChildEntries(typeNode, entry);
             cg.generateObjectValidator(
               typeNode,
               mapValues(childEntries, (e) => e.name),
@@ -293,7 +294,7 @@ export class ResultValidationCompiler {
       case Kind.FRAGMENT_SPREAD: {
         const fragment = this.fragments[node.name.value];
         return fragment.selectionSet.selections.flatMap((selectionNode) =>
-          this.getChildEntriesFromSelectionNode(typeNode, entry, selectionNode)
+          this.getChildEntriesFromSelectionNode(typeNode, entry, selectionNode),
         );
       }
 
@@ -302,7 +303,7 @@ export class ResultValidationCompiler {
           throw new Error("Unexpected type condition on non-union type");
         }
         return node.selectionSet.selections.flatMap((selectionNode) =>
-          this.getChildEntriesFromSelectionNode(typeNode, entry, selectionNode)
+          this.getChildEntriesFromSelectionNode(typeNode, entry, selectionNode),
         );
       }
 
@@ -317,7 +318,7 @@ export class ResultValidationCompiler {
   ): Record<string, QueueEntry> {
     return Object.fromEntries(
       entry.selectionSet!.selections.flatMap((node) =>
-        this.getChildEntriesFromSelectionNode(typeNode, entry, node)
+        this.getChildEntriesFromSelectionNode(typeNode, entry, node),
       ),
     );
   }
@@ -335,11 +336,9 @@ export class ResultValidationCompiler {
         const s = selectableVariants.length === 1 ? "" : "s";
         const names = selectableVariants.map((idx) => this.tg.type(idx).title);
         throw new Error(
-          `at '${entry.path}': selection set required for type${s} ${
-            names.join(
-              ", ",
-            )
-          }`,
+          `at '${entry.path}': selection set required for type${s} ${names.join(
+            ", ",
+          )}`,
         );
       }
     }
@@ -348,18 +347,18 @@ export class ResultValidationCompiler {
     const variantSelections: Map<string, InlineFragmentNode> =
       entry.selectionSet != null
         ? new Map(
-          entry.selectionSet.selections.map((node) => {
-            if (
-              node.kind !== Kind.INLINE_FRAGMENT ||
-              node.typeCondition == null
-            ) {
-              throw new Error(
-                `at '${entry.path}': selection nodes must be inline fragments with type condition`,
-              );
-            }
-            return [node.typeCondition.name.value, node];
-          }),
-        )
+            entry.selectionSet.selections.map((node) => {
+              if (
+                node.kind !== Kind.INLINE_FRAGMENT ||
+                node.typeCondition == null
+              ) {
+                throw new Error(
+                  `at '${entry.path}': selection nodes must be inline fragments with type condition`,
+                );
+              }
+              return [node.typeCondition.name.value, node];
+            }),
+          )
         : new Map();
 
     const entries: QueueEntry[] = variants.map((variantIdx) => {

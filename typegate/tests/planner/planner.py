@@ -19,6 +19,7 @@ def planner(g: Graph):
 
     union1 = t.union([t.integer(), t.string()])
     union2 = t.union([A, B])
+    union3 = t.union([t.list(t.integer()), t.list(A).rename("ListOfA")])
 
     deno = DenoRuntime()
     dummy_func = "() => {}"
@@ -36,6 +37,7 @@ def planner(g: Graph):
             ),
             "union1": union1.rename("Union1"),
             "union2": union2.rename("Union2"),
+            "union3": union3.rename("Union3"),
             "from_union1": deno.func(
                 t.struct({"u1": union1.from_parent("Union1")}),
                 t.integer(),

@@ -1,5 +1,98 @@
 export const snapshot = {};
 
+snapshot[`planner 1`] = `
+[
+  {
+    id: "one",
+    node: "one",
+    path: [
+      "one",
+    ],
+    type: {
+      title: "func_81",
+      type: "function",
+    },
+  },
+  {
+    id: "one.id",
+    node: "id",
+    path: [
+      "one",
+      "id",
+    ],
+    type: {
+      format: "uuid",
+      title: "string_17",
+      type: "string",
+    },
+  },
+  {
+    id: "one.email",
+    node: "email",
+    path: [
+      "one",
+      "email",
+    ],
+    type: {
+      format: "email",
+      title: "string_18",
+      type: "string",
+    },
+  },
+  {
+    id: "one.nested",
+    node: "nested",
+    path: [
+      "one",
+      "nested",
+    ],
+    type: {
+      title: "object_24",
+      type: "object",
+    },
+  },
+  {
+    id: "one.nested.first",
+    node: "first",
+    path: [
+      "one",
+      "nested",
+      "first",
+    ],
+    type: {
+      title: "string_19",
+      type: "string",
+    },
+  },
+  {
+    id: "one.nested.second",
+    node: "second",
+    path: [
+      "one",
+      "nested",
+      "second",
+    ],
+    type: {
+      title: "list_21",
+      type: "list",
+    },
+  },
+  {
+    id: "one.nested.third",
+    node: "third",
+    path: [
+      "one",
+      "nested",
+      "third",
+    ],
+    type: {
+      title: "optional_23",
+      type: "optional",
+    },
+  },
+]
+`;
+
 snapshot[`planner 2`] = `
 {
   one: {
@@ -15,65 +108,65 @@ snapshot[`planner 2`] = `
       rate_calls: false,
       rate_weight: null,
       runtime: 0,
-      title: "func_75",
+      title: "func_81",
       type: "function",
     },
     referencedTypes: {
       "one.email": [
         {
-          title: "string_13",
+          title: "string_18",
           type: "string",
         },
       ],
       "one.id": [
         {
-          title: "string_12",
+          title: "string_17",
           type: "string",
         },
       ],
       "one.nested": [
         {
-          title: "object_19",
+          title: "object_24",
           type: "object",
         },
       ],
       "one.nested.first": [
         {
-          title: "string_14",
+          title: "string_19",
           type: "string",
         },
       ],
       "one.nested.second": [
         {
-          title: "list_16",
+          title: "list_21",
           type: "list",
         },
         {
-          title: "float_15",
+          title: "float_20",
           type: "float",
         },
       ],
       "one.nested.third": [
         {
-          title: "optional_18",
+          title: "optional_23",
           type: "optional",
         },
         {
-          title: "boolean_17",
+          title: "boolean_22",
           type: "boolean",
         },
       ],
       one: [
         {
-          title: "func_75",
+          title: "func_81",
           type: "function",
         },
         {
-          title: "object_32",
+          title: "object_38",
           type: "object",
         },
         {
-          title: "object_52",
+          title: "object_58",
           type: "object",
         },
       ],
@@ -84,7 +177,7 @@ snapshot[`planner 2`] = `
 
 snapshot[`planner 3`] = `
 [
-  "one  one  one  object  object_32  false",
+  "one  one  one  object  object_38  false",
   "one.union1  union1  one/union1  union  Union1  false",
   "one.union2  union2  one/union2  union  Union2  false",
   "one.union2\$A.a  a  one/union2\$A/a  integer  integer_0  false",
@@ -96,7 +189,7 @@ snapshot[`planner 3`] = `
 
 snapshot[`planner 4`] = `
 [
-  "one  one  one  object  object_32  false",
+  "one  one  one  object  object_38  false",
   "one.union2  union2  one/union2  union  Union2  true",
   "one.union2\$A.a  a  one/union2\$A/a  integer  integer_0  false",
   "one.union2\$B.b  b  one/union2\$B/b  either  either_6  false",
@@ -108,102 +201,9 @@ snapshot[`planner 4`] = `
 ]
 `;
 
-snapshot[`planner 1`] = `
-[
-  {
-    id: "one",
-    node: "one",
-    path: [
-      "one",
-    ],
-    type: {
-      title: "func_75",
-      type: "function",
-    },
-  },
-  {
-    id: "one.id",
-    node: "id",
-    path: [
-      "one",
-      "id",
-    ],
-    type: {
-      format: "uuid",
-      title: "string_12",
-      type: "string",
-    },
-  },
-  {
-    id: "one.email",
-    node: "email",
-    path: [
-      "one",
-      "email",
-    ],
-    type: {
-      format: "email",
-      title: "string_13",
-      type: "string",
-    },
-  },
-  {
-    id: "one.nested",
-    node: "nested",
-    path: [
-      "one",
-      "nested",
-    ],
-    type: {
-      title: "object_19",
-      type: "object",
-    },
-  },
-  {
-    id: "one.nested.first",
-    node: "first",
-    path: [
-      "one",
-      "nested",
-      "first",
-    ],
-    type: {
-      title: "string_14",
-      type: "string",
-    },
-  },
-  {
-    id: "one.nested.second",
-    node: "second",
-    path: [
-      "one",
-      "nested",
-      "second",
-    ],
-    type: {
-      title: "list_16",
-      type: "list",
-    },
-  },
-  {
-    id: "one.nested.third",
-    node: "third",
-    path: [
-      "one",
-      "nested",
-      "third",
-    ],
-    type: {
-      title: "optional_18",
-      type: "optional",
-    },
-  },
-]
-`;
-
 snapshot[`planner: dependencies 1`] = `
 [
-  "two  two  two  object  object_68  false",
+  "two  two  two  object  object_74  false",
   "two.id  id  two/id  integer  integer_8  false",
   "two.email  email  two/email  string  UserEmail  false",
 ]
@@ -211,91 +211,91 @@ snapshot[`planner: dependencies 1`] = `
 
 snapshot[`planner: dependencies 2`] = `
 [
-  "two  two  two  object  object_68  false",
+  "two  two  two  object  object_74  false",
   "two.id  id  two/id  integer  integer_8  false",
   "two.email  email  two/email  string  UserEmail  false",
-  "two.profile  profile  two/profile  object  object_51  false",
-  "two.profile.firstName  firstName  two/profile/firstName  string  string_14  false",
-  "two.profile.lastName  lastName  two/profile/lastName  string  string_14  false",
-  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_14  false",
+  "two.profile  profile  two/profile  object  object_57  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_19  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_19  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_19  false",
 ]
 `;
 
 snapshot[`planner: dependencies 3`] = `
 [
-  "two  two  two  object  object_68  false",
+  "two  two  two  object  object_74  false",
   "two.id  id  two/id  integer  integer_8  false",
   "two.email  email  two/email  string  UserEmail  false",
-  "two.profile  profile  two/profile  object  object_51  false",
-  "two.profile.firstName  firstName  two/profile/firstName  string  string_14  false",
-  "two.profile.lastName  lastName  two/profile/lastName  string  string_14  false",
-  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_14  false",
+  "two.profile  profile  two/profile  object  object_57  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_19  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_19  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_19  false",
 ]
 `;
 
 snapshot[`planner: dependencies 4`] = `
 [
-  "two  two  two  object  object_68  false",
+  "two  two  two  object  object_74  false",
   "two.email  email  two/email  string  UserEmail  true",
-  "two.profile  profile  two/profile  object  object_51  false",
-  "two.profile.firstName  firstName  two/profile/firstName  string  string_14  false",
-  "two.profile.lastName  lastName  two/profile/lastName  string  string_14  false",
-  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_14  false",
+  "two.profile  profile  two/profile  object  object_57  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_19  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_19  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_19  false",
   "two.id  id  two/id  integer  integer_8  false",
 ]
 `;
 
 snapshot[`planner: dependencies 5`] = `
 [
-  "two  two  two  object  object_68  false",
+  "two  two  two  object  object_74  false",
   "two.email  email  two/email  string  UserEmail  true",
-  "two.profile  profile  two/profile  object  object_51  false",
-  "two.profile.firstName  firstName  two/profile/firstName  string  string_14  false",
-  "two.profile.lastName  lastName  two/profile/lastName  string  string_14  false",
-  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_14  false",
-  "two.taggedPic  taggedPic  two/taggedPic  string  string_14  false",
+  "two.profile  profile  two/profile  object  object_57  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_19  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_19  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_19  false",
+  "two.taggedPic  taggedPic  two/taggedPic  string  string_19  false",
 ]
 `;
 
 snapshot[`planner: dependencies 6`] = `
 [
-  "two  two  two  object  object_68  false",
+  "two  two  two  object  object_74  false",
   "two.id  id  two/id  integer  integer_8  false",
   "two.email  email  two/email  string  UserEmail  true",
-  "two.profile  profile  two/profile  object  object_51  true",
-  "two.profile.email  email  two/profile/email  string  string_13  false",
-  "two.profile.firstName  firstName  two/profile/firstName  string  string_14  false",
-  "two.profile.lastName  lastName  two/profile/lastName  string  string_14  false",
-  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_14  false",
-  "two.taggedPic  taggedPic  two/taggedPic  string  string_14  false",
+  "two.profile  profile  two/profile  object  object_57  true",
+  "two.profile.email  email  two/profile/email  string  string_18  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_19  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_19  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_19  false",
+  "two.taggedPic  taggedPic  two/taggedPic  string  string_19  false",
 ]
 `;
 
 snapshot[`planner: dependencies in union/either 1`] = `
 [
-  "three  three  three  object  object_73  false",
-  "three.id  id  three/id  integer  integer_71  false",
-  "three.user  user  three/user  either  either_72  false",
-  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  string_33  false",
+  "three  three  three  object  object_79  false",
+  "three.id  id  three/id  integer  integer_77  false",
+  "three.user  user  three/user  either  either_78  false",
+  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  string_39  false",
   "three.user\$RegisteredUser.email  email  three/user\$RegisteredUser/email  string  RegisteredUserEmail  false",
-  "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  object_42  false",
-  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  string_39  false",
+  "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  object_48  false",
+  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  string_45  false",
   "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  string_4  false",
   "three.user\$RegisteredUser.profile.profilePic  profilePic  three/user\$RegisteredUser/profile/profilePic  string  string_4  false",
-  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  string_33  false",
+  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  string_39  false",
 ]
 `;
 
 snapshot[`planner: dependencies in union/either 2`] = `
 [
-  "three  three  three  object  object_73  false",
-  "three.id  id  three/id  integer  integer_71  false",
-  "three.user  user  three/user  either  either_72  false",
-  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  string_33  false",
+  "three  three  three  object  object_79  false",
+  "three.id  id  three/id  integer  integer_77  false",
+  "three.user  user  three/user  either  either_78  false",
+  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  string_39  false",
   "three.user\$RegisteredUser.email  email  three/user\$RegisteredUser/email  string  RegisteredUserEmail  true",
-  "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  object_42  false",
-  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  string_39  false",
+  "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  object_48  false",
+  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  string_45  false",
   "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  string_4  false",
-  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  string_33  false",
+  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  string_39  false",
 ]
 `;

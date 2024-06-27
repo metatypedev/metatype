@@ -216,31 +216,43 @@ export class Planner {
           // TODO error message: or not selectable variant?
           throw new Error(`unknown variant '${typeName}'`);
         }
-        const outputType = this.tg.type(idx, Type.OBJECT);
+        const outputType = this.tg.unwrapQuantifier(this.tg.type(idx));
+        if (outputType.type !== Type.OBJECT) {
+          throw new Error("expected object type");
+        }
+        // const outputType = this.tg.type(idx, Type.OBJECT);
         const parentPath = node.path.slice();
         parentPath[parentPath.length - 1] += `$${typeName}`;
         stages.push(
-          ...new DependencyResolver(
-            this.tg,
-            parentPath.join("."),
-            outputType,
-            (field) =>
-              this.traverseField(
-                this.getChildNodeForField(
-                  field,
-                  {
-                    ...node,
-                    path: parentPath,
-                    // TODO: what if null?
-                    typeIdx: selectableVariants.get(typeName)!,
-                  },
-                  outputType.properties,
-                  stage,
-                ),
-                field,
-              ),
-            selection,
-          ).getScheduledStages(),
+          ...this.traverseValueField({
+            ...node,
+            path: parentPath,
+            typeIdx: idx,
+            selectionSet,
+            parent: node,
+            parentStage: stage,
+          }),
+          // ...new DependencyResolver(
+          //   this.tg,
+          //   parentPath.join("."),
+          //   outputType,
+          //   (field) =>
+          //     this.traverseField(
+          //       this.getChildNodeForField(
+          //         field,
+          //         {
+          //           ...node,
+          //           path: parentPath,
+          //           // TODO: what if null?
+          //           typeIdx: selectableVariants.get(typeName)!,
+          //         },
+          //         outputType.properties,
+          //         stage,
+          //       ),
+          //       field,
+          //     ),
+          //   selection,
+          // ).getScheduledStages(),
         );
       }
 
@@ -359,12 +371,13 @@ export class Planner {
 
     const fieldType = this.tg.type(node.typeIdx);
 
-    const stages = fieldType.type !== Type.FUNCTION
-      ? this.traverseValueField(node)
-      : this.traverseFuncField(
-        node,
-        this.tg.type(parent.typeIdx, Type.OBJECT).properties,
-      );
+    const stages =
+      fieldType.type !== Type.FUNCTION
+        ? this.traverseValueField(node)
+        : this.traverseFuncField(
+            node,
+            this.tg.type(parent.typeIdx, Type.OBJECT).properties,
+          );
 
     return stages;
   }
@@ -479,9 +492,8 @@ export class Planner {
     const stage = this.createComputeStage(node, {
       dependencies: deps,
       args: collected.compute,
-      argumentTypes: mapValues(
-        inputType.properties,
-        (idx) => this.tg.getGraphQLType(this.tg.type(idx)),
+      argumentTypes: mapValues(inputType.properties, (idx) =>
+        this.tg.getGraphQLType(this.tg.type(idx)),
       ),
       outType: outputType,
       effect,
@@ -525,7 +537,7 @@ export class Planner {
     // Unnamed queries/mutations will be named "Q"/"M"
     return (
       this.operation.name?.value ??
-        this.operation.operation.charAt(0).toUpperCase()
+      this.operation.operation.charAt(0).toUpperCase()
     );
   }
 
@@ -534,18 +546,17 @@ export class Planner {
    */
   private createComputeStage(
     node: Node,
-    props:
-      & Omit<
-        ComputeStageProps,
-        | "operationType"
-        | "operationName"
-        | "outType"
-        | "node"
-        | "path"
-        | "parent"
-        | "typeIdx"
-      >
-      & Partial<Pick<ComputeStageProps, "outType">>,
+    props: Omit<
+      ComputeStageProps,
+      | "operationType"
+      | "operationName"
+      | "outType"
+      | "node"
+      | "path"
+      | "parent"
+      | "typeIdx"
+    > &
+      Partial<Pick<ComputeStageProps, "outType">>,
   ): ComputeStage {
     return new ComputeStage({
       operationType: this.operation.operation,

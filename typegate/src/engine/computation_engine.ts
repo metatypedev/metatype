@@ -88,6 +88,10 @@ export class ComputationEngine {
     limit: RateLimit | null,
     verbose: boolean,
   ): Promise<Record<string, JSONValue>> {
+    console.log(
+      "plan",
+      plan.map((s) => s.id()),
+    );
     await policies.authorize(context, info, verbose);
 
     const computationEngine = new ComputationEngine(
@@ -146,9 +150,10 @@ export class ComputationEngine {
             effect,
             ...deps,
           },
-        })
+        }),
       ),
     );
+    console.log("stage", stageId, "; res:", res);
 
     if (!rateCalls) {
       this.consumeLimit(res.length * (rateWeight ?? 1));
@@ -188,8 +193,8 @@ export class ComputationEngine {
       });
 
       // TODO
-      this.lenses[stageId] = lens.flatMap((l) =>
-        batcher([(l as Record<string, unknown>)[field]]) ?? []
+      this.lenses[stageId] = lens.flatMap(
+        (l) => batcher([(l as Record<string, unknown>)[field]]) ?? [],
       );
     }
 
@@ -198,14 +203,16 @@ export class ComputationEngine {
 
   private getDeps(stage: ComputeStage, parentId: string | null) {
     // TODO what if the dependency has not been computed yet??? (not in cache)
-    return stage.props.dependencies.filter((dep) => dep != parentId)
+    return stage.props.dependencies
+      .filter((dep) => dep != parentId)
       .filter((dep) => !(parentId && dep.startsWith(`${parentId}`)))
       .reduce((agg, dep) => ({ ...agg, [dep]: this.cache[dep] }), {});
   }
 
   private updateSelectedBranch(currentLevel: number, parentId: string | null) {
     while (
-      this.topSelection != null && currentLevel < this.topSelection.level
+      this.topSelection != null &&
+      currentLevel < this.topSelection.level
     ) {
       // top branch selections exhausted
       this.activeSelections.pop();
@@ -237,12 +244,14 @@ export class ComputationEngine {
     const currentLevel = path.length;
 
     if (
-      this.topSelection != null && this.topSelection.level + 1 === currentLevel
+      this.topSelection != null &&
+      this.topSelection.level + 1 === currentLevel
     ) {
       throw new InvalidPlan("nested union/either should have been flattened");
     }
 
     const branches = this.cache[stageId].map((res) => {
+      console.log("value", res);
       const branch = childSelection(res);
       if (branch == null) {
         throw new InvalidPlan(
