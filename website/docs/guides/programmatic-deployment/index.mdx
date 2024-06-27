@@ -1,5 +1,6 @@
 import SDKTabs from "@site/src/components/SDKTabs";
 import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme/CodeBlock";
 
 # Programmatic deployment
 
@@ -18,7 +19,11 @@ You are required to provide the configurations and also handle migrations by you
 <SDKTabs>
     <TabItem value="python">
 
-```python
+    <CodeBlock language="python">
+  {require("!!code-loader!../../../../typegate/tests/docs/how-tos/prog_deploy/prog_deploy.py").content}
+    </CodeBlock>
+
+{/* ```python
 import os
 from os import path
 
@@ -77,12 +82,16 @@ def deploy():
     return result
 
 res = deploy()
-```
+``` */}
 
     </TabItem>
     <TabItem value="typescript">
 
-```typescript
+    <CodeBlock language="typescript">
+  {require("!!code-loader!../../../../typegate/tests/docs/how-tos/prog_deploy/prog_deploy.ts").content}
+    </CodeBlock>
+
+{/* ```typescript
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
 import * as path from "path";
@@ -125,7 +134,7 @@ const config = {
 
 // Deploy to typegate
 const deployResult = await tgDeploy(tg, config);
-```
+``` */}
 
     </TabItem>
 
