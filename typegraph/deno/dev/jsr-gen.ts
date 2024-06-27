@@ -17,8 +17,9 @@ for (
   if (/\.(ts|js|mjs)$/.test(path)) {
     const hintFile = `${removeExtension(path)}.d.ts`;
     const sourcePath = existsSync(hintFile) ? hintFile : path;
-    const relPath = sourcePath.replace(denoSdkDir, ".");
-    jsrExports[relPath] = relPath;
+    const canonRelPath = sourcePath.replace(denoSdkDir, ".");
+    const usrRelPath = sourcePath.replace(srcDir, ".");
+    jsrExports[usrRelPath] = canonRelPath;
   }
 }
 

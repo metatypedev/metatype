@@ -35,7 +35,7 @@ for (
   if (path.endsWith(".d.ts")) {
     continue;
   }
-  if (!/.(js|ts)/.test(path)) {
+  if (!/.(js|ts)$/.test(path)) {
     continue;
   }
 
