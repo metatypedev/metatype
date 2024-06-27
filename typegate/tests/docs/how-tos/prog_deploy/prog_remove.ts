@@ -17,8 +17,8 @@ const baseUrl = `http://localhost:${PORT}`;
 const auth = new BasicAuth("admin", "password");
 // skip:end
 
-// Response from typegate
-const result = await tgRemove(tg, {
+// Response from typegate,
+const result = await tgRemove(tg.name, { // pass the typegraph name
   typegate: {
     url: baseUrl,
     auth: auth,

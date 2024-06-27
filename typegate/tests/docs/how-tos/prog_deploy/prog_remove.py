@@ -35,7 +35,7 @@ def remove():
     # skip:end
 
     result = tg_remove(
-        example,
+        example.name,  # pass the typegraph name
         params=TypegraphRemoveParams(
             typegate=TypegateConnectionOptions(url=base_url, auth=auth),
         ),
