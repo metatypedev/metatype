@@ -77,13 +77,7 @@ Meta.test(
 
     await t.should("remove typegraph from typegate", async () => {
       const tsRemove = path.join(scriptsPath, "prog_remove.ts");
-      const removeCommand = [
-        "deno",
-        "run",
-        "-A",
-        tsRemove,
-        port.toString(),
-      ];
+      const removeCommand = ["deno", "run", "-A", tsRemove, port.toString()];
       const removeResult = await t.shell(removeCommand);
       if (removeResult.code !== 0) {
         console.error("Typegraph Remove Script Failed: ", removeResult.stderr);

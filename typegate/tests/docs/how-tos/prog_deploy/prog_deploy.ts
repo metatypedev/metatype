@@ -1,12 +1,11 @@
+// skip:start
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
+// skip:end
 
 import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
-// skip:start
 import * as path from "node:path";
-// skip:end
-
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
 
 // Your typegraph
@@ -24,21 +23,18 @@ export const tg = await typegraph("example", (g) => {
     pub,
   );
 });
-
 // skip:start
 const cwd = Deno.args[0];
 const PORT = Deno.args[1];
 // skip:end
 
 // Configure your deployment
-
 let baseUrl = "<TYPEGATE_URL>";
 let auth = new BasicAuth("<USERNAME>", "<PASSWORD>");
-
 // skip:start
 baseUrl = `http://localhost:${PORT}`;
 auth = new BasicAuth("admin", "password");
-// skip: end
+// skip:end
 
 const config = {
   typegate: {
@@ -57,4 +53,5 @@ const config = {
 
 // Deploy to typegate
 const deployResult = await tgDeploy(tg, config);
+// skip:next-line
 console.log(deployResult);

@@ -10,7 +10,7 @@ from typegraph.graph.shared_types import BasicAuth
 
 # skip:start
 import sys
-# skip: end
+# skip:end
 
 
 # Your typegraph
@@ -23,13 +23,12 @@ def example(g: Graph):
 
 # skip:start
 PORT = sys.argv[1]
+
+
 # skip:end
-
-
 def remove():
     base_url = "<TYPEGATE_URL>"
     auth = BasicAuth("<USERNAME>", "<PASSWORD>")
-
     # skip:start
     base_url = f"http://localhost:{PORT}"
     auth = BasicAuth("admin", "password")
@@ -45,7 +44,7 @@ def remove():
     return result
 
 
-res = remove()
-
 # Response from typegate
+res = remove()
+# skip:next-line
 print(res.typegate)

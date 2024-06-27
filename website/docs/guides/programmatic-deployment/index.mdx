@@ -41,62 +41,16 @@ Similarly to the above, you can undeploy typegraphs using the `tgRemove`/`tg_rem
 <SDKTabs>
     <TabItem value="python">
 
-```python
-# ..
-from typegraph.graph.tg_deploy import (
-    TypegateConnectionOptions,
-    TypegraphDeployParams,
-    TypegraphRemoveParams,
-    tg_remove,
-)
-
-# Your typegraph
-
-@typegraph()
-def example(g: Graph):
-    # ..
-
-def remove():
-    result = tg_remove(
-        example,
-        params=TypegraphRemoveParams(
-            typegate=TypegateConnectionOptions(
-                url = "<TYPEGATE_URL>",
-                auth = BasicAuth("<USERNAME>", "<PASSWORD>")
-            )
-        )
-    )
-
-    return result
-
-res = remove()
-
-# Response from typegate
-
-print(res.typegate)
-
-```
+    <CodeBlock language="python">
+  {require("!!code-loader!../../../../typegate/tests/docs/how-tos/prog_deploy/prog_remove.py").content}
+    </CodeBlock>
 
     </TabItem>
     <TabItem value="typescript">
 
-```typescript
-// ..
-import { BasicAuth, tgRemove } from "@typegraph/sdk/tg_deploy.js";
-
-// Your typegraph
-const tg = await typegraph("example", (g) => {
-  // ..
-});
-
-const { typegate } = await tgRemove(tg, {
-  url: "<TYPEGATE_URL>",
-  auth: new BasicAuth("<USERNAME>", "<PASSWORD>"),
-});
-
-// Response from typegate
-console.log(typegate);
-```
+      <CodeBlock language="typescript">
+  {require("!!code-loader!../../../../typegate/tests/docs/how-tos/prog_deploy/prog_remove.ts").content}
+      </CodeBlock>
 
     </TabItem>
 

@@ -3,8 +3,8 @@ from os import path
 
 # skip:start
 import sys
-# skip:end
 
+# skip:end
 from typegraph.gen.exports.core import MigrationAction
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_deploy import (
@@ -13,12 +13,10 @@ from typegraph.graph.tg_deploy import (
     TypegateConnectionOptions,
 )
 from typegraph.runtimes.deno import DenoRuntime
-
 from typegraph import Graph, Policy, t, typegraph
 
+
 # Your typegraph
-
-
 @typegraph()
 def example(g: Graph):
     deno = DenoRuntime()
@@ -38,14 +36,13 @@ def example(g: Graph):
 # skip:start
 cwd = sys.argv[1]
 PORT = sys.argv[2]
+
+
 # skip:end
-
-
 # Configure your deployment
 def deploy():
     base_url = "<TYPEGATE_URL>"
     auth = BasicAuth("<USERNAME>", "<PASSWORD>")
-
     # skip:start
     base_url = f"http://localhost:{PORT}"
     auth = BasicAuth("admin", "password")
@@ -70,5 +67,7 @@ def deploy():
     return result
 
 
+# typegate response
 res = deploy()
+# skip:next-line
 print(res.serialized)
