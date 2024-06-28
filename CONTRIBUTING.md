@@ -130,6 +130,7 @@ source .venv/bin/activate # depends on your shell
 
 ```bash
 ghjk x dev-compose all # or only the envs required (e.g. base prisma s3)
+ghjk x build-tgraph # build typegraph
 ghjk x test-e2e # all tests
 ghjk x test-e2e runtimes/prisma/full_prisma_mapping_test.ts # isolated test
 ghjk x # more test tasks are availaible
