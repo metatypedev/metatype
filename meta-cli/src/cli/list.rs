@@ -87,7 +87,7 @@ impl List {
         let mut headers = HeaderMap::new();
         headers.insert(
             AUTHORIZATION,
-            HeaderValue::from_str(&format!("Basic {}", "YWRtaW46cGFzc3dvcmQ="))?,
+            HeaderValue::from_str(&format!("Basic {}", "YWRtaW46cGFzc3dvcmQ="))?, // I don't know if it right, may be get from env
         );
 
         let query = r#"
@@ -100,7 +100,7 @@ impl List {
         "#;
 
         let response = client
-            .post("http://localhost:7891/typegate")
+            .post("http://localhost:7891/typegate") // this too, may be get from env
             .headers(headers)
             .gql(query.into(), None)
             .await?;
@@ -112,22 +112,24 @@ impl List {
 
     #[allow(clippy::vec_box)]
     async fn display_typegrahs(&self, tgs: Vec<Box<Typegraph>>) -> Result<()> {
-        let mut lines: Vec<Table> = Vec::new();
-        let more_tgs = self.get_more_info().await?;
+        let mut tables: Vec<Table> = Vec::new();
         for tg in tgs {
-            let table = Table::new(tg.name().unwrap());
-            lines.push(table);
+            let mut table = Table::new(tg.name().unwrap());
+            table.set_path(tg.get_path().ok());
+            tables.push(table);
         }
 
-        for tg in more_tgs {
-            let mut table = Table::new(tg.name);
-            table.set_url(tg.url);
-            lines.push(table);
+        if let Ok(more_tgs) = self.get_more_info().await {
+            for tg in more_tgs {
+                let mut table = Table::new(tg.name);
+                table.set_url(Some(tg.url));
+                tables.push(table);
+            }
         }
 
         Table::print_table_header();
-        for line in lines {
-            println!("{}", line.to_table_row());
+        for table in tables {
+            println!("{}", table.to_table_row());
         }
 
         Ok(())
@@ -150,20 +152,20 @@ impl Table {
         }
     }
 
-    fn _set_path(&mut self, path: String) {
-        self.path = Some(path);
+    fn set_path(&mut self, path: Option<String>) {
+        self.path = path;
     }
 
-    fn set_url(&mut self, url: String) {
-        self.url = Some(url);
+    fn set_url(&mut self, url: Option<String>) {
+        self.url = url;
     }
 
     fn to_table_row(&self) -> String {
         format!(
             "{:<50} {:<20} {:<30}",
             self.name,
-            self.path.as_deref().unwrap_or(""),
-            self.url.as_deref().unwrap_or("")
+            self.path.as_deref().unwrap_or("None"),
+            self.url.as_deref().unwrap_or("None")
         )
     }
 
