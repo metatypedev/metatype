@@ -4,7 +4,7 @@
 use self::actors::task::deploy::{DeployAction, DeployActionGenerator};
 use self::actors::task_manager::{self, StopReason};
 use super::{Action, ConfigArgs, NodeArgs};
-use crate::config::Config;
+use crate::config::{Config, NodeConfig};
 use crate::deploy::actors;
 use crate::deploy::actors::console::ConsoleActor;
 use crate::interlude::*;
@@ -88,6 +88,7 @@ pub struct DeployOptions {
 pub struct Deploy {
     config: Arc<Config>,
     node: Node,
+    node_config: NodeConfig,
     base_dir: Arc<Path>,
     options: DeployOptions,
     secrets: RawSecrets,
@@ -121,6 +122,7 @@ impl Deploy {
         Ok(Self {
             config,
             node,
+            node_config,
             base_dir: dir.clone(),
             options,
             secrets,
@@ -289,6 +291,21 @@ mod watch_mode {
             deploy.options.allow_destructive,
         );
 
+        #[cfg(feature = "typegate")]
+        let _typegate_addr = if deploy.options.run_typegate {
+            use crate::deploy::actors::typegate::TypegateInit;
+            info!("starting typegate");
+            Some(
+                TypegateInit::new(&deploy.node_config, &deploy.base_dir)
+                    .await?
+                    .start(console.clone())
+                    .await?,
+            )
+        } else {
+            info!("no typegate");
+            None
+        };
+
         let mut init = TaskManagerInit::<DeployAction>::new(
             deploy.config.clone(),
             action_generator.clone(),
@@ -296,11 +313,6 @@ mod watch_mode {
             TaskSource::DiscoveryAndWatch(deploy.base_dir),
         )
         .retry(3, None);
-
-        #[cfg(feature = "typegate")]
-        if deploy.options.run_typegate {
-            // init = init.with_typegate();
-        }
 
         if let Some(max_parallel_loads) = deploy.max_parallel_loads {
             init = init.max_parallel_tasks(max_parallel_loads);
