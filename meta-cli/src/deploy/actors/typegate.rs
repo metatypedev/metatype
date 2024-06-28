@@ -139,10 +139,13 @@ impl Handler<message::StartProcess> for TypegateActor {
 
         let console = self.console.clone();
 
-        match spawn_res.map(|mut child| {
+        // to prevent nested error handling in the match statement
+        let spawn_res = spawn_res.map(|mut child| {
             let res = TypegateActor::take_output_streams(&mut child);
             res.map(|(stdout, stderr)| (child, stdout, stderr))
-        }) {
+        });
+
+        match spawn_res {
             Ok(Ok((mut child, stdout, stderr))) => {
                 {
                     let addr = ctx.address();
