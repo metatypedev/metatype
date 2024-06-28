@@ -1,21 +1,11 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
-
-import { testDir } from "test-utils/dir.ts";
 import { TextLineStream } from "@dev/deps.ts";
 import { deadline } from "std/async/mod.ts";
-
-export type MetaDevOptions = {
-  args?: string[];
-  env?: Record<string, string>;
-  cwd?: string;
-};
 
 export type FetchOutputLineParam = {
   (line: string): boolean | Promise<boolean>; // return false to stop
 };
 
-export class MetaDev {
+export class ProcessOutputLines {
   #process: Deno.ChildProcess;
   #stdinStream: WritableStream<Uint8Array>;
   #stdoutStream: ReadableStream<string>;
@@ -23,19 +13,8 @@ export class MetaDev {
   #stdout: ReadableStreamDefaultReader<string>;
   #stderr: ReadableStreamDefaultReader<string>;
 
-  private constructor(
-    metaBin: string,
-    public options: MetaDevOptions,
-  ) {
-    this.#process = new Deno.Command(metaBin, {
-      cwd: options.cwd ?? testDir,
-      args: [...(options.args ?? [])],
-      env: options.env ?? {},
-      stdout: "piped",
-      stderr: "piped",
-      stdin: "piped",
-    }).spawn();
-
+  constructor(process: Deno.ChildProcess) {
+    this.#process = process;
     this.#stdinStream = this.#process.stdin;
     this.#stdoutStream = this.#process.stdout
       .pipeThrough(new TextDecoderStream())
@@ -47,14 +26,10 @@ export class MetaDev {
     this.#stderr = this.#stderrStream.getReader();
   }
 
-  static start(options: MetaDevOptions = {}): MetaDev {
-    return new MetaDev("meta", options);
-  }
-
   async #fetchOutputLines(
     reader: ReadableStreamDefaultReader<string>,
     param: FetchOutputLineParam,
-    timeoutMs: number = 5_000,
+    timeoutMs: number | null = 10_000,
   ) {
     const next =
       timeoutMs == null
@@ -71,11 +46,11 @@ export class MetaDev {
   }
 
   fetchStdoutLines(param: FetchOutputLineParam) {
-    return this.#fetchOutputLines(this.#stdout, param);
+    return this.#fetchOutputLines(this.#stdout, param, null);
   }
 
   fetchStderrLines(param: FetchOutputLineParam) {
-    return this.#fetchOutputLines(this.#stderr, param);
+    return this.#fetchOutputLines(this.#stderr, param, null);
   }
 
   async writeLine(line: string) {
