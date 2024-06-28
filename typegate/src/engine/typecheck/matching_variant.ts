@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Type, TypeNode } from "../../typegraph/type_node.ts";
+import { EitherNode, Type, UnionNode } from "../../typegraph/type_node.ts";
 import { TypeGraph } from "../../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { mapValues } from "std/collections/map_values.ts";
@@ -9,48 +9,17 @@ import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";
 
 export type VariantMatcher = (value: unknown) => string | null;
 
-export function flattenUnionVariants(
-  tg: TypeGraph,
-  variants: number[],
-): number[] {
-  return variants.flatMap((idx) => {
-    const typeNode = tg.type(idx);
-    switch (typeNode.type) {
-      case Type.UNION:
-        return flattenUnionVariants(tg, typeNode.anyOf);
-      case Type.EITHER:
-        return flattenUnionVariants(tg, typeNode.oneOf);
-      default:
-        return [idx];
-    }
-  });
-}
-
-// get the all the variants in a multilevel union/either
-export function getNestedUnionVariants(
-  tg: TypeGraph,
-  typeNode: TypeNode,
-): number[] {
-  switch (typeNode.type) {
-    case Type.UNION:
-      return flattenUnionVariants(tg, typeNode.anyOf);
-    case Type.EITHER:
-      return flattenUnionVariants(tg, typeNode.oneOf);
-    default:
-      throw new Error(`Expected either or union, got '${typeNode.type}'`);
-  }
-}
-// optimized variant matcher for union of objects
+/** get variant selector for selectable variants */
 export function generateVariantMatcher(
   tg: TypeGraph,
-  typeIdx: number,
+  typeNode: UnionNode | EitherNode,
 ): VariantMatcher {
-  // all variants must be objects
-  const variantIndices = getNestedUnionVariants(tg, tg.type(typeIdx));
-  const variants = variantIndices.map((idx) => tg.type(idx, Type.OBJECT));
+  // selectable variants
+  const variants = tg.typeUtils.getFlatUnionVariants(typeNode);
+  // .filter((idx) => tg.isScalarOrListOfScalars(tg.type(idx)));
 
   const validators = new Function(
-    new VariantMatcherCompiler(tg).generate(variantIndices),
+    new VariantMatcherCompiler(tg).generate(variants),
   )() as ValidatorFn[];
 
   return (value: unknown) => {
@@ -59,7 +28,7 @@ export function generateVariantMatcher(
       const validator = validators[i];
       validator(value, "<value>", errors, validationContext);
       if (errors.length === 0) {
-        return variants[i].title;
+        return tg.type(variants[i]).title;
       }
       errors = [];
     }
@@ -155,7 +124,8 @@ class VariantMatcherCompiler {
     const validatorNames = variants.map((idx) => functionName(idx));
     const variantValidators = `\nreturn [${validatorNames.join(", ")}]`;
 
-    return [...refs].map((idx) => this.codes.get(idx)).join("\n") +
-      variantValidators;
+    return (
+      [...refs].map((idx) => this.codes.get(idx)).join("\n") + variantValidators
+    );
   }
 }
