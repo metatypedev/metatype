@@ -6682,6 +6682,7 @@ dependencies = [
  "prisma-models",
  "process-wrap",
  "project-root",
+ "rand 0.8.5",
  "reqwest",
  "self_update",
  "semver 1.0.23",
