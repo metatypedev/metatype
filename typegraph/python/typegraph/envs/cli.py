@@ -24,6 +24,7 @@ _optional_cli_envs = ("prefix",)
 class Command(Enum):
     SERIALIZE = "serialize"
     DEPLOY = "deploy"
+    LIST = "list"
 
 
 @dataclass
