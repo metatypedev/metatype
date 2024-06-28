@@ -36,7 +36,8 @@ Meta.test(
       migrations: [],
     });
 
-    const { typegate: gateResponseRem } = await tgRemove(tg, {
+    // pass the typegraph name
+    const { typegate: gateResponseRem } = await tgRemove(tg.name, {
       typegate: { url: gate, auth },
     });
     assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });

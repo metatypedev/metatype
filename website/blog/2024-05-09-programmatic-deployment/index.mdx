@@ -46,49 +46,38 @@ It's the place where you tell which typegate you want to deploy to, how you want
     <TabItem value="python">
 
 ```python
-config_params = MigrationConfig(
-    migration_dir= "path/to/prisma-migrations",
-    global_action=MigrationAction(
-        create=True, # allow creating migrations
-        reset=True  # allow destructive migrations
-    ),
-    runtime_actions=None,
-)
-artifacts_config = ArtifactResolutionConfig(
-    prisma_migration=config_params,
-    prefix=None,
-    dir=None,  # artifacts are resolved relative to this path
-    disable_artifact_resolution=None,
-    codegen=None,
-)
-config = TypegraphDeployParams(
-    base_url="<TYPEGATE_URL>",
-    auth=BasicAuth(username="<USERNAME>", password="<PASSWORD>"),
-    artifacts_config=artifacts_config,
-    secrets={"POSTGRES": "<DB_URL>"},
-)
+config: TypegraphDeployParams = TypegraphDeployParams(
+        typegate=TypegateConnectionOptions(url="<TYPEGATE_URL>", auth=BasicAuth("<USERNAME>", "<PASSWORD>")),
+        typegraph_path=os.path.join(cwd, "path-to-typegraph"),
+        prefix="",
+        secrets={},
+        migrations_dir=path.join("prisma-migrations", example.name),
+        migration_actions=None,
+        default_migration_action=MigrationAction(
+            apply=True,
+            reset=True,  # allow destructive migrations
+            create=True,
+        ),
+    )
 ```
 
     </TabItem>
     <TabItem value="typescript">
 
 ```typescript
-const artifactsConfig = {
-  prismaMigration: {
-    globalAction: {
-      create: true, // allow creating migrations
-      reset: true, // allow destructive migrations
-    },
-    migrationDir: "path/to/prisma-migrations",
-  },
-  dir: ".", // artifacts are resolved relative to this path
-};
-
 const config = {
-  baseUrl: "<TYPEGATE_URL>",
-  auth: new BasicAuth("<USERNAME>", "<PASSWORD>"),
+  typegate: {
+    url: "<TYPEGATE_URL>",
+    auth: new BasicAuth("<USERNAME>", "<PASSWORD>"),
+  },
+  typegraphPath: path.join(cwd, "path-to-typegraph.ts"),
+  prefix: "",
   secrets: { POSTGRES: "<DB_URL>" },
-  artifactsConfig,
+  migrationsDir: path.join("prisma-migrations", tg.name),
+  defaultMigrationAction: {
+    create: true,
+    reset: true, // allow destructive migrations
+  },
 };
 ```
 
@@ -102,7 +91,7 @@ Now, picture this, you have a lot of typegraphs and one or more typegate instanc
 
 ```typescript
 // ..
-import { tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy";
+import { tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
 // ..
 
 const BASIC_AUTH = loadMyAuthsFromSomeSource();
@@ -127,19 +116,18 @@ export function getConfig(tgName: string, tgLocation: string) {
   // Note: You can always develop various ways of constructing the configuration,
   // like loading it from a file.
   return {
-    baseUrl: TYPEGATE_URL,
-    auth: BASIC_AUTH,
-    secrets: {
-      /* .. */
+    typegate: {
+      url: "<TYPEGATE_URL>",
+      auth: new BasicAuth("<USERNAME>", "<PASSWORD>"),
     },
-    artifactsConfig: {
-      prismaMigration: {
-        // ..
-        // convention used by meta-cli but you are free to do whatever you want
-        migrationDir: "prisma-migrations/" + tgName,
-      },
+    typegraphPath: path.join(cwd, "path-to-typegraph.ts"),
+    prefix: "",
+    secrets: { POSTGRES: "<DB_URL>" },
+    migrationsDir: path.join("prisma-migrations", tg.name),
+    defaultMigrationAction: {
+      create: true,
+      reset: true, // allow destructive migrations
     },
-    typegraphPath: tgLocation,
   };
 }
 
@@ -169,7 +157,7 @@ export async function undeployAll() {
   for (const { tg } of typegraphs) {
     try {
       // use tgRemove to remove typegraphs
-      const { typegate } = await tgRemove(tg, {
+      const { typegate } = await tgRemove("<TYPEGRAPH_NAME>", {
         baseUrl: TYPEGATE_URL,
         auth: BASIC_AUTH,
       });

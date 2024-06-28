@@ -124,7 +124,7 @@ export async function tgDeploy(
 }
 
 export async function tgRemove(
-  typegraph: TypegraphOutput,
+  typegraphName: string,
   params: TypegraphRemoveParams,
 ): Promise<RemoveResult> {
   const { url, auth } = params.typegate;
@@ -140,10 +140,10 @@ export async function tgRemove(
     {
       method: "POST",
       headers,
-      body: wit_utils.gqlRemoveQuery([typegraph.name]),
+      body: wit_utils.gqlRemoveQuery([typegraphName.toString()]),
     },
-    `tgRemove failed to remove typegraph ${typegraph.name}`,
-  )) as Record<string, any>;
+    `tgRemove failed to remove typegraph ${typegraphName}`,
+  )) as Record<string, any> | string;
 
   return { typegate: response };
 }
