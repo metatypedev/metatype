@@ -46,6 +46,7 @@ const config = {
   secrets: {},
   migrationsDir: path.join("prisma-migrations", tg.name),
   defaultMigrationAction: {
+    apply: true,
     create: true,
     reset: true, // allow destructive migrations
   },

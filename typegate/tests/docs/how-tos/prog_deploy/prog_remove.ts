@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 // skip:end
 
-import { typegraph } from "@typegraph/sdk/index.js";
-import { BasicAuth, tgRemove } from "@typegraph/sdk/tg_deploy.js";
+import { typegraph } from "@typegraph/sdk/index.ts";
+import { BasicAuth, tgRemove } from "@typegraph/sdk/tg_deploy.ts";
 
 // Your typegraph
 const tg = await typegraph("example", (_g) => {
@@ -18,7 +18,8 @@ const auth = new BasicAuth("admin", "password");
 // skip:end
 
 // Response from typegate,
-const result = await tgRemove(tg.name, { // pass the typegraph name
+const result = await tgRemove(tg.name, {
+  // pass the typegraph name
   typegate: {
     url: baseUrl,
     auth: auth,
