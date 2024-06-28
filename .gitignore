@@ -44,7 +44,6 @@ coverage*
 
 typegraph/deno/sdk/src/gen
 typegraph/deno/sdk/README.md
-typegraph/deno/sdk/LICENSE.md
 typegraph/node
 typegraph/python/typegraph/gen
 

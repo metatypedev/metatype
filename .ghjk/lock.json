@@ -613,6 +613,27 @@
           "crateName": "cargo-udeps",
           "locked": true,
           "specifiedVersion": true
+        },
+        "bciqb6acvw45s2pagycoulvy6e5n5ukmbi6j4lrwe2nr5vu5txe333mi": {
+          "version": "1.3.0",
+          "buildDepConfigs": {
+            "node_org": {
+              "version": "v20.8.0",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "node_org@0.1.0",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "npmi_npm@0.1.0",
+          "packageName": "@bytecodealliance/jco",
+          "specifiedVersion": true
         }
       }
     },
@@ -665,7 +686,7 @@
                 "bciqfgnjbpohl4jn7hh72iz6mtwos4js72xg7oipbqxsvjykm7errgka",
                 "bciqpszk4pvfknr65scs2bsuo2j372lbc4ywb52uq6ljtksppxbt6uwy",
                 "bciqcraurpl4pijby6dmkuzevrupqwxoupubzke476koiigkljrpszuy",
-                "bciqdjlgjjtjbt4h7wiexadsws7kef7d4jikwgfq66ijr52gfyrnvaqq"
+                "bciqifiqlvknwgcqa2xgvi7diixw2kop5kjrvng6i4uzf4e5y3c4abri"
               ],
               "allowedBuildDeps": "bciqduqrotwckptiuy7f6med5uixh7bq2csx6crdbk5wcytpvzanqcoy"
             },
@@ -692,7 +713,7 @@
                 "bciqfgnjbpohl4jn7hh72iz6mtwos4js72xg7oipbqxsvjykm7errgka",
                 "bciqpszk4pvfknr65scs2bsuo2j372lbc4ywb52uq6ljtksppxbt6uwy",
                 "bciqcraurpl4pijby6dmkuzevrupqwxoupubzke476koiigkljrpszuy",
-                "bciqdjlgjjtjbt4h7wiexadsws7kef7d4jikwgfq66ijr52gfyrnvaqq",
+                "bciqifiqlvknwgcqa2xgvi7diixw2kop5kjrvng6i4uzf4e5y3c4abri",
                 "bciqdagddr7ykkiri2l6xx6kpziflufklhdf6qtzruq7pi766ywwzokq"
               ],
               "allowedBuildDeps": "bciqduqrotwckptiuy7f6med5uixh7bq2csx6crdbk5wcytpvzanqcoy"
@@ -715,7 +736,7 @@
                 "bciqfgnjbpohl4jn7hh72iz6mtwos4js72xg7oipbqxsvjykm7errgka",
                 "bciqpszk4pvfknr65scs2bsuo2j372lbc4ywb52uq6ljtksppxbt6uwy",
                 "bciqcraurpl4pijby6dmkuzevrupqwxoupubzke476koiigkljrpszuy",
-                "bciqdjlgjjtjbt4h7wiexadsws7kef7d4jikwgfq66ijr52gfyrnvaqq"
+                "bciqifiqlvknwgcqa2xgvi7diixw2kop5kjrvng6i4uzf4e5y3c4abri"
               ],
               "allowedBuildDeps": "bciqduqrotwckptiuy7f6med5uixh7bq2csx6crdbk5wcytpvzanqcoy"
             },
@@ -775,7 +796,7 @@
                 "bciqfgnjbpohl4jn7hh72iz6mtwos4js72xg7oipbqxsvjykm7errgka",
                 "bciqpszk4pvfknr65scs2bsuo2j372lbc4ywb52uq6ljtksppxbt6uwy",
                 "bciqcraurpl4pijby6dmkuzevrupqwxoupubzke476koiigkljrpszuy",
-                "bciqdjlgjjtjbt4h7wiexadsws7kef7d4jikwgfq66ijr52gfyrnvaqq"
+                "bciqifiqlvknwgcqa2xgvi7diixw2kop5kjrvng6i4uzf4e5y3c4abri"
               ],
               "allowedBuildDeps": "bciqduqrotwckptiuy7f6med5uixh7bq2csx6crdbk5wcytpvzanqcoy"
             },
@@ -787,7 +808,7 @@
                 "bciqfgnjbpohl4jn7hh72iz6mtwos4js72xg7oipbqxsvjykm7errgka",
                 "bciqpszk4pvfknr65scs2bsuo2j372lbc4ywb52uq6ljtksppxbt6uwy",
                 "bciqcraurpl4pijby6dmkuzevrupqwxoupubzke476koiigkljrpszuy",
-                "bciqdjlgjjtjbt4h7wiexadsws7kef7d4jikwgfq66ijr52gfyrnvaqq",
+                "bciqifiqlvknwgcqa2xgvi7diixw2kop5kjrvng6i4uzf4e5y3c4abri",
                 "bciqd67xvzjx5rhilxs3c2zzjhfgqynhqywqosjvyo4jyyu3ykgsgdgy",
                 "bciqgz7rew65ut3nwunl2qmmlshqmmsgybqsgn4ekzz7fn3322hu3keq",
                 "bciqf6xkaxfvapwn3bf73vnqzr7mkcxgghwdh24uhgnozbz7wsdl2rrq"
@@ -802,7 +823,7 @@
                 "bciqfgnjbpohl4jn7hh72iz6mtwos4js72xg7oipbqxsvjykm7errgka",
                 "bciqpszk4pvfknr65scs2bsuo2j372lbc4ywb52uq6ljtksppxbt6uwy",
                 "bciqcraurpl4pijby6dmkuzevrupqwxoupubzke476koiigkljrpszuy",
-                "bciqdjlgjjtjbt4h7wiexadsws7kef7d4jikwgfq66ijr52gfyrnvaqq",
+                "bciqifiqlvknwgcqa2xgvi7diixw2kop5kjrvng6i4uzf4e5y3c4abri",
                 "bciqk7kzquppicvwdz2erhbkqu5gwzojtbjbk5gzjau2zo6xaf6x7kpa",
                 "bciqkfsvzlt23celx7huie2ilyelz6pbtumsxto3vsyocprrezxrvrha",
                 "bciqjij47lkh2rdkrz3jc6wmevbfjkpueih33izmmf3xuycbyokkfweq"
@@ -828,7 +849,7 @@
                 "bciqfgnjbpohl4jn7hh72iz6mtwos4js72xg7oipbqxsvjykm7errgka",
                 "bciqpszk4pvfknr65scs2bsuo2j372lbc4ywb52uq6ljtksppxbt6uwy",
                 "bciqcraurpl4pijby6dmkuzevrupqwxoupubzke476koiigkljrpszuy",
-                "bciqdjlgjjtjbt4h7wiexadsws7kef7d4jikwgfq66ijr52gfyrnvaqq"
+                "bciqifiqlvknwgcqa2xgvi7diixw2kop5kjrvng6i4uzf4e5y3c4abri"
               ],
               "allowedBuildDeps": "bciqduqrotwckptiuy7f6med5uixh7bq2csx6crdbk5wcytpvzanqcoy"
             }
@@ -2693,8 +2714,8 @@
         },
         "packageName": "componentize-py"
       },
-      "bciqdjlgjjtjbt4h7wiexadsws7kef7d4jikwgfq66ijr52gfyrnvaqq": {
-        "version": "1.2.4",
+      "bciqifiqlvknwgcqa2xgvi7diixw2kop5kjrvng6i4uzf4e5y3c4abri": {
+        "version": "1.3.0",
         "port": {
           "ty": "denoWorker@v1",
           "name": "npmi_npm",
