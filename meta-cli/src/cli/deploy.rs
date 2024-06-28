@@ -76,6 +76,12 @@ pub struct DeployOptions {
     /// Overrides secrets in the format `[<typegraph-name>:]<secret-name>=<value>`
     #[clap(long = "secret")]
     pub secrets: Vec<String>,
+
+    // FIXME incompatible with non-watch mode
+    #[cfg(feature = "typegate")]
+    /// Run a typegate with the current target configuration
+    #[clap(long)]
+    pub run_typegate: bool,
 }
 
 #[derive(Debug)]
@@ -290,6 +296,11 @@ mod watch_mode {
             TaskSource::DiscoveryAndWatch(deploy.base_dir),
         )
         .retry(3, None);
+
+        #[cfg(feature = "typegate")]
+        if deploy.options.run_typegate {
+            // init = init.with_typegate();
+        }
 
         if let Some(max_parallel_loads) = deploy.max_parallel_loads {
             init = init.max_parallel_tasks(max_parallel_loads);
