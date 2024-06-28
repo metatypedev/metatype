@@ -3,9 +3,23 @@
 
 import { METATYPE_VERSION, SDK_PACKAGE_NAME_TS } from "../../../dev/consts.ts";
 import { existsSync, expandGlobSync, join } from "../../../dev/deps.ts";
+import { copyFilesAt } from "../../../dev/utils.ts";
 import { removeExtension } from "../../../dev/utils.ts";
-import { denoSdkDir, srcDir } from "./common.ts";
+import { denoSdkDir, fromRoot, srcDir } from "./common.ts";
 
+// Update license, readme
+copyFilesAt(
+  {
+    destDir: denoSdkDir,
+    overwrite: true,
+  },
+  {
+    [fromRoot("README.md")]: "README.md",
+    [fromRoot("dev/LICENSE-MPL-2.0.md")]: "LICENSE.md",
+  },
+);
+
+// Prepare jsr export map
 const jsrExports = {} as Record<string, string>;
 for (
   const { path } of expandGlobSync("./**/*.*", {
@@ -32,7 +46,7 @@ Deno.writeTextFileSync(
       // ungitignore
       // https://jsr.io/docs/troubleshooting#excluded-module-error
       publish: {
-        exclude: ["!src/gen"],
+        exclude: ["!src/gen", "!LICENSE.md", "!README.md"],
       },
       exports: jsrExports,
     },

@@ -7,3 +7,7 @@ import { projectDir } from "../../../dev/utils.ts";
 export const denoSdkDir = resolve(projectDir, "./typegraph/deno/sdk");
 export const srcDir = resolve(denoSdkDir, "src");
 export const outDir = resolve(projectDir, "./typegraph/node");
+
+export function fromRoot(relPath: string) {
+  return resolve(projectDir, relPath);
+}

@@ -1,20 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import {
-  copySync,
-  dnt,
-  expandGlobSync,
-  join,
-  resolve,
-} from "../../../dev/deps.ts";
-import { projectDir, removeExtension } from "../../../dev/utils.ts";
+import { dnt, expandGlobSync, join } from "../../../dev/deps.ts";
+import { copyFilesAt, removeExtension } from "../../../dev/utils.ts";
 import {
   METATYPE_VERSION,
   SDK_PACKAGE_NAME_TS,
   TAGLINE,
 } from "../../../dev/consts.ts";
-import { outDir } from "./common.ts";
+import { fromRoot, outDir } from "./common.ts";
 import { srcDir } from "./common.ts";
 
 // Direct node users need to use module
@@ -78,17 +72,17 @@ await dnt.build({
     },
   },
   postBuild() {
-    // Copy assets
-    copySync(
-      resolve(projectDir, "./dev/LICENSE-MPL-2.0.md"),
-      resolve(outDir, "./LICENCE.md"),
-    );
-    copySync(
-      resolve(
-        projectDir,
-        "./typegraph/deno/sdk/src/gen/typegraph_core.core.wasm",
-      ),
-      join(outDir, "./esm/gen/typegraph_core.core.wasm"),
+    copyFilesAt(
+      {
+        destDir: outDir,
+        overwrite: true,
+      },
+      {
+        [fromRoot("README.md")]: "README.md",
+        [fromRoot("dev/LICENSE-MPL-2.0.md")]: "LICENSE.md",
+        [fromRoot("./typegraph/deno/sdk/src/gen/typegraph_core.core.wasm")]:
+          "./esm/gen/typegraph_core.core.wasm",
+      },
     );
   },
 });

@@ -54,14 +54,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     dependsOn: "build-tgraph-ts",
     inherit: ["build-tgraph-ts"],
     async fn($) {
-      const nodeSdkPath = $.workingDir.join("typegraph/node");
-      const distPath = await $.removeIfExists(nodeSdkPath);
       await $`deno run -A typegraph/deno/dev/deno2node.ts`;
-      await $.co([
-        distPath
-          .join("README.md")
-          .symlinkTo($.workingDir.join("README.md").toString()),
-      ]);
     },
   },
   "build-jsr-pub": {

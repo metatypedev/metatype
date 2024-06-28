@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dirname, fromFileUrl, resolve, yaml } from "./deps.ts";
+import { copySync, dirname, fromFileUrl, join, resolve, yaml } from "./deps.ts";
 
 export const projectDir = resolve(dirname(fromFileUrl(import.meta.url)), "..");
 
@@ -123,4 +123,14 @@ export function removeExtension(path: string) {
   return known.test(path.trim())
     ? path.replace(path, "")
     : path.substring(0, path.lastIndexOf("."));
+}
+
+export function copyFilesAt(
+  { destDir, overwrite }: { destDir: string; overwrite?: boolean },
+  fileNames: Record<string, string>,
+) {
+  for (const [orig, destName] of Object.entries(fileNames)) {
+    console.log("from", orig, "to", join(destDir, destName));
+    copySync(orig, join(destDir, destName), { overwrite });
+  }
 }
