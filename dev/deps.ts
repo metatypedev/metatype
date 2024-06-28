@@ -23,6 +23,7 @@ export {
   dirname,
   fromFileUrl,
   join,
+  relative,
   resolve,
 } from "https://deno.land/std@0.219.0/path/mod.ts";
 export { parseArgs } from "https://deno.land/std@0.219.0/cli/mod.ts";

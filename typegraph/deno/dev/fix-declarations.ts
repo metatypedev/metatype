@@ -7,7 +7,8 @@ import {
   resolve,
 } from "https://deno.land/std@0.224.0/path/mod.ts";
 import { expandGlobSync } from "https://deno.land/std@0.224.0/fs/mod.ts";
-import { join } from "../../../dev/deps.ts";
+import { join, relative } from "../../../dev/deps.ts";
+import { denoSdkDir } from "./common.ts";
 
 export const thisDir = dirname(fromFileUrl(import.meta.url));
 
@@ -32,12 +33,12 @@ const replacements = [
   })),
   // Remove exports aliases
   {
-    path: resolve(thisDir, basePath + "/typegraph_core.js"),
+    path: resolve(thisDir, basePath, "typegraph_core.js"),
     op: (s: string) => s.replaceAll(/,\s*\w+ as '[\w:\/]+'/g, ""),
   },
   // Normalize native node imports
   {
-    path: resolve(thisDir, basePath + "/typegraph_core.js"),
+    path: resolve(thisDir, basePath, "typegraph_core.js"),
     op: (s: string) =>
       s.replaceAll(/["']fs\/promises["']/g, "'node:fs/promises'"),
   },
@@ -54,7 +55,7 @@ for (const { path, op } of replacements) {
 
   const newText = rewrite.join("\n");
   if (text != newText) {
-    console.log(`  Fixed generated code in ${path.replace(thisDir, "")}`);
+    console.log(`  Fixed generated code at ${relative(thisDir, path)}`);
     Deno.writeTextFileSync(path, newText);
   }
 }
@@ -70,7 +71,7 @@ const merged = Array.from(
 ).reduce((curr, { path }) => {
   console.log(`  < ${path}`);
   const next = `
-// ${path}
+// ${relative(denoSdkDir, path)}
 ${
     Deno.readTextFileSync(path)
       .replaceAll(/import type {.+} from ['"].+\.d.ts['"];/g, (m) => `// ${m}`)

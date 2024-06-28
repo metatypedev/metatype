@@ -49,7 +49,7 @@ const install = {
     // Install tsx, etc.
     await shell("pnpm install".split(/\s+/), opt);
 
-    // use local node
+    // Use local node
     const localNodeSdk = join(dir, "../../typegraph/node");
     if (!(await exists(localNodeSdk))) {
       throw new Error(`Node sdk not found at ${localNodeSdk}`);
