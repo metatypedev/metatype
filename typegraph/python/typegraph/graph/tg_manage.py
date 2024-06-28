@@ -34,6 +34,8 @@ class Manager:
             self.serialize()
         elif self.env.command == Command.DEPLOY:
             self.deploy()
+        elif self.env.command == Command.LIST:
+            self.list()
         else:
             raise Exception("unreachable")
 
@@ -127,3 +129,6 @@ class Manager:
             else:
                 Log.failure({"typegraph": self.typegraph.name, "errors": [str(err)]})
             return
+
+    def list(self):
+        Log.success({"typegraph": self.typegraph.name})

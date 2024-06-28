@@ -731,6 +731,7 @@
     "https://raw.githubusercontent.com/metatypedev/ghjk/0.2.0/deps/common.ts": "f775710b66a9099b98651cd3831906466e9b83ef98f2e5c080fd59ee801c28d4",
     "https://raw.githubusercontent.com/metatypedev/ghjk/0.2.0/deps/ports.ts": "3c60d1f7ab626ffdd81b37f4e83a780910936480da8fe24f4ccceaefa207d339",
     "https://raw.githubusercontent.com/metatypedev/ghjk/0.2.0/files/deno/mod.ts": "1b8204c3df18b908408b2148b48af788e669d0debbeb8ba119418ab1ddf1ab8f",
+    "https://raw.githubusercontent.com/metatypedev/ghjk/0.2.0/files/deno/worker.ts": "8ded400d70a0bd40e281ceb1ffcdc82578443caf9c481b9eee77166472784282",
     "https://raw.githubusercontent.com/metatypedev/ghjk/0.2.0/host/mod.ts": "cc25d1f82e54e6a27eef4571145c3f34c4c8ad9148b3aa48bd3b53d1e078d95d",
     "https://raw.githubusercontent.com/metatypedev/ghjk/0.2.0/host/types.ts": "f450d9b9c0eced2650262d02455aa6f794de0edd6b052aade256882148e5697f",
     "https://raw.githubusercontent.com/metatypedev/ghjk/0.2.0/install/mod.ts": "aa54eb3e119f28d33e61645c89669da292ee00376068ead8f45be2807e7a9989",
