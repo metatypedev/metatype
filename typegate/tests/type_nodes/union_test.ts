@@ -17,26 +17,17 @@ Meta.test(
       async () => {
         await gql`
           query {
-            convert(color: { name: "blue" }, to: "rgb_array") {
-              ... on RGBArray {
-                rgb
-              }
+            convert(color: "blue", to: "rgb_array") {
               ... on RGBStruct {
                 r
                 g
                 b
               }
-              ... on HexColor {
-                hex
-              }
-              ... on NamedColor {
-                name
-              }
             }
           }
         `
           .expectData({
-            convert: { rgb: [0, 0, 255] },
+            convert: [0, 0, 255],
           })
           .on(e);
       },
@@ -47,26 +38,17 @@ Meta.test(
       async () => {
         await gql`
           query {
-            convert(color: { hex: "#ffffff" }, to: "rgb_array") {
-              ... on RGBArray {
-                rgb
-              }
+            convert(color: "#ffffff", to: "rgb_array") {
               ... on RGBStruct {
                 r
                 g
                 b
               }
-              ... on HexColor {
-                hex
-              }
-              ... on NamedColor {
-                name
-              }
             }
           }
         `
           .expectData({
-            convert: { rgb: [255, 255, 255] },
+            convert: [255, 255, 255],
           })
           .on(e);
       },
@@ -77,26 +59,17 @@ Meta.test(
       async () => {
         await gql`
           query {
-            convert(color: { rgb: [220, 20, 60] }, to: "hex") {
-              ... on RGBArray {
-                rgb
-              }
+            convert(color: [220, 20, 60], to: "hex") {
               ... on RGBStruct {
                 r
                 g
                 b
               }
-              ... on HexColor {
-                hex
-              }
-              ... on NamedColor {
-                name
-              }
             }
           }
         `
           .expectData({
-            convert: { hex: "#dc143c" },
+            convert: "#dc143c",
           })
           .on(e);
       },
@@ -108,19 +81,10 @@ Meta.test(
         await gql`
           query {
             convert(color: { r: 155, g: 38, b: 182 }, to: "rgb_struct") {
-              ... on RGBArray {
-                rgb
-              }
               ... on RGBStruct {
                 r
                 g
                 b
-              }
-              ... on HexColor {
-                hex
-              }
-              ... on NamedColor {
-                name
               }
             }
           }
@@ -142,17 +106,8 @@ Meta.test(
         await gql`
           query {
             convert(color: { r: 155, g: 38, b: 182 }, to: "rgb_struct") {
-              ... on RGBArray {
-                rgb
-              }
               ... on RGBStruct {
                 r
-              }
-              ... on HexColor {
-                hex
-              }
-              ... on NamedColor {
-                name
               }
             }
           }
@@ -172,19 +127,10 @@ Meta.test(
         await gql`
           query {
             convert(color: 100, to: "rgb_array") {
-              ... on RGBArray {
-                rgb
-              }
               ... on RGBStruct {
                 r
                 g
                 b
-              }
-              ... on HexColor {
-                hex
-              }
-              ... on NamedColor {
-                name
               }
             }
           }
@@ -200,19 +146,10 @@ Meta.test(
         await gql`
           query {
             convert(color: "hello world", to: "rgb_array") {
-              ... on RGBArray {
-                rgb
-              }
               ... on RGBStruct {
                 r
                 g
                 b
-              }
-              ... on HexColor {
-                hex
-              }
-              ... on NamedColor {
-                name
               }
             }
           }
@@ -221,6 +158,7 @@ Meta.test(
           .on(e);
       },
     );
+
     await t.should("allow to introspect the union type", async () => {
       await gql`
         query IntrospectionQuery {
