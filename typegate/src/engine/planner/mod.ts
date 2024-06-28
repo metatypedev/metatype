@@ -234,8 +234,7 @@ export class Planner {
                   {
                     ...node,
                     path: parentPath,
-                    // TODO: what if null?
-                    typeIdx: selectableVariants.get(typeName)!,
+                    typeIdx: idx,
                   },
                   outputType.properties,
                   stage,
