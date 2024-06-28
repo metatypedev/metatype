@@ -433,9 +433,8 @@ impl wit::core::Guest for Lib {
     }
 
     fn get_internal_policy() -> Result<(PolicyId, String)> {
-        let deno_mat = DenoMaterializer::Inline(MaterializerDenoFunc {
-            code: "(_, { context }) => context.provider === 'internal'".to_string(),
-            secrets: vec![],
+        let deno_mat = DenoMaterializer::Predefined(wit::runtimes::MaterializerDenoPredefined {
+            name: "internal_policy".to_string(),
         });
         let mat = Materializer::deno(deno_mat, crate::wit::runtimes::Effect::Read);
         let policy_id = Store::register_policy(

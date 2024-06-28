@@ -126,7 +126,7 @@ export class PythonRuntime extends Runtime {
     logger.info(
       `initializing WitWireMessenger for PythonRuntime ${uuid} on typegraph ${typegraphName}`,
     );
-    const token = await InternalAuth.emit();
+    const token = await InternalAuth.emit(typegate.cryptoKeys);
     const wire = await WitWireMessenger.init(
       "inline://pyrt_wit_wire.cwasm",
       uuid,

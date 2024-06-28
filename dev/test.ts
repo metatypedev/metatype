@@ -56,9 +56,9 @@ export async function testE2e(args: {
           testFiles.push(
             ...(
               await Array.fromAsync(
-                path.expandGlob("**/*_test.ts", { globstar: true }),
+                path.expandGlob("**/*_test.ts", { globstar: true })
               )
-            ).map((ent) => ent.path.toString()),
+            ).map((ent) => ent.path.toString())
           );
           return;
         }
@@ -70,7 +70,7 @@ export async function testE2e(args: {
         } else {
           throw new Error(`Not a valid test file: ${path}`);
         }
-      }),
+      })
     );
   } else {
     // run all the tests
@@ -79,9 +79,9 @@ export async function testE2e(args: {
         await Array.fromAsync(
           wd
             .join("typegate/tests")
-            .expandGlob("**/*_test.ts", { globstar: true }),
+            .expandGlob("**/*_test.ts", { globstar: true })
         )
-      ).map((ent) => ent.path.toString()),
+      ).map((ent) => ent.path.toString())
     );
   }
   const prefixLength = `${projectDir}/typegate/tests/`.length;
@@ -91,7 +91,7 @@ export async function testE2e(args: {
       includeScore: true,
       useExtendedSearch: true,
       threshold: 0.4,
-    },
+    }
   );
   const filtered = filter ? fuse.search(filter) : null;
   const filteredTestFiles =
@@ -228,7 +228,7 @@ export async function testE2e(args: {
 
     const { duration } = await run.promise;
     $.logStep(
-      `${prefix} Completed ${wd.relative(file)} in ${duration / 1_000}s`,
+      `${prefix} Completed ${wd.relative(file)} in ${duration / 1_000}s`
     );
 
     nexts = Object.keys(runs).filter((f) => !runs[f].streamed);
@@ -243,14 +243,14 @@ export async function testE2e(args: {
   $.log(
     `Tests completed in ${Math.floor(globalDuration / 60_000)}m${
       Math.floor(globalDuration / 1_000) % 60
-    }s:`,
+    }s:`
   );
 
   for (const run of finished.sort((a, b) => a.duration - b.duration)) {
     $.log(
       ` - ${Math.floor(run.duration / 60_000)}m${
         Math.floor(run.duration / 1_000) % 60
-      }s -- ${run.success ? "" : "FAILED -"}${wd.relative(run.testFile)}`,
+      }s -- ${run.success ? "" : "FAILED -"}${wd.relative(run.testFile)}`
     );
   }
 

@@ -6,7 +6,7 @@ import { ComputeStage } from "../engine/query_engine.ts";
 import { Resolver, ResolverArgs } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { getLogger } from "../log.ts";
-import config from "../config.ts";
+import { globalConfig } from "../config.ts";
 import * as semver from "std/semver/mod.ts";
 import { Typegate } from "../typegate/mod.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
@@ -178,11 +178,11 @@ export class TypeGateRuntime extends Runtime {
     if (
       !semver.greaterOrEqual(
         semver.parse(targetVersion),
-        semver.parse(config.version),
+        semver.parse(globalConfig.version),
       )
     ) {
       throw new Error(
-        `Typegraph SDK version ${targetVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
+        `Typegraph SDK version ${targetVersion} must be greater than typegate version ${globalConfig.version} (until the releases are stable)`,
       );
     }
 

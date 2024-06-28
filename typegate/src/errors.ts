@@ -4,7 +4,7 @@
 import { basename, dirname } from "std/url/mod.ts";
 import { extname } from "std/path/mod.ts";
 import { getLogger } from "./log.ts";
-import config from "./config.ts";
+import { globalConfig } from "./config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -64,7 +64,7 @@ export class BaseError extends Error {
       this.module ?? "",
       this.message,
     );
-    if (config.debug) {
+    if (globalConfig.debug) {
       logger.error(this.stack);
     }
     logger.warn("Responding with HTTP {}", this.code);

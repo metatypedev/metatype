@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "../config.ts";
 import { Register, ReplicatedRegister } from "./register.ts";
 import * as Sentry from "sentry";
 import { RateLimiter, RedisRateLimiter } from "./rate_limiter.ts";
@@ -37,7 +36,6 @@ import introspectionJson from "../typegraphs/introspection.json" with {
 };
 import { ArtifactService } from "../services/artifact_service.ts";
 import { ArtifactStore } from "./artifacts/mod.ts";
-import { SyncConfig } from "../sync/config.ts";
 // TODO move from tests (MET-497)
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
@@ -45,6 +43,8 @@ import { TypegraphStore } from "../sync/typegraph.ts";
 import { createLocalArtifactStore } from "./artifacts/local.ts";
 import { createSharedArtifactStore } from "./artifacts/shared.ts";
 import { AsyncDisposableStack } from "dispose";
+import { globalConfig, TypegateConfig } from "../config.ts";
+import { TypegateCryptoKeys } from "../crypto.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -78,10 +78,13 @@ export class Typegate implements AsyncDisposable {
   #disposed = false;
 
   static async init(
-    syncConfig: SyncConfig | null = null,
+    config: TypegateConfig,
     customRegister: Register | null = null,
-    tmpDir = config.tmp_dir,
   ): Promise<Typegate> {
+    const { sync: syncConfig } = config;
+    const tmpDir = config.base.tmp_dir;
+
+    const cryptoKeys = await TypegateCryptoKeys.init(config.base.tg_secret);
     if (syncConfig == null) {
       logger.warn("Entering no-sync mode...");
       logger.warn(
@@ -91,7 +94,7 @@ export class Typegate implements AsyncDisposable {
       await using stack = new AsyncDisposableStack();
 
       const register = customRegister ?? new MemoryRegister();
-      const artifactStore = await createLocalArtifactStore(tmpDir);
+      const artifactStore = await createLocalArtifactStore(tmpDir, cryptoKeys);
 
       stack.use(register);
       stack.use(artifactStore);
@@ -100,8 +103,8 @@ export class Typegate implements AsyncDisposable {
         register,
         new NoLimiter(),
         artifactStore,
-        null,
-        tmpDir,
+        config,
+        cryptoKeys,
         stack.move(),
       );
     } else {
@@ -118,22 +121,26 @@ export class Typegate implements AsyncDisposable {
         await limiter.terminate();
       });
 
-      const artifactStore = await createSharedArtifactStore(tmpDir, syncConfig);
+      const artifactStore = await createSharedArtifactStore(
+        tmpDir,
+        syncConfig,
+        cryptoKeys,
+      );
       stack.use(artifactStore);
 
       const typegate = new Typegate(
         null!,
         limiter,
         artifactStore,
-        syncConfig,
-        tmpDir,
+        config,
+        cryptoKeys,
         stack.move(),
       );
 
       const register = await ReplicatedRegister.init(
         typegate,
         syncConfig.redis,
-        TypegraphStore.init(syncConfig),
+        TypegraphStore.init(syncConfig, cryptoKeys),
       );
       typegate.disposables.use(register);
 
@@ -155,8 +162,8 @@ export class Typegate implements AsyncDisposable {
     public readonly register: Register,
     private limiter: RateLimiter,
     public artifactStore: ArtifactStore,
-    public syncConfig: SyncConfig | null = null,
-    public tmpDir: string,
+    public readonly config: TypegateConfig, // TODO deep readonly??
+    public cryptoKeys: TypegateCryptoKeys,
     private disposables: AsyncDisposableStack,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
@@ -202,10 +209,7 @@ export class Typegate implements AsyncDisposable {
     return res;
   }
 
-  async handle(
-    request: Request,
-    connInfo: Deno.NetAddr,
-  ): Promise<Response> {
+  async handle(request: Request, connInfo: Deno.NetAddr): Promise<Response> {
     try {
       const url = new URL(request.url);
 
@@ -276,7 +280,7 @@ export class Typegate implements AsyncDisposable {
       }
       // default to graphql service
 
-      if (request.method === "GET" && config.debug) {
+      if (request.method === "GET" && globalConfig.debug) {
         return handlePlaygroundGraphQL(request, engine);
       }
 

@@ -129,7 +129,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     )
 
 
-def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
+def tg_remove(typegraph_name: str, params: TypegraphRemoveParams):
     typegate = params.typegate
 
     sep = "/" if not typegate.url.endswith("/") else ""
@@ -139,7 +139,7 @@ def tg_remove(tg: TypegraphOutput, params: TypegraphRemoveParams):
     if typegate.auth is not None:
         headers["Authorization"] = typegate.auth.as_header_value()
 
-    res = wit_utils.gql_remove_query(store, [tg.name])
+    res = wit_utils.gql_remove_query(store, [typegraph_name])
 
     if isinstance(res, Err):
         raise Exception(res.value)

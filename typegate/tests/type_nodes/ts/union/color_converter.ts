@@ -6,7 +6,7 @@ import {
   RGBColor,
 } from "https://deno.land/x/color_util@1.0.1/mod.ts";
 
-type RGBArray = { rgb: [number, number, number] };
+type RGBArray = [number, number, number];
 
 type RGBStruct = {
   r: number;
@@ -14,14 +14,11 @@ type RGBStruct = {
   b: number;
 };
 
-type ColorName =
-  | "red"
-  | "green"
-  | "blue"
-  | "black"
-  | "white";
+type ColorName = "red" | "green" | "blue" | "black" | "white";
 
-type Color = RGBArray | RGBStruct | { hex: string } | { name: ColorName };
+type HexColor = `#${string}`;
+
+type Color = RGBArray | RGBStruct | HexColor | ColorName;
 interface ConvertInput {
   color: Color;
   to: "rgb_array" | "rgb_struct" | "hex" | "colorName";
@@ -40,29 +37,29 @@ const colorNameToRGB = {
 type ColorFormat = "rgb_array" | "rgb_struct" | "hex" | "named_color";
 
 function getColorFormat(color: Color): ColorFormat {
-  if ("rgb" in color && Array.isArray(color.rgb)) {
+  if (Array.isArray(color)) {
     return "rgb_array";
   }
-  if ("name" in color && typeof color.name === "string") {
+  if (typeof color === "string") {
+    if (color.startsWith("#")) {
+      return "hex";
+    }
     return "named_color";
-  }
-  if (
-    "hex" in color && typeof color.hex === "string" && color.hex.startsWith("#")
-  ) {
-    return "hex";
   }
   return "rgb_struct";
 }
 
-function rgbToArray(rgb: RGBColor): RGBArray["rgb"] {
+function rgbToArray(rgb: RGBColor): RGBArray {
   return [rgb.red, rgb.green, rgb.blue];
 }
 
 function parseRGB(color: Color) {
-  if ("rgb" in color) {
-    return new RGBColor(...color.rgb);
-  } else if ("r" in color) {
-    return new RGBColor(color.r, color.g, color.b);
+  if (typeof color === "object") {
+    if ("r" in color) {
+      return new RGBColor(color.r, color.g, color.b);
+    } else {
+      return new RGBColor(...color);
+    }
   } else {
     throw new Error(`cannot parse RGB from ${color}`);
   }
@@ -93,17 +90,17 @@ export function convert(
 
       if (to == "hex") {
         const colorHex = rgb.toHex();
-        return { hex: colorHex.toString() };
+        return colorHex.toString();
       }
 
       throw new Error("RGB to color name not supported");
     }
 
     case "hex": {
-      const hex = new HexColor((color as { hex: string }).hex);
+      const hex = new HexColor(color as string);
 
       if (to == "rgb_array" || to == "rgb_struct") {
-        return { rgb: rgbToArray(hex.toRGB()) };
+        return rgbToArray(hex.toRGB());
       }
 
       if (to == "hex") {
@@ -114,16 +111,16 @@ export function convert(
     }
 
     case "named_color": {
-      const rgbValues = colorNameToRGB[(color as { name: string }).name];
-      const rgb = parseRGB({ rgb: rgbValues });
+      const rgbValues = colorNameToRGB[color as ColorName];
+      const rgb = parseRGB(rgbValues);
 
       if (to == "rgb_array" || to == "rgb_struct") {
-        return { rgb: rgbToArray(rgb) };
+        return rgbToArray(rgb);
       }
 
       if (to == "hex") {
         const colorHex = rgb.toHex();
-        return { hex: colorHex.toString() };
+        return colorHex.toString();
       }
 
       return color;

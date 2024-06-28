@@ -8,13 +8,11 @@ import { Runtime } from "../runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "../utils.ts";
 import { typegraph_validate } from "native";
 import Chance from "chance";
-
 import {
   initAuth,
   internalAuthName,
   nextAuthorizationHeader,
 } from "../services/auth/mod.ts";
-
 import {
   isBoolean,
   isEither,
@@ -30,7 +28,6 @@ import {
   TypeNode,
 } from "./type_node.ts";
 import { Batcher } from "../types.ts";
-
 import type {
   Cors,
   Materializer as TypeMaterializer,
@@ -44,6 +41,7 @@ import { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
 import randomizeRecursively from "../runtimes/random.ts";
 import { Typegate } from "../typegate/mod.ts";
+import { TypeUtils } from "./utils.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -59,9 +57,7 @@ export class SecretManager {
     this.typegraphName = TypeGraph.formatName(typegraph, false);
   }
 
-  secretOrFail(
-    name: string,
-  ): string {
+  secretOrFail(name: string): string {
     const value = this.secretOrNull(name);
     ensure(
       value != null,
@@ -70,9 +66,7 @@ export class SecretManager {
     return value as string;
   }
 
-  secretOrNull(
-    name: string,
-  ): string | null {
+  secretOrNull(name: string): string | null {
     return this.secrets[name] ?? null;
   }
 }
@@ -102,8 +96,10 @@ export class TypeGraph implements AsyncDisposable {
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
   name: string;
+  readonly typeUtils: TypeUtils;
 
   private constructor(
+    public typegate: Typegate,
     public tg: TypeGraphDS,
     public secretManager: SecretManager,
     public denoRuntimeIdx: number,
@@ -120,6 +116,7 @@ export class TypeGraph implements AsyncDisposable {
       typeByName[tpe.title] = tpe;
     }
     this.typeByName = typeByName;
+    this.typeUtils = new TypeUtils(this);
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
@@ -237,6 +234,7 @@ export class TypeGraph implements AsyncDisposable {
 
     const auths = new Map<string, Protocol>();
     const tg = new TypeGraph(
+      typegate,
       typegraph,
       secretManager,
       denoRuntimeIdx,
@@ -263,7 +261,10 @@ export class TypeGraph implements AsyncDisposable {
     }
 
     // override "internal" to enforce internal auth
-    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
+    auths.set(
+      internalAuthName,
+      await InternalAuth.init(typegraphName, typegate.cryptoKeys),
+    );
 
     return tg;
   }
@@ -273,10 +274,7 @@ export class TypeGraph implements AsyncDisposable {
     idx: number,
     asType: T,
   ): TypeNode & { type: T };
-  type<T extends TypeNode["type"]>(
-    idx: number,
-    asType?: T,
-  ): TypeNode {
+  type<T extends TypeNode["type"]>(idx: number, asType?: T): TypeNode {
     ensure(
       typeof idx === "number" && idx < this.tg.types.length,
       `cannot find type with index '${idx}'`,
@@ -308,10 +306,7 @@ export class TypeGraph implements AsyncDisposable {
     return this.tg.policies[idx];
   }
 
-  parseSecret(
-    schema: TypeNode,
-    name: string,
-  ) {
+  parseSecret(schema: TypeNode, name: string) {
     const value = this.secretManager.secretOrNull(name);
     if (value == undefined) {
       if (isOptional(schema)) {
@@ -326,14 +321,10 @@ export class TypeGraph implements AsyncDisposable {
 
     if (isString(schema)) return value;
 
-    throw new Error(
-      `invalid type for secret injection: ${schema.type}`,
-    );
+    throw new Error(`invalid type for secret injection: ${schema.type}`);
   }
 
-  getRandom(
-    schema: TypeNode,
-  ): number | string | null {
+  getRandom(schema: TypeNode): number | string | null {
     const tgTypes: TypeNode[] = this.tg.types;
     let seed = 12; // default seed
     if (
@@ -349,15 +340,11 @@ export class TypeGraph implements AsyncDisposable {
 
       return result;
     } catch (_) {
-      throw new Error(
-        `invalid type for random injection: ${schema.type}`,
-      );
+      throw new Error(`invalid type for random injection: ${schema.type}`);
     }
   }
 
-  nextBatcher = (
-    type: TypeNode,
-  ): Batcher => {
+  nextBatcher = (type: TypeNode): Batcher => {
     // convenience check to be removed
     const ensureArray = (x: []) => {
       ensure(Array.isArray(x), `${JSON.stringify(x)} not an array`);
@@ -387,8 +374,14 @@ export class TypeGraph implements AsyncDisposable {
       };
     }
     ensure(
-      isObject(type) || isInteger(type) || isNumber(type) || isBoolean(type) ||
-        isFunction(type) || isString(type) || isUnion(type) || isEither(type),
+      isObject(type) ||
+        isInteger(type) ||
+        isNumber(type) ||
+        isBoolean(type) ||
+        isFunction(type) ||
+        isString(type) ||
+        isUnion(type) ||
+        isEither(type),
       `object expected but got ${type.type}`,
     );
     return (x: any) => {
@@ -460,9 +453,7 @@ export class TypeGraph implements AsyncDisposable {
   //  - an array of strings (for an object)
   //  - a Map<string, string[]> (for an union type)
   //  - `null` for scalar types (no selection set expected)
-  getPossibleSelectionFields(
-    typeIdx: number,
-  ): PossibleSelectionFields {
+  getPossibleSelectionFields(typeIdx: number): PossibleSelectionFields {
     const typeNode = this.type(typeIdx);
     if (typeNode.type === Type.OPTIONAL) {
       return this.getPossibleSelectionFields(typeNode.item);
@@ -477,9 +468,10 @@ export class TypeGraph implements AsyncDisposable {
 
     if (typeNode.type === Type.OBJECT) {
       return new Map(
-        Object.entries(typeNode.properties).map((
-          [key, idx],
-        ) => [key, this.getPossibleSelectionFields(idx)]),
+        Object.entries(typeNode.properties).map(([key, idx]) => [
+          key,
+          this.getPossibleSelectionFields(idx),
+        ]),
       );
     }
 
@@ -492,9 +484,10 @@ export class TypeGraph implements AsyncDisposable {
       return null;
     }
 
-    const entries = variants.map((
-      idx,
-    ) => [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const);
+    const entries = variants.map(
+      (idx) =>
+        [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const,
+    );
 
     if (entries[0][1] === null) {
       if (entries.some((e) => e[1] !== null)) {
@@ -540,6 +533,8 @@ export class TypeGraph implements AsyncDisposable {
     }
     return typeNode;
   }
+
+  // TODO TypeUtils class?
 }
 
 export type PossibleSelectionFields =

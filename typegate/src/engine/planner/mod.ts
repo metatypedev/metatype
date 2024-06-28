@@ -15,13 +15,11 @@ import {
   getWrappedType,
   isQuantifier,
   Type,
-  UnionNode,
 } from "../../typegraph/type_node.ts";
 import { closestWord, unparse } from "../../utils.ts";
 import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../../log.ts";
-import { EitherNode } from "../../typegraph/types.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { DependencyResolver } from "./dependency_resolver.ts";
@@ -66,12 +64,16 @@ export class Planner {
     private readonly tg: TypeGraph,
     private readonly verbose: boolean,
   ) {
-    this.policiesBuilder = new OperationPoliciesBuilder(tg);
+    const { timer_policy_eval_retries } = tg.typegate.config.base;
+    this.policiesBuilder = new OperationPoliciesBuilder(tg, {
+      timer_policy_eval_retries,
+    });
   }
 
   getPlan(): Plan {
-    const rootIdx =
-      this.tg.type(0, Type.OBJECT).properties[this.operation.operation];
+    const rootIdx = this.tg.type(0, Type.OBJECT).properties[
+      this.operation.operation
+    ];
     ensureNonNullable(
       rootIdx,
       `operation '${this.operation.operation}' is not available`,
@@ -86,14 +88,15 @@ export class Planner {
       typeIdx: rootIdx,
     });
 
-    const varTypes: Record<string, string> =
-      (this.operation?.variableDefinitions ?? []).reduce(
-        (agg, { variable, type }) => ({
-          ...agg,
-          [variable.name.value]: unparse(type.loc!),
-        }),
-        {} as Record<string, string>,
-      );
+    const varTypes: Record<string, string> = (
+      this.operation?.variableDefinitions ?? []
+    ).reduce(
+      (agg, { variable, type }) => ({
+        ...agg,
+        [variable.name.value]: unparse(type.loc!),
+      }),
+      {} as Record<string, string>,
+    );
 
     for (const stage of stages) {
       stage.varTypes = varTypes;
@@ -110,10 +113,7 @@ export class Planner {
    * @param node
    * @param stage `ComputeStage` for `node`
    */
-  private traverse(
-    node: Node,
-    stage?: ComputeStage,
-  ): ComputeStage[] {
+  private traverse(node: Node, stage?: ComputeStage): ComputeStage[] {
     const { name, selectionSet, args, typeIdx } = node;
     const typ = this.tg.type(typeIdx);
 
@@ -133,19 +133,16 @@ export class Planner {
       const stages: ComputeStage[] = [];
 
       this.verbose &&
-        logger.debug(
-          `${this.tg.root.title} {}`,
-          {
-            name,
-            args: args.map((n) => n.name?.value),
-            selection: selection.map((n) => n.name?.value),
-            type: typ.type,
-            props: Object.entries(props).reduce(
-              (agg, [k, v]) => ({ ...agg, [k]: this.tg.type(v).type }),
-              {},
-            ),
-          },
-        );
+        logger.debug(`${this.tg.root.title} {}`, {
+          name,
+          args: args.map((n) => n.name?.value),
+          selection: selection.map((n) => n.name?.value),
+          type: typ.type,
+          props: Object.entries(props).reduce(
+            (agg, [k, v]) => ({ ...agg, [k]: this.tg.type(v).type }),
+            {},
+          ),
+        });
 
       stages.push(
         ...new DependencyResolver(
@@ -166,8 +163,24 @@ export class Planner {
 
     if (typ.type === Type.EITHER || typ.type === Type.UNION) {
       const stages: ComputeStage[] = [];
-      const variants = this.getNestedVariantsByName(typ);
-      const unselectedVariants = new Set(Object.keys(variants));
+      const variants = this.tg.typeUtils.getFlatUnionVariants(typ);
+      const selectableVariants = new Map(
+        variants.flatMap((idx) => {
+          const typeNode = this.tg.type(idx);
+          if (this.tg.typeUtils.isScalarOrListOfScalars(typeNode)) {
+            return [];
+          } else {
+            return [[typeNode.title, idx]];
+          }
+        }),
+      );
+      const unselectedVariants = new Set(selectableVariants.keys());
+
+      if (unselectedVariants.size === 0 && selectionSet.selections.length > 0) {
+        const path = this.formatPath(node.path);
+        throw new Error(`at ${path}: Unexpected selections`);
+      }
+
       // expect selections to be inline fragments with type conditions
       const selections = selectionSet.selections.map((sel) => {
         if (sel.kind !== Kind.INLINE_FRAGMENT || sel.typeCondition == null) {
@@ -196,11 +209,17 @@ export class Planner {
 
       ensureNonNullable(stage, "unexpected");
 
-      stage.props.childSelection = generateVariantMatcher(this.tg, typeIdx);
+      stage.props.childSelection = generateVariantMatcher(this.tg, typ);
 
       for (const [typeName, selectionSet] of selections) {
         const selection = resolveSelection(selectionSet, this.fragments);
-        const outputType = this.tg.type(variants[typeName], Type.OBJECT);
+        // TODO eventually wrapped in a quantifier?
+        const idx = selectableVariants.get(typeName);
+        if (idx == null) {
+          // TODO error message: or not selectable variant?
+          throw new Error(`unknown variant '${typeName}'`);
+        }
+        const outputType = this.tg.type(idx, Type.OBJECT);
         const parentPath = node.path.slice();
         parentPath[parentPath.length - 1] += `$${typeName}`;
         stages.push(
@@ -212,7 +231,11 @@ export class Planner {
               this.traverseField(
                 this.getChildNodeForField(
                   field,
-                  { ...node, path: parentPath, typeIdx: variants[typeName] },
+                  {
+                    ...node,
+                    path: parentPath,
+                    typeIdx: idx,
+                  },
                   outputType.properties,
                   stage,
                 ),
@@ -271,10 +294,7 @@ export class Planner {
    * @param field {FieldNode} The selection field for node
    * @param node
    */
-  private traverseField(
-    node: Node,
-    field: ast.FieldNode,
-  ): ComputeStage[] {
+  private traverseField(node: Node, field: ast.FieldNode): ComputeStage[] {
     const { parent, path, name } = node;
 
     if (parent == null) {
@@ -282,7 +302,8 @@ export class Planner {
     }
 
     if (
-      path.length === 1 && this.tg.introspection &&
+      path.length === 1 &&
+      this.tg.introspection &&
       (name === "__schema" || name === "__type")
     ) {
       const introspection = new Planner(
@@ -294,16 +315,18 @@ export class Planner {
       const root = this.tg.introspection.type(0, Type.OBJECT);
 
       // traverse on the root node: parent, parentStage and node stage are undefined
-      return introspection.traverse({
-        name: parent.name,
-        path: [],
-        args: parent.args,
-        selectionSet: { kind: Kind.SELECTION_SET, selections: [field] },
-        typeIdx: root.properties["query"],
-      }).map((stage) => {
-        stage.props.rateWeight = 0;
-        return stage;
-      });
+      return introspection
+        .traverse({
+          name: parent.name,
+          path: [],
+          args: parent.args,
+          selectionSet: { kind: Kind.SELECTION_SET, selections: [field] },
+          typeIdx: root.properties["query"],
+        })
+        .map((stage) => {
+          stage.props.rateWeight = 0;
+          return stage;
+        });
     }
 
     // typename case
@@ -428,7 +451,8 @@ export class Planner {
     if (
       this.operation.operation === "query" &&
       // TODO: effect should always be non-null
-      (mat.effect.effect != null && mat.effect.effect != "read")
+      mat.effect.effect != null &&
+      mat.effect.effect != "read"
     ) {
       throw new Error(
         `'${schema.title}' via '${mat.name}' can only be executed in mutation`,
@@ -467,15 +491,11 @@ export class Planner {
       materializer: mat,
       batcher: this.tg.nextBatcher(outputType),
       rateCalls: rate_calls,
-      rateWeight: (rate_weight as number ?? 0), // `as number` does not promote null or undefined to a number
+      rateWeight: (rate_weight as number) ?? 0, // `as number` does not promote null or undefined to a number
     });
     stages.push(stage);
 
-    this.policiesBuilder.push(
-      stage.id(),
-      node.typeIdx,
-      collected.policies,
-    );
+    this.policiesBuilder.push(stage.id(), node.typeIdx, collected.policies);
     const types = this.policiesBuilder.setReferencedTypes(
       stage.id(),
       node.typeIdx,
@@ -505,8 +525,10 @@ export class Planner {
 
   get operationName(): string {
     // Unnamed queries/mutations will be named "Q"/"M"
-    return this.operation.name?.value ??
-      this.operation.operation.charAt(0).toUpperCase();
+    return (
+      this.operation.name?.value ??
+        this.operation.operation.charAt(0).toUpperCase()
+    );
   }
 
   /**
@@ -575,23 +597,5 @@ export class Planner {
     return new Error(
       `'${name}' not found at '${formattedPath}', available names are: ${suggestions}`,
     );
-  }
-
-  private getNestedVariantsByName(
-    typ: UnionNode | EitherNode,
-  ): Record<string, number> {
-    const getEntries = (
-      typ: UnionNode | EitherNode,
-    ): Array<[string, number]> => {
-      const variants = typ.type === Type.UNION ? typ.anyOf : typ.oneOf;
-      return variants.flatMap((idx) => {
-        const typeNode = this.tg.type(idx);
-        if (typeNode.type === Type.EITHER || typeNode.type === Type.UNION) {
-          return getEntries(typeNode);
-        }
-        return [[typeNode.title, idx]];
-      });
-    };
-    return Object.fromEntries(getEntries(typ));
   }
 }
