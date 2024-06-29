@@ -14,6 +14,7 @@ import { ProcessOutputLines } from "test-utils/process.ts";
 import { newTempDir } from "test-utils/dir.ts";
 import { transformSyncConfig } from "@typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
+import { assertEquals } from "std/assert/assert_equals.ts";
 
 const previousVersion = PUBLISHED_VERSION;
 
@@ -41,7 +42,6 @@ const syncConfig = transformSyncConfig({
   s3_bucket: syncEnvs.SYNC_S3_BUCKET,
   s3_path_style: true,
 });
-console.log({ syncConfig });
 
 // TODO remove after the next release
 // These typegates are disabled because a compatibity issue on the pyrt wasm:
@@ -191,33 +191,70 @@ Meta.test(
       },
     );
 
+    const typegraphs: string[] = [];
+
     const processLines = new ProcessOutputLines(proc);
     await processLines.fetchStdoutLines((line) => {
       // console.log("typegate>", line);
       return !line.includes("typegate ready on 7899");
     });
     processLines.fetchStdoutLines((line) => {
+      const match = line.match(/Initializing engine '(.+)'/);
+      if (match) {
+        typegraphs.push(match[1]);
+      }
       console.log("typegate>", line);
       return true;
     });
 
-    await t.should(
-      "successfully deploy with the current published version",
-      async () => {
-        const command =
-          `meta deploy --target dev --max-parallel-loads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
-        const res = await $`bash -c ${command}`
-          .cwd(examplesDir.join("typegraphs"))
-          .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-          .env("MCLI_LOADER_CMD", "npm x tsx");
-        console.log(res);
-      },
-    );
+    await t.should("successfully deploy on the published version", async () => {
+      const command =
+        `meta deploy --target dev --max-parallel-loads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
+      const res = await $`bash -c ${command}`
+        .cwd(examplesDir.join("typegraphs"))
+        .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
+        .env("MCLI_LOADER_CMD", "npm x tsx");
+      console.log(res);
+    });
 
     const status = await processLines.close();
     console.log(status);
 
-    //
+    const typegraphs2: string[] = [];
+
+    await t.should("upgrade the typegate to the current version", async () => {
+      const proc2 = new Deno.Command("cargo", {
+        args: ["run", "-p", "meta-cli", "-F", "typegate", "--", "typegate"],
+        env: {
+          ...Deno.env.toObject(),
+          TG_SECRET: tgSecret,
+          TG_ADMIN_PASSWORD: "password",
+          TMP_DIR: typegateTempDir,
+          TG_PORT: "7899",
+          // TODO should not be necessary
+          VERSION: previousVersion,
+          ...syncEnvs,
+        },
+        stdin: "piped",
+        stdout: "piped",
+        stderr: "piped",
+      }).spawn();
+
+      const processLines2 = new ProcessOutputLines(proc2);
+      await processLines2.fetchStdoutLines((line) => {
+        console.log("typegate>", line);
+        const match = $.stripAnsi(line).match(/reloaded addition: (.+)/);
+        if (match) {
+          typegraphs2.push(match[1]);
+        }
+        return !line.includes("typegate ready on 7899");
+      });
+      await processLines2.close().catch(() => {});
+    });
+
+    await t.should("have the same typegraphs", () => {
+      assertEquals(typegraphs.sort(), typegraphs2.sort());
+    });
 
     await Deno.remove(typegateTempDir, { recursive: true });
   },
