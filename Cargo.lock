@@ -6691,6 +6691,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "shadow-rs",
+ "strip-ansi-escapes",
  "tar",
  "tempfile",
  "textwrap",

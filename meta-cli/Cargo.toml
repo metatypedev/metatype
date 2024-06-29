@@ -79,6 +79,7 @@ tar.workspace = true
 # FIXME: deprecated, be on the lookout for alternatives
 serde_yaml = "0.9.33"
 base64.workspace = true
+strip-ansi-escapes = "0.2.0"
 
 # fs
 normpath = "1.2.0"

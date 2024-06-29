@@ -302,7 +302,6 @@ mod watch_mode {
                     .await?,
             )
         } else {
-            info!("no typegate");
             None
         };
 
