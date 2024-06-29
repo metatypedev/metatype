@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: Elastic-2.0
 // skip:end
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 import * as path from "node:path";
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.ts";
 
 // Your typegraph
 export const tg = await typegraph("example", (g) => {
@@ -46,6 +46,7 @@ const config = {
   secrets: {},
   migrationsDir: path.join("prisma-migrations", tg.name),
   defaultMigrationAction: {
+    apply: true,
     create: true,
     reset: true, // allow destructive migrations
   },

@@ -14,7 +14,7 @@ const denoJson = resolve(testDir, "../deno.jsonc");
 Meta.test("metagen rust builds", async (t) => {
   const tmpDir = t.tempDir;
 
-  const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.mjs");
+  const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.ts");
   const genCratePath = join(tmpDir, "mdk");
 
   await Deno.writeTextFile(
@@ -128,8 +128,8 @@ Meta.test("Metagen within sdk", async (t) => {
   const sdkResults = [] as Array<string>;
 
   await t.should("Run metagen within typescript", async () => {
-    const { tg } = await import("./typegraphs/metagen.mjs");
-    const { Metagen } = await import("@typegraph/sdk/metagen.js");
+    const { tg } = await import("./typegraphs/metagen.ts");
+    const { Metagen } = await import("@typegraph/sdk/metagen.ts");
     const metagen = new Metagen(workspace, genConfig);
     const generated = metagen.dryRun(tg, targetName);
     await t.assertSnapshot(

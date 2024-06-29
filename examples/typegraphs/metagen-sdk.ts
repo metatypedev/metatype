@@ -1,36 +1,42 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 // skip:end
-import { Metagen } from "@typegraph/sdk/metagen.js";
+import { Metagen } from "@typegraph/sdk/metagen.ts";
 
 // get typegraph desc here
-const tg = await typegraph({
-  name: "metagen-sdk",
-  // skip:next-line
-  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
-}, (g) => {
-  const idv3 = t.struct({
-    title: t.string(),
-    artist: t.string(),
-    releaseTime: t.datetime(),
-    mp3Url: t.uri(),
-  }).rename("idv3");
+const tg = await typegraph(
+  {
+    name: "metagen-sdk",
+    // skip:next-line
+    cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
+  },
+  (g) => {
+    const idv3 = t
+      .struct({
+        title: t.string(),
+        artist: t.string(),
+        releaseTime: t.datetime(),
+        mp3Url: t.uri(),
+      })
+      .rename("idv3");
 
-  const deno = new DenoRuntime();
+    const deno = new DenoRuntime();
 
-  g.expose({
-    remix: deno.import(
-      idv3,
-      idv3,
+    g.expose(
       {
-        module: "./metagen/ts/remix.ts",
-        deps: ["./metagen/ts/mdk.ts"],
-        name: "remix_track",
+        remix: deno
+          .import(idv3, idv3, {
+            module: "./metagen/ts/remix.ts",
+            deps: ["./metagen/ts/mdk.ts"],
+            name: "remix_track",
+          })
+          .rename("remix_track"),
       },
-    ).rename("remix_track")
-  }, Policy.public());
-});
+      Policy.public()
+    );
+  }
+);
 
 if (false) {
   const myPath = import.meta.url.replace("file://", "");
@@ -39,17 +45,17 @@ if (false) {
     myPath + "/..",
     // this rest of the config is similmilar to the CLI config
     {
-      "targets": {
-        "main": [
+      targets: {
+        main: [
           {
-            "generator": "mdk_typescript",
-            "typegraph_path": myPath,
-            "path": "funcs/",
+            generator: "mdk_typescript",
+            typegraph_path: myPath,
+            path: "funcs/",
           },
         ],
       },
     }
   );
   // dry_run doesn't write to disk
-  metagen.dryRun(tg, "main")
+  metagen.dryRun(tg, "main");
 }

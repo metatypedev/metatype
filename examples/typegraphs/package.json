@@ -1,9 +1,0 @@
-{
-  "type": "module",
-  "dependencies": {
-    "@typegraph/sdk": "link:../../typegraph/node/sdk/dist"
-  },
-  "devDependencies": {
-    "tsx": "^4.10.4"
-  }
-}

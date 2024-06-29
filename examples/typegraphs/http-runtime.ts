@@ -1,10 +1,10 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
 
 // isort: off
 // skip:end
 // highlight-next-line
-import { HttpRuntime } from "@typegraph/sdk/runtimes/http.js";
+import { HttpRuntime } from "@typegraph/sdk/runtimes/http.ts";
 
 await typegraph(
   {
@@ -33,7 +33,7 @@ await typegraph(
           }),
           {
             path: "/random",
-          },
+          }
         ),
         facts_as_text: facts.get(
           t.struct({
@@ -41,10 +41,10 @@ await typegraph(
             language: t.enum_(["en", "de"]),
           }),
           t.string(),
-          { path: "/random", headerPrefix: "header_" },
+          { path: "/random", headerPrefix: "header_" }
         ),
       },
-      pub,
+      pub
     );
-  },
+  }
 );

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.js";
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.ts";
 import * as path from "std/path/mod.ts";
 
 const cwd = Deno.args[0];

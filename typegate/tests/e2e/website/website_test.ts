@@ -73,16 +73,17 @@ const prepare = {
         (
           await t.shell("bash build.sh".split(" "), {
             currentDir: "examples/typegraphs/metagen/rs",
+            env: {
+              MCLI_LOADER_CMD:
+                "deno run -A --import-map=../typegate/import_map.json {filepath}",
+            },
           })
         ).code,
         0,
       );
     });
   },
-} as Record<
-  (typeof list)[number],
-  ((t: MetaTest) => Promise<void>) | undefined
->;
+} as Record<string, ((t: MetaTest) => Promise<void>) | undefined>;
 
 Meta.test("website typegraph files", async (t) => {
   await t.should("list all python files", async () => {
@@ -129,7 +130,14 @@ for (const name of list) {
       let tsVersion: string;
       await t.should("serialize typescript typegraph", async () => {
         const { stdout } = await Meta.cli(
-          { currentDir: "examples", env: { RUST_LOG: "trace" } },
+          {
+            currentDir: "examples",
+            env: {
+              RUST_LOG: "trace",
+              MCLI_LOADER_CMD:
+                "deno run -A --import-map=../typegate/import_map.json {filepath}",
+            },
+          },
           "serialize",
           "-f",
           `typegraphs/${name}.ts`,
@@ -151,9 +159,14 @@ async function toComparable(t: MetaTest, tg: TypeGraphDS) {
   await Promise.all(
     tg.materializers.map(async (mat) => {
       if (mat.name === "function") {
-        const res = await t.shell("deno fmt -".split(" "), {
-          stdin: mat.data.script as string,
-        });
+        // FIXME: deno fmt sometimes no-ops on code formatted by prettier
+        // having very opinionated configs to enforce the formatting looks sufficient for now
+        const res = await t.shell(
+          "deno fmt --no-semicolons --line-width 10 -".split(" "),
+          {
+            stdin: mat.data.script as string,
+          },
+        );
         mat.data.script = res.stdout;
       }
     }),

@@ -1,5 +1,5 @@
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { S3Runtime } from "@typegraph/sdk/providers/aws.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { S3Runtime } from "@typegraph/sdk/providers/aws.ts";
 
 await typegraph(
   {
@@ -23,11 +23,11 @@ await typegraph(
         signUploadUrl: s3.presignPut({ bucket: "examples" }),
         upload: s3.upload(
           "examples",
-          t.file({ allow: ["image/png", "image/jpeg"] }),
+          t.file({ allow: ["image/png", "image/jpeg"] })
         ),
         uploadMany: s3.uploadAll("examples"),
       },
-      Policy.public(),
+      Policy.public()
     );
-  },
+  }
 );

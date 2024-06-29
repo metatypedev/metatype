@@ -1,13 +1,12 @@
-lockfileVersion: '9.0'
+lockfileVersion: "9.0"
 
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
 importers:
-
   .:
     dependencies:
-      '@typegraph/sdk':
+      "@typegraph/sdk":
         specifier: link:../../typegraph/node/sdk/dist
         version: link:../../typegraph/node/sdk/dist

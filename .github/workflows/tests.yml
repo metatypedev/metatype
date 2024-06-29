@@ -3,7 +3,7 @@ on:
     inputs:
       debug_enabled:
         type: boolean
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
         required: false
         default: false
   push:
@@ -90,8 +90,6 @@ jobs:
           sudo apt update && sudo apt install -y --no-install-recommends libclang-dev clang
 
           ghjk x install-ts
-          ls -osha typegraph/node/sdk
-          ls -osha typegraph/node/sdk/node_modules/.bin
           ghjk x install-website
           ghjk x install-lsp
           ghjk x fetch-deno
@@ -274,14 +272,9 @@ jobs:
 
           # start the docker containers
           ghjk x dev-compose base prisma
-          # wait for verdaccio to get started
-          sleep 10s
-
-          export NPM_CONFIG_REGISTRY=http://localhost:4873
 
           WASM_OPT=1 ghjk x build-tgraph
-
-          ghjk x lock-clean-deno
+          ls -osha typegraph/node
 
           ghjk x install-ts
 
@@ -289,8 +282,6 @@ jobs:
           ghjk x dev update --cache-only
 
           ghjk x test-rust
-
-          ghjk x lock-clean-deno
 
           ghjk x test-e2e --threads 1 -- --coverage=coverage
 
@@ -301,6 +292,9 @@ jobs:
             typegate/tests/runtimes/wasm_wire/*.ts \
             typegate/tests/runtimes/wasm_reflected/*.ts \
             typegate/tests/runtimes/python/*.ts \
+            typegate/tests/e2e/self_deploy/self_deploy.ts \
+            typegate/tests/metagen/typegraphs/metagen.ts \
+            typegraph/deno/sdk/src/*.ts \
             dev/deps.ts \
             dev/utils.ts
 

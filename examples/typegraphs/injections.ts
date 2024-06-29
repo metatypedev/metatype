@@ -1,5 +1,5 @@
-import { Policy, t, typegraph } from "@typegraph/sdk";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 
 typegraph(
   {

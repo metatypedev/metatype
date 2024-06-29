@@ -1,22 +1,24 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 
 // skip:end
 
-await typegraph({
-  name: "deno",
-  // skip:next-line
-  cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
-}, (g) => {
-  const deno = new DenoRuntime();
-  const pub = Policy.public();
+await typegraph(
+  {
+    name: "deno",
+    // skip:next-line
+    cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
+  },
+  (g) => {
+    const deno = new DenoRuntime();
+    const pub = Policy.public();
 
-  const fib = deno.func(
-    t.struct({ "n": t.float() }),
-    t.struct({ "res": t.integer(), "ms": t.float() }),
-    {
-      code: `
+    const fib = deno.func(
+      t.struct({ n: t.float() }),
+      t.struct({ res: t.integer(), ms: t.float() }),
+      {
+        code: `
             ({ n }) => {
                 let a = 0, b = 1, c;
                 const start = performance.now();
@@ -31,10 +33,14 @@ await typegraph({
                 };
             }
         `,
-    },
-  );
+      }
+    );
 
-  g.expose({
-    compute_fib: fib,
-  }, pub);
-});
+    g.expose(
+      {
+        compute_fib: fib,
+      },
+      pub
+    );
+  }
+);
