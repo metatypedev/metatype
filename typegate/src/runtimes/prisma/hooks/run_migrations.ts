@@ -104,7 +104,6 @@ export const runMigrations: PushHandler = async (
       response.warn(`Migrations disabled for runtime ${rt.data.name}`);
       continue;
     }
-    console.debug("migration options", rt.data.migration_options);
 
     const migration = new Migration(rt.data, secretManager, response);
 

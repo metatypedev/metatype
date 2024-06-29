@@ -191,6 +191,65 @@ impl Handler<message::Stop> for TypegateActor {
     }
 }
 
+enum LogLevel {
+    Debug,
+    Info,
+    Warning,
+    Error,
+}
+
+impl LogLevel {
+    fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "DEBUG" => Some(Self::Debug),
+            "INFO" => Some(Self::Info),
+            "WARN" => Some(Self::Warning),
+            "ERROR" => Some(Self::Error),
+            "CRITICAL" => Some(Self::Error),
+            _ => None,
+        }
+    }
+}
+
+struct LogRecord<'a> {
+    level: LogLevel,
+    #[allow(unused)]
+    scope: &'a str,
+    message: &'a str,
+}
+
+// TODO unit test
+impl<'a> LogRecord<'a> {
+    fn from_line(line: &'a str) -> Option<Self> {
+        let (first, tail) = line.split_once(' ')?;
+        debug!("first: {first}; tail: {tail}");
+        let _ = chrono::DateTime::parse_from_rfc3339(first).ok()?;
+        if tail.chars().next()? != '[' {
+            return None;
+        }
+        let (level_scope, message) = tail[1..].split_once("] ")?;
+        let (level, scope) = level_scope.split_once(' ')?;
+        let level = LogLevel::from_str(level)?;
+        Some(Self {
+            level,
+            scope,
+            message,
+        })
+    }
+
+    fn log(&self, console: &Addr<ConsoleActor>) {
+        // let prefix = format!("typegate ({})>", self.scope);
+        let prefix = "typegate>";
+        let prefix = prefix.dimmed();
+        match self.level {
+            LogLevel::Debug => console.debug(format!("{} {}", prefix, self.message)),
+            LogLevel::Info => console.info(format!("{} {}", prefix, self.message)),
+            LogLevel::Warning => console.warning(format!("{} {}", prefix, self.message)),
+            LogLevel::Error => console.error(format!("{} {}", prefix, self.message)),
+        }
+    }
+}
+
 impl TypegateActor {
     fn take_output_streams(
         process: &mut Box<dyn TokioChildWrapper>,
@@ -221,7 +280,12 @@ impl TypegateActor {
         };
 
         while let Some(line) = error_handler.handle(reader.next_line().await) {
-            console.debug(format!("{prefix} {line}"));
+            let naked_line = strip_ansi_escapes::strip_str(&line);
+            if let Some(log_record) = LogRecord::from_line(&naked_line) {
+                log_record.log(&console);
+            } else {
+                console.info(format!("{prefix} {line}"));
+            }
             if line.contains("typegate ready on ") {
                 ready_tx.send(()).unwrap();
                 break;
@@ -229,7 +293,12 @@ impl TypegateActor {
         }
 
         while let Some(line) = error_handler.handle(reader.next_line().await) {
-            console.debug(format!("{prefix} {line}"));
+            let naked_line = strip_ansi_escapes::strip_str(&line);
+            if let Some(log_record) = LogRecord::from_line(&naked_line) {
+                log_record.log(&console);
+            } else {
+                console.info(format!("{prefix} {line}"));
+            }
         }
 
         addr.do_send(message::Stop);
@@ -245,7 +314,7 @@ impl TypegateActor {
         };
 
         while let Some(line) = error_handler.handle(reader.next_line().await) {
-            console.debug(format!("{prefix} {line}"));
+            console.error(format!("{prefix} {line}"));
         }
 
         addr.do_send(message::Stop);
