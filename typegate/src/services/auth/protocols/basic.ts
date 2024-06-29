@@ -4,10 +4,12 @@
 import { SystemTypegraph } from "../../../system_typegraphs.ts";
 import { b64decode } from "../../../utils.ts";
 import { SecretManager } from "../../../typegraph/mod.ts";
-import config from "../../../config.ts";
+import { TypegateConfigBase } from "../../../config.ts";
 import { Protocol, TokenMiddlewareOutput } from "./protocol.ts";
 import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
 import { Auth } from "../../../typegraph/types.ts";
+
+type BasicAuthConfig = Pick<TypegateConfigBase, "tg_admin_password">;
 
 export class BasicAuth extends Protocol {
   static init(
@@ -15,6 +17,7 @@ export class BasicAuth extends Protocol {
     auth: Auth,
     secretManager: SecretManager,
     _denoRuntime: DenoRuntime,
+    config: BasicAuthConfig,
   ): Promise<Protocol> {
     const tokens = new Map();
     for (const user of auth.auth_data.users as string[]) {

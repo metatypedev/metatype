@@ -6,8 +6,11 @@ import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 export const testDir = dirname(dirname(fromFileUrl(import.meta.url)));
 export const workspaceDir = dirname(dirname(testDir));
 
-export function newTempDir(): Promise<string> {
+export function newTempDir(
+  options: Deno.MakeTempOptions = {},
+): Promise<string> {
   return Deno.makeTempDir({
-    dir: join(dirname(dirname(testDir)), "tmp"),
+    dir: join(workspaceDir, "tmp"),
+    ...options,
   });
 }

@@ -65,7 +65,6 @@ impl<'a> TypeVisitor<'a> for Validator {
         current_node: CurrentNode<'_>,
         context: &Self::Context,
     ) -> VisitResult<Self::Return> {
-        let typegraph = context.get_typegraph();
         let type_node = current_node.type_node;
 
         let last_seg = current_node.path.last();
@@ -76,23 +75,9 @@ impl<'a> TypeVisitor<'a> for Validator {
             }
         }
 
-        match type_node {
-            TypeNode::Union { .. } | TypeNode::Either { .. } => {
-                let mut variants = vec![];
-                typegraph.collect_nested_variants_into(&mut variants, &[current_node.type_idx]);
-                match typegraph.check_union_variants(&variants) {
-                    Ok(_) => {}
-                    Err(err) => {
-                        self.push_error(current_node.path, err);
-                        return VisitResult::Continue(false);
-                    }
-                }
-            }
-            TypeNode::Function { .. } => {
-                // validate materializer??
-                // TODO deno static
-            }
-            _ => {}
+        if let TypeNode::Function { .. } = type_node {
+            // validate materializer??
+            // TODO deno static
         }
 
         if let Some(enumeration) = &type_node.base().enumeration {

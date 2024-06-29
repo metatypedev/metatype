@@ -3,12 +3,19 @@
 
 import { FragmentDefs } from "../../transports/graphql/graphql.ts";
 import {
+  InlineFragmentNode,
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
 } from "graphql/ast";
 import { FieldNode, Kind } from "graphql";
-import { isScalar, ObjectNode, Type } from "../../typegraph/type_node.ts";
+import {
+  EitherNode,
+  isScalar,
+  ObjectNode,
+  Type,
+  UnionNode,
+} from "../../typegraph/type_node.ts";
 import { TypeGraph } from "../../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { getChildTypes } from "../../typegraph/visitor.ts";
@@ -19,10 +26,6 @@ import {
   Validator,
   ValidatorFn,
 } from "./common.ts";
-import {
-  flattenUnionVariants,
-  getNestedUnionVariants,
-} from "./matching_variant.ts";
 
 export function generateValidator(
   tg: TypeGraph,
@@ -36,7 +39,8 @@ export function generateValidator(
     const errors: ErrorEntry[] = [];
     validator(value, "<value>", errors, validationContext);
     if (errors.length > 0) {
-      const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
+      const messages = errors
+        .map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
       throw new Error(`Validation errors:\n${messages}`);
     }
@@ -54,7 +58,10 @@ export class ResultValidationCompiler {
   codes: Map<string, string> = new Map();
   counter = 0;
 
-  constructor(private tg: TypeGraph, private fragments: FragmentDefs) {}
+  constructor(
+    private tg: TypeGraph,
+    private fragments: FragmentDefs,
+  ) {}
 
   private validatorName(idx: number, additionalSuffix = false) {
     if (!additionalSuffix) {
@@ -87,11 +94,7 @@ export class ResultValidationCompiler {
     const queue: QueueEntry[] = [rootEntry];
     const refs = new Set([rootEntry.name]);
 
-    for (
-      let entry = queue.shift();
-      entry != null;
-      entry = queue.shift()
-    ) {
+    for (let entry = queue.shift(); entry != null; entry = queue.shift()) {
       refs.add(entry.name);
       if (this.codes.has(entry.name)) {
         continue;
@@ -225,8 +228,9 @@ export class ResultValidationCompiler {
 
     const rootValidator = `\nreturn ${rootEntry.name}`;
 
-    return [...refs].map((name) => this.codes.get(name)).join("\n") +
-      rootValidator;
+    return (
+      [...refs].map((name) => this.codes.get(name)).join("\n") + rootValidator
+    );
   }
 
   private getChildEntryFromFieldNode(
@@ -237,17 +241,18 @@ export class ResultValidationCompiler {
     const { name, selectionSet, alias } = node;
     const propName = alias?.value ?? name.value;
     if (name.value === "__typename") {
-      return [propName, {
-        name: "validate_typename",
-        typeIdx: -1,
-        path: entry.path + ".__typename",
-      } as QueueEntry];
+      return [
+        propName,
+        {
+          name: "validate_typename",
+          typeIdx: -1,
+          path: entry.path + ".__typename",
+        } as QueueEntry,
+      ];
     }
 
     if (!Object.hasOwn(typeNode.properties, name.value)) {
-      throw new Error(
-        `Unexpected property '${name.value}' at '${entry.path}'`,
-      );
+      throw new Error(`Unexpected property '${name.value}' at '${entry.path}'`);
     }
 
     const propTypeIdx = typeNode.properties[name.value];
@@ -255,26 +260,25 @@ export class ResultValidationCompiler {
     let validator: string;
     if (this.hasNestedObjectResult(propTypeIdx)) {
       if (selectionSet == null) {
-        throw new Error(
-          `Selection set required at '${path}'`,
-        );
+        throw new Error(`Selection set required at '${path}'`);
       }
       validator = this.validatorName(propTypeIdx, true);
     } else {
       if (selectionSet != null) {
-        throw new Error(
-          `Unexpected selection set at '${path}'`,
-        );
+        throw new Error(`Unexpected selection set at '${path}'`);
       }
       validator = this.validatorName(propTypeIdx, false);
     }
 
-    return [propName, {
-      name: validator,
-      path,
-      typeIdx: propTypeIdx,
-      selectionSet,
-    } as QueueEntry];
+    return [
+      propName,
+      {
+        name: validator,
+        path,
+        typeIdx: propTypeIdx,
+        selectionSet,
+      } as QueueEntry,
+    ];
   }
 
   private getChildEntriesFromSelectionNode(
@@ -298,11 +302,7 @@ export class ResultValidationCompiler {
           throw new Error("Unexpected type condition on non-union type");
         }
         return node.selectionSet.selections.flatMap((selectionNode) =>
-          this.getChildEntriesFromSelectionNode(
-            typeNode,
-            entry,
-            selectionNode,
-          )
+          this.getChildEntriesFromSelectionNode(typeNode, entry, selectionNode)
         );
       }
 
@@ -316,10 +316,9 @@ export class ResultValidationCompiler {
     entry: QueueEntry,
   ): Record<string, QueueEntry> {
     return Object.fromEntries(
-      entry.selectionSet!
-        .selections.flatMap((node) =>
-          this.getChildEntriesFromSelectionNode(typeNode, entry, node)
-        ),
+      entry.selectionSet!.selections.flatMap((node) =>
+        this.getChildEntriesFromSelectionNode(typeNode, entry, node)
+      ),
     );
   }
 
@@ -327,62 +326,54 @@ export class ResultValidationCompiler {
     variants: number[],
     entry: QueueEntry,
   ): QueueEntry[] {
-    const isVariantScalar = (idx: number) => {
-      const ty = this.tg.type(idx);
-      if (ty.type == "list") {
-        return isScalar(this.tg.type(ty.items));
-      }
-      return isScalar(ty);
-    };
-    const multilevelVariants = flattenUnionVariants(this.tg, variants);
-    if (entry.selectionSet == null) {
-      if (
-        multilevelVariants.some((variantIdx) => !isVariantScalar(variantIdx))
-      ) {
-        const hasScalar = variants.some(isVariantScalar);
-        if (hasScalar) {
-          // TODO: AOT validation for the typegraph
-          throw new Error(
-            `Either/union variants must be either all scalars or all objects at '${entry.path}'`,
-          );
-        }
-        throw new Error(`Selection set required at '${entry.path}'`);
-      }
-      return variants.map((variantIdx) => ({
-        name: this.validatorName(variantIdx, false),
-        path: entry.path,
-        typeIdx: variantIdx,
-      }));
-    }
-
-    if (
-      multilevelVariants.some((idx) => this.tg.type(idx).type !== Type.OBJECT)
-    ) {
-      throw new Error(
-        `Either/union variants must be either all scalars or all objects at '${entry.path}'`,
-      );
-    }
-
-    const variantSelections = new Map(
-      entry.selectionSet.selections.map((node) => {
-        if (node.kind !== Kind.INLINE_FRAGMENT || node.typeCondition == null) {
-          throw new Error(
-            `at '${entry.path}': selection nodes must be inline fragments with type condition`,
-          );
-        }
-        return [node.typeCondition.name.value, node];
-      }),
+    const multilevelVariants = this.tg.typeUtils.flattenUnionVariants(variants);
+    const selectableVariants = multilevelVariants.filter(
+      (variant) =>
+        !this.tg.typeUtils.isScalarOrListOfScalars(this.tg.type(variant)),
     );
+    if (entry.selectionSet == null) {
+      if (selectableVariants.length > 0) {
+        const s = selectableVariants.length === 1 ? "" : "s";
+        const names = selectableVariants.map((idx) => this.tg.type(idx).title);
+        throw new Error(
+          `at '${entry.path}': selection set required for type${s} ${
+            names.join(
+              ", ",
+            )
+          }`,
+        );
+      }
+    }
+
+    // TODO test validation for scalar variants
+    const variantSelections: Map<string, InlineFragmentNode> =
+      entry.selectionSet != null
+        ? new Map(
+          entry.selectionSet.selections.map((node) => {
+            if (
+              node.kind !== Kind.INLINE_FRAGMENT ||
+              node.typeCondition == null
+            ) {
+              throw new Error(
+                `at '${entry.path}': selection nodes must be inline fragments with type condition`,
+              );
+            }
+            return [node.typeCondition.name.value, node];
+          }),
+        )
+        : new Map();
 
     const entries: QueueEntry[] = variants.map((variantIdx) => {
-      const variantType = this.tg.type(variantIdx);
-      switch (variantType.type) {
+      const typeNode = this.tg.type(variantIdx);
+      const typeName = typeNode.title;
+      const unquantified = this.tg.typeUtils.unwrapQuantifier(typeNode);
+      switch (unquantified.type) {
         case Type.OBJECT: {
-          const typeName = variantType.title;
           const selectionSet = variantSelections.get(typeName)?.selectionSet;
           if (selectionSet == null) {
+            // TODO link to matching documentation page
             throw new Error(
-              `at '${entry.path}': variant type '${typeName}' must be selected with type condition inline fragment`,
+              `at '${entry.path}': variant type '${typeName}' must have a selection set on an inline fragment with type condition`,
             );
           }
           variantSelections.delete(typeName);
@@ -393,34 +384,38 @@ export class ResultValidationCompiler {
             selectionSet,
           };
         }
-
         case Type.UNION:
         case Type.EITHER: {
-          const variantIndices = getNestedUnionVariants(this.tg, variantType);
+          const nestedVariants = this.tg.typeUtils.getFlatUnionVariants(
+            typeNode as UnionNode | EitherNode,
+          );
           return {
             name: this.validatorName(variantIdx, true),
             path: entry.path,
             typeIdx: variantIdx,
             selectionSet: {
               kind: Kind.SELECTION_SET,
-              selections: variantIndices.map((idx) => {
+              selections: nestedVariants.flatMap((idx) => {
                 const typeNode = this.tg.type(idx);
                 const typeName = typeNode.title;
                 const node = variantSelections.get(typeName);
+                // TODO not necessary
                 if (node == null) {
-                  throw new Error(
-                    `at '${entry.path}': variant type '${typeName}' must be selected with type condition inline fragment`,
-                  );
+                  return [];
                 }
                 variantSelections.delete(typeName);
-                return node;
+                return [node];
               }),
             },
           };
         }
-
-        default:
-          throw new Error();
+        default: {
+          return {
+            name: this.validatorName(variantIdx, true),
+            path: entry.path,
+            typeIdx: variantIdx,
+          };
+        }
       }
     });
 

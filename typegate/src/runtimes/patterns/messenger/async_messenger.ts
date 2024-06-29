@@ -4,7 +4,7 @@
 import { getLogger } from "../../../log.ts";
 import { Answer, Message, TaskData } from "./types.ts";
 import { maxi32 } from "../../../utils.ts";
-import config from "../../../config.ts";
+import { TypegateConfigBase } from "../../../config/types.ts";
 
 const logger = getLogger(import.meta);
 
@@ -19,7 +19,13 @@ export type MessengerSend<Broker, M> = (
 
 export type MessengerStop<Broker> = (broker: Broker) => Promise<void> | void;
 
-const TIMEOUT_SECS = config.timer_max_timeout_ms / 1000;
+export type AsyncMessengerConfig = Readonly<
+  Pick<
+    TypegateConfigBase,
+    | "timer_max_timeout_ms"
+    | "timer_destroy_resources"
+  >
+>;
 
 export class AsyncMessenger<Broker, M, A> {
   protected broker: Broker;
@@ -37,14 +43,18 @@ export class AsyncMessenger<Broker, M, A> {
   ];
   #queueIndex = 0;
 
+  #timeoutSecs: number;
+
   protected constructor(
     start: MessengerStart<Broker, A>,
     send: MessengerSend<Broker, M>,
     stop: MessengerStop<Broker>,
+    private config: AsyncMessengerConfig,
   ) {
     this.#start = start;
     this.#send = send;
     this.#stop = stop;
+    this.#timeoutSecs = config.timer_max_timeout_ms / 1000;
     // init broker
     this.broker = start(this.receive.bind(this));
     this.initTimer();
@@ -78,18 +88,18 @@ export class AsyncMessenger<Broker, M, A> {
             const data = JSON.stringify(item, null, 2);
             this.receive({
               id: item.id,
-              error: `${TIMEOUT_SECS}s timeout exceeded: ${data}`,
+              error: `${this.#timeoutSecs}s timeout exceeded: ${data}`,
             });
             shouldStop = true;
           }
         }
 
-        if (shouldStop && config.timer_destroy_resources) {
+        if (shouldStop && this.config.timer_destroy_resources) {
           this.#stop(this.broker);
           logger.info("reset broker after timeout");
           this.broker = this.#start(this.receive.bind(this));
         }
-      }, config.timer_max_timeout_ms);
+      }, this.config.timer_max_timeout_ms);
     }
   }
 

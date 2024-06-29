@@ -2,11 +2,12 @@ export const snapshot = {};
 
 snapshot[`Union type 1`] = `
 [
-  "Type mismatch: got 'StringValue' but expected 'union' for argument 'color' of type 'union' ('Color') at convert caused by:
-    - Type mismatch: got 'StringValue' but expected ''OBJECT'' for argument 'color' of type 'object' ('RGBArray') at convert
-    - Type mismatch: got 'StringValue' but expected ''OBJECT'' for argument 'color' of type 'object' ('RGBStruct') at convert
-    - Type mismatch: got 'StringValue' but expected ''OBJECT'' for argument 'color' of type 'object' ('HexColor') at convert
-    - Type mismatch: got 'StringValue' but expected ''OBJECT'' for argument 'color' of type 'object' ('NamedColor') at convert
+  "Validation errors:
+  - at <value>.color: Value does not match to any variant of the union type 
+  #0 <value>.color,expected an array, got string
+  #1 <value>.color,expected an object, got string
+  #2 <value>.color,string does not match to the pattern /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$/
+  #3 <value>.color,value did not match to any of the enum values
 ",
 ]
 `;
@@ -55,8 +56,8 @@ snapshot[`Union type 2`] = `
         name: "ColorOut",
         possibleTypes: [
           {
-            kind: "OBJECT",
-            name: "RGBArray",
+            kind: "LIST",
+            name: null,
           },
           {
             kind: "OBJECT",
@@ -64,32 +65,17 @@ snapshot[`Union type 2`] = `
           },
           {
             kind: "OBJECT",
-            name: "HexColor",
+            name: "_String",
           },
           {
             kind: "OBJECT",
-            name: "NamedColor",
+            name: "_String",
           },
         ],
       },
       {
         kind: "OBJECT",
-        name: "RGBArray",
-        possibleTypes: null,
-      },
-      {
-        kind: "OBJECT",
         name: "RGBStruct",
-        possibleTypes: null,
-      },
-      {
-        kind: "OBJECT",
-        name: "HexColor",
-        possibleTypes: null,
-      },
-      {
-        kind: "OBJECT",
-        name: "NamedColor",
         possibleTypes: null,
       },
       {
@@ -113,7 +99,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "union_20Out",
+        name: "union_17Out",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -132,7 +118,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "union_17Out",
+        name: "union_14Out",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -191,7 +177,7 @@ snapshot[`Union type 2`] = `
           },
           {
             kind: "UNION",
-            name: "union_38Out",
+            name: "union_35Out",
           },
         ],
       },
@@ -207,7 +193,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "union_38Out",
+        name: "union_35Out",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -219,7 +205,7 @@ snapshot[`Union type 2`] = `
           },
           {
             kind: "UNION",
-            name: "either_37Out",
+            name: "either_34Out",
           },
         ],
       },
@@ -235,7 +221,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "either_37Out",
+        name: "either_34Out",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -264,22 +250,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "INPUT_OBJECT",
-        name: "RGBArrayInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
         name: "RGBStructInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "HexColorInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "NamedColorInp",
         possibleTypes: null,
       },
       {
@@ -294,7 +265,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "union_20In",
+        name: "union_17In",
         possibleTypes: null,
       },
       {
@@ -304,7 +275,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "union_17In",
+        name: "union_14In",
         possibleTypes: null,
       },
       {
@@ -344,7 +315,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "union_38In",
+        name: "union_35In",
         possibleTypes: null,
       },
       {
@@ -359,7 +330,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "either_37In",
+        name: "either_34In",
         possibleTypes: null,
       },
       {

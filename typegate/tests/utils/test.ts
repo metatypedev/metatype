@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
-import { crypto } from "std/crypto/mod.ts";
 import { dirname, extname, join } from "std/path/mod.ts";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
@@ -13,10 +12,13 @@ import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
 import { TypeGraph } from "../../src/typegraph/mod.ts";
-import { SyncConfig } from "../../src/sync/config.ts";
+import {
+  defaultTypegateConfigBase,
+  getTypegateConfig,
+  SyncConfig,
+} from "../../src/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
-import config from "../../src/config.ts";
 
 export interface ParseOptions {
   deploy?: boolean;
@@ -37,7 +39,7 @@ export enum SDKLangugage {
 class TypegateManager implements AsyncDisposable {
   private index = 0;
 
-  constructor(private typegates: Typegate[]) {}
+  constructor(public typegates: Typegate[]) {}
 
   get replicas() {
     return this.typegates.length;
@@ -50,7 +52,11 @@ class TypegateManager implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
-    await Promise.all(this.typegates.map((tg) => tg[Symbol.asyncDispose]()));
+    await Promise.all(
+      this.typegates.map(async (tg) => {
+        await tg[Symbol.asyncDispose]();
+      }),
+    );
   }
 }
 
@@ -140,7 +146,7 @@ export class MetaTest {
   }
 
   get tempDir() {
-    return this.typegate.tmpDir;
+    return this.typegate.config.base.tmp_dir;
   }
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
@@ -447,19 +453,24 @@ export const test = ((o, fn): void => {
       const tempDirs = await Promise.all(
         Array.from({ length: replicas }).map(async (_) => {
           const uuid = crypto.randomUUID();
-          return await Deno.makeTempDir({
+          return await newTempDir({
             prefix: `typegate-test-${uuid}`,
-            dir: config.tmp_dir,
           });
         }),
       );
 
       // TODO different tempDir for each typegate instance
       const result = await Promise.allSettled(
-        Array.from({ length: replicas }).map(
-          async (_, index) =>
-            await Typegate.init(opts.syncConfig ?? null, null, tempDirs[index]),
-        ),
+        Array.from({ length: replicas }).map(async (_, index) => {
+          const config = getTypegateConfig({
+            base: {
+              ...defaultTypegateConfigBase,
+            },
+          });
+          config.sync = opts.syncConfig ?? null;
+          config.base.tmp_dir = tempDirs[index];
+          return await Typegate.init(config);
+        }),
       );
       const typegates = result.map((r) => {
         if (r.status === "fulfilled") {
