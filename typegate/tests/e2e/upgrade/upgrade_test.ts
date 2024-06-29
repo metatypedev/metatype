@@ -1,5 +1,8 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
 import { Meta } from "test-utils/mod.ts";
-import { METATYPE_VERSION, PUBLISHED_VERSION } from "@dev/consts.ts";
+import { PUBLISHED_VERSION } from "@dev/consts.ts";
 import { projectDir } from "@dev/utils.ts";
 import { $ } from "@dev/deps.ts";
 import { download } from "download";
@@ -18,6 +21,9 @@ function getAssetName(version: string) {
   return `meta-cli-v${version}-${Deno.build.target}`;
 }
 
+// TODO remove after the next release
+// These typegates are disabled because a compatibity issue on the pyrt wasm:
+//  Module was  WebAssembly backtrace support but it is enabled for the host
 const disabled = [
   "quick-start-project.ts",
   "faas-runner.ts",
@@ -36,7 +42,7 @@ async function checkMetaBin(path: typeof tempDir) {
       .stdout("piped");
     console.log(res.stdout);
     return true;
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 }
@@ -49,10 +55,11 @@ async function downloadAndExtractAsset(version: string) {
   if (await checkMetaBin(metaBin)) {
     return metaBin.toString();
   }
-  const url = `https://github.com/metatypedev/metatype/releases/download/v${version}/${name}.tar.gz`;
+  const url =
+    `https://github.com/metatypedev/metatype/releases/download/v${version}/${name}.tar.gz`;
   console.log("Downloading from", url);
   const archiveName = `${name}.tar.gz`;
-  const fileObj = await download(url, {
+  const _fileObj = await download(url, {
     file: archiveName,
     dir: tempDir.toString(),
   });
@@ -74,7 +81,7 @@ async function downloadAndExtractAsset(version: string) {
       mode: 0o755,
     });
     const res = await copy(entry, target);
-    console.log(`successfully write ${res} bytes`);
+    console.log(`successfully written ${res} bytes`);
   }
 
   await Deno.remove(archivePath.toString());
@@ -99,13 +106,6 @@ Meta.test("typegate upgrade", async (t) => {
   const typegateTempDir = await newTempDir();
   const repoDir = await newTempDir();
 
-  console.log({ metaBinDir, path: Deno.env.get("PATH") });
-  let envPathList = Deno.env.get("PATH")!.split(":");
-  envPathList = envPathList.filter((path) => !path.includes("target/debug"));
-  envPathList.unshift(metaBinDir);
-  const envPath = envPathList.join(":");
-  console.log(envPath);
-
   const proc = new Deno.Command("meta", {
     args: ["typegate"],
     env: {
@@ -115,6 +115,8 @@ Meta.test("typegate upgrade", async (t) => {
       TG_ADMIN_PASSWORD: "password",
       TMP_DIR: typegateTempDir,
       TG_PORT: "7899",
+      // TODO should not be necessary
+      VERSION: previousVersion,
     },
     stdin: "piped",
     stdout: "piped",
@@ -137,21 +139,9 @@ Meta.test("typegate upgrade", async (t) => {
       const typegraphsDir = examplesDir.join("typegraphs");
       for await (const entry of typegraphsDir.readDir()) {
         const path = typegraphsDir.relative(entry.path);
-        if (path !== "basic.ts" && !path.endsWith(".json")) {
-          await entry.path.remove().catch((e) => {});
+        if (disabled.includes(path.toString())) {
+          await entry.path.remove().catch((_e) => {});
         }
-        // if (disabled.includes(path.toString())) {
-        //   await entry.path.remove().catch((e) => {});
-        // }
-      }
-
-      // temp
-      for await (const entry of typegraphsDir.readDir()) {
-        const path = typegraphsDir.relative(entry.path);
-        console.log(path);
-        // if (disabled.includes(path.toString())) {
-        //   throw new Error("unexpected");
-        // }
       }
 
       await $`pnpm install`
@@ -169,18 +159,19 @@ Meta.test("typegate upgrade", async (t) => {
 
   const processLines = new ProcessOutputLines(proc);
   await processLines.fetchStdoutLines((line) => {
-    console.log("typegate>", line);
+    // console.log("typegate>", line);
     return !line.includes("typegate ready on 7899");
   });
-  processLines.fetchStdoutLines((line) => {
-    console.log("typegate>", line);
+  processLines.fetchStdoutLines((_line) => {
+    // console.log("typegate>", line);
     return true;
   });
 
   await t.should(
     "successfully deploy with the current published version",
     async () => {
-      const command = `meta deploy --target dev --max-parallel-loads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
+      const command =
+        `meta deploy --target dev --max-parallel-loads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
       const res = await $`bash -c ${command}`
         .cwd(examplesDir.join("typegraphs"))
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)

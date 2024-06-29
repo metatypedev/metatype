@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
 import { TextLineStream } from "@dev/deps.ts";
 import { deadline } from "std/async/mod.ts";
 
@@ -31,10 +34,9 @@ export class ProcessOutputLines {
     param: FetchOutputLineParam,
     timeoutMs: number | null = 10_000,
   ) {
-    const next =
-      timeoutMs == null
-        ? () => reader.read()
-        : () => deadline(reader.read(), timeoutMs);
+    const next = timeoutMs == null
+      ? () => reader.read()
+      : () => deadline(reader.read(), timeoutMs);
     let shouldContinue = true;
     while (shouldContinue) {
       const { value: line, done } = await next();
