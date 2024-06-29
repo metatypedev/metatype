@@ -152,9 +152,8 @@ Meta.test(
         VERSION: previousVersion,
         ...syncEnvs,
       },
-      stdin: "piped",
       stdout: "piped",
-      stderr: "piped",
+      // stderr: "piped",
     }).spawn();
 
     const examplesDir = $.path(repoDir).join("metatype/examples");
@@ -193,12 +192,12 @@ Meta.test(
 
     const typegraphs: string[] = [];
 
-    const processLines = new ProcessOutputLines(proc);
-    await processLines.fetchStdoutLines((line) => {
+    const stdout = new ProcessOutputLines(proc.stdout);
+    await stdout.fetchUntil((line) => {
       // console.log("typegate>", line);
       return !line.includes("typegate ready on 7899");
     });
-    processLines.fetchStdoutLines((line) => {
+    stdout.fetchUntil((line) => {
       const match = line.match(/Initializing engine '(.+)'/);
       if (match) {
         typegraphs.push(match[1]);
@@ -217,13 +216,15 @@ Meta.test(
       console.log(res);
     });
 
-    const status = await processLines.close();
-    console.log(status);
+    await stdout.close();
+    proc.kill("SIGKILL");
+    const status = await proc.status;
+    console.log({ status });
 
     const typegraphs2: string[] = [];
 
     await t.should("upgrade the typegate to the current version", async () => {
-      const proc2 = new Deno.Command("cargo", {
+      const proc = new Deno.Command("cargo", {
         args: ["run", "-p", "meta-cli", "-F", "typegate", "--", "typegate"],
         env: {
           ...Deno.env.toObject(),
@@ -235,13 +236,12 @@ Meta.test(
           VERSION: previousVersion,
           ...syncEnvs,
         },
-        stdin: "piped",
         stdout: "piped",
-        stderr: "piped",
+        // stderr: "piped",
       }).spawn();
 
-      const processLines2 = new ProcessOutputLines(proc2);
-      await processLines2.fetchStdoutLines((line) => {
+      const stdout = new ProcessOutputLines(proc.stdout);
+      await stdout.fetchUntil((line) => {
         console.log("typegate>", line);
         const match = $.stripAnsi(line).match(/reloaded addition: (.+)/);
         if (match) {
@@ -249,7 +249,10 @@ Meta.test(
         }
         return !line.includes("typegate ready on 7899");
       });
-      await processLines2.close().catch(() => {});
+      await stdout.close();
+      proc.kill("SIGKILL");
+      const status = await proc.status;
+      console.log({ status });
     });
 
     await t.should("have the same typegraphs", () => {
