@@ -1,7 +1,7 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
-import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python.ts";
 
 // skip:end
 
@@ -29,7 +29,7 @@ typegraph(
           code: "({n}) => Array.from(Array(5).keys()).reduce((sum, e) => sum + e, 0)",
         }),
       },
-      pub,
+      pub
     );
-  },
+  }
 );

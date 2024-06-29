@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk";
-import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.ts";
 
 export const tg = await typegraph("wasm-duplicate-ts", (g: any) => {
   const wasm1 = WasmRuntime.wire("rust.wasm");

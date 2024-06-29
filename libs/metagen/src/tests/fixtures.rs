@@ -12,7 +12,10 @@ pub async fn test_typegraph_1() -> anyhow::Result<Box<Typegraph>> {
                 .split(' ')
                 .collect::<Vec<_>>(),
         )
-        .env("MCLI_LOADER_CMD", "pnpm dlx tsx")
+        .env(
+            "MCLI_LOADER_CMD",
+            "deno run -A --import-map=../../typegate/import_map.json {filepath}",
+        )
         .kill_on_drop(true)
         .output()
         .await?;

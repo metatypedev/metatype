@@ -1,5 +1,5 @@
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
 
 // skip:start
 function getEnvVariable(

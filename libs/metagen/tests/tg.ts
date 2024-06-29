@@ -1,15 +1,11 @@
-import {
-  Policy,
-  t,
-  typegraph,
-} from "../../../typegraph/node/sdk/dist/index.js";
-import { WasmRuntime } from "../../../typegraph/node/sdk/dist/runtimes/wasm.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.ts";
 
-typegraph(
-  {
-    name: "gen-test",
-    builder(g) {
-      const obj = t.struct({
+typegraph({
+  name: "gen-test",
+  builder(g) {
+    const obj = t
+      .struct({
         str: t.string(),
         int: t.integer(),
         float: t.float(),
@@ -26,19 +22,15 @@ typegraph(
         ]),
         list: t.list(t.string()),
         type: t.string(),
-      }).rename("MyObj");
+      })
+      .rename("MyObj");
 
-      const wasm = WasmRuntime.wire("placeholder");
-      g.expose(
-        {
-          my_faas: wasm.handler(
-            obj,
-            obj,
-            { name: "my_faas" },
-          ).rename("my_faas"),
-        },
-        Policy.public(),
-      );
-    },
+    const wasm = WasmRuntime.wire("placeholder");
+    g.expose(
+      {
+        my_faas: wasm.handler(obj, obj, { name: "my_faas" }).rename("my_faas"),
+      },
+      Policy.public()
+    );
   },
-);
+});

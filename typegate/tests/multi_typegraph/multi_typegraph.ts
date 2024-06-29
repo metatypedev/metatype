@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { RandomRuntime } from "@typegraph/sdk/runtimes/random.js";
-import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { RandomRuntime } from "@typegraph/sdk/runtimes/random.ts";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python.ts";
 import outdent from "outdent";
-import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.js";
+import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
 
 function randomFunc() {
-  return { "data": null };
+  return { data: null };
 }
 
 export const notTg = randomFunc();
@@ -21,32 +21,29 @@ export const temporal = async () =>
       hostSecret: "HOST",
       namespaceSecret: "NAMESPACE",
     });
-    g.expose(
-      {
-        startKv: temporal.startWorkflow(
-          "keyValueStore",
-          t.struct({}),
-        ).withPolicy(pub),
+    g.expose({
+      startKv: temporal
+        .startWorkflow("keyValueStore", t.struct({}))
+        .withPolicy(pub),
 
-        query: temporal.queryWorkflow(
-          "getValue",
-          t.string(),
-          t.string().optional(),
-        ).withPolicy(pub),
+      query: temporal
+        .queryWorkflow("getValue", t.string(), t.string().optional())
+        .withPolicy(pub),
 
-        signal: temporal.signalWorkflow(
+      signal: temporal
+        .signalWorkflow(
           "setValue",
           t.struct({ key: t.string(), value: t.string() }),
-        ).withPolicy(pub),
+        )
+        .withPolicy(pub),
 
-        describe: temporal.describeWorkflow().withPolicy(pub),
-      },
-    );
+      describe: temporal.describeWorkflow().withPolicy(pub),
+    });
   });
 
 const tpe = t.struct({
-  "a": t.string(),
-  "b": t.list(t.either([t.integer(), t.string()])),
+  a: t.string(),
+  b: t.list(t.either([t.integer(), t.string()])),
 });
 
 export const python = async () =>
@@ -55,21 +52,19 @@ export const python = async () =>
     const pub = Policy.public();
 
     g.expose({
-      identityLambda: python.fromLambda(
-        t.struct({ input: tpe }),
-        tpe,
-        { code: "lambda x: x['input']" },
-      ).withPolicy(pub),
-      identityDef: python.fromDef(
-        t.struct({ input: tpe }),
-        tpe,
-        {
+      identityLambda: python
+        .fromLambda(t.struct({ input: tpe }), tpe, {
+          code: "lambda x: x['input']",
+        })
+        .withPolicy(pub),
+      identityDef: python
+        .fromDef(t.struct({ input: tpe }), tpe, {
           code: outdent`
         def identity(x):
           return x['input']
         `,
-        },
-      ).withPolicy(pub),
+        })
+        .withPolicy(pub),
     });
   });
 
@@ -79,19 +74,28 @@ export const randomTg = async () =>
     const pub = Policy.public();
 
     // test for enum, union, either
-    const rgb = t.struct({
-      "R": t.float(),
-      "G": t.float(),
-      "B": t.float(),
-    }, { name: "Rgb" });
-    const vec = t.struct({ "x": t.float(), "y": t.float(), "z": t.float() }, {
-      name: "Vec",
-    });
+    const rgb = t.struct(
+      {
+        R: t.float(),
+        G: t.float(),
+        B: t.float(),
+      },
+      { name: "Rgb" },
+    );
+    const vec = t.struct(
+      { x: t.float(), y: t.float(), z: t.float() },
+      {
+        name: "Vec",
+      },
+    );
 
-    const rubix_cube = t.struct({ "name": t.string(), "size": t.integer() }, {
-      name: "Rubix",
-    });
-    const toygun = t.struct({ "color": t.string() }, { name: "Toygun" });
+    const rubix_cube = t.struct(
+      { name: t.string(), size: t.integer() },
+      {
+        name: "Rubix",
+      },
+    );
+    const toygun = t.struct({ color: t.string() }, { name: "Toygun" });
 
     const testStruct = t.struct({
       field: t.union([rgb, vec]),
@@ -101,14 +105,14 @@ export const randomTg = async () =>
     });
 
     g.expose({
-      test1: random.gen(
-        t.struct({
-          email: t.email(),
-          country: t.string({}, { config: { gen: "country", full: true } }),
-        }),
-      ).withPolicy(pub),
-      test2: random.gen(
-        testStruct,
-      ).withPolicy(pub),
+      test1: random
+        .gen(
+          t.struct({
+            email: t.email(),
+            country: t.string({}, { config: { gen: "country", full: true } }),
+          }),
+        )
+        .withPolicy(pub),
+      test2: random.gen(testStruct).withPolicy(pub),
     });
   });

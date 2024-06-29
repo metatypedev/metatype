@@ -9,12 +9,8 @@ from typegraph import t, typegraph
 def union_node(g: Graph):
     channel_of_8_bits = t.integer(min=0, max=255, name="8BitChannel")
 
-    rgb_array = t.struct(
-        {
-            "rgb": t.list(channel_of_8_bits, min=3, max=3),
-        },
-        name="RGBArray",
-    )
+    rgb_array = t.list(channel_of_8_bits, min=3, max=3, name="RGBArray")
+
     rgb_struct = t.struct(
         {
             "r": channel_of_8_bits,
@@ -24,25 +20,16 @@ def union_node(g: Graph):
         name="RGBStruct",
     )
 
-    hex = t.struct(
-        {
-            "hex": t.string(pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"),
-        },
-        name="HexColor",
-    )
+    hex = t.string(pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$", name="HexColor")
 
-    named_color = t.struct(
-        {
-            "name": t.enum(
-                [
-                    "red",
-                    "green",
-                    "blue",
-                    "black",
-                    "white",
-                ]
-            )
-        },
+    named_color = t.enum(
+        [
+            "red",
+            "green",
+            "blue",
+            "black",
+            "white",
+        ],
         name="NamedColor",
     )
 

@@ -25,20 +25,14 @@ repos:
         language: system
         entry: bash -c 'ghjk x lock-sed --check'
         pass_filenames: false
-      - id: clean-deno-lock
-        name: "Clean deno.lock"
-        always_run: true
-        language: system
-        entry: ghjk x lock-clean-deno
-        pass_filenames: false
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs && cd ../dev && deno fmt && cd ../typegraph/node && deno fmt --ignore=node_modules,dist'
+        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs && cd ../dev && deno fmt && cd ../typegraph/deno && deno fmt --ignore=node_modules,dist'
         pass_filenames: false
         types:
           - ts
-        files: ^(typegate|dev|typegraph/node)/
+        files: ^(typegate|dev|typegraph/deno)/
       - id: deno-lint
         name: Deno lint
         language: system
@@ -47,16 +41,6 @@ repos:
         types:
           - ts
         files: ^(typegate|dev)/
-      - id: es-lint
-        name: Eslint typegraph
-        language: system
-        entry: bash -c 'cd typegraph/node/sdk && [ -f node_modules/.bin/eslint ] && pnpm eslint'
-        pass_filenames: false
-        types_or:
-          - ts
-          - tsx
-        files: ^typegraph/node/sdk
-        exclude: node_modules
       - id: es-lint
         name: Eslint website
         language: system
@@ -98,12 +82,7 @@ repos:
       - id: check-merge-conflict
       - id: end-of-file-fixer
         # exclude all generated files
-        exclude: (?x)(
-          .ghjk/.*
-          |.*deno.lock
-          |.*\.snap$|typegate/src/typegraphs/.*\.json
-          |website/docs/reference/
-          |libs/pyrt_wit_wire/pyrt)
+        exclude: (?x)( .ghjk/.* |.*deno.lock |.*\.snap$|typegate/src/typegraphs/.*\.json |website/docs/reference/ |libs/pyrt_wit_wire/pyrt)
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.5
     hooks:

@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.js";
-import * as effects from "@typegraph/sdk/effects.js";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.ts";
+import * as effects from "@typegraph/sdk/effects.ts";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
 
 const user = t.struct(
   {

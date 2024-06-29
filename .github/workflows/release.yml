@@ -186,16 +186,22 @@ jobs:
           cd ../..
 
           cd typegraph/node
-          pnpm install
-          pnpm run sdk-build
-          cp ./sdk/{package.json,package-lock.json,LICENSE.md} ./sdk/dist
-          cd ../..
-
-          cd typegraph/node/sdk/dist
           pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
           [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
             && pnpm publish --no-git-checks --force \
             || pnpm publish --no-git-checks
+          cd ../..
+
+          cd typegraph/deno/sdk
+          ghjk x build-jsr-pub
+
+          # Requires auth
+          # jsr requires explicit type hints everytime (almost no inferences)
+          #  - https://jsr.io/docs/about-slow-types#explicit-types
+          #  - https://jsr.io/docs/about-slow-types#simple-inference
+
+          # deno publish --dry-run --allow-slow-types --allow-dirty
+
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
