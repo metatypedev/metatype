@@ -1,19 +1,21 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use anyhow::{bail, Result};
+use async_trait::async_trait;
+use clap::Parser;
+use common::graphql::Query;
+use common::typegraph::Typegraph;
+use reqwest::Url;
+use std::sync::Arc;
 
 use super::serialize::SerializeReportExt;
 use super::{Action, ConfigArgs};
-use crate::config::{Config, PathOption};
+use crate::config::{Config, NodeConfig, PathOption};
 use crate::deploy::actors::console::ConsoleActor;
 use crate::deploy::actors::task::serialize::{SerializeAction, SerializeActionGenerator};
 use crate::deploy::actors::task_manager::{StopReason, TaskManagerInit, TaskSource};
 use crate::interlude::*;
-use clap::Parser;
-use common::typegraph::Typegraph;
-use core::fmt::Debug;
-
-use common::graphql::Query;
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
+use serde::Deserialize;
 
 #[derive(Parser, Debug)]
 pub struct List {
@@ -28,9 +30,7 @@ impl Action for List {
         let dir = args.dir()?;
         let config_path = args.config.clone();
 
-        let config = Config::load_or_find(config_path, &dir)?;
-
-        let config = Arc::new(config);
+        let config = Arc::new(Config::load_or_find(config_path, &dir)?);
 
         let console = ConsoleActor::new(Arc::clone(&config)).start();
 
@@ -43,10 +43,10 @@ impl Action for List {
             true,
         );
 
-        let task_source = TaskSource::Discovery(dir.into());
+        let task_source = TaskSource::Discovery(dir.clone().into());
 
         let mut init = TaskManagerInit::<SerializeAction>::new(
-            config.clone(),
+            Arc::clone(&config),
             action_generator,
             console,
             task_source,
@@ -59,37 +59,28 @@ impl Action for List {
         let report = init.run().await;
 
         match report.stop_reason {
-            StopReason::Error => bail!("failed"),
+            StopReason::Error => bail!("Task manager stopped due to error."),
             StopReason::Manual | StopReason::ManualForced => {
-                bail!("cancelled")
+                bail!("Task manager stopped manually.")
             }
             StopReason::Natural => {}
-            StopReason::Restart => panic!("restart not supported for serialize"),
+            StopReason::Restart => panic!("Restart is not supported for serialization."),
         }
 
-        let tgs = report.into_typegraphs()?;
+        let typegraphs = report.into_typegraphs()?;
 
-        self.display_typegrahs(tgs).await?;
-        Ok(())
+        self.display_typegraphs(dir, typegraphs).await
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 struct TypegraphObject {
     name: String,
     url: String,
 }
 
 impl List {
-    async fn get_more_info(&self) -> Result<Vec<TypegraphObject>> {
-        let client = reqwest::Client::new();
-
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            AUTHORIZATION,
-            HeaderValue::from_str(&format!("Basic {}", "YWRtaW46cGFzc3dvcmQ="))?, // I don't know if it right, may be get from env
-        );
-
+    async fn get_more_info(&self, dir: PathBuf) -> Result<Vec<TypegraphObject>> {
         let query = r#"
             query {
                 typegraphs {
@@ -98,29 +89,38 @@ impl List {
                 }
             }
         "#;
-
-        let response = client
-            .post("http://localhost:7891/typegate") // this too, may be get from env
-            .headers(headers)
+        let mut node_config = NodeConfig::default();
+        node_config.url = Url::parse("http://localhost:7891")?;
+        let node = node_config.build(dir).await?;
+        let response = node
+            .post("/typegate")
+            .unwrap()
             .gql(query.into(), None)
             .await?;
 
         response
             .data("typegraphs")
-            .map_err(|err| anyhow::format_err!(err))
+            .map_err(|err| anyhow::anyhow!(err))
     }
 
     #[allow(clippy::vec_box)]
-    async fn display_typegrahs(&self, tgs: Vec<Box<Typegraph>>) -> Result<()> {
+    async fn display_typegraphs(
+        &self,
+        dir: PathBuf,
+        typegraphs: Vec<Box<Typegraph>>,
+    ) -> Result<()> {
         let mut tables: Vec<Table> = Vec::new();
-        for tg in tgs {
+
+        Table::print_table_header();
+
+        for tg in typegraphs {
             let mut table = Table::new(tg.name().unwrap());
             table.set_path(tg.get_path().ok());
             tables.push(table);
         }
 
-        if let Ok(more_tgs) = self.get_more_info().await {
-            for tg in more_tgs {
+        if let Ok(more_info) = self.get_more_info(dir).await {
+            for tg in more_info {
                 let mut table = Table::new(tg.name);
                 table.set_url(Some(tg.url));
                 tables.push(table);
@@ -145,7 +145,7 @@ struct Table {
 
 impl Table {
     fn new(name: String) -> Self {
-        Table {
+        Self {
             name,
             path: None,
             url: None,
