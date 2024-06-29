@@ -82,7 +82,7 @@ function argsAsConfig() {
   );
 }
 
-function transformSyncConfig(raw: SyncConfig): SyncConfigX {
+export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
   const { hostname, port, password, pathname } = raw.redis_url;
   const redisDb = parseInt(pathname.slice(1));
   if (isNaN(redisDb)) {

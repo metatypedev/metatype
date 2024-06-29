@@ -12,6 +12,8 @@ import { copy } from "std/io/copy.ts";
 import { encodeBase64 } from "std/encoding/base64.ts";
 import { ProcessOutputLines } from "test-utils/process.ts";
 import { newTempDir } from "test-utils/dir.ts";
+import { transformSyncConfig } from "@typegate/config.ts";
+import { clearSyncData, setupSync } from "test-utils/hooks.ts";
 
 const previousVersion = PUBLISHED_VERSION;
 
@@ -20,6 +22,26 @@ const tempDir = $.path(projectDir).join("tmp");
 function getAssetName(version: string) {
   return `meta-cli-v${version}-${Deno.build.target}`;
 }
+
+const syncEnvs = {
+  SYNC_REDIS_URL: "redis://:password@localhost:6379/12",
+  SYNC_S3_HOST: "http://localhost:9000",
+  SYNC_S3_REGION: "local",
+  SYNC_S3_ACCESS_KEY: "minio",
+  SYNC_S3_SECRET_KEY: "password",
+  SYNC_S3_BUCKET: "upgrade-test",
+};
+
+const syncConfig = transformSyncConfig({
+  redis_url: new URL(syncEnvs.SYNC_REDIS_URL),
+  s3_host: new URL(syncEnvs.SYNC_S3_HOST),
+  s3_region: syncEnvs.SYNC_S3_REGION,
+  s3_access_key: syncEnvs.SYNC_S3_ACCESS_KEY,
+  s3_secret_key: syncEnvs.SYNC_S3_SECRET_KEY,
+  s3_bucket: syncEnvs.SYNC_S3_BUCKET,
+  s3_path_style: true,
+});
+console.log({ syncConfig });
 
 // TODO remove after the next release
 // These typegates are disabled because a compatibity issue on the pyrt wasm:
@@ -92,98 +114,111 @@ async function downloadAndExtractAsset(version: string) {
   return metaBin.toString();
 }
 
-Meta.test("typegate upgrade", async (t) => {
-  let publishedBin: string = "";
-  await t.should("download published cli (fat version)", async () => {
-    publishedBin = await downloadAndExtractAsset(previousVersion);
-  });
-
-  const metaBinDir = $.path(publishedBin).parent()!.toString();
-  const tgSecret = encodeBase64(
-    globalThis.crypto.getRandomValues(new Uint8Array(64)),
-  );
-
-  const typegateTempDir = await newTempDir();
-  const repoDir = await newTempDir();
-
-  const proc = new Deno.Command("meta", {
-    args: ["typegate"],
-    env: {
-      ...Deno.env.toObject(),
-      PATH: `${metaBinDir}:${Deno.env.get("PATH")}`,
-      TG_SECRET: tgSecret,
-      TG_ADMIN_PASSWORD: "password",
-      TMP_DIR: typegateTempDir,
-      TG_PORT: "7899",
-      // TODO should not be necessary
-      VERSION: previousVersion,
+Meta.test(
+  {
+    name: "typegate upgrade",
+    async setup() {
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
-    stdin: "piped",
-    stdout: "piped",
-    stderr: "piped",
-  }).spawn();
+    async teardown() {
+      await clearSyncData(syncConfig);
+    },
+  },
+  async (t) => {
+    let publishedBin: string = "";
+    await t.should("download published cli (fat version)", async () => {
+      publishedBin = await downloadAndExtractAsset(previousVersion);
+    });
 
-  const examplesDir = $.path(repoDir).join("metatype/examples");
+    const metaBinDir = $.path(publishedBin).parent()!.toString();
+    const tgSecret = encodeBase64(
+      globalThis.crypto.getRandomValues(new Uint8Array(64)),
+    );
 
-  await t.should(
-    "download example typegraphs for the published version",
-    async () => {
-      const tag = `v${previousVersion}`;
+    const typegateTempDir = await newTempDir();
+    const repoDir = await newTempDir();
 
-      await $`git clone https://github.com/metatypedev/metatype.git --depth 1 --branch ${tag} --quiet`
-        .cwd(repoDir)
-        .stdout("piped")
-        .stderr("piped")
-        .printCommand();
+    const proc = new Deno.Command("meta", {
+      args: ["typegate"],
+      env: {
+        ...Deno.env.toObject(),
+        PATH: `${metaBinDir}:${Deno.env.get("PATH")}`,
+        TG_SECRET: tgSecret,
+        TG_ADMIN_PASSWORD: "password",
+        TMP_DIR: typegateTempDir,
+        TG_PORT: "7899",
+        // TODO should not be necessary
+        VERSION: previousVersion,
+        ...syncEnvs,
+      },
+      stdin: "piped",
+      stdout: "piped",
+      stderr: "piped",
+    }).spawn();
 
-      const typegraphsDir = examplesDir.join("typegraphs");
-      for await (const entry of typegraphsDir.readDir()) {
-        const path = typegraphsDir.relative(entry.path);
-        if (disabled.includes(path.toString())) {
-          await entry.path.remove().catch((_e) => {});
+    const examplesDir = $.path(repoDir).join("metatype/examples");
+
+    await t.should(
+      "download example typegraphs for the published version",
+      async () => {
+        const tag = `v${previousVersion}`;
+
+        await $`git clone https://github.com/metatypedev/metatype.git --depth 1 --branch ${tag} --quiet`
+          .cwd(repoDir)
+          .stdout("piped")
+          .stderr("piped")
+          .printCommand();
+
+        const typegraphsDir = examplesDir.join("typegraphs");
+        for await (const entry of typegraphsDir.readDir()) {
+          const path = typegraphsDir.relative(entry.path);
+          if (disabled.includes(path.toString())) {
+            await entry.path.remove().catch((_e) => {});
+          }
         }
-      }
 
-      await $`pnpm install`
-        .cwd(examplesDir.join("typegraphs"))
-        .stdout("inherit")
-        .printCommand();
+        await $`pnpm install`
+          .cwd(examplesDir.join("typegraphs"))
+          .stdout("inherit")
+          .printCommand();
 
-      await $.raw`pnpm add @typegraph/sdk@${previousVersion}`
-        .cwd(examplesDir.join("typegraphs"))
-        .env("NPM_CONFIG_REGISTRY", "https://registry.npmjs.org")
-        .stdout("inherit")
-        .printCommand();
-    },
-  );
+        await $.raw`pnpm add @typegraph/sdk@${previousVersion}`
+          .cwd(examplesDir.join("typegraphs"))
+          .env("NPM_CONFIG_REGISTRY", "https://registry.npmjs.org")
+          .stdout("inherit")
+          .printCommand();
+      },
+    );
 
-  const processLines = new ProcessOutputLines(proc);
-  await processLines.fetchStdoutLines((line) => {
-    // console.log("typegate>", line);
-    return !line.includes("typegate ready on 7899");
-  });
-  processLines.fetchStdoutLines((_line) => {
-    // console.log("typegate>", line);
-    return true;
-  });
+    const processLines = new ProcessOutputLines(proc);
+    await processLines.fetchStdoutLines((line) => {
+      // console.log("typegate>", line);
+      return !line.includes("typegate ready on 7899");
+    });
+    processLines.fetchStdoutLines((line) => {
+      console.log("typegate>", line);
+      return true;
+    });
 
-  await t.should(
-    "successfully deploy with the current published version",
-    async () => {
-      const command =
-        `meta deploy --target dev --max-parallel-loads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
-      const res = await $`bash -c ${command}`
-        .cwd(examplesDir.join("typegraphs"))
-        .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        .env("MCLI_LOADER_CMD", "npm x tsx");
-      console.log(res);
-    },
-  );
+    await t.should(
+      "successfully deploy with the current published version",
+      async () => {
+        const command =
+          `meta deploy --target dev --max-parallel-loads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
+        const res = await $`bash -c ${command}`
+          .cwd(examplesDir.join("typegraphs"))
+          .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
+          .env("MCLI_LOADER_CMD", "npm x tsx");
+        console.log(res);
+      },
+    );
 
-  const status = await processLines.close();
-  console.log(status);
+    const status = await processLines.close();
+    console.log(status);
 
-  //
+    //
 
-  await Deno.remove(typegateTempDir, { recursive: true });
-});
+    await Deno.remove(typegateTempDir, { recursive: true });
+  },
+);
