@@ -10,7 +10,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     fn: async ($) => {
       $.logger.info("pipe me to a shell");
       const uname = await $`uname -a`.text();
-      if (/(Ubuntu|Debian)/.test(uname)) {
+      if (/(Ubuntu|Debian|Linux pop-os)/.test(uname)) {
         console.log(
           `sudo apt update && ` +
             `sudo apt install -y --no-install-recommends ` +
@@ -29,9 +29,9 @@ const tasks: Record<string, DenoTaskDefArgs> = {
   "install-py": {
     inherit: "_python",
     async fn($) {
-      if (!await $.workingDir.join(".venv").exists()) {
-        const pyExec = $.env.REAL_PYTHON_EXEC_PATH!
-          .split(":")
+      if (!(await $.workingDir.join(".venv").exists())) {
+        const pyExec = $.env
+          .REAL_PYTHON_EXEC_PATH!.split(":")
           .filter((str) => str.length > 0)[0];
         await $.raw`${pyExec} -m venv .venv`;
         $.logger.info("virtual env created");
@@ -54,9 +54,11 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       $`pnpm install --recursive 
           --filter ./examples/typegraphs/ 
           --filter ./typegraph/node/
-          --filter ./typegraph/node/sdk
-          --filter ./libs/metagen/tests/*...`
-        .stdinText(Array(1000).map(() => "y").join("\n")),
+          --filter ./libs/metagen/tests/*...`.stdinText(
+        Array(1000)
+          .map(() => "y")
+          .join("\n"),
+      ),
   },
 
   "install-website": {
@@ -76,21 +78,20 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         count: 10,
         delay: $.exponentialBackoff(500),
         action: async () =>
-          await $.co([
-            "command",
-            "reactor",
-            "proxy",
-          ].map((kind) => {
-            const url = `https://github.com/bytecodealliance/wasmtime` +
-              `/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.${kind}.wasm`;
-            return $.request(url).showProgress()
-              .pipeToPath(
-                $.workingDir.join("tmp").join(std_url.basename(url)),
-                {
-                  create: true,
-                },
-              );
-          })),
+          await $.co(
+            ["command", "reactor", "proxy"].map((kind) => {
+              const url = `https://github.com/bytecodealliance/wasmtime` +
+                `/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.${kind}.wasm`;
+              return $.request(url)
+                .showProgress()
+                .pipeToPath(
+                  $.workingDir.join("tmp").join(std_url.basename(url)),
+                  {
+                    create: true,
+                  },
+                );
+            }),
+          ),
       });
     },
   },

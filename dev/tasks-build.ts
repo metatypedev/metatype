@@ -8,7 +8,8 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     inherit: ["_rust", "_python"],
     async fn($) {
       const typegraphs = await Array.fromAsync(
-        $.path(import.meta.dirname!).join("../typegate/src/typegraphs/")
+        $.path(import.meta.dirname!)
+          .join("../typegate/src/typegraphs/")
           .expandGlob("**/*.py", {
             includeDirs: false,
             globstar: true,
@@ -42,44 +43,24 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     dependsOn: "build-tgraph-core",
     inherit: ["build-tgraph-core", "_ecma"],
     async fn($) {
-      const sdkPath = $.workingDir.join("typegraph/node/sdk");
-      const genPath = await $.removeIfExists(sdkPath.join("src/gen"));
-      const distPath = await $.removeIfExists(sdkPath.join("dist"));
+      const denoSdkPath = $.workingDir.join("typegraph/deno/sdk");
+      const genPath = await $.removeIfExists(denoSdkPath.join("src/gen"));
 
       await $`jco transpile $WASM_FILE -o ${genPath} --map metatype:typegraph/host=../host/host.js`;
-      await $`pnpm -C typegraph/node install`;
-      await $`pnpm -C typegraph/node run sdk-build`;
-      await $.co(
-        [
-          sdkPath.join("package.json").copyToDir(distPath),
-          sdkPath.join("package-lock.json").copyToDir(distPath),
-          sdkPath.join("LICENSE.md").copyToDir(distPath),
-          distPath.join("README.md").symlinkTo(
-            $.workingDir.join("README.md").toString(),
-          ),
-        ],
-      );
+      await $`deno run -A typegraph/deno/dev/fix-declarations.ts`;
     },
   },
-  "build-tgraph-ts-pub": {
+  "build-tgraph-ts-node": {
     dependsOn: "build-tgraph-ts",
     inherit: ["build-tgraph-ts"],
-    vars: {
-      NPM_CONFIG_REGISTRY: "http://localhost:4873",
-    },
     async fn($) {
-      const distPath = $.workingDir.join("typegraph/node/sdk/dist");
-      await $.raw`npm config set "${
-        $.env.NPM_CONFIG_REGISTRY!.replace(/^http:/, "")
-      }/:_authToken" fooBar`
-        .cwd(distPath);
-      await $`npm unpublish @typegraph/sdk --force --registry $NPM_CONFIG_REGISTRY`
-        .noThrow().cwd(distPath);
-      await $`npm publish --tag dev --no-git-checks --force --registry $NPM_CONFIG_REGISTRY`
-        .cwd(distPath);
-
-      // FIXME: mutex on lockfile
-      await $`ghjk x lock-clean-deno`;
+      await $`deno run -A typegraph/deno/dev/deno2node.ts`;
+    },
+  },
+  "build-jsr-pub": {
+    async fn($) {
+      await $`deno run -A typegraph/deno/dev/jsr-gen.ts`;
+      await $`cd typegraph/deno/sdk && deno publish --dry-run --allow-slow-types --allow-dirty`;
     },
   },
   "build-tgraph-py": {
@@ -94,18 +75,16 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     },
   },
   "build-tgraph": {
-    dependsOn: [
-      "build-tgraph-py",
-      "build-tgraph-ts-pub",
-    ],
+    dependsOn: ["build-tgraph-py", "build-tgraph-ts-node"],
   },
 
   "gen-pyrt-bind": {
     inherit: "_wasm",
     async fn($) {
       await $.removeIfExists("./libs/pyrt_wit_wire/wit_wire");
-      await $`componentize-py -d ../../wit/wit-wire.wit bindings .`
-        .cwd("./libs/pyrt_wit_wire");
+      await $`componentize-py -d ../../wit/wit-wire.wit bindings .`.cwd(
+        "./libs/pyrt_wit_wire",
+      );
     },
   },
   "build-pyrt": {

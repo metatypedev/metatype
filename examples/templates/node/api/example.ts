@@ -1,6 +1,6 @@
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
-import { PythonRuntime } from "@typegraph/sdk/runtimes/python.js";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python";
 
 typegraph("example", (g) => {
   const pub = Policy.public();
@@ -12,12 +12,12 @@ typegraph("example", (g) => {
       .fromLambda(
         t.struct({ first: t.float(), second: t.float() }),
         t.float(),
-        { code: "lambda x: x['first'] + x['second']" },
+        { code: "lambda x: x['first'] + x['second']" }
       )
       .withPolicy(pub),
     multiply: deno
       .func(t.struct({ first: t.float(), second: t.float() }), t.float(), {
-        code: "({first, second}) => first * second",
+        code: ({ first, second }) => first * second,
       })
       .withPolicy(pub),
   });

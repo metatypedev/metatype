@@ -67,9 +67,28 @@ impl CommandContext {
 
     fn build_raw_from_env(&self) -> Option<Command> {
         if let Ok(argv_str) = std::env::var("MCLI_LOADER_CMD") {
-            let argv = argv_str.split(' ').collect::<Vec<_>>();
-            let mut command = Command::new(argv[0]);
-            command.args(&argv[1..]).arg(self.path.to_str().unwrap());
+            let argv_str_fmtd = argv_str
+                .replace("{filepath}", self.path.to_str().unwrap())
+                .replace(
+                    "{cwd}",
+                    &std::env::current_dir()
+                        .map(|c| c.to_string_lossy().to_string())
+                        .unwrap_or("{cwd}".to_string()),
+                )
+                .to_string();
+            let command = if !argv_str_fmtd.eq(&argv_str) {
+                // custom
+                let argv = argv_str_fmtd.split(' ').collect::<Vec<_>>();
+                let mut command = Command::new(argv[0]);
+                command.args(&argv[1..]);
+                command
+            } else {
+                // prefix the path
+                let argv = argv_str.split(' ').collect::<Vec<_>>();
+                let mut command = Command::new(argv[0]);
+                command.args(&argv[1..]).arg(self.path.to_str().unwrap());
+                command
+            };
             Some(command)
         } else {
             None

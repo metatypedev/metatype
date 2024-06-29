@@ -1,7 +1,7 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { Auth } from "@typegraph/sdk/params.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { Auth } from "@typegraph/sdk/params.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 
 // skip:end
 
@@ -27,7 +27,7 @@ typegraph(
           your_own_content: g.fromContext("your_own_content"),
         }),
       },
-      pub,
+      pub
     );
-  },
+  }
 );

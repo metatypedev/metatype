@@ -118,7 +118,6 @@ export async function testE2e(args: {
     DENO_TESTING: "true",
     TMP_DIR: tmpDir.toString(),
     TIMER_MAX_TIMEOUT_MS: "30000",
-    NPM_CONFIG_REGISTRY: "http://localhost:4873",
     // NOTE: ordering of the variables is important as we want the
     // `meta` build to be resolved before any system meta builds
     PATH: `${wd.join("target/debug").toString()}:${Deno.env.get("PATH")}`,
