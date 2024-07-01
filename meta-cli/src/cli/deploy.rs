@@ -88,6 +88,7 @@ pub struct DeployOptions {
 pub struct Deploy {
     config: Arc<Config>,
     node: Node,
+    #[cfg(feature = "typegate")]
     node_config: NodeConfig,
     base_dir: Arc<Path>,
     options: DeployOptions,

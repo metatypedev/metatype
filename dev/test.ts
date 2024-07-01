@@ -188,7 +188,9 @@ export async function testE2e(args: {
   const globalStart = Date.now();
 
   $.logStep(`${prefix} Building xtask and meta-cli...`);
-  await $`cargo build -p xtask -p meta-cli`.cwd(wd);
+  await $`cargo build -p xtask -p meta-cli -F typegate
+          && mv target/debug/meta target/debug/meta-full
+          && cargo build -p meta-cli`.cwd(wd);
 
   // launch a promise that doesnt get awaited
   (async () => {
