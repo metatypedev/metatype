@@ -10,7 +10,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     fn: async ($) => {
       $.logger.info("pipe me to a shell");
       const osRelease = await $`cat /etc/os-release`.text();
-      if (/(Ubuntu|Debian)/.test(osRelease)) {
+      if (/(Ubuntu|Debian|Linux pop-os)/.test(osRelease)) {
         console.log(
           `sudo apt update && ` +
             `sudo apt install -y --no-install-recommends ` +
