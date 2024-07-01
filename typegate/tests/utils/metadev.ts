@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { testDir } from "test-utils/dir.ts";
-import { TextLineStream } from "../../../dev/deps.ts";
+import { TextLineStream } from "@dev/deps.ts";
 import { deadline } from "std/async/mod.ts";
 
 export type MetaDevOptions = {
@@ -56,11 +56,9 @@ export class MetaDev {
     param: FetchOutputLineParam,
     timeoutMs: number = 5_000,
   ) {
-    const next = timeoutMs == null ? () => reader.read() : () =>
-      deadline(
-        reader.read(),
-        timeoutMs,
-      );
+    const next = timeoutMs == null
+      ? () => reader.read()
+      : () => deadline(reader.read(), timeoutMs);
     let shouldContinue = true;
     while (shouldContinue) {
       const { value: line, done } = await next();

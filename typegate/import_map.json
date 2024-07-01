@@ -30,7 +30,9 @@
     "@typegraph/sdk/": "../typegraph/deno/sdk/src/",
     "@typegate/": "./src/",
     "test-utils/": "./tests/utils/",
+    "@dev/": "../dev/",
     "dax": "https://deno.land/x/dax@0.39.2/mod.ts",
-    "dispose": "https://deno.land/x/dispose@1.1.0/mod.ts"
+    "dispose": "https://deno.land/x/dispose@1.1.0/mod.ts",
+    "download": "https://deno.land/x/download@v1.0.1/mod.ts"
   }
 }

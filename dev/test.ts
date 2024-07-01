@@ -130,7 +130,11 @@ export async function testE2e(args: {
   await tmpDir.ensureDir();
   // remove non-vendored caches
   for await (const cache of tmpDir.readDir()) {
-    if (cache.name.endsWith(".wasm") || cache.name == "libpython") {
+    if (
+      cache.name.endsWith(".wasm") ||
+      cache.name == "libpython" ||
+      cache.name.startsWith("meta-cli")
+    ) {
       continue;
     }
     await tmpDir.join(cache.name).remove({ recursive: true });
