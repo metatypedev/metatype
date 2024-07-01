@@ -151,10 +151,10 @@ export class MetaTest {
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
     const register = this.typegates.next().register;
-    // console.log(
-    //   "available typegraphs",
-    //   register.list().map((e) => e.name),
-    // );
+    console.log(
+      "available typegraphs",
+      register.list().map((e) => e.name),
+    );
     return register.get(name);
   }
 
@@ -270,10 +270,7 @@ export class MetaTest {
       );
     } else {
       cmd.push(
-        ...(
-          Deno.env.get("MCLI_LOADER_PY")?.split(" ") ??
-            [lang.toString()]
-        ),
+        ...(Deno.env.get("MCLI_LOADER_PY")?.split(" ") ?? [lang.toString()]),
         "utils/tg_deploy_script.py",
         cwd,
         this.port.toString(),
