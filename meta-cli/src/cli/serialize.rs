@@ -108,9 +108,7 @@ impl Action for Serialize {
     #[tracing::instrument]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
-
         let task_source = TaskSource::Static(self.files.clone());
-
         let tgs = orchestrate_serialization_workflow(
             args,
             dir.clone(),
@@ -119,7 +117,6 @@ impl Action for Serialize {
             task_source,
         )
         .await?;
-
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
                 self.write(&self.to_string(&tg)?).await?;

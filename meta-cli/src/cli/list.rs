@@ -1,17 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use super::serialize::orchestrate_serialization_workflow;
+use super::{Action, ConfigArgs};
+use crate::config::NodeConfig;
+use crate::deploy::actors::task_manager::TaskSource;
+use crate::interlude::*;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
 use common::graphql::Query;
 use common::typegraph::Typegraph;
 use reqwest::Url;
-
-use super::serialize::orchestrate_serialization_workflow;
-use super::{Action, ConfigArgs};
-use crate::config::NodeConfig;
-use crate::deploy::actors::task_manager::TaskSource;
-use crate::interlude::*;
 use serde::Deserialize;
 
 #[derive(Parser, Debug)]
@@ -25,9 +24,7 @@ impl Action for List {
     #[tracing::instrument]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
-
         let task_source = TaskSource::Discovery(dir.clone().into());
-
         let typegraphs = orchestrate_serialization_workflow(
             args,
             dir.clone(),
@@ -36,19 +33,18 @@ impl Action for List {
             task_source,
         )
         .await?;
-
         self.display_typegraphs(dir, typegraphs).await
     }
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct TypegraphObject {
+struct TypegraphInfo {
     name: String,
     url: String,
 }
 
 impl List {
-    async fn get_more_info(&self, dir: PathBuf) -> Result<Vec<TypegraphObject>> {
+    async fn fetch_deployed_typegraphs(&self, dir: PathBuf) -> Result<Vec<TypegraphInfo>> {
         let query = r#"
             query {
                 typegraphs {
@@ -65,7 +61,6 @@ impl List {
             .unwrap()
             .gql(query.into(), None)
             .await?;
-
         response
             .data("typegraphs")
             .map_err(|err| anyhow::anyhow!(err))
@@ -75,69 +70,89 @@ impl List {
     async fn display_typegraphs(
         &self,
         dir: PathBuf,
-        typegraphs: Vec<Box<Typegraph>>,
+        local_typegraphs: Vec<Box<Typegraph>>,
     ) -> Result<()> {
-        let mut tables: Vec<Table> = Vec::new();
+        let mut typegraph_entries: Vec<TypegraphEntry> = Vec::new();
 
-        Table::print_table_header();
-
-        for tg in typegraphs {
-            let mut table = Table::new(tg.name().unwrap());
-            table.set_path(tg.get_path().ok());
-            tables.push(table);
+        for tg in local_typegraphs {
+            let entry = TypegraphEntry::new(
+                tg.name().unwrap(),
+                tg.get_path().ok(),
+                None,
+                "-".to_string(),
+            );
+            typegraph_entries.push(entry);
         }
 
-        if let Ok(more_info) = self.get_more_info(dir).await {
-            for tg in more_info {
-                let mut table = Table::new(tg.name);
-                table.set_url(Some(tg.url));
-                tables.push(table);
+        if let Ok(deployed_typegraphs) = self.fetch_deployed_typegraphs(dir).await {
+            for deployed_tg in deployed_typegraphs {
+                if let Some(existing_entry) = typegraph_entries
+                    .iter_mut()
+                    .find(|t| t.name == deployed_tg.name)
+                {
+                    existing_entry.update_deployment_info(deployed_tg.url);
+                } else {
+                    let entry = TypegraphEntry::new(
+                        deployed_tg.name,
+                        None,
+                        Some(deployed_tg.url),
+                        "deployed".to_string(),
+                    );
+                    typegraph_entries.push(entry);
+                }
             }
         }
 
-        Table::print_table_header();
-        for table in tables {
-            println!("{}", table.to_table_row());
+        TypegraphEntry::print_table_header();
+        for entry in typegraph_entries {
+            println!("{}", entry.to_table_row());
         }
-
         Ok(())
     }
 }
 
 #[derive(Debug, Clone)]
-struct Table {
+struct TypegraphEntry {
     name: String,
     path: Option<String>,
     url: Option<String>,
+    deployment_status: String,
 }
 
-impl Table {
-    fn new(name: String) -> Self {
+impl TypegraphEntry {
+    fn new(
+        name: String,
+        path: Option<String>,
+        url: Option<String>,
+        deployment_status: String,
+    ) -> Self {
         Self {
             name,
-            path: None,
-            url: None,
+            path,
+            url,
+            deployment_status,
         }
     }
 
-    fn set_path(&mut self, path: Option<String>) {
-        self.path = path;
-    }
-
-    fn set_url(&mut self, url: Option<String>) {
-        self.url = url;
+    fn update_deployment_info(&mut self, url: String) {
+        self.url = Some(url);
+        self.deployment_status = "deployed".to_string();
     }
 
     fn to_table_row(&self) -> String {
         format!(
-            "{:<50} {:<20} {:<30}",
+            "{:<50} {:<20} {:<50} {:<20}",
             self.name,
-            self.path.as_deref().unwrap_or("None"),
-            self.url.as_deref().unwrap_or("None")
+            self.path.as_deref().unwrap_or("-"),
+            self.url.as_deref().unwrap_or("-"),
+            self.deployment_status
         )
     }
 
     fn print_table_header() {
-        println!("{:<50} {:<20} {:<30}", "NAME", "PATH", "URL");
+        println!(
+            "{:<50} {:<20} {:<50} {:<20}",
+            "NAME", "PATH", "URL", "DEPLOYMENT STATUS"
+        );
     }
 }
