@@ -42,6 +42,7 @@ const syncConfig = transformSyncConfig({
   s3_bucket: syncEnvs.SYNC_S3_BUCKET,
   s3_path_style: true,
 });
+console.log(syncConfig);
 
 // TODO remove after the next release
 // These typegates are disabled because a compatibity issue on the pyrt wasm:
