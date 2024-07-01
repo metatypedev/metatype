@@ -41,11 +41,11 @@ indexmap.workspace = true
 
 # patterns
 once_cell.workspace = true
-lazy_static = "1.4.0"
+lazy_static = "1.5.0"
 crossbeam-channel = "0.5.13"
 itertools.workspace = true
 enum_dispatch = "0.3.13"
-derive_more = "0.99.17"
+derive_more = "0.99.18"
 indoc.workspace = true
 cached = { version = "0.51.3", features = ["proc_macro", "async"] }
 
@@ -83,7 +83,7 @@ serde_yaml = "0.9.33"
 # fs
 normpath = "1.2.0"
 directories = "5.0.1"
-include_dir = "0.7.3"
+include_dir = "0.7.4"
 grep = "0.3.1"
 filetime = "0.2.23"
 notify-debouncer-mini = { version = "0.4.1", default-features = false }
@@ -95,7 +95,7 @@ textwrap = "0.16.1"
 # http
 reqwest = { workspace = true, features = ["json"] }
 actix = "0.13.3"
-actix-web = "4.6.0"
+actix-web = "4.8.0"
 
 # logging
 tracing.workspace = true
