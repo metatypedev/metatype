@@ -1,19 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-use anyhow::{bail, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
 use common::graphql::Query;
 use common::typegraph::Typegraph;
 use reqwest::Url;
-use std::sync::Arc;
 
-use super::serialize::SerializeReportExt;
+use super::serialize::orchestrate_serialization_workflow;
 use super::{Action, ConfigArgs};
-use crate::config::{Config, NodeConfig, PathOption};
-use crate::deploy::actors::console::ConsoleActor;
-use crate::deploy::actors::task::serialize::{SerializeAction, SerializeActionGenerator};
-use crate::deploy::actors::task_manager::{StopReason, TaskManagerInit, TaskSource};
+use crate::config::NodeConfig;
+use crate::deploy::actors::task_manager::TaskSource;
 use crate::interlude::*;
 use serde::Deserialize;
 
@@ -28,46 +25,17 @@ impl Action for List {
     #[tracing::instrument]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
-        let config_path = args.config.clone();
-
-        let config = Arc::new(Config::load_or_find(config_path, &dir)?);
-
-        let console = ConsoleActor::new(Arc::clone(&config)).start();
-
-        let action_generator = SerializeActionGenerator::new(
-            config.dir().unwrap_or_log().into(),
-            dir.clone().into(),
-            config
-                .prisma_migrations_base_dir(PathOption::Absolute)
-                .into(),
-            true,
-        );
 
         let task_source = TaskSource::Discovery(dir.clone().into());
 
-        let mut init = TaskManagerInit::<SerializeAction>::new(
-            Arc::clone(&config),
-            action_generator,
-            console,
+        let typegraphs = orchestrate_serialization_workflow(
+            args,
+            dir.clone(),
+            None,
+            self.max_parallel_loads,
             task_source,
-        );
-
-        if let Some(max_parallel_tasks) = self.max_parallel_loads {
-            init = init.max_parallel_tasks(max_parallel_tasks);
-        }
-
-        let report = init.run().await;
-
-        match report.stop_reason {
-            StopReason::Error => bail!("Task manager stopped due to error."),
-            StopReason::Manual | StopReason::ManualForced => {
-                bail!("Task manager stopped manually.")
-            }
-            StopReason::Natural => {}
-            StopReason::Restart => panic!("Restart is not supported for serialization."),
-        }
-
-        let typegraphs = report.into_typegraphs()?;
+        )
+        .await?;
 
         self.display_typegraphs(dir, typegraphs).await
     }

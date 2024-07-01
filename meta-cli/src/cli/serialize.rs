@@ -47,56 +47,78 @@ pub struct Serialize {
     max_parallel_loads: Option<usize>,
 }
 
+#[allow(clippy::vec_box)]
+pub async fn orchestrate_serialization_workflow(
+    args: ConfigArgs,
+    dir: PathBuf,
+    files: Option<Vec<PathBuf>>,
+    max_parallel_loads: Option<usize>,
+    task_source: TaskSource,
+) -> Result<Vec<Box<Typegraph>>> {
+    let config_path = args.config.clone();
+
+    let config = Config::load_or_find(config_path, &dir)?;
+
+    let config = Arc::new(config);
+
+    let console = ConsoleActor::new(Arc::clone(&config)).start();
+
+    let action_generator = SerializeActionGenerator::new(
+        config.dir().unwrap_or_log().into(),
+        dir.clone().into(),
+        config
+            .prisma_migrations_base_dir(PathOption::Absolute)
+            .into(),
+        true,
+    );
+
+    if files.is_some_and(|f| f.is_empty()) {
+        bail!("no file provided");
+    }
+
+    // TODO fail_fast
+    let mut init = TaskManagerInit::<SerializeAction>::new(
+        config.clone(),
+        action_generator,
+        console,
+        task_source,
+    );
+    if let Some(max_parallel_tasks) = max_parallel_loads {
+        init = init.max_parallel_tasks(max_parallel_tasks);
+    }
+
+    let report = init.run().await;
+
+    match report.stop_reason {
+        StopReason::Error => bail!("failed"),
+        StopReason::Manual | StopReason::ManualForced => {
+            bail!("cancelled")
+        }
+        StopReason::Natural => {}
+        StopReason::Restart => panic!("restart not supported for serialize"),
+    }
+
+    let typegrahs = report.into_typegraphs()?;
+
+    Ok(typegrahs)
+}
+
 #[async_trait]
 impl Action for Serialize {
     #[tracing::instrument]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
-        let config_path = args.config.clone();
 
-        let config = Config::load_or_find(config_path, &dir)?;
+        let task_source = TaskSource::Static(self.files.clone());
 
-        let config = Arc::new(config);
-
-        let console = ConsoleActor::new(Arc::clone(&config)).start();
-
-        let action_generator = SerializeActionGenerator::new(
-            config.dir().unwrap_or_log().into(),
-            dir.into(),
-            config
-                .prisma_migrations_base_dir(PathOption::Absolute)
-                .into(),
-            true,
-        );
-
-        if self.files.is_empty() {
-            bail!("no file provided");
-        }
-
-        // TODO fail_fast
-        let mut init = TaskManagerInit::<SerializeAction>::new(
-            config.clone(),
-            action_generator,
-            console,
-            TaskSource::Static(self.files.clone()),
-        );
-        if let Some(max_parallel_tasks) = self.max_parallel_loads {
-            init = init.max_parallel_tasks(max_parallel_tasks);
-        }
-
-        let report = init.run().await;
-
-        match report.stop_reason {
-            StopReason::Error => bail!("failed"),
-            StopReason::Manual | StopReason::ManualForced => {
-                bail!("cancelled")
-            }
-            StopReason::Natural => {}
-            StopReason::Restart => panic!("restart not supported for serialize"),
-        }
-
-        // TODO no need to report errors
-        let tgs = report.into_typegraphs()?;
+        let tgs = orchestrate_serialization_workflow(
+            args,
+            dir.clone(),
+            Some(self.files.clone()),
+            self.max_parallel_loads,
+            task_source,
+        )
+        .await?;
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
@@ -135,7 +157,7 @@ impl SerializeReportExt for Report<SerializeAction> {
             match entry.status {
                 TaskFinishStatus::Finished(results) => {
                     for (_, tg) in results.into_iter() {
-                        let tg = tg.map_err(|_e| {
+                        let mut tg = tg.map_err(|_e| {
                             // tracing::error!(
                             //     "serialization failed for typegraph '{}' at {:?}",
                             //     e.typegraph,
@@ -146,6 +168,7 @@ impl SerializeReportExt for Report<SerializeAction> {
                             // }
                             ferr!("failed")
                         })?;
+                        tg.path = Some(entry.path.clone());
                         res.push(tg);
                     }
                 }
