@@ -120,10 +120,11 @@ Meta.test(
     name: "Deno runtime - Python SDK: file name reloading in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -160,10 +161,11 @@ Meta.test(
     name: "Deno runtime - Python SDK: use local imports in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -187,10 +189,11 @@ Meta.test(
     name: "DenoRuntime - TS SDK: artifacts and deps in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (metaTest) => {
@@ -216,10 +219,11 @@ Meta.test(
     replicas: 1,
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (metaTest) => {
@@ -254,10 +258,11 @@ Meta.test(
     name: "Deno runtime - TS SDK: file name reloading in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -303,10 +308,11 @@ Meta.test(
     name: "Deno runtime - TS SDK: script reloading in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -354,10 +360,11 @@ Meta.test(
     sanitizeOps: false,
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -394,10 +401,11 @@ Meta.test(
     name: "Deno runtime - TS SDK: with no artifacts in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -424,10 +432,11 @@ Meta.test(
     name: "Deno runtime - Python SDK: with no artifacts in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -452,10 +461,11 @@ Meta.test(
     name: "Deno runtime - TS SDK: with duplicate artifacts in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -482,10 +492,11 @@ Meta.test(
     name: "Deno runtime - Python SDK: with duplicate artifacts in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -512,10 +523,11 @@ Meta.test(
     name: "DenoRuntime - Sync mode: support for dirs when adding deps",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -560,10 +572,11 @@ Meta.test(
     name: "DenoRuntime - Sync mode: support for globs when adding deps",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {

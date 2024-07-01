@@ -40,7 +40,7 @@ const syncConfig = transformSyncConfig({
   s3_access_key: syncEnvs.SYNC_S3_ACCESS_KEY,
   s3_secret_key: syncEnvs.SYNC_S3_SECRET_KEY,
   s3_bucket: syncEnvs.SYNC_S3_BUCKET,
-  s3_path_style: false,
+  s3_path_style: true,
 });
 
 // TODO remove after the next release
