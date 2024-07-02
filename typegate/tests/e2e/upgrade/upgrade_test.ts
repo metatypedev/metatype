@@ -229,8 +229,8 @@ Meta.test(
     const typegraphs2: string[] = [];
 
     await t.should("upgrade the typegate to the current version", async () => {
-      const proc = new Deno.Command("cargo", {
-        args: ["run", "-p", "meta-cli", "-F", "typegate", "--", "typegate"],
+      const proc = new Deno.Command("meta-full", {
+        args: ["typegate"],
         env: {
           ...Deno.env.toObject(),
           TG_SECRET: tgSecret,
