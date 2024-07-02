@@ -20,7 +20,7 @@ export class LineReader {
   }
 
   // return true if the stream is exhausted
-  async readUntil(
+  async readWhile(
     check: Consumer,
     timeoutMs: number | null = 30_000,
   ): Promise<boolean> {
