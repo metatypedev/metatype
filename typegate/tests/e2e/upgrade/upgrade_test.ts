@@ -242,10 +242,17 @@ Meta.test(
           ...syncEnvs,
         },
         stdout: "piped",
-        // stderr: "piped",
+        stderr: "piped",
       }).spawn();
 
       const stdout = new ProcessOutputLines(proc.stdout);
+      const stderr = new ProcessOutputLines(proc.stderr);
+
+      stderr.fetchUntil((line) => {
+        console.log("typegate[E]>", line);
+        return true;
+      }, 300000);
+
       await stdout.fetchUntil((line) => {
         console.log("typegate>", line);
         const match = $.stripAnsi(line).match(/reloaded addition: (.+)/);
@@ -253,8 +260,10 @@ Meta.test(
           typegraphs2.push(match[1]);
         }
         return !line.includes("typegate ready on 7899");
-      });
+      }, 300000);
+
       await stdout.close();
+      await stderr.close();
       proc.kill("SIGKILL");
       const status = await proc.status;
       console.log({ status });
