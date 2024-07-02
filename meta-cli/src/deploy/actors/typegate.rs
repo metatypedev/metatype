@@ -222,7 +222,6 @@ struct LogRecord<'a> {
 impl<'a> LogRecord<'a> {
     fn from_line(line: &'a str) -> Option<Self> {
         let (first, tail) = line.split_once(' ')?;
-        debug!("first: {first}; tail: {tail}");
         let _ = chrono::DateTime::parse_from_rfc3339(first).ok()?;
         if tail.chars().next()? != '[' {
             return None;

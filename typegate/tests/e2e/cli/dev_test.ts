@@ -3,11 +3,12 @@
 
 import { gql, Meta } from "test-utils/mod.ts";
 import { join, resolve } from "std/path/mod.ts";
-import { assert, assertRejects } from "std/assert/mod.ts";
+import { assert, assertEquals, assertRejects } from "std/assert/mod.ts";
 import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "dax";
 import { killProcess, LineReader, LineWriter } from "../../utils/process.ts";
+import { workspaceDir } from "../../utils/dir.ts";
 
 const m = new TestModule(import.meta);
 
@@ -66,7 +67,7 @@ Meta.test(
     const stderr = new LineReader(metadev.stderr);
     const stdin = new LineWriter(metadev.stdin);
 
-    await stderr.readUntil((line) => {
+    await stderr.readWhile((line) => {
       // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test from migration.py",
@@ -95,7 +96,7 @@ Meta.test(
 
     await t.should("load second version of the typegraph", async () => {
       await writeTypegraph(1, tgDefPath);
-      await stderr.readUntil((line) => {
+      await stderr.readWhile((line) => {
         // console.log("line:", line);
         return !line.includes("[select]");
       });
@@ -103,7 +104,7 @@ Meta.test(
       await stdin.writeLine("3");
     });
 
-    await stderr.readUntil((line) => {
+    await stderr.readWhile((line) => {
       // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test",
@@ -185,7 +186,7 @@ Meta.test(
     const stderr = new LineReader(metadev.stderr);
     const stdin = new LineWriter(metadev.stdin);
 
-    await stderr.readUntil((line) => {
+    await stderr.readWhile((line) => {
       // console.log("line:", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test",
@@ -225,7 +226,7 @@ Meta.test(
 
     await t.should("load second version of the typegraph", async () => {
       await writeTypegraph(1, tgDefFile);
-      await stderr.readUntil((line) => {
+      await stderr.readWhile((line) => {
         // console.log("line:", line);
         return !line.includes("[select]");
       });
@@ -235,7 +236,7 @@ Meta.test(
       await stdin.writeLine("1");
     });
 
-    await stderr.readUntil((line) => {
+    await stderr.readWhile((line) => {
       // console.log("line:", line);
       return !line.includes("Removed migration directory");
     });
@@ -249,3 +250,82 @@ Meta.test(
     await killProcess(metadev);
   },
 );
+
+const examplesDir = $.path(workspaceDir).join("examples");
+
+Meta.test("meta dev with typegate", async (t) => {
+  const metadev = new Deno.Command("meta-full", {
+    cwd: examplesDir.toString(),
+    args: ["dev"],
+    stderr: "piped",
+  }).spawn();
+  const stderr = new LineReader(metadev.stderr);
+
+  const deployed: [string, string][] = [];
+
+  await stderr.readWhile((rawLine) => {
+    const line = $.stripAnsi(rawLine);
+    // console.log("meta-full dev>", line);
+    const match = line.match(
+      /successfully deployed typegraph ([\w_-]+) from (.+)$/,
+    );
+    if (match) {
+      const prefix = "typegraphs/";
+      if (!match[2].startsWith(prefix)) {
+        throw new Error("unexpected");
+      }
+      deployed.push([match[2].slice(prefix.length), match[1]]);
+    }
+    return deployed.length < 41;
+  });
+
+  await t.should("have deployed all the typegraphs", () => {
+    // TODO use `meta list`
+    assertEquals(deployed.sort(), [
+      ["authentication.ts", "authentication"],
+      ["backend-for-frontend.ts", "backend-for-frontend"],
+      ["basic.ts", "basic-authentication"],
+      ["cors.ts", "cors"],
+      ["database.ts", "database"],
+      ["deno.ts", "deno"],
+      ["example_rest.ts", "example-rest"],
+      ["execute.ts", "roadmap-execute"],
+      ["faas-runner.ts", "faas-runner"],
+      ["files-upload.ts", "files-upload"],
+      ["first-typegraph.ts", "first-typegraph"],
+      ["func-ctx.ts", "func-ctx"],
+      ["func-gql.ts", "func-gql"],
+      ["func.ts", "roadmap-func"],
+      ["graphql-server.ts", "graphql-server"],
+      ["graphql.ts", "graphql"],
+      ["http-runtime.ts", "http-runtime"],
+      ["iam-provider.ts", "iam-provider"],
+      ["index.ts", "homepage"],
+      ["injections.ts", "injection-example"],
+      ["jwt.ts", "jwt-authentication"],
+      ["math.ts", "math"],
+      ["metagen-deno.ts", "metagen-deno"],
+      ["metagen-py.ts", "metagen-py"],
+      ["metagen-rs.ts", "metagen-rs"],
+      ["metagen-sdk.ts", "metagen-sdk"],
+      ["microservice-orchestration.ts", "team-a"],
+      ["microservice-orchestration.ts", "team-b"],
+      ["oauth2.ts", "oauth2-authentication"],
+      ["policies.ts", "policies"],
+      ["prisma-runtime.ts", "prisma-runtime"],
+      ["prisma.ts", "roadmap-prisma"],
+      ["programmable-api-gateway.ts", "programmable-api-gateway"],
+      ["quick-start-project.ts", "quick-start-project"],
+      ["random-field.ts", "random-field"],
+      ["rate.ts", "rate"],
+      ["reduce.ts", "roadmap-reduce"],
+      ["rest.ts", "roadmap-rest"],
+      ["roadmap-policies.ts", "roadmap-policies"],
+      ["roadmap-random.ts", "roadmap-random"],
+      ["triggers.ts", "triggers"],
+    ]);
+  });
+
+  await stderr.close();
+  await killProcess(metadev);
+});
