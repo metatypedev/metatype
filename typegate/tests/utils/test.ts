@@ -151,10 +151,6 @@ export class MetaTest {
 
   getTypegraphEngine(name: string): QueryEngine | undefined {
     const register = this.typegates.next().register;
-    console.log(
-      "available typegraphs",
-      register.list().map((e) => e.name),
-    );
     return register.get(name);
   }
 
