@@ -4,7 +4,7 @@
 use self::actors::task::deploy::{DeployAction, DeployActionGenerator};
 use self::actors::task_manager::{self, StopReason};
 use super::{Action, ConfigArgs, NodeArgs};
-use crate::config::{Config, NodeConfig};
+use crate::config::Config;
 use crate::deploy::actors;
 use crate::deploy::actors::console::ConsoleActor;
 use crate::interlude::*;
@@ -89,7 +89,7 @@ pub struct Deploy {
     config: Arc<Config>,
     node: Node,
     #[cfg(feature = "typegate")]
-    node_config: NodeConfig,
+    node_config: crate::config::NodeConfig,
     base_dir: Arc<Path>,
     options: DeployOptions,
     secrets: RawSecrets,
@@ -123,6 +123,7 @@ impl Deploy {
         Ok(Self {
             config,
             node,
+            #[cfg(feature = "typegate")]
             node_config,
             base_dir: dir.clone(),
             options,
