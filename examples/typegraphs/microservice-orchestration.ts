@@ -15,7 +15,7 @@ function getEnvOrDefault(key: string, defaultValue: string) {
 }
 // skip:end
 
-typegraph(
+await typegraph(
   {
     name: "team-a",
     // skip:next-line
@@ -26,7 +26,7 @@ typegraph(
 
     const deno = new DenoRuntime();
     const records = new GraphQLRuntime(
-      getEnvOrDefault("TG_URL", "http://localhost:7890" + "/team-b")
+      getEnvOrDefault("TG_URL", "http://localhost:7890" + "/team-b"),
     );
 
     g.expose(
@@ -34,12 +34,12 @@ typegraph(
         version_team_b: records.query(t.struct({}), t.integer(), ["version"]),
         version_team_a: deno.static(t.integer(), 3),
       },
-      pub
+      pub,
     );
-  }
+  },
 );
 
-typegraph(
+await typegraph(
   {
     name: "team-b",
     // skip:next-line
@@ -55,7 +55,7 @@ typegraph(
         version: deno.static(t.integer(), 12),
         record: deno.static(t.struct({ weight: t.integer() }), { weight: 100 }),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

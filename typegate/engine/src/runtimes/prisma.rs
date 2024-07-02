@@ -124,9 +124,7 @@ pub async fn op_prisma_diff(
         let state = state.borrow();
         state.borrow::<Ctx>().tmp_dir.clone()
     };
-    let res = migration::diff(&tmp_dir, input.datasource, datamodel, input.script).await;
-    eprintln!("diff result: {:?}", res);
-    res
+    migration::diff(&tmp_dir, input.datasource, datamodel, input.script).await
 }
 
 #[derive(Deserialize)]

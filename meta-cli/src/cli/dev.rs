@@ -27,6 +27,11 @@ pub struct Dev {
     /// secrets overload
     #[clap(long = "secret")]
     secrets: Vec<String>,
+
+    #[cfg(feature = "typegate")]
+    /// Do not run a typegate. By default a typegate is run with the current target configuration
+    #[clap(long)]
+    no_typegate: bool,
 }
 
 #[async_trait]
@@ -41,6 +46,8 @@ impl Action for Dev {
             no_migration: false,
             create_migration: true,
             secrets: self.secrets.clone(),
+            #[cfg(feature = "typegate")]
+            run_typegate: !self.no_typegate,
         };
 
         let deploy = DeploySubcommand::new(

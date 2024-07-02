@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "test-utils/mod.ts";
-import { MetaDev } from "test-utils/metadev.ts";
 import { join, resolve } from "std/path/mod.ts";
-import { assert, assertRejects } from "std/assert/mod.ts";
+import { assert, assertEquals, assertRejects } from "std/assert/mod.ts";
 import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "dax";
+import { killProcess, LineReader, LineWriter } from "../../utils/process.ts";
+import { workspaceDir } from "../../utils/dir.ts";
 
 const m = new TestModule(import.meta);
 
@@ -49,7 +50,7 @@ Meta.test(
       await writeTypegraph(null, tgDefPath);
     });
 
-    const metadev = await MetaDev.start({
+    const metadev = new Deno.Command("meta", {
       cwd: t.workingDir,
       args: [
         "dev",
@@ -58,10 +59,16 @@ Meta.test(
         "--secret",
         `migration-failure-test:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
       ],
-    });
+      // stdout: "piped",
+      stderr: "piped",
+      stdin: "piped",
+    }).spawn();
 
-    await metadev.fetchStderrLines((line) => {
-      // console.log("line:", line);
+    const stderr = new LineReader(metadev.stderr);
+    const stdin = new LineWriter(metadev.stdin);
+
+    await stderr.readWhile((line) => {
+      // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test from migration.py",
       );
@@ -89,16 +96,16 @@ Meta.test(
 
     await t.should("load second version of the typegraph", async () => {
       await writeTypegraph(1, tgDefPath);
-      await metadev.fetchStderrLines((line) => {
+      await stderr.readWhile((line) => {
         // console.log("line:", line);
         return !line.includes("[select]");
       });
 
-      await metadev.writeLine("3");
+      await stdin.writeLine("3");
     });
 
-    await metadev.fetchStderrLines((line) => {
-      // console.log("line:", line);
+    await stderr.readWhile((line) => {
+      // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test",
       );
@@ -123,7 +130,9 @@ Meta.test(
         .on(e);
     });
 
-    await metadev.close();
+    await stderr.close();
+    await stdin.close();
+    await killProcess(metadev);
   },
 );
 
@@ -161,7 +170,7 @@ Meta.test(
       await writeTypegraph(null, tgDefFile);
     });
 
-    const metadev = await MetaDev.start({
+    const metadev = new Deno.Command("meta", {
       cwd: t.workingDir,
       args: [
         "dev",
@@ -169,9 +178,15 @@ Meta.test(
         `--gate=http://localhost:${t.port}`,
         `--secret=migration-failure-test:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
       ],
-    });
+      // stdout: "piped",
+      stderr: "piped",
+      stdin: "piped",
+    }).spawn();
 
-    await metadev.fetchStderrLines((line) => {
+    const stderr = new LineReader(metadev.stderr);
+    const stdin = new LineWriter(metadev.stdin);
+
+    await stderr.readWhile((line) => {
       // console.log("line:", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test",
@@ -211,17 +226,17 @@ Meta.test(
 
     await t.should("load second version of the typegraph", async () => {
       await writeTypegraph(1, tgDefFile);
-      await metadev.fetchStderrLines((line) => {
+      await stderr.readWhile((line) => {
         // console.log("line:", line);
         return !line.includes("[select]");
       });
 
       assert((await listSubdirs(migrationsDir)).length === 2);
 
-      await metadev.writeLine("1");
+      await stdin.writeLine("1");
     });
 
-    await metadev.fetchStderrLines((line) => {
+    await stderr.readWhile((line) => {
       // console.log("line:", line);
       return !line.includes("Removed migration directory");
     });
@@ -230,6 +245,87 @@ Meta.test(
       assert((await listSubdirs(migrationsDir)).length === 1);
     });
 
-    await metadev.close();
+    await stderr.close();
+    await stdin.close();
+    await killProcess(metadev);
   },
 );
+
+const examplesDir = $.path(workspaceDir).join("examples");
+
+Meta.test("meta dev with typegate", async (t) => {
+  const metadev = new Deno.Command("meta-full", {
+    cwd: examplesDir.toString(),
+    args: ["dev"],
+    stderr: "piped",
+  }).spawn();
+  const stderr = new LineReader(metadev.stderr);
+
+  const deployed: [string, string][] = [];
+
+  await stderr.readWhile((rawLine) => {
+    const line = $.stripAnsi(rawLine);
+    // console.log("meta-full dev>", line);
+    const match = line.match(
+      /successfully deployed typegraph ([\w_-]+) from (.+)$/,
+    );
+    if (match) {
+      const prefix = "typegraphs/";
+      if (!match[2].startsWith(prefix)) {
+        throw new Error("unexpected");
+      }
+      deployed.push([match[2].slice(prefix.length), match[1]]);
+    }
+    return deployed.length < 41;
+  });
+
+  await t.should("have deployed all the typegraphs", () => {
+    // TODO use `meta list`
+    assertEquals(deployed.sort(), [
+      ["authentication.ts", "authentication"],
+      ["backend-for-frontend.ts", "backend-for-frontend"],
+      ["basic.ts", "basic-authentication"],
+      ["cors.ts", "cors"],
+      ["database.ts", "database"],
+      ["deno.ts", "deno"],
+      ["example_rest.ts", "example-rest"],
+      ["execute.ts", "roadmap-execute"],
+      ["faas-runner.ts", "faas-runner"],
+      ["files-upload.ts", "files-upload"],
+      ["first-typegraph.ts", "first-typegraph"],
+      ["func-ctx.ts", "func-ctx"],
+      ["func-gql.ts", "func-gql"],
+      ["func.ts", "roadmap-func"],
+      ["graphql-server.ts", "graphql-server"],
+      ["graphql.ts", "graphql"],
+      ["http-runtime.ts", "http-runtime"],
+      ["iam-provider.ts", "iam-provider"],
+      ["index.ts", "homepage"],
+      ["injections.ts", "injection-example"],
+      ["jwt.ts", "jwt-authentication"],
+      ["math.ts", "math"],
+      ["metagen-deno.ts", "metagen-deno"],
+      ["metagen-py.ts", "metagen-py"],
+      ["metagen-rs.ts", "metagen-rs"],
+      ["metagen-sdk.ts", "metagen-sdk"],
+      ["microservice-orchestration.ts", "team-a"],
+      ["microservice-orchestration.ts", "team-b"],
+      ["oauth2.ts", "oauth2-authentication"],
+      ["policies.ts", "policies"],
+      ["prisma-runtime.ts", "prisma-runtime"],
+      ["prisma.ts", "roadmap-prisma"],
+      ["programmable-api-gateway.ts", "programmable-api-gateway"],
+      ["quick-start-project.ts", "quick-start-project"],
+      ["random-field.ts", "random-field"],
+      ["rate.ts", "rate"],
+      ["reduce.ts", "roadmap-reduce"],
+      ["rest.ts", "roadmap-rest"],
+      ["roadmap-policies.ts", "roadmap-policies"],
+      ["roadmap-random.ts", "roadmap-random"],
+      ["triggers.ts", "triggers"],
+    ]);
+  });
+
+  await stderr.close();
+  await killProcess(metadev);
+});

@@ -76,12 +76,20 @@ pub struct DeployOptions {
     /// Overrides secrets in the format `[<typegraph-name>:]<secret-name>=<value>`
     #[clap(long = "secret")]
     pub secrets: Vec<String>,
+
+    // FIXME incompatible with non-watch mode
+    #[cfg(feature = "typegate")]
+    /// Run a typegate with the current target configuration
+    #[clap(long)]
+    pub run_typegate: bool,
 }
 
 #[derive(Debug)]
 pub struct Deploy {
     config: Arc<Config>,
     node: Node,
+    #[cfg(feature = "typegate")]
+    node_config: crate::config::NodeConfig,
     base_dir: Arc<Path>,
     options: DeployOptions,
     secrets: RawSecrets,
@@ -115,6 +123,8 @@ impl Deploy {
         Ok(Self {
             config,
             node,
+            #[cfg(feature = "typegate")]
+            node_config,
             base_dir: dir.clone(),
             options,
             secrets,
@@ -282,6 +292,20 @@ mod watch_mode {
             deploy.options.create_migration,
             deploy.options.allow_destructive,
         );
+
+        #[cfg(feature = "typegate")]
+        let _typegate_addr = if deploy.options.run_typegate {
+            use crate::deploy::actors::typegate::TypegateInit;
+            info!("starting typegate");
+            Some(
+                TypegateInit::new(&deploy.node_config, &deploy.base_dir)
+                    .await?
+                    .start(console.clone())
+                    .await?,
+            )
+        } else {
+            None
+        };
 
         let mut init = TaskManagerInit::<DeployAction>::new(
             deploy.config.clone(),
