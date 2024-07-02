@@ -236,6 +236,17 @@ impl<'a> LogRecord<'a> {
         })
     }
 
+    // Log records from Rust have different format, and are sent to stderr
+    fn from_line_native(line: &'a str) -> Option<Self> {
+        let (level, message) = line.split_once(' ')?;
+        let level = LogLevel::from_str(level)?;
+        Some(Self {
+            level,
+            scope: "",
+            message,
+        })
+    }
+
     fn log(&self, console: &Addr<ConsoleActor>) {
         // let prefix = format!("typegate ({})>", self.scope);
         let prefix = "typegate>";
@@ -313,7 +324,13 @@ impl TypegateActor {
         };
 
         while let Some(line) = error_handler.handle(reader.next_line().await) {
-            console.error(format!("{prefix} {line}"));
+            let naked_line = strip_ansi_escapes::strip_str(&line);
+            log::debug!("from line native: {naked_line:?}");
+            if let Some(log_record) = LogRecord::from_line_native(&naked_line) {
+                log_record.log(&console);
+            } else {
+                console.error(format!("{prefix} {line}"));
+            }
         }
 
         addr.do_send(message::Stop);
