@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "test-utils/mod.ts";
-import { MetaDev } from "test-utils/metadev.ts";
 import { join, resolve } from "std/path/mod.ts";
 import { assert, assertRejects } from "std/assert/mod.ts";
 import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "dax";
+import { killProcess, LineReader, LineWriter } from "../../utils/process.ts";
 
 const m = new TestModule(import.meta);
 
@@ -49,7 +49,7 @@ Meta.test(
       await writeTypegraph(null, tgDefPath);
     });
 
-    const metadev = await MetaDev.start({
+    const metadev = new Deno.Command("meta", {
       cwd: t.workingDir,
       args: [
         "dev",
@@ -58,9 +58,15 @@ Meta.test(
         "--secret",
         `migration-failure-test:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
       ],
-    });
+      // stdout: "piped",
+      stderr: "piped",
+      stdin: "piped",
+    }).spawn();
 
-    await metadev.fetchStderrLines((line) => {
+    const stderr = new LineReader(metadev.stderr);
+    const stdin = new LineWriter(metadev.stdin);
+
+    await stderr.readUntil((line) => {
       // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test from migration.py",
@@ -89,15 +95,15 @@ Meta.test(
 
     await t.should("load second version of the typegraph", async () => {
       await writeTypegraph(1, tgDefPath);
-      await metadev.fetchStderrLines((line) => {
+      await stderr.readUntil((line) => {
         // console.log("line:", line);
         return !line.includes("[select]");
       });
 
-      await metadev.writeLine("3");
+      await stdin.writeLine("3");
     });
 
-    await metadev.fetchStderrLines((line) => {
+    await stderr.readUntil((line) => {
       // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test",
@@ -123,7 +129,9 @@ Meta.test(
         .on(e);
     });
 
-    await metadev.close();
+    await stderr.close();
+    await stdin.close();
+    await killProcess(metadev);
   },
 );
 
@@ -161,7 +169,7 @@ Meta.test(
       await writeTypegraph(null, tgDefFile);
     });
 
-    const metadev = await MetaDev.start({
+    const metadev = new Deno.Command("meta", {
       cwd: t.workingDir,
       args: [
         "dev",
@@ -169,9 +177,15 @@ Meta.test(
         `--gate=http://localhost:${t.port}`,
         `--secret=migration-failure-test:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
       ],
-    });
+      // stdout: "piped",
+      stderr: "piped",
+      stdin: "piped",
+    }).spawn();
 
-    await metadev.fetchStderrLines((line) => {
+    const stderr = new LineReader(metadev.stderr);
+    const stdin = new LineWriter(metadev.stdin);
+
+    await stderr.readUntil((line) => {
       // console.log("line:", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test",
@@ -211,17 +225,17 @@ Meta.test(
 
     await t.should("load second version of the typegraph", async () => {
       await writeTypegraph(1, tgDefFile);
-      await metadev.fetchStderrLines((line) => {
+      await stderr.readUntil((line) => {
         // console.log("line:", line);
         return !line.includes("[select]");
       });
 
       assert((await listSubdirs(migrationsDir)).length === 2);
 
-      await metadev.writeLine("1");
+      await stdin.writeLine("1");
     });
 
-    await metadev.fetchStderrLines((line) => {
+    await stderr.readUntil((line) => {
       // console.log("line:", line);
       return !line.includes("Removed migration directory");
     });
@@ -230,6 +244,8 @@ Meta.test(
       assert((await listSubdirs(migrationsDir)).length === 1);
     });
 
-    await metadev.close();
+    await stderr.close();
+    await stdin.close();
+    await killProcess(metadev);
   },
 );
