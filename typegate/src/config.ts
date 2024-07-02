@@ -32,11 +32,9 @@ async function getHostname() {
   }
 }
 
-if (!Deno.env.has("VERSION")) {
-  // set version for config and workers, only running in main engine
-  const { get_version } = await import("native");
-  Deno.env.set("VERSION", get_version());
-}
+// set version for config and workers, only running in main engine
+const { get_version } = await import("native");
+Deno.env.set("VERSION", get_version());
 
 export const globalConfig = configOrExit(
   globalConfigSchema,
@@ -84,7 +82,7 @@ function argsAsConfig() {
   );
 }
 
-function transformSyncConfig(raw: SyncConfig): SyncConfigX {
+export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
   const { hostname, port, password, pathname } = raw.redis_url;
   const redisDb = parseInt(pathname.slice(1));
   if (isNaN(redisDb)) {

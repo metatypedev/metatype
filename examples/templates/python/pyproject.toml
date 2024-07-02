@@ -6,7 +6,7 @@ authors = []
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-typegraph = "0.4.4-0"
+typegraph = "0.4.3"
 
 [build-system]
 requires = ["poetry-core"]

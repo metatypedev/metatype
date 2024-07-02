@@ -37,7 +37,7 @@ env("main")
 env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v24.1" }),
-  ports.pipi({ packageName: "cmake" })[0]
+  ports.pipi({ packageName: "cmake" })[0],
 );
 
 if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
@@ -45,14 +45,14 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
     ports.mold({
       version: "v2.4.0",
       replaceLd: true,
-    })
+    }),
   );
 }
 
 env("_ecma").install(
   installs.node,
   ports.pnpm({ version: "v9.4.0" }),
-  ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0]
+  ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
 );
 
 env("_python").install(
@@ -64,7 +64,7 @@ env("_python").install(
   ports.pipi({
     packageName: "poetry",
     version: "1.7.0",
-  })[0]
+  })[0],
 );
 
 env("_wasm").install(
@@ -83,7 +83,7 @@ env("_wasm").install(
   ports.npmi({
     packageName: "@bytecodealliance/jco",
     version: "1.3.0",
-  })[0]
+  })[0],
 );
 
 env("oci").inherit(["_rust", "_wasm"]);
@@ -102,7 +102,7 @@ env("ci")
       crateName: "cross",
       version: "0.2.5",
       locked: true,
-    })
+    }),
   );
 
 env("dev")
@@ -110,7 +110,7 @@ env("dev")
   .install(
     ports.act(),
     ports.cargobi({ crateName: "whiz", locked: true }),
-    ports.cargobi({ crateName: "wit-deps-cli", locked: true })
+    ports.cargobi({ crateName: "wit-deps-cli", locked: true }),
   );
 
 task("version-print", () => console.log(METATYPE_VERSION), {
@@ -131,19 +131,26 @@ task("version-bump", async ($) => {
 
   if (!bumps.includes(bump)) {
     throw new Error(
-      `invalid argument "${bump}", valid are: ${bumps.join(", ")}`
+      `invalid argument "${bump}", valid are: ${bumps.join(", ")}`,
     );
   }
 
   const newVersion = semver.format(
-    semver.increment(semver.parse(METATYPE_VERSION), bump as semver.ReleaseType)
+    semver.increment(
+      semver.parse(METATYPE_VERSION),
+      bump as semver.ReleaseType,
+    ),
   );
+
+  const lines = [[/^(export const METATYPE_VERSION = ").*(";)$/, newVersion]];
+  if (bump !== "prerelease") {
+    lines.push([/^(export const PUBLISHED_VERSION = ").*(";)$/, newVersion]);
+  }
+
   $.logStep(`Bumping ${METATYPE_VERSION} → ${newVersion}`);
   await sedLock($.workingDir, {
     lines: {
-      "./dev/consts.ts": [
-        [/^(export const METATYPE_VERSION = ").*(";)$/, newVersion],
-      ],
+      "./dev/consts.ts": lines,
     },
   });
   await $`ghjk x lock-sed`;

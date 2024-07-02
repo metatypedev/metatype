@@ -10,7 +10,7 @@ export const WASMTIME_PY_VERSION = "21.0.0";
 export const TYPEGRAPH_VERSION = "0.0.3";
 export const PRISMA_VERSION = "5.6.0";
 export const METATYPE_VERSION = "0.4.4-0";
-export const PUBLISHED_VERSION = "0.4.2";
+export const PUBLISHED_VERSION = "0.4.3";
 export const SDK_PACKAGE_NAME_TS = "@typegraph/sdk";
 export const TAGLINE =
   `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.`;
@@ -33,6 +33,9 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   ],
   "typegate/tests/**/*.snap": [
     [/(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)/, METATYPE_VERSION],
+  ],
+  "typegate/tests/e2e/upgrade/upgrade_test.ts": [
+    [/(const\s+PUBLISHED_VERSION\s*=\s*").+(";)/, PUBLISHED_VERSION],
   ],
   "typegraph/python/typegraph/__init__.py": [
     ['(version = ").+(")', METATYPE_VERSION],
@@ -79,17 +82,19 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     ['(version = ").+(")', METATYPE_VERSION],
     [/(wasmtime = "\^).+(")/, WASMTIME_PY_VERSION],
   ],
-  "examples/**/compose.yml": [
+  "examples/templates/**/compose.yml": [
     ["(    image: ghcr.io/metatypedev/typegate:v).+()", PUBLISHED_VERSION],
   ],
-  "examples/**/pyproject.toml": [['(typegraph = ").+(")', METATYPE_VERSION]],
-  "examples/**/package.json": [
-    [/(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)/, METATYPE_VERSION],
+  "examples/templates/**/pyproject.toml": [
+    ['(typegraph = ").+(")', PUBLISHED_VERSION],
+  ],
+  "examples/templates/**/package.json": [
+    [/(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)/, PUBLISHED_VERSION],
   ],
   "examples/**/*.ts": [
     [
       /(import\s+.+\s+from "npm:@typegraph\/sdk@)[^\/]+(\/.+";)/,
-      METATYPE_VERSION,
+      PUBLISHED_VERSION,
     ],
   ],
   "CONTRIBUTING.md": [[/(GHJK_VERSION=").*(")/, GHJK_VERSION]],
