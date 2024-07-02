@@ -97,7 +97,7 @@ export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
   };
 
   const s3 = {
-    endpoint: raw.s3_host.origin,
+    endpoint: raw.s3_host.href,
     region: raw.s3_region,
     credentials: {
       accessKeyId: raw.s3_access_key,
