@@ -22,7 +22,7 @@ export class ProcessOutputLines {
   // return true if the stream is exhausted
   async fetchUntil(
     check: Consumer,
-    timeoutMs: number | null = 10_000,
+    timeoutMs: number | null = 30_000,
   ): Promise<boolean> {
     const next = timeoutMs == null
       ? () => this.#reader.read()

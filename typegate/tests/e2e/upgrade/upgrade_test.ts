@@ -252,7 +252,7 @@ Meta.test(
       stderr.fetchUntil((line) => {
         console.log("typegate[E]>", line);
         return true;
-      }, 300000);
+      });
 
       await stdout.fetchUntil((line) => {
         console.log("typegate>", line);
@@ -261,7 +261,7 @@ Meta.test(
           typegraphs2.push(match[1]);
         }
         return !line.includes("typegate ready on 7899");
-      }, 300000);
+      });
 
       await stdout.close();
       await stderr.close();
