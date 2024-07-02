@@ -164,12 +164,18 @@ impl Typegraph {
     }
 
     pub fn get_key(&self) -> Result<String> {
+        let path = self.get_path()?;
+        Ok(format!("{}#{}", path, self.name()?))
+    }
+
+    pub fn get_path(&self) -> Result<String> {
         let path = self
             .path
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("typegraph path not set, cannot get id"))?
             .to_str()
-            .ok_or_else(|| anyhow::anyhow!("typegraph path is not valid unicode"))?;
-        Ok(format!("{}#{}", path, self.name()?))
+            .ok_or_else(|| anyhow::anyhow!("typegraph path is not valid unicode"))?
+            .to_owned();
+        Ok(path)
     }
 }
