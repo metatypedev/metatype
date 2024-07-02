@@ -31,6 +31,7 @@ const syncEnvs = {
   SYNC_S3_ACCESS_KEY: "minio",
   SYNC_S3_SECRET_KEY: "password",
   SYNC_S3_BUCKET: "upgrade-test",
+  SYNC_S3_PATH_STYLE: "true",
 };
 
 const syncConfig = transformSyncConfig({
@@ -42,6 +43,7 @@ const syncConfig = transformSyncConfig({
   s3_bucket: syncEnvs.SYNC_S3_BUCKET,
   s3_path_style: true,
 });
+console.log(syncConfig);
 
 // TODO remove after the next release
 // These typegates are disabled because a compatibity issue on the pyrt wasm:
@@ -54,7 +56,7 @@ const disabled = [
   "metagen-py.ts",
 ];
 
-async function checkMetaBin(path: typeof tempDir) {
+async function checkMetaBin(path: typeof tempDir, version: string) {
   try {
     if (!(await path.exists())) {
       return false;
@@ -62,9 +64,12 @@ async function checkMetaBin(path: typeof tempDir) {
     const res = await $`bash -c 'meta --version'`
       .env("PATH", `${path.parent()!.toString()}:${Deno.env.get("PATH")}`)
       .stdout("piped");
-    console.log(res.stdout);
-    return true;
-  } catch (_e) {
+    if (res.stdout.includes(version)) {
+      return true;
+    }
+    throw new Error(`version mismatch: ${res.stdout}`);
+  } catch (e) {
+    console.error(e);
     return false;
   }
 }
@@ -74,7 +79,7 @@ async function downloadAndExtractAsset(version: string) {
   const name = getAssetName(version);
   const extractTargetDir = tempDir.join(name);
   const metaBin = extractTargetDir.join("meta");
-  if (await checkMetaBin(metaBin)) {
+  if (await checkMetaBin(metaBin, version)) {
     return metaBin.toString();
   }
   const url =
@@ -108,7 +113,7 @@ async function downloadAndExtractAsset(version: string) {
 
   await Deno.remove(archivePath.toString());
 
-  if (!(await checkMetaBin(metaBin))) {
+  if (!(await checkMetaBin(metaBin, version))) {
     throw new Error("unexpected");
   }
   return metaBin.toString();
