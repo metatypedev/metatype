@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Meta } from "test-utils/mod.ts";
-import { PUBLISHED_VERSION } from "@dev/consts.ts";
 import { projectDir } from "@dev/utils.ts";
 import { $ } from "@dev/deps.ts";
 import { download } from "download";
@@ -15,6 +14,8 @@ import { newTempDir } from "test-utils/dir.ts";
 import { transformSyncConfig } from "@typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
 import { assertEquals } from "std/assert/assert_equals.ts";
+
+const PUBLISHED_VERSION = "0.4.3";
 
 const previousVersion = PUBLISHED_VERSION;
 
