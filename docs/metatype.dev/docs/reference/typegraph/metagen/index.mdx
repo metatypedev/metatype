@@ -13,7 +13,12 @@ The following feature is not yet stable.
 
 :::
 
-Metagen is a code-generator suite that contains implementations that help with development on the Metatype platform. Today, this means a set of generators to help with [custom functions](/docs/guides/external-functions) by generating types, serializers and bindings. It's availaible bundled within the [meta CLI](/docs/reference/meta-cli) and the [typegraph SDKs](/docs/reference/typegraph#sdks).
+Metagen is a code-generator suite that contains implementations that help with development on the Metatype platform. Today, this means a set of generators to:
+
+- Generate code-first, typesafe clients for your typegraph
+- Help with [custom functions](/docs/guides/external-functions) by generating types, serializers and bindings. 
+
+It's availaible bundled within the [meta CLI](/docs/reference/meta-cli) and the [typegraph SDKs](/docs/reference/typegraph#sdks).
 
 ## Access through CLI
 
@@ -43,10 +48,10 @@ metagen:
         stubbed_runtimes: ["wasm_wire", "deno"]
     # more than one targets avail if you need them
     iter:
-      - generator: fdk_typescript
-        path: ./ts/
+      - generator: client_ts
+        path: ./next_app/
         # name of typegraph to read from typegate
-        typegraph: svc_products
+        typegraph: svc_bff
 ```
 
 This allows us to invoke the targets from the CLI.
@@ -77,6 +82,38 @@ To resolve this concern, the SDKs support a serialization mode that skips resolu
 
 :::
 
+### `client_ts`
+
+This generator supports:
+
+- Types and query builders based on your typegraph
+- [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) based `GraphQlTransport` implementation
+  - Requires Node.js version `v17.5.0` and [up](https://nodejs.org/dist/latest-v18.x/docs/api/globals.html#fetch).
+  - Requires using `--experimental-fetch` flag if on Node.js version below v18.0.0
+- Sync and async queries
+
+TODO: example usage
+
+### `client_py`
+
+This generator supports:
+
+- Types and query builders based on your typegraph
+- [`gql`](https://github.com/graphql-python/gql) based `GraphQlTransport` implementation
+- Sync and async queries
+
+TODO: example usage
+
+### `client_rs`
+
+This generator supports:
+
+- Types and query builders based on your typegraph
+- [`reqwest`](https://lib.rs/crates/reqwest) based `GraphQlTransport` implementation
+- Sync and async queries
+
+TODO: example usage
+
 ### `fdk_typescript`
 
 This generator supports:
@@ -85,7 +122,8 @@ This generator supports:
 - Stub function types for custom functions implementors that adhere to typegraph functions.
   - By default, all function types from the `DenoRuntime` get stub types.
   - Use `stubbed_runtimes` to select which runtimes get stubs.
-- Types for interacting with the typegate from within custom functions.
+- [`client_ts`](#client_ts) based typegraph client
+  - Special `HostcallTransport` implementation
 
 The following example showcases the generator.
 
