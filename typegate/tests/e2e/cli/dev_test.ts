@@ -7,7 +7,7 @@ import { assert, assertEquals, assertRejects } from "std/assert/mod.ts";
 import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "dax";
-import { killProcess, LineReader, LineWriter } from "../../utils/process.ts";
+import { killProcess, Lines, LineWriter } from "../../utils/process.ts";
 import { workspaceDir } from "../../utils/dir.ts";
 
 const m = new TestModule(import.meta);
@@ -64,7 +64,7 @@ Meta.test(
       stdin: "piped",
     }).spawn();
 
-    const stderr = new LineReader(metadev.stderr);
+    const stderr = new Lines(metadev.stderr);
     const stdin = new LineWriter(metadev.stdin);
 
     await stderr.readWhile((line) => {
@@ -183,7 +183,7 @@ Meta.test(
       stdin: "piped",
     }).spawn();
 
-    const stderr = new LineReader(metadev.stderr);
+    const stderr = new Lines(metadev.stderr);
     const stdin = new LineWriter(metadev.stdin);
 
     await stderr.readWhile((line) => {
@@ -259,7 +259,7 @@ Meta.test("meta dev with typegate", async (t) => {
     args: ["dev"],
     stderr: "piped",
   }).spawn();
-  const stderr = new LineReader(metadev.stderr);
+  const stderr = new Lines(metadev.stderr);
 
   const deployed: [string, string][] = [];
 

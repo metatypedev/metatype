@@ -9,7 +9,7 @@ import { Untar } from "std/archive/untar.ts";
 import { readerFromIterable } from "std/streams/mod.ts";
 import { copy } from "std/io/copy.ts";
 import { encodeBase64 } from "std/encoding/base64.ts";
-import { ProcessOutputLines } from "test-utils/process.ts";
+import { Lines } from "test-utils/process.ts";
 import { newTempDir } from "test-utils/dir.ts";
 import { transformSyncConfig } from "@typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
@@ -198,12 +198,12 @@ Meta.test(
 
     const typegraphs: string[] = [];
 
-    const stdout = new ProcessOutputLines(proc.stdout);
-    await stdout.fetchUntil((line) => {
+    const stdout = new Lines(proc.stdout);
+    await stdout.readWhile((line) => {
       // console.log("typegate>", line);
       return !line.includes("typegate ready on 7899");
     });
-    stdout.fetchUntil((line) => {
+    stdout.readWhile((line) => {
       const match = line.match(/Initializing engine '(.+)'/);
       if (match) {
         typegraphs.push(match[1]);
@@ -246,15 +246,15 @@ Meta.test(
         stderr: "piped",
       }).spawn();
 
-      const stdout = new ProcessOutputLines(proc.stdout);
-      const stderr = new ProcessOutputLines(proc.stderr);
+      const stdout = new Lines(proc.stdout);
+      const stderr = new Lines(proc.stderr);
 
-      stderr.fetchUntil((line) => {
+      stderr.readWhile((line) => {
         console.log("typegate[E]>", line);
         return true;
       });
 
-      await stdout.fetchUntil((line) => {
+      await stdout.readWhile((line) => {
         console.log("typegate>", line);
         const match = $.stripAnsi(line).match(/reloaded addition: (.+)/);
         if (match) {

@@ -8,7 +8,7 @@ export type Consumer = {
   (line: string): boolean | Promise<boolean>; // return false to stop
 };
 
-export class LineReader {
+export class Lines {
   #stream: ReadableStream<string>;
   #reader: ReadableStreamDefaultReader<string>;
 
