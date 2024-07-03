@@ -98,6 +98,8 @@ async function downloadAndExtractAsset(version: string) {
   );
   const untar = new Untar(reader);
 
+  await extractTargetDir.ensureDir();
+
   for await (const entry of untar) {
     if (entry.fileName !== "meta") {
       throw new Error("unexpected");

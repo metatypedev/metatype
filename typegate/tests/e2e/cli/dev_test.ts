@@ -254,18 +254,28 @@ Meta.test(
 const examplesDir = $.path(workspaceDir).join("examples");
 
 Meta.test("meta dev with typegate", async (t) => {
+  await $`bash build.sh`.cwd(examplesDir.join("typegraphs/metagen/rs"));
+
   const metadev = new Deno.Command("meta-full", {
     cwd: examplesDir.toString(),
     args: ["dev"],
+    stdout: "piped",
     stderr: "piped",
   }).spawn();
   const stderr = new Lines(metadev.stderr);
+  const stdout = new Lines(metadev.stdout);
 
   const deployed: [string, string][] = [];
 
+  console.log(new Date());
+  stdout.readWhile((line) => {
+    console.log("meta-full dev>", line);
+    return true;
+  }, null);
+
   await stderr.readWhile((rawLine) => {
     const line = $.stripAnsi(rawLine);
-    // console.log("meta-full dev>", line);
+    console.log("meta-full dev[E]>", line);
     const match = line.match(
       /successfully deployed typegraph ([\w_-]+) from (.+)$/,
     );
