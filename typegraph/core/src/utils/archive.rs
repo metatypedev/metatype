@@ -55,7 +55,6 @@ impl ArchiveExt for FsContext {
             })
             .collect::<Result<BTreeMap<_, _>, _>>()?;
 
-        crate::logger::debug!("archive entries: {entries:?}");
         let bytes = archive_entries_from_bytes(entries).map_err(|e| e.to_string())?;
         encode_bytes_to_base_64(bytes).map_err(|e| e.to_string())
     }
