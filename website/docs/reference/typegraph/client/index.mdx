@@ -1,0 +1,277 @@
+---
+sidebar_position: 50
+---
+
+import TGExample from "@site/src/components/TGExample";
+
+# Client
+
+:::warning Beta
+
+The following feature is not yet stable.
+
+:::
+
+The typegraph client provides a code-first alternative for querying typegraphs. 
+It contains types generated from your typegraph definition to ensure type saftey.
+The client code-generators are provided as part of the [meatgen](/docs/reference/metagen) suite under the names:
+
+- `client_ts`: client code-generator for Typescript for use in browsers and other runtimes
+- `client_py`: client code-generator for Python
+- `client_rs`: client code-generator for Rust.
+
+The `mdk` genenrators also include the client suite for use in custom functions.
+Refer to the metagen documentation on how to access the generators.
+
+## Transports
+
+The requests themselves are sent to the typegate using different transport implementations for different usecases.
+Not all transports have the same feature sets.
+
+### `GraphQLTransport`
+
+This transport converts to equivalent GraphQL query strings that get sent over http.
+It includes the following features for all implementations:
+
+- Sync and async queries and mutations
+- Multiple queries or mutations in one request
+
+### `HostcallTransport`
+
+This transport uses host functions exposed by the typegate for use with custom functions.
+
+- Sync queries and mutations
+- Multiple queries or mutations in one request
+
+## API
+
+Even though there are minor differences across language implementations, the generated clients adhere to a common design that contains the following elements.
+
+### `QueryGraph`
+
+The root type generated for your client, it includes:
+
+- Query builders for all your root functions
+- Transport constructors for all the transports exposed by the typegraph
+
+<!-- TODO: rust support for TGExample -->
+
+<TGExample
+  python={{content: `qg = new QueryGraph();`}}
+  typescript={{content: `const qg = new QueryGraph();`}}
+  disablePlayground
+/>
+
+### Requests
+
+Requests consist of two parts:
+- Describe the operations using methods on `QueryGraph`
+  - Methods are typesafe according to each typegraph root function
+- Transport methods that take the query description and perform request on typegate
+  - Mutations and queries have separate accessors
+  - Some transports like the `GraphQLTransport` support multiple operations in one request
+  
+<TGExample
+  python={{content: `
+qg = QueryGraph()
+gql_client = qg.graphql(address="http://localhost:7890")
+
+# describe the query
+out = gql_client.query(
+    {
+        "user": qg.get_user(
+            UserArgs(id="1234"),
+            UserSelectParams(
+                # choose which fields get included
+                id=True,
+                email=True,
+            ),
+        ),
+        # add a second query in the request
+        "posts": qg.get_post(
+            PostArgs(filter="today"), 
+            PostSelectParams(
+              slug=True, 
+              title=True,
+            )
+        ),
+    }
+)
+user = out["user"];
+posts = out["posts"]
+`}}
+  typescript={{content: `
+const api1 = new QueryGraph();
+const gqlClient = new api1.graphql({ address: "http://localhost:7890" });
+
+const { user, posts } = await gqlClient.query({
+  user: api1.getUser(
+    // arguments to get user
+    { id: "1234" }, 
+    // select which fields get included
+    {
+      id: true,
+      email: true,
+    }
+  ),
+  // add a second query to the request
+  posts: api1.getPosts(
+    { filter: "today" }, 
+    { title: true, slug: true }
+  ),
+});
+  `}}
+  disablePlayground
+/>
+
+### Nested arguments
+
+Some fields are themselves composite types that have fields that need to be selected.
+Some fields also require arguments to be passed.
+  
+<TGExample
+  python={{content: `
+out = gql_client.query(
+    {
+        "user": qg.get_user(
+            UserArgs(id="1234"),
+            UserSelectParams(
+                # the posts field takes an argument
+                posts=(
+                  PostArgs(filter="top"), 
+                  # and is also a composite
+                  # so we must select fields
+                  PostSelectParams(
+                    slug=True, 
+                    title=True
+                  )
+                ),
+            ),
+        ),
+    }
+)
+user = out["user"];
+posts = out["posts"]
+`}}
+  typescript={{content: `
+const { user } = await gqlClient.query({
+  user: api1.getUser(
+    { id: "1234" }, 
+    {
+      // posts field takes an argument
+      posts: [
+        { filter: "top" }, 
+        // and is also a composite type
+        // so we need to select fields
+        { title: true, slug: true }
+      ],
+    }
+  ),
+});
+  `}}
+  disablePlayground
+/>
+
+### Selecting fields
+
+When selecting fields on an object, we use bool to indicate interest.
+By default, null or unspecified fields will not be included.
+And if the field itself is an struct, or if it takes an argument, values must be provided to be included.
+
+When selecting fields, we can flip the default so that all unspecified fields get included:
+  
+<TGExample
+  python={{content: `
+out = gql_client.query(
+    {
+        "user": qg.get_user(
+            UserArgs(id="1234"),
+            # use the all static method to flip the
+            # semantics for unspecified fields
+            UserSelectParams.all(
+                _all=True,
+                # we can exclude fields explicitly
+                id=False,
+                # the posts field takes an argument
+                # so it still must be provided
+                # if intending to include it
+                posts=(
+                  PostArgs(filter="top"), 
+                  PostSelectParams.all()
+                ),
+            ),
+        ),
+    }
+)
+`}}
+  typescript={{content: `
+const { user  } = await gqlClient.query({
+  user: api1.getUser(
+    { id: "1234" }, 
+    // select which fields get included
+    {
+      // setting the value of \`_\` will filp the semantic
+      // of unspecified fields
+      _:  "selectAll",
+      // we can exclude fields explicitly 
+      id: false,
+      // post field takes a parameter
+      // so it must be specified still
+      // if intending to include it
+      posts: [
+        { filter: "top" }, 
+        { _: "selectAll" }
+      ],
+    }
+  ),
+});
+  `}}
+  disablePlayground
+/>
+
+Note that this only applies to scalar fields and those that require arguments or are structs must still be explicitly inculded.
+
+### Preparing requests
+
+Some transports like the `GraphQLTransport` allow us to prepare requests before hand to minimize overhead having to bulid the GraphQL query each time.
+
+<TGExample
+  python={{content: `
+prepared = gql_client.prepare_query(
+    # we specify the type of args explicitly
+    str,
+    lambda args: {
+        "user": qg.get_user(
+            UserArgs(id="1234"),
+            UserSelectParams(
+                id=True,
+                email=True,
+                posts=(PostArgs(filter="top"), PostSelectParams(slug=True, title=True)),
+            ),
+        ),
+        "posts": qg.get_post(
+            PostArgs(filter="today"), PostSelectParams(slug=True, title=True)
+        ),
+    },
+)
+
+# execute the actual query
+out = prepared.do("arg")
+out2 = prepared.do("arg2")
+`}}
+  typescript={{content: `
+const prepared = gqlClient
+  // we specify the type of args to make it type safe
+  .prepareQuery((args: { filter: string }) => ({
+    posts: api1.getPosts({ filter: args.filter }, { _: "selectAll" }),
+  }));
+
+// when it comes time to query, we can pass \`args\` from above
+// according to the specified type
+const { posts } = await prepared.do({ filter: "hey" });
+const { posts: posts2 } = await prepared.do({ filter: "hey" });
+  `}}
+  disablePlayground
+/>
+
+## TODO: unions and either
