@@ -10,7 +10,7 @@ pub mod random;
 pub mod temporal;
 pub mod typegate;
 pub mod typegraph;
-pub mod wasi;
+pub mod wasm;
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -28,7 +28,7 @@ use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreType
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     MaterializerHttpRequest, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
-    RandomRuntimeData, TemporalOperationData, TemporalRuntimeData,
+    RandomRuntimeData, TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -46,7 +46,7 @@ pub use self::random::RandomMaterializer;
 use self::temporal::temporal_operation;
 pub use self::temporal::TemporalMaterializer;
 use self::typegate::TypegateOperation;
-pub use self::wasi::WasiMaterializer;
+pub use self::wasm::WasmMaterializer;
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
 
@@ -57,7 +57,8 @@ pub enum Runtime {
     Http(Rc<HttpRuntimeData>),
     Python,
     Random(Rc<RandomRuntimeData>),
-    WasmEdge,
+    WasmWire(Rc<WasmRuntimeData>),
+    WasmReflected(Rc<WasmRuntimeData>),
     Prisma(Rc<PrismaRuntimeData>, Rc<RefCell<PrismaContext>>),
     PrismaMigration,
     Temporal(Rc<TemporalRuntimeData>),
@@ -114,7 +115,7 @@ impl Materializer {
         }
     }
 
-    fn wasi(runtime_id: RuntimeId, data: WasiMaterializer, effect: wit::Effect) -> Self {
+    fn wasm(runtime_id: RuntimeId, data: WasmMaterializer, effect: wit::Effect) -> Self {
         Self {
             runtime_id,
             effect,
@@ -175,7 +176,7 @@ pub enum MaterializerData {
     Http(Rc<MaterializerHttpRequest>),
     Python(Rc<PythonMaterializer>),
     Random(Rc<RandomMaterializer>),
-    WasmEdge(Rc<WasiMaterializer>),
+    Wasm(Rc<WasmMaterializer>),
     Prisma(Rc<PrismaMaterializer>),
     PrismaMigration(PrismaMigrationOperation),
     Temporal(Rc<TemporalMaterializer>),
@@ -259,7 +260,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         data: wit::MaterializerDenoImport,
         effect: wit::Effect,
     ) -> Result<wit::MaterializerId> {
-        let module = Store::get_deno_module(data.module);
+        let module = Store::get_deno_module(data.module, data.deps);
         let data = MaterializerDenoImport {
             func_name: data.func_name,
             module,
@@ -355,15 +356,39 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_materializer(mat))
     }
 
-    fn register_wasmedge_runtime() -> Result<wit::RuntimeId, wit::Error> {
-        Ok(Store::register_runtime(Runtime::WasmEdge))
+    fn register_wasm_reflected_runtime(
+        data: wit::WasmRuntimeData,
+    ) -> Result<wit::RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::WasmReflected(data.into())))
     }
 
-    fn from_wasi_module(
+    fn register_wasm_wire_runtime(
+        data: wit::WasmRuntimeData,
+    ) -> Result<wit::RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::WasmWire(data.into())))
+    }
+
+    fn from_wasm_reflected_func(
         base: wit::BaseMaterializer,
-        data: wit::MaterializerWasi,
+        data: wit::MaterializerWasmReflectedFunc,
     ) -> Result<wit::MaterializerId, wit::Error> {
-        let mat = Materializer::wasi(base.runtime, WasiMaterializer::Module(data), base.effect);
+        let mat = Materializer::wasm(
+            base.runtime,
+            WasmMaterializer::ReflectedFunc(data),
+            base.effect,
+        );
+        Ok(Store::register_materializer(mat))
+    }
+
+    fn from_wasm_wire_handler(
+        base: wit::BaseMaterializer,
+        data: wit::MaterializerWasmWireHandler,
+    ) -> Result<wit::MaterializerId, wit::Error> {
+        let mat = Materializer::wasm(
+            base.runtime,
+            WasmMaterializer::WireHandler(data),
+            base.effect,
+        );
         Ok(Store::register_materializer(mat))
     }
 
@@ -390,12 +415,12 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         prisma_op!(runtime, model, Aggregate, "aggregate")
     }
 
-    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
-        prisma_op!(runtime, model, GroupBy, "groupBy")
-    }
-
     fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
         prisma_op!(runtime, model, Count, "count")
+    }
+
+    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
+        prisma_op!(runtime, model, GroupBy, "groupBy")
     }
 
     fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams, wit::Error> {
@@ -586,7 +611,11 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             WitOp::GetArgInfoByPath => (WitEffect::Read, Op::GetArgInfoByPath),
             WitOp::FindAvailableOperations => (WitEffect::Read, Op::FindAvailableOperations),
             WitOp::FindPrismaModels => (WitEffect::Read, Op::FindPrismaModels),
-            WitOp::RawPrismaQuery => (WitEffect::Read, Op::RawPrismaQuery),
+            WitOp::RawPrismaRead => (WitEffect::Read, Op::RawPrismaQuery),
+            WitOp::RawPrismaCreate => (WitEffect::Create(false), Op::RawPrismaQuery),
+            WitOp::RawPrismaUpdate => (WitEffect::Update(false), Op::RawPrismaQuery),
+            WitOp::RawPrismaDelete => (WitEffect::Delete(true), Op::RawPrismaQuery),
+            WitOp::QueryPrismaModel => (WitEffect::Read, Op::QueryPrismaModel),
         };
 
         Ok(Store::register_materializer(Materializer::typegate(

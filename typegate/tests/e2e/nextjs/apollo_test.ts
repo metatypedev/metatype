@@ -236,19 +236,15 @@ function startNextServer(typegatePort: number) {
   return NextJsServer.init(command);
 }
 
-const envs = {
-  TG_APOLLO_HOST: HOST,
-  TG_APOLLO_REGION: REGION,
-  TG_APOLLO_ACCESS_KEY: ACCESS_KEY,
-  TG_APOLLO_SECRET_KEY: SECRET_KEY,
-  TG_APOLLO_PATH_STYLE: PATH_STYLE,
+const secrets = {
+  HOST,
+  REGION,
+  access_key: ACCESS_KEY,
+  secret_key: SECRET_KEY,
+  PATH_STYLE,
 };
 
 async function deployTypegraph(port: number) {
-  Object.entries(envs).forEach(([k, v]) => {
-    Deno.env.set(k, v);
-  });
-
   const output = await m.cli(
     {},
     "deploy",
@@ -257,6 +253,7 @@ async function deployTypegraph(port: number) {
     "-f",
     "typegraph/apollo.py",
     "--allow-dirty",
+    ...Object.entries(secrets).map(([k, v]) => `--secret=apollo:${k}=${v}`),
   );
 
   console.log("---- Start: Deploy output: stdout ----");
@@ -268,10 +265,6 @@ async function deployTypegraph(port: number) {
 }
 
 async function undeployTypegraph(port: number) {
-  Object.keys(envs).forEach((k) => {
-    Deno.env.delete(k);
-  });
-
   await m.cli(
     {},
     "undeploy",
@@ -284,9 +277,7 @@ async function undeployTypegraph(port: number) {
 
 Meta.test({
   name: "apollo client",
-  port: true,
-  systemTypegraphs: true,
-  introspection: true
+  introspection: true,
 }, async (t) => {
   await initBucket();
   await deployTypegraph(t.port!);

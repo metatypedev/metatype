@@ -1,9 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use actix_web::dev::ServerHandle;
-use anyhow::{anyhow, Result};
-use async_trait::async_trait;
+use crate::interlude::*;
+
 use clap::CommandFactory;
 use clap::Parser;
 use clap::ValueEnum;
@@ -23,14 +22,15 @@ pub struct Completion {
 
 #[async_trait]
 impl Action for Completion {
-    async fn run(&self, _args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
+    #[tracing::instrument]
+    async fn run(&self, _args: ConfigArgs) -> Result<()> {
         let mut cmd = Args::command();
         let name = cmd.get_name().to_string();
         match self.shell.or_else(Shell::from_env) {
             Some(shell) => generate(shell, &mut cmd, name, &mut std::io::stdout()),
             None => {
-                return Err(anyhow!(
-                    "Unable to detect shell, please specify it using --shell <{}>",
+                return Err(format_err!(
+                    "unable to detect shell, please specify it using --shell <{}>",
                     Vec::from(Shell::value_variants())
                         .into_iter()
                         .map(|s| s.to_string())

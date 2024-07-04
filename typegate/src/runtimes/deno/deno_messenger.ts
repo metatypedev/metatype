@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import * as Sentry from "sentry";
-import { envSharedWithWorkers } from "../../log.ts";
+import { envSharedWithWorkers } from "../../config/shared.ts";
 import { Task } from "./shared_types.ts";
-import { LazyAsyncMessenger } from "../patterns/messenger/lazy_async_messenger.ts";
+import {
+  AsyncMessengerConfig,
+  LazyAsyncMessenger,
+} from "../patterns/messenger/lazy_async_messenger.ts";
 
 export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
   constructor(
@@ -12,6 +15,7 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
     permissions: Deno.PermissionOptionsObject,
     lazy: boolean,
     ops: Map<number, Task>,
+    config: AsyncMessengerConfig,
   ) {
     super(
       (receive) => {
@@ -60,6 +64,7 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
       (broker) => {
         broker.terminate();
       },
+      config,
     );
 
     if (lazy) {

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "../config.ts";
+import { globalConfig } from "../config.ts";
 import { QueryEngine } from "../engine/query_engine.ts";
 import { getLogger } from "../log.ts";
 
@@ -22,7 +22,7 @@ export function resolveIdentifier(
   request: Request,
   engine: QueryEngine,
   context: Record<string, unknown>,
-  connInfo: Deno.ServeHandlerInfo,
+  connInfo: Deno.NetAddr,
 ): string {
   if (engine.tg.tg.meta.rate?.context_identifier) {
     const contextId = context[engine.tg.tg.meta.rate?.context_identifier] as
@@ -32,20 +32,20 @@ export function resolveIdentifier(
       if (typeof contextId === "string") {
         return contextId;
       }
-      logger.warning(
+      logger.warn(
         `invalid context identifier type at ${engine.tg.tg.meta.rate?.context_identifier}, only string is supported, got: ${contextId}`,
       );
     }
   }
 
-  if (config.trust_proxy) {
-    const headerIp = request.headers.get(config.trust_header_ip);
+  if (globalConfig.trust_proxy) {
+    const headerIp = request.headers.get(globalConfig.trust_header_ip);
     if (headerIp) {
       return headerIp;
     }
   }
 
-  return (connInfo.remoteAddr as Deno.NetAddr).hostname;
+  return connInfo.hostname;
 }
 
 export function addHeaders(

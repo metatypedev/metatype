@@ -47,7 +47,7 @@ Meta.test("Simple graph", async (t) => {
         rec(nested: { arg: $val })
       }
     `
-      .expectErrorContains("missing variable")
+      .expectErrorContains("variable not found")
       .on(e);
   });
 

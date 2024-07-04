@@ -1,15 +1,16 @@
 # skip:start
 from os import environ
 
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors
 from typegraph.runtimes import DenoRuntime, GraphQLRuntime
 
 
 # skip:end
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def team_a(g: Graph):
     public = Policy.public()
@@ -24,17 +25,15 @@ def team_a(g: Graph):
     )
 
 
-# @typegraph(
-#     # skip:next-line
-#     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
-# )
-# def team_b(g: Graph):
-#     public = Policy.public()
-#
-#     deno = DenoRuntime()
-#
-#     g.expose(
-#         public,
-#         version=deno.static(t.integer(), 12),
-#         record=deno.static(t.struct({"weight": t.integer()}), {"weight": 100}),
-#     )
+@typegraph(
+    # skip:next-line
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+)
+def team_b(g: Graph):
+    public = Policy.public()
+    deno = DenoRuntime()
+    g.expose(
+        public,
+        version=deno.static(t.integer(), 12),
+        record=deno.static(t.struct({"weight": t.integer()}), {"weight": 100}),
+    )

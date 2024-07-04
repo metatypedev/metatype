@@ -1,0 +1,4 @@
+@dataclass
+class {{ class_name }}(Struct):
+{% for field in fields %}    {{ field }}
+{% endfor %}

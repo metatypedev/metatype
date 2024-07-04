@@ -17,15 +17,16 @@ crash.log
 target
 **/*.rs.bk
 
-dev-tools/ts-language-server/out/
-dev-tools/vscode-metatype-support/out/
-dev-tools/*.vsix
+meta-lsp/ts-language-server/out/
+meta-lsp/vscode-metatype-support/out/
+meta-lsp/*.vsix
 
 typegate/workers
 typegate/codegen
 typegate/tests/prisma-migrations
 typegate/tests/e2e/cli/prisma-migrations
 typegate/tests/importers/copy/
+typegate/tests/**/*.wasm
 .env
 typegate/native/bindings.json
 bindings
@@ -41,7 +42,13 @@ recipe.json
 tmp/
 coverage*
 
-typegraph/node/sdk/src/gen
+typegraph/deno/sdk/src/gen
+typegraph/deno/sdk/README.md
+typegraph/node
 typegraph/python/typegraph/gen
 
 *.egg-info/
+
+examples/typegraphs/migrations
+examples/typegraphs/**/*.wasm
+libs/pyrt_wit_wire/wit_wire

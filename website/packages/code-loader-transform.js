@@ -8,11 +8,15 @@ const projectDir = path.resolve(__dirname, "../..");
 const commentsPrefix = {
   py: "#",
   ts: "//",
+  rs: "//",
+  toml: "#",
 };
 
 const postTransformations = {
   py: (source) => source.replaceAll(/ {4}/g, "  "),
   ts: (source) => source,
+  rs: (source) => source,
+  toml: (source) => source,
 };
 
 module.exports = async function (source) {
@@ -21,18 +25,27 @@ module.exports = async function (source) {
   const prefix = commentsPrefix[ext];
 
   if (ext === "py") {
-    source = await new Promise((resolve) => {
+    source = await new Promise((resolve, reject) => {
       const child = spawn("ruff", ["format", "--line-length", "70", "-"]);
       child.stdin.write(source);
       child.stdin.end();
-      let buffer = "";
+      let stdout = "";
+      let stderr = "";
       child.stdout.on("data", (data) => {
-        buffer += data;
+        stdout += data;
+      });
+      child.stderr.on("data", (data) => {
+        stderr += data;
       });
       child.on("exit", function () {
-        resolve(buffer);
+        if (stderr.length > 0) {
+          reject(new Error(`Failed to format python code: ${stderr}`));
+        } else {
+          resolve(stdout);
+        }
       });
     });
+    console.log(this.resourcePath, source);
   }
 
   const ret = [];
@@ -66,7 +79,7 @@ module.exports = async function (source) {
     }
   }
 
-  const transformation = postTransformations[ext];
+  const transformation = postTransformations[ext] ?? ((src) => src);
   const content = transformation(deindent(ret.join("\n"))).trim();
 
   return `module.exports = ${JSON.stringify({

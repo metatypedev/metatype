@@ -17,7 +17,7 @@ query read {
   ) {
     id
   }
-  find_user(term:"%doe%", id:"") {
+  find_user(term: "%doe%", id: "") {
     email
     firstname
   }

@@ -1,25 +1,22 @@
 [package]
 name = "common"
-version = "0.3.7-0"
+version = "0.4.4-0"
 edition = "2021"
 
 [dependencies]
 anyhow.workspace = true
-base64 = "0.21.5"
-flate2 = "1.0.28"
+base64.workspace = true
+flate2.workspace = true
 indexmap.workspace = true
-schemars = { version = "0.8.16", features = ["derive", "preserve_order"], optional = true }
 serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
-serde_with = "3.4.0"
-tar = "0.4.40"
+serde_with = "3.8.1"
+tar.workspace = true
 ignore = "0.4.20"
 reqwest = { workspace = true, features = ["json"] }
+url = { version = "2.4", features = ["serde"] }
 async-trait = "0.1.74"
 itertools = "0.11.0"
 colored = "2.0.4"
 indoc.workspace = true
 thiserror.workspace = true
-
-[features]
-codegen = ["dep:schemars"]

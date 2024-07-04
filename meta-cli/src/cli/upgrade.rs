@@ -1,13 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::interlude::*;
+
 use crate::global_config::GlobalConfig;
 
 use super::{Action, ConfigArgs};
 use crate::build;
-use actix_web::dev::ServerHandle;
-use anyhow::{Ok, Result};
-use async_trait::async_trait;
 use chrono::{Duration, Utc};
 use clap::Parser;
 use self_update::{backends::github::Update, update::UpdateStatus};
@@ -26,7 +25,8 @@ pub struct Upgrade {
 
 #[async_trait]
 impl Action for Upgrade {
-    async fn run(&self, _args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
+    #[tracing::instrument]
+    async fn run(&self, _args: ConfigArgs) -> Result<()> {
         // https://github.com/jaemk/self_update/issues/44
         let opts = self.clone();
         tokio::task::spawn_blocking(move || {
@@ -53,13 +53,14 @@ impl Action for Upgrade {
                     );
                 }
             };
-            Ok(())
+            eyre::Ok(())
         })
         .await??;
         Ok(())
     }
 }
 
+#[tracing::instrument]
 pub async fn upgrade_check() -> Result<()> {
     let config_path = GlobalConfig::default_path()?;
     let mut local_config = GlobalConfig::load(&config_path).await?;
@@ -74,7 +75,7 @@ pub async fn upgrade_check() -> Result<()> {
                 .current_version(current_version)
                 .build()?;
 
-            Ok(update.get_latest_release()?)
+            eyre::Ok(update.get_latest_release()?)
         })
         .await??;
 

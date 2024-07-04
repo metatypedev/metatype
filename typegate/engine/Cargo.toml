@@ -6,42 +6,51 @@ version.workspace = true
 [dependencies]
 anyhow.workspace = true
 thiserror.workspace = true
+tap = "1.0.1"
+
+connection-string = "0.2.0"
+
+futures.workspace = true
 tokio = { workspace = true, features = ["full"] }
+
 log.workspace = true
-futures = "0.3"
+
+serde.workspace = true
+regex.workspace = true
+zstd = "0.13"
+base64.workspace = true
+convert_case = "0.6.0"
+
 once_cell.workspace = true
-base64 = "0.21.5"
 dashmap = "5.5.3"
-num-traits = "0.2.17"
-num-derive = "0.4.1"
+
 temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
-query-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-query-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
-schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.5.2" }
+query-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+query-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 tempfile.workspace = true
-tap = "1.0.1"
-convert_case = "0.6.0"
-connection-string = "0.2.0"
+
 mt_deno.workspace = true
+deno_core.workspace = true
 common.workspace = true
-typescript.workspace = true
-wasmedge-sdk.workspace = true
-wasmedge-sys.workspace = true
-wasmedge-types.workspace = true
+
+wasmtime = { workspace = true,  features = ["component-model"] }
+wasmtime-wasi.workspace = true
+
 shadow-rs.workspace = true
-serde.workspace = true
-regex = "1.10.2"
 
 [dev-dependencies]
 env_logger.workspace = true
 
 [build-dependencies]
 shadow-rs.workspace = true
+wasmtime = { workspace = true,  features = ["component-model"] }
+zstd = "0.13.1"

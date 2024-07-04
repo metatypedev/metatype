@@ -4,8 +4,6 @@ from typegraph.graph.params import Cors, Auth
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.runtimes.random import RandomRuntime
 
-# skip:end
-
 
 @typegraph(
     cors=Cors(
@@ -13,12 +11,16 @@ from typegraph.runtimes.random import RandomRuntime
     ),
 )
 def policies(g: Graph):
+    # skip:end
     deno = DenoRuntime()
     random = RandomRuntime(seed=0, reset=None)
+
+    # `public` is sugar for to `() => true`
     public = Policy.public()
 
     admin_only = deno.policy(
         "admin_only",
+        # note: policies either return true | false | null
         "(args, { context }) => context.username ? context.username === 'admin' : null",
     )
     user_only = deno.policy(
@@ -29,8 +31,11 @@ def policies(g: Graph):
     g.auth(Auth.basic(["admin", "user"]))
 
     g.expose(
+        # set default policy for the exposed functions
+        Policy.public(),
         public=random.gen(t.string()).with_policy(public),
         admin_only=random.gen(t.string()).with_policy(admin_only),
         user_only=random.gen(t.string()).with_policy(user_only),
+        # if both policies return null, access is denied
         both=random.gen(t.string()).with_policy(user_only, admin_only),
     )

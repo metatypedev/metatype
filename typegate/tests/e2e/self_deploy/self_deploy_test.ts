@@ -1,47 +1,44 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
-import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
+import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.ts";
 
 import { Meta } from "test-utils/mod.ts";
-import { tg } from "./self_deploy.mjs"; // FIXME: deno coverage issues with transpiled version of this file
+import { tg } from "./self_deploy.ts";
 import { testDir } from "test-utils/dir.ts";
 import { join } from "std/path/join.ts";
 import { assertEquals, assertExists } from "std/assert/mod.ts";
+import * as path from "std/path/mod.ts";
 
-Meta.test({
-  name: "deploy and undeploy typegraph without meta-cli",
-  port: true,
-  systemTypegraphs: true,
-}, async (t) => {
-  const gate = `http://localhost:${t.port}`;
-  const auth = new BasicAuth("admin", "password");
-  const cwdDir = join(testDir, "e2e", "self_deploy");
+Meta.test(
+  {
+    name: "deploy and undeploy typegraph without meta-cli",
+  },
+  async (t) => {
+    const gate = `http://localhost:${t.port}`;
+    const auth = new BasicAuth("admin", "password");
+    const cwdDir = join(testDir, "e2e", "self_deploy");
 
-  const { serialized, typegate: gateResponseAdd } = await tgDeploy(tg, {
-    baseUrl: gate,
-    auth,
-    secrets: {},
-    artifactsConfig: {
-      prismaMigration: {
-        globalAction: {
-          create: true,
-          reset: false,
-        },
-        migrationDir: "prisma-migrations",
+    const { serialized, response: gateResponseAdd } = await tgDeploy(tg, {
+      typegate: { url: gate, auth },
+      secrets: {},
+      typegraphPath: path.join(cwdDir, "self_deploy.mjs"),
+      migrationsDir: `${cwdDir}/prisma-migrations`,
+      defaultMigrationAction: {
+        apply: true,
+        create: true,
+        reset: false,
       },
-      dir: cwdDir,
-    },
-  });
-  assertExists(serialized, "serialized has a value");
-  assertEquals(gateResponseAdd, {
-    data: {
-      addTypegraph: { name: "self-deploy", messages: [], migrations: [] },
-    },
-  });
-
-  const { typegate: gateResponseRem } = await tgRemove(tg, {
-    baseUrl: gate,
-    auth,
-  });
-  assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
-});
+    });
+    assertExists(serialized, "serialized has a value");
+    assertEquals(gateResponseAdd, {
+      name: "self-deploy",
+      messages: [],
+      migrations: [],
+    });
+    // pass the typegraph name
+    const { typegate: gateResponseRem } = await tgRemove(tg.name, {
+      typegate: { url: gate, auth },
+    });
+    assertEquals(gateResponseRem, { data: { removeTypegraphs: true } });
+  },
+);

@@ -1,17 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::interlude::*;
+
 use crate::utils::clap::UrlValueParser;
-use actix_web::dev::ServerHandle;
-use anyhow::Result;
-use async_trait::async_trait;
 use clap::Parser;
 use clap::Subcommand;
 use clap_verbosity_flag::Verbosity;
 use enum_dispatch::enum_dispatch;
 use normpath::PathExt;
 use reqwest::Url;
-use std::path::PathBuf;
 
 mod ui;
 
@@ -55,7 +53,13 @@ pub struct ConfigArgs {
 
 impl ConfigArgs {
     pub fn dir(&self) -> Result<PathBuf> {
-        Ok(PathBuf::from(&self.dir).normalize()?.into_path_buf())
+        Ok(self
+            .dir
+            .normalize()
+            .wrap_err(
+                "error normalizing working directory, make sure any override working dir exists.",
+            )?
+            .into_path_buf())
     }
 }
 
@@ -87,7 +91,7 @@ pub(crate) enum Commands {
 #[async_trait]
 #[enum_dispatch(Commands)]
 pub trait Action {
-    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()>;
+    async fn run(&self, args: ConfigArgs) -> Result<()>;
 }
 
 #[derive(Parser, Debug, Clone)]
@@ -95,6 +99,9 @@ pub struct NodeArgs {
     /// Address of the typegate.
     #[clap(short, long, value_parser = UrlValueParser::new().http())]
     pub gate: Option<Url>,
+
+    #[clap(short, long)]
+    pub prefix: Option<String>,
 
     /// Username to use to connect to the typegate (basic auth).
     #[clap(long)]

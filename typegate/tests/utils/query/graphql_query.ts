@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { QueryEngine } from "../../../src/engine/query_engine.ts";
+import { QueryEngine } from "@typegate/engine/query_engine.ts";
 import { FileExtractor } from "./file_extractor.ts";
 import {
   Context,
@@ -11,7 +11,8 @@ import {
   Query,
   Variables,
 } from "./mod.ts";
-import { findOperation } from "../../../src/transports/graphql/graphql.ts";
+import { findOperation } from "@typegate/transports/graphql/graphql.ts";
+import { TypegateCryptoKeys } from "@typegate/crypto.ts";
 import { parse } from "graphql";
 import { None } from "monads";
 import { MetaTest } from "../test.ts";
@@ -63,13 +64,16 @@ export class GraphQLQuery extends Query {
     return new FileExtractor().extractFilesFromVars(this.variables);
   }
 
-  async getRequest(url: string) {
+  async getRequest(url: string, cryptoKeys: TypegateCryptoKeys) {
     const { headers, context } = this;
 
     const defaults: Record<string, string> = {};
 
     if (Object.keys(context).length > 0) {
-      defaults["Authorization"] = await this.contextEncoder(context);
+      defaults["Authorization"] = await this.contextEncoder(
+        context,
+        cryptoKeys,
+      );
     }
 
     const clean = (headers: Record<string, string>) => {

@@ -1,18 +1,103 @@
-# HTTP/REST 
+import TGExample from "@site/src/components/TGExample";
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
 
-The HTTPRuntime allows our typegraphs to access external REST APIs.
+# HTTP/REST
+
+## HTTP Runtime
+
+The HTTPRuntime allows your typegraphs to access external REST APIs.
+
+Common use cases (but not limited to):
+
+- Enable consuming one or more REST APIs through the same interface
+- Programmatically generate typegraphs from an existing [openapi specs](https://swagger.io/specification/) or similar
 
 Example:
 
+<TGExample
+  typegraph="http-runtime"
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/http-runtime.ts")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/http-runtime.py")}
+  query={require("./http.graphql")}
+/>
+
+## Verbs
+
+This runtime supports `GET`, `POST`, `PUT`, `DELETE` http verbs.
+
+In most cases, queries are not limited to a simple query parameter or use the default `application/json` content type. You can assign what parts of your request description each field in the input struct belongs to.
+
+In the example bellow, this endpoint corresponds to `POST <API_URL>/submit_user?form_type=..` with a body requiring the fields: `pseudo`, `age` and with header `accept` set as `application/json`.
+
+<SDKTabs>
+    <TabItem value="python">
 ```python
-from typegraph.runtime.http import HTTPRuntime
-
 # ..
-
-remote = HTTPRuntime('https://dev.to/api')
-remote.get(
-    '/test',
-    t.struct({}),
-    t.list(t.struct({'a': t.integer()})),
-)
+    remote = HTTPRuntime("<API_URL>")
+    g.expose(
+        pub,
+        add_user=remote.post(
+            "/submit_user",
+            # define your input/output
+            t.struct(
+                {
+                    "id": t.uuid(),
+                    "username": t.float(),
+                    "years_lived": t.integer(),
+                    "form_type": t.integer(),
+                    "config_accept": t.string().set("application/json")
+                },
+            ),
+            t.struct({ "message": t.string() }),
+            # specify where each field in your input should be associated with
+            body_fields=("username", "years_lived"),
+            query_fields=("form_type"),
+            # you may want to rename a few fields
+            # if you are using your own naming conventions or reusing types
+            rename_fields={
+                "username": "pseudo",
+                "years_lived": "age",
+            },
+            content_type="multipart/form-data",
+            # set a custom header prefix
+            header_prefix="config_"
+        )
+    )
+# ..
 ```
+    </TabItem>
+    <TabItem value="typescript">
+```typescript
+// ..
+  const remote = new HttpRuntime("<API_URL>");
+  g.expose({
+    add_user: remote.post(
+      // define your input/output
+      t.struct(
+        {
+          id: t.uuid(),
+          username: t.float(),
+          years_lived: t.integer(),
+          form_type: t.integer()
+        },
+      ),
+      t.struct({ message: t.string() }),
+      {
+        path: "/submit_user",
+        // specify where each field in your input should be associated with
+        bodyFields: ["username", "years_lived"],
+        queryFields: ["form_type"],
+        // you may want to rename a few fields
+        // if you are using your own naming conventions or reusing types
+        renameFields: [
+          ["username", "pseudo"],
+          ["years_lived", "age"],
+        ],
+        contentType: "multipart/form-data",
+      }
+  )}, pub);
+// ..
+```
+    </TabItem>
+</SDKTabs>

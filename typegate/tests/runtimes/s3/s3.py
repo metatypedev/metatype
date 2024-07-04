@@ -3,7 +3,7 @@ from typegraph.providers.aws import S3Runtime
 
 
 @typegraph()
-def s3_test(g: Graph):
+def s3(g: Graph):
     public = Policy.public()
 
     s3 = S3Runtime(

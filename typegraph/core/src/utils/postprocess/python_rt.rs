@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::utils::fs_host;
+use crate::utils::{artifacts::ArtifactsExt, fs::FsContext, postprocess::PostProcessor};
 use common::typegraph::{
     runtimes::python::ModuleMatData,
     utils::{map_from_object, object_from_map},
@@ -9,27 +9,43 @@ use common::typegraph::{
 };
 use std::path::PathBuf;
 
-use crate::utils::postprocess::{compress_and_encode, PostProcessor};
+pub struct PythonProcessor {
+    typegraph_dir: PathBuf,
+}
 
-pub struct PythonProcessor;
+impl PythonProcessor {
+    pub fn new(typegraph_dir: PathBuf) -> Self {
+        Self { typegraph_dir }
+    }
+}
 
 impl PostProcessor for PythonProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
-        for mat in tg.materializers.iter_mut() {
-            if mat.name.as_str() == "pymodule" {
-                let mut mat_data: ModuleMatData =
-                    object_from_map(std::mem::take(&mut mat.data)).map_err(|e| e.to_string())?;
-                let Some(path) = mat_data.code.strip_prefix("file:").to_owned() else {
-                    continue;
-                };
+        let fs_ctx = FsContext::new(self.typegraph_dir.clone());
+        let mut materializers = std::mem::take(&mut tg.materializers);
 
-                let main_path = fs_host::make_absolute(&PathBuf::from(path))?;
-                mat_data.code = compress_and_encode(&main_path)?;
+        for mat in materializers.iter_mut() {
+            if mat.name.as_str() == "pymodule" {
+                let mat_data = std::mem::take(&mut mat.data);
+                let mut mat_data: ModuleMatData =
+                    object_from_map(mat_data).map_err(|e| e.to_string())?;
+
+                fs_ctx.register_artifact(mat_data.entry_point.clone(), tg)?;
+
+                let deps = std::mem::take(&mut mat_data.deps);
+                for artifact in deps.into_iter() {
+                    let artifacts = fs_ctx.list_files(&[artifact.to_string_lossy().to_string()]);
+                    for artifact in artifacts.iter() {
+                        fs_ctx.register_artifact(artifact.clone(), tg)?;
+                    }
+                    mat_data.deps.extend(artifacts);
+                }
 
                 mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
-                tg.deps.push(main_path);
             }
         }
+
+        tg.materializers = materializers;
         Ok(())
     }
 }

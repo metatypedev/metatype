@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import pg from "npm:pg";
+import pg from "pg";
 import { removeMigrations } from "test-utils/migrations.ts";
 
 export async function dropSchema(schema: string) {
@@ -23,4 +23,13 @@ export async function reset(tgName: string, schema: string) {
 
 export function randomSchema() {
   return "z" + Math.random().toString(36).substring(2);
+}
+
+export function randomPGConnStr() {
+  const schema = randomSchema();
+  return {
+    connStr:
+      `postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+    schema,
+  };
 }

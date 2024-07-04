@@ -9,8 +9,6 @@ const m = new TestModule(import.meta);
 
 Meta.test({
   name: "meta undeploy",
-  port: true,
-  systemTypegraphs: true,
 }, async (t) => {
   const schema = randomSchema();
   // prepare

@@ -4,9 +4,7 @@
 import {
   get_version,
   typegraph_validate,
-  typescript_format_code,
   validate_prisma_runtime_data,
-  wasmedge_wasi,
 } from "native";
 
 function assert<T>(val: T) {
@@ -28,18 +26,6 @@ Deno.test("version", () => {
   );
 });
 
-Deno.test("typescriptFormatCode", () => {
-  const source = "console.log( {hello: 'world'})";
-
-  assert(
-    Meta.typescriptFormatCode(source) ===
-      `console.log({ hello: "world" });\n`,
-  );
-
-  const out = typescript_format_code({ source });
-  assert(out!.Ok!.formatted_code === `console.log({ hello: "world" });\n`);
-});
-
 Deno.test("validatePrismaRuntimeData", () => {
   const json = {
     name: "my_prisma",
@@ -55,7 +41,6 @@ Deno.test("validatePrismaRuntimeData", () => {
 
 Deno.test("typegraphValidate", () => {
   const json = {
-    "$id": "https://metatype.dev/specs/0.0.3.json",
     "types": [
       {
         "type": "object",
@@ -137,8 +122,8 @@ Deno.test("typegraphValidate", () => {
       "auths": [],
       "rate": null,
       "version": "0.0.3",
-      "random_seed": null,
-      "ref_artifacts": {},
+      "randomSeed": null,
+      "artifacts": {},
     },
   };
   const str = JSON.stringify(json);
@@ -146,17 +131,4 @@ Deno.test("typegraphValidate", () => {
 
   const out = typegraph_validate({ json: str });
   assert("Valid" in out && JSON.stringify(JSON.parse(out.Valid.json)) == str);
-});
-
-Deno.test("wasmedgeWasi", async () => {
-  const input: WasiInput = {
-    wasm: "typegate/tests/runtimes/wasmedge/rust.wasm",
-    func: "add",
-    out: "integer",
-    args: [JSON.stringify(1), JSON.stringify(2)],
-  };
-  assert(Meta.wasmedgeWasi(input) == "3");
-
-  const out = await wasmedge_wasi(input);
-  assert("Ok" in out && out.Ok.res == "3");
 });

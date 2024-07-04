@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "../config.ts";
 import { Register, ReplicatedRegister } from "./register.ts";
 import * as Sentry from "sentry";
 import { RateLimiter, RedisRateLimiter } from "./rate_limiter.ts";
@@ -35,14 +34,17 @@ import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
-import { SyncConfig } from "../sync/config.ts";
+import { ArtifactService } from "../services/artifact_service.ts";
+import { ArtifactStore } from "./artifacts/mod.ts";
+// TODO move from tests (MET-497)
 import { MemoryRegister } from "test-utils/memory_register.ts";
 import { NoLimiter } from "test-utils/no_limiter.ts";
 import { TypegraphStore } from "../sync/typegraph.ts";
-import {
-  handleArtifactUpload,
-  handleUploadUrl,
-} from "../services/artifact_upload_service.ts";
+import { createLocalArtifactStore } from "./artifacts/local.ts";
+import { createSharedArtifactStore } from "./artifacts/shared.ts";
+import { AsyncDisposableStack } from "dispose";
+import { globalConfig, TypegateConfig } from "../config.ts";
+import { TypegateCryptoKeys } from "../crypto.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -66,42 +68,81 @@ export type PushResult = {
   response: PushResponse;
 };
 
-export interface UploadUrlMeta {
-  artifactName: string;
-  artifactHash: string;
-  artifactSizeInBytes: number;
-  urlUsed: boolean;
+export interface DeinitOptions {
+  engines?: boolean;
 }
 
-export class Typegate {
+export class Typegate implements AsyncDisposable {
   #onPushHooks: PushHandler[] = [];
-  artifactUploadUrlCache: Map<string, UploadUrlMeta> = new Map();
+  #artifactService: ArtifactService;
+  #disposed = false;
 
   static async init(
-    syncConfig: SyncConfig | null = null,
+    config: TypegateConfig,
     customRegister: Register | null = null,
   ): Promise<Typegate> {
+    const { sync: syncConfig } = config;
+    const tmpDir = config.base.tmp_dir;
+
+    const cryptoKeys = await TypegateCryptoKeys.init(config.base.tg_secret);
     if (syncConfig == null) {
-      logger.warning("Entering no-sync mode...");
-      logger.warning(
+      logger.warn("Entering no-sync mode...");
+      logger.warn(
         "Enable sync if you want to use accross multiple instances or if you want persistence.",
       );
 
+      await using stack = new AsyncDisposableStack();
+
       const register = customRegister ?? new MemoryRegister();
-      return new Typegate(register, new NoLimiter(), null);
+      const artifactStore = await createLocalArtifactStore(tmpDir, cryptoKeys);
+
+      stack.use(register);
+      stack.use(artifactStore);
+
+      return new Typegate(
+        register,
+        new NoLimiter(),
+        artifactStore,
+        config,
+        cryptoKeys,
+        stack.move(),
+      );
     } else {
+      logger.info("Entering sync mode...");
       if (customRegister) {
-        throw new Error(
-          "Custom register is not supported in sync mode",
-        );
+        throw new Error("Custom register is not supported in sync mode");
       }
+
+      await using stack = new AsyncDisposableStack();
+
       const limiter = await RedisRateLimiter.init(syncConfig.redis);
-      const typegate = new Typegate(null!, limiter, syncConfig);
+      // stack.use(limiter);
+      stack.defer(async () => {
+        await limiter.terminate();
+      });
+
+      const artifactStore = await createSharedArtifactStore(
+        tmpDir,
+        syncConfig,
+        cryptoKeys,
+      );
+      stack.use(artifactStore);
+
+      const typegate = new Typegate(
+        null!,
+        limiter,
+        artifactStore,
+        config,
+        cryptoKeys,
+        stack.move(),
+      );
+
       const register = await ReplicatedRegister.init(
         typegate,
         syncConfig.redis,
-        TypegraphStore.init(syncConfig),
+        TypegraphStore.init(syncConfig, cryptoKeys),
       );
+      typegate.disposables.use(register);
 
       (typegate as { register: Register }).register = register;
 
@@ -120,20 +161,22 @@ export class Typegate {
   private constructor(
     public readonly register: Register,
     private limiter: RateLimiter,
-    public syncConfig: SyncConfig | null = null,
+    public artifactStore: ArtifactStore,
+    public readonly config: TypegateConfig, // TODO deep readonly??
+    public cryptoKeys: TypegateCryptoKeys,
+    private disposables: AsyncDisposableStack,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
     this.#onPush(PrismaHooks.generateSchema);
     this.#onPush(PrismaHooks.runMigrations);
+    this.#artifactService = new ArtifactService(artifactStore);
   }
 
-  async deinit() {
-    await Promise.all(this.register.list().map((e) => e.terminate()));
-    if (this.syncConfig) {
-      await (this.register as ReplicatedRegister).stopSync();
-      await (this.limiter as RedisRateLimiter).terminate();
-    }
+  async [Symbol.asyncDispose]() {
+    if (this.#disposed) return;
+    this.#disposed = true;
+    await this.disposables[Symbol.asyncDispose]();
   }
 
   #onPush(handler: PushHandler) {
@@ -166,10 +209,7 @@ export class Typegate {
     return res;
   }
 
-  async handle(
-    request: Request,
-    connInfo: Deno.ServeHandlerInfo,
-  ): Promise<Response> {
+  async handle(request: Request, connInfo: Deno.NetAddr): Promise<Response> {
     try {
       const url = new URL(request.url);
 
@@ -179,30 +219,27 @@ export class Typegate {
 
       const [engineName, serviceName] = parsePath(url.pathname);
 
-      // artifact upload handlers
-      if (serviceName === "get-upload-url") {
-        return handleUploadUrl(
-          request,
-          engineName,
-          this.artifactUploadUrlCache,
-        );
-      }
-
-      if (serviceName === "upload-artifacts") {
-        return handleArtifactUpload(
-          request,
-          engineName,
-          this.artifactUploadUrlCache,
-        );
+      if (serviceName === "artifacts") {
+        return await this.#artifactService.handle(request, engineName);
       }
 
       if (!engineName || ignoreList.has(engineName)) {
-        return notFound();
+        logger.error("engine not found on request url {}", {
+          engineName,
+          ignored: ignoreList.has(engineName),
+          url: request.url,
+        });
+        return notFound("engine name required on url");
       }
 
       const engine = this.register.get(engineName);
       if (!engine) {
-        return notFound();
+        logger.error("engine not found for request {}", {
+          engineName,
+          url: request.url,
+          engines: this.register.list().map((en) => en.name),
+        });
+        return notFound(`engine not found for typegraph '${engineName}'`);
       }
 
       const cors = engine.tg.cors(request);
@@ -243,7 +280,7 @@ export class Typegate {
       }
       // default to graphql service
 
-      if (request.method === "GET" && config.debug) {
+      if (request.method === "GET" && globalConfig.debug) {
         return handlePlaygroundGraphQL(request, engine);
       }
 
@@ -255,14 +292,7 @@ export class Typegate {
         return methodNotAllowed();
       }
 
-      return handleGraphQL(
-        request,
-        engine,
-        context,
-        info,
-        limit,
-        headers,
-      );
+      return handleGraphQL(request, engine, context, info, limit, headers);
     } catch (e) {
       Sentry.captureException(e);
       console.error(e);
@@ -292,10 +322,7 @@ export class Typegate {
       }
     }
 
-    const secretManager = new SecretManager(
-      tgJson,
-      secrets,
-    );
+    const secretManager = new SecretManager(tgJson, secrets);
 
     const pushResponse = new PushResponse();
     logger.info("Handling onPush hooks");
@@ -321,14 +348,41 @@ export class Typegate {
       enableIntrospection,
     );
 
+    const oldArtifacts = new Set(
+      Object.values(this.register.get(name)?.tg.tg.meta.artifacts ?? {}).map(
+        (m) => m.hash,
+      ),
+    );
+
     logger.info(`Registering engine '${name}'`);
     await this.register.add(engine);
+
+    const newArtifacts = new Set(
+      Object.values(engine.tg.tg.meta.artifacts).map((m) => m.hash),
+    );
+
+    await this.artifactStore.updateRefCounts(newArtifacts, oldArtifacts);
 
     return {
       name,
       engine,
       response: pushResponse,
     };
+  }
+
+  async removeTypegraph(name: string) {
+    const engine = this.register.get(name);
+    if (!engine) {
+      throw new Error(`Engine '${name}' not found`);
+    }
+
+    await this.register.remove(name);
+
+    const artifacts = new Set(
+      Object.values(engine.tg.tg.meta.artifacts).map((m) => m.hash),
+    );
+    await this.artifactStore.updateRefCounts(new Set(), artifacts);
+    await this.artifactStore.runArtifactGC();
   }
 
   async initQueryEngine(
@@ -343,20 +397,18 @@ export class Typegate {
 
     const introspection = enableIntrospection
       ? await TypeGraph.init(
+        this,
         introspectionDef,
         new SecretManager(introspectionDef, {}),
         {
-          typegraph: TypeGraphRuntime.init(
-            tgDS,
-            [],
-            {},
-          ),
+          typegraph: TypeGraphRuntime.init(tgDS, [], {}),
         },
         null,
       )
       : null;
 
     const tg = await TypeGraph.init(
+      this,
       tgDS,
       secretManager,
       customRuntime,

@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { connect, Redis, RedisConnectOptions } from "redis";
-import { Deferred, deferred } from "std/async/deferred.ts";
+import {
+  Deferred,
+  deferred,
+} from "https://deno.land/std@0.208.0/async/deferred.ts";
 import { QueryEngine } from "../engine/query_engine.ts";
 
 // keys: tokens, latest

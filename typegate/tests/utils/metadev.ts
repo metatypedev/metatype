@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { testDir } from "test-utils/dir.ts";
-import { getMetaCliExe } from "test-utils/meta.ts";
 import { TextLineStream } from "../../../dev/deps.ts";
+import { deadline } from "std/async/mod.ts";
 
 export type MetaDevOptions = {
   args?: string[];
@@ -29,7 +29,7 @@ export class MetaDev {
   ) {
     this.#process = new Deno.Command(metaBin, {
       cwd: options.cwd ?? testDir,
-      args: ["-vvvv", ...(options.args ?? [])],
+      args: [...(options.args ?? [])],
       env: options.env ?? {},
       stdout: "piped",
       stderr: "piped",
@@ -47,23 +47,20 @@ export class MetaDev {
     this.#stderr = this.#stderrStream.getReader();
   }
 
-  static async start(options: MetaDevOptions = {}): Promise<MetaDev> {
-    const metaBin = await getMetaCliExe();
-    return new MetaDev(metaBin, options);
+  static start(options: MetaDevOptions = {}): MetaDev {
+    return new MetaDev("meta", options);
   }
 
   async #fetchOutputLines(
     reader: ReadableStreamDefaultReader<string>,
     param: FetchOutputLineParam,
-    timeoutMs?: number,
+    timeoutMs: number = 5_000,
   ) {
     const next = timeoutMs == null ? () => reader.read() : () =>
-      Promise.race([
+      deadline(
         reader.read(),
-        new Promise((_, reject) =>
-          setTimeout(reject, timeoutMs, new Error("timeout"))
-        ),
-      ]) as Promise<ReadableStreamDefaultReadResult<string>>;
+        timeoutMs,
+      );
     let shouldContinue = true;
     while (shouldContinue) {
       const { value: line, done } = await next();

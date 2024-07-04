@@ -11,7 +11,7 @@ const projectName = "metatype";
 const config = {
   title: "Metatype",
   // prettier-ignore
-  tagline: "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are.",
+  tagline: "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -25,8 +25,7 @@ const config = {
   },
   stylesheets: [
     {
-      href:
-        "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
       type: "text/css",
     },
   ],
@@ -41,12 +40,6 @@ const config = {
         appUrl: "https://eu.posthog.com",
         enableInDevelopment: false,
         persistence: "memory",
-      },
-    ],
-    [
-      "docusaurus-plugin-sentry",
-      {
-        DSN: "d951b2e2b71d43e0b2fc41555cf8bf75@sentry.triage.dev/5",
       },
     ],
     [
@@ -117,6 +110,11 @@ const config = {
             label: "Use cases",
           },
           {
+            to: "/docs/concepts/features-overview",
+            position: "left",
+            label: "Features",
+          },
+          {
             type: "docSidebar",
             docsPluginId: "docs",
             sidebarId: "docs",
@@ -130,8 +128,13 @@ const config = {
           },
           {
             href: "https://github.com/metatypedev/metatype",
-            label: "GitHub",
             position: "right",
+            className: "header-github-link",
+          },
+          {
+            href: "https://communityinviter.com/apps/metatypedev/invite",
+            position: "right",
+            className: "header-slack-link",
           },
         ],
       },
@@ -144,6 +147,10 @@ const config = {
               {
                 label: "Getting started",
                 to: "/docs/tutorials/metatype-basics",
+              },
+              {
+                label: "Features overview",
+                to: "/docs/concepts/features-overview",
               },
               {
                 label: "Concepts",
@@ -163,9 +170,13 @@ const config = {
                 href: "https://github.com/metatypedev/metatype/discussions",
               },
               {
+                label: "Slack",
+                href: "https://communityinviter.com/apps/metatypedev/invite",
+              },
+              /*{
                 label: "Stack Overflow",
                 href: "https://stackoverflow.com/questions/tagged/metatype",
-              },
+              },*/
               {
                 label: "Twitter",
                 href: "https://twitter.com/metatypedev",

@@ -1,9 +1,12 @@
-from typegraph import Policy, t, typegraph, Graph
+from typegraph.graph.typegraph import Graph
+from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
+
+from typegraph import t, typegraph
 
 
 @typegraph()
-def either(g: Graph):
+def either_node(g: Graph):
     deno = DenoRuntime()
 
     # user models

@@ -2,40 +2,82 @@
 sidebar_position: 50
 ---
 
-import TGExample from "@site/src/components/TGExample"; 
 import Cors from "@site/shared/cors/index.mdx";
-
+import TabItem from "@theme/TabItem";
+import TGExample from "@site/src/components/TGExample";
 
 # Secure your requests
 
 ## Authentication
 
-Metatype supports multiple authentication schemes: Basic authentication, JSON Web Tokens (JWT) and OAuth2. This enables every request to have a context and store some information about the user. You can then use the context to set specific fields with `from_context` or as you will see next step, to restrict accesses via the policies.
+Typegraphs supports multiple auth schemes for incoming requests including:
 
-For your app, you will use basic authentication in order to restrict some actions for admin users. In order to do so, adding the following secret to your `metatype.yml` file: `TG_AUTHENTICATION_BASIC_ADMIN=password`.
+- [Basic access](/docs/reference/typegate/authentication#basic-authentication)
+- [JSON Web Tokens (JWT)](/docs/reference/typegate/authentication#jwt-authentication)
+- [OAuth2](/docs/reference/typegate/authentication#oauth2-authorization)
+
+Each scheme relies on tokens that will be expected on the `Authorization` header of any incoming request. Information extracted from any found tokens will then be added to the context of every request. Each scheme allows for different secrets to be encoded in the tokens, secrets like user identification and access tokens. You can then use [policies](/docs/reference/policies) to examine the context and determine if a request is allowed access to parts of your typegraph. You can also [inject](/docs/reference/types/injections) data from the context, to set materalizer inputs for example, using `from_context`.
+
+The following example uses basic authentication in order to only allow access for admin users. Basic authentication relies on a username and password pair. We specify the password through typegraph secrets with the format `BASIC_{username}`. In this case, the secret `BASIC_andim=password` is set.
 
     <TGExample
-          typegraph="authentication"
-          python={require("../../../../examples/typegraphs/authentication.py")}
-          typescript={require("!!code-loader!../../../../examples/typegraphs/authentication.ts")}
-          query={require("./authentication.graphql")}
-          headers={{
-            Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",
+      typegraph="authentication"
+      python={require("!!code-loader!../../../../examples/typegraphs/authentication.py")}
+      typescript={require("!!code-loader!../../../../examples/typegraphs/authentication.ts")}
+      query={require("./authentication.graphql")}
+      headers={{
+            Authorization: "Basic YW5kaW06cGFzc3dvcmQ=",
           }}
-          tab="headers"
-        />
+      tab="headers"
+      />
 
-More details [here](/docs/reference/typegate/authentication).
+Note, the token is encoded in base64. Decoded, it'd read `andim:password`.
 
-{/* ## Context
+If you were to try to send a request without the header, you'd notice that `get_full_context` still returns a result. An empty object. Authentication is only responsible for populating the context object and without a policy to shoot down the request, it'll access the materalizers.
 
+On the other hand, `get_context` returns an empty object when no header is found. `from_context` acts as guard preventing the materalizer from being accessed unless the named data is found in the context.
+
+More details about authentication can be found [here](/docs/reference/typegate/authentication).
 
 ## Policies
- */}
-## CORS
 
-<Cors />
+The primary authorization paradigm used in typegraphs is [policy based access control](/docs/reference/policies#policy-based-access-control-pbac). Policies are small pieces of logic that evaluate a request and determine whether access is allowed or not. They're attached to materalizers and are evaluated whenever a request tries to access the materalizer.
 
-```python
-TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"])
+Concretely, policies are implemented using [custom function](/docs/guides/external-functions). These functions take the request's context object as input and return an optional bool. Typescript functions running on `DenoRuntime` is the recommended way for writing policies today and the following example demonstrates how.
+
+Before anything, the following secrets are required to enable the basic authentication scheme.
+
+```yaml
+typegates:
+  dev:
+    # ..
+    secrets:
+      policies:
+        BASIC_admin: "admin_pass"
+        BASIC_user: "user_pass"
 ```
+
+<TGExample
+  typegraph="policies"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/policies.ts")}
+  python={require("!!code-loader!../../../../examples/typegraphs/policies.py")}
+  query={require("./policies.graphql")}
+  headers={{
+    Authorization: "Basic YWRtaW46YWRtaW5fcGFzcw==",
+  }}
+  tab="headers"
+/>
+
+More than one policy can be attached to a single materalizer and combining policies allows for compositionaly defining our access control rules. If a materalizer has more than one policy, they are evaluated in turn and:
+
+- If any one of attached policy returns `true`, the request immediately gains access.
+- If a policy returns `false`, the request is immediately denied access.
+- If the policy means to defer decision to other attached policies, it can return null instead.
+- If all attached policies return `null`, the request is denied access.
+
+There are helper functions on the `Policy` object that allow easy construction of common policy patterns.
+
+- `Policy.public`: allow any request.
+- `Policy.internal`: allow requests originating from within typegraph like custom functions.
+- `Policy.on`: use different policies depending on request effect. Useful for policy shared across many materalizers.
+- `Policy.context`: generate a policy using a simple pattern matching on context object fields.

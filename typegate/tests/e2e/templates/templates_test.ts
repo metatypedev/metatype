@@ -6,101 +6,98 @@ import { newTempDir, workspaceDir } from "test-utils/dir.ts";
 import { exists, expandGlob } from "std/fs/mod.ts";
 import { join } from "std/path/mod.ts";
 import { assert } from "std/assert/mod.ts";
-import { projectDir } from "../../../../dev/utils.ts";
-// import { shell } from "test-utils/shell.ts";
+import { shell } from "test-utils/shell.ts";
 
-const modifiers: Record<string, (dir: string) => Promise<void> | void> = {
-  "python": () => {},
-  "deno": async (dir: string) => {
-    for await (const f of expandGlob("**/*.ts", { root: dir })) {
-      // FIXME: deno is unable to map the types from .d.ts files when used locally
-      const data = (await Deno.readTextFile(f.path)).replace(
-        /\(\s*g\s*\)/,
-        "(g: any)",
-      );
-      const level = f.path.replace(projectDir, "").split("/").length - 2;
-      const newData = data.replaceAll(
-        /npm:@typegraph\/sdk@[0-9]+\.[0-9]+\.[0-9]+/g,
-        `${Array(level).fill("..").join("/")}/typegraph/node/sdk/dist`,
-      );
-
-      await Deno.writeTextFile(f.path, newData);
-    }
-  },
-  "node": async (dir) => {
-    // Method 1. the published version from npm is used
-
-    // // Method 2. install local module
-    // // should work once we have a `node` loader since
-    // // deno does not support file scheme yet
-    // // https://github.com/denoland/deno/issues/18474
-    // await shell(["pnpm", "i", "../../typegraph/node"], {
-    //   currentDir: dir,
-    // });
-
-    // Method 3. rewrite imports
-    // const importMap = JSON.parse(
-    //   await Deno.readTextFile(
-    //     import.meta.resolve("../../../../typegraph/node/sdk/package.json"),
-    //   ),
-    // );
-    for await (const f of expandGlob("**/*.ts", { root: dir })) {
-      const data = await Deno.readTextFile(f.path);
-      const newData = data.replace(
-        /"@typegraph\/sdk\/?(.*)"/g,
-        (_match, chunk) => {
-          return `"../../../typegraph/node/sdk/dist/${chunk}"`;
-          // const importFile = importMap?.exports[chunk]?.import;
-          // console.log(chunk, "=>", importFile);
-          // if (importFile) {
-          //   return `"../../../typegraph/node/sdk/${
-          //     importFile.replace("./", "")
-          //   }"`;
-          // }
-        },
-      );
-      await Deno.writeTextFile(
-        f.path,
-        newData,
-      );
-    }
-  },
+type LangRuntimeConfig<V> = {
+  python: V;
+  deno: V;
+  node: V;
 };
 
-for (const template of ["python", "deno", "node"]) {
-  Meta.test({
-    name: `${template} template`,
-    port: true,
-    systemTypegraphs: true,
-  }, async (t) => {
-    const dir = await newTempDir();
+const envs = {
+  python: {},
+  deno: {
+    MCLI_LOADER_CMD:
+      "deno run -A --import-map=../../typegate/import_map.json {filepath}",
+  },
+  node: {},
+} as LangRuntimeConfig<Record<string, string>>;
 
-    await t.should("should be extracted correctly", async () => {
-      const out = await Meta.cli("new", "--template", template, dir);
-      console.log(out.stdout);
-      const source = join(workspaceDir, "examples/templates", template);
-      const sourcesFiles = await Array.fromAsync(
-        expandGlob("**/*", {
-          root: source,
-        }),
+const install = {
+  python: async (_dir: string) => {},
+  deno: async (dir: string) => {
+    for await (
+      const { path } of expandGlob("./**/*.ts", {
+        root: dir,
+        includeDirs: false,
+        globstar: true,
+      })
+    ) {
+      const content = await Deno.readTextFile(path);
+      const rewrite = content.replace(
+        /"(npm:@typegraph\/sdk@[0-9]+\.[0-9]+\.[0-9]+)(-[0-9]+)?(.+)";/g,
+        (_m, _pref, _, mod) => `"@typegraph/sdk${mod}.ts"`,
       );
-      assert(sourcesFiles.length > 0);
-      for (const f of sourcesFiles) {
-        const relPath = f.path.replace(source, "");
-        assert(exists(join(dir, relPath)));
-      }
-    });
+      await Deno.writeTextFile(path, rewrite);
+    }
+  },
+  node: async (dir: string) => {
+    const opt = { currentDir: dir };
+    // Remove original package
+    await shell("pnpm remove @typegraph/sdk".split(/\s+/), opt);
 
-    await modifiers[template](dir);
-    const out = await Meta.cli(
-      { currentDir: dir },
-      "deploy",
-      "--target",
-      "dev",
-      "--gate",
-      `http://localhost:${t.port}`,
-      "--allow-dirty",
-    );
-    console.log(out);
-  });
+    // Install tsx, etc.
+    await shell("pnpm install".split(/\s+/), opt);
+
+    // Use local node
+    const localNodeSdk = join(dir, "../../typegraph/node");
+    if (!(await exists(localNodeSdk))) {
+      throw new Error(`Node sdk not found at ${localNodeSdk}`);
+    }
+    // await shell(`deno run -A typegraph/deno/dev/deno2node.ts`.split(/\s+/));
+    await shell(`pnpm install ${localNodeSdk}`.split(/\s+/), opt);
+  },
+} as LangRuntimeConfig<(dir: string) => Promise<void>>;
+
+for (const template of ["python", "deno", "node"] as const) {
+  Meta.test(
+    {
+      name: `${template} template`,
+    },
+    async (t) => {
+      const dir = await newTempDir();
+
+      await t.should("should be extracted correctly", async () => {
+        const out = await Meta.cli("new", "--template", template, dir);
+        console.log(out.stdout);
+        const source = join(workspaceDir, "examples/templates", template);
+        const sourcesFiles = await Array.fromAsync(
+          expandGlob("**/*", {
+            root: source,
+          }),
+        );
+        assert(sourcesFiles.length > 0);
+        for (const f of sourcesFiles) {
+          const relPath = f.path.replace(source, "");
+          assert(exists(join(dir, relPath)));
+        }
+      });
+
+      await install[template](dir);
+      // await modifiers[template](dir);
+      const out = await Meta.cli(
+        {
+          currentDir: dir,
+          env: envs[template],
+        },
+        "deploy",
+        "--target",
+        "dev",
+        "--gate",
+        `http://localhost:${t.port}`,
+        "--allow-dirty",
+      );
+      console.log(out);
+    },
+  );
 }

@@ -1,4 +1,5 @@
 query {
+  get_full_context
   get_context {
     username
   }

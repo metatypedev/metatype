@@ -11,7 +11,7 @@ export function CompareLandscape() {
           <tr className="border-none">
             <td className="border-none"></td>
             <td>
-              <small>← individual level</small>
+              <small>← individual entities</small>
               <br />
               transactional
             </td>
@@ -30,7 +30,7 @@ export function CompareLandscape() {
             <td className="bg-slate-100">
               <strong>Metatype</strong>
               <br />
-              <small>query engine for data entities in evolving systems</small>
+              <small>composition engine for entities in evolving systems</small>
             </td>
             <td>
               Trino
@@ -47,7 +47,7 @@ export function CompareLandscape() {
             <td>
               Temporal
               <br />
-              <small>workflow orchestration engine for data operations</small>
+              <small>workflow orchestration for long-running operations</small>
             </td>
             <td>
               Spark

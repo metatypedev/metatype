@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 
 const user = t.struct({
   id: t.uuid().fromRandom(),
@@ -21,13 +21,14 @@ const user = t.struct({
   street: t.string({}, { config: { gen: "address" } }).fromRandom(),
   city: t.string({}, { config: { gen: "city" } }).fromRandom(),
   postcode: t.string({}, { config: { gen: "postcode" } }).fromRandom(),
-  country: t.string({}, { config: { gen: "country", full: true } })
+  country: t
+    .string({}, { config: { gen: "country", full: true } })
     .fromRandom(),
   uri: t.string({ format: "uri" }).fromRandom(),
   hostname: t.string({ format: "hostname" }).fromRandom(),
 });
 
-typegraph("random_injection", (g: any) => {
+export const tg = await typegraph("random_injection", (g: any) => {
   const pub = Policy.public();
   const deno = new DenoRuntime();
 

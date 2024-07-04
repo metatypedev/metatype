@@ -7,7 +7,9 @@ Meta.test({
   name: "Union type",
   introspection: true,
 }, async (t) => {
-  const e = await t.engine("type_nodes/union_node_attr.py");
+  const e = await t.engine(
+    "type_nodes/union_node_attr.py",
+  );
 
   await t.should("be normalized and represented as rgb color", async () => {
     await gql`

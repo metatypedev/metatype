@@ -1,6 +1,21 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
-/// <reference types="./runtime.d.ts" />
+
+import type {
+  ParsedDiff,
+  PrismaApplyOut,
+  PrismaCreateOut,
+  PrismaDeployOut,
+  PrismaQueryInp,
+  PrismaRegisterEngineInp,
+  TemporalRegisterInput,
+  TemporalWorkflowDescribeInput,
+  TemporalWorkflowDescribeOutput,
+  TemporalWorkflowQueryInput,
+  TemporalWorkflowSignalInput,
+  TemporalWorkflowStartInput,
+  WasmInput,
+} from "./runtime.js";
 
 export function get_version() {
   return Meta.version();
@@ -24,26 +39,6 @@ export type FormatCodeOut =
       message: string;
     };
   };
-
-export function typescript_format_code(input: FormatCodeInp) {
-  try {
-    const out = Meta.typescriptFormatCode(input.source);
-    return {
-      Ok: {
-        formatted_code: out,
-      },
-    };
-  } catch (err) {
-    if (typeof err == "string") {
-      return {
-        Err: {
-          message: err,
-        },
-      };
-    }
-    throw err;
-  }
-}
 
 export type ValidateInput = {
   // deno-lint-ignore no-explicit-any
@@ -104,9 +99,9 @@ export type WasiOutput =
     };
   };
 
-export function wasmedge_wasi(a0: WasiInput): Promise<WasiOutput> {
+export function wasmtime_wit(a0: WasmInput): Promise<WasiOutput> {
   try {
-    const out = Meta.wasmedgeWasi(a0);
+    const out = Meta.wasmtimeWit(a0);
     return Promise.resolve({ Ok: { res: out } });
   } catch (err) {
     return Promise.resolve({ Err: { message: err.toString() } });
@@ -239,118 +234,6 @@ export async function temporal_workflow_query(
   }
 }
 
-export type WasiVmInitConfig = {
-  vm_name: string;
-  pylib_path: string;
-  wasi_mod_path: string;
-  preopens: Array<string>;
-};
-
-export type WasiVmSetupOut =
-  | "Ok"
-  | {
-    Err: {
-      message: string;
-    };
-  };
-export type WasiVmUnregisterInp = {
-  vm_name: string;
-};
-export function register_virtual_machine(a0: WasiVmInitConfig): WasiVmSetupOut {
-  try {
-    Meta.python.registerVm(a0);
-    return "Ok";
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-
-export function unregister_virtual_machine(
-  a0: WasiVmUnregisterInp,
-): WasiVmSetupOut {
-  try {
-    Meta.python.unregisterVm(a0.vm_name);
-    return "Ok";
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-
-export type WasiReactorOut =
-  | {
-    Ok: {
-      res: string;
-    };
-  }
-  | {
-    Err: {
-      message: string;
-    };
-  };
-export function register_lambda(a0: PythonRegisterInp): WasiReactorOut {
-  try {
-    const res = Meta.python.registerLambda(a0);
-    return { Ok: { res } };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-export function apply_lambda(a0: PythonApplyInp): WasiReactorOut {
-  try {
-    const res = Meta.python.applyLambda(a0);
-    return { Ok: { res } };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-export function unregister_lambda(a0: PythonUnregisterInp): WasiReactorOut {
-  try {
-    const res = Meta.python.unregisterLambda(a0);
-    return { Ok: { res } };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-export function apply_def(a0: PythonApplyInp): WasiReactorOut {
-  try {
-    const res = Meta.python.applyDef(a0);
-    return { Ok: { res } };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-export function register_def(a0: PythonRegisterInp): WasiReactorOut {
-  try {
-    const res = Meta.python.registerDef(a0);
-    return { Ok: { res } };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-export function unregister_def(a0: PythonUnregisterInp): WasiReactorOut {
-  try {
-    const res = Meta.python.unregisterDef(a0);
-    return { Ok: { res } };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-export function register_module(a0: PythonRegisterInp): WasiReactorOut {
-  try {
-    const res = Meta.python.registerModule(a0);
-    return { Ok: { res } };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-export function unregister_module(a0: PythonUnregisterInp): WasiReactorOut {
-  try {
-    const res = Meta.python.unregisterModule(a0);
-    return { Ok: { res } };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
 export type PrismaRegisterEngineOut =
   | "Ok"
   | {
@@ -569,8 +452,4 @@ export function archive(a0: ArchiveInp): ArchiveResult {
   } catch (err) {
     return { Err: { message: err.toString() } };
   }
-}
-
-export function transformTypescript(a0: string): string {
-  return Meta.deno.transformTypescript(a0);
 }

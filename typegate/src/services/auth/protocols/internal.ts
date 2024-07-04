@@ -1,23 +1,31 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { signJWT, verifyJWT } from "../../../crypto.ts";
+import { TypegateCryptoKeys } from "../../../crypto.ts";
+import { getLogger } from "@typegate/log.ts";
 import { Protocol, TokenMiddlewareOutput } from "./protocol.ts";
 
+const logger = getLogger(import.meta);
+
 export class InternalAuth extends Protocol {
-  static init(typegraphName: string): Promise<Protocol> {
-    return Promise.resolve(new InternalAuth(typegraphName));
+  static init(
+    typegraphName: string,
+    cryptoKeys: TypegateCryptoKeys,
+  ): Promise<Protocol> {
+    return Promise.resolve(new InternalAuth(typegraphName, cryptoKeys));
   }
 
-  static emit(): Promise<string> {
+  // TODO non-static
+  static emit(cryptoKeys: TypegateCryptoKeys): Promise<string> {
     const claims = {
       provider: "internal",
     };
-    return signJWT(claims, 30);
+    return cryptoKeys.signJWT(claims, 30);
   }
 
   private constructor(
     typegraphName: string,
+    private cryptoKeys: TypegateCryptoKeys,
   ) {
     super(typegraphName);
   }
@@ -27,7 +35,7 @@ export class InternalAuth extends Protocol {
     _request: Request,
   ): Promise<TokenMiddlewareOutput> {
     try {
-      const claims = await verifyJWT(token);
+      const claims = await this.cryptoKeys.verifyJWT(token);
       if (claims.provider === "internal") {
         return {
           claims,
@@ -41,7 +49,8 @@ export class InternalAuth extends Protocol {
           error: null,
         };
       }
-    } catch {
+    } catch (e) {
+      logger.error(`failed to verify the token: ${e.message ?? e}`);
       return {
         claims: {},
         nextToken: null,

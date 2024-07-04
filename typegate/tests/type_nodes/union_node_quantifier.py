@@ -1,9 +1,12 @@
-from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.typegraph import Graph
+from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
+
+from typegraph import t, typegraph
 
 
 @typegraph()
-def union_quantifier(g: Graph):
+def union_node_quantifier(g: Graph):
     metadata = t.struct(
         {
             "label": t.string(),

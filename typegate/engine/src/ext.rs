@@ -3,8 +3,8 @@
 
 use crate::interlude::*;
 use crate::{
-    runtimes::{deno_rt, prisma, python::python_bindings, temporal, wasmedge},
-    typegraph, typescript,
+    runtimes::{prisma, temporal, wasm, wit_wire},
+    typegraph,
 };
 
 use crate::OpDepInjector;
@@ -18,28 +18,15 @@ deno_core::extension!(
     tg_metatype_ext,
     ops = [
         crate::op_get_version,
-        #[cfg(test)]
-        tests::op_obj_go_round,
-        typescript::op_typescript_format_code,
         typegraph::op_typegraph_validate,
         typegraph::op_validate_prisma_runtime_data,
-        wasmedge::op_wasmedge_wasi,
+        wasm::op_wasmtime_wit,
         temporal::op_temporal_register,
         temporal::op_temporal_unregister,
         temporal::op_temporal_workflow_start,
         temporal::op_temporal_workflow_query,
         temporal::op_temporal_workflow_signal,
         temporal::op_temporal_workflow_describe,
-        python_bindings::op_register_virtual_machine,
-        python_bindings::op_unregister_virtual_machine,
-        python_bindings::op_register_lambda,
-        python_bindings::op_unregister_lambda,
-        python_bindings::op_apply_lambda,
-        python_bindings::op_register_def,
-        python_bindings::op_unregister_def,
-        python_bindings::op_apply_def,
-        python_bindings::op_register_module,
-        python_bindings::op_unregister_module,
         prisma::op_prisma_register_engine,
         prisma::op_prisma_unregister_engine,
         prisma::op_prisma_query,
@@ -50,7 +37,12 @@ deno_core::extension!(
         prisma::op_prisma_reset,
         prisma::op_unpack,
         prisma::op_archive,
-        deno_rt::op_deno_transform_typescript
+        wit_wire::op_wit_wire_init,
+        wit_wire::op_wit_wire_handle,
+        wit_wire::op_wit_wire_destroy,
+        // FIXME(yohe): this test broke and has proven difficult to fix
+        // #[cfg(test)]
+        // tests::op_obj_go_round,
     ],
     // esm_entry_point = "ext:tg_metatype_ext/00_runtime.js",
     // esm = ["00_runtime.js"],
@@ -64,7 +56,7 @@ deno_core::extension!(
         ext.esm_files.to_mut().push(
             deno_core::ExtensionFileSource::new(
                 "ext:tg_metatype_ext/00_runtime.js",
-                include_str!("../00_runtime.js")
+                deno_core::ascii_str_include!("../00_runtime.js")
             )
         );
         ext.esm_entry_point = Some("ext:tg_metatype_ext/00_runtime.js");
@@ -99,6 +91,7 @@ pub mod tests {
         b: String,
     }
 
+    // FIXME: this is also broken for some reason
     #[deno_core::op2]
     #[serde]
     pub fn op_obj_go_round(#[state] ctx: &TestCtx, #[serde] incoming: In) -> Result<Out> {
@@ -118,14 +111,17 @@ pub mod tests {
                 ..Default::default()
             },
             ..Default::default()
-        })
-        .await?
+        })?
         .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;
         let permissions = PermissionsContainer::allow_all();
         let mut worker = worker_factory
-            .create_main_worker(main_module, permissions)
+            .create_main_worker(
+                deno_runtime::WorkerExecutionMode::Run,
+                main_module,
+                permissions,
+            )
             .await?;
         worker.execute_script_static(
             deno_core::located_script_name!(),

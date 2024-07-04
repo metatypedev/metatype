@@ -8,13 +8,11 @@ import { Runtime } from "../runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "../utils.ts";
 import { typegraph_validate } from "native";
 import Chance from "chance";
-
 import {
   initAuth,
   internalAuthName,
   nextAuthorizationHeader,
 } from "../services/auth/mod.ts";
-
 import {
   isBoolean,
   isEither,
@@ -30,7 +28,6 @@ import {
   TypeNode,
 } from "./type_node.ts";
 import { Batcher } from "../types.ts";
-
 import type {
   Cors,
   Materializer as TypeMaterializer,
@@ -43,6 +40,8 @@ import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
 import randomizeRecursively from "../runtimes/random.ts";
+import { Typegate } from "../typegate/mod.ts";
+import { TypeUtils } from "./utils.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -58,44 +57,17 @@ export class SecretManager {
     this.typegraphName = TypeGraph.formatName(typegraph, false);
   }
 
-  static formatSecretName(typegraphName: string, secretName: string): string {
-    return `TG_${typegraphName}_${secretName}`.replaceAll("-", "_")
-      .toUpperCase();
-  }
-
-  private valueOrNull(secretName: string): string | null {
-    const valueFromEnv = Deno.env.get(secretName);
-    const valueFromSecrets = this.secrets[secretName];
-    if (valueFromSecrets) {
-      ensure(
-        !valueFromEnv,
-        `secret "${secretName}" from metatype.yaml cannot override a secret defined by environment variable in the typegate: choose one of those two options`,
-      );
-      return valueFromSecrets;
-    }
-    return valueFromEnv ?? null;
-  }
-
-  secretOrFail(
-    name: string,
-  ): string {
-    const secretName = SecretManager.formatSecretName(this.typegraphName, name);
-    const value = this.valueOrNull(secretName);
+  secretOrFail(name: string): string {
+    const value = this.secretOrNull(name);
     ensure(
       value != null,
-      `cannot find env "${secretName}" for "${this.typegraphName}"`,
+      `cannot find secret "${name}" for "${this.typegraphName}"`,
     );
     return value as string;
   }
 
-  secretOrNull(
-    name: string,
-  ): string | null {
-    const secretName = SecretManager.formatSecretName(
-      this.typegraphName,
-      name,
-    );
-    return this.valueOrNull(secretName);
+  secretOrNull(name: string): string | null {
+    return this.secrets[name] ?? null;
   }
 }
 
@@ -106,7 +78,7 @@ const GRAPHQL_SCALAR_TYPES = {
   [Type.STRING]: "String",
 } as Partial<Record<TypeNode["type"], string>>;
 
-export class TypeGraph {
+export class TypeGraph implements AsyncDisposable {
   static readonly emptyArgs: ast.ArgumentNode[] = [];
   static emptyFields: ast.SelectionSetNode = {
     kind: Kind.SELECTION_SET,
@@ -124,8 +96,10 @@ export class TypeGraph {
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
   name: string;
+  readonly typeUtils: TypeUtils;
 
   private constructor(
+    public typegate: Typegate,
     public tg: TypeGraphDS,
     public secretManager: SecretManager,
     public denoRuntimeIdx: number,
@@ -142,6 +116,14 @@ export class TypeGraph {
       typeByName[tpe.title] = tpe;
     }
     this.typeByName = typeByName;
+    this.typeUtils = new TypeUtils(this);
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
+    if (this.introspection) {
+      await this.introspection[Symbol.asyncDispose]();
+    }
   }
 
   get rawName() {
@@ -174,6 +156,7 @@ export class TypeGraph {
   }
 
   static async init(
+    typegate: Typegate,
     typegraph: TypeGraphDS,
     secretManager: SecretManager,
     staticReference: RuntimeResolver,
@@ -235,6 +218,7 @@ export class TypeGraph {
         );
 
         return initRuntime(runtime.name, {
+          typegate,
           typegraph,
           typegraphName,
           materializers,
@@ -250,6 +234,7 @@ export class TypeGraph {
 
     const auths = new Map<string, Protocol>();
     const tg = new TypeGraph(
+      typegate,
       typegraph,
       secretManager,
       denoRuntimeIdx,
@@ -276,16 +261,12 @@ export class TypeGraph {
     }
 
     // override "internal" to enforce internal auth
-    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
+    auths.set(
+      internalAuthName,
+      await InternalAuth.init(typegraphName, typegate.cryptoKeys),
+    );
 
     return tg;
-  }
-
-  async deinit(): Promise<void> {
-    await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
-    if (this.introspection) {
-      await this.introspection.deinit();
-    }
   }
 
   type(idx: number): TypeNode;
@@ -293,10 +274,7 @@ export class TypeGraph {
     idx: number,
     asType: T,
   ): TypeNode & { type: T };
-  type<T extends TypeNode["type"]>(
-    idx: number,
-    asType?: T,
-  ): TypeNode {
+  type<T extends TypeNode["type"]>(idx: number, asType?: T): TypeNode {
     ensure(
       typeof idx === "number" && idx < this.tg.types.length,
       `cannot find type with index '${idx}'`,
@@ -328,10 +306,7 @@ export class TypeGraph {
     return this.tg.policies[idx];
   }
 
-  parseSecret(
-    schema: TypeNode,
-    name: string,
-  ) {
+  parseSecret(schema: TypeNode, name: string) {
     const value = this.secretManager.secretOrNull(name);
     if (value == undefined) {
       if (isOptional(schema)) {
@@ -346,21 +321,17 @@ export class TypeGraph {
 
     if (isString(schema)) return value;
 
-    throw new Error(
-      `invalid type for secret injection: ${schema.type}`,
-    );
+    throw new Error(`invalid type for secret injection: ${schema.type}`);
   }
 
-  getRandom(
-    schema: TypeNode,
-  ): number | string | null {
+  getRandom(schema: TypeNode): number | string | null {
     const tgTypes: TypeNode[] = this.tg.types;
     let seed = 12; // default seed
     if (
-      this.tg.meta.random_seed !== undefined &&
-      this.tg.meta.random_seed !== null
+      this.tg.meta.randomSeed !== undefined &&
+      this.tg.meta.randomSeed !== null
     ) {
-      seed = this.tg.meta.random_seed;
+      seed = this.tg.meta.randomSeed;
     }
     const chance: typeof Chance = new Chance(seed);
 
@@ -369,15 +340,11 @@ export class TypeGraph {
 
       return result;
     } catch (_) {
-      throw new Error(
-        `invalid type for random injection: ${schema.type}`,
-      );
+      throw new Error(`invalid type for random injection: ${schema.type}`);
     }
   }
 
-  nextBatcher = (
-    type: TypeNode,
-  ): Batcher => {
+  nextBatcher = (type: TypeNode): Batcher => {
     // convenience check to be removed
     const ensureArray = (x: []) => {
       ensure(Array.isArray(x), `${JSON.stringify(x)} not an array`);
@@ -407,8 +374,14 @@ export class TypeGraph {
       };
     }
     ensure(
-      isObject(type) || isInteger(type) || isNumber(type) || isBoolean(type) ||
-        isFunction(type) || isString(type) || isUnion(type) || isEither(type),
+      isObject(type) ||
+        isInteger(type) ||
+        isNumber(type) ||
+        isBoolean(type) ||
+        isFunction(type) ||
+        isString(type) ||
+        isUnion(type) ||
+        isEither(type),
       `object expected but got ${type.type}`,
     );
     return (x: any) => {
@@ -480,9 +453,7 @@ export class TypeGraph {
   //  - an array of strings (for an object)
   //  - a Map<string, string[]> (for an union type)
   //  - `null` for scalar types (no selection set expected)
-  getPossibleSelectionFields(
-    typeIdx: number,
-  ): PossibleSelectionFields {
+  getPossibleSelectionFields(typeIdx: number): PossibleSelectionFields {
     const typeNode = this.type(typeIdx);
     if (typeNode.type === Type.OPTIONAL) {
       return this.getPossibleSelectionFields(typeNode.item);
@@ -497,9 +468,10 @@ export class TypeGraph {
 
     if (typeNode.type === Type.OBJECT) {
       return new Map(
-        Object.entries(typeNode.properties).map((
-          [key, idx],
-        ) => [key, this.getPossibleSelectionFields(idx)]),
+        Object.entries(typeNode.properties).map(([key, idx]) => [
+          key,
+          this.getPossibleSelectionFields(idx),
+        ]),
       );
     }
 
@@ -512,9 +484,10 @@ export class TypeGraph {
       return null;
     }
 
-    const entries = variants.map((
-      idx,
-    ) => [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const);
+    const entries = variants.map(
+      (idx) =>
+        [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const,
+    );
 
     if (entries[0][1] === null) {
       if (entries.some((e) => e[1] !== null)) {
@@ -560,6 +533,8 @@ export class TypeGraph {
     }
     return typeNode;
   }
+
+  // TODO TypeUtils class?
 }
 
 export type PossibleSelectionFields =

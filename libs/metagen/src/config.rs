@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //!  Sample yaml:
+//!  ```yaml
 //!  generators: # this section only required when we support external generators
 //!     - mdk_rust
 //!     - mdk_ts
@@ -10,10 +11,12 @@
 //!       wasm_module: wasm.io/custom_gen
 //!  targets:
 //!     default:
-//!         mdk_rust: # config for any configured generatour under this name
-//!             typegraph: console
-//!             path: ./mats/gen
-//!             annotate_debug: true
+//!         # config for any configured generatour under this name
+//!         generator: mdk_rust
+//!         typegraph: console
+//!         path: ./mats/gen
+//!         annotate_debug: true
+//! ```
 use crate::interlude::*;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -22,7 +25,15 @@ pub struct Config {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct Target(pub HashMap<String, serde_json::Value>);
+pub struct Target(pub Vec<GeneratorConfig>);
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct GeneratorConfig {
+    #[serde(rename = "generator")]
+    pub generator_name: String,
+    #[serde(flatten)]
+    pub other: serde_json::Value,
+}
 
 /// If both name and path are set, name is used to disambiguate
 /// from multiple typegrpahs loaded from file at path.

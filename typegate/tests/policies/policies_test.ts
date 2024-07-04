@@ -1,14 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "../../src/config.ts";
-import { signJWT } from "../../src/crypto.ts";
+import { TypegateConfig } from "../../src/config.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
-async function genSecretKey(): Promise<Record<string, string>> {
-  const key = await crypto.subtle.importKey(
+async function genSecretKey(
+  config: TypegateConfig,
+): Promise<Record<string, string>> {
+  const key = await globalThis.crypto.subtle.importKey(
     "raw",
-    config.tg_secret.slice(32, 64),
+    config.base.tg_secret.slice(32, 64),
     { name: "HMAC", hash: { name: "SHA-256" } },
     true,
     ["verify"],
@@ -18,9 +19,11 @@ async function genSecretKey(): Promise<Record<string, string>> {
 }
 
 Meta.test("Policies", async (t) => {
+  const config = t.typegate.config;
+  const crypto = t.typegate.cryptoKeys;
   const e = await t.engine("policies/policies.py", {
-    secrets: await genSecretKey(),
-    typegraph: "policies",
+    secrets: await genSecretKey(config),
+    // typegraph: "policies",
   });
 
   await t.should("have public access", async () => {
@@ -74,16 +77,16 @@ Meta.test("Policies", async (t) => {
       provider: "native",
       a: "2",
     };
-    const jwt = await signJWT(claims, -10);
+    const jwt = await crypto.signJWT(claims, -10);
 
     await gql`
-        query {
-          pol_two(a: 3) {
-            a
-          }
+      query {
+        pol_two(a: 3) {
+          a
         }
-      `
-      .withHeaders({ "authorization": `bearer ${jwt}` })
+      }
+    `
+      .withHeaders({ authorization: `bearer ${jwt}` })
       .expectErrorContains("jwt expired")
       .expectStatus(401)
       .on(e);
@@ -103,11 +106,12 @@ Meta.test("Policies", async (t) => {
 });
 
 Meta.test("Role jwt policy access", async (t) => {
+  const config = t.typegate.config;
   const e_norm = await t.engine("policies/policies_jwt.py", {
-    secrets: await genSecretKey(),
+    secrets: await genSecretKey(config),
   });
   const e_inject = await t.engine("policies/policies_jwt_injection.py", {
-    secrets: await genSecretKey(),
+    secrets: await genSecretKey(config),
   });
 
   await t.should("have role", async () => {
@@ -115,11 +119,12 @@ Meta.test("Role jwt policy access", async (t) => {
       query {
         sayHelloWorld
       }
-    `.withContext({
-      user: {
-        name: "some role",
-      },
-    })
+    `
+      .withContext({
+        user: {
+          name: "some role",
+        },
+      })
       .expectData({
         sayHelloWorld: "Hello World!",
       })
@@ -131,11 +136,12 @@ Meta.test("Role jwt policy access", async (t) => {
       query {
         sayHelloRegexWorld
       }
-    `.withContext({
-      user: {
-        name: "bdmin",
-      },
-    })
+    `
+      .withContext({
+        user: {
+          name: "bdmin",
+        },
+      })
       .expectData({
         sayHelloRegexWorld: "Hello World!",
       })
@@ -147,14 +153,13 @@ Meta.test("Role jwt policy access", async (t) => {
       query {
         sayHelloRegexWorld
       }
-    `.withContext({
-      user: {
-        name: "dmin",
-      },
-    })
-      .expectErrorContains(
-        "Authorization failed for policy",
-      )
+    `
+      .withContext({
+        user: {
+          name: "dmin",
+        },
+      })
+      .expectErrorContains("Authorization failed for policy")
       .on(e_norm);
   });
 
@@ -180,13 +185,13 @@ Meta.test("Role jwt policy access", async (t) => {
     "not have access as the typegraph policy is sanitized",
     async () => {
       await gql`
-      query {
-        sayHelloWorld
-      }
-    `
+        query {
+          sayHelloWorld
+        }
+      `
         .expectErrorContains("__ctx")
         .withContext({
-          "literally": "anything",
+          literally: "anything",
         })
         .on(e_inject);
     },
@@ -194,8 +199,9 @@ Meta.test("Role jwt policy access", async (t) => {
 });
 
 Meta.test("Namespace policies", async (t) => {
+  const config = t.typegate.config;
   const e = await t.engine("policies/policies.py", {
-    secrets: await genSecretKey(),
+    secrets: await genSecretKey(config),
     typegraph: "policies",
   });
 
@@ -203,7 +209,9 @@ Meta.test("Namespace policies", async (t) => {
     await gql`
       query {
         ns {
-          select { id }
+          select {
+            id
+          }
         }
       }
     `
@@ -213,8 +221,9 @@ Meta.test("Namespace policies", async (t) => {
 });
 
 Meta.test("Policies for effects", async (t) => {
-  const e = await t.engine("policies/effects.py", {
-    secrets: await genSecretKey(),
+  const config = t.typegate.config;
+  const e = await t.engine("policies/effects_py.py", {
+    secrets: await genSecretKey(config),
   });
 
   await t.should("succeeed", async () => {
@@ -238,7 +247,7 @@ Meta.test("Policies for effects", async (t) => {
   await t.should("fail without authorization", async () => {
     await gql`
       mutation {
-        updateUser(id: 12, set: {email: "john.doe@example.com"}) {
+        updateUser(id: 12, set: { email: "john.doe@example.com" }) {
           id
           email
         }
@@ -263,7 +272,7 @@ Meta.test("Policies for effects", async (t) => {
   await t.should("should succeed with appropriate autorization", async () => {
     await gql`
       mutation {
-        updateUser(id: 12, set: {email: "john.doe@example.com"}) {
+        updateUser(id: 12, set: { email: "john.doe@example.com" }) {
           id
           email
         }

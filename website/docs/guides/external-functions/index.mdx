@@ -3,21 +3,152 @@ sidebar_position: 50
 ---
 
 import TGExample from "@site/src/components/TGExample";
-import CodeBlock from "@theme-original/CodeBlock";
 
-# Run serverless functions
+# Custom functions
 
-{/* ## Embedded runner
+Custom functions can be used to run custom code at different points of a typegraph. These constructs fall under [functions](/docs/concepts/mental-model#functions) which are, concretly, operations associated to a specific runtime. For some common tasks, like simple operations on database tables for example, runtime implementations provide function [generators](/docs/reference/runtimes/prisma#generators) to minimize boilerplate. For cases not expressible by generators, runtimes like the `DenoRuntime` allow us to write more powerful custom functions.
 
-## External runner */}
+Custom functions are commonly used for:
 
-Typegraphs allow us to define and execute at different places to accomplish myriad of tasks:
+- Specialized business logic to respond directly to incoming requests
+- Authentication policy logic
 
-<TGExample typegraph="math" 
-    python={require("../../../../examples/typegraphs/math.py")}
-    query={require('./math.graphql')} 
-    />
+The following example uses the `DenoRuntime` to respond to requests and define a policy.
 
-Here's what `fib.ts` looks like:
+<TGExample
+  typegraph="math"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/math.ts")}
+  python={require("!!code-loader!../../../../examples/typegraphs/math.py")}
+  query={require("./math.graphql")}
+/>
 
-<CodeBlock language="typescript">{require("!!code-loader!../../../../examples/typegraphs/scripts/fib.ts").content}</CodeBlock>
+Note that for the `fib` root function, we're using a typescript module in an external file. Here's what `scripts/fib.ts` looks like:
+
+<TGExample
+  typescript={require("!!code-loader!../../../../examples/typegraphs/scripts/fib.ts")}
+  disablePlayground
+/>
+
+The following runtimes can be used to run custom functions:
+
+- [`DenoRuntime`](/docs/reference/runtimes/deno/) through typescript code.
+- [`PythonRuntime`](/docs/reference/runtimes/python/) through python code.
+- [`WasmRuntime`](/docs/reference/runtimes/wasm/) through wasm modules.
+- [`PrismaRuntime`](/docs/reference/runtimes/prisma/) throw raw SQL queries.
+
+## Accessing function context
+
+:::warning Beta
+
+The following feature is currently only implemented for the `DenoRuntime`.
+
+:::
+
+On some runtimes, custom functions are passed to the context object along with the function inputs. This object provides access to all kinds of information about the context in which the function is running. The following example illustrates availaible fields:
+
+<TGExample
+  typegraph="func-ctx"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/func-ctx.ts")}
+  python={require("!!code-loader!../../../../examples/typegraphs/func-ctx.py")}
+  query={require("./ctx.graphql")}
+/>
+
+Note, the typescript version of the sample uses a closure instead of a string snippet to define the function. This is a simple syntax sugar availaible when using `DenoRuntime` through the typescript sdk or the `PythonRuntime` the python one. Consult the reference for each runtime to look at what's availaible.
+
+## Accessing the typegraph
+
+:::warning Beta
+
+The following feature is currently only implemented for the `DenoRuntime`.
+
+:::
+
+To do anything meaningful with custom functions, you'll want to access the rest of functionality implemented on your typegraph. The primary way of doing this is by sending GraphqQl queries from within your function. On the `DenoRuntime`, to make this easier, there's a `gql` object passed to all functions. The following exapmle illustrates how it functions:
+
+<TGExample
+  typegraph="func-gql"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/func-gql.ts")}
+  python={require("!!code-loader!../../../../examples/typegraphs/func-gql.py")}
+  query={require("./gql.graphql")}
+/>
+
+And `scripts/createVote.ts` looks like:
+
+<TGExample
+  typescript={require("!!code-loader!../../../../examples/typegraphs/scripts/createVote.ts")}
+  disablePlayground
+/>
+## Generating types
+
+:::warning Beta
+
+The following feature is not yet stable.
+
+:::
+
+Custom functions can be made smoother to develop or more robust to changes by using the [metagen](/docs/reference/metagen) to generate code for them. By using the generated types along with static analysis tools in your workflow, this allows you to avoid many cases of drift between your custom functions and your typegraph. Not to mention improving the development experience of writing custom functions. The code generated for Python and Rust targets also includes the serialization boilerplate and utilities that you'd need for those to even get started in those languages.
+
+The metagen library is availaible within the [meta CLI](/docs/reference/meta-cli) or the [typegraph SDK](/docs/reference/typegraph#sdks). In the following example we'll use the CLI to generate typescript code for a simple typegraph.
+
+<TGExample
+  typegraph="metagen-deno"
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-deno.ts")}
+  python={require("!!code-loader!../../../../examples/typegraphs/metagen-deno.py")}
+  query={require("./metagen.graphql")}
+/>
+
+We'll need to configure metagen through the `metatype.yaml` file. We add a new target to the metagen section that does what we need.
+
+```yaml
+metagen:
+  targets:
+    # named targets to configure a bunch of generators together
+    metagen_deno:
+      - generator: mdk_typescript # generator to use
+        # path to generate to
+        path: ./metagen/ts/
+        # point to the typegraph location
+        # or name of typegraph on a typegate somehwere
+        typegraph_path: ./metagen-deno.ts
+```
+
+We can configure multiple target in our config file. Each target can have mutiple generator configurations. Metagen currently [implements](/docs/reference/metagen) for the Typescript, Python and Rust targets.
+
+We can then invoke the target using the following command:
+
+```bash
+meta gen metagen_deno
+```
+
+This results in the following files.
+
+```bash
+❯ lsd --tree metagen
+ metagen
+└──  ts
+    └──  mdk.ts
+```
+
+Within `mdk.ts` and the types and helpers, all the types from your typegraph should be there. Something like:
+
+<details>
+
+<summary>Code generation sample. Collapsed for aesthetic reasons.</summary>
+
+<TGExample
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen/ts/mdk.ts")}
+  disablePlayground
+/>
+
+</details>
+
+Note, this also include typescript function types for specific typegraph functions. By default, the `mdk_typescript` generator will only include stub function types for those defined on the `DenoRuntime` but this is [configurable](/docs/reference/metagen#mdk_typescript).
+
+We can then use these types in the following manner. Add the following snippet into `metagen/ts/remix.ts`.
+
+<TGExample
+  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen/ts/remix.ts")}
+  disablePlayground
+/>
+
+Ofcourse, we'll need to include both our implementation and the generated code when defining our typegraph functions.

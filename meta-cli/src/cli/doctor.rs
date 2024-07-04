@@ -1,22 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{path::PathBuf, sync::Arc};
-
-use crate::{
-    cli::ui,
-    config::{Config, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS},
-    fs::{clean_path, find_in_parents},
-    global_config::GlobalConfig,
-    typegraph::loader::Discovery,
-};
+use crate::{interlude::*, typegraph::loader::discovery::Discovery};
 
 use super::{Action, ConfigArgs};
-use actix_web::dev::ServerHandle;
-use anyhow::Result;
-use async_trait::async_trait;
+use crate::cli::ui;
+use crate::config::{Config, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS};
+use crate::fs::{clean_path, find_in_parents};
+use crate::global_config::GlobalConfig;
 use clap::Parser;
-use colored::Colorize;
+use owo_colors::OwoColorize;
 use std::process::Command;
 
 #[derive(Parser, Debug)]
@@ -38,7 +31,8 @@ fn shell(cmds: Vec<&str>) -> Result<String> {
 
 #[async_trait]
 impl Action for Doctor {
-    async fn run(&self, args: ConfigArgs, _: Option<ServerHandle>) -> Result<()> {
+    #[tracing::instrument]
+    async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = &args.dir()?;
 
         let w = 60;

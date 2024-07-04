@@ -34,13 +34,13 @@ export function useGifScroll(delta = 0.01, saveDelay = 100) {
 
 export function useVirtualScroll(
   [min, max]: [number, number],
-  speedRatio: number
+  speedRatio: number,
 ) {
   const [values, api] = useSpring(
     () => ({
       progress: 0,
     }),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export function useVirtualScroll(
 
         virtualScroll = Math.max(
           Math.min(virtualScroll + delta, scrollHeight + max - min),
-          0
+          0,
         );
         const simulatedScroll = unvirtualize(virtualScroll);
 
@@ -162,7 +162,7 @@ export function useVirtualScroll(
 export function useLinearSpring(
   value: SpringValue<number>,
   xs: number[],
-  ys: number[]
+  ys: number[],
 ) {
   if (xs.length !== ys.length) {
     throw new Error("xs and ys must have the same length");

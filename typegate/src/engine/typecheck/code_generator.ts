@@ -23,18 +23,18 @@ export class CodeGenerator {
     const comparisons = [];
 
     if (
-      ([
-        Type.BOOLEAN,
-        Type.FLOAT,
-        Type.INTEGER,
-        Type.STRING,
-      ] as TypeNode["type"][])
-        .includes(typeNode.type)
+      (
+        [
+          Type.INTEGER,
+          Type.STRING,
+          Type.FLOAT,
+          Type.BOOLEAN,
+          Type.FILE,
+        ] as TypeNode["type"][]
+      ).includes(typeNode.type)
     ) {
       // shallow comparison
-      comparisons.push(
-        ...typeNode.enum!.map((val) => `value !== ${val}`),
-      );
+      comparisons.push(...typeNode.enum!.map((val) => `value !== ${val}`));
     } else {
       // deep comparison
       comparisons.push(
@@ -169,16 +169,11 @@ export class CodeGenerator {
     itemValidatorName: string,
   ) {
     this.line(`if (value != null) {`);
-    this.line(
-      `${itemValidatorName}(value, path, errors, context)`,
-    );
+    this.line(`${itemValidatorName}(value, path, errors, context)`);
     this.line("}");
   }
 
-  generateArrayValidator(
-    typeNode: ListNode,
-    itemValidatorName: string,
-  ) {
+  generateArrayValidator(typeNode: ListNode, itemValidatorName: string) {
     this.validation(
       `!Array.isArray(value)`,
       "`expected an array, got ${typeof value}`",
@@ -222,10 +217,7 @@ export class CodeGenerator {
       "`expected an object, got ${typeof value}`",
     );
     this.line("else");
-    this.validation(
-      `value == null`,
-      '"exptected a non-null object, got null"',
-    );
+    this.validation(`value == null`, '"exptected a non-null object, got null"');
 
     this.line("else {");
     this.line("const keys = new Set(Object.keys(value))");
@@ -245,10 +237,7 @@ export class CodeGenerator {
     return Object.values(typeNode.properties);
   }
 
-  generateUnionValidator(
-    typeNode: UnionNode,
-    variantValidatorNames: string[],
-  ) {
+  generateUnionValidator(typeNode: UnionNode, variantValidatorNames: string[]) {
     this.line("const failed = [];");
     this.line("let errs;");
 
@@ -279,6 +268,7 @@ export class CodeGenerator {
     variantValidatorNames: string[],
   ) {
     this.line("let matchCount = 0;");
+    this.line("const failed = [];");
     this.line("let errs;");
 
     const variantCount = typeNode.oneOf.length;
@@ -292,16 +282,22 @@ export class CodeGenerator {
       const validator = variantValidatorNames[i];
       this.line(`${validator}(value, path, errs, context);`);
       this.line("if (errs.length === 0) { matchCount += 1 }");
+      this.line("else { failed.push(errs) }");
     }
-
     this.line("if (matchCount === 0) {");
     this.line(
-      'errors.push([path, "Value does not match to any variant of the either type"])',
+      "const failedErrors = failed.map((errs, i) => `\\n  #${i} ${errs.join(', ')}`).join('');",
+    );
+    this.line(
+      "errors.push([path, `Value does not match to any variant of the either type ${failedErrors}`])",
     );
     this.line("}");
     this.line("else if (matchCount > 1) {");
     this.line(
-      'errors.push([path, "Value match to more than one variant of the either type"])',
+      "const failedErrors = failed.map((errs, i) => `\\n  #${i} ${errs.join(', ')}`).join('');",
+    );
+    this.line(
+      "errors.push([path, `Value match to more than one variant of the either type ${failedErrors}`])",
     );
     this.line("}");
   }

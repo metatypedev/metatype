@@ -1,0 +1,13 @@
+query {
+  ctx {
+    parent
+    context
+    effect
+    meta {
+      url
+      token
+    }
+    secrets
+    headers
+  }
+}

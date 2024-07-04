@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { testDir } from "test-utils/dir.ts";
+import { testDir } from "./dir.ts";
 
 export interface ShellOptions {
   stdin?: string;
@@ -33,7 +33,6 @@ async function readOutput(p: Deno.ChildProcess): Promise<ShellOutput> {
     })(),
   ]);
   const status = await p.status;
-  console.log(status);
   return { stdout, stderr, code: status.code };
 }
 

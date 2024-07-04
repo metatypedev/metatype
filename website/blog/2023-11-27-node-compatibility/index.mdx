@@ -1,0 +1,68 @@
+# The Node/Deno SDK is now available
+
+We are happy to announce that we have redesigned our SDKs to support Node/Deno and facilitate the integration of future languages. Most of the [typegraph SDK](/docs/reference/typegraph) is now written in Rust and shaped around a core interface running in WebAssembly.
+
+## Meet `wit`
+
+In the realm of WebAssembly, the [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen) project emerges as the most mature tool to create and maintain the language bindings for WebAssembly modules. This tool introduces WIT (WebAssembly Interface Types) as an Interface Definition Language (IDL) to describe the imports, exports, and capabilities of WebAssembly components seamlessly.
+
+For example, Metatype implements the reactor pattern to handle requests as they come and delegate part of their execution in correct WASM runtime. The wit-bindgen helps there to define the interfaces between the guest (the Metatype runtime) and the host (the typegate) to ensure the correct serialization of the payloads. The `wit` definition could look like this:
+
+```
+package metatype:wit-wire;
+
+interface typegate-wire {
+  hostcall: func(op-name: string, json: string) -> result<string, string>;
+}
+
+interface mat-wire {
+  record handle-req {
+    op-name: string,
+    in-json: string,
+  }
+
+  handle: func(req: handle-req) -> result<string, string>;
+}
+
+world wit-wire {
+  import typegate-wire;
+
+  export mat-wire;
+}
+```
+
+The `wit` file is then used to generate the bindings for the host and the guest in Rust, TypeScript, Python, and other languages. The host bindings are used in the typegate to call the WASM runtime, and the guest bindings are used in the WASM runtime to call the typegate.
+
+## Install the v0.2.x series
+
+The documentation contains now examples for Node and Deno.
+
+### Upgrade with Node
+
+```bash
+npm install @typegraph/sdk
+meta new --template node .
+```
+
+### Upgrade with Deno
+
+```bash
+meta new --template deno .
+```
+
+```typescript
+import { typegraph } from "npm:@typegraph/sdk/index.js";
+```
+
+### Upgrade with Python
+
+```python
+pip3 install --upgrade typegraph
+poetry add typegraph@latest
+```
+
+## Give us feedback!
+
+This new release enables us to provide a consistent experience across all languages and reduce the work to maintain the existing Python SDK.
+
+As always, report issues and let us know what you think on [GitHub](https://github.com/metatypedev/metatype/discussions).

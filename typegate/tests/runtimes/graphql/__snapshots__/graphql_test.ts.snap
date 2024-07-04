@@ -2,7 +2,6 @@ export const snapshot = {};
 
 snapshot[`Typegraph generation with GraphQL runtime 1`] = `
 '{
-  "\$id": "https://metatype.dev/specs/0.0.3.json",
   "types": [
     {
       "type": "object",
@@ -13,16 +12,22 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "as_id": false,
       "properties": {
         "user": 1,
-        "createUser": 6
+        "users": 7,
+        "createUser": 11,
+        "create_message": 14,
+        "messages": 27
       },
       "required": [
         "user",
-        "createUser"
+        "users",
+        "createUser",
+        "create_message",
+        "messages"
       ]
     },
     {
       "type": "function",
-      "title": "func_5",
+      "title": "func_20",
       "runtime": 1,
       "policies": [
         0
@@ -37,7 +42,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "object",
-      "title": "object_3",
+      "title": "object_18",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -48,12 +53,12 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "required": []
     },
     {
-      "type": "integer",
-      "title": "integer_2",
+      "type": "string",
+      "title": "string_17",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false
+      "as_id": true
     },
     {
       "type": "object",
@@ -63,13 +68,22 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 5
+        "id": 5,
+        "name": 6
       },
       "required": []
     },
     {
-      "type": "integer",
-      "title": "integer_0",
+      "type": "string",
+      "title": "string_0",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": true
+    },
+    {
+      "type": "string",
+      "title": "string_1",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -77,18 +91,914 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "function",
-      "title": "func_9",
+      "title": "func_25",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "as_id": false,
-      "input": 2,
-      "output": 4,
+      "input": 8,
+      "output": 9,
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_21",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {},
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_23",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "data": 10
+      },
+      "required": []
+    },
+    {
+      "type": "list",
+      "title": "_22_User[]",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 4
+    },
+    {
+      "type": "function",
+      "title": "func_28",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 12,
+      "output": 4,
+      "materializer": 3,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_26",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "input": 13
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "CreateUserInput",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "name": 6,
+        "username": 6,
+        "email": 6
+      },
+      "required": []
+    },
+    {
+      "type": "function",
+      "title": "func_34",
+      "runtime": 2,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 23,
+      "output": 26,
+      "materializer": 4,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "message",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 16,
+        "title": 17,
+        "user_id": 18,
+        "user": 19
+      },
+      "required": []
+    },
+    {
+      "type": "integer",
+      "title": "integer_7",
+      "runtime": 2,
+      "policies": [],
+      "config": {
+        "auto": true
+      },
+      "as_id": true
+    },
+    {
+      "type": "string",
+      "title": "string_8",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "string",
+      "title": "uid",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "function",
+      "title": "func_15",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "input": 20,
+      "output": 22,
+      "materializer": 5,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_13",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 21
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_12",
+      "runtime": 1,
+      "policies": [],
+      "injection": {
+        "source": "parent",
+        "data": {
+          "value": 18
+        }
+      },
+      "config": {},
+      "as_id": true
+    },
+    {
+      "type": "optional",
+      "title": "_14_User?",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 4,
+      "default_value": null
+    },
+    {
+      "type": "object",
+      "title": "object_31",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "data": 24
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "_message_CreateInput",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 25,
+        "title": 17,
+        "user_id": 18
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "optional_29",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 16,
+      "default_value": null
+    },
+    {
+      "type": "object",
+      "title": "_messageOutputType",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 16,
+        "title": 17,
+        "user_id": 18,
+        "user": 19
+      },
+      "required": []
+    },
+    {
+      "type": "function",
+      "title": "func_97",
+      "runtime": 2,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 28,
+      "output": 83,
+      "materializer": 6,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "_message_QueryInput",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "where": 29,
+        "orderBy": 64,
+        "take": 71,
+        "skip": 73,
+        "cursor": 75,
+        "distinct": 80
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "_72_QuerymessageWhereInput?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 30,
+      "default_value": null
+    },
+    {
+      "type": "object",
+      "title": "QuerymessageWhereInput",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 31,
+        "title": 44,
+        "user_id": 60,
+        "AND": 61,
+        "OR": 61,
+        "NOT": 63
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "_47__integer_filter_c?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 32,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "_integer_filter_c",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 33,
+      "default_value": null
+    },
+    {
+      "type": "union",
+      "title": "union_45",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "anyOf": [
+        34,
+        43
+      ]
+    },
+    {
+      "type": "either",
+      "title": "_integer_filter",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "oneOf": [
+        35,
+        36,
+        37,
+        38,
+        40,
+        42
+      ]
+    },
+    {
+      "type": "integer",
+      "title": "integer_35",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "object",
+      "title": "object_38",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "equals": 35
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_39",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "not": 35
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_40",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "lt": 39,
+        "gt": 39,
+        "lte": 39,
+        "gte": 39
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "optional_36",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 35,
+      "default_value": null
+    },
+    {
+      "type": "object",
+      "title": "object_41",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "in": 41
+      },
+      "required": []
+    },
+    {
+      "type": "list",
+      "title": "list_37",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 35
+    },
+    {
+      "type": "object",
+      "title": "object_42",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "notIn": 41
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_44",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "not": 34
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "_64__string_filter_c?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 45,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "_string_filter_c",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 46,
+      "default_value": null
+    },
+    {
+      "type": "union",
+      "title": "union_62",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "anyOf": [
+        47,
+        59
+      ]
+    },
+    {
+      "type": "union",
+      "title": "_string_filter",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "anyOf": [
+        17,
+        48,
+        49,
+        50,
+        52,
+        53,
+        56,
+        57
+      ]
+    },
+    {
+      "type": "object",
+      "title": "object_51",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "equals": 17
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_52",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "not": 17
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_53",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "in": 51
+      },
+      "required": []
+    },
+    {
+      "type": "list",
+      "title": "list_50",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 17
+    },
+    {
+      "type": "object",
+      "title": "object_54",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "notIn": 51
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_57",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "contains": 17,
+        "mode": 54
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "optional_56",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 55,
+      "default_value": null
+    },
+    {
+      "type": "string",
+      "title": "string_55",
+      "runtime": 2,
+      "policies": [],
+      "enum": [
+        "\\\\"insensitive\\\\""
+      ],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "object",
+      "title": "object_58",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "search": 17
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_59",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "startsWith": 58,
+        "endsWith": 58
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "optional_49",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 17,
+      "default_value": null
+    },
+    {
+      "type": "object",
+      "title": "object_61",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "not": 47
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "_65__string_filter_c?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 45,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "_69__68_QuerymessageWhereInput[]?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 62,
+      "default_value": null
+    },
+    {
+      "type": "list",
+      "title": "_68_QuerymessageWhereInput[]",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 30
+    },
+    {
+      "type": "optional",
+      "title": "_70_QuerymessageWhereInput?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 30,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "_80__message_OrderBy?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 65,
+      "default_value": null
+    },
+    {
+      "type": "list",
+      "title": "_message_OrderBy",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 66
+    },
+    {
+      "type": "object",
+      "title": "object_78",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 67,
+        "title": 67,
+        "user_id": 67
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "_Sort",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 68,
+      "default_value": null
+    },
+    {
+      "type": "union",
+      "title": "union_76",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "anyOf": [
+        69,
+        70
+      ]
+    },
+    {
+      "type": "object",
+      "title": "object_75",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "sort": 70
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "_SortOrder",
+      "runtime": 2,
+      "policies": [],
+      "enum": [
+        "\\\\"asc\\\\"",
+        "\\\\"desc\\\\""
+      ],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "optional",
+      "title": "_82__Take?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 72,
+      "default_value": null
+    },
+    {
+      "type": "integer",
+      "title": "_Take",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "exclusiveMinimum": 0
+    },
+    {
+      "type": "optional",
+      "title": "_84__Skip?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 74,
+      "default_value": null
+    },
+    {
+      "type": "integer",
+      "title": "_Skip",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "minimum": 0
+    },
+    {
+      "type": "optional",
+      "title": "_89__message_Cursor?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 76,
+      "default_value": null
+    },
+    {
+      "type": "union",
+      "title": "_message_Cursor",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "anyOf": [
+        77,
+        78,
+        79
+      ]
+    },
+    {
+      "type": "object",
+      "title": "object_85",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 16
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_86",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "title": 17
+      },
+      "required": []
+    },
+    {
+      "type": "object",
+      "title": "object_87",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "user_id": 18
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "_92__KeysOf_message?",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 81,
+      "default_value": null
+    },
+    {
+      "type": "list",
+      "title": "_KeysOf_message",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 82
+    },
+    {
+      "type": "string",
+      "title": "string_90",
+      "runtime": 2,
+      "policies": [],
+      "enum": [
+        "\\\\"id\\\\"",
+        "\\\\"title\\\\"",
+        "\\\\"user_id\\\\""
+      ],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "list",
+      "title": "_95_messageWithNestedCount[]",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 84
+    },
+    {
+      "type": "object",
+      "title": "messageWithNestedCount",
+      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 16,
+        "title": 17,
+        "user_id": 18,
+        "user": 19
+      },
+      "required": []
     }
   ],
   "materializers": [
@@ -115,6 +1025,17 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       }
     },
     {
+      "name": "query",
+      "runtime": 1,
+      "effect": {
+        "effect": "read",
+        "idempotent": true
+      },
+      "data": {
+        "path": null
+      }
+    },
+    {
       "name": "mutation",
       "runtime": 1,
       "effect": {
@@ -123,6 +1044,41 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       },
       "data": {
         "path": null
+      }
+    },
+    {
+      "name": "prisma_operation",
+      "runtime": 2,
+      "effect": {
+        "effect": "create",
+        "idempotent": false
+      },
+      "data": {
+        "table": "message",
+        "operation": "createOne"
+      }
+    },
+    {
+      "name": "query",
+      "runtime": 1,
+      "effect": {
+        "effect": "read",
+        "idempotent": true
+      },
+      "data": {
+        "path": null
+      }
+    },
+    {
+      "name": "prisma_operation",
+      "runtime": 2,
+      "effect": {
+        "effect": "read",
+        "idempotent": true
+      },
+      "data": {
+        "table": "message",
+        "operation": "findMany"
       }
     }
   ],
@@ -137,7 +1093,73 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "name": "graphql",
       "data": {
-        "endpoint": "https://example.com/api/graphql"
+        "endpoint": "https://graphqlzero.almansi.me/api"
+      }
+    },
+    {
+      "name": "prisma",
+      "data": {
+        "name": "graphql",
+        "connection_string_secret": "POSTGRES",
+        "models": [
+          {
+            "typeIdx": 15,
+            "typeName": "message",
+            "props": [
+              {
+                "type": "scalar",
+                "key": "id",
+                "propType": {
+                  "type": "Int"
+                },
+                "cardinality": "one",
+                "typeIdx": 16,
+                "injection": null,
+                "unique": false,
+                "auto": true,
+                "defaultValue": null
+              },
+              {
+                "type": "scalar",
+                "key": "title",
+                "propType": {
+                  "type": "String",
+                  "format": "Plain"
+                },
+                "cardinality": "one",
+                "typeIdx": 17,
+                "injection": null,
+                "unique": false,
+                "auto": false,
+                "defaultValue": null
+              },
+              {
+                "type": "scalar",
+                "key": "user_id",
+                "propType": {
+                  "type": "String",
+                  "format": "Plain"
+                },
+                "cardinality": "one",
+                "typeIdx": 18,
+                "injection": null,
+                "unique": false,
+                "auto": false,
+                "defaultValue": null
+              }
+            ],
+            "idFields": [
+              "id"
+            ],
+            "uniqueConstraints": []
+          }
+        ],
+        "relationships": [],
+        "migration_options": {
+          "migration_files": null,
+          "create": false,
+          "reset": false
+        }
       }
     }
   ],
@@ -165,8 +1187,8 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     "auths": [],
     "rate": null,
     "version": "0.0.3",
-    "random_seed": null,
-    "ref_artifacts": {}
+    "randomSeed": null,
+    "artifacts": {}
   }
 }'
 `;

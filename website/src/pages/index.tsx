@@ -30,11 +30,10 @@ function Header() {
           </span>{" "}
           platform
         </Heading>
-        <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[850px]">
-          Build <strong>serverless</strong> backends with{" "}
-          <strong>zero-trust</strong> and{" "}
-          <strong>less code</strong>, no matter where and how your (legacy)
-          systems are.
+        <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[880px]">
+          Build <strong>backend components</strong> with <strong>WASM</strong>,{" "}
+          <strong>Typescript</strong> and <strong>Python</strong>, no matter
+          where and how your (legacy) systems are.
         </p>
         <div className="md:flex md:px-32 justify-center">
           <Link
@@ -67,7 +66,6 @@ function Intro({
       <div>
         <div className="flex text-sm mb-8">
           <ChoicePicker
-            name="profile"
             choices={profiles}
             choice={profile}
             onChange={setProfile}
@@ -78,10 +76,9 @@ function Intro({
           <span className="text-metared">castle</span> building
         </Heading>
         <p>
-          And castle building is{" "}
-          <strong>hard</strong>. Even the best teams can struggle to build
-          according to the plans, especially with the ever evolving needs and
-          the tech landscape complexities.
+          And castle building is <strong>hard</strong>. Even the best teams can
+          struggle to build according to the plans, especially with the ever
+          evolving needs and the tech landscape complexities.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -99,13 +96,13 @@ function Stability(): JSX.Element {
     <section>
       <div>
         <Heading as="h2">
-          Build <span className="text-metared">stable</span> castle with{" "}
+          Build <span className="text-metared">reliable</span> castle with{" "}
           <span className="text-metared">typegraphs</span>
         </Heading>
         <p>
-          Typegraphs are programmable <strong>virtual graphs</strong>{" "}
-          describing all the components of your stack. They enable you to
-          compose APIs, storage and business logic in a type safe manner.
+          Typegraphs are programmable <strong>virtual graphs</strong> describing
+          all the components of your stack. They enable you to compose APIs,
+          storage and business logic in a type safe manner.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -127,9 +124,8 @@ function Modularity(): JSX.Element {
           <span className="text-metared">typegate</span>
         </Heading>
         <p>
-          Typegate is a distributed GraphQL/REST <strong>query engine</strong>
-          {" "}
-          that compiles, optimizes, runs and caches queries over typegraphs. It
+          Typegate is a GraphQL/REST <strong>composition engine</strong> that
+          compiles, optimizes, runs and caches queries over typegraphs. It
           enforces authentication, authorization and security for you.
         </p>
       </div>
@@ -152,9 +148,9 @@ function Reusability(): JSX.Element {
           <span className="text-metared">Metatype</span>
         </Heading>
         <p>
-          Install third parties as <strong>dependencies</strong>{" "}
-          and start reusing components. The Meta CLI offers you live reloading
-          and one-command deployment to Metacloud or your own instance.
+          Install third parties as <strong>dependencies</strong> and start
+          reusing components. The Meta CLI offers you live reloading and
+          one-command deployment to Metatype cloud or your self-hosted instance.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -236,6 +232,7 @@ const featureList = [
   },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function Features(): JSX.Element {
   return (
     <section className="grid-3 text-center">
@@ -274,7 +271,7 @@ function TryIt(): JSX.Element {
       </div>
       <div className="w-full">
         <TGExample
-          python={require("../../../examples/typegraphs/index.py")}
+          python={require("!!code-loader!../../../examples/typegraphs/index.py")}
           typescript={require("!!code-loader!../../../examples/typegraphs/index.ts")}
           typegraph="homepage"
           variables={{ email: "fill-me", message: "Great tool!" }}
@@ -371,6 +368,7 @@ function Runtimes(): JSX.Element {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DemoVideo(): JSX.Element {
   return (
     <section>
@@ -380,9 +378,9 @@ function DemoVideo(): JSX.Element {
           <span className="text-metared">in hours</span>
         </Heading>
         <p>
-          Watch the <strong>3 minutes introduction</strong>{" "}
-          of the Metatype platform and start designing your own typegraph. Once
-          you have understood the basics, you already feel productive.
+          Watch the <strong>3 minutes introduction</strong> of the Metatype
+          platform and start designing your own typegraph. Once you have
+          understood the basics, you already feel productive.
         </p>
       </div>
       <div className="flex justify-center">
@@ -424,7 +422,7 @@ function Landscape(): JSX.Element {
 const profiles = {
   leader: "I'm an engineering leader",
   developer: "I'm a developer",
-  business: "I'm not familiar with APIs",
+  //business: "I'm not familiar with APIs",
 };
 
 type Profile = keyof typeof profiles;
@@ -432,28 +430,29 @@ type Profile = keyof typeof profiles;
 const order: Record<Profile, JSX.Element> = {
   leader: (
     <>
-      <Landscape />
-      <DemoVideo />
+      <Stability />
+      <Modularity />
+      <Reusability />
       <TryIt />
-      <Features />
+      <Landscape />
+      <Runtimes />
     </>
   ),
   developer: (
     <>
-      <TryIt />
-      <DemoVideo />
       <Landscape />
+      <TryIt />
       <Runtimes />
     </>
   ),
-  business: (
+  /*business: (
     <>
       <Features />
       <Landscape />
       <DemoVideo />
       <Runtimes />
     </>
-  ),
+  ),*/
 };
 
 export default function Home(): JSX.Element {
@@ -467,9 +466,7 @@ export default function Home(): JSX.Element {
       <Header />
       <main id="homepage" className="container">
         <Intro profile={profile} setProfile={setProfile} />
-        <Stability />
-        <Modularity />
-        <Reusability />
+
         {order[profile]}
       </main>
     </Layout>

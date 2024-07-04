@@ -35,18 +35,18 @@ export async function initRuntime(
 }
 
 export async function init_runtimes(): Promise<void> {
-  await Promise.allSettled([
-    import("./Runtime.ts"),
+  await Promise.all([
     import("./deno.ts"),
     import("./graphql.ts"),
     import("./http.ts"),
     import("./prisma.ts"),
-    import("./python_wasi.ts"),
+    import("./python.ts"),
     import("./random.ts"),
     import("./s3.ts"),
     import("./temporal.ts"),
     import("./typegate.ts"),
     import("./typegraph.ts"),
-    import("./wasmedge.ts"),
+    import("./wasm_wire.ts"),
+    import("./wasm_reflected.ts"),
   ]);
 }

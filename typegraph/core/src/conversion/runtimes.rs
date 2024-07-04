@@ -1,17 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
-
-use std::rc::Rc;
-
 use crate::errors::Result;
 use crate::runtimes::prisma::get_prisma_context;
 use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
-    Runtime, TemporalMaterializer, WasiMaterializer,
+    Runtime, TemporalMaterializer, WasmMaterializer,
 };
-use crate::wit::core::RuntimeId;
+use crate::wit::core::{Artifact as WitArtifact, RuntimeId};
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
@@ -21,16 +17,18 @@ use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
-use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
+use common::typegraph::runtimes::wasm::WasmRuntimeData;
 use common::typegraph::runtimes::{
-    KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
+    Artifact, KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
 };
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
-use sha2::{Digest, Sha256};
-
 use serde_json::json;
+use sha2::{Digest, Sha256};
+use std::collections::HashMap;
+use std::rc::Rc;
+use unindent::Unindent;
 
 fn effect(typ: EffectType, idempotent: bool) -> Effect {
     Effect {
@@ -92,7 +90,10 @@ impl MaterializerConverter for DenoMaterializer {
                 let mut data = IndexMap::new();
                 data.insert(
                     "script".to_string(),
-                    serde_json::Value::String(format!("var _my_lambda = {}", &inline_fun.code)),
+                    serde_json::Value::String(format!(
+                        "var _my_lambda = {}",
+                        &inline_fun.code.unindent()
+                    )),
                 );
                 data.insert(
                     "secrets".to_string(),
@@ -102,7 +103,8 @@ impl MaterializerConverter for DenoMaterializer {
             }
             Module(module) => {
                 let data = serde_json::from_value(json!({
-                    "code": format!("file:{}", module.file),
+                    "entryPoint": module.file,
+                    "deps": module.deps,
                 }))
                 .unwrap();
                 ("module".to_string(), data)
@@ -229,11 +231,12 @@ impl MaterializerConverter for PythonMaterializer {
                 ("def".to_string(), data)
             }
             Module(module) => {
-                let mut data = IndexMap::new();
-                data.insert(
-                    "code".to_string(),
-                    serde_json::Value::String(format!("file:{}", module.file)),
-                );
+                let data = serde_json::from_value(json!({
+                    "entryPoint": module.file,
+                    "deps": module.deps,
+                }))
+                .map_err(|e| e.to_string())?;
+
                 ("pymodule".to_string(), data)
             }
             Import(import) => {
@@ -280,7 +283,27 @@ impl MaterializerConverter for RandomMaterializer {
     }
 }
 
-impl MaterializerConverter for WasiMaterializer {
+impl From<WitArtifact> for Artifact {
+    fn from(artifact: WitArtifact) -> Self {
+        Artifact {
+            path: artifact.path.into(),
+            hash: artifact.hash,
+            size: artifact.size,
+        }
+    }
+}
+
+impl From<Artifact> for WitArtifact {
+    fn from(artifact: Artifact) -> Self {
+        WitArtifact {
+            path: artifact.path.as_os_str().to_str().unwrap().to_string(),
+            hash: artifact.hash,
+            size: artifact.size,
+        }
+    }
+}
+
+impl MaterializerConverter for WasmMaterializer {
     fn convert(
         &self,
         c: &mut TypegraphContext,
@@ -288,17 +311,17 @@ impl MaterializerConverter for WasiMaterializer {
         effect: WitEffect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
-        let WasiMaterializer::Module(mat) = self;
+        let (name, func_name) = match &self {
+            WasmMaterializer::ReflectedFunc(func) => ("wasm_reflected_func", &func.func_name[..]),
+            WasmMaterializer::WireHandler(handler) => ("wasm_wire_handler", &handler.func_name[..]),
+        };
 
         let data = serde_json::from_value(json!({
-            "wasm": mat.module,
-            "func": mat.func_name,
-            "artifact_hash": "", // resolved at finalization
-            "tg_name": None::<String>,
+            "op_name": func_name,
         }))
         .map_err(|e| e.to_string())?;
 
-        let name = "wasi".to_string();
+        let name = name.to_string();
         Ok(Materializer {
             name,
             runtime,
@@ -401,16 +424,21 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             Ok(TGRuntime::Known(Rt::HTTP(data)).into())
         }
         Runtime::Python => {
-            Ok(TGRuntime::Known(Rt::PythonWasi(PythonRuntimeData { config: None })).into())
+            Ok(TGRuntime::Known(Rt::Python(PythonRuntimeData { config: None })).into())
         }
         Runtime::Random(d) => Ok(TGRuntime::Known(Rt::Random(RandomRuntimeData {
             seed: d.seed,
             reset: d.reset.clone(),
         }))
         .into()),
-        Runtime::WasmEdge => {
-            Ok(TGRuntime::Known(Rt::WasmEdge(WasmEdgeRuntimeData { config: None })).into())
-        }
+        Runtime::WasmReflected(data) => Ok(TGRuntime::Known(Rt::WasmReflected(WasmRuntimeData {
+            wasm_artifact: std::path::PathBuf::from(&data.wasm_artifact),
+        }))
+        .into()),
+        Runtime::WasmWire(data) => Ok(TGRuntime::Known(Rt::WasmWire(WasmRuntimeData {
+            wasm_artifact: std::path::PathBuf::from(&data.wasm_artifact),
+        }))
+        .into()),
         Runtime::Prisma(d, _) => Ok(ConvertedRuntime::Lazy(Box::new(
             move |runtime_id, runtime_idx, tg| -> Result<_> {
                 let ctx = get_prisma_context(runtime_id);

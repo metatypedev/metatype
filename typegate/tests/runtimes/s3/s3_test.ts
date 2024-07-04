@@ -56,11 +56,11 @@ Meta.test("s3 typegraphs", async (t) => {
 Meta.test("s3", async (t) => {
   const e = await t.engine("runtimes/s3/s3.py", {
     secrets: {
-      HOST: HOST,
-      REGION: REGION,
-      ACCESS_KEY: ACCESS_KEY,
-      SECRET_KEY: SECRET_KEY,
-      PATH_STYLE: PATH_STYLE,
+      HOST,
+      REGION,
+      access_key: ACCESS_KEY,
+      secret_key: SECRET_KEY,
+      PATH_STYLE,
     },
   });
 
@@ -232,8 +232,8 @@ Meta.test("s3 upload with fetch", async (t) => {
     secrets: {
       HOST: HOST,
       REGION: REGION,
-      ACCESS_KEY: ACCESS_KEY,
-      SECRET_KEY: SECRET_KEY,
+      access_key: ACCESS_KEY,
+      secret_key: SECRET_KEY,
       PATH_STYLE: PATH_STYLE,
     },
   });

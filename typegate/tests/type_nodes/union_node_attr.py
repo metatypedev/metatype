@@ -1,9 +1,12 @@
-from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.typegraph import Graph
+from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
+
+from typegraph import t, typegraph
 
 
 @typegraph()
-def union_attr(g: Graph):
+def union_node_attr(g: Graph):
     rgb = t.struct({"R": t.float(), "G": t.float(), "B": t.float()}, name="Rgb")
     vec = t.struct({"x": t.float(), "y": t.float(), "z": t.float()}, name="Vec")
     pair = t.struct({"first": t.float(), "second": t.float()})

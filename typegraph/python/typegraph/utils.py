@@ -5,7 +5,9 @@ import json
 from functools import reduce
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from typegraph.gen.exports.core import SerializeParams
 from typegraph.gen.exports.utils import ReducePath, ReduceValue
+from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.injection import InheritDef, serialize_static_injection
 from typegraph.wit import store, wit_utils
 
@@ -76,3 +78,16 @@ def build_reduce_data(node: Any, paths: List[ReducePath], curr_path: List[str]):
 
 def unpack_tarb64(tar_b64: str, dest: str):
     return wit_utils.unpack_tarb64(store, tar_b64, dest)
+
+
+frozen_memo: Dict[str, FinalizationResult] = {}
+
+
+def freeze_tg_output(
+    config: SerializeParams, tg_output: TypegraphOutput
+) -> TypegraphOutput:
+    if tg_output.name not in frozen_memo:
+        frozen_memo[tg_output.name] = tg_output.serialize(config)
+    return TypegraphOutput(
+        name=tg_output.name, serialize=lambda _: frozen_memo[tg_output.name]
+    )

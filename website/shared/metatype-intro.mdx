@@ -1,13 +1,32 @@
-Metatype is an open platform for developers to **declaratively build APIs**. It offers a new approach to creating backends, where the developers focus on data modelling and delegate the implementation to the platform.
+Metatype is an open source platform to author and deploy APIs for the cloud and components eras. It provides a declarative programming model that helps you to efficiently design APIs and focus on the functional requirements.
 
-The intent is to address the following challenges:
+The runtime embraces WebAssembly (WASM) as a first-class citizen to allow you to write your business logic in the language of your choice and run it on-demand. Those "backend components" are reusable across your stacks and deployable without pipelines or containers.
 
-- developers are often a bottleneck, and may spend less than 50% of their time on tasks that matter
-- most of the developments needs are similar, yet most of the systems are not interoperable
-- infrastructure management takes time and slows down the deployment velocity
+The platform provides a set of capabilities out of the box:
 
-The platform is composed of the following components:
+- create/read/update/delete data in your database
+- storing files in your cloud storage
+- authenticate users with different providers or using JWTs
+- connecting to third-party/internal APIs
 
-- [**Typegraph**](/docs/reference/typegraph): a multi-language SDK to manage typegraphs - virtual graphs of types - and compose them
-- [**Typegate**](/docs/reference/typegate): a serverless REST/GraphQL gateway to execute queries over typegraphs
-- [**Meta CLI**](/docs/reference/meta-cli): a command-line tool to offer a great developer experience and fast deployment
+And offers an opportunity to climb the one step higher in the abstraction ladder and drastically simplify the building of great APIs and systems!
+
+<br />
+
+<div className="mx-auto max-w-[650px]">
+
+![](evolution.drawio.svg)
+
+</div>
+
+Metatype is designed to be as simple as possible and horizontally scalable in existing container orchestration solution like Kubernetes. It consists of multiple parts, including:
+
+- [**Typegraph**](/docs/reference/typegraph): a cross-language SDK to manage typegraphs - virtual graphs of types - and compose them
+- [**Typegate**](/docs/reference/typegate): a serverless GraphQL/REST gateway to execute queries over typegraphs
+- [**Meta CLI**](/docs/reference/meta-cli): a command-line tool to efficiently deploy the typegraphs on the gateway
+
+<div className="mx-auto max-w-[400px]">
+
+![](components.drawio.svg)
+
+</div>

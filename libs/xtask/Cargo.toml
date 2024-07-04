@@ -1,16 +1,11 @@
 [package]
 name = "xtask"
-version = "0.3.7-0"
+version = "0.4.4-0"
 edition = "2021"
 
 [dependencies]
 anyhow.workspace = true
 clap = { workspace = true, features = ["derive"] }
-common = { path = "../common", features = ["codegen"] }
-typescript = { path = "../typescript" }
-schemars = { version = "0.8.16", features = ["indexmap2"] }
-serde_json.workspace = true
-project-root = "0.2.2"
 mt_deno.workspace = true
 typegate_engine.workspace = true
 log.workspace = true

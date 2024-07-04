@@ -18,12 +18,12 @@ pub struct BasicAuth {
     pub password: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Node {
     pub base_url: Url,
     pub prefix: Option<String>,
     pub auth: Option<BasicAuth>,
-    pub env: HashMap<String, String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -39,13 +39,11 @@ impl Node {
         url: U,
         prefix: Option<String>,
         auth: Option<BasicAuth>,
-        env: HashMap<String, String>,
     ) -> Result<Self> {
         Ok(Self {
-            base_url: url.into_url()?,
+            base_url: url.into_url().context("error parsing url")?,
             prefix,
             auth,
-            env,
         })
     }
 
@@ -119,7 +117,7 @@ impl Node {
         Ok(())
     }
 
-    pub async fn typegraph(&self, name: &str) -> Result<Option<Typegraph>, Error> {
+    pub async fn typegraph(&self, name: &str) -> Result<Option<Box<Typegraph>>, Error> {
         let res = self
             .post("/typegate")
             .map_err(Error::Other)?
@@ -147,7 +145,7 @@ impl Node {
             return Ok(None);
         };
         serde_json::from_str::<Typegraph>(&res.serialized)
-            .map(Some)
+            .map(|tg| Some(Box::new(tg)))
             .map_err(|err| Error::Other(anyhow::anyhow!(err)))
     }
 }

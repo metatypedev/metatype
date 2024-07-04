@@ -10,10 +10,11 @@ from typegraph.runtimes.graphql import GraphQLRuntime
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
     ),
+    # skip:end
 )
 def graphql(g: Graph):
     db = PrismaRuntime("database", "POSTGRES_CONN")
@@ -22,7 +23,7 @@ def graphql(g: Graph):
     public = Policy.public()
 
     # highlight-next-line
-    user = t.struct({"id": t.string(), "name": t.string()})
+    user = t.struct({"id": t.string(), "name": t.string()}, name="User")
 
     message = t.struct(
         {

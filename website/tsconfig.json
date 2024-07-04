@@ -7,8 +7,6 @@
     "allowJs": false,
     "baseUrl": ".",
     "esModuleInterop": true,
-    "types": [
-      "docusaurus-theme-frontmatter"
-    ]
+    "types": ["docusaurus-theme-frontmatter", "docusaurus-plugin-sass"]
   }
 }

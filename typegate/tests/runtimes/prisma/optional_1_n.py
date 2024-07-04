@@ -3,7 +3,7 @@ from typegraph.providers.prisma import PrismaRuntime
 
 
 @typegraph()
-def prisma_opt_n(g: Graph):
+def optional_1_n(g: Graph):
     db = PrismaRuntime("prisma", "POSTGRES")
 
     public = Policy.public()

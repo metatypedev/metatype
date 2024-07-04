@@ -1,3 +1,5 @@
+#!/bin/env -S ghjk deno run -A --config=typegate/deno.jsonc
+
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
@@ -21,119 +23,261 @@
  */
 
 import {
-  basename,
+  $,
   ctrlc,
   cyan,
-  expandGlobSync,
   Fuse,
   gray,
   green,
-  join,
-  parseFlags,
+  mergeReadableStreams,
+  parseArgs,
   red,
-  resolve,
   TextLineStream,
   yellow,
 } from "./deps.ts";
 import { projectDir } from "./utils.ts";
 
-const flags = parseFlags(Deno.args, {
-  "--": true,
-  string: ["threads", "f", "filter"],
-});
+const wd = $.path(projectDir);
 
-const testFiles: string[] = [];
-
-// find test files
-if (flags._.length === 0) {
-  // run all the tests
-  for (
-    const entry of expandGlobSync("typegate/tests/**/*_test.ts", {
-      root: projectDir,
-      globstar: true,
-    })
-  ) {
-    testFiles.push(entry.path);
+async function listTestFiles(filesArg: string[]): Promise<string[]> {
+  if (filesArg.length > 0) {
+    const testFiles = [] as string[];
+    await $.co(
+      filesArg.map(async (inPath) => {
+        let path = wd.resolve(inPath);
+        let stat = await path.stat();
+        if (!stat) {
+          path = wd.resolve("typegate/tests", inPath);
+          stat = await path.stat();
+          if (!stat) {
+            throw new Error(`unable to resolve test files under "${inPath}"`);
+          }
+        }
+        if (stat.isDirectory) {
+          testFiles.push(
+            ...(
+              await Array.fromAsync(
+                path.expandGlob("**/*_test.ts", { globstar: true }),
+              )
+            ).map((ent) => ent.path.toString()),
+          );
+          return;
+        }
+        if (!stat.isFile) {
+          throw new Error(`Not a file: ${path}`);
+        }
+        if (path.basename().match(/_test\.ts$/) != null) {
+          testFiles.push(path.resolve().toString());
+        } else {
+          throw new Error(`Not a valid test file: ${path}`);
+        }
+      }),
+    );
+    return testFiles;
+  } else {
+    // run all the tests
+    return (
+      await Array.fromAsync(
+        wd
+          .join("typegate/tests")
+          .expandGlob("**/*_test.ts", { globstar: true }),
+      )
+    ).map((ent) => ent.path.toString());
   }
-} else {
-  for (const f of flags._) {
-    const path = resolve(projectDir, "typegate/tests", f as string);
-    const stat = await Deno.stat(path);
+}
 
-    if (stat.isDirectory) {
-      for (
-        const entry of expandGlobSync("**/*_test.ts", {
-          root: path,
-          globstar: true,
-        })
-      ) {
-        testFiles.push(entry.path);
-      }
+interface Result {
+  testFile: string;
+  duration: number;
+  success: boolean;
+}
+
+interface Run {
+  promise: Promise<Result>;
+  output: ReadableStream<string> | null;
+  done: boolean;
+}
+
+function applyFilter(files: string[], filter: string | undefined): string[] {
+  const prefixLength = `${projectDir}/typegate/tests/`.length;
+  const fuse = new Fuse(
+    files.map((f) => f.slice(prefixLength)),
+    {
+      includeScore: true,
+      useExtendedSearch: true,
+      threshold: 0.4,
+    },
+  );
+  const filtered = filter ? fuse.search(filter) : null;
+  return filtered?.map((res) => files[res.refIndex]) ?? files;
+}
+
+export async function testE2e(args: {
+  files: string[];
+  filter?: string;
+  threads?: number;
+  flags?: string[];
+}) {
+  const { filter, threads = 4, flags = [] } = args;
+  const testFiles = await listTestFiles(args.files);
+  const filteredTestFiles = applyFilter(testFiles, filter);
+  if (filteredTestFiles.length == 0) {
+    throw new Error("No tests found to run");
+  }
+
+  const tmpDir = wd.join("tmp");
+  const env: Record<string, string> = {
+    CLICOLOR_FORCE: "1",
+    RUST_LOG: "off,xtask=debug,meta=debug",
+    RUST_SPANTRACE: "1",
+    // "RUST_BACKTRACE": "short",
+    RUST_MIN_STACK: "8388608",
+    LOG_LEVEL: "DEBUG",
+    // "NO_COLOR": "1",
+    DEBUG: "true",
+    PACKAGED: "false",
+    TG_SECRET:
+      "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
+    TG_ADMIN_PASSWORD: "password",
+    DENO_TESTING: "true",
+    TMP_DIR: tmpDir.toString(),
+    TIMER_MAX_TIMEOUT_MS: "30000",
+    // NOTE: ordering of the variables is important as we want the
+    // `meta` build to be resolved before any system meta builds
+    PATH: `${wd.join("target/debug").toString()}:${Deno.env.get("PATH")}`,
+  };
+
+  if (await wd.join(".venv").exists()) {
+    env["PATH"] = `${wd.join(".venv/bin").toString()}:${env["PATH"]}`;
+  }
+
+  await tmpDir.ensureDir();
+  // remove non-vendored caches
+  for await (const cache of tmpDir.readDir()) {
+    if (cache.name.endsWith(".wasm") || cache.name == "libpython") {
       continue;
     }
-    if (!stat.isFile) {
-      throw new Error(`Not a file: ${path}`);
+    await tmpDir.join(cache.name).remove({ recursive: true });
+  }
+
+  const prefix = "[dev/test.ts]";
+  $.logStep(`${prefix} Testing with ${threads} threads`);
+
+  const xtask = wd.join("target/debug/xtask");
+  const denoConfig = wd.join("typegate/deno.jsonc");
+
+  function createRun(testFile: string, streamed: boolean): Run {
+    const start = Date.now();
+    const outputOption = streamed ? "inherit" : "piped";
+    const child = $
+      .raw`${xtask} deno test --config=${denoConfig} ${testFile} ${flags}`
+      .cwd(wd)
+      .env(env)
+      .stdout(outputOption)
+      .stderr(outputOption)
+      .noThrow()
+      .spawn();
+
+    const output = streamed
+      ? null
+      : mergeReadableStreams(child.stdout(), child.stderr())
+        .pipeThrough(new TextDecoderStream())
+        .pipeThrough(new TextLineStream());
+
+    const promise = child.then(({ code }) => {
+      const end = Date.now();
+      return { success: code == 0, testFile, duration: end - start };
+    });
+
+    return {
+      promise,
+      output,
+      done: false,
+    };
+  }
+
+  const queue = [...filteredTestFiles];
+
+  $.logStep(`${prefix} Building xtask and meta-cli...`);
+  await $`cargo build -p xtask -p meta-cli`.cwd(wd);
+
+  $.logStep(`Discovered ${queue.length} test files to run`);
+
+  const threadCount = Math.min(threads, queue.length);
+
+  const outputOptions: OutputOptions = {
+    streamed: threadCount === 1,
+    verbose: false,
+  };
+  const logger = new Logger(queue, threadCount, outputOptions);
+  const results = new TestResultConsumer(logger);
+
+  const testThreads: TestThread[] = [];
+  for (let i = 0; i < threadCount; i++) {
+    testThreads.push(new TestThread(i + 1, queue, results, logger, createRun));
+  }
+
+  let ctrlcCount = 0;
+  const _ctrlc = ctrlc.setHandler(() => {
+    ctrlcCount++;
+    switch (ctrlcCount) {
+      case 1: {
+        const remaining = queue.length;
+        queue.length = 0;
+        logger.cancelled(remaining);
+        results.setCancelledCount(remaining);
+        break;
+      }
+
+      case 2: {
+        console.log(`Killing ${testThreads.length} running tests...`);
+        for (const t of testThreads) {
+          if (t.testProcess) {
+            t.testProcess.kill("SIGKILL");
+          }
+        }
+        break;
+      }
+
+      case 3:
+        console.log("Force exiting...");
+        Deno.exit(1);
+        break;
     }
-    if (basename(path).match(/_test\.ts$/) != null) {
-      testFiles.push(path);
-    } else {
-      throw new Error(`Not a valid test file: ${path}`);
+  });
+
+  const runnerResults = await Promise.allSettled(
+    testThreads.map(async (t) => {
+      await t.run();
+      return t;
+    }),
+  );
+  for (const result of runnerResults) {
+    if (result.status === "rejected") {
+      console.error("Thread #${result.threadId} failed to run");
+      console.error(result.reason);
     }
   }
+
+  Deno.exit(await results.finalize());
 }
 
-const filter: string | undefined = flags.filter || flags.f;
-const pathPrefix = `${projectDir}/typegate/tests/`;
-const fuse = new Fuse(testFiles.map((f) => f.slice(pathPrefix.length)), {
-  includeScore: true,
-  useExtendedSearch: true,
-  threshold: 0.4,
-});
-const filtered = filter ? fuse.search(filter) : null;
-const filteredTestFiles = filter
-  ? filtered!.map((res) => testFiles[res.refIndex])
-  : testFiles;
-
-const cwd = resolve(projectDir, "typegate");
-const tmpDir = join(projectDir, "tmp");
-const env: Record<string, string> = {
-  "RUST_LOG": "off,xtask=debug,meta=debug",
-  "LOG_LEVEL": "DEBUG",
-  // "NO_COLOR": "1",
-  "DEBUG": "true",
-  "PACKAGED": "false",
-  "TG_SECRET":
-    "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
-  "TG_ADMIN_PASSWORD": "password",
-  "DENO_TESTING": "true",
-  "TMP_DIR": tmpDir,
-  "TIMER_MAX_TIMEOUT_MS": "30000",
-  "NPM_CONFIG_REGISTRY": "http://localhost:4873",
-};
-
-await Deno.mkdir(tmpDir, { recursive: true });
-// remove non-vendored caches
-for await (const cache of Deno.readDir(tmpDir)) {
-  if (
-    cache.name.endsWith(".wasm") || cache.name == "libpython"
-  ) {
-    continue;
-  }
-  await Deno.remove(join(tmpDir, cache.name), { recursive: true });
+export async function testE2eCli(argv: string[]) {
+  const flags = parseArgs(argv, {
+    "--": true,
+    string: ["threads", "f", "filter"],
+  });
+  await testE2e({
+    files: flags._.map((item) => item.toString()),
+    threads: flags.threads ? parseInt(flags.threads) : undefined,
+    filter: flags.filter ?? flags.f,
+    flags: flags["--"],
+  });
 }
 
-const libPath = Deno.build.os === "darwin"
-  ? "DYLD_LIBRARY_PATH"
-  : "LD_LIBRARY_PATH";
-const wasmEdgeLib = join(Deno.env.get("HOME")!, "/.wasmedge/lib");
-
-if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
-  env[libPath] = `${wasmEdgeLib}:${Deno.env.get(libPath) ?? ""}`;
+if (import.meta.main) {
+  await testE2eCli(Deno.args);
 }
-
-const threads = flags.threads ? parseInt(flags.threads) : 4;
-const prefix = "[dev/test.ts]";
-console.log(`${prefix} Testing with ${threads} threads`);
 
 type TestThreadState =
   | { status: "idle" }
@@ -143,17 +287,12 @@ type TestThreadState =
 interface Counts {
   success: number;
   failure: number;
-  error: number;
   cancelled: number;
 }
 
 class Logger {
   private threadStates: Array<TestThreadState>;
   private dynamic = true; // TODO: make this configurable
-  public testCommandOutputOptions: {
-    stdout: "piped" | "inherit";
-    stderr: "piped" | "inherit";
-  };
 
   #print(...args: unknown[]) {
     Deno.stdout.writeSync(new TextEncoder().encode(args.join(" ")));
@@ -165,7 +304,6 @@ class Logger {
   #counts: Counts = {
     success: 0,
     failure: 0,
-    error: 0,
     cancelled: 0,
   };
 
@@ -177,10 +315,6 @@ class Logger {
     this.threadStates = Array.from({ length: threadCount }, () => ({
       status: "idle",
     }));
-    this.testCommandOutputOptions = {
-      stdout: options.stream ? "inherit" : "piped",
-      stderr: options.stream ? "inherit" : "piped",
-    };
 
     if (this.dynamic) {
       this.#println();
@@ -219,8 +353,9 @@ class Logger {
   #displayCounts() {
     const fields = [];
 
-    const activeCount =
-      this.threadStates.filter((s) => s.status === "running").length;
+    const activeCount = this.threadStates.filter(
+      (s) => s.status === "running",
+    ).length;
     fields.push(gray(`active=${activeCount}`));
 
     fields.push(`pending=${this.queue.length}`);
@@ -259,56 +394,35 @@ class Logger {
     this.#println(cyan(`thread #${threadId}`), displayedState);
   }
 
-  result(result: TestResult, counts: Counts) {
+  result(result: ExtendedResult, counts: Counts) {
     this.updateCounts(counts);
-    let status: string;
-    switch (result.status) {
-      case "success":
-        status = green("passed");
-        break;
-      case "failure":
-        status = red("failed");
-        break;
-      case "error":
-        status = red("error");
-        break;
-    }
+    const status = result.success ? green("passed") : red("failed");
 
     this.#output(() => {
       this.#println(
         status,
         result.testFile,
-        gray(`(${result.duration}ms)`),
+        gray(`(${result.duration / 1_000}s)`),
         gray(`#${result.runnerId}`),
       );
     });
   }
 
-  resultOutputs(results: TestResult[]) {
-    if (this.options.stream) return;
+  async resultOutputs(results: ExtendedResult[]) {
+    if (this.options.streamed) return;
     for (const result of results) {
-      if (result.status === "success" && !this.options.verbose) continue;
-      this.#resultOuput(result);
+      if (result.success && !this.options.verbose) continue;
+      await this.#resultOuput(result);
     }
   }
 
-  #resultOuput(result: TestResult) {
+  async #resultOuput(result: ExtendedResult) {
     this.#println();
-    this.#println(
-      gray("-- OUTPUT START <stdout>"),
-      result.testFile,
-      gray("--"),
-    );
-    this.#println(result.stdout);
-    this.#println(gray("-- OUTPUT END <stdout>"), result.testFile, gray("--"));
-    this.#println();
-    this.#println(
-      gray("-- OUTPUT START <stderr>"),
-      result.testFile,
-      gray("--"),
-    );
-    this.#println(result.stderr);
-    this.#println(gray("-- OUTPUT END <stderr>"), result.testFile, gray("--"));
+    this.#println(gray("-- OUTPUT START"), result.testFile, gray("--"));
+    for await (const line of result.output!) {
+      this.#println(line);
+    }
+    this.#println(gray("-- OUTPUT END"), result.testFile, gray("--"));
   }
 
   cancelled(count: number) {
@@ -322,11 +436,11 @@ class Logger {
 
   #output(outputFn: () => void) {
     if (!this.dynamic) {
-      if (this.options.stream) {
+      if (this.options.streamed) {
         this.#println();
       }
       outputFn();
-      if (this.options.stream) {
+      if (this.options.streamed) {
         this.#println();
       }
     } else {
@@ -337,26 +451,23 @@ class Logger {
   }
 }
 
-interface TestResult {
+interface ExtendedResult extends Result {
   testFile: string;
-  duration: number;
+  output: ReadableStream<string> | null;
   runnerId: number;
-  status: "success" | "failure" | "error";
-  stdout: string;
-  stderr: string;
 }
 
 interface OutputOptions {
-  stream: boolean;
+  streamed: boolean;
   verbose: boolean;
 }
 
 class TestResultConsumer {
-  private results: TestResult[] = [];
+  private results: ExtendedResult[] = [];
   #counts: Counts = {
     success: 0,
     failure: 0,
-    error: 0,
+    // error: 0,
     cancelled: 0,
   };
   private startTime: number;
@@ -365,19 +476,14 @@ class TestResultConsumer {
     this.startTime = Date.now();
   }
 
-  consume(r: Omit<TestResult, "runnerId">, runner: TestThread) {
-    const result: TestResult = { ...r, runnerId: runner.threadId };
-    switch (result.status) {
-      case "success":
-        this.#counts.success++;
-        break;
-      case "failure":
-        this.#counts.failure++;
-        break;
-      case "error":
-        this.#counts.error++;
-        break;
+  consume(r: Omit<ExtendedResult, "runnerId">, runner: TestThread) {
+    const result: ExtendedResult = { ...r, runnerId: runner.threadId };
+    if (result.success) {
+      this.#counts.success++;
+    } else {
+      this.#counts.failure++;
     }
+
     this.logger.result(result, this.#counts);
     this.results.push(result);
   }
@@ -386,8 +492,8 @@ class TestResultConsumer {
     this.#counts.cancelled = count;
   }
 
-  finalize(): number {
-    this.logger.resultOutputs(this.results);
+  async finalize(): Promise<number> {
+    await this.logger.resultOutputs(this.results);
 
     const duration = Date.now() - this.startTime;
 
@@ -395,17 +501,16 @@ class TestResultConsumer {
     if (this.#counts.cancelled > 0) {
       console.log(`${this.#counts.cancelled} tests were cancelled`);
     }
-    console.log(`${this.results.length} tests completed in ${duration}ms:`);
     console.log(
-      `  successes: ${this.#counts.success}/${this.results.length}`,
+      `${this.results.length} tests completed in ${
+        Math.floor(duration / 60_000)
+      }m${Math.floor(duration / 1_000)}s:`,
     );
+    console.log(`  successes: ${this.#counts.success}/${this.results.length}`);
 
-    const failureCount = this.#counts.failure + this.#counts.error;
-    console.log(
-      `  failures: ${failureCount}/${this.results.length}`,
-    );
+    console.log(`  failures: ${this.#counts.failure}/${this.results.length}`);
 
-    if (failureCount + this.#counts.cancelled > 0) {
+    if (this.#counts.failure + this.#counts.cancelled > 0) {
       return 1;
     } else {
       return 0;
@@ -414,13 +519,14 @@ class TestResultConsumer {
 }
 
 class TestThread {
-  testProcess: Deno.ChildProcess | null = null;
+  currentRun: Run | null;
 
   constructor(
     public threadId: number,
     private queue: string[],
     private results: TestResultConsumer,
     private logger: Logger,
+    private createRun: (file: string, streamed: boolean) => Run,
   ) {}
 
   async run() {
@@ -428,6 +534,7 @@ class TestThread {
       const testFile = this.queue.shift();
       if (!testFile) break;
 
+      const pathPrefix = `${projectDir}/typegate/tests/`;
       const relativePath = testFile.slice(pathPrefix.length);
 
       this.logger.threadState(this.threadId, {
@@ -435,128 +542,20 @@ class TestThread {
         testFile: relativePath,
       });
 
-      const start = Date.now();
-      this.testProcess = new Deno.Command("deno", {
-        args: [
-          "task",
-          "test",
-          testFile,
-          ...flags["--"],
-        ],
-        cwd,
-        env: { ...Deno.env.toObject(), ...env },
-        ...this.logger.testCommandOutputOptions,
-      }).spawn();
+      this.currentRun = this.createRun(testFile, this.logger.options.streamed);
+      const result = await this.currentRun.promise;
 
-      let streams: {
-        stdout: ReadableStream<string>;
-        stderr: ReadableStream<string>;
-      } | null = null;
-
-      if (!this.logger.options.stream) {
-        streams = {
-          stdout: this.testProcess.stdout.pipeThrough(new TextDecoderStream())
-            .pipeThrough(new TextLineStream()),
-          stderr: this.testProcess.stderr.pipeThrough(new TextDecoderStream())
-            .pipeThrough(new TextLineStream()),
-        };
-      }
-
-      let status: Deno.CommandStatus | null = null;
-      try {
-        status = await this.testProcess.status;
-      } catch (error) {
-        console.error(error);
-      }
-
-      const duration = Date.now() - start;
-
-      let stdout = "";
-      let stderr = "";
-      try {
-        if (streams) {
-          for await (const line of streams.stdout) {
-            stdout += line + "\n";
-          }
-          for await (const line of streams.stderr) {
-            stderr += line + "\n";
-          }
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
-      const statusString = status == null
-        ? "error"
-        : (status.success ? "success" : "failure");
-
-      this.results.consume({
-        testFile: relativePath,
-        duration,
-        status: statusString,
-        stdout,
-        stderr,
-      }, this);
+      this.results.consume(
+        {
+          testFile: relativePath,
+          output: this.currentRun.output,
+          ...result,
+        },
+        this,
+      );
+      this.currentRun = null;
     }
 
     this.logger.threadState(this.threadId, { status: "finished" });
   }
 }
-
-const queue = [...filteredTestFiles];
-const outputOptions: OutputOptions = {
-  stream: threads === 1 || queue.length === 1,
-  verbose: false,
-};
-
-console.log(`Discovered ${queue.length} test files`);
-
-const logger = new Logger(queue, threads, outputOptions);
-const results = new TestResultConsumer(logger);
-
-const testThreads: TestThread[] = [];
-for (let i = 0; i < threads; i++) {
-  testThreads.push(new TestThread(i + 1, queue, results, logger));
-}
-
-let ctrlcCount = 0;
-const _ctrlc = ctrlc.setHandler(() => {
-  ctrlcCount++;
-  switch (ctrlcCount) {
-    case 1: {
-      const remaining = queue.length;
-      queue.length = 0;
-      logger.cancelled(remaining);
-      results.setCancelledCount(remaining);
-      break;
-    }
-
-    case 2: {
-      console.log(`Killing ${testThreads.length} running tests...`);
-      for (const t of testThreads) {
-        if (t.testProcess) {
-          t.testProcess.kill("SIGKILL");
-        }
-      }
-      break;
-    }
-
-    case 3:
-      console.log("Force exiting...");
-      Deno.exit(1);
-      break;
-  }
-});
-
-const runnerResults = await Promise.allSettled(testThreads.map(async (t) => {
-  await t.run();
-  return t;
-}));
-for (const result of runnerResults) {
-  if (result.status === "rejected") {
-    console.error("Thread #${result.threadId} failed to run");
-    console.error(result.reason);
-  }
-}
-
-Deno.exit(results.finalize());

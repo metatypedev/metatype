@@ -2,12 +2,17 @@
 
 ## `metatype.yml` Example file
 
+The `metatype.yml` is a configuration file where we store environment variables, secrets and configs in which our app will use during deployment and runtime.
+
 ```yaml
 typegates:
   dev:
     url: http://localhost:7890
     username: admin
     password: password
+    secrets:
+      my-app:
+        POSTGRES_URL: postgres://user:password@localhost:5432/db?schema=public
 
 typegraphs:
   python:
@@ -16,6 +21,21 @@ typegraphs:
     prisma:
       migrations_path: "migrations"
 ```
+
+## Typegate configuration
+
+Each typegate node is configured under `typegates.<name>`.
+The typegate node selection is done by the `--target` option in the CLI.
+
+### Named secrets
+
+Named secrets are used to configure runtimes.
+Their values are provided in the `secrets` section of the configuration file
+directly or indirectly using [lade](https://github.com/zifeo/lade).
+Each entry in the `secrets` section is the set of secrets for a specific typegraph.
+The typegraph name is the key of the entry and the value is an object mapping each secret name to its value or vault source (see [next section](#automatic-secret-loading-support)).
+
+To sum up, each secret is defined in `secrets.<typegraph-name>.<secret-name>.<secret-value-or-source>`.
 
 ## Automatic secret loading support
 
@@ -30,5 +50,3 @@ typegates:
     username: op://VAULT_NAME/SECRET_NAME/FIELD_NAME
     password: infisical://app.infisical.com/PROJECT_NAME/ENV_NAME/SECRET_NAME
 ```
-
-More of Lade documentation

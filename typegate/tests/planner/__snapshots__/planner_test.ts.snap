@@ -1,98 +1,5 @@
 export const snapshot = {};
 
-snapshot[`planner 1`] = `
-[
-  {
-    id: "one",
-    node: "one",
-    path: [
-      "one",
-    ],
-    type: {
-      title: "func_75",
-      type: "function",
-    },
-  },
-  {
-    id: "one.id",
-    node: "id",
-    path: [
-      "one",
-      "id",
-    ],
-    type: {
-      format: "uuid",
-      title: "string_12",
-      type: "string",
-    },
-  },
-  {
-    id: "one.email",
-    node: "email",
-    path: [
-      "one",
-      "email",
-    ],
-    type: {
-      format: "email",
-      title: "string_13",
-      type: "string",
-    },
-  },
-  {
-    id: "one.nested",
-    node: "nested",
-    path: [
-      "one",
-      "nested",
-    ],
-    type: {
-      title: "object_19",
-      type: "object",
-    },
-  },
-  {
-    id: "one.nested.first",
-    node: "first",
-    path: [
-      "one",
-      "nested",
-      "first",
-    ],
-    type: {
-      title: "string_14",
-      type: "string",
-    },
-  },
-  {
-    id: "one.nested.second",
-    node: "second",
-    path: [
-      "one",
-      "nested",
-      "second",
-    ],
-    type: {
-      title: "list_16",
-      type: "list",
-    },
-  },
-  {
-    id: "one.nested.third",
-    node: "third",
-    path: [
-      "one",
-      "nested",
-      "third",
-    ],
-    type: {
-      title: "optional_18",
-      type: "optional",
-    },
-  },
-]
-`;
-
 snapshot[`planner 2`] = `
 {
   one: {
@@ -198,6 +105,99 @@ snapshot[`planner 4`] = `
   "one.from_union2  from_union2  one/from_union2  integer  integer_8  false",
   "one.union1  union1  one/union1  union  Union1  true",
   "one.from_union1  from_union1  one/from_union1  integer  integer_8  false",
+]
+`;
+
+snapshot[`planner 1`] = `
+[
+  {
+    id: "one",
+    node: "one",
+    path: [
+      "one",
+    ],
+    type: {
+      title: "func_75",
+      type: "function",
+    },
+  },
+  {
+    id: "one.id",
+    node: "id",
+    path: [
+      "one",
+      "id",
+    ],
+    type: {
+      format: "uuid",
+      title: "string_12",
+      type: "string",
+    },
+  },
+  {
+    id: "one.email",
+    node: "email",
+    path: [
+      "one",
+      "email",
+    ],
+    type: {
+      format: "email",
+      title: "string_13",
+      type: "string",
+    },
+  },
+  {
+    id: "one.nested",
+    node: "nested",
+    path: [
+      "one",
+      "nested",
+    ],
+    type: {
+      title: "object_19",
+      type: "object",
+    },
+  },
+  {
+    id: "one.nested.first",
+    node: "first",
+    path: [
+      "one",
+      "nested",
+      "first",
+    ],
+    type: {
+      title: "string_14",
+      type: "string",
+    },
+  },
+  {
+    id: "one.nested.second",
+    node: "second",
+    path: [
+      "one",
+      "nested",
+      "second",
+    ],
+    type: {
+      title: "list_16",
+      type: "list",
+    },
+  },
+  {
+    id: "one.nested.third",
+    node: "third",
+    path: [
+      "one",
+      "nested",
+      "third",
+    ],
+    type: {
+      title: "optional_18",
+      type: "optional",
+    },
+  },
 ]
 `;
 

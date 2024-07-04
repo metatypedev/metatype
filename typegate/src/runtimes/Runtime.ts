@@ -8,7 +8,10 @@ import { Resolver } from "../types.ts";
 export abstract class Runtime {
   readonly id: string;
 
-  constructor(typegraphName: string, uuid = crypto.randomUUID()) {
+  constructor(
+    public typegraphName: string,
+    uuid = crypto.randomUUID() as string,
+  ) {
     this.id = `${typegraphName}_${this.constructor.name}_${uuid}`;
   }
 
@@ -18,7 +21,7 @@ export abstract class Runtime {
     stage: ComputeStage,
     waitlist: ComputeStage[],
     verbose: boolean,
-  ): ComputeStage[];
+  ): ComputeStage[] | Promise<ComputeStage[]>;
 
   static collectRelativeStages(
     base: ComputeStage,

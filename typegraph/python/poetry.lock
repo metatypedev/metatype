@@ -16,6 +16,24 @@ six = ">=1.6.1,<2.0"
 wheel = ">=0.23.0,<1.0"
 
 [[package]]
+name = "importlib-resources"
+version = "6.4.0"
+description = "Read resources from Python packages"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "importlib_resources-6.4.0-py3-none-any.whl", hash = "sha256:50d10f043df931902d4194ea07ec57960f66a80449ff867bfe782b4c486ba78c"},
+    {file = "importlib_resources-6.4.0.tar.gz", hash = "sha256:cdb2b453b8046ca4e3798eb1d84f3cce1446a0e8e7b5ef4efb600f19fc398145"},
+]
+
+[package.dependencies]
+zipp = {version = ">=3.1.0", markers = "python_version < \"3.10\""}
+
+[package.extras]
+docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-lint"]
+testing = ["jaraco.test (>=5.4)", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-ruff (>=0.2.1)", "zipp (>=3.17)"]
+
+[[package]]
 name = "python-box"
 version = "7.1.1"
 description = "Advanced Python dictionaries with dot notation access"
@@ -60,32 +78,35 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.10.0"
+version = "4.11.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.10.0-py3-none-any.whl", hash = "sha256:69b1a937c3a517342112fb4c6df7e72fc39a38e7891a5730ed4985b5214b5475"},
-    {file = "typing_extensions-4.10.0.tar.gz", hash = "sha256:b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"},
+    {file = "typing_extensions-4.11.0-py3-none-any.whl", hash = "sha256:c1f94d72897edaf4ce775bb7558d5b79d8126906a14ea5ed1635921406c0387a"},
+    {file = "typing_extensions-4.11.0.tar.gz", hash = "sha256:83f085bd5ca59c80295fc2a82ab5dac679cbe02b9f33f7d83af68e241bea51b0"},
 ]
 
 [[package]]
 name = "wasmtime"
-version = "18.0.2"
+version = "21.0.0"
 description = "A WebAssembly runtime powered by Wasmtime"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "wasmtime-18.0.2-py3-none-any.whl", hash = "sha256:49625d389ddd766f5416a1723a76a25473df1dbe6ad706902b7bdbfa549ec3df"},
-    {file = "wasmtime-18.0.2-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:190f182e51f7f0e5340a7ffeb01519eb759748872a2bb227c6b1c055cbee61ce"},
-    {file = "wasmtime-18.0.2-py3-none-macosx_11_0_arm64.whl", hash = "sha256:817c780eb506deaabe31cf23c5e9fe9ab9a1815bc0b805d292ec7502c495e10a"},
-    {file = "wasmtime-18.0.2-py3-none-manylinux1_x86_64.whl", hash = "sha256:30adbf2fb380aae2d7cfd18c6f14d7633d62a8204caf185b7557b2364533268d"},
-    {file = "wasmtime-18.0.2-py3-none-manylinux2014_aarch64.whl", hash = "sha256:c43d281df87af4139735aa62950d855499f58f72778b0e7a79488b3b8807d108"},
-    {file = "wasmtime-18.0.2-py3-none-win_amd64.whl", hash = "sha256:7ccc88a9ee2bb601dbd1dc065a22af7b2f1a85c39b1aa8ebfb8ea57f78157d35"},
+    {file = "wasmtime-21.0.0-py3-none-any.whl", hash = "sha256:9b7ee9bb6c14586974d34c92bb7f0723161067769233c5dd8ea99c233759b48d"},
+    {file = "wasmtime-21.0.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:b10b6ec13fa04fc1d81a4f9b2d244938c67710e9279011e53397bfa071b85b3f"},
+    {file = "wasmtime-21.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:3e245a5c03c1de46cdafcd98da6daa381cadd7bd41aae70d8bef4c8c0ea51798"},
+    {file = "wasmtime-21.0.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:6587515be9603f8bb0732f3b508d2034f21d407fd55879c4402032e40e1ddae6"},
+    {file = "wasmtime-21.0.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:4b242b065922f65cd40d8cedb3f19269423f28d7955567fe2daca03a44c03446"},
+    {file = "wasmtime-21.0.0-py3-none-win_amd64.whl", hash = "sha256:00f929d0caf58a69890df00888f9da12c2aa3ed5af4c8b7b2dca96a4996da731"},
 ]
 
+[package.dependencies]
+importlib-resources = ">=5.10"
+
 [package.extras]
-testing = ["coverage", "pycparser", "pytest", "pytest-mypy"]
+testing = ["componentize-py", "coverage", "pycparser", "pytest", "pytest-mypy"]
 
 [[package]]
 name = "wheel"
@@ -101,7 +122,22 @@ files = [
 [package.extras]
 test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
 
+[[package]]
+name = "zipp"
+version = "3.18.2"
+description = "Backport of pathlib-compatible object wrapper for zip files"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "zipp-3.18.2-py3-none-any.whl", hash = "sha256:dce197b859eb796242b0622af1b8beb0a722d52aa2f57133ead08edd5bf5374e"},
+    {file = "zipp-3.18.2.tar.gz", hash = "sha256:6278d9ddbcfb1f1089a88fde84481528b07b0e10474e09dcfe53dad4069fa059"},
+]
+
+[package.extras]
+docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
+testing = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "56e8d570e226c410bc7f7e5161672004c4796a7e84637e7fe2893988a8a350ee"
+content-hash = "1a8b08df1555b98d2c92c186d3b26d648451538f89f14f8174bf857ea4de8445"

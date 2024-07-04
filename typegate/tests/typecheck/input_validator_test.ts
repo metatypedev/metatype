@@ -5,8 +5,6 @@ import { gql, Meta } from "../utils/mod.ts";
 
 import { Type } from "../../src/typegraph/type_node.ts";
 import { InputValidationCompiler } from "../../src/engine/typecheck/input.ts";
-import { nativeResult } from "../../src/utils.ts";
-import * as native from "native";
 import { assert, assertEquals } from "std/assert/mod.ts";
 
 function getFunctionName(idx: number): string {
@@ -19,28 +17,35 @@ Meta.test("input validator compiler", async (t) => {
 
   const root = tg.type(0, Type.OBJECT);
 
-  await t.should("generate valid code", () => {
+  await t.should("generate valid code", async () => {
     const mutations = tg.type(root.properties["mutation"], Type.OBJECT);
     const createPost = tg.type(
       mutations.properties["createPost"],
       Type.FUNCTION,
     );
 
-    const generatedCode = new InputValidationCompiler(tg, getFunctionName)
-      .generate(
-        createPost.input,
-      );
-    const code = nativeResult(native.typescript_format_code({
-      source: generatedCode,
-    }))!.formatted_code;
+    const generatedCode = new InputValidationCompiler(
+      tg,
+      getFunctionName,
+    ).generate(createPost.input);
 
-    t.assertSnapshot(code);
+    await t.assertSnapshot(generatedCode);
   });
 
   await t.should("fail for invalid inputs", async () => {
     await gql`
-      mutation CreatePost($title: String!, $content: String!, $authorId: String!, $tags: [String]) {
-        createPost(title: $title, content: $content, authorId: $authorId, tags: $tags) {
+      mutation CreatePost(
+        $title: String!
+        $content: String!
+        $authorId: String!
+        $tags: [String]
+      ) {
+        createPost(
+          title: $title
+          content: $content
+          authorId: $authorId
+          tags: $tags
+        ) {
           id
         }
       }
@@ -51,15 +56,25 @@ Meta.test("input validator compiler", async (t) => {
         authorId: "12",
         tags: ["tech", "web", "programming"],
       })
-      .expectBody((body) => {
+      .expectBody(async (body) => {
         assertEquals(body.errors.length, 1);
-        t.assertSnapshot(body.errors[0].message);
+        await t.assertSnapshot(body.errors[0].message);
       })
       .on(e);
 
     await gql`
-      mutation CreateUser($id: String!, $username: String!, $email: String!, $website: String!) {
-        createUser(id: $id, username: $username, email: $email, website: $website) {
+      mutation CreateUser(
+        $id: String!
+        $username: String!
+        $email: String!
+        $website: String!
+      ) {
+        createUser(
+          id: $id
+          username: $username
+          email: $email
+          website: $website
+        ) {
           id
         }
       }
@@ -74,20 +89,16 @@ Meta.test("input validator compiler", async (t) => {
       .on(e);
   });
 
-  await t.should("generate valid code with enums", () => {
+  await t.should("generate valid code with enums", async () => {
     const queries = tg.type(root.properties["query"], Type.OBJECT);
-    const enums = tg.type(
-      queries.properties["enums"],
-      Type.FUNCTION,
-    );
+    const enums = tg.type(queries.properties["enums"], Type.FUNCTION);
 
-    const generatedCode = new InputValidationCompiler(tg, getFunctionName)
-      .generate(enums.input);
-    const code = nativeResult(native.typescript_format_code({
-      source: generatedCode,
-    }))!.formatted_code;
+    const generatedCode = new InputValidationCompiler(
+      tg,
+      getFunctionName,
+    ).generate(enums.input);
 
-    t.assertSnapshot(code);
+    await t.assertSnapshot(generatedCode);
   });
 
   await t.should("fail for invalid inputs: enums", async () => {
@@ -95,7 +106,10 @@ Meta.test("input validator compiler", async (t) => {
       query Enums($role: String!, $items: [AvailableItem]!) {
         enums(userRole: $role, availableItems: $items) {
           userRole
-          availableItems { name unitPrice }
+          availableItems {
+            name
+            unitPrice
+          }
         }
       }
     `
@@ -110,7 +124,10 @@ Meta.test("input validator compiler", async (t) => {
       query Enums($role: String!, $items: [AvailableItem]!) {
         enums(userRole: $role, availableItems: $items) {
           userRole
-          availableItems { name unitPrice }
+          availableItems {
+            name
+            unitPrice
+          }
         }
       }
     `
@@ -126,21 +143,20 @@ Meta.test("input validator compiler", async (t) => {
       .on(e);
   });
 
-  await t.should("generate valid code with union and either types", () => {
-    const queries = tg.type(root.properties["query"], Type.OBJECT);
-    const posts = tg.type(
-      queries.properties["posts"],
-      Type.FUNCTION,
-    );
+  await t.should(
+    "generate valid code with union and either types",
+    async () => {
+      const queries = tg.type(root.properties["query"], Type.OBJECT);
+      const posts = tg.type(queries.properties["posts"], Type.FUNCTION);
 
-    const generatedCode = new InputValidationCompiler(tg, getFunctionName)
-      .generate(posts.input);
-    const code = nativeResult(native.typescript_format_code({
-      source: generatedCode,
-    }))!.formatted_code;
+      const generatedCode = new InputValidationCompiler(
+        tg,
+        getFunctionName,
+      ).generate(posts.input);
 
-    t.assertSnapshot(code);
-  });
+      await t.assertSnapshot(generatedCode);
+    },
+  );
 
   await t.should("fail for invalid inputs: union", async () => {
     await gql`
@@ -155,7 +171,10 @@ Meta.test("input validator compiler", async (t) => {
 
     await gql`
       query FindPosts {
-        posts(tag: ["tech", "programming", "deno"], authorId: "36b8f84d-df4e-4d49-b662-bcde71a8764f") {
+        posts(
+          tag: ["tech", "programming", "deno"]
+          authorId: "36b8f84d-df4e-4d49-b662-bcde71a8764f"
+        ) {
           id
         }
       }
@@ -165,7 +184,10 @@ Meta.test("input validator compiler", async (t) => {
 
     await gql`
       query FindPosts {
-        posts(tag: ["tech", "deno"], authorId: "36b8f84d-df4e-4d49-b662-bcde71a8764f") {
+        posts(
+          tag: ["tech", "deno"]
+          authorId: "36b8f84d-df4e-4d49-b662-bcde71a8764f"
+        ) {
           id
         }
       }
@@ -184,22 +206,24 @@ Meta.test("input validator compiler", async (t) => {
         }
       }
     `
-      .expectBody((body) => {
+      .expectBody(async (body) => {
         assertEquals(body.errors.length, 1);
-        t.assertSnapshot(body.errors[0].message);
+        await t.assertSnapshot(body.errors[0].message);
       })
       .on(e);
 
     await gql`
       query FindPosts {
-        posts(search: { content: ["tech", "programming", "web", "softwares"] }) {
+        posts(
+          search: { content: ["tech", "programming", "web", "softwares"] }
+        ) {
           id
         }
       }
     `
-      .expectBody((body) => {
+      .expectBody(async (body) => {
         assertEquals(body.errors.length, 1);
-        t.assertSnapshot(body.errors[0].message);
+        await t.assertSnapshot(body.errors[0].message);
       })
       .on(e);
 

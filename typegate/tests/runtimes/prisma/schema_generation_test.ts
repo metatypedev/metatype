@@ -30,10 +30,6 @@ async function assertGeneratedSchema(
     rt.name === "prisma"
   )[0] as PrismaRT.DS<PrismaRT.DataRaw>;
 
-  const secretKey = `TG_${
-    tgName.toUpperCase().replaceAll(/[^\w]/g, "_")
-  }_POSTGRES`;
-
   if (reorderModels) {
     runtime.data.models = reorderModels(runtime.data.models);
   }
@@ -42,7 +38,7 @@ async function assertGeneratedSchema(
     tg,
     runtime.data,
     new SecretManager(tg, {
-      [secretKey]: "postgresql://postgres:postgres@localhost:5432/postgres",
+      POSTGRES: "postgresql://postgres:postgres@localhost:5432/postgres",
     }),
   );
 

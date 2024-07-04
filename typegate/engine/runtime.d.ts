@@ -1,11 +1,72 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-interface WasiInput {
+declare global {
+  const Meta: MetaNS;
+}
+
+type MetaNS = {
+  version: () => string;
+  typescriptFormatCode: (source: string) => string;
+  typegraphValidate: (json: string) => string;
+  validatePrismaRuntimeData: (obj: any) => void;
+  wasmtimeWit: (inp: WasmInput) => string;
+
+  prisma: {
+    registerEngine: (
+      inp: PrismaRegisterEngineInp,
+    ) => Promise<void>;
+    unregisterEngine: (engine_name: string) => Promise<void>;
+    query: (inp: PrismaQueryInp) => Promise<string>;
+    diff: (
+      inp: PrismaDiffInp,
+    ) => Promise<[string, ParsedDiff[]] | undefined | null>;
+    apply: (inp: PrismaDevInp) => Promise<PrismaApplyOut>;
+    deploy: (inp: PrismaDeployInp) => Promise<PrismaDeployOut>;
+    create: (inp: PrismaCreateInp) => Promise<PrismaCreateOut>;
+    reset: (datasource: string) => Promise<boolean>;
+    unpack: (inp: UnpackInp) => void;
+    archive: (path: string) => string | undefined | null;
+  };
+
+  temporal: {
+    clientRegister: (inp: TemporalRegisterInput) => Promise<void>;
+    clientUnregister: (client_id: string) => void;
+    workflowStart: (
+      inp: TemporalWorkflowStartInput,
+    ) => Promise<string>;
+    workflowSignal: (
+      inp: TemporalWorkflowSignalInput,
+    ) => Promise<void>;
+    workflowQuery: (
+      inp: TemporalWorkflowQueryInput,
+    ) => Promise<Array<string>>;
+    workflowDescribe: (
+      inp: TemporalWorkflowDescribeInput,
+    ) => Promise<TemporalWorkflowDescribeOutput>;
+  };
+
+  wit_wire: {
+    init: (
+      componentPath: string,
+      instanceId: string,
+      args: WitWireInitArgs,
+      cb: (op_name: string, json: string) => Promise<string>,
+    ) => Promise<WitWireInitResponse>;
+    destroy: (
+      instanceId: string,
+    ) => Promise<void>;
+    handle: (
+      instanceId: string,
+      args: WitWireReq,
+    ) => Promise<WitWireHandleResponse>;
+  };
+};
+
+interface WasmInput {
   func: string;
   wasm: string;
   args: Array<string>;
-  out: string;
 }
 interface PrismaRegisterEngineInp {
   datamodel: string;
@@ -143,63 +204,58 @@ interface ParsedDiff {
   table: string;
   diff: TableDiff[];
 }
-declare namespace Meta {
-  function version(): string;
-  function typescriptFormatCode(source: string): string;
-  function typegraphValidate(json: string): string;
-  function validatePrismaRuntimeData(obj: any): void;
-  function wasmedgeWasi(inp: WasiInput): string;
 
-  namespace prisma {
-    function registerEngine(
-      inp: PrismaRegisterEngineInp,
-    ): Promise<void>;
-    function unregisterEngine(engine_name: string): Promise<void>;
-    function query(inp: PrismaQueryInp): Promise<string>;
-    function diff(
-      inp: PrismaDiffInp,
-    ): Promise<[string, ParsedDiff[]] | undefined | null>;
-    function apply(inp: PrismaDevInp): Promise<PrismaApplyOut>;
-    function deploy(inp: PrismaDeployInp): Promise<PrismaDeployOut>;
-    function create(inp: PrismaCreateInp): Promise<PrismaCreateOut>;
-    function reset(datasource: string): Promise<boolean>;
-    function unpack(inp: UnpackInp): void;
-    function archive(path: string): string | undefined | null;
+export type WitWireReq = {
+  op_name: string;
+  in_json: string;
+};
+
+export type WitWireHandleError =
+  | {
+    InstanceNotFound: string;
   }
-
-  namespace temporal {
-    function clientRegister(inp: TemporalRegisterInput): Promise<void>;
-    function clientUnregister(client_id: string): void;
-    function workflowStart(
-      inp: TemporalWorkflowStartInput,
-    ): Promise<string>;
-    function workflowSignal(
-      inp: TemporalWorkflowSignalInput,
-    ): Promise<void>;
-    function workflowQuery(
-      inp: TemporalWorkflowQueryInput,
-    ): Promise<Array<string>>;
-    function workflowDescribe(
-      inp: TemporalWorkflowDescribeInput,
-    ): Promise<TemporalWorkflowDescribeOutput>;
+  | {
+    ModuleErr: string;
   }
-  namespace python {
-    function registerVm(inp: WasiVmInitConfig): void;
-    function unregisterVm(vm_name: string): void;
+  | {
+    MatErr: string;
+  };
 
-    function registerLambda(inp: PythonRegisterInp): string;
-    function unregisterLambda(inp: PythonUnregisterInp): string;
-    function applyLambda(inp: PythonApplyInp): string;
+export type WitWireMatInfo = {
+  op_name: string;
+  mat_title: string;
+  mat_hash: string;
+  mat_data_json: string;
+};
 
-    function registerDef(inp: PythonRegisterInp): string;
-    function unregisterDef(inp: PythonUnregisterInp): string;
-    function applyDef(inp: PythonApplyInp): string;
+export type WitWireInitArgs = {
+  metatype_version: string;
+  expected_ops: WitWireMatInfo[];
+};
 
-    function registerModule(inp: PythonRegisterInp): string;
-    function unregisterModule(inp: PythonUnregisterInp): string;
+export type WitWireInitResponse = object;
+export type WitWireInitError =
+  | {
+    VersionMismatch: string;
   }
-
-  namespace deno {
-    function transformTypescript(inp: string): string;
+  | {
+    UnexpectedMat: string;
   }
-}
+  | {
+    ModuleErr: string;
+  }
+  | {
+    Other: string;
+  };
+
+export type WitWireHandleResponse =
+  | {
+    Ok: string;
+  }
+  | "NoHandler"
+  | {
+    InJsonErr: string;
+  }
+  | {
+    HandlerErr: string;
+  };

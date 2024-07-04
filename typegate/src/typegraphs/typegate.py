@@ -38,20 +38,46 @@ prisma_query_tags = [
 ]
 
 # https://github.com/prisma/prisma-engines/blob/93f79ec1ca7867558f10130d8db84fb7bf150357/query-engine/request-handlers/src/protocols/json/body.rs#L50
-prisma_json_query = t.struct(
+prisma_query_single = t.struct(
     {
         "modelName": t.string().optional(),
         "action": t.enum(prisma_query_tags, name="PrismaQueryTag"),
-        "query": t.struct(
-            {
-                "arguments": t.json().optional(),  # TODO t.record([t.string(), t.json()])
-                "selection": t.json(),  # TODO t.record([t.string(), t.enum([t.boolean(), g.ref("PrismaFieldQuery")])])
-            },
-            name="PrismaFieldQuery",
-        ),
+        # "query": t.struct(
+        #     {
+        #         "arguments": t.json().optional(),  # TODO t.record([t.string(), t.json()])
+        #         "selection": t.json(),  # TODO t.record([t.string(), t.enum([t.boolean(), g.ref("PrismaFieldQuery")])])
+        #     },
+        #     name="PrismaFieldQuery",
+        # ),
+        "query": t.json(),
     },
-    name="PrismaJsonSingleQuery",
+    name="PrismaSingleQuery",
 )
+
+prisma_query_batch = t.struct(
+    {
+        "batch": t.list(prisma_query_single),
+        "transaction": t.struct(
+            {
+                "isolationLevel": t.enum(
+                    [
+                        "read uncommitted",
+                        "readuncommitted",
+                        "read committed",
+                        "readcommitted",
+                        "repeatable read",
+                        "repeatableread",
+                        "snapshot",
+                        "serializable",
+                    ]
+                ).optional(),
+            }
+        ).optional(),
+    },
+    name="PrismaBatchQuery",
+)
+
+prisma_query = t.either([prisma_query_single, prisma_query_batch], name="PrismaQuery")
 
 
 @typegraph(
@@ -233,25 +259,43 @@ def typegate(g: Graph):
         rate_calls=True,
     )
 
-    raw_prisma_query_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.RAW_PRISMA_QUERY
+    raw_prisma_read_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.RAW_PRISMA_READ
     )
-    if isinstance(raw_prisma_query_mat_id, Err):
-        raise Exception(raw_prisma_query_mat_id.value)
+    if isinstance(raw_prisma_read_mat_id, Err):
+        raise Exception(raw_prisma_read_mat_id.value)
     raw_prisma_read_mat = Materializer(
-        raw_prisma_query_mat_id.value,
+        raw_prisma_read_mat_id.value,
         effect=fx.read(),
     )
+
+    raw_prisma_create_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.RAW_PRISMA_CREATE
+    )
+    if isinstance(raw_prisma_create_mat_id, Err):
+        raise Exception(raw_prisma_create_mat_id.value)
     raw_prisma_create_mat = Materializer(
-        raw_prisma_query_mat_id.value,
+        raw_prisma_create_mat_id.value,
         effect=fx.create(False),
     )
+
+    raw_prisma_update_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.RAW_PRISMA_UPDATE
+    )
+    if isinstance(raw_prisma_update_mat_id, Err):
+        raise Exception(raw_prisma_update_mat_id.value)
     raw_prisma_update_mat = Materializer(
-        raw_prisma_query_mat_id.value,
+        raw_prisma_update_mat_id.value,
         effect=fx.update(False),
     )
+
+    raw_prisma_delete_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.RAW_PRISMA_DELETE
+    )
+    if isinstance(raw_prisma_delete_mat_id, Err):
+        raise Exception(raw_prisma_delete_mat_id.value)
     raw_prisma_delete_mat = Materializer(
-        raw_prisma_query_mat_id.value,
+        raw_prisma_delete_mat_id.value,
         effect=fx.delete(False),
     )
 
@@ -261,10 +305,42 @@ def typegate(g: Graph):
             "typegraph": t.string(),
             # prisma runtime name
             "runtime": t.string(),
-            "query": prisma_json_query,
+            "query": prisma_query,
         }
     )
     raw_prisma_op_out = t.json()
+
+    query_prisma_model_mat_id = runtimes.register_typegate_materializer(
+        store, TypegateOperation.QUERY_PRISMA_MODEL
+    )
+    if isinstance(query_prisma_model_mat_id, Err):
+        raise Exception(query_prisma_model_mat_id.value)
+    query_prisma_model = t.func(
+        t.struct(
+            {
+                "typegraph": t.string(),
+                "runtime": t.string(),
+                "model": t.string(),
+                "offset": t.integer(),
+                "limit": t.integer(),
+            }
+        ),
+        t.struct(
+            {
+                "fields": t.list(
+                    t.struct(
+                        {
+                            "name": t.string(),
+                            "type": shallow_type_info,
+                        }
+                    )
+                ),
+                "rowCount": t.integer(),
+                "data": t.list(t.json()),
+            }
+        ),
+        Materializer(query_prisma_model_mat_id.value, effect=fx.read()),
+    )
 
     g.expose(
         admin_only,
@@ -344,4 +420,5 @@ def typegate(g: Graph):
             raw_prisma_op_out,
             raw_prisma_delete_mat,
         ),
+        queryPrismaModel=query_prisma_model,
     )

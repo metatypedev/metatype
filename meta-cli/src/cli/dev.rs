@@ -1,14 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
+use crate::interlude::*;
 
 use super::deploy::DeployOptions;
 use super::deploy::DeploySubcommand;
 use super::Action;
 use super::ConfigArgs;
 use super::NodeArgs;
-use actix_web::dev::ServerHandle;
-use anyhow::Result;
-use async_trait::async_trait;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -33,10 +31,10 @@ pub struct Dev {
 
 #[async_trait]
 impl Action for Dev {
-    async fn run(&self, args: ConfigArgs, server_handle: Option<ServerHandle>) -> Result<()> {
+    #[tracing::instrument]
+    async fn run(&self, args: ConfigArgs) -> Result<()> {
         log::info!("'meta dev' subcommand is an alias to 'meta deploy --codegen --allow-dirty --watch --create-migration'");
         let options = DeployOptions {
-            codegen: true,
             allow_dirty: true,
             allow_destructive: self.run_destructive_migrations,
             watch: true,
@@ -52,6 +50,6 @@ impl Action for Dev {
             None,
             self.max_parallel_loads,
         );
-        deploy.run(args, server_handle).await
+        deploy.run(args).await
     }
 }

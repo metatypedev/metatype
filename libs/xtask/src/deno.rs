@@ -51,18 +51,8 @@ impl Test {
         let permissions = mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
             allow_run: Some(
                 [
-                    "cargo",
-                    "hostname",
-                    "target/debug/meta",
-                    "git",
-                    "python3",
-                    "rm",
-                    "mkdir",
-                    "bash",
-                    "npm",
-                    "pnpm",
-                    "setsid",
-                    "temporal",
+                    "cargo", "hostname", "meta", "git", "python3", "rm", "mkdir", "bash", "npm",
+                    "pnpm", "setsid", "temporal", "deno", "poetry",
                 ]
                 .into_iter()
                 .map(str::to_owned)
@@ -71,12 +61,7 @@ impl Test {
             allow_sys: Some(vec![]),
             allow_env: Some(vec![]),
             allow_hrtime: true,
-            allow_write: Some(
-                ["tmp", "typegate/tests"]
-                    .into_iter()
-                    .map(std::str::FromStr::from_str)
-                    .collect::<Result<_, _>>()?,
-            ),
+            allow_write: Some(vec![]),
             allow_ffi: Some(vec![]),
             allow_read: Some(vec![]),
             allow_net: Some(vec![]),
@@ -131,14 +116,8 @@ impl Bench {
         let permissions = mt_deno::deno::deno_runtime::permissions::PermissionsOptions {
             allow_run: Some(
                 [
-                    "cargo",
-                    "hostname",
-                    "target/debug/meta",
-                    "git",
-                    "python3",
-                    "rm",
-                    "mkdir",
-                    "bash",
+                    "cargo", "hostname", "meta", "git", "python3", "rm", "mkdir", "bash", "npm",
+                    "pnpm", "setsid", "temporal", "deno", "poetry",
                 ]
                 .into_iter()
                 .map(str::to_owned)

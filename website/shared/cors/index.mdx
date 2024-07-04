@@ -1,17 +1,51 @@
 import TGExample from "@site/src/components/TGExample";
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
 
+Cross-Origin Resource Sharing (CORS) is a mechanism that allows or denies cross-origin requests in the browser. It prevents websites that you've not explicitly allowed from using your API. Note that it doesn't protect non-browser clients like server side code or a mobile app from using your typegraphs, only browsers implements the CORS mechanism. More details can be found [here](https://developer.mozilla.org/en/docs/Web/HTTP/CORS).
 
-Cross-Origin Resource Sharing (CORS) on the one hand is a mechanism that allows or denies cross-origin requests in the browser. It avoids that other websites use your API without explicitly allowing it. Note that it doesn't protect other servers or a mobile app from using your typegraphs, only browsers implements the CORS mechanism. See this [documentation](https://developer.mozilla.org/en/docs/Web/HTTP/CORS) for the details.
+<SDKTabs>
+    <TabItem value="typescript">
 
 <TGExample
   typegraph="cors"
-  python={require("../../../examples/typegraphs/cors.py")}
   typescript={require("!!code-loader!../../../examples/typegraphs/cors.ts")}
   query={require("./cors.graphql")}
 />
 
-If your browser support well CORS, you should see an error and even more if you try to run the interactive demo. By the way, there is a hidden core header in all interactive demos you have met so far:
+    </TabItem>
+
+    <TabItem value="python">
+
+<TGExample
+  typegraph="cors"
+  python={require("!!code-loader!../../../examples/typegraphs/cors.py")}
+  query={require("./cors.graphql")}
+/>
+
+    </TabItem>
+
+</SDKTabs>
+
+If your browser support well CORS, you should the following error if you try to run the interactive demo.
+
+```json
+{
+  "errors": [
+    {
+      "message": "NetworkError when attempting to fetch resource.",
+      "stack": ""
+    }
+  ]
+}
+```
+
+Look in the network tab of your browser inspect tools to see the error proper.
+
+By the way, there is a hidden cors header in all interactive demos you have met so far:
 
 ```python
-TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"])
+# ..
+Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"])
+# ..
 ```

@@ -25,6 +25,32 @@ import { ComputationEngine } from "./computation_engine.ts";
 import { isIntrospectionQuery } from "../services/graphql_service.ts";
 import { ObjectNode } from "../typegraph/type_node.ts";
 import { RestSchemaGenerator } from "../transports/rest/rest_schema_generator.ts";
+import { BaseError, ErrorConstructor, ErrorKind } from "../errors.ts";
+
+class GraphQLVariableNotFound extends BaseError {
+  constructor(variable: string) {
+    super(import.meta, ErrorKind.User, `variable not found: ${variable}`);
+  }
+}
+
+class TypegraphError extends BaseError {
+  constructor(message: string) {
+    super(import.meta, ErrorKind.Typegraph, message);
+  }
+}
+
+class EndpointQueryError extends TypegraphError {
+  constructor(message: string, endpoint: string | null) {
+    const endpointStr = endpoint == null ? "" : ` '${endpoint}'`;
+    super(`invalid query for endpoint${endpointStr}: ${message}`);
+  }
+}
+
+class EndpointGraphQLVariableNotFound extends EndpointQueryError {
+  constructor(varName: string) {
+    super(`variable not found: $${varName}`, null);
+  }
+}
 
 /**
  * Processed graphql node to be evaluated against a Runtime
@@ -51,7 +77,7 @@ export class ComputeStage {
   varType(varName: string): string {
     const typ = this.varTypes[varName];
     if (typ == null) {
-      throw new Error(`variable not found: $${varName}`);
+      throw new GraphQLVariableNotFound(varName);
     }
     return typ;
   }
@@ -104,17 +130,17 @@ class QueryCache {
 }
 
 const effectToMethod = {
-  "read": "GET",
-  "create": "POST",
-  "update": "PUT",
-  "delete": "DELETE",
+  read: "GET",
+  create: "POST",
+  update: "PUT",
+  delete: "DELETE",
 };
 
 export interface EndpointToSchemaMap {
   [index: string]: { fnName: string; outputSchema: unknown };
 }
 
-export class QueryEngine {
+export class QueryEngine implements AsyncDisposable {
   name: string;
   queryCache: QueryCache;
   logger: log.Logger;
@@ -136,19 +162,20 @@ export class QueryEngine {
     return this.tg.rawName;
   }
 
-  public constructor(
-    public tg: TypeGraph,
-  ) {
+  public constructor(public tg: TypeGraph) {
     this.tg = tg;
     this.name = tg.name;
     this.queryCache = new QueryCache();
     this.logger = log.getLogger("engine");
     this.rest = {
-      "GET": {},
-      "POST": {},
-      "PUT": {},
-      "DELETE": {},
+      GET: {},
+      POST: {},
+      PUT: {},
+      DELETE: {},
     };
+  }
+  async [Symbol.asyncDispose]() {
+    await this.tg[Symbol.asyncDispose]();
   }
 
   async registerEndpoints() {
@@ -159,7 +186,7 @@ export class QueryEngine {
       const unwrappedOperation = operation.unwrap();
       const name = unwrappedOperation.name?.value;
       if (!name) {
-        throw new Error("query name is required");
+        throw new EndpointQueryError("query name is required", null);
       }
 
       const [plan] = await this.getPlan(
@@ -169,14 +196,19 @@ export class QueryEngine {
         false,
       );
 
-      const effects = Array.from(new Set(
-        plan.stages.filter((s) => s.props.parent == null).map((s) =>
-          s.props.effect
-        ),
-      ).values());
+      const effects = Array.from(
+        new Set(
+          plan.stages
+            .filter((s) => s.props.parent == null)
+            .map((s) => s.props.effect),
+        ).values(),
+      );
 
       if (effects.length !== 1) {
-        throw new Error("root fields in query must be of the same effect");
+        throw new EndpointQueryError(
+          "root fields in query must be of the same effect",
+          name,
+        );
       }
       const [effect] = effects;
 
@@ -200,23 +232,27 @@ export class QueryEngine {
         if (fnName) {
           // Note: (query | mutation) <endpointName> { <fnName1>, <fnName2>, .. }
           const match = this.tg.tg.types
-            .filter((tpe) =>
-              tpe.type == "object" &&
-              (tpe.title == "Query" || tpe.title == "Mutation") &&
-              tpe.properties[fnName] != undefined
-            ).shift() as ObjectNode;
+            .filter(
+              (tpe) =>
+                tpe.type == "object" &&
+                (tpe.title == "Query" || tpe.title == "Mutation") &&
+                tpe.properties[fnName] != undefined,
+            )
+            .shift() as ObjectNode;
 
           if (!match) {
-            throw new Error(
+            throw new EndpointQueryError(
               `invalid state: "${name}" in query definition not found in type list`,
+              name,
             );
           }
 
           const typeIdx = match.properties?.[fnName];
           const endpointFunc = this.tg.type(typeIdx);
           if (endpointFunc.type != "function") {
-            throw new Error(
+            throw new EndpointQueryError(
               `invalid state: function expected, got "${endpointFunc.type}"`,
+              name,
             );
           }
 
@@ -241,6 +277,7 @@ export class QueryEngine {
         this.checkVariablesPresence(
           unwrappedOperation.variableDefinitions ?? [],
           variables,
+          EndpointGraphQLVariableNotFound,
         );
         return variables;
       };
@@ -253,13 +290,15 @@ export class QueryEngine {
           return { type: "array", items: toJSONSchema(v.type) };
         }
         const name = v.name.value;
-        const schema = ({
-          "Integer": { type: "number" },
-          "Float": { type: "number" },
-          "Boolean": { type: "boolean" },
-          "String": { type: "string" },
-          "ID": { type: "string" },
-        } as any)?.[name];
+        const schema = (
+          {
+            Integer: { type: "number" },
+            Float: { type: "number" },
+            Boolean: { type: "boolean" },
+            String: { type: "string" },
+            ID: { type: "string" },
+          } as any
+        )?.[name];
         if (schema) {
           return schema;
         }
@@ -283,21 +322,17 @@ export class QueryEngine {
     }
   }
 
-  async terminate() {
-    return await this.tg.deinit();
-  }
-
-  materialize(
+  async materialize(
     stages: ComputeStage[],
     verbose: boolean,
-  ): ComputeStage[] {
+  ): Promise<ComputeStage[]> {
     const stagesMat: ComputeStage[] = [];
     const waitlist = [...stages];
 
     while (waitlist.length > 0) {
       const stage = waitlist.shift()!;
       stagesMat.push(
-        ...stage.props.runtime.materialize(stage, waitlist, verbose),
+        ...(await stage.props.runtime.materialize(stage, waitlist, verbose)),
       );
     }
 
@@ -336,7 +371,7 @@ export class QueryEngine {
     */
 
     // how
-    const stagesMat = this.materialize(stages, verbose);
+    const stagesMat = await this.materialize(stages, verbose);
 
     // when
     const optimizedStages = this.optimize(stagesMat, verbose);
@@ -391,12 +426,13 @@ export class QueryEngine {
   checkVariablesPresence(
     defs: Readonly<Array<ast.VariableDefinitionNode>>,
     variables: Record<string, unknown>,
+    errCtor: ErrorConstructor,
   ) {
     for (const varDef of defs) {
       const varName = varDef.variable.name.value;
       const value = variables[varName];
       if (value === undefined) {
-        throw Error(`missing variable "${varName}" value`);
+        throw new errCtor(varName);
       }
       // variable values are validated with the argument validator
     }

@@ -7,8 +7,9 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph(
-    # skip:next-line
+    # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
 )
 def deno(g: Graph):
     deno = DenoRuntime()
@@ -18,7 +19,7 @@ def deno(g: Graph):
         t.struct({"n": t.float()}),
         t.struct({"res": t.integer(), "ms": t.float()}),
         code="""
-        ({ n }) => {
+            ({ n }) => {
                 let a = 0, b = 1, c;
                 const start = performance.now();
                 for (

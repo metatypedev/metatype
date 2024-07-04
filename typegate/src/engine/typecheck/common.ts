@@ -3,8 +3,8 @@
 
 import { StringFormat } from "../../typegraph/types.ts";
 import * as uuid from "std/uuid/mod.ts";
-import validator from "npm:validator";
-import lodash from "npm:lodash";
+import validator from "validator";
+import lodash from "lodash";
 
 export type ErrorEntry = [path: string, message: string];
 
@@ -32,12 +32,15 @@ const formatValidators: Record<StringFormat, FormatValidator> = {
   email: validator.isEmail,
   // TODO validatorjs does not have a URI validator, so this is stricter than expected
   uri: (value: string) => {
-    return validator.isDataURI(value) || validator.isURL(value, {
-      require_protocol: true,
-      require_valid_protocol: false,
-      require_host: true,
-      require_tld: false,
-    });
+    return (
+      validator.isDataURI(value) ||
+      validator.isURL(value, {
+        require_protocol: true,
+        require_valid_protocol: false,
+        require_host: true,
+        require_tld: false,
+      })
+    );
   },
   // TODO
   hostname: validator.isFQDN,

@@ -6,6 +6,7 @@ use crate::wit::runtimes as wit;
 #[derive(Debug)]
 pub struct MaterializerDenoModule {
     pub file: String,
+    pub deps: Vec<String>,
 }
 
 #[derive(Debug)]

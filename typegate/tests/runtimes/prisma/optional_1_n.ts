@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.js";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.js";
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
 
-typegraph("prisma_opt_1", (g: any) => {
+export const tg = await typegraph("prisma_opt_1", (g: any) => {
   const db = new PrismaRuntime("prisma", "POSTGRES");
   const pub = Policy.public();
 
   const record = t.struct(
     {
-      "id": t.uuid({ asId: true, config: { auto: true } }),
-      "name": t.string(),
-      "age": t.integer().optional(),
+      id: t.uuid({ asId: true, config: { auto: true } }),
+      name: t.string(),
+      age: t.integer().optional(),
     },
     { name: "record" },
   );

@@ -3,11 +3,8 @@
 
 use std::collections::HashMap;
 
-#[cfg(feature = "codegen")]
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "source", rename_all = "lowercase")]
 pub enum ParameterTransformLeafNode {
@@ -23,7 +20,6 @@ pub enum ParameterTransformLeafNode {
     Parent { parent_idx: u32 },
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ParameterTransformParentNode {
@@ -35,7 +31,6 @@ pub enum ParameterTransformParentNode {
     Array { items: Vec<ParameterTransformNode> },
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
 pub enum ParameterTransformNodeData {
@@ -43,7 +38,6 @@ pub enum ParameterTransformNodeData {
     Parent(ParameterTransformParentNode),
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ParameterTransformNode {
@@ -52,7 +46,6 @@ pub struct ParameterTransformNode {
     pub data: ParameterTransformNodeData,
 }
 
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionParameterTransform {
     pub resolver_input: u32,

@@ -23,12 +23,11 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::hash::Hasher as _;
-
 use std::rc::Rc;
 
 use crate::wit::core::{
-    ArtifactResolutionConfig, Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec,
-    RuntimeId, TypegraphInitParams,
+    Artifact as WitArtifact, Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec,
+    RuntimeId, SerializeParams, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -59,7 +58,7 @@ pub struct TypegraphContext {
 }
 
 thread_local! {
-    static TG: RefCell<Option<TypegraphContext>> = RefCell::new(None);
+    static TG: RefCell<Option<TypegraphContext>> = const { RefCell::new(None) };
 }
 
 static TYPEGRAPH_VERSION: &str = "0.0.3";
@@ -109,7 +108,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
             random_seed: Default::default(),
-            ref_artifacts: Default::default(),
+            artifacts: Default::default(),
         },
         types: vec![],
         saved_store_state: Some(Store::save()),
@@ -181,11 +180,9 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn finalize(
-    res_config: Option<ArtifactResolutionConfig>,
-) -> Result<(String, Vec<(String, String)>)> {
+pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> {
     #[cfg(test)]
-    eprintln!("Finalizing typegraph...");
+    eprintln!("Serializing typegraph typegraph...");
 
     let mut ctx = TG.with(|tg| {
         tg.borrow_mut()
@@ -196,7 +193,6 @@ pub fn finalize(
     let auths = finalize_auths(&mut ctx)?;
 
     let mut tg = Typegraph {
-        id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
         types: ctx
             .types
             .into_iter()
@@ -213,7 +209,13 @@ pub fn finalize(
                 dynamic: ctx.meta.queries.dynamic,
                 endpoints: Store::get_graphql_endpoints(),
             },
-            ref_artifacts: ctx.meta.ref_artifacts,
+            // artifacts: {
+            //     let arts = ctx.meta.artifacts;
+            //     let mut arts = arts.into_iter().collect::<Vec<_>>();
+            //     arts.sort_by_cached_key(|pair| pair.0.clone());
+            //     arts.into_iter().collect()
+            // },
+            artifacts: ctx.meta.artifacts,
             random_seed: Store::get_random_seed(),
             auths,
             ..ctx.meta
@@ -222,33 +224,35 @@ pub fn finalize(
         deps: Default::default(),
     };
 
-    let config = res_config.map(|config| {
-        tg.meta.prefix = config.prefix.clone();
-        config
-    });
-    TypegraphPostProcessor::new(config).postprocess(&mut tg)?;
+    tg.meta.prefix = params.prefix.clone();
+
+    let pretty = params.pretty;
+    TypegraphPostProcessor::new(params).postprocess(&mut tg)?;
+
+    let artifacts = tg
+        .meta
+        .artifacts
+        .values()
+        .cloned()
+        .map(Into::into)
+        .collect::<Vec<_>>();
 
     Store::restore(ctx.saved_store_state.unwrap());
 
-    let result = match serde_json::to_string_pretty(&tg).map_err(|e| e.to_string().into()) {
-        Ok(res) => res,
-        Err(e) => return Err(e),
+    let result = if pretty {
+        serde_json::to_string_pretty(&tg)
+    } else {
+        serde_json::to_string(&tg)
     };
 
-    // TODO: maybe remove this extra return value? tg.meta.ref_artifacts can be accessed on the sdk frontend
-    let referred_artifacts: Vec<(String, String)> = tg
-        .meta
-        .ref_artifacts
-        .clone()
-        .iter()
-        .map(|(hash, path)| (hash.clone(), path.to_string_lossy().to_string()))
-        .collect();
+    let result = match result.map_err(|e| e.to_string().into()) {
+        Ok(res) => res,
+        Err(e) => {
+            return Err(e);
+        }
+    };
 
-    #[cfg(test)]
-    return Ok((result, referred_artifacts));
-
-    #[cfg(not(test))]
-    return Ok((result, referred_artifacts));
+    Ok((result, artifacts))
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {

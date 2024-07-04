@@ -11,11 +11,9 @@ use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
-use crate::wit::core::ArtifactResolutionConfig;
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
-use std::path::PathBuf;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
 
@@ -60,7 +58,6 @@ pub struct Store {
     graphql_endpoints: Vec<String>,
     auths: Vec<common::typegraph::Auth>,
 
-    deploy_cwd_dir: Option<PathBuf>,
     random_seed: Option<u32>,
 
     latest_alias_no: u32,
@@ -105,7 +102,7 @@ const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity", "true"];
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
-    pub static SDK_VERSION: String = "0.3.7-0".to_owned();
+    pub static SDK_VERSION: String = "0.4.4-0".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
@@ -127,7 +124,7 @@ pub struct NameRegistration(pub bool);
 #[cfg(test)]
 impl Store {
     pub fn reset() {
-        let _ = crate::typegraph::finalize(None);
+        let _ = crate::typegraph::serialize(Default::default());
         with_store_mut(|s| *s = Store::new());
     }
 }
@@ -217,16 +214,6 @@ impl Store {
             s.type_by_names.insert(name, id);
             Ok(())
         })
-    }
-
-    pub fn set_deploy_cwd(value: Option<String>) {
-        with_store_mut(|s| {
-            s.deploy_cwd_dir = value.map(PathBuf::from);
-        })
-    }
-
-    pub fn get_deploy_cwd() -> Option<PathBuf> {
-        with_store(|s| s.deploy_cwd_dir.clone())
     }
 
     pub fn get_random_seed() -> Option<u32> {
@@ -449,7 +436,7 @@ impl Store {
         }
     }
 
-    pub fn get_deno_module(file: String) -> MaterializerId {
+    pub fn get_deno_module(file: String, deps: Vec<String>) -> MaterializerId {
         if let Some(mat) = with_store(|s| s.deno_modules.get(&file).cloned()) {
             mat
         } else {
@@ -459,6 +446,7 @@ impl Store {
                 effect: Effect::Read, // N/A
                 data: Rc::new(DenoMaterializer::Module(MaterializerDenoModule {
                     file: file.clone(),
+                    deps: deps.clone(),
                 }))
                 .into(),
             });

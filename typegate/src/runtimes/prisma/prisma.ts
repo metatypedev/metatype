@@ -9,7 +9,7 @@ import { iterParentStages, nativeResult, nativeVoid } from "../../utils.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import { ComputeArgParams } from "../../engine/planner/args.ts";
 import { PrismaOperationMatData } from "../../typegraph/types.ts";
-import { getLogger } from "../../log.ts";
+import { getLogger, Logger } from "../../log.ts";
 import * as PrismaRT from "./types.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
@@ -51,13 +51,13 @@ interface FieldQuery {
   arguments?: Record<string, unknown>;
 }
 
-interface SingleQuery {
+export interface SingleQuery {
   modelName?: string;
   action: string;
   query: FieldQuery;
 }
 
-interface BatchQuery {
+export interface BatchQuery {
   batch: SingleQuery[];
   // transaction
 }
@@ -67,12 +67,15 @@ interface GenQuery {
 }
 
 export class PrismaRuntime extends Runtime {
+  private logger: Logger;
+
   private constructor(
     typegraphName: string,
     readonly name: string,
     private datamodel: string,
   ) {
     super(typegraphName);
+    this.logger = getLogger(`prisma:${typegraphName}:${name}`);
   }
 
   static async init(
@@ -90,24 +93,32 @@ export class PrismaRuntime extends Runtime {
       args.name,
       datamodel,
     );
+    logger.info(`registering prisma engine '${instance.name}': ${instance.id}`);
     nativeVoid(
       await native.prisma_register_engine({
         engine_name: instance.id,
         datamodel,
       }),
     );
+    logger.info(`prisma engine '${instance.name}' registered`);
     return instance;
   }
 
   async deinit(): Promise<void> {
+    this.logger.info(`unregistering prisma engine '${this.name}': ${this.id}`);
     nativeVoid(
       await native.prisma_unregister_engine({
         engine_name: this.id,
       }),
     );
+    this.logger.info(`prisma engine '${this.name}' unregistered`);
   }
 
   async query(query: SingleQuery | BatchQuery) {
+    const isBatchQuery = "batch" in query;
+    this.logger.info(
+      `prisma query on runtime '${this.name}': ${JSON.stringify(query)}`,
+    );
     const { res } = nativeResult(
       await native.prisma_query({
         engine_name: this.id,
@@ -116,11 +127,29 @@ export class PrismaRuntime extends Runtime {
       }),
     );
     const result = JSON.parse(res);
+
     if ("errors" in result) {
-      console.error("remote prisma errors", result.errors);
+      this.logger.error("remote prisma errors", result.errors);
       throw new ResolverError(result.errors[0].user_facing_error.message);
+    } else {
+      this.logger.info(`prisma query successful on runtime '${this.name}'`);
+      this.logger.debug(`prisma query result: ${JSON.stringify(result)}`);
     }
-    return result.data;
+
+    // TODO refactor when we support partial results in GraphQL
+    const results = isBatchQuery ? result.batchResult : [result];
+    const ret = [];
+    for (const r of results) {
+      if ("errors" in r) {
+        // TODO support for partial failures??
+        this.logger.error(
+          `(rt:'${this.name}') remote prisma errors: ${r.errors}`,
+        );
+        throw new ResolverError(r.errors[0].user_facing_error.message);
+      }
+      ret.push(r.data);
+    }
+    return isBatchQuery ? ret : ret[0];
   }
 
   execute(
@@ -133,13 +162,11 @@ export class PrismaRuntime extends Runtime {
 
       const startTime = performance.now();
       const generatedQuery = q({ variables, context, effect, parent });
-      console.log(
-        "remote prisma query",
-        JSON.stringify(generatedQuery, null, 2),
-      );
       const res = await this.query(generatedQuery);
       const endTime = performance.now();
-      logger.debug(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
+      this.logger.debug(
+        `queried prisma in ${(endTime - startTime).toFixed(2)}ms`,
+      );
 
       return path.reduce((r, field) => r[field], res);
     };
@@ -168,7 +195,13 @@ export class PrismaRuntime extends Runtime {
     iterParentStages(stages, (stage, children) => {
       const mat = stage.props.materializer;
       if (mat == null) {
-        throw new Error("");
+        this.logger.error(
+          "Materializer not found during Query Planning for Operation:",
+          stage.props.operationName,
+        );
+        throw new Error("Materializer not found during Query Planning.", {
+          cause: `${stage.props.operationName} - ${stage.props.operationType}`,
+        });
       }
       const matData = mat.data as unknown as PrismaOperationMatData;
 

@@ -4,23 +4,27 @@
     "website/.docusaurus": true,
     "website/node_modules": true
   },
-  "deno.importMap": "typegate/import_map.json",
   "deno.enablePaths": [
     "typegate",
     "dev",
     "examples/templates/deno",
-    "typegraph/node/dev"
+    "examples/typegraphs",
+    "typegraph/deno/dev",
+    "typegraph/deno/sdk",
+    "ghjk.ts",
+    ".ghjk"
   ],
+  "deno.importMap": "typegate/import_map.json",
   "deno.unstable": true,
-  "deno.suggest.completeFunctionCalls": true,
-  "deno.inlayHints.variableTypes.enabled": true,
-  "deno.inlayHints.propertyDeclarationTypes.enabled": true,
-  "deno.inlayHints.parameterTypes.enabled": true,
-  "deno.inlayHints.parameterNames.enabled": "all",
-  "deno.inlayHints.parameterNames.suppressWhenArgumentMatchesName": true,
-  "deno.inlayHints.enumMemberValues.enabled": true,
-  "deno.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
-  "deno.inlayHints.functionLikeReturnTypes.enabled": true,
+  "typescript.suggest.completeFunctionCalls": true,
+  "typescript.inlayHints.variableTypes.enabled": true,
+  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
+  "typescript.inlayHints.parameterTypes.enabled": true,
+  "typescript.inlayHints.parameterNames.enabled": "all",
+  "typescript.inlayHints.parameterNames.suppressWhenArgumentMatchesName": true,
+  "typescript.inlayHints.enumMemberValues.enabled": true,
+  "typescript.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
+  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
   "rust-analyzer.checkOnSave": true,
   "deno.codeLens.implementations": true,
   "deno.codeLens.references": true,
@@ -34,7 +38,7 @@
     }
   },
   "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "languageToolLinter.languageTool.ignoredWordsInWorkspace": [
     "cockroachdb",
@@ -53,12 +57,11 @@
     "trino",
     "typegate",
     "typegates",
+    "typegraph",
     "typegraphs",
     "wasmedge"
   ],
   "python.languageServer": "Pylance",
-  "python.analysis.extraPaths": [
-    "typegraph/python"
-  ],
-  "mdx.experimentalLanguageServer": true,
+  "python.analysis.extraPaths": ["typegraph/python"],
+  "prettier.proseWrap": "never"
 }

@@ -17,12 +17,11 @@ RUN set -eux \
    && apt-get update \
    && apt install --fix-broken --assume-yes --no-install-recommends \
    make \
+   clang \
    # libffi-sys cate build dep\
    automake \
    # protoc\
    libprotoc-dev:$ARCH \
-   # wasmedge-sys crate build dep\
-   libclang-dev \
    # openssl crate build deps \
    pkg-config \
    libssl-dev:$ARCH \
@@ -32,21 +31,22 @@ RUN set -eux \
    git \
    curl \
    # asdf deps \
+   zstd \
    xz-utils \
    unzip
 
-ARG GHJK_VERSION=423d38e
+ARG GHJK_VERSION=0.2.0
 ENV GHJK_SHARE_DIR=/ghjk
 RUN curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
    | GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash sh 
 
 COPY ghjk.ts .
 # mold breaks builds for aarch64 linux
-RUN OCI=1 NO_PYTHON=1 NO_MOLD=1 ghjk ports sync
-ENV GHJK_ENV=$GHJK_SHARE_DIR/env.sh
-ENV BASH_ENV=$GHJK_ENV
+ENV GHJK_ENV=_rust
+RUN ghjk e cook
+ENV BASH_ENV=$GHJK_SHARE_DIR/env.sh
 # RUN echo $PATH && echo $LD_LIBRARY_PATH && dpkg --status libclang-dev && exit 1
 # nasty hack until dockerfiles support setting env variables
 # from command outputs: https://github.com/moby/moby/issues/29110
-ENV PATH=/.ghjk/envs/default/shims/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV LD_LIBRARY_PATH=/.ghjk/envs/default/shims/lib
+ENV PATH=/.ghjk/envs/$GHJK_ENV/shims/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV LD_LIBRARY_PATH=/.ghjk/envs/$GHJK_ENV/shims/lib

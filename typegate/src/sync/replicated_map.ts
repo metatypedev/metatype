@@ -5,8 +5,15 @@ import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
 import { getLogger } from "../log.ts";
 import { ensure } from "../utils.ts";
+import { BaseError, ErrorKind } from "../errors.ts";
 
 const logger = getLogger(import.meta);
+
+class ReplicatedMapError extends BaseError {
+  constructor(message: string) {
+    super(import.meta, ErrorKind.Typegate, message, 500);
+  }
+}
 
 type SyncContext = {
   start: (cursor: XIdInput) => AsyncIterableIterator<Record<string, string>>;
@@ -18,12 +25,12 @@ const ADD = "add";
 const RM = "rm";
 
 // Deno Redis driver library does not support well txs (MULTI), prefer Lua scripts to avoid bugs
-const addCmd = `
+const addCmd = /* lua */ `
 redis.call('HSET', KEYS[1], ARGV[1], ARGV[3])
 redis.call('XADD', KEYS[2], 'MAXLEN', '~', '10000', '*', 'name', ARGV[1], 'event', '${ADD}', 'instance', ARGV[2])
 `.trim();
 
-const rmCmd = `
+const rmCmd = /* lua */ `
 redis.call('HDEL', KEYS[1], ARGV[1])
 redis.call('XADD', KEYS[2], 'MAXLEN', '~', '10000', '*', 'name', ARGV[1], 'event', '${RM}', 'instance', ARGV[2])
 `.trim();
@@ -38,7 +45,7 @@ type RedisReplicatedMapOptions<T> = {
   terminate: TerminateHook<T>;
 };
 
-export class RedisReplicatedMap<T> {
+export class RedisReplicatedMap<T> implements AsyncDisposable {
   private instance: string;
 
   public memory: Map<string, T>;
@@ -46,21 +53,6 @@ export class RedisReplicatedMap<T> {
   private ekey: string;
 
   sync: SyncContext | null;
-
-  private constructor(
-    name: string,
-    private redis: Redis,
-    private redisObs: Redis,
-    private serializer: Serializer<T>,
-    private deserializer: Deserializer<T>,
-    private terminateHook: TerminateHook<T>,
-  ) {
-    this.instance = crypto.randomUUID();
-    this.memory = new Map();
-    this.key = name;
-    this.ekey = `${name}_event`;
-    this.sync = null;
-  }
 
   static async init<T>(
     name: string,
@@ -81,6 +73,31 @@ export class RedisReplicatedMap<T> {
       deserialize,
       terminate,
     );
+  }
+
+  private constructor(
+    name: string,
+    private redis: Redis,
+    private redisObs: Redis,
+    private serializer: Serializer<T>,
+    private deserializer: Deserializer<T>,
+    private terminateHook: TerminateHook<T>,
+  ) {
+    this.instance = crypto.randomUUID();
+    this.memory = new Map();
+    this.key = name;
+    this.ekey = `${name}_event`;
+    this.sync = null;
+  }
+
+  async [Symbol.asyncDispose]() {
+    if (this.sync) {
+      await this.sync.cancel();
+      this.sync = null;
+    }
+
+    this.redis.close();
+    this.redisObs.close();
   }
 
   async historySync(): Promise<XIdInput> {
@@ -139,27 +156,19 @@ export class RedisReplicatedMap<T> {
       if (event === ADD) {
         const payload = await redis.hget(key, name);
         if (!payload) {
-          throw Error(`added message without payload ${name}`);
+          throw new ReplicatedMapError(`added message without payload ${name}`);
         }
-        logger.info(`received addition: ${name}`);
+        logger.info(`received addition {}`, { name });
         await this.memorySet(name, await deserializer(payload, false));
       } else if (event === RM) {
-        logger.info(`received removal: ${name}`);
+        logger.info(`received removal {}`, { name });
         await this.memorySet(name, null);
       } else {
-        throw Error(`unexpected message ${name} with ${event}`);
+        throw new ReplicatedMapError(
+          `unexpected message ${name} with ${event}`,
+        );
       }
     }
-  }
-
-  async stopSync() {
-    if (this.sync) {
-      await this.sync.cancel();
-      this.sync = null;
-    }
-
-    this.redis.close();
-    this.redisObs.close();
   }
 
   private subscribe(): SyncContext {
@@ -208,7 +217,7 @@ export class RedisReplicatedMap<T> {
     const { key, ekey, serializer, redis } = this;
 
     await this.memorySet(name, elem);
-    logger.info(`sent addition: ${name}`);
+    logger.info(`sent addition {}`, { name, key, ekey, elem: !!elem });
 
     await redis.eval(
       addCmd,
@@ -229,7 +238,7 @@ export class RedisReplicatedMap<T> {
     const { key, ekey, redis } = this;
 
     await this.memorySet(name, null);
-    logger.info(`sent removal: ${name}`);
+    logger.info(`sent removal {}`, { name, key });
 
     await redis.eval(
       rmCmd,

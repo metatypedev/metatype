@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use anyhow::{bail, Result};
+use crate::interlude::*;
+
 use pathdiff::diff_paths;
-use std::path::{Path, PathBuf};
 
 pub fn is_hidden(path: impl AsRef<Path>) -> bool {
     path.as_ref().components().any(|c| {

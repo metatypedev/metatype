@@ -1,0 +1,90 @@
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+
+# Wasm
+
+## Wasm runtime
+
+The Wasm runtime enables the execution of functions authored in any language that can be compiled into WebAssembly and that follows the [component model](https://component-model.bytecodealliance.org/design/why-component-model.html).
+
+Common use cases:
+
+- Integrating an existing WebAssembly component
+- Building language-agnostic services
+
+## Example
+
+Here is a simple wit component description using [wit IDL](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) that exports the `add` function.
+
+```rust
+package example:host;
+world host {
+  export add: func(a: u32, b: u32) -> u32;
+}
+```
+
+In your typegraph:
+
+<SDKTabs>
+    <TabItem value="python">
+
+```python
+from typegraph.runtimes.wasm import WasmRuntime
+
+@typegraph
+def example(g: Graph):
+    pub = Policy.public()
+    wasm = WasmRuntime.reflected("path/to/your-compiled-component.wasm");
+
+    g.expose(
+        add=wasm.export(
+            t.struct({"a": t.integer(), "b": t.integer()}),
+            t.integer(),
+            name="add",  # exported function
+        )
+    )
+
+```
+
+    </TabItem>
+    <TabItem value="typescript">
+
+```typescript
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.js";
+
+typegraph("example", (g) => {
+  const pub = Policy.public();
+  const wasm = WasmRuntime.reflected("path/to/your-compiled-component.wasm");
+
+  g.expose({
+    add: wasm
+      .export(t.struct({ a: t.integer(), b: t.integer() }), t.integer(), {
+        name: "add", // exported function
+      })
+      .withPolicy(pub),
+  });
+});
+```
+
+    </TabItem>
+
+</SDKTabs>
+
+## Wit to Typegraph types
+
+Wit ensures that you have statically typed values backed directly in your component. You can refer to the correspondence table bellow in how the input/output values are shaped in your typegraph.
+
+| wit                                                          |                                          typegraph                                           | Example values                                |
+| ------------------------------------------------------------ | :------------------------------------------------------------------------------------------: | --------------------------------------------- |
+| `string`                                                     |                                   `t.string()`, `t.uuid()`                                   | "Hello world", "H", ..                        |
+| `u8`, `u16`, `u32`, `u64`, `s8`, `s16`, `s32`, `s64`         |                                  `t.integer()`, `t.float()`                                  | 1, 2, 0, ..                                   |
+| `f32`, `f64`                                                 |                                         `t.float()`                                          | 3.14, 100, 2, ..                              |
+| `char`                                                       | `t.string()` (truncated), `t.integer()` (truncated as `u8`), `t.float()` (truncated as `u8`) | "A", 65, 65.0, ..                             |
+| `option<T>`                                                  |                                       `<T>.optional()`                                       | `null`, "hello world", ..                     |
+| `list<T>`                                                    |                                        `t.list(<T>)`                                         | ["one", "two" ], [1, 2], ..                   |
+| `tuple<T1, T2, ..>`                                          |                                `t.list(t.enum([t1, t2, ..]))`                                | [1, "one"], [2, "two"], ..                    |
+| `enum example { one, two }`                                  |                                   `t.enum(["one", "two"])`                                   | "one", "two"                                  |
+| `variant example { one(string), two }`                       |         `t.struct({ "tag": t.enum(["one", "two"]), "value": t.string().optional() )`         | `{ "tag": "two", "value": null }`             |
+| `record example { id: string, description: option<string> }` |            `t.struct({ "id": t.integer(), "description": t.string().optional() )`            | `{ "id": 123, "description": "some text"}`    |
+| `flags example { read, write, delete }`                      |                        `t.list(t.enum(["read", "write", "delete"]))`                         | `["read"]`, `["read", "write", "delete"]`, .. |

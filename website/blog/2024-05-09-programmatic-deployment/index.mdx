@@ -1,0 +1,183 @@
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+import UpgradePythonSDK from "../../shared/upgrade/python-sdk.mdx";
+import UpgradeTsSDK from "../../shared/upgrade/typescript-sdk.mdx";
+
+# Programmatic deployment (v0.4.x)
+
+A new approach to deploying typegraphs has been introduced starting with version 0.4.0. This aims to facilitate the development of automation tools around the APIs you build within the Metatype ecosystem.
+
+## What has changed?
+
+Before v0.4.x, we had to entirely rely on the [meta cli](/docs/reference/meta-cli) to deploy typegraphs to a typegate instance.
+
+This is no longer the case, as all core logic has been moved to the TypeScript/Python typegraph SDKs, both of which share the same WebAssembly-based **typegraph-core** behind the scenes. This provides some degree of assurance that you will have nearly identical experiences with each SDK.
+
+## What are the use-cases?
+
+Since typegraphs can be written using the programming language your preferred SDK is based on, you can dynamically create typegraphs with ease.
+
+The missing piece was having an interface natively backed inside the SDK for doing deployment programmatically.
+
+### Programmatic deployment
+
+### Initial setup
+
+Just like any other dependency in your favorite programming language, each SDKs can be installed with your favorite package manager.
+
+You can use one of the commands below to get started with the latest available version.
+
+<SDKTabs>
+  <TabItem value="typescript">
+    <UpgradeTsSDK />
+  </TabItem>
+  <TabItem value="python">
+    <UpgradePythonSDK />
+  </TabItem>
+</SDKTabs>
+
+#### Configuration
+
+This is analoguous to the yaml configuration file when you are using [meta cli](/docs/reference/meta-cli).
+
+It's the place where you tell which typegate you want to deploy to, how you want the artifacts to be resolved, among other settings.
+
+<SDKTabs>
+    <TabItem value="python">
+
+```python
+config: TypegraphDeployParams = TypegraphDeployParams(
+        typegate=TypegateConnectionOptions(url="<TYPEGATE_URL>", auth=BasicAuth("<USERNAME>", "<PASSWORD>")),
+        typegraph_path=os.path.join(cwd, "path-to-typegraph"),
+        prefix="",
+        secrets={},
+        migrations_dir=path.join("prisma-migrations", example.name),
+        migration_actions=None,
+        default_migration_action=MigrationAction(
+            apply=True,
+            reset=True,  # allow destructive migrations
+            create=True,
+        ),
+    )
+```
+
+    </TabItem>
+    <TabItem value="typescript">
+
+```typescript
+const config = {
+  typegate: {
+    url: "<TYPEGATE_URL>",
+    auth: new BasicAuth("<USERNAME>", "<PASSWORD>"),
+  },
+  typegraphPath: path.join(cwd, "path-to-typegraph.ts"),
+  prefix: "",
+  secrets: { POSTGRES: "<DB_URL>" },
+  migrationsDir: path.join("prisma-migrations", tg.name),
+  defaultMigrationAction: {
+    create: true,
+    reset: true, // allow destructive migrations
+  },
+};
+```
+
+    </TabItem>
+
+</SDKTabs>
+
+### Deploy/remove
+
+Now, picture this, you have a lot of typegraphs and one or more typegate instance(s) running, you can easily make small scripts that does any specific job you want.
+
+```typescript
+// ..
+import { tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.js";
+// ..
+
+const BASIC_AUTH = loadMyAuthsFromSomeSource();
+const TYPEGATE_URL = "...";
+
+export async function getTypegraphs() {
+  // Suppose we have these typegraphs..
+  // Let's enumerate them like this to simplify
+  return [
+    {
+      tg: await import("path/to/shop-finances"),
+      location: "path/to/shop-finances.ts",
+    },
+    {
+      tg: await import("path/to/shop-stats"),
+      location: "path/to/shop-stats.ts",
+    },
+  ];
+}
+
+export function getConfig(tgName: string, tgLocation: string) {
+  // Note: You can always develop various ways of constructing the configuration,
+  // like loading it from a file.
+  return {
+    typegate: {
+      url: "<TYPEGATE_URL>",
+      auth: new BasicAuth("<USERNAME>", "<PASSWORD>"),
+    },
+    typegraphPath: path.join(cwd, "path-to-typegraph.ts"),
+    prefix: "",
+    secrets: { POSTGRES: "<DB_URL>" },
+    migrationsDir: path.join("prisma-migrations", tg.name),
+    defaultMigrationAction: {
+      create: true,
+      reset: true, // allow destructive migrations
+    },
+  };
+}
+
+export async function deployAll() {
+  const typegraphs = await getTypegraphs();
+  for (const { tg, location } of typegraphs) {
+    try {
+      const config = getConfig(tg.name, location);
+      // use tgDeploy to deploy typegraphs, it will contain the response from typegate
+      const { typegate } = await tgDeploy(tg, config);
+      const selection = typegate?.data?.addTypegraph;
+      if (selection) {
+        const { messages } = selection;
+        console.log(messages.map(({ text }) => text).join("\n"));
+      } else {
+        throw new Error(JSON.stringify(typegate));
+      }
+    } catch (e) {
+      console.error("[!] Failed deploying", tg.name);
+      console.error(e);
+    }
+  }
+}
+
+export async function undeployAll() {
+  const typegraphs = await getTypegraphs();
+  for (const { tg } of typegraphs) {
+    try {
+      // use tgRemove to remove typegraphs
+      const { typegate } = await tgRemove("<TYPEGRAPH_NAME>", {
+        baseUrl: TYPEGATE_URL,
+        auth: BASIC_AUTH,
+      });
+      console.log(typegate);
+    } catch (e) {
+      console.error("Failed removing", tg.name);
+      console.error(e);
+    }
+  }
+}
+```
+
+### Going beyond
+
+With these new additions, you can automate virtually anything programmatically on the typegraph side. Starting from having highly dynamic APIs to providing ways to deploy and configure them, you can even build a custom framework around the ecosystem!
+
+Please tell us what you think and report any issues you found on [Github](https://github.com/metatypedev/metatype/issues).
+
+:::info Notes
+
+You can check the [Programmatic deployment](/docs/guides/programmatic-deployment) reference page for more information.
+
+:::

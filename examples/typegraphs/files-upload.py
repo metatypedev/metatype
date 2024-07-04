@@ -6,12 +6,11 @@ from typegraph.graph.params import Cors
 
 
 @typegraph(
+    name="files-upload",
     # skip-next-line
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 )
-def retrend(g: Graph):
-    public = Policy.public()
-
+def files_upload(g: Graph):
     s3 = S3Runtime(
         # we provide the name of the env vars
         # the typegate will read from
@@ -23,11 +22,11 @@ def retrend(g: Graph):
     )
 
     g.expose(
+        Policy.public(),
         # we can then generate helpers for interacting with our runtime
-        listObjects=s3.list("bucket"),
-        getDownloadUrl=s3.presign_get("bucket"),
-        signUploadUrl=s3.presign_put("bucket"),
-        upload=s3.upload("bucket", t.file(allow=["image/png", "image/jpeg"])),
-        uploadMany=s3.upload_all("bucket"),
-        default_policy=[public],
+        listObjects=s3.list("examples"),
+        getDownloadUrl=s3.presign_get("examples"),
+        signUploadUrl=s3.presign_put("examples"),
+        upload=s3.upload("examples", t.file(allow=["image/png", "image/jpeg"])),
+        uploadMany=s3.upload_all("examples"),
     )

@@ -5,7 +5,6 @@ mod ext;
 mod runtimes;
 // mod snapshot;
 mod typegraph;
-mod typescript;
 
 #[allow(unused_imports)]
 mod interlude {
@@ -74,8 +73,20 @@ impl OpDepInjector {
         #[cfg(test)]
         state.put(ext::tests::TestCtx { val: 10 });
         state.put(runtimes::temporal::Ctx::default());
-        state.put(runtimes::python::python_bindings::Ctx::default());
-        state.put(runtimes::prisma::Ctx::new(self.tmp_dir.unwrap()));
+        let engine = wasmtime::Engine::new(
+            wasmtime::Config::new()
+                .async_support(true)
+                .cache_config_load_default()
+                .context("error reading system's wasmtime cache config")
+                .unwrap(),
+        )
+        .expect("invalid wasmtime engine config");
+        let tmp_dir = self.tmp_dir.unwrap();
+        state.put(
+            runtimes::wit_wire::Ctx::new(engine, tmp_dir.join("wit_wire_workdir"))
+                .expect("error initializing wit_wire state"),
+        );
+        state.put(runtimes::prisma::Ctx::new(tmp_dir));
     }
 }
 

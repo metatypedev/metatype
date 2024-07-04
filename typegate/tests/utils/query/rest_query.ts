@@ -9,6 +9,7 @@ import {
   Query,
   Variables,
 } from "./mod.ts";
+import { TypegateCryptoKeys } from "@typegate/crypto.ts";
 
 export class RestQuery extends Query {
   constructor(
@@ -37,7 +38,10 @@ export class RestQuery extends Query {
     return q;
   }
 
-  async getRequest(url: string): Promise<Request> {
+  async getRequest(
+    url: string,
+    cryptoKeys: TypegateCryptoKeys,
+  ): Promise<Request> {
     const { method, name, headers, context } = this;
     const uri = new URL(`${url}/rest/${name}`);
 
@@ -55,7 +59,10 @@ export class RestQuery extends Query {
     }
 
     if (Object.keys(context).length > 0) {
-      defaults["Authorization"] = await this.contextEncoder(context);
+      defaults["Authorization"] = await this.contextEncoder(
+        context,
+        cryptoKeys,
+      );
     }
 
     return new Request(uri, {

@@ -2,23 +2,30 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 
+use crate::utils::metagen_utils::RawTgResolver;
 use common::typegraph::{Auth, AuthProtocol};
+use fs::FsContext;
 use indexmap::IndexMap;
 use serde_json::json;
 
+use self::oauth2::std::{named_provider, Oauth2Builder};
 use crate::errors::Result;
 use crate::global_store::{get_sdk_version, NameRegistration, Store};
 use crate::types::subgraph::Subgraph;
 use crate::types::{TypeDefExt, TypeId};
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
-use crate::wit::utils::{Auth as WitAuth, QueryDeployParams};
+use crate::wit::utils::{Auth as WitAuth, MdkConfig, MdkOutput, QueryDeployParams};
 use crate::Lib;
+use std::path::Path;
 
-use self::oauth2::std::{named_provider, Oauth2Builder};
-
-pub mod fs_host;
+mod archive;
+mod artifacts;
+mod fs;
+pub mod metagen_utils;
 mod oauth2;
+mod pathlib;
 pub mod postprocess;
 pub mod reduce;
 
@@ -253,19 +260,45 @@ impl crate::wit::utils::Guest for crate::Lib {
         Ok(req_body.to_string())
     }
 
-    fn unpack_tarb64(tar_b64: String, dest: String) -> Result<()> {
-        fs_host::unpack_base64(&tar_b64, dest).map_err(|e| e.into())
-    }
-
     fn remove_injections(id: CoreTypeId) -> Result<CoreTypeId> {
         remove_injections_recursive(id.into()).map(|id| id.into())
     }
 
-    fn get_cwd() -> Result<String, String> {
-        match fs_host::cwd() {
-            Ok(path) => Ok(path.display().to_string()),
-            Err(e) => Err(e),
+    fn metagen_exec(config: MdkConfig) -> Result<Vec<MdkOutput>, String> {
+        let gen_config: metagen::Config = serde_json::from_str(&config.config_json)
+            .map_err(|e| format!("Load metagen config: {}", e))?;
+
+        let tg = serde_json::from_str(&config.tg_json).map_err(|e| e.to_string())?;
+        let resolver = RawTgResolver { tg };
+
+        metagen::generate_target_sync(
+            &gen_config,
+            &config.target_name,
+            PathBuf::from(config.workspace_path),
+            resolver,
+        )
+        .map(|map| {
+            map.0
+                .iter()
+                .map(|(k, v)| MdkOutput {
+                    path: k.to_string_lossy().to_string(),
+                    content: v.contents.clone(),
+                    overwrite: v.overwrite,
+                })
+                .collect::<Vec<_>>()
+        })
+        .map_err(|e| format!("Generate target: {}", e))
+    }
+
+    fn metagen_write_files(items: Vec<MdkOutput>, typegraph_dir: String) -> Result<(), String> {
+        let fs_ctx = FsContext::new(typegraph_dir.into());
+        for item in items {
+            if fs_ctx.exists(Path::new(&item.path))? && !item.overwrite {
+                continue;
+            }
+            fs_ctx.write_text_file(Path::new(&item.path), item.content)?;
         }
+        Ok(())
     }
 }
 

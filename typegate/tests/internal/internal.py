@@ -1,9 +1,12 @@
-from typegraph import Graph, Policy, t, typegraph
+from typegraph.graph.typegraph import Graph
+from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
+
+from typegraph import t, typegraph
 
 
 @typegraph()
-def test_internal(g: Graph):
+def internal(g: Graph):
     public = Policy.public()
     internal = Policy.internal()
 

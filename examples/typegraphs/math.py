@@ -1,8 +1,17 @@
+# skip:start
 from typegraph import typegraph, Policy, t, Graph
+from typegraph.graph.params import Cors, Rate
+
+# skip:end
 from typegraph.runtimes.deno import DenoRuntime
 
 
-@typegraph()
+@typegraph(
+    # skip:start
+    rate=Rate(window_limit=2000, window_sec=60, query_limit=200),
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
+)
 def math(g: Graph):
     public = Policy.public()
 
@@ -15,13 +24,15 @@ def math(g: Graph):
     # or we can point to a local file that's accessible to the meta-cli
     fib_module = "scripts/fib.ts"
 
-    # the policy implementation is based on functions itself
+    # the policy implementation is based on functions as well
     restrict_referer = deno.policy(
         "restrict_referer_policy",
-        '(_, context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
+        '(_, context) => context.headers.referer && ["localhost", "metatype.dev"].includes(new URL(context.headers.referer).hostname)',
     )
 
     g.expose(
+        public,
+        # all functions have inputs and outputs
         fib=deno.import_(
             t.struct({"size": t.integer()}),
             t.list(t.float()),
@@ -32,10 +43,10 @@ def math(g: Graph):
             t.struct({"items": t.list(t.string())}),
             t.string(),
             code=random_item_fn,
-        ).with_policy(public),
+        ),
         random=deno.func(
             t.struct(),
             t.float(),
             code="() => Math.random()",  # more inline code
-        ).with_policy(public),
+        ),
     )

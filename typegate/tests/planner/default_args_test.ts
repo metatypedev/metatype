@@ -8,7 +8,7 @@ Meta.test("prisma", async (t) => {
   const e = await t.engine("runtimes/prisma/full_prisma_mapping.py", {
     secrets: {
       POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=prisma",
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma_default_args",
     },
   });
 

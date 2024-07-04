@@ -1,6 +1,6 @@
 # disable SHELL cmd down below if switching to non-debug
-ARG RUST_VERSION=1.75.0
-ARG DENO_VERSION=1.41.0
+ARG RUST_VERSION=1.77.1
+ARG DENO_VERSION=1.43.6
 ARG DISTROLESS_TAG=debug-nonroot
 
 #
@@ -9,7 +9,7 @@ FROM rust:${RUST_VERSION}-slim-bullseye AS base
 
 WORKDIR /app
 
-RUN cargo install cargo-chef --locked
+RUN cargo install cargo-chef --locked --debug
 
 FROM base as plan
 
@@ -39,8 +39,6 @@ RUN set -eux; \
     automake \
     # wasm-opt deps \
     clang \
-    ## wasmedge-sys \
-    libclang-dev \
     ## openssl deps \
     pkg-config \
     libssl-dev \
@@ -48,43 +46,48 @@ RUN set -eux; \
     git \
     curl \
     # asdf deps \
+    zstd \
     xz-utils \
     unzip \
     ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=423d38e
+ARG GHJK_VERSION=0.2.0
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY ghjk.ts .
-RUN OCI=1 NO_PYTHON=1 ghjk ports sync
-ENV GHJK_ENV=/root/.local/share/ghjk/env.sh
-
-ARG WASM_OPT_VERSION=0.116.0
-ARG WASM_TOOLS_VERSION=1.0.53
-RUN cargo install wasm-opt@$WASM_OPT_VERSION --locked --debug
-RUN cargo install wasm-tools@$WASM_TOOLS_VERSION --locked --debug
+COPY dev/*.ts dev/
+ENV GHJK_ENV=oci
+ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
+RUN ghjk envs cook
 
 COPY --from=plan /app/recipe.json recipe.json
 
-RUN . $GHJK_ENV \
-    && cargo chef cook --recipe-path recipe.json --release --package typegate \
+ARG CARGO_PROFILE=release
+
+RUN . "$GHJK_ACTIVATE" \
+    && cargo chef cook --recipe-path recipe.json --profile $CARGO_PROFILE --package typegate \
     && rm recipe.json
 
 COPY . .
 
-RUN . $GHJK_ENV \
-    && cargo build --release --package typegate
+RUN . "$GHJK_ACTIVATE" \
+    && cargo build --profile $CARGO_PROFILE --package typegate \
+    && ( \
+        [ $CARGO_PROFILE = 'release' ]  \
+            && cp target/release/typegate typegate-bin \
+            || cp target/debug/typegate typegate-bin \
+    )
 
-RUN . $GHJK_ENV \
+RUN . "$GHJK_ACTIVATE" \
     && deno run -A dev/update.ts --cache-only --src-only \
     && mkdir -p typegate/tmp
 
 #
 FROM builder as dev
 
-RUN . $GHJK_ENV \
+RUN . "$GHJK_ACTIVATE" \
     && mv target /tmp/target \
     && rm -rf * \
     && mv /tmp/target .
@@ -97,12 +100,11 @@ ARG TARGETARCH
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH} /tini
 
-RUN . $GHJK_ENV \
+RUN . "$GHJK_ACTIVATE" \
     && chmod +x /tini \
     && mkdir -p /lib/sym \
     && ln -s /lib/aarch64-linux-gnu /lib/sym/arm64 \
-    && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64 \
-    && cp $(dirname $(realpath $(which wasmedge)))/.. /.wasmedge -r
+    && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64
 
 #
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} as prd
@@ -113,16 +115,14 @@ ARG TARGETARCH
 
 ENV NO_COLOR true
 ENV DENO_DIR /deno-dir/
-ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/.wasmedge/lib64"
 
 WORKDIR /app
 
 COPY --from=runtime-bin /tini /tini
 COPY --from=runtime-bin /lib/sym /lib/sym
-COPY --from=runtime-bin /.wasmedge /.wasmedge
 COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
-COPY --from=builder /app/target/release/typegate /bin/typegate
+COPY --from=builder /app/typegate-bin /bin/typegate
 # the typegate ecma sources
 COPY --from=builder /app/typegate/deno.jsonc /app/typegate/import_map.json ./typegate/
 COPY --from=builder /app/typegate/engine/*.js /app/typegate/engine/*.ts ./typegate/engine/

@@ -6,11 +6,13 @@ import { Runtime } from "./Runtime.ts";
 import { createUrl } from "../utils.ts";
 import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import * as base64 from "std/encoding/base64.ts";
+import { encodeBase64 } from "std/encoding/base64.ts";
 import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
 import { HTTPRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
+
+const logger = getLogger(import.meta);
 
 const encodeRequestBody = (
   body: Record<string, any>,
@@ -32,6 +34,7 @@ const encodeRequestBody = (
       return mapToFormData(body);
     // -- form handler --
     default:
+      logger.error(`Content-Type ${contentType} not supported`);
       throw new Error(`Content-Type ${contentType} not supported`);
   }
 };
@@ -68,7 +71,7 @@ export class HTTPRuntime extends Runtime {
       headers.set(
         "authorization",
         `basic ${
-          base64.encode(
+          encodeBase64(
             secretManager.secretOrFail(args.basic_auth_secret as string),
           )
         }`,
@@ -165,7 +168,7 @@ export class HTTPRuntime extends Runtime {
       );
 
       if (res.status >= 400) {
-        this.logger.warning(
+        this.logger.warn(
           `${pathname} - ${searchParams} - ${body} => ${res.status} : ${
             Deno.inspect({ res, options, args, bodyFields, hasBody, method })
           }`,
@@ -189,6 +192,7 @@ export class HTTPRuntime extends Runtime {
         return null;
       }
 
+      this.logger.error(`Unsupported content type "${contentType}"`);
       throw new Error(`Unsupported content type "${contentType}"`);
     };
   }

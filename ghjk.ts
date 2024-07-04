@@ -1,109 +1,150 @@
-export { ghjk } from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
-import * as ghjk from "https://raw.github.com/metatypedev/ghjk/423d38e/mod.ts";
-import * as ports from "https://raw.github.com/metatypedev/ghjk/423d38e/ports/mod.ts";
+import { METATYPE_VERSION } from "./dev/consts.ts";
+import { file, ports, sedLock, semver, stdDeps } from "./dev/deps.ts";
+import installs from "./dev/installs.ts";
+import tasksBuild from "./dev/tasks-build.ts";
+import tasksDev from "./dev/tasks-dev.ts";
+import tasksFetch from "./dev/tasks-fetch.ts";
+import tasksInstall from "./dev/tasks-install.ts";
+import tasksLint from "./dev/tasks-lint.ts";
+import tasksLock from "./dev/tasks-lock.ts";
+import tasksTest from "./dev/tasks-test.ts";
 
-const PROTOC_VERSION = "v24.1";
-const POETRY_VERSION = "1.7.0";
-const PYTHON_VERSION = "3.8.18";
-const PNPM_VERSION = "v8.15.2";
-const WASM_TOOLS_VERSION = "1.0.53";
-const JCO_VERSION = "1.0.0";
-const WASMEDGE_VERSION = "0.13.5";
-const WASM_OPT_VERSION = "0.116.0";
-const MOLD_VERSION = "v2.4.0";
-const CMAKE_VERSION = "3.28.0-rc6";
-const CARGO_INSTA_VERSION = "1.33.0";
-const NODE_VERSION = "20.8.0";
-const TEMPORAL_VERSION = "0.10.7";
-const METATYPE_VERSION = "0.3.7-0";
-
-ghjk.install(
-  ports.wasmedge({ version: WASMEDGE_VERSION }),
-  ports.protoc({ version: PROTOC_VERSION }),
-  ports.asdf({
-    pluginRepo: "https://github.com/asdf-community/asdf-cmake",
-    installType: "version",
-    version: CMAKE_VERSION,
-  }),
-  ports.cargo_binstall(),
-  ports.temporal_cli({ version: TEMPORAL_VERSION }),
-);
-
-if (!Deno.env.has("OCI")) {
-  ghjk.install(
-    // FIXME: use cargobi when avail
-    ports.cargobi({
-      crateName: "wasm-opt",
-      version: WASM_OPT_VERSION,
-      locked: true,
-    }),
-    ports.cargobi({
-      crateName: "wasm-tools",
-      version: WASM_TOOLS_VERSION,
-      locked: true,
-    }),
-    // these aren't required by the typegate build process
-    ports.cargobi({
-      crateName: "cargo-insta",
-      version: CARGO_INSTA_VERSION,
-      locked: true,
-    }),
-    ports.node({ version: NODE_VERSION }),
-    ports.pnpm({ version: PNPM_VERSION }),
-    // FIXME: jco installs node as a dep
-    ports.npmi({
-      packageName: "@bytecodealliance/jco",
-      version: JCO_VERSION,
-    })[0],
-    ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
-  );
-}
-
-if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
-  ghjk.install(
-    ports.mold({
-      version: MOLD_VERSION,
-      replaceLd: Deno.env.has("CI") || Deno.env.has("OCI"),
-    }),
-  );
-}
-
-if (!Deno.env.has("NO_PYTHON")) {
-  ghjk.install(
-    ports.cpy_bs({ version: PYTHON_VERSION }),
-    ports.pipi({
-      packageName: "poetry",
-      version: POETRY_VERSION,
-    })[0],
-  );
-  if (!Deno.env.has("CI") && !Deno.env.has("OCI")) {
-    ghjk.install(
-      ports.pipi({ packageName: "pre-commit" })[0],
-    );
-  }
-}
-
-if (!Deno.env.has("CI") && !Deno.env.has("OCI")) {
-  ghjk.install(
-    ports.act({}),
-    ports.cargobi({ crateName: "whiz", locked: true }),
-  );
-}
-
-ghjk.task("clean-deno-lock", {
-  installs: [
-    // jq
-  ],
-  async fn({ $ }) {
-    const jqOp1 =
-      `del(.packages.specifiers["npm:@typegraph/sdk@${METATYPE_VERSION}"])`;
-    const jqOp2 = `del(.packages.npm["@typegraph/sdk@${METATYPE_VERSION}"])`;
-    const jqOp = `${jqOp1} | ${jqOp2}`;
-    const lock = await $`jq ${jqOp} typegate/deno.lock`.text();
-    await Deno.writeTextFile("typegate/deno.lock", lock);
+const ghjk = file({
+  defaultEnv: Deno.env.get("CI") ? "ci" : Deno.env.get("OCI") ? "oci" : "dev",
+  tasks: {
+    ...tasksBuild,
+    ...tasksDev,
+    ...tasksFetch,
+    ...tasksInstall,
+    ...tasksLint,
+    ...tasksLock,
+    ...tasksTest,
   },
 });
+export const sophon = ghjk.sophon;
+const { env, task } = ghjk;
 
-export const secureConfig = ghjk.secureConfig({
-  allowedPortDeps: [...ghjk.stdDeps({ enableRuntimes: true })],
+env("main")
+  .install(installs.deno)
+  .vars({
+    RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off",
+    WASMTIME_BACKTRACE_DETAILS: "1",
+    TYPEGRAPH_VERSION: "0.0.3",
+    CLICOLOR_FORCE: "1",
+  })
+  .allowedBuildDeps(...stdDeps(), installs.python_latest, installs.node);
+
+env("_rust").install(
+  // use rustup for the actual toolchain
+  ports.protoc({ version: "v24.1" }),
+  ports.pipi({ packageName: "cmake" })[0]
+);
+
+if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
+  env("dev").install(
+    ports.mold({
+      version: "v2.4.0",
+      replaceLd: true,
+    })
+  );
+}
+
+env("_ecma").install(
+  installs.node,
+  ports.pnpm({ version: "v9.4.0" }),
+  ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0]
+);
+
+env("_python").install(
+  installs.python,
+  ports.pipi({
+    packageName: "ruff",
+    version: "0.4.7",
+  })[0],
+  ports.pipi({
+    packageName: "poetry",
+    version: "1.7.0",
+  })[0]
+);
+
+env("_wasm").install(
+  ports.cargobi({
+    crateName: "wasm-opt",
+    version: "0.116.1",
+    locked: true,
+  }),
+  ports.cargobi({
+    crateName: "wasm-tools",
+    version: "1.208.1",
+    locked: true,
+  }),
+  ports.pipi({ packageName: "componentize-py", version: "0.13.4" })[0],
+  // FIXME: jco installs node as a dep
+  ports.npmi({
+    packageName: "@bytecodealliance/jco",
+    version: "1.3.0",
+  })[0]
+);
+
+env("oci").inherit(["_rust", "_wasm"]);
+
+env("ci")
+  .inherit(["_rust", "_python", "_ecma", "_wasm"])
+  .install(
+    ports.pipi({ packageName: "pre-commit", version: "3.7.1" })[0],
+    ports.temporal_cli({ version: "v0.13.1" }),
+    ports.cargobi({
+      crateName: "cargo-insta",
+      version: "1.33.0",
+      locked: true,
+    }),
+    ports.cargobi({
+      crateName: "cross",
+      version: "0.2.5",
+      locked: true,
+    })
+  );
+
+env("dev")
+  .inherit("ci")
+  .install(
+    ports.act(),
+    ports.cargobi({ crateName: "whiz", locked: true }),
+    ports.cargobi({ crateName: "wit-deps-cli", locked: true })
+  );
+
+task("version-print", () => console.log(METATYPE_VERSION), {
+  desc: "Print $METATYPE_VERSION",
+});
+
+task("version-bump", async ($) => {
+  const bumps = [
+    "major",
+    "premajor",
+    "minor",
+    "preminor",
+    "patch",
+    "prepatch",
+    "prerelease",
+  ];
+  const bump = $.argv[0];
+
+  if (!bumps.includes(bump)) {
+    throw new Error(
+      `invalid argument "${bump}", valid are: ${bumps.join(", ")}`
+    );
+  }
+
+  const newVersion = semver.format(
+    semver.increment(semver.parse(METATYPE_VERSION), bump as semver.ReleaseType)
+  );
+  $.logStep(`Bumping ${METATYPE_VERSION} → ${newVersion}`);
+  await sedLock($.workingDir, {
+    lines: {
+      "./dev/consts.ts": [
+        [/^(export const METATYPE_VERSION = ").*(";)$/, newVersion],
+      ],
+    },
+  });
+  await $`ghjk x lock-sed`;
 });

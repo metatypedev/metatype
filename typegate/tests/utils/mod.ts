@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+// import { SingleRegister } from "test-utils/single_register.ts";
+// import { Typegate } from "@typegate/typegate/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { dirname, join } from "std/path/mod.ts";
-import { copy } from "std/streams/copy.ts";
+import { copy } from "std/fs/copy.ts";
 import { init_native } from "native";
-import { SingleRegister } from "./single_register.ts";
-import { Typegate } from "../../src/typegate/mod.ts";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";
 import { test } from "./test.ts";
@@ -14,6 +14,7 @@ import { metaCli } from "./meta.ts";
 import { testDir } from "./dir.ts";
 import { autoTest } from "./autotest.ts";
 import { init_runtimes } from "../../src/runtimes/mod.ts";
+import { getCurrentTest } from "./test.ts";
 
 // native must load first to avoid import race conditions and panic
 init_native();
@@ -42,27 +43,34 @@ export const Meta = {
 };
 
 export async function execute(
-  engine: QueryEngine,
+  _engine: QueryEngine | null,
   request: Request,
 ): Promise<Response> {
-  const register = new SingleRegister(engine.name, engine);
-  const typegate = await Typegate.init(null, register);
+  // TODO: MET-500
+  // This might only work in temp mode; using different temp dir for each typegate instance
+  // if (engine) {
+  //   const register = new SingleRegister(engine.name, engine);
+  //   const test = getCurrentTest();
+  //   await using typegate = await Typegate.init(null, register, test.tempDir);
+  //   return await typegate.handle(request, {
+  //     remoteAddr: { hostname: "localhost" },
+  //   } as Deno.ServeHandlerInfo);
+  // } else {
+  const typegate = getCurrentTest().typegates.next();
   return await typegate.handle(request, {
-    remoteAddr: { hostname: "localhost" },
-  } as Deno.ServeHandlerInfo);
+    hostname: "localhost",
+    port: 0,
+    transport: "tcp",
+  });
+  // }
 }
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function copyFile(src: string, dest: string) {
-  const srcFile = await Deno.open(join(testDir, src));
   const destPath = join(testDir, dest);
   await Deno.mkdir(dirname(destPath), { recursive: true });
-  const destFile = await Deno.create(destPath);
 
-  await copy(srcFile, destFile);
-
-  srcFile.close();
-  destFile.close();
+  await copy(join(testDir, src), destPath);
 }

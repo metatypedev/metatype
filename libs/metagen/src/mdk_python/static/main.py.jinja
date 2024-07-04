@@ -1,0 +1,12 @@
+# - NOTE: only modules that are imported relatively
+#   are supported. I.e. prefixed by `.` or `..`
+# - Make sure to include any module imports in the `deps`
+#   array when using external modules with PythonRuntime 
+from .{{ mod_name }}_types import {{ imports }}
+
+{% for func in funcs %}
+@typed_{{ func.name }}
+def {{ func.name }}(inp: {{ func.input_name }}) -> {{ func.output_name }}:
+    # TODO: write your logic here
+    raise Exception("{{ func.name }} not implemented")
+{% endfor %}

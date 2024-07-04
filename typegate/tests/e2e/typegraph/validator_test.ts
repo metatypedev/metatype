@@ -15,8 +15,11 @@ Meta.test("typegraph validation", async (t) => {
         await m.cli(
           {
             env: {
-              "RUST_LOG": "error",
-              "RUST_BACKTRACE": "0",
+              RUST_LOG: "error",
+              RUST_BACKTRACE: "0",
+              RUST_SPANTRACE: "0",
+              RUST_LIB_BACKTRACE: "0",
+              RUST_ERR_LOCATION: "0",
             },
           },
           "serialize",
@@ -25,6 +28,7 @@ Meta.test("typegraph validation", async (t) => {
         );
         fail("should have thrown");
       } catch (e) {
+        console.log(e);
         await t.assertSnapshot(e.stderr);
       }
     },

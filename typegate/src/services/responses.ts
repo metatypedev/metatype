@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { JSONValue } from "../utils.ts";
+import { BaseError, ErrorKind } from "../errors.ts";
 
 export const jsonOk = (data: JSONValue, headers: Headers) => {
   headers.set("content-type", "application/json");
@@ -36,22 +37,22 @@ export const jsonError = (
 };
 
 export const badRequest = (message: string) => {
-  return new Response(`bad request: ${message}`, {
-    status: 400,
-  });
+  return new BaseError(null, ErrorKind.User, message)
+    .withType("BadRequest")
+    .toResponse();
 };
-export const notFound = () =>
-  new Response("not found", {
-    status: 404,
-  });
+export const notFound = (message = "not found") =>
+  new BaseError(null, ErrorKind.User, message, 404)
+    .withType("NotFound")
+    .toResponse();
 
 export const methodNotAllowed = () =>
-  new Response("method not allowed", {
-    status: 405,
-  });
+  new BaseError(null, ErrorKind.User, "method not allowed", 405)
+    .withType("MethodNotAllowed")
+    .toResponse();
 
 export const serverError = () => {
-  return new Response("ko", {
-    status: 500,
-  });
+  return new BaseError(null, ErrorKind.Service, "internal server error")
+    .withType("ServerError")
+    .toResponse();
 };

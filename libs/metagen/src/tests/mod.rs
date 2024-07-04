@@ -8,7 +8,7 @@ pub use fixtures::*;
 
 #[derive(Clone)]
 struct TestCtx {
-    typegraphs: Arc<HashMap<String, Typegraph>>,
+    typegraphs: Arc<HashMap<String, Box<Typegraph>>>,
 }
 
 impl InputResolver for TestCtx {
@@ -34,14 +34,14 @@ pub struct E2eTestCase {
     pub target: String,
     pub config: config::Config,
     pub target_dir: PathBuf,
-    pub typegraphs: HashMap<String, Typegraph>,
+    pub typegraphs: HashMap<String, Box<Typegraph>>,
     pub build_fn: fn(BuildArgs) -> BoxFuture<anyhow::Result<()>>,
 }
 
 pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
     // spin_up_typegate
     for case in cases {
-        let tmp_dir = tokio::task::spawn_blocking(|| tempfile::tempdir())
+        let tmp_dir = tokio::task::spawn_blocking(tempfile::tempdir)
             .await??
             .into_path();
         {
@@ -60,11 +60,12 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
         let test_cx = TestCtx {
             typegraphs: typegraphs.clone(),
         };
-        let files = crate::generate_target(&case.config, &case.target, test_cx).await?;
-        for (path, buf) in files {
+        let files =
+            crate::generate_target(&case.config, &case.target, tmp_dir.clone(), test_cx).await?;
+        for (path, buf) in files.0 {
             let path = tmp_dir.join(path);
             tokio::fs::create_dir_all(path.parent().unwrap()).await?;
-            tokio::fs::write(path, buf).await?;
+            tokio::fs::write(path, buf.contents).await?;
         }
         // compile
         (case.build_fn)(BuildArgs {
@@ -94,7 +95,7 @@ async fn spin_up_typegate() -> anyhow::Result<(tokio::process::Child, common::no
     let tg_admin_password = "password";
 
     let typegate = tokio::process::Command::new("cargo")
-        .args(&["r", "-p", "typegate"])
+        .args(["r", "-p", "typegate"])
         .envs([
             ("LOG_LEVEL".to_string(), "DEBUG".to_string()),
             ("TG_PORT".to_string(), tg_port.to_string()),
@@ -113,7 +114,7 @@ async fn spin_up_typegate() -> anyhow::Result<(tokio::process::Child, common::no
             username: "admin".into(),
             password: tg_admin_password.into(),
         }),
-        Default::default(),
-    )?;
+    )
+    .map_err(|err| format_err!(Box::new(err)))?;
     Ok((typegate, node))
 }

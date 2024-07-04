@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { crypto } from "std/crypto/mod.ts";
-import * as base64 from "std/encoding/base64url.ts";
-import config from "./config.ts";
+import { decodeBase64Url, encodeBase64Url } from "std/encoding/base64url.ts";
 import * as jwt from "jwt";
 
 export const sha1 = (text: string | Uint8Array): Promise<string> => {
@@ -12,7 +11,7 @@ export const sha1 = (text: string | Uint8Array): Promise<string> => {
       "SHA-1",
       typeof text === "string" ? new TextEncoder().encode(text) : text,
     )
-    .then(base64.encode);
+    .then(encodeBase64Url);
 };
 
 export const sha256 = (text: string | Uint8Array): Promise<string> => {
@@ -21,79 +20,86 @@ export const sha256 = (text: string | Uint8Array): Promise<string> => {
       "SHA-256",
       typeof text === "string" ? new TextEncoder().encode(text) : text,
     )
-    .then(base64.encode);
+    .then(encodeBase64Url);
 };
 
-export const signKey = await crypto.subtle.importKey(
-  "raw",
-  config.tg_secret.slice(32, 64),
-  { name: "HMAC", hash: { name: "SHA-256" } },
-  false,
-  ["sign", "verify"],
-);
+export class TypegateCryptoKeys {
+  readonly ivLength = 16;
 
-export const encryptionKey = await crypto.subtle.importKey(
-  "raw",
-  config.tg_secret.slice(0, 32),
-  { name: "AES-GCM" },
-  false,
-  ["encrypt", "decrypt"],
-);
+  private constructor(
+    private signKey: CryptoKey,
+    private encryptionKey: CryptoKey,
+  ) {}
 
-const ivLength = 16;
+  static async init(tg_secret: Uint8Array): Promise<TypegateCryptoKeys> {
+    const signKey = await crypto.subtle.importKey(
+      "raw",
+      tg_secret.slice(32, 64),
+      { name: "HMAC", hash: { name: "SHA-256" } },
+      false,
+      ["sign", "verify"],
+    );
+    const encryptionKey = await crypto.subtle.importKey(
+      "raw",
+      tg_secret.slice(0, 32),
+      { name: "AES-GCM" },
+      false,
+      ["encrypt", "decrypt"],
+    );
+    return new TypegateCryptoKeys(signKey, encryptionKey);
+  }
 
-export async function encrypt(message: string): Promise<string> {
-  const data = new TextEncoder().encode(message);
-  const iv = crypto.getRandomValues(new Uint8Array(ivLength));
-  const cipher = await crypto.subtle.encrypt(
-    {
-      name: "AES-GCM",
-      iv,
-    },
-    encryptionKey,
-    data,
-  );
-  const buffer = new Uint8Array(ivLength + cipher.byteLength);
-  buffer.set(iv, 0);
-  buffer.set(new Uint8Array(cipher), ivLength);
-  return base64.encode(buffer.buffer);
-}
+  async encrypt(message: string): Promise<string> {
+    const data = new TextEncoder().encode(message);
+    const iv = crypto.getRandomValues(new Uint8Array(this.ivLength));
+    const cipher = await crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv,
+      },
+      this.encryptionKey,
+      data,
+    );
+    const buffer = new Uint8Array(16 + cipher.byteLength);
+    buffer.set(iv, 0);
+    buffer.set(new Uint8Array(cipher), 16);
+    return encodeBase64Url(buffer.buffer);
+  }
 
-export async function decrypt(payload: string): Promise<string> {
-  const buffer = base64.decode(payload);
-  const iv = buffer.slice(0, ivLength);
-  const cipher = buffer.slice(ivLength);
-  const data = await crypto.subtle.decrypt(
-    {
-      name: "AES-GCM",
-      iv,
-    },
-    encryptionKey,
-    cipher,
-  );
-  return new TextDecoder().decode(data);
-}
+  async decrypt(payload: string): Promise<string> {
+    const buffer = decodeBase64Url(payload);
+    const iv = buffer.slice(0, this.ivLength);
+    const cipher = buffer.slice(this.ivLength);
+    const data = await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv,
+      },
+      this.encryptionKey,
+      cipher,
+    );
+    return new TextDecoder().decode(data);
+  }
 
-export async function signJWT(
-  payload: Record<string, unknown>,
-  durationSec: number,
-): Promise<string> {
-  return await jwt.create(
-    { alg: "HS256", typ: "JWT" },
-    {
-      ...payload,
-      exp: jwt.getNumericDate(durationSec),
-      iat: Math.floor(new Date().valueOf() / 1000),
-    },
-    signKey,
-  );
-}
+  async signJWT(
+    payload: Record<string, unknown>,
+    durationSec: number,
+  ): Promise<string> {
+    return await jwt.create(
+      { alg: "HS256", typ: "JWT" },
+      {
+        ...payload,
+        exp: jwt.getNumericDate(durationSec),
+        iat: Math.floor(new Date().valueOf() / 1000),
+      },
+      this.signKey,
+    );
+  }
 
-export async function verifyJWT(
-  token: string,
-): Promise<Record<string, unknown>> {
-  const payload = await jwt.verify(token, signKey);
-  return payload as Record<string, unknown>;
+  async verifyJWT(token: string): Promise<Record<string, unknown>> {
+    const payload = await jwt.verify(token, this.signKey);
+    return payload as Record<string, unknown>;
+  }
 }
 
 export async function unsafeExtractJWT(
