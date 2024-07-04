@@ -1370,6 +1370,7 @@
     "https://deno.land/x/convert_bytes@v2.1.1/src/unit.ts": "ebfa749b09d2f6cf16a3a6cae5ab6042ae66667b9780071cbb933fcbdcff9731",
     "https://deno.land/x/convert_bytes@v2.1.1/src/utility.ts": "a94b4c50286910a23a90c0a0510e8191fa3311dec44d062a6d4fe3d5b7ff8176",
     "https://deno.land/x/crc32@v0.2.0/mod.ts": "de7a3fa2d4ef24b96fc21e1cc4d2d65d1d2b1dcea92f63960e3e11bfa82df0fa",
+    "https://deno.land/x/ctrlc@0.2.1/mod.ts": "b7895894c596f2e8355d3b181ed30fa74cb54b94c419b730f6cb6ff96b20ec8b",
     "https://deno.land/x/dax@0.39.2/mod.ts": "309f96ce11fa8a1bb244fdfdcb60fa66f092200a72295402094aab88bdf02bdd",
     "https://deno.land/x/dax@0.39.2/src/command.ts": "01980353fec193bbc7f1c3690bb87472607d0b1b7d9844d17904920b907cd0de",
     "https://deno.land/x/dax@0.39.2/src/command_handler.ts": "a9e40f0f1ec57318e62904b5785fede82dcdf1101922ebb3ebfad8f1c4d9c8df",

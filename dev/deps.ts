@@ -33,7 +33,13 @@ export {
   expandGlob,
   expandGlobSync,
 } from "https://deno.land/std@0.219.0/fs/mod.ts";
-export { cyan, green } from "https://deno.land/std@0.219.0/fmt/colors.ts";
+export {
+  cyan,
+  gray,
+  green,
+  red,
+  yellow,
+} from "https://deno.land/std@0.219.0/fmt/colors.ts";
 export { format as formatDuration } from "https://deno.land/std@0.219.0/fmt/duration.ts";
 export {
   mergeReadableStreams,
@@ -51,3 +57,4 @@ import Fuse from "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js";
 export { Fuse };
 import bytes from "https://deno.land/x/convert_bytes@v2.1.1/mod.ts";
 export { bytes };
+export * as ctrlc from "https://deno.land/x/ctrlc@0.2.1/mod.ts";
