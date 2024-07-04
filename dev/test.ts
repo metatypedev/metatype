@@ -259,7 +259,7 @@ export async function testE2e(args: {
     }
   }
 
-  Deno.exit(await results.finalize());
+  return await results.finalize();
 }
 
 export async function testE2eCli(argv: string[]) {
@@ -267,7 +267,7 @@ export async function testE2eCli(argv: string[]) {
     "--": true,
     string: ["threads", "f", "filter"],
   });
-  await testE2e({
+  return await testE2e({
     files: flags._.map((item) => item.toString()),
     threads: flags.threads ? parseInt(flags.threads) : undefined,
     filter: flags.filter ?? flags.f,
@@ -276,7 +276,7 @@ export async function testE2eCli(argv: string[]) {
 }
 
 if (import.meta.main) {
-  await testE2eCli(Deno.args);
+  Deno.exit(await testE2eCli(Deno.args));
 }
 
 type TestThreadState =
