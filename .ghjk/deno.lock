@@ -751,6 +751,7 @@
     "https://deno.land/x/code_block_writer@12.0.0/utils/string_utils.ts": "60cb4ec8bd335bf241ef785ccec51e809d576ff8e8d29da43d2273b69ce2a6ff",
     "https://deno.land/x/convert_bytes@v2.1.1/mod.ts": "036bd2d9519c8ad44bd5a15d4e42123dc16843f793b3c81ca1fca905b21dd7df",
     "https://deno.land/x/convert_bytes@v2.1.1/src/utility.ts": "a94b4c50286910a23a90c0a0510e8191fa3311dec44d062a6d4fe3d5b7ff8176",
+    "https://deno.land/x/ctrlc@0.2.1/mod.ts": "b7895894c596f2e8355d3b181ed30fa74cb54b94c419b730f6cb6ff96b20ec8b",
     "https://deno.land/x/dax@0.38.0/mod.ts": "3a5d7e6ac12547feec5d3c0c96717f14276891a3802fbbc73e5901e4f20eb08d",
     "https://deno.land/x/dax@0.38.0/src/command.ts": "f20135ef7188a0fc9f773d50e88775dee8653044a7f536fb2fb885b293c26ec4",
     "https://deno.land/x/dax@0.38.0/src/command_handler.ts": "a9e40f0f1ec57318e62904b5785fede82dcdf1101922ebb3ebfad8f1c4d9c8df",

@@ -28,7 +28,7 @@ const syncConfig = {
     hostname: "localhost",
     port: 6379,
     password: "password",
-    db: 1,
+    db: 2,
   },
   s3: {
     endpoint: "http://localhost:9000",
@@ -66,21 +66,21 @@ Meta.test(
         assertEquals(s3Objects?.length, 4);
 
         await gql`
-        query {
-          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
+          query {
+            identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
+            identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
+            identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
           }
-          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          }
-          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          }
-        }
-      `
+        `
           .expectData({
             identityDef: {
               a: "hello",
@@ -115,9 +115,7 @@ Meta.test(
     },
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/python/python.py",
-    );
+    const e = await t.engine("runtimes/python/python.py");
 
     await t.should("work once (lambda)", async () => {
       await gql`
@@ -216,9 +214,7 @@ Meta.test(
   },
   async (t) => {
     const testMultipleReplica = async (instanceNumber: number) => {
-      const e = await t.engine(
-        "runtimes/python/python.py",
-      );
+      const e = await t.engine("runtimes/python/python.py");
 
       await sleep(5_000);
 
@@ -226,10 +222,10 @@ Meta.test(
         `work on the typgate instance #${instanceNumber}`,
         async () => {
           await gql`
-          query {
-            testMod(name: "Loyd")
-          }
-        `
+            query {
+              testMod(name: "Loyd")
+            }
+          `
             .expectData({
               testMod: `Hello Loyd`,
             })
@@ -320,18 +316,16 @@ Meta.test(
     },
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/python/python_no_artifact.py",
-    );
+    const e = await t.engine("runtimes/python/python_no_artifact.py");
 
     await t.should(
       "work when there are no artifacts in the typegraph: python SDK, in sync mode",
       async () => {
         await gql`
-        query {
-          test_lambda(a: "test")
-        }
-      `
+          query {
+            test_lambda(a: "test")
+          }
+        `
           .expectData({
             test_lambda: "test",
           })
@@ -360,17 +354,17 @@ Meta.test(
       "work when there are no artifacts in the typegraph: TS SDK, in sync mode",
       async () => {
         await gql`
-        query {
-          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
+          query {
+            identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
+            identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
           }
-          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          }
-        }
-      `
+        `
           .expectData({
             identityDef: {
               a: "hello",
@@ -401,19 +395,17 @@ Meta.test(
     },
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/python/python_duplicate_artifact.py",
-    );
+    const e = await t.engine("runtimes/python/python_duplicate_artifact.py");
 
     await t.should(
       "work when there is duplicate artifacts uploads: Python SDK, in sync mode",
       async () => {
         await gql`
-        query {
-          testMod(name: "Loyd")
-          testModDuplicate(name: "Barney")
-        }
-      `
+          query {
+            testMod(name: "Loyd")
+            testModDuplicate(name: "Barney")
+          }
+        `
           .expectData({
             testMod: "Hello Loyd",
             testModDuplicate: "Hello Barney",
@@ -444,17 +436,17 @@ Meta.test(
       "work when there is duplicate artifacts uploads: TS SDK, in sync mode",
       async () => {
         await gql`
-        query {
-          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          },
-          identityModDuplicate(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
+          query {
+            identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
+            identityModDuplicate(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
           }
-        }
-      `
+        `
           .expectData({
             identityMod: {
               a: "hello",
@@ -486,9 +478,7 @@ Meta.test(
     await t.should(
       "work for deps specified with dir on Python SDK",
       async () => {
-        const engine = await t.engine(
-          "runtimes/python/python_dir.py",
-        );
+        const engine = await t.engine("runtimes/python/python_dir.py");
 
         await gql`
           query {
@@ -542,9 +532,7 @@ Meta.test(
     await t.should(
       "work for deps specified with glob on Python SDK",
       async () => {
-        const engine = await t.engine(
-          "runtimes/python/python_globs.py",
-        );
+        const engine = await t.engine("runtimes/python/python_globs.py");
 
         await gql`
           query {
