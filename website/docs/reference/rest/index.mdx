@@ -184,7 +184,25 @@ In this example, let's generate a simple fetch clientm, you can refer to their o
 openapi-generator-cli generate \
     -i http://localhost:7890/my_awesome_typegraph/rest/__schema
     -g typescript-fetch \
-    -o my-client
+    -o my-client \
+    --skip-validate-spec
 ```
 
 This will generate a `fetch`-based typescript project.
+
+```
+.
++-- apis
+¦    +-- DefaultApi.ts
+¦    +-- index.ts
++-- models
+¦    +-- Either10.ts
+¦    +-- ErrorExtensions.ts
+¦    ...
+¦    +-- GetMyAwesomeTypegraphGetIdentity200Response.ts
+¦    +-- Post.ts
+¦    +-- User.ts
+¦    +-- index.ts
++-- runtime.ts
++-- index.ts
+```
