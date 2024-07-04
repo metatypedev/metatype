@@ -52,5 +52,5 @@ Deno.writeTextFileSync(
     },
     null,
     2,
-  ),
+  ) + "\n",
 );
