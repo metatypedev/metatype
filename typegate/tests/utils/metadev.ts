@@ -54,13 +54,11 @@ export class MetaDev {
   async #fetchOutputLines(
     reader: ReadableStreamDefaultReader<string>,
     param: FetchOutputLineParam,
-    timeoutMs: number = 5_000,
+    timeoutMs: number = 30_000,
   ) {
-    const next = timeoutMs == null ? () => reader.read() : () =>
-      deadline(
-        reader.read(),
-        timeoutMs,
-      );
+    const next = timeoutMs == null
+      ? () => reader.read()
+      : () => deadline(reader.read(), timeoutMs);
     let shouldContinue = true;
     while (shouldContinue) {
       const { value: line, done } = await next();

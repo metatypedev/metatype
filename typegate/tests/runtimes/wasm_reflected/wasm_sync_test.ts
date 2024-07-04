@@ -27,7 +27,7 @@ const syncConfig = {
     hostname: "localhost",
     port: 6379,
     password: "password",
-    db: 1,
+    db: 3,
   },
   s3: {
     endpoint: "http://localhost:9000",
