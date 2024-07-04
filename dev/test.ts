@@ -292,7 +292,7 @@ interface Counts {
 
 class Logger {
   private threadStates: Array<TestThreadState>;
-  private dynamic = true; // TODO: make this configurable
+  private dynamic = Deno.stdout.isTerminal(); // TODO: make this configurable
 
   #print(...args: unknown[]) {
     Deno.stdout.writeSync(new TextEncoder().encode(args.join(" ")));
@@ -366,10 +366,6 @@ class Logger {
 
     if (this.#counts.failure) {
       fields.push(red(`failure=${this.#counts.failure}`));
-    }
-
-    if (this.#counts.error) {
-      fields.push(yellow(`error=${this.#counts.error}`));
     }
 
     if (this.#counts.cancelled) {
@@ -503,12 +499,22 @@ class TestResultConsumer {
     }
     console.log(
       `${this.results.length} tests completed in ${
-        Math.floor(duration / 60_000)
+        Math.floor(
+          duration / 60_000,
+        )
       }m${Math.floor(duration / 1_000)}s:`,
     );
     console.log(`  successes: ${this.#counts.success}/${this.results.length}`);
 
     console.log(`  failures: ${this.#counts.failure}/${this.results.length}`);
+
+    if (this.#counts.failure > 0) {
+      for (const res of this.results) {
+        if (!res.success) {
+          console.log(`    - ${res.testFile}`);
+        }
+      }
+    }
 
     if (this.#counts.failure + this.#counts.cancelled > 0) {
       return 1;
@@ -547,9 +553,9 @@ class TestThread {
 
       this.results.consume(
         {
-          testFile: relativePath,
           output: this.currentRun.output,
           ...result,
+          testFile: relativePath,
         },
         this,
       );
