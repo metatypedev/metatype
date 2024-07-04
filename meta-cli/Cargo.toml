@@ -29,6 +29,8 @@ default = []
 typegate = ["dep:typegate_engine"]
 
 [dependencies]
+tabled = "0.15.0"
+
 # internal
 typegate_engine = { workspace = true, optional = true }
 common.workspace = true
