@@ -26,6 +26,9 @@ export class Manager {
       case "deploy":
         await this.#deploy();
         break;
+      case "list":
+        await this.#list();
+        break;
       default:
         throw new Error(
           `command ${this.#env.command} from meta-cli not supported`,
@@ -136,6 +139,10 @@ export class Manager {
       });
       return;
     }
+  }
+
+  async #list(): Promise<void> {
+    log.success({ typegraph: this.#typegraph.name });
   }
 }
 
