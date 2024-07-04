@@ -283,7 +283,7 @@ jobs:
 
           ghjk x test-rust
 
-          ghjk x test-e2e --threads 1 -- --coverage=coverage
+          ghjk x test-e2e -- --coverage=coverage
 
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
           deno cache --import-map typegate/import_map.json \

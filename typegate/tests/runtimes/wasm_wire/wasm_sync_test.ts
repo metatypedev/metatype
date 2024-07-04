@@ -27,7 +27,7 @@ const syncConfig = {
     hostname: "localhost",
     port: 6379,
     password: "password",
-    db: 1,
+    db: 4,
   },
   s3: {
     endpoint: "http://localhost:9000",
@@ -87,9 +87,7 @@ Meta.test(
 
       assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 3);
 
-      const engine = await metaTest.engine(
-        "runtimes/wasm_wire/wasm_wire.ts",
-      );
+      const engine = await metaTest.engine("runtimes/wasm_wire/wasm_wire.ts");
 
       await gql`
         query {
@@ -104,9 +102,7 @@ Meta.test(
         .on(engine);
 
       // second engine on the other typegate instance
-      const engine2 = await metaTest.engine(
-        "runtimes/wasm_wire/wasm_wire.ts",
-      );
+      const engine2 = await metaTest.engine("runtimes/wasm_wire/wasm_wire.ts");
 
       await gql`
         query {
