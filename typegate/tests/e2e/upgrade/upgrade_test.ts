@@ -15,7 +15,7 @@ import { transformSyncConfig } from "@typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
 import { assertEquals } from "std/assert/assert_equals.ts";
 
-const PUBLISHED_VERSION = "0.4.3";
+const PUBLISHED_VERSION = "0.4.4";
 
 const previousVersion = PUBLISHED_VERSION;
 
