@@ -81,9 +81,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
       - uses: mozilla-actions/sccache-action@v0.0.3
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         run: |
@@ -236,9 +233,6 @@ jobs:
           detached: true
       - uses: dsherret/rust-toolchain-file@v1
       - uses: mozilla-actions/sccache-action@v0.0.3
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
       # - name: Cache deno dir
       #  uses: actions/cache@v4
       #  with:
