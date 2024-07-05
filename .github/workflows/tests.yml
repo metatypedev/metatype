@@ -256,6 +256,8 @@ jobs:
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+        with:
+          cache-disable: true
       - shell: bash
         run: |
           # we don't want bash sub shells to do ghjk_reload

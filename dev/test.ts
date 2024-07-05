@@ -154,7 +154,11 @@ export async function testE2e(args: {
   await tmpDir.ensureDir();
   // remove non-vendored caches
   for await (const cache of tmpDir.readDir()) {
-    if (cache.name.endsWith(".wasm") || cache.name == "libpython") {
+    if (
+      cache.name.endsWith(".wasm") ||
+      cache.name == "libpython" ||
+      cache.name.startsWith("meta-cli")
+    ) {
       continue;
     }
     await tmpDir.join(cache.name).remove({ recursive: true });
@@ -199,7 +203,9 @@ export async function testE2e(args: {
   const queue = [...filteredTestFiles];
 
   $.logStep(`${prefix} Building xtask and meta-cli...`);
-  await $`cargo build -p xtask -p meta-cli`.cwd(wd);
+  await $`cargo build -p meta-cli -F typegate
+          && mv target/debug/meta target/debug/meta-full
+          && cargo build -p xtask -p meta-cli`.cwd(wd);
 
   $.logStep(`Discovered ${queue.length} test files to run`);
 

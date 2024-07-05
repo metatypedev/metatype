@@ -22,9 +22,7 @@ export async function tryDeleteBucket(client: S3Client, bucket: string) {
     }
 
     for (const { Key } of list) {
-      await client.send(
-        new DeleteObjectCommand({ Bucket: bucket, Key: Key! }),
-      );
+      await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: Key! }));
     }
   }
 
