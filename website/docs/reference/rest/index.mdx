@@ -128,14 +128,13 @@ You can browse it at `{TYPEGATE_URL}/{TG_NAME}/rest`.
 
 ## OpenAPI clients
 
-In some cases, as your typegraph gets more complicated, you may want to automate the step of generating clients and focus on the actual logic of your application instead.
+In some cases, as your typegraph gets more complicated, you may want to automate the step of writing clients and focus on the actual logic of your application instead.
 
-The OpenAPI spec will be available at `{TYPEGATE_URL}/{TG_NAME}/rest/__schema`, which is very useful considering that there is already exist
-a handful amount of tools that enables you creating clients from an existing OpenAPI specification file.
+The OpenAPI spec will be available at `{TYPEGATE_URL}/{TG_NAME}/rest/__schema`, which is very useful considering that there are already a number of tools that enable you to create clients from an existing OpenAPI specification file.
 
 Once you download the specification file for your API, it should look like something like this:
-```javascript
-// my_awesome_typegraph_openapi.json
+```js
+// {TYPEGATE_URL}/my_awesome_typegraph/rest/__schema
 {
   "openapi": "3.0.3",
   "info": {
@@ -148,7 +147,7 @@ Once you download the specification file for your API, it should look like somet
   },
   "servers": [{ "url": "http://localhost:7890" }],
   "paths": { 
-    // typing each path manually can be very tedious as your API grows
+    // typing each path manually on a custom client can be very tedious as your API grows
     "/my_awesome_typegraph/rest/get_post": {
       "get": {
         "summary": "Perform get_post",
@@ -165,24 +164,23 @@ Once you download the specification file for your API, it should look like somet
 ```
 
 Here are some of the most used generators:
-* Multilang: https://github.com/OpenAPITools/openapi-generator
-* Multilang: https://www.npmjs.com/package/@openapitools/openapi-generator-cli
-
-* Flutter: https://pub.dev/packages/openapi_generator
+* Multilang: [OpenAPITools/openapi-generator](https://github.com/OpenAPITools/openapi-generator)
+* Multilang: [@openapitools/openapi-generator-cli](https://www.npmjs.com/package/@openapitools/openapi-generator-cli)
+* Flutter: [openapi_generator](https://pub.dev/packages/openapi_generator)
 
 To keep our setup simple, let us look at [@openapitools/openapi-generator-cli](https://www.npmjs.com/package/@openapitools/openapi-generator-cli),
-which is basically a wrapper around [openapi-generator](https://github.com/OpenAPITools/openapi-generator) and will download the appropriate dependencies for you.
+which is just a wrapper around [openapi-generator](https://github.com/OpenAPITools/openapi-generator) and will download the appropriate dependencies for you.
 
 First, install the cli globally
 ```bash
 npm i -g @openapitools/openapi-generator-cli
 ```
 
-In this example, let's generate a simple fetch clientm, you can refer to their official documentation for other generators.
+In this example, let's generate a simple fetch client, you can refer to their official documentation for other generators.
 
 ```bash
 openapi-generator-cli generate \
-    -i http://localhost:7890/my_awesome_typegraph/rest/__schema
+    -i http://localhost:7890/my_awesome_typegraph/rest/__schema \
     -g typescript-fetch \
     -o my-client \
     --skip-validate-spec
