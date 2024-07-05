@@ -3,24 +3,7 @@
 
 import { gql, Meta, sleep } from "../../utils/mod.ts";
 import * as path from "std/path/mod.ts";
-import { connect } from "redis";
-import { S3Client } from "aws-sdk/client-s3";
-import { createBucket, tryDeleteBucket } from "test-utils/s3.ts";
-
-const redisKey = "typegraph";
-const redisEventKey = "typegraph_event";
-
-async function cleanUp() {
-  using redis = await connect(syncConfig.redis);
-  await redis.del(redisKey);
-  await redis.del(redisEventKey);
-
-  const s3 = new S3Client(syncConfig.s3);
-  await tryDeleteBucket(s3, syncConfig.s3Bucket);
-  await createBucket(s3, syncConfig.s3Bucket);
-  s3.destroy();
-  await redis.quit();
-}
+import { clearSyncData, setupSync } from "test-utils/hooks.ts";
 
 const syncConfig = {
   redis: {
@@ -46,16 +29,15 @@ Meta.test(
     name: "Deno runtime - Python SDK: in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/deno/deno.py",
-    );
+    const e = await t.engine("runtimes/deno/deno.py");
 
     await t.should("work on the default worker", async () => {
       await gql`
@@ -138,16 +120,15 @@ Meta.test(
     name: "Deno runtime - Python SDK: file name reloading in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/deno/deno.py",
-    );
+    const e = await t.engine("runtimes/deno/deno.py");
 
     await t.should("success for allowed network access", async () => {
       await gql`
@@ -180,16 +161,15 @@ Meta.test(
     name: "Deno runtime - Python SDK: use local imports in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/deno/deno_dep.py",
-    );
+    const e = await t.engine("runtimes/deno/deno_dep.py");
     await t.should("work for local imports", async () => {
       await gql`
         query {
@@ -209,10 +189,11 @@ Meta.test(
     name: "DenoRuntime - TS SDK: artifacts and deps in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (metaTest) => {
@@ -238,17 +219,16 @@ Meta.test(
     replicas: 1,
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (metaTest) => {
     const testMultipleReplica = async (instanceNumber: number) => {
-      const e = await metaTest.engine(
-        "runtimes/deno/deno_dep.py",
-      );
+      const e = await metaTest.engine("runtimes/deno/deno_dep.py");
 
       await sleep(5_000);
 
@@ -256,10 +236,10 @@ Meta.test(
         `work on the typgate instance #${instanceNumber}`,
         async () => {
           await gql`
-        query {
-          doAddition(a: 1, b: 2)
-        }
-      `
+            query {
+              doAddition(a: 1, b: 2)
+            }
+          `
             .expectData({
               doAddition: 3,
             })
@@ -278,18 +258,17 @@ Meta.test(
     name: "Deno runtime - TS SDK: file name reloading in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
     const load = async (value: number) => {
       Deno.env.set("DYNAMIC", path.join("dynamic", `${value}.ts`));
-      const e = await t.engine(
-        "runtimes/deno/deno_reload.py",
-      );
+      const e = await t.engine("runtimes/deno/deno_reload.py");
       Deno.env.delete("DYNAMIC");
       return e;
     };
@@ -329,10 +308,11 @@ Meta.test(
     name: "Deno runtime - TS SDK: script reloading in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -349,9 +329,7 @@ Meta.test(
           denoScript,
           originalContent.replace('"REWRITE_ME"', `${value}`),
         );
-        const e = await t.engine(
-          "runtimes/deno/deno_reload.py",
-        );
+        const e = await t.engine("runtimes/deno/deno_reload.py");
         await t.should(`reload with new value ${value}`, async () => {
           await gql`
             query {
@@ -382,16 +360,15 @@ Meta.test(
     sanitizeOps: false,
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/deno/deno.py",
-    );
+    const e = await t.engine("runtimes/deno/deno.py");
 
     await t.should("safely fail upon stack overflow", async () => {
       await gql`
@@ -424,10 +401,11 @@ Meta.test(
     name: "Deno runtime - TS SDK: with no artifacts in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -454,16 +432,15 @@ Meta.test(
     name: "Deno runtime - Python SDK: with no artifacts in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/deno/deno_no_artifact.py",
-    );
+    const e = await t.engine("runtimes/deno/deno_no_artifact.py");
 
     await t.should("work with no artifacts in typegrpah", async () => {
       await gql`
@@ -484,10 +461,11 @@ Meta.test(
     name: "Deno runtime - TS SDK: with duplicate artifacts in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
@@ -514,16 +492,15 @@ Meta.test(
     name: "Deno runtime - Python SDK: with duplicate artifacts in sync mode",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/deno/deno_duplicate_artifact.py",
-    );
+    const e = await t.engine("runtimes/deno/deno_duplicate_artifact.py");
 
     await t.should("work with duplicate artifacts in typegrpah", async () => {
       await gql`
@@ -546,19 +523,18 @@ Meta.test(
     name: "DenoRuntime - Sync mode: support for dirs when adding deps",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {
     await t.should(
       "work for deps specified with dir on Python SDK",
       async () => {
-        const engine = await t.engine(
-          "runtimes/deno/deno_dir.py",
-        );
+        const engine = await t.engine("runtimes/deno/deno_dir.py");
 
         await gql`
           query {
@@ -596,10 +572,11 @@ Meta.test(
     name: "DenoRuntime - Sync mode: support for globs when adding deps",
     syncConfig,
     async setup() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
     },
     async teardown() {
-      await cleanUp();
+      await clearSyncData(syncConfig);
     },
   },
   async (t) => {

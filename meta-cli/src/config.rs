@@ -109,6 +109,36 @@ impl NodeConfig {
         }
     }
 
+    pub async fn get_admin_password(&self, dir: impl AsRef<Path>) -> Result<String> {
+        let raw_username = self
+            .username
+            .clone()
+            .ok_or_else(|| ferr!("no username in config file metatype.yaml"))?;
+
+        let raw_password = self
+            .password
+            .clone()
+            .ok_or_else(|| ferr!("no password in config file metatype.yaml"))?;
+
+        let username = lade_sdk::hydrate_one(raw_username, dir.as_ref())
+            .await
+            .map_err(anyhow_to_eyre!())
+            .context("error hydrating username")?;
+
+        if &username != "admin" {
+            return Err(ferr!(
+                "username in config file metatype.yaml is not 'admin'"
+            ));
+        }
+
+        let password = lade_sdk::hydrate_one(raw_password, dir.as_ref())
+            .await
+            .map_err(anyhow_to_eyre!())
+            .context("error hydrating password")?;
+
+        Ok(password)
+    }
+
     #[tracing::instrument]
     pub async fn build<P: AsRef<Path> + core::fmt::Debug>(&self, dir: P) -> Result<Node> {
         Node::new(
