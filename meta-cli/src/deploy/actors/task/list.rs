@@ -134,7 +134,7 @@ impl TaskAction for ListAction {
 
     fn get_error_message(&self, err: &str) -> String {
         format!(
-            "{icon} failed to liste typegraph(s) from {path:?}: {err}",
+            "{icon} failed to list typegraph(s) from {path:?}: {err}",
             icon = "✗".red(),
             path = self.task_ref.path.display().yellow(),
             err = err,
@@ -157,7 +157,7 @@ impl TaskAction for ListAction {
             }
             Err(output) => {
                 ctx.console.error(format!(
-                    "{icon} failed to liste typegraph {name} from {path}",
+                    "{icon} failed to list typegraph {name} from {path}",
                     icon = "✗".red(),
                     name = output.get_typegraph_name().cyan(),
                     path = self.task_ref.path.display().yellow(),
@@ -176,6 +176,6 @@ impl TaskAction for ListAction {
     }
 
     async fn get_rpc_response(&self, _call: &serde_json::Value) -> Result<serde_json::Value> {
-        Err(ferr!("rpc request not supported on serialize task"))
+        Err(ferr!("rpc request not supported on list task"))
     }
 }
