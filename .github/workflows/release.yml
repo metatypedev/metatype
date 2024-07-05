@@ -30,9 +30,6 @@ jobs:
           fetch-depth: 0
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v${{ env.DENO_VERSION }}
       - uses: kenji-miyake/setup-git-cliff@v2
       - run: |
           VERSION=$(ghjk x version-print)
@@ -161,9 +158,6 @@ jobs:
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
       - uses: mozilla-actions/sccache-action@v0.0.3
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         env:
@@ -336,9 +330,6 @@ jobs:
         with:
           fetch-depth: 0
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v${{ env.DENO_VERSION }}
       - uses: kenji-miyake/setup-git-cliff@v2
       - id: bump
         run: |

@@ -19,7 +19,6 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "rust-toolchain.toml": [[/(channel = ").+(")/, RUST_VERSION]],
   ".github/**/*.yml": [
     ['(  GHJK_VERSION: ").+(")', GHJK_VERSION],
-    ['(  DENO_VERSION: ").+(")', DENO_VERSION],
     [/([\s-]+uses:\s+metatypedev\/setup-ghjk@).+()/, GHJK_ACTION_VERSION],
   ],
   "meta-lsp/package.json": [
