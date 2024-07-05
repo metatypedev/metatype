@@ -74,7 +74,7 @@ const merged = Array.from(
 // ${relative(denoSdkDir, path)}
 ${
     Deno.readTextFileSync(path)
-      .replaceAll(/import type {.+} from ['"].+\.d.ts['"];/g, (m) => `// ${m}`)
+      .replaceAll(/import type {.+} from ['"].+\.d\.ts['"];/g, (m) => `// ${m}`)
       .replaceAll(/export {.+};/g, (m) => `// ${m}`)
   }
 `;
