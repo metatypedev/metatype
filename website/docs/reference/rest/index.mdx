@@ -75,10 +75,10 @@ There is no rule in what type of query you should do most of the time as everyth
 
 In other words, depending on what `query_type` (query or mutation), `$param1, $param2, ..` will be defined from the request parameters (GET) or the request body (POST).
 
-- <b>query</b>: Perform a `GET` at
-  `{TYPEGATE_URL}/{TG_NAME}/rest/endpoint_name?param1=..&param2=..`
-- <b>mutation</b>: Perform a `POST` at `{TYPEGATE_URL}/{TG_NAME}/rest/endpoint_name`
-  with `Content-Type` set as `application/json`
+- <b>query</b>: Perform a `GET` at `{TYPEGATE_URL}/{TG_NAME}
+  /rest/endpoint_name?param1=..&param2=..`
+- <b>mutation</b>: Perform a `POST` at `{TYPEGATE_URL}/{TG_NAME}
+  /rest/endpoint_name` with `Content-Type` set as `application/json`
 
 ```js
 {
@@ -125,7 +125,6 @@ In any case, you can always check the auto-generated documentation of the availa
 
 You can browse it at `{TYPEGATE_URL}/{TG_NAME}/rest`.
 
-
 ## OpenAPI clients
 
 In some cases, as your typegraph gets more complicated, you may want to automate the step of writing clients and focus on the actual logic of your application instead.
@@ -133,6 +132,7 @@ In some cases, as your typegraph gets more complicated, you may want to automate
 The OpenAPI spec will be available at `{TYPEGATE_URL}/{TG_NAME}/rest/__schema`, which is very useful considering that there are already a number of tools that enable you to create clients from an existing OpenAPI specification file.
 
 Once you download the specification file for your API, it should look like something like this:
+
 ```js
 // {TYPEGATE_URL}/my_awesome_typegraph/rest/__schema
 {
@@ -146,7 +146,7 @@ Once you download the specification file for your API, it should look like somet
     "version": "1.0.0"
   },
   "servers": [{ "url": "http://localhost:7890" }],
-  "paths": { 
+  "paths": {
     // typing each path manually on a custom client can be very tedious as your API grows
     "/my_awesome_typegraph/rest/get_post": {
       "get": {
@@ -164,14 +164,16 @@ Once you download the specification file for your API, it should look like somet
 ```
 
 Here are some of the most used generators:
-* Multilang: [OpenAPITools/openapi-generator](https://github.com/OpenAPITools/openapi-generator)
-* Multilang: [@openapitools/openapi-generator-cli](https://www.npmjs.com/package/@openapitools/openapi-generator-cli)
-* Flutter: [openapi_generator](https://pub.dev/packages/openapi_generator)
+
+- Multilang: [OpenAPITools/openapi-generator](https://github.com/OpenAPITools/openapi-generator)
+- Multilang: [@openapitools/openapi-generator-cli](https://www.npmjs.com/package/@openapitools/openapi-generator-cli)
+- Flutter: [openapi_generator](https://pub.dev/packages/openapi_generator)
 
 To keep our setup simple, let us look at [@openapitools/openapi-generator-cli](https://www.npmjs.com/package/@openapitools/openapi-generator-cli),
 which is just a wrapper around [openapi-generator](https://github.com/OpenAPITools/openapi-generator) and will download the appropriate dependencies for you.
 
 First, install the cli globally
+
 ```bash
 npm i -g @openapitools/openapi-generator-cli
 ```
