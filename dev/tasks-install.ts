@@ -36,7 +36,6 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         await $.raw`${pyExec} -m venv .venv`;
         $.logger.info("virtual env created");
       }
-      console.log($.env);
       await $`bash -sx`.stdinText(
         [
           `. .venv/bin/activate`,

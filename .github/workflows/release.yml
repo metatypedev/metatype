@@ -170,9 +170,9 @@ jobs:
           ghjk x install-py
           ghjk x install-ts
 
-          WASM_OPT=1 ghjk x build-tgraph-core
-
           source .venv/bin/activate
+
+          WASM_OPT=1 ghjk x build-tgraph
 
           cd typegraph/python
           poetry build
