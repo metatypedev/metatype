@@ -45,6 +45,7 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
+          allowUpdates: ${{ github.event_name == 'workflow_dispatch' }}
           makeLatest: true
           bodyFile: "CHANGE.md"
           discussionCategory: "Announcements"
