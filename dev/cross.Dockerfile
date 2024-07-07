@@ -37,8 +37,10 @@ RUN set -eux \
 
 ENV GHJK_SHARE_DIR=/ghjk
 ARG GHJK_VERSION=0.2.0
-RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
-    deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
+RUN curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
+   | GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash sh 
+
+WORKDIR /app
 
 COPY dev/*.ts dev/
 COPY ghjk.ts .
