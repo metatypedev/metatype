@@ -95,7 +95,7 @@ jobs:
           targets: ${{ matrix.target }}
       # some targets don't use cross so will require the deps in the host
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: mozilla-actions/sccache-action@v0.0.5
       - run: |
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
@@ -160,7 +160,7 @@ jobs:
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: mozilla-actions/sccache-action@v0.0.5
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         env:
@@ -232,7 +232,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v6
         id: build
         with:
           file: dev/Dockerfile
