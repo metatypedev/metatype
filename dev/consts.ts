@@ -9,8 +9,8 @@ export const WASMTIME_VERSION = "21.0.0";
 export const WASMTIME_PY_VERSION = "21.0.0";
 export const TYPEGRAPH_VERSION = "0.0.3";
 export const PRISMA_VERSION = "5.6.0";
-export const METATYPE_VERSION = "0.4.4-0";
-export const PUBLISHED_VERSION = "0.4.3";
+export const METATYPE_VERSION = "0.4.4";
+export const PUBLISHED_VERSION = "0.4.4";
 export const SDK_PACKAGE_NAME_TS = "@typegraph/sdk";
 export const TAGLINE =
   `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.`;
@@ -19,7 +19,6 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "rust-toolchain.toml": [[/(channel = ").+(")/, RUST_VERSION]],
   ".github/**/*.yml": [
     ['(  GHJK_VERSION: ").+(")', GHJK_VERSION],
-    ['(  DENO_VERSION: ").+(")', DENO_VERSION],
     [/([\s-]+uses:\s+metatypedev\/setup-ghjk@).+()/, GHJK_ACTION_VERSION],
   ],
   "meta-lsp/package.json": [
