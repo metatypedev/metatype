@@ -60,7 +60,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
   "build-jsr-pub": {
     async fn($) {
       await $`deno run -A typegraph/deno/dev/jsr-gen.ts`;
-      await $`cd typegraph/deno/sdk && deno publish --dry-run --allow-slow-types --allow-dirty`;
+      await $`cd typegraph/deno/sdk && deno publish --allow-slow-types --allow-dirty`;
     },
   },
   "build-tgraph-py": {
