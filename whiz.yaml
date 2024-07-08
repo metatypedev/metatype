@@ -40,7 +40,6 @@ typegraph:
     - "libs/metagen/**/*"
   command: |
     ghjk x build-tgraph
-    ghjk x build-jsr-pub
 
 system_graphs:
   watch:
