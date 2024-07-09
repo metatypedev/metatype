@@ -16,6 +16,7 @@
 pub mod action;
 mod command;
 pub mod deploy;
+pub mod list;
 pub mod serialize;
 
 use self::action::{ActionFinalizeContext, ActionResult, TaskAction};

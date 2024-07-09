@@ -18,6 +18,7 @@ pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;
 pub(crate) mod gen;
+pub(crate) mod list;
 pub(crate) mod new;
 pub(crate) mod serialize;
 pub(crate) mod typegate;
@@ -74,6 +75,8 @@ pub(crate) enum Commands {
     Deploy(deploy::DeploySubcommand),
     /// Undeploy typegraph(s) from typegate
     Undeploy(undeploy::Undeploy),
+    /// List typegraph(s) from typegate
+    List(list::List),
     /// Access metagen generators
     Gen(gen::Gen),
     /// Upgrade

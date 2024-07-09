@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.4.4-0"
+version = "0.4.4"
 edition = "2021"
 
 description = "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are."
@@ -12,11 +12,11 @@ repository = "https://github.com/metatypedev/metatype"
 include = ["src"]
 keywords = ["api", "composition", "typesystem", "graphql", "ecosystem"]
 categories = [
-  "accessibility",
-  "api-bindings",
-  "data-structures",
-  "development-tools",
-  "wasm",
+    "accessibility",
+    "api-bindings",
+    "data-structures",
+    "development-tools",
+    "wasm",
 ]
 build = "build.rs"
 
@@ -29,6 +29,8 @@ default = []
 typegate = ["dep:typegate_engine"]
 
 [dependencies]
+tabled = "0.15.0"
+
 # internal
 typegate_engine = { workspace = true, optional = true }
 common.workspace = true
@@ -64,11 +66,11 @@ clap-verbosity-flag = "2.2.0"
 ctrlc = "3.4.4"
 dialoguer = "0.11.0"
 self_update = { version = "0.39.0", features = [
-  "archive-tar",
-  "archive-zip",
-  "compression-flate2",
-  "compression-zip-deflate",
-  "compression-zip-bzip2",
+    "archive-tar",
+    "archive-zip",
+    "compression-flate2",
+    "compression-zip-deflate",
+    "compression-zip-bzip2",
 ] }
 
 # codecs
@@ -76,9 +78,10 @@ serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
 flate2.workspace = true
 tar.workspace = true
-base64.workspace = true
 # FIXME: deprecated, be on the lookout for alternatives
 serde_yaml = "0.9.33"
+base64.workspace = true
+strip-ansi-escapes = "0.2.0"
 
 # fs
 normpath = "1.2.0"
@@ -91,6 +94,7 @@ ignore = "0.4.20"
 globset = "0.4.14"
 pathdiff = "0.2.1"
 textwrap = "0.16.1"
+tempfile.workspace = true
 
 # http
 reqwest = { workspace = true, features = ["json"] }
@@ -110,9 +114,10 @@ prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0
 nix = { version = "0.29.0", features = ["signal"] }
 lade-sdk = "0.9.1"
 git2 = { version = "0.18.3", features = [
-  "vendored-libgit2",
+    "vendored-libgit2",
 ], default-features = false }
 process-wrap = { version = "8.0.2", features = ["tokio1"] }
+rand = "0.8.5"
 
 [dev-dependencies]
 # testing
@@ -120,7 +125,6 @@ assert_cmd = "2.0.14"
 
 # fs
 project-root = "0.2.2"
-tempfile.workspace = true
 
 [build-dependencies]
 shadow-rs.workspace = true

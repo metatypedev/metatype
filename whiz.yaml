@@ -11,6 +11,8 @@ gate1: &tp
   command: ghjk x dev-gate1
   pipe:
     "^.+DEBUG http .*$": whiz://http
+  env:
+    TMP_DIR: "./tmp"
 
 gate2:
   <<: *tp
@@ -38,7 +40,6 @@ typegraph:
     - "libs/metagen/**/*"
   command: |
     ghjk x build-tgraph
-    ghjk x build-jsr-pub
 
 system_graphs:
   watch:

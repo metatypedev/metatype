@@ -24,25 +24,26 @@
 
 import {
   $,
+  ctrlc,
+  cyan,
   Fuse,
+  gray,
+  green,
   mergeReadableStreams,
   parseArgs,
+  red,
   TextLineStream,
+  yellow,
 } from "./deps.ts";
 import { projectDir } from "./utils.ts";
 
-export async function testE2e(args: {
-  files: string[];
-  filter?: string;
-  threads?: number;
-  flags?: string[];
-}) {
-  const { filter, threads = 4, flags = [] } = args;
-  const wd = $.path(projectDir);
-  const testFiles = [] as string[];
-  if (args.files.length > 0) {
+const wd = $.path(projectDir);
+
+async function listTestFiles(filesArg: string[]): Promise<string[]> {
+  if (filesArg.length > 0) {
+    const testFiles = [] as string[];
     await $.co(
-      args.files.map(async (inPath) => {
+      filesArg.map(async (inPath) => {
         let path = wd.resolve(inPath);
         let stat = await path.stat();
         if (!stat) {
@@ -72,21 +73,35 @@ export async function testE2e(args: {
         }
       }),
     );
+    return testFiles;
   } else {
     // run all the tests
-    testFiles.push(
-      ...(
-        await Array.fromAsync(
-          wd
-            .join("typegate/tests")
-            .expandGlob("**/*_test.ts", { globstar: true }),
-        )
-      ).map((ent) => ent.path.toString()),
-    );
+    return (
+      await Array.fromAsync(
+        wd
+          .join("typegate/tests")
+          .expandGlob("**/*_test.ts", { globstar: true }),
+      )
+    ).map((ent) => ent.path.toString());
   }
+}
+
+interface Result {
+  testFile: string;
+  duration: number;
+  success: boolean;
+}
+
+interface Run {
+  promise: Promise<Result>;
+  output: ReadableStream<string> | null;
+  done: boolean;
+}
+
+function applyFilter(files: string[], filter: string | undefined): string[] {
   const prefixLength = `${projectDir}/typegate/tests/`.length;
   const fuse = new Fuse(
-    testFiles.map((f) => f.slice(prefixLength)),
+    files.map((f) => f.slice(prefixLength)),
     {
       includeScore: true,
       useExtendedSearch: true,
@@ -94,9 +109,18 @@ export async function testE2e(args: {
     },
   );
   const filtered = filter ? fuse.search(filter) : null;
-  const filteredTestFiles = filtered?.map((res) => testFiles[res.refIndex]) ??
-    testFiles;
+  return filtered?.map((res) => files[res.refIndex]) ?? files;
+}
 
+export async function testE2e(args: {
+  files: string[];
+  filter?: string;
+  threads?: number;
+  flags?: string[];
+}) {
+  const { filter, threads = 4, flags = [] } = args;
+  const testFiles = await listTestFiles(args.files);
+  const filteredTestFiles = applyFilter(testFiles, filter);
   if (filteredTestFiles.length == 0) {
     throw new Error("No tests found to run");
   }
@@ -130,7 +154,11 @@ export async function testE2e(args: {
   await tmpDir.ensureDir();
   // remove non-vendored caches
   for await (const cache of tmpDir.readDir()) {
-    if (cache.name.endsWith(".wasm") || cache.name == "libpython") {
+    if (
+      cache.name.endsWith(".wasm") ||
+      cache.name == "libpython" ||
+      cache.name.startsWith("meta-cli")
+    ) {
       continue;
     }
     await tmpDir.join(cache.name).remove({ recursive: true });
@@ -139,36 +167,26 @@ export async function testE2e(args: {
   const prefix = "[dev/test.ts]";
   $.logStep(`${prefix} Testing with ${threads} threads`);
 
-  interface Result {
-    testFile: string;
-    duration: number;
-    success: boolean;
-  }
-
-  interface Run {
-    promise: Promise<Result>;
-    output: ReadableStream<string>;
-    done: boolean;
-    streamed: boolean;
-  }
-
   const xtask = wd.join("target/debug/xtask");
   const denoConfig = wd.join("typegate/deno.jsonc");
 
-  function createRun(testFile: string): Run {
+  function createRun(testFile: string, streamed: boolean): Run {
     const start = Date.now();
+    const outputOption = streamed ? "inherit" : "piped";
     const child = $
       .raw`${xtask} deno test --config=${denoConfig} ${testFile} ${flags}`
       .cwd(wd)
       .env(env)
-      .stdout("piped")
-      .stderr("piped")
+      .stdout(outputOption)
+      .stderr(outputOption)
       .noThrow()
       .spawn();
 
-    const output = mergeReadableStreams(child.stdout(), child.stderr())
-      .pipeThrough(new TextDecoderStream())
-      .pipeThrough(new TextLineStream());
+    const output = streamed
+      ? null
+      : mergeReadableStreams(child.stdout(), child.stderr())
+        .pipeThrough(new TextDecoderStream())
+        .pipeThrough(new TextLineStream());
 
     const promise = child.then(({ code }) => {
       const end = Date.now();
@@ -179,94 +197,75 @@ export async function testE2e(args: {
       promise,
       output,
       done: false,
-      streamed: false,
     };
   }
 
-  const queues = [...filteredTestFiles];
-  const runs: Record<string, Run> = {};
-  const globalStart = Date.now();
+  const queue = [...filteredTestFiles];
 
   $.logStep(`${prefix} Building xtask and meta-cli...`);
-  await $`cargo build -p xtask -p meta-cli`.cwd(wd);
+  await $`cargo build -p meta-cli -F typegate
+          && mv target/debug/meta target/debug/meta-full
+          && cargo build -p xtask -p meta-cli`.cwd(wd);
 
-  // launch a promise that doesnt get awaited
-  (async () => {
-    while (queues.length > 0) {
-      const current = Object.values(runs)
-        .filter((r) => !r.done)
-        .map((r) => r.promise);
-      if (current.length <= threads) {
-        const next = queues.shift()!;
-        runs[next] = createRun(next);
-      } else {
-        const result = await Promise.any(current);
-        runs[result.testFile].done = true;
+  $.logStep(`Discovered ${queue.length} test files to run`);
+
+  const threadCount = Math.min(threads, queue.length);
+
+  const outputOptions: OutputOptions = {
+    streamed: threadCount === 1,
+    verbose: false,
+  };
+  const logger = new Logger(queue, threadCount, outputOptions);
+  const results = new TestResultConsumer(logger);
+
+  const testThreads: TestThread[] = [];
+  for (let i = 0; i < threadCount; i++) {
+    testThreads.push(new TestThread(i + 1, queue, results, logger, createRun));
+  }
+
+  let ctrlcCount = 0;
+  const _ctrlc = ctrlc.setHandler(() => {
+    ctrlcCount++;
+    switch (ctrlcCount) {
+      case 1: {
+        const remaining = queue.length;
+        queue.length = 0;
+        logger.cancelled(remaining);
+        results.setCancelledCount(remaining);
+        break;
       }
-    }
-  })();
 
-  let nexts = Object.keys(runs);
-  do {
-    const file = nexts.find((f) => !runs[f].done) ?? nexts[0];
-    const run = runs[file];
-    run.streamed = true;
-
-    $.logStep(`${prefix} Launched ${wd.relative(file)}`);
-    for await (const line of run.output) {
-      if (line.startsWith("warning: skipping duplicate package")) {
-        // https://github.com/rust-lang/cargo/issues/10752
-        continue;
+      case 2: {
+        console.log(`Killing ${testThreads.length} running tests...`);
+        for (const t of testThreads) {
+          if (t.testProcess) {
+            t.testProcess.kill("SIGKILL");
+          }
+        }
+        break;
       }
-      $.log(line);
+
+      case 3:
+        console.log("Force exiting...");
+        Deno.exit(1);
+        break;
     }
+  });
 
-    const { duration } = await run.promise;
-    $.logStep(
-      `${prefix} Completed ${wd.relative(file)} in ${duration / 1_000}s`,
-    );
-
-    nexts = Object.keys(runs).filter((f) => !runs[f].streamed);
-  } while (nexts.length > 0);
-
-  const globalDuration = Date.now() - globalStart;
-  const finished = await Promise.all(Object.values(runs).map((r) => r.promise));
-  const successes = finished.filter((r) => r.success);
-  const failures = finished.filter((r) => !r.success);
-
-  $.log();
-  $.log(
-    `Tests completed in ${Math.floor(globalDuration / 60_000)}m${
-      Math.floor(globalDuration / 1_000) % 60
-    }s:`,
+  const runnerResults = await Promise.allSettled(
+    testThreads.map(async (t) => {
+      await t.run();
+      return t;
+    }),
   );
-
-  for (const run of finished.sort((a, b) => a.duration - b.duration)) {
-    $.log(
-      ` - ${Math.floor(run.duration / 60_000)}m${
-        Math.floor(run.duration / 1_000) % 60
-      }s -- ${run.success ? "" : "FAILED -"}${wd.relative(run.testFile)}`,
-    );
+  for (const result of runnerResults) {
+    if (result.status === "rejected") {
+      console.error("Thread #${result.threadId} failed to run");
+      console.error(result.reason);
+    }
   }
 
-  $.log(`  successes: ${successes.length}/${filteredTestFiles.length}`);
-  $.log(`  failures: ${failures.length}/${filteredTestFiles.length}`);
-  const filteredOutCount = testFiles.length - filteredTestFiles.length;
-  if (filteredOutCount > 0) {
-    $.log(`  ${filteredOutCount} test files were filtered out`);
-  }
-
-  $.log("");
-
-  if (failures.length > 0) {
-    $.logError("Errors were detected:");
-    $.logGroup(() => {
-      for (const failure of failures) {
-        $.log(`- ${wd.relative(failure.testFile)}`);
-      }
-    });
-    throw new Error("test errors detected");
-  }
+  return await results.finalize();
 }
 
 export async function testE2eCli(argv: string[]) {
@@ -274,7 +273,7 @@ export async function testE2eCli(argv: string[]) {
     "--": true,
     string: ["threads", "f", "filter"],
   });
-  await testE2e({
+  return await testE2e({
     files: flags._.map((item) => item.toString()),
     threads: flags.threads ? parseInt(flags.threads) : undefined,
     filter: flags.filter ?? flags.f,
@@ -283,5 +282,292 @@ export async function testE2eCli(argv: string[]) {
 }
 
 if (import.meta.main) {
-  await testE2eCli(Deno.args);
+  Deno.exit(await testE2eCli(Deno.args));
+}
+
+type TestThreadState =
+  | { status: "idle" }
+  | { status: "running"; testFile: string }
+  | { status: "finished" };
+
+interface Counts {
+  success: number;
+  failure: number;
+  cancelled: number;
+}
+
+class Logger {
+  private threadStates: Array<TestThreadState>;
+  private dynamic = Deno.stdout.isTerminal(); // TODO: make this configurable
+
+  #print(...args: unknown[]) {
+    Deno.stdout.writeSync(new TextEncoder().encode(args.join(" ")));
+  }
+  #println(...args: unknown[]) {
+    this.#print(...args, "\n");
+  }
+
+  #counts: Counts = {
+    success: 0,
+    failure: 0,
+    cancelled: 0,
+  };
+
+  constructor(
+    private queue: string[],
+    private threadCount: number,
+    public readonly options: Readonly<OutputOptions>,
+  ) {
+    this.threadStates = Array.from({ length: threadCount }, () => ({
+      status: "idle",
+    }));
+
+    if (this.dynamic) {
+      this.#println();
+      this.#displayThreadStates();
+    }
+  }
+
+  threadState(threadId: number, state: TestThreadState) {
+    this.threadStates[threadId - 1] = state;
+    if (!this.dynamic) {
+      this.#displayThreadState(threadId);
+    } else {
+      this.#clearThreadStates();
+      this.#displayThreadStates();
+    }
+  }
+
+  updateCounts(counts: Partial<Counts>) {
+    this.#counts = {
+      ...this.#counts,
+      ...counts,
+    };
+  }
+
+  #clearThreadStates() {
+    this.#print(`\x1b[${this.threadCount + 2}A\x1b[J`);
+  }
+  #displayThreadStates() {
+    this.#println();
+    for (let i = 1; i <= this.threadCount; i++) {
+      this.#displayThreadState(i);
+    }
+    this.#displayCounts();
+  }
+
+  #displayCounts() {
+    const fields = [];
+
+    const activeCount = this.threadStates.filter(
+      (s) => s.status === "running",
+    ).length;
+    fields.push(gray(`active=${activeCount}`));
+
+    fields.push(`pending=${this.queue.length}`);
+
+    if (this.#counts.success) {
+      fields.push(green(`success=${this.#counts.success}`));
+    }
+
+    if (this.#counts.failure) {
+      fields.push(red(`failure=${this.#counts.failure}`));
+    }
+
+    if (this.#counts.cancelled) {
+      fields.push(gray(`cancelled=${this.#counts.cancelled}`));
+    }
+
+    this.#println(" ", ...fields);
+  }
+
+  #displayThreadState(threadId: number) {
+    const state = this.threadStates[threadId - 1];
+    let displayedState: string;
+    switch (state.status) {
+      case "idle":
+      case "finished":
+        displayedState = gray(state.status);
+        break;
+      case "running":
+        displayedState = state.testFile;
+        break;
+    }
+    this.#println(cyan(`thread #${threadId}`), displayedState);
+  }
+
+  result(result: ExtendedResult, counts: Counts) {
+    this.updateCounts(counts);
+    const status = result.success ? green("passed") : red("failed");
+
+    this.#output(() => {
+      this.#println(
+        status,
+        result.testFile,
+        gray(`(${result.duration / 1_000}s)`),
+        gray(`#${result.runnerId}`),
+      );
+    });
+  }
+
+  async resultOutputs(results: ExtendedResult[]) {
+    if (this.options.streamed) return;
+    for (const result of results) {
+      if (result.success && !this.options.verbose) continue;
+      await this.#resultOuput(result);
+    }
+  }
+
+  async #resultOuput(result: ExtendedResult) {
+    this.#println();
+    this.#println(gray("-- OUTPUT START"), result.testFile, gray("--"));
+    for await (const line of result.output!) {
+      this.#println(line);
+    }
+    this.#println(gray("-- OUTPUT END"), result.testFile, gray("--"));
+  }
+
+  cancelled(count: number) {
+    this.#output(() => {
+      this.#println(
+        yellow(`cancelled ${count} pending tests...`),
+        "Press Ctrl-C again to stop current tests...",
+      );
+    });
+  }
+
+  #output(outputFn: () => void) {
+    if (!this.dynamic) {
+      if (this.options.streamed) {
+        this.#println();
+      }
+      outputFn();
+      if (this.options.streamed) {
+        this.#println();
+      }
+    } else {
+      this.#clearThreadStates();
+      outputFn();
+      this.#displayThreadStates();
+    }
+  }
+}
+
+interface ExtendedResult extends Result {
+  testFile: string;
+  output: ReadableStream<string> | null;
+  runnerId: number;
+}
+
+interface OutputOptions {
+  streamed: boolean;
+  verbose: boolean;
+}
+
+class TestResultConsumer {
+  private results: ExtendedResult[] = [];
+  #counts: Counts = {
+    success: 0,
+    failure: 0,
+    // error: 0,
+    cancelled: 0,
+  };
+  private startTime: number;
+
+  constructor(private logger: Logger) {
+    this.startTime = Date.now();
+  }
+
+  consume(r: Omit<ExtendedResult, "runnerId">, runner: TestThread) {
+    const result: ExtendedResult = { ...r, runnerId: runner.threadId };
+    if (result.success) {
+      this.#counts.success++;
+    } else {
+      this.#counts.failure++;
+    }
+
+    this.logger.result(result, this.#counts);
+    this.results.push(result);
+  }
+
+  setCancelledCount(count: number) {
+    this.#counts.cancelled = count;
+  }
+
+  async finalize(): Promise<number> {
+    await this.logger.resultOutputs(this.results);
+
+    const duration = Date.now() - this.startTime;
+
+    console.log();
+    if (this.#counts.cancelled > 0) {
+      console.log(`${this.#counts.cancelled} tests were cancelled`);
+    }
+    console.log(
+      `${this.results.length} tests completed in ${
+        Math.floor(
+          duration / 60_000,
+        )
+      }m${Math.floor(duration / 1_000)}s:`,
+    );
+    console.log(`  successes: ${this.#counts.success}/${this.results.length}`);
+
+    console.log(`  failures: ${this.#counts.failure}/${this.results.length}`);
+
+    if (this.#counts.failure > 0) {
+      for (const res of this.results) {
+        if (!res.success) {
+          console.log(`    - ${res.testFile}`);
+        }
+      }
+    }
+
+    if (this.#counts.failure + this.#counts.cancelled > 0) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+}
+
+class TestThread {
+  currentRun: Run | null;
+
+  constructor(
+    public threadId: number,
+    private queue: string[],
+    private results: TestResultConsumer,
+    private logger: Logger,
+    private createRun: (file: string, streamed: boolean) => Run,
+  ) {}
+
+  async run() {
+    while (true) {
+      const testFile = this.queue.shift();
+      if (!testFile) break;
+
+      const pathPrefix = `${projectDir}/typegate/tests/`;
+      const relativePath = testFile.slice(pathPrefix.length);
+
+      this.logger.threadState(this.threadId, {
+        status: "running",
+        testFile: relativePath,
+      });
+
+      this.currentRun = this.createRun(testFile, this.logger.options.streamed);
+      const result = await this.currentRun.promise;
+
+      this.results.consume(
+        {
+          output: this.currentRun.output,
+          ...result,
+          testFile: relativePath,
+        },
+        this,
+      );
+      this.currentRun = null;
+    }
+
+    this.logger.threadState(this.threadId, { status: "finished" });
+  }
 }

@@ -151,12 +151,12 @@ repos:
         files: ^website/
         exclude: website/typegraphs
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.28.5
+    rev: 0.28.6
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.4.10"
+    rev: "v0.5.1"
     hooks:
       - id: ruff
       - id: ruff-format

@@ -30,11 +30,10 @@ jobs:
           fetch-depth: 0
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v${{ env.DENO_VERSION }}
       - uses: kenji-miyake/setup-git-cliff@v2
-      - run: |
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - shell: bash
+        run: |
           VERSION=$(ghjk x version-print)
           if [[ "${{ steps.latest-tag.outputs.tag }}" != "v$VERSION" ]]; then
             echo "Tag ${{ steps.latest-tag.outputs.tag }} does not match code version v$VERSION, stopping."
@@ -46,12 +45,13 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
+          allowUpdates: ${{ github.event_name == 'workflow_dispatch' }}
           makeLatest: true
           bodyFile: "CHANGE.md"
           discussionCategory: "Announcements"
           prerelease: ${{ contains(steps.latest-tag.outputs.tag, 'dev') || contains(steps.latest-tag.outputs.tag, 'alpha') }}
 
-  meta-cli:
+  pub-meta-cli:
     needs:
       - check-bump
     # using `always()` makes the job evaulte despite
@@ -95,7 +95,7 @@ jobs:
           targets: ${{ matrix.target }}
       # some targets don't use cross so will require the deps in the host
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - uses: mozilla-actions/sccache-action@v0.0.3
+      - uses: mozilla-actions/sccache-action@v0.0.5
       - run: |
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
@@ -143,7 +143,7 @@ jobs:
           asset_name: "meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz"
           overwrite: ${{ inputs.ovewriteArtifacts }}
 
-  typegraph:
+  pub-typegraph:
     needs:
       - check-bump
     if: |
@@ -160,10 +160,7 @@ jobs:
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: mozilla-actions/sccache-action@v0.0.3
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
+      - uses: mozilla-actions/sccache-action@v0.0.5
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         env:
@@ -174,9 +171,9 @@ jobs:
           ghjk x install-py
           ghjk x install-ts
 
-          WASM_OPT=1 ghjk x build-tgraph-core
-
           source .venv/bin/activate
+
+          WASM_OPT=1 ghjk x build-tgraph
 
           cd typegraph/python
           poetry build
@@ -209,7 +206,7 @@ jobs:
           file_glob: true
           overwrite: ${{ inputs.ovewriteArtifacts }}
 
-  typegate:
+  build-docker:
     needs:
       - check-bump
     if: |
@@ -235,7 +232,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v6
         id: build
         with:
           file: dev/Dockerfile
@@ -255,12 +252,12 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  docker:
+  pub-docker:
     needs:
-      - typegate
+      - build-docker
     # needs hack required here as well because
-    # `typegate` uses it
-    if: always() && needs.typegate.result == 'success'
+    # `build-docker` uses it
+    if: always() && needs.build-docker.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -284,7 +281,7 @@ jobs:
           docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ steps.latest-tag.outputs.tag }} --tag ${{ env.REGISTRY_IMAGE }}:latest $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:latest
 
-  vscode-extension:
+  pub-vscode-extension:
     needs:
       - check-bump
     if: |
@@ -326,19 +323,16 @@ jobs:
 
   bump:
     needs:
-      - meta-cli
-      - typegraph
-      - typegate
-      - docker
+      - pub-meta-cli
+      - pub-typegraph
+      - build-docker
+      - pub-docker
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v${{ env.DENO_VERSION }}
       - uses: kenji-miyake/setup-git-cliff@v2
       - id: bump
         run: |

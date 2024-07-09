@@ -35,15 +35,18 @@ RUN set -eux \
    xz-utils \
    unzip
 
-ARG GHJK_VERSION=0.2.0
 ENV GHJK_SHARE_DIR=/ghjk
+ARG GHJK_VERSION=0.2.0
 RUN curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
    | GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash sh 
 
+WORKDIR /app
+
+COPY dev/*.ts dev/
 COPY ghjk.ts .
 # mold breaks builds for aarch64 linux
 ENV GHJK_ENV=_rust
-RUN ghjk e cook
+RUN ghjk envs cook
 ENV BASH_ENV=$GHJK_SHARE_DIR/env.sh
 # RUN echo $PATH && echo $LD_LIBRARY_PATH && dpkg --status libclang-dev && exit 1
 # nasty hack until dockerfiles support setting env variables

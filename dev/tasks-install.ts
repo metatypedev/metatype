@@ -9,12 +9,17 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     desc: "Print a command you can use to install system items",
     fn: async ($) => {
       $.logger.info("pipe me to a shell");
-      const uname = await $`uname -a`.text();
-      if (/(Ubuntu|Debian|Linux pop-os)/.test(uname)) {
+      const osRelease = await $`cat /etc/os-release`.text();
+      if (/(Ubuntu|Debian|Linux pop-os)/.test(osRelease)) {
         console.log(
           `sudo apt update && ` +
             `sudo apt install -y --no-install-recommends ` +
             `gcc-multilib pkg-config libssl-dev libclang-dev perl make`,
+        );
+      } else if (/Fedora|Red Hat|CentOS/.test(osRelease)) {
+        console.log(
+          `sudo dnf install -y ` +
+            `gcc gcc-c++ pkg-config openssl-devel clang-devel perl make`,
         );
       } else {
         $.logger.error("unable to determine platform");
@@ -36,7 +41,6 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         await $.raw`${pyExec} -m venv .venv`;
         $.logger.info("virtual env created");
       }
-      console.log($.env);
       await $`bash -sx`.stdinText(
         [
           `. .venv/bin/activate`,

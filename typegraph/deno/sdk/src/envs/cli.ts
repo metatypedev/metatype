@@ -15,7 +15,7 @@ const requiredCliEnvs = [
 
 const optionalCliEnvs = ["prefix"] as const;
 
-const COMMANDS = ["serialize", "deploy"] as const;
+const COMMANDS = ["serialize", "deploy", "list"] as const;
 type Command = typeof COMMANDS extends ReadonlyArray<infer C> ? C : never;
 
 export interface CliEnv {
