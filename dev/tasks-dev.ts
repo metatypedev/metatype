@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { DenoTaskDefArgs } from "./deps.ts";
+import { $, DenoTaskDefArgs } from "./deps.ts";
+import { projectDir } from "./utils.ts";
 
 const tasks: Record<string, DenoTaskDefArgs> = {
-  "dev": {
+  dev: {
     desc: "Execute dev/*.ts scripts.",
     async fn($) {
       if ($.argv.length == 0) {
@@ -19,7 +20,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
   },
 
   "dev-compose": {
-    "desc": "Wrapper around docker compose to manage runtime dependencies",
+    desc: "Wrapper around docker compose to manage runtime dependencies",
     async fn($) {
       const dcs = await Array.fromAsync(
         $.workingDir.join("dev/envs").expandGlob("compose.*.yml", {
@@ -28,8 +29,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         }),
       );
       const files = Object.fromEntries(
-        dcs
-          .map((e) => [e.path.basename().split(".")[1], e.path]),
+        dcs.map((e) => [e.path.basename().split(".")[1], e.path]),
       );
 
       const on = new Set<string>();
@@ -40,7 +40,9 @@ const tasks: Record<string, DenoTaskDefArgs> = {
           if (!files[arg]) {
             console.log(
               `Unknown env "${arg}", available: ${
-                Object.keys(files).join(", ")
+                Object.keys(files).join(
+                  ", ",
+                )
               } or "all".`,
             );
             Deno.exit(1);
@@ -51,11 +53,17 @@ const tasks: Record<string, DenoTaskDefArgs> = {
 
       if (on.size > 0) {
         await $.raw`docker compose ${
-          [...on].flatMap((file) => ["-f", file])
+          [...on].flatMap((file) => [
+            "-f",
+            file,
+          ])
         } up -d --remove-orphans`;
       } else {
         await $.raw`docker compose ${
-          Object.values(files).flatMap((file) => ["-f", file])
+          Object.values(files).flatMap((file) => [
+            "-f",
+            file,
+          ])
         } down --remove-orphans`;
       }
     },
@@ -80,6 +88,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
       TG_ADMIN_PASSWORD: "password",
       TG_PORT: "7891",
+      TMP_DIR: $.path(projectDir).join("tmp").toString(),
     },
     fn: ($) => $`cargo run -p typegate`,
   },

@@ -21,7 +21,7 @@ export class Manager {
   async run() {
     switch (this.#env.command) {
       case "serialize":
-        await this.#serialize();
+        this.#serialize();
         break;
       case "deploy":
         await this.#deploy();
@@ -37,7 +37,7 @@ export class Manager {
     return path.join(this.#env.migrations_dir, this.#typegraph.name);
   }
 
-  async #serialize(): Promise<void> {
+  #serialize(): void {
     let finalizationResult: TgFinalizationResult;
     try {
       const env = this.#env;
@@ -67,50 +67,50 @@ export class Manager {
   }
 
   async #deploy(): Promise<void> {
-    const deployData = await rpc.getDeployData(this.#typegraph.name);
-
-    const env = this.#env;
-    if (!env.artifact_resolution) {
-      log.failure({
-        typegraph: this.#typegraph.name,
-        errors: ["artifact resolution must be enabled for deployment"],
-      });
-      return;
-    }
-
-    const params: SerializeParams = {
-      typegraphPath: env.typegraph_path,
-      prefix: env.prefix,
-      artifactResolution: true,
-      codegen: false,
-      prismaMigration: {
-        migrationsDir: this.#getMigrationsDir(),
-        migrationActions: Object.entries(deployData.migrationActions),
-        defaultMigrationAction: deployData.defaultMigrationAction,
-      },
-      pretty: false,
-    };
-
-    // hack for allowing tg.serialize(config) to be called more than once
-    const frozenOut = freezeTgOutput(params, this.#typegraph);
-
-    // hack for allowing tg.serialize(config) to be called more than once
-    let frozenSerialized: TgFinalizationResult;
     try {
-      frozenSerialized = frozenOut.serialize(params);
-    } catch (err: any) {
-      log.failure({
-        typegraph: this.#typegraph.name,
-        errors: getErrorStack(err, "failed to serialize typegraph"),
-      });
-      return;
-    }
-    const reusableTgOutput = {
-      ...this.#typegraph,
-      serialize: () => frozenSerialized,
-    } as TypegraphOutput;
+      const deployData = await rpc.getDeployData(this.#typegraph.name);
 
-    try {
+      const env = this.#env;
+      if (!env.artifact_resolution) {
+        log.failure({
+          typegraph: this.#typegraph.name,
+          errors: ["artifact resolution must be enabled for deployment"],
+        });
+        return;
+      }
+
+      const params: SerializeParams = {
+        typegraphPath: env.typegraph_path,
+        prefix: env.prefix,
+        artifactResolution: true,
+        codegen: false,
+        prismaMigration: {
+          migrationsDir: this.#getMigrationsDir(),
+          migrationActions: Object.entries(deployData.migrationActions),
+          defaultMigrationAction: deployData.defaultMigrationAction,
+        },
+        pretty: false,
+      };
+
+      // hack for allowing tg.serialize(config) to be called more than once
+      const frozenOut = freezeTgOutput(params, this.#typegraph);
+
+      // hack for allowing tg.serialize(config) to be called more than once
+      let frozenSerialized: TgFinalizationResult;
+      try {
+        frozenSerialized = frozenOut.serialize(params);
+      } catch (err: any) {
+        log.failure({
+          typegraph: this.#typegraph.name,
+          errors: getErrorStack(err, "failed to serialize typegraph"),
+        });
+        return;
+      }
+      const reusableTgOutput = {
+        ...this.#typegraph,
+        serialize: () => frozenSerialized,
+      } as TypegraphOutput;
+
       const deployTarget = await rpc.getDeployTarget();
       const { response } = await tgDeploy(reusableTgOutput, {
         typegate: {
