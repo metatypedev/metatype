@@ -27,9 +27,6 @@ pub struct DeploySubcommand {
 
     #[command(flatten)]
     options: DeployOptions,
-
-    #[clap(long)]
-    max_parallel_loads: Option<usize>,
 }
 
 impl DeploySubcommand {
@@ -38,14 +35,12 @@ impl DeploySubcommand {
         target: String,
         options: DeployOptions,
         file: Option<PathBuf>,
-        max_parallel_loads: Option<usize>,
     ) -> Self {
         Self {
             node,
             target,
             options,
             file,
-            max_parallel_loads,
         }
     }
 }
@@ -82,6 +77,18 @@ pub struct DeployOptions {
     /// Run a typegate with the current target configuration
     #[clap(long)]
     pub run_typegate: bool,
+
+    /// maximum number of concurrent deployment tasks
+    #[clap(long)]
+    pub threads: Option<usize>,
+
+    /// max retry count
+    #[clap(long)]
+    pub retry: Option<usize>,
+
+    /// initial retry interval in milliseconds
+    #[clap(long)]
+    pub retry_interval_ms: Option<u64>,
 }
 
 #[derive(Debug)]
@@ -94,7 +101,6 @@ pub struct Deploy {
     options: DeployOptions,
     secrets: RawSecrets,
     file: Option<PathBuf>,
-    max_parallel_loads: Option<usize>,
 }
 
 impl Deploy {
@@ -129,7 +135,6 @@ impl Deploy {
             options,
             secrets,
             file: file.clone(),
-            max_parallel_loads: deploy.max_parallel_loads,
         })
     }
 }
@@ -188,6 +193,8 @@ enum ExitStatus {
 mod default_mode {
     //! non-watch mode
 
+    use std::time::Duration;
+
     use task_manager::{TaskManagerInit, TaskSource};
 
     use crate::config::PathOption;
@@ -224,10 +231,13 @@ mod default_mode {
                 TaskSource::Discovery(deploy.base_dir)
             },
         )
-        .retry(3, None);
+        .retry(
+            deploy.options.retry.unwrap_or(0),
+            deploy.options.retry_interval_ms.map(Duration::from_millis),
+        );
 
-        if let Some(max_parallel_loads) = deploy.max_parallel_loads {
-            init = init.max_parallel_tasks(max_parallel_loads);
+        if let Some(max_parallel_tasks) = deploy.options.threads {
+            init = init.max_parallel_tasks(max_parallel_tasks);
         }
         let report = init.run().await;
 
@@ -262,6 +272,8 @@ mod default_mode {
 }
 
 mod watch_mode {
+    use std::time::Duration;
+
     use task_manager::{TaskManagerInit, TaskSource};
 
     use crate::config::PathOption;
@@ -313,10 +325,13 @@ mod watch_mode {
             console.clone(),
             TaskSource::DiscoveryAndWatch(deploy.base_dir),
         )
-        .retry(3, None);
+        .retry(
+            deploy.options.retry.unwrap_or(3),
+            deploy.options.retry_interval_ms.map(Duration::from_millis),
+        );
 
-        if let Some(max_parallel_loads) = deploy.max_parallel_loads {
-            init = init.max_parallel_tasks(max_parallel_loads);
+        if let Some(max_parallel_tasks) = deploy.options.threads {
+            init = init.max_parallel_tasks(max_parallel_tasks);
         }
         let report = init.run().await;
 

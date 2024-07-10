@@ -22,7 +22,7 @@ pub struct Dev {
     run_destructive_migrations: bool,
 
     #[clap(long)]
-    max_parallel_loads: Option<usize>,
+    threads: Option<usize>,
 
     /// secrets overload
     #[clap(long = "secret")]
@@ -32,6 +32,14 @@ pub struct Dev {
     /// Do not run a typegate. By default a typegate is run with the current target configuration
     #[clap(long)]
     no_typegate: bool,
+
+    /// max retry count
+    #[clap(long)]
+    retry: Option<usize>,
+
+    /// initial retry interval
+    #[clap(long)]
+    retry_interval_ms: Option<u64>,
 }
 
 #[async_trait]
@@ -48,6 +56,9 @@ impl Action for Dev {
             secrets: self.secrets.clone(),
             #[cfg(feature = "typegate")]
             run_typegate: !self.no_typegate,
+            threads: self.threads,
+            retry: self.retry,
+            retry_interval_ms: self.retry_interval_ms,
         };
 
         let deploy = DeploySubcommand::new(
@@ -55,7 +66,6 @@ impl Action for Dev {
             self.target.clone().unwrap_or("dev".to_string()),
             options,
             None,
-            self.max_parallel_loads,
         );
         deploy.run(args).await
     }
