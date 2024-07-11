@@ -185,7 +185,7 @@ jobs:
           cd typegraph/node
           pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
           [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
-            && pnpm publish --no-git-checks --force \
+            && (pnpm publish --no-git-checks || true) \
             || pnpm publish --no-git-checks
           cd ../..
 

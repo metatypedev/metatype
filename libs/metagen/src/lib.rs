@@ -13,7 +13,7 @@ mod interlude {
     pub use std::sync::Arc;
 
     pub use color_eyre::eyre::{
-        self as anyhow, bail, ensure, format_err, ContextCompat, OptionExt, Result, WrapErr,
+        self, self as anyhow, bail, ensure, format_err, ContextCompat, OptionExt, Result, WrapErr,
     };
     pub use futures_concurrency::prelude::*;
     pub use indexmap::IndexMap;
@@ -22,13 +22,20 @@ mod interlude {
     pub use serde::{Deserialize, Serialize};
     #[cfg(test)]
     pub use tokio::process::Command;
+
+    pub use crate::anyhow_to_eyre;
 }
 
 mod config;
-mod mdk;
+mod macros;
+mod shared;
+
 mod mdk_python;
 mod mdk_rust;
 mod mdk_typescript;
+
+mod client_ts;
+
 #[cfg(test)]
 mod tests;
 mod utils;
@@ -139,6 +146,16 @@ impl GeneratorRunner {
                         op: |workspace_path: &Path, val| {
                             let config = mdk_typescript::MdkTypescriptGenConfig::from_json(val, workspace_path)?;
                             let generator = mdk_typescript::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
+                (
+                    "client_ts".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = client_ts::ClienTsGenConfig::from_json(val, workspace_path)?;
+                            let generator = client_ts::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },

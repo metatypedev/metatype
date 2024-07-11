@@ -11,6 +11,7 @@
     "examples/typegraphs",
     "typegraph/deno/dev",
     "typegraph/deno/sdk",
+    "libs/metagen",
     "ghjk.ts",
     ".ghjk"
   ],
@@ -62,6 +63,8 @@
     "wasmedge"
   ],
   "python.languageServer": "Pylance",
-  "python.analysis.extraPaths": ["typegraph/python"],
+  "python.analysis.extraPaths": [
+    "typegraph/python"
+  ],
   "prettier.proseWrap": "never"
 }

@@ -3,7 +3,7 @@
 
 use super::utils::normalize_type_title;
 use crate::interlude::*;
-use crate::mdk::*;
+use crate::shared::*;
 use crate::utils::*;
 use std::fmt::Write;
 

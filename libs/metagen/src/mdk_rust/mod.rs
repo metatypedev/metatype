@@ -15,7 +15,7 @@ mod types;
 mod utils;
 
 use crate::interlude::*;
-use crate::mdk::*;
+use crate::shared::*;
 use crate::utils::*;
 use crate::*;
 
@@ -151,8 +151,8 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
     writeln!(&mut mod_rs.buf, "pub mod types {{")?;
     writeln!(&mut mod_rs.buf, "    use super::*;")?;
     let ty_name_memo = {
-        let mut renderer = mdk::types::TypeRenderer::new(
-            &tg.types,
+        let mut renderer = shared::types::TypeRenderer::new(
+            tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
             Rc::new(types::RustTypeRenderer {
                 derive_serde: true,
                 derive_debug: true,
@@ -291,7 +291,7 @@ impl stubs::MyFunc for MyMat {
 }
 
 #[test]
-fn mdk_rs_e2e() -> anyhow::Result<()> {
+fn e2e() -> anyhow::Result<()> {
     use crate::tests::*;
 
     let tg_name = "gen-test";

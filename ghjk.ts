@@ -111,6 +111,7 @@ env("dev")
     ports.act(),
     ports.cargobi({ crateName: "whiz", locked: true }),
     ports.cargobi({ crateName: "wit-deps-cli", locked: true }),
+    ports.cargobi({ crateName: "git-cliff", locked: true }),
   );
 
 task("version-print", () => console.log(METATYPE_VERSION), {

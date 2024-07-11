@@ -4,6 +4,8 @@
 import { $, DenoTaskDefArgs } from "./deps.ts";
 import { projectDir } from "./utils.ts";
 
+const DOCKER_CMD = Deno.env.get("DOCKER_CMD") ?? "docker";
+
 const tasks: Record<string, DenoTaskDefArgs> = {
   dev: {
     desc: "Execute dev/*.ts scripts.",
@@ -52,14 +54,14 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       }
 
       if (on.size > 0) {
-        await $.raw`docker compose ${
+        await $.raw`${DOCKER_CMD} compose ${
           [...on].flatMap((file) => [
             "-f",
             file,
           ])
         } up -d --remove-orphans`;
       } else {
-        await $.raw`docker compose ${
+        await $.raw`${DOCKER_CMD} compose ${
           Object.values(files).flatMap((file) => [
             "-f",
             file,

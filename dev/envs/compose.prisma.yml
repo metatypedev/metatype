@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:15
+    image: docker.io/library/postgres:15
     restart: unless-stopped
     ports:
       - "5432:5432"

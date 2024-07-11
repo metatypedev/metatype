@@ -7,7 +7,7 @@ use garde::external::compact_str::CompactStringExt;
 use heck::ToPascalCase;
 
 use crate::interlude::*;
-use crate::mdk::*;
+use crate::shared::*;
 use crate::*;
 
 use self::utils::Memo;
