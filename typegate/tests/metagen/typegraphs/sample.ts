@@ -14,7 +14,7 @@ const genPosts = () => [
   { slug: "hello", title: "Hello World!" },
 ];
 
-await typegraph({
+export const tg = await typegraph({
   name: "sample",
   builder(g) {
     const deno = new DenoRuntime();

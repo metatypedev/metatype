@@ -460,19 +460,35 @@ Meta.test("client table suite", async (metaTest) => {
     ).code,
     0,
   );
+  // FIXME: dax replaces commands to deno with
+  // commands to xtask
+  Deno.execPath = () => "deno";
   const cases = [
     {
       skip: false,
       name: "client_ts",
       command: $`deno run -A main.ts`.cwd(
-        import.meta.resolve("./typegraphs/sample/ts/main.ts"),
+        join(scriptsPath, "ts"),
       ),
-      expected: {},
+      expected: {
+        posts: [
+          { slug: "hair", title: "I dyed my hair!" },
+          { slug: "hello", title: "Hello World!" },
+        ],
+        user: {
+          id: "69099108-e48b-43c9-ad02-c6514eaad6e3",
+          email: "yuse@mail.box",
+          posts: [
+            { slug: "hair", title: "I dyed my hair!" },
+            { slug: "hello", title: "Hello World!" },
+          ],
+        },
+      },
     },
   ];
 
   await using _engine = await metaTest.engine(
-    "metagen/typegraphs/sample.py",
+    "metagen/typegraphs/sample.ts",
   );
   for (const prefix of ["rs", "ts", "py"]) {
     await metaTest.should(`mdk data go round ${prefix}`, async (t) => {

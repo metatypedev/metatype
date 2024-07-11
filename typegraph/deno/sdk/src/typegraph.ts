@@ -209,7 +209,14 @@ export async function typegraph(
     ...InjectionSource,
   };
 
-  builder(g);
+  try {
+    builder(g);
+  } catch (err) {
+    if (err.payload && !err.cause) {
+      err.cause = err.payload;
+    }
+    throw err;
+  }
 
   const ret = {
     serialize(config: SerializeParams) {
