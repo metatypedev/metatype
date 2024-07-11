@@ -1,0 +1,12 @@
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+
+metagen:
+  targets:
+    main:
+      - generator: client_ts
+        path: ./ts/
+        typegraph_path: ../sample.ts

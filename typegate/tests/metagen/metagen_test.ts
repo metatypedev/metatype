@@ -8,6 +8,7 @@ import { assertEquals } from "std/assert/mod.ts";
 import { GraphQLQuery } from "../utils/query/graphql_query.ts";
 import { JSONValue } from "../../src/utils.ts";
 import { testDir } from "../utils/dir.ts";
+import $ from "jsr:@david/dax@0.41.0";
 
 const denoJson = resolve(testDir, "../deno.jsonc");
 
@@ -180,7 +181,7 @@ Meta.test("Metagen within sdk", async (t) => {
   }
 });
 
-Meta.test("metagen table suite", async (metaTest) => {
+Meta.test("mdk table suite", async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/identities");
   const genCratePath = join(scriptsPath, "rs");
   // const genPyPath = join(scriptsPath, "py");
@@ -437,6 +438,53 @@ Meta.test("metagen table suite", async (metaTest) => {
             .withVars(vars)
             .expectData(vars)
             .on(engine);
+        });
+      }
+    });
+  }
+});
+
+Meta.test("client table suite", async (metaTest) => {
+  const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
+
+  assertEquals(
+    (
+      await Meta.cli(
+        {
+          env: {
+            // RUST_BACKTRACE: "1",
+          },
+        },
+        ...`-C ${scriptsPath} gen`.split(" "),
+      )
+    ).code,
+    0,
+  );
+  const cases = [
+    {
+      skip: false,
+      name: "client_ts",
+      command: $`deno run -A main.ts`.cwd(
+        import.meta.resolve("./typegraphs/sample/ts/main.ts"),
+      ),
+      expected: {},
+    },
+  ];
+
+  await using _engine = await metaTest.engine(
+    "metagen/typegraphs/sample.py",
+  );
+  for (const prefix of ["rs", "ts", "py"]) {
+    await metaTest.should(`mdk data go round ${prefix}`, async (t) => {
+      for (const { name, command, expected, skip } of cases) {
+        if (skip) {
+          continue;
+        }
+        await t.step(name, async () => {
+          const res = await command
+            .env({ "TG_PORT": metaTest.port.toString() })
+            .json();
+          assertEquals(res, expected);
         });
       }
     });
