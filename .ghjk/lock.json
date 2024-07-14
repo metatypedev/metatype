@@ -952,13 +952,13 @@
               "ty": "denoFile@v1",
               "key": "dev-gate2",
               "desc": "Launch the typegate in sync mode.",
-              "envKey": "bciqjfazgnyxehqdfwztfmuymn25mgqm3uq5yelkqbpd5bcdkyyr5bdq"
+              "envKey": "bciqa6u77tafrjvgdwr5pimkex36f4ttdiba5mkj626kclhhcry2fnfq"
             },
             "dev-gate1": {
               "ty": "denoFile@v1",
               "key": "dev-gate1",
               "desc": "Launch the typegate in single-instance mode.",
-              "envKey": "bciqmxq7fex7x2jkdb6dxzvyqcdjopabf6bhclywyvzclkhflp2vi6ci"
+              "envKey": "bciqdrqdemix3vxa5spb3syclbrv23eg3r5jdmakbto3e6ih2mannhia"
             },
             "dev-eg-tgraphs": {
               "ty": "denoFile@v1",
@@ -1336,7 +1336,7 @@
                 }
               ]
             },
-            "bciqmxq7fex7x2jkdb6dxzvyqcdjopabf6bhclywyvzclkhflp2vi6ci": {
+            "bciqdrqdemix3vxa5spb3syclbrv23eg3r5jdmakbto3e6ih2mannhia": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1394,12 +1394,17 @@
                   "val": "7891"
                 },
                 {
+                  "ty": "posix.envVar",
+                  "key": "TMP_DIR",
+                  "val": "/Users/teostocco/Documents/triage/metatypedev/metatype/tmp"
+                },
+                {
                   "ty": "ghjk.ports.InstallSetRef",
                   "setId": "ghjkEnvProvInstSet____rust"
                 }
               ]
             },
-            "bciqjfazgnyxehqdfwztfmuymn25mgqm3uq5yelkqbpd5bcdkyyr5bdq": {
+            "bciqa6u77tafrjvgdwr5pimkex36f4ttdiba5mkj626kclhhcry2fnfq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1455,6 +1460,11 @@
                   "ty": "posix.envVar",
                   "key": "TG_PORT",
                   "val": "7892"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TMP_DIR",
+                  "val": "/Users/teostocco/Documents/triage/metatypedev/metatype/tmp"
                 },
                 {
                   "ty": "posix.envVar",
