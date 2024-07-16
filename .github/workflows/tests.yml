@@ -135,8 +135,7 @@ jobs:
       - if: ${{ matrix.cross != true }}
         shell: bash
         run: |
-          # cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
-          cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate --verbose
+          cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
 
   test-website:
     needs: changes

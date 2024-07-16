@@ -136,10 +136,17 @@ pub async fn launch_typegate_deno(
         .ok_or_else(|| std::env::set_var("REDIS_URL", "none"))
         .ok();
 
+    if std::env::var("TMP_DIR").is_err() {
+        std::env::set_var(
+            "TMP_DIR",
+            std::env::current_dir().expect("no cwd found").join("tmp"),
+        );
+    }
+
     use std::str::FromStr;
     let tmp_dir = std::env::var("TMP_DIR")
         .map(|p| PathBuf::from_str(&p).expect("invalid $TMP_DIR"))
-        .unwrap_or_else(|_| std::env::current_dir().expect("no cwd found").join("tmp"));
+        .unwrap();
 
     let permissions = deno_runtime::permissions::PermissionsOptions {
         allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
