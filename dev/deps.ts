@@ -1,17 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-export { file } from "https://raw.github.com/metatypedev/ghjk/44d9a41/mod.ts";
-export * from "https://raw.github.com/metatypedev/ghjk/44d9a41/mod.ts";
-export * as ports from "https://raw.github.com/metatypedev/ghjk/44d9a41/ports/mod.ts";
+export { file } from "https://raw.github.com/metatypedev/ghjk/8d50518/mod.ts";
+export * from "https://raw.github.com/metatypedev/ghjk/8d50518/mod.ts";
+export * as ports from "https://raw.github.com/metatypedev/ghjk/8d50518/ports/mod.ts";
 export {
   std_url,
   zod,
-} from "https://raw.github.com/metatypedev/ghjk/44d9a41/deps/common.ts";
+} from "https://raw.github.com/metatypedev/ghjk/8d50518/deps/common.ts";
 export {
   copyLock,
   sedLock,
-} from "https://raw.github.com/metatypedev/ghjk/44d9a41/std.ts";
+} from "https://raw.github.com/metatypedev/ghjk/8d50518/std.ts";
 // export * from "../../ghjk/mod.ts";
 // export * as ports from "../../ghjk/ports/mod.ts";
 // export * as utils from "../../ghjk/utils/mod.ts";

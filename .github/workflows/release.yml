@@ -16,7 +16,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "0.2.0"
+  GHJK_VERSION: "8d50518"
   GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
 
@@ -71,36 +71,41 @@ jobs:
           - os: macos-13
             target: x86_64-apple-darwin
             suffix: ""
+            cross: false
           - os: macos-14
             target: aarch64-apple-darwin
             suffix: ""
+            cross: false
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             suffix: ""
+            cross: false
           # FIXME: deno doesn't support musl today https://github.com/denoland/deno/issues/3711
           # - os: ubuntu-latest
           #   target: x86_64-unknown-linux-musl
           #   suffix: ""
+          #   cross: false
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             suffix: ""
+            cross: true
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # some targets don't use cross so will require the deps in the host
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
         with:
           targets: ${{ matrix.target }}
-      # some targets don't use cross so will require the deps in the host
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - uses: mozilla-actions/sccache-action@v0.0.5
       - run: |
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
       # we use cross for building on this platform
-      - if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
+      - if: ${{ matrix.cross }}
         shell: bash
         env:
           # arguments for our custom cross.Dockerfile
@@ -110,16 +115,16 @@ jobs:
           cargo install cross
 
           # NOTE: we only build the thin cli
-          cross build --release --locked --package meta-cli --target ${{ matrix.target }}
+          cross build --release --locked --package meta-cli --target ${{ matrix.target }} --verbose
           # we cd next to the file so that the its parent dirs
           # aren't present in the tar
           cd target/${{ matrix.target }}/release/
           tar czvf ../../../meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
-      - if: ${{ matrix.target != 'aarch64-unknown-linux-gnu' }}
+      - if: ${{ matrix.cross != true }}
         shell: bash
         run: |
-          cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate -v
+          cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate --verbose
           cd target/${{ matrix.target }}/release/
           tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
@@ -129,7 +134,7 @@ jobs:
           tar czvf ../../../meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
       # fat meta-cli is not avail for arm64 linux (waiting on arm64 linux machines for Gh CI)
-      - if: ${{ matrix.target != 'aarch64-unknown-linux-gnu' }}
+      - if: ${{ matrix.cross != true }}
         uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
@@ -153,6 +158,9 @@ jobs:
         || github.event_name == 'workflow_dispatch'
       )
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # The OIDC ID token is used for authentication with JSR.    
     steps:
       - uses: actions/checkout@v4
         with:
@@ -167,37 +175,34 @@ jobs:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           WASM_FILE: target/release/typegraph_core.wasm
+          OVERWRITE: ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }}
         run: |
-          ghjk x install-py
           ghjk x install-ts
-
+          ghjk x install-py
           source .venv/bin/activate
 
           WASM_OPT=1 ghjk x build-tgraph
 
           cd typegraph/python
           poetry build
-          [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
+          [ "$OVERWRITE" == 'true' ] \
             && poetry publish --skip-existing \
             || poetry publish
-          cd ../..
+          cd -
 
           cd typegraph/node
           pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
-          [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
-            && pnpm publish --no-git-checks --force \
+          [ "$OVERWRITE" == 'true' ] \
+            && (pnpm publish --no-git-checks --force || true) \
             || pnpm publish --no-git-checks
-          cd ../..
+          cd -
 
           cd typegraph/deno/sdk
-          ghjk x build-jsr-pub
-
-          # Requires auth
-          # jsr requires explicit type hints everytime (almost no inferences)
-          #  - https://jsr.io/docs/about-slow-types#explicit-types
-          #  - https://jsr.io/docs/about-slow-types#simple-inference
-
-          # deno publish --dry-run --allow-slow-types --allow-dirty
+          ghjk x build-tgraph-ts-jsr
+          [ "$OVERWRITE" == 'true' ] \
+            && (deno publish --allow-slow-types --allow-dirty || true) \
+            || deno publish --allow-slow-types --allow-dirty
+          cd -
 
       - uses: svenstaro/upload-release-action@v2
         with:

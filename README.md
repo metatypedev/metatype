@@ -20,16 +20,19 @@ Support us by <a href="https://github.com/metatypedev/metatype/stargazers">starr
 
 <p align="center">
     <a href="https://github.com/metatypedev/metatype/pkgs/container/typegate" target="_blank">
-        <img src="https://ghcr-badge.deta.dev/metatypedev/typegate/latest_tag?trim=major&label=typegate" alt="Typegate Docker" />
+        <img src="https://ghcr-badge.deta.dev/metatypedev/typegate/latest_tag?trim=major&label=typegate" alt="Typegate Docker image badge" />
     </a>
     <a href="https://github.com/metatypedev/metatype/releases" target="_blank">
-        <img src="https://img.shields.io/github/v/release/metatypedev/metatype?include_prereleases&label=meta-cli" alt="Meta CLI binary" />
+        <img src="https://img.shields.io/github/v/release/metatypedev/metatype?include_prereleases&label=meta-cli" alt="Meta CLI binary Github release badge" />
     </a>
     <a href="https://pypi.org/project/typegraph/" target="_blank">
-        <img src="https://img.shields.io/pypi/v/typegraph?label=typegraph&logo=pypi" alt="Python typegraph SDK" />
+        <img src="https://img.shields.io/pypi/v/typegraph?label=typegraph&logo=pypi" alt="Python typegraph SDK badge PyPi" />
     </a>
     <a href="https://www.npmjs.com/package/@typegraph/sdk" target="_blank">
-        <img src="https://img.shields.io/npm/v/@typegraph/sdk?label=@typegraph/sdk&logo=npm" alt="Typescript typegraph SDK" />
+        <img src="https://img.shields.io/npm/v/@typegraph/sdk?label=@typegraph/sdk&logo=npm" alt="Typescript typegraph SDK badge NPM" />
+    </a>
+    <a href="https://jsr.io/@typegraph/sdk" target="_blank">
+        <img src="https://jsr.io/badges/@typegraph/sdk" alt="Typescript typegraph SDK badge JSR" />
     </a>
 </p>
 

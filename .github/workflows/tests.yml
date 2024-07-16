@@ -16,7 +16,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "0.2.0"
+  GHJK_VERSION: "8d50518"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir
@@ -135,7 +135,8 @@ jobs:
       - if: ${{ matrix.cross != true }}
         shell: bash
         run: |
-          cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
+          # cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
+          cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate --verbose
 
   test-website:
     needs: changes
