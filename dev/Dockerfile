@@ -160,7 +160,7 @@ FROM prd as epoint
 USER nonroot
 EXPOSE 7890
 
-ENV TMP_DIR=/app/tmp
+ENV MT_DIR=/app/tmp
 
 ENTRYPOINT ["/tini", "--"]
 CMD ["/bin/typegate"]
