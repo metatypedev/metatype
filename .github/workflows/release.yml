@@ -341,7 +341,7 @@ jobs:
       - uses: kenji-miyake/setup-git-cliff@v2
       - id: bump
         run: |
-          ghjk x verison-bump prerelease
+          ghjk x version-bump prerelease
           echo "version=$(ghjk x version-print)" >> $GITHUB_OUTPUT
           git cliff --output CHANGELOG.md
       - uses: peter-evans/create-pull-request@v6
