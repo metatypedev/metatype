@@ -952,13 +952,13 @@
               "ty": "denoFile@v1",
               "key": "dev-gate2",
               "desc": "Launch the typegate in sync mode.",
-              "envKey": "bciqa6u77tafrjvgdwr5pimkex36f4ttdiba5mkj626kclhhcry2fnfq"
+              "envKey": "bciqh3ggqtari3afhlcziqap3tnxet3ukxrww2e3gsfs55aeyusczjka"
             },
             "dev-gate1": {
               "ty": "denoFile@v1",
               "key": "dev-gate1",
               "desc": "Launch the typegate in single-instance mode.",
-              "envKey": "bciqdrqdemix3vxa5spb3syclbrv23eg3r5jdmakbto3e6ih2mannhia"
+              "envKey": "bciqpl6auz6efo4fv5shhzlfx4lqvpcb6xq7ptdj2xjlny5c2vf2tnfq"
             },
             "dev-eg-tgraphs": {
               "ty": "denoFile@v1",
@@ -1336,7 +1336,7 @@
                 }
               ]
             },
-            "bciqdrqdemix3vxa5spb3syclbrv23eg3r5jdmakbto3e6ih2mannhia": {
+            "bciqpl6auz6efo4fv5shhzlfx4lqvpcb6xq7ptdj2xjlny5c2vf2tnfq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1396,7 +1396,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "TMP_DIR",
-                  "val": "/Users/teostocco/Documents/triage/metatypedev/metatype/tmp"
+                  "val": "/Users/destifo/Documents/Skool/SiTE/Rust/metatype/tmp"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1404,7 +1404,7 @@
                 }
               ]
             },
-            "bciqa6u77tafrjvgdwr5pimkex36f4ttdiba5mkj626kclhhcry2fnfq": {
+            "bciqh3ggqtari3afhlcziqap3tnxet3ukxrww2e3gsfs55aeyusczjka": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1464,7 +1464,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "TMP_DIR",
-                  "val": "/Users/teostocco/Documents/triage/metatypedev/metatype/tmp"
+                  "val": "/Users/destifo/Documents/Skool/SiTE/Rust/metatype/tmp"
                 },
                 {
                   "ty": "posix.envVar",
