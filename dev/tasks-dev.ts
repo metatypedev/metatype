@@ -1,8 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { $, DenoTaskDefArgs } from "./deps.ts";
-import { projectDir } from "./utils.ts";
+import { DenoTaskDefArgs } from "./deps.ts";
 
 const tasks: Record<string, DenoTaskDefArgs> = {
   dev: {
@@ -88,7 +87,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
       TG_ADMIN_PASSWORD: "password",
       TG_PORT: "7891",
-      TMP_DIR: $.path(projectDir).join("tmp").toString(),
+      // TMP_DIR: $.path(projectDir).join("tmp").toString(),
     },
     fn: ($) => $`cargo run -p typegate`,
   },
