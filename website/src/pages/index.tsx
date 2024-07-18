@@ -22,7 +22,7 @@ function Header() {
       <div className="flex justify-end mt-5 mr-5 mb-0">
         <Link to="https://devhunt.org/tool/metatype">
           <img
-            src="images/homepage/devhunt_tab_dark.svg"
+            src="images/homepage/devhunt_tab_solid.svg"
             alt="Devhunt result"
           />
         </Link>
