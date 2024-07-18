@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-export const GHJK_VERSION = "0.2.0";
+export const METATYPE_VERSION = "0.4.5";
+export const PUBLISHED_VERSION = "0.4.4";
+export const GHJK_VERSION = "8d50518";
 export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";
 export const RUST_VERSION = "1.77.1";
 export const DENO_VERSION = "1.43.6";
@@ -9,8 +11,6 @@ export const WASMTIME_VERSION = "21.0.0";
 export const WASMTIME_PY_VERSION = "21.0.0";
 export const TYPEGRAPH_VERSION = "0.0.3";
 export const PRISMA_VERSION = "5.6.0";
-export const METATYPE_VERSION = "0.4.4";
-export const PUBLISHED_VERSION = "0.4.4";
 export const SDK_PACKAGE_NAME_TS = "@typegraph/sdk";
 export const TAGLINE =
   `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.`;
@@ -56,6 +56,9 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     ],
     ['(wasmtime = ").+(")', WASMTIME_VERSION],
     ['(wasmtime-wasi = ").+(")', WASMTIME_VERSION],
+  ],
+  "dev/deps.ts": [
+    [/(.*\/metatypedev\/ghjk\/)[^\/]*(\/.*)/, GHJK_VERSION],
   ],
   "dev/cross.Dockerfile": [["(ARG GHJK_VERSION=).*()", GHJK_VERSION]],
   "dev/Dockerfile": [

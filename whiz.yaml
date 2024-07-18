@@ -11,8 +11,6 @@ gate1: &tp
   command: ghjk x dev-gate1
   pipe:
     "^.+DEBUG http .*$": whiz://http
-  env:
-    TMP_DIR: "./tmp"
 
 gate2:
   <<: *tp
@@ -55,7 +53,7 @@ setup:
     - typegraph/python/pyproject.toml
     - website/package.json
   env:
-    GHJK_VERSION: "0.2.0"
+    GHJK_VERSION: "8d50518"
   command: |
     set -e
     curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh |  bash
@@ -66,4 +64,4 @@ setup:
     ghjk x install-ts
     ghjk x install-website
     ghjk x install-lsp
-    ghjk x install-sys | bash
+    echo 'NOTE: To install system dependencies, do "ghjk x install-sys | bash"'
