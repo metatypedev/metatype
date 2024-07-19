@@ -1360,13 +1360,13 @@
               "ty": "denoFile@v1",
               "key": "dev-gate2",
               "desc": "Launch the typegate in sync mode.",
-              "envKey": "bciqjfazgnyxehqdfwztfmuymn25mgqm3uq5yelkqbpd5bcdkyyr5bdq"
+              "envKey": "bciqaej253rnvikqbu4hmpxwqhth5ylpizpzv3yhlvelloz2czrzr7qq"
             },
             "dev-gate1": {
               "ty": "denoFile@v1",
               "key": "dev-gate1",
               "desc": "Launch the typegate in single-instance mode.",
-              "envKey": "bciqmxq7fex7x2jkdb6dxzvyqcdjopabf6bhclywyvzclkhflp2vi6ci"
+              "envKey": "bciqiyfxxgbnr2ly66jlytns2acoyulonynon35wo7x46mv75w3p5wwy"
             },
             "dev-eg-tgraphs": {
               "ty": "denoFile@v1",
@@ -1744,7 +1744,7 @@
                 }
               ]
             },
-            "bciqmxq7fex7x2jkdb6dxzvyqcdjopabf6bhclywyvzclkhflp2vi6ci": {
+            "bciqiyfxxgbnr2ly66jlytns2acoyulonynon35wo7x46mv75w3p5wwy": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1802,12 +1802,17 @@
                   "val": "7891"
                 },
                 {
+                  "ty": "posix.envVar",
+                  "key": "TMP_DIR",
+                  "val": "/home/joe/Project/metatype/tmp"
+                },
+                {
                   "ty": "ghjk.ports.InstallSetRef",
                   "setId": "ghjkEnvProvInstSet____rust"
                 }
               ]
             },
-            "bciqjfazgnyxehqdfwztfmuymn25mgqm3uq5yelkqbpd5bcdkyyr5bdq": {
+            "bciqaej253rnvikqbu4hmpxwqhth5ylpizpzv3yhlvelloz2czrzr7qq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1863,6 +1868,11 @@
                   "ty": "posix.envVar",
                   "key": "TG_PORT",
                   "val": "7892"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TMP_DIR",
+                  "val": "/home/joe/Project/metatype/tmp"
                 },
                 {
                   "ty": "posix.envVar",

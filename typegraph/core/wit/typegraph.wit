@@ -483,6 +483,25 @@ interface runtimes {
     }
 
     register-typegraph-materializer: func(operation: typegraph-operation) -> result<materializer-id, error>;
+    
+    // kv
+    record kv-runtime-data {
+        endpoint: string,
+        db-number: option<u8>,
+        password: option<string>
+    }
+    
+    register-kv-runtime: func(data: kv-runtime-data) -> result<runtime-id, error>;
+
+    enum kv-materializer {
+        get,
+        set,
+        delete,
+        keys,
+        all,
+    }
+
+    kv-operation: func(base: base-materializer, data: kv-materializer) -> result<materializer-id, error>;
 }
 
 interface aws {
