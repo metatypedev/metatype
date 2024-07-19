@@ -24,7 +24,7 @@
           "specifiedVersion": false
         },
         "bciqngfjdds2gmnwhriiif3fjgqw2hhpm3ssqxlnq4kiwyk53uesmzgy": {
-          "version": "3.30.0",
+          "version": "3.30.1",
           "buildDepConfigs": {
             "curl_aa": {
               "version": "7.81.0",
@@ -219,6 +219,42 @@
           },
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "wit-deps-cli",
+          "locked": true,
+          "specifiedVersion": false
+        },
+        "bciqny2uv3hqjpsra5eribww5ojitk3ndtkf2g44otv4xoi5waxfrwzq": {
+          "version": "2.4.0",
+          "buildDepConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.7.4",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
+            },
+            "rust_rustup": {
+              "version": "1.78.0",
+              "buildDepConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.1",
+                  "buildDepConfigs": {
+                    "git_aa": {
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal",
+              "specifiedVersion": false
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "git-cliff",
           "locked": true,
           "specifiedVersion": false
         },
@@ -646,42 +682,6 @@
           "crateName": "cargo-udeps",
           "locked": true,
           "specifiedVersion": true
-        },
-        "bciqny2uv3hqjpsra5eribww5ojitk3ndtkf2g44otv4xoi5waxfrwzq": {
-          "version": "2.4.0",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.78.0",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.34.1",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": false
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "git-cliff",
-          "locked": true,
-          "specifiedVersion": false
         }
       }
     },
