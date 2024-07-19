@@ -7,13 +7,13 @@ import UpgradeMetatype from "../../shared/upgrade/index.mdx";
 
 ## Introducing the Embedded Typegate
 
-The embedded typegate is a feature that comes with the [Meta CLI](/docs/reference/meta-cli) which provides the option of spinning a typegate instance from the CLI with minimum configurations and installations needed from the developer. All that is required to access the _Embedded Typegate_ is to install _Meta_CLI_. The spawned typegate instance behaves similarly to cloud-deployed typegates.
+The embedded typegate is a feature that comes with the [Meta CLI](/docs/reference/meta-cli) which provides the option of spinning a typegate instance from the CLI with minimum configurations and installations needed from the developer. All that is required to access the _Embedded Typegate_ is to install _Meta CLI_. The spawned typegate instance behaves similarly to cloud-deployed typegates.
 
 ## The motive
 
-There are more than a couple of reasons why a developer would be tempted to use an emedded typegate. While developers can start a typegate instance using docker compose, the developer needs to install docker as a dependency to run the typegate container. Even though docker is familiar among many developers, it can sometimes be tricky and unbeknownst to some developers. We at metatype highly value the developer experience and one reason for adding the _embedded typegate_ feature to the _Meta_CLI_ is for users to have a smooth experience with our system by providing a docker compose free experience.
+There are more than a couple of reasons why a developer would be tempted to use an emedded typegate. While developers can start a typegate instance using docker compose, the developer needs to install docker as a dependency to run the typegate container. Even though docker is familiar among many developers, it can sometimes be tricky and unbeknownst to some developers. We at metatype highly value the developer experience and one reason for adding the _embedded typegate_ feature to the _Meta CLI_ is for users to have a smooth experience with our system by providing a docker compose free experience.
 This feature provides a great utility for developers to author and test typegraphs in their local machine before deploying them to production level typegate instances on the cloud.
-Additionally, developers need not concern themselves with deployment configurations which are needed only during deployment. The only need to focus their energy and time in developing the right application and easily test them on _embedded typegate_ running from the terminal. To add more to what is said, as the typegate engine keeps evolving, users will be abstracted away from the different configurations which might be added on the future. The _Meta_CLI_ will abstract much of what's not needed in a dev environment. Thus, leaving less headaches to developers on new changes.
+Additionally, developers need not concern themselves with deployment configurations which are needed only during deployment. The only need to focus their energy and time in developing the right application and easily test them on _embedded typegate_ running from the terminal. To add more to what is said, as the typegate engine keeps evolving, users will be abstracted away from the different configurations which might be added on the future. The _Meta CLI_ will abstract much of what's not needed in a dev environment. Thus, leaving less headaches to developers on new changes.
 Ultimately, The _embedded typegate_ is designed to be a good dev environment friendly tool which faciliates development time.
 
 ## Quick First hand example
@@ -22,7 +22,7 @@ Ultimately, The _embedded typegate_ is designed to be a good dev environment fri
 
 Either of the two [Typegraph](/docs/reference/typegraph) SDKs are needed to author typegraphs. For this example, the node SDK will be used.
 
-First, make sure the _Meta_CLI_ is installed.
+First, make sure the _Meta CLI_ is installed.
 
 ```shell
 curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/installer.sh | bash

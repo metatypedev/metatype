@@ -1,4 +1,6 @@
 import SDKTabs from "@site/src/components/SDKTabs";
+import PyPmTabs from "@site/src/components/PythonPackageManagerTabs";
+import TsPmTabs from "@site/src/components/TsPackageManagerTabs";
 import TabItem from "@theme/TabItem";
 
 <SDKTabs>
@@ -8,23 +10,48 @@ import TabItem from "@theme/TabItem";
 
 Install the `@typegraph/sdk` package from npm using your preferred package manager and runtime. The SDK requires Node 16+ with Typescript 4.7+, Deno 1.28+ or Bun 1+.
 
-```bash
-# using pnpm
-pnpm add @typegraph/sdk
+  <TsPmTabs>
+    <TabItem value="pnpm">
+      ```bash
+      pnpm add @typegraph/sdk
+      ```
+    </TabItem>
+    <TabItem value="npm">
+      ```bash
+      npm install @typegraph/sdk
+      ```
+    </TabItem>
+    <TabItem value="yarn">
+      ```bash
+      yarn add @typegraph/sdk
+      ```
+    </TabItem>
+    <TabItem value="deno">
+      ```bash
+      import { ... } from "npm:@typegraph/sdk/mod.ts";
+      ```
+    </TabItem>
+    <TabItem value="bun">
+      ```bash
+      bun add @typegraph/sdk
+      ```
+    </TabItem>
+    <TabItem value="jsr">
+      ```bash
+      # deno
+      deno add @typegraph/sdk
 
-# using npm
-npm install @typegraph/sdk
+      # npm (one of the below, depending on your package manager)
+      npx jsr add @typegraph/sdk
+      yarn dlx jsr add @typegraph/sdk
+      pnpm dlx jsr add @typegraph/sdk
+      bunx jsr add @typegraph/sdk
+      ```
+    </TabItem>
 
-# using yarn
-yarn add @typegraph/sdk
+  </TsPmTabs>
 
-# using Deno
-import { ... } from "npm:@typegraph/sdk/mod.ts";
-
-# using Bun
-bun add @typegraph/sdk
-```
-
+<br />
 When using Node, make sure to add this to your Typescript configuration:
 
 ```json
@@ -42,13 +69,14 @@ Create (and activate) your virtual environment with Python 3.8+ for your project
 # virtual env
 python3 -m venv .venv
 source .venv/bin/activate
-
-# using pip
-pip3 install typegraph
-
-# using poetry
-poetry add typegraph
 ```
+
+{" "}
+
+<PyPmTabs>
+  <TabItem value="pip">```bash pip3 install typegraph ```</TabItem>
+  <TabItem value="poetry">```bash poetry add typegraph ```</TabItem>
+</PyPmTabs>
 
   </TabItem>
 </SDKTabs>

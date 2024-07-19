@@ -2,10 +2,15 @@ import EmbeddedTypegate from "../meta-cli/embedded-typegate.mdx";
 
 ### Using Embedded Typegate (Recommended)
 
-<EmbeddedTypegate />
+```shell
+meta typegate
+```
 
-### Using Docker
+The typegate instance runs on port `7890` by default. You can check if the typegate node is running by accessing [http://localhost:7890](http://localhost:7890) in your browser.
 
+<details>
+  <summary> Using docker (Not Recommended) </summary>
+  
 Install [Docker](https://docs.docker.com/get-docker/) and use the following `compose.yml` to launch a typegate node. For multi-instance production workloads, Redis and an S3 object store provider are required but the typegate will run using in-memory stores if no `SYNC_*` environment variable is detected. More details can be found [here](/docs/reference/typegate/synchronization). In practice you might also want to add a database or other systems that the typegate can connect to.
 
 ```yml
@@ -30,3 +35,5 @@ docker compose up --detach
 # watch the typegate logs
 docker compose logs typegate --follow
 ```
+
+</details>
