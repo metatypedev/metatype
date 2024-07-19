@@ -66,6 +66,7 @@ impl Test {
                     "temporal",
                     "deno",
                     "poetry",
+                    "xtask",
                 ]
                 .into_iter()
                 .map(str::to_owned)
@@ -144,6 +145,7 @@ impl Bench {
                     "temporal",
                     "deno",
                     "poetry",
+                    "xtask",
                 ]
                 .into_iter()
                 .map(str::to_owned)

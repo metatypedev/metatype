@@ -4,7 +4,7 @@
 import { Meta } from "test-utils/mod.ts";
 import { projectDir } from "@dev/utils.ts";
 import { $ } from "@dev/deps.ts";
-import { PUBLISHED_VERSION } from "@dev/consts.ts";
+import { PUBLISHED_VERSION, PYTHON_VERSION } from "@dev/consts.ts";
 import { download } from "download";
 import { Untar } from "std/archive/untar.ts";
 import { readerFromIterable } from "std/streams/mod.ts";
@@ -14,7 +14,7 @@ import { Lines } from "test-utils/process.ts";
 import { newTempDir } from "test-utils/dir.ts";
 import { transformSyncConfig } from "@typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
-import { assertEquals } from "std/assert/assert_equals.ts";
+import { assertEquals } from "std/assert/mod.ts";
 
 const previousVersion = PUBLISHED_VERSION;
 
@@ -75,7 +75,7 @@ async function checkMetaBin(path: typeof tempDir, version: string) {
 }
 
 // download the fat version of the cli on the latest stable release
-async function downloadAndExtractAsset(version: string) {
+export async function downloadAndExtractCli(version: string) {
   const name = getAssetName(version);
   const extractTargetDir = tempDir.join(name);
   const metaBin = extractTargetDir.join("meta");
@@ -121,6 +121,7 @@ async function downloadAndExtractAsset(version: string) {
   return metaBin.toString();
 }
 
+// This also tests the published NPM version of the SDK
 Meta.test(
   {
     name: "typegate upgrade",
@@ -135,7 +136,7 @@ Meta.test(
   async (t) => {
     let publishedBin: string = "";
     await t.should("download published cli (fat version)", async () => {
-      publishedBin = await downloadAndExtractAsset(previousVersion);
+      publishedBin = await downloadAndExtractCli(previousVersion);
     });
 
     const metaBinDir = $.path(publishedBin).parent()!.toString();
@@ -145,6 +146,9 @@ Meta.test(
 
     const typegateTempDir = await newTempDir();
     const repoDir = await newTempDir();
+    t.addCleanup(() =>
+      $.co([$.removeIfExists(typegateTempDir), $.removeIfExists(repoDir)])
+    );
 
     const proc = new Deno.Command("meta", {
       args: ["typegate"],
@@ -215,7 +219,7 @@ Meta.test(
 
     await t.should("successfully deploy on the published version", async () => {
       const command =
-        `meta deploy --target dev --max-parallel-loads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
+        `meta deploy --target dev --threads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
       const res = await $`bash -c ${command}`
         .cwd(examplesDir.join("typegraphs"))
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
@@ -276,5 +280,147 @@ Meta.test(
     });
 
     await Deno.remove(typegateTempDir, { recursive: true });
+  },
+);
+
+Meta.test(
+  {
+    name: "published SDK tests",
+    // ignore: true,
+    async setup() {
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
+    },
+    async teardown() {
+      await clearSyncData(syncConfig);
+    },
+  },
+  async (t) => {
+    let publishedBin: string = "";
+    await t.should("download published cli (fat version)", async () => {
+      publishedBin = await downloadAndExtractCli(previousVersion);
+    });
+    const metaBinDir = $.path(publishedBin).parent()!.toString();
+
+    const tmpDir = $.path(t.tempDir);
+    const tgSecret = encodeBase64(
+      globalThis.crypto.getRandomValues(new Uint8Array(64)),
+    );
+
+    const typegateTempDir = await tmpDir.join(".metatype").ensureDir();
+
+    const proc = $`bash -c 'meta typegate'`
+      .env({
+        PATH: `${metaBinDir}:${Deno.env.get("PATH")}`,
+        TG_SECRET: tgSecret,
+        TG_ADMIN_PASSWORD: "password",
+        TMP_DIR: typegateTempDir.toString(),
+        TG_PORT: "7899",
+        // TODO should not be necessary
+        VERSION: previousVersion,
+        DEBUG: "true",
+        ...syncEnvs,
+      })
+      .stdout("piped")
+      .noThrow()
+      .spawn();
+
+    const stdout = new Lines(proc.stdout());
+    await stdout.readWhile((line) => {
+      console.error("typegate>", line);
+      return !line.includes("typegate ready on 7899");
+    });
+
+    const tgsDir = $.path(await newTempDir());
+    t.addCleanup(() => $.removeIfExists(tgsDir));
+
+    await tgsDir.join("metatype.yml").writeText(`
+typegates:
+  dev:
+    url: "http://localhost:7891"
+    username: admin
+    password: password
+    secrets:
+      roadmap-func:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_func"
+        BASIC_andim: hunter2
+
+typegraphs:
+  materializers:
+    prisma:
+      migrations_path: "migrations"
+`);
+    await t.should("work with JSR npm", async () => {
+      const npmJsrDir = await tgsDir.join("npm_jsr").ensureDir();
+      await $`pnpm init`.cwd(npmJsrDir);
+      await $`pnpm dlx jsr add @typegraph/sdk@${PUBLISHED_VERSION}`.cwd(
+        npmJsrDir,
+      );
+      await $.co([
+        $.path("examples/typegraphs/func.ts").copy(npmJsrDir.join("tg.ts")),
+        $.path("examples/typegraphs/scripts").copyToDir(npmJsrDir),
+        $.path("examples/templates/node/tsconfig.json").copyToDir(npmJsrDir),
+        npmJsrDir
+          .join("package.json")
+          .readJson()
+          .then((pkg) =>
+            npmJsrDir
+              .join("package.json")
+              .writeJson({ ...(pkg as object), type: "module" })
+          ),
+      ]);
+
+      const command =
+        `meta deploy --target dev --allow-dirty --gate http://localhost:7899 -vvv`;
+      await $`bash -c ${command}`
+        .cwd(npmJsrDir)
+        .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
+        .env("MCLI_LOADER_CMD", "pnpm dlx tsx");
+    });
+
+    await t.should("work with JSR deno", async () => {
+      const denoJsrDir = await tgsDir.join("deno_jsr").ensureDir();
+      await denoJsrDir.join("deno.json").writeJson({});
+      await $`bash -c 'deno add @typegraph/sdk@${PUBLISHED_VERSION}'`.cwd(
+        denoJsrDir,
+      );
+      await $.co([
+        $.path("examples/typegraphs/func.ts").copy(denoJsrDir.join("tg.ts")),
+        $.path("examples/typegraphs/scripts").copyToDir(denoJsrDir),
+      ]);
+
+      const command =
+        `meta deploy --target dev --allow-dirty --gate http://localhost:7899 -vvv`;
+      await $`bash -c ${command}`
+        .cwd(denoJsrDir)
+        .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
+        .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`);
+    });
+
+    await t.should("work with pypa", async () => {
+      const pypaDir = await tgsDir.join("pypa").ensureDir();
+      await $
+        .raw`poetry init -n --python=${PYTHON_VERSION} --dependency=typegraph:${PUBLISHED_VERSION}`
+        .cwd(
+          pypaDir,
+        );
+      await $.co([
+        $.raw`poetry install`.cwd(pypaDir),
+        $.path("examples/typegraphs/func.py").copy(pypaDir.join("tg.py")),
+        $.path("examples/typegraphs/scripts").copyToDir(pypaDir),
+      ]);
+
+      const command =
+        `poetry env use python && meta deploy --target dev --allow-dirty --gate http://localhost:7899 -vvv`;
+      await $`bash -c ${command}`
+        .cwd(pypaDir)
+        .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
+        .env("MCLI_LOADER_PY", `poetry run python`);
+    });
+
+    proc.kill("SIGKILL");
+    const status = await proc;
+    console.log({ status });
+    await stdout.close();
   },
 );

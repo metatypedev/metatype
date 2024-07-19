@@ -153,6 +153,7 @@ pub async fn launch_typegate_deno(
     let tmp_dir = std::env::var("TMP_DIR")
         .map(|p| PathBuf::from_str(&p).expect("invalid $TMP_DIR"))
         .unwrap();
+    tokio::fs::create_dir_all(&tmp_dir).await?;
     let gitignore = tmp_dir.join(".gitignore");
     if matches!(tokio::fs::try_exists(&gitignore).await, Err(_) | Ok(false)) {
         tokio::fs::write(gitignore, "*").await?;
