@@ -4,6 +4,7 @@
 import { Meta } from "test-utils/mod.ts";
 import { projectDir } from "@dev/utils.ts";
 import { $ } from "@dev/deps.ts";
+import { PUBLISHED_VERSION } from "@dev/consts.ts";
 import { download } from "download";
 import { Untar } from "std/archive/untar.ts";
 import { readerFromIterable } from "std/streams/mod.ts";
@@ -14,8 +15,6 @@ import { newTempDir } from "test-utils/dir.ts";
 import { transformSyncConfig } from "@typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
 import { assertEquals } from "std/assert/assert_equals.ts";
-
-const PUBLISHED_VERSION = "0.4.4";
 
 const previousVersion = PUBLISHED_VERSION;
 

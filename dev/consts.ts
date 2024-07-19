@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-export const METATYPE_VERSION = "0.4.5";
-export const PUBLISHED_VERSION = "0.4.4";
+export const METATYPE_VERSION = "0.4.6-0";
+export const PUBLISHED_VERSION = "0.4.5";
 export const GHJK_VERSION = "8d50518";
 export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";
 export const RUST_VERSION = "1.77.1";
@@ -32,9 +32,6 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   ],
   "typegate/tests/**/*.snap": [
     [/(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)/, METATYPE_VERSION],
-  ],
-  "typegate/tests/e2e/upgrade/upgrade_test.ts": [
-    [/(const\s+PUBLISHED_VERSION\s*=\s*").+(";)/, PUBLISHED_VERSION],
   ],
   "typegraph/python/typegraph/__init__.py": [
     ['(version = ").+(")', METATYPE_VERSION],

@@ -646,6 +646,42 @@
           "crateName": "cargo-udeps",
           "locked": true,
           "specifiedVersion": true
+        },
+        "bciqny2uv3hqjpsra5eribww5ojitk3ndtkf2g44otv4xoi5waxfrwzq": {
+          "version": "2.4.0",
+          "buildDepConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.7.4",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
+            },
+            "rust_rustup": {
+              "version": "1.78.0",
+              "buildDepConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.1",
+                  "buildDepConfigs": {
+                    "git_aa": {
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal",
+              "specifiedVersion": false
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "git-cliff",
+          "locked": true,
+          "specifiedVersion": false
         }
       }
     },
@@ -666,7 +702,7 @@
               "installs": [
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet____rust": {
               "installs": [
@@ -674,7 +710,7 @@
                 "bciqbrychkfu7qrjhcg77jbagzhlyva6yrzudd3szh7jrdncgswcmhci",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet___dev": {
               "installs": [
@@ -682,6 +718,7 @@
                 "bciqaox52l2fs7w5rlyppdc4jq2t4fr2dnt5zyx32ljqrmcwlrthlgkq",
                 "bciqonsgjkby5ii3ovd3etz7sn4h4zdunidy2ikwuzwbbi6emcvyglky",
                 "bciqftdi7dnyibxcqyipcregan6x7rq7x3knxehwznowebxje5nnt4jq",
+                "bciqaua6dxbrmegvkfhanmhyptnl3x67ucovsv7725d666ts5ic2h74y",
                 "bciqakdwqj7fgoikxq7k3hkyubhinoxolv7f4efxc2ruofmfrf4fltjq",
                 "bciqhmxwybpauxkvdt25peyg7f2szfywk2tln5knul5ljknbfwfqau5y",
                 "bciqfuxxzar7qdvo2ojexjrxqikhfelril5c7oifep4obqstm3n7ufky",
@@ -700,7 +737,7 @@
                 "bciqihumb3qmuc2xesnyf3jne7usbjxw7dk52qq53nrvvzex335qbuby",
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet____ecma": {
               "installs": [
@@ -709,7 +746,7 @@
                 "bciqk76ralarrfscv72jgxo3mxwhpvy4z3hyb3pliuhgbvwf7mevwrqi",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet____python": {
               "installs": [
@@ -718,7 +755,7 @@
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet____wasm": {
               "installs": [
@@ -728,7 +765,7 @@
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet___ci": {
               "installs": [
@@ -750,7 +787,7 @@
                 "bciqihumb3qmuc2xesnyf3jne7usbjxw7dk52qq53nrvvzex335qbuby",
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet_______task_env_lint-udeps": {
               "installs": [
@@ -758,7 +795,7 @@
                 "bciqhxbg6yxnlod6cx6ysrxsgq3ejqvoi6dxtrezzq3chnqfs2xd664y",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet_______task_env_dev-website": {
               "installs": [
@@ -770,7 +807,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet_______task_env_test-rust": {
               "installs": [
@@ -784,7 +821,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet_______task_env_dev-eg-tgraphs": {
               "installs": [
@@ -798,7 +835,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-core": {
               "installs": [
@@ -810,7 +847,7 @@
                 "bciqihumb3qmuc2xesnyf3jne7usbjxw7dk52qq53nrvvzex335qbuby",
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-py": {
               "installs": [
@@ -825,7 +862,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-ts": {
               "installs": [
@@ -840,7 +877,7 @@
                 "bciqn5efsjq6kax6nmtia2b7jjvqmsfqzgvisnz5lno5u7seuheydy3i",
                 "bciqk76ralarrfscv72jgxo3mxwhpvy4z3hyb3pliuhgbvwf7mevwrqi"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet_______task_env_build-sys-tgraphs": {
               "installs": [
@@ -851,7 +888,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             },
             "ghjkEnvProvInstSet___oci": {
               "installs": [
@@ -863,7 +900,7 @@
                 "bciqihumb3qmuc2xesnyf3jne7usbjxw7dk52qq53nrvvzex335qbuby",
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq"
               ],
-              "allowedBuildDeps": "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i"
+              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
             }
           }
         }
@@ -1948,7 +1985,7 @@
           "portRef": "rustup_rustlang@0.1.0"
         }
       },
-      "bciqgjgbaqqt62wuy6vo56jso6d2lw3cc2ao47ffkps7a5dtb6yjp6pa": {
+      "bciqfx5vcmpn7jwp5g4rtcwatrzifrnbjxpacqp5sqabmt24mda3vbka": {
         "manifest": {
           "ty": "denoWorker@v1",
           "name": "rust_rustup",
@@ -1981,6 +2018,7 @@
           "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/ports/rust.ts"
         },
         "defaultInst": {
+          "version": "1.77.1",
           "portRef": "rust_rustup@0.1.0"
         }
       },
@@ -2103,14 +2141,14 @@
           "portRef": "node_org@0.1.0"
         }
       },
-      "bciqmog334kddvt4434twkcecuy4givs6df2l5dysofcvlnamvumil5i": {
+      "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma": {
         "tar_aa": "bciqb6ua63xodzwxngnbjq35hfikiwzb3dclbqkc7e6xgjdt5jin4pia",
         "git_aa": "bciqfl5s36w335ducrb6f6gwb3vuwup7vzqwwg67pq42xtkngsnxqobi",
         "curl_aa": "bciqcfe7qyxmokpn6pgtaj35r5qg74jkehuu6cvyrtcsnegvwlm64oqy",
         "unzip_aa": "bciqgkpwxjmo5phw5se4ugyiz4xua3xrd54quzmk7wdwpq3vghglogjy",
         "zstd_aa": "bciqmcvyepuficjj3mwshsbfecwdmzch5gwxqo557icnq4zujtdllh4a",
         "rustup_rustlang": "bciqfxspjch33ejyj46gipjw6xqgcntfzm76ynjbzftuthwvtqt6ybey",
-        "rust_rustup": "bciqgjgbaqqt62wuy6vo56jso6d2lw3cc2ao47ffkps7a5dtb6yjp6pa",
+        "rust_rustup": "bciqfx5vcmpn7jwp5g4rtcwatrzifrnbjxpacqp5sqabmt24mda3vbka",
         "cargo_binstall_ghrel": "bciqp5j2fc6xqmgwv3ytmsjknua5yvldkt5axklupllrysfh5fc67nyq",
         "pnpm_ghrel": "bciqgq2kt6syo44zm5tvukb4xux7hgrtxj6qi4ois5abeg26ufjonp3a",
         "asdf_plugin_git": "bciqf3zz4dsl3hoaitqaokbt3flhjazjibr5st6mijnxcczpnc6a7zai",
@@ -2303,6 +2341,50 @@
           "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/ports/cargobi.ts"
         },
         "crateName": "wit-deps-cli",
+        "locked": true
+      },
+      "bciqaua6dxbrmegvkfhanmhyptnl3x67ucovsv7725d666ts5ic2h74y": {
+        "buildDepConfigs": {
+          "rust_rustup": {
+            "portRef": "rust_rustup@0.1.0",
+            "profile": "minimal"
+          }
+        },
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cargobi_cratesio",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cargo_binstall_ghrel"
+            },
+            {
+              "name": "rust_rustup"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/ports/cargobi.ts"
+        },
+        "crateName": "git-cliff",
         "locked": true
       },
       "bciqakdwqj7fgoikxq7k3hkyubhinoxolv7f4efxc2ruofmfrf4fltjq": {

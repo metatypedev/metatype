@@ -32,7 +32,12 @@ env("main")
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
   })
-  .allowedBuildDeps(...stdDeps(), installs.python_latest, installs.node);
+  .allowedBuildDeps(
+    ...stdDeps(),
+    installs.python_latest,
+    installs.node,
+    installs.rust_stable,
+  );
 
 env("_rust").install(
   // use rustup for the actual toolchain
@@ -112,6 +117,7 @@ env("dev")
     ports.act(),
     ports.cargobi({ crateName: "whiz", locked: true }),
     ports.cargobi({ crateName: "wit-deps-cli", locked: true }),
+    ports.cargobi({ crateName: "git-cliff", locked: true }),
   );
 
 task("version-print", () => console.log(METATYPE_VERSION), {
