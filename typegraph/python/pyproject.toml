@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph"
-version = "0.4.4"
+version = "0.4.5"
 description = "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license = "MPL-2.0"

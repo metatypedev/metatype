@@ -1,4 +1,4 @@
-import { METATYPE_VERSION } from "./dev/consts.ts";
+import { METATYPE_VERSION, PUBLISHED_VERSION } from "./dev/consts.ts";
 import { file, ports, sedLock, semver, stdDeps } from "./dev/deps.ts";
 import installs from "./dev/installs.ts";
 import tasksBuild from "./dev/tasks-build.ts";
@@ -37,7 +37,8 @@ env("main")
 env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v24.1" }),
-  ports.pipi({ packageName: "cmake" })[0],
+  // TODO: add default param for cmake port
+  ports.cmake({})[0],
 );
 
 if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
@@ -143,12 +144,18 @@ task("version-bump", async ($) => {
     ),
   );
 
+  $.logStep(`Bumping ${METATYPE_VERSION} → ${newVersion}`);
   const lines = [[/^(export const METATYPE_VERSION = ").*(";)$/, newVersion]];
-  if (bump !== "prerelease") {
-    lines.push([/^(export const PUBLISHED_VERSION = ").*(";)$/, newVersion]);
+  if (bump === "prerelease") {
+    $.logStep(
+      `Bumping published version ${PUBLISHED_VERSION} → ${METATYPE_VERSION}`,
+    );
+    lines.push([
+      /^(export const PUBLISHED_VERSION = ").*(";)$/,
+      METATYPE_VERSION,
+    ]);
   }
 
-  $.logStep(`Bumping ${METATYPE_VERSION} → ${newVersion}`);
   await sedLock($.workingDir, {
     lines: {
       "./dev/consts.ts": lines,

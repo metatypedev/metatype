@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const deindent = require("de-indent");
 const path = require("path");
-const { spawn } = require("child_process");
+//const { spawn } = require("child_process");
 
 const projectDir = path.resolve(__dirname, "../..");
 
@@ -24,6 +24,7 @@ module.exports = async function (source) {
   const ext = relPath.split(".").pop();
   const prefix = commentsPrefix[ext];
 
+  /*
   if (ext === "py") {
     source = await new Promise((resolve, reject) => {
       const child = spawn("ruff", ["format", "--line-length", "70", "-"]);
@@ -45,8 +46,8 @@ module.exports = async function (source) {
         }
       });
     });
-    console.log(this.resourcePath, source);
   }
+  */
 
   const ret = [];
   let skipping = false;

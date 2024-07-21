@@ -19,6 +19,14 @@ import Heading from "@theme/Heading";
 function Header() {
   return (
     <header className="bg-gradient-to-b from-slate-200 from-0% to-white to-100%">
+      <div className="flex justify-end mt-5 mr-5 mb-0">
+        <Link to="https://devhunt.org/tool/metatype">
+          <img
+            src="images/homepage/devhunt_tab_solid.svg"
+            alt="Devhunt result"
+          />
+        </Link>
+      </div>
       <div className="container text-center py-12">
         <div className="rounded-full bg-white w-40 h-40 flex px-6 m-auto mb-10">
           <img src="images/logo.svg" alt="Metatype logo" />
