@@ -63,9 +63,14 @@ Meta.test(
       stderr: "piped",
       stdin: "piped",
     }).spawn();
-
     const stderr = new Lines(metadev.stderr);
     const stdin = new LineWriter(metadev.stdin);
+
+    t.addCleanup(async () => {
+      await stderr.close();
+      await stdin.close();
+      await killProcess(metadev);
+    });
 
     await stderr.readWhile((line) => {
       // console.log("meta dev>", line);
@@ -129,10 +134,6 @@ Meta.test(
         })
         .on(e);
     });
-
-    await stderr.close();
-    await stdin.close();
-    await killProcess(metadev);
   },
 );
 
@@ -185,6 +186,12 @@ Meta.test(
 
     const stderr = new Lines(metadev.stderr);
     const stdin = new LineWriter(metadev.stdin);
+
+    t.addCleanup(async () => {
+      await stderr.close();
+      await stdin.close();
+      await killProcess(metadev);
+    });
 
     await stderr.readWhile((line) => {
       // console.log("line:", line);
@@ -244,10 +251,6 @@ Meta.test(
     await t.should("have removed latest migration", async () => {
       assert((await listSubdirs(migrationsDir)).length === 1);
     });
-
-    await stderr.close();
-    await stdin.close();
-    await killProcess(metadev);
   },
 );
 
@@ -264,7 +267,14 @@ Meta.test("meta dev with typegate", async (t) => {
   }).spawn();
   const stderr = new Lines(metadev.stderr);
   const stdout = new Lines(metadev.stdout);
-
+  t.addCleanup(async () => {
+    await stderr.close();
+    await stdout.close();
+    // FIXME: it still leaks the child typegate process even
+    // though we the cli has a ctrl_c handler
+    metadev.kill("SIGTERM");
+    await metadev.status;
+  });
   const deployed: [string, string][] = [];
 
   console.log(new Date());
@@ -335,7 +345,4 @@ Meta.test("meta dev with typegate", async (t) => {
       ["triggers.ts", "triggers"],
     ]);
   });
-
-  await stderr.close();
-  await killProcess(metadev);
 });

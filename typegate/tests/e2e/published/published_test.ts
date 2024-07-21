@@ -222,8 +222,7 @@ Meta.test(
         `meta deploy --target dev --threads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
       const res = await $`bash -c ${command}`
         .cwd(examplesDir.join("typegraphs"))
-        .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        .env("MCLI_LOADER_CMD", "npm x tsx");
+        .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`);
       console.log(res);
     });
 
@@ -405,7 +404,7 @@ typegraphs:
           pypaDir,
         );
       await $.co([
-        $.raw`poetry install`.cwd(pypaDir),
+        $`bash -c 'poetry env use python && poetry install'`.cwd(pypaDir),
         $.path("examples/typegraphs/func.py").copy(pypaDir.join("tg.py")),
         $.path("examples/typegraphs/scripts").copyToDir(pypaDir),
       ]);
