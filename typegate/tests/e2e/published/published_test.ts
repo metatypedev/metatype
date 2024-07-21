@@ -195,10 +195,10 @@ Meta.test(
           }
         }
 
-        // FIXME: we clean out the deno.json used by the examples
-        // before adding the published version due to usage of two
-        // import maps for @typegraph/sdk
-        // remove this line after 0.4.6 is published
+        // NOTE: we clean out the deno.json used by the examples
+        // before adding the published version
+        // by default @typegraph/sdk/ needs that trailing slash
+        // due to https://github.com/WICG/import-maps?tab=readme-ov-file#packages-via-trailing-slashes
         await examplesDir.join("deno.json").writeJson({});
         await $.raw`bash -c 'deno add @typegraph/sdk@${previousVersion}'`
           .cwd(examplesDir)

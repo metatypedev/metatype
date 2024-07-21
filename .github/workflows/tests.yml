@@ -291,8 +291,7 @@ jobs:
             typegate/tests/e2e/self_deploy/self_deploy.ts \
             typegate/tests/metagen/typegraphs/metagen.ts \
             typegraph/deno/sdk/src/*.ts \
-            dev/deps.ts \
-            dev/utils.ts
+            dev/*.ts
 
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 

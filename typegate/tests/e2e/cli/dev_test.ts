@@ -264,6 +264,9 @@ Meta.test("meta dev with typegate", async (t) => {
     args: ["dev"],
     stdout: "piped",
     stderr: "piped",
+    env: {
+      MCLI_LOADER_CMD: "deno run -A --config deno.json",
+    },
   }).spawn();
   const stderr = new Lines(metadev.stderr);
   const stdout = new Lines(metadev.stdout);
