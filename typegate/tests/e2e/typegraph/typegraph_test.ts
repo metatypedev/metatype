@@ -5,7 +5,6 @@ import { expandGlob } from "std/fs/expand_glob.ts";
 import { dirname, fromFileUrl } from "std/path/mod.ts";
 import { Meta } from "../../utils/mod.ts";
 import { MetaTest } from "../../utils/test.ts";
-import { $ } from "@dev/deps.ts";
 
 export const thisDir = dirname(fromFileUrl(import.meta.url));
 
@@ -30,8 +29,6 @@ async function testSerializeAll(t: MetaTest, path: string) {
 }
 
 Meta.test("typegraphs creation", async (t) => {
-  await $.co([
-    testSerializeAll(t, "typegraphs/python/*.py"),
-    testSerializeAll(t, "typegraphs/deno/*.ts"),
-  ]);
+  await testSerializeAll(t, "typegraphs/python/*.py");
+  await testSerializeAll(t, "typegraphs/deno/*.ts");
 });

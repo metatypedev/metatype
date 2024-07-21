@@ -702,7 +702,7 @@
               "installs": [
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet____rust": {
               "installs": [
@@ -710,7 +710,7 @@
                 "bciqbrychkfu7qrjhcg77jbagzhlyva6yrzudd3szh7jrdncgswcmhci",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet___dev": {
               "installs": [
@@ -737,7 +737,7 @@
                 "bciqihumb3qmuc2xesnyf3jne7usbjxw7dk52qq53nrvvzex335qbuby",
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet____ecma": {
               "installs": [
@@ -746,7 +746,7 @@
                 "bciqk76ralarrfscv72jgxo3mxwhpvy4z3hyb3pliuhgbvwf7mevwrqi",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet____python": {
               "installs": [
@@ -755,7 +755,7 @@
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet____wasm": {
               "installs": [
@@ -765,7 +765,7 @@
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet___ci": {
               "installs": [
@@ -787,7 +787,7 @@
                 "bciqihumb3qmuc2xesnyf3jne7usbjxw7dk52qq53nrvvzex335qbuby",
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet_______task_env_lint-udeps": {
               "installs": [
@@ -795,7 +795,7 @@
                 "bciqhxbg6yxnlod6cx6ysrxsgq3ejqvoi6dxtrezzq3chnqfs2xd664y",
                 "bciqamrjz2xxx5gxex2xc3fyttudt2fvu2bjvea5kqcwwnvbl2orlbaq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet_______task_env_dev-website": {
               "installs": [
@@ -807,7 +807,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet_______task_env_test-rust": {
               "installs": [
@@ -821,7 +821,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet_______task_env_dev-eg-tgraphs": {
               "installs": [
@@ -835,7 +835,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-core": {
               "installs": [
@@ -847,7 +847,7 @@
                 "bciqihumb3qmuc2xesnyf3jne7usbjxw7dk52qq53nrvvzex335qbuby",
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-py": {
               "installs": [
@@ -862,7 +862,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-ts": {
               "installs": [
@@ -877,7 +877,7 @@
                 "bciqn5efsjq6kax6nmtia2b7jjvqmsfqzgvisnz5lno5u7seuheydy3i",
                 "bciqk76ralarrfscv72jgxo3mxwhpvy4z3hyb3pliuhgbvwf7mevwrqi"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet_______task_env_build-sys-tgraphs": {
               "installs": [
@@ -888,7 +888,7 @@
                 "bciqcvyjgjkhhqrpxn2t5bewd43yvwujqzapshcuwr2btmxbsobtb7iy",
                 "bciqbml3tljo3tngxutpjcevr4pdgqkvh6cvfznrplrchqvke5m7kd7q"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             },
             "ghjkEnvProvInstSet___oci": {
               "installs": [
@@ -900,7 +900,7 @@
                 "bciqihumb3qmuc2xesnyf3jne7usbjxw7dk52qq53nrvvzex335qbuby",
                 "bciqknnob6elrfg7cgnejgi3vybmixx26dfiwn2tlanflkuqk3mrejkq"
               ],
-              "allowedBuildDeps": "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma"
+              "allowedBuildDeps": "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda"
             }
           }
         }
@@ -1985,7 +1985,7 @@
           "portRef": "rustup_rustlang@0.1.0"
         }
       },
-      "bciqfx5vcmpn7jwp5g4rtcwatrzifrnbjxpacqp5sqabmt24mda3vbka": {
+      "bciqexwxc46otat77pacsu22x7p3ibqivtiezh3aqhgwl5uwu3glyv7q": {
         "manifest": {
           "ty": "denoWorker@v1",
           "name": "rust_rustup",
@@ -2018,7 +2018,7 @@
           "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/ports/rust.ts"
         },
         "defaultInst": {
-          "version": "1.77.1",
+          "version": "1.79.0",
           "portRef": "rust_rustup@0.1.0"
         }
       },
@@ -2141,14 +2141,14 @@
           "portRef": "node_org@0.1.0"
         }
       },
-      "bciqhlq3c3nooycgjfltina3xibzbhqxgjjkyqxdzpft4pn3dca37zma": {
+      "bciqbxqgxii3igrifu254uog6ttjcagotbhy4vmznjm7bpkskgsf6yda": {
         "tar_aa": "bciqb6ua63xodzwxngnbjq35hfikiwzb3dclbqkc7e6xgjdt5jin4pia",
         "git_aa": "bciqfl5s36w335ducrb6f6gwb3vuwup7vzqwwg67pq42xtkngsnxqobi",
         "curl_aa": "bciqcfe7qyxmokpn6pgtaj35r5qg74jkehuu6cvyrtcsnegvwlm64oqy",
         "unzip_aa": "bciqgkpwxjmo5phw5se4ugyiz4xua3xrd54quzmk7wdwpq3vghglogjy",
         "zstd_aa": "bciqmcvyepuficjj3mwshsbfecwdmzch5gwxqo557icnq4zujtdllh4a",
         "rustup_rustlang": "bciqfxspjch33ejyj46gipjw6xqgcntfzm76ynjbzftuthwvtqt6ybey",
-        "rust_rustup": "bciqfx5vcmpn7jwp5g4rtcwatrzifrnbjxpacqp5sqabmt24mda3vbka",
+        "rust_rustup": "bciqexwxc46otat77pacsu22x7p3ibqivtiezh3aqhgwl5uwu3glyv7q",
         "cargo_binstall_ghrel": "bciqp5j2fc6xqmgwv3ytmsjknua5yvldkt5axklupllrysfh5fc67nyq",
         "pnpm_ghrel": "bciqgq2kt6syo44zm5tvukb4xux7hgrtxj6qi4ois5abeg26ufjonp3a",
         "asdf_plugin_git": "bciqf3zz4dsl3hoaitqaokbt3flhjazjibr5st6mijnxcczpnc6a7zai",

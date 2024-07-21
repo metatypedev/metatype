@@ -146,9 +146,14 @@ Meta.test(
 
     const typegateTempDir = await newTempDir();
     const repoDir = await newTempDir();
-    t.addCleanup(() =>
-      $.co([$.removeIfExists(typegateTempDir), $.removeIfExists(repoDir)])
-    );
+    const examplesDir = $.path(await newTempDir());
+    /* t.addCleanup(() =>
+      $.co([
+        $.removeIfExists(typegateTempDir),
+        $.removeIfExists(repoDir),
+        $.removeIfExists(examplesDir),
+      ])
+    ); */
 
     const proc = new Deno.Command("meta", {
       args: ["typegate"],
@@ -167,19 +172,21 @@ Meta.test(
       // stderr: "piped",
     }).spawn();
 
-    const examplesDir = $.path(repoDir).join("metatype/examples");
-
     await t.should(
       "download example typegraphs for the published version",
       async () => {
         const tag = `v${previousVersion}`;
 
-        await $`git clone https://github.com/metatypedev/metatype.git --depth 1 --branch ${tag} --quiet`
+        // FIXME: cache across test runs
+        await $`git clone https://github.com/metatypedev/metatype.git --depth 1 --branch ${tag}`
           .cwd(repoDir)
           .stdout("piped")
           .stderr("piped")
           .printCommand();
 
+        await $.path(repoDir).join("metatype/examples").copy(examplesDir, {
+          overwrite: true,
+        });
         const typegraphsDir = examplesDir.join("typegraphs");
         for await (const entry of typegraphsDir.readDir()) {
           const path = typegraphsDir.relative(entry.path);
@@ -188,13 +195,13 @@ Meta.test(
           }
         }
 
-        await $`pnpm install`
-          .cwd(examplesDir.join("typegraphs"))
-          .stdout("inherit")
-          .printCommand();
-
-        await $.raw`pnpm add @typegraph/sdk@${previousVersion}`
-          .cwd(examplesDir.join("typegraphs"))
+        // FIXME: we clean out the deno.json used by the examples
+        // before adding the published version due to usage of two
+        // import maps for @typegraph/sdk
+        // remove this line after 0.4.6 is published
+        await examplesDir.join("deno.json").writeJson({});
+        await $.raw`bash -c 'deno add @typegraph/sdk@${previousVersion}'`
+          .cwd(examplesDir)
           .env("NPM_CONFIG_REGISTRY", "https://registry.npmjs.org")
           .stdout("inherit")
           .printCommand();
@@ -285,7 +292,6 @@ Meta.test(
 Meta.test(
   {
     name: "published SDK tests",
-    // ignore: true,
     async setup() {
       await clearSyncData(syncConfig);
       await setupSync(syncConfig);

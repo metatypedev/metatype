@@ -11,9 +11,11 @@ use common::typegraph::{runtimes::TGRuntime, Materializer};
 use crate::interlude::*;
 
 pub struct StubbedFunction {
+    #[allow(unused)]
     pub id: u32,
     pub node: TypeNode,
     pub mat: Materializer,
+    #[allow(unused)]
     pub runtime: Rc<TGRuntime>,
 }
 

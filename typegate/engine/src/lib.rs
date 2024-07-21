@@ -159,7 +159,7 @@ pub async fn launch_typegate_deno(
         tokio::fs::write(gitignore, "*").await?;
     }
 
-    let permissions = deno_runtime::permissions::PermissionsOptions {
+    let permissions = deno_runtime::deno_permissions::PermissionsOptions {
         allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
         allow_sys: Some(vec![]),
         allow_env: Some(vec![]),
@@ -196,7 +196,7 @@ fn op_get_version() -> &'static str {
 mod tests {
     use crate::interlude::*;
 
-    use deno_runtime::permissions::PermissionsOptions;
+    use deno_runtime::deno_permissions::PermissionsOptions;
 
     #[test]
     #[ignore]

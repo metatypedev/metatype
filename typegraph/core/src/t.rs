@@ -237,7 +237,7 @@ pub struct OptionalBuilder {
 impl Default for TypeOptional {
     fn default() -> Self {
         Self {
-            of: u32::max_value(),
+            of: u32::MAX,
             default_item: None,
         }
     }
@@ -268,7 +268,7 @@ pub struct ListBuilder {
 impl Default for TypeList {
     fn default() -> Self {
         Self {
-            of: u32::max_value(),
+            of: u32::MAX,
             min: None,
             max: None,
             unique_items: None,
@@ -454,10 +454,10 @@ pub struct FuncBuilder {
 impl Default for TypeFunc {
     fn default() -> Self {
         Self {
-            inp: u32::max_value(),
-            out: u32::max_value(),
+            inp: u32::MAX,
+            out: u32::MAX,
             parameter_transform: None,
-            mat: u32::max_value(),
+            mat: u32::MAX,
             rate_calls: false,
             rate_weight: None,
         }

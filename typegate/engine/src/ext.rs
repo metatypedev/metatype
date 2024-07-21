@@ -68,7 +68,7 @@ deno_core::extension!(
 pub mod tests {
     #[rustfmt::skip]
     use deno_core as deno_core; // necessary for re-exported macros to work
-    use deno_runtime::permissions::PermissionsContainer;
+    use deno_runtime::deno_permissions::PermissionsContainer;
     use std::sync::Arc;
 
     use super::*;
