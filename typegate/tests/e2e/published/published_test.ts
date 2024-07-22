@@ -147,13 +147,15 @@ Meta.test(
     const typegateTempDir = await newTempDir();
     const repoDir = await newTempDir();
     const examplesDir = $.path(await newTempDir());
-    /* t.addCleanup(() =>
-      $.co([
+    t.addCleanup(async () => {
+      await $.co([
         $.removeIfExists(typegateTempDir),
         $.removeIfExists(repoDir),
         $.removeIfExists(examplesDir),
-      ])
-    ); */
+      ]);
+    });
+
+    const port = String(t.port + 1);
 
     const proc = new Deno.Command("meta", {
       args: ["typegate"],
@@ -163,7 +165,7 @@ Meta.test(
         TG_SECRET: tgSecret,
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir,
-        TG_PORT: "7899",
+        TG_PORT: `${port}`,
         // TODO should not be necessary
         VERSION: previousVersion,
         ...syncEnvs,
@@ -212,8 +214,8 @@ Meta.test(
 
     const stdout = new Lines(proc.stdout);
     await stdout.readWhile((line) => {
-      // console.log("typegate>", line);
-      return !line.includes("typegate ready on 7899");
+      console.log("typegate>", line);
+      return !line.includes(`typegate ready on ${port}`);
     });
     stdout.readWhile((line) => {
       const match = line.match(/Initializing engine '(.+)'/);
@@ -226,7 +228,7 @@ Meta.test(
 
     await t.should("successfully deploy on the published version", async () => {
       const command =
-        `meta deploy --target dev --threads=4 --allow-dirty --gate http://localhost:7899 -vvv`;
+        `meta deploy --target dev --threads=4 --allow-dirty --gate http://localhost:${port} -vvv`;
       const res = await $`bash -c ${command}`
         .cwd(examplesDir.join("typegraphs"))
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`);
@@ -241,6 +243,7 @@ Meta.test(
     const typegraphs2: string[] = [];
 
     await t.should("upgrade the typegate to the current version", async () => {
+      const port = String(t.port + 2);
       const proc = new Deno.Command("meta-full", {
         args: ["typegate"],
         env: {
@@ -248,7 +251,7 @@ Meta.test(
           TG_SECRET: tgSecret,
           TG_ADMIN_PASSWORD: "password",
           TMP_DIR: typegateTempDir,
-          TG_PORT: "7899",
+          TG_PORT: `${port}`,
           // TODO should not be necessary
           VERSION: previousVersion,
           ...syncEnvs,
@@ -271,7 +274,7 @@ Meta.test(
         if (match) {
           typegraphs2.push(match[1]);
         }
-        return !line.includes("typegate ready on 7899");
+        return !line.includes(`typegate ready on ${port}`);
       });
 
       await stdout.close();
@@ -306,8 +309,6 @@ Meta.test(
       publishedBin = await downloadAndExtractCli(previousVersion);
     });
 
-    const port = 7899;
-
     const metaBinDir = $.path(publishedBin).parent()!.toString();
 
     const tmpDir = $.path(t.tempDir);
@@ -316,6 +317,8 @@ Meta.test(
     );
 
     const typegateTempDir = await tmpDir.join(".metatype").ensureDir();
+
+    const port = String(t.port + 1);
 
     const proc = $`bash -c 'meta typegate'`
       .env({

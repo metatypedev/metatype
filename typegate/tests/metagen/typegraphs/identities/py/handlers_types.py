@@ -116,8 +116,8 @@ FORWARD_REFS["CompositesArgs"] = CompositesArgs
 @dataclass
 class Composites(Struct):
     opt: Union[str, None]
-    either: Union["Branch2", "Primitives"]
-    union: Union[str, List[str], int]
+    either: Union["Primitives", "Branch2"]
+    union: Union[List[str], int, str]
     list: List[str]
 
 
@@ -143,8 +143,8 @@ FORWARD_REFS["Cycles1Args"] = Cycles1Args
 @dataclass
 class Cycles1(Struct):
     phantom1: Union[str, None]
-    to2: Union[Union["Cycles1", Union["Branch33B", "Branch33A"]], None]
-    list3: Union[List[Union["Branch33A", "Branch33B"]], None]
+    to2: Union[Union[Union["Branch33A", "Branch33B"], "Cycles1"], None]
+    list3: Union[List[Union["Branch33B", "Branch33A"]], None]
 
 
 FORWARD_REFS["Cycles1"] = Cycles1
@@ -162,7 +162,7 @@ FORWARD_REFS["Branch33A"] = Branch33A
 @dataclass
 class Branch33B(Struct):
     phantom3b: Union[str, None]
-    to2: Union[Union[Union["Branch33A", "Branch33B"], "Cycles1"], None]
+    to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
 
 
 FORWARD_REFS["Branch33B"] = Branch33B
