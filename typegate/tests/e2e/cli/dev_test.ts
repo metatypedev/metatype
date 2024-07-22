@@ -194,7 +194,7 @@ Meta.test(
     });
 
     await stderr.readWhile((line) => {
-      // console.log("line:", line);
+      console.log("line:", line);
       return !$.stripAnsi(line).includes(
         "successfully deployed typegraph migration-failure-test",
       );
@@ -259,6 +259,7 @@ const examplesDir = $.path(workspaceDir).join("examples");
 Meta.test("meta dev with typegate", async (t) => {
   await $`bash build.sh`.cwd(examplesDir.join("typegraphs/metagen/rs"));
 
+  const port = String(t.port + 1);
   const metadev = new Deno.Command("meta-full", {
     cwd: examplesDir.toString(),
     args: ["dev"],
@@ -266,6 +267,7 @@ Meta.test("meta dev with typegate", async (t) => {
     stderr: "piped",
     env: {
       MCLI_LOADER_CMD: "deno run -A --config deno.json",
+      TG_PORT: port,
     },
   }).spawn();
   const stderr = new Lines(metadev.stderr);
@@ -288,7 +290,7 @@ Meta.test("meta dev with typegate", async (t) => {
 
   await stderr.readWhile((rawLine) => {
     const line = $.stripAnsi(rawLine);
-    console.log("meta-full dev[E]>", line);
+    // console.log("meta-full dev[E]>", line);
     const match = line.match(
       /successfully deployed typegraph ([\w_-]+) from (.+)$/,
     );
