@@ -561,3 +561,9 @@ export interface WasiMatData {
   func: string;
   wasmArtifact: string;
 }
+
+export interface kvRuntimeData {
+  endpoint: string;
+  db_number: number;
+  password: string;
+}
