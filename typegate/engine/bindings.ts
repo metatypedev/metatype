@@ -453,3 +453,32 @@ export function archive(a0: ArchiveInp): ArchiveResult {
     return { Err: { message: err.toString() } };
   }
 }
+
+export type KVRegisterInput = {
+  endpoint: string;
+  db_number: number;
+  password: string;
+};
+
+export type KVRegisterOutput =
+  | {
+    Ok: {
+      message: string;
+    };
+  }
+  | {
+    Err: {
+      message: string;
+    };
+  };
+
+export function kv_register(
+  _input: KVRegisterInput,
+): KVRegisterOutput {
+  try {
+    // TODO: implement
+    return { Ok: { message: "Registration successful" } };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}
