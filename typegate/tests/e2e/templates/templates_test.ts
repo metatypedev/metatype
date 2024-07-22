@@ -15,12 +15,17 @@ type LangRuntimeConfig<V> = {
 };
 
 const envs = {
-  python: {},
+  python: {
+    RUST_LOG: "trace",
+  },
   deno: {
     MCLI_LOADER_CMD:
       "deno run -A --import-map=../../typegate/import_map.json {filepath}",
+    RUST_LOG: "trace",
   },
-  node: {},
+  node: {
+    RUST_LOG: "trace",
+  },
 } as LangRuntimeConfig<Record<string, string>>;
 
 const install = {

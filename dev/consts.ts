@@ -55,6 +55,9 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     ['(wasmtime = ").+(")', WASMTIME_VERSION],
     ['(wasmtime-wasi = ").+(")', WASMTIME_VERSION],
   ],
+  "typegraph/deno/sdk/jsr.json": [
+    [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
+  ],
   "dev/deps.ts": [[/(.*\/metatypedev\/ghjk\/)[^\/]*(\/.*)/, GHJK_VERSION]],
   "dev/cross.Dockerfile": [["(ARG GHJK_VERSION=).*()", GHJK_VERSION]],
   "dev/Dockerfile": [

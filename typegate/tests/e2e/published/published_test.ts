@@ -305,6 +305,9 @@ Meta.test(
     await t.should("download published cli (fat version)", async () => {
       publishedBin = await downloadAndExtractCli(previousVersion);
     });
+
+    const port = 7899;
+
     const metaBinDir = $.path(publishedBin).parent()!.toString();
 
     const tmpDir = $.path(t.tempDir);
@@ -320,7 +323,7 @@ Meta.test(
         TG_SECRET: tgSecret,
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir.toString(),
-        TG_PORT: "7899",
+        TG_PORT: `${port}`,
         // TODO should not be necessary
         VERSION: previousVersion,
         DEBUG: "true",
@@ -331,9 +334,10 @@ Meta.test(
       .spawn();
 
     const stdout = new Lines(proc.stdout());
+    console.log("waiting on typegate to be ready");
     await stdout.readWhile((line) => {
-      console.error("typegate>", line);
-      return !line.includes("typegate ready on 7899");
+      // console.error("typegate>", line);
+      return !line.includes(`typegate ready on ${port}`);
     });
 
     const tgsDir = $.path(await newTempDir());
@@ -342,7 +346,7 @@ Meta.test(
     await tgsDir.join("metatype.yml").writeText(`
 typegates:
   dev:
-    url: "http://localhost:7891"
+    url: "http://localhost:${port}"
     username: admin
     password: password
     secrets:
@@ -376,11 +380,12 @@ typegraphs:
       ]);
 
       const command =
-        `meta deploy --target dev --allow-dirty --gate http://localhost:7899 -vvv`;
+        `meta deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;
       await $`bash -c ${command}`
         .cwd(npmJsrDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        .env("MCLI_LOADER_CMD", "pnpm dlx tsx");
+        .env("MCLI_LOADER_CMD", "pnpm dlx tsx")
+        .env("RUST_LOG", "trace");
     });
 
     await t.should("work with JSR deno", async () => {
@@ -395,11 +400,12 @@ typegraphs:
       ]);
 
       const command =
-        `meta deploy --target dev --allow-dirty --gate http://localhost:7899 -vvv`;
+        `meta deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;
       await $`bash -c ${command}`
         .cwd(denoJsrDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`);
+        .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`)
+        .env("RUST_LOG", "trace");
     });
 
     await t.should("work with pypa", async () => {
@@ -416,11 +422,12 @@ typegraphs:
       ]);
 
       const command =
-        `poetry env use python && meta deploy --target dev --allow-dirty --gate http://localhost:7899 -vvv`;
+        `poetry env use python && meta deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.py`;
       await $`bash -c ${command}`
         .cwd(pypaDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        .env("MCLI_LOADER_PY", `poetry run python`);
+        .env("MCLI_LOADER_PY", `poetry run python`)
+        .env("RUST_LOG", "trace");
     });
 
     proc.kill("SIGKILL");
