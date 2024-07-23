@@ -8,6 +8,7 @@ use std::{path::Path, sync::Arc};
 use tokio::process::Command;
 
 use super::action::{SharedActionConfig, TaskFilter};
+use super::shell_words;
 
 mod python;
 mod typescript;
@@ -78,8 +79,8 @@ impl CommandContext {
                 .to_string();
             let command = if !argv_str_fmtd.eq(&argv_str) {
                 // custom
-                let argv = argv_str_fmtd.split(' ').collect::<Vec<_>>();
-                let mut command = Command::new(argv[0]);
+                let argv = shell_words::split(&argv_str_fmtd).unwrap();
+                let mut command = Command::new(argv[0].clone());
                 command.args(&argv[1..]);
                 command
             } else {
