@@ -120,6 +120,7 @@ pub struct TaskManager<A: TaskAction + 'static> {
     reports: IndexMap<Arc<Path>, TaskFinishStatus<A>>,
     watcher_addr: Option<Addr<WatcherActor<A>>>,
     console: Addr<ConsoleActor>,
+    seen_tasks: usize,
 }
 
 const DEFAULT_INITIAL_RETRY_INTERVAL: Duration = Duration::from_secs(3);
@@ -190,6 +191,7 @@ impl<A: TaskAction + 'static> TaskManagerInit<A> {
                 reports: IndexMap::new(),
                 watcher_addr,
                 console,
+                seen_tasks: 0,
             }
         });
 
@@ -333,6 +335,7 @@ impl<A: TaskAction + 'static> Handler<AddTask> for TaskManager<A> {
             // ok: new task
         }
 
+        self.seen_tasks += 1;
         self.task_queue.push_back(msg.task_ref);
         ctx.address().do_send(message::NextTask);
     }
@@ -450,7 +453,11 @@ impl<A: TaskAction + 'static> Handler<DiscoveryDone> for TaskManager<A> {
 
         // TODO check queue??
         if self.active_tasks.is_empty() {
-            if self.watcher_addr.is_none() && self.pending_retries.is_empty() {
+            if self.seen_tasks == 0 {
+                self.console.error("no typegraphs discovered".to_string());
+                self.stop_reason = Some(StopReason::Error);
+                ctx.stop();
+            } else if self.watcher_addr.is_none() && self.pending_retries.is_empty() {
                 // no watcher, auto stop when all tasks finished
                 self.console.debug("all tasks finished".to_string());
                 self.stop_reason = Some(StopReason::Natural);
