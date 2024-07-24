@@ -410,9 +410,6 @@ mod shell_words {
         }
     }
 
-    #[cfg(feature = "std")]
-    impl std::error::Error for ParseError {}
-
     enum State {
         Delimiter,
         Backslash,
