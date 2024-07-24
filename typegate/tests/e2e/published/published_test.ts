@@ -204,7 +204,6 @@ Meta.test(
         await examplesDir.join("deno.json").writeJson({});
         await $.raw`bash -c 'deno add @typegraph/sdk@${previousVersion}'`
           .cwd(examplesDir)
-          .env("NPM_CONFIG_REGISTRY", "https://registry.npmjs.org")
           .stdout("inherit")
           .printCommand();
       },

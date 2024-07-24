@@ -84,13 +84,13 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     [/(wasmtime = "\^).+(")/, WASMTIME_PY_VERSION],
   ],
   "examples/templates/**/compose.yml": [
-    ["(    image: ghcr.io/metatypedev/typegate:v).+()", PUBLISHED_VERSION],
+    ["(    image: ghcr.io/metatypedev/typegate:v).+()", METATYPE_VERSION],
   ],
   "examples/templates/**/pyproject.toml": [
-    ['(typegraph = ").+(")', PUBLISHED_VERSION],
+    ['(typegraph = ").+(")', METATYPE_VERSION],
   ],
   "examples/templates/**/package.json": [
-    [/(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)/, PUBLISHED_VERSION],
+    [/(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)/, METATYPE_VERSION],
   ],
   "examples/**/*.ts": [
     [
