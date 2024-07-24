@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::shell_words;
 use tokio::process::Command;
 
+use crate::utils::shell_words;
 use crate::{interlude::*, utils::ensure_venv};
 
 pub(super) async fn get_raw_command(path: impl AsRef<Path>) -> Result<Command> {
@@ -15,7 +15,7 @@ pub(super) async fn get_raw_command(path: impl AsRef<Path>) -> Result<Command> {
         )
     })?;
     let loader_py = std::env::var("MCLI_LOADER_PY").unwrap_or_else(|_| "python3".to_string());
-    let loader_py = shell_words::split(&loader_py).unwrap();
+    let loader_py = shell_words::split(&loader_py).map_err(|err| anyhow::anyhow!(err))?;
     let mut command = Command::new(loader_py[0].clone());
     command
         .args(&loader_py[1..])

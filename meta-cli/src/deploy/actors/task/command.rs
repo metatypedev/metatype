@@ -3,12 +3,12 @@
 
 use crate::config::ModuleType;
 use crate::interlude::*;
+use crate::utils::shell_words;
 use std::process::Stdio;
 use std::{path::Path, sync::Arc};
 use tokio::process::Command;
 
 use super::action::{SharedActionConfig, TaskFilter};
-use super::shell_words;
 
 mod python;
 mod typescript;
@@ -27,7 +27,7 @@ pub(super) async fn build_task_command(
 
     ctx.ensure_file_exists().await?;
 
-    let mut command = if let Some(command) = ctx.build_raw_from_env() {
+    let mut command = if let Ok(command) = ctx.build_raw_from_env() {
         command
     } else {
         match ModuleType::try_from(ctx.path.as_path())? {
@@ -66,34 +66,31 @@ impl CommandContext {
         Ok(())
     }
 
-    fn build_raw_from_env(&self) -> Option<Command> {
-        if let Ok(argv_str) = std::env::var("MCLI_LOADER_CMD") {
-            let argv_str_fmtd = argv_str
-                .replace("{filepath}", self.path.to_str().unwrap())
-                .replace(
-                    "{cwd}",
-                    &std::env::current_dir()
-                        .map(|c| c.to_string_lossy().to_string())
-                        .unwrap_or("{cwd}".to_string()),
-                )
-                .to_string();
-            let command = if !argv_str_fmtd.eq(&argv_str) {
-                // custom
-                let argv = shell_words::split(&argv_str_fmtd).unwrap();
-                let mut command = Command::new(argv[0].clone());
-                command.args(&argv[1..]);
-                command
-            } else {
-                // prefix the path
-                let argv = argv_str.split(' ').collect::<Vec<_>>();
-                let mut command = Command::new(argv[0]);
-                command.args(&argv[1..]).arg(self.path.to_str().unwrap());
-                command
-            };
-            Some(command)
+    fn build_raw_from_env(&self) -> Result<Command> {
+        let argv_str = std::env::var("MCLI_LOADER_CMD")?;
+        let argv_str_fmtd = argv_str
+            .replace("{filepath}", self.path.to_str().unwrap())
+            .replace(
+                "{cwd}",
+                &std::env::current_dir()
+                    .map(|c| c.to_string_lossy().to_string())
+                    .unwrap_or("{cwd}".to_string()),
+            )
+            .to_string();
+        let command = if !argv_str_fmtd.eq(&argv_str) {
+            // custom
+            let argv = shell_words::split(&argv_str_fmtd).map_err(|err| anyhow::anyhow!(err))?;
+            let mut command = Command::new(argv[0].clone());
+            command.args(&argv[1..]);
+            command
         } else {
-            None
-        }
+            // prefix the path
+            let argv = shell_words::split(&argv_str).map_err(|err| anyhow::anyhow!(err))?;
+            let mut command = Command::new(argv[0].clone());
+            command.args(&argv[1..]).arg(self.path.to_str().unwrap());
+            command
+        };
+        Ok(command)
     }
 
     fn setup_task(&self, command: &mut Command) {
