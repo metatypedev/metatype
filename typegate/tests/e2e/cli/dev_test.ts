@@ -262,7 +262,13 @@ Meta.test("meta dev with typegate", async (t) => {
   const port = String(t.port + 1);
   const metadev = new Deno.Command("meta-full", {
     cwd: examplesDir.toString(),
-    args: ["dev"],
+    args: [
+      "dev",
+      `--main-url`,
+      import.meta.resolve("../../../src/main.ts"),
+      `--import-map-url`,
+      import.meta.resolve("../../../import_map.json"),
+    ],
     stdout: "piped",
     stderr: "piped",
     env: {
@@ -290,7 +296,10 @@ Meta.test("meta dev with typegate", async (t) => {
 
   await stderr.readWhile((rawLine) => {
     const line = $.stripAnsi(rawLine);
-    // console.log("meta-full dev[E]>", line);
+    console.log("meta-full dev[E]>", line);
+    if (line.match(/failed to deploy/i)) {
+      throw new Error("error detected on line: " + rawLine);
+    }
     const match = line.match(
       /successfully deployed typegraph ([\w_-]+) from (.+)$/,
     );

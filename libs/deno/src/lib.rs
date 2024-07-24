@@ -47,15 +47,21 @@ pub fn run_sync(
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) {
-    create_and_run_current_thread_with_maybe_metrics(async move {
-        spawn_subcommand(async move {
-            run(main_mod, import_map_url, permissions, custom_extensions)
+    new_thread_builder()
+        .spawn(|| {
+            create_and_run_current_thread_with_maybe_metrics(async move {
+                spawn_subcommand(async move {
+                    run(main_mod, import_map_url, permissions, custom_extensions)
+                        .await
+                        .unwrap()
+                })
                 .await
                 .unwrap()
+            })
         })
-        .await
         .unwrap()
-    });
+        .join()
+        .unwrap();
 }
 
 pub async fn run(
@@ -290,12 +296,12 @@ pub async fn test(
     Ok(())
 }
 
-fn new_thread_builder() -> std::thread::Builder {
+pub fn new_thread_builder() -> std::thread::Builder {
     let builder = std::thread::Builder::new();
     let builder = if cfg!(debug_assertions) {
         // this is only relevant for WebWorkers
         // FIXME: find a better location for this as tihs won't work
-        // if a new thread has already launched by this point
+        // if a second thread has already launched by this point
         if std::env::var("RUST_MIN_STACK").is_err() {
             std::env::set_var("RUST_MIN_STACK", "8388608");
         }

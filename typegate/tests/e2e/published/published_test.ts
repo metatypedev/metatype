@@ -158,14 +158,20 @@ Meta.test(
     const port = String(t.port + 1);
 
     const proc = new Deno.Command("meta", {
-      args: ["typegate"],
+      args: [
+        "typegate",
+        `--main-url`,
+        import.meta.resolve("../../../src/main.ts"),
+        `--import-map-url`,
+        import.meta.resolve("../../../import_map.json"),
+      ],
       env: {
         ...Deno.env.toObject(),
         PATH: `${metaBinDir}:${Deno.env.get("PATH")}`,
         TG_SECRET: tgSecret,
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir,
-        TG_PORT: `${port}`,
+        TG_PORT: port,
         // TODO should not be necessary
         VERSION: previousVersion,
         ...syncEnvs,
@@ -213,7 +219,7 @@ Meta.test(
 
     const stdout = new Lines(proc.stdout);
     await stdout.readWhile((line) => {
-      console.log("typegate>", line);
+      console.log(`typegate>`, line);
       return !line.includes(`typegate ready on ${port}`);
     });
     stdout.readWhile((line) => {
@@ -221,9 +227,9 @@ Meta.test(
       if (match) {
         typegraphs.push(match[1]);
       }
-      console.log("typegate>", line);
+      console.log("typegate counting matches>", line);
       return true;
-    });
+    }, null);
 
     await t.should("successfully deploy on the published version", async () => {
       const command =
@@ -244,7 +250,13 @@ Meta.test(
     await t.should("upgrade the typegate to the current version", async () => {
       const port = String(t.port + 2);
       const proc = new Deno.Command("meta-full", {
-        args: ["typegate"],
+        args: [
+          "typegate",
+          `--main-url`,
+          import.meta.resolve("../../../src/main.ts"),
+          `--import-map-url`,
+          import.meta.resolve("../../../import_map.json"),
+        ],
         env: {
           ...Deno.env.toObject(),
           TG_SECRET: tgSecret,
@@ -265,7 +277,7 @@ Meta.test(
       stderr.readWhile((line) => {
         console.log("typegate[E]>", line);
         return true;
-      });
+      }, null);
 
       await stdout.readWhile((line) => {
         console.log("typegate>", line);

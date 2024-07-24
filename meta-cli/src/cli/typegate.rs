@@ -6,14 +6,14 @@ use clap::Parser;
 
 use crate::cli::{Action, ConfigArgs};
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct Typegate {
     /// The url to the `main.ts` module of typegate deno
     #[clap(long)]
-    main_url: Option<String>,
+    pub main_url: Option<String>,
     /// The url to the `import_map.json` manifest for typegate
     #[clap(long)]
-    import_map_url: Option<String>,
+    pub import_map_url: Option<String>,
 }
 
 #[async_trait]

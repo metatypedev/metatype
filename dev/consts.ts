@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-export const METATYPE_VERSION = "0.4.6-0";
+export const METATYPE_VERSION = "0.4.6";
 export const PUBLISHED_VERSION = "0.4.5";
 export const GHJK_VERSION = "8d50518";
 export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";

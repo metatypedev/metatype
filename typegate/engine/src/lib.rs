@@ -27,6 +27,7 @@ mod interlude {
 
 pub use deno_core::{resolve_url, resolve_url_or_path};
 pub use ext::extensions;
+pub use mt_deno::new_thread_builder;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
 use shadow_rs::shadow;
