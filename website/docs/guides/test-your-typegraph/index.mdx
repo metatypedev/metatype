@@ -6,8 +6,7 @@ import TsPmTabs from "@site/src/components/TsPackageManagerTabs";
 
 # Test typegraphs
 
-[Typegraph](/docs/reference/typegraph) is the frontend of the _Metatype_ ecosystem where the app is authored and defined. Typegraph is basically a function that includes the definition of the exposed APIs, the embedded runtimes, database table definitions, functions and other building blocks of the application.
-
+[Typegraph](/docs/reference/typegraph) is the SDK of the _Metatype_ where the app is authored and defined.
 Typegraphs can be tested easily with the common test suites in the language of your choosing.
 
 The following next lines describes how you can test your typegraph.
@@ -16,12 +15,140 @@ For _Typescript_ SDK, we will be using [vitest](https://vitest.dev/) and [pytest
 <SDKTabs>
 
     <TabItem value="typescript">
-    example typegraph
+
+To test typegraphs in the _typescript_ SDK, you first need to add _vitest_ as a dev dependency to your metatype project.
+
+:::info
+You can follow [this](/docs/tutorials/quick-start) link on how to bootstrap a metatype application.
+:::
+
+To install _vitest_, you can execute the command below in your terminal based on the runtime you are using for the project.
+
+<TsPmTabs>
+
+    <TabItem value="pnpm">
+      ```bash
+      pnpm add -D vitest
+      ```
+    </TabItem>
+    <TabItem value="npm">
+      ```bash
+      npm install -D vitest
+      ```
+    </TabItem>
+    <TabItem value="yarn">
+      ```bash
+      yarn add -D vitest
+      ```
+    </TabItem>
+    <TabItem value="deno">
+      ```bash
+      import { ... } from "npm:vitest";
+      ```
+    </TabItem>
+    <TabItem value="bun">
+      ```bash
+      bun add -D vitest
+      ```
+    </TabItem>
+    <TabItem value="jsr">
+      ```bash
+      # vitest currently not in jsr registry
+      ```
+    </TabItem>
+
+</TsPmTabs>
+
+After you have installed _vitest_, your project is setup for some tests. Create a test `tg.test.ts` in `/tests` directory from the root project dir. _vitest_ discovers tests by file names, so ensure that your test names follow the following format below.
+
+```bash
+**/*.test.ts
+**/*.spec.ts
+```
+
+For this example, the template typegraph generated from the `meta new` command is used, which is the one down below.
+
+```typescript
+...
+
+export const tg = typegraph("example", (g) => {
+  const pub = Policy.public();
+  const deno = new DenoRuntime();
+  const python = new PythonRuntime();
+
+  g.expose({
+    add: python
+      .fromLambda(
+        t.struct({ first: t.float(), second: t.float() }),
+        t.float(),
+        { code: "lambda x: x['first'] + x['second']" },
+      )
+      .withPolicy(pub),
+    multiply: deno
+      .func(t.struct({ first: t.float(), second: t.float() }), t.float(), {
+        code: "({first, second}) => first * second",
+      })
+      .withPolicy(pub),
+  });
+});
+```
+
+For the typegraph test file, you can write these simple test cases to check the validity of your typegraphs.
+
+```typescript
+import { assert, assertType, expect, test } from "vitest";
+
+
+test("checks if typegraph output is computed", async () => {
+    const tg_output = await tg;
+    assertType<TypegraphOutput>(tg_output);
+});
+
+test("test if typegraph name is correct", async () => {
+    const tg_output = await tg;
+    assert(tg_output.name === "example", "typegraph name is correct");
+});
+
+test("test if serialize function exists", async () => {
+    const tg_output = await tg;
+    assertType<Function>(typeof tg_output.serialize);
+});
+
+test("test if typegraph serialization works", async () => {
+    const tg_output = await tg;
+
+    // serialize params
+    const params = {
+        typegraphPath: "api/example.mjs",
+        prefix: "",
+        artifactResolution: true,
+        codegen: false,
+        prismaMigration: {
+        migrationsDir: "prisma-migrations",
+        migrationActions: Object.entries({}),
+        defaultMigrationAction: {
+            apply: true,
+            create: false,
+            reset: false,
+        },
+        },
+        pretty: false,
+    };
+
+    const serialized = tg_output.serialize(params);
+    assert(serialized !== null, "Serialization Successful");
+    assertType<TgFinalizationResult>(serialized);
+});
+```
+
+Here, you can test various outputs you get from running the typegraph function. You can add more test cases to make your app robust.
+
     </TabItem>
 
     <TabItem value="python">
     
 First, you need to add _pytest_ as a dev dependency in your project/application. 
+
 :::info
 You can follow [this](/docs/tutorials/quick-start) link on how to bootstrap a metatype application.
 :::
@@ -46,12 +173,10 @@ poetry shell
 
 Now, You can start writing tests for your typegraph. For convention, write the tests inside the `tests` directory under the project's root dir. 
 
-Assuming we have this simple typegraph definition, which is a template typegraph you can generate by using the `meta new` commmand from the _Meta CLI_.
+Assuming you have this simple typegraph definition, which is a template typegraph you can generate by using the `meta new` commmand from the _Meta CLI_.
 
 ```python
-from typegraph import typegraph, Policy, t, Graph
-from typegraph.runtimes import PythonRuntime
-
+...
 
 @typegraph()
 def example(g: Graph):
