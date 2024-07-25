@@ -31,6 +31,7 @@ env:
   # used by ghjk
   # TODO: add logic to setup-ghjk
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  DOCKER_BUILD_NO_SUMMARY: true
 
 jobs:
   changes:
