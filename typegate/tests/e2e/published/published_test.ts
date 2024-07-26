@@ -61,7 +61,7 @@ async function checkMetaBin(path: typeof tempDir, version: string) {
     if (!(await path.exists())) {
       return false;
     }
-    const res = await $`bash -c 'meta --version'`
+    const res = await $`bash -c 'meta-old --version'`
       .env("PATH", `${path.parent()!.toString()}:${Deno.env.get("PATH")}`)
       .stdout("piped");
     if (res.stdout.includes(version)) {
@@ -78,7 +78,7 @@ async function checkMetaBin(path: typeof tempDir, version: string) {
 export async function downloadAndExtractCli(version: string) {
   const name = getAssetName(version);
   const extractTargetDir = tempDir.join(name);
-  const metaBin = extractTargetDir.join("meta");
+  const metaBin = extractTargetDir.join("meta-old");
   if (await checkMetaBin(metaBin, version)) {
     return metaBin.toString();
   }
@@ -103,7 +103,6 @@ export async function downloadAndExtractCli(version: string) {
     if (entry.fileName !== "meta") {
       throw new Error("unexpected");
     }
-    Deno.mkdir(extractTargetDir.toString(), { recursive: true });
     using target = await Deno.open(metaBin.toString(), {
       create: true,
       write: true,
@@ -157,14 +156,8 @@ Meta.test(
 
     const port = String(t.port + 1);
 
-    const proc = new Deno.Command("meta", {
-      args: [
-        "typegate",
-        `--main-url`,
-        import.meta.resolve("../../../src/main.ts"),
-        `--import-map-url`,
-        import.meta.resolve("../../../import_map.json"),
-      ],
+    const proc = new Deno.Command("meta-old", {
+      args: ["typegate"],
       env: {
         ...Deno.env.toObject(),
         PATH: `${metaBinDir}:${Deno.env.get("PATH")}`,
@@ -177,7 +170,6 @@ Meta.test(
         ...syncEnvs,
       },
       stdout: "piped",
-      // stderr: "piped",
     }).spawn();
 
     await t.should(
@@ -233,7 +225,7 @@ Meta.test(
 
     await t.should("successfully deploy on the published version", async () => {
       const command =
-        `meta deploy --target dev --threads=4 --allow-dirty --gate http://localhost:${port} -vvv`;
+        `meta-old deploy --target dev --threads=4 --allow-dirty --gate http://localhost:${port} -vvv`;
       const res = await $`bash -c ${command}`
         .cwd(examplesDir.join("typegraphs"))
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`);
@@ -268,16 +260,9 @@ Meta.test(
           ...syncEnvs,
         },
         stdout: "piped",
-        stderr: "piped",
       }).spawn();
 
       const stdout = new Lines(proc.stdout);
-      const stderr = new Lines(proc.stderr);
-
-      stderr.readWhile((line) => {
-        console.log("typegate[E]>", line);
-        return true;
-      }, null);
 
       await stdout.readWhile((line) => {
         console.log("typegate>", line);
@@ -289,7 +274,6 @@ Meta.test(
       });
 
       await stdout.close();
-      await stderr.close();
       proc.kill("SIGKILL");
       const status = await proc.status;
       console.log({ status });
@@ -329,9 +313,9 @@ Meta.test(
 
     const typegateTempDir = await tmpDir.join(".metatype").ensureDir();
 
-    const port = String(t.port + 1);
+    const port = String(t.port - 10);
 
-    const proc = $`bash -c 'meta typegate'`
+    const proc = $`bash -c 'meta-old typegate -vvvv'`
       .env({
         PATH: `${metaBinDir}:${Deno.env.get("PATH")}`,
         TG_SECRET: tgSecret,
@@ -349,8 +333,9 @@ Meta.test(
 
     const stdout = new Lines(proc.stdout());
     console.log("waiting on typegate to be ready");
+
     await stdout.readWhile((line) => {
-      // console.error("typegate>", line);
+      console.error("typegate>", line);
       return !line.includes(`typegate ready on ${port}`);
     });
 
@@ -365,7 +350,7 @@ typegates:
     password: password
     secrets:
       roadmap-func:
-        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_func"
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=roadmap_func2"
         BASIC_andim: hunter2
 
 typegraphs:
@@ -394,7 +379,7 @@ typegraphs:
       ]);
 
       const command =
-        `meta deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;
+        `meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;
       await $`bash -c ${command}`
         .cwd(npmJsrDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
@@ -414,7 +399,7 @@ typegraphs:
       ]);
 
       const command =
-        `meta deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;
+        `meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;
       await $`bash -c ${command}`
         .cwd(denoJsrDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
@@ -436,7 +421,7 @@ typegraphs:
       ]);
 
       const command =
-        `poetry env use python && meta deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.py`;
+        `poetry env use python && meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.py`;
       await $`bash -c ${command}`
         .cwd(pypaDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)

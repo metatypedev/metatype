@@ -52,6 +52,7 @@ impl Test {
                     "hostname",
                     "meta",
                     "meta-full",
+                    "meta-old",
                     "git",
                     "python3",
                     "rm",
