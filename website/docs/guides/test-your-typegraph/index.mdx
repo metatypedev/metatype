@@ -160,7 +160,7 @@ You can follow [this](/docs/tutorials/quick-start) link on how to bootstrap a me
     </TabItem>
     <TabItem value="poetry">
     ```bash
-    poetry add --dev pytest
+    poetry add --group dev pytest
     ```
     </TabItem>
 </PyPmTabs>
@@ -196,29 +196,48 @@ def example(g: Graph):
 You can write the following test to check if your typegraph is correctly authored. Under `/tests` dir, create an empty test and add the test code below. Make sure you name your test file appending `_test` or prepending `test_` so pytest can discover them. 
 
 ```python
-from example.api.example import example as tg
-import subprocess
+from typegraph.wit import SerializeParams, PrismaMigrationConfig, MigrationAction
+from typegraph.graph.shared_types import FinalizationResult
 
-# running the typegraph gives a TypegraphOutput object 
-tg_output = tg()
+
+# running the typegraph gives a TypegraphOutput object
+tg_output = tg
+
 
 # test if the tg output is correct,
 def test_tg_name():
     assert tg_output.name == "example"
-    
+
+
 def test_serialize_tg():
     assert callable(tg_output.serialize)
 
+
 # check if the typegraph gets serialized
 def test_serialize():
-    command_args = [
-        "meta",
-        "serialize",
-        "-f",
-        "example/api/example.py" # tg path from the project root dir
-    ]
-    result = subprocess.run(command_args, capture_output=True, text=True)
-    assert result.returncode == 0
+    serialize_params = SerializeParams(
+        typegraph_path="example/api/example.py",
+        prefix=None,
+        artifact_resolution=False,
+        codegen=True,
+        prisma_migration=PrismaMigrationConfig(
+            migrations_dir="prisma-migrations",
+            migration_actions=[],
+            default_migration_action=MigrationAction(
+                apply=False, create=False, reset=False
+            ),
+        ),
+        pretty=False,
+    )
+
+    serialize_func = tg_output.serialize
+    serialized_output = serialize_func(serialize_params)
+    assert isinstance(serialized_output, FinalizationResult)
+    
+    assert serialized_output.tgJson is not None
+    
+    assert isinstance(serialized_output.tgJson, str)
+    
 ```
 
 Running the typegraph function, results in a [TypegraphOutput](https://github.com/metatypedev/metatype/blob/8cc1c129b0f858047eda8557c1bc120873d37aca/typegraph/python/typegraph/graph/shared_types.py#L18) object which you can play around to add more checks to your tests.
