@@ -311,7 +311,7 @@ Meta.test("meta dev with typegate", async (t) => {
       deployed.push([match[2].slice(prefix.length), match[1]]);
     }
     return deployed.length < 41;
-  });
+  }, 5 * 1000);
 
   await t.should("have deployed all the typegraphs", () => {
     // TODO use `meta list`
