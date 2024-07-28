@@ -119,6 +119,8 @@ test("test if serialize function exists", async () => {
 });
 ```
 
+The above were simple tests you can execute against the output of the typegraph function. You can also do a serialization test to check if the typegraph is serialized successfully. 
+
 ```typescript
 ...
 
@@ -155,6 +157,8 @@ test("test if typegraph serialization works", async () => {
     assertType<TgFinalizationResult>(serialized);
 });
 ```
+
+Furthermore, you can test typegraph deployment and running a query against a typegate instance. You first test for typegraph deploy, then querying into a typegate instance. The following tests depict on how you can do that.
 
 ```typescript
 ...
@@ -224,7 +228,7 @@ test("test defined endpoints from the typegraph", async () => {
 
 ```
 
-Here, you can test various outputs you get from running the typegraph function. You can add more test cases to make your app robust.
+You don't have to stop here, you can test various outputs you get from running the typegraph function and querying directly into the deployed typegraphs. You can add more test cases to make your app robust.
 
     </TabItem>
 
@@ -306,6 +310,9 @@ def test_serialize_tg():
     
 ```
 
+
+The above were simple tests you can execute against the output of the typegraph function. You can also do a serialization test to check if the typegraph is serialized successfully. 
+
 ```python
 ... 
 
@@ -345,6 +352,8 @@ def test_serialize():
     assert isinstance(serialized_output.tgJson, str)
 
 ```
+
+Furthermore, you can test typegraph deployment and running a query against a typegate instance. You first test for typegraph deploy, then querying into a typegate instance. The following tests depict on how you can do that.
 
 ```python
 ...
@@ -405,7 +414,7 @@ After you have written your tests, you can run them all by executing the `pytest
 pytest
 ```
 
-Using the above steps, you can always test your typegraph whenever you need to. 
+You don't have to stop here, you can test various outputs you get from running the typegraph function and querying directly into the deployed typegraphs. You can add more test cases to make your app robust.
 
 While `pytest` is used in this example, typegraphs can be easily tested with most of other test suite solutions by following the above approach.
     
