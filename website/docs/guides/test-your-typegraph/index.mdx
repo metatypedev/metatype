@@ -97,27 +97,35 @@ For the typegraph test file, you can write these simple test cases to check the 
 
 ```typescript
 import { assert, assertType, expect, test } from "vitest";
+import { BasicAuth, tgDeploy, DeployResult } from "@typegraph/sdk/tg_deploy";
 
 
 test("checks if typegraph output is computed", async () => {
     const tg_output = await tg;
+
     assertType<TypegraphOutput>(tg_output);
 });
 
 test("test if typegraph name is correct", async () => {
     const tg_output = await tg;
+
     assert(tg_output.name === "example", "typegraph name is correct");
 });
 
 test("test if serialize function exists", async () => {
     const tg_output = await tg;
+
     assertType<Function>(typeof tg_output.serialize);
 });
+```
+
+```typescript
+...
+
+let reusableTgOutput;
 
 test("test if typegraph serialization works", async () => {
     const tg_output = await tg;
-
-    // serialize params
     const params = {
         typegraphPath: "api/example.mjs",
         prefix: "",
@@ -134,11 +142,86 @@ test("test if typegraph serialization works", async () => {
         },
         pretty: false,
     };
-
+    
     const serialized = tg_output.serialize(params);
+
+    // cache the serialize result as the serialize function can only be called one time
+    reusableTgOutput = {
+        ...tg_output,
+        serialize: (params) => serialized,
+    };
+
     assert(serialized !== null, "Serialization Successful");
     assertType<TgFinalizationResult>(serialized);
 });
+```
+
+```typescript
+...
+
+const gate = "http://localhost:7891";
+const typegraph_name = "example";
+
+test("test typegraph deploy to typegate", async () => {
+    // TODO: launch typegate programmatically
+
+    const auth = new BasicAuth("admin", "password");
+
+    const deploy_result = await tgDeploy(reusableTgOutput, {
+        typegate: {
+            url: gate,
+            auth: auth
+        },
+        typegraphPath: "api/example.mjs",
+        prefix: "",
+        secrets: {},
+        migrationsDir: "prisma-migrations",
+        migrationActions: {},
+        defaultMigrationAction: {
+            apply: false,
+            create: false,
+            reset: false
+        }
+    });
+
+    assertType<DeployResult>(deploy_result);
+
+    assert(deploy_result.serialized !== null);
+
+    expect(deploy_result).toBe({
+        "name": "example",
+        "messages": [],
+        "migrations": [],
+    });
+});
+
+test("test defined endpoints from the typegraph", async () => {
+    const query = `
+        {
+            add(first: 17, second: 20)
+        }
+    `;
+
+    const url = `${gate}/${typegraph_name}`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({query})
+    });
+
+    assert(response.ok);
+    expect(response.status).toBe(200);
+
+    const responseBody = await response.json();
+    const expectedResult = {"data": {"add": 37}};
+    
+    assert.exists(responseBody);
+    expect(responseBody).toBe(expectedResult)
+
+});
+
 ```
 
 Here, you can test various outputs you get from running the typegraph function. You can add more test cases to make your app robust.
@@ -197,11 +280,20 @@ You can write the following test to check if your typegraph is correctly authore
 
 ```python
 from typegraph.wit import SerializeParams, PrismaMigrationConfig, MigrationAction
-from typegraph.graph.shared_types import FinalizationResult
+from typegraph.graph.shared_types import FinalizationResult, BasicAuth, TypegraphOutput
+from typegraph.graph.tg_deploy import (
+    TypegraphDeployParams,
+    tg_deploy,
+    TypegateConnectionOptions,
+    DeployResult,
+)
+import requests
 
 
 # running the typegraph gives a TypegraphOutput object
 tg_output = tg
+
+reusable_tg: TypegraphOutput = None
 
 
 # test if the tg output is correct,
@@ -211,12 +303,16 @@ def test_tg_name():
 
 def test_serialize_tg():
     assert callable(tg_output.serialize)
+    
+```
 
+```python
+... 
 
 # check if the typegraph gets serialized
 def test_serialize():
     serialize_params = SerializeParams(
-        typegraph_path="example/api/example.py",
+        typegraph_path="demo.py",
         prefix=None,
         artifact_resolution=False,
         codegen=True,
@@ -232,12 +328,73 @@ def test_serialize():
 
     serialize_func = tg_output.serialize
     serialized_output = serialize_func(serialize_params)
+    global reusable_tg
+    reusable_tg = {
+        "name": tg_output.name,
+        "serialize": lambda params: serialized_output,
+    }
+    
+    # cache the serialize result as the serialize function can only be called one time
+    reusable_tg = TypegraphOutput(
+        name=tg_output.name, serialize=lambda params: serialized_output
+    )
     assert isinstance(serialized_output, FinalizationResult)
-    
+
     assert serialized_output.tgJson is not None
-    
+
     assert isinstance(serialized_output.tgJson, str)
-    
+
+```
+
+```python
+...
+
+gate = "http://localhost:7891"
+
+def test_deploy():
+    auth = BasicAuth("admin", "password")
+
+    deploy_result = tg_deploy(
+        reusable_tg,
+        TypegraphDeployParams(
+            typegate=TypegateConnectionOptions(url=gate, auth=auth),
+            typegraph_path="demo.py",
+            prefix="",
+            secrets=None,
+            migrations_dir="prisma-migrations",
+            migration_actions=None,
+            default_migration_action=MigrationAction(
+                apply=False, create=False, reset=False
+            ),
+        ),
+    )
+
+    assert isinstance(deploy_result, DeployResult)
+
+    assert deploy_result.serialized is not None
+
+    assert deploy_result.response == {
+        "name": "example",
+        "messages": [],
+        "migrations": [],
+    }
+
+
+def test_endpoints():
+    query = """
+        {
+            hello(world: "Estub")
+        }
+    """
+
+    response = requests.post(url=f"{gate}/example", json={"query": query})
+
+    assert response.status_code == 200
+
+    result = {"data": {"hello": "Hellow Estub!"}}
+
+    assert response.json() == result
+
 ```
 
 Running the typegraph function, results in a [TypegraphOutput](https://github.com/metatypedev/metatype/blob/8cc1c129b0f858047eda8557c1bc120873d37aca/typegraph/python/typegraph/graph/shared_types.py#L18) object which you can play around to add more checks to your tests.
