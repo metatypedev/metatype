@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-export { file } from "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/mod.ts";
-export * from "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/mod.ts";
-export * as ports from "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/ports/mod.ts";
+export { file } from "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/mod.ts";
+export * from "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/mod.ts";
+export * as ports from "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/ports/mod.ts";
 export {
   std_url,
   zod,
-} from "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/deps/common.ts";
+} from "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/deps/common.ts";
 export {
   copyLock,
   sedLock,
-} from "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/std.ts";
-export { downloadFile } from "https://raw.githubusercontent.com/metatypedev/ghjk/8d50518/utils/mod.ts";
+} from "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/std.ts";
+export { downloadFile } from "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/utils/mod.ts";
 // export * from "../../ghjk/mod.ts";
 // export * as ports from "../../ghjk/ports/mod.ts";
 // export * as utils from "../../ghjk/utils/mod.ts";
