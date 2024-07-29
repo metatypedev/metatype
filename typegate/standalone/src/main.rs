@@ -29,7 +29,6 @@ pub fn init_sentry(config: &Config) -> sentry::ClientInitGuard {
 fn main() {
     logger::init();
     if cfg!(debug_assertions) {
-        #[cfg(debug_assertions)]
         typegate_engine::new_thread_builder()
             .spawn(main_main)
             .unwrap()

@@ -268,12 +268,12 @@ Meta.test("meta dev with typegate", async (t) => {
       import.meta.resolve("../../../src/main.ts"),
       `--import-map-url`,
       import.meta.resolve("../../../import_map.json"),
+      `--gate=http://localhost:${port}`,
     ],
     stdout: "piped",
     stderr: "piped",
     env: {
       MCLI_LOADER_CMD: "deno run -A --config deno.json",
-      TG_PORT: port,
     },
   }).spawn();
   const stderr = new Lines(metadev.stderr);

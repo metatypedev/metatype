@@ -41,6 +41,7 @@ pub struct Dev {
     #[clap(long)]
     retry_interval_ms: Option<u64>,
 
+    #[cfg(feature = "typegate")]
     #[clap(flatten)]
     pub typegate_options: super::typegate::Typegate,
 }
