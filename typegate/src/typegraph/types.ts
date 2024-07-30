@@ -562,8 +562,9 @@ export interface WasiMatData {
   wasmArtifact: string;
 }
 
-export interface kvRuntimeData {
-  endpoint: string;
-  db_number: number;
-  password: string;
+export interface KvRuntimeData {
+  host: string | null;
+  port: string | null;
+  db_number: number | null;
+  password: string | null;
 }

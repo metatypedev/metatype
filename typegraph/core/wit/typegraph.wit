@@ -486,7 +486,8 @@ interface runtimes {
     
     // kv
     record kv-runtime-data {
-        endpoint: string,
+        host: option<string>,
+        port: option<string>,
         db-number: option<u8>,
         password: option<string>
     }

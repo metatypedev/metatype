@@ -497,7 +497,8 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
         }))
         .into()),
         Runtime::Kv(d) => Ok(TGRuntime::Known(Rt::Kv(KvRuntimeData {
-            endpoint: d.endpoint.clone(),
+            host: d.host.clone(),
+            port: d.port.clone(),
             db_number: d.db_number,
             password: d.password.clone(),
         }))
