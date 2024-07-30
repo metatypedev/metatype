@@ -1,25 +1,26 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine/query_engine.ts";
 import { connect, Redis } from "redis";
-import { registerRuntime } from "./mod.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
 import { getLogger, Logger } from "../log.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
 import { KvRuntimeData } from "../typegraph/types.ts";
+import { Resolver, RuntimeInitParams } from "../types.ts";
+import { registerRuntime } from "./mod.ts";
+import { Runtime } from "./Runtime.ts";
 
 const logger = getLogger(import.meta);
 
 @registerRuntime("kv")
 export class KvRuntime extends Runtime {
   private logger: Logger;
-  private memory = new Map<string, string>();
+  private redis: Redis;
 
-  private constructor(typegraphName: string, private redis: Redis) {
+  private constructor(typegraphName: string, redis: Redis) {
     super(typegraphName);
     this.logger = getLogger(`kv:'${typegraphName}'`);
+    this.redis = redis;
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
@@ -32,13 +33,14 @@ export class KvRuntime extends Runtime {
       port: args.port ?? "6379",
     });
     const instance = new KvRuntime(typegraphName, connection);
-    instance.logger.info("registerd KvRuntime");
+    instance.logger.info("registered KvRuntime");
     return instance;
   }
 
   deinit(): Promise<void> {
     throw new Error("Method not implemented.");
   }
+
   materialize(
     stage: ComputeStage,
     _waitlist: ComputeStage[],
@@ -48,32 +50,32 @@ export class KvRuntime extends Runtime {
 
     const resolver: Resolver = () => {
       if (name == "kv_set") {
-        return (key: string, value: string) => {
-          this.memory.set(key, value);
+        return async (key: string, value: string) => {
+          await this.redis.set(key, value);
         };
       }
 
       if (name == "kv_get") {
-        return (key: string) => {
-          return this.memory.get(key);
+        return async (key: string) => {
+          return await this.redis.get(key);
         };
       }
 
       if (name == "kv_delete") {
-        return (key: string) => {
-          return this.memory.delete(key);
+        return async (key: string) => {
+          return await this.redis.del(key);
         };
       }
 
       if (name == "kv_keys") {
-        return () => {
-          return Array.from(this.memory.keys());
+        return async () => {
+          return await this.redis.keys("*");
         };
       }
 
       if (name == "kv_all") {
-        return () => {
-          return Array.from(this.memory.entries());
+        return async () => {
+          return await this.redis.hgetall("*");
         };
       }
     };
