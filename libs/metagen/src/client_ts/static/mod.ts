@@ -282,11 +282,11 @@ type SelectionFlags = "selectAll";
 type Selection = {
   _?: SelectionFlags;
   [key: string]:
-    | undefined
-    | boolean
-    | Selection
-    | SelectionFlags
-    | [Record<string, unknown>, Selection | undefined];
+  | undefined
+  | boolean
+  | Selection
+  | SelectionFlags
+  | [Record<string, unknown>, Selection | undefined];
 };
 
 type NodeMeta = {
@@ -311,13 +311,13 @@ type SelectNode<Out = unknown> = {
 export class QueryNode<Out> {
   constructor(
     public inner: SelectNode<Out>,
-  ) {}
+  ) { }
 }
 
 export class MutationNode<Out> {
   constructor(
     public inner: SelectNode<Out>,
-  ) {}
+  ) { }
 }
 
 type SelectNodeOut<T> = T extends (QueryNode<infer O> | MutationNode<infer O>)
@@ -357,17 +357,17 @@ function selectionToNodeSet(
       if (!Array.isArray(nodeSelection)) {
         throw new Error(
           `node at ${parentPath}.${nodeName} ` +
-            `requires arguments but selection ` +
-            `is typeof ${typeof nodeSelection}`,
+          `is a scalar that requires arguments but selection ` +
+          `is typeof ${typeof nodeSelection}`,
         );
       }
       const [arg] = nodeSelection;
       // TODO: consider bringing in Zod (after hoisting impl into common lib)
       if (typeof arg != "object") {
         throw new Error(
-          `node at ${parentPath}.${nodeName} ` +
-            `requires argument object but first element of ` +
-            `selection is typeof ${typeof arg}`,
+          `node at ${parentPath}.${nodeName} is a scalar ` +
+          `that requires argument object but first element of ` +
+          `selection is typeof ${typeof arg}`,
         );
       }
       const expectedArguments = new Map(Object.entries(argumentTypes));
@@ -394,21 +394,23 @@ function selectionToNodeSet(
         if (!Array.isArray(subSelections)) {
           throw new Error(
             `node at ${parentPath}.${nodeName} ` +
-              `is a composite that takes an argument but selection is typeof ${typeof nodeSelection}`,
+            `is a composite that takes an argument ` +
+            `but selection is typeof ${typeof nodeSelection}`,
           );
         }
         subSelections = subSelections[1];
       } else if (Array.isArray(subSelections)) {
         throw new Error(
           `node at ${parentPath}.${nodeName} ` +
-            `is a composite that takes no arguments but selection is typeof ${typeof nodeSelection}`,
+          `is a composite that takes no arguments ` +
+          `but selection is typeof ${typeof nodeSelection}`,
         );
       }
       if (typeof subSelections != "object") {
         throw new Error(
           `node at ${parentPath}.${nodeName} ` +
-            `is a no argument composite but first element of ` +
-            `selection is typeof ${typeof nodeSelection}`,
+          `is a no argument composite but first element of ` +
+          `selection is typeof ${typeof nodeSelection}`,
         );
       }
       node.subNodes = selectionToNodeSet(
@@ -439,27 +441,25 @@ function convertQueryNodeGql(
 
   const args = node.args;
   if (args) {
-    out = `${out} (${
-      Object.entries(args)
-        .map(([key, val]) => {
-          const name = `in${variables.size}`;
-          variables.set(name, val);
-          return `${key}: $${name}`;
-        })
-    })`;
+    out = `${out} (${Object.entries(args)
+      .map(([key, val]) => {
+        const name = `in${variables.size}`;
+        variables.set(name, val);
+        return `${key}: $${name}`;
+      })
+      })`;
   }
 
   const subNodes = node.subNodes;
   if (subNodes) {
-    out = `${out} { ${
-      subNodes.map((node) => convertQueryNodeGql(node, variables)).join(" ")
-    } }`;
+    out = `${out} { ${subNodes.map((node) => convertQueryNodeGql(node, variables)).join(" ")
+      } }`;
   }
   return out;
 }
 
 class QueryGraphBase {
-  constructor(private typeNameMapGql: Record<string, string>) {}
+  constructor(private typeNameMapGql: Record<string, string>) { }
 
   graphql(addr: URL | string, options?: GraphQlTransportOptions) {
     return new GraphQLTransport(
