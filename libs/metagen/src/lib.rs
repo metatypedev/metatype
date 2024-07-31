@@ -34,6 +34,7 @@ mod mdk_python;
 mod mdk_rust;
 mod mdk_typescript;
 
+mod client_py;
 mod client_ts;
 
 #[cfg(test)]

@@ -40,10 +40,9 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         for (const arg of $.argv) {
           if (!files[arg]) {
             console.log(
-              `Unknown env "${arg}", available: ${
-                Object.keys(files).join(
-                  ", ",
-                )
+              `Unknown env "${arg}", available: ${Object.keys(files).join(
+                ", ",
+              )
               } or "all".`,
             );
             Deno.exit(1);
@@ -53,19 +52,17 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       }
 
       if (on.size > 0) {
-        await $.raw`${DOCKER_CMD} compose ${
-          [...on].flatMap((file) => [
-            "-f",
-            file,
-          ])
-        } up -d --remove-orphans`;
+        await $.raw`${DOCKER_CMD} compose ${[...on].flatMap((file) => [
+          "-f",
+          file,
+        ])
+          } up -d --remove-orphans`;
       } else {
-        await $.raw`${DOCKER_CMD} compose ${
-          Object.values(files).flatMap((file) => [
-            "-f",
-            file,
-          ])
-        } down --remove-orphans`;
+        await $.raw`${DOCKER_CMD} compose ${Object.values(files).flatMap((file) => [
+          "-f",
+          file,
+        ])
+          } down --remove-orphans`;
       }
     },
   },
@@ -89,7 +86,6 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
       TG_ADMIN_PASSWORD: "password",
       TG_PORT: "7891",
-      // TMP_DIR: $.path(projectDir).join("tmp").toString(),
     },
     fn: ($) => $`cargo run -p typegate`,
   },

@@ -2,17 +2,15 @@ export type GraphQlTransportOptions = Omit<RequestInit, "body"> & {
   fetch?: typeof fetch;
 };
 
-const variablePath = Symbol("variablePath");
-const pathSeparator = "%.%";
-
-class GraphQLTransportCore {
+export class GraphQLTransport {
   constructor(
     public address: URL,
     public options: GraphQlTransportOptions,
     private typeToGqlTypeMap: Record<string, string>,
-  ) {}
+  ) {
+  }
 
-  buildGql(
+  protected buildGql(
     query: Record<string, SelectNode>,
     ty: "query" | "mutation",
     name: string = "",
@@ -37,7 +35,7 @@ class GraphQLTransportCore {
     };
   }
 
-  async fetch(
+  protected async fetch(
     doc: string,
     variables: Record<string, unknown>,
     options?: GraphQlTransportOptions,
@@ -86,22 +84,12 @@ class GraphQLTransportCore {
     }
     return await res.json() as { data: unknown; errors?: object[] };
   }
-}
 
-export class GraphQLTransport {
-  #core: GraphQLTransportCore;
-  constructor(
-    address: URL,
-    options: GraphQlTransportOptions,
-    typeToGqlTypeMap: Record<string, string>,
-  ) {
-    this.#core = new GraphQLTransportCore(address, options, typeToGqlTypeMap);
-  }
   async query<Doc extends Record<string, QueryNode<unknown>>>(
     query: Doc,
     options?: GraphQlTransportOptions,
   ): Promise<QueryDocOut<Doc>> {
-    const { variables, doc } = this.#core.buildGql(
+    const { variables, doc } = this.buildGql(
       Object.fromEntries(
         Object.entries(query).map((
           [key, val],
@@ -109,7 +97,7 @@ export class GraphQLTransport {
       ),
       "query",
     );
-    const res = await this.#core.fetch(doc, variables, options);
+    const res = await this.fetch(doc, variables, options);
     if ("errors" in res) {
       throw new Error("graphql errors on response", {
         cause: res.errors,
@@ -122,7 +110,7 @@ export class GraphQLTransport {
     query: Doc,
     options?: GraphQlTransportOptions,
   ): Promise<QueryDocOut<Doc>> {
-    const { variables, doc } = this.#core.buildGql(
+    const { variables, doc } = this.buildGql(
       Object.fromEntries(
         Object.entries(query).map((
           [key, val],
@@ -130,7 +118,7 @@ export class GraphQLTransport {
       ),
       "query",
     );
-    const res = await this.#core.fetch(doc, variables, options);
+    const res = await this.fetch(doc, variables, options);
     if ("errors" in res) {
       throw new Error("graphql errors on response", {
         cause: res.errors,
@@ -145,7 +133,13 @@ export class GraphQLTransport {
   >(
     fun: (args: T) => Doc,
   ): PreparedRequest<T, Doc> {
-    return new PreparedRequest(this.#core, fun, "query");
+    return new PreparedRequest(
+      this.address,
+      this.options,
+      this.typeToGqlTypeMap,
+      fun,
+      "query",
+    );
   }
 
   prepareMutation<
@@ -154,26 +148,38 @@ export class GraphQLTransport {
   >(
     fun: (args: T) => Q,
   ): PreparedRequest<T, Q> {
-    return new PreparedRequest(this.#core, fun, "mutation");
+    return new PreparedRequest(
+      this.address,
+      this.options,
+      this.typeToGqlTypeMap,
+      fun,
+      "mutation",
+    );
   }
 }
+
+const variablePath = Symbol("variablePath");
+const pathSeparator = "%.%";
 
 class PreparedRequest<
   T extends JsonObject,
   Doc extends Record<string, QueryNode<unknown> | MutationNode<unknown>>,
-> {
+> extends GraphQLTransport {
   #doc: string;
   #mappings: Record<string, unknown>;
 
   constructor(
-    private core: GraphQLTransportCore,
+    address: URL,
+    options: GraphQlTransportOptions,
+    typeToGqlTypeMap: Record<string, string>,
     fun: (args: T) => Doc,
     ty: "query" | "mutation",
     name: string = "",
   ) {
+    super(address, options, typeToGqlTypeMap);
     const rootId = "$root";
     const dryRunNode = fun(this.#getProxy(rootId) as unknown as T);
-    const { doc, variables } = core.buildGql(
+    const { doc, variables } = this.buildGql(
       Object.fromEntries(
         Object.entries(dryRunNode).map((
           [key, val],
@@ -252,7 +258,7 @@ class PreparedRequest<
     //   doc: this.#doc,
     //   mapping: this.#mappings,
     // });
-    const res = await this.core.fetch(this.#doc, resolvedVariables, opts);
+    const res = await this.fetch(this.#doc, resolvedVariables, opts);
     if ("errors" in res) {
       throw new Error("graphql errors on response", {
         cause: res.errors,
