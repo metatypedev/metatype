@@ -142,7 +142,7 @@ def selection_to_nodes(
                         + "requires argument object "
                         + f"but selection is typeof {type(node_selection)}"
                     )
-                sub_selections = node_selection[0]
+                sub_selections = node_selection[1]
             elif isinstance(sub_selections, tuple):
                 raise Exception(
                     f"node at {parent_path}.{node_selection} "
@@ -385,14 +385,10 @@ class NodeDescs:
     @staticmethod
     def Func9():
         return NodeMeta(
-            **{
-                **asdict(NodeDescs.Post()),
-                **asdict(NodeMeta(
-                    arg_types={
-                        "filter": "Optional4",
-                    },
-                ))
-            }
+            sub_nodes=NodeDescs.Post().sub_nodes,
+            arg_types={
+                "filter": "Optional4",
+            },
         )
 
     @staticmethod
@@ -408,20 +404,16 @@ class NodeDescs:
     @staticmethod
     def Func19():
         return NodeMeta(
-            **{
-                **asdict(NodeDescs.Post()),
-                **asdict(NodeMeta(
-                    arg_types={
-                        "id": "String13",
-                    },
-                ))
-            }
+            sub_nodes=NodeDescs.User().sub_nodes,
+            arg_types={
+                "id": "String13",
+            },
         )
 
     @staticmethod
     def Func20():
         return NodeMeta(
-            **asdict(NodeDescs.User()),
+            sub_nodes=NodeDescs.User().sub_nodes,
         )
 
 

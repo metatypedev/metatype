@@ -3,6 +3,7 @@
 
 mod node_metas;
 mod selections;
+mod types;
 
 use core::fmt::Write;
 
@@ -130,23 +131,22 @@ fn render_mdk_ts(_config: &ClienPyGenConfig, tg: &Typegraph) -> anyhow::Result<S
     write!(
         dest,
         r#"
-export class QueryGraph extends QueryGraphBase {{
-  constructor() {{
-    super({{"#
+class QueryGraph(QueryGraphBase):
+    def __init__(self):
+        self.ty_to_gql_ty_map = {{"#
     )?;
     for ty_name in name_mapper.memo.borrow().deref().values() {
         write!(
             dest,
             // TODO: proper any scalar support
             r#"
-      "{ty_name}": "Any","#
+            "{ty_name}": "Any","#
         )?;
     }
     write!(
         dest,
         r#"
-    }});
-  }}
+        }};
     "#
     )?;
 
@@ -161,16 +161,16 @@ export class QueryGraph extends QueryGraphBase {{
             fun.in_id.map(|id| data_types.get(&id).unwrap()),
             fun.select_ty.map(|id| selection_names.get(&id).unwrap()),
         ) {
-            (Some(arg_ty), Some(select_ty)) => format!("args: {arg_ty}, select: {select_ty}"),
+            (Some(arg_ty), Some(select_ty)) => format!("self, args: {arg_ty}, select: {select_ty}"),
             // functions that return scalars don't need selections
-            (Some(arg_ty), None) => format!("args: {arg_ty}"),
+            (Some(arg_ty), None) => format!("self, args: {arg_ty}"),
             // not all functions have args (empty struct arg)
-            (None, Some(select_ty)) => format!("select: {select_ty}"),
+            (None, Some(select_ty)) => format!("self, select: {select_ty}"),
             (None, None) => "".into(),
         };
 
         let args_selection = match (fun.in_id, fun.select_ty) {
-            (Some(_), Some(_)) => "[args, select]",
+            (Some(_), Some(_)) => "(args, select)",
             (Some(_), None) => "args",
             (None, Some(_)) => "select",
             (None, None) => "true",
@@ -311,8 +311,8 @@ fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
 
 /// Render the common sections like the transports
 fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
-    let mdk_ts = include_str!("static/mod.ts");
-    writeln!(dest, "{}", mdk_ts)?;
+    let mod_py = include_str!("static/mod.py");
+    writeln!(dest, "{}", mod_py)?;
     Ok(())
 }
 
@@ -374,12 +374,11 @@ fn render_node_metas(
     write!(
         dest,
         r#"
-const nodeMetas = {{
-  scalar() {{
-    return {{}};
-  }},
-  {methods}
-}}
+class NodeDescs:
+    @staticmethod
+    def scalar():
+        return NodeMeta()
+    {methods}
 "#
     )?;
     Ok(memo)

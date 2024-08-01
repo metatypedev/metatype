@@ -23,23 +23,24 @@ impl TsNodeMetasRenderer {
         write!(
             dest,
             r#"
-  {ty_name}(): NodeMeta {{
-    return {{
-      subNodes: ["#
+    @staticmethod
+    {ty_name}(): 
+        return NodeMeta(
+            sub_nodes={{"#
         )?;
         for (key, node_ref) in props {
             write!(
                 dest,
                 r#"
-        ["{key}", this.{node_ref}()],"#
+                "{key}": NodeDescs.{node_ref}(),"#
             )?;
         }
         write!(
             dest,
             r#"
-      ],
-    }};
-  }},"#
+            }},
+        );
+"#
         )?;
         Ok(())
     }
@@ -54,36 +55,37 @@ impl TsNodeMetasRenderer {
         write!(
             dest,
             r#"
-  {ty_name}(): NodeMeta {{
-    return {{
-      ...this.{return_node}(),"#
+    @staticmethod
+    {ty_name}(): 
+        return NodeMeta(
+            sub_nodes=NodeDescs.{return_node}().sub_nodes,"#
         )?;
         if let Some(fields) = argument_fields {
             write!(
                 dest,
                 r#"
-      argumentTypes: {{"#
+            arg_types={{"#
             )?;
 
             for (key, ty) in fields {
                 write!(
                     dest,
                     r#"
-        {key}: "{ty}","#
+                "{key}": "{ty}","#
                 )?;
             }
 
             write!(
                 dest,
                 r#"
-      }},"#
+            }},"#
             )?;
         }
         write!(
             dest,
             r#"
-    }};
-  }},"#
+        );
+"#
         )?;
         Ok(())
     }
@@ -161,20 +163,6 @@ impl RenderType for TsNodeMetasRenderer {
                 // data: UnionTypeData { any_of: variants },
                 // base,
             } => {
-                // let variants = variants
-                //     .iter()
-                //     .map(|&inner| {
-                //         let (ty_name, _cyclic) = renderer.render_subgraph(inner, cursor)?;
-                //         let ty_name = match ty_name {
-                //             RenderedName::Name(name) => name,
-                //             RenderedName::Placeholder(name) => name,
-                //         };
-                //         Ok::<_, anyhow::Error>(ty_name)
-                //     })
-                //     .collect::<Result<Vec<_>, _>>()?;
-                // let ty_name = normalize_type_title(&base.title);
-                // self.render_union_type(renderer, &ty_name, variants)?;
-                // ty_name
                 todo!("unions are wip")
             }
         };
