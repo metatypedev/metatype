@@ -24,7 +24,7 @@ class NodeArgValue:
     value: Any
 
 NodeArgs = Dict[str, NodeArgValue]
-Out = TypeVar("Out")
+Out = TypeVar("Out", covariant=True)
 
 
 @dataclass
@@ -462,17 +462,17 @@ class QueryGraph(QueryGraphBase):
             "Optional4": "Any",
         }
 
-    def get_user(self, args: UserArgs, select: UserSelectParams):
+    def get_user(self, args: UserArgs, select: UserSelectParams) -> QueryNode[User]:
         node = selection_to_nodes(
             {"getUser": (args, select)}, {"getUser": NodeDescs.Func19()}, "$q"
-        )
-        return node[0]
+        )[0]
+        return QueryNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
 
-    def get_post(self, args: PostArgs, select: PostSelectParams):
+    def get_post(self, args: PostArgs, select: PostSelectParams) -> QueryNode[Post]:
         node = selection_to_nodes(
             {"getPosts": (args, select)}, {"getPosts": NodeDescs.Func9()}, "$q"
-        )
-        return node[0]
+        )[0]
+        return QueryNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
 
 
 qg = QueryGraph()
