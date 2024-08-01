@@ -86,3 +86,17 @@ await runOrExit([
   ...flags["cache-only"] ? [] : ["--reload", "--lock-write"],
   ...tsFiles,
 ], projectDir);
+
+/* for (const file of tsFiles) {
+  const out = await $`deno info
+        --config=${denoConfigPath}
+        --unstable-worker-options
+        --unstable-net
+        ${file}`
+    .cwd(projectDir)
+    .missing("stdout");
+  if (/missing/.test(out)) {
+    console.log(file);
+    break;
+  }
+} */

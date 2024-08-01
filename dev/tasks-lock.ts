@@ -43,6 +43,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         // we don't use the `generate-lockfile` command because
         // "If the lockfile already exists, it will be rebuilt with the
         // latest available version of every package."
+        // and this breaks stuff
         await $`cargo tree`.stdout("piped");
       }
     },

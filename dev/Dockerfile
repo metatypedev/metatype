@@ -1,6 +1,6 @@
 # disable SHELL cmd down below if switching to non-debug
-ARG RUST_VERSION=1.77.1
-ARG DENO_VERSION=1.43.6
+ARG RUST_VERSION=1.79.0
+ARG DENO_VERSION=1.45.2
 ARG DISTROLESS_TAG=debug-nonroot
 
 #
@@ -52,7 +52,7 @@ RUN set -eux; \
     ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=8d50518
+ARG GHJK_VERSION=b702292
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
