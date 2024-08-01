@@ -29,7 +29,7 @@ export class KvRuntime extends Runtime {
     const { typegraph, args } = params as RuntimeInitParams<KvRuntimeData>;
     const typegraphName = TypeGraph.formatName(typegraph);
     const connection = await connect({
-      hostname: args.host ?? "localhost",
+      hostname: args.host,
       port: args.port ?? "6379",
     });
     const instance = new KvRuntime(typegraphName, connection);
@@ -68,14 +68,14 @@ export class KvRuntime extends Runtime {
       }
 
       if (name == "kv_keys") {
-        return async () => {
-          return await this.redis.keys("*");
+        return async (filter: string) => {
+          return await this.redis.keys(filter);
         };
       }
 
       if (name == "kv_all") {
-        return async () => {
-          return await this.redis.hgetall("*");
+        return async (filter: string) => {
+          return await this.redis.hgetall(filter);
         };
       }
     };

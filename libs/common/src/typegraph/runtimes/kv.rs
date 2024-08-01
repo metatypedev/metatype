@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct KvRuntimeData {
-    pub host: Option<String>,
+    pub host: String,
     pub port: Option<String>,
     pub db_number: Option<u8>,
     pub password: Option<String>,

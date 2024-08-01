@@ -563,7 +563,7 @@ export interface WasiMatData {
 }
 
 export interface KvRuntimeData {
-  host: string | null;
+  host: string;
   port: string | null;
   db_number: number | null;
   password: string | null;
