@@ -62,7 +62,7 @@ export class GraphQLTransport {
         `error reading body: ${err}`
       );
       throw new Error(
-        `graphql request to ${this.address} failed: ${body}`,
+        `graphql request to ${this.address} failed with status ${res.status}: ${body}`,
         {
           cause: {
             response: res,
