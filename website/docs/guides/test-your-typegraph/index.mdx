@@ -6,8 +6,8 @@ import TsPmTabs from "@site/src/components/TsPackageManagerTabs";
 
 # Test typegraphs
 
-[Typegraph](/docs/reference/typegraph) is the SDK of the _Metatype_ where the app is authored and defined.
-Typegraphs can be tested easily with the common test suites in the language of your choosing.
+[Typegraph](/docs/reference/typegraph) is the SDK for _Metatype_,  used to author and define applications..
+Typegraphs can be easily tested using common test suites in your preferred programming language.
 
 The following next lines describe how you can test your typegraph.
 For _Typescript_ SDK, we will be using [vitest](https://vitest.dev/) and [pytest](https://docs.pytest.org/en/stable/) for the _Python_ SDK in this example.
@@ -158,7 +158,11 @@ test("test if typegraph serialization works", async () => {
 });
 ```
 
-Furthermore, you can test typegraph deployment and running a query against a typegate instance. You first test for typegraph deploy, then querying into a typegate instance. The following tests depict on how you can do that.
+Furthermore, you can test typegraph deployment and running a query against a typegate instance. You first test for typegraph deploy, then querying into a typegate instance. The following tests depict on how you can do that. 
+
+:::info
+Make sure you have a typegate node running for the next tests to work.
+:::
 
 ```typescript
 ...
@@ -167,7 +171,6 @@ const gate = "http://localhost:7891";
 const typegraph_name = "example";
 
 test("test typegraph deploy to typegate", async () => {
-    // TODO: launch typegate programmatically
 
     const auth = new BasicAuth("admin", "password");
 
@@ -354,6 +357,10 @@ def test_serialize():
 ```
 
 Furthermore, you can test typegraph deployment and running a query against a typegate instance. You first test for typegraph deploy, then querying into a typegate instance. The following tests depict on how you can do that.
+
+:::info
+Make sure you have a typegate node running for the next tests to work.
+:::
 
 ```python
 ...
