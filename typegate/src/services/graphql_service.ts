@@ -51,7 +51,7 @@ export async function handleGraphQL(
     content = await parseRequest(request);
   } catch (e) {
     if (e instanceof BaseError) {
-      return e.toResponse(Object.fromEntries(headers));
+      return e.toResponse(headers);
     }
     return badRequest(e.message);
   }
@@ -120,7 +120,7 @@ export async function handleGraphQL(
   } catch (e) {
     // throw e;
     if (e instanceof BaseError) {
-      return e.toResponse(Object.fromEntries(headers));
+      return e.toResponse(headers);
     }
     if (e instanceof ResolverError) {
       logger.error(`field err: ${e.message}`);

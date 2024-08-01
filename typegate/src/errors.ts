@@ -56,7 +56,7 @@ export class BaseError extends Error {
   }
 
   toResponse(
-    headers: Record<string, string> = {},
+    headers: Headers = new Headers(),
     graphqlFormat = true,
   ): Response {
     const type = this.#type ?? this.constructor.name;
