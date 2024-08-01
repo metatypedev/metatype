@@ -55,7 +55,7 @@ export class BaseError extends Error {
     return this;
   }
 
-  toResponse(graphqlFormat = true): Response {
+  toResponse(headers: Record<string, string>, graphqlFormat = true): Response {
     const type = this.#type ?? this.constructor.name;
     logger.error(
       "{}[{}:{}]: {}",
@@ -98,7 +98,7 @@ export class BaseError extends Error {
 
     return new Response(JSON.stringify(responseObj), {
       status: this.code,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...headers },
     });
   }
 }
