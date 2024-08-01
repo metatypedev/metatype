@@ -68,14 +68,14 @@ export class KvRuntime extends Runtime {
       }
 
       if (name == "kv_keys") {
-        return async (filter: string) => {
-          return await this.redis.keys(filter);
+        return async (filter: string | null) => {
+          return await this.redis.keys(filter ?? "*");
         };
       }
 
       if (name == "kv_all") {
-        return async (filter: string) => {
-          return await this.redis.hgetall(filter);
+        return async (filter: string | null) => {
+          return await this.redis.hgetall(filter ?? "*");
         };
       }
     };
