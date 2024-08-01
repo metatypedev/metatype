@@ -89,7 +89,7 @@ function serve(typegates: TypegateManager): Promise<ServeResult> {
   });
 }
 
-type MetaTestCleanupFn = () => void | Promise<void>;
+type MetaTestCleanupFn = () => unknown | Promise<unknown>;
 
 const defaultCli = await createMetaCli(shell);
 
@@ -138,7 +138,9 @@ export class MetaTest {
   }
 
   addCleanup(fn: MetaTestCleanupFn) {
-    this.disposables.defer(fn);
+    this.disposables.defer(async () => {
+      await fn();
+    });
   }
 
   get typegate() {

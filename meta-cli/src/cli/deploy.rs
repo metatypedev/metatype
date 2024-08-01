@@ -75,8 +75,8 @@ pub struct DeployOptions {
     // FIXME incompatible with non-watch mode
     #[cfg(feature = "typegate")]
     /// Run a typegate with the current target configuration
-    #[clap(long)]
-    pub run_typegate: bool,
+    #[clap(skip = None)]
+    pub typegate_options: Option<super::typegate::Typegate>,
 
     /// maximum number of concurrent deployment tasks
     #[clap(long)]
@@ -306,14 +306,19 @@ mod watch_mode {
         );
 
         #[cfg(feature = "typegate")]
-        let _typegate_addr = if deploy.options.run_typegate {
+        let _typegate_addr = if let Some(tg_opts) = deploy.options.typegate_options {
             use crate::deploy::actors::typegate::TypegateInit;
             info!("starting typegate");
             Some(
-                TypegateInit::new(&deploy.node_config, &deploy.base_dir)
-                    .await?
-                    .start(console.clone())
-                    .await?,
+                TypegateInit::new(
+                    &deploy.node_config,
+                    &deploy.base_dir,
+                    tg_opts.main_url,
+                    tg_opts.import_map_url,
+                )
+                .await?
+                .start(console.clone())
+                .await?,
             )
         } else {
             None
