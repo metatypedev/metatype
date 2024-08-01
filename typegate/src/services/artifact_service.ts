@@ -52,11 +52,9 @@ export class ArtifactService {
         });
       } catch (e) {
         if (e instanceof BaseError) {
-          return e.toResponse({ "Content-Type": "application/json" });
+          return e.toResponse();
         }
-        return new UnknownError(e).toResponse({
-          "Content-Type": "application/json",
-        });
+        return new UnknownError(e).toResponse();
       }
     }
 
@@ -110,7 +108,7 @@ export class ArtifactService {
       meta = await this.store.takeArtifactMeta(token);
     } catch (e) {
       if (e instanceof BaseError) {
-        return e.toResponse({ "Content-Type": "application/json" });
+        return e.toResponse();
       }
       return new Response(JSON.stringify({ error: e.message }), {
         status: 500,

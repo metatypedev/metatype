@@ -39,20 +39,20 @@ export const jsonError = (
 export const badRequest = (message: string) => {
   return new BaseError(null, ErrorKind.User, message)
     .withType("BadRequest")
-    .toResponse({ "Content-Type": "application/json" });
+    .toResponse();
 };
 export const notFound = (message = "not found") =>
   new BaseError(null, ErrorKind.User, message, 404)
     .withType("NotFound")
-    .toResponse({ "Content-Type": "application/json" });
+    .toResponse();
 
 export const methodNotAllowed = () =>
   new BaseError(null, ErrorKind.User, "method not allowed", 405)
     .withType("MethodNotAllowed")
-    .toResponse({ "Content-Type": "application/json" });
+    .toResponse();
 
 export const serverError = () => {
   return new BaseError(null, ErrorKind.Service, "internal server error")
     .withType("ServerError")
-    .toResponse({ "Content-Type": "application/json" });
+    .toResponse();
 };
