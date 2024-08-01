@@ -8,7 +8,7 @@ pub use deno;
 use deno::{
     deno_runtime::{
         deno_core::{futures::FutureExt, unsync::JoinHandle, ModuleSpecifier},
-        permissions::PermissionsOptions,
+        deno_permissions::{self, PermissionsOptions},
         tokio_util::create_and_run_current_thread_with_maybe_metrics,
     },
     *,
@@ -47,15 +47,21 @@ pub fn run_sync(
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) {
-    create_and_run_current_thread_with_maybe_metrics(async move {
-        spawn_subcommand(async move {
-            run(main_mod, import_map_url, permissions, custom_extensions)
+    new_thread_builder()
+        .spawn(|| {
+            create_and_run_current_thread_with_maybe_metrics(async move {
+                spawn_subcommand(async move {
+                    run(main_mod, import_map_url, permissions, custom_extensions)
+                        .await
+                        .unwrap()
+                })
                 .await
                 .unwrap()
+            })
         })
-        .await
         .unwrap()
-    });
+        .join()
+        .unwrap();
 }
 
 pub async fn run(
@@ -66,7 +72,7 @@ pub async fn run(
 ) -> anyhow::Result<()> {
     deno::util::v8::init_v8_flags(&[], &[], deno::util::v8::get_v8_flags_from_env());
 
-    deno_runtime::permissions::set_prompt_callbacks(
+    deno_permissions::set_prompt_callbacks(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
     );
@@ -95,8 +101,8 @@ pub async fn run(
     let cli_factory = factory::CliFactory::from_flags(flags)?.with_custom_ext_cb(custom_extensions);
 
     let worker_factory = cli_factory.create_cli_main_worker_factory().await?;
-    let permissions = deno_runtime::permissions::PermissionsContainer::new(
-        deno_runtime::permissions::Permissions::from_options(&permissions)?,
+    let permissions = deno_permissions::PermissionsContainer::new(
+        deno_permissions::Permissions::from_options(&permissions)?,
     );
     let mut worker = worker_factory
         .create_main_worker(
@@ -155,7 +161,7 @@ pub async fn test(
 
     deno::util::v8::init_v8_flags(&[], &[], deno::util::v8::get_v8_flags_from_env());
 
-    deno_runtime::permissions::set_prompt_callbacks(
+    deno_permissions::set_prompt_callbacks(
         Box::new(util::draw_thread::DrawThread::hide),
         Box::new(util::draw_thread::DrawThread::show),
     );
@@ -213,21 +219,24 @@ pub async fn test(
 
     let options = cli_factory.cli_options().clone();
 
-    let test_options = args::TestOptions {
-        files,
-        ..options.resolve_test_options(test_flags)?
+    let test_options = args::WorkspaceTestOptions {
+        // files,
+        ..options.resolve_workspace_test_options(&test_flags)
     };
+    let members_with_test_opts = options.resolve_test_options_for_members(&test_flags)?;
     let file_fetcher = cli_factory.file_fetcher()?;
 
     // Various test files should not share the same permissions in terms of
     // `PermissionsContainer` - otherwise granting/revoking permissions in one
     // file would have impact on other files, which is undesirable.
-    let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
+    let permissions = deno_permissions::Permissions::from_options(&permissions)?;
 
     let specifiers_with_mode = fetch_specifiers_with_test_mode(
         options.as_ref(),
         file_fetcher,
-        test_options.files,
+        members_with_test_opts
+            .into_iter()
+            .map(|(_, opts)| opts.files),
         &test_options.doc,
     )
     .await?;
@@ -287,12 +296,12 @@ pub async fn test(
     Ok(())
 }
 
-fn new_thread_builder() -> std::thread::Builder {
+pub fn new_thread_builder() -> std::thread::Builder {
     let builder = std::thread::Builder::new();
     let builder = if cfg!(debug_assertions) {
         // this is only relevant for WebWorkers
         // FIXME: find a better location for this as tihs won't work
-        // if a new thread has already launched by this point
+        // if a second thread has already launched by this point
         if std::env::var("RUST_MIN_STACK").is_err() {
             std::env::set_var("RUST_MIN_STACK", "8388608");
         }
@@ -304,107 +313,4 @@ fn new_thread_builder() -> std::thread::Builder {
         builder
     };
     builder
-}
-
-pub fn bench_sync(
-    files: deno_config::glob::FilePatterns,
-    config_file: PathBuf,
-    permissions: PermissionsOptions,
-    custom_extensions: Arc<worker::CustomExtensionsCb>,
-    argv: Vec<String>,
-) {
-    new_thread_builder()
-        .spawn(|| {
-            create_and_run_current_thread_with_maybe_metrics(async move {
-                spawn_subcommand(async move {
-                    bench(files, config_file, permissions, custom_extensions, argv)
-                        .await
-                        .unwrap()
-                })
-                .await
-                .unwrap()
-            })
-        })
-        .unwrap()
-        .join()
-        .unwrap();
-}
-
-pub async fn bench(
-    files: deno_config::glob::FilePatterns,
-    config_file: PathBuf,
-    permissions: PermissionsOptions,
-    custom_extensions: Arc<worker::CustomExtensionsCb>,
-    argv: Vec<String>,
-) -> anyhow::Result<()> {
-    use deno::tools::bench::*;
-    use deno::tools::test::TestFilter;
-    deno::util::v8::init_v8_flags(&[], &[], deno::util::v8::get_v8_flags_from_env());
-
-    deno_runtime::permissions::set_prompt_callbacks(
-        Box::new(util::draw_thread::DrawThread::hide),
-        Box::new(util::draw_thread::DrawThread::show),
-    );
-    let flags = args::Flags {
-        unstable_config: args::UnstableConfig {
-            features: DEFAULT_UNSTABLE_FLAGS
-                .iter()
-                .copied()
-                .map(String::from)
-                .collect(),
-            ..Default::default()
-        },
-        type_check_mode: args::TypeCheckMode::Local,
-        config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
-        argv,
-        ..Default::default()
-    };
-
-    let bench_options = args::BenchOptions {
-        ..args::BenchOptions::resolve(
-            Some(deno_config::BenchConfig { files }),
-            None,
-            &std::env::current_dir()?,
-        )?
-    };
-    let cli_factory = factory::CliFactory::from_flags(flags)?.with_custom_ext_cb(custom_extensions);
-
-    let options = cli_factory.cli_options();
-
-    // Various bench files should not share the same permissions in terms of
-    // `PermissionsContainer` - otherwise granting/revoking permissions in one
-    // file would have impact on other files, which is undesirable.
-    let permissions = deno_runtime::permissions::Permissions::from_options(&permissions)?;
-
-    let specifiers = util::fs::collect_specifiers(
-        bench_options.files,
-        options.vendor_dir_path().map(ToOwned::to_owned),
-        is_supported_bench_path,
-    )?;
-
-    if specifiers.is_empty() {
-        return Err(deno_core::error::generic_error("No bench modules found"));
-    }
-
-    let main_graph_container = cli_factory.main_module_graph_container().await?;
-    main_graph_container.check_specifiers(&specifiers).await?;
-
-    if bench_options.no_run {
-        return Ok(());
-    }
-
-    let log_level = options.log_level();
-    let worker_factory = Arc::new(cli_factory.create_cli_main_worker_factory().await?);
-    bench_specifiers(
-        worker_factory,
-        &permissions,
-        specifiers,
-        BenchSpecifierOptions {
-            filter: TestFilter::from_flag(&bench_options.filter),
-            json: bench_options.json,
-            log_level,
-        },
-    )
-    .await?;
-    Ok(())
 }

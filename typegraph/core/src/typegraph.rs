@@ -224,7 +224,7 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> 
         deps: Default::default(),
     };
 
-    tg.meta.prefix = params.prefix.clone();
+    tg.meta.prefix.clone_from(&params.prefix);
 
     let pretty = params.pretty;
     TypegraphPostProcessor::new(params).postprocess(&mut tg)?;

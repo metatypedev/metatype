@@ -31,13 +31,21 @@ pub struct TypegateActor {
     temp_dir: Option<tempfile::TempDir>,
 }
 
+#[derive(Debug)]
 pub struct TypegateInit {
     port: u16,
     admin_password: String,
+    main_url: Option<String>,
+    import_map_url: Option<String>,
 }
 
 impl TypegateInit {
-    pub async fn new(node_config: &NodeConfig, working_dir: impl AsRef<Path>) -> Result<Self> {
+    pub async fn new(
+        node_config: &NodeConfig,
+        working_dir: impl AsRef<Path> + std::fmt::Debug,
+        main_url: Option<String>,
+        import_map_url: Option<String>,
+    ) -> Result<Self> {
         let host = node_config
             .url
             .host_str()
@@ -58,9 +66,12 @@ impl TypegateInit {
         Ok(Self {
             port,
             admin_password,
+            main_url,
+            import_map_url,
         })
     }
 
+    #[tracing::instrument]
     pub async fn start(self, console: Addr<ConsoleActor>) -> Result<Addr<TypegateActor>> {
         let (ready_tx, ready_rx) = oneshot::channel();
 
@@ -74,6 +85,7 @@ impl TypegateInit {
         let command = self.create_command(&temp_dir)?;
 
         let addr = TypegateActor::create(move |ctx| {
+            trace!("typegate actor starting");
             ctx.address()
                 .do_send(message::StartProcess(command, ready_tx));
 
@@ -103,6 +115,12 @@ impl TypegateInit {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
+        if let Some(url) = &self.main_url {
+            command.arg(format!("--main-url={url}"));
+        }
+        if let Some(url) = &self.import_map_url {
+            command.arg(format!("--import-map-url={url}"));
+        }
 
         Ok(command)
     }
@@ -325,7 +343,6 @@ impl TypegateActor {
 
         while let Some(line) = error_handler.handle(reader.next_line().await) {
             let naked_line = strip_ansi_escapes::strip_str(&line);
-            log::debug!("from line native: {naked_line:?}");
             if let Some(log_record) = LogRecord::from_line_native(&naked_line) {
                 log_record.log(&console);
             } else {

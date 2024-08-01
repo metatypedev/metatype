@@ -1,17 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-export const METATYPE_VERSION = "0.4.5";
-export const PUBLISHED_VERSION = "0.4.4";
-export const GHJK_VERSION = "8d50518";
+export const METATYPE_VERSION = "0.4.6";
+export const PUBLISHED_VERSION = "0.4.5";
+export const GHJK_VERSION = "b702292";
 export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";
-export const RUST_VERSION = "1.77.1";
-export const DENO_VERSION = "1.43.6";
+export const RUST_VERSION = "1.79.0";
+export const DENO_VERSION = "1.45.2";
 export const WASMTIME_VERSION = "21.0.0";
 export const WASMTIME_PY_VERSION = "21.0.0";
 export const TYPEGRAPH_VERSION = "0.0.3";
 export const PRISMA_VERSION = "5.6.0";
 export const SDK_PACKAGE_NAME_TS = "@typegraph/sdk";
+export const PYTHON_VERSION = "3.8.18";
 export const TAGLINE =
   `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.`;
 
@@ -32,9 +33,6 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   ],
   "typegate/tests/**/*.snap": [
     [/(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)/, METATYPE_VERSION],
-  ],
-  "typegate/tests/e2e/upgrade/upgrade_test.ts": [
-    [/(const\s+PUBLISHED_VERSION\s*=\s*").+(";)/, PUBLISHED_VERSION],
   ],
   "typegraph/python/typegraph/__init__.py": [
     ['(version = ").+(")', METATYPE_VERSION],
@@ -57,9 +55,10 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     ['(wasmtime = ").+(")', WASMTIME_VERSION],
     ['(wasmtime-wasi = ").+(")', WASMTIME_VERSION],
   ],
-  "dev/deps.ts": [
-    [/(.*\/metatypedev\/ghjk\/)[^\/]*(\/.*)/, GHJK_VERSION],
+  "typegraph/deno/sdk/jsr.json": [
+    [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
   ],
+  "dev/deps.ts": [[/(.*\/metatypedev\/ghjk\/)[^\/]*(\/.*)/, GHJK_VERSION]],
   "dev/cross.Dockerfile": [["(ARG GHJK_VERSION=).*()", GHJK_VERSION]],
   "dev/Dockerfile": [
     ["(ARG DENO_VERSION=).*()", DENO_VERSION],
@@ -85,13 +84,13 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     [/(wasmtime = "\^).+(")/, WASMTIME_PY_VERSION],
   ],
   "examples/templates/**/compose.yml": [
-    ["(    image: ghcr.io/metatypedev/typegate:v).+()", PUBLISHED_VERSION],
+    ["(    image: ghcr.io/metatypedev/typegate:v).+()", METATYPE_VERSION],
   ],
   "examples/templates/**/pyproject.toml": [
-    ['(typegraph = ").+(")', PUBLISHED_VERSION],
+    ['(typegraph = ").+(")', METATYPE_VERSION],
   ],
   "examples/templates/**/package.json": [
-    [/(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)/, PUBLISHED_VERSION],
+    [/(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)/, METATYPE_VERSION],
   ],
   "examples/**/*.ts": [
     [

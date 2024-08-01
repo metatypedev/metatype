@@ -6,14 +6,14 @@ use clap::Parser;
 
 use crate::cli::{Action, ConfigArgs};
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct Typegate {
     /// The url to the `main.ts` module of typegate deno
     #[clap(long)]
-    main_url: Option<String>,
+    pub main_url: Option<String>,
     /// The url to the `import_map.json` manifest for typegate
     #[clap(long)]
-    import_map_url: Option<String>,
+    pub import_map_url: Option<String>,
 }
 
 #[async_trait]
@@ -30,26 +30,38 @@ pub fn command(_cmd: Typegate, _gen_args: ConfigArgs) -> Result<()> {
     }
     #[cfg(feature = "typegate")]
     {
-        let cmd = _cmd;
-        let runtime = typegate_engine::runtime();
-        const BASE_URL: &str = "https://raw.githubusercontent.com/metatypedev/metatype/";
-        let main_url = cmd.main_url.unwrap_or_else(|| {
-            BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/typegate/src/main.ts"
-        });
-        let import_map_url = cmd.import_map_url.unwrap_or_else(|| {
-            BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/typegate/import_map.json"
-        });
-
-        runtime
-            .block_on(typegate_engine::launch_typegate_deno(
-                // typegate_core::resolve_url_or_path(
-                //     "",
-                //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
-                // )?,
-                typegate_engine::resolve_url(&main_url)?,
-                Some(import_map_url),
-            ))
-            .map_err(anyhow_to_eyre!())?;
+        if cfg!(debug_assertions) {
+            typegate_engine::new_thread_builder()
+                .spawn(|| run_typegate(_cmd))?
+                .join()
+                .map_err(|_err| ferr!("error joining thread"))??;
+        } else {
+            run_typegate(_cmd)?;
+        }
         Ok(())
     }
+}
+
+#[cfg(feature = "typegate")]
+fn run_typegate(cmd: Typegate) -> Result<()> {
+    let runtime = typegate_engine::runtime();
+    const BASE_URL: &str = "https://raw.githubusercontent.com/metatypedev/metatype/";
+    let main_url = cmd.main_url.unwrap_or_else(|| {
+        BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/typegate/src/main.ts"
+    });
+    let import_map_url = cmd.import_map_url.unwrap_or_else(|| {
+        BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/typegate/import_map.json"
+    });
+
+    runtime
+        .block_on(typegate_engine::launch_typegate_deno(
+            // typegate_core::resolve_url_or_path(
+            //     "",
+            //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
+            // )?,
+            typegate_engine::resolve_url(&main_url)?,
+            Some(import_map_url),
+        ))
+        .map_err(anyhow_to_eyre!())?;
+    Ok(())
 }
