@@ -9,7 +9,7 @@ import TsPmTabs from "@site/src/components/TsPackageManagerTabs";
 [Typegraph](/docs/reference/typegraph) is the SDK of the _Metatype_ where the app is authored and defined.
 Typegraphs can be tested easily with the common test suites in the language of your choosing.
 
-The following next lines describes how you can test your typegraph.
+The following next lines describe how you can test your typegraph.
 For _Typescript_ SDK, we will be using [vitest](https://vitest.dev/) and [pytest](https://docs.pytest.org/en/stable/) for the _Python_ SDK in this example.
 
 <SDKTabs>
@@ -59,7 +59,7 @@ To install _vitest_, you can execute the command below in your terminal based on
 
 </TsPmTabs>
 
-After you have installed _vitest_, your project is setup for some tests. Create a test `tg.test.ts` in `/tests` directory from the root project dir. _vitest_ discovers tests by file names, so ensure that your test names follow the following format below.
+After you have installed _vitest_, your project is set up for some tests. Create a test `tg.test.ts` in `/tests` directory from the root project dir. _vitest_ discovers tests by file names, so ensure that your test names follow the following format below.
 
 ```bash
 **/*.test.ts
@@ -341,7 +341,7 @@ def test_serialize():
         "serialize": lambda params: serialized_output,
     }
     
-    # cache the serialize result as the serialize function can only be called one time
+    # cache the serialize result as the serialize function can only be called once
     reusable_tg = TypegraphOutput(
         name=tg_output.name, serialize=lambda params: serialized_output
     )
@@ -416,7 +416,7 @@ pytest
 
 You don't have to stop here, you can test various outputs you get from running the typegraph function and querying directly into the deployed typegraphs. You can add more test cases to make your app robust.
 
-While `pytest` is used in this example, typegraphs can be easily tested with most of other test suite solutions by following the above approach.
+While `pytest` is used in this example, typegraphs can be easily tested with most other test suite solutions by following the above approach.
     
     </TabItem>
 
