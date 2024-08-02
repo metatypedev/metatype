@@ -6,7 +6,7 @@ import TsPmTabs from "@site/src/components/TsPackageManagerTabs";
 
 # Test typegraphs
 
-[Typegraph](/docs/reference/typegraph) is the SDK for _Metatype_,  used to author and define applications..
+[Typegraph](/docs/reference/typegraph) is the SDK for _Metatype_, used to author and define applications..
 Typegraphs can be easily tested using common test suites in your preferred programming language.
 
 The following next lines describe how you can test your typegraph.
@@ -99,27 +99,26 @@ For the typegraph test file, you can write these simple test cases to check the 
 import { assert, assertType, expect, test } from "vitest";
 import { BasicAuth, tgDeploy, DeployResult } from "@typegraph/sdk/tg_deploy";
 
-
 test("checks if typegraph output is computed", async () => {
-    const tg_output = await tg;
+  const tg_output = await tg;
 
-    assertType<TypegraphOutput>(tg_output);
+  assertType<TypegraphOutput>(tg_output);
 });
 
 test("test if typegraph name is correct", async () => {
-    const tg_output = await tg;
+  const tg_output = await tg;
 
-    assert(tg_output.name === "example", "typegraph name is correct");
+  assert(tg_output.name === "example", "typegraph name is correct");
 });
 
 test("test if serialize function exists", async () => {
-    const tg_output = await tg;
+  const tg_output = await tg;
 
-    assertType<Function>(typeof tg_output.serialize);
+  assertType<Function>(typeof tg_output.serialize);
 });
 ```
 
-The above were simple tests you can execute against the output of the typegraph function. You can also do a serialization test to check if the typegraph is serialized successfully. 
+The above were simple tests you can execute against the output of the typegraph function. You can also do a serialization test to check if the typegraph is serialized successfully.
 
 ```typescript
 ...
@@ -144,7 +143,7 @@ test("test if typegraph serialization works", async () => {
         },
         pretty: false,
     };
-    
+
     const serialized = tg_output.serialize(params);
 
     // cache the serialize result as the serialize function can only be called one time
@@ -158,7 +157,7 @@ test("test if typegraph serialization works", async () => {
 });
 ```
 
-Furthermore, you can test typegraph deployment and running a query against a typegate instance. You first test for typegraph deploy, then querying into a typegate instance. The following tests depict on how you can do that. 
+Furthermore, you can test typegraph deployment and running a query against a typegate instance. You first test for typegraph deploy, then querying into a typegate instance. The following tests depict on how you can do that.
 
 :::info
 Make sure you have a typegate node running for the next tests to work.
@@ -223,7 +222,7 @@ test("test defined endpoints from the typegraph", async () => {
 
     const responseBody = await response.json();
     const expectedResult = {"data": {"add": 37}};
-    
+
     assert.exists(responseBody);
     expect(responseBody).toBe(expectedResult)
 
@@ -236,23 +235,16 @@ You don't have to stop here, you can test various outputs you get from running t
     </TabItem>
 
     <TabItem value="python">
-    
-First, you need to add _pytest_ as a dev dependency in your project/application. 
+
+First, you need to add _pytest_ as a dev dependency in your project/application.
 
 :::info
 You can follow [this](/docs/tutorials/quick-start) link on how to bootstrap a metatype application.
 :::
+
 <PyPmTabs>
-    <TabItem value="pip">
-    ```bash
-    pip3 install pytest
-    ```
-    </TabItem>
-    <TabItem value="poetry">
-    ```bash
-    poetry add --group dev pytest
-    ```
-    </TabItem>
+  <TabItem value="pip">```bash pip3 install pytest ```</TabItem>
+  <TabItem value="poetry">```bash poetry add --group dev pytest ```</TabItem>
 </PyPmTabs>
 
 After successful installation, you need to activate a python venv. In poetry, you can easily activate the virtual environment using the command below.
@@ -261,7 +253,7 @@ After successful installation, you need to activate a python venv. In poetry, yo
 poetry shell
 ```
 
-Now, You can start writing tests for your typegraph. For convention, write the tests inside the `tests` directory under the project's root dir. 
+Now, You can start writing tests for your typegraph. For convention, write the tests inside the `tests` directory under the project's root dir.
 
 Assuming you have this simple typegraph definition, which is a template typegraph you can generate by using the `meta new` commmand from the _Meta CLI_.
 
@@ -283,7 +275,7 @@ def example(g: Graph):
 
 ```
 
-You can write the following test to check if your typegraph is correctly authored. Under `/tests` dir, create an empty test and add the test code below. Make sure you name your test file appending `_test` or prepending `test_` so pytest can discover them. 
+You can write the following test to check if your typegraph is correctly authored. Under `/tests` dir, create an empty test and add the test code below. Make sure you name your test file appending `_test` or prepending `test_` so pytest can discover them.
 
 ```python
 from typegraph.wit import SerializeParams, PrismaMigrationConfig, MigrationAction
@@ -310,14 +302,13 @@ def test_tg_name():
 
 def test_serialize_tg():
     assert callable(tg_output.serialize)
-    
+
 ```
 
-
-The above were simple tests you can execute against the output of the typegraph function. You can also do a serialization test to check if the typegraph is serialized successfully. 
+The above were simple tests you can execute against the output of the typegraph function. You can also do a serialization test to check if the typegraph is serialized successfully.
 
 ```python
-... 
+...
 
 # check if the typegraph gets serialized
 def test_serialize():
@@ -343,7 +334,7 @@ def test_serialize():
         "name": tg_output.name,
         "serialize": lambda params: serialized_output,
     }
-    
+
     # cache the serialize result as the serialize function can only be called once
     reusable_tg = TypegraphOutput(
         name=tg_output.name, serialize=lambda params: serialized_output
@@ -424,7 +415,7 @@ pytest
 You don't have to stop here, you can test various outputs you get from running the typegraph function and querying directly into the deployed typegraphs. You can add more test cases to make your app robust.
 
 While `pytest` is used in this example, typegraphs can be easily tested with most other test suite solutions by following the above approach.
-    
+
     </TabItem>
 
 </SDKTabs>
