@@ -4,8 +4,7 @@ from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
-
-class Struct:
+class Struct():
     def repr(self):
         return asdict(self)
 
@@ -77,7 +76,6 @@ class Struct:
         except Exception:
             return val
 
-
 @dataclass
 class Primitives(Struct):
     str: str
@@ -94,25 +92,22 @@ class Primitives(Struct):
     boolean: bool
 
 
+
 FORWARD_REFS["Primitives"] = Primitives
-
-
 @dataclass
 class PrimitivesArgs(Struct):
     data: "Primitives"
 
 
+
 FORWARD_REFS["PrimitivesArgs"] = PrimitivesArgs
-
-
 @dataclass
 class CompositesArgs(Struct):
     data: "Composites"
 
 
+
 FORWARD_REFS["CompositesArgs"] = CompositesArgs
-
-
 @dataclass
 class Composites(Struct):
     opt: Union[str, None]
@@ -121,83 +116,75 @@ class Composites(Struct):
     list: List[str]
 
 
+
 FORWARD_REFS["Composites"] = Composites
-
-
 @dataclass
 class Branch2(Struct):
     branch2: str
 
 
+
 FORWARD_REFS["Branch2"] = Branch2
-
-
 @dataclass
 class Cycles1Args(Struct):
     data: "Cycles1"
 
 
+
 FORWARD_REFS["Cycles1Args"] = Cycles1Args
-
-
 @dataclass
 class Cycles1(Struct):
     phantom1: Union[str, None]
     to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
-    list3: Union[List[Union["Branch33B", "Branch33A"]], None]
+    list3: Union[List[Union["Branch33A", "Branch33B"]], None]
+
 
 
 FORWARD_REFS["Cycles1"] = Cycles1
-
-
 @dataclass
 class Branch33A(Struct):
     phantom3a: Union[str, None]
     to1: Union["Cycles1", None]
 
 
+
 FORWARD_REFS["Branch33A"] = Branch33A
-
-
 @dataclass
 class Branch33B(Struct):
     phantom3b: Union[str, None]
-    to2: Union[Union["Cycles1", Union["Branch33B", "Branch33A"]], None]
+    to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
+
 
 
 FORWARD_REFS["Branch33B"] = Branch33B
-
-
 @dataclass
 class SimpleCycles1Args(Struct):
     data: "SimpleCycles1"
 
 
+
 FORWARD_REFS["SimpleCycles1Args"] = SimpleCycles1Args
-
-
 @dataclass
 class SimpleCycles1(Struct):
     phantom1: Union[str, None]
     to2: Union["SimpleCycles2", None]
 
 
+
 FORWARD_REFS["SimpleCycles1"] = SimpleCycles1
-
-
 @dataclass
 class SimpleCycles2(Struct):
     phantom2: Union[str, None]
     to3: Union["SimpleCycles3", None]
 
 
+
 FORWARD_REFS["SimpleCycles2"] = SimpleCycles2
-
-
 @dataclass
 class SimpleCycles3(Struct):
     phantom3: Union[str, None]
     to1: Union["SimpleCycles1", None]
+
 
 
 FORWARD_REFS["SimpleCycles3"] = SimpleCycles3
@@ -209,17 +196,6 @@ def __repr(value: Any):
     return value
 
 
-def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
-    def exported_wrapper(raw_inp):
-        inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
-        out: Composites = user_fn(inp)
-        if isinstance(out, list):
-            return [__repr(v) for v in out]
-        return __repr(out)
-
-    return exported_wrapper
-
-
 def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
     def exported_wrapper(raw_inp):
         inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
@@ -227,7 +203,16 @@ def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
+    return exported_wrapper
 
+
+def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
+    def exported_wrapper(raw_inp):
+        inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
+        out: Composites = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
     return exported_wrapper
 
 
@@ -238,7 +223,6 @@ def typed_cycles(user_fn: Callable[[Cycles1Args], Cycles1]):
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
-
     return exported_wrapper
 
 
@@ -249,5 +233,6 @@ def typed_simple_cycles(user_fn: Callable[[SimpleCycles1Args], SimpleCycles1]):
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
-
     return exported_wrapper
+
+

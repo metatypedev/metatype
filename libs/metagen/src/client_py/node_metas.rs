@@ -8,11 +8,11 @@ use common::typegraph::*;
 use super::utils::normalize_type_title;
 use crate::{interlude::*, shared::types::*};
 
-pub struct TsNodeMetasRenderer {
+pub struct PyNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
 }
 
-impl TsNodeMetasRenderer {
+impl PyNodeMetasRenderer {
     /// `props` is a map of prop_name -> (TypeName, subNodeName)
     fn render_for_object(
         &self,
@@ -24,7 +24,7 @@ impl TsNodeMetasRenderer {
             dest,
             r#"
     @staticmethod
-    {ty_name}(): 
+    def {ty_name}(): 
         return NodeMeta(
             sub_nodes={{"#
         )?;
@@ -39,7 +39,7 @@ impl TsNodeMetasRenderer {
             dest,
             r#"
             }},
-        );
+        )
 "#
         )?;
         Ok(())
@@ -56,7 +56,7 @@ impl TsNodeMetasRenderer {
             dest,
             r#"
     @staticmethod
-    {ty_name}(): 
+    def {ty_name}(): 
         return NodeMeta(
             sub_nodes=NodeDescs.{return_node}().sub_nodes,"#
         )?;
@@ -84,14 +84,14 @@ impl TsNodeMetasRenderer {
         write!(
             dest,
             r#"
-        );
+        )
 "#
         )?;
         Ok(())
     }
 }
 
-impl RenderType for TsNodeMetasRenderer {
+impl RenderType for PyNodeMetasRenderer {
     fn render(
         &self,
         renderer: &mut TypeRenderer,

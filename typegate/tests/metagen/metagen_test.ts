@@ -8,7 +8,7 @@ import { assertEquals } from "std/assert/mod.ts";
 import { GraphQLQuery } from "../utils/query/graphql_query.ts";
 import { JSONValue } from "../../src/utils.ts";
 import { testDir } from "../utils/dir.ts";
-import $ from "jsr:@david/dax@0.41.0";
+import $ from "dax";
 
 const denoJson = resolve(testDir, "../deno.jsonc");
 
@@ -460,15 +460,34 @@ Meta.test("client table suite", async (metaTest) => {
     ).code,
     0,
   );
-  // FIXME: dax replaces commands to deno with
-  // commands to xtask
-  Deno.execPath = () => "deno";
   const cases = [
     {
       skip: false,
       name: "client_ts",
-      command: $`deno run -A main.ts`.cwd(
+      // NOTE: dax replaces commands to deno with
+      // commands to xtask so we go through bah
+      command: $`bash -c 'deno run -A main.ts'`.cwd(
         join(scriptsPath, "ts"),
+      ),
+      expected: {
+        posts: [
+          { slug: "hair", title: "I dyed my hair!" },
+          { slug: "hello", title: "Hello World!" },
+        ],
+        user: {
+          id: "69099108-e48b-43c9-ad02-c6514eaad6e3",
+          email: "yuse@mail.box",
+          posts: [
+            { slug: "hair", title: "I dyed my hair!" },
+            { slug: "hello", title: "Hello World!" },
+          ],
+        },
+      },
+    },
+    {
+      name: "client_py",
+      command: $`python3 main.py'`.cwd(
+        join(scriptsPath, "py"),
       ),
       expected: {
         posts: [

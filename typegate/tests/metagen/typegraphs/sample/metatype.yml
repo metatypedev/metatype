@@ -10,3 +10,6 @@ metagen:
       - generator: client_ts
         path: ./ts/
         typegraph_path: ../sample.ts
+      - generator: client_py
+        path: ./py/
+        typegraph_path: ../sample.ts

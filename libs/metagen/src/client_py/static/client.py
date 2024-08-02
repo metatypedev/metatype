@@ -1,96 +1,85 @@
-from typing import (
-    Any,
-    Callable,
-    Literal,
-    TypedDict,
-    Mapping,
-    TypeVar,
-    Generic,
-    Dict,
-    Tuple,
-    List,
-    Union,
-)
-from dataclasses import dataclass, asdict
+import typing
+import dataclasses as dc
 import json
 import urllib.request as request
 import urllib.error
 import http.client as http_c
 
 
-@dataclass
+@dc.dataclass
 class NodeArgValue:
     type_name: str
-    value: Any
-
-NodeArgs = Dict[str, NodeArgValue]
-Out = TypeVar("Out", covariant=True)
+    value: typing.Any
 
 
-@dataclass
-class SelectNode(Generic[Out]):
+NodeArgs = typing.Dict[str, NodeArgValue]
+Out = typing.TypeVar("Out", covariant=True)
+
+
+@dc.dataclass
+class SelectNode(typing.Generic[Out]):
     name: str
-    args: Union[NodeArgs, None]
-    sub_nodes: Union[List["SelectNode"], None]
-    _phantom: Union[None, Out] = None
+    args: typing.Union[NodeArgs, None]
+    sub_nodes: typing.Union[typing.List["SelectNode"], None]
+    _phantom: typing.Union[None, Out] = None
 
 
-@dataclass
-class QueryNode(Generic[Out], SelectNode[Out]):
+@dc.dataclass
+class QueryNode(typing.Generic[Out], SelectNode[Out]):
     pass
 
 
-@dataclass
-class MutationNode(Generic[Out], SelectNode[Out]):
+@dc.dataclass
+class MutationNode(typing.Generic[Out], SelectNode[Out]):
     pass
 
 
-ArgT = TypeVar("ArgT")
-SelectionT = TypeVar("SelectionT")
+ArgT = typing.TypeVar("ArgT")
+SelectionT = typing.TypeVar("SelectionT")
 
-AliasInfo = Dict[str, SelectionT]
-ScalarSelectNoArgs = Union[bool, None]  # | AliasInfo['ScalarSelectNoArgs'];
-ScalarSelectArgs = Union[
-    Tuple[ArgT, None], Literal[False], None
+AliasInfo = typing.Dict[str, SelectionT]
+ScalarSelectNoArgs = typing.Union[bool, None]  # | AliasInfo['ScalarSelectNoArgs'];
+ScalarSelectArgs = typing.Union[
+    ArgT, typing.Literal[False], None
 ]  # | AliasInfo['ScalarSelectArgs'];
-CompositSelectNoArgs = Union[
-    Tuple[None, SelectionT], Literal[False], None
+CompositeSelectNoArgs = typing.Union[
+    SelectionT, typing.Literal[False], None
 ]  # | AliasInfo['CompositSelectNoArgs'];
-CompositSelectArgs = Union[
-    Tuple[ArgT, SelectionT], Literal[False], None
+CompositeSelectArgs = typing.Union[
+    typing.Tuple[ArgT, SelectionT], typing.Literal[False], None
 ]  # | AliasInfo['CompositSelectArgs'];
 
 
-@dataclass
+@dc.dataclass
 class SelectionFlags:
-    select_all: Union[bool, None] = None
+    select_all: typing.Union[bool, None] = None
 
 
-class Selection(TypedDict, total=False):
+class Selection(typing.TypedDict, total=False):
     _: SelectionFlags
 
 
-SelectionGeneric = Dict[
+SelectionGeneric = typing.Dict[
     str,
-    Union[
+    typing.Union[
         SelectionFlags,
         ScalarSelectNoArgs,
-        ScalarSelectArgs[Mapping[str, Any]],
-        CompositSelectNoArgs,
-        CompositSelectArgs[Mapping[str, Any], Any],
+        ScalarSelectArgs[typing.Mapping[str, typing.Any]],
+        CompositeSelectNoArgs,
+        CompositeSelectArgs[typing.Mapping[str, typing.Any], typing.Any],
     ],
 ]
 
 
-@dataclass
+@dc.dataclass
 class NodeMeta:
-    sub_nodes: Union[Dict[str, "NodeMeta"], None] = None
-    arg_types: Union[Dict[str, str], None] = None
+    sub_nodes: typing.Union[typing.Dict[str, "NodeMeta"], None] = None
+    arg_types: typing.Union[typing.Dict[str, str], None] = None
 
 
 def selection_to_nodes(
-    selection: SelectionGeneric, metas: Dict[str, NodeMeta], parent_path: str
-) -> List[SelectNode[Any]]:
+    selection: SelectionGeneric, metas: typing.Dict[str, NodeMeta], parent_path: str
+) -> typing.List[SelectNode[typing.Any]]:
     out = []
     flags = selection.get("_")
     if flags is not None and not isinstance(flags, SelectionFlags):
@@ -103,11 +92,11 @@ def selection_to_nodes(
         found_nodes.remove(node_name)
 
         node_selection = selection[node_name]
-        if (node_selection is None and not select_all) or (node_selection == False):
+        if (node_selection is None and not select_all) or not node_selection:
             # this node was not selected
             continue
 
-        node_args: Union[NodeArgs, None] = None
+        node_args: typing.Union[NodeArgs, None] = None
         if meta.arg_types is not None:
             if not isinstance(node_selection, tuple):
                 raise Exception(
@@ -132,7 +121,7 @@ def selection_to_nodes(
                         f"unexpected argument ${key} at {parent_path}.{node_name}"
                     )
                 node_args[key] = NodeArgValue(ty_name, val)
-        sub_nodes: Union[List[SelectNode], None] = None
+        sub_nodes: typing.Union[typing.List[SelectNode], None] = None
         if meta.sub_nodes is not None:
             sub_selections = node_selection
             if meta.arg_types is not None:
@@ -171,7 +160,7 @@ def selection_to_nodes(
 
 def convert_query_node_gql(
     node: SelectNode,
-    variables: Dict[str, NodeArgValue],
+    variables: typing.Dict[str, NodeArgValue],
 ):
     out = node.name
     if node.args is not None:
@@ -180,34 +169,34 @@ def convert_query_node_gql(
             name = f"in{len(variables)}"
             variables[name] = val
             arg_row += f"{key}: ${name},"
-        out += f" ({arg_row})"
+        out += f"({arg_row[:-1]})"
 
     if node.sub_nodes is not None:
         sub_node_list = ""
         for node in node.sub_nodes:
-            sub_node_list += f" {convert_query_node_gql(node, variables)}"
-        out += f"{{ {sub_node_list} }}"
+            sub_node_list += f"{convert_query_node_gql(node, variables)} "
+        out += f" {{ {sub_node_list}}}"
     return out
 
 
-@dataclass
+@dc.dataclass
 class GraphQLTransportOptions:
-    headers: Dict[str, str]
+    headers: typing.Dict[str, str]
 
 
-@dataclass
+@dc.dataclass
 class GraphQLRequest:
     addr: str
     method: str
-    headers: Dict[str, str]
+    headers: typing.Dict[str, str]
     body: bytes
 
 
-@dataclass
+@dc.dataclass
 class GraphQLResponse:
     req: GraphQLRequest
     status: int
-    headers: Dict[str, str]
+    headers: typing.Dict[str, str]
     body: bytes
 
 
@@ -216,7 +205,7 @@ class GraphQLTransportBase:
         self,
         addr: str,
         opts: GraphQLTransportOptions,
-        ty_to_gql_ty_map: Dict[str, str],
+        ty_to_gql_ty_map: typing.Dict[str, str],
     ):
         self.addr = addr
         self.opts = opts
@@ -224,11 +213,11 @@ class GraphQLTransportBase:
 
     def build_gql(
         self,
-        query: Dict[str, SelectNode],
-        ty: Union[Literal["query"], Literal["mutation"]],
+        query: typing.Dict[str, SelectNode],
+        ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
         name: str = "",
     ):
-        variables: Dict[str, NodeArgValue] = {}
+        variables: typing.Dict[str, NodeArgValue] = {}
         root_nodes = ""
         for key, node in query.items():
             root_nodes += f"  {key}: {convert_query_node_gql(node, variables)}\n"
@@ -236,14 +225,14 @@ class GraphQLTransportBase:
         for key, val in variables.items():
             args_row += f"${key}: {self.ty_to_gql_ty_map[val.type_name]},"
 
-        doc = f"{ty} {name}({args_row}) {{\n{root_nodes}}}"
+        doc = f"{ty} {name}({args_row[:-1]}) {{\n{root_nodes}}}"
         return (doc, {key: val.value for key, val in variables.items()})
 
     def build_req(
         self,
         doc: str,
-        variables: Dict[str, Any],
-        opts: Union[GraphQLTransportOptions, None] = None,
+        variables: typing.Dict[str, typing.Any],
+        opts: typing.Union[GraphQLTransportOptions, None] = None,
     ):
         headers = {}
         headers.update(self.opts.headers)
@@ -267,7 +256,7 @@ class GraphQLTransportBase:
         if res.status != 200:
             raise Exception(f"graphql request failed with status {res.status}", res)
         if res.headers.get("content-type") != "application/json":
-            raise Exception(f"unexpected content-type in graphql response", res)
+            raise Exception("unexpected content-type in graphql response", res)
         parsed = json.loads(res.body)
         if parsed["errors"]:
             raise Exception("graphql errors in response", parsed)
@@ -278,8 +267,8 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
     def fetch(
         self,
         doc: str,
-        variables: Dict[str, Any],
-        opts: Union[GraphQLTransportOptions, None],
+        variables: typing.Dict[str, typing.Any],
+        opts: typing.Union[GraphQLTransportOptions, None],
     ):
         req = self.build_req(doc, variables, opts)
         try:
@@ -311,9 +300,9 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
 
     def query(
         self,
-        inp: Dict[str, QueryNode[Out]],
-        opts: Union[GraphQLTransportOptions, None] = None,
-    ) -> Dict[str, Out]:
+        inp: typing.Dict[str, QueryNode[Out]],
+        opts: typing.Union[GraphQLTransportOptions, None] = None,
+    ) -> typing.Dict[str, Out]:
         doc, variables = self.build_gql({key: val for key, val in inp.items()}, "query")
         print(doc, variables)
         out = self.fetch(doc, variables, opts)
@@ -321,9 +310,9 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
 
     def mutation(
         self,
-        inp: Dict[str, MutationNode[Out]],
-        opts: Union[GraphQLTransportOptions, None] = None,
-    ) -> Dict[str, Out]:
+        inp: typing.Dict[str, MutationNode[Out]],
+        opts: typing.Union[GraphQLTransportOptions, None] = None,
+    ) -> typing.Dict[str, Out]:
         doc, variables = self.build_gql(
             {key: val for key, val in inp.items()}, "mutation"
         )
@@ -332,33 +321,33 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
 
 
 # def queryT[Out](
-#     self, inp: Tuple[QueryNode[Out, Any, Any], *QueryNode[Out, Any, Any]]
-# ) -> Tuple[*Out]:
+#     self, inp: typing.Tuple[QueryNode[Out, typing.Any, typing.Any], *QueryNode[Out, typing.Any, typing.Any]]
+# ) -> typing.Tuple[*Out]:
 #     return ()
 
 # def prepare_query[Args, K, Out](
 #     self,
 #     argType: type[Args],
-#     inp: Callable[[Args], Dict[K, SelectNode[Out, Any, Any]]],
+#     inp: Callable[[Args], typing.Dict[K, SelectNode[Out, typing.Any, typing.Any]]],
 # ) -> PreparedRequest[Args, K, Out]:
 #     return PreparedRequest(inp)
 
 
-class PreparedRequest(Generic[ArgT, Out]):
-    def __init__(self, inp: Callable[[ArgT], Dict[str, SelectNode[Out]]]):
+class PreparedRequest(typing.Generic[ArgT, Out]):
+    def __init__(self, inp: typing.Callable[[ArgT], typing.Dict[str, SelectNode[Out]]]):
         self.inp = inp
         pass
 
-    def do(self, args: ArgT) -> Dict[str, Out]:
+    def do(self, args: ArgT) -> typing.Dict[str, Out]:
         return {}
 
 
 class QueryGraphBase:
-    def __init__(self, ty_to_gql_ty_map: Dict[str, str]):
+    def __init__(self, ty_to_gql_ty_map: typing.Dict[str, str]):
         self.ty_to_gql_ty_map = ty_to_gql_ty_map
 
     def graphql_sync(
-        self, addr: str, opts: Union[GraphQLTransportOptions, None] = None
+        self, addr: str, opts: typing.Union[GraphQLTransportOptions, None] = None
     ):
         return GraphQLTransportUrlib(
             addr, opts or GraphQLTransportOptions({}), self.ty_to_gql_ty_map
@@ -368,140 +357,3 @@ class QueryGraphBase:
 # - - - - - - - - - -- - - - - - -  -- - -  #
 
 
-class NodeDescs:
-    @staticmethod
-    def scalar():
-        return NodeMeta()
-
-    @staticmethod
-    def Post():
-        return NodeMeta(
-            sub_nodes={
-                "slug": NodeDescs.scalar(),
-                "title": NodeDescs.scalar(),
-            },
-        )
-
-    @staticmethod
-    def Func9():
-        return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
-            arg_types={
-                "filter": "Optional4",
-            },
-        )
-
-    @staticmethod
-    def User():
-        return NodeMeta(
-            sub_nodes={
-                "id": NodeDescs.scalar(),
-                "email": NodeDescs.scalar(),
-                "posts": NodeDescs.Func9(),
-            },
-        )
-
-    @staticmethod
-    def Func19():
-        return NodeMeta(
-            sub_nodes=NodeDescs.User().sub_nodes,
-            arg_types={
-                "id": "String13",
-            },
-        )
-
-    @staticmethod
-    def Func20():
-        return NodeMeta(
-            sub_nodes=NodeDescs.User().sub_nodes,
-        )
-
-
-class User(TypedDict):
-    id: str
-    email: str
-    post: List["Post"]
-
-
-class UserArgs(TypedDict):
-    id: str
-
-
-class UserSelectParams(Selection, total=False):
-    id: ScalarSelectNoArgs
-    email: ScalarSelectNoArgs
-    posts: CompositSelectArgs["PostArgs", "PostSelectParams"]
-
-
-class Post(TypedDict):
-    slug: str
-    title: str
-
-
-class PostArgs(TypedDict):
-    filter: Union[str, None]
-
-
-class PostSelectParams(Selection, total=False):
-    slug: ScalarSelectNoArgs
-    title: ScalarSelectNoArgs
-
-
-class QueryGraph(QueryGraphBase):
-    def __init__(self):
-        self.ty_to_gql_ty_map = {
-            "String13": "Any",
-            "Optional4": "Any",
-        }
-
-    def get_user(self, args: UserArgs, select: UserSelectParams) -> QueryNode[User]:
-        node = selection_to_nodes(
-            {"getUser": (args, select)}, {"getUser": NodeDescs.Func19()}, "$q"
-        )[0]
-        return QueryNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
-
-    def get_post(self, args: PostArgs, select: PostSelectParams) -> QueryNode[Post]:
-        node = selection_to_nodes(
-            {"getPosts": (args, select)}, {"getPosts": NodeDescs.Func9()}, "$q"
-        )[0]
-        return QueryNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
-
-
-qg = QueryGraph()
-gql_client = qg.graphql_sync("http://localhost:7890/sample")
-
-out = gql_client.query(
-    {
-        "user": qg.get_user(
-            UserArgs(id="1234"),
-            UserSelectParams(
-                id=True,
-                email=True,
-                posts=(PostArgs(filter="top"), PostSelectParams(slug=True, title=True)),
-            ),
-        ),
-        "posts": qg.get_post(
-            PostArgs(filter="today"), PostSelectParams(slug=True, title=True)
-        ),
-    }
-)
-user = out["user"]
-
-# prepared = gql_client.prepare_query(
-#     str,
-#     lambda args: {
-#         "user": qg.get_user(
-#             UserArgs(id="1234"),
-#             UserSelectParams(
-#                 id=True,
-#                 email=True,
-#                 posts=(PostArgs(filter="top"), PostSelectParams(slug=True, title=True)),
-#             ),
-#         ),
-#         "posts": qg.get_post(
-#             PostArgs(filter="today"), PostSelectParams(slug=True, title=True)
-#         ),
-#     },
-# )
-#
-# out = prepared.do("arg")

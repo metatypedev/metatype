@@ -161,6 +161,16 @@ impl GeneratorRunner {
                         },
                     },
                 ),
+                (
+                    "client_py".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = client_py::ClienPyGenConfig::from_json(val, workspace_path)?;
+                            let generator = client_py::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
             ]);
         }
 

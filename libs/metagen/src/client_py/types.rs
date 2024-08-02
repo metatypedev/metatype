@@ -16,7 +16,8 @@ impl PyTypeRenderer {
         alias_name: &str,
         aliased_ty: &str,
     ) -> std::fmt::Result {
-        writeln!(out, "{alias_name} = {aliased_ty};")
+        writeln!(out, "{alias_name} = {aliased_ty}")?;
+        writeln!(out)
     }
 
     /// `props` is a map of prop_name -> (TypeName, serialization_name)
@@ -26,11 +27,11 @@ impl PyTypeRenderer {
         ty_name: &str,
         props: IndexMap<String, Rc<str>>,
     ) -> std::fmt::Result {
-        writeln!(dest, "class {ty_name}(typing.TypedDict)")?;
+        writeln!(dest, "class {ty_name}(typing.TypedDict):")?;
         for (name, ty_name) in props.into_iter() {
             writeln!(dest, "    {name}: {ty_name}")?;
         }
-        Ok(())
+        writeln!(dest)
     }
 
     fn render_union_type(
@@ -44,7 +45,7 @@ impl PyTypeRenderer {
             write!(dest, "\n    {ty_name},")?;
         }
         writeln!(dest, "]")?;
-        Ok(())
+        writeln!(dest)
     }
 }
 
@@ -121,7 +122,7 @@ impl RenderType for PyTypeRenderer {
                 self.render_alias(renderer, &ty_name, "str")?;
                 ty_name
             }
-            TypeNode::String { .. } => "string".into(),
+            TypeNode::String { .. } => "str".into(),
             TypeNode::File { base, .. } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
                 self.render_alias(renderer, &ty_name, "bytes")?;
