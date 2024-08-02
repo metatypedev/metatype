@@ -171,8 +171,8 @@ def convert_query_node_gql(
         for key, val in node.args.items():
             name = f"in{len(variables)}"
             variables[name] = val
-            arg_row += f"{key}: ${name},"
-        out += f"({arg_row[:-1]})"
+            arg_row += f"{key}: ${name}, "
+        out += f"({arg_row[:-2]})"
 
     if node.sub_nodes is not None:
         sub_node_list = ""
@@ -226,9 +226,9 @@ class GraphQLTransportBase:
             root_nodes += f"  {key}: {convert_query_node_gql(node, variables)}\n"
         args_row = ""
         for key, val in variables.items():
-            args_row += f"${key}: {self.ty_to_gql_ty_map[val.type_name]},"
+            args_row += f"${key}: {self.ty_to_gql_ty_map[val.type_name]}, "
 
-        doc = f"{ty} {name}({args_row[:-1]}) {{\n{root_nodes}}}"
+        doc = f"{ty} {name}({args_row[:-2]}) {{\n{root_nodes}}}"
         return (doc, {key: val.value for key, val in variables.items()})
 
     def build_req(
@@ -261,7 +261,7 @@ class GraphQLTransportBase:
         if res.headers.get("content-type") != "application/json":
             raise Exception("unexpected content-type in graphql response", res)
         parsed = json.loads(res.body)
-        if parsed["errors"]:
+        if parsed.get("errors"):
             raise Exception("graphql errors in response", parsed)
         return parsed["data"]
 
@@ -307,7 +307,6 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         opts: typing.Union[GraphQLTransportOptions, None] = None,
     ) -> typing.Dict[str, Out]:
         doc, variables = self.build_gql({key: val for key, val in inp.items()}, "query")
-        print(doc, variables)
         out = self.fetch(doc, variables, opts)
         return out
 
@@ -409,13 +408,6 @@ class NodeDescs:
         )
 
 
-class Post(typing.TypedDict):
-    slug: str
-    title: str
-
-
-Post7 = typing.List[Post]
-
 StringUuid = str
 
 StringEmail = str
@@ -429,6 +421,14 @@ class User(typing.TypedDict):
 
 class GetUserInput(typing.TypedDict):
     id: str
+
+
+class Post(typing.TypedDict):
+    slug: str
+    title: str
+
+
+Post7 = typing.List[Post]
 
 
 class GetPostsInput(typing.TypedDict):
@@ -453,24 +453,22 @@ class QueryGraph(QueryGraphBase):
             "Optional4": "Any",
         }
 
-    def get_user(
-        self, args: GetUserInput, select: UserSelections
-    ) -> MutationNode[User]:
+    def get_user(self, args: GetUserInput, select: UserSelections) -> QueryNode[User]:
         node = selection_to_nodes(
             {"getUser": (args, select)}, {"getUser": NodeDescs.Func19()}, "$q"
         )[0]
-        return MutationNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
+        return QueryNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
 
     def get_posts(
         self, args: GetPostsInput, select: PostSelections
-    ) -> MutationNode[Post7]:
+    ) -> QueryNode[Post7]:
         node = selection_to_nodes(
             {"getPosts": (args, select)}, {"getPosts": NodeDescs.Func9()}, "$q"
         )[0]
-        return MutationNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
+        return QueryNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
 
-    def no_args(self, select: UserSelections) -> MutationNode[User]:
+    def no_args(self, select: UserSelections) -> QueryNode[User]:
         node = selection_to_nodes(
             {"noArgs": select}, {"noArgs": NodeDescs.Func20()}, "$q"
         )[0]
-        return MutationNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
+        return QueryNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)

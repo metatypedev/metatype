@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { QueryGraph } from "./mdk.ts";
+import { QueryGraph } from "./client.ts";
 
 const api1 = new QueryGraph();
 

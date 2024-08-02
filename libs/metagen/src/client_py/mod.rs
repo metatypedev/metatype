@@ -179,8 +179,8 @@ class QueryGraph(QueryGraphBase):
         let meta_method = node_metas.get(&fun.id).unwrap();
 
         let node_type = match fun.effect {
-            EffectType::Create => "QueryNode",
-            EffectType::Update | EffectType::Delete | EffectType::Read => "MutationNode",
+            EffectType::Read => "QueryNode",
+            EffectType::Update | EffectType::Delete | EffectType::Create => "MutationNode",
         };
 
         write!(

@@ -106,7 +106,7 @@ export class GraphQLTransport {
     return res.data as QueryDocOut<Doc>;
   }
 
-  async mutation<Doc extends Record<string, QueryNode<unknown>>>(
+  async mutation<Doc extends Record<string, MutationNode<unknown>>>(
     query: Doc,
     options?: GraphQlTransportOptions,
   ): Promise<QueryDocOut<Doc>> {
@@ -116,7 +116,7 @@ export class GraphQLTransport {
           [key, val],
         ) => [key, (val as MutationNode<unknown>).inner]),
       ),
-      "query",
+      "mutation",
     );
     const res = await this.fetch(doc, variables, options);
     if ("errors" in res) {

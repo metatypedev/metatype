@@ -168,8 +168,8 @@ def convert_query_node_gql(
         for key, val in node.args.items():
             name = f"in{len(variables)}"
             variables[name] = val
-            arg_row += f"{key}: ${name},"
-        out += f"({arg_row[:-1]})"
+            arg_row += f"{key}: ${name}, "
+        out += f"({arg_row[:-2]})"
 
     if node.sub_nodes is not None:
         sub_node_list = ""
@@ -223,9 +223,9 @@ class GraphQLTransportBase:
             root_nodes += f"  {key}: {convert_query_node_gql(node, variables)}\n"
         args_row = ""
         for key, val in variables.items():
-            args_row += f"${key}: {self.ty_to_gql_ty_map[val.type_name]},"
+            args_row += f"${key}: {self.ty_to_gql_ty_map[val.type_name]}, "
 
-        doc = f"{ty} {name}({args_row[:-1]}) {{\n{root_nodes}}}"
+        doc = f"{ty} {name}({args_row[:-2]}) {{\n{root_nodes}}}"
         return (doc, {key: val.value for key, val in variables.items()})
 
     def build_req(
@@ -258,7 +258,7 @@ class GraphQLTransportBase:
         if res.headers.get("content-type") != "application/json":
             raise Exception("unexpected content-type in graphql response", res)
         parsed = json.loads(res.body)
-        if parsed["errors"]:
+        if parsed.get("errors"):
             raise Exception("graphql errors in response", parsed)
         return parsed["data"]
 
@@ -304,7 +304,6 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         opts: typing.Union[GraphQLTransportOptions, None] = None,
     ) -> typing.Dict[str, Out]:
         doc, variables = self.build_gql({key: val for key, val in inp.items()}, "query")
-        print(doc, variables)
         out = self.fetch(doc, variables, opts)
         return out
 

@@ -466,7 +466,7 @@ Meta.test("client table suite", async (metaTest) => {
       name: "client_ts",
       // NOTE: dax replaces commands to deno with
       // commands to xtask so we go through bah
-      command: $`bash -c 'deno run -A main.ts'`.cwd(
+      command: $`bash -c "deno run -A main.ts"`.cwd(
         join(scriptsPath, "ts"),
       ),
       expected: {
@@ -486,7 +486,7 @@ Meta.test("client table suite", async (metaTest) => {
     },
     {
       name: "client_py",
-      command: $`python3 main.py'`.cwd(
+      command: $`python3 main.py`.cwd(
         join(scriptsPath, "py"),
       ),
       expected: {
@@ -509,19 +509,15 @@ Meta.test("client table suite", async (metaTest) => {
   await using _engine = await metaTest.engine(
     "metagen/typegraphs/sample.ts",
   );
-  for (const prefix of ["rs", "ts", "py"]) {
-    await metaTest.should(`mdk data go round ${prefix}`, async (t) => {
-      for (const { name, command, expected, skip } of cases) {
-        if (skip) {
-          continue;
-        }
-        await t.step(name, async () => {
-          const res = await command
-            .env({ "TG_PORT": metaTest.port.toString() })
-            .json();
-          assertEquals(res, expected);
-        });
-      }
+  for (const { name, command, expected, skip } of cases) {
+    if (skip) {
+      continue;
+    }
+    await metaTest.should(name, async () => {
+      const res = await command
+        .env({ "TG_PORT": metaTest.port.toString() })
+        .json();
+      assertEquals(res, expected);
     });
   }
 });

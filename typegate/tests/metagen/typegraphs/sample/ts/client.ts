@@ -109,7 +109,7 @@ export class GraphQLTransport {
     return res.data as QueryDocOut<Doc>;
   }
 
-  async mutation<Doc extends Record<string, QueryNode<unknown>>>(
+  async mutation<Doc extends Record<string, MutationNode<unknown>>>(
     query: Doc,
     options?: GraphQlTransportOptions,
   ): Promise<QueryDocOut<Doc>> {
@@ -119,7 +119,7 @@ export class GraphQLTransport {
           [key, val],
         ) => [key, (val as MutationNode<unknown>).inner]),
       ),
-      "query",
+      "mutation",
     );
     const res = await this.fetch(doc, variables, options);
     if ("errors" in res) {
@@ -524,23 +524,23 @@ const nodeMetas = {
     };
   },
 };
-export type GetPostsInput = {
-  filter: (string) | null | undefined;
-};
 export type Post = {
   slug: string;
   title: string;
 };
 export type Post7 = Array<Post>;
+export type GetUserInput = {
+  id: string;
+};
+export type GetPostsInput = {
+  filter: (string) | null | undefined;
+};
 export type StringUuid = string;
 export type StringEmail = string;
 export type User = {
   id: StringUuid;
   email: StringEmail;
   posts: void;
-};
-export type GetUserInput = {
-  id: string;
 };
 
 export type PostSelections = {
@@ -569,7 +569,7 @@ export class QueryGraph extends QueryGraphBase {
       [["getUser", nodeMetas.Func19()]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<User>;
+    return new QueryNode(inner) as QueryNode<User>;
   }
   getPosts(args: GetPostsInput, select: PostSelections) {
     const inner = selectionToNodeSet(
@@ -577,7 +577,7 @@ export class QueryGraph extends QueryGraphBase {
       [["getPosts", nodeMetas.Func9()]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<Post7>;
+    return new QueryNode(inner) as QueryNode<Post7>;
   }
   noArgs(select: UserSelections) {
     const inner = selectionToNodeSet(
@@ -585,6 +585,6 @@ export class QueryGraph extends QueryGraphBase {
       [["noArgs", nodeMetas.Func20()]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<User>;
+    return new QueryNode(inner) as QueryNode<User>;
   }
 }

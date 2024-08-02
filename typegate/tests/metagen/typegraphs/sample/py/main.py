@@ -1,4 +1,4 @@
-from .client import (
+from client import (
     QueryGraph,
     GetUserInput,
     UserSelections,
@@ -9,9 +9,10 @@ import json
 import os
 
 qg = QueryGraph()
-gql_client = qg.graphql_sync(f"http://localhost:{os.getenv("TG_PORT")}/sample")
+port = os.getenv("TG_PORT")
+gql_client = qg.graphql_sync(f"http://localhost:{port}/sample")
 
-res = gql_client.mutation(
+res = gql_client.query(
     {
         "user": qg.get_user(
             GetUserInput(id="1234"),
