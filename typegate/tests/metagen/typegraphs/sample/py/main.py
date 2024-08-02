@@ -1,4 +1,10 @@
-from .client import *
+from .client import (
+    QueryGraph,
+    GetUserInput,
+    UserSelections,
+    GetPostsInput,
+    PostSelections,
+)
 import json
 import os
 
@@ -12,12 +18,14 @@ res = gql_client.mutation(
             UserSelections(
                 id=True,
                 email=True,
-                posts=(GetPostsInput(filter="top"), PostSelections(slug=True, title=True)),
+                posts=(
+                    GetPostsInput(filter="top"),
+                    PostSelections(slug=True, title=True),
+                ),
             ),
         ),
         "posts": qg.get_posts(
-            GetPostsInput(filter="today"), 
-            PostSelections(slug=True, title=True)
+            GetPostsInput(filter="today"), PostSelections(slug=True, title=True)
         ),
     }
 )

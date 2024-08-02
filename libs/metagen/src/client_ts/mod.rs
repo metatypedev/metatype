@@ -379,7 +379,7 @@ const nodeMetas = {{
     return {{}};
   }},
   {methods}
-}}
+}};
 "#
     )?;
     Ok(memo)

@@ -13,10 +13,10 @@ pub struct PyNodeSelectionsRenderer {
 }
 
 enum SelectionTy {
-    ScalarNoArgs,
+    Scalar,
     ScalarArgs { arg_ty: Rc<str> },
     CompositeArgs { arg_ty: Rc<str>, select_ty: Rc<str> },
-    CompositeNoArgs { select_ty: Rc<str> },
+    Composite { select_ty: Rc<str> },
 }
 
 impl PyNodeSelectionsRenderer {
@@ -31,9 +31,9 @@ impl PyNodeSelectionsRenderer {
         for (name, select_ty) in props {
             use SelectionTy::*;
             match select_ty {
-                ScalarNoArgs => writeln!(dest, "    {name}: ScalarSelectNoArgs")?,
+                Scalar => writeln!(dest, "    {name}: ScalarSelectNoArgs")?,
                 ScalarArgs { arg_ty } => writeln!(dest, "    {name}: ScalarSelectArgs[{arg_ty}]")?,
-                CompositeNoArgs { select_ty } => {
+                Composite { select_ty } => {
                     writeln!(dest, "    {name}: CompositeSelectNoArgs[{select_ty}]")?
                 }
                 CompositeArgs { arg_ty, select_ty } => writeln!(
@@ -57,12 +57,12 @@ impl PyNodeSelectionsRenderer {
             | TypeNode::Float { .. }
             | TypeNode::Integer { .. }
             | TypeNode::String { .. }
-            | TypeNode::File { .. } => SelectionTy::ScalarNoArgs,
+            | TypeNode::File { .. } => SelectionTy::Scalar,
             TypeNode::Function { data, .. } => {
                 let arg_ty = self.arg_ty_names.get(&data.input).unwrap().clone();
                 match self.selection_for_field(data.output, renderer, cursor)? {
-                    SelectionTy::ScalarNoArgs => SelectionTy::ScalarArgs { arg_ty },
-                    SelectionTy::CompositeNoArgs { select_ty } => {
+                    SelectionTy::Scalar => SelectionTy::ScalarArgs { arg_ty },
+                    SelectionTy::Composite { select_ty } => {
                         SelectionTy::CompositeArgs { select_ty, arg_ty }
                     }
                     SelectionTy::CompositeArgs { .. } | SelectionTy::ScalarArgs { .. } => {
@@ -78,7 +78,7 @@ impl PyNodeSelectionsRenderer {
                 data: ListTypeData { items: item, .. },
                 ..
             } => self.selection_for_field(*item, renderer, cursor)?,
-            TypeNode::Object { .. } => SelectionTy::CompositeNoArgs {
+            TypeNode::Object { .. } => SelectionTy::Composite {
                 select_ty: renderer.render_subgraph(ty, cursor)?.0.unwrap(),
             },
             TypeNode::Union { .. } | TypeNode::Either { .. } => todo!("unions are wip"),
@@ -99,7 +99,7 @@ impl RenderType for PyNodeSelectionsRenderer {
             | TypeNode::File { .. } => unreachable!("scalars don't get to have selections"),
             TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
             TypeNode::Optional { data: OptionalTypeData { item, .. }, .. }
-            | TypeNode::List { data: ListTypeData { items: item, .. }, .. } 
+            | TypeNode::List { data: ListTypeData { items: item, .. }, .. }
             | TypeNode::Function { data:FunctionTypeData { output: item, .. }, .. }
                 => renderer.render_subgraph(*item, cursor)?.0.unwrap().to_string(),
             TypeNode::Object { data, base } => {

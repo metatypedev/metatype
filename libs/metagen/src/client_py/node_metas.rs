@@ -24,7 +24,7 @@ impl PyNodeMetasRenderer {
             dest,
             r#"
     @staticmethod
-    def {ty_name}(): 
+    def {ty_name}():
         return NodeMeta(
             sub_nodes={{"#
         )?;
@@ -56,7 +56,7 @@ impl PyNodeMetasRenderer {
             dest,
             r#"
     @staticmethod
-    def {ty_name}(): 
+    def {ty_name}():
         return NodeMeta(
             sub_nodes=NodeDescs.{return_node}().sub_nodes,"#
         )?;

@@ -360,15 +360,13 @@ class QueryGraphBase:
 # - - - - - - - - - -- - - - - - -  -- - -  #
 
 
-
-
 class NodeDescs:
     @staticmethod
     def scalar():
         return NodeMeta()
-    
+
     @staticmethod
-    def Post(): 
+    def Post():
         return NodeMeta(
             sub_nodes={
                 "slug": NodeDescs.scalar(),
@@ -377,7 +375,7 @@ class NodeDescs:
         )
 
     @staticmethod
-    def Func9(): 
+    def Func9():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
             arg_types={
@@ -386,7 +384,7 @@ class NodeDescs:
         )
 
     @staticmethod
-    def User(): 
+    def User():
         return NodeMeta(
             sub_nodes={
                 "id": NodeDescs.scalar(),
@@ -396,7 +394,7 @@ class NodeDescs:
         )
 
     @staticmethod
-    def Func19(): 
+    def Func19():
         return NodeMeta(
             sub_nodes=NodeDescs.User().sub_nodes,
             arg_types={
@@ -405,26 +403,23 @@ class NodeDescs:
         )
 
     @staticmethod
-    def Func20(): 
+    def Func20():
         return NodeMeta(
             sub_nodes=NodeDescs.User().sub_nodes,
         )
 
-class GetUserInput(typing.TypedDict):
-    id: str
 
 class Post(typing.TypedDict):
     slug: str
     title: str
 
-Post7 = typing.List[Post]
 
-class GetPostsInput(typing.TypedDict):
-    filter: typing.Union[str, None]
+Post7 = typing.List[Post]
 
 StringUuid = str
 
 StringEmail = str
+
 
 class User(typing.TypedDict):
     id: StringUuid
@@ -432,9 +427,18 @@ class User(typing.TypedDict):
     posts: None
 
 
+class GetUserInput(typing.TypedDict):
+    id: str
+
+
+class GetPostsInput(typing.TypedDict):
+    filter: typing.Union[str, None]
+
+
 class PostSelections(Selection, total=False):
     slug: ScalarSelectNoArgs
     title: ScalarSelectNoArgs
+
 
 class UserSelections(Selection, total=False):
     id: ScalarSelectNoArgs
@@ -445,31 +449,28 @@ class UserSelections(Selection, total=False):
 class QueryGraph(QueryGraphBase):
     def __init__(self):
         self.ty_to_gql_ty_map = {
-            "Optional4": "Any",
             "String13": "Any",
+            "Optional4": "Any",
         }
-    
-    def get_user(self, args: GetUserInput, select: UserSelections) -> MutationNode[User]:
+
+    def get_user(
+        self, args: GetUserInput, select: UserSelections
+    ) -> MutationNode[User]:
         node = selection_to_nodes(
-            {"getUser": (args, select)}, 
-            {"getUser": NodeDescs.Func19()}, 
-            "$q"
+            {"getUser": (args, select)}, {"getUser": NodeDescs.Func19()}, "$q"
         )[0]
         return MutationNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
 
-    def get_posts(self, args: GetPostsInput, select: PostSelections) -> MutationNode[Post7]:
+    def get_posts(
+        self, args: GetPostsInput, select: PostSelections
+    ) -> MutationNode[Post7]:
         node = selection_to_nodes(
-            {"getPosts": (args, select)}, 
-            {"getPosts": NodeDescs.Func9()}, 
-            "$q"
+            {"getPosts": (args, select)}, {"getPosts": NodeDescs.Func9()}, "$q"
         )[0]
         return MutationNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
 
     def no_args(self, select: UserSelections) -> MutationNode[User]:
         node = selection_to_nodes(
-            {"noArgs": select}, 
-            {"noArgs": NodeDescs.Func20()}, 
-            "$q"
+            {"noArgs": select}, {"noArgs": NodeDescs.Func20()}, "$q"
         )[0]
         return MutationNode(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
-

@@ -12,12 +12,13 @@ pub struct PyTypeRenderer {}
 impl PyTypeRenderer {
     fn render_alias(
         &self,
-        out: &mut impl Write,
+        dest: &mut impl Write,
         alias_name: &str,
         aliased_ty: &str,
     ) -> std::fmt::Result {
-        writeln!(out, "{alias_name} = {aliased_ty}")?;
-        writeln!(out)
+        writeln!(dest, "{alias_name} = {aliased_ty}")?;
+        writeln!(dest)?;
+        Ok(())
     }
 
     /// `props` is a map of prop_name -> (TypeName, serialization_name)
@@ -31,7 +32,8 @@ impl PyTypeRenderer {
         for (name, ty_name) in props.into_iter() {
             writeln!(dest, "    {name}: {ty_name}")?;
         }
-        writeln!(dest)
+        writeln!(dest)?;
+        Ok(())
     }
 
     fn render_union_type(
@@ -45,7 +47,9 @@ impl PyTypeRenderer {
             write!(dest, "\n    {ty_name},")?;
         }
         writeln!(dest, "]")?;
-        writeln!(dest)
+        writeln!(dest)?;
+        writeln!(dest)?;
+        Ok(())
     }
 }
 

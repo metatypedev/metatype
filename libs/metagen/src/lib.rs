@@ -6,7 +6,7 @@ mod interlude {
     pub use common::typegraph::TypeNode;
     pub use common::typegraph::Typegraph;
 
-    pub use std::collections::{HashMap, HashSet};
+    pub use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
     pub use std::ops::Deref;
     pub use std::path::{Path, PathBuf};
     pub use std::rc::Rc;

@@ -87,7 +87,7 @@ pub trait RenderType {
     }
 }
 
-pub type NameMemo = HashMap<u32, Rc<str>>;
+pub type NameMemo = std::collections::BTreeMap<u32, Rc<str>>;
 
 /// type_id, old_str, (final_ty_name) -> new_str
 type ReplacementRecords = Vec<(u32, Rc<str>, Box<dyn Fn(&str) -> String>)>;
