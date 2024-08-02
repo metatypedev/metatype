@@ -19,7 +19,7 @@
     "jwt": "https://deno.land/x/djwt@v3.0.1/mod.ts",
     "redis": "https://deno.land/x/redis@v0.32.1/mod.ts",
     "oauth2_client": "https://deno.land/x/oauth2_client@v1.0.2/mod.ts",
-    "test/mock_fetch": "https://deno.land/x/mock_fetch@0.3.0/mod.ts",
+    "test/mock_fetch": "./tests/utils/mock_fetch.ts",
     "levenshtein": "https://deno.land/x/levenshtein@v1.0.1/mod.ts",
     "aws-sdk/client-s3": "https://esm.sh/@aws-sdk/client-s3@3.335.0?pin=v131",
     "aws-sdk/s3-request-presigner": "https://esm.sh/@aws-sdk/s3-request-presigner@3.335.0?pin=v131",

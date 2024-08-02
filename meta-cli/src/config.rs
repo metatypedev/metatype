@@ -109,7 +109,11 @@ impl NodeConfig {
         }
     }
 
-    pub async fn get_admin_password(&self, dir: impl AsRef<Path>) -> Result<String> {
+    #[tracing::instrument]
+    pub async fn get_admin_password(
+        &self,
+        dir: impl AsRef<Path> + std::fmt::Debug,
+    ) -> Result<String> {
         let raw_username = self
             .username
             .clone()

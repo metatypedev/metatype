@@ -27,6 +27,7 @@ mod interlude {
 
 pub use deno_core::{resolve_url, resolve_url_or_path};
 pub use ext::extensions;
+pub use mt_deno::new_thread_builder;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
 use shadow_rs::shadow;
@@ -153,12 +154,13 @@ pub async fn launch_typegate_deno(
     let tmp_dir = std::env::var("TMP_DIR")
         .map(|p| PathBuf::from_str(&p).expect("invalid $TMP_DIR"))
         .unwrap();
+    tokio::fs::create_dir_all(&tmp_dir).await?;
     let gitignore = tmp_dir.join(".gitignore");
     if matches!(tokio::fs::try_exists(&gitignore).await, Err(_) | Ok(false)) {
         tokio::fs::write(gitignore, "*").await?;
     }
 
-    let permissions = deno_runtime::permissions::PermissionsOptions {
+    let permissions = deno_runtime::deno_permissions::PermissionsOptions {
         allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
         allow_sys: Some(vec![]),
         allow_env: Some(vec![]),
@@ -195,7 +197,7 @@ fn op_get_version() -> &'static str {
 mod tests {
     use crate::interlude::*;
 
-    use deno_runtime::permissions::PermissionsOptions;
+    use deno_runtime::deno_permissions::PermissionsOptions;
 
     #[test]
     #[ignore]

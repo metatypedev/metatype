@@ -22,6 +22,7 @@
  * with the -q flag.
  */
 
+import { CommandChild } from "jsr:@david/dax@0.41.0";
 import {
   $,
   ctrlc,
@@ -96,6 +97,7 @@ interface Run {
   promise: Promise<Result>;
   output: ReadableStream<string> | null;
   done: boolean;
+  child: CommandChild;
 }
 
 function applyFilter(files: string[], filter: string | undefined): string[] {
@@ -197,6 +199,7 @@ export async function testE2e(args: {
       promise,
       output,
       done: false,
+      child,
     };
   }
 
@@ -238,8 +241,8 @@ export async function testE2e(args: {
       case 2: {
         console.log(`Killing ${testThreads.length} running tests...`);
         for (const t of testThreads) {
-          if (t.testProcess) {
-            t.testProcess.kill("SIGKILL");
+          if (t.currentRun) {
+            t.currentRun.child.kill("SIGKILL");
           }
         }
         break;
@@ -248,7 +251,6 @@ export async function testE2e(args: {
       case 3:
         console.log("Force exiting...");
         Deno.exit(1);
-        break;
     }
   });
 
@@ -531,7 +533,7 @@ class TestResultConsumer {
 }
 
 class TestThread {
-  currentRun: Run | null;
+  currentRun: Run | null = null;
 
   constructor(
     public threadId: number,

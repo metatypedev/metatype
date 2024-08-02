@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::fs::FsContext;
-use common::archive::{
-    archive_entries_from_bytes, encode_bytes_to_base_64, tarb64_unpack_entries_as_map,
-};
+use common::archive::{archive_entries_from_bytes, encode_bytes_to_base_64};
 use std::{collections::BTreeMap, path::Path};
 
 pub trait ArchiveExt {
     fn compress_and_encode(&self, path: impl AsRef<Path>) -> Result<String, String>;
-    fn unpack_base64(&self, tarb64: &str, dest: &Path) -> Result<(), String>;
+    // fn unpack_base64(&self, tarb64: &str, dest: &Path) -> Result<(), String>;
 }
 
 impl FsContext {
@@ -59,7 +57,7 @@ impl ArchiveExt for FsContext {
         encode_bytes_to_base_64(bytes).map_err(|e| e.to_string())
     }
 
-    fn unpack_base64(&self, tarb64: &str, dest: &Path) -> Result<(), String> {
+    /* fn unpack_base64(&self, tarb64: &str, dest: &Path) -> Result<(), String> {
         // TODO iterator instead of loading everything in memory
         let contents = tarb64_unpack_entries_as_map(Some(tarb64)).map_err(|e| e.to_string())?;
 
@@ -68,5 +66,5 @@ impl ArchiveExt for FsContext {
         }
 
         Ok(())
-    }
+    } */
 }

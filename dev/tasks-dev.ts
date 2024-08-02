@@ -65,7 +65,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
             "-f",
             file,
           ])
-        } down --remove-orphans`;
+        } down --remove-orphans --volumes`;
       }
     },
   },

@@ -3,6 +3,7 @@
 
 use tokio::process::Command;
 
+use crate::utils::shell_words;
 use crate::{interlude::*, utils::ensure_venv};
 
 pub(super) async fn get_raw_command(path: impl AsRef<Path>) -> Result<Command> {
@@ -14,10 +15,10 @@ pub(super) async fn get_raw_command(path: impl AsRef<Path>) -> Result<Command> {
         )
     })?;
     let loader_py = std::env::var("MCLI_LOADER_PY").unwrap_or_else(|_| "python3".to_string());
-    let mut loader_py = loader_py.split_whitespace();
-    let mut command = Command::new(loader_py.next().unwrap());
+    let loader_py = shell_words::split(&loader_py).map_err(|err| anyhow::anyhow!(err))?;
+    let mut command = Command::new(loader_py[0].clone());
     command
-        .args(loader_py)
+        .args(&loader_py[1..])
         .arg(path.as_ref().to_str().unwrap())
         .env("PYTHONUNBUFFERED", "1")
         .env("PYTHONDONTWRITEBYTECODE", "1")

@@ -66,11 +66,11 @@ impl TaskFilter {
     }
 }
 
-impl ToString for TaskFilter {
-    fn to_string(&self) -> String {
+impl core::fmt::Display for TaskFilter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            TaskFilter::All => "all".to_string(),
-            TaskFilter::Typegraphs(typegraphs) => format!("typegraphs={}", typegraphs.join(",")),
+            TaskFilter::All => write!(f, "all"),
+            TaskFilter::Typegraphs(typegraphs) => write!(f, "typegraphs={}", typegraphs.join(",")),
         }
     }
 }

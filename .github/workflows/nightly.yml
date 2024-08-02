@@ -5,6 +5,7 @@ on:
 
 env:
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/dev
+  DOCKER_BUILD_NO_SUMMARY: true
 
 jobs:
   builder:
