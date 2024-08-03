@@ -170,6 +170,7 @@ const gate = "http://localhost:7891";
 const typegraph_name = "example";
 
 test("test typegraph deploy to typegate", async () => {
+    // TODO: launch typegate programmatically
 
     const auth = new BasicAuth("admin", "password");
 
@@ -194,10 +195,10 @@ test("test typegraph deploy to typegate", async () => {
 
     assert(deploy_result.serialized !== null);
 
-    expect(deploy_result).toBe({
-        "name": "example",
-        "messages": [],
-        "migrations": [],
+    expect(deploy_result.response).toMatchObject({
+        name: "example",
+        messages: [],
+        migrations: [],
     });
 });
 
@@ -221,11 +222,27 @@ test("test defined endpoints from the typegraph", async () => {
     expect(response.status).toBe(200);
 
     const responseBody = await response.json();
-    const expectedResult = {"data": {"add": 37}};
-
+    const expectedResult = {data: {add: 37}};
+    
     assert.exists(responseBody);
-    expect(responseBody).toBe(expectedResult)
+    expect(responseBody).toMatchObject(expectedResult)
 
+});
+
+test("test typegraph undeployment", async () => {
+    const undeploy_result = await tgRemove(
+        "example",
+        {
+            typegate: {
+                auth: new BasicAuth("admin", "password"),
+                url: gate
+            }
+        }
+    );
+
+    expect(undeploy_result.typegate).toMatchObject(
+        { data: { removeTypegraphs: true } }
+    );
 });
 
 ```
@@ -401,6 +418,22 @@ def test_endpoints():
     result = {"data": {"hello": "Hellow Estub!"}}
 
     assert response.json() == result
+
+
+def test_undeploy():
+    # provide typegraph name and TypegateConnectionOptions
+    tg_name = "example"
+    typegate_conn = TypegateConnectionOptions(
+        auth=BasicAuth("admin", "password"), url=gate
+    )
+
+    result = tg_remove(
+        typegraph_name=tg_name, params=TypegraphRemoveParams(typegate=typegate_conn)
+    )
+    
+    expected_result = RemoveResult(typegate={'data': {'removeTypegraphs': True}})
+
+    assert result == expected_result
 
 ```
 
