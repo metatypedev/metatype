@@ -247,6 +247,10 @@ test("test typegraph undeployment", async () => {
 
 ```
 
+:::info
+It's recommended to setup an after and before test hooks to clean up any database changes. So make sure to include those keep the state before and after tests the same.
+:::
+
 You don't have to stop here, you can test various outputs you get from running the typegraph function and querying directly into the deployed typegraphs. You can add more test cases to make your app robust.
 
     </TabItem>
@@ -444,6 +448,10 @@ After you have written your tests, you can run them all by executing the `pytest
 ```bash
 pytest
 ```
+
+:::info
+It's recommended to setup an after and before test hooks to clean up any database changes. So make sure to include those keep the state before and after tests the same.
+:::
 
 You don't have to stop here, you can test various outputs you get from running the typegraph function and querying directly into the deployed typegraphs. You can add more test cases to make your app robust.
 
