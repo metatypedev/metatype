@@ -223,7 +223,7 @@ test("test defined endpoints from the typegraph", async () => {
 
     const responseBody = await response.json();
     const expectedResult = {data: {add: 37}};
-    
+
     assert.exists(responseBody);
     expect(responseBody).toMatchObject(expectedResult)
 
@@ -434,7 +434,7 @@ def test_undeploy():
     result = tg_remove(
         typegraph_name=tg_name, params=TypegraphRemoveParams(typegate=typegate_conn)
     )
-    
+
     expected_result = RemoveResult(typegate={'data': {'removeTypegraphs': True}})
 
     assert result == expected_result
