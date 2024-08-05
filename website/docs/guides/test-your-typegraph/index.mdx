@@ -1,0 +1,479 @@
+import TabItem from "@theme/TabItem";
+import SDKTabs from "@site/src/components/SDKTabs";
+
+import PyPmTabs from "@site/src/components/PythonPackageManagerTabs";
+import TsPmTabs from "@site/src/components/TsPackageManagerTabs";
+
+# Test typegraphs
+
+[Typegraph](/docs/reference/typegraph) is the SDK for _Metatype_, used to author and define applications..
+Typegraphs can be easily tested using common test suites in your preferred programming language.
+
+The following next lines describe how you can test your typegraph.
+For _Typescript_ SDK, we will be using [vitest](https://vitest.dev/) and [pytest](https://docs.pytest.org/en/stable/) for the _Python_ SDK in this example.
+
+<SDKTabs>
+
+    <TabItem value="typescript">
+
+To test typegraphs in the _typescript_ SDK, you first need to add _vitest_ as a dev dependency to your metatype project.
+
+:::info
+You can follow [this](/docs/tutorials/quick-start) link on how to bootstrap a metatype application.
+:::
+
+To install _vitest_, you can execute the command below in your terminal based on the runtime you are using for the project.
+
+<TsPmTabs>
+
+    <TabItem value="pnpm">
+      ```bash
+      pnpm add -D vitest
+      ```
+    </TabItem>
+    <TabItem value="npm">
+      ```bash
+      npm install -D vitest
+      ```
+    </TabItem>
+    <TabItem value="yarn">
+      ```bash
+      yarn add -D vitest
+      ```
+    </TabItem>
+    <TabItem value="deno">
+      ```bash
+      import { ... } from "npm:vitest";
+      ```
+    </TabItem>
+    <TabItem value="bun">
+      ```bash
+      bun add -D vitest
+      ```
+    </TabItem>
+    <TabItem value="jsr">
+      ```bash
+      # vitest currently not in jsr registry
+      ```
+    </TabItem>
+
+</TsPmTabs>
+
+After you have installed _vitest_, your project is set up for some tests. Create a test `tg.test.ts` in `/tests` directory from the root project dir. _vitest_ discovers tests by file names, so ensure that your test names follow the following format below.
+
+```bash
+**/*.test.ts
+**/*.spec.ts
+```
+
+For this example, the template typegraph generated from the `meta new` command is used, which is the one down below.
+
+```typescript
+...
+
+export const tg = typegraph("example", (g) => {
+  const pub = Policy.public();
+  const deno = new DenoRuntime();
+  const python = new PythonRuntime();
+
+  g.expose({
+    add: python
+      .fromLambda(
+        t.struct({ first: t.float(), second: t.float() }),
+        t.float(),
+        { code: "lambda x: x['first'] + x['second']" },
+      )
+      .withPolicy(pub),
+    multiply: deno
+      .func(t.struct({ first: t.float(), second: t.float() }), t.float(), {
+        code: "({first, second}) => first * second",
+      })
+      .withPolicy(pub),
+  });
+});
+```
+
+For the typegraph test file, you can write these simple test cases to check the validity of your typegraphs.
+
+```typescript
+import { assert, assertType, expect, test } from "vitest";
+import { BasicAuth, tgDeploy, DeployResult } from "@typegraph/sdk/tg_deploy";
+
+test("checks if typegraph output is computed", async () => {
+  const tg_output = await tg;
+
+  assertType<TypegraphOutput>(tg_output);
+});
+
+test("test if typegraph name is correct", async () => {
+  const tg_output = await tg;
+
+  assert(tg_output.name === "example", "typegraph name is correct");
+});
+
+test("test if serialize function exists", async () => {
+  const tg_output = await tg;
+
+  assertType<Function>(typeof tg_output.serialize);
+});
+```
+
+The above were simple tests you can execute against the output of the typegraph function. You can also do a serialization test to check if the typegraph is serialized successfully.
+
+To run the tests in watch mode, you can use the following command.
+
+```bash
+vitest watch
+```
+
+```typescript
+...
+
+let reusableTgOutput;
+
+test("test if typegraph serialization works", async () => {
+    const tg_output = await tg;
+    const params = {
+        typegraphPath: "api/example.mjs",
+        prefix: "",
+        artifactResolution: true,
+        codegen: false,
+        prismaMigration: {
+        migrationsDir: "prisma-migrations",
+        migrationActions: Object.entries({}),
+        defaultMigrationAction: {
+            apply: true,
+            create: false,
+            reset: false,
+        },
+        },
+        pretty: false,
+    };
+
+    const serialized = tg_output.serialize(params);
+
+    // cache the serialize result as the serialize function can only be called one time
+    reusableTgOutput = {
+        ...tg_output,
+        serialize: (params) => serialized,
+    };
+
+    assert(serialized !== null, "Serialization Successful");
+    assertType<TgFinalizationResult>(serialized);
+});
+```
+
+Furthermore, you can test typegraph deployment and running a query against a typegate instance. You first test for typegraph deploy, then querying into a typegate instance. The following tests depict on how you can do that.
+
+:::info
+Make sure you have a typegate node running for the next tests to work.
+:::
+
+```typescript
+...
+
+const gate = "http://localhost:7891";
+const typegraph_name = "example";
+
+test("test typegraph deploy to typegate", async () => {
+
+    const auth = new BasicAuth("admin", "password");
+
+    const deploy_result = await tgDeploy(reusableTgOutput, {
+        typegate: {
+            url: gate,
+            auth: auth
+        },
+        typegraphPath: "api/example.mjs",
+        prefix: "",
+        secrets: {},
+        migrationsDir: "prisma-migrations",
+        migrationActions: {},
+        defaultMigrationAction: {
+            apply: false,
+            create: false,
+            reset: false
+        }
+    });
+
+    assertType<DeployResult>(deploy_result);
+
+    assert(deploy_result.serialized !== null);
+
+    expect(deploy_result.response).toMatchObject({
+        name: "example",
+        messages: [],
+        migrations: [],
+    });
+});
+
+test("test defined endpoints from the typegraph", async () => {
+    const query = `
+        {
+            add(first: 17, second: 20)
+        }
+    `;
+
+    const url = `${gate}/${typegraph_name}`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({query})
+    });
+
+    assert(response.ok);
+    expect(response.status).toBe(200);
+
+    const responseBody = await response.json();
+    const expectedResult = {data: {add: 37}};
+
+    assert.exists(responseBody);
+    expect(responseBody).toMatchObject(expectedResult)
+
+});
+
+test("test typegraph undeployment", async () => {
+    const undeploy_result = await tgRemove(
+        "example",
+        {
+            typegate: {
+                auth: new BasicAuth("admin", "password"),
+                url: gate
+            }
+        }
+    );
+
+    expect(undeploy_result.typegate).toMatchObject(
+        { data: { removeTypegraphs: true } }
+    );
+});
+
+```
+
+:::info
+It's recommended to setup an after and before test hooks to clean up any database changes. So make sure to include those keep the state before and after tests the same.
+:::
+
+You don't have to stop here, you can test various outputs you get from running the typegraph function and querying directly into the deployed typegraphs. You can add more test cases to make your app robust.
+
+    </TabItem>
+
+    <TabItem value="python">
+
+First, you need to add _pytest_ as a dev dependency in your project/application.
+
+:::info
+You can follow [this](/docs/tutorials/quick-start) link on how to bootstrap a metatype application.
+:::
+
+<PyPmTabs>
+  <TabItem value="pip">
+  
+```bash
+pip3 install pytest
+```
+  </TabItem>
+  <TabItem value="poetry">
+
+```bash
+poetry add --group dev pytest
+```
+
+    </TabItem>
+
+</PyPmTabs>
+
+After successful installation, you need to activate a python venv. In poetry, you can easily activate the virtual environment using the command below.
+
+```bash
+poetry shell
+```
+
+Now, You can start writing tests for your typegraph. For convention, write the tests inside the `tests` directory under the project's root dir.
+
+Assuming you have this simple typegraph definition, which is a template typegraph you can generate by using the `meta new` commmand from the _Meta CLI_.
+
+```python
+...
+
+@typegraph()
+def example(g: Graph):
+    public = Policy.public()
+    python = PythonRuntime()
+
+    hello = python.from_lambda(
+        t.struct({"world": t.string()}),
+        t.string(),
+        lambda x: f"Hello {x['world']}!",
+    )
+
+    g.expose(public, hello=hello)
+
+```
+
+You can write the following test to check if your typegraph is correctly authored. Under `/tests` dir, create an empty test and add the test code below. Make sure you name your test file appending `_test` or prepending `test_` so pytest can discover them.
+
+```python
+from typegraph.wit import SerializeParams, PrismaMigrationConfig, MigrationAction
+from typegraph.graph.shared_types import FinalizationResult, BasicAuth, TypegraphOutput
+from typegraph.graph.tg_deploy import (
+    TypegraphDeployParams,
+    tg_deploy,
+    TypegateConnectionOptions,
+    DeployResult,
+)
+import requests
+
+
+# running the typegraph gives a TypegraphOutput object
+tg_output = tg
+
+reusable_tg: TypegraphOutput = None
+
+
+# test if the tg output is correct,
+def test_tg_name():
+    assert tg_output.name == "example"
+
+
+def test_serialize_tg():
+    assert callable(tg_output.serialize)
+
+```
+
+The above were simple tests you can execute against the output of the typegraph function. You can also do a serialization test to check if the typegraph is serialized successfully.
+
+```python
+...
+
+# check if the typegraph gets serialized
+def test_serialize():
+    serialize_params = SerializeParams(
+        typegraph_path="demo.py",
+        prefix=None,
+        artifact_resolution=False,
+        codegen=True,
+        prisma_migration=PrismaMigrationConfig(
+            migrations_dir="prisma-migrations",
+            migration_actions=[],
+            default_migration_action=MigrationAction(
+                apply=False, create=False, reset=False
+            ),
+        ),
+        pretty=False,
+    )
+
+    serialize_func = tg_output.serialize
+    serialized_output = serialize_func(serialize_params)
+    global reusable_tg
+    reusable_tg = {
+        "name": tg_output.name,
+        "serialize": lambda params: serialized_output,
+    }
+
+    # cache the serialize result as the serialize function can only be called once
+    reusable_tg = TypegraphOutput(
+        name=tg_output.name, serialize=lambda params: serialized_output
+    )
+    assert isinstance(serialized_output, FinalizationResult)
+
+    assert serialized_output.tgJson is not None
+
+    assert isinstance(serialized_output.tgJson, str)
+
+```
+
+Furthermore, you can test typegraph deployment and running a query against a typegate instance. You first test for typegraph deploy, then querying into a typegate instance. The following tests depict on how you can do that.
+
+:::info
+Make sure you have a typegate node running for the next tests to work.
+:::
+
+```python
+...
+
+gate = "http://localhost:7891"
+
+def test_deploy():
+    auth = BasicAuth("admin", "password")
+
+    deploy_result = tg_deploy(
+        reusable_tg,
+        TypegraphDeployParams(
+            typegate=TypegateConnectionOptions(url=gate, auth=auth),
+            typegraph_path="demo.py",
+            prefix="",
+            secrets=None,
+            migrations_dir="prisma-migrations",
+            migration_actions=None,
+            default_migration_action=MigrationAction(
+                apply=False, create=False, reset=False
+            ),
+        ),
+    )
+
+    assert isinstance(deploy_result, DeployResult)
+
+    assert deploy_result.serialized is not None
+
+    assert deploy_result.response == {
+        "name": "example",
+        "messages": [],
+        "migrations": [],
+    }
+
+
+def test_endpoints():
+    query = """
+        {
+            hello(world: "Estub")
+        }
+    """
+
+    response = requests.post(url=f"{gate}/example", json={"query": query})
+
+    assert response.status_code == 200
+
+    result = {"data": {"hello": "Hellow Estub!"}}
+
+    assert response.json() == result
+
+
+def test_undeploy():
+    # provide typegraph name and TypegateConnectionOptions
+    tg_name = "example"
+    typegate_conn = TypegateConnectionOptions(
+        auth=BasicAuth("admin", "password"), url=gate
+    )
+
+    result = tg_remove(
+        typegraph_name=tg_name, params=TypegraphRemoveParams(typegate=typegate_conn)
+    )
+
+    expected_result = RemoveResult(typegate={'data': {'removeTypegraphs': True}})
+
+    assert result == expected_result
+
+```
+
+Running the typegraph function, results in a [TypegraphOutput](https://github.com/metatypedev/metatype/blob/8cc1c129b0f858047eda8557c1bc120873d37aca/typegraph/python/typegraph/graph/shared_types.py#L18) object which you can play around to add more checks to your tests.
+
+After you have written your tests, you can run them all by executing the `pytest` command from your terminal.
+
+```bash
+pytest
+```
+
+:::info
+It's recommended to setup an after and before test hooks to clean up any database changes. So make sure to include those keep the state before and after tests the same.
+:::
+
+You don't have to stop here, you can test various outputs you get from running the typegraph function and querying directly into the deployed typegraphs. You can add more test cases to make your app robust.
+
+While `pytest` is used in this example, typegraphs can be easily tested with most other test suite solutions by following the above approach.
+
+    </TabItem>
+
+</SDKTabs>

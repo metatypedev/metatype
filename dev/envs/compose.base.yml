@@ -19,7 +19,7 @@ services:
       REDIS_PASSWORD: password
 
   minio:
-    image: bitnami/minio:2022
+    image: bitnami/minio:2024
     platform: linux/amd64
     restart: unless-stopped
     ports:
