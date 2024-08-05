@@ -1,17 +1,17 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Optional
 from dataclasses import dataclass
+from typing import Optional
 
-from typegraph.gen.types import Err
+from typegraph import fx, t
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
-    KvRuntimeData,
     KvMaterializer,
+    KvRuntimeData,
 )
-from typegraph import fx, t
+from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
 
@@ -47,24 +47,26 @@ class KvRuntime(Runtime):
         return t.func(t.struct({"key": t.string()}), t.string(), mat)
 
     def set(self):
-        mat = self.__operation(KvMaterializer.SET, fx.write())
+        mat = self.__operation(KvMaterializer.SET, fx.update())
         return t.func(
             t.struct({"key": t.string(), "value": t.string()}), t.string(), mat
         )
 
-    def delete(self, key: str):
-        mat = self.__operation(KvMaterializer.DELETE, fx.write())
+    def delete(self):
+        mat = self.__operation(KvMaterializer.DELETE, fx.delete())
         return t.func(t.struct({"key": t.string()}), t.string(), mat)
 
     def keys(self):
         mat = self.__operation(KvMaterializer.KEYS, fx.read())
-        return t.func(t.struct({"filter": Optional[t.string()]}), list[t.string()], mat)
+        return t.func(
+            t.struct({"filter": t.optional(t.string())}), t.list(t.string()), mat
+        )
 
     def all(self):
         mat = self.__operation(KvMaterializer.ALL, fx.read())
         return t.func(
-            t.struct({"filter": Optional[t.string()]}),
-            list[tuple[t.string(), t.string()]],
+            t.struct({"filter": t.optional(t.string())}),
+            t.list(t.string()),
             mat,
         )
 
