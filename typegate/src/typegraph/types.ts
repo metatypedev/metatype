@@ -565,6 +565,6 @@ export interface WasiMatData {
 export interface KvRuntimeData {
   host: string;
   port: string | null;
-  db_number: number | null;
+  dbNumber: number | null;
   password: string | null;
 }

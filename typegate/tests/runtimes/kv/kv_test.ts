@@ -5,7 +5,7 @@ import { Policy, typegraph } from "@typegraph/sdk/index.ts";
 import { KvRuntime } from "@typegraph/sdk/runtimes/kv.ts";
 
 export const tg = await typegraph("kv", (g: any) => {
-  const kv = new KvRuntime({ host: "" });
+  const kv = new KvRuntime({ host: "REDIS_HOST", password: "REDIS_PASSWORD" });
   const pub = Policy.public();
   g.expose({
     get: kv.get().withPolicy(pub),
