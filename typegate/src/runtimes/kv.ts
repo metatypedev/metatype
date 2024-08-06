@@ -24,16 +24,20 @@ export class KvRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    logger.info("initializing KvRuntime");
-    logger.debug(`init params: ${JSON.stringify(params)}`);
-    const { typegraph, args } = params as RuntimeInitParams<KvRuntimeData>;
+    logger.info("Initializing KvRuntime");
+    logger.debug(`Init params: ${JSON.stringify(params)}`);
+    const { typegraph, args, secretManager } = params as RuntimeInitParams<
+      KvRuntimeData
+    >;
     const typegraphName = TypeGraph.formatName(typegraph);
     const connection = await connect({
-      hostname: args.host,
-      port: args.port ?? "6379",
+      hostname: secretManager.secretOrFail(args.host as string),
+      port: secretManager.secretOrNull(args.port as string) ?? "6379",
+      password: secretManager.secretOrNull(args.password as string) ??
+        "password",
     });
     const instance = new KvRuntime(typegraphName, connection);
-    instance.logger.info("registered KvRuntime");
+    instance.logger.info("Registered KvRuntime");
     return instance;
   }
 
