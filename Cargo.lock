@@ -5934,7 +5934,7 @@ dependencies = [
 [[package]]
 name = "lade-sdk"
 version = "0.11.3"
-source = "git+https://github.com/metatypedev/lade?branch=v0.11.2-url-2.4#512dad84351d0c46589831ceac69cf6758b2b4e9"
+source = "git+https://github.com/metatypedev/lade?branch=fix-infisical-project-id#2556714f13a6163d30aed5f598ebe93b985f1e25"
 dependencies = [
  "access-json",
  "anyhow",
