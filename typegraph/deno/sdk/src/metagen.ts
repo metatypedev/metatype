@@ -39,7 +39,12 @@ export class Metagen {
     } as MdkConfig;
   }
 
-  dryRun(tgOutput: TypegraphOutput, targetName: string, overwrite?: false) {
+  /** dry-run metagen */
+  dryRun(
+    tgOutput: TypegraphOutput,
+    targetName: string,
+    overwrite?: false,
+  ): Array<MdkOutput> {
     const mdkConfig = this.getMdkConfig(tgOutput, targetName);
     return wit_utils.metagenExec(mdkConfig).map((value: any) => ({
       ...value,
@@ -47,6 +52,7 @@ export class Metagen {
     })) as Array<MdkOutput>;
   }
 
+  /** run metagen */
   run(tgOutput: TypegraphOutput, targetName: string, overwrite?: false) {
     const items = this.dryRun(tgOutput, targetName, overwrite);
     wit_utils.metagenWriteFiles(items, this.workspacePath);

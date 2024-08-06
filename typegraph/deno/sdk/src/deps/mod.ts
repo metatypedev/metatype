@@ -13,7 +13,8 @@ export function mapValues(
   return Object.fromEntries(newEntries);
 }
 
-export function dirname(path: string) {
+/** get the directory name from a path */
+export function dirname(path: string): string {
   // Note: Do not refactor with runtime dependent OS check
   const [unixIdx, winIdx] = ["/", "\\"].map((sep) => path.lastIndexOf(sep));
   return path.substring((winIdx > 0 ? winIdx : unixIdx) + 1);
@@ -21,7 +22,8 @@ export function dirname(path: string) {
 
 import { fromFileUrlPosix, fromFileUrlWin32 } from "./_import.ts";
 
-export function fromFileUrl(path: string) {
+/** */
+export function fromFileUrl(path: string): string {
   // Note: Do not refactor with runtime dependent OS check
   // Examples: file://C:, file://D:
   const isWin32 = /^file:\/\/\w:/.test(path);

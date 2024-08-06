@@ -27,7 +27,8 @@ export class PrismaRuntime extends Runtime {
     this.connectionStringSecret = connectionStringSecret;
   }
 
-  findUnique(model: string | Typedef) {
+  /** create a function for a prisma `findUnique` query */
+  findUnique(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -35,7 +36,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  findMany(model: string | Typedef) {
+  /** create a function for a prisma `findMany` query */
+  findMany(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -43,7 +45,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  findFirst(model: string | Typedef) {
+  /** create a function for a prisma `findFirst` query */
+  findFirst(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -51,7 +54,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  aggregate(model: string | Typedef) {
+  /** create a function for a prisma `aggregate` query */
+  aggregate(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -59,7 +63,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  count(model: string | Typedef) {
+  /** create a function for a prisma `count` query */
+  count(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -67,7 +72,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  groupBy(model: string | Typedef) {
+  /** create a function for a prisma `groupBy` query */
+  groupBy(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -75,7 +81,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  create(model: string | Typedef) {
+  /** create a function for a prisma `create` query */
+  create(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -83,7 +90,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  createMany(model: string | Typedef) {
+  /** create a function for a prisma `createMany` query */
+  createMany(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -91,7 +99,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  update(model: string | Typedef) {
+  /** create a function for a prisma `update` query */
+  update(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -99,7 +108,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  updateMany(model: string | Typedef) {
+  /** create a function for a prisma `updateMany` query */
+  updateMany(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -107,7 +117,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  upsert(model: string | Typedef) {
+  /** create a function for a prisma `upsert` query */
+  upsert(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -115,7 +126,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  delete(model: string | Typedef) {
+  /** create a function for a prisma `delete` query */
+  delete(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -123,7 +135,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  deleteMany(model: string | Typedef) {
+  /** create a function for a prisma `deleteMany` query */
+  deleteMany(model: string | Typedef): t.Func {
     if (typeof model == "string") {
       model = genRef(model);
     }
@@ -131,7 +144,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  execute(query: string, parameters: Typedef, effect: Effect) {
+  /** create a function for prisma `execute` */
+  execute(query: string, parameters: Typedef, effect: Effect): t.Func {
     const type = runtimes.prismaExecute(
       this._id,
       query,
@@ -141,7 +155,8 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  queryRaw(query: string, parameters: Typedef | null, output: Typedef) {
+  /** create a function for prisma `queryRaw` */
+  queryRaw(query: string, parameters: Typedef | null, output: Typedef): t.Func {
     const type = runtimes.prismaQueryRaw(
       this._id,
       query,
@@ -151,7 +166,12 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  link(targetType: string | Typedef, name: string, arg?: PrismaLinkArg) {
+  /** define a relationship */
+  link(
+    targetType: string | Typedef,
+    name: string,
+    arg?: PrismaLinkArg,
+  ): Typedef {
     return prismaLink(targetType, name, arg ?? {});
   }
 }
@@ -160,7 +180,7 @@ function prismaLink(
   targetType: string | Typedef,
   name?: string,
   arg?: PrismaLinkArg,
-) {
+): Typedef {
   if (typeof targetType == "string") {
     targetType = genRef(targetType);
   }
