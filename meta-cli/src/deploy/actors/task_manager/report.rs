@@ -36,9 +36,9 @@ impl<A: TaskAction> Report<A> {
             },
             |mut summary, entry| {
                 if let Some((text, success)) = entry.get_summary() {
-                    summary.text.push_str(
-                        format!("  - {}: {}\n", entry.path.display().to_string(), text).as_str(),
-                    );
+                    summary
+                        .text
+                        .push_str(format!("  - {}: {}\n", entry.path.display(), text).as_str());
                     summary.success = summary.success && success;
                 }
                 summary
