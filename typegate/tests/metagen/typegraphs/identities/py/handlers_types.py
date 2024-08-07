@@ -144,7 +144,7 @@ FORWARD_REFS["Cycles1Args"] = Cycles1Args
 class Cycles1(Struct):
     phantom1: Union[str, None]
     to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
-    list3: Union[List[Union["Branch33B", "Branch33A"]], None]
+    list3: Union[List[Union["Branch33A", "Branch33B"]], None]
 
 
 FORWARD_REFS["Cycles1"] = Cycles1
@@ -162,7 +162,7 @@ FORWARD_REFS["Branch33A"] = Branch33A
 @dataclass
 class Branch33B(Struct):
     phantom3b: Union[str, None]
-    to2: Union[Union["Cycles1", Union["Branch33B", "Branch33A"]], None]
+    to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
 
 
 FORWARD_REFS["Branch33B"] = Branch33B
@@ -209,10 +209,10 @@ def __repr(value: Any):
     return value
 
 
-def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
+def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
     def exported_wrapper(raw_inp):
-        inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
-        out: Composites = user_fn(inp)
+        inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
+        out: Primitives = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -220,10 +220,10 @@ def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
     return exported_wrapper
 
 
-def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
+def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
     def exported_wrapper(raw_inp):
-        inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
-        out: Primitives = user_fn(inp)
+        inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
+        out: Composites = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)

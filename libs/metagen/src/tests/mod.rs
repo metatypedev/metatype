@@ -33,7 +33,7 @@ type BoxFuture<T> = std::pin::Pin<Box<dyn std::future::Future<Output = T> + Send
 pub struct E2eTestCase {
     pub target: String,
     pub config: config::Config,
-    pub target_dir: PathBuf,
+    pub target_dir: Option<PathBuf>,
     pub typegraphs: HashMap<String, Box<Typegraph>>,
     pub build_fn: fn(BuildArgs) -> BoxFuture<anyhow::Result<()>>,
 }
@@ -44,11 +44,11 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
         let tmp_dir = tokio::task::spawn_blocking(tempfile::tempdir)
             .await??
             .into_path();
-        {
-            let mut dir = tokio::fs::read_dir(&case.target_dir).await?;
+        if let Some(target_dir) = &case.target_dir {
+            let mut dir = tokio::fs::read_dir(target_dir).await?;
             while let Some(entry) = dir.next_entry().await? {
                 let entry_path = entry.path();
-                let target_path = tmp_dir.join(entry.path().strip_prefix(&case.target_dir)?);
+                let target_path = tmp_dir.join(entry.path().strip_prefix(target_dir)?);
                 tokio::fs::copy(entry_path, &target_path)
                     .await
                     .context("error copying target_dir to temp dir")?;
@@ -80,7 +80,7 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
         // TODO: query generated stub functions
 
         // cleanup
-        // tokio::fs::remove_dir_all(tmp_dir).await?;
+        tokio::fs::remove_dir_all(tmp_dir).await?;
         // node.try_undeploy(&typegraphs.keys().cloned().collect::<Vec<_>>()).await?;
     }
     Ok(())

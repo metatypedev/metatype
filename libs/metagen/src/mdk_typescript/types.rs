@@ -24,11 +24,15 @@ impl TypescriptTypeRenderer {
         &self,
         dest: &mut impl Write,
         ty_name: &str,
-        props: IndexMap<String, Rc<str>>,
+        props: IndexMap<String, (Rc<str>, bool)>,
     ) -> std::fmt::Result {
         writeln!(dest, "export type {ty_name} = {{")?;
-        for (name, ty_name) in props.into_iter() {
-            writeln!(dest, "  {name}: {ty_name};")?;
+        for (name, (ty_name, optional)) in props.into_iter() {
+            if optional {
+                writeln!(dest, "  {name}?: {ty_name};")?;
+            } else {
+                writeln!(dest, "  {name}: {ty_name};")?;
+            }
         }
         writeln!(dest, "}};")?;
         Ok(())
@@ -138,11 +142,23 @@ impl RenderType for TypescriptTypeRenderer {
                             RenderedName::Name(name) => name,
                             RenderedName::Placeholder(name) => name,
                         };
-                        Ok::<_, anyhow::Error>((normalize_struct_prop_name(&name[..]), ty_name))
+                        let optional = matches!(
+                            renderer.nodes[dep_id as usize].deref(),
+                            TypeNode::Optional { .. }
+                        );
+                        Ok::<_, anyhow::Error>((
+                            normalize_struct_prop_name(&name[..]),
+                            (ty_name, optional),
+                        ))
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
+
                 let ty_name = normalize_type_title(&base.title);
-                self.render_object_type(renderer, &ty_name, props)?;
+                if !props.is_empty() {
+                    self.render_object_type(renderer, &ty_name, props)?;
+                } else {
+                    self.render_alias(renderer, &ty_name, "Record<string, never>")?;
+                }
                 ty_name
             }
             TypeNode::Either {

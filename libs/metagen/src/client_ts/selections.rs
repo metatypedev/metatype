@@ -5,8 +5,8 @@ use std::fmt::Write;
 
 use common::typegraph::*;
 
-use super::utils::normalize_type_title;
-use crate::{interlude::*, shared::types::*};
+use super::utils::*;
+use crate::{interlude::*, shared::client::*, shared::types::*};
 
 pub struct TsNodeSelectionsRenderer {
     pub arg_ty_names: Rc<NameMemo>,
@@ -18,28 +18,28 @@ impl TsNodeSelectionsRenderer {
         &self,
         dest: &mut impl Write,
         ty_name: &str,
-        props: IndexMap<String, (Rc<str>, Option<Rc<str>>)>,
+        props: IndexMap<String, SelectionTy>,
     ) -> std::fmt::Result {
         writeln!(
             dest,
             "export type {ty_name} = {{
   _?: SelectionFlags;"
         )?;
-        for (name, (select_ty, arg_ty)) in props {
-            if let Some(arg_ty) = arg_ty {
-                if &select_ty[..] == "boolean" {
-                    // just providing the argument is enough to signal selection
-                    writeln!(dest, "  {name}:?: {arg_ty};")?;
-                } else {
-                    // we need to allow false to allow explicit disabling
-                    // when the select all flag is set
-                    writeln!(dest, "  {name}?: [{arg_ty}, {select_ty}] | false;")?;
+        for (name, select_ty) in props {
+            use SelectionTy::*;
+            match select_ty {
+                Scalar => writeln!(dest, r#"  {name}?: ScalarSelectNoArgs,"#)?,
+                ScalarArgs { arg_ty } => {
+                    writeln!(dest, r#"  {name}?: ScalarSelectArgs<{arg_ty}>,"#)?
                 }
-            } else if &select_ty[..] == "boolean" {
-                writeln!(dest, "  {name}?: {select_ty};")?;
-            } else {
-                writeln!(dest, "  {name}?: {select_ty} | false;")?;
-            }
+                Composite { select_ty } => {
+                    writeln!(dest, r#"  {name}?: CompositeSelectNoArgs<{select_ty}>,"#)?
+                }
+                CompositeArgs { arg_ty, select_ty } => writeln!(
+                    dest,
+                    r#"  {name}?: CompositeSelectArgs<{arg_ty}, {select_ty}>,"#
+                )?,
+            };
         }
         writeln!(dest, "}};")?;
         Ok(())
@@ -59,7 +59,7 @@ impl RenderType for TsNodeSelectionsRenderer {
             | TypeNode::Float { .. }
             | TypeNode::Integer { .. }
             | TypeNode::String { .. }
-            | TypeNode::File { .. } => "boolean".to_string(),
+            | TypeNode::File { .. } => "scalar".to_string(),
             TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
             TypeNode::Optional { data: OptionalTypeData { item, .. }, .. }
             | TypeNode::List { data: ListTypeData { items: item, .. }, .. }
@@ -71,22 +71,12 @@ impl RenderType for TsNodeSelectionsRenderer {
                     .iter()
                     // generate property types first
                     .map(|(name, &dep_id)| {
-                        let (select_ty, arg_ty) = match renderer.nodes[dep_id as usize].deref() {
-                            TypeNode::Union { .. }
-                            | TypeNode::Either { .. } => todo!("unions are wip"),
-                            TypeNode::Function { data, .. } => {
-                                let arg_ty = self.arg_ty_names.get(&data.input).unwrap().clone();
-                                let (out_ty, _) = renderer.render_subgraph(data.output, cursor)?;
-                                let out_ty = out_ty.unwrap();
-                                (out_ty, Some(arg_ty))
-                            },
-                            _ =>  {
-                                let (select_t, _) = renderer.render_subgraph(dep_id, cursor)?;
-                                let out_ty = select_t.unwrap();
-                                (out_ty, None)
-                            }
-                        };
-                        eyre::Ok((name.clone(), (select_ty,arg_ty)))
+                        eyre::Ok(
+                            (
+                                normalize_struct_prop_name(name),
+                                selection_for_field(dep_id, &self.arg_ty_names, renderer, cursor)?
+                            )
+                        )
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
                 let node_name = &base.title;

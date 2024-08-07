@@ -12,7 +12,7 @@ pub struct GenStubOptions {}
 pub fn gen_stub(
     fun: &StubbedFunction,
     mod_stub_traits: &mut GenDestBuf,
-    type_names: &HashMap<u32, Rc<str>>,
+    type_names: &BTreeMap<u32, Rc<str>>,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<String> {
     let TypeNode::Function { base, data } = &fun.node else {
@@ -55,7 +55,7 @@ pub fn gen_stub(
 }
 
 pub fn gen_op_to_mat_map(
-    op_to_trait_map: &HashMap<String, String>,
+    op_to_trait_map: &BTreeMap<String, String>,
     dest: &mut GenDestBuf,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<()> {

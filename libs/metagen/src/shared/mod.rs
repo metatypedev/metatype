@@ -4,6 +4,7 @@
 //! This module contains common logic for mdk generation
 //! imlementations
 
+pub mod client;
 pub mod types;
 
 use common::typegraph::{runtimes::TGRuntime, Materializer};
@@ -11,9 +12,11 @@ use common::typegraph::{runtimes::TGRuntime, Materializer};
 use crate::interlude::*;
 
 pub struct StubbedFunction {
+    #[allow(unused)]
     pub id: u32,
     pub node: TypeNode,
     pub mat: Materializer,
+    #[allow(unused)]
     pub runtime: Rc<TGRuntime>,
 }
 
@@ -59,4 +62,21 @@ pub fn filter_stubbed_funcs(
         })
         .collect();
     Ok(stubbed_funcs)
+}
+
+pub fn is_composite(types: &[TypeNode], id: u32) -> bool {
+    match &types[id as usize] {
+        TypeNode::Function { .. } => unreachable!(),
+        TypeNode::Any { .. } => unimplemented!("unexpected Any type as output"),
+        TypeNode::Boolean { .. }
+        | TypeNode::Float { .. }
+        | TypeNode::Integer { .. }
+        | TypeNode::String { .. }
+        | TypeNode::File { .. } => false,
+        TypeNode::Object { .. } => true,
+        TypeNode::Optional { data, .. } => is_composite(types, data.item),
+        TypeNode::List { data, .. } => is_composite(types, data.items),
+        TypeNode::Union { data, .. } => data.any_of.iter().any(|&id| is_composite(types, id)),
+        TypeNode::Either { data, .. } => data.one_of.iter().any(|&id| is_composite(types, id)),
+    }
 }

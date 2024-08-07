@@ -8,7 +8,8 @@ import { assertEquals } from "std/assert/mod.ts";
 import { GraphQLQuery } from "../utils/query/graphql_query.ts";
 import { JSONValue } from "../../src/utils.ts";
 import { testDir } from "../utils/dir.ts";
-import $ from "jsr:@david/dax@0.41.0";
+import $ from "dax";
+import { z as zod } from "zod";
 
 const denoJson = resolve(testDir, "../deno.jsonc");
 
@@ -444,7 +445,9 @@ Meta.test("mdk table suite", async (metaTest) => {
   }
 });
 
-Meta.test("client table suite", async (metaTest) => {
+Meta.test({
+  name: "client table suite",
+}, async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
 
   assertEquals(
@@ -460,49 +463,86 @@ Meta.test("client table suite", async (metaTest) => {
     ).code,
     0,
   );
-  // FIXME: dax replaces commands to deno with
-  // commands to xtask
-  Deno.execPath = () => "deno";
+  const expectedSchemaQ = zod.object({
+    user: zod.object({
+      id: zod.string(),
+      email: zod.string(),
+      post1: zod.object({
+        id: zod.string(),
+        slug: zod.string(),
+        title: zod.string(),
+      }).array(),
+      post2: zod.object({
+        // NOTE: no id
+        slug: zod.string(),
+        title: zod.string(),
+      }).array(),
+    }),
+    posts: zod.object({
+      id: zod.string(),
+      slug: zod.string(),
+      title: zod.string(),
+    }),
+    scalarNoArgs: zod.string(),
+  });
+  const expectedSchemaM = zod.object({
+    scalarArgs: zod.string(),
+    compositeNoArgs: zod.object({
+      id: zod.string(),
+      slug: zod.string(),
+      title: zod.string(),
+    }),
+    compositeArgs: zod.object({
+      id: zod.string(),
+      slug: zod.string(),
+      title: zod.string(),
+    }),
+  });
+  const expectedSchema = zod.tuple([
+    expectedSchemaQ,
+    expectedSchemaQ,
+    expectedSchemaM,
+    expectedSchemaQ,
+    expectedSchemaM,
+  ]);
   const cases = [
     {
       skip: false,
       name: "client_ts",
-      command: $`deno run -A main.ts`.cwd(
+      // NOTE: dax replaces commands to deno with
+      // commands to xtask so we go through bah
+      command: $`bash -c "deno run -A main.ts"`.cwd(
         join(scriptsPath, "ts"),
       ),
-      expected: {
-        posts: [
-          { slug: "hair", title: "I dyed my hair!" },
-          { slug: "hello", title: "Hello World!" },
-        ],
-        user: {
-          id: "69099108-e48b-43c9-ad02-c6514eaad6e3",
-          email: "yuse@mail.box",
-          posts: [
-            { slug: "hair", title: "I dyed my hair!" },
-            { slug: "hello", title: "Hello World!" },
-          ],
-        },
-      },
+      expected: expectedSchema,
+    },
+    {
+      name: "client_py",
+      command: $`python3 main.py`.cwd(
+        join(scriptsPath, "py"),
+      ),
+      expected: expectedSchema,
     },
   ];
 
   await using _engine = await metaTest.engine(
     "metagen/typegraphs/sample.ts",
+    {
+      secrets: {
+        POSTGRES:
+          "postgresql://postgres:password@localhost:5432/db?schema=sample",
+      },
+    },
   );
-  for (const prefix of ["rs", "ts", "py"]) {
-    await metaTest.should(`mdk data go round ${prefix}`, async (t) => {
-      for (const { name, command, expected, skip } of cases) {
-        if (skip) {
-          continue;
-        }
-        await t.step(name, async () => {
-          const res = await command
-            .env({ "TG_PORT": metaTest.port.toString() })
-            .json();
-          assertEquals(res, expected);
-        });
-      }
+  for (const { name, command, expected, skip } of cases) {
+    if (skip) {
+      continue;
+    }
+    await metaTest.should(name, async () => {
+      const res = await command
+        .env({ "TG_PORT": metaTest.port.toString() })
+        .json();
+      expected.parse(res);
     });
   }
 });

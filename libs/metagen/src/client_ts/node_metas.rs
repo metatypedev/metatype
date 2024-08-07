@@ -31,7 +31,7 @@ impl TsNodeMetasRenderer {
             write!(
                 dest,
                 r#"
-        ["{key}", this.{node_ref}()],"#
+        ["{key}", nodeMetas.{node_ref}],"#
             )?;
         }
         write!(
@@ -54,9 +54,10 @@ impl TsNodeMetasRenderer {
         write!(
             dest,
             r#"
+
   {ty_name}(): NodeMeta {{
     return {{
-      ...this.{return_node}(),"#
+      ...nodeMetas.{return_node}(),"#
         )?;
         if let Some(fields) = argument_fields {
             write!(

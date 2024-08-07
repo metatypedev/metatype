@@ -190,7 +190,7 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
         let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
             format!("error collecting materializers for runtimes {stubbed_rts:?}")
         })?;
-        let mut op_to_mat_map = HashMap::new();
+        let mut op_to_mat_map = BTreeMap::new();
         for fun in &stubbed_funs {
             let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &ty_name_memo, &gen_stub_opts)?;
             if let Some(Some(op_name)) = fun.mat.data.get("op_name").map(|val| val.as_str()) {
@@ -346,7 +346,7 @@ fn e2e() -> anyhow::Result<()> {
                         Ok(())
                     })
                 },
-                target_dir: "./tests/mat_rust/".into(),
+                target_dir: Some("./tests/mat_rust/".into()),
             }])
             .await
         })?;

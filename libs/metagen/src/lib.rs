@@ -6,7 +6,7 @@ mod interlude {
     pub use common::typegraph::TypeNode;
     pub use common::typegraph::Typegraph;
 
-    pub use std::collections::{HashMap, HashSet};
+    pub use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
     pub use std::ops::Deref;
     pub use std::path::{Path, PathBuf};
     pub use std::rc::Rc;
@@ -34,6 +34,7 @@ mod mdk_python;
 mod mdk_rust;
 mod mdk_typescript;
 
+mod client_py;
 mod client_ts;
 
 #[cfg(test)]
@@ -156,6 +157,16 @@ impl GeneratorRunner {
                         op: |workspace_path: &Path, val| {
                             let config = client_ts::ClienTsGenConfig::from_json(val, workspace_path)?;
                             let generator = client_ts::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
+                (
+                    "client_py".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = client_py::ClienPyGenConfig::from_json(val, workspace_path)?;
+                            let generator = client_py::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },

@@ -65,7 +65,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
             "-f",
             file,
           ])
-        } down --remove-orphans`;
+        } down --remove-orphans --volumes`;
       }
     },
   },
@@ -89,7 +89,6 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
       TG_ADMIN_PASSWORD: "password",
       TG_PORT: "7891",
-      // TMP_DIR: $.path(projectDir).join("tmp").toString(),
     },
     fn: ($) => $`cargo run -p typegate`,
   },
