@@ -5934,7 +5934,7 @@ dependencies = [
 [[package]]
 name = "lade-sdk"
 version = "0.11.3"
-source = "git+https://github.com/metatypedev/lade?branch=fix-infisical-project-id#2556714f13a6163d30aed5f598ebe93b985f1e25"
+source = "git+https://github.com/zifeo/lade?branch=main#8ae18b62b89b3e333f5b4c486209c971620e2aae"
 dependencies = [
  "access-json",
  "anyhow",
