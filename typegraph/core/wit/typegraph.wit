@@ -486,10 +486,7 @@ interface runtimes {
     
     // kv
     record kv-runtime-data {
-        host: string,
-        port: option<string>,
-        db-number: option<u8>,
-        password: option<string>
+        url: string
     }
     
     register-kv-runtime: func(data: kv-runtime-data) -> result<runtime-id, error>;

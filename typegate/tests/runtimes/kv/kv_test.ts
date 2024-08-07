@@ -23,8 +23,7 @@ Meta.test(
   async (t) => {
     const e = await t.engine("runtimes/kv/kv.ts", {
       secrets: {
-        REDIS_HOST: "localhost",
-        REDIS_PASSWORD: "password",
+        REDIS: "redis://:password@localhost:6379",
       },
     });
 
