@@ -54,7 +54,7 @@ class KvRuntime(Runtime):
 
     def delete(self):
         mat = self.__operation(KvMaterializer.DELETE, fx.delete())
-        return t.func(t.struct({"key": t.string()}), t.string(), mat)
+        return t.func(t.struct({"key": t.string()}), t.integer(), mat)
 
     def keys(self):
         mat = self.__operation(KvMaterializer.KEYS, fx.read())

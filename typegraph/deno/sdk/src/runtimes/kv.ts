@@ -59,28 +59,25 @@ export class KvRuntime extends Runtime {
 
   get() {
     const mat = this.#operation("get", fx.read());
-
     return t.func(t.struct({ "key": t.string() }), t.string(), mat);
   }
 
   delete() {
     const mat = this.#operation("delete", fx.delete_());
-
-    return t.func(t.struct({ "key": t.string() }), t.string(), mat);
+    return t.func(t.struct({ "key": t.string() }), t.integer(), mat);
   }
 
   keys() {
     const mat = this.#operation("keys", fx.read());
-
     return t.func(
       t.struct({ "filter": t.optional(t.string()) }),
       t.list(t.string()),
       mat,
     );
   }
+
   all() {
     const mat = this.#operation("all", fx.read());
-
     return t.func(
       t.struct({ "filter": t.optional(t.string()) }),
       t.list(t.string()),

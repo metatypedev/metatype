@@ -1,17 +1,91 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, typegraph } from "@typegraph/sdk/index.ts";
-import { KvRuntime } from "@typegraph/sdk/runtimes/kv.ts";
+import { MetaTest } from "test-utils/test.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 
-export const tg = await typegraph("kv", (g: any) => {
-  const kv = new KvRuntime({ host: "REDIS_HOST", password: "REDIS_PASSWORD" });
-  const pub = Policy.public();
-  g.expose({
-    get: kv.get().withPolicy(pub),
-    set: kv.set().withPolicy(pub),
-    delete: kv.delete().withPolicy(pub),
-    keys: kv.keys().withPolicy(pub),
-    all: kv.all().withPolicy(pub),
+async function testSerialize(t: MetaTest, file: string) {
+  await t.should(`serialize typegraph ${file}`, async () => {
+    const { stdout: tg } = await Meta.cli("serialize", "--pretty", "-f", file);
+    await t.assertSnapshot(tg);
   });
+}
+
+Meta.test({ name: "Typegraph using kv" }, async (t) => {
+  await testSerialize(t, "runtimes/kv/kv.ts");
+  await testSerialize(t, "runtimes/kv/kv.py");
 });
+
+Meta.test(
+  {
+    name: "Kv runtime",
+  },
+  async (t) => {
+    const e = await t.engine("runtimes/kv/kv.ts", {
+      secrets: {
+        REDIS_HOST: "localhost",
+        REDIS_PASSWORD: "password",
+      },
+    });
+
+    await t.should("set key to value", async () => {
+      await gql`
+        mutation {
+          set(key: "name", value: "joe")
+        }
+      `
+        .expectData({
+          set: "OK",
+        })
+        .on(e);
+    });
+
+    await t.should("get value from redis by key", async () => {
+      await gql`
+        query {
+          get(key: "name")
+        }
+      `
+        .expectData({
+          get: "joe",
+        })
+        .on(e);
+    });
+
+    await t.should("get all keys from redist", async () => {
+      await gql`
+        query {
+          keys(filter: "*")
+        }
+      `
+        .expectData({
+          keys: ["name"],
+        })
+        .on(e);
+    });
+
+    await t.should("get all keys and value", async () => {
+      await gql`
+        query {
+          all(filter: "*")
+        }
+      `
+        .expectData({
+          all: [],
+        })
+        .on(e);
+    });
+
+    await t.should("delete key", async () => {
+      await gql`
+        mutation {
+          delete(key: "name")
+        }
+      `
+        .expectData({
+          delete: 1,
+        })
+        .on(e);
+    });
+  },
+);

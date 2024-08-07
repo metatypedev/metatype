@@ -20,11 +20,6 @@ typegates:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
       migration-failure-test:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
-      kv:
-        REDIS_HOST: "localhost"
-        REDIS_PORT: "6379"
-        REDIS_PASSWORD: password
-
 
 typegraphs:
   materializers:

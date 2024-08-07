@@ -38,11 +38,13 @@ export class KvRuntime extends Runtime {
     });
     const instance = new KvRuntime(typegraphName, connection);
     instance.logger.info("Registered KvRuntime");
+
     return instance;
   }
 
-  deinit(): Promise<void> {
-    throw new Error("Method not implemented.");
+  // deno-lint-ignore require-await
+  async deinit(): Promise<void> {
+    this.redis.close();
   }
 
   materialize(
@@ -52,39 +54,32 @@ export class KvRuntime extends Runtime {
   ): ComputeStage[] | Promise<ComputeStage[]> {
     const name = stage.props.materializer?.name;
 
-    const resolver: Resolver = () => {
+    const resolver: Resolver = async (args) => {
       if (name == "kv_set") {
-        return async (key: string, value: string) => {
-          await this.redis.set(key, value);
-        };
+        const { key, value } = args;
+        return await this.redis.set(key, value);
       }
 
       if (name == "kv_get") {
-        return async (key: string) => {
-          return await this.redis.get(key);
-        };
+        const { key } = args;
+        return await this.redis.get(key);
       }
 
       if (name == "kv_delete") {
-        return async (key: string) => {
-          return await this.redis.del(key);
-        };
+        const { key } = args;
+        return await this.redis.del(key);
       }
 
       if (name == "kv_keys") {
-        return async (filter: string | null) => {
-          return await this.redis.keys(filter ?? "*");
-        };
+        const { filter } = args;
+        return await this.redis.keys(filter ?? "*");
       }
 
       if (name == "kv_all") {
-        return async (filter: string | null) => {
-          return await this.redis.hgetall(filter ?? "*");
-        };
+        const { filter } = args;
+        return await this.redis.hgetall(filter ?? "*");
       }
     };
-    return [
-      new ComputeStage({ ...stage.props, resolver }),
-    ];
+    return [new ComputeStage({ ...stage.props, resolver })];
   }
 }
