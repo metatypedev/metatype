@@ -18,25 +18,11 @@ class KvOperationMat implements Materializer {
 }
 
 export class KvRuntime extends Runtime {
-  host: string;
-  port?: string;
-  dbNumber?: number;
-  password?: string;
-
-  constructor(
-    { host, port, dbNumber, password }: {
-      host: string;
-      port?: string;
-      dbNumber?: number;
-      password?: string;
-    },
-  ) {
-    const id = runtimes.registerKvRuntime({ host, port, dbNumber, password });
+  url: string;
+  constructor(url: string) {
+    const id = runtimes.registerKvRuntime({ url });
     super(id);
-    this.host = host;
-    this.port = port;
-    this.dbNumber = dbNumber;
-    this.password = password;
+    this.url = url;
   }
 
   #operation(operation: KvMaterializer, effect: Effect) {

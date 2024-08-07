@@ -496,12 +496,6 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             path_style_secret: d.path_style_secret.clone(),
         }))
         .into()),
-        Runtime::Kv(d) => Ok(TGRuntime::Known(Rt::Kv(KvRuntimeData {
-            host: d.host.clone(),
-            port: d.port.clone(),
-            db_number: d.db_number,
-            password: d.password.clone(),
-        }))
-        .into()),
+        Runtime::Kv(d) => Ok(TGRuntime::Known(Rt::Kv(KvRuntimeData { url: d.url.clone() })).into()),
     }
 }

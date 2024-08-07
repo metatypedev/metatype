@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { connect, Redis } from "redis";
+import { connect, parseURL, Redis } from "redis";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { getLogger, Logger } from "../log.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
@@ -30,12 +30,9 @@ export class KvRuntime extends Runtime {
       KvRuntimeData
     >;
     const typegraphName = TypeGraph.formatName(typegraph);
-    const connection = await connect({
-      hostname: secretManager.secretOrFail(args.host as string),
-      port: secretManager.secretOrNull(args.port as string) ?? "6379",
-      password: secretManager.secretOrNull(args.password as string) ??
-        "password",
-    });
+    const url = secretManager.secretOrFail(args.url);
+    const redisConnectionOption = parseURL(url);
+    const connection = await connect(redisConnectionOption);
     const instance = new KvRuntime(typegraphName, connection);
     instance.logger.info("Registered KvRuntime");
 

@@ -243,10 +243,7 @@ snapshot[`Typegraph using kv 1`] = `
       {
         "name": "kv",
         "data": {
-          "host": "REDIS_HOST",
-          "port": null,
-          "db_number": null,
-          "password": "REDIS_PASSWORD"
+          "url": "REDIS"
         }
       }
     ],
@@ -524,10 +521,7 @@ snapshot[`Typegraph using kv 2`] = `
       {
         "name": "kv",
         "data": {
-          "host": "REDIS_HOST",
-          "port": null,
-          "db_number": null,
-          "password": "REDIS_PASSWORD"
+          "url": "REDIS"
         }
       }
     ],

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from dataclasses import dataclass
-from typing import Optional
 
 from typegraph import fx, t
 from typegraph.gen.exports.runtimes import (
@@ -17,30 +16,16 @@ from typegraph.wit import runtimes, store
 
 
 class KvRuntime(Runtime):
-    host: str
-    port: Optional[str]
-    db_number: Optional[int]
-    password: Optional[str]
+    url: str
 
-    def __init__(
-        self,
-        host: str,
-        port: Optional[str],
-        db_number: Optional[int],
-        password: Optional[str],
-    ):
-        data = KvRuntimeData(
-            host=host, port=port, db_number=db_number, password=password
-        )
+    def __init__(self, url: str):
+        data = KvRuntimeData(url)
         runtime_id = runtimes.register_kv_runtime(store, data)
         if isinstance(runtime_id, Err):
             raise Exception(runtime_id.value)
 
         super().__init__(runtime_id.value)
-        self.host = host
-        self.port = port
-        self.db_number = db_number
-        self.password = password
+        self.url = url
 
     def get(self):
         mat = self.__operation(KvMaterializer.GET, fx.read())
