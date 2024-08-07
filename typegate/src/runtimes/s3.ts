@@ -38,7 +38,6 @@ export class S3Runtime extends Runtime {
 
   static init(params: RuntimeInitParams): Runtime {
     logger.info("initializing S3Runtime");
-    logger.debug("init params: " + JSON.stringify(params));
     const { secretManager, typegraphName } = params;
     const args = params.args as unknown as S3RuntimeData;
 
