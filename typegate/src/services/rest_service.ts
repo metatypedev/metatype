@@ -65,7 +65,7 @@ export async function handleRest(
         `query not found: ${name}`,
         404,
       ).withType("NotFound")
-        .toResponse(false);
+        .toResponse(headers, false);
     }
 
     const variables = req.method === "GET"
@@ -92,7 +92,7 @@ export async function handleRest(
   } catch (e) {
     headers.set("Content-Type", "application/json");
     if (e instanceof BaseError) {
-      return e.toResponse(false);
+      return e.toResponse(headers, false);
     }
     if (e instanceof ResolverError) {
       logger.error(`field err: ${e.message}`);

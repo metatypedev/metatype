@@ -655,24 +655,6 @@ const nodeMetas = {
       ],
     };
   },
-
-  Func27(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-
-  Func25(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
-
-  Func24(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
   User(): NodeMeta {
     return {
       subNodes: [
@@ -708,6 +690,27 @@ const nodeMetas = {
       },
     };
   },
+
+  Func25(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+
+  Func24(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+
+  Func27(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+};
+export type Object21 = {
+  id: string;
 };
 export type StringUuid = string;
 export type Post = {
@@ -721,9 +724,6 @@ export type User = {
   id: StringUuid;
   email: StringEmail;
   posts: Post7;
-};
-export type Object21 = {
-  id: string;
 };
 
 export type PostSelections = {

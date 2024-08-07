@@ -533,6 +533,15 @@ class NodeDescs:
         )
 
     @staticmethod
+    def Func28():
+        return NodeMeta(
+            sub_nodes=NodeDescs.Post().sub_nodes,
+            arg_types={
+                "id": "String13",
+            },
+        )
+
+    @staticmethod
     def Func25():
         return NodeMeta(
             sub_nodes=NodeDescs.scalar().sub_nodes,
@@ -550,36 +559,21 @@ class NodeDescs:
         )
 
     @staticmethod
-    def Func27():
-        return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
-        )
-
-    @staticmethod
-    def Func28():
-        return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
-            arg_types={
-                "id": "String13",
-            },
-        )
-
-    @staticmethod
     def Func24():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
         )
 
+    @staticmethod
+    def Func27():
+        return NodeMeta(
+            sub_nodes=NodeDescs.Post().sub_nodes,
+        )
 
-Object21 = typing.TypedDict(
-    "Object21",
-    {
-        "id": str,
-    },
-    total=False,
-)
 
 StringUuid = str
+
+StringEmail = str
 
 Post = typing.TypedDict(
     "Post",
@@ -591,8 +585,6 @@ Post = typing.TypedDict(
     total=False,
 )
 
-StringEmail = str
-
 Post7 = typing.List[Post]
 
 User = typing.TypedDict(
@@ -601,6 +593,14 @@ User = typing.TypedDict(
         "id": StringUuid,
         "email": StringEmail,
         "posts": Post7,
+    },
+    total=False,
+)
+
+Object21 = typing.TypedDict(
+    "Object21",
+    {
+        "id": str,
     },
     total=False,
 )
