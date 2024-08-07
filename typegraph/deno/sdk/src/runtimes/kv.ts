@@ -62,8 +62,8 @@ export class KvRuntime extends Runtime {
     );
   }
 
-  all() {
-    const mat = this.#operation("all", fx.read());
+  values() {
+    const mat = this.#operation("values", fx.read());
     return t.func(
       t.struct({ "filter": t.optional(t.string()) }),
       t.list(t.string()),

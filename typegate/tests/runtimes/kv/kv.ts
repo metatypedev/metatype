@@ -12,6 +12,6 @@ export const tg = await typegraph("kv", (g: any) => {
     set: kv.set().withPolicy(pub),
     delete: kv.delete().withPolicy(pub),
     keys: kv.keys().withPolicy(pub),
-    all: kv.all().withPolicy(pub),
+    values: kv.values().withPolicy(pub),
   });
 });
