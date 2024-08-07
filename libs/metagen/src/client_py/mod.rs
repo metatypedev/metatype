@@ -135,7 +135,7 @@ fn render_client_py(_config: &ClienPyGenConfig, tg: &Typegraph) -> anyhow::Resul
         r#"
 class QueryGraph(QueryGraphBase):
     def __init__(self):
-        self.ty_to_gql_ty_map = {{"#
+        super().__init__({{"#
     )?;
     for ty_name in name_mapper.memo.borrow().deref().values() {
         write!(
@@ -148,7 +148,7 @@ class QueryGraph(QueryGraphBase):
     write!(
         dest,
         r#"
-        }}
+        }})
     "#
     )?;
 
@@ -163,9 +163,11 @@ class QueryGraph(QueryGraphBase):
             fun.in_id.map(|id| data_types.get(&id).unwrap()),
             fun.select_ty.map(|id| selection_names.get(&id).unwrap()),
         ) {
-            (Some(arg_ty), Some(select_ty)) => format!("self, args: {arg_ty}, select: {select_ty}"),
+            (Some(arg_ty), Some(select_ty)) => {
+                format!("self, args: typing.Union[{arg_ty}, PlaceholderArgs], select: {select_ty}")
+            }
             // functions that return scalars don't need selections
-            (Some(arg_ty), None) => format!("self, args: {arg_ty}"),
+            (Some(arg_ty), None) => format!("self, args: typing.Union[{arg_ty}, PlaceholderArgs]"),
             // not all functions have args (empty struct arg)
             (None, Some(select_ty)) => format!("self, select: {select_ty}"),
             (None, None) => "self".into(),

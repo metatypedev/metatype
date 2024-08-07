@@ -131,7 +131,7 @@ fn render_client_ts(_config: &ClienTsGenConfig, tg: &Typegraph) -> anyhow::Resul
     write!(
         dest,
         r#"
-export class QueryGraph extends QueryGraphBase {{
+export class QueryGraph extends _QueryGraphBase {{
   constructor() {{
     super({{"#
     )?;
@@ -162,9 +162,11 @@ export class QueryGraph extends QueryGraphBase {{
             fun.in_id.map(|id| data_types.get(&id).unwrap()),
             fun.select_ty.map(|id| selection_names.get(&id).unwrap()),
         ) {
-            (Some(arg_ty), Some(select_ty)) => format!("args: {arg_ty}, select: {select_ty}"),
+            (Some(arg_ty), Some(select_ty)) => {
+                format!("args: {arg_ty} | PlaceholderArgs<{arg_ty}>, select: {select_ty}")
+            }
             // functions that return scalars don't need selections
-            (Some(arg_ty), None) => format!("args: {arg_ty}"),
+            (Some(arg_ty), None) => format!("args: {arg_ty} | PlaceholderArgs<{arg_ty}>"),
             // not all functions have args (empty struct arg)
             (None, Some(select_ty)) => format!("select: {select_ty}"),
             (None, None) => "".into(),
@@ -191,7 +193,7 @@ export class QueryGraph extends QueryGraphBase {{
             dest,
             r#"
   {method_name}({args_row}) {{
-    const inner = selectionToNodeSet(
+    const inner = _selectionToNodeSet(
       {{ "{node_name}": {args_selection} }},
       [["{node_name}", nodeMetas.{meta_method}]],
       "$q",
@@ -348,7 +350,7 @@ fn e2e() -> anyhow::Result<()> {
                         Ok(())
                     })
                 },
-                target_dir: None,
+                target_dir: Some("./tests/client_ts/".into()),
             }])
             .await
         })?;

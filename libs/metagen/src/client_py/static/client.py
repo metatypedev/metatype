@@ -6,95 +6,11 @@ import urllib.error
 import http.client as http_c
 
 
-@dc.dataclass
-class NodeArgValue:
-    type_name: str
-    value: typing.Any
-
-
-NodeArgs = typing.Dict[str, NodeArgValue]
-Out = typing.TypeVar("Out", covariant=True)
-
-
-@dc.dataclass
-class SelectNode(typing.Generic[Out]):
-    node_name: str
-    instance_name: str
-    args: typing.Optional[NodeArgs]
-    sub_nodes: typing.Optional[typing.List["SelectNode"]]
-    _phantom: typing.Optional[Out] = None
-
-
-@dc.dataclass
-class QueryNode(typing.Generic[Out], SelectNode[Out]):
-    pass
-
-
-@dc.dataclass
-class MutationNode(typing.Generic[Out], SelectNode[Out]):
-    pass
-
-
-ArgT = typing.TypeVar("ArgT")
-SelectionT = typing.TypeVar("SelectionT")
-
-
-class Alias(typing.Generic[SelectionT]):
-    def __init__(self, **aliases: SelectionT):
-        self.items = aliases
-
-
-ScalarSelectNoArgs = typing.Union[bool, Alias[typing.Literal[True]], None]
-ScalarSelectArgs = typing.Union[ArgT, Alias[ArgT], typing.Literal[False], None]
-CompositeSelectNoArgs = typing.Union[
-    SelectionT, Alias[SelectionT], typing.Literal[False], None
-]
-CompositeSelectArgs = typing.Union[
-    typing.Tuple[ArgT, SelectionT],
-    Alias[typing.Tuple[ArgT, SelectionT]],
-    typing.Literal[False],
-    None,
-]
-
-
-# FIXME: ideally this would be a TypedDict
-# to allow full dict based queries but
-# we need to reliably identify SelectionFlags at runtime
-# but TypedDicts don't allow instanceof
-@dc.dataclass
-class SelectionFlags:
-    select_all: typing.Union[bool, None] = None
-
-
-class Selection(typing.TypedDict, total=False):
-    _: SelectionFlags
-
-
-SelectionGeneric = typing.Dict[
-    str,
-    typing.Union[
-        SelectionFlags,
-        ScalarSelectNoArgs,
-        ScalarSelectArgs[typing.Mapping[str, typing.Any]],
-        CompositeSelectNoArgs["SelectionGeneric"],
-        # FIXME: should be possible to make SelectionT here `SelectionGeneric` recursively
-        # but something breaks
-        CompositeSelectArgs[typing.Mapping[str, typing.Any], typing.Any],
-    ],
-]
-
-
-@dc.dataclass
-class NodeMeta:
-    sub_nodes: typing.Optional[typing.Dict[str, typing.Callable[[], "NodeMeta"]]] = None
-    arg_types: typing.Optional[typing.Dict[str, str]] = None
-
-
 def selection_to_nodes(
-    selection: SelectionGeneric,
-    metas: typing.Dict[str, typing.Callable[[], NodeMeta]],
+    selection: "SelectionGeneric",
+    metas: typing.Dict[str, typing.Callable[[], "NodeMeta"]],
     parent_path: str,
-) -> typing.List[SelectNode[typing.Any]]:
+) -> typing.List["SelectNode[typing.Any]"]:
     out = []
     flags = selection.get("_")
     if flags is not None and not isinstance(flags, SelectionFlags):
@@ -188,8 +104,11 @@ def selection_to_nodes(
                         + f"selection is typeof {type(instance_selection)}",
                     )
                 sub_nodes = selection_to_nodes(
-                    sub_selections, meta.sub_nodes, f"{parent_path}.{instance_name}"
+                    typing.cast("SelectionGeneric", sub_selections),
+                    meta.sub_nodes,
+                    f"{parent_path}.{instance_name}",
                 )
+
             node = SelectNode(node_name, instance_name, instance_args, sub_nodes)
             out.append(node)
 
@@ -199,6 +118,149 @@ def selection_to_nodes(
             f"unexpected nodes found in selection set at {parent_path}: {found_nodes}",
         )
     return out
+
+
+# Util types section #
+
+Out = typing.TypeVar("Out", covariant=True)
+
+T = typing.TypeVar("T")
+
+ArgT = typing.TypeVar("ArgT", bound=typing.Mapping[str, typing.Any])
+SelectionT = typing.TypeVar("SelectionT")
+
+# Query node types section #
+
+
+@dc.dataclass
+class SelectNode(typing.Generic[Out]):
+    node_name: str
+    instance_name: str
+    args: typing.Optional["NodeArgs"]
+    sub_nodes: typing.Optional[typing.List["SelectNode"]]
+
+
+@dc.dataclass
+class QueryNode(SelectNode[Out]):
+    pass
+
+
+@dc.dataclass
+class MutationNode(SelectNode[Out]):
+    pass
+
+
+@dc.dataclass
+class NodeMeta:
+    sub_nodes: typing.Optional[typing.Dict[str, typing.Callable[[], "NodeMeta"]]] = None
+    arg_types: typing.Optional[typing.Dict[str, str]] = None
+
+
+# Argument types section #
+
+
+@dc.dataclass
+class NodeArgValue:
+    type_name: str
+    value: typing.Any
+
+
+NodeArgs = typing.Dict[str, NodeArgValue]
+
+
+class PlaceholderValue(typing.Generic[T]):
+    def __init__(self, key: str):
+        self.key = key
+
+
+PlaceholderArgs = typing.Dict[str, PlaceholderValue]
+
+
+class PreparedArgs:
+    def get(self, key: str) -> PlaceholderValue:
+        return PlaceholderValue(key)
+
+
+# Selection types section #
+
+
+class Alias(typing.Generic[SelectionT]):
+    """
+    Request multiple instances of a single node under different
+    aliases.
+    """
+
+    def __init__(self, **aliases: SelectionT):
+        self.items = aliases
+
+
+ScalarSelectNoArgs = typing.Union[bool, Alias[typing.Literal[True]], None]
+ScalarSelectArgs = typing.Union[
+    ArgT,
+    PlaceholderArgs,
+    Alias[typing.Union[ArgT, PlaceholderArgs]],
+    typing.Literal[False],
+    None,
+]
+CompositeSelectNoArgs = typing.Union[
+    SelectionT, Alias[SelectionT], typing.Literal[False], None
+]
+CompositeSelectArgs = typing.Union[
+    typing.Tuple[typing.Union[ArgT, PlaceholderArgs], SelectionT],
+    Alias[typing.Tuple[typing.Union[ArgT, PlaceholderArgs], SelectionT]],
+    typing.Literal[False],
+    None,
+]
+
+
+# FIXME: ideally this would be a TypedDict
+# to allow full dict based queries but
+# we need to reliably identify SelectionFlags at runtime
+# but TypedDicts don't allow instanceof
+@dc.dataclass
+class SelectionFlags:
+    select_all: typing.Union[bool, None] = None
+
+
+class Selection(typing.TypedDict, total=False):
+    _: SelectionFlags
+
+
+SelectionGeneric = typing.Mapping[
+    str,
+    typing.Union[
+        SelectionFlags,
+        ScalarSelectNoArgs,
+        ScalarSelectArgs[typing.Mapping[str, typing.Any]],
+        CompositeSelectNoArgs["SelectionGeneric"],
+        # FIXME: should be possible to make SelectionT here `SelectionGeneric` recursively
+        # but something breaks
+        CompositeSelectArgs[typing.Mapping[str, typing.Any], typing.Any],
+    ],
+]
+
+# GraphQL section
+
+
+@dc.dataclass
+class GraphQLTransportOptions:
+    headers: typing.Dict[str, str]
+
+
+@dc.dataclass
+class GraphQLRequest:
+    addr: str
+    method: str
+    headers: typing.Dict[str, str]
+    body: bytes
+
+
+@dc.dataclass
+class GraphQLResponse:
+    req: GraphQLRequest
+    status: int
+    headers: typing.Dict[str, str]
+    body: bytes
 
 
 def convert_query_node_gql(
@@ -227,27 +289,6 @@ def convert_query_node_gql(
     return out
 
 
-@dc.dataclass
-class GraphQLTransportOptions:
-    headers: typing.Dict[str, str]
-
-
-@dc.dataclass
-class GraphQLRequest:
-    addr: str
-    method: str
-    headers: typing.Dict[str, str]
-    body: bytes
-
-
-@dc.dataclass
-class GraphQLResponse:
-    req: GraphQLRequest
-    status: int
-    headers: typing.Dict[str, str]
-    body: bytes
-
-
 class GraphQLTransportBase:
     def __init__(
         self,
@@ -261,7 +302,7 @@ class GraphQLTransportBase:
 
     def build_gql(
         self,
-        query: typing.Dict[str, SelectNode],
+        query: typing.Mapping[str, SelectNode],
         ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
         name: str = "",
     ):
@@ -354,45 +395,92 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         self,
         inp: typing.Dict[str, QueryNode[Out]],
         opts: typing.Optional[GraphQLTransportOptions] = None,
+        name: str = "",
     ) -> typing.Dict[str, Out]:
-        doc, variables = self.build_gql({key: val for key, val in inp.items()}, "query")
+        doc, variables = self.build_gql(
+            {key: val for key, val in inp.items()}, "query", name
+        )
         # print(doc,variables)
         # return {}
-        out = self.fetch(doc, variables, opts)
-        return out
+        return self.fetch(doc, variables, opts)
 
     def mutation(
         self,
         inp: typing.Dict[str, MutationNode[Out]],
         opts: typing.Optional[GraphQLTransportOptions] = None,
+        name: str = "",
     ) -> typing.Dict[str, Out]:
         doc, variables = self.build_gql(
-            {key: val for key, val in inp.items()}, "mutation"
+            {key: val for key, val in inp.items()}, "mutation", name
         )
-        out = self.fetch(doc, variables, opts)
-        return out
+        return self.fetch(doc, variables, opts)
+
+    def prepare_query(
+        self,
+        fun: typing.Callable[[PreparedArgs], typing.Dict[str, QueryNode[Out]]],
+        name: str = "",
+    ) -> "PreparedRequestUrlib[Out]":
+        return PreparedRequestUrlib(self, fun, "query", name)
+
+    def prepare_mutation(
+        self,
+        fun: typing.Callable[[PreparedArgs], typing.Dict[str, MutationNode[Out]]],
+        name: str = "",
+    ) -> "PreparedRequestUrlib[Out]":
+        return PreparedRequestUrlib(self, fun, "mutation", name)
 
 
-# def queryT[Out](
-#     self, inp: typing.Tuple[QueryNode[Out, typing.Any, typing.Any], *QueryNode[Out, typing.Any, typing.Any]]
-# ) -> typing.Tuple[*Out]:
-#     return ()
+class PreparedRequestBase(typing.Generic[Out]):
+    def __init__(
+        self,
+        transport: GraphQLTransportBase,
+        fun: typing.Callable[[PreparedArgs], typing.Mapping[str, SelectNode[Out]]],
+        ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
+        name: str = "",
+    ):
+        dry_run_node = fun(PreparedArgs())
+        doc, variables = transport.build_gql(dry_run_node, ty, name)
+        self.doc = doc
+        self._mapping = variables
+        self.transport = transport
 
-# def prepare_query[Args, K, Out](
-#     self,
-#     argType: type[Args],
-#     inp: Callable[[Args], typing.Dict[K, SelectNode[Out, typing.Any, typing.Any]]],
-# ) -> PreparedRequest[Args, K, Out]:
-#     return PreparedRequest(inp)
+    def resolve_vars(
+        self,
+        args: typing.Mapping[str, typing.Any],
+        mappings: typing.Dict[str, typing.Any],
+    ):
+        resolved: typing.Dict[str, typing.Any] = {}
+        for key, val in mappings.items():
+            if isinstance(val, PlaceholderValue):
+                resolved[key] = args[val.key]
+            elif isinstance(val, dict):
+                self.resolve_vars(args, val)
+            else:
+                resolved[key] = val
+        return resolved
 
 
-class PreparedRequest(typing.Generic[ArgT, Out]):
-    def __init__(self, inp: typing.Callable[[ArgT], typing.Dict[str, SelectNode[Out]]]):
-        self.inp = inp
-        pass
+class PreparedRequestUrlib(PreparedRequestBase[Out]):
+    def __init__(
+        self,
+        transport: GraphQLTransportUrlib,
+        fun: typing.Callable[[PreparedArgs], typing.Mapping[str, SelectNode[Out]]],
+        ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
+        name: str = "",
+    ):
+        super().__init__(transport, fun, ty, name)
+        self.transport = transport
 
-    def do(self, args: ArgT) -> typing.Dict[str, Out]:
-        return {}
+    def perform(
+        self,
+        args: typing.Mapping[str, typing.Any],
+        opts: typing.Optional[GraphQLTransportOptions] = None,
+    ) -> typing.Dict[str, Out]:
+        resolved_vars = self.resolve_vars(args, self._mapping)
+        return self.transport.fetch(self.doc, resolved_vars, opts)
+
+
+# Query graph section #
 
 
 class QueryGraphBase:

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.ts";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
 import { RandomRuntime } from "@typegraph/sdk/runtimes/random.ts";
 
@@ -39,12 +39,25 @@ export const tg = await typegraph({
         getPosts: random.gen(post),
 
         scalarNoArgs: random.gen(t.string()),
-        scalarArgs: deno.func(post, t.string(), { code: () => "hello" }),
-        compositeNoArgs: deno.func(t.struct({}), post, { code: genUser }),
+        scalarArgs: deno.func(
+          post,
+          t.string(),
+          {
+            code: () => "hello",
+            effect: fx.update(),
+          },
+        ),
+        compositeNoArgs: deno.func(t.struct({}), post, {
+          code: genUser,
+          effect: fx.update(),
+        }),
         compositeArgs: deno.func(
           t.struct({ id: t.string() }),
           post,
-          { code: genUser },
+          {
+            code: genUser,
+            effect: fx.update(),
+          },
         ),
       },
       Policy.public(),

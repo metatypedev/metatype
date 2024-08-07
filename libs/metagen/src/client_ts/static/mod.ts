@@ -1,393 +1,4 @@
-type ErrorPolyfill = new (msg: string, payload: unknown) => Error;
-
-export type GraphQlTransportOptions = Omit<RequestInit, "body"> & {
-  fetch?: typeof fetch;
-};
-
-export class GraphQLTransport {
-  constructor(
-    public address: URL,
-    public options: GraphQlTransportOptions,
-    private typeToGqlTypeMap: Record<string, string>,
-  ) {
-  }
-
-  protected buildGql(
-    query: Record<string, SelectNode>,
-    ty: "query" | "mutation",
-    name: string = "",
-  ) {
-    const variables = new Map<string, NodeArgValue>();
-
-    const rootNodes = Object
-      .entries(query)
-      .map(([key, node]) => {
-        const fixedNode = { ...node, instanceName: key };
-        return convertQueryNodeGql(fixedNode, variables);
-      })
-      .join("\n  ");
-
-    let argsRow = [...variables.entries()]
-      .map(([key, val]) => `$${key}: ${this.typeToGqlTypeMap[val.typeName]}`)
-      .join(", ");
-    if (argsRow.length > 0) {
-      // graphql doesn't like empty parentheses so we only
-      // add them if there are args
-      argsRow = `(${argsRow})`;
-    }
-
-    const doc = `${ty} ${name}${argsRow} {
-  ${rootNodes}
-}`;
-    return {
-      doc,
-      variables: Object.fromEntries(
-        [...variables.entries()]
-          .map(([key, val]) => [key, val.value]),
-      ),
-    };
-  }
-
-  protected async fetch(
-    doc: string,
-    variables: Record<string, unknown>,
-    options?: GraphQlTransportOptions,
-  ) {
-    // console.log(doc, variables);
-    const fetchImpl = options?.fetch ?? this.options.fetch ?? fetch;
-    const res = await fetchImpl(this.address, {
-      ...this.options,
-      ...options,
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        ...this.options.headers ?? {},
-        ...options?.headers ?? {},
-      },
-      body: JSON.stringify({
-        query: doc,
-        variables,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text().catch((err) =>
-        `error reading body: ${err}`
-      );
-      throw new (Error as ErrorPolyfill)(
-        `graphql request to ${this.address} failed with status ${res.status}: ${body}`,
-        {
-          cause: {
-            response: res,
-            body,
-          },
-        },
-      );
-    }
-    if (res.headers.get("content-type") != "application/json") {
-      throw new (Error as ErrorPolyfill)(
-        "unexpected content type in response",
-        {
-          cause: {
-            response: res,
-            body: await res.text().catch((err) => `error reading body: ${err}`),
-          },
-        },
-      );
-    }
-    return await res.json() as { data: unknown; errors?: object[] };
-  }
-
-  async query<Doc extends Record<string, QueryNode<unknown>>>(
-    query: Doc,
-    options?: GraphQlTransportOptions,
-  ): Promise<QueryDocOut<Doc>> {
-    const { variables, doc } = this.buildGql(
-      Object.fromEntries(
-        Object.entries(query).map((
-          [key, val],
-        ) => [key, (val as QueryNode<unknown>).inner]),
-      ),
-      "query",
-    );
-    const res = await this.fetch(doc, variables, options);
-    if ("errors" in res) {
-      throw new (Error as ErrorPolyfill)("graphql errors on response", {
-        cause: res.errors,
-      });
-    }
-    return res.data as QueryDocOut<Doc>;
-  }
-
-  async mutation<Doc extends Record<string, MutationNode<unknown>>>(
-    query: Doc,
-    options?: GraphQlTransportOptions,
-  ): Promise<QueryDocOut<Doc>> {
-    const { variables, doc } = this.buildGql(
-      Object.fromEntries(
-        Object.entries(query).map((
-          [key, val],
-        ) => [key, (val as MutationNode<unknown>).inner]),
-      ),
-      "mutation",
-    );
-    const res = await this.fetch(doc, variables, options);
-    if ("errors" in res) {
-      throw new (Error as ErrorPolyfill)("graphql errors on response", {
-        cause: res.errors,
-      });
-    }
-    return res.data as QueryDocOut<Doc>;
-  }
-
-  prepareQuery<
-    T extends JsonObject,
-    Doc extends Record<string, QueryNode<unknown>>,
-  >(
-    fun: (args: T) => Doc,
-  ): PreparedRequest<T, Doc> {
-    return new PreparedRequest(
-      this.address,
-      this.options,
-      this.typeToGqlTypeMap,
-      fun,
-      "query",
-    );
-  }
-
-  prepareMutation<
-    T extends JsonObject,
-    Q extends Record<string, MutationNode<unknown>>,
-  >(
-    fun: (args: T) => Q,
-  ): PreparedRequest<T, Q> {
-    return new PreparedRequest(
-      this.address,
-      this.options,
-      this.typeToGqlTypeMap,
-      fun,
-      "mutation",
-    );
-  }
-}
-
-const variablePath = Symbol("variablePath");
-const pathSeparator = "%.%";
-
-class PreparedRequest<
-  T extends JsonObject,
-  Doc extends Record<string, QueryNode<unknown> | MutationNode<unknown>>,
-> extends GraphQLTransport {
-  #doc: string;
-  #mappings: Record<string, unknown>;
-
-  constructor(
-    address: URL,
-    options: GraphQlTransportOptions,
-    typeToGqlTypeMap: Record<string, string>,
-    fun: (args: T) => Doc,
-    ty: "query" | "mutation",
-    name: string = "",
-  ) {
-    super(address, options, typeToGqlTypeMap);
-    const rootId = "$root";
-    const dryRunNode = fun(this.#getProxy(rootId) as unknown as T);
-    const { doc, variables } = this.buildGql(
-      Object.fromEntries(
-        Object.entries(dryRunNode).map((
-          [key, val],
-        ) => [key, (val as MutationNode<unknown>).inner]),
-      ),
-      ty,
-      name,
-    );
-    this.#doc = doc;
-    this.#mappings = variables;
-  }
-
-  resolveVariable(
-    args: T,
-    cur: Json,
-    path: string[],
-    idx = 0,
-  ): unknown {
-    if (idx == path.length - 1) {
-      return cur;
-    }
-    if (typeof cur != "object" || cur == null) {
-      const curPath = path.slice(0, idx);
-      throw new (Error as ErrorPolyfill)(
-        `unexpected prepard request arguments shape: item at ${curPath} is not object when trying to access ${path}`,
-        {
-          cause: {
-            args,
-            curPath,
-            curObj: cur,
-            mappings: this.#mappings,
-          },
-        },
-      );
-    }
-    const childIdx = idx + 1;
-    return this.resolveVariable(
-      args,
-      (cur as JsonObject)[path[childIdx]],
-      path,
-      childIdx,
-    );
-  }
-
-  #getProxy(path: string): { [variablePath]: string } {
-    return new Proxy(
-      { [variablePath]: path },
-      {
-        get: (target, prop, _reciever) => {
-          if (prop === variablePath) {
-            return path;
-          }
-          return this.#getProxy(
-            `${target[variablePath]}${pathSeparator}${String(prop)}`,
-          );
-        },
-      },
-    );
-  }
-
-  async do(args: T, opts?: GraphQlTransportOptions): Promise<
-    {
-      [K in keyof Doc]: SelectNodeOut<Doc[K]>;
-    }
-  > {
-    const resolvedVariables = {} as Record<string, unknown>;
-    for (const [key, val] of Object.entries(this.#mappings)) {
-      if (typeof val !== "object" || val == null || !(variablePath in val)) {
-        throw new Error("impossible");
-      }
-      const path = (val[variablePath] as string).split(pathSeparator);
-      resolvedVariables[key] = this.resolveVariable(args, args, path);
-    }
-    // console.log(this.#doc, {
-    //   resolvedVariables,
-    //   mapping: this.#mappings,
-    // });
-    const res = await this.fetch(this.#doc, resolvedVariables, opts);
-    if ("errors" in res) {
-      throw new (Error as ErrorPolyfill)("graphql errors on response", {
-        cause: res.errors,
-      });
-    }
-    return res.data as QueryDocOut<Doc>;
-  }
-}
-
-type NodeArgValue = {
-  typeName: string;
-  value: unknown;
-};
-
-type NodeArgs = {
-  [name: string]: NodeArgValue;
-};
-
-export class Alias<T> {
-  #aliases: Record<string, T>;
-  constructor(
-    aliases: Record<string, T>,
-  ) {
-    this.#aliases = aliases;
-  }
-  aliases() {
-    return this.#aliases;
-  }
-}
-
-export function alias<T>(aliases: Record<string, T>): Alias<T> {
-  return new Alias(aliases);
-}
-
-type ScalarSelectNoArgs =
-  | boolean
-  | Alias<true>
-  | null
-  | undefined;
-
-type ScalarSelectArgs<ArgT> =
-  | ArgT
-  | Alias<ArgT>
-  | false
-  | null
-  | undefined;
-
-type CompositeSelectNoArgs<SelectionT> =
-  | SelectionT
-  | Alias<SelectionT>
-  | false
-  | null
-  | undefined;
-
-type CompositeSelectArgs<ArgT, SelectionT> =
-  | [ArgT, SelectionT]
-  | Alias<[ArgT, SelectionT]>
-  | false
-  | undefined
-  | null;
-
-type SelectionFlags = "selectAll";
-
-type Selection = {
-  _?: SelectionFlags;
-  [key: string]:
-    | SelectionFlags
-    | ScalarSelectNoArgs
-    | ScalarSelectArgs<Record<string, unknown>>
-    | CompositeSelectNoArgs<Selection | undefined>
-    | CompositeSelectArgs<Record<string, unknown>, Selection>
-    | Selection;
-};
-
-type NodeMeta = {
-  subNodes?: [string, () => NodeMeta][];
-  argumentTypes?: { [name: string]: string };
-};
-
-export type JsonLiteral = string | number | boolean | null;
-export type JsonObject = { [key: string]: Json };
-export type JsonArray = Json[];
-export type Json = JsonLiteral | JsonObject | JsonArray;
-
-export type DeArrayify<T> = T extends Array<infer Inner> ? Inner : T;
-
-type SelectNode<Out = unknown> = {
-  _phantom?: Out;
-  instanceName: string;
-  nodeName: string;
-  args?: NodeArgs;
-  subNodes?: SelectNode[];
-};
-
-export class QueryNode<Out> {
-  constructor(
-    public inner: SelectNode<Out>,
-  ) {}
-}
-
-export class MutationNode<Out> {
-  constructor(
-    public inner: SelectNode<Out>,
-  ) {}
-}
-
-type SelectNodeOut<T> = T extends (QueryNode<infer O> | MutationNode<infer O>)
-  ? O
-  : never;
-type QueryDocOut<T> = T extends
-  Record<string, QueryNode<unknown> | MutationNode<unknown>> ? {
-    [K in keyof T]: SelectNodeOut<T[K]>;
-  }
-  : never;
-
-// deno-lint-ignore no-unused-vars
-function selectionToNodeSet(
+function _selectionToNodeSet(
   selection: Selection,
   metas: [string, () => NodeMeta][],
   parentPath: string,
@@ -429,6 +40,7 @@ function selectionToNodeSet(
       const node: SelectNode = { instanceName, nodeName };
 
       if (argumentTypes) {
+        // make sure the arg is of the expected form
         let arg = instanceSelection;
         if (Array.isArray(arg)) {
           arg = arg[0];
@@ -441,26 +53,25 @@ function selectionToNodeSet(
               `is typeof ${typeof arg}`,
           );
         }
+
         const expectedArguments = new Map(Object.entries(argumentTypes));
-        // TODO: consider logging a warning if `_` is detected incase user passes
-        // Selection as arg
-        node.args = Object.fromEntries(
-          Object.entries(arg)
-            .map(([key, value]) => {
-              const typeName = expectedArguments.get(key);
-              if (!typeName) {
-                throw new Error(
-                  `unexpected argument ${key} at ${parentPath}.${instanceName}`,
-                );
-              }
-              expectedArguments.delete(key);
-              return [key, { typeName, value }];
-            }),
-        );
-        // TODO: consider detecting required arguments here
+        node.args = {};
+        for (const [key, value] of Object.entries(arg)) {
+          const typeName = expectedArguments.get(key);
+          // TODO: consider logging a warning if `_` is detected incase user passes
+          // Selection as arg
+          if (!typeName) {
+            throw new Error(
+              `unexpected argument ${key} at ${parentPath}.${instanceName}`,
+            );
+          }
+          expectedArguments.delete(key);
+          node.args[key] = { typeName, value };
+        }
       }
 
       if (subNodes) {
+        // sanity check selection object
         let subSelections = instanceSelection;
         if (argumentTypes) {
           if (!Array.isArray(subSelections)) {
@@ -485,7 +96,8 @@ function selectionToNodeSet(
               `selection is typeof ${typeof nodeSelection}`,
           );
         }
-        node.subNodes = selectionToNodeSet(
+
+        node.subNodes = _selectionToNodeSet(
           // assume it's a Selection. If it's an argument
           // object, mismatch between the node desc should hopefully
           // catch it
@@ -508,6 +120,178 @@ function selectionToNodeSet(
   }
   return out;
 }
+
+/* Query node types section */
+
+type SelectNode<_Out = unknown> = {
+  nodeName: string;
+  instanceName: string;
+  args?: NodeArgs;
+  subNodes?: SelectNode[];
+};
+
+export class QueryNode<Out> {
+  #inner: SelectNode<Out>;
+  constructor(
+    inner: SelectNode<Out>,
+  ) {
+    this.#inner = inner;
+  }
+
+  inner() {
+    return this.#inner;
+  }
+}
+
+export class MutationNode<Out> {
+  #inner: SelectNode<Out>;
+  constructor(
+    inner: SelectNode<Out>,
+  ) {
+    this.#inner = inner;
+  }
+
+  inner() {
+    return this.#inner;
+  }
+}
+
+type SelectNodeOut<T> = T extends (QueryNode<infer O> | MutationNode<infer O>)
+  ? O
+  : never;
+type QueryDocOut<T> = T extends
+  Record<string, QueryNode<unknown> | MutationNode<unknown>> ? {
+    [K in keyof T]: SelectNodeOut<T[K]>;
+  }
+  : never;
+
+type NodeMeta = {
+  subNodes?: [string, () => NodeMeta][];
+  argumentTypes?: { [name: string]: string };
+};
+
+/* Selection types section */
+
+type SelectionFlags = "selectAll";
+
+type Selection = {
+  _?: SelectionFlags;
+  [key: string]:
+    | SelectionFlags
+    | ScalarSelectNoArgs
+    | ScalarSelectArgs<Record<string, unknown>>
+    | CompositeSelectNoArgs<Selection | undefined>
+    | CompositeSelectArgs<Record<string, unknown>, Selection>
+    | Selection;
+};
+
+type ScalarSelectNoArgs =
+  | boolean
+  | Alias<true>
+  | null
+  | undefined;
+
+type ScalarSelectArgs<ArgT extends Record<string, unknown>> =
+  | ArgT
+  | PlaceholderArgs<ArgT>
+  | Alias<ArgT | PlaceholderArgs<ArgT>>
+  | false
+  | null
+  | undefined;
+
+type CompositeSelectNoArgs<SelectionT> =
+  | SelectionT
+  | Alias<SelectionT>
+  | false
+  | null
+  | undefined;
+
+type CompositeSelectArgs<ArgT extends Record<string, unknown>, SelectionT> =
+  | [ArgT | PlaceholderArgs<ArgT>, SelectionT]
+  | Alias<[ArgT | PlaceholderArgs<ArgT>, SelectionT]>
+  | false
+  | undefined
+  | null;
+
+/**
+ * Request multiple instances of a single node under different
+ * aliases. Look at {@link alias} for a functional way of instantiating
+ * this class.
+ */
+export class Alias<T> {
+  #aliases: Record<string, T>;
+  constructor(
+    aliases: Record<string, T>,
+  ) {
+    this.#aliases = aliases;
+  }
+  aliases() {
+    return this.#aliases;
+  }
+}
+
+/**
+ * Request multiple instances of a single node under different
+ * aliases.
+ */
+export function alias<T>(aliases: Record<string, T>): Alias<T> {
+  return new Alias(aliases);
+}
+
+/* Argument types section */
+
+type NodeArgValue = {
+  typeName: string;
+  value: unknown;
+};
+
+type NodeArgs = {
+  [name: string]: NodeArgValue;
+};
+
+/**
+ * This object is passed to closures used for preparing requests
+ * ahead of time for {@link PreparedRequest}s. It allows one to
+ * get {@link PlaceholderValue}s that can be used in place of node
+ * arguments. At request time, the {@link PreparedRequest} then
+ * takes an object that adheres to `T` that can then be used
+ * to replace the placeholders.
+ */
+export class PreparedArgs<T extends Record<string, unknown>> {
+  get(key: OnlyStringKeys<T>): PlaceholderValue<T[typeof key]> {
+    return new PlaceholderValue(key);
+  }
+}
+
+/**
+ * Placeholder values for use by {@link PreparedRequest}
+ */
+export class PlaceholderValue<_T> {
+  #key: string;
+  constructor(key: string) {
+    this.#key = key;
+  }
+
+  key() {
+    return this.#key;
+  }
+}
+
+export type PlaceholderArgs<T extends Record<string, unknown>> = {
+  [K in keyof T]: PlaceholderValue<T[K]>;
+};
+
+/* GraphQL section */
+
+/**
+ * Options to be used for requests performed by {@link GraphQLTransport}.
+ */
+export type GraphQlTransportOptions = Omit<RequestInit, "body"> & {
+  /**
+   * {@link fetch} implementaiton to use. Defaults to the one found in the environment
+   */
+  fetch?: typeof fetch;
+};
 
 function convertQueryNodeGql(
   node: SelectNode,
@@ -539,10 +323,310 @@ function convertQueryNodeGql(
   return out;
 }
 
-// deno-lint-ignore no-unused-vars
-class QueryGraphBase {
+function buildGql(
+  typeToGqlTypeMap: Record<string, string>,
+  query: Record<string, SelectNode>,
+  ty: "query" | "mutation",
+  name: string = "",
+) {
+  const variables = new Map<string, NodeArgValue>();
+
+  const rootNodes = Object
+    .entries(query)
+    .map(([key, node]) => {
+      const fixedNode = { ...node, instanceName: key };
+      return convertQueryNodeGql(fixedNode, variables);
+    })
+    .join("\n  ");
+
+  let argsRow = [...variables.entries()]
+    .map(([key, val]) => `$${key}: ${typeToGqlTypeMap[val.typeName]}`)
+    .join(", ");
+  if (argsRow.length > 0) {
+    // graphql doesn't like empty parentheses so we only
+    // add them if there are args
+    argsRow = `(${argsRow})`;
+  }
+
+  const doc = `${ty} ${name}${argsRow} {
+  ${rootNodes}
+}`;
+  return {
+    doc,
+    variables: Object.fromEntries(
+      [...variables.entries()]
+        .map(([key, val]) => [key, val.value]),
+    ),
+  };
+}
+
+async function fetchGql(
+  addr: URL,
+  doc: string,
+  variables: Record<string, unknown>,
+  options: GraphQlTransportOptions,
+) {
+  // console.log(doc, variables);
+  const fetchImpl = options.fetch ?? fetch;
+  const res = await fetchImpl(addr, {
+    ...options,
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      ...options.headers ?? {},
+    },
+    body: JSON.stringify({
+      query: doc,
+      variables,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch((err) => `error reading body: ${err}`);
+    throw new (Error as ErrorPolyfill)(
+      `graphql request to ${addr} failed with status ${res.status}: ${body}`,
+      {
+        cause: {
+          response: res,
+          body,
+        },
+      },
+    );
+  }
+  if (res.headers.get("content-type") != "application/json") {
+    throw new (Error as ErrorPolyfill)(
+      "unexpected content type in response",
+      {
+        cause: {
+          response: res,
+          body: await res.text().catch((err) => `error reading body: ${err}`),
+        },
+      },
+    );
+  }
+  return await res.json() as { data: unknown; errors?: object[] };
+}
+
+/**
+ * Access the typegraph over it's exposed GraphQL API.
+ */
+export class GraphQLTransport {
+  constructor(
+    public address: URL,
+    public options: GraphQlTransportOptions,
+    private typeToGqlTypeMap: Record<string, string>,
+  ) {
+  }
+
+  async #request(
+    doc: string,
+    variables: Record<string, unknown>,
+    options?: GraphQlTransportOptions,
+  ) {
+    const res = await fetchGql(this.address, doc, variables, {
+      ...this.options,
+      ...options,
+    });
+    if ("errors" in res) {
+      throw new (Error as ErrorPolyfill)("graphql errors on response", {
+        cause: res.errors,
+      });
+    }
+    return res.data;
+  }
+
+  /**
+   * Make a query request to the typegraph.
+   */
+  async query<Doc extends Record<string, QueryNode<unknown>>>(
+    query: Doc,
+    { options, name = "" }: {
+      options?: GraphQlTransportOptions;
+      name?: string;
+    } = {},
+  ): Promise<QueryDocOut<Doc>> {
+    const { variables, doc } = buildGql(
+      this.typeToGqlTypeMap,
+      Object.fromEntries(
+        Object.entries(query).map((
+          [key, val],
+        ) => [key, (val as QueryNode<unknown>).inner()]),
+      ),
+      "query",
+      name,
+    );
+    return await this.#request(doc, variables, options) as QueryDocOut<Doc>;
+  }
+
+  /**
+   * Make a mutation request to the typegraph.
+   */
+  async mutation<Doc extends Record<string, MutationNode<unknown>>>(
+    query: Doc,
+    { options, name = "" }: {
+      options?: GraphQlTransportOptions;
+      name?: string;
+    } = {},
+  ): Promise<QueryDocOut<Doc>> {
+    const { variables, doc } = buildGql(
+      this.typeToGqlTypeMap,
+      Object.fromEntries(
+        Object.entries(query).map((
+          [key, val],
+        ) => [key, (val as MutationNode<unknown>).inner()]),
+      ),
+      "mutation",
+      name,
+    );
+    return await this.#request(doc, variables, options) as QueryDocOut<Doc>;
+  }
+
+  /**
+   * Prepare an ahead of time query {@link PreparedRequest}.
+   */
+  prepareQuery<
+    T extends JsonObject,
+    Doc extends Record<string, QueryNode<unknown>>,
+  >(
+    fun: (args: PreparedArgs<T>) => Doc,
+    { name = "" }: { name?: string } = {},
+  ): PreparedRequest<T, Doc> {
+    return new PreparedRequest(
+      this.address,
+      this.options,
+      this.typeToGqlTypeMap,
+      fun,
+      "query",
+      name,
+    );
+  }
+
+  /**
+   * Prepare an ahead of time mutation {@link PreparedRequest}.
+   */
+  prepareMutation<
+    T extends JsonObject,
+    Q extends Record<string, MutationNode<unknown>>,
+  >(
+    fun: (args: PreparedArgs<T>) => Q,
+    { name = "" }: { name?: string } = {},
+  ): PreparedRequest<T, Q> {
+    return new PreparedRequest(
+      this.address,
+      this.options,
+      this.typeToGqlTypeMap,
+      fun,
+      "mutation",
+      name,
+    );
+  }
+}
+
+/**
+ * Prepares the GraphQL string ahead of time and allows re-use
+ * avoid the compute and garbage overhead of re-building it for
+ * repeat queries.
+ */
+export class PreparedRequest<
+  T extends JsonObject,
+  Doc extends Record<string, QueryNode<unknown> | MutationNode<unknown>>,
+> {
+  public doc: string;
+  #mappings: Record<string, unknown>;
+
+  constructor(
+    private address: URL,
+    private options: GraphQlTransportOptions,
+    typeToGqlTypeMap: Record<string, string>,
+    fun: (args: PreparedArgs<T>) => Doc,
+    ty: "query" | "mutation",
+    name: string = "",
+  ) {
+    const args = new PreparedArgs<T>();
+    const dryRunNode = fun(args);
+    const { doc, variables } = buildGql(
+      typeToGqlTypeMap,
+      Object.fromEntries(
+        Object.entries(dryRunNode).map((
+          [key, val],
+        ) => [key, (val as MutationNode<unknown>).inner()]),
+      ),
+      ty,
+      name,
+    );
+    this.doc = doc;
+    this.#mappings = variables;
+  }
+
+  resolveVariables(
+    args: T,
+    mappings: Record<string, unknown>,
+  ) {
+    const resolvedVariables = {} as Record<string, unknown>;
+    for (const [key, val] of Object.entries(mappings)) {
+      if (val instanceof PlaceholderValue) {
+        resolvedVariables[key] = args[val.key()];
+      } else if (typeof val == "object" && val != null) {
+        this.resolveVariables(args, val as JsonObject);
+      } else {
+        resolvedVariables[key] = val;
+      }
+    }
+    return resolvedVariables;
+  }
+
+  /**
+   * Execute the prepared request.
+   */
+  async perform(args: T, opts?: GraphQlTransportOptions): Promise<
+    {
+      [K in keyof Doc]: SelectNodeOut<Doc[K]>;
+    }
+  > {
+    const resolvedVariables = this.resolveVariables(args, this.#mappings);
+    // console.log(this.doc, {
+    //   resolvedVariables,
+    //   mapping: this.#mappings,
+    // });
+    const res = await fetchGql(
+      this.address,
+      this.doc,
+      resolvedVariables,
+      {
+        ...this.options,
+        ...opts,
+      },
+    );
+    if ("errors" in res) {
+      throw new (Error as ErrorPolyfill)("graphql errors on response", {
+        cause: res.errors,
+      });
+    }
+    return res.data as QueryDocOut<Doc>;
+  }
+}
+
+/* Util types section */
+
+type OnlyStringKeys<T extends Record<string, unknown>> = {
+  [K in keyof T]: K extends string ? K : never;
+}[keyof T];
+
+type JsonLiteral = string | number | boolean | null;
+type JsonObject = { [key: string]: Json };
+type JsonArray = Json[];
+type Json = JsonLiteral | JsonObject | JsonArray;
+
+type ErrorPolyfill = new (msg: string, payload: unknown) => Error;
+
+/* QueryGraph section */
+
+class _QueryGraphBase {
   constructor(private typeNameMapGql: Record<string, string>) {}
 
+  /**
+   * Get the {@link GraphQLTransport} for the typegraph.
+   */
   graphql(addr: URL | string, options?: GraphQlTransportOptions) {
     return new GraphQLTransport(
       new URL(addr),

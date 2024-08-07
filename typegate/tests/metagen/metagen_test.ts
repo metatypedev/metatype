@@ -463,7 +463,7 @@ Meta.test({
     ).code,
     0,
   );
-  const expectedSchema = zod.object({
+  const expectedSchemaQ = zod.object({
     user: zod.object({
       id: zod.string(),
       email: zod.string(),
@@ -484,6 +484,8 @@ Meta.test({
       title: zod.string(),
     }),
     scalarNoArgs: zod.string(),
+  });
+  const expectedSchemaM = zod.object({
     scalarArgs: zod.string(),
     compositeNoArgs: zod.object({
       id: zod.string(),
@@ -496,6 +498,13 @@ Meta.test({
       title: zod.string(),
     }),
   });
+  const expectedSchema = zod.tuple([
+    expectedSchemaQ,
+    expectedSchemaQ,
+    expectedSchemaM,
+    expectedSchemaQ,
+    expectedSchemaM,
+  ]);
   const cases = [
     {
       skip: false,
