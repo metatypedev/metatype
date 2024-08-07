@@ -117,7 +117,7 @@ FORWARD_REFS["CompositesArgs"] = CompositesArgs
 class Composites(Struct):
     opt: Union[str, None]
     either: Union["Branch2", "Primitives"]
-    union: Union[List[str], str, int]
+    union: Union[List[str], int, str]
     list: List[str]
 
 
@@ -144,7 +144,7 @@ FORWARD_REFS["Cycles1Args"] = Cycles1Args
 class Cycles1(Struct):
     phantom1: Union[str, None]
     to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
-    list3: Union[List[Union["Branch33B", "Branch33A"]], None]
+    list3: Union[List[Union["Branch33A", "Branch33B"]], None]
 
 
 FORWARD_REFS["Cycles1"] = Cycles1
@@ -162,7 +162,7 @@ FORWARD_REFS["Branch33A"] = Branch33A
 @dataclass
 class Branch33B(Struct):
     phantom3b: Union[str, None]
-    to2: Union[Union[Union["Branch33A", "Branch33B"], "Cycles1"], None]
+    to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
 
 
 FORWARD_REFS["Branch33B"] = Branch33B
@@ -209,6 +209,17 @@ def __repr(value: Any):
     return value
 
 
+def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
+    def exported_wrapper(raw_inp):
+        inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
+        out: Primitives = user_fn(inp)
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+
+    return exported_wrapper
+
+
 def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
     def exported_wrapper(raw_inp):
         inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
@@ -235,17 +246,6 @@ def typed_simple_cycles(user_fn: Callable[[SimpleCycles1Args], SimpleCycles1]):
     def exported_wrapper(raw_inp):
         inp: SimpleCycles1Args = Struct.new(SimpleCycles1Args, raw_inp)
         out: SimpleCycles1 = user_fn(inp)
-        if isinstance(out, list):
-            return [__repr(v) for v in out]
-        return __repr(out)
-
-    return exported_wrapper
-
-
-def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
-    def exported_wrapper(raw_inp):
-        inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
-        out: Primitives = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)

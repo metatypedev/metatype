@@ -105,3 +105,27 @@ pub fn default_type_node_base() -> TypeNodeBase {
         enumeration: None,
     }
 }
+
+pub async fn test_typegraph_3() -> anyhow::Result<Box<Typegraph>> {
+    let out = tokio::process::Command::new("cargo")
+        .args(
+            "run -p meta-cli -- serialize -f tests/tg2.ts -vvv"
+                // "run -p meta-cli -- serialize -f ../../examples/typegraphs/reduce.py"
+                .split(' ')
+                .collect::<Vec<_>>(),
+        )
+        .env(
+            "MCLI_LOADER_CMD",
+            "deno run -A --import-map=../../typegate/import_map.json {filepath}",
+        )
+        .kill_on_drop(true)
+        .output()
+        .await?;
+    let mut tg: Vec<Box<Typegraph>> = serde_json::from_slice(&out.stdout).with_context(|| {
+        format!(
+            "error deserializing typegraph: {out:?}\nstderr):\n{}\n---END---",
+            std::str::from_utf8(&out.stderr).unwrap(),
+        )
+    })?;
+    Ok(tg.pop().unwrap())
+}

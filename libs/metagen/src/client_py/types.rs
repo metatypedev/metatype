@@ -8,15 +8,17 @@ use common::typegraph::*;
 use super::utils::{normalize_struct_prop_name, normalize_type_title};
 use crate::{interlude::*, shared::types::*};
 
-pub struct TypescriptTypeRenderer {}
-impl TypescriptTypeRenderer {
+pub struct PyTypeRenderer {}
+impl PyTypeRenderer {
     fn render_alias(
         &self,
-        out: &mut impl Write,
+        dest: &mut impl Write,
         alias_name: &str,
         aliased_ty: &str,
     ) -> std::fmt::Result {
-        writeln!(out, "export type {alias_name} = {aliased_ty};")
+        writeln!(dest, "{alias_name} = {aliased_ty}")?;
+        writeln!(dest)?;
+        Ok(())
     }
 
     /// `props` is a map of prop_name -> (TypeName, serialization_name)
@@ -26,15 +28,20 @@ impl TypescriptTypeRenderer {
         ty_name: &str,
         props: IndexMap<String, (Rc<str>, bool)>,
     ) -> std::fmt::Result {
-        writeln!(dest, "export type {ty_name} = {{")?;
-        for (name, (ty_name, optional)) in props.into_iter() {
-            if optional {
-                writeln!(dest, "  {name}?: {ty_name};")?;
-            } else {
-                writeln!(dest, "  {name}: {ty_name};")?;
-            }
+        writeln!(dest, r#"{ty_name} = typing.TypedDict("{ty_name}", {{"#)?;
+        for (name, (ty_name, _optional)) in props.into_iter() {
+            // FIXME: use NotRequired when bumping to python version
+            // that supports it
+            // also, remove the total param below
+            // if optional {
+            //     writeln!(dest, r#"    "{name}": typing.NotRequired[{ty_name}],"#)?;
+            // } else {
+            //     writeln!(dest, r#"    "{name}": {ty_name},"#)?;
+            // }
+            writeln!(dest, r#"    "{name}": {ty_name},"#)?;
         }
-        writeln!(dest, "}};")?;
+        writeln!(dest, "}}, total=False)")?;
+        writeln!(dest)?;
         Ok(())
     }
 
@@ -44,16 +51,45 @@ impl TypescriptTypeRenderer {
         ty_name: &str,
         variants: Vec<Rc<str>>,
     ) -> std::fmt::Result {
-        write!(dest, "export type {ty_name} =")?;
+        writeln!(dest, "{ty_name} = typing.Union[")?;
         for ty_name in variants.into_iter() {
-            write!(dest, "\n  | ({ty_name})")?;
+            writeln!(dest, "    {ty_name},")?;
         }
-        writeln!(dest, ";")?;
+        writeln!(dest, "]")?;
+        writeln!(dest)?;
+        writeln!(dest)?;
         Ok(())
+    }
+
+    fn quote_ty_name(
+        &self,
+        id: u32,
+        (ty_name, cyclic): (RenderedName, Option<bool>),
+        renderer: &mut TypeRenderer,
+    ) -> Rc<str> {
+        match ty_name {
+            RenderedName::Name(name) => {
+                if cyclic.is_some() && !name.contains('"') {
+                    format!(r#""{name}""#).into()
+                } else {
+                    name
+                }
+            }
+            RenderedName::Placeholder(_name) => renderer.placeholder_string(
+                id,
+                Box::new(move |ty_name| {
+                    if !ty_name.contains('"') {
+                        format!(r#""{ty_name}""#)
+                    } else {
+                        ty_name.into()
+                    }
+                }),
+            ),
+        }
     }
 }
 
-impl RenderType for TypescriptTypeRenderer {
+impl RenderType for PyTypeRenderer {
     fn render(
         &self,
         renderer: &mut TypeRenderer,
@@ -61,25 +97,25 @@ impl RenderType for TypescriptTypeRenderer {
     ) -> anyhow::Result<String> {
         let body_required = type_body_required(cursor.node.clone());
         let name = match cursor.node.clone().deref() {
-            TypeNode::Function { .. } => "void".into(),
+            TypeNode::Function { .. } => "None".into(),
             TypeNode::Boolean { base } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "boolean")?;
+                self.render_alias(renderer, &ty_name, "bool")?;
                 ty_name
             }
-            TypeNode::Boolean { .. } => "boolean".into(),
+            TypeNode::Boolean { .. } => "bool".into(),
             TypeNode::Float { base, .. } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "number")?;
+                self.render_alias(renderer, &ty_name, "float")?;
                 ty_name
             }
-            TypeNode::Float { .. } => "number".into(),
+            TypeNode::Float { .. } => "float".into(),
             TypeNode::Integer { base, .. } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "number")?;
+                self.render_alias(renderer, &ty_name, "int")?;
                 ty_name
             }
-            TypeNode::Integer { .. } => "number".into(),
+            TypeNode::Integer { .. } => "int".into(),
             TypeNode::String {
                 base:
                     TypeNodeBase {
@@ -91,7 +127,14 @@ impl RenderType for TypescriptTypeRenderer {
             } if body_required => {
                 let ty_name = normalize_type_title(title);
                 // variants are valid strings in JSON (validated by the validator)
-                self.render_alias(renderer, &ty_name, &variants.join(" | "))?;
+                self.render_union_type(
+                    renderer,
+                    &ty_name,
+                    variants
+                        .iter()
+                        .map(|val| format!("typing.Literal[{val}]").into())
+                        .collect(),
+                )?;
                 ty_name
             }
             TypeNode::String {
@@ -110,38 +153,38 @@ impl RenderType for TypescriptTypeRenderer {
                     },
             } if title.starts_with("string_") => {
                 let ty_name = normalize_type_title(&format!("string_{format}"));
-                self.render_alias(renderer, &ty_name, "string")?;
+                self.render_alias(renderer, &ty_name, "str")?;
                 ty_name
             }
             TypeNode::String { base, .. } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "string")?;
+                self.render_alias(renderer, &ty_name, "str")?;
                 ty_name
             }
-            TypeNode::String { .. } => "string".into(),
+            TypeNode::String { .. } => "str".into(),
             TypeNode::File { base, .. } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "File")?;
+                self.render_alias(renderer, &ty_name, "bytes")?;
                 ty_name
             }
-            TypeNode::File { .. } => "File".into(),
+            TypeNode::File { .. } => "bytes".into(),
             TypeNode::Any { base } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "any")?;
+                self.render_alias(renderer, &ty_name, "typing.Any")?;
                 ty_name
             }
-            TypeNode::Any { .. } => "any".into(),
+            TypeNode::Any { .. } => "typing.Any".into(),
             TypeNode::Object { data, base } => {
                 let props = data
                     .properties
                     .iter()
                     // generate property types first
                     .map(|(name, &dep_id)| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(dep_id, cursor)?;
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
+                        let ty_name = self.quote_ty_name(
+                            dep_id,
+                            renderer.render_subgraph(dep_id, cursor)?,
+                            renderer,
+                        );
                         let optional = matches!(
                             renderer.nodes[dep_id as usize].deref(),
                             TypeNode::Optional { .. }
@@ -152,13 +195,8 @@ impl RenderType for TypescriptTypeRenderer {
                         ))
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
-
                 let ty_name = normalize_type_title(&base.title);
-                if !props.is_empty() {
-                    self.render_object_type(renderer, &ty_name, props)?;
-                } else {
-                    self.render_alias(renderer, &ty_name, "Record<string, never>")?;
-                }
+                self.render_object_type(renderer, &ty_name, props)?;
                 ty_name
             }
             TypeNode::Either {
@@ -171,12 +209,12 @@ impl RenderType for TypescriptTypeRenderer {
             } => {
                 let variants = variants
                     .iter()
-                    .map(|&inner| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(inner, cursor)?;
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
+                    .map(|&dep_id| {
+                        let ty_name = self.quote_ty_name(
+                            dep_id,
+                            renderer.render_subgraph(dep_id, cursor)?,
+                            renderer,
+                        );
                         Ok::<_, anyhow::Error>(ty_name)
                     })
                     .collect::<Result<Vec<_>, _>>()?;
@@ -195,25 +233,22 @@ impl RenderType for TypescriptTypeRenderer {
                     },
             } if base.title.starts_with("optional_") => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(*item, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                format!("({inner_ty_name}) | null | undefined")
+                let inner_ty_name =
+                    self.quote_ty_name(*item, renderer.render_subgraph(*item, cursor)?, renderer);
+                format!("typing.Optional[{inner_ty_name}]")
             }
             TypeNode::Optional { data, base } => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(data.item, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                let inner_ty_name = self.quote_ty_name(
+                    data.item,
+                    renderer.render_subgraph(data.item, cursor)?,
+                    renderer,
+                );
                 let ty_name = normalize_type_title(&base.title);
                 self.render_alias(
                     renderer,
                     &ty_name,
-                    &format!("{inner_ty_name} | null | undefined"),
+                    &format!("typing.Union[{inner_ty_name}, None]"),
                 )?;
                 ty_name
             }
@@ -230,31 +265,30 @@ impl RenderType for TypescriptTypeRenderer {
                     },
             } if base.title.starts_with("list_") => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(*items, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                let inner_ty_name =
+                    self.quote_ty_name(*items, renderer.render_subgraph(*items, cursor)?, renderer);
                 if let Some(true) = unique_items {
-                    // TODO: use sets?
-                    format!("Array<{inner_ty_name}>")
+                    format!("typing.Set[{inner_ty_name}]")
                 } else {
-                    format!("Array<{inner_ty_name}>")
+                    format!("typing.List[{inner_ty_name}]")
                 }
             }
             TypeNode::List { data, base } => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(data.items, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                let inner_ty_name = self.quote_ty_name(
+                    data.items,
+                    renderer.render_subgraph(data.items, cursor)?,
+                    renderer,
+                );
                 let ty_name = normalize_type_title(&base.title);
                 if let Some(true) = data.unique_items {
-                    // FIXME: use set?
-                    self.render_alias(renderer, &ty_name, &format!("Array<{inner_ty_name}>"))?;
+                    self.render_alias(renderer, &ty_name, &format!("typing.Set[{inner_ty_name}]"))?;
                 } else {
-                    self.render_alias(renderer, &ty_name, &format!("Array<{inner_ty_name}>"))?;
+                    self.render_alias(
+                        renderer,
+                        &ty_name,
+                        &format!("typing.List[{inner_ty_name}]"),
+                    )?;
                 };
                 ty_name
             }

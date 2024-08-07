@@ -3,6 +3,8 @@
 
 import { DenoTaskDefArgs } from "./deps.ts";
 
+const DOCKER_CMD = Deno.env.get("DOCKER_CMD") ?? "docker";
+
 const tasks: Record<string, DenoTaskDefArgs> = {
   dev: {
     desc: "Execute dev/*.ts scripts.",
@@ -51,14 +53,14 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       }
 
       if (on.size > 0) {
-        await $.raw`docker compose ${
+        await $.raw`${DOCKER_CMD} compose ${
           [...on].flatMap((file) => [
             "-f",
             file,
           ])
         } up -d --remove-orphans`;
       } else {
-        await $.raw`docker compose ${
+        await $.raw`${DOCKER_CMD} compose ${
           Object.values(files).flatMap((file) => [
             "-f",
             file,
@@ -87,7 +89,6 @@ const tasks: Record<string, DenoTaskDefArgs> = {
         "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
       TG_ADMIN_PASSWORD: "password",
       TG_PORT: "7891",
-      // TMP_DIR: $.path(projectDir).join("tmp").toString(),
     },
     fn: ($) => $`cargo run -p typegate`,
   },

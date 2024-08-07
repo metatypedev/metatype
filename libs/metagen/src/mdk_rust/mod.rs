@@ -15,7 +15,7 @@ mod types;
 mod utils;
 
 use crate::interlude::*;
-use crate::mdk::*;
+use crate::shared::*;
 use crate::utils::*;
 use crate::*;
 
@@ -151,8 +151,8 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
     writeln!(&mut mod_rs.buf, "pub mod types {{")?;
     writeln!(&mut mod_rs.buf, "    use super::*;")?;
     let ty_name_memo = {
-        let mut renderer = mdk::types::TypeRenderer::new(
-            &tg.types,
+        let mut renderer = shared::types::TypeRenderer::new(
+            tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
             Rc::new(types::RustTypeRenderer {
                 derive_serde: true,
                 derive_debug: true,
@@ -190,7 +190,7 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
         let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
             format!("error collecting materializers for runtimes {stubbed_rts:?}")
         })?;
-        let mut op_to_mat_map = HashMap::new();
+        let mut op_to_mat_map = BTreeMap::new();
         for fun in &stubbed_funs {
             let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &ty_name_memo, &gen_stub_opts)?;
             if let Some(Some(op_name)) = fun.mat.data.get("op_name").map(|val| val.as_str()) {
@@ -291,7 +291,7 @@ impl stubs::MyFunc for MyMat {
 }
 
 #[test]
-fn mdk_rs_e2e() -> anyhow::Result<()> {
+fn e2e() -> anyhow::Result<()> {
     use crate::tests::*;
 
     let tg_name = "gen-test";
@@ -346,7 +346,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                         Ok(())
                     })
                 },
-                target_dir: "./tests/mat_rust/".into(),
+                target_dir: Some("./tests/mat_rust/".into()),
             }])
             .await
         })?;

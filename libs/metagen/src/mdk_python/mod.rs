@@ -5,9 +5,10 @@
 
 use garde::external::compact_str::CompactStringExt;
 use heck::ToPascalCase;
+use indexmap::IndexSet;
 
 use crate::interlude::*;
-use crate::mdk::*;
+use crate::shared::*;
 use crate::*;
 
 use self::utils::Memo;
@@ -211,7 +212,7 @@ fn render_main(
     required: &MergedRequiredObjects,
     file_stem: &str,
 ) -> anyhow::Result<String> {
-    let mut exports = HashSet::new();
+    let mut exports = std::collections::BTreeSet::new();
     for func in required.funcs.iter() {
         exports.insert(format!("typed_{}", func.name));
         exports.insert(func.input_name.clone());
@@ -321,8 +322,8 @@ fn merge_requirements(
             memo: Memo::new(),
             top_level_types: vec![],
         };
-        let mut types = HashSet::new();
-        let mut funcs = HashSet::new();
+        let mut types = IndexSet::new();
+        let mut funcs = IndexSet::new();
 
         for req in requirements {
             // merge classes

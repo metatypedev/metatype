@@ -178,4 +178,15 @@ impl Typegraph {
             .to_owned();
         Ok(path)
     }
+
+    pub fn root(&self) -> Result<(&TypeNodeBase, &ObjectTypeData)> {
+        if self.types.is_empty() {
+            bail!("typegraph is empty: no nodes found");
+        }
+        let root = &self.types[0];
+        match root {
+            TypeNode::Object { base, data } => Ok((base, data)),
+            _ => bail!("typegraph is invalid: root node is not object"),
+        }
+    }
 }

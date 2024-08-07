@@ -8,6 +8,8 @@ import { assertEquals } from "std/assert/mod.ts";
 import { GraphQLQuery } from "../utils/query/graphql_query.ts";
 import { JSONValue } from "../../src/utils.ts";
 import { testDir } from "../utils/dir.ts";
+import $ from "dax";
+import { z as zod } from "zod";
 
 const denoJson = resolve(testDir, "../deno.jsonc");
 
@@ -180,7 +182,7 @@ Meta.test("Metagen within sdk", async (t) => {
   }
 });
 
-Meta.test("metagen table suite", async (metaTest) => {
+Meta.test("mdk table suite", async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/identities");
   const genCratePath = join(scriptsPath, "rs");
   // const genPyPath = join(scriptsPath, "py");
@@ -439,6 +441,108 @@ Meta.test("metagen table suite", async (metaTest) => {
             .on(engine);
         });
       }
+    });
+  }
+});
+
+Meta.test({
+  name: "client table suite",
+}, async (metaTest) => {
+  const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
+
+  assertEquals(
+    (
+      await Meta.cli(
+        {
+          env: {
+            // RUST_BACKTRACE: "1",
+          },
+        },
+        ...`-C ${scriptsPath} gen`.split(" "),
+      )
+    ).code,
+    0,
+  );
+  const expectedSchemaQ = zod.object({
+    user: zod.object({
+      id: zod.string(),
+      email: zod.string(),
+      post1: zod.object({
+        id: zod.string(),
+        slug: zod.string(),
+        title: zod.string(),
+      }).array(),
+      post2: zod.object({
+        // NOTE: no id
+        slug: zod.string(),
+        title: zod.string(),
+      }).array(),
+    }),
+    posts: zod.object({
+      id: zod.string(),
+      slug: zod.string(),
+      title: zod.string(),
+    }),
+    scalarNoArgs: zod.string(),
+  });
+  const expectedSchemaM = zod.object({
+    scalarArgs: zod.string(),
+    compositeNoArgs: zod.object({
+      id: zod.string(),
+      slug: zod.string(),
+      title: zod.string(),
+    }),
+    compositeArgs: zod.object({
+      id: zod.string(),
+      slug: zod.string(),
+      title: zod.string(),
+    }),
+  });
+  const expectedSchema = zod.tuple([
+    expectedSchemaQ,
+    expectedSchemaQ,
+    expectedSchemaM,
+    expectedSchemaQ,
+    expectedSchemaM,
+  ]);
+  const cases = [
+    {
+      skip: false,
+      name: "client_ts",
+      // NOTE: dax replaces commands to deno with
+      // commands to xtask so we go through bah
+      command: $`bash -c "deno run -A main.ts"`.cwd(
+        join(scriptsPath, "ts"),
+      ),
+      expected: expectedSchema,
+    },
+    {
+      name: "client_py",
+      command: $`python3 main.py`.cwd(
+        join(scriptsPath, "py"),
+      ),
+      expected: expectedSchema,
+    },
+  ];
+
+  await using _engine = await metaTest.engine(
+    "metagen/typegraphs/sample.ts",
+    {
+      secrets: {
+        POSTGRES:
+          "postgresql://postgres:password@localhost:5432/db?schema=sample",
+      },
+    },
+  );
+  for (const { name, command, expected, skip } of cases) {
+    if (skip) {
+      continue;
+    }
+    await metaTest.should(name, async () => {
+      const res = await command
+        .env({ "TG_PORT": metaTest.port.toString() })
+        .json();
+      expected.parse(res);
     });
   }
 });
