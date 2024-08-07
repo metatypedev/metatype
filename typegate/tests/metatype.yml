@@ -18,6 +18,8 @@ typegates:
     secrets:
       prisma:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
+      sample:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=sample"
       migration-failure-test:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
 

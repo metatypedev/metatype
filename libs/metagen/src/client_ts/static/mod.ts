@@ -1,3 +1,5 @@
+type ErrorPolyfill = new (msg: string, payload: unknown) => Error;
+
 export type GraphQlTransportOptions = Omit<RequestInit, "body"> & {
   fetch?: typeof fetch;
 };
@@ -16,14 +18,25 @@ export class GraphQLTransport {
     name: string = "",
   ) {
     const variables = new Map<string, NodeArgValue>();
+
     const rootNodes = Object
       .entries(query)
-      .map(([key, node]) => `${key}: ${convertQueryNodeGql(node, variables)}`)
+      .map(([key, node]) => {
+        const fixedNode = { ...node, instanceName: key };
+        return convertQueryNodeGql(fixedNode, variables);
+      })
       .join("\n  ");
-    const argsRow = [...variables.entries()]
+
+    let argsRow = [...variables.entries()]
       .map(([key, val]) => `$${key}: ${this.typeToGqlTypeMap[val.typeName]}`)
       .join(", ");
-    const doc = `${ty} ${name}(${argsRow}) {
+    if (argsRow.length > 0) {
+      // graphql doesn't like empty parentheses so we only
+      // add them if there are args
+      argsRow = `(${argsRow})`;
+    }
+
+    const doc = `${ty} ${name}${argsRow} {
   ${rootNodes}
 }`;
     return {
@@ -40,7 +53,7 @@ export class GraphQLTransport {
     variables: Record<string, unknown>,
     options?: GraphQlTransportOptions,
   ) {
-    // console.log({ doc, variables });
+    // console.log(doc, variables);
     const fetchImpl = options?.fetch ?? this.options.fetch ?? fetch;
     const res = await fetchImpl(this.address, {
       ...this.options,
@@ -61,7 +74,7 @@ export class GraphQLTransport {
       const body = await res.text().catch((err) =>
         `error reading body: ${err}`
       );
-      throw new Error(
+      throw new (Error as ErrorPolyfill)(
         `graphql request to ${this.address} failed with status ${res.status}: ${body}`,
         {
           cause: {
@@ -72,7 +85,7 @@ export class GraphQLTransport {
       );
     }
     if (res.headers.get("content-type") != "application/json") {
-      throw new Error(
+      throw new (Error as ErrorPolyfill)(
         "unexpected content type in response",
         {
           cause: {
@@ -99,7 +112,7 @@ export class GraphQLTransport {
     );
     const res = await this.fetch(doc, variables, options);
     if ("errors" in res) {
-      throw new Error("graphql errors on response", {
+      throw new (Error as ErrorPolyfill)("graphql errors on response", {
         cause: res.errors,
       });
     }
@@ -120,7 +133,7 @@ export class GraphQLTransport {
     );
     const res = await this.fetch(doc, variables, options);
     if ("errors" in res) {
-      throw new Error("graphql errors on response", {
+      throw new (Error as ErrorPolyfill)("graphql errors on response", {
         cause: res.errors,
       });
     }
@@ -203,7 +216,7 @@ class PreparedRequest<
     }
     if (typeof cur != "object" || cur == null) {
       const curPath = path.slice(0, idx);
-      throw new Error(
+      throw new (Error as ErrorPolyfill)(
         `unexpected prepard request arguments shape: item at ${curPath} is not object when trying to access ${path}`,
         {
           cause: {
@@ -253,14 +266,13 @@ class PreparedRequest<
       const path = (val[variablePath] as string).split(pathSeparator);
       resolvedVariables[key] = this.resolveVariable(args, args, path);
     }
-    // console.log({
+    // console.log(this.#doc, {
     //   resolvedVariables,
-    //   doc: this.#doc,
     //   mapping: this.#mappings,
     // });
     const res = await this.fetch(this.#doc, resolvedVariables, opts);
     if ("errors" in res) {
-      throw new Error("graphql errors on response", {
+      throw new (Error as ErrorPolyfill)("graphql errors on response", {
         cause: res.errors,
       });
     }
@@ -277,20 +289,64 @@ type NodeArgs = {
   [name: string]: NodeArgValue;
 };
 
+export class Alias<T> {
+  #aliases: Record<string, T>;
+  constructor(
+    aliases: Record<string, T>,
+  ) {
+    this.#aliases = aliases;
+  }
+  aliases() {
+    return this.#aliases;
+  }
+}
+
+export function alias<T>(aliases: Record<string, T>): Alias<T> {
+  return new Alias(aliases);
+}
+
+type ScalarSelectNoArgs =
+  | boolean
+  | Alias<true>
+  | null
+  | undefined;
+
+type ScalarSelectArgs<ArgT> =
+  | ArgT
+  | Alias<ArgT>
+  | false
+  | null
+  | undefined;
+
+type CompositeSelectNoArgs<SelectionT> =
+  | SelectionT
+  | Alias<SelectionT>
+  | false
+  | null
+  | undefined;
+
+type CompositeSelectArgs<ArgT, SelectionT> =
+  | [ArgT, SelectionT]
+  | Alias<[ArgT, SelectionT]>
+  | false
+  | undefined
+  | null;
+
 type SelectionFlags = "selectAll";
 
 type Selection = {
   _?: SelectionFlags;
   [key: string]:
-  | undefined
-  | boolean
-  | Selection
-  | SelectionFlags
-  | [Record<string, unknown>, Selection | undefined];
+    | SelectionFlags
+    | ScalarSelectNoArgs
+    | ScalarSelectArgs<Record<string, unknown>>
+    | CompositeSelectNoArgs<Selection | undefined>
+    | CompositeSelectArgs<Record<string, unknown>, Selection>
+    | Selection;
 };
 
 type NodeMeta = {
-  subNodes?: [string, NodeMeta][];
+  subNodes?: [string, () => NodeMeta][];
   argumentTypes?: { [name: string]: string };
 };
 
@@ -303,7 +359,8 @@ export type DeArrayify<T> = T extends Array<infer Inner> ? Inner : T;
 
 type SelectNode<Out = unknown> = {
   _phantom?: Out;
-  name: string;
+  instanceName: string;
+  nodeName: string;
   args?: NodeArgs;
   subNodes?: SelectNode[];
 };
@@ -311,13 +368,13 @@ type SelectNode<Out = unknown> = {
 export class QueryNode<Out> {
   constructor(
     public inner: SelectNode<Out>,
-  ) { }
+  ) {}
 }
 
 export class MutationNode<Out> {
   constructor(
     public inner: SelectNode<Out>,
-  ) { }
+  ) {}
 }
 
 type SelectNodeOut<T> = T extends (QueryNode<infer O> | MutationNode<infer O>)
@@ -329,9 +386,10 @@ type QueryDocOut<T> = T extends
   }
   : never;
 
+// deno-lint-ignore no-unused-vars
 function selectionToNodeSet(
   selection: Selection,
-  metas: [string, NodeMeta][],
+  metas: [string, () => NodeMeta][],
   parentPath: string,
 ): SelectNode<unknown>[] {
   const out = [] as SelectNode[];
@@ -341,7 +399,7 @@ function selectionToNodeSet(
   const foundNodes = new Set(Object.keys(selection));
 
   for (
-    const [nodeName, { subNodes, argumentTypes }] of metas ?? []
+    const [nodeName, metaFn] of metas ?? []
   ) {
     foundNodes.delete(nodeName);
 
@@ -351,76 +409,94 @@ function selectionToNodeSet(
       continue;
     }
 
-    const node: SelectNode = { name: nodeName };
+    const { argumentTypes, subNodes } = metaFn();
 
-    if (argumentTypes) {
-      if (!Array.isArray(nodeSelection)) {
+    const nodeInstances = nodeSelection instanceof Alias
+      ? nodeSelection.aliases()
+      : { [nodeName]: nodeSelection };
+
+    for (
+      const [instanceName, instanceSelection] of Object.entries(nodeInstances)
+    ) {
+      if (!instanceSelection && !selectAll) {
+        continue;
+      }
+      if (instanceSelection instanceof Alias) {
         throw new Error(
-          `node at ${parentPath}.${nodeName} ` +
-          `is a scalar that requires arguments but selection ` +
-          `is typeof ${typeof nodeSelection}`,
+          `nested Alias discovored at ${parentPath}.${instanceName}`,
         );
       }
-      const [arg] = nodeSelection;
-      // TODO: consider bringing in Zod (after hoisting impl into common lib)
-      if (typeof arg != "object") {
-        throw new Error(
-          `node at ${parentPath}.${nodeName} is a scalar ` +
-          `that requires argument object but first element of ` +
-          `selection is typeof ${typeof arg}`,
-        );
-      }
-      const expectedArguments = new Map(Object.entries(argumentTypes));
-      // TODO: consider logging a warning if `_` is detected incase user passes
-      // Selection as arg
-      node.args = Object.fromEntries(
-        Object.entries(arg).map(([key, value]) => {
-          const typeName = expectedArguments.get(key);
-          if (!typeName) {
-            throw new Error(
-              `unexpected argument ${key} at ${parentPath}.${nodeName}`,
-            );
-          }
-          expectedArguments.delete(key);
-          return [key, { typeName, value }];
-        }),
-      );
-      // TODO: consider detecting required arguments here
-    }
+      const node: SelectNode = { instanceName, nodeName };
 
-    if (subNodes) {
-      let subSelections = nodeSelection;
       if (argumentTypes) {
-        if (!Array.isArray(subSelections)) {
+        let arg = instanceSelection;
+        if (Array.isArray(arg)) {
+          arg = arg[0];
+        }
+        // TODO: consider bringing in Zod (after hoisting impl into common lib)
+        if (typeof arg != "object" || arg === null) {
           throw new Error(
-            `node at ${parentPath}.${nodeName} ` +
-            `is a composite that takes an argument ` +
-            `but selection is typeof ${typeof nodeSelection}`,
+            `node at ${parentPath}.${instanceName} is a node ` +
+              `that requires arguments object but detected argument ` +
+              `is typeof ${typeof arg}`,
           );
         }
-        subSelections = subSelections[1];
-      } else if (Array.isArray(subSelections)) {
-        throw new Error(
-          `node at ${parentPath}.${nodeName} ` +
-          `is a composite that takes no arguments ` +
-          `but selection is typeof ${typeof nodeSelection}`,
+        const expectedArguments = new Map(Object.entries(argumentTypes));
+        // TODO: consider logging a warning if `_` is detected incase user passes
+        // Selection as arg
+        node.args = Object.fromEntries(
+          Object.entries(arg)
+            .map(([key, value]) => {
+              const typeName = expectedArguments.get(key);
+              if (!typeName) {
+                throw new Error(
+                  `unexpected argument ${key} at ${parentPath}.${instanceName}`,
+                );
+              }
+              expectedArguments.delete(key);
+              return [key, { typeName, value }];
+            }),
         );
+        // TODO: consider detecting required arguments here
       }
-      if (typeof subSelections != "object") {
-        throw new Error(
-          `node at ${parentPath}.${nodeName} ` +
-          `is a no argument composite but first element of ` +
-          `selection is typeof ${typeof nodeSelection}`,
-        );
-      }
-      node.subNodes = selectionToNodeSet(
-        subSelections,
-        subNodes,
-        `${parentPath}.${nodeName}`,
-      );
-    }
 
-    out.push(node);
+      if (subNodes) {
+        let subSelections = instanceSelection;
+        if (argumentTypes) {
+          if (!Array.isArray(subSelections)) {
+            throw new Error(
+              `node at ${parentPath}.${instanceName} ` +
+                `is a composite that takes an argument ` +
+                `but selection is typeof ${typeof subSelections}`,
+            );
+          }
+          subSelections = subSelections[1];
+        } else if (Array.isArray(subSelections)) {
+          throw new Error(
+            `node at ${parentPath}.${instanceName} ` +
+              `is a composite that takes no arguments ` +
+              `but selection is typeof ${typeof subSelections}`,
+          );
+        }
+        if (typeof subSelections != "object") {
+          throw new Error(
+            `node at ${parentPath}.${nodeName} ` +
+              `is a no argument composite but first element of ` +
+              `selection is typeof ${typeof nodeSelection}`,
+          );
+        }
+        node.subNodes = selectionToNodeSet(
+          // assume it's a Selection. If it's an argument
+          // object, mismatch between the node desc should hopefully
+          // catch it
+          subSelections as Selection,
+          subNodes,
+          `${parentPath}.${instanceName}`,
+        );
+      }
+
+      out.push(node);
+    }
   }
   foundNodes.delete("_");
   if (foundNodes.size > 0) {
@@ -437,29 +513,35 @@ function convertQueryNodeGql(
   node: SelectNode,
   variables: Map<string, NodeArgValue>,
 ) {
-  let out = node.name;
+  let out = node.nodeName == node.instanceName
+    ? node.nodeName
+    : `${node.instanceName}: ${node.nodeName}`;
 
   const args = node.args;
   if (args) {
-    out = `${out} (${Object.entries(args)
-      .map(([key, val]) => {
-        const name = `in${variables.size}`;
-        variables.set(name, val);
-        return `${key}: $${name}`;
-      })
-      })`;
+    out = `${out} (${
+      Object.entries(args)
+        .map(([key, val]) => {
+          const name = `in${variables.size}`;
+          variables.set(name, val);
+          return `${key}: $${name}`;
+        })
+        .join(", ")
+    })`;
   }
 
   const subNodes = node.subNodes;
   if (subNodes) {
-    out = `${out} { ${subNodes.map((node) => convertQueryNodeGql(node, variables)).join(" ")
-      } }`;
+    out = `${out} { ${
+      subNodes.map((node) => convertQueryNodeGql(node, variables)).join(" ")
+    } }`;
   }
   return out;
 }
 
+// deno-lint-ignore no-unused-vars
 class QueryGraphBase {
-  constructor(private typeNameMapGql: Record<string, string>) { }
+  constructor(private typeNameMapGql: Record<string, string>) {}
 
   graphql(addr: URL | string, options?: GraphQlTransportOptions) {
     return new GraphQLTransport(

@@ -32,7 +32,7 @@ impl PyNodeMetasRenderer {
             write!(
                 dest,
                 r#"
-                "{key}": NodeDescs.{node_ref}(),"#
+                "{key}": NodeDescs.{node_ref},"#
             )?;
         }
         write!(

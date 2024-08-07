@@ -26,12 +26,21 @@ impl PyTypeRenderer {
         &self,
         dest: &mut impl Write,
         ty_name: &str,
-        props: IndexMap<String, Rc<str>>,
+        props: IndexMap<String, (Rc<str>, bool)>,
     ) -> std::fmt::Result {
-        writeln!(dest, "class {ty_name}(typing.TypedDict):")?;
-        for (name, ty_name) in props.into_iter() {
-            writeln!(dest, "    {name}: {ty_name}")?;
+        writeln!(dest, r#"{ty_name} = typing.TypedDict("{ty_name}", {{"#)?;
+        for (name, (ty_name, _optional)) in props.into_iter() {
+            // FIXME: use NotRequired when bumping to python version
+            // that supports it
+            // also, remove the total param below
+            // if optional {
+            //     writeln!(dest, r#"    "{name}": typing.NotRequired[{ty_name}],"#)?;
+            // } else {
+            //     writeln!(dest, r#"    "{name}": {ty_name},"#)?;
+            // }
+            writeln!(dest, r#"    "{name}": {ty_name},"#)?;
         }
+        writeln!(dest, "}}, total=False)")?;
         writeln!(dest)?;
         Ok(())
     }
@@ -44,12 +53,39 @@ impl PyTypeRenderer {
     ) -> std::fmt::Result {
         writeln!(dest, "{ty_name} = typing.Union[")?;
         for ty_name in variants.into_iter() {
-            write!(dest, "\n    {ty_name},")?;
+            writeln!(dest, "    {ty_name},")?;
         }
         writeln!(dest, "]")?;
         writeln!(dest)?;
         writeln!(dest)?;
         Ok(())
+    }
+
+    fn quote_ty_name(
+        &self,
+        id: u32,
+        (ty_name, cyclic): (RenderedName, Option<bool>),
+        renderer: &mut TypeRenderer,
+    ) -> Rc<str> {
+        match ty_name {
+            RenderedName::Name(name) => {
+                if cyclic.is_some() && !name.contains('"') {
+                    format!(r#""{name}""#).into()
+                } else {
+                    name
+                }
+            }
+            RenderedName::Placeholder(_name) => renderer.placeholder_string(
+                id,
+                Box::new(move |ty_name| {
+                    if !ty_name.contains('"') {
+                        format!(r#""{ty_name}""#)
+                    } else {
+                        ty_name.into()
+                    }
+                }),
+            ),
+        }
     }
 }
 
@@ -91,14 +127,13 @@ impl RenderType for PyTypeRenderer {
             } if body_required => {
                 let ty_name = normalize_type_title(title);
                 // variants are valid strings in JSON (validated by the validator)
-                self.render_alias(
+                self.render_union_type(
                     renderer,
                     &ty_name,
-                    &variants
+                    variants
                         .iter()
-                        .map(|val| format!("typing.Literal[{val}]"))
-                        .collect::<Vec<_>>()
-                        .join(" | "),
+                        .map(|val| format!("typing.Literal[{val}]").into())
+                        .collect(),
                 )?;
                 ty_name
             }
@@ -145,12 +180,19 @@ impl RenderType for PyTypeRenderer {
                     .iter()
                     // generate property types first
                     .map(|(name, &dep_id)| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(dep_id, cursor)?;
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
-                        Ok::<_, anyhow::Error>((normalize_struct_prop_name(&name[..]), ty_name))
+                        let ty_name = self.quote_ty_name(
+                            dep_id,
+                            renderer.render_subgraph(dep_id, cursor)?,
+                            renderer,
+                        );
+                        let optional = matches!(
+                            renderer.nodes[dep_id as usize].deref(),
+                            TypeNode::Optional { .. }
+                        );
+                        Ok::<_, anyhow::Error>((
+                            normalize_struct_prop_name(&name[..]),
+                            (ty_name, optional),
+                        ))
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
                 let ty_name = normalize_type_title(&base.title);
@@ -167,12 +209,12 @@ impl RenderType for PyTypeRenderer {
             } => {
                 let variants = variants
                     .iter()
-                    .map(|&inner| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(inner, cursor)?;
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
+                    .map(|&dep_id| {
+                        let ty_name = self.quote_ty_name(
+                            dep_id,
+                            renderer.render_subgraph(dep_id, cursor)?,
+                            renderer,
+                        );
                         Ok::<_, anyhow::Error>(ty_name)
                     })
                     .collect::<Result<Vec<_>, _>>()?;
@@ -191,20 +233,17 @@ impl RenderType for PyTypeRenderer {
                     },
             } if base.title.starts_with("optional_") => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(*item, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                format!("typing.Union[{inner_ty_name}, None]")
+                let inner_ty_name =
+                    self.quote_ty_name(*item, renderer.render_subgraph(*item, cursor)?, renderer);
+                format!("typing.Optional[{inner_ty_name}]")
             }
             TypeNode::Optional { data, base } => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(data.item, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                let inner_ty_name = self.quote_ty_name(
+                    data.item,
+                    renderer.render_subgraph(data.item, cursor)?,
+                    renderer,
+                );
                 let ty_name = normalize_type_title(&base.title);
                 self.render_alias(
                     renderer,
@@ -226,11 +265,8 @@ impl RenderType for PyTypeRenderer {
                     },
             } if base.title.starts_with("list_") => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(*items, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                let inner_ty_name =
+                    self.quote_ty_name(*items, renderer.render_subgraph(*items, cursor)?, renderer);
                 if let Some(true) = unique_items {
                     format!("typing.Set[{inner_ty_name}]")
                 } else {
@@ -239,11 +275,11 @@ impl RenderType for PyTypeRenderer {
             }
             TypeNode::List { data, base } => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(data.items, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                let inner_ty_name = self.quote_ty_name(
+                    data.items,
+                    renderer.render_subgraph(data.items, cursor)?,
+                    renderer,
+                );
                 let ty_name = normalize_type_title(&base.title);
                 if let Some(true) = data.unique_items {
                     self.render_alias(renderer, &ty_name, &format!("typing.Set[{inner_ty_name}]"))?;

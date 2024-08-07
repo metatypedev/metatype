@@ -6,7 +6,7 @@ use once_cell::sync::Lazy;
 
 // sourced from
 // keyword library https://docs.python.org/3/library/keyword.html
-static KEYWORDS: Lazy<std::collections::HashSet<&'static str>> = Lazy::new(|| {
+static _KEYWORDS: Lazy<std::collections::HashSet<&'static str>> = Lazy::new(|| {
     [
         "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
         "continue", "def", "del", "elif", "else", "except", "finally", "for", "from", "global",
@@ -33,10 +33,10 @@ pub fn normalize_type_title(title: &str) -> String {
 
 /// This assumes title was already through [normalize_type_title]
 pub fn normalize_struct_prop_name(title: &str) -> String {
-    let title = title.to_snek_case();
-    if KEYWORDS.contains(&title[..]) {
-        format!("{title}_")
-    } else {
-        title
-    }
+    title.to_snek_case()
+    // if KEYWORDS.contains(&title[..]) {
+    //     format!("{title}_")
+    // } else {
+    //     title
+    // }
 }

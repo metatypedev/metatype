@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 mod node_metas;
+
 mod selections;
 mod types;
 mod utils;
@@ -13,6 +14,7 @@ use common::typegraph::EffectType;
 use crate::interlude::*;
 use crate::*;
 
+use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
 use crate::utils::GenDestBuf;
@@ -166,17 +168,20 @@ class QueryGraph(QueryGraphBase):
             (Some(arg_ty), None) => format!("self, args: {arg_ty}"),
             // not all functions have args (empty struct arg)
             (None, Some(select_ty)) => format!("self, select: {select_ty}"),
-            (None, None) => "".into(),
+            (None, None) => "self".into(),
         };
 
         let args_selection = match (fun.in_id, fun.select_ty) {
             (Some(_), Some(_)) => "(args, select)",
             (Some(_), None) => "args",
             (None, Some(_)) => "select",
-            (None, None) => "true",
+            (None, None) => "True",
         };
 
-        let meta_method = node_metas.get(&fun.id).unwrap();
+        let meta_method = node_metas
+            .get(&fun.id)
+            .map(|str| &str[..])
+            .unwrap_or_else(|| "scalar");
 
         let node_type = match fun.effect {
             EffectType::Read => "QueryNode",
@@ -189,119 +194,16 @@ class QueryGraph(QueryGraphBase):
     def {method_name}({args_row}) -> {node_type}[{out_ty_name}]:
         node = selection_to_nodes(
             {{"{node_name}": {args_selection}}}, 
-            {{"{node_name}": NodeDescs.{meta_method}()}}, 
+            {{"{node_name}": NodeDescs.{meta_method}}}, 
             "$q"
         )[0]
-        return {node_type}(name=node.name, args=node.args, sub_nodes=node.sub_nodes)
+        return {node_type}(node.node_name, node.instance_name, node.args, node.sub_nodes)
 "#
         )?;
     }
 
     writeln!(&mut client_py)?;
     Ok(client_py.buf)
-}
-
-struct RootFn {
-    id: u32,
-    name: String,
-    in_id: Option<u32>,
-    out_id: u32,
-    effect: EffectType,
-    select_ty: Option<u32>,
-}
-
-struct RenderManifest {
-    data_types: HashSet<u32>,
-    // arg_types: HashSet<u32>,
-    // arg_types: HashSet<u32>,
-    selections: HashSet<u32>,
-    root_fns: Vec<RootFn>,
-}
-
-/// Collect upfront all the items we need to render
-fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
-    let mut root_fns = vec![];
-    let mut selections = HashSet::new();
-    let mut data_types = HashSet::new();
-    // let mut arg_types = HashSet::new();
-
-    let (_root_base, root) = tg.root().map_err(anyhow_to_eyre!())?;
-    for (key, &func_id) in &root.properties {
-        let TypeNode::Function { data, .. } = &tg.types[func_id as usize] else {
-            bail!(
-                "invalid typegraph: node of type {} instead of a root function",
-                tg.types[func_id as usize].type_name()
-            );
-        };
-        let mat = &tg.materializers[data.materializer as usize];
-
-        fn is_composite(types: &[TypeNode], id: u32) -> bool {
-            match &types[id as usize] {
-                TypeNode::Function { .. } => unreachable!(),
-                TypeNode::Any { .. } => unimplemented!("unexpected Any type as output"),
-                TypeNode::Boolean { .. }
-                | TypeNode::Float { .. }
-                | TypeNode::Integer { .. }
-                | TypeNode::String { .. }
-                | TypeNode::File { .. } => false,
-                TypeNode::Object { .. } => true,
-                TypeNode::Optional { data, .. } => is_composite(types, data.item),
-                TypeNode::List { data, .. } => is_composite(types, data.items),
-                TypeNode::Union { data, .. } => {
-                    data.any_of.iter().any(|&id| is_composite(types, id))
-                }
-                TypeNode::Either { data, .. } => {
-                    data.one_of.iter().any(|&id| is_composite(types, id))
-                }
-            }
-        }
-
-        data_types.insert(data.output);
-
-        let in_id = if matches!(
-            &tg.types[data.input as usize],
-            TypeNode::Object { data, .. } if !data.properties.is_empty()
-        ) {
-            data_types.insert(data.input);
-            // arg_types.insert(data.input);
-            Some(data.input)
-        } else {
-            None
-        };
-        root_fns.push(RootFn {
-            id: func_id,
-            name: key.clone(),
-            effect: mat.effect.effect.unwrap_or(EffectType::Read),
-            // empty struct arguments don't need arguments
-            in_id,
-            out_id: data.output,
-            // scalar return types don't need selections
-            select_ty: if is_composite(&tg.types, data.output) {
-                selections.insert(func_id);
-                Some(data.output)
-            } else {
-                None
-            },
-        });
-    }
-
-    for node in &tg.types {
-        if let TypeNode::Function { data, .. } = node {
-            if matches!(
-                &tg.types[data.input as usize],
-                TypeNode::Object { data, .. } if !data.properties.is_empty()
-            ) {
-                data_types.insert(data.input);
-            }
-        }
-    }
-
-    Ok(RenderManifest {
-        root_fns,
-        selections,
-        data_types,
-        // arg_types,
-    })
 }
 
 /// Render the common sections like the transports
@@ -360,7 +262,7 @@ fn render_node_metas(
         name_mapper.nodes.clone(),
         Rc::new(node_metas::PyNodeMetasRenderer { name_mapper }),
     );
-    for &id in &manifest.selections {
+    for &id in &manifest.node_metas {
         _ = renderer.render(id)?;
     }
     let (methods, memo) = renderer.finalize();

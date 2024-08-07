@@ -5,18 +5,11 @@ use std::fmt::Write;
 
 use common::typegraph::*;
 
-use super::utils::normalize_type_title;
-use crate::{interlude::*, shared::types::*};
+use super::utils::*;
+use crate::{interlude::*, shared::client::*, shared::types::*};
 
 pub struct PyNodeSelectionsRenderer {
     pub arg_ty_names: Rc<NameMemo>,
-}
-
-enum SelectionTy {
-    Scalar,
-    ScalarArgs { arg_ty: Rc<str> },
-    CompositeArgs { arg_ty: Rc<str>, select_ty: Rc<str> },
-    Composite { select_ty: Rc<str> },
 }
 
 impl PyNodeSelectionsRenderer {
@@ -27,63 +20,28 @@ impl PyNodeSelectionsRenderer {
         ty_name: &str,
         props: IndexMap<String, SelectionTy>,
     ) -> std::fmt::Result {
-        writeln!(dest, "class {ty_name}(Selection, total=False):")?;
+        writeln!(dest, r#"{ty_name} = typing.TypedDict("{ty_name}", {{"#)?;
+        writeln!(dest, r#"    "_": SelectionFlags,"#)?;
         for (name, select_ty) in props {
             use SelectionTy::*;
             match select_ty {
-                Scalar => writeln!(dest, "    {name}: ScalarSelectNoArgs")?,
-                ScalarArgs { arg_ty } => writeln!(dest, "    {name}: ScalarSelectArgs[{arg_ty}]")?,
-                Composite { select_ty } => {
-                    writeln!(dest, "    {name}: CompositeSelectNoArgs[{select_ty}]")?
+                Scalar => writeln!(dest, r#"    "{name}": ScalarSelectNoArgs,"#)?,
+                ScalarArgs { arg_ty } => {
+                    writeln!(dest, r#"    "{name}": ScalarSelectArgs["{arg_ty}"],"#)?
                 }
+                Composite { select_ty } => writeln!(
+                    dest,
+                    r#"    "{name}": CompositeSelectNoArgs["{select_ty}"],"#
+                )?,
                 CompositeArgs { arg_ty, select_ty } => writeln!(
                     dest,
-                    "    {name}: CompositeSelectArgs[{arg_ty}, {select_ty}]"
+                    r#"    "{name}": CompositeSelectArgs["{arg_ty}", "{select_ty}"],"#
                 )?,
             };
         }
+        writeln!(dest, "}}, total=False)")?;
         writeln!(dest)?;
         Ok(())
-    }
-
-    fn selection_for_field(
-        &self,
-        ty: u32,
-        renderer: &mut TypeRenderer,
-        cursor: &mut VisitCursor,
-    ) -> Result<SelectionTy> {
-        Ok(match renderer.nodes[ty as usize].deref() {
-            TypeNode::Boolean { .. }
-            | TypeNode::Float { .. }
-            | TypeNode::Integer { .. }
-            | TypeNode::String { .. }
-            | TypeNode::File { .. } => SelectionTy::Scalar,
-            TypeNode::Function { data, .. } => {
-                let arg_ty = self.arg_ty_names.get(&data.input).unwrap().clone();
-                match self.selection_for_field(data.output, renderer, cursor)? {
-                    SelectionTy::Scalar => SelectionTy::ScalarArgs { arg_ty },
-                    SelectionTy::Composite { select_ty } => {
-                        SelectionTy::CompositeArgs { select_ty, arg_ty }
-                    }
-                    SelectionTy::CompositeArgs { .. } | SelectionTy::ScalarArgs { .. } => {
-                        unreachable!("function can not return a function")
-                    }
-                }
-            }
-            TypeNode::Optional {
-                data: OptionalTypeData { item, .. },
-                ..
-            }
-            | TypeNode::List {
-                data: ListTypeData { items: item, .. },
-                ..
-            } => self.selection_for_field(*item, renderer, cursor)?,
-            TypeNode::Object { .. } => SelectionTy::Composite {
-                select_ty: renderer.render_subgraph(ty, cursor)?.0.unwrap(),
-            },
-            TypeNode::Union { .. } | TypeNode::Either { .. } => todo!("unions are wip"),
-            TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
-        })
     }
 }
 
@@ -96,7 +54,7 @@ impl RenderType for PyNodeSelectionsRenderer {
             | TypeNode::Float { .. }
             | TypeNode::Integer { .. }
             | TypeNode::String { .. }
-            | TypeNode::File { .. } => unreachable!("scalars don't get to have selections"),
+            | TypeNode::File { .. } => "scalar".into(), // unreachable!("scalars don't get to have selections"),
             TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
             TypeNode::Optional { data: OptionalTypeData { item, .. }, .. }
             | TypeNode::List { data: ListTypeData { items: item, .. }, .. }
@@ -110,8 +68,8 @@ impl RenderType for PyNodeSelectionsRenderer {
                     .map(|(name, &dep_id)| {
                         eyre::Ok(
                             (
-                                name.clone(),
-                                self.selection_for_field(dep_id, renderer, cursor)?
+                                normalize_struct_prop_name(name),
+                                selection_for_field(dep_id, &self.arg_ty_names, renderer, cursor)?
                             )
                         )
                     })

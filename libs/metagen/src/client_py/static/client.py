@@ -18,10 +18,11 @@ Out = typing.TypeVar("Out", covariant=True)
 
 @dc.dataclass
 class SelectNode(typing.Generic[Out]):
-    name: str
-    args: typing.Union[NodeArgs, None]
-    sub_nodes: typing.Union[typing.List["SelectNode"], None]
-    _phantom: typing.Union[None, Out] = None
+    node_name: str
+    instance_name: str
+    args: typing.Optional[NodeArgs]
+    sub_nodes: typing.Optional[typing.List["SelectNode"]]
+    _phantom: typing.Optional[Out] = None
 
 
 @dc.dataclass
@@ -37,19 +38,29 @@ class MutationNode(typing.Generic[Out], SelectNode[Out]):
 ArgT = typing.TypeVar("ArgT")
 SelectionT = typing.TypeVar("SelectionT")
 
-AliasInfo = typing.Dict[str, SelectionT]
-ScalarSelectNoArgs = typing.Union[bool, None]  # | AliasInfo['ScalarSelectNoArgs'];
-ScalarSelectArgs = typing.Union[
-    ArgT, typing.Literal[False], None
-]  # | AliasInfo['ScalarSelectArgs'];
+
+class Alias(typing.Generic[SelectionT]):
+    def __init__(self, **aliases: SelectionT):
+        self.items = aliases
+
+
+ScalarSelectNoArgs = typing.Union[bool, Alias[typing.Literal[True]], None]
+ScalarSelectArgs = typing.Union[ArgT, Alias[ArgT], typing.Literal[False], None]
 CompositeSelectNoArgs = typing.Union[
-    SelectionT, typing.Literal[False], None
-]  # | AliasInfo['CompositSelectNoArgs'];
+    SelectionT, Alias[SelectionT], typing.Literal[False], None
+]
 CompositeSelectArgs = typing.Union[
-    typing.Tuple[ArgT, SelectionT], typing.Literal[False], None
-]  # | AliasInfo['CompositSelectArgs'];
+    typing.Tuple[ArgT, SelectionT],
+    Alias[typing.Tuple[ArgT, SelectionT]],
+    typing.Literal[False],
+    None,
+]
 
 
+# FIXME: ideally this would be a TypedDict
+# to allow full dict based queries but
+# we need to reliably identify SelectionFlags at runtime
+# but TypedDicts don't allow instanceof
 @dc.dataclass
 class SelectionFlags:
     select_all: typing.Union[bool, None] = None
@@ -65,7 +76,9 @@ SelectionGeneric = typing.Dict[
         SelectionFlags,
         ScalarSelectNoArgs,
         ScalarSelectArgs[typing.Mapping[str, typing.Any]],
-        CompositeSelectNoArgs,
+        CompositeSelectNoArgs["SelectionGeneric"],
+        # FIXME: should be possible to make SelectionT here `SelectionGeneric` recursively
+        # but something breaks
         CompositeSelectArgs[typing.Mapping[str, typing.Any], typing.Any],
     ],
 ]
@@ -73,12 +86,14 @@ SelectionGeneric = typing.Dict[
 
 @dc.dataclass
 class NodeMeta:
-    sub_nodes: typing.Union[typing.Dict[str, "NodeMeta"], None] = None
-    arg_types: typing.Union[typing.Dict[str, str], None] = None
+    sub_nodes: typing.Optional[typing.Dict[str, typing.Callable[[], "NodeMeta"]]] = None
+    arg_types: typing.Optional[typing.Dict[str, str]] = None
 
 
 def selection_to_nodes(
-    selection: SelectionGeneric, metas: typing.Dict[str, NodeMeta], parent_path: str
+    selection: SelectionGeneric,
+    metas: typing.Dict[str, typing.Callable[[], NodeMeta]],
+    parent_path: str,
 ) -> typing.List[SelectNode[typing.Any]]:
     out = []
     flags = selection.get("_")
@@ -88,68 +103,96 @@ def selection_to_nodes(
         )
     select_all = True if flags is not None and flags.select_all else False
     found_nodes = set(selection.keys())
-    for node_name, meta in metas.items():
-        found_nodes.remove(node_name)
+    for node_name, meta_fn in metas.items():
+        found_nodes.discard(node_name)
 
-        node_selection = selection[node_name]
-        if (node_selection is None and not select_all) or not node_selection:
+        node_selection = selection.get(node_name)
+        if node_selection is False or (node_selection is None and not select_all):
             # this node was not selected
             continue
 
-        node_args: typing.Union[NodeArgs, None] = None
-        if meta.arg_types is not None:
-            if not isinstance(node_selection, tuple):
+        meta = meta_fn()
+
+        # we splat out any aliasing of nodes here
+        node_instances = (
+            [(key, val) for key, val in node_selection.items.items()]
+            if isinstance(node_selection, Alias)
+            else [(node_name, node_selection)]
+        )
+
+        for instance_name, instance_selection in node_instances:
+            # print(parent_path, instance_selection, meta.sub_nodes, instance_selection, flags)
+            if instance_selection is False or (
+                instance_selection is None and not select_all
+            ):
+                # this instance was not selected
+                continue
+            if isinstance(instance_selection, Alias):
                 raise Exception(
-                    f"node at {parent_path}.{node_name} is a scalar that "
-                    + "requires arguments "
-                    + f"but selection is typeof {type(node_selection)}"
-                )
-            arg = node_selection[0]
-            if not isinstance(arg, dict):
-                raise Exception(
-                    f"node at {parent_path}.{node_name} is a scalar that "
-                    + "requires argument object "
-                    + f"but first element of selection is typeof {type(node_selection)}"
+                    f"nested Alias node discovored at {parent_path}.{instance_name}"
                 )
 
-            expected_args = {key: val for key, val in meta.arg_types.items()}
-            node_args = {}
-            for key, val in arg.items():
-                ty_name = expected_args.pop(key)
-                if ty_name is None:
-                    raise Exception(
-                        f"unexpected argument ${key} at {parent_path}.{node_name}"
-                    )
-                node_args[key] = NodeArgValue(ty_name, val)
-        sub_nodes: typing.Union[typing.List[SelectNode], None] = None
-        if meta.sub_nodes is not None:
-            sub_selections = node_selection
+            instance_args: typing.Optional[NodeArgs] = None
             if meta.arg_types is not None:
-                if not isinstance(node_selection, tuple):
-                    raise Exception(
-                        f"node at {parent_path}.{node_name} is a composite "
-                        + "requires argument object "
-                        + f"but selection is typeof {type(node_selection)}"
-                    )
-                sub_selections = node_selection[1]
-            elif isinstance(sub_selections, tuple):
-                raise Exception(
-                    f"node at {parent_path}.{node_selection} "
-                    + "is a composite that takes no arguments "
-                    + f"but selection is typeof {type(node_selection)}",
-                )
+                arg = instance_selection
 
-            if not isinstance(sub_selections, dict):
-                raise Exception(
-                    f"node at {parent_path}.{node_name} "
-                    + "is a no argument composite but first element of "
-                    + f"selection is typeof {type(node_selection)}",
+                if isinstance(arg, tuple):
+                    arg = arg[0]
+
+                # arg types are always TypedDicts
+                if not isinstance(arg, dict):
+                    raise Exception(
+                        f"node at {parent_path}.{instance_name} is a node that "
+                        + "requires arguments "
+                        + f"but detected argument is typeof {type(arg)}"
+                    )
+
+                # convert arg dict to NodeArgs
+                expected_args = {key: val for key, val in meta.arg_types.items()}
+                instance_args = {}
+                for key, val in arg.items():
+                    ty_name = expected_args.pop(key)
+                    if ty_name is None:
+                        raise Exception(
+                            f"unexpected argument ${key} at {parent_path}.{instance_name}"
+                        )
+                    instance_args[key] = NodeArgValue(ty_name, val)
+
+            sub_nodes: typing.Optional[typing.List[SelectNode]] = None
+            if meta.sub_nodes is not None:
+                sub_selections = instance_selection
+
+                # if node requires both selection and arg, it must be
+                # a CompositeSelectArgs which is a tuple selection
+                if meta.arg_types is not None:
+                    if not isinstance(sub_selections, tuple):
+                        raise Exception(
+                            f"node at {parent_path}.{instance_name} is a composite "
+                            + "that requires an argument object "
+                            + f"but selection is typeof {type(sub_selections)}"
+                        )
+                    sub_selections = sub_selections[1]
+
+                elif isinstance(sub_selections, tuple):
+                    raise Exception(
+                        f"node at {parent_path}.{instance_name} "
+                        + "is a composite that takes no arguments "
+                        + f"but selection is typeof {type(instance_selection)}",
+                    )
+
+                # selection types are always TypedDicts as well
+                if not isinstance(sub_selections, dict):
+                    raise Exception(
+                        f"node at {parent_path}.{instance_name} "
+                        + "is a no argument composite but first element of "
+                        + f"selection is typeof {type(instance_selection)}",
+                    )
+                sub_nodes = selection_to_nodes(
+                    sub_selections, meta.sub_nodes, f"{parent_path}.{instance_name}"
                 )
-            sub_nodes = selection_to_nodes(
-                sub_selections, meta.sub_nodes, f"{parent_path}.{node_name}"
-            )
-        node = SelectNode(node_name, node_args, sub_nodes)
-        out.append(node)
+            node = SelectNode(node_name, instance_name, instance_args, sub_nodes)
+            out.append(node)
+
     found_nodes.discard("_")
     if len(found_nodes) > 0:
         raise Exception(
@@ -162,14 +205,19 @@ def convert_query_node_gql(
     node: SelectNode,
     variables: typing.Dict[str, NodeArgValue],
 ):
-    out = node.name
+    out = (
+        f"{node.instance_name}: {node.node_name}"
+        if node.instance_name != node.node_name
+        else node.node_name
+    )
     if node.args is not None:
         arg_row = ""
         for key, val in node.args.items():
             name = f"in{len(variables)}"
             variables[name] = val
             arg_row += f"{key}: ${name}, "
-        out += f"({arg_row[:-2]})"
+        if len(arg_row):
+            out += f"({arg_row[:-2]})"
 
     if node.sub_nodes is not None:
         sub_node_list = ""
@@ -220,19 +268,23 @@ class GraphQLTransportBase:
         variables: typing.Dict[str, NodeArgValue] = {}
         root_nodes = ""
         for key, node in query.items():
-            root_nodes += f"  {key}: {convert_query_node_gql(node, variables)}\n"
+            fixed_node = SelectNode(node.node_name, key, node.args, node.sub_nodes)
+            root_nodes += f"  {convert_query_node_gql(fixed_node, variables)}\n"
         args_row = ""
         for key, val in variables.items():
             args_row += f"${key}: {self.ty_to_gql_ty_map[val.type_name]}, "
 
-        doc = f"{ty} {name}({args_row[:-2]}) {{\n{root_nodes}}}"
+        if len(args_row):
+            args_row = f"({args_row[:-2]})"
+
+        doc = f"{ty} {name}{args_row} {{\n{root_nodes}}}"
         return (doc, {key: val.value for key, val in variables.items()})
 
     def build_req(
         self,
         doc: str,
         variables: typing.Dict[str, typing.Any],
-        opts: typing.Union[GraphQLTransportOptions, None] = None,
+        opts: typing.Optional[GraphQLTransportOptions] = None,
     ):
         headers = {}
         headers.update(self.opts.headers)
@@ -268,7 +320,7 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         self,
         doc: str,
         variables: typing.Dict[str, typing.Any],
-        opts: typing.Union[GraphQLTransportOptions, None],
+        opts: typing.Optional[GraphQLTransportOptions],
     ):
         req = self.build_req(doc, variables, opts)
         try:
@@ -301,16 +353,18 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
     def query(
         self,
         inp: typing.Dict[str, QueryNode[Out]],
-        opts: typing.Union[GraphQLTransportOptions, None] = None,
+        opts: typing.Optional[GraphQLTransportOptions] = None,
     ) -> typing.Dict[str, Out]:
         doc, variables = self.build_gql({key: val for key, val in inp.items()}, "query")
+        # print(doc,variables)
+        # return {}
         out = self.fetch(doc, variables, opts)
         return out
 
     def mutation(
         self,
         inp: typing.Dict[str, MutationNode[Out]],
-        opts: typing.Union[GraphQLTransportOptions, None] = None,
+        opts: typing.Optional[GraphQLTransportOptions] = None,
     ) -> typing.Dict[str, Out]:
         doc, variables = self.build_gql(
             {key: val for key, val in inp.items()}, "mutation"
@@ -346,7 +400,7 @@ class QueryGraphBase:
         self.ty_to_gql_ty_map = ty_to_gql_ty_map
 
     def graphql_sync(
-        self, addr: str, opts: typing.Union[GraphQLTransportOptions, None] = None
+        self, addr: str, opts: typing.Optional[GraphQLTransportOptions] = None
     ):
         return GraphQLTransportUrlib(
             addr, opts or GraphQLTransportOptions({}), self.ty_to_gql_ty_map
