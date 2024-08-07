@@ -50,7 +50,8 @@ export class TemporalRuntime extends Runtime {
     return Func.fromTypeFunc(dataFunc);
   }
 
-  startWorkflow(workflowType: string, arg: Typedef) {
+  /** create a function to start a workflow */
+  startWorkflow(workflowType: string, arg: Typedef): Func {
     return this.#genericTemporalFunc(
       {
         tag: "start-workflow",
@@ -60,7 +61,8 @@ export class TemporalRuntime extends Runtime {
     );
   }
 
-  signalWorkflow(signalName: string, arg: Typedef) {
+  /** create a function to signal a workflow */
+  signalWorkflow(signalName: string, arg: Typedef): Func {
     return this.#genericTemporalFunc(
       {
         tag: "signal-workflow",
@@ -70,7 +72,8 @@ export class TemporalRuntime extends Runtime {
     );
   }
 
-  queryWorkflow(queryType: string, arg: Typedef, out: Typedef) {
+  /** create a function to query a workflow */
+  queryWorkflow(queryType: string, arg: Typedef, out: Typedef): Func {
     return this.#genericTemporalFunc(
       {
         tag: "query-workflow",
@@ -81,7 +84,8 @@ export class TemporalRuntime extends Runtime {
     );
   }
 
-  describeWorkflow() {
+  /** create a function that describes a workflow */
+  describeWorkflow(): Func {
     return this.#genericTemporalFunc({ tag: "describe-workflow" });
   }
 }

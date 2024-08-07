@@ -8,10 +8,12 @@ import { Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 
 export class WasmRuntime extends Runtime {
-  static reflected(modulePath: string) {
+  /** create reflected wasm runtime */
+  static reflected(modulePath: string): WasmRuntimeReflected {
     return new WasmRuntimeReflected(modulePath);
   }
-  static wire(modulePath: string) {
+  /** create a wasm runtime using the wire protocol */
+  static wire(modulePath: string): WasmRuntimeWire {
     return new WasmRuntimeWire(modulePath);
   }
 }

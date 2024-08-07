@@ -11,7 +11,7 @@ import { serializeStaticInjection } from "./injection_utils.ts";
 import { SerializeParams } from "../gen/typegraph_core.d.ts";
 import { log } from "../io.ts";
 
-export function stringifySymbol(symbol: symbol) {
+export function stringifySymbol(symbol: symbol): string {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
   if (!name) {
     throw new Error("unable to determine symbol name");
