@@ -6,8 +6,10 @@ from typegraph.runtimes.kv import KvRuntime
 
 
 @typegraph()
-def kv_py(g: Graph):
-    kv = KvRuntime("REDIS_HOST", "REDIS_PASSWORD")
+def kv(g: Graph):
+    kv = KvRuntime(
+        host="REDIS_HOST", password="REDIS_PASSWORD", db_number=None, port=None
+    )
 
     g.expose(
         Policy.public(),
