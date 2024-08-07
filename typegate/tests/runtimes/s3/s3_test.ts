@@ -172,7 +172,7 @@ Meta.test("s3", async (t) => {
       }
     `
       .withVars({
-        path: "/",
+        path: "",
       })
       .expectData({
         listObjects: {

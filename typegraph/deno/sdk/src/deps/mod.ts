@@ -22,7 +22,7 @@ export function dirname(path: string): string {
 
 import { fromFileUrlPosix, fromFileUrlWin32 } from "./_import.ts";
 
-/** */
+/** get path from file url */
 export function fromFileUrl(path: string): string {
   // Note: Do not refactor with runtime dependent OS check
   // Examples: file://C:, file://D:
