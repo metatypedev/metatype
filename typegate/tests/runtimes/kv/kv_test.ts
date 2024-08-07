@@ -51,7 +51,7 @@ Meta.test(
         .on(e);
     });
 
-    await t.should("get all keys from redist", async () => {
+    await t.should("get all keys from redis", async () => {
       await gql`
         query {
           keys(filter: "*")
@@ -63,14 +63,14 @@ Meta.test(
         .on(e);
     });
 
-    await t.should("get all keys and value", async () => {
+    await t.should("get values from redis", async () => {
       await gql`
         query {
-          all(filter: "*")
+          values(filter: "*")
         }
       `
         .expectData({
-          all: [],
+          values: ["joe"],
         })
         .on(e);
     });

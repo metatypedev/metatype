@@ -72,9 +72,16 @@ export class KvRuntime extends Runtime {
         return await this.redis.keys(filter ?? "*");
       }
 
-      if (name == "kv_all") {
+      if (name === "kv_values") {
         const { filter } = args;
-        return await this.redis.hgetall(filter ?? "*");
+        const keys = await this.redis.keys(filter ?? "*");
+        const values = await Promise.all(
+          keys.map(async (key) => {
+            const value = await this.redis.get(key);
+            return value;
+          }),
+        );
+        return values;
       }
     };
     return [new ComputeStage({ ...stage.props, resolver })];

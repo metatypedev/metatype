@@ -15,5 +15,5 @@ def kv(g: Graph):
         set=kv.set(),
         delete=kv.delete(),
         keys=kv.keys(),
-        all=kv.all(),
+        values=kv.values(),
     )

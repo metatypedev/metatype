@@ -47,8 +47,8 @@ class KvRuntime(Runtime):
             t.struct({"filter": t.optional(t.string())}), t.list(t.string()), mat
         )
 
-    def all(self):
-        mat = self.__operation(KvMaterializer.ALL, fx.read())
+    def values(self):
+        mat = self.__operation(KvMaterializer.VALUES, fx.read())
         return t.func(
             t.struct({"filter": t.optional(t.string())}),
             t.list(t.string()),

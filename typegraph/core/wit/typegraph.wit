@@ -496,7 +496,7 @@ interface runtimes {
         set,
         delete,
         keys,
-        all,
+        values,
     }
 
     kv-operation: func(base: base-materializer, data: kv-materializer) -> result<materializer-id, error>;

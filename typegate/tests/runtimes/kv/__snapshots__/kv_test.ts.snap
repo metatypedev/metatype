@@ -16,14 +16,14 @@ snapshot[`Typegraph using kv 1`] = `
           "set": 4,
           "delete": 6,
           "keys": 8,
-          "all": 12
+          "values": 12
         },
         "required": [
           "get",
           "set",
           "delete",
           "keys",
-          "all"
+          "values"
         ]
       },
       {
@@ -223,7 +223,7 @@ snapshot[`Typegraph using kv 1`] = `
         "data": {}
       },
       {
-        "name": "kv_all",
+        "name": "kv_values",
         "runtime": 1,
         "effect": {
           "effect": "read",
@@ -294,14 +294,14 @@ snapshot[`Typegraph using kv 2`] = `
           "set": 4,
           "delete": 6,
           "keys": 8,
-          "all": 12
+          "values": 12
         },
         "required": [
           "get",
           "set",
           "delete",
           "keys",
-          "all"
+          "values"
         ]
       },
       {
@@ -501,7 +501,7 @@ snapshot[`Typegraph using kv 2`] = `
         "data": {}
       },
       {
-        "name": "kv_all",
+        "name": "kv_values",
         "runtime": 1,
         "effect": {
           "effect": "read",
