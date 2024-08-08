@@ -341,6 +341,18 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_materializer(mat))
     }
 
+    fn from_python_workflow(
+        base: wit::BaseMaterializer,
+        data: wit::MaterializerPythonWorkflow,
+    ) -> Result<wit::MaterializerId, wit::Error> {
+        let mat = Materializer::python(
+            base.runtime,
+            PythonMaterializer::Workflow(data),
+            base.effect,
+        );
+        Ok(Store::register_materializer(mat))
+    }
+
     fn register_random_runtime(
         data: wit::RandomRuntimeData,
     ) -> Result<wit::MaterializerId, wit::Error> {

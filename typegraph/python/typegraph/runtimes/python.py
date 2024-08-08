@@ -140,6 +140,48 @@ class PythonRuntime(Runtime):
             ),
         )
 
+    # def workflow(
+    #     self,
+    #     inp: "t.struct",
+    #     out: "t.typedef",
+    #     *,
+    #     file: str,
+    #     name: str,
+    #     deps: List[str] = [],
+    #     effect: Optional[Effect] = None,
+    #     secrets: Optional[List[str]] = None,
+    # ):
+    #     effect = effect or EffectRead()
+    #     secrets = secrets or []
+
+    #     base = BaseMaterializer(runtime=self.id.value, effect=effect)
+    #     mat_id = runtimes.from_python_workflow(
+    #         store,
+    #         base,
+    #         MaterializerPythonWorkflow(
+    #             file=file,
+    #             name=name,
+    #             deps=deps,
+    #             runtime=self.id.value,
+    #         ),
+    #     )
+
+    #     if isinstance(mat_id, Err):
+    #         raise Exception(mat_id.value)
+
+    #     from typegraph import t
+
+    #     return t.func(
+    #         inp,
+    #         out,
+    #         WorkflowMat(
+    #             id=mat_id.value,
+    #             file=file,
+    #             name=name,
+    #             secrets=secrets
+    #         ),
+    #     )
+
 
 @dataclass
 class LambdaMat(Materializer):
@@ -157,6 +199,13 @@ class DefMat(Materializer):
 @dataclass
 class ImportMat(Materializer):
     module: str
+    name: str
+    secrets: List[str]
+
+
+@dataclass
+class WorkflowMat(Materializer):
+    file: str
     name: str
     secrets: List[str]
 

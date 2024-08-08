@@ -249,6 +249,15 @@ impl MaterializerConverter for PythonMaterializer {
                 .unwrap();
                 ("import_function".to_string(), data)
             }
+            Workflow(workflow) => {
+                let data = serde_json::from_value(json!({
+                    "name": workflow.name,
+                    "file": workflow.file,
+                    "deps": workflow.deps,
+                }))
+                .unwrap();
+                ("pyworkflow".to_string(), data)
+            }
         };
         Ok(Materializer {
             name,

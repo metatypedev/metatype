@@ -9,4 +9,5 @@ pub enum PythonMaterializer {
     Def(wit::MaterializerPythonDef),
     Module(wit::MaterializerPythonModule),
     Import(wit::MaterializerPythonImport),
+    Workflow(wit::MaterializerPythonWorkflow),
 }

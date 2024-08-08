@@ -25,7 +25,7 @@ impl PostProcessor for PythonProcessor {
         let mut materializers = std::mem::take(&mut tg.materializers);
 
         for mat in materializers.iter_mut() {
-            if mat.name.as_str() == "pymodule" {
+            if mat.name.as_str() == "pymodule" || mat.name.as_str() == "pyworkflow" {
                 let mat_data = std::mem::take(&mut mat.data);
                 let mut mat_data: ModuleMatData =
                     object_from_map(mat_data).map_err(|e| e.to_string())?;

@@ -350,11 +350,19 @@ interface runtimes {
         secrets: list<string>
     }
 
+    // TODO: host:port
+    record materializer-python-workflow {
+        name: string,
+        file: string,
+        deps: list<string>,
+    }
+
     register-python-runtime: func() -> result<runtime-id, error>;
     from-python-lambda: func(base: base-materializer, data: materializer-python-lambda) -> result<materializer-id, error>;
     from-python-def: func(base: base-materializer, data: materializer-python-def) -> result<materializer-id, error>;
     from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>;
     from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>;
+    from-python-workflow: func(base: base-materializer, data: materializer-python-workflow) -> result<materializer-id, error>;
 
     // random
     record random-runtime-data {
