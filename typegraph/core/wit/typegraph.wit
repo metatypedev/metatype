@@ -351,18 +351,12 @@ interface runtimes {
     }
 
     // TODO: host:port
-    record materializer-python-workflow {
-        name: string,
-        file: string,
-        deps: list<string>,
-    }
 
     register-python-runtime: func() -> result<runtime-id, error>;
     from-python-lambda: func(base: base-materializer, data: materializer-python-lambda) -> result<materializer-id, error>;
     from-python-def: func(base: base-materializer, data: materializer-python-def) -> result<materializer-id, error>;
     from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>;
     from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>;
-    from-python-workflow: func(base: base-materializer, data: materializer-python-workflow) -> result<materializer-id, error>;
 
     // random
     record random-runtime-data {
@@ -491,6 +485,46 @@ interface runtimes {
     }
 
     register-typegraph-materializer: func(operation: typegraph-operation) -> result<materializer-id, error>;
+
+
+    // substantial
+    record substantial-runtime-data {
+        endpoint: string,
+        basic-auth-secret: option<string>,
+    }
+
+    enum workflow-kind {
+        python, // for now
+    }
+
+    record materializer-workflow {
+        name: string,
+        file: string,
+        deps: list<string>,
+        kind: workflow-kind
+    }
+
+    record substantial-event {
+        name: string,
+        payload: string, // json
+    }
+
+    variant substantial-operation-type {
+        start(string),
+        stop(string),
+        send(string),
+    }
+
+    record substantial-operation-data {
+        mat-arg: option<string>,
+        func-arg: option<type-id>,
+        func-out: option<type-id>,
+        operation: substantial-operation-type,
+    }
+
+    register-substantial-runtime: func(data: substantial-runtime-data) -> result<runtime-id, error>;
+    register-workflow: func(base: base-materializer, data: materializer-workflow) -> result<materializer-id, error>;
+    generate-substantial-operation: func(runtime: runtime-id, data: substantial-operation-data) -> result<func-params, error>;
 }
 
 interface aws {

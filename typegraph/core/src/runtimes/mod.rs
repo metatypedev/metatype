@@ -7,6 +7,7 @@ pub mod graphql;
 pub mod prisma;
 pub mod python;
 pub mod random;
+pub mod substantial;
 pub mod temporal;
 pub mod typegate;
 pub mod typegraph;
@@ -28,10 +29,12 @@ use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreType
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     MaterializerHttpRequest, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
-    RandomRuntimeData, TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
+    RandomRuntimeData, SubstantialRuntimeData, TemporalOperationData, TemporalRuntimeData,
+    WasmRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
+use substantial::{substantial_operation, SubstantialMaterializer};
 
 use self::aws::S3Materializer;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
@@ -65,6 +68,7 @@ pub enum Runtime {
     Typegate,
     Typegraph,
     S3(Rc<S3RuntimeData>),
+    Substantial(Rc<SubstantialRuntimeData>),
 }
 
 #[derive(Debug, Clone)]
@@ -166,6 +170,18 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn substantial(
+        runtime_id: RuntimeId,
+        data: SubstantialMaterializer,
+        effect: wit::Effect,
+    ) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: Rc::new(data).into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -183,6 +199,7 @@ pub enum MaterializerData {
     Typegate(TypegateOperation),
     Typegraph(TypegraphOperation),
     S3(Rc<S3Materializer>),
+    Substantial(Rc<SubstantialMaterializer>),
 }
 
 macro_rules! prisma_op {
@@ -338,18 +355,6 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         data: wit::MaterializerPythonImport,
     ) -> Result<wit::MaterializerId, wit::Error> {
         let mat = Materializer::python(base.runtime, PythonMaterializer::Import(data), base.effect);
-        Ok(Store::register_materializer(mat))
-    }
-
-    fn from_python_workflow(
-        base: wit::BaseMaterializer,
-        data: wit::MaterializerPythonWorkflow,
-    ) -> Result<wit::MaterializerId, wit::Error> {
-        let mat = Materializer::python(
-            base.runtime,
-            PythonMaterializer::Workflow(data),
-            base.effect,
-        );
         Ok(Store::register_materializer(mat))
     }
 
@@ -654,5 +659,32 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             op,
             effect,
         )))
+    }
+
+    fn register_substantial_runtime(
+        data: wit::SubstantialRuntimeData,
+    ) -> Result<RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::Substantial(data.into())))
+    }
+
+    fn register_workflow(
+        base: wit::BaseMaterializer,
+        data: wit::MaterializerWorkflow,
+    ) -> Result<wit::MaterializerId, wit::Error> {
+        let mat = Materializer::substantial(
+            base.runtime,
+            match data.kind {
+                wit::WorkflowKind::Python => SubstantialMaterializer::Python(data),
+            },
+            base.effect,
+        );
+        Ok(Store::register_materializer(mat))
+    }
+
+    fn generate_substantial_operation(
+        runtime: RuntimeId,
+        data: wit::SubstantialOperationData,
+    ) -> Result<FuncParams, wit::Error> {
+        substantial_operation(runtime, data)
     }
 }

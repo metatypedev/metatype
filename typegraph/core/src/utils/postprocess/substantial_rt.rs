@@ -9,23 +9,23 @@ use common::typegraph::{
 };
 use std::path::PathBuf;
 
-pub struct PythonProcessor {
+pub struct SubstantialProcessor {
     typegraph_dir: PathBuf,
 }
 
-impl PythonProcessor {
+impl SubstantialProcessor {
     pub fn new(typegraph_dir: PathBuf) -> Self {
         Self { typegraph_dir }
     }
 }
 
-impl PostProcessor for PythonProcessor {
+impl PostProcessor for SubstantialProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         let fs_ctx = FsContext::new(self.typegraph_dir.clone());
         let mut materializers = std::mem::take(&mut tg.materializers);
 
         for mat in materializers.iter_mut() {
-            if mat.name.as_str() == "pymodule" {
+            if mat.name.as_str() == "register" {
                 let mat_data = std::mem::take(&mut mat.data);
                 let mut mat_data: ModuleMatData =
                     object_from_map(mat_data).map_err(|e| e.to_string())?;
