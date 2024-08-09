@@ -17,6 +17,7 @@ from typegraph.gen.exports.runtimes import (
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.runtimes.substantial import SubstantialRuntime
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
@@ -140,47 +141,17 @@ class PythonRuntime(Runtime):
             ),
         )
 
-    # def workflow(
-    #     self,
-    #     inp: "t.struct",
-    #     out: "t.typedef",
-    #     *,
-    #     file: str,
-    #     name: str,
-    #     deps: List[str] = [],
-    #     effect: Optional[Effect] = None,
-    #     secrets: Optional[List[str]] = None,
-    # ):
-    #     effect = effect or EffectRead()
-    #     secrets = secrets or []
-
-    #     base = BaseMaterializer(runtime=self.id.value, effect=effect)
-    #     mat_id = runtimes.from_python_workflow(
-    #         store,
-    #         base,
-    #         MaterializerPythonWorkflow(
-    #             file=file,
-    #             name=name,
-    #             deps=deps,
-    #             runtime=self.id.value,
-    #         ),
-    #     )
-
-    #     if isinstance(mat_id, Err):
-    #         raise Exception(mat_id.value)
-
-    #     from typegraph import t
-
-    #     return t.func(
-    #         inp,
-    #         out,
-    #         WorkflowMat(
-    #             id=mat_id.value,
-    #             file=file,
-    #             name=name,
-    #             secrets=secrets
-    #         ),
-    #     )
+    def workflow(
+        self,
+        endpoint: str,
+        basic_auth: str,
+        *,
+        file: str,
+        name: str,
+        deps: List[str] = [],
+    ):
+        substantial = SubstantialRuntime(endpoint, basic_auth)
+        return substantial.register(file, name, deps)
 
 
 @dataclass

@@ -497,33 +497,26 @@ interface runtimes {
         python, // for now
     }
 
-    record materializer-workflow {
+    record workflow {
         name: string,
         file: string,
         deps: list<string>,
         kind: workflow-kind
     }
 
-    record substantial-event {
-        name: string,
-        payload: string, // json
-    }
-
     variant substantial-operation-type {
-        start(string),
-        stop(string),
-        send(string),
+        start(workflow),
+        stop(workflow),
+        send(workflow),
     }
 
     record substantial-operation-data {
-        mat-arg: option<string>,
         func-arg: option<type-id>,
-        func-out: option<type-id>,
+        // func-out: option<type-id>,
         operation: substantial-operation-type,
     }
 
     register-substantial-runtime: func(data: substantial-runtime-data) -> result<runtime-id, error>;
-    register-workflow: func(base: base-materializer, data: materializer-workflow) -> result<materializer-id, error>;
     generate-substantial-operation: func(runtime: runtime-id, data: substantial-operation-data) -> result<func-params, error>;
 }
 

@@ -667,20 +667,6 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_runtime(Runtime::Substantial(data.into())))
     }
 
-    fn register_workflow(
-        base: wit::BaseMaterializer,
-        data: wit::MaterializerWorkflow,
-    ) -> Result<wit::MaterializerId, wit::Error> {
-        let mat = Materializer::substantial(
-            base.runtime,
-            match data.kind {
-                wit::WorkflowKind::Python => SubstantialMaterializer::Python(data),
-            },
-            base.effect,
-        );
-        Ok(Store::register_materializer(mat))
-    }
-
     fn generate_substantial_operation(
         runtime: RuntimeId,
         data: wit::SubstantialOperationData,

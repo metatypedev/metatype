@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::path::PathBuf;
+
 use crate::global_store::Store;
 use crate::t::{self, TypeBuilder};
 use crate::wit::core::FuncParams;
@@ -11,16 +13,16 @@ use crate::wit::{
 use crate::{
     conversion::runtimes::MaterializerConverter, errors::Result, typegraph::TypegraphContext,
 };
+use common::typegraph::runtimes::substantial::WorkflowMatData;
 use common::typegraph::Materializer;
 
 use serde_json::json;
 
 #[derive(Debug)]
 pub enum SubstantialMaterializer {
-    Python(wit::runtimes::MaterializerWorkflow),
-    Start { name: String },
-    Stop { name: String },
-    Send { name: String },
+    Start { workflow: WorkflowMatData },
+    Stop { workflow: WorkflowMatData },
+    Send { workflow: WorkflowMatData },
 }
 
 impl MaterializerConverter for SubstantialMaterializer {
@@ -31,63 +33,39 @@ impl MaterializerConverter for SubstantialMaterializer {
         effect: WitEffect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
-        match self {
-            SubstantialMaterializer::Python(wf) => {
-                let data = serde_json::from_value(json!({
-                    "runtime": runtime,
-                    "name": wf.name,
-                    "file": wf.file,
-                    "deps": wf.deps,
-                    "kind": match wf.kind {
-                        wit::runtimes::WorkflowKind::Python => "python",
-                    }
-                }))
-                .unwrap();
+        let as_index_map = |wf_data: &WorkflowMatData| {
+            let WorkflowMatData {
+                name,
+                file,
+                kind,
+                deps,
+            } = wf_data;
+            json!({
+                "name": name,
+                "file": file,
+                "kind": kind,
+                "deps": deps,
+            })
+        };
 
-                Ok(Materializer {
-                    name: "register".to_string(),
-                    effect: effect.into(),
-                    data,
-                    runtime,
-                })
+        let (name, data) = match self {
+            SubstantialMaterializer::Start { workflow } => {
+                ("start".to_string(), as_index_map(workflow))
             }
-            SubstantialMaterializer::Start { name } => {
-                let data = serde_json::from_value(json!({
-                    "name": name,
-                }))
-                .unwrap();
-                Ok(Materializer {
-                    name: "start".to_string(),
-                    effect: effect.into(),
-                    data,
-                    runtime,
-                })
+            SubstantialMaterializer::Stop { workflow } => {
+                ("stop".to_string(), as_index_map(workflow))
             }
-            SubstantialMaterializer::Stop { name } => {
-                let data = serde_json::from_value(json!({
-                    "name": name,
-                }))
-                .unwrap();
-                Ok(Materializer {
-                    name: "stop".to_string(),
-                    effect: effect.into(),
-                    data,
-                    runtime,
-                })
+            SubstantialMaterializer::Send { workflow } => {
+                ("send".to_string(), as_index_map(workflow))
             }
-            SubstantialMaterializer::Send { name } => {
-                let data = serde_json::from_value(json!({
-                    "name": name,
-                }))
-                .unwrap();
-                Ok(Materializer {
-                    name: "send".to_string(),
-                    effect: effect.into(),
-                    data,
-                    runtime,
-                })
-            }
-        }
+        };
+
+        Ok(Materializer {
+            name,
+            effect: effect.into(),
+            data: serde_json::from_value(data).unwrap(),
+            runtime,
+        })
     }
 }
 
@@ -97,28 +75,35 @@ pub fn substantial_operation(
 ) -> Result<FuncParams> {
     let mut inp = t::struct_();
     let (effect, mat_data, out_ty) = match data.operation {
-        SubstantialOperationType::Start(name) => {
+        SubstantialOperationType::Start(workflow) => {
             inp.prop("name", t::string().build()?);
             (
                 WitEffect::Create(false),
-                SubstantialMaterializer::Start { name },
+                SubstantialMaterializer::Start {
+                    workflow: workflow.into(),
+                },
                 t::string().build()?,
             )
         }
-        SubstantialOperationType::Stop(name) => {
+        SubstantialOperationType::Stop(workflow) => {
             inp.prop("name", t::string().build()?);
             (
                 WitEffect::Create(false),
-                SubstantialMaterializer::Stop { name },
+                SubstantialMaterializer::Stop {
+                    workflow: workflow.into(),
+                },
                 t::string().build()?,
             )
         }
-        SubstantialOperationType::Send(name) => {
-            inp.prop("event", t::string().build()?);
-            inp.prop("payload", 0.into());
+        SubstantialOperationType::Send(workflow) => {
+            let arg = data.func_arg.ok_or("query arg is undefined".to_string())?;
+            inp.prop("event_name", t::string().build()?);
+            inp.prop("payload", arg.into());
             (
                 WitEffect::Create(false),
-                SubstantialMaterializer::Send { name },
+                SubstantialMaterializer::Send {
+                    workflow: workflow.into(),
+                },
                 t::string().build()?,
             )
         }
@@ -131,4 +116,19 @@ pub fn substantial_operation(
         out: out_ty.into(),
         mat: mat_id,
     })
+}
+
+impl From<wit::runtimes::Workflow> for WorkflowMatData {
+    fn from(value: wit::runtimes::Workflow) -> Self {
+        Self {
+            name: value.name,
+            file: value.file,
+            kind: match value.kind {
+                wit::runtimes::WorkflowKind::Python => {
+                    common::typegraph::runtimes::substantial::WorkflowKind::Python
+                }
+            },
+            deps: value.deps.iter().map(PathBuf::from).collect(),
+        }
+    }
 }
