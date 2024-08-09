@@ -15,7 +15,7 @@ exclude = [
   "libs/pyrt_wit_wire",
 ]
 [workspace.package] 
-version = "0.4.7"
+version = "0.4.8-0"
 edition = "2021"
 
 [workspace.dependencies]
