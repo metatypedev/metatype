@@ -4,46 +4,10 @@
 
 The KvRuntime enables interaction with a Redis database by setting, retrieving, deleting, and managing keys and values.
 
-### Python Example
-
-In the following Python example, we use the typegraph to create a TypeGraph with a KvRuntime connected to a Redis database. The graph exposes public operations for managing key-value pairs in Redis.
-
-```python
-from typegraph import Graph, Policy, typegraph
-from typegraph.runtimes.kv import KvRuntime
-
-
-@typegraph()
-def kv(g: Graph):
-    kv = KvRuntime("REDIS")
-
-    g.expose(
-        Policy.public(),
-        get=kv.get(),
-        set=kv.set(),
-        delete=kv.delete(),
-        keys=kv.keys(),
-        values=kv.values(),
-    )
-```
-
-### TypeScript Example
-
-In the TypeScript example below, we achieve the same functionality using the @typegraph/sdk. The KvRuntime is connected to a Redis instance, and public policies are applied to the exposed key-value operations.
-
-```typescript
-import { Policy, typegraph } from "@typegraph/sdk/index.ts";
-import { KvRuntime } from "@typegraph/sdk/runtimes/kv.ts";
-
-export const tg = await typegraph("kv", (g: any) => {
-  const kv = new KvRuntime("REDIS");
-  const pub = Policy.public();
-  g.expose({
-    get: kv.get().withPolicy(pub),
-    set: kv.set().withPolicy(pub),
-    delete: kv.delete().withPolicy(pub),
-    keys: kv.keys().withPolicy(pub),
-    values: kv.values().withPolicy(pub),
-  });
-});
-```
+<TGExample
+  typegraph="kv"
+  python={require("!!code-loader!../../../../../examples/typegraphs/kv.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/kv.ts")}
+  disablePlayground={true}
+  query={{ content: "" }}
+/>
