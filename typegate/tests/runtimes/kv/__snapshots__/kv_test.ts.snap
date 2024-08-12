@@ -28,7 +28,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "function",
-        "title": "func_4",
+        "title": "func_25",
         "runtime": 1,
         "policies": [
           0
@@ -63,7 +63,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "function",
-        "title": "func_10",
+        "title": "func_26",
         "runtime": 1,
         "policies": [
           0
@@ -78,7 +78,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "object",
-        "title": "object_7",
+        "title": "object_6",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -91,7 +91,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "function",
-        "title": "func_15",
+        "title": "func_27",
         "runtime": 1,
         "policies": [
           0
@@ -106,7 +106,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "integer",
-        "title": "integer_13",
+        "title": "integer_11",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -114,7 +114,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "function",
-        "title": "func_22",
+        "title": "func_28",
         "runtime": 1,
         "policies": [
           0
@@ -129,7 +129,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "object",
-        "title": "object_18",
+        "title": "object_15",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -141,7 +141,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "optional",
-        "title": "optional_17",
+        "title": "optional_14",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -151,7 +151,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "list",
-        "title": "list_20",
+        "title": "list_17",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -200,7 +200,7 @@ snapshot[`Typegraph using kv 1`] = `
         "runtime": 1,
         "effect": {
           "effect": "update",
-          "idempotent": true
+          "idempotent": false
         },
         "data": {}
       },

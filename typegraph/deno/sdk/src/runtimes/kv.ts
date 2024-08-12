@@ -35,7 +35,7 @@ export class KvRuntime extends Runtime {
   }
 
   set() {
-    const mat = this.#operation("set", fx.update());
+    const mat = this.#operation("set", fx.update(false));
     return t.func(
       t.struct({ "key": t.string(), "value": t.string() }),
       t.string(),
@@ -56,7 +56,7 @@ export class KvRuntime extends Runtime {
   keys() {
     const mat = this.#operation("keys", fx.read());
     return t.func(
-      t.struct({ "filter": t.optional(t.string()) }),
+      t.struct({ "filter": t.string().optional() }),
       t.list(t.string()),
       mat,
     );
@@ -65,7 +65,7 @@ export class KvRuntime extends Runtime {
   values() {
     const mat = this.#operation("values", fx.read());
     return t.func(
-      t.struct({ "filter": t.optional(t.string()) }),
+      t.struct({ "filter": t.string().optional() }),
       t.list(t.string()),
       mat,
     );
