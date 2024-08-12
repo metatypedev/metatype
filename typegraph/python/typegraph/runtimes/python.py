@@ -151,7 +151,7 @@ class PythonRuntime(Runtime):
         deps: List[str] = [],
     ):
         substantial = SubstantialRuntime(endpoint, basic_auth)
-        return substantial.register(file, name, deps)
+        return substantial._using_workflow(file, name, deps)
 
 
 @dataclass

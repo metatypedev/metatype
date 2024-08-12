@@ -6,6 +6,7 @@ import { runtimes } from "../wit.ts";
 import { Effect } from "../gen/typegraph_core.d.ts";
 import { Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
+import { SubstantialRuntime } from "../runtimes/substantial.ts";
 
 interface LambdaMat extends Materializer {
   fn: string;
@@ -112,5 +113,16 @@ export class PythonRuntime extends Runtime {
       module,
       name,
     });
+  }
+
+  workflow(
+    endpoint: string,
+    basicAuthSecret: string,
+    file: string,
+    name: string,
+    deps: Array<string> = [],
+  ): SubstantialRuntime {
+    const substantial = new SubstantialRuntime({ endpoint, basicAuthSecret });
+    return substantial._usingWorkflow(file, name, deps);
   }
 }

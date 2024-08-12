@@ -21,9 +21,6 @@ from typegraph.wit import runtimes, store
 
 class SubstantialRuntime(Runtime):
     def __init__(self, endpoint: str, basic_auth: str):
-        self.name = None
-        self.file = None
-        self.deps = None
         data = SubstantialRuntimeData(endpoint=endpoint, basic_auth_secret=basic_auth)
         super().__init__(runtimes.register_substantial_runtime(store, data))
 
