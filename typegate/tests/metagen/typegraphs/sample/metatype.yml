@@ -17,4 +17,4 @@ metagen:
         path: ./rs/
         typegraph_path: ../sample.ts
         # skip_cargo_toml: true
-        # skip_lib_rs: true
+        skip_lib_rs: true
