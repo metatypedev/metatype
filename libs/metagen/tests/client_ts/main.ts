@@ -9,7 +9,20 @@ const gqlClient = api1.graphql(
   `http://localhost:${Deno.env.get("TG_PORT")}/sample`,
 );
 
-const prepared = gqlClient.prepareQuery((
+const preparedQ = gqlClient.prepareQuery(() => ({
+  user: api1.getUser({
+    _: "selectAll",
+    posts: alias({
+      post1: { id: true, slug: true, title: true },
+      post2: { _: "selectAll", id: false },
+    }),
+  }),
+  posts: api1.getPosts({ _: "selectAll" }),
+
+  scalarNoArgs: api1.scalarNoArgs(),
+}));
+
+const preparedM = gqlClient.prepareMutation((
   args: PreparedArgs<{
     id: string;
     slug: string;
@@ -21,17 +34,26 @@ const prepared = gqlClient.prepareQuery((
     slug: args.get("slug"),
     title: args.get("title"),
   }),
-  compositeArgs: api1.compositeArgs({ id: args.get("id") }, { _: "selectAll" }),
+  compositeNoArgs: api1.compositeNoArgs({
+    _: "selectAll",
+  }),
+  compositeArgs: api1.compositeArgs({
+    id: args.get("id"),
+  }, {
+    _: "selectAll",
+  }),
 }));
 
-const { scalarArgs, compositeArgs } = await prepared.do({
+const res1 = await preparedQ.perform({});
+const res1a = await preparedQ.perform({});
+
+const res2 = await preparedM.perform({
   id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
   slug: "s",
   title: "t",
 });
 
-const res = await gqlClient.query({
-  // syntax very similar to typegraph definition
+const res3 = await gqlClient.query({
   user: api1.getUser({
     _: "selectAll",
     posts: alias({
@@ -42,6 +64,9 @@ const res = await gqlClient.query({
   posts: api1.getPosts({ _: "selectAll" }),
 
   scalarNoArgs: api1.scalarNoArgs(),
+});
+
+const res4 = await gqlClient.mutation({
   scalarArgs: api1.scalarArgs({
     id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
     slug: "",
@@ -56,4 +81,5 @@ const res = await gqlClient.query({
     _: "selectAll",
   }),
 });
-console.log(JSON.stringify(res));
+
+console.log(JSON.stringify([res1, res1a, res2, res3, res4]));

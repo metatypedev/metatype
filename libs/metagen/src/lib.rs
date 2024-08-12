@@ -35,6 +35,7 @@ mod mdk_rust;
 mod mdk_typescript;
 
 mod client_py;
+mod client_rs;
 mod client_ts;
 
 #[cfg(test)]
@@ -167,6 +168,16 @@ impl GeneratorRunner {
                         op: |workspace_path: &Path, val| {
                             let config = client_py::ClienPyGenConfig::from_json(val, workspace_path)?;
                             let generator = client_py::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
+                (
+                    "client_rs".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = client_rs::ClienRsGenConfig::from_json(val, workspace_path)?;
+                            let generator = client_rs::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },

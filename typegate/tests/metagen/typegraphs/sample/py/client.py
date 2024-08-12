@@ -10,7 +10,7 @@ import http.client as http_c
 
 
 def selection_to_nodes(
-    selection: "SelectionGeneric",
+    selection: "SelectionErased",
     metas: typing.Dict[str, typing.Callable[[], "NodeMeta"]],
     parent_path: str,
 ) -> typing.List["SelectNode[typing.Any]"]:
@@ -107,7 +107,7 @@ def selection_to_nodes(
                         + f"selection is typeof {type(instance_selection)}",
                     )
                 sub_nodes = selection_to_nodes(
-                    typing.cast("SelectionGeneric", sub_selections),
+                    typing.cast("SelectionErased", sub_selections),
                     meta.sub_nodes,
                     f"{parent_path}.{instance_name}",
                 )
@@ -123,7 +123,9 @@ def selection_to_nodes(
     return out
 
 
-# Util types section #
+#
+# --- --- Util types --- --- #
+#
 
 Out = typing.TypeVar("Out", covariant=True)
 
@@ -132,7 +134,10 @@ T = typing.TypeVar("T")
 ArgT = typing.TypeVar("ArgT", bound=typing.Mapping[str, typing.Any])
 SelectionT = typing.TypeVar("SelectionT")
 
-# Query node types section #
+
+#
+# --- --- Graph node types --- --- #
+#
 
 
 @dc.dataclass
@@ -159,7 +164,9 @@ class NodeMeta:
     arg_types: typing.Optional[typing.Dict[str, str]] = None
 
 
-# Argument types section #
+#
+# --- --- Argument types --- --- #
+#
 
 
 @dc.dataclass
@@ -184,7 +191,9 @@ class PreparedArgs:
         return PlaceholderValue(key)
 
 
-# Selection types section #
+#
+# --- --- Selection types --- --- #
+#
 
 
 class Alias(typing.Generic[SelectionT]):
@@ -229,20 +238,22 @@ class Selection(typing.TypedDict, total=False):
     _: SelectionFlags
 
 
-SelectionGeneric = typing.Mapping[
+SelectionErased = typing.Mapping[
     str,
     typing.Union[
         SelectionFlags,
         ScalarSelectNoArgs,
         ScalarSelectArgs[typing.Mapping[str, typing.Any]],
-        CompositeSelectNoArgs["SelectionGeneric"],
-        # FIXME: should be possible to make SelectionT here `SelectionGeneric` recursively
+        CompositeSelectNoArgs["SelectionErased"],
+        # FIXME: should be possible to make SelectionT here `SelectionErased` recursively
         # but something breaks
         CompositeSelectArgs[typing.Mapping[str, typing.Any], typing.Any],
     ],
 ]
 
-# GraphQL section
+#
+# --- --- GraphQL types --- --- #
+#
 
 
 @dc.dataclass
@@ -483,7 +494,9 @@ class PreparedRequestUrlib(PreparedRequestBase[Out]):
         return self.transport.fetch(self.doc, resolved_vars, opts)
 
 
-# Query graph section #
+#
+# --- --- QueryGraph types --- --- #
+#
 
 
 class QueryGraphBase:
@@ -498,13 +511,21 @@ class QueryGraphBase:
         )
 
 
-# - - - - - - - - - -- - - - - - -  -- - -  #
+#
+# --- --- Typegraph types --- --- #
+#
 
 
 class NodeDescs:
     @staticmethod
     def scalar():
         return NodeMeta()
+
+    @staticmethod
+    def Func25():
+        return NodeMeta(
+            sub_nodes=NodeDescs.scalar().sub_nodes,
+        )
 
     @staticmethod
     def Post():
@@ -533,21 +554,6 @@ class NodeDescs:
         )
 
     @staticmethod
-    def Func28():
-        return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
-            arg_types={
-                "id": "String13",
-            },
-        )
-
-    @staticmethod
-    def Func25():
-        return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
-        )
-
-    @staticmethod
     def Func26():
         return NodeMeta(
             sub_nodes=NodeDescs.scalar().sub_nodes,
@@ -559,21 +565,36 @@ class NodeDescs:
         )
 
     @staticmethod
+    def Func27():
+        return NodeMeta(
+            sub_nodes=NodeDescs.Post().sub_nodes,
+        )
+
+    @staticmethod
     def Func24():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
         )
 
     @staticmethod
-    def Func27():
+    def Func28():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
+            arg_types={
+                "id": "String13",
+            },
         )
 
 
-StringUuid = str
+Object21 = typing.TypedDict(
+    "Object21",
+    {
+        "id": str,
+    },
+    total=False,
+)
 
-StringEmail = str
+StringUuid = str
 
 Post = typing.TypedDict(
     "Post",
@@ -585,6 +606,8 @@ Post = typing.TypedDict(
     total=False,
 )
 
+StringEmail = str
+
 Post7 = typing.List[Post]
 
 User = typing.TypedDict(
@@ -593,14 +616,6 @@ User = typing.TypedDict(
         "id": StringUuid,
         "email": StringEmail,
         "posts": Post7,
-    },
-    total=False,
-)
-
-Object21 = typing.TypedDict(
-    "Object21",
-    {
-        "id": str,
     },
     total=False,
 )

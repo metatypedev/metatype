@@ -54,7 +54,7 @@ impl RenderType for PyNodeSelectionsRenderer {
             | TypeNode::Float { .. }
             | TypeNode::Integer { .. }
             | TypeNode::String { .. }
-            | TypeNode::File { .. } => "scalar".into(), // unreachable!("scalars don't get to have selections"),
+            | TypeNode::File { .. } => unreachable!("scalars don't get to have selections"),
             TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
             TypeNode::Optional { data: OptionalTypeData { item, .. }, .. }
             | TypeNode::List { data: ListTypeData { items: item, .. }, .. }

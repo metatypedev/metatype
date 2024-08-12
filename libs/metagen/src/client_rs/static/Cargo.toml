@@ -1,0 +1,14 @@
+package.name = "client_rs_static"
+package.edition = "2021"
+package.version = "0.0.1"
+
+[dependencies]
+serde = { version = "1.0.203", features = ["derive"] }
+serde_json = "1.0.117"
+reqwest = { version = "0.12", features = ["blocking","json"] }
+
+# The options after here are configured for crates intended to be
+# wasm artifacts. Remove them if your usage is different
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib", "rlib"]

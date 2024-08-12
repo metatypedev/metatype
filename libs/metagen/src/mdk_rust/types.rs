@@ -11,6 +11,10 @@ use std::fmt::Write;
 pub struct RustTypeRenderer {
     pub derive_debug: bool,
     pub derive_serde: bool,
+    // this is used by the client since
+    // users might exclude fields on return
+    // types
+    pub all_fields_optional: bool,
 }
 
 impl RustTypeRenderer {
@@ -170,10 +174,16 @@ impl RenderType for RustTypeRenderer {
                             RenderedName::Placeholder(name) => name,
                         };
 
+                        let ty_name = match renderer.nodes[dep_id as usize].deref() {
+                            TypeNode::Optional { .. } => ty_name.to_string(),
+                            _ if !self.all_fields_optional => ty_name.to_string(),
+                            _ => format!("Option<{ty_name}>"),
+                        };
+
                         let ty_name = if let Some(true) = cyclic {
                             format!("Box<{ty_name}>")
                         } else {
-                            ty_name.to_string()
+                            ty_name
                         };
 
                         let normalized_prop_name = normalize_struct_prop_name(name);
@@ -187,6 +197,11 @@ impl RenderType for RustTypeRenderer {
                     .collect::<Result<IndexMap<_, _>, _>>()?;
 
                 let ty_name = normalize_type_title(&base.title);
+                let ty_name = if self.all_fields_optional {
+                    format!("{ty_name}Partial")
+                } else {
+                    ty_name
+                };
                 self.render_struct(renderer, &ty_name, props)?;
                 ty_name
             }
@@ -741,6 +756,7 @@ pub enum CEither {
                 Rc::new(RustTypeRenderer {
                     derive_serde: true,
                     derive_debug: true,
+                    all_fields_optional: false,
                 }),
             );
             let gen_name = renderer.render(nodes.len() as u32 - 1)?;

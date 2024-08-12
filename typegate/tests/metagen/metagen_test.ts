@@ -523,16 +523,17 @@ Meta.test({
       ),
       expected: expectedSchema,
     },
+    {
+      name: "client_rs",
+      command: $`cargo run`.cwd(
+        join(scriptsPath, "rs"),
+      ),
+      expected: zod.tuple([expectedSchemaQ, expectedSchemaM]),
+    },
   ];
 
   await using _engine = await metaTest.engine(
     "metagen/typegraphs/sample.ts",
-    {
-      secrets: {
-        POSTGRES:
-          "postgresql://postgres:password@localhost:5432/db?schema=sample",
-      },
-    },
   );
   for (const { name, command, expected, skip } of cases) {
     if (skip) {

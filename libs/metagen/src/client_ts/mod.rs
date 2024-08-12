@@ -230,7 +230,10 @@ fn render_data_types(
         name_mapper.nodes.clone(),
         Rc::new(mdk_typescript::types::TypescriptTypeRenderer {}),
     );
-    for &id in &manifest.data_types {
+    for &id in &manifest.arg_types {
+        _ = renderer.render(id)?;
+    }
+    for &id in &manifest.return_types {
         _ = renderer.render(id)?;
     }
     let (types_ts, name_memo) = renderer.finalize();

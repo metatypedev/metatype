@@ -7,8 +7,8 @@ use super::types::*;
 use common::typegraph::{EffectType, ListTypeData, OptionalTypeData};
 
 pub struct RenderManifest {
-    pub data_types: HashSet<u32>,
-    // arg_types: HashSet<u32>,
+    pub return_types: HashSet<u32>,
+    pub arg_types: HashSet<u32>,
     pub node_metas: HashSet<u32>,
     pub selections: HashSet<u32>,
     pub root_fns: Vec<RootFn>,
@@ -27,9 +27,9 @@ pub struct RootFn {
 pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
     let mut root_fns = vec![];
     let mut selections = HashSet::new();
-    let mut data_types = HashSet::new();
+    let mut return_types = HashSet::new();
     let mut node_metas = HashSet::new();
-    // let mut arg_types = HashSet::new();
+    let mut arg_types = HashSet::new();
 
     let (_root_base, root) = tg.root().map_err(anyhow_to_eyre!())?;
     for (key, &func_id) in &root.properties {
@@ -42,7 +42,7 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
         let mat = &tg.materializers[data.materializer as usize];
 
         node_metas.insert(func_id);
-        data_types.insert(data.output);
+        return_types.insert(data.output);
         root_fns.push(RootFn {
             id: func_id,
             name: key.clone(),
@@ -53,8 +53,7 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
                 &tg.types[data.input as usize],
                 TypeNode::Object { data, .. } if !data.properties.is_empty()
             ) {
-                data_types.insert(data.input);
-                // arg_types.insert(data.input);
+                arg_types.insert(data.input);
                 Some(data.input)
             } else {
                 None
@@ -76,7 +75,7 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
                 &tg.types[data.input as usize],
                 TypeNode::Object { data, .. } if !data.properties.is_empty()
             ) {
-                data_types.insert(data.input);
+                arg_types.insert(data.input);
             }
         }
     }
@@ -84,9 +83,9 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
     Ok(RenderManifest {
         root_fns,
         selections,
-        data_types,
+        return_types,
         node_metas,
-        // arg_types,
+        arg_types,
     })
 }
 

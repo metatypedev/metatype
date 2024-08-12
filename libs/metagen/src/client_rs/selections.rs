@@ -8,11 +8,11 @@ use common::typegraph::*;
 use super::utils::*;
 use crate::{interlude::*, shared::client::*, shared::types::*};
 
-pub struct TsNodeSelectionsRenderer {
+pub struct RsNodeSelectionsRenderer {
     pub arg_ty_names: Rc<NameMemo>,
 }
 
-impl TsNodeSelectionsRenderer {
+impl RsNodeSelectionsRenderer {
     /// `props` is a map of prop_name -> (SelectionType, ArgumentType)
     fn render_for_object(
         &self,
@@ -20,33 +20,41 @@ impl TsNodeSelectionsRenderer {
         ty_name: &str,
         props: IndexMap<String, SelectionTy>,
     ) -> std::fmt::Result {
-        writeln!(
-            dest,
-            "export type {ty_name} = {{
-  _?: SelectionFlags;"
-        )?;
-        for (name, select_ty) in props {
+        // derive prop
+        write!(dest, "#[derive(Default, Debug)]")?;
+        writeln!(dest, "pub struct {ty_name}<ATy = NoAlias> {{")?;
+        for (name, select_ty) in &props {
             use SelectionTy::*;
             match select_ty {
-                Scalar => writeln!(dest, r#"  {name}?: ScalarSelectNoArgs,"#)?,
+                Scalar => writeln!(dest, r#"    pub {name}: ScalarSelectNoArgs<ATy>,"#)?,
                 ScalarArgs { arg_ty } => {
-                    writeln!(dest, r#"  {name}?: ScalarSelectArgs<{arg_ty}>,"#)?
+                    writeln!(dest, r#"    pub {name}: ScalarSelectArgs<{arg_ty}, ATy>,"#)?
                 }
-                Composite { select_ty } => {
-                    writeln!(dest, r#"  {name}?: CompositeSelectNoArgs<{select_ty}>,"#)?
-                }
+                Composite { select_ty } => writeln!(
+                    dest,
+                    r#"    pub {name}: CompositeSelectNoArgs<{select_ty}<ATy>, ATy>,"#
+                )?,
                 CompositeArgs { arg_ty, select_ty } => writeln!(
                     dest,
-                    r#"  {name}?: CompositeSelectArgs<{arg_ty}, {select_ty}>,"#
+                    r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, ATy>,"#
                 )?,
             };
         }
-        writeln!(dest, "}};")?;
+        writeln!(dest, "}}")?;
+        write!(dest, "impl_selection_traits!({ty_name}, ")?;
+        let len = props.len();
+        for (idx, (name, _)) in props.iter().enumerate() {
+            if idx < len - 1 {
+                write!(dest, "{name}, ")?;
+            } else {
+                writeln!(dest, "{name});")?;
+            }
+        }
         Ok(())
     }
 }
 
-impl RenderType for TsNodeSelectionsRenderer {
+impl RenderType for RsNodeSelectionsRenderer {
     fn render(
         &self,
         renderer: &mut TypeRenderer,
@@ -95,20 +103,6 @@ impl RenderType for TsNodeSelectionsRenderer {
                 // data: UnionTypeData { any_of: variants },
                 // base,
             } => {
-                // let variants = variants
-                //     .iter()
-                //     .map(|&inner| {
-                //         let (ty_name, _cyclic) = renderer.render_subgraph(inner, cursor)?;
-                //         let ty_name = match ty_name {
-                //             RenderedName::Name(name) => name,
-                //             RenderedName::Placeholder(name) => name,
-                //         };
-                //         Ok::<_, anyhow::Error>(ty_name)
-                //     })
-                //     .collect::<Result<Vec<_>, _>>()?;
-                // let ty_name = normalize_type_title(&base.title);
-                // self.render_union_type(renderer, &ty_name, variants)?;
-                // ty_name
                 todo!("unions are wip")
             }
         };

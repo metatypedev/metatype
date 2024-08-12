@@ -1,3 +1,5 @@
+// @ts-nocheck: Deno file
+
 import { METATYPE_VERSION, PUBLISHED_VERSION } from "./dev/consts.ts";
 import { file, ports, sedLock, semver, stdDeps } from "./dev/deps.ts";
 import installs from "./dev/installs.ts";
@@ -58,8 +60,8 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
 }
 
 env("_ecma").install(
+  // NOTE: pnpm is now packaged by node-org by default
   installs.node,
-  ports.pnpm({ version: "v9.4.0" }),
   ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
 );
 

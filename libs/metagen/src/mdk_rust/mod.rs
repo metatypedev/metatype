@@ -11,8 +11,8 @@
 //!  - Will not be replaced on second generation.
 
 mod stubs;
-mod types;
-mod utils;
+pub mod types;
+pub mod utils;
 
 use crate::interlude::*;
 use crate::shared::*;
@@ -156,6 +156,7 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
             Rc::new(types::RustTypeRenderer {
                 derive_serde: true,
                 derive_debug: true,
+                all_fields_optional: false,
             }),
         );
         // remove the root type which we don't want to generate types for
@@ -334,7 +335,7 @@ fn e2e() -> anyhow::Result<()> {
                 build_fn: |args| {
                     Box::pin(async move {
                         let status = tokio::process::Command::new("cargo")
-                            .args("build --target wasm32-wasi".split(' ').collect::<Vec<_>>())
+                            .args("clippy --target wasm32-wasi".split(' ').collect::<Vec<_>>())
                             .current_dir(args.path)
                             .kill_on_drop(true)
                             .spawn()?
