@@ -149,7 +149,7 @@ export type Student43 = Student3 | null | undefined;
 export type Student = {
   id: number;
   name: string;
-  peers: Student43;
+  peers?: Student43;
 };
 export type Student8 = Array<Student>;
 export type TwoInput = {
@@ -297,7 +297,7 @@ def typed_three(user_fn: Callable[[Object7], Student]):
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 // gen-static-start
-#![allow(unused)]
+#![allow(dead_code)]
 
 pub mod wit {
     wit_bindgen::generate!({
@@ -903,7 +903,7 @@ export type Student43 = Student3 | null | undefined;
 export type Student = {
   id: number;
   name: string;
-  peers: Student43;
+  peers?: Student43;
 };
 export type Student8 = Array<Student>;
 export type TwoInput = {
@@ -1051,7 +1051,7 @@ def typed_three(user_fn: Callable[[Object7], Student]):
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 // gen-static-start
-#![allow(unused)]
+#![allow(dead_code)]
 
 pub mod wit {
     wit_bindgen::generate!({

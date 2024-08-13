@@ -210,15 +210,15 @@ impl QueryGraph {{
         let args_row = match &arg_ty {
             Some(arg_ty) => format!(
                 " 
-        args: {arg_ty}"
+        args: impl Into<NodeArgs<{arg_ty}>>"
             ),
             None => "".into(),
         };
         match &select_ty {
             Some(select_ty) => {
                 let arg_value = match &arg_ty {
-                    Some(_) => "Some(to_json_value(args))",
-                    None => "None",
+                    Some(_) => "args.into().into()",
+                    None => "NodeArgsErased::None",
                 };
                 write!(
                     dest,
@@ -238,7 +238,7 @@ impl QueryGraph {{
             }
             None => {
                 let arg_value = match &arg_ty {
-                    Some(_) => "SelectionErased::ScalarArgs(to_json_value(args))",
+                    Some(_) => "SelectionErased::ScalarArgs(args.into().into())",
                     None => "SelectionErased::Scalar",
                 };
                 write!(

@@ -6,6 +6,7 @@ package.version = "0.0.1"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
 reqwest = { version = "0.12", features = ["blocking","json"] }
+tokio = "1"
 
 # The options after here are configured for crates intended to be
 # wasm artifacts. Remove them if your usage is different

@@ -528,7 +528,7 @@ Meta.test({
       command: $`cargo run`.cwd(
         join(scriptsPath, "rs"),
       ),
-      expected: zod.tuple([expectedSchemaQ, expectedSchemaM]),
+      expected: expectedSchema,
     },
   ];
 

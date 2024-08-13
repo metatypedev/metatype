@@ -522,12 +522,6 @@ class NodeDescs:
         return NodeMeta()
 
     @staticmethod
-    def Func25():
-        return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
-        )
-
-    @staticmethod
     def Post():
         return NodeMeta(
             sub_nodes={
@@ -551,6 +545,12 @@ class NodeDescs:
     def Func23():
         return NodeMeta(
             sub_nodes=NodeDescs.User().sub_nodes,
+        )
+
+    @staticmethod
+    def Func25():
+        return NodeMeta(
+            sub_nodes=NodeDescs.scalar().sub_nodes,
         )
 
     @staticmethod
@@ -586,14 +586,6 @@ class NodeDescs:
         )
 
 
-Object21 = typing.TypedDict(
-    "Object21",
-    {
-        "id": str,
-    },
-    total=False,
-)
-
 StringUuid = str
 
 Post = typing.TypedDict(
@@ -602,6 +594,14 @@ Post = typing.TypedDict(
         "id": StringUuid,
         "slug": str,
         "title": str,
+    },
+    total=False,
+)
+
+Object21 = typing.TypedDict(
+    "Object21",
+    {
+        "id": str,
     },
     total=False,
 )

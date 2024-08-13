@@ -6,8 +6,9 @@ use std::{collections::HashMap, marker::PhantomData};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 
-type CowStr = std::borrow::Cow<'static, str>;
-type JsonObject = serde_json::Map<String, serde_json::Value>;
+pub type CowStr = std::borrow::Cow<'static, str>;
+pub type BoxErr = Box<dyn std::error::Error + Send + Sync>;
+pub type JsonObject = serde_json::Map<String, serde_json::Value>;
 
 fn to_json_value<T: Serialize>(val: T) -> serde_json::Value {
     serde_json::to_value(val).expect("error serializing value")
@@ -39,13 +40,15 @@ fn selection_to_node_set(
 
         let node_instances = match node_selection {
             SelectionErased::None => continue,
-            SelectionErased::Scalar => vec![(node_name.clone(), (None, None))],
-            SelectionErased::ScalarArgs(args) => vec![(node_name.clone(), (Some(args), None))],
+            SelectionErased::Scalar => vec![(node_name.clone(), (NodeArgsErased::None, None))],
+            SelectionErased::ScalarArgs(args) => {
+                vec![(node_name.clone(), (args, None))]
+            }
             SelectionErased::Composite(select) => {
-                vec![(node_name.clone(), (None, Some(select)))]
+                vec![(node_name.clone(), (NodeArgsErased::None, Some(select)))]
             }
             SelectionErased::CompositeArgs(args, select) => {
-                vec![(node_name.clone(), (Some(args), Some(select)))]
+                vec![(node_name.clone(), (args, Some(select)))]
             }
             SelectionErased::Alias(aliases) => aliases
                 .into_iter()
@@ -53,12 +56,12 @@ fn selection_to_node_set(
                     (
                         instance_name,
                         match selection {
-                            AliasSelection::Scalar => (None, None),
-                            AliasSelection::ScalarArgs(args) => (Some(args), None),
-                            AliasSelection::Composite(select) => (None, Some(select)),
-                            AliasSelection::CompositeArgs(args, select) => {
-                                (Some(args), Some(select))
+                            AliasSelection::Scalar => (NodeArgsErased::None, None),
+                            AliasSelection::ScalarArgs(args) => (args, None),
+                            AliasSelection::Composite(select) => {
+                                (NodeArgsErased::None, Some(select))
                             }
+                            AliasSelection::CompositeArgs(args, select) => (args, Some(select)),
                         },
                     )
                 })
@@ -68,32 +71,27 @@ fn selection_to_node_set(
         let meta = meta_fn();
         for (instance_name, (args, select)) in node_instances {
             let args = if let Some(arg_types) = &meta.arg_types {
-                let Some(args) = args else {
-                    return Err(SelectionError::MissingArgs {
-                        path: format!("{parent_path}.{instance_name}"),
-                    });
-                };
-                let args = match args {
-                    serde_json::Value::Object(val) => val,
-                    _ => unreachable!(),
-                };
-                let mut instance_args = HashMap::new();
-                for (name, value) in args {
-                    let Some(type_name) = arg_types.get(&name[..]) else {
-                        return Err(SelectionError::UnexpectedArgs {
-                            name,
+                match args {
+                    NodeArgsErased::Inline(args) => {
+                        let instance_args = check_node_args(args, arg_types).map_err(|name| {
+                            SelectionError::UnexpectedArgs {
+                                name,
+                                path: format!("{parent_path}.{instance_name}"),
+                            }
+                        })?;
+                        Some(NodeArgsMerged::Inline(instance_args))
+                    }
+                    NodeArgsErased::Placeholder(ph) => Some(NodeArgsMerged::Placeholder {
+                        value: ph,
+                        // FIXME: this clone can be improved
+                        arg_types: arg_types.clone(),
+                    }),
+                    NodeArgsErased::None => {
+                        return Err(SelectionError::MissingArgs {
                             path: format!("{parent_path}.{instance_name}"),
-                        });
-                    };
-                    instance_args.insert(
-                        name.into(),
-                        NodeArgValue {
-                            type_name: type_name.clone(),
-                            value,
-                        },
-                    );
+                        })
+                    }
                 }
-                Some(instance_args)
             } else {
                 None
             };
@@ -158,7 +156,7 @@ struct NodeMeta {
 pub struct SelectNodeErased {
     node_name: CowStr,
     instance_name: CowStr,
-    args: Option<NodeArgs>,
+    args: Option<NodeArgsMerged>,
     sub_nodes: Vec<SelectNodeErased>,
 }
 
@@ -202,7 +200,7 @@ pub struct MutationMarker;
 pub struct UnselectedNode<SelT, SelAliasedT, QTy, Out> {
     root_name: CowStr,
     root_meta: NodeMetaFn,
-    args: Option<serde_json::Value>,
+    args: NodeArgsErased,
     _marker: PhantomData<(SelT, SelAliasedT, QTy, Out)>,
 }
 
@@ -216,8 +214,8 @@ where
                 [(
                     self.root_name.clone(),
                     match self.args {
-                        Some(args) => SelectionErased::CompositeArgs(args, select.into()),
-                        None => SelectionErased::Composite(select.into()),
+                        NodeArgsErased::None => SelectionErased::Composite(select.into()),
+                        args => SelectionErased::CompositeArgs(args, select.into()),
                     },
                 )]
                 .into(),
@@ -239,8 +237,8 @@ where
                 [(
                     self.root_name.clone(),
                     match self.args {
-                        Some(args) => SelectionErased::CompositeArgs(args, select.into()),
-                        None => SelectionErased::Composite(select.into()),
+                        NodeArgsErased::None => SelectionErased::Composite(select.into()),
+                        args => SelectionErased::CompositeArgs(args, select.into()),
                     },
                 )]
                 .into(),
@@ -410,18 +408,18 @@ pub struct SelectionErasedMap(HashMap<CowStr, SelectionErased>);
 enum SelectionErased {
     None,
     Scalar,
-    ScalarArgs(serde_json::Value),
+    ScalarArgs(NodeArgsErased),
     Composite(SelectionErasedMap),
-    CompositeArgs(serde_json::Value, SelectionErasedMap),
+    CompositeArgs(NodeArgsErased, SelectionErasedMap),
     Alias(HashMap<CowStr, AliasSelection>),
 }
 
 #[derive(Debug)]
 pub enum AliasSelection {
     Scalar,
-    ScalarArgs(serde_json::Value),
+    ScalarArgs(NodeArgsErased),
     Composite(SelectionErasedMap),
-    CompositeArgs(serde_json::Value, SelectionErasedMap),
+    CompositeArgs(NodeArgsErased, SelectionErasedMap),
 }
 
 #[derive(Default, Clone, Copy)]
@@ -443,7 +441,7 @@ pub enum ScalarSelectNoArgs<ATy> {
 }
 #[derive(Debug)]
 pub enum ScalarSelectArgs<ArgT, ATy> {
-    Get(serde_json::Value, PhantomData<ArgT>),
+    Get(NodeArgsErased, PhantomData<ArgT>),
     Skip,
     Alias(AliasInfo<ArgT, (), ATy>),
 }
@@ -456,7 +454,7 @@ pub enum CompositeSelectNoArgs<SelT, ATy> {
 #[derive(Debug)]
 pub enum CompositeSelectArgs<ArgT, SelT, ATy> {
     Get(
-        serde_json::Value,
+        NodeArgsErased,
         SelectionErasedMap,
         PhantomData<(ArgT, SelT)>,
     ),
@@ -497,7 +495,7 @@ pub fn select<SelT, T: From<Select<SelT>>>(selection: SelT) -> T {
     T::from(Select(selection))
 }
 /// Provide arguments and selections for a composite node.
-pub fn arg_select<Arg, SelT, T: From<ArgSelect<Arg, SelT>>>(args: Arg, selection: SelT) -> T {
+pub fn arg_select<ArgT, SelT, T: From<ArgSelect<ArgT, SelT>>>(args: ArgT, selection: SelT) -> T {
     T::from(ArgSelect(args, selection))
 }
 
@@ -612,7 +610,7 @@ where
     ArgT: Serialize,
 {
     fn from(Args(args): Args<ArgT>) -> Self {
-        Self::Get(to_json_value(args), PhantomData)
+        Self::Get(NodeArgsErased::Inline(to_json_value(args)), PhantomData)
     }
 }
 
@@ -631,7 +629,30 @@ where
     SelT: Into<SelectionErasedMap>,
 {
     fn from(ArgSelect(args, selection): ArgSelect<ArgT, SelT>) -> Self {
-        Self::Get(to_json_value(args), selection.into(), PhantomData)
+        Self::Get(
+            NodeArgsErased::Inline(to_json_value(args)),
+            selection.into(),
+            PhantomData,
+        )
+    }
+}
+
+impl<ArgT, ATy> From<PlaceholderArg<ArgT>> for ScalarSelectArgs<ArgT, ATy> {
+    fn from(value: PlaceholderArg<ArgT>) -> Self {
+        Self::Get(NodeArgsErased::Placeholder(value.value), PhantomData)
+    }
+}
+impl<ArgT, SelT, ATy> From<PlaceholderArgSelect<ArgT, SelT>>
+    for CompositeSelectArgs<ArgT, SelT, ATy>
+where
+    SelT: Into<SelectionErasedMap>,
+{
+    fn from(value: PlaceholderArgSelect<ArgT, SelT>) -> Self {
+        Self::Get(
+            NodeArgsErased::Placeholder(value.value),
+            value.selection.into(),
+            PhantomData,
+        )
     }
 }
 
@@ -747,7 +768,7 @@ where
     ArgT: Serialize,
 {
     fn from(val: Args<ArgT>) -> Self {
-        AliasSelection::ScalarArgs(to_json_value(val.0))
+        AliasSelection::ScalarArgs(NodeArgsErased::Inline(to_json_value(val.0)))
     }
 }
 impl<SelT> From<Select<SelT>> for AliasSelection
@@ -767,7 +788,7 @@ where
 {
     fn from(val: ArgSelect<ArgT, SelT>) -> Self {
         let map = val.1.into();
-        AliasSelection::CompositeArgs(to_json_value(val.0), map)
+        AliasSelection::CompositeArgs(NodeArgsErased::Inline(to_json_value(val.0)), map)
     }
 }
 impl<ATy> From<ScalarSelectNoArgs<ATy>> for AliasSelection {
@@ -843,51 +864,193 @@ macro_rules! impl_selection_traits {
 // --- --- Argument types --- --- //
 //
 
-type NodeArgs = HashMap<CowStr, NodeArgValue>;
+pub enum NodeArgs<ArgT> {
+    Inline(ArgT),
+    Placeholder(PlaceholderValue),
+}
+
+impl<ArgT> From<ArgT> for NodeArgs<ArgT> {
+    fn from(value: ArgT) -> Self {
+        Self::Inline(value)
+    }
+}
+
+#[derive(Debug)]
+pub enum NodeArgsErased {
+    None,
+    Inline(serde_json::Value),
+    Placeholder(PlaceholderValue),
+}
+
+impl<ArgT> From<NodeArgs<ArgT>> for NodeArgsErased
+where
+    ArgT: Serialize,
+{
+    fn from(value: NodeArgs<ArgT>) -> Self {
+        match value {
+            NodeArgs::Inline(arg) => Self::Inline(to_json_value(arg)),
+            NodeArgs::Placeholder(ph) => Self::Placeholder(ph),
+        }
+    }
+}
+
+enum NodeArgsMerged {
+    Inline(HashMap<CowStr, NodeArgValue>),
+    Placeholder {
+        value: PlaceholderValue,
+        arg_types: HashMap<CowStr, CowStr>,
+    },
+}
+
+/// This checks the input arg json for a node
+/// against the arg description from the [`NodeMeta`].
+fn check_node_args(
+    args: serde_json::Value,
+    arg_types: &HashMap<CowStr, CowStr>,
+) -> Result<HashMap<CowStr, NodeArgValue>, String> {
+    let args = match args {
+        serde_json::Value::Object(val) => val,
+        _ => unreachable!(),
+    };
+    let mut instance_args = HashMap::new();
+    for (name, value) in args {
+        let Some(type_name) = arg_types.get(&name[..]) else {
+            return Err(name);
+        };
+        instance_args.insert(
+            name.into(),
+            NodeArgValue {
+                type_name: type_name.clone(),
+                value,
+            },
+        );
+    }
+    Ok(instance_args)
+}
 
 struct NodeArgValue {
     type_name: CowStr,
     value: serde_json::Value,
 }
 
-/* pub struct PreparedArgs;
+pub struct PreparedArgs;
 
 impl PreparedArgs {
-    pub fn get<Arg>(&mut self, key: impl Into<CowStr>) -> PlaceholderValue<Arg> {
-        PlaceholderValue {
+    pub fn get<ArgT, F, In>(&mut self, key: impl Into<CowStr>, fun: F) -> NodeArgs<ArgT>
+    where
+        In: serde::de::DeserializeOwned,
+        F: Fn(In) -> ArgT + 'static + Send + Sync,
+        ArgT: Serialize,
+    {
+        NodeArgs::Placeholder(PlaceholderValue {
             key: key.into(),
+            fun: Box::new(move |value| {
+                let value = serde_json::from_value(value)?;
+                let value = fun(value);
+                serde_json::to_value(value)
+            }),
+        })
+    }
+    pub fn arg<ArgT, T, F, In>(&mut self, key: impl Into<CowStr>, fun: F) -> T
+    where
+        T: From<PlaceholderArg<ArgT>>,
+        In: serde::de::DeserializeOwned,
+        F: Fn(In) -> ArgT + 'static + Send + Sync,
+        ArgT: Serialize,
+    {
+        T::from(PlaceholderArg {
+            value: PlaceholderValue {
+                key: key.into(),
+                fun: Box::new(move |value| {
+                    let value = serde_json::from_value(value)?;
+                    let value = fun(value);
+                    serde_json::to_value(value)
+                }),
+            },
             _phantom: PhantomData,
-        }
+        })
+    }
+    pub fn arg_select<ArgT, SelT, T, F, In>(
+        &mut self,
+        key: impl Into<CowStr>,
+        selection: SelT,
+        fun: F,
+    ) -> T
+    where
+        T: From<PlaceholderArgSelect<ArgT, SelT>>,
+        In: serde::de::DeserializeOwned,
+        F: Fn(In) -> ArgT + 'static + Send + Sync,
+        ArgT: Serialize,
+    {
+        T::from(PlaceholderArgSelect {
+            value: PlaceholderValue {
+                key: key.into(),
+                fun: Box::new(move |value| {
+                    let value = serde_json::from_value(value)?;
+                    let value = fun(value);
+                    serde_json::to_value(value)
+                }),
+            },
+            selection,
+            _phantom: PhantomData,
+        })
     }
 }
 
-pub struct PlaceholderValue<Arg> {
+pub struct PlaceholderValue {
     key: CowStr,
-    _phantom: PhantomData<Arg>,
+    fun: Box<
+        dyn Fn(serde_json::Value) -> Result<serde_json::Value, serde_json::Error> + Send + Sync,
+    >,
 }
 
-pub struct PlaceholderArgs<Arg>(Arg); */
+impl std::fmt::Debug for PlaceholderValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PlaceholderValue")
+            .field("key", &self.key)
+            .finish_non_exhaustive()
+    }
+}
+
+pub struct PlaceholderArg<ArgT> {
+    value: PlaceholderValue,
+    _phantom: PhantomData<ArgT>,
+}
+pub struct PlaceholderArgSelect<ArgT, SelT> {
+    value: PlaceholderValue,
+    selection: SelT,
+    _phantom: PhantomData<ArgT>,
+}
+
+pub struct PlaceholderArgs<Arg>(Arg);
 
 //
 // --- --- GraphQL types --- --- //
 //
 
-pub use graphql::*;
-mod graphql {
+use graphql::*;
+pub mod graphql {
+    use std::sync::Arc;
+
     use super::*;
 
-    pub(super) type TyToGqlTyMap = std::sync::Arc<HashMap<CowStr, CowStr>>;
+    pub(super) type TyToGqlTyMap = Arc<HashMap<CowStr, CowStr>>;
 
-    #[derive(Default)]
+    #[derive(Default, Clone)]
     pub struct GraphQlTransportOptions {
         headers: reqwest::header::HeaderMap,
         timeout: Option<std::time::Duration>,
     }
 
+    // PlaceholderValue, fieldName -> gql_var_name
+    type FoundPlaceholders = Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>;
+
     fn select_node_to_gql(
         dest: &mut impl std::fmt::Write,
         node: SelectNodeErased,
-        variables: &mut HashMap<CowStr, NodeArgValue>,
+        variable_types: &mut HashMap<CowStr, CowStr>,
+        variables_object: &mut JsonObject,
+        placeholders: &mut FoundPlaceholders,
     ) -> std::fmt::Result {
         if node.instance_name != node.node_name {
             write!(dest, "{}: {}", node.instance_name, node.node_name)?;
@@ -895,20 +1058,39 @@ mod graphql {
             write!(dest, "{}", node.node_name)?;
         }
         if let Some(args) = node.args {
-            if !args.is_empty() {
-                write!(dest, "(")?;
-                for (key, val) in args {
-                    let name = format!("in{}", variables.len());
-                    write!(dest, "{key}: ${name}, ")?;
-                    variables.insert(name.into(), val);
+            match args {
+                NodeArgsMerged::Inline(args) => {
+                    if !args.is_empty() {
+                        write!(dest, "(")?;
+                        for (key, val) in args {
+                            let name = format!("in{}", variable_types.len());
+                            write!(dest, "{key}: ${name}, ")?;
+                            variables_object.insert(name.clone(), val.value);
+                            variable_types.insert(name.into(), val.type_name);
+                        }
+                        write!(dest, ")")?;
+                    }
                 }
-                write!(dest, ")")?;
+                NodeArgsMerged::Placeholder { value, arg_types } => {
+                    if !arg_types.is_empty() {
+                        write!(dest, "(")?;
+                        let mut map = HashMap::new();
+                        for (key, type_name) in arg_types {
+                            let name = format!("in{}", variable_types.len());
+                            write!(dest, "{key}: ${name}, ")?;
+                            variable_types.insert(name.clone().into(), type_name);
+                            map.insert(key, name.into());
+                        }
+                        write!(dest, ")")?;
+                        placeholders.push((value, map));
+                    }
+                }
             }
         }
         if !node.sub_nodes.is_empty() {
             write!(dest, "{{ ")?;
             for node in node.sub_nodes {
-                select_node_to_gql(dest, node, variables)?;
+                select_node_to_gql(dest, node, variable_types, variables_object, placeholders)?;
                 write!(dest, " ")?;
             }
             write!(dest, " }}")?;
@@ -918,29 +1100,38 @@ mod graphql {
 
     fn build_gql_doc(
         ty_to_gql_ty_map: &TyToGqlTyMap,
-        query: Vec<SelectNodeErased>,
+        nodes: Vec<SelectNodeErased>,
         ty: &'static str,
         name: Option<CowStr>,
-    ) -> Result<(String, serde_json::Value), GraphQLRequestError> {
+    ) -> Result<(String, JsonObject, FoundPlaceholders), GraphQLRequestError> {
         use std::fmt::Write;
-        let mut variables = HashMap::new();
+        let mut variables_types = HashMap::new();
+        let mut variables_values = serde_json::Map::new();
         let mut root_nodes = String::new();
-        for node in query {
+        let mut placeholders = vec![];
+        for (idx, node) in nodes.into_iter().enumerate() {
+            let node = SelectNodeErased {
+                instance_name: format!("node{idx}").into(),
+                ..node
+            };
             write!(&mut root_nodes, "  ").expect("error building to string");
-            select_node_to_gql(&mut root_nodes, node, &mut variables)
-                .expect("error building to string");
+            select_node_to_gql(
+                &mut root_nodes,
+                node,
+                &mut variables_types,
+                &mut variables_values,
+                &mut placeholders,
+            )
+            .expect("error building to string");
             writeln!(&mut root_nodes).expect("error building to string");
         }
         let mut args_row = String::new();
-        if !variables.is_empty() {
+        if !variables_types.is_empty() {
             write!(&mut args_row, "(").expect("error building to string");
-            for (key, val) in &variables {
-                let gql_ty = ty_to_gql_ty_map.get(&val.type_name[..]).ok_or_else(|| {
+            for (key, ty) in &variables_types {
+                let gql_ty = ty_to_gql_ty_map.get(&ty[..]).ok_or_else(|| {
                     GraphQLRequestError::InvalidQuery {
-                        error: Box::from(format!(
-                            "unknown typegraph type found: {}",
-                            val.type_name
-                        )),
+                        error: Box::from(format!("unknown typegraph type found: {}", ty)),
                     }
                 })?;
                 write!(&mut args_row, "${key}: {gql_ty}, ").expect("error building to string");
@@ -949,15 +1140,7 @@ mod graphql {
         }
         let name = name.unwrap_or_else(|| "".into());
         let doc = format!("{ty} {name}{args_row} {{\n{root_nodes}}}");
-        Ok((
-            doc,
-            serde_json::Value::Object(
-                variables
-                    .into_iter()
-                    .map(|(key, val)| (key.into(), val.value))
-                    .collect(),
-            ),
-        ))
+        Ok((doc, variables_values, placeholders))
     }
 
     struct GraphQLRequest {
@@ -970,7 +1153,7 @@ mod graphql {
     fn build_gql_req(
         addr: Url,
         doc: &str,
-        variables: &serde_json::Value,
+        variables: &JsonObject,
         opts: &GraphQlTransportOptions,
     ) -> GraphQLRequest {
         let mut headers = reqwest::header::HeaderMap::new();
@@ -1002,7 +1185,10 @@ mod graphql {
         pub body: JsonObject,
     }
 
-    fn handle_response(response: GraphQLResponse) -> Result<JsonObject, GraphQLRequestError> {
+    fn handle_response(
+        response: GraphQLResponse,
+        nodes_len: usize,
+    ) -> Result<Vec<serde_json::Value>, GraphQLRequestError> {
         if !response.status.is_success() {
             return Err(GraphQLRequestError::RequestFailed { response });
         }
@@ -1026,12 +1212,21 @@ mod graphql {
                 data: body.data,
             });
         }
-        let Some(body) = body.data else {
+        let Some(mut body) = body.data else {
             return Err(GraphQLRequestError::BodyError {
                 error: Box::from("body response doesn't contain data field"),
             });
         };
-        Ok(body)
+        (0..nodes_len)
+            .map(|idx| {
+                body.remove(&format!("node{idx}"))
+                    .ok_or_else(|| GraphQLRequestError::BodyError {
+                        error: Box::from(format!(
+                            "expecting response under node key 'node{idx}' but none found"
+                        )),
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()
     }
 
     #[derive(Debug)]
@@ -1047,14 +1242,14 @@ mod graphql {
         },
         /// Unable to deserialize body
         BodyError {
-            error: Box<dyn std::error::Error>,
+            error: BoxErr,
         },
         /// Unable to make http request
         NetworkError {
-            error: Box<dyn std::error::Error>,
+            error: BoxErr,
         },
         InvalidQuery {
-            error: Box<dyn std::error::Error>,
+            error: BoxErr,
         },
     }
 
@@ -1118,10 +1313,18 @@ mod graphql {
         }
     }
 
+    #[derive(Clone)]
     pub struct GraphQlTransportReqwestSync {
         addr: Url,
         ty_to_gql_ty_map: TyToGqlTyMap,
         client: reqwest::blocking::Client,
+    }
+
+    #[derive(Clone)]
+    pub struct GraphQlTransportReqwest {
+        addr: Url,
+        ty_to_gql_ty_map: TyToGqlTyMap,
+        client: reqwest::Client,
     }
 
     impl GraphQlTransportReqwestSync {
@@ -1139,19 +1342,12 @@ mod graphql {
             opts: &GraphQlTransportOptions,
             ty: &'static str,
         ) -> Result<Vec<serde_json::Value>, GraphQLRequestError> {
-            let doc = nodes
-                .into_iter()
-                .enumerate()
-                .map(|(idx, node)| SelectNodeErased {
-                    instance_name: format!("node{idx}").into(),
-                    ..node
-                })
-                .collect::<Vec<_>>();
-            let doc_len = doc.len();
-
-            let doc = build_gql_doc(&self.ty_to_gql_ty_map, doc, ty, None)?;
-            // let (doc, variables) = dbg!(doc);
-            let (doc, variables) = doc;
+            let nodes_len = nodes.len();
+            let (doc, variables, placeholders) =
+                build_gql_doc(&self.ty_to_gql_ty_map, nodes, ty, None)?;
+            if !placeholders.is_empty() {
+                panic!("placeholders found in non-prepared query")
+            }
             let req = build_gql_req(self.addr.clone(), &doc, &variables, opts);
             // dbg!(serde_json::to_string_pretty(&req.body).expect("error serializing body"));
             let req = self
@@ -1164,41 +1360,28 @@ mod graphql {
             } else {
                 req
             };
-            let mut resp = match req.send() {
+            match req.send() {
                 Ok(res) => {
                     let status = res.status();
                     let headers = res.headers().clone();
                     match res.json::<JsonObject>() {
-                        Ok(body) => handle_response(GraphQLResponse {
-                            status,
-                            headers,
-                            body,
-                        })?,
-                        Err(error) => {
-                            return Err(GraphQLRequestError::BodyError {
-                                error: Box::new(error),
-                            })
-                        }
+                        Ok(body) => handle_response(
+                            GraphQLResponse {
+                                status,
+                                headers,
+                                body,
+                            },
+                            nodes_len,
+                        ),
+                        Err(error) => Err(GraphQLRequestError::BodyError {
+                            error: Box::new(error),
+                        }),
                     }
                 }
-                Err(error) => {
-                    return Err(GraphQLRequestError::NetworkError {
-                        error: Box::new(error),
-                    })
-                }
-            };
-            let resp = (0..doc_len)
-                .map(|idx| {
-                    resp.remove(&format!("node{idx}")).ok_or_else(|| {
-                        GraphQLRequestError::BodyError {
-                            error: Box::from(format!(
-                                "expecting response under node key 'node{idx}' but none found"
-                            )),
-                        }
-                    })
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(resp)
+                Err(error) => Err(GraphQLRequestError::NetworkError {
+                    error: Box::new(error),
+                }),
+            }
         }
 
         pub fn query<Doc: ToSelectDoc + ToQueryDoc>(
@@ -1242,6 +1425,489 @@ mod graphql {
             })?;
             Ok(resp)
         }
+        pub fn prepare_query<Doc: ToSelectDoc + ToQueryDoc>(
+            &self,
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+        ) -> Result<PreparedRequestReqwestSync<Doc>, PrepareRequestError> {
+            self.prepare_query_with_opts(fun, Default::default())
+        }
+
+        pub fn prepare_query_with_opts<Doc: ToSelectDoc + ToQueryDoc>(
+            &self,
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            opts: GraphQlTransportOptions,
+        ) -> Result<PreparedRequestReqwestSync<Doc>, PrepareRequestError> {
+            PreparedRequestReqwestSync::new(
+                fun,
+                self.addr.clone(),
+                opts,
+                "query",
+                &self.ty_to_gql_ty_map,
+            )
+        }
+
+        pub fn prepare_mutation<Doc: ToSelectDoc + ToMutationDoc>(
+            &self,
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+        ) -> Result<PreparedRequestReqwestSync<Doc>, PrepareRequestError> {
+            self.prepare_mutation_with_opts(fun, Default::default())
+        }
+
+        pub fn prepare_mutation_with_opts<Doc: ToSelectDoc + ToMutationDoc>(
+            &self,
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            opts: GraphQlTransportOptions,
+        ) -> Result<PreparedRequestReqwestSync<Doc>, PrepareRequestError> {
+            PreparedRequestReqwestSync::new(
+                fun,
+                self.addr.clone(),
+                opts,
+                "mutation",
+                &self.ty_to_gql_ty_map,
+            )
+        }
+    }
+
+    impl GraphQlTransportReqwest {
+        pub fn new(addr: Url, ty_to_gql_ty_map: TyToGqlTyMap) -> Self {
+            Self {
+                addr,
+                ty_to_gql_ty_map,
+                client: reqwest::Client::new(),
+            }
+        }
+
+        async fn fetch(
+            &self,
+            nodes: Vec<SelectNodeErased>,
+            opts: &GraphQlTransportOptions,
+            ty: &'static str,
+        ) -> Result<Vec<serde_json::Value>, GraphQLRequestError> {
+            let nodes_len = nodes.len();
+            let (doc, variables, placeholders) =
+                build_gql_doc(&self.ty_to_gql_ty_map, nodes, ty, None)?;
+            if !placeholders.is_empty() {
+                panic!("placeholders found in non-prepared query")
+            }
+            let req = build_gql_req(self.addr.clone(), &doc, &variables, opts);
+            // dbg!(serde_json::to_string_pretty(&req.body).expect("error serializing body"));
+            let req = self
+                .client
+                .request(req.method, req.addr)
+                .headers(req.headers)
+                .json(&req.body);
+            let req = if let Some(timeout) = opts.timeout {
+                req.timeout(timeout)
+            } else {
+                req
+            };
+            match req.send().await {
+                Ok(res) => {
+                    let status = res.status();
+                    let headers = res.headers().clone();
+                    match res.json::<JsonObject>().await {
+                        Ok(body) => handle_response(
+                            GraphQLResponse {
+                                status,
+                                headers,
+                                body,
+                            },
+                            nodes_len,
+                        ),
+                        Err(error) => Err(GraphQLRequestError::BodyError {
+                            error: Box::new(error),
+                        }),
+                    }
+                }
+                Err(error) => Err(GraphQLRequestError::NetworkError {
+                    error: Box::new(error),
+                }),
+            }
+        }
+
+        pub async fn query<Doc: ToSelectDoc + ToQueryDoc>(
+            &self,
+            nodes: Doc,
+        ) -> Result<Doc::Out, GraphQLRequestError> {
+            self.query_with_opts(nodes, &Default::default()).await
+        }
+
+        pub async fn query_with_opts<Doc: ToSelectDoc + ToQueryDoc>(
+            &self,
+            nodes: Doc,
+            opts: &GraphQlTransportOptions,
+        ) -> Result<Doc::Out, GraphQLRequestError> {
+            let resp = self.fetch(nodes.to_select_doc(), opts, "query").await?;
+            let resp = Doc::parse_response(resp).map_err(|err| GraphQLRequestError::BodyError {
+                error: Box::from(format!(
+                    "error deserializing response into output type: {err}"
+                )),
+            })?;
+            Ok(resp)
+        }
+
+        pub async fn mutation<Doc: ToSelectDoc + ToMutationDoc>(
+            &self,
+            nodes: Doc,
+        ) -> Result<Doc::Out, GraphQLRequestError> {
+            self.mutation_with_opts(nodes, &Default::default()).await
+        }
+
+        pub async fn mutation_with_opts<Doc: ToSelectDoc + ToMutationDoc>(
+            &self,
+            nodes: Doc,
+            opts: &GraphQlTransportOptions,
+        ) -> Result<Doc::Out, GraphQLRequestError> {
+            let resp = self.fetch(nodes.to_select_doc(), opts, "mutation").await?;
+            let resp = Doc::parse_response(resp).map_err(|err| GraphQLRequestError::BodyError {
+                error: Box::from(format!(
+                    "error deserializing response into output type: {err}"
+                )),
+            })?;
+            Ok(resp)
+        }
+        pub fn prepare_query<Doc: ToSelectDoc + ToQueryDoc>(
+            &self,
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+        ) -> Result<PreparedRequestReqwest<Doc>, PrepareRequestError> {
+            self.prepare_query_with_opts(fun, Default::default())
+        }
+
+        pub fn prepare_query_with_opts<Doc: ToSelectDoc + ToQueryDoc>(
+            &self,
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            opts: GraphQlTransportOptions,
+        ) -> Result<PreparedRequestReqwest<Doc>, PrepareRequestError> {
+            PreparedRequestReqwest::new(
+                fun,
+                self.addr.clone(),
+                opts,
+                "query",
+                &self.ty_to_gql_ty_map,
+            )
+        }
+
+        pub fn prepare_mutation<Doc: ToSelectDoc + ToMutationDoc>(
+            &self,
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+        ) -> Result<PreparedRequestReqwest<Doc>, PrepareRequestError> {
+            self.prepare_mutation_with_opts(fun, Default::default())
+        }
+
+        pub fn prepare_mutation_with_opts<Doc: ToSelectDoc + ToMutationDoc>(
+            &self,
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            opts: GraphQlTransportOptions,
+        ) -> Result<PreparedRequestReqwest<Doc>, PrepareRequestError> {
+            PreparedRequestReqwest::new(
+                fun,
+                self.addr.clone(),
+                opts,
+                "mutation",
+                &self.ty_to_gql_ty_map,
+            )
+        }
+    }
+
+    fn resolve_prepared_variables(
+        placeholders: &FoundPlaceholders,
+        mut inline_variables: JsonObject,
+        mut args: HashMap<CowStr, serde_json::Value>,
+    ) -> Result<JsonObject, PrepareRequestError> {
+        for (ph, key_map) in placeholders {
+            let Some(value) = args.remove(&ph.key) else {
+                return Err(PrepareRequestError::PlaceholderError(Box::from(format!(
+                    "no value found for placeholder expected under key '{}'",
+                    ph.key
+                ))));
+            };
+            let value = match (ph.fun)(value) {
+                Ok(value) => value,
+                Err(err) => {
+                    return Err(PrepareRequestError::PlaceholderError(Box::from(format!(
+                        "error applying placeholder closure for value under key '{}': {err}",
+                        ph.key
+                    ))))
+                }
+            };
+            let mut value = match value {
+                serde_json::Value::Object(value) => value,
+                _ => unreachable!("placeholder closures must return structs"),
+            };
+            for (key, var_key) in key_map {
+                inline_variables.insert(
+                    var_key.clone().into(),
+                    value.remove(&key[..]).unwrap_or(serde_json::Value::Null),
+                );
+            }
+        }
+        Ok(inline_variables)
+    }
+
+    pub struct PreparedRequestReqwest<Out> {
+        addr: Url,
+        client: reqwest::Client,
+        nodes_len: usize,
+        doc: String,
+        variables: JsonObject,
+        opts: GraphQlTransportOptions,
+        placeholders: Arc<FoundPlaceholders>,
+        _phantom: PhantomData<Out>,
+    }
+
+    pub struct PreparedRequestReqwestSync<Doc> {
+        addr: Url,
+        client: reqwest::blocking::Client,
+        nodes_len: usize,
+        doc: String,
+        variables: JsonObject,
+        opts: GraphQlTransportOptions,
+        placeholders: Arc<FoundPlaceholders>,
+        _phantom: PhantomData<Doc>,
+    }
+
+    impl<Doc: ToSelectDoc> PreparedRequestReqwestSync<Doc> {
+        fn new(
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            addr: Url,
+            opts: GraphQlTransportOptions,
+            ty: &'static str,
+            ty_to_gql_ty_map: &TyToGqlTyMap,
+        ) -> Result<Self, PrepareRequestError> {
+            let nodes = fun(&mut PreparedArgs).map_err(PrepareRequestError::FunctionError)?;
+            let nodes = nodes.to_select_doc();
+            let nodes_len = nodes.len();
+            let (doc, variables, placeholders) = build_gql_doc(ty_to_gql_ty_map, nodes, ty, None)
+                .map_err(PrepareRequestError::BuildError)?;
+            Ok(Self {
+                doc,
+                variables,
+                nodes_len,
+                addr,
+                client: reqwest::blocking::Client::new(),
+                opts,
+                placeholders: Arc::new(placeholders),
+                _phantom: PhantomData,
+            })
+        }
+
+        pub fn perform<K, V>(
+            &self,
+            args: impl Into<HashMap<K, V>>,
+        ) -> Result<Doc::Out, PrepareRequestError>
+        where
+            K: Into<CowStr>,
+            V: serde::Serialize,
+        {
+            let args: HashMap<K, V> = args.into();
+            let args = args
+                .into_iter()
+                .map(|(key, val)| (key.into(), to_json_value(val)))
+                .collect();
+            let variables =
+                resolve_prepared_variables(&self.placeholders, self.variables.clone(), args)?;
+            let req = build_gql_req(self.addr.clone(), &self.doc, &variables, &self.opts);
+            // dbg!(serde_json::to_string_pretty(&req.body).expect("error serializing body"));
+            let req = self
+                .client
+                .request(req.method, req.addr)
+                .headers(req.headers)
+                .json(&req.body);
+            let req = if let Some(timeout) = self.opts.timeout {
+                req.timeout(timeout)
+            } else {
+                req
+            };
+            let res = match req.send() {
+                Ok(res) => {
+                    let status = res.status();
+                    let headers = res.headers().clone();
+                    match res.json::<JsonObject>() {
+                        Ok(body) => handle_response(
+                            GraphQLResponse {
+                                status,
+                                headers,
+                                body,
+                            },
+                            self.nodes_len,
+                        )
+                        .map_err(PrepareRequestError::RequestError)?,
+                        Err(error) => {
+                            return Err(PrepareRequestError::RequestError(
+                                GraphQLRequestError::BodyError {
+                                    error: Box::new(error),
+                                },
+                            ))
+                        }
+                    }
+                }
+                Err(error) => {
+                    return Err(PrepareRequestError::RequestError(
+                        GraphQLRequestError::NetworkError {
+                            error: Box::new(error),
+                        },
+                    ))
+                }
+            };
+            Doc::parse_response(res).map_err(|err| {
+                PrepareRequestError::RequestError(GraphQLRequestError::BodyError {
+                    error: Box::from(format!(
+                        "error deserializing response into output type: {err}"
+                    )),
+                })
+            })
+        }
+    }
+
+    impl<Doc: ToSelectDoc> PreparedRequestReqwest<Doc> {
+        fn new(
+            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            addr: Url,
+            opts: GraphQlTransportOptions,
+            ty: &'static str,
+            ty_to_gql_ty_map: &TyToGqlTyMap,
+        ) -> Result<Self, PrepareRequestError> {
+            let nodes = fun(&mut PreparedArgs).map_err(PrepareRequestError::FunctionError)?;
+            let nodes = nodes.to_select_doc();
+            let nodes_len = nodes.len();
+            let (doc, variables, placeholders) = build_gql_doc(ty_to_gql_ty_map, nodes, ty, None)
+                .map_err(PrepareRequestError::BuildError)?;
+            let placeholders = std::sync::Arc::new(placeholders);
+            Ok(Self {
+                doc,
+                variables,
+                nodes_len,
+                addr,
+                client: reqwest::Client::new(),
+                opts,
+                placeholders,
+                _phantom: PhantomData,
+            })
+        }
+
+        pub async fn perform<K, V>(
+            &self,
+            args: impl Into<HashMap<K, V>>,
+        ) -> Result<Doc::Out, PrepareRequestError>
+        where
+            K: Into<CowStr>,
+            V: serde::Serialize,
+        {
+            let args: HashMap<K, V> = args.into();
+            let args = args
+                .into_iter()
+                .map(|(key, val)| (key.into(), to_json_value(val)))
+                .collect();
+            let variables =
+                resolve_prepared_variables(&self.placeholders, self.variables.clone(), args)?;
+            let req = build_gql_req(self.addr.clone(), &self.doc, &variables, &self.opts);
+            // dbg!(serde_json::to_string_pretty(&req.body).expect("error serializing body"));
+            let req = self
+                .client
+                .request(req.method, req.addr)
+                .headers(req.headers)
+                .json(&req.body);
+            let req = if let Some(timeout) = self.opts.timeout {
+                req.timeout(timeout)
+            } else {
+                req
+            };
+            let res = match req.send().await {
+                Ok(res) => {
+                    let status = res.status();
+                    let headers = res.headers().clone();
+                    match res.json::<JsonObject>().await {
+                        Ok(body) => handle_response(
+                            GraphQLResponse {
+                                status,
+                                headers,
+                                body,
+                            },
+                            self.nodes_len,
+                        )
+                        .map_err(PrepareRequestError::RequestError)?,
+                        Err(error) => {
+                            return Err(PrepareRequestError::RequestError(
+                                GraphQLRequestError::BodyError {
+                                    error: Box::new(error),
+                                },
+                            ))
+                        }
+                    }
+                }
+                Err(error) => {
+                    return Err(PrepareRequestError::RequestError(
+                        GraphQLRequestError::NetworkError {
+                            error: Box::new(error),
+                        },
+                    ))
+                }
+            };
+            Doc::parse_response(res).map_err(|err| {
+                PrepareRequestError::RequestError(GraphQLRequestError::BodyError {
+                    error: Box::from(format!(
+                        "error deserializing response into output type: {err}"
+                    )),
+                })
+            })
+        }
+    }
+
+    // we need a manual clone impl since the derive will
+    // choke if Doc isn't clone
+    impl<Doc> Clone for PreparedRequestReqwestSync<Doc> {
+        fn clone(&self) -> Self {
+            Self {
+                addr: self.addr.clone(),
+                client: self.client.clone(),
+                nodes_len: self.nodes_len,
+                doc: self.doc.clone(),
+                variables: self.variables.clone(),
+                opts: self.opts.clone(),
+                placeholders: self.placeholders.clone(),
+                _phantom: PhantomData,
+            }
+        }
+    }
+    impl<Doc> Clone for PreparedRequestReqwest<Doc> {
+        fn clone(&self) -> Self {
+            Self {
+                addr: self.addr.clone(),
+                client: self.client.clone(),
+                nodes_len: self.nodes_len,
+                doc: self.doc.clone(),
+                variables: self.variables.clone(),
+                opts: self.opts.clone(),
+                placeholders: self.placeholders.clone(),
+                _phantom: PhantomData,
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    pub enum PrepareRequestError {
+        FunctionError(BoxErr),
+        BuildError(GraphQLRequestError),
+        PlaceholderError(BoxErr),
+        RequestError(GraphQLRequestError),
+    }
+
+    impl std::error::Error for PrepareRequestError {}
+    impl std::fmt::Display for PrepareRequestError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                PrepareRequestError::FunctionError(err) => {
+                    write!(f, "error calling doc builder closure: {err}")
+                }
+                PrepareRequestError::BuildError(err) => write!(f, "error building request: {err}"),
+                PrepareRequestError::PlaceholderError(err) => {
+                    write!(f, "error resolving placeholder values: {err}")
+                }
+                PrepareRequestError::RequestError(err) => {
+                    write!(f, "error making graphql request: {err}")
+                }
+            }
+        }
     }
 }
 
@@ -1249,12 +1915,16 @@ mod graphql {
 // --- --- QueryGraph types --- --- //
 //
 
+#[derive(Clone)]
 pub struct QueryGraph {
     ty_to_gql_ty_map: TyToGqlTyMap,
     addr: Url,
 }
 
 impl QueryGraph {
+    pub fn graphql(&self) -> GraphQlTransportReqwest {
+        GraphQlTransportReqwest::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
+    }
     pub fn graphql_sync(&self) -> GraphQlTransportReqwestSync {
         GraphQlTransportReqwestSync::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
     }
