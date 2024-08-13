@@ -1066,6 +1066,7 @@
     "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/deps/common.ts": "f775710b66a9099b98651cd3831906466e9b83ef98f2e5c080fd59ee801c28d4",
     "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/deps/ports.ts": "3c60d1f7ab626ffdd81b37f4e83a780910936480da8fe24f4ccceaefa207d339",
     "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/files/deno/mod.ts": "1b8204c3df18b908408b2148b48af788e669d0debbeb8ba119418ab1ddf1ab8f",
+    "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/files/deno/worker.ts": "8ded400d70a0bd40e281ceb1ffcdc82578443caf9c481b9eee77166472784282",
     "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/files/mod.ts": "a934ddb4803896e27b40644fe75623d584e01f30bbe1e16eb26bd772aa5b6064",
     "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/host/mod.ts": "6d1ae2174e495945a7ebab6e868e512c166113691bd864769d9542b8547c3b17",
     "https://raw.githubusercontent.com/metatypedev/ghjk/b702292/host/types.ts": "f450d9b9c0eced2650262d02455aa6f794de0edd6b052aade256882148e5697f",
