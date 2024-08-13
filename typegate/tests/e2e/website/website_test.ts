@@ -34,6 +34,7 @@ const list = [
   "index",
   "injections",
   "jwt",
+  "kv",
   "math",
   "metagen-deno",
   "metagen-py",
