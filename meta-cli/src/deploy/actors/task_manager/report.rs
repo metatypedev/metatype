@@ -35,33 +35,42 @@ impl<A: TaskAction> Report<A> {
                 success: true,
             },
             |mut summary, entry| {
-                let (text, success) = match &entry.status {
-                    TaskFinishStatus::<A>::Finished(results) => {
-                        let success_count = results
-                            .iter()
-                            .filter(|(_, res)| {
-                                res.as_ref().ok().map(|r| r.is_success()).unwrap_or(false)
-                            })
-                            .count();
-                        (
-                            format!("{}/{} success", success_count, results.len()),
-                            success_count == results.len(),
-                        )
-                    }
-                    TaskFinishStatus::<A>::Error => ("failed".to_string(), false),
-                    TaskFinishStatus::<A>::Cancelled => ("cancelled".to_string(), true),
-                };
-                summary.text.push_str(
-                    format!(
-                        "  - {}: {}\n",
-                        entry.path.display().to_string().yellow(),
-                        text
-                    )
-                    .as_str(),
-                );
-                summary.success = summary.success && success;
+                if let Some((text, success)) = entry.get_summary() {
+                    summary
+                        .text
+                        .push_str(format!("  - {}: {}\n", entry.path.display(), text).as_str());
+                    summary.success = summary.success && success;
+                }
                 summary
             },
         )
+    }
+}
+
+impl<A: TaskAction> ReportEntry<A> {
+    fn get_summary(&self) -> Option<(String, bool)> {
+        match &self.status {
+            TaskFinishStatus::<A>::Finished(results) => {
+                let success = results
+                    .iter()
+                    .filter(|(_, res)| res.as_ref().ok().map(|r| r.is_success()).unwrap_or(false))
+                    .count();
+                let total = results.len();
+                let mut res = String::new();
+                if success > 0 {
+                    res.push_str(&format!("{}/{} success", success, total).green().to_string());
+                }
+                let failure = total - success;
+                if failure > 0 {
+                    if success > 0 {
+                        res.push_str("  ");
+                    }
+                    res.push_str(&format!("{}/{} failure", failure, total).red().to_string());
+                }
+                Some((res, success == total))
+            }
+            TaskFinishStatus::<A>::Error => Some(("failed".to_string(), false)),
+            TaskFinishStatus::<A>::Cancelled => Some(("cancelled".to_string(), true)),
+        }
     }
 }

@@ -58,7 +58,8 @@ export default class Policy {
     );
   }
 
-  static on(effects: PolicyPerEffectAlt) {
+  /** create policy based on effects */
+  static on(effects: PolicyPerEffectAlt): PolicyPerEffectObject {
     return new PolicyPerEffectObject(effects);
   }
 }

@@ -8,7 +8,11 @@ const tasks: Record<string, DenoTaskDefArgs> = {
   "test-e2e": {
     inherit: "ci",
     desc: "Shorthand for `dev/test.ts`",
-    fn: ($) => testE2eCli($.argv),
+    fn: async ($) => {
+      if (await testE2eCli($.argv) != 0) {
+        throw new Error("tests failed");
+      }
+    },
   },
   "test-website": {
     inherit: "_ecma",

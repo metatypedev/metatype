@@ -40,6 +40,10 @@ pub struct Dev {
     /// initial retry interval
     #[clap(long)]
     retry_interval_ms: Option<u64>,
+
+    #[cfg(feature = "typegate")]
+    #[clap(flatten)]
+    pub typegate_options: super::typegate::Typegate,
 }
 
 #[async_trait]
@@ -55,7 +59,11 @@ impl Action for Dev {
             create_migration: true,
             secrets: self.secrets.clone(),
             #[cfg(feature = "typegate")]
-            run_typegate: !self.no_typegate,
+            typegate_options: if !self.no_typegate {
+                Some(self.typegate_options.clone())
+            } else {
+                None
+            },
             threads: self.threads,
             retry: self.retry,
             retry_interval_ms: self.retry_interval_ms,

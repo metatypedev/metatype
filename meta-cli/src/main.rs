@@ -85,18 +85,6 @@ fn main() -> Result<()> {
         std::env::set_var("RUST_LOG", format!("warn,meta={filter}"));
     }
     logger::init();
-
-    let runner = actix::System::with_tokio_rt(|| {
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap_or_log()
-    });
-
-    if let Err(err) = runner.block_on(upgrade_check()) {
-        warn!("cannot check for update: {err}");
-    }
-
     if args.version {
         println!("meta {}", build::PKG_VERSION);
         return Ok(());
@@ -105,16 +93,32 @@ fn main() -> Result<()> {
     match args.command {
         // the deno task requires use of a single thread runtime which it'll spawn itself
         Some(cli::Commands::Typegate(cmd_args)) => cli::typegate::command(cmd_args, args.config)?,
-        Some(command) => runner.block_on(async move {
-            match command {
-                cli::Commands::Serialize(_)
-                | cli::Commands::Dev(_)
-                | cli::Commands::Deploy(_)
-                | cli::Commands::List(_)
-                | cli::Commands::Gen(_) => command.run(args.config).await,
-                _ => command.run(args.config).await.map(|_| ()),
+        Some(command) => {
+            // NOTE: we avoid making the runner (i.e. launching a new thread)
+            // if we're launching the typegate as this messes with
+            // the RUST_MIN_STACK
+            let runner = actix::System::with_tokio_rt(|| {
+                tokio::runtime::Builder::new_multi_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap_or_log()
+            });
+
+            if let Err(err) = runner.block_on(upgrade_check()) {
+                warn!("cannot check for update: {err}");
             }
-        })?,
+
+            runner.block_on(async move {
+                match command {
+                    cli::Commands::Serialize(_)
+                    | cli::Commands::Dev(_)
+                    | cli::Commands::Deploy(_)
+                    | cli::Commands::List(_)
+                    | cli::Commands::Gen(_) => command.run(args.config).await,
+                    _ => command.run(args.config).await.map(|_| ()),
+                }
+            })?
+        }
         None => Args::command().print_help()?,
     }
 

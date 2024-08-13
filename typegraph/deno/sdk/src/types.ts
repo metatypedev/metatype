@@ -144,7 +144,8 @@ export class Typedef {
     return optional(this, data);
   }
 
-  withInjection(injection: string) {
+  /** inject value to type (serialized injection) */
+  withInjection(injection: string): this {
     const wrapperId = core.withInjection(this._id, injection);
     return new Proxy(this, {
       get(target, prop, receiver) {
@@ -160,27 +161,33 @@ export class Typedef {
     }) as this;
   }
 
-  set(value: InjectionValue<unknown>) {
+  /** inject static value */
+  set(value: InjectionValue<unknown>): this {
     return this.withInjection(serializeStaticInjection(value));
   }
 
-  inject(value: InjectionValue<string>) {
+  /** inject value to type (generic source) */
+  inject(value: InjectionValue<string>): this {
     return this.withInjection(serializeGenericInjection("dynamic", value));
   }
 
-  fromContext(value: InjectionValue<string>) {
+  /** inject value to type */
+  fromContext(value: InjectionValue<string>): this {
     return this.withInjection(serializeGenericInjection("context", value));
   }
 
-  fromSecret(value: InjectionValue<string>) {
+  /** inject value from secret */
+  fromSecret(value: InjectionValue<string>): this {
     return this.withInjection(serializeGenericInjection("secret", value));
   }
 
-  fromParent(value: InjectionValue<string>) {
+  /** inject value from parent */
+  fromParent(value: InjectionValue<string>): this {
     return this.withInjection(serializeFromParentInjection(value));
   }
 
-  fromRandom() {
+  /** inject random value */
+  fromRandom(): this {
     return this.withInjection(serializeGenericInjection("random", null));
   }
 }
@@ -191,7 +198,8 @@ class Boolean extends Typedef {
   }
 }
 
-export function boolean(base: SimplifiedBase<TypeBase> = {}) {
+/** boolean type */
+export function boolean(base: SimplifiedBase<TypeBase> = {}): Boolean {
   const completeBase = {
     ...base,
     asId: false,
@@ -219,10 +227,11 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
   }
 }
 
+/** integer type */
 export function integer(
   data: SimplifiedNumericData<TypeInteger> = {},
   base: SimplifiedBase<TypeBase> & AsId = {},
-) {
+): Integer {
   const completeData = {
     ...data,
     enumeration: data.enumeration
@@ -260,10 +269,11 @@ class Float extends Typedef implements Readonly<TypeFloat> {
   }
 }
 
+/** floating-point type */
 export function float(
   data: SimplifiedNumericData<TypeFloat> = {},
   base: SimplifiedBase<TypeBase> = {},
-) {
+): Float {
   const completeData = {
     ...data,
     enumeration: data.enumeration
@@ -299,10 +309,11 @@ class StringT extends Typedef implements Readonly<TypeString> {
   }
 }
 
+/** string type */
 export function string(
   data: TypeString = {},
   base: SimplifiedBase<TypeBase> & AsId = {},
-) {
+): StringT {
   const completeBase = {
     ...base,
     asId: base.asId ?? false,
@@ -311,44 +322,57 @@ export function string(
   return new StringT(core.stringb(data, completeBase), data, completeBase);
 }
 
-export function uuid(base: SimplifiedBase<TypeBase> & AsId = {}) {
+/** uuid type */
+export function uuid(base: SimplifiedBase<TypeBase> & AsId = {}): StringT {
   return string({ format: "uuid" }, base);
 }
 
-export function email() {
+/** email type */
+export function email(): StringT {
   return string({ format: "email" });
 }
 
-export function uri() {
+/** uri type */
+export function uri(): StringT {
   return string({ format: "uri" });
 }
 
-export function ean() {
+/** ean type */
+export function ean(): StringT {
   return string({ format: "ean" });
 }
 
-export function path() {
+/** path type */
+export function path(): StringT {
   return string({ format: "path" });
 }
 
-export function datetime() {
+/** datetime type */
+export function datetime(): StringT {
   return string({ format: "date-time" });
 }
 
-export function json() {
+/** json type */
+export function json(): StringT {
   return string({ format: "json" });
 }
 
-export function hostname() {
+/** hostname type */
+export function hostname(): StringT {
   return string({ format: "hostname" });
 }
 
-export function phone() {
+/** phone number type */
+export function phone(): StringT {
   return string({ format: "phone" });
 }
 
 // Note: enum is a reserved word
-export function enum_(variants: string[], base: SimplifiedBase<TypeBase> = {}) {
+/** string enum type */
+export function enum_(
+  variants: string[],
+  base: SimplifiedBase<TypeBase> = {},
+): StringT {
   return string(
     {
       enumeration: variants.map((variant) => JSON.stringify(variant)),
@@ -370,10 +394,11 @@ class File extends Typedef {
   }
 }
 
+/** file type */
 export function file(
   data: Simplified<TypeFile> = {},
   base: SimplifiedBase<TypeBase> = {},
-) {
+): File {
   const completeBase = {
     ...base,
     asId: false,
@@ -397,11 +422,12 @@ class List extends Typedef {
   }
 }
 
+/** list type */
 export function list(
   variant: Typedef,
   data: Simplified<TypeList> = {},
   base: SimplifiedBase<TypeBase> = {},
-) {
+): List {
   const completeData = {
     of: variant._id,
     ...data,
@@ -429,11 +455,12 @@ class Optional extends Typedef {
   }
 }
 
+/** optional type */
 export function optional(
   variant: Typedef,
   data: Simplified<TypeOptional> = {},
   base: SimplifiedBase<TypeBase> = {},
-) {
+): Optional {
   const completeData = {
     of: variant._id,
     ...data,
@@ -460,10 +487,11 @@ class Union extends Typedef {
   }
 }
 
+/** union type */
 export function union(
   variants: Array<Typedef>,
   base: SimplifiedBase<TypeBase> = {},
-) {
+): Union {
   const data = {
     variants: new Uint32Array(variants.map((variant) => variant._id)),
   };
@@ -484,10 +512,11 @@ class Either extends Typedef {
   }
 }
 
+/** either type */
 export function either(
   variants: Array<Typedef>,
   base: SimplifiedBase<TypeBase> = {},
-) {
+): Either {
   const data = {
     variants: new Uint32Array(variants.map((variant) => variant._id)),
   };
@@ -507,6 +536,7 @@ export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
   }
 }
 
+/** struct type */
 export function struct<P extends { [key: string]: Typedef }>(
   props: P,
   base: SimplifiedBase<TypeBase> & { additionalProps?: boolean } = {},
@@ -618,7 +648,10 @@ export class Func<
     );
   }
 
-  reduce(value: Record<string, unknown | InheritDef>) {
+  /** reduce input type;
+   * see [parameter transformations](https://metatype.dev/docs/reference/types/parameter-transformations)
+   */
+  reduce(value: Record<string, unknown | InheritDef>): Func {
     const data: Reduce = {
       paths: buildReduceData(value),
     };
@@ -628,6 +661,9 @@ export class Func<
     return func(new Typedef(reducedId, {}), this.out, this.mat);
   }
 
+  /** apply injections to the input type;
+   * see [parameter transformations](https://metatype.dev/docs/reference/types/parameter-transformations)
+   */
   apply(value: ApplyParamObjectNode): Func<Typedef, O, M> {
     const serialized = serializeApplyParamNode(value);
     if (
@@ -649,6 +685,7 @@ export class Func<
     );
   }
 
+  /** set rate limiting configs */
   rate(inp: { calls: boolean; weight?: number }): Func<I, O, M> {
     return func(this.inp, this.out, this.mat, this.parameterTransform, {
       rateCalls: inp.calls ?? false,
@@ -656,7 +693,8 @@ export class Func<
     });
   }
 
-  static fromTypeFunc(data: FuncParams) {
+  /** */
+  static fromTypeFunc(data: FuncParams): Func {
     return func(
       new Typedef(data.inp, {}) as Struct<{ [key: string]: Typedef }>,
       new Typedef(data.out, {}),
@@ -670,6 +708,7 @@ type FuncConfig = {
   rateWeight?: number;
 };
 
+/** function type */
 export function func<
   I extends Typedef = Typedef,
   O extends Typedef = Typedef,
@@ -680,7 +719,7 @@ export function func<
   mat: M,
   transformData: ParameterTransform | null = null,
   config: FuncConfig | null = null,
-) {
+): Func<I, O, M> {
   const rateCalls = config?.rateCalls ?? false;
   const rateWeight = config?.rateWeight ?? undefined;
   return new Func<I, O, M>(

@@ -8,3 +8,4 @@ from typegraph.runtimes.http import HttpRuntime  # noqa
 from typegraph.runtimes.python import PythonRuntime  # noqa
 from typegraph.runtimes.random import RandomRuntime  # noqa
 from typegraph.runtimes.wasm import WasmRuntime  # noqa
+from typegraph.runtimes.kv import KvRuntime  # noqa

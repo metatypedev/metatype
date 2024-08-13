@@ -16,7 +16,8 @@ export class RandomRuntime extends Runtime {
     super(runtimes.registerRandomRuntime(data));
   }
 
-  gen(out: t.Typedef) {
+  /** create a function for random value generation */
+  gen(out: t.Typedef): t.Func {
     const effect = fx.read();
 
     const matId = runtimes.createRandomMat(

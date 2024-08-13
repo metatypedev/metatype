@@ -8,11 +8,12 @@ use crate::runtimes::{
     Runtime, TemporalMaterializer, WasmMaterializer,
 };
 use crate::wit::core::{Artifact as WitArtifact, RuntimeId};
-use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
+use crate::wit::runtimes::{HttpMethod, KvMaterializer, MaterializerHttpRequest};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
 use common::typegraph::runtimes::http::HTTPRuntimeData;
+use common::typegraph::runtimes::kv::KvRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
@@ -378,6 +379,31 @@ impl MaterializerConverter for TemporalMaterializer {
     }
 }
 
+impl MaterializerConverter for KvMaterializer {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<Materializer> {
+        let runtime = c.register_runtime(runtime_id)?;
+        let data = serde_json::from_value(json!({})).map_err(|e| e.to_string())?;
+        let name = match self {
+            KvMaterializer::Get => "kv_get".to_string(),
+            KvMaterializer::Set => "kv_set".to_string(),
+            KvMaterializer::Delete => "kv_delete".to_string(),
+            KvMaterializer::Keys => "kv_keys".to_string(),
+            KvMaterializer::Values => "kv_values".to_string(),
+        };
+        Ok(Materializer {
+            name,
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
 pub fn convert_materializer(
     c: &mut TypegraphContext,
     mat: RawMaterializer,
@@ -478,5 +504,6 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             }))
             .into())
         }
+        Runtime::Kv(d) => Ok(TGRuntime::Known(Rt::Kv(KvRuntimeData { url: d.url.clone() })).into()),
     }
 }

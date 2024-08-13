@@ -28,9 +28,9 @@ use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
-    MaterializerHttpRequest, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
-    RandomRuntimeData, SubstantialRuntimeData, TemporalOperationData, TemporalRuntimeData,
-    WasmRuntimeData,
+    KvMaterializer, KvRuntimeData, MaterializerHttpRequest, PrismaLinkData,
+    PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData, SubstantialRuntimeData,
+    TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -69,6 +69,7 @@ pub enum Runtime {
     Typegraph,
     S3(Rc<S3RuntimeData>),
     Substantial(Rc<SubstantialRuntimeData>),
+    Kv(Rc<KvRuntimeData>),
 }
 
 #[derive(Debug, Clone)]
@@ -182,6 +183,14 @@ impl Materializer {
             data: Rc::new(data).into(),
         }
     }
+
+    fn kv(runtime_id: RuntimeId, data: KvMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: Rc::new(data).into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -200,6 +209,7 @@ pub enum MaterializerData {
     Typegraph(TypegraphOperation),
     S3(Rc<S3Materializer>),
     Substantial(Rc<SubstantialMaterializer>),
+    Kv(Rc<KvMaterializer>),
 }
 
 macro_rules! prisma_op {
@@ -672,5 +682,17 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         data: wit::SubstantialOperationData,
     ) -> Result<FuncParams, wit::Error> {
         substantial_operation(runtime, data)
+    }
+
+    fn register_kv_runtime(data: KvRuntimeData) -> Result<RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::Kv(data.into())))
+    }
+
+    fn kv_operation(
+        base: BaseMaterializer,
+        data: KvMaterializer,
+    ) -> Result<MaterializerId, wit::Error> {
+        let mat = Materializer::kv(base.runtime, data, base.effect);
+        Ok(Store::register_materializer(mat))
     }
 }

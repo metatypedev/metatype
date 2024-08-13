@@ -1,24 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Runtime } from "../runtimes/mod.ts";
+import { Materializer, Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../wit.ts";
-import { Func, Struct, Typedef } from "../types.ts";
+import { Func, Typedef } from "../types.ts";
 import {
   SubstantialOperationData,
   SubstantialOperationType,
   Workflow,
 } from "../gen/typegraph_core.d.ts";
-
-export type CoreDynFunction = Func<
-  Struct<{
-    [key: string]: Typedef;
-  }>,
-  Typedef,
-  {
-    _id: number;
-  }
->;
 
 export class SubstantialRuntime extends Runtime {
   endpoint: string;
@@ -57,7 +47,7 @@ export class SubstantialRuntime extends Runtime {
   #genericSubstantialFunc(
     operation: SubstantialOperationType,
     funcArg?: Typedef,
-  ): CoreDynFunction {
+  ): Func<Typedef, Typedef, Materializer> {
     const data = {
       funcArg: funcArg?._id,
       operation,
@@ -66,24 +56,24 @@ export class SubstantialRuntime extends Runtime {
     return Func.fromTypeFunc(funcData);
   }
 
-  start(): CoreDynFunction {
+  start(): Func<Typedef, Typedef, Materializer> {
     return this.#genericSubstantialFunc({
       tag: "start",
       val: this.workflow!,
     });
   }
 
-  stop(): CoreDynFunction {
+  stop(): Func<Typedef, Typedef, Materializer> {
     return this.#genericSubstantialFunc({
       tag: "stop",
       val: this.workflow!,
     });
   }
 
-  send(payload: Typedef): CoreDynFunction {
+  send(payload: Typedef): Func<Typedef, Typedef, Materializer> {
     return this.#genericSubstantialFunc(
       {
-        tag: "stop",
+        tag: "send",
         val: this.workflow!,
       },
       payload,

@@ -151,9 +151,11 @@ typegraphs:
     exclude:
       - "**/*"
       - "typegraphs/temporal.py"
+      - "typegraphs/kv.py"
   typescript:
     exclude:
       - "typegraphs/temporal.ts"
+      - "typegraphs/kv.ts"
     include:
       - "typegraphs/*.ts"
   javascript:

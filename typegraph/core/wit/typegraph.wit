@@ -486,7 +486,6 @@ interface runtimes {
 
     register-typegraph-materializer: func(operation: typegraph-operation) -> result<materializer-id, error>;
 
-
     // substantial
     record substantial-runtime-data {
         endpoint: string,
@@ -518,6 +517,23 @@ interface runtimes {
 
     register-substantial-runtime: func(data: substantial-runtime-data) -> result<runtime-id, error>;
     generate-substantial-operation: func(runtime: runtime-id, data: substantial-operation-data) -> result<func-params, error>;
+    
+    // kv
+    record kv-runtime-data {
+        url: string
+    }
+    
+    register-kv-runtime: func(data: kv-runtime-data) -> result<runtime-id, error>;
+
+    enum kv-materializer {
+        get,
+        set,
+        delete,
+        keys,
+        values,
+    }
+
+    kv-operation: func(base: base-materializer, data: kv-materializer) -> result<materializer-id, error>;
 }
 
 interface aws {

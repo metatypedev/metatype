@@ -16,9 +16,10 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "8d50518"
+  GHJK_VERSION: "b702292"
   GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
+  DOCKER_BUILD_NO_SUMMARY: true
 
 jobs:
   check-bump:
@@ -159,7 +160,7 @@ jobs:
       )
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write # The OIDC ID token is used for authentication with JSR.    
     steps:
       - uses: actions/checkout@v4

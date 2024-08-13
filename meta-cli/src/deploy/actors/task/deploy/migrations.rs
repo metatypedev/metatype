@@ -201,6 +201,7 @@ impl DeployActionInner {
     }
 }
 
+#[allow(unused)] // FIXME:
 #[derive(Debug)]
 pub struct ConfirmDatabaseResetRequired {
     pub task: Addr<TaskActor<DeployAction>>,

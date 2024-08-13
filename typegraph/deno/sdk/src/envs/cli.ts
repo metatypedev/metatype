@@ -95,11 +95,13 @@ export function loadCliEnv(): CliEnv | null {
 
 export const CLI_ENV = loadCliEnv();
 
-export function hasCliEnv() {
+/** check if running in the meta cli */
+export function hasCliEnv(): boolean {
   return CLI_ENV != null;
 }
 
-export function getCliEnv() {
+/** get the envs from meta cli */
+export function getCliEnv(): CliEnv {
   if (CLI_ENV == null) {
     throw new Error("cannot be called in this context");
   }

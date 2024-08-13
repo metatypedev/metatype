@@ -104,8 +104,10 @@ impl ConnectedEngine {
 #[serde(crate = "serde", rename_all = "camelCase")]
 pub struct ConstructorOptions {
     pub datamodel: String,
+    #[allow(unused)] // FIXME:
     pub log_level: String,
     #[serde(default)]
+    #[allow(unused)] // FIXME:
     pub log_queries: bool,
     #[serde(default)]
     pub datasource_overrides: BTreeMap<String, String>,

@@ -15,13 +15,24 @@ type LangRuntimeConfig<V> = {
 };
 
 const envs = {
-  python: {},
+  python: {
+    RUST_LOG: "trace",
+  },
   deno: {
     MCLI_LOADER_CMD:
       "deno run -A --import-map=../../typegate/import_map.json {filepath}",
+    RUST_LOG: "trace",
   },
-  node: {},
+  node: {
+    RUST_LOG: "trace",
+  },
 } as LangRuntimeConfig<Record<string, string>>;
+
+const files = {
+  python: "api/example.py",
+  deno: "api/example.ts",
+  node: "api/example.ts",
+} as LangRuntimeConfig<string>;
 
 const install = {
   python: async (_dir: string) => {},
@@ -96,6 +107,8 @@ for (const template of ["python", "deno", "node"] as const) {
         "--gate",
         `http://localhost:${t.port}`,
         "--allow-dirty",
+        "-f",
+        files[template],
       );
       console.log(out);
     },

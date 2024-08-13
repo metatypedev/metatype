@@ -15,13 +15,13 @@ exclude = [
   "libs/pyrt_wit_wire",
 ]
 [workspace.package] 
-version = "0.4.5"
+version = "0.4.8-0"
 edition = "2021"
 
 [workspace.dependencies]
 # deno = { path =  "../deno/cli"}
-deno = { git = "https://github.com/metatypedev/deno", branch = "v1.43.6-embeddable" }
-deno_core = { version = "=0.280.0" }
+deno = { git = "https://github.com/metatypedev/deno", branch = "v1.45.2-embeddable" }
+deno_core = { version = "=0.293.0" }
 
 # internal crates
 mt_deno = { path = "libs/deno/" }

@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.4.5"
+version = "0.4.8-0"
 edition = "2021"
 
 description = "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are."
@@ -99,7 +99,6 @@ tempfile.workspace = true
 # http
 reqwest = { workspace = true, features = ["json"] }
 actix = "0.13.3"
-actix-web = "4.6.0"
 
 # logging
 tracing.workspace = true
@@ -112,7 +111,7 @@ color-eyre.workspace = true
 # misc
 prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 nix = { version = "0.29.0", features = ["signal"] }
-lade-sdk = "0.9.1"
+lade-sdk = { git = "https://github.com/zifeo/lade", branch = "main" }
 git2 = { version = "0.18.3", features = [
     "vendored-libgit2",
 ], default-features = false }

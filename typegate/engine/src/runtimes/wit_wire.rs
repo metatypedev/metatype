@@ -199,7 +199,9 @@ impl Host for TypegateHost {
                     // and yet we're transmuting it to a Local here.
                     // This is observed from the deno codebase
                     // and I can't explain it
-                    let func = unsafe { std::mem::transmute::<_, v8::Local<v8::Function>>(js_fn) };
+                    let func = unsafe {
+                        std::mem::transmute::<SendPtr<v8::Function>, v8::Local<v8::Function>>(js_fn)
+                    };
                     let res = func
                         .call(tc_scope, recv.into(), &params)
                         .expect("got null from hostcall");
