@@ -1,12 +1,17 @@
 # skip:start
 from typegraph import Graph, Policy, typegraph
+from typegraph.graph.params import Cors
 from typegraph.runtimes.kv import KvRuntime
 
 # skip:end
 
 
-@typegraph()
-def kv(g: Graph):
+@typegraph(
+    # skip:start
+    cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    # skip:end
+)
+def key_value(g: Graph):
     kv = KvRuntime("REDIS")
 
     g.expose(
