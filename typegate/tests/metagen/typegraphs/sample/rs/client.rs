@@ -1947,9 +1947,6 @@ mod node_metas {
         }
     }
 
-    pub fn Func25() -> NodeMeta {
-        NodeMeta { ..scalar() }
-    }
     pub fn Post() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -1963,9 +1960,6 @@ mod node_metas {
             ),
         }
     }
-    pub fn Func24() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
     pub fn Func27() -> NodeMeta {
         NodeMeta { ..Post() }
     }
@@ -1973,19 +1967,6 @@ mod node_metas {
         NodeMeta {
             arg_types: Some([("id".into(), "String13".into())].into()),
             ..Post()
-        }
-    }
-    pub fn Func26() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("id".into(), "String4".into()),
-                    ("slug".into(), "String1".into()),
-                    ("title".into(), "String1".into()),
-                ]
-                .into(),
-            ),
-            ..scalar()
         }
     }
     pub fn User() -> NodeMeta {
@@ -2004,10 +1985,25 @@ mod node_metas {
     pub fn Func23() -> NodeMeta {
         NodeMeta { ..User() }
     }
-}
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct Object21Partial {
-    pub id: Option<String>,
+    pub fn Func26() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("id".into(), "String4".into()),
+                    ("slug".into(), "String1".into()),
+                    ("title".into(), "String1".into()),
+                ]
+                .into(),
+            ),
+            ..scalar()
+        }
+    }
+    pub fn Func24() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn Func25() -> NodeMeta {
+        NodeMeta { ..scalar() }
+    }
 }
 pub type StringUuid = String;
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -2015,6 +2011,10 @@ pub struct PostPartial {
     pub id: Option<StringUuid>,
     pub slug: Option<String>,
     pub title: Option<String>,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Object21Partial {
+    pub id: Option<String>,
 }
 pub type StringEmail = String;
 pub type Post7 = Vec<PostPartial>;

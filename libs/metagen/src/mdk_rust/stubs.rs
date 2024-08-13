@@ -176,10 +176,8 @@ mod test {
             r#"// gen-static-end
 use types::*;
 pub mod types {
-    use super::*;
     pub type MyInt = i64;
 }
-use stubs::*;
 pub mod stubs {
     use super::*;
     pub trait MyFunc: Sized + 'static {

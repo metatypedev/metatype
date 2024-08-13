@@ -65,7 +65,9 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
         for (path, buf) in files.0 {
             let path = tmp_dir.join(path);
             tokio::fs::create_dir_all(path.parent().unwrap()).await?;
-            tokio::fs::write(path, buf.contents).await?;
+            if buf.overwrite || !tokio::fs::try_exists(&path).await? {
+                tokio::fs::write(path, buf.contents).await?;
+            }
         }
         // compile
         (case.build_fn)(BuildArgs {

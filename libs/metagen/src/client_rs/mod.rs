@@ -378,6 +378,42 @@ mod node_metas {{
     Ok(memo)
 }
 
+struct NameMapper {
+    nodes: Vec<Rc<TypeNode>>,
+    memo: std::cell::RefCell<NameMemo>,
+}
+
+impl NameMapper {
+    pub fn name_for(&self, id: u32) -> Rc<str> {
+        self.memo
+            .borrow_mut()
+            .entry(id)
+            .or_insert_with(|| {
+                Rc::from(normalize_type_title(&self.nodes[id as usize].base().title))
+            })
+            .clone()
+    }
+}
+
+pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
+    let cargo_toml = include_str!("static/Cargo.toml");
+    if let Some(crate_name) = crate_name {
+        const DEF_CRATE_NAME: &str = "client_rs_static";
+        cargo_toml.replace(DEF_CRATE_NAME, crate_name)
+    } else {
+        cargo_toml.to_string()
+    }
+}
+
+pub fn gen_lib_rs() -> String {
+    r#"
+mod client;
+pub use client::*;
+
+"#
+    .into()
+}
+
 #[test]
 fn e2e() -> anyhow::Result<()> {
     use crate::tests::*;
@@ -433,53 +469,9 @@ fn e2e() -> anyhow::Result<()> {
                         Ok(())
                     })
                 },
-                target_dir: Some("./tests/client_rs/".into()),
+                target_dir: Some("./fixtures/client_rs/".into()),
             }])
             .await
         })?;
     Ok(())
-}
-
-struct NameMapper {
-    nodes: Vec<Rc<TypeNode>>,
-    memo: std::cell::RefCell<NameMemo>,
-}
-
-impl NameMapper {
-    pub fn name_for(&self, id: u32) -> Rc<str> {
-        self.memo
-            .borrow_mut()
-            .entry(id)
-            .or_insert_with(|| {
-                Rc::from(normalize_type_title(&self.nodes[id as usize].base().title))
-            })
-            .clone()
-    }
-}
-
-pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
-    let cargo_toml = include_str!("static/Cargo.toml");
-    let mut cargo_toml = if let Some(crate_name) = crate_name {
-        const DEF_CRATE_NAME: &str = "client_rs_static";
-        cargo_toml.replace(DEF_CRATE_NAME, crate_name)
-    } else {
-        cargo_toml.to_string()
-    };
-    cargo_toml.push_str(
-        r#"
-
-[profile.release]
-strip = "symbols"
-opt-level = "z""#,
-    );
-    cargo_toml
-}
-
-pub fn gen_lib_rs() -> String {
-    r#"
-mod client;
-pub use client::*;
-
-"#
-    .into()
 }

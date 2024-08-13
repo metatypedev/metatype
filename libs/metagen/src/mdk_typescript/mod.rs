@@ -225,7 +225,7 @@ fn e2e() -> anyhow::Result<()> {
                         Ok(())
                     })
                 },
-                target_dir: Some("./tests/mat_rust/".into()),
+                target_dir: None,
             }])
             .await
         })?;

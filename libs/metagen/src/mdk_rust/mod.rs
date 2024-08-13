@@ -149,7 +149,6 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
     gen_static(&mut mod_rs)?;
     writeln!(&mut mod_rs.buf, "use types::*;")?;
     writeln!(&mut mod_rs.buf, "pub mod types {{")?;
-    writeln!(&mut mod_rs.buf, "    use super::*;")?;
     let ty_name_memo = {
         let mut renderer = shared::types::TypeRenderer::new(
             tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
@@ -176,7 +175,6 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
         name_memo
     };
     writeln!(&mut mod_rs.buf, "}}")?;
-    writeln!(&mut mod_rs.buf, "use stubs::*;")?;
     writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
     writeln!(&mut mod_rs.buf, "    use super::*;")?;
     {
@@ -347,7 +345,7 @@ fn e2e() -> anyhow::Result<()> {
                         Ok(())
                     })
                 },
-                target_dir: Some("./tests/mat_rust/".into()),
+                target_dir: Some("./fixtures/mat_rust/".into()),
             }])
             .await
         })?;

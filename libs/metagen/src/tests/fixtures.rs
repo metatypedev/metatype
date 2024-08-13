@@ -7,7 +7,7 @@ use common::typegraph::*;
 pub async fn test_typegraph_1() -> anyhow::Result<Box<Typegraph>> {
     let out = tokio::process::Command::new("cargo")
         .args(
-            "run -p meta-cli -- serialize -f tests/tg.ts -vvv"
+            "run -p meta-cli -- serialize -f fixtures/tg.ts -vvv"
                 // "run -p meta-cli -- serialize -f ../../examples/typegraphs/reduce.py"
                 .split(' ')
                 .collect::<Vec<_>>(),
@@ -109,7 +109,7 @@ pub fn default_type_node_base() -> TypeNodeBase {
 pub async fn test_typegraph_3() -> anyhow::Result<Box<Typegraph>> {
     let out = tokio::process::Command::new("cargo")
         .args(
-            "run -p meta-cli -- serialize -f tests/tg2.ts -vvv"
+            "run -p meta-cli -- serialize -f fixtures/tg2.ts -vvv"
                 // "run -p meta-cli -- serialize -f ../../examples/typegraphs/reduce.py"
                 .split(' ')
                 .collect::<Vec<_>>(),

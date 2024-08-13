@@ -284,6 +284,23 @@ class NodeDescs:
     Ok(memo)
 }
 
+struct NameMapper {
+    nodes: Vec<Rc<TypeNode>>,
+    memo: std::cell::RefCell<NameMemo>,
+}
+
+impl NameMapper {
+    pub fn name_for(&self, id: u32) -> Rc<str> {
+        self.memo
+            .borrow_mut()
+            .entry(id)
+            .or_insert_with(|| {
+                Rc::from(normalize_type_title(&self.nodes[id as usize].base().title))
+            })
+            .clone()
+    }
+}
+
 #[test]
 fn e2e() -> anyhow::Result<()> {
     use crate::tests::*;
@@ -341,21 +358,4 @@ fn e2e() -> anyhow::Result<()> {
             .await
         })?;
     Ok(())
-}
-
-struct NameMapper {
-    nodes: Vec<Rc<TypeNode>>,
-    memo: std::cell::RefCell<NameMemo>,
-}
-
-impl NameMapper {
-    pub fn name_for(&self, id: u32) -> Rc<str> {
-        self.memo
-            .borrow_mut()
-            .entry(id)
-            .or_insert_with(|| {
-                Rc::from(normalize_type_title(&self.nodes[id as usize].base().title))
-            })
-            .clone()
-    }
 }

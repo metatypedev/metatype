@@ -655,19 +655,16 @@ const nodeMetas = {
       ],
     };
   },
-  User(): NodeMeta {
+
+  Func24(): NodeMeta {
     return {
-      subNodes: [
-        ["id", nodeMetas.scalar],
-        ["email", nodeMetas.scalar],
-        ["posts", nodeMetas.Post],
-      ],
+      ...nodeMetas.Post(),
     };
   },
 
-  Func23(): NodeMeta {
+  Func25(): NodeMeta {
     return {
-      ...nodeMetas.User(),
+      ...nodeMetas.scalar(),
     };
   },
 
@@ -682,21 +679,24 @@ const nodeMetas = {
     };
   },
 
-  Func24(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-
-  Func25(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
-
   Func27(): NodeMeta {
     return {
       ...nodeMetas.Post(),
+    };
+  },
+  User(): NodeMeta {
+    return {
+      subNodes: [
+        ["id", nodeMetas.scalar],
+        ["email", nodeMetas.scalar],
+        ["posts", nodeMetas.Post],
+      ],
+    };
+  },
+
+  Func23(): NodeMeta {
+    return {
+      ...nodeMetas.User(),
     };
   },
 
