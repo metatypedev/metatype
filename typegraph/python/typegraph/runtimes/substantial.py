@@ -1,8 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from ast import List
-from typing import Union
+from typing import List, Union
 from typegraph import t
 from typegraph.gen.exports.runtimes import (
     SubstantialOperationData,
@@ -39,7 +38,7 @@ class SubstantialRuntime(Runtime):
     def _generic_substantial_func(
         self,
         operation: SubstantialOperationType,
-        func_arg: Union[None, t.typedef] = None,
+        func_arg: Union[None, "t.typedef"] = None,
     ):
         data = SubstantialOperationData(
             func_arg=None if func_arg is None else func_arg.id, operation=operation
@@ -58,6 +57,6 @@ class SubstantialRuntime(Runtime):
         operation = SubstantialOperationTypeStop(self.workflow)
         return self._generic_substantial_func(operation, None)
 
-    def send(self, payload: t.typedef):
+    def send(self, payload: "t.typedef"):
         operation = SubstantialOperationTypeSend(self.workflow)
         return self._generic_substantial_func(operation, payload)
