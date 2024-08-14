@@ -21,7 +21,7 @@ impl RsNodeSelectionsRenderer {
         props: IndexMap<String, SelectionTy>,
     ) -> std::fmt::Result {
         // derive prop
-        write!(dest, "#[derive(Default, Debug)]")?;
+        writeln!(dest, "#[derive(Default, Debug)]")?;
         writeln!(dest, "pub struct {ty_name}<ATy = NoAlias> {{")?;
         for (name, select_ty) in &props {
             use SelectionTy::*;

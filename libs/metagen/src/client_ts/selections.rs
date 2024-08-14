@@ -28,16 +28,16 @@ impl TsNodeSelectionsRenderer {
         for (name, select_ty) in props {
             use SelectionTy::*;
             match select_ty {
-                Scalar => writeln!(dest, r#"  {name}?: ScalarSelectNoArgs,"#)?,
+                Scalar => writeln!(dest, r#"  {name}?: ScalarSelectNoArgs;"#)?,
                 ScalarArgs { arg_ty } => {
-                    writeln!(dest, r#"  {name}?: ScalarSelectArgs<{arg_ty}>,"#)?
+                    writeln!(dest, r#"  {name}?: ScalarSelectArgs<{arg_ty}>;"#)?
                 }
                 Composite { select_ty } => {
-                    writeln!(dest, r#"  {name}?: CompositeSelectNoArgs<{select_ty}>,"#)?
+                    writeln!(dest, r#"  {name}?: CompositeSelectNoArgs<{select_ty}>;"#)?
                 }
                 CompositeArgs { arg_ty, select_ty } => writeln!(
                     dest,
-                    r#"  {name}?: CompositeSelectArgs<{arg_ty}, {select_ty}>,"#
+                    r#"  {name}?: CompositeSelectArgs<{arg_ty}, {select_ty}>;"#
                 )?,
             };
         }

@@ -54,7 +54,6 @@ impl TsNodeMetasRenderer {
         write!(
             dest,
             r#"
-
   {ty_name}(): NodeMeta {{
     return {{
       ...nodeMetas.{return_node}(),"#

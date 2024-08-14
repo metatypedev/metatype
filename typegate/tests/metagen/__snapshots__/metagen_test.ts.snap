@@ -513,7 +513,6 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    use super::*;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Object7 {
         pub name: String,
@@ -532,7 +531,6 @@ pub mod types {
         pub name: String,
     }
 }
-use stubs::*;
 pub mod stubs {
     use super::*;
     pub trait Func18: Sized + 'static {
@@ -1267,7 +1265,6 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    use super::*;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Object7 {
         pub name: String,
@@ -1286,7 +1283,6 @@ pub mod types {
         pub name: String,
     }
 }
-use stubs::*;
 pub mod stubs {
     use super::*;
     pub trait Func18: Sized + 'static {

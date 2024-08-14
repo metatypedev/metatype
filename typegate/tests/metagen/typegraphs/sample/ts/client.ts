@@ -655,35 +655,6 @@ const nodeMetas = {
       ],
     };
   },
-
-  Func24(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-
-  Func25(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
-
-  Func26(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "String4",
-        slug: "String1",
-        title: "String1",
-      },
-    };
-  },
-
-  Func27(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
   User(): NodeMeta {
     return {
       subNodes: [
@@ -700,12 +671,41 @@ const nodeMetas = {
     };
   },
 
+  Func26(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "String4",
+        slug: "String1",
+        title: "String1",
+      },
+    };
+  },
+
   Func28(): NodeMeta {
     return {
       ...nodeMetas.Post(),
       argumentTypes: {
         id: "String13",
       },
+    };
+  },
+
+  Func25(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+
+  Func24(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+
+  Func27(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
     };
   },
 };
