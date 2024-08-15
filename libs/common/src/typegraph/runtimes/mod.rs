@@ -9,6 +9,7 @@ use substantial::SubstantialRuntimeData;
 
 use self::deno::DenoRuntimeData;
 use self::graphql::GraphQLRuntimeData;
+use self::grpc::GrpcRuntimeData;
 use self::http::HTTPRuntimeData;
 use self::kv::KvRuntimeData;
 use self::prisma::PrismaRuntimeData;
@@ -20,6 +21,7 @@ use self::wasm::WasmRuntimeData;
 
 pub mod deno;
 pub mod graphql;
+pub mod grpc;
 pub mod http;
 pub mod kv;
 pub mod prisma;
@@ -59,6 +61,7 @@ pub enum KnownRuntime {
     Typegraph(TypegraphRuntimeData),
     Substantial(SubstantialRuntimeData),
     Kv(KvRuntimeData),
+    Grpc(GrpcRuntimeData),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -93,6 +96,7 @@ impl TGRuntime {
                 KnownRuntime::Typegraph(_) => "typegraph",
                 KnownRuntime::Substantial(_) => "substantial",
                 KnownRuntime::Kv(_) => "kv",
+                KnownRuntime::Grpc(_) => "grpc",
             },
             TGRuntime::Unknown(UnknownRuntime { name, .. }) => name,
         }

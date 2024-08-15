@@ -27,10 +27,11 @@ use crate::validation::types::validate_value;
 use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
-    self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
-    KvMaterializer, KvRuntimeData, MaterializerHttpRequest, PrismaLinkData,
-    PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData, SubstantialRuntimeData,
+    self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, GrpcMaterializer,
+    GrpcRuntimeData, HttpRuntimeData, KvMaterializer, KvRuntimeData, MaterializerHttpRequest,
+    PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData,
     TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
+    PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData, SubstantialRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -70,6 +71,7 @@ pub enum Runtime {
     S3(Rc<S3RuntimeData>),
     Substantial(Rc<SubstantialRuntimeData>),
     Kv(Rc<KvRuntimeData>),
+    Grpc(Rc<GrpcRuntimeData>),
 }
 
 #[derive(Debug, Clone)]
@@ -191,6 +193,14 @@ impl Materializer {
             data: Rc::new(data).into(),
         }
     }
+
+    fn grpc(runtime_id: RuntimeId, data: GrpcMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: Rc::new(data).into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -210,6 +220,7 @@ pub enum MaterializerData {
     S3(Rc<S3Materializer>),
     Substantial(Rc<SubstantialMaterializer>),
     Kv(Rc<KvMaterializer>),
+    Grpc(Rc<GrpcMaterializer>),
 }
 
 macro_rules! prisma_op {
@@ -693,6 +704,18 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         data: KvMaterializer,
     ) -> Result<MaterializerId, wit::Error> {
         let mat = Materializer::kv(base.runtime, data, base.effect);
+        Ok(Store::register_materializer(mat))
+    }
+
+    fn register_grpc_runtime(data: GrpcRuntimeData) -> Result<RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::Grpc(data.into())))
+    }
+
+    fn call_grpc_methode(
+        base: BaseMaterializer,
+        data: GrpcMaterializer,
+    ) -> Result<MaterializerId, wit::Error> {
+        let mat = Materializer::grpc(base.runtime, data, base.effect);
         Ok(Store::register_materializer(mat))
     }
 }
