@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import type {
+  GrpcRegisterInput,
+  GrpcRegisterOutput,
   ParsedDiff,
   PrismaApplyOut,
   PrismaCreateOut,
@@ -451,5 +453,16 @@ export function archive(a0: ArchiveInp): ArchiveResult {
     return { Ok: { base64: res } };
   } catch (err) {
     return { Err: { message: err.toString() } };
+  }
+}
+
+export async function grpc_register(
+  a0: GrpcRegisterInput,
+): Promise<GrpcRegisterOutput> {
+  try {
+    await Meta.grpc.gprcRegister(a0);
+    return "Ok";
+  } catch (err) {
+    return { Err: { message: err.to_string() } };
   }
 }

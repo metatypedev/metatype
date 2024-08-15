@@ -51,4 +51,7 @@ globalThis.Meta = {
     destroy: getOp("op_wit_wire_destroy"),
     handle: getOp("op_wit_wire_handle"),
   },
+  grpc: {
+    gprcRegister: getOp("op_grpc_register"),
+  },
 };

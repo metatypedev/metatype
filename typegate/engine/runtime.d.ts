@@ -61,6 +61,10 @@ type MetaNS = {
       args: WitWireReq,
     ) => Promise<WitWireHandleResponse>;
   };
+
+  grpc: {
+    grpcRegister: (inp: GrpcRegisterInput) => Promise<GrpcRegisterOutput>;
+  };
 };
 
 interface WasmInput {
@@ -258,4 +262,16 @@ export type WitWireHandleResponse =
   }
   | {
     HandlerErr: string;
+  };
+
+export type GrpcRegisterInput = {
+  url: string;
+};
+
+export type GrpcRegisterOutput =
+  | "Ok"
+  | {
+    Err: {
+      message: string;
+    };
   };
