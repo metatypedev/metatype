@@ -40,6 +40,8 @@ import { projectDir } from "./utils.ts";
 
 const wd = $.path(projectDir);
 
+const profile: string = "debug";
+
 async function listTestFiles(filesArg: string[]): Promise<string[]> {
   if (filesArg.length > 0) {
     const testFiles = [] as string[];
@@ -146,7 +148,7 @@ export async function testE2e(args: {
     TIMER_MAX_TIMEOUT_MS: "30000",
     // NOTE: ordering of the variables is important as we want the
     // `meta` build to be resolved before any system meta builds
-    PATH: `${wd.join("target/debug").toString()}:${Deno.env.get("PATH")}`,
+    PATH: `${wd.join(`target/${profile}`).toString()}:${Deno.env.get("PATH")}`,
   };
 
   if (await wd.join(".venv").exists()) {
@@ -169,7 +171,7 @@ export async function testE2e(args: {
   const prefix = "[dev/test.ts]";
   $.logStep(`${prefix} Testing with ${threads} threads`);
 
-  const xtask = wd.join("target/debug/xtask");
+  const xtask = wd.join(`target/${profile}/xtask`);
   const denoConfig = wd.join("typegate/deno.jsonc");
 
   function createRun(testFile: string, streamed: boolean): Run {
@@ -205,10 +207,12 @@ export async function testE2e(args: {
 
   const queue = [...filteredTestFiles];
 
+  const buildProfile = profile == "debug" ? "dev" : profile;
+
   $.logStep(`${prefix} Building xtask and meta-cli...`);
-  await $`cargo build -p meta-cli -F typegate
-          && mv target/debug/meta target/debug/meta-full
-          && cargo build -p xtask -p meta-cli`.cwd(wd);
+  await $`cargo build -p meta-cli -F typegate --${buildProfile}
+          && mv target/${profile}/meta target/${profile}/meta-full
+          && cargo build -p xtask -p meta-cli --${buildProfile}`.cwd(wd);
 
   $.logStep(`Discovered ${queue.length} test files to run`);
 

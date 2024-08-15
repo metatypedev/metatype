@@ -1270,126 +1270,144 @@
             "version-bump": {
               "ty": "denoFile@v1",
               "key": "version-bump",
-              "envKey": "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi"
+              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
             },
             "version-print": {
               "ty": "denoFile@v1",
               "key": "version-print",
               "desc": "Print $METATYPE_VERSION",
-              "envKey": "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi"
+              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
             },
             "test-lsp": {
               "ty": "denoFile@v1",
               "key": "test-lsp",
-              "envKey": "bciqfc7xpvg2we63kzdrshwyjudryc64lekcg2msgqnff7mnvox7n4fy"
+              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
             },
             "test-rust": {
               "ty": "denoFile@v1",
               "key": "test-rust",
-              "envKey": "bciqi3e7xmx27tdbvjwwwmh3tetevp3apldch7ifbpauxsovl4cohudq"
+              "envKey": "bciqov4rontailrkkhq4mmg6unksfithoszn3abi3pyfqnvlh6ynkvka"
             },
             "test-website": {
               "ty": "denoFile@v1",
               "key": "test-website",
               "workingDir": "./website",
-              "envKey": "bciqfc7xpvg2we63kzdrshwyjudryc64lekcg2msgqnff7mnvox7n4fy"
+              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
             },
             "test-e2e": {
               "ty": "denoFile@v1",
               "key": "test-e2e",
               "desc": "Shorthand for `dev/test.ts`",
-              "envKey": "bciqcwkq6wg63c6swnk5bcpk6svhd35mptdi5dzdv6vxb75zc7ooq24i"
+              "envKey": "bciqdyc67uwyl5pkoaaohvgmnpdtuamame6zvktiegfai562fuw5oiiq"
             },
             "lock-sed": {
               "ty": "denoFile@v1",
               "key": "lock-sed",
               "desc": "Update versions",
-              "envKey": "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi"
+              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
             },
             "lint-udeps": {
               "ty": "denoFile@v1",
               "key": "lint-udeps",
               "desc": "Check for unused cargo depenencies",
-              "envKey": "bciqkoolzb5k3ydzj3hahandxkfaxljpgidgdi6hpvrwxwal3ahmpi6y"
+              "envKey": "bciqgbrnhfvvtmoua3evkupx3f7tt6ma45tpnjsoh5lw5y2igquul76y"
             },
             "install-wasi-adapter": {
               "ty": "denoFile@v1",
               "key": "install-wasi-adapter",
-              "envKey": "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi"
+              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
             },
             "install-lsp": {
               "ty": "denoFile@v1",
               "key": "install-lsp",
-              "envKey": "bciqfc7xpvg2we63kzdrshwyjudryc64lekcg2msgqnff7mnvox7n4fy"
+              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
             },
             "install-website": {
               "ty": "denoFile@v1",
               "key": "install-website",
-              "envKey": "bciqfc7xpvg2we63kzdrshwyjudryc64lekcg2msgqnff7mnvox7n4fy"
+              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
             },
             "install-ts": {
               "ty": "denoFile@v1",
               "key": "install-ts",
-              "envKey": "bciqfc7xpvg2we63kzdrshwyjudryc64lekcg2msgqnff7mnvox7n4fy"
+              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
             },
             "install-py": {
               "ty": "denoFile@v1",
               "key": "install-py",
-              "envKey": "bciqfgfpcam23r6t6tpit5hjclrtwwptfo7yhwojwngqdm5xuhhcwgfa"
+              "envKey": "bciqmpo7soabnkxibgqgurlc5lfy4a7jeglk6v45x4e4k7wnmwmztaqq"
             },
             "install-sys": {
               "ty": "denoFile@v1",
               "key": "install-sys",
               "desc": "Print a command you can use to install system items",
-              "envKey": "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi"
+              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
             },
             "fetch-deno": {
               "ty": "denoFile@v1",
               "key": "fetch-deno",
               "desc": "Cache remote deno modules.",
-              "envKey": "bciqfc7xpvg2we63kzdrshwyjudryc64lekcg2msgqnff7mnvox7n4fy"
+              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
             },
             "dev-website": {
               "ty": "denoFile@v1",
               "key": "dev-website",
               "workingDir": "./website",
               "desc": "Launch the website",
-              "envKey": "bciqo5weutvl3sad2b52cigsr7pkzjaj33odvx5jhxmkukmffwwibjga"
+              "envKey": "bciqadrkruydvgov2zwklcwohmuno4nalyc3pg3yomdumdxfstvo4pby"
+            },
+            "dev-gate5": {
+              "ty": "denoFile@v1",
+              "key": "dev-gate5",
+              "desc": "Launch the typegate from the latests published image.",
+              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+            },
+            "dev-gate4": {
+              "ty": "denoFile@v1",
+              "key": "dev-gate4",
+              "desc": "Launch the typegate from the locally built typegate image.",
+              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+            },
+            "dev-gate3": {
+              "ty": "denoFile@v1",
+              "key": "dev-gate3",
+              "desc": "Launch the typegate from a locally found meta bin.",
+              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
             },
             "dev-gate2": {
               "ty": "denoFile@v1",
               "key": "dev-gate2",
               "desc": "Launch the typegate in sync mode.",
-              "envKey": "bciqjfazgnyxehqdfwztfmuymn25mgqm3uq5yelkqbpd5bcdkyyr5bdq"
+              "envKey": "bciqh7p45mporp4lmdynwq3xdlhbkauaww7ggluc2bzqgpkxyw7j76fq"
             },
             "dev-gate1": {
               "ty": "denoFile@v1",
               "key": "dev-gate1",
               "desc": "Launch the typegate in single-instance mode.",
-              "envKey": "bciqmxq7fex7x2jkdb6dxzvyqcdjopabf6bhclywyvzclkhflp2vi6ci"
+              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
             },
             "dev-eg-tgraphs": {
               "ty": "denoFile@v1",
               "key": "dev-eg-tgraphs",
               "desc": "meta dev example/typegraphs",
-              "envKey": "bciqhciuagnfwex2iffsvdcb7qvazygu3yvwuvt5f6u4xyye7cfxf62a"
+              "envKey": "bciqgpx2na2og2c3ty363m2kq3gficj4l4wxlpnrwl5gqiuzooondwja"
             },
             "dev-compose": {
               "ty": "denoFile@v1",
               "key": "dev-compose",
               "desc": "Wrapper around docker compose to manage runtime dependencies",
-              "envKey": "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi"
+              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
             },
             "dev": {
               "ty": "denoFile@v1",
               "key": "dev",
               "desc": "Execute dev/*.ts scripts.",
-              "envKey": "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi"
+              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
             },
             "gen-pyrt-bind": {
               "ty": "denoFile@v1",
               "key": "gen-pyrt-bind",
-              "envKey": "bciqjpe3qes7txbsoqf3vxksr3f7wglk2gb2wzi2qu2bmopfrtee56ly"
+              "envKey": "bciqbc7tuunt52ewlomqkynauomfweotxpf6hzut7yz532bwk2gckn5a"
             },
             "build-pyrt": {
               "ty": "denoFile@v1",
@@ -1397,17 +1415,17 @@
               "dependsOn": [
                 "gen-pyrt-bind"
               ],
-              "envKey": "bciqjpe3qes7txbsoqf3vxksr3f7wglk2gb2wzi2qu2bmopfrtee56ly"
+              "envKey": "bciqbc7tuunt52ewlomqkynauomfweotxpf6hzut7yz532bwk2gckn5a"
             },
             "build-tgraph-ts-jsr": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-ts-jsr",
-              "envKey": "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi"
+              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
             },
             "build-tgraph-core": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-core",
-              "envKey": "bciqfmm5ettbkgirjn4nkdpqsvno4pshaxnruan64q7lzhx2mey2a6ua"
+              "envKey": "bciqlo5nwzz6bg3k475s2w42hxaqdkixdva6tnew5gghedac5d3ng43y"
             },
             "build-tgraph-py": {
               "ty": "denoFile@v1",
@@ -1415,7 +1433,7 @@
               "dependsOn": [
                 "build-tgraph-core"
               ],
-              "envKey": "bciqlnczvw5r6erqm4vm5qffeg2hgtapvbpjjsapmbial3tlznbzjwoi"
+              "envKey": "bciqi3ve7wig2zhcduvq2kt63yovunribk6kzbha3nucg5fkcuabt7xa"
             },
             "build-tgraph-ts": {
               "ty": "denoFile@v1",
@@ -1423,7 +1441,7 @@
               "dependsOn": [
                 "build-tgraph-core"
               ],
-              "envKey": "bciqmbwvn7ih4u22vuxfgcw3r2mjgqox2wa3ygze7yrgd24gkjp5sifq"
+              "envKey": "bciqasechgtqcnyliotc6k53o62vzvfm5jut74mgewfwoz7j7szvibci"
             },
             "build-tgraph-ts-node": {
               "ty": "denoFile@v1",
@@ -1431,7 +1449,7 @@
               "dependsOn": [
                 "build-tgraph-ts"
               ],
-              "envKey": "bciqmbwvn7ih4u22vuxfgcw3r2mjgqox2wa3ygze7yrgd24gkjp5sifq"
+              "envKey": "bciqasechgtqcnyliotc6k53o62vzvfm5jut74mgewfwoz7j7szvibci"
             },
             "build-tgraph": {
               "ty": "denoFile@v1",
@@ -1440,12 +1458,12 @@
                 "build-tgraph-py",
                 "build-tgraph-ts-node"
               ],
-              "envKey": "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi"
+              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
             },
             "build-sys-tgraphs": {
               "ty": "denoFile@v1",
               "key": "build-sys-tgraphs",
-              "envKey": "bciqk6vtevi3uhed6toozarvuqez7nhcafw72ex5fetqxof3b3aqm3la"
+              "envKey": "bciqdvyz2p7j7h7mk6edcuetyuu3qaexepnlzvh57auyrscxa7nx6n2q"
             }
           },
           "tasksNamed": [
@@ -1465,6 +1483,9 @@
             "install-sys",
             "fetch-deno",
             "dev-website",
+            "dev-gate5",
+            "dev-gate4",
+            "dev-gate3",
             "dev-gate2",
             "dev-gate1",
             "dev-eg-tgraphs",
@@ -1486,7 +1507,7 @@
         "id": "envs",
         "config": {
           "envs": {
-            "bciqh67lbrzxdurxdyghhngxyhq5yllkjb4ubg6ewofj4azspil2sghq": {
+            "bciqc6sjkyyjd32glkf553dkax7lw66qkdlk4cvpwlnkqy62h3yz3bcy": {
               "desc": "the default default environment.",
               "provides": [
                 {
@@ -1496,8 +1517,26 @@
                 },
                 {
                   "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet___main"
+                }
+              ]
+            },
+            "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "info,swc_ecma_codegen=off,tracing::span=off"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1515,45 +1554,12 @@
                 }
               ]
             },
-            "bciqdohetprvjln4qpn2tot4epa7ikgm5nrevk2ouajpxvb6aistoroi": {
+            "bciqgbrnhfvvtmoua3evkupx3f7tt6ma45tpnjsoh5lw5y2igquul76y": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "TYPEGRAPH_VERSION",
-                  "val": "0.0.3"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "CLICOLOR_FORCE",
-                  "val": "1"
-                },
-                {
-                  "ty": "ghjk.ports.InstallSetRef",
-                  "setId": "ghjkEnvProvInstSet___main"
-                }
-              ]
-            },
-            "bciqkoolzb5k3ydzj3hahandxkfaxljpgidgdi6hpvrwxwal3ahmpi6y": {
-              "provides": [
-                {
-                  "ty": "posix.envVar",
-                  "key": "RUST_LOG",
-                  "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1571,17 +1577,12 @@
                 }
               ]
             },
-            "bciqjpe3qes7txbsoqf3vxksr3f7wglk2gb2wzi2qu2bmopfrtee56ly": {
+            "bciqbc7tuunt52ewlomqkynauomfweotxpf6hzut7yz532bwk2gckn5a": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1599,17 +1600,12 @@
                 }
               ]
             },
-            "bciqfgfpcam23r6t6tpit5hjclrtwwptfo7yhwojwngqdm5xuhhcwgfa": {
+            "bciqmpo7soabnkxibgqgurlc5lfy4a7jeglk6v45x4e4k7wnmwmztaqq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1627,17 +1623,12 @@
                 }
               ]
             },
-            "bciqfc7xpvg2we63kzdrshwyjudryc64lekcg2msgqnff7mnvox7n4fy": {
+            "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1655,17 +1646,12 @@
                 }
               ]
             },
-            "bciqo5weutvl3sad2b52cigsr7pkzjaj33odvx5jhxmkukmffwwibjga": {
+            "bciqadrkruydvgov2zwklcwohmuno4nalyc3pg3yomdumdxfstvo4pby": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1688,17 +1674,12 @@
                 }
               ]
             },
-            "bciqneegebfsc27gmtujwohhnwgziarymoanrpurvoxywgrg7orewtgy": {
+            "bciqahf2tfeocjdxm6vt4py7nen4konon5ufmjszqkuo4drhtj445zyi": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1716,17 +1697,12 @@
                 }
               ]
             },
-            "bciqi3e7xmx27tdbvjwwwmh3tetevp3apldch7ifbpauxsovl4cohudq": {
+            "bciqov4rontailrkkhq4mmg6unksfithoszn3abi3pyfqnvlh6ynkvka": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1744,17 +1720,12 @@
                 }
               ]
             },
-            "bciqmxq7fex7x2jkdb6dxzvyqcdjopabf6bhclywyvzclkhflp2vi6ci": {
+            "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1807,17 +1778,12 @@
                 }
               ]
             },
-            "bciqjfazgnyxehqdfwztfmuymn25mgqm3uq5yelkqbpd5bcdkyyr5bdq": {
+            "bciqh7p45mporp4lmdynwq3xdlhbkauaww7ggluc2bzqgpkxyw7j76fq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1910,17 +1876,12 @@
                 }
               ]
             },
-            "bciqhciuagnfwex2iffsvdcb7qvazygu3yvwuvt5f6u4xyye7cfxf62a": {
+            "bciqgpx2na2og2c3ty363m2kq3gficj4l4wxlpnrwl5gqiuzooondwja": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1938,17 +1899,12 @@
                 }
               ]
             },
-            "bciqfmm5ettbkgirjn4nkdpqsvno4pshaxnruan64q7lzhx2mey2a6ua": {
+            "bciqlo5nwzz6bg3k475s2w42hxaqdkixdva6tnew5gghedac5d3ng43y": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1971,17 +1927,12 @@
                 }
               ]
             },
-            "bciqlnczvw5r6erqm4vm5qffeg2hgtapvbpjjsapmbial3tlznbzjwoi": {
+            "bciqi3ve7wig2zhcduvq2kt63yovunribk6kzbha3nucg5fkcuabt7xa": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -2004,17 +1955,12 @@
                 }
               ]
             },
-            "bciqmbwvn7ih4u22vuxfgcw3r2mjgqox2wa3ygze7yrgd24gkjp5sifq": {
+            "bciqasechgtqcnyliotc6k53o62vzvfm5jut74mgewfwoz7j7szvibci": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -2037,17 +1983,12 @@
                 }
               ]
             },
-            "bciqk6vtevi3uhed6toozarvuqez7nhcafw72ex5fetqxof3b3aqm3la": {
+            "bciqdvyz2p7j7h7mk6edcuetyuu3qaexepnlzvh57auyrscxa7nx6n2q": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -2065,17 +2006,12 @@
                 }
               ]
             },
-            "bciqcwkq6wg63c6swnk5bcpk6svhd35mptdi5dzdv6vxb75zc7ooq24i": {
+            "bciqdyc67uwyl5pkoaaohvgmnpdtuamame6zvktiegfai562fuw5oiiq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -2093,17 +2029,12 @@
                 }
               ]
             },
-            "bciqm6h3xtp5dbm5fjfjxzt2tz4nah3kgfawp6nam3kbsjmdm47nansa": {
+            "bciqf76zyyuyjv6qftg3snjga2c5me32myn2nxlclr4kryuy2nobtbii": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -2121,17 +2052,12 @@
                 }
               ]
             },
-            "bciqlgq5a24bktwn7jeyggh7mwqabdjyk4mbu43bs2vt2nhnusxxpygq": {
+            "bciqkx557bvfx3hn4pl47jx75x37twor5h5jarz7kbk2tvzqv4xpw3vq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
                   "key": "RUST_LOG",
                   "val": "info,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "WASMTIME_BACKTRACE_DETAILS",
-                  "val": "1"
                 },
                 {
                   "ty": "posix.envVar",
@@ -2152,14 +2078,14 @@
           },
           "defaultEnv": "dev",
           "envsNamed": {
-            "main": "bciqh67lbrzxdurxdyghhngxyhq5yllkjb4ubg6ewofj4azspil2sghq",
-            "_wasm": "bciqjpe3qes7txbsoqf3vxksr3f7wglk2gb2wzi2qu2bmopfrtee56ly",
-            "_python": "bciqfgfpcam23r6t6tpit5hjclrtwwptfo7yhwojwngqdm5xuhhcwgfa",
-            "_ecma": "bciqfc7xpvg2we63kzdrshwyjudryc64lekcg2msgqnff7mnvox7n4fy",
-            "_rust": "bciqneegebfsc27gmtujwohhnwgziarymoanrpurvoxywgrg7orewtgy",
-            "ci": "bciqcwkq6wg63c6swnk5bcpk6svhd35mptdi5dzdv6vxb75zc7ooq24i",
-            "dev": "bciqm6h3xtp5dbm5fjfjxzt2tz4nah3kgfawp6nam3kbsjmdm47nansa",
-            "oci": "bciqlgq5a24bktwn7jeyggh7mwqabdjyk4mbu43bs2vt2nhnusxxpygq"
+            "main": "bciqc6sjkyyjd32glkf553dkax7lw66qkdlk4cvpwlnkqy62h3yz3bcy",
+            "_wasm": "bciqbc7tuunt52ewlomqkynauomfweotxpf6hzut7yz532bwk2gckn5a",
+            "_python": "bciqmpo7soabnkxibgqgurlc5lfy4a7jeglk6v45x4e4k7wnmwmztaqq",
+            "_ecma": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq",
+            "_rust": "bciqahf2tfeocjdxm6vt4py7nen4konon5ufmjszqkuo4drhtj445zyi",
+            "ci": "bciqdyc67uwyl5pkoaaohvgmnpdtuamame6zvktiegfai562fuw5oiiq",
+            "dev": "bciqf76zyyuyjv6qftg3snjga2c5me32myn2nxlclr4kryuy2nobtbii",
+            "oci": "bciqkx557bvfx3hn4pl47jx75x37twor5h5jarz7kbk2tvzqv4xpw3vq"
           }
         }
       }

@@ -73,7 +73,7 @@ RUN . "$GHJK_ACTIVATE" \
 COPY . .
 
 RUN . "$GHJK_ACTIVATE" \
-    && cargo build --profile $CARGO_PROFILE --package typegate \
+    && cargo build --profile $CARGO_PROFILE --package typegate --locked \
     && ( \
         [ $CARGO_PROFILE = 'release' ]  \
             && cp target/release/typegate typegate-bin \
@@ -110,6 +110,11 @@ RUN . "$GHJK_ACTIVATE" \
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} as prd
 
 SHELL ["/busybox/sh", "-c"]
+
+# hack for https://github.com/GoogleContainerTools/distroless/issues/1643
+USER root
+RUN chown 65532:65532 /home/nonroot
+USER nonroot
 
 ARG TARGETARCH
 
