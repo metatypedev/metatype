@@ -111,11 +111,6 @@ FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} as prd
 
 SHELL ["/busybox/sh", "-c"]
 
-# hack for https://github.com/GoogleContainerTools/distroless/issues/1643
-USER root
-RUN chown 65532:65532 /home/nonroot
-USER nonroot
-
 ARG TARGETARCH
 
 ENV NO_COLOR true
