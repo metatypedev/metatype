@@ -671,15 +671,6 @@ const nodeMetas = {
     };
   },
 
-  Func28(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "String13",
-      },
-    };
-  },
-
   Func26(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
@@ -687,6 +678,15 @@ const nodeMetas = {
         id: "String4",
         slug: "String1",
         title: "String1",
+      },
+    };
+  },
+
+  Func28(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "String13",
       },
     };
   },

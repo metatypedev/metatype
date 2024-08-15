@@ -3,7 +3,7 @@
 
 export const METATYPE_VERSION = "0.4.7-0";
 export const PUBLISHED_VERSION = "0.4.6";
-export const GHJK_VERSION = "b702292";
+export const GHJK_VERSION = "v0.2.1";
 export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";
 export const RUST_VERSION = "1.79.0";
 export const DENO_VERSION = "1.45.2";

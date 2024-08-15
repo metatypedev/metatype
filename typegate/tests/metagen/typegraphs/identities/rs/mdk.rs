@@ -3,7 +3,7 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 // gen-static-start
-#![allow(unused)]
+#![allow(dead_code)]
 
 pub mod wit {
     wit_bindgen::generate!({
@@ -219,7 +219,6 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    use super::*;
     pub type String1 = String;
     pub type StringUuid = String;
     pub type StringEmail = String;
@@ -340,7 +339,6 @@ pub mod types {
         pub data: SimpleCycles1,
     }
 }
-use stubs::*;
 pub mod stubs {
     use super::*;
     pub trait RsPrimitives: Sized + 'static {

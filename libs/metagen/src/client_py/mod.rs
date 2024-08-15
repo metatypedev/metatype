@@ -224,7 +224,10 @@ fn render_data_types(
 ) -> anyhow::Result<NameMemo> {
     let mut renderer =
         TypeRenderer::new(name_mapper.nodes.clone(), Rc::new(types::PyTypeRenderer {}));
-    for &id in &manifest.data_types {
+    for &id in &manifest.arg_types {
+        _ = renderer.render(id)?;
+    }
+    for &id in &manifest.return_types {
         _ = renderer.render(id)?;
     }
     let (types_ts, name_memo) = renderer.finalize();
@@ -279,6 +282,23 @@ class NodeDescs:
 "#
     )?;
     Ok(memo)
+}
+
+struct NameMapper {
+    nodes: Vec<Rc<TypeNode>>,
+    memo: std::cell::RefCell<NameMemo>,
+}
+
+impl NameMapper {
+    pub fn name_for(&self, id: u32) -> Rc<str> {
+        self.memo
+            .borrow_mut()
+            .entry(id)
+            .or_insert_with(|| {
+                Rc::from(normalize_type_title(&self.nodes[id as usize].base().title))
+            })
+            .clone()
+    }
 }
 
 #[test]
@@ -338,21 +358,4 @@ fn e2e() -> anyhow::Result<()> {
             .await
         })?;
     Ok(())
-}
-
-struct NameMapper {
-    nodes: Vec<Rc<TypeNode>>,
-    memo: std::cell::RefCell<NameMemo>,
-}
-
-impl NameMapper {
-    pub fn name_for(&self, id: u32) -> Rc<str> {
-        self.memo
-            .borrow_mut()
-            .entry(id)
-            .or_insert_with(|| {
-                Rc::from(normalize_type_title(&self.nodes[id as usize].base().title))
-            })
-            .clone()
-    }
 }

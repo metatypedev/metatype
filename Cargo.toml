@@ -3,10 +3,14 @@ resolver = "2"
 members = [
   "libs/*",
   "libs/metagen/src/mdk_rust/static",
+  "libs/metagen/src/client_rs/static",
   "typegate/engine",
   "typegate/standalone",
   "meta-cli",
   "typegraph/core", 
+  # this test doesn't rely on a sample artifact
+  # so we can include it in the top workspace
+  "typegate/tests/metagen/typegraphs/sample/rs",
 ]
 
 exclude = [

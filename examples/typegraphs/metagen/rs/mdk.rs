@@ -3,7 +3,7 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 // gen-static-start
-#![allow(unused)]
+#![allow(dead_code)]
 
 pub mod wit {
     wit_bindgen::generate!({
@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.6";
+        static MT_VERSION: &str = "0.4.7-0";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -219,7 +219,6 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    use super::*;
     pub type StringDateTime = String;
     pub type StringUri = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -232,7 +231,6 @@ pub mod types {
         pub mp3_url: StringUri,
     }
 }
-use stubs::*;
 pub mod stubs {
     use super::*;
     pub trait RemixTrack: Sized + 'static {

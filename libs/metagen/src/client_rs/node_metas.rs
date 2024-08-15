@@ -8,11 +8,11 @@ use common::typegraph::*;
 use super::utils::normalize_type_title;
 use crate::{interlude::*, shared::types::*};
 
-pub struct TsNodeMetasRenderer {
+pub struct RsNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
 }
 
-impl TsNodeMetasRenderer {
+impl RsNodeMetasRenderer {
     /// `props` is a map of prop_name -> (TypeName, subNodeName)
     fn render_for_object(
         &self,
@@ -23,23 +23,26 @@ impl TsNodeMetasRenderer {
         write!(
             dest,
             r#"
-  {ty_name}(): NodeMeta {{
-    return {{
-      subNodes: ["#
+    pub fn {ty_name}() -> NodeMeta {{
+        NodeMeta {{
+            arg_types: None,
+            sub_nodes: Some(
+                ["#
         )?;
         for (key, node_ref) in props {
             write!(
                 dest,
                 r#"
-        ["{key}", nodeMetas.{node_ref}],"#
+                    ("{key}".into(), {node_ref} as NodeMetaFn),"#
             )?;
         }
         write!(
             dest,
             r#"
-      ],
-    }};
-  }},"#
+                ].into()
+            ),
+        }}
+    }}"#
         )?;
         Ok(())
     }
@@ -54,42 +57,44 @@ impl TsNodeMetasRenderer {
         write!(
             dest,
             r#"
-  {ty_name}(): NodeMeta {{
-    return {{
-      ...nodeMetas.{return_node}(),"#
+    pub fn {ty_name}() -> NodeMeta {{
+        NodeMeta {{"#
         )?;
         if let Some(fields) = argument_fields {
             write!(
                 dest,
                 r#"
-      argumentTypes: {{"#
+            arg_types: Some(
+                ["#
             )?;
 
             for (key, ty) in fields {
                 write!(
                     dest,
                     r#"
-        {key}: "{ty}","#
+                    ("{key}".into(), "{ty}".into()),"#
                 )?;
             }
 
             write!(
                 dest,
                 r#"
-      }},"#
+                ].into()
+            ),"#
             )?;
         }
         write!(
             dest,
             r#"
-    }};
-  }},"#
+            ..{return_node}()
+        }}
+    }}"#
         )?;
         Ok(())
     }
 }
 
-impl RenderType for TsNodeMetasRenderer {
+impl RenderType for RsNodeMetasRenderer {
     fn render(
         &self,
         renderer: &mut TypeRenderer,
