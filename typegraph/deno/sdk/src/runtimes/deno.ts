@@ -115,7 +115,8 @@ export class DenoRuntime extends Runtime {
     return t.func(inp, inp, mat);
   }
 
-  static<P extends t.Typedef>(out: P, value: any) {
+  /** use a static function already registered on the typegate */
+  static<P extends t.Typedef>(out: P, value: any): t.Func {
     const mat = {
       _id: runtimes.registerDenoStatic(
         {

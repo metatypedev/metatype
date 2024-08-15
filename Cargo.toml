@@ -8,18 +8,16 @@ members = [
   "typegate/standalone",
   "meta-cli",
   "typegraph/core", 
-  # this test doesn't rely on a sample artifact
-  # so we can include it in the top workspace
-  "typegate/tests/metagen/typegraphs/sample/rs",
 ]
 
 exclude = [
   "typegate/tests/runtimes/wasm_reflected/rust",
   "typegate/tests/runtimes/wasm_wire/rust",
+  "typegate/tests/metagen/typegraphs/sample/rs",
   "libs/pyrt_wit_wire",
 ]
 [workspace.package] 
-version = "0.4.7-0"
+version = "0.4.8-0"
 edition = "2021"
 
 [workspace.dependencies]

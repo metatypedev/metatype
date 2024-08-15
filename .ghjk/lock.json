@@ -18,22 +18,22 @@
           "specifiedVersion": true
         },
         "bciqmpujkkyxmzdz7sxpvi2pmajzfmg6gofplyqn43av2styxu2ng7sy": {
-          "version": "7.81.0",
+          "version": "8.9.0",
           "buildDepConfigs": {},
           "portRef": "curl_aa@0.1.0",
           "specifiedVersion": false
         },
         "bciqngfjdds2gmnwhriiif3fjgqw2hhpm3ssqxlnq4kiwyk53uesmzgy": {
-          "version": "3.30.1",
+          "version": "3.30.2",
           "buildDepConfigs": {
             "curl_aa": {
-              "version": "7.81.0",
+              "version": "8.9.0",
               "buildDepConfigs": {},
               "portRef": "curl_aa@0.1.0",
               "specifiedVersion": false
             },
             "git_aa": {
-              "version": "2.34.1",
+              "version": "2.46.0",
               "buildDepConfigs": {},
               "portRef": "git_aa@0.1.0",
               "specifiedVersion": false
@@ -42,7 +42,7 @@
               "version": "d631481e96",
               "buildDepConfigs": {
                 "git_aa": {
-                  "version": "2.34.1",
+                  "version": "2.46.0",
                   "buildDepConfigs": {},
                   "portRef": "git_aa@0.1.0",
                   "specifiedVersion": false
@@ -65,7 +65,7 @@
           "specifiedVersion": false
         },
         "bciqay4m4kmzfduj5t2clgejxgpe5zwper6lyyaxt7rhbjalaqd32nhq": {
-          "version": "2.34.1",
+          "version": "2.46.0",
           "buildDepConfigs": {},
           "portRef": "git_aa@0.1.0",
           "specifiedVersion": false
@@ -74,7 +74,7 @@
           "version": "d631481e96",
           "buildDepConfigs": {
             "git_aa": {
-              "version": "2.34.1",
+              "version": "2.46.0",
               "buildDepConfigs": {},
               "portRef": "git_aa@0.1.0",
               "specifiedVersion": false
@@ -83,6 +83,12 @@
           "portRef": "asdf_plugin_git@0.1.0",
           "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
           "specifiedVersion": false
+        },
+        "bciqdryp66ydidszpw3nbjwf7d5lnyvw7xujujby4bnx5mdgdjabxcvi": {
+          "version": "2.46.0",
+          "buildDepConfigs": {},
+          "portRef": "git_aa@0.1.0",
+          "specifiedVersion": true
         },
         "bciqkv7foyoio4wpti4yf2qrw5nphkgk2din6ba7mjv2w7hmgrv725ja": {
           "version": "v2.4.0",
@@ -98,17 +104,23 @@
           "replaceLd": true,
           "specifiedVersion": true
         },
+        "bciqj4p5hoqweghbuvz52rupja7sqze34z63dd62nz632c5zxikv6ezy": {
+          "version": "1.35",
+          "buildDepConfigs": {},
+          "portRef": "tar_aa@0.1.0",
+          "specifiedVersion": false
+        },
         "bciqjlw6cxddajjmznoemlmnu7mgbbm7a3hfmnd2x5oivwajmiqui5ey": {
-          "version": "v0.2.64",
+          "version": "v0.2.65",
           "buildDepConfigs": {},
           "portRef": "act_ghrel@0.1.0",
           "specifiedVersion": false
         },
-        "bciqprohqqm7hfj3qoio2y4slu2i4vgypv6c32g3djvj4pjduo5ns4mi": {
+        "bciqkdikxlnvysolt3rirxozdyaovts5jo7e6zdhto7pjgxss4rkjeui": {
           "version": "0.5.0",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
+              "version": "v1.10.2",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -120,7 +132,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.45.2",
+                      "version": "2.46.0",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -132,7 +144,7 @@
               },
               "portRef": "rust_rustup@0.1.0",
               "profile": "minimal",
-              "specifiedVersion": false
+              "specifiedVersion": true
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
@@ -141,19 +153,19 @@
           "specifiedVersion": false
         },
         "bciqeal5okt5zj763vhgsmf3afr5thrkqaitv6pb3wwegcwyb74gdyjq": {
-          "version": "v1.7.4",
+          "version": "v1.10.2",
           "buildDepConfigs": {},
           "portRef": "cargo_binstall_ghrel@0.1.0",
           "specifiedVersion": false
         },
-        "bciqeub366wrduva4y3rxegdjkhlebwsud56e5orgcpbkdrbhuxmvuxa": {
+        "bciqdm4ezstna7wryjatl75thl72622466u4ht2y25dkhvgu76kcnemi": {
           "version": "1.79.0",
           "buildDepConfigs": {
             "rustup_rustlang": {
               "version": "1.27.1",
               "buildDepConfigs": {
                 "git_aa": {
-                  "version": "2.45.2",
+                  "version": "2.46.0",
                   "buildDepConfigs": {},
                   "portRef": "git_aa@0.1.0",
                   "specifiedVersion": false
@@ -165,13 +177,13 @@
           },
           "portRef": "rust_rustup@0.1.0",
           "profile": "minimal",
-          "specifiedVersion": false
+          "specifiedVersion": true
         },
         "bciqewpyjyfnnk4rbd6bbu5who2w6ve7dyt3inal72zg23cs4qnln32q": {
           "version": "1.27.1",
           "buildDepConfigs": {
             "git_aa": {
-              "version": "2.45.2",
+              "version": "2.46.0",
               "buildDepConfigs": {},
               "portRef": "git_aa@0.1.0",
               "specifiedVersion": false
@@ -180,11 +192,11 @@
           "portRef": "rustup_rustlang@0.1.0",
           "specifiedVersion": false
         },
-        "bciqk4pjtubgng2jbkpkky2mvqejegqpaqhqfreryyyy4ataduwhcfsq": {
+        "bciqg6addm4t4fpqgkcpukqvbdrkscd56popl3at6aljs4tfnsfl3iki": {
           "version": "0.3.4",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
+              "version": "v1.10.2",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -196,7 +208,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.45.2",
+                      "version": "2.46.0",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -208,7 +220,7 @@
               },
               "portRef": "rust_rustup@0.1.0",
               "profile": "minimal",
-              "specifiedVersion": false
+              "specifiedVersion": true
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
@@ -216,11 +228,11 @@
           "locked": true,
           "specifiedVersion": false
         },
-        "bciqny2uv3hqjpsra5eribww5ojitk3ndtkf2g44otv4xoi5waxfrwzq": {
+        "bciqjt35de5uwbp3qv3idkj7or2pu2gcun5jjkdttfupyuseslmjny5i": {
           "version": "2.4.0",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
+              "version": "v1.10.2",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -232,7 +244,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.46.0",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -244,7 +256,7 @@
               },
               "portRef": "rust_rustup@0.1.0",
               "profile": "minimal",
-              "specifiedVersion": false
+              "specifiedVersion": true
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
@@ -280,17 +292,43 @@
           "packageName": "pre-commit",
           "specifiedVersion": true
         },
+        "bciqfoek3nbk2jfcgfx5323wcco2bmml75tgrsjgxbdhxe5dn3isgjgi": {
+          "version": "3.12.2",
+          "buildDepConfigs": {
+            "tar_aa": {
+              "version": "1.35",
+              "buildDepConfigs": {},
+              "portRef": "tar_aa@0.1.0",
+              "specifiedVersion": false
+            },
+            "zstd_aa": {
+              "version": "v1.5.6,",
+              "buildDepConfigs": {},
+              "portRef": "zstd_aa@0.1.0",
+              "specifiedVersion": false
+            }
+          },
+          "portRef": "cpy_bs_ghrel@0.1.0",
+          "releaseTag": "20240224",
+          "specifiedVersion": true
+        },
+        "bciqe6fwheayositrdk7rkr2ngdr4wizldakex23tgivss7w6z7g3q3y": {
+          "version": "v1.5.6,",
+          "buildDepConfigs": {},
+          "portRef": "zstd_aa@0.1.0",
+          "specifiedVersion": false
+        },
         "bciqbbuzvdy4qweoxykn6kcqp3xyoi2ehdbdv3xbir4inj6i3m72wcsa": {
           "version": "v0.13.1",
           "buildDepConfigs": {},
           "portRef": "temporal_cli_ghrel@0.1.0",
           "specifiedVersion": true
         },
-        "bciqkr4tyf7wvelz3rcifm47okxidbe76rb7r6nikj3aulqoxtgothlq": {
+        "bciqnvknjnd6ivod4sz4usxxbxmhhyp4kiahvyy4yn6erblbzfu2s7na": {
           "version": "1.33.0",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
+              "version": "v1.10.2",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -302,7 +340,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.45.2",
+                      "version": "2.46.0",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -314,7 +352,7 @@
               },
               "portRef": "rust_rustup@0.1.0",
               "profile": "minimal",
-              "specifiedVersion": false
+              "specifiedVersion": true
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
@@ -322,11 +360,11 @@
           "locked": true,
           "specifiedVersion": true
         },
-        "bciqijtlsvsgtcsuchl5tk6hxi4kcyuvdfq3lvm6lzn5o4xtiz6gzeiy": {
+        "bciqgustga36b3bmjpi76xcde43z3efxo2czwmvotcxlktxkhcizywiq": {
           "version": "0.2.5",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
+              "version": "v1.10.2",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -338,7 +376,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.45.2",
+                      "version": "2.46.0",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -350,7 +388,7 @@
               },
               "portRef": "rust_rustup@0.1.0",
               "profile": "minimal",
-              "specifiedVersion": false
+              "specifiedVersion": true
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
@@ -474,11 +512,11 @@
           "packageName": "node-gyp",
           "specifiedVersion": true
         },
-        "bciqfmcxigz46qj767rnf5xnmhnmomqs55owt2unvwujke37suy6onsy": {
+        "bciqow7vi5yxnhumjr3am67ct5pnavar2e55wp2vlddesl43oyppw5kq": {
           "version": "0.116.1",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
+              "version": "v1.10.2",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -490,7 +528,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.45.2",
+                      "version": "2.46.0",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -502,7 +540,7 @@
               },
               "portRef": "rust_rustup@0.1.0",
               "profile": "minimal",
-              "specifiedVersion": false
+              "specifiedVersion": true
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
@@ -510,11 +548,11 @@
           "locked": true,
           "specifiedVersion": true
         },
-        "bciqbjgwmu5dkd4yxzfadkplzelrsikhguzi6taa57hishlvjfgbzl6y": {
+        "bciqgrinxolr2jfyj4smh3w5vwz6n4aacistocxbat5pz2fwf23glslq": {
           "version": "1.208.1",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
+              "version": "v1.10.2",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -526,7 +564,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.45.2",
+                      "version": "2.46.0",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -538,7 +576,7 @@
               },
               "portRef": "rust_rustup@0.1.0",
               "profile": "minimal",
-              "specifiedVersion": false
+              "specifiedVersion": true
             }
           },
           "portRef": "cargobi_cratesio@0.1.0",
@@ -595,335 +633,6 @@
           "packageName": "@bytecodealliance/jco",
           "specifiedVersion": true
         },
-        "bciqeju54u3m3aipax7w7snnfxwpqzx2h5c77jdl7hvgiendnydqivwa": {
-          "version": "nightly-2024-05-26",
-          "buildDepConfigs": {
-            "rustup_rustlang": {
-              "version": "1.27.1",
-              "buildDepConfigs": {
-                "git_aa": {
-                  "version": "2.45.2",
-                  "buildDepConfigs": {},
-                  "portRef": "git_aa@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rustup_rustlang@0.1.0",
-              "specifiedVersion": false
-            }
-          },
-          "portRef": "rust_rustup@0.1.0",
-          "specifiedVersion": true
-        },
-        "bciqk7gvbbprzpfqzvok7kucwsorxrvloqf2v2j6oy2rrsg4v7ucnmaq": {
-          "version": "0.1.47",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.79.0",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.45.2",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": false
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "cargo-udeps",
-          "locked": true,
-          "specifiedVersion": true
-        },
-        "bciqkdikxlnvysolt3rirxozdyaovts5jo7e6zdhto7pjgxss4rkjeui": {
-          "version": "0.5.0",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.79.0",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.34.1",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": true
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "whiz",
-          "locked": true,
-          "specifiedVersion": false
-        },
-        "bciqdm4ezstna7wryjatl75thl72622466u4ht2y25dkhvgu76kcnemi": {
-          "version": "1.79.0",
-          "buildDepConfigs": {
-            "rustup_rustlang": {
-              "version": "1.27.1",
-              "buildDepConfigs": {
-                "git_aa": {
-                  "version": "2.34.1",
-                  "buildDepConfigs": {},
-                  "portRef": "git_aa@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rustup_rustlang@0.1.0",
-              "specifiedVersion": false
-            }
-          },
-          "portRef": "rust_rustup@0.1.0",
-          "profile": "minimal",
-          "specifiedVersion": true
-        },
-        "bciqg6addm4t4fpqgkcpukqvbdrkscd56popl3at6aljs4tfnsfl3iki": {
-          "version": "0.3.4",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.79.0",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.34.1",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": true
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wit-deps-cli",
-          "locked": true,
-          "specifiedVersion": false
-        },
-        "bciqjt35de5uwbp3qv3idkj7or2pu2gcun5jjkdttfupyuseslmjny5i": {
-          "version": "2.4.0",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.79.0",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.34.1",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": true
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "git-cliff",
-          "locked": true,
-          "specifiedVersion": false
-        },
-        "bciqnvknjnd6ivod4sz4usxxbxmhhyp4kiahvyy4yn6erblbzfu2s7na": {
-          "version": "1.33.0",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.79.0",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.34.1",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": true
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "cargo-insta",
-          "locked": true,
-          "specifiedVersion": true
-        },
-        "bciqgustga36b3bmjpi76xcde43z3efxo2czwmvotcxlktxkhcizywiq": {
-          "version": "0.2.5",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.79.0",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.34.1",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": true
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "cross",
-          "locked": true,
-          "specifiedVersion": true
-        },
-        "bciqow7vi5yxnhumjr3am67ct5pnavar2e55wp2vlddesl43oyppw5kq": {
-          "version": "0.116.1",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.79.0",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.34.1",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": true
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasm-opt",
-          "locked": true,
-          "specifiedVersion": true
-        },
-        "bciqgrinxolr2jfyj4smh3w5vwz6n4aacistocxbat5pz2fwf23glslq": {
-          "version": "1.208.1",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.79.0",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.34.1",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": true
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "wasm-tools",
-          "locked": true,
-          "specifiedVersion": true
-        },
         "bciqe6sahnduk5kofaohmecai2ip7ipjakg7rn32ezstllzr5nixmhyi": {
           "version": "nightly-2024-05-26",
           "buildDepConfigs": {
@@ -931,7 +640,7 @@
               "version": "1.27.1",
               "buildDepConfigs": {
                 "git_aa": {
-                  "version": "2.34.1",
+                  "version": "2.46.0",
                   "buildDepConfigs": {},
                   "portRef": "git_aa@0.1.0",
                   "specifiedVersion": false
@@ -949,7 +658,7 @@
           "version": "0.1.47",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.7.4",
+              "version": "v1.10.2",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -961,7 +670,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.46.0",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false

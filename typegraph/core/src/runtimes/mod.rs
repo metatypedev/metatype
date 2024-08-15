@@ -27,8 +27,9 @@ use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
-    MaterializerHttpRequest, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
-    RandomRuntimeData, TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
+    KvMaterializer, KvRuntimeData, MaterializerHttpRequest, PrismaLinkData,
+    PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData, TemporalOperationData,
+    TemporalRuntimeData, WasmRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -65,6 +66,7 @@ pub enum Runtime {
     Typegate,
     Typegraph,
     S3(Rc<S3RuntimeData>),
+    Kv(Rc<KvRuntimeData>),
 }
 
 #[derive(Debug, Clone)]
@@ -166,6 +168,14 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn kv(runtime_id: RuntimeId, data: KvMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: Rc::new(data).into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -183,6 +193,7 @@ pub enum MaterializerData {
     Typegate(TypegateOperation),
     Typegraph(TypegraphOperation),
     S3(Rc<S3Materializer>),
+    Kv(Rc<KvMaterializer>),
 }
 
 macro_rules! prisma_op {
@@ -642,5 +653,17 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             op,
             effect,
         )))
+    }
+
+    fn register_kv_runtime(data: KvRuntimeData) -> Result<RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::Kv(data.into())))
+    }
+
+    fn kv_operation(
+        base: BaseMaterializer,
+        data: KvMaterializer,
+    ) -> Result<MaterializerId, wit::Error> {
+        let mat = Materializer::kv(base.runtime, data, base.effect);
+        Ok(Store::register_materializer(mat))
     }
 }

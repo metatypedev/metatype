@@ -48,5 +48,6 @@ export async function init_runtimes(): Promise<void> {
     import("./typegraph.ts"),
     import("./wasm_wire.ts"),
     import("./wasm_reflected.ts"),
+    import("./kv.ts"),
   ]);
 }

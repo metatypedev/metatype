@@ -54,13 +54,14 @@ export class ApplyFromParent {
 }
 
 const InjectionSource = {
-  asArg: (name?: string, type?: t.Typedef) =>
+  asArg: (name?: string, type?: t.Typedef): ApplyFromArg =>
     new ApplyFromArg(name ?? null, type?._id ?? null),
-  set: (value: any) => new ApplyFromStatic(value),
-  fromSecret: (key: string) => new ApplyFromSecret(key),
-  fromContext: (key: string, type?: t.Typedef) =>
+  set: (value: any): ApplyFromStatic => new ApplyFromStatic(value),
+  fromSecret: (key: string): ApplyFromSecret => new ApplyFromSecret(key),
+  fromContext: (key: string, type?: t.Typedef): ApplyFromContext =>
     new ApplyFromContext(key, type?._id ?? null),
-  fromParent: (typeName: string) => new ApplyFromParent(typeName),
+  fromParent: (typeName: string): ApplyFromParent =>
+    new ApplyFromParent(typeName),
 } as const;
 
 type InjectionSourceType = typeof InjectionSource;
@@ -79,32 +80,39 @@ export interface TypegraphBuilderArgs extends InjectionSourceType {
 
 export class InheritDef {
   public payload: string | undefined;
-  set(value: InjectionValue<unknown>) {
+
+  /** inject static value */
+  set(value: InjectionValue<unknown>): InheritDef {
     this.payload = serializeStaticInjection(value);
     return this;
   }
 
-  inject(value: InjectionValue<string>) {
+  /** inject a value (generic) */
+  inject(value: InjectionValue<string>): InheritDef {
     this.payload = serializeGenericInjection("dynamic", value);
     return this;
   }
 
-  fromContext(value: InjectionValue<string>) {
+  /** inject from context */
+  fromContext(value: InjectionValue<string>): InheritDef {
     this.payload = serializeGenericInjection("context", value);
     return this;
   }
 
-  fromSecret(value: InjectionValue<string>) {
+  /** inject from secret */
+  fromSecret(value: InjectionValue<string>): InheritDef {
     this.payload = serializeGenericInjection("secret", value);
     return this;
   }
 
-  fromParent(value: InjectionValue<string>) {
+  /** inject from parent */
+  fromParent(value: InjectionValue<string>): InheritDef {
     this.payload = serializeFromParentInjection(value);
     return this;
   }
 
-  fromRandom() {
+  /** inject from random */
+  fromRandom(): InheritDef {
     this.payload = serializeGenericInjection("random", null);
     return this;
   }
@@ -259,7 +267,8 @@ export async function typegraph(
   return ret;
 }
 
-export function genRef(name: string) {
+/** generate a type reference (by name) */
+export function genRef(name: string): t.Typedef {
   const value = core.refb(name, []);
   if (typeof value == "object") {
     throw new Error(JSON.stringify(value));

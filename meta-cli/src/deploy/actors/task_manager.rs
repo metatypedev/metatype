@@ -431,8 +431,7 @@ impl<A: TaskAction + 'static> Handler<TaskFinished<A>> for TaskManager<A> {
             ctx.spawn(fut.in_current_span().into_actor(self));
         }
 
-        // TODO check queue??
-        if self.active_tasks.is_empty() {
+        if self.task_queue.is_empty() && self.active_tasks.is_empty() {
             if self.watcher_addr.is_none() && self.pending_retries.is_empty() {
                 // no watcher, auto stop when all tasks finished
                 self.console.debug("all tasks finished".to_string());
@@ -451,8 +450,7 @@ impl<A: TaskAction + 'static> Handler<DiscoveryDone> for TaskManager<A> {
     fn handle(&mut self, _: DiscoveryDone, ctx: &mut Context<Self>) -> Self::Result {
         self.console.debug("discovery done".to_string());
 
-        // TODO check queue??
-        if self.active_tasks.is_empty() {
+        if self.task_queue.is_empty() && self.active_tasks.is_empty() {
             if self.seen_tasks == 0 {
                 self.console.error("no typegraphs discovered".to_string());
                 self.stop_reason = Some(StopReason::Error);

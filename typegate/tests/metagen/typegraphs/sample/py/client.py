@@ -532,6 +532,12 @@ class NodeDescs:
         )
 
     @staticmethod
+    def Func27():
+        return NodeMeta(
+            sub_nodes=NodeDescs.Post().sub_nodes,
+        )
+
+    @staticmethod
     def Func28():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
@@ -577,12 +583,6 @@ class NodeDescs:
     def Func25():
         return NodeMeta(
             sub_nodes=NodeDescs.scalar().sub_nodes,
-        )
-
-    @staticmethod
-    def Func27():
-        return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
         )
 
 
