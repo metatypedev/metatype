@@ -207,10 +207,14 @@ export async function testE2e(args: {
 
   const queue = [...filteredTestFiles];
 
+  const buildProfile = profile == "debug" ? "dev" : profile;
+
   $.logStep(`${prefix} Building xtask and meta-cli...`);
-  await $`cargo build -p meta-cli -F typegate --${profile}
+  await $`cargo build -p meta-cli -F typegate --profile ${buildProfile}
           && mv target/${profile}/meta target/${profile}/meta-full
-          && cargo build -p xtask -p meta-cli --${profile}`.cwd(wd);
+          && cargo build -p xtask -p meta-cli --profile ${buildProfile}`.cwd(
+    wd,
+  );
 
   $.logStep(`Discovered ${queue.length} test files to run`);
 
