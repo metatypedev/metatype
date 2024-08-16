@@ -77,6 +77,9 @@ impl OpDepInjector {
         let engine = wasmtime::Engine::new(
             wasmtime::Config::new()
                 .async_support(true)
+                .wasm_backtrace(true)
+                // embedded wasm images have backtrace enabled
+                .wasm_backtrace_details(wasmtime::WasmBacktraceDetails::Enable)
                 .cache_config_load_default()
                 .context("error reading system's wasmtime cache config")
                 .unwrap(),
