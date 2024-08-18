@@ -17,6 +17,7 @@ from typegraph.gen.exports.runtimes import (
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.runtimes.substantial import SubstantialRuntime
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
@@ -140,6 +141,18 @@ class PythonRuntime(Runtime):
             ),
         )
 
+    def workflow(
+        self,
+        endpoint: str,
+        basic_auth: str,
+        *,
+        file: str,
+        name: str,
+        deps: List[str] = [],
+    ):
+        substantial = SubstantialRuntime(endpoint, basic_auth)
+        return substantial._using_workflow(file, name, deps)
+
 
 @dataclass
 class LambdaMat(Materializer):
@@ -157,6 +170,13 @@ class DefMat(Materializer):
 @dataclass
 class ImportMat(Materializer):
     module: str
+    name: str
+    secrets: List[str]
+
+
+@dataclass
+class WorkflowMat(Materializer):
+    file: str
     name: str
     secrets: List[str]
 
