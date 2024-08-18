@@ -2,7 +2,7 @@
 
 # Possible titles (sth that relates with the solution we are providing)
 - Integrating durable execution into existing systems
-- Workflow completion Paradigms
+- Durable Workflow Execution Paradigms
 - Execution flow Paradigms
 -
 
@@ -21,13 +21,13 @@
 
 # Integrating Durable Execution into existing systems.
 
-In this age of cloud development and microservices architecture, problems start to arise with the amounts of workloads that run in the system. **ADD Real World Example Here** Having multiple components in your system introduces more failure points and that's a common phenomenon in complex systems. But one important behavior of any application which the business side expects is that for an execution flow to reach its completion. Especially as systems grow in feature and complexity, chances are high that long-running processes will start to appear in our systems. To ensure that these processes complete in the intended manner, solutions were introduced in the last few decades.
+In this age of cloud development and microservices architecture, problems start to arise with the amounts of workloads that run in the system. **ADD Real World Example Here** Having multiple components in your system introduces more failure points and that's a common phenomenon in complex systems. But one important behavior of any application which the business side expects is for an execution flow to reach its completion. Especially as systems grow in feature and complexity, chances are high that long-running processes will start to appear in our systems. To ensure that these processes complete in the intended manner, solutions were introduced in the last few decades.
 
 To explore some of the solutions that were presented to achieve completeness of a workflow.
 
 1. Event-Driven Architecture with Message Queues
 
-This architecture heavily relies on services communicating by publishing and subscribing to events using message queues. Message queues are persistent storages which ensure the data is not lost during failures and service unavailability. Your components in your distrubuted system synchronize by using events/messages in these independent services. Even though this path offers service decomposability and fault tolerance to the most part, it can have some shortcomings. i.e using message queues comes with the overhead of managing the messages well(deduplication and message ordering). It isn't also ideal for systems which requied immediate consistency across the components. Some of the techs and patterns which use this architecture are
+This architecture heavily relies on services communicating by publishing and subscribing to events using message queues. Message queues are persistent storages which ensure the data is not lost during failures and service unavailability. Your components in your distributed system synchronize by using events/messages in these independent services. Even though this path offers service decomposability and fault tolerance to the most part, it can have some shortcomings. i.e using message queues comes with the overhead of managing the messages well(deduplication and message ordering). It isn't also ideal for systems which require immediate consistency across the components. Some of the techs and patterns which use this architecture are
 
 - [RabbitMq](https://www.rabbitmq.com/)
 - [Amazon SQS](https://aws.amazon.com/sqs/)
@@ -38,16 +38,16 @@ This design pattern tries to achieve consistency across different services of a 
 
 3. Stateful Orchestrators
 
-Stateful orchestrators provide a solution for long-running workflows by maintaining the state of each step in a workflow. A step in a workflow represents a task and these tasks are represented as states inside worflows. Workflows are defined as a state machine or direct acyclic graphs(DAGs). In this approach, there is an orchestrator which handles task's execution order, transitioning, handling retries and maintaing the state. In case of any failures, the system can recover from the persisted state. Stateful orchestrators offers great value in fault tolerance, consistency and observability. It is one of the solutions which have proven applicable for the modern age of distributed computing. Some of the well known services which provide this solution as a service are
+Stateful orchestrators provide a solution for long-running workflows by maintaining the state of each step in a workflow. A step in a workflow represents a task and these tasks are represented as states inside workflows. Workflows are defined as a state machine or direct acyclic graphs(DAGs). In this approach, there is an orchestrator which handles task's execution order, transitioning, handling retries and maintaining the state. In case of any failures, the system can recover from the persisted state. Stateful orchestrators offer great value in fault tolerance, consistency and observability. It is one of the solutions which have proven applicable for the modern age of distributed computing. Some of the well known services which provide this solution as a service are
 
 - [AWS Step Functions](https://aws.amazon.com/step-functions/)
 - [Azure Logic Apps](https://azure.microsoft.com/en-us/products/logic-apps)
 
 4. Durable Execution
 
-Durable Execution is a behavior of a system to preserve the state of the application and persist the execution despite failures or system interruptions. Durable execution enforces for every task, its inputs and outputs, call stack and including local variables to be persisted. This constraints or rather features of durable execution allows a system to automatically retry or continue running in the face of infrastructure or system failures, ultimately getting through to completion.
+Durable Execution is a behavior of a system to preserve the state of the application and persist the execution despite failures or system interruptions. Durable execution enforces for every task, its inputs and outputs, call stack and including local variables to be persisted. These constraints or rather features of durable execution allows a system to automatically retry or continue running in the face of infrastructure or system failures, ultimately getting through to completion.
 
-Durable execution isn't a distinctive or novel solution from the ones listed above, but includes some of the strong points and tries to present a somewhat complete approach to acheiving consistency, fault tolerance, data integrity, resilience for long-running processes and observability.
+Durable execution isn't a distinctive or novel solution from the ones listed above, but includes some of the strong points and tries to present a somewhat complete approach to achieving consistency, fault tolerance, data integrity, resilience for long-running processes and observability.
 
 As durable execution grows to be a fundamental driver of distributed computing, some of the solutions which use this style are
 
@@ -65,7 +65,7 @@ If you are interested more in durable execution, you can check out [this](https:
 Bonus Content ahead
 :::
 
-Here in metatype, we recognize the need for a workflow management capabilities. Thus, a dedicated runtime namely [Temporal Runtime](/docs/reference/runtimes/temporal), is included among a few other runtimes we support. We chose temporal instead of the other available solutions mainly as it is an open source project and due to its rich capabilities.
+Here in metatype, we recognize the need for workflow management capabilities. Thus, a dedicated runtime namely [Temporal Runtime](/docs/reference/runtimes/temporal), is included among a few other runtimes we support. We chose temporal instead of the other available solutions mainly as it is an open source project and due to its rich capabilities.
 
 The `Temporal Runtime` allows you to easily integrate durable workflows into your APIs. You can check the [reference here](/docs/reference/runtimes/temporal) to check in the details.
 
