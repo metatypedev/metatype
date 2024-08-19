@@ -24,3 +24,19 @@ pub struct WorkflowMatData {
     pub kind: WorkflowKind,
     pub deps: Vec<PathBuf>,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ModuleMatData {
+    pub entry_point: PathBuf,
+    pub deps: Vec<PathBuf>,
+}
+
+impl From<WorkflowMatData> for ModuleMatData {
+    fn from(value: WorkflowMatData) -> Self {
+        Self {
+            entry_point: PathBuf::from(value.file),
+            deps: value.deps,
+        }
+    }
+}

@@ -10,9 +10,7 @@ interface RegistrableRuntime {
   init(params: RuntimeInitParams): Promise<Runtime> | Runtime;
 }
 
-export function registerRuntime<
-  T extends RegistrableRuntime,
->(
+export function registerRuntime<T extends RegistrableRuntime>(
   name: string,
 ): (runtime: T) => void {
   return (runtime: T) => {
@@ -49,5 +47,6 @@ export async function init_runtimes(): Promise<void> {
     import("./wasm_wire.ts"),
     import("./wasm_reflected.ts"),
     import("./kv.ts"),
+    import("./substantial.ts"),
   ]);
 }
