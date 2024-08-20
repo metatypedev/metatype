@@ -43,6 +43,7 @@ class SubstantialRuntime(Runtime):
             func_arg=None if func_arg is None else func_arg.id, operation=operation
         )
         func_data = runtimes.generate_substantial_operation(store, self.id.value, data)
+
         if isinstance(func_data, Err):
             raise Exception(func_data.value)
 

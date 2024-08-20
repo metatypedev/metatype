@@ -27,7 +27,6 @@ impl PostProcessor for SubstantialProcessor {
         for mat in materializers.iter_mut() {
             if has_workflow_def.contains(&mat.name.as_str()) {
                 let mat_data = std::mem::take(&mut mat.data);
-                crate::wit::metatype::typegraph::host::eprint(&format!("HERE {mat_data:?}"));
                 let mut mat_data: ModuleMatData = object_from_map::<WorkflowMatData>(mat_data)
                     .map(|data| data.into())
                     .map_err(|e| e.to_string())?;

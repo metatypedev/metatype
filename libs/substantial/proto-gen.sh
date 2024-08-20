@@ -4,4 +4,4 @@ set -eux
 
 # must be in sync with substantial/Cargo.toml protobuf
 cargo install protobuf-codegen
-protoc -I . --rust_out=substantial/src/protocol protocol/*
+protoc -I . --rust_out=src/protocol protocol/*
