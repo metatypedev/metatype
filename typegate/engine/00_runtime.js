@@ -52,6 +52,6 @@ globalThis.Meta = {
     handle: getOp("op_wit_wire_handle"),
   },
   grpc: {
-    gprcRegister: getOp("op_grpc_register"),
+    callGrpcMethod: getOp("op_call_grpc_method"),
   },
 };

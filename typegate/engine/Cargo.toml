@@ -42,15 +42,21 @@ mt_deno.workspace = true
 deno_core.workspace = true
 common.workspace = true
 
-wasmtime = { workspace = true,  features = ["component-model"] }
+wasmtime = { workspace = true, features = ["component-model"] }
 wasmtime-wasi.workspace = true
 
 shadow-rs.workspace = true
+
+tonic = "0.12.1"
+protobuf = "3.5.0"
+protobuf-parse = "3.5.1"
+bytes = "1.7.1"
+protobuf-json-mapping = "3.5.1"
 
 [dev-dependencies]
 env_logger.workspace = true
 
 [build-dependencies]
 shadow-rs.workspace = true
-wasmtime = { workspace = true,  features = ["component-model"] }
+wasmtime = { workspace = true, features = ["component-model"] }
 zstd = "0.13.1"

@@ -4,16 +4,11 @@
 import { Runtime } from "@typegate/runtimes/Runtime.ts";
 import * as native from "native";
 import { ComputeStage } from "@typegate/engine/query_engine.ts";
-import { RuntimeInitParams } from "@typegate/types.ts";
 import { getLogger, Logger } from "@typegate/log.ts";
 import { TypeGraph } from "@typegate/typegraph/mod.ts";
-import { nativeVoid } from "@typegate/utils.ts";
+import { Resolver, RuntimeInitParams } from "../types.ts";
 
 const logger = getLogger(import.meta);
-
-interface GrpcRuntimeData {
-  url: string;
-}
 
 export class GrpcRuntime extends Runtime {
   private logger: Logger;
@@ -23,30 +18,36 @@ export class GrpcRuntime extends Runtime {
     this.logger = getLogger(`grpc: '${typegraphName}'`);
   }
 
+  // deno-lint-ignore require-await
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     logger.info("Initliazing GrpcRuntime");
     logger.debug(`Init params: ${JSON.stringify(params)}`);
 
-    const { typegraph, args } = params as RuntimeInitParams<
-      GrpcRuntimeData
-    >;
+    const { typegraph } = params as RuntimeInitParams;
     const typegraphName = TypeGraph.formatName(typegraph);
     const instance = new GrpcRuntime(typegraphName);
     instance.logger.info("registering GrpcRuntime");
-    nativeVoid(
-      await native.grpc_register({ url: args.url }),
-    );
-    throw new Error("Method not implemented.");
+    return instance;
   }
 
   deinit(): Promise<void> {
     throw new Error("Method not implemented.");
   }
   materialize(
-    _stage: ComputeStage,
+    stage: ComputeStage,
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] | Promise<ComputeStage[]> {
-    throw new Error("Method not implemented.");
+    const resolver: Resolver = async (args) => {
+      const { proto_file, method, payload, endpoint } = args;
+      return await native.call_grpc_method({
+        proto_file,
+        method,
+        payload,
+        endpoint,
+      });
+    };
+
+    return [new ComputeStage({ ...stage.props, resolver })];
   }
 }

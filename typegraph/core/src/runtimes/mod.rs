@@ -71,7 +71,7 @@ pub enum Runtime {
     S3(Rc<S3RuntimeData>),
     Substantial(Rc<SubstantialRuntimeData>),
     Kv(Rc<KvRuntimeData>),
-    Grpc(Rc<GrpcRuntimeData>),
+    Grpc,
 }
 
 #[derive(Debug, Clone)]
@@ -707,8 +707,8 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_materializer(mat))
     }
 
-    fn register_grpc_runtime(data: GrpcRuntimeData) -> Result<RuntimeId, wit::Error> {
-        Ok(Store::register_runtime(Runtime::Grpc(data.into())))
+    fn register_grpc_runtime() -> Result<RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::Grpc))
     }
 
     fn call_grpc_methode(
