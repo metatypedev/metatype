@@ -28,10 +28,9 @@ use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, GrpcMaterializer,
-    GrpcRuntimeData, HttpRuntimeData, KvMaterializer, KvRuntimeData, MaterializerHttpRequest,
-    PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData,
-    TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
+    HttpRuntimeData, KvMaterializer, KvRuntimeData, MaterializerHttpRequest, PrismaLinkData,
     PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData, SubstantialRuntimeData,
+    TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
