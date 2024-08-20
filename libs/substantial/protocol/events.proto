@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package substantial.protos.events;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+message Start {
+  google.protobuf.Struct kwargs = 1;
+}
+
+message Save {
+  uint32 id = 1;
+  string value = 2;
+  int32 counter = 3;
+}
+
+message Sleep {
+  uint32 id = 1;
+  google.protobuf.Timestamp start = 2;
+  google.protobuf.Timestamp end = 3;
+}
+
+message Send {
+  string name = 1;
+  string value = 2;
+}
+
+message Stop {
+  oneof result {
+    string ok = 1;
+    string err = 2;
+  }
+}
+
+message Event {
+  google.protobuf.Timestamp at = 1;
+  oneof of {
+    Start start = 10;
+    Save save = 11;
+    Sleep sleep = 12;
+    Send send = 13;
+    Stop stop = 14;
+  }
+};
+
+message Records {
+  string run_id = 1;
+  repeated Event events = 2;
+}
