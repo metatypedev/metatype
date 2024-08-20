@@ -7,6 +7,7 @@ pub mod graphql;
 pub mod prisma;
 pub mod python;
 pub mod random;
+pub mod substantial;
 pub mod temporal;
 pub mod typegate;
 pub mod typegraph;
@@ -28,11 +29,12 @@ use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreType
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
     KvMaterializer, KvRuntimeData, MaterializerHttpRequest, PrismaLinkData,
-    PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData, TemporalOperationData,
-    TemporalRuntimeData, WasmRuntimeData,
+    PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData, SubstantialRuntimeData,
+    TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
+use substantial::{substantial_operation, SubstantialMaterializer};
 
 use self::aws::S3Materializer;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
@@ -66,6 +68,7 @@ pub enum Runtime {
     Typegate,
     Typegraph,
     S3(Rc<S3RuntimeData>),
+    Substantial(Rc<SubstantialRuntimeData>),
     Kv(Rc<KvRuntimeData>),
 }
 
@@ -169,6 +172,18 @@ impl Materializer {
         }
     }
 
+    fn substantial(
+        runtime_id: RuntimeId,
+        data: SubstantialMaterializer,
+        effect: wit::Effect,
+    ) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: Rc::new(data).into(),
+        }
+    }
+
     fn kv(runtime_id: RuntimeId, data: KvMaterializer, effect: wit::Effect) -> Self {
         Self {
             runtime_id,
@@ -193,6 +208,7 @@ pub enum MaterializerData {
     Typegate(TypegateOperation),
     Typegraph(TypegraphOperation),
     S3(Rc<S3Materializer>),
+    Substantial(Rc<SubstantialMaterializer>),
     Kv(Rc<KvMaterializer>),
 }
 
@@ -653,6 +669,19 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             op,
             effect,
         )))
+    }
+
+    fn register_substantial_runtime(
+        data: wit::SubstantialRuntimeData,
+    ) -> Result<RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::Substantial(data.into())))
+    }
+
+    fn generate_substantial_operation(
+        runtime: RuntimeId,
+        data: wit::SubstantialOperationData,
+    ) -> Result<FuncParams, wit::Error> {
+        substantial_operation(runtime, data)
     }
 
     fn register_kv_runtime(data: KvRuntimeData) -> Result<RuntimeId, wit::Error> {
