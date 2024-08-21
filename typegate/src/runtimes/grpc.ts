@@ -38,13 +38,19 @@ export class GrpcRuntime extends Runtime {
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] | Promise<ComputeStage[]> {
+    const {
+      proto_file,
+      method,
+      endpoint,
+    } = stage.props.materializer?.data ?? {};
+
     const resolver: Resolver = async (args) => {
-      const { proto_file, method, payload, endpoint } = args;
+      const { payload } = args;
       return await native.call_grpc_method({
-        proto_file,
-        method,
+        proto_file: String(proto_file),
+        method: String(method),
         payload,
-        endpoint,
+        endpoint: String(endpoint),
       });
     };
 

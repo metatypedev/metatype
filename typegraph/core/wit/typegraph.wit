@@ -541,7 +541,6 @@ interface runtimes {
     record grpc-materializer {
         proto-file: string,
         method: string,
-        payload: string,
         endpoint: string,
     }
 
