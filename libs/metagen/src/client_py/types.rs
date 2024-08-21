@@ -152,7 +152,7 @@ impl RenderType for PyTypeRenderer {
                         ..
                     },
             } if title.starts_with("string_") => {
-                let ty_name = normalize_type_title(&format!("string_{format}"));
+                let ty_name = normalize_type_title(&format!("string_{format}_{}", cursor.id));
                 self.render_alias(renderer, &ty_name, "str")?;
                 ty_name
             }

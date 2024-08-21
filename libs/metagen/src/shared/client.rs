@@ -92,8 +92,8 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
 pub enum SelectionTy {
     Scalar,
     ScalarArgs { arg_ty: Rc<str> },
-    CompositeArgs { arg_ty: Rc<str>, select_ty: Rc<str> },
     Composite { select_ty: Rc<str> },
+    CompositeArgs { arg_ty: Rc<str>, select_ty: Rc<str> },
 }
 
 pub fn selection_for_field(
@@ -102,7 +102,8 @@ pub fn selection_for_field(
     renderer: &mut TypeRenderer,
     cursor: &mut VisitCursor,
 ) -> Result<SelectionTy> {
-    Ok(match renderer.nodes[ty as usize].deref() {
+    let node = renderer.nodes[ty as usize].clone();
+    Ok(match &node.deref() {
         TypeNode::Boolean { .. }
         | TypeNode::Float { .. }
         | TypeNode::Integer { .. }
@@ -145,7 +146,23 @@ pub fn selection_for_field(
         TypeNode::Object { .. } => SelectionTy::Composite {
             select_ty: renderer.render_subgraph(ty, cursor)?.0.unwrap(),
         },
-        TypeNode::Union { .. } | TypeNode::Either { .. } => todo!("unions are wip"),
+        TypeNode::Either {
+            data: common::typegraph::EitherTypeData { one_of: variants },
+            ..
+        }
+        | TypeNode::Union {
+            data: common::typegraph::UnionTypeData { any_of: variants },
+            ..
+        } => {
+            let select_ty = renderer.render_subgraph(ty, cursor)?.0.unwrap();
+            match selection_for_field(variants[0], arg_ty_names, renderer, cursor)? {
+                SelectionTy::Scalar => SelectionTy::Scalar,
+                SelectionTy::Composite { .. } => SelectionTy::Composite { select_ty },
+                SelectionTy::CompositeArgs { .. } | SelectionTy::ScalarArgs { .. } => {
+                    unreachable!("function can not be a union/either member")
+                }
+            }
+        }
         TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
     })
 }

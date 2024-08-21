@@ -10,6 +10,7 @@ use crate::{interlude::*, shared::types::*};
 
 pub struct RsNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
+    pub named_types: Rc<std::sync::Mutex<HashSet<u32>>>,
 }
 
 impl RsNodeMetasRenderer {
@@ -23,26 +24,61 @@ impl RsNodeMetasRenderer {
         write!(
             dest,
             r#"
-    pub fn {ty_name}() -> NodeMeta {{
-        NodeMeta {{
-            arg_types: None,
-            sub_nodes: Some(
-                ["#
+pub fn {ty_name}() -> NodeMeta {{
+    NodeMeta {{
+        arg_types: None,
+        variants: None,
+        sub_nodes: Some(
+            ["#
         )?;
         for (key, node_ref) in props {
             write!(
                 dest,
                 r#"
-                    ("{key}".into(), {node_ref} as NodeMetaFn),"#
+                ("{key}".into(), {node_ref} as NodeMetaFn),"#
             )?;
         }
         write!(
             dest,
             r#"
-                ].into()
-            ),
-        }}
-    }}"#
+            ].into()
+        ),
+    }}
+}}"#
+        )?;
+        Ok(())
+    }
+
+    fn render_for_union(
+        &self,
+        dest: &mut impl Write,
+        ty_name: &str,
+        props: IndexMap<String, Rc<str>>,
+    ) -> std::fmt::Result {
+        write!(
+            dest,
+            r#"
+pub fn {ty_name}() -> NodeMeta {{
+    NodeMeta {{
+        arg_types: None,
+        sub_nodes: None,
+        variants: Some(
+            ["#
+        )?;
+        for (key, node_ref) in props {
+            write!(
+                dest,
+                r#"
+                ("{key}".into(), {node_ref} as NodeMetaFn),"#
+            )?;
+        }
+        write!(
+            dest,
+            r#"
+            ].into()
+        ),
+    }}
+}}"#
         )?;
         Ok(())
     }
@@ -57,38 +93,38 @@ impl RsNodeMetasRenderer {
         write!(
             dest,
             r#"
-    pub fn {ty_name}() -> NodeMeta {{
-        NodeMeta {{"#
+pub fn {ty_name}() -> NodeMeta {{
+    NodeMeta {{"#
         )?;
         if let Some(fields) = argument_fields {
             write!(
                 dest,
                 r#"
-            arg_types: Some(
-                ["#
+        arg_types: Some(
+            ["#
             )?;
 
             for (key, ty) in fields {
                 write!(
                     dest,
                     r#"
-                    ("{key}".into(), "{ty}".into()),"#
+                ("{key}".into(), "{ty}".into()),"#
                 )?;
             }
 
             write!(
                 dest,
                 r#"
-                ].into()
-            ),"#
+            ].into()
+        ),"#
             )?;
         }
         write!(
             dest,
             r#"
-            ..{return_node}()
-        }}
-    }}"#
+        ..{return_node}()
+    }}
+}}"#
         )?;
         Ok(())
     }
@@ -117,10 +153,14 @@ impl RenderType for RsNodeMetasRenderer {
             | TypeNode::List {
                 data: ListTypeData { items: item, .. },
                 ..
-            } => renderer.render_subgraph(*item, cursor)?.0.unwrap().to_string(),
+            } => renderer
+                .render_subgraph(*item, cursor)?
+                .0
+                .unwrap()
+                .to_string(),
             TypeNode::Function { data, base } => {
                 let (return_ty_name, _cyclic) = renderer.render_subgraph(data.output, cursor)?;
-                let return_ty_name = return_ty_name.unwrap() ;
+                let return_ty_name = return_ty_name.unwrap();
                 let props = match renderer.nodes[data.input as usize].deref() {
                     TypeNode::Object { data, .. } if !data.properties.is_empty() => {
                         let props = data
@@ -157,30 +197,43 @@ impl RenderType for RsNodeMetasRenderer {
                 ty_name
             }
             TypeNode::Either {
-                ..
-                // data: EitherTypeData { one_of: variants },
-                // base,
+                data: EitherTypeData { one_of: variants },
+                base,
             }
             | TypeNode::Union {
-                ..
-                // data: UnionTypeData { any_of: variants },
-                // base,
+                data: UnionTypeData { any_of: variants },
+                base,
             } => {
-                // let variants = variants
-                //     .iter()
-                //     .map(|&inner| {
-                //         let (ty_name, _cyclic) = renderer.render_subgraph(inner, cursor)?;
-                //         let ty_name = match ty_name {
-                //             RenderedName::Name(name) => name,
-                //             RenderedName::Placeholder(name) => name,
-                //         };
-                //         Ok::<_, anyhow::Error>(ty_name)
-                //     })
-                //     .collect::<Result<Vec<_>, _>>()?;
-                // let ty_name = normalize_type_title(&base.title);
-                // self.render_union_type(renderer, &ty_name, variants)?;
-                // ty_name
-                todo!("unions are wip")
+                let mut named_set = vec![];
+                let variants = variants
+                    .iter()
+                    .filter_map(|&inner| {
+                        if !renderer.is_composite(inner) {
+                            return None;
+                        }
+                        named_set.push(inner);
+                        let (ty_name, _cyclic) = match renderer.render_subgraph(inner, cursor) {
+                            Ok(val) => val,
+                            Err(err) => return Some(Err(err)),
+                        };
+                        let ty_name = ty_name.unwrap();
+                        Some(eyre::Ok((
+                            renderer.nodes[inner as usize].deref().base().title.clone(),
+                            ty_name,
+                        )))
+                    })
+                    .collect::<Result<IndexMap<_, _>, _>>()?;
+                if !variants.is_empty() {
+                    {
+                        let mut named_types = self.named_types.lock().unwrap();
+                        named_types.extend(named_set)
+                    }
+                    let ty_name = normalize_type_title(&base.title);
+                    self.render_for_union(renderer, &ty_name, variants)?;
+                    ty_name
+                } else {
+                    "scalar".into()
+                }
             }
         };
         Ok(name)

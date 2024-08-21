@@ -463,40 +463,32 @@ Meta.test({
     ).code,
     0,
   );
+
+  const postSchema = zod.object({
+    id: zod.string(),
+    slug: zod.string(),
+    title: zod.string(),
+  });
+  const userSchema = zod.object({
+    id: zod.string(),
+    email: zod.string(),
+  });
   const expectedSchemaQ = zod.object({
-    user: zod.object({
-      id: zod.string(),
-      email: zod.string(),
-      post1: zod.object({
-        id: zod.string(),
-        slug: zod.string(),
-        title: zod.string(),
-      }).array(),
+    user: userSchema.extend({
+      post1: postSchema.array(),
       post2: zod.object({
         // NOTE: no id
         slug: zod.string(),
         title: zod.string(),
       }).array(),
     }),
-    posts: zod.object({
-      id: zod.string(),
-      slug: zod.string(),
-      title: zod.string(),
-    }),
+    posts: postSchema,
     scalarNoArgs: zod.string(),
   });
   const expectedSchemaM = zod.object({
     scalarArgs: zod.string(),
-    compositeNoArgs: zod.object({
-      id: zod.string(),
-      slug: zod.string(),
-      title: zod.string(),
-    }),
-    compositeArgs: zod.object({
-      id: zod.string(),
-      slug: zod.string(),
-      title: zod.string(),
-    }),
+    compositeNoArgs: postSchema,
+    compositeArgs: postSchema,
   });
   const expectedSchema = zod.tuple([
     expectedSchemaQ,
@@ -504,6 +496,12 @@ Meta.test({
     expectedSchemaM,
     expectedSchemaQ,
     expectedSchemaM,
+    /* zod.object({
+      scalarUnion: zod.string(),
+      compositeUnion1: postSchema,
+      compositeUnion2: zod.undefined(),
+      mixedUnion: zod.string(),
+    }), */
   ]);
   const cases = [
     {
@@ -541,9 +539,9 @@ Meta.test({
     }
     await metaTest.should(name, async () => {
       const res = await command
-        .env({ "TG_PORT": metaTest.port.toString() })
-        .json();
-      expected.parse(res);
+        .env({ "TG_PORT": metaTest.port.toString() }).text();
+      console.log(res);
+      expected.parse(JSON.parse(res));
     });
   }
 });

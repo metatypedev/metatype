@@ -66,8 +66,8 @@ pub fn filter_stubbed_funcs(
 
 pub fn is_composite(types: &[TypeNode], id: u32) -> bool {
     match &types[id as usize] {
-        TypeNode::Function { .. } => unreachable!(),
-        TypeNode::Any { .. } => unimplemented!("unexpected Any type as output"),
+        TypeNode::Function { .. } => panic!("function type isn't composite or scalar"),
+        TypeNode::Any { .. } => panic!("unexpected Any type as output"),
         TypeNode::Boolean { .. }
         | TypeNode::Float { .. }
         | TypeNode::Integer { .. }
@@ -80,3 +80,36 @@ pub fn is_composite(types: &[TypeNode], id: u32) -> bool {
         TypeNode::Either { data, .. } => data.one_of.iter().any(|&id| is_composite(types, id)),
     }
 }
+
+pub fn get_gql_type(types: &[TypeNode], id: u32, optional: bool) -> String {
+    let name = match &types[id as usize] {
+        TypeNode::Optional { data, .. } => return get_gql_type(types, data.item, true),
+        TypeNode::List { data, .. } => format!("[{}]", get_gql_type(types, data.items, true)),
+        TypeNode::String { base, .. } => {
+            if base.as_id {
+                "ID".into()
+            } else {
+                "String".into()
+            }
+        }
+        TypeNode::Boolean { .. } => "Boolean".into(),
+        TypeNode::Float { .. } => "Float".into(),
+        TypeNode::Integer { .. } => "Int".into(),
+        node => node.base().title.clone(),
+    };
+    if !optional {
+        format!("{name}!")
+    } else {
+        name
+    }
+}
+/*
+  getGraphQLType(typeNode: TypeNode, optional = false): string {
+    const scalarType = GRAPHQL_SCALAR_TYPES[typeNode.type];
+    if (scalarType != null) {
+      return scalarType;
+    }
+
+    return typeNode.title;
+  }
+*/

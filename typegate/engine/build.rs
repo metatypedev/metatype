@@ -12,7 +12,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cwd = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR")?);
     let out_dir = PathBuf::from(std::env::var("OUT_DIR")?);
     let target = std::env::var("TARGET")?;
-
     println!(
         "cargo:rerun-if-changed={}/main.py",
         cwd.join("../../libs/pyrt_wit_wire")
@@ -29,9 +28,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let wasm_path = out_dir.join("pyrt.wasm");
-    // note: we're using ghjk here
+    // NOTE: we're using ghjk here
     // if this proves troubsome, consider moving the
     // task impl inline
+    // NOTE: you'll need to manually invalidate the cache
+    // if you change the build-pyrt behaviour
     assert!(
         std::process::Command::new("ghjk")
             .args(["x", "build-pyrt"])

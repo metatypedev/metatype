@@ -10,6 +10,7 @@ mod utils;
 use core::fmt::Write;
 
 use common::typegraph::EffectType;
+use shared::get_gql_type;
 
 use crate::interlude::*;
 use crate::*;
@@ -137,12 +138,12 @@ class QueryGraph(QueryGraphBase):
     def __init__(self):
         super().__init__({{"#
     )?;
-    for ty_name in name_mapper.memo.borrow().deref().values() {
+    for (&id, ty_name) in name_mapper.memo.borrow().deref() {
+        let gql_ty = get_gql_type(&tg.types, id, false);
         write!(
             dest,
-            // TODO: proper any scalar support
             r#"
-            "{ty_name}": "Any","#
+            "{ty_name}": "{gql_ty}","#
         )?;
     }
     write!(

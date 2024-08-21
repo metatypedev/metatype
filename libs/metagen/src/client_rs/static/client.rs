@@ -40,36 +40,32 @@ fn selection_to_node_set(
 
         let node_instances = match node_selection {
             SelectionErased::None => continue,
-            SelectionErased::Scalar => vec![(node_name.clone(), (NodeArgsErased::None, None))],
+            SelectionErased::Scalar => vec![(node_name.clone(), NodeArgsErased::None, None)],
             SelectionErased::ScalarArgs(args) => {
-                vec![(node_name.clone(), (args, None))]
+                vec![(node_name.clone(), args, None)]
             }
             SelectionErased::Composite(select) => {
-                vec![(node_name.clone(), (NodeArgsErased::None, Some(select)))]
+                vec![(node_name.clone(), NodeArgsErased::None, Some(select))]
             }
             SelectionErased::CompositeArgs(args, select) => {
-                vec![(node_name.clone(), (args, Some(select)))]
+                vec![(node_name.clone(), args, Some(select))]
             }
             SelectionErased::Alias(aliases) => aliases
                 .into_iter()
                 .map(|(instance_name, selection)| {
-                    (
-                        instance_name,
-                        match selection {
-                            AliasSelection::Scalar => (NodeArgsErased::None, None),
-                            AliasSelection::ScalarArgs(args) => (args, None),
-                            AliasSelection::Composite(select) => {
-                                (NodeArgsErased::None, Some(select))
-                            }
-                            AliasSelection::CompositeArgs(args, select) => (args, Some(select)),
-                        },
-                    )
+                    let (args, select) = match selection {
+                        AliasSelection::Scalar => (NodeArgsErased::None, None),
+                        AliasSelection::ScalarArgs(args) => (args, None),
+                        AliasSelection::Composite(select) => (NodeArgsErased::None, Some(select)),
+                        AliasSelection::CompositeArgs(args, select) => (args, Some(select)),
+                    };
+                    (instance_name, args, select)
                 })
                 .collect(),
         };
 
         let meta = meta_fn();
-        for (instance_name, (args, select)) in node_instances {
+        for (instance_name, args, select) in node_instances {
             let args = if let Some(arg_types) = &meta.arg_types {
                 match args {
                     NodeArgsErased::Inline(args) => {
@@ -95,17 +91,60 @@ fn selection_to_node_set(
             } else {
                 None
             };
-
-            let sub_nodes = if let Some(sub_nodes) = &meta.sub_nodes {
-                let Some(select) = select else {
-                    return Err(SelectionError::MissingSubNodes {
-                        path: format!("{parent_path}.{instance_name}"),
-                    });
-                };
-                selection_to_node_set(select, sub_nodes, format!("{parent_path}.{instance_name}"))?
-            } else {
-                vec![]
+            let sub_nodes = match (&meta.variants, &meta.sub_nodes) {
+                (Some(_), Some(_)) => unreachable!("union/either types can't have sub_nodes"),
+                (None, None) => SubNodes::None,
+                (variants, sub_nodes) => {
+                    let Some(select) = select else {
+                        return Err(SelectionError::MissingSubNodes {
+                            path: format!("{parent_path}.{instance_name}"),
+                        });
+                    };
+                    match select {
+                        CompositeSelection::Atomic(select) => {
+                            let Some(sub_nodes) = sub_nodes else {
+                                return Err(SelectionError::UnexpectedUnion {
+                                    path: format!("{parent_path}.{instance_name}"),
+                                });
+                            };
+                            SubNodes::Atomic(selection_to_node_set(
+                                select,
+                                sub_nodes,
+                                format!("{parent_path}.{instance_name}"),
+                            )?)
+                        }
+                        CompositeSelection::Union(variant_select) => {
+                            let Some(variants) = variants else {
+                                return Err(SelectionError::MissingUnion {
+                                    path: format!("{parent_path}.{instance_name}"),
+                                });
+                            };
+                            let mut out = HashMap::new();
+                            for (variant_ty, select) in variant_select {
+                                let Some(variant_meta) = variants.get(&variant_ty[..]) else {
+                                    return Err(SelectionError::UnexpectedVariant {
+                                        path: format!("{parent_path}.{instance_name}"),
+                                        varaint_ty: variant_ty.clone(),
+                                    });
+                                };
+                                let variant_meta = variant_meta();
+                                // this union member is a scalar
+                                let Some(sub_nodes) = variant_meta.sub_nodes else {
+                                    continue;
+                                };
+                                let nodes = selection_to_node_set(
+                                    select,
+                                    &sub_nodes,
+                                    format!("{parent_path}.{instance_name}"),
+                                )?;
+                                out.insert(variant_ty, nodes);
+                            }
+                            SubNodes::Union(out)
+                        }
+                    }
+                }
             };
+
             out.push(SelectNodeErased {
                 node_name: node_name.clone(),
                 instance_name,
@@ -121,7 +160,10 @@ fn selection_to_node_set(
 pub enum SelectionError {
     MissingArgs { path: String },
     MissingSubNodes { path: String },
+    MissingUnion { path: String },
     UnexpectedArgs { path: String, name: String },
+    UnexpectedUnion { path: String },
+    UnexpectedVariant { path: String, varaint_ty: CowStr },
 }
 
 impl std::fmt::Display for SelectionError {
@@ -133,6 +175,17 @@ impl std::fmt::Display for SelectionError {
             }
             SelectionError::MissingSubNodes { path } => {
                 write!(f, "node at {path} is a composite but no selection found")
+            }
+            SelectionError::MissingUnion { path } => write!(
+                f,
+                "node at {path} is a union but provided selection is atomic"
+            ),
+            SelectionError::UnexpectedUnion { path } => write!(
+                f,
+                "node at {path} is an atomic type but union selection provided"
+            ),
+            SelectionError::UnexpectedVariant { path, varaint_ty } => {
+                write!(f, "node at {path} has no variant called '{varaint_ty}'")
             }
         }
     }
@@ -150,6 +203,13 @@ type NodeMetaFn = fn() -> NodeMeta;
 struct NodeMeta {
     sub_nodes: Option<HashMap<CowStr, NodeMetaFn>>,
     arg_types: Option<HashMap<CowStr, CowStr>>,
+    variants: Option<HashMap<CowStr, NodeMetaFn>>,
+}
+
+enum SubNodes {
+    None,
+    Atomic(Vec<SelectNodeErased>),
+    Union(HashMap<CowStr, Vec<SelectNodeErased>>),
 }
 
 /// The final form of the nodes used in queries.
@@ -157,7 +217,7 @@ pub struct SelectNodeErased {
     node_name: CowStr,
     instance_name: CowStr,
     args: Option<NodeArgsMerged>,
-    sub_nodes: Vec<SelectNodeErased>,
+    sub_nodes: SubNodes,
 }
 
 /// Wrappers around [`SelectNodeErased`] that only holds query nodes
@@ -206,7 +266,7 @@ pub struct UnselectedNode<SelT, SelAliasedT, QTy, Out> {
 
 impl<SelT, SelAliased, QTy, Out> UnselectedNode<SelT, SelAliased, QTy, Out>
 where
-    SelT: Into<SelectionErasedMap>,
+    SelT: Into<CompositeSelection>,
 {
     fn select_erased(self, select: SelT) -> Result<SelectNodeErased, SelectionError> {
         let nodes = selection_to_node_set(
@@ -229,7 +289,7 @@ where
 
 impl<SelT, SelAliased, QTy, Out> UnselectedNode<SelT, SelAliased, QTy, Out>
 where
-    SelAliased: Into<SelectionErasedMap>,
+    SelAliased: Into<CompositeSelection>,
 {
     fn select_aliased_erased(self, select: SelAliased) -> Result<SelectNodeErased, SelectionError> {
         let nodes = selection_to_node_set(
@@ -254,7 +314,7 @@ where
 
 impl<SelT, SelAliased, Out> UnselectedNode<SelT, SelAliased, QueryMarker, Out>
 where
-    SelT: Into<SelectionErasedMap>,
+    SelT: Into<CompositeSelection>,
 {
     pub fn select(self, select: SelT) -> Result<QueryNode<Out>, SelectionError> {
         Ok(QueryNode(self.select_erased(select)?, PhantomData))
@@ -262,7 +322,7 @@ where
 }
 impl<SelT, SelAliased, Out> UnselectedNode<SelT, SelAliased, QueryMarker, Out>
 where
-    SelAliased: Into<SelectionErasedMap>,
+    SelAliased: Into<CompositeSelection>,
 {
     pub fn select_aliased(
         self,
@@ -273,7 +333,7 @@ where
 }
 impl<SelT, SelAliased, Out> UnselectedNode<SelT, SelAliased, MutationMarker, Out>
 where
-    SelT: Into<SelectionErasedMap>,
+    SelT: Into<CompositeSelection>,
 {
     pub fn select(self, select: SelT) -> Result<MutationNode<Out>, SelectionError> {
         Ok(MutationNode(self.select_erased(select)?, PhantomData))
@@ -281,7 +341,7 @@ where
 }
 impl<SelT, SelAliased, Out> UnselectedNode<SelT, SelAliased, MutationMarker, Out>
 where
-    SelAliased: Into<SelectionErasedMap>,
+    SelAliased: Into<CompositeSelection>,
 {
     pub fn select_aliased(
         self,
@@ -405,12 +465,24 @@ impl_for_tuple!(0 N0, 1 N1, 2 N2, 3 N3, 4 N4, 5 N5, 6 N6, 7 N7, 8 N8, 9 N9, 10 N
 pub struct SelectionErasedMap(HashMap<CowStr, SelectionErased>);
 
 #[derive(Debug)]
+pub enum CompositeSelection {
+    Atomic(SelectionErasedMap),
+    Union(HashMap<CowStr, SelectionErasedMap>),
+}
+
+impl Default for CompositeSelection {
+    fn default() -> Self {
+        CompositeSelection::Atomic(SelectionErasedMap(Default::default()))
+    }
+}
+
+#[derive(Debug)]
 enum SelectionErased {
     None,
     Scalar,
     ScalarArgs(NodeArgsErased),
-    Composite(SelectionErasedMap),
-    CompositeArgs(NodeArgsErased, SelectionErasedMap),
+    Composite(CompositeSelection),
+    CompositeArgs(NodeArgsErased, CompositeSelection),
     Alias(HashMap<CowStr, AliasSelection>),
 }
 
@@ -418,13 +490,13 @@ enum SelectionErased {
 pub enum AliasSelection {
     Scalar,
     ScalarArgs(NodeArgsErased),
-    Composite(SelectionErasedMap),
-    CompositeArgs(NodeArgsErased, SelectionErasedMap),
+    Composite(CompositeSelection),
+    CompositeArgs(NodeArgsErased, CompositeSelection),
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Debug)]
 pub struct HasAlias;
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Debug)]
 pub struct NoAlias;
 
 #[derive(Debug)]
@@ -434,7 +506,7 @@ pub struct AliasInfo<ArgT, SelT, ATyag> {
 }
 
 #[derive(Debug)]
-pub enum ScalarSelectNoArgs<ATy> {
+pub enum ScalarSelect<ATy> {
     Get,
     Skip,
     Alias(AliasInfo<(), (), ATy>),
@@ -446,8 +518,8 @@ pub enum ScalarSelectArgs<ArgT, ATy> {
     Alias(AliasInfo<ArgT, (), ATy>),
 }
 #[derive(Debug)]
-pub enum CompositeSelectNoArgs<SelT, ATy> {
-    Get(SelectionErasedMap, PhantomData<SelT>),
+pub enum CompositeSelect<SelT, ATy> {
+    Get(CompositeSelection, PhantomData<SelT>),
     Skip,
     Alias(AliasInfo<(), SelT, ATy>),
 }
@@ -455,7 +527,7 @@ pub enum CompositeSelectNoArgs<SelT, ATy> {
 pub enum CompositeSelectArgs<ArgT, SelT, ATy> {
     Get(
         NodeArgsErased,
-        SelectionErasedMap,
+        CompositeSelection,
         PhantomData<(ArgT, SelT)>,
     ),
     Skip,
@@ -526,7 +598,7 @@ pub trait Selection {
 
 // --- Impl SelectionType impls --- //
 
-impl<ATy> Selection for ScalarSelectNoArgs<ATy> {
+impl<ATy> Selection for ScalarSelect<ATy> {
     fn all() -> Self {
         Self::Get
     }
@@ -536,9 +608,9 @@ impl<ArgT, ATy> Selection for ScalarSelectArgs<ArgT, ATy> {
         Self::Skip
     }
 }
-impl<SelT, ATy> Selection for CompositeSelectNoArgs<SelT, ATy>
+impl<SelT, ATy> Selection for CompositeSelect<SelT, ATy>
 where
-    SelT: Selection + Into<SelectionErasedMap>,
+    SelT: Selection + Into<CompositeSelection>,
 {
     fn all() -> Self {
         let sel = SelT::all();
@@ -555,7 +627,7 @@ where
 }
 // --- Default impls --- //
 
-impl<ATy> Default for ScalarSelectNoArgs<ATy> {
+impl<ATy> Default for ScalarSelect<ATy> {
     fn default() -> Self {
         Self::Skip
     }
@@ -565,7 +637,7 @@ impl<ArgT, ATy> Default for ScalarSelectArgs<ArgT, ATy> {
         Self::Skip
     }
 }
-impl<SelT, ATy> Default for CompositeSelectNoArgs<SelT, ATy> {
+impl<SelT, ATy> Default for CompositeSelect<SelT, ATy> {
     fn default() -> Self {
         Self::Skip
     }
@@ -578,13 +650,13 @@ impl<ArgT, SelT, ATy> Default for CompositeSelectArgs<ArgT, SelT, ATy> {
 
 // --- From Get/Skip...etc impls --- //
 
-impl<ATy> From<Get> for ScalarSelectNoArgs<ATy> {
+impl<ATy> From<Get> for ScalarSelect<ATy> {
     fn from(_: Get) -> Self {
         Self::Get
     }
 }
 
-impl<ATy> From<Skip> for ScalarSelectNoArgs<ATy> {
+impl<ATy> From<Skip> for ScalarSelect<ATy> {
     fn from(_: Skip) -> Self {
         Self::Skip
     }
@@ -594,7 +666,7 @@ impl<ArgT, ATy> From<Skip> for ScalarSelectArgs<ArgT, ATy> {
         Self::Skip
     }
 }
-impl<SelT, ATy> From<Skip> for CompositeSelectNoArgs<SelT, ATy> {
+impl<SelT, ATy> From<Skip> for CompositeSelect<SelT, ATy> {
     fn from(_: Skip) -> Self {
         Self::Skip
     }
@@ -614,9 +686,9 @@ where
     }
 }
 
-impl<SelT, ATy> From<Select<SelT>> for CompositeSelectNoArgs<SelT, ATy>
+impl<SelT, ATy> From<Select<SelT>> for CompositeSelect<SelT, ATy>
 where
-    SelT: Into<SelectionErasedMap>,
+    SelT: Into<CompositeSelection>,
 {
     fn from(Select(selection): Select<SelT>) -> Self {
         Self::Get(selection.into(), PhantomData)
@@ -626,7 +698,7 @@ where
 impl<ArgT, SelT, ATy> From<ArgSelect<ArgT, SelT>> for CompositeSelectArgs<ArgT, SelT, ATy>
 where
     ArgT: Serialize,
-    SelT: Into<SelectionErasedMap>,
+    SelT: Into<CompositeSelection>,
 {
     fn from(ArgSelect(args, selection): ArgSelect<ArgT, SelT>) -> Self {
         Self::Get(
@@ -645,7 +717,7 @@ impl<ArgT, ATy> From<PlaceholderArg<ArgT>> for ScalarSelectArgs<ArgT, ATy> {
 impl<ArgT, SelT, ATy> From<PlaceholderArgSelect<ArgT, SelT>>
     for CompositeSelectArgs<ArgT, SelT, ATy>
 where
-    SelT: Into<SelectionErasedMap>,
+    SelT: Into<CompositeSelection>,
 {
     fn from(value: PlaceholderArgSelect<ArgT, SelT>) -> Self {
         Self::Get(
@@ -664,9 +736,9 @@ where
 /// on aliases like [`Skip`].
 pub trait FromAliasSelection<T> {}
 
-impl FromAliasSelection<Get> for ScalarSelectNoArgs<HasAlias> {}
+impl FromAliasSelection<Get> for ScalarSelect<HasAlias> {}
 impl<ArgT> FromAliasSelection<Args<ArgT>> for ScalarSelectArgs<ArgT, HasAlias> {}
-impl<SelT> FromAliasSelection<Select<SelT>> for CompositeSelectNoArgs<SelT, HasAlias> {}
+impl<SelT> FromAliasSelection<Select<SelT>> for CompositeSelect<SelT, HasAlias> {}
 impl<ArgT, SelT> FromAliasSelection<ArgSelect<ArgT, SelT>>
     for CompositeSelectArgs<ArgT, SelT, HasAlias>
 {
@@ -674,8 +746,8 @@ impl<ArgT, SelT> FromAliasSelection<ArgSelect<ArgT, SelT>>
 
 // --- From Alias impls --- //
 
-impl From<Alias<(), ScalarSelectNoArgs<HasAlias>>> for ScalarSelectNoArgs<HasAlias> {
-    fn from(Alias(info): Alias<(), ScalarSelectNoArgs<HasAlias>>) -> Self {
+impl From<Alias<(), ScalarSelect<HasAlias>>> for ScalarSelect<HasAlias> {
+    fn from(Alias(info): Alias<(), ScalarSelect<HasAlias>>) -> Self {
         Self::Alias(AliasInfo {
             aliases: info.aliases,
             _phantom: PhantomData,
@@ -687,7 +759,7 @@ impl<ArgT> From<Alias<ArgT, ()>> for ScalarSelectArgs<ArgT, HasAlias> {
         Self::Alias(info)
     }
 }
-impl<SelT> From<Alias<(), SelT>> for CompositeSelectNoArgs<SelT, HasAlias> {
+impl<SelT> From<Alias<(), SelT>> for CompositeSelect<SelT, HasAlias> {
     fn from(Alias(info): Alias<(), SelT>) -> Self {
         Self::Alias(info)
     }
@@ -706,9 +778,9 @@ impl<ArgT, SelT, ATy> From<AliasInfo<ArgT, SelT, ATy>> for SelectionErased {
     }
 }
 
-impl<ATy> From<ScalarSelectNoArgs<ATy>> for SelectionErased {
-    fn from(value: ScalarSelectNoArgs<ATy>) -> SelectionErased {
-        use ScalarSelectNoArgs::*;
+impl<ATy> From<ScalarSelect<ATy>> for SelectionErased {
+    fn from(value: ScalarSelect<ATy>) -> SelectionErased {
+        use ScalarSelect::*;
         match value {
             Get => SelectionErased::Scalar,
             Skip => SelectionErased::None,
@@ -728,12 +800,9 @@ impl<ArgT, ATy> From<ScalarSelectArgs<ArgT, ATy>> for SelectionErased {
     }
 }
 
-impl<SelT, ATy> From<CompositeSelectNoArgs<SelT, ATy>> for SelectionErased
-where
-    SelT: Into<SelectionErasedMap>,
-{
-    fn from(value: CompositeSelectNoArgs<SelT, ATy>) -> SelectionErased {
-        use CompositeSelectNoArgs::*;
+impl<SelT, ATy> From<CompositeSelect<SelT, ATy>> for SelectionErased {
+    fn from(value: CompositeSelect<SelT, ATy>) -> SelectionErased {
+        use CompositeSelect::*;
         match value {
             Get(selection, _) => SelectionErased::Composite(selection),
             Skip => SelectionErased::None,
@@ -756,6 +825,73 @@ where
     }
 }
 
+// --- UnionMember impls --- //
+
+/// The following trait is used for types that implement
+/// selections for the composite members of unions.
+///
+/// The err return value indicates the case where
+/// aliases are used selections on members which is an error
+///
+/// This state is currently impossible to arrive at since
+/// AliasInfo has no public construction methods with NoAlias
+/// set. Union selection types make sure all their immediate
+/// member selection use NoAlias to prevent this invalid stat.e
+pub trait UnionMember {
+    fn composite(self) -> Option<SelectionErasedMap>;
+}
+
+/// Internal marker trait use to make sure we can't have union members
+/// selection being another union selection.
+trait NotUnionSelection {}
+
+// NOTE: UnionMembers are all NoAlias
+impl UnionMember for ScalarSelect<NoAlias> {
+    fn composite(self) -> Option<SelectionErasedMap> {
+        None
+    }
+}
+
+impl<ArgT> UnionMember for ScalarSelectArgs<ArgT, NoAlias> {
+    fn composite(self) -> Option<SelectionErasedMap> {
+        None
+    }
+}
+
+impl<SelT> UnionMember for CompositeSelect<SelT, NoAlias>
+where
+    SelT: NotUnionSelection,
+{
+    fn composite(self) -> Option<SelectionErasedMap> {
+        use CompositeSelect::*;
+        match self {
+            Get(CompositeSelection::Atomic(selection), _) => Some(selection),
+            Skip => None,
+            Get(CompositeSelection::Union(_), _) => {
+                unreachable!("union selection on union member selection. how??")
+            }
+            Alias(_) => unreachable!("alias discovored on union/either member. how??"),
+        }
+    }
+}
+
+impl<ArgT, SelT, NoAlias> UnionMember for CompositeSelectArgs<ArgT, SelT, NoAlias>
+where
+    SelT: NotUnionSelection,
+{
+    fn composite(self) -> Option<SelectionErasedMap> {
+        use CompositeSelectArgs::*;
+        match self {
+            Get(_args, CompositeSelection::Atomic(selection), _) => Some(selection),
+            Skip => None,
+            Get(_args, CompositeSelection::Union(_), _) => {
+                unreachable!("union selection on union member selection. how??")
+            }
+            Alias(_) => unreachable!("alias discovored on union/either member. how??"),
+        }
+    }
+}
+
 // --- Into AliasSelection impls --- //
 
 impl From<Get> for AliasSelection {
@@ -773,7 +909,7 @@ where
 }
 impl<SelT> From<Select<SelT>> for AliasSelection
 where
-    SelT: Into<SelectionErasedMap>,
+    SelT: Into<CompositeSelection>,
 {
     fn from(val: Select<SelT>) -> Self {
         let map = val.0.into();
@@ -784,16 +920,16 @@ where
 impl<ArgT, SelT> From<ArgSelect<ArgT, SelT>> for AliasSelection
 where
     ArgT: Serialize,
-    SelT: Into<SelectionErasedMap>,
+    SelT: Into<CompositeSelection>,
 {
     fn from(val: ArgSelect<ArgT, SelT>) -> Self {
         let map = val.1.into();
         AliasSelection::CompositeArgs(NodeArgsErased::Inline(to_json_value(val.0)), map)
     }
 }
-impl<ATy> From<ScalarSelectNoArgs<ATy>> for AliasSelection {
-    fn from(val: ScalarSelectNoArgs<ATy>) -> Self {
-        use ScalarSelectNoArgs::*;
+impl<ATy> From<ScalarSelect<ATy>> for AliasSelection {
+    fn from(val: ScalarSelect<ATy>) -> Self {
+        use ScalarSelect::*;
         match val {
             Get => AliasSelection::Scalar,
             _ => unreachable!(),
@@ -810,12 +946,12 @@ impl<ArgT, ATy> From<ScalarSelectArgs<ArgT, ATy>> for AliasSelection {
     }
 }
 
-impl<SelT, ATy> From<CompositeSelectNoArgs<SelT, ATy>> for AliasSelection
+impl<SelT, ATy> From<CompositeSelect<SelT, ATy>> for AliasSelection
 where
     SelT: Into<SelectionErasedMap>,
 {
-    fn from(val: CompositeSelectNoArgs<SelT, ATy>) -> Self {
-        use CompositeSelectNoArgs::*;
+    fn from(val: CompositeSelect<SelT, ATy>) -> Self {
+        use CompositeSelect::*;
         match val {
             Get(select, _) => AliasSelection::Composite(select),
             _ => unreachable!(),
@@ -839,14 +975,14 @@ where
 #[macro_export]
 macro_rules! impl_selection_traits {
     ($ty:ident,$($field:tt),+) => {
-        impl<ATy> From<$ty<ATy>> for SelectionErasedMap {
-            fn from(value: $ty<ATy>) -> SelectionErasedMap {
-                SelectionErasedMap(
+        impl<ATy> From<$ty<ATy>> for CompositeSelection {
+            fn from(value: $ty<ATy>) -> CompositeSelection {
+                CompositeSelection::Atomic(SelectionErasedMap(
                     [
                         $((stringify!($field).into(), value.$field.into()),)+
                     ]
                     .into(),
-                )
+                ))
             }
         }
 
@@ -855,6 +991,30 @@ macro_rules! impl_selection_traits {
                 Self {
                     $($field: all(),)+
                 }
+            }
+        }
+
+        impl<ATy> NotUnionSelection for $ty<ATy> {}
+    };
+}
+#[macro_export]
+macro_rules! impl_union_selection_traits {
+    ($ty:ident,$(($variant_ty:tt, $field:tt)),+) => {
+        impl<ATy> From<$ty<ATy>> for CompositeSelection {
+            fn from(_value: $ty<ATy>) -> CompositeSelection {
+                /*CompositeSelection::Union(
+                    [
+                        $({
+                            let selection =
+                                UnionMember::composite(value.$field);
+                            selection.map(|val| ($variant_ty.into(), val))
+                        },)+
+                    ]
+                    .into_iter()
+                    .filter_map(|val| val)
+                    .collect(),
+                )*/
+                panic!("unions/either are wip")
             }
         }
     };
@@ -1046,6 +1206,7 @@ pub mod graphql {
     type FoundPlaceholders = Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>;
 
     fn select_node_to_gql(
+        ty_to_gql_ty_map: &TyToGqlTyMap,
         dest: &mut impl std::fmt::Write,
         node: SelectNodeErased,
         variable_types: &mut HashMap<CowStr, CowStr>,
@@ -1087,13 +1248,49 @@ pub mod graphql {
                 }
             }
         }
-        if !node.sub_nodes.is_empty() {
-            write!(dest, "{{ ")?;
-            for node in node.sub_nodes {
-                select_node_to_gql(dest, node, variable_types, variables_object, placeholders)?;
-                write!(dest, " ")?;
+        match node.sub_nodes {
+            SubNodes::None => {}
+            SubNodes::Atomic(sub_nodes) => {
+                write!(dest, "{{ ")?;
+                for node in sub_nodes {
+                    select_node_to_gql(
+                        ty_to_gql_ty_map,
+                        dest,
+                        node,
+                        variable_types,
+                        variables_object,
+                        placeholders,
+                    )?;
+                    write!(dest, " ")?;
+                }
+                write!(dest, " }}")?;
             }
-            write!(dest, " }}")?;
+            SubNodes::Union(variants) => {
+                write!(dest, "{{ ")?;
+                for (ty, sub_nodes) in variants {
+                    let gql_ty = ty_to_gql_ty_map
+                        .get(&ty[..])
+                        .expect("impossible: no GraphQL type equivalent found for variant type");
+                    let gql_ty = match gql_ty.strip_suffix('!') {
+                        Some(val) => val,
+                        None => &gql_ty[..],
+                    };
+                    write!(dest, " ... on {gql_ty} {{ ")?;
+                    for node in sub_nodes {
+                        select_node_to_gql(
+                            ty_to_gql_ty_map,
+                            dest,
+                            node,
+                            variable_types,
+                            variables_object,
+                            placeholders,
+                        )?;
+                        write!(dest, " ")?;
+                    }
+                    write!(dest, " }}")?;
+                }
+                write!(dest, " }}")?;
+            }
         }
         Ok(())
     }
@@ -1116,6 +1313,7 @@ pub mod graphql {
             };
             write!(&mut root_nodes, "  ").expect("error building to string");
             select_node_to_gql(
+                ty_to_gql_ty_map,
                 &mut root_nodes,
                 node,
                 &mut variables_types,
@@ -1166,6 +1364,7 @@ pub mod graphql {
             "application/json".try_into().unwrap(),
         );
         headers.extend(opts.headers.clone());
+        // println!("{doc}, {variables:#?}");
         let body = serde_json::json!({
             "query": doc,
             "variables": variables
@@ -1349,7 +1548,6 @@ pub mod graphql {
                 panic!("placeholders found in non-prepared query")
             }
             let req = build_gql_req(self.addr.clone(), &doc, &variables, opts);
-            // dbg!(serde_json::to_string_pretty(&req.body).expect("error serializing body"));
             let req = self
                 .client
                 .request(req.method, req.addr)
@@ -1490,7 +1688,6 @@ pub mod graphql {
                 panic!("placeholders found in non-prepared query")
             }
             let req = build_gql_req(self.addr.clone(), &doc, &variables, opts);
-            // dbg!(serde_json::to_string_pretty(&req.body).expect("error serializing body"));
             let req = self
                 .client
                 .request(req.method, req.addr)
@@ -1707,7 +1904,6 @@ pub mod graphql {
             let variables =
                 resolve_prepared_variables(&self.placeholders, self.variables.clone(), args)?;
             let req = build_gql_req(self.addr.clone(), &self.doc, &variables, &self.opts);
-            // dbg!(serde_json::to_string_pretty(&req.body).expect("error serializing body"));
             let req = self
                 .client
                 .request(req.method, req.addr)
@@ -1801,7 +1997,6 @@ pub mod graphql {
             let variables =
                 resolve_prepared_variables(&self.placeholders, self.variables.clone(), args)?;
             let req = build_gql_req(self.addr.clone(), &self.doc, &variables, &self.opts);
-            // dbg!(serde_json::to_string_pretty(&req.body).expect("error serializing body"));
             let req = self
                 .client
                 .request(req.method, req.addr)

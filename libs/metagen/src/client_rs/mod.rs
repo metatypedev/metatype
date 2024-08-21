@@ -7,6 +7,7 @@ mod selections;
 use core::fmt::Write;
 
 use common::typegraph::EffectType;
+use shared::get_gql_type;
 
 use crate::interlude::*;
 use crate::*;
@@ -151,7 +152,7 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: &Typegraph) -> anyhow::Resul
     };
     let name_mapper = Rc::new(name_mapper);
 
-    let node_metas = render_node_metas(dest, &manifest, name_mapper.clone())?;
+    let (node_metas, named_types) = render_node_metas(dest, &manifest, name_mapper.clone())?;
     let data_types = render_data_types(dest, &manifest, name_mapper.clone())?;
     let data_types = Rc::new(data_types);
     let selection_names =
@@ -168,12 +169,21 @@ impl QueryGraph {{
             ty_to_gql_ty_map: std::sync::Arc::new([
             "#
     )?;
-    for ty_name in name_mapper.memo.borrow().deref().values() {
+    for (&id, ty_name) in name_mapper.memo.borrow().deref() {
+        let gql_ty = get_gql_type(&tg.types, id, false);
         write!(
             dest,
-            // TODO: proper graphql typing support
             r#"
-                ("{ty_name}".into(), "Any".into()),"#
+                ("{ty_name}".into(), "{gql_ty}".into()),"#
+        )?;
+    }
+    for id in named_types {
+        let ty_name = &tg.types[id as usize].base().title;
+        let gql_ty = get_gql_type(&tg.types, id, false);
+        write!(
+            dest,
+            r#"
+                ("{ty_name}".into(), "{gql_ty}".into()),"#
         )?;
     }
     write!(
@@ -319,7 +329,12 @@ fn render_data_types(
         _ = renderer.render(id)?;
     }
     let (types_rs, name_memo) = renderer.finalize();
-    writeln!(dest.buf, "{}", types_rs)?;
+    writeln!(dest.buf, "use types::*;")?;
+    writeln!(dest.buf, "pub mod types {{")?;
+    for line in types_rs.lines() {
+        writeln!(dest.buf, "    {line}")?;
+    }
+    writeln!(dest.buf, "}}")?;
     Ok(name_memo)
 }
 
@@ -350,10 +365,14 @@ fn render_node_metas(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
     name_mapper: Rc<NameMapper>,
-) -> Result<NameMemo> {
+) -> Result<(NameMemo, HashSet<u32>)> {
+    let named_types = Rc::new(std::sync::Mutex::new(HashSet::new()));
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(node_metas::RsNodeMetasRenderer { name_mapper }),
+        Rc::new(node_metas::RsNodeMetasRenderer {
+            name_mapper,
+            named_types: named_types.clone(),
+        }),
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;
@@ -369,13 +388,23 @@ mod node_metas {{
         NodeMeta {{
             arg_types: None,
             sub_nodes: None,
+            variants: None,
         }}
-    }}
-    {methods}
+    }}"#
+    )?;
+    for line in methods.lines() {
+        writeln!(dest, "    {line}")?;
+    }
+    write!(
+        dest,
+        r#"
 }}
 "#
     )?;
-    Ok(memo)
+    Ok((
+        memo,
+        Rc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
+    ))
 }
 
 struct NameMapper {

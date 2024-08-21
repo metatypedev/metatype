@@ -113,6 +113,22 @@ impl TypeRenderer {
             replacement_records: Default::default(),
         }
     }
+    pub fn is_composite(&self, id: u32) -> bool {
+        match self.nodes[id as usize].deref() {
+            TypeNode::Function { .. } => panic!("function type isn't composite or scalar"),
+            TypeNode::Any { .. } => panic!("Any tye isn't composite or scalar"),
+            TypeNode::Boolean { .. }
+            | TypeNode::Float { .. }
+            | TypeNode::Integer { .. }
+            | TypeNode::String { .. }
+            | TypeNode::File { .. } => false,
+            TypeNode::Object { .. } => true,
+            TypeNode::Optional { data, .. } => self.is_composite(data.item),
+            TypeNode::List { data, .. } => self.is_composite(data.items),
+            TypeNode::Union { data, .. } => data.any_of.iter().any(|&id| self.is_composite(id)),
+            TypeNode::Either { data, .. } => data.one_of.iter().any(|&id| self.is_composite(id)),
+        }
+    }
 
     pub fn placeholder_string(
         &mut self,

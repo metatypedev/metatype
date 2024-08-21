@@ -136,7 +136,7 @@ impl RenderType for RustTypeRenderer {
                         ..
                     },
             } if title.starts_with("string_") => {
-                let ty_name = normalize_type_title(&format!("string_{format}"));
+                let ty_name = normalize_type_title(&format!("string_{format}_{}", cursor.id));
                 self.render_alias(renderer, &ty_name, "String")?;
                 ty_name
             }
