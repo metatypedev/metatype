@@ -1818,18 +1818,14 @@ pub mod graphql {
                     ph.key
                 ))));
             };
-            let value = match (ph.fun)(value) {
-                Ok(value) => value,
-                Err(err) => {
-                    return Err(PrepareRequestError::PlaceholderError(Box::from(format!(
-                        "error applying placeholder closure for value under key '{}': {err}",
-                        ph.key
-                    ))))
-                }
-            };
-            let mut value = match value {
-                serde_json::Value::Object(value) => value,
-                _ => unreachable!("placeholder closures must return structs"),
+            let value = (ph.fun)(value).map_err(|err| {
+                PrepareRequestError::PlaceholderError(Box::from(format!(
+                    "error applying placeholder closure for value under key '{}': {err}",
+                    ph.key
+                )))
+            })?;
+            let serde_json::Value::Object(mut value) = value else {
+                unreachable!("placeholder closures must return structs");
             };
             for (key, var_key) in key_map {
                 inline_variables.insert(

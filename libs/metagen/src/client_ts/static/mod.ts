@@ -10,7 +10,7 @@ function _selectionToNodeSet(
   const foundNodes = new Set(Object.keys(selection));
 
   for (
-    const [nodeName, metaFn] of metas ?? []
+    const [nodeName, metaFn] of metas
   ) {
     foundNodes.delete(nodeName);
 

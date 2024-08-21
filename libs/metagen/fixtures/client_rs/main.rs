@@ -5,6 +5,7 @@
 
 #[rustfmt::skip]
 pub mod client;
+use client::types::*;
 use client::*;
 
 fn main() -> Result<(), BoxErr> {
