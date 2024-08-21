@@ -30,7 +30,6 @@ env("main")
   .install(installs.deno)
   .vars({
     RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off",
-    WASMTIME_BACKTRACE_DETAILS: "1",
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
   })

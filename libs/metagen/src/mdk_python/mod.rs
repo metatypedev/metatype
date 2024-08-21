@@ -225,7 +225,7 @@ fn render_main(
     context.insert("imports", &exports.join_compact(", ").to_string());
 
     tera.render("main_template", &context)
-        .wrap_err("Failed to render main template")
+        .with_context(|| "Failed to render main template")
 }
 
 fn render_types(tera: &tera::Tera, required: &MergedRequiredObjects) -> anyhow::Result<String> {
@@ -253,7 +253,7 @@ fn render_types(tera: &tera::Tera, required: &MergedRequiredObjects) -> anyhow::
     context.insert("funcs", &required.funcs);
 
     tera.render("types_template", &context)
-        .context("Failed to render types template")
+        .with_context(|| "Failed to render types template")
 }
 
 fn gen_required_objects(

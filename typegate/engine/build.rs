@@ -49,6 +49,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let engine = wasmtime::Engine::new(
         wasmtime::Config::new()
+            .wasm_backtrace(true)
+            // embedded wasm images have backtrace enabled
+            .wasm_backtrace_details(wasmtime::WasmBacktraceDetails::Enable)
             .cache_config_load_default()
             .map_err(|err| format!("error reading system's wasmtime cache config: {err}"))?
             .target(&target)

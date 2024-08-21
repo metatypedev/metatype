@@ -2142,22 +2142,6 @@ mod node_metas {
             variants: None,
         }
     }
-    pub fn Func41() -> NodeMeta {
-        NodeMeta { ..scalar() }
-    }
-    pub fn Func42() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("id".into(), "String4".into()),
-                    ("slug".into(), "String1".into()),
-                    ("title".into(), "String1".into()),
-                ]
-                .into(),
-            ),
-            ..scalar()
-        }
-    }
     pub fn Post() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2189,31 +2173,6 @@ mod node_metas {
     pub fn Func39() -> NodeMeta {
         NodeMeta { ..User() }
     }
-    pub fn Union9() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            sub_nodes: None,
-            variants: Some(
-                [
-                    ("post".into(), Post as NodeMetaFn),
-                    ("user".into(), User as NodeMetaFn),
-                ]
-                .into(),
-            ),
-        }
-    }
-    pub fn Func46() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String20".into())].into()),
-            ..Union9()
-        }
-    }
-    pub fn Func44() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String20".into())].into()),
-            ..Post()
-        }
-    }
     pub fn Union15() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2233,31 +2192,72 @@ mod node_metas {
             ..Union15()
         }
     }
+    pub fn Union9() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: Some(
+                [
+                    ("post".into(), Post as NodeMetaFn),
+                    ("user".into(), User as NodeMetaFn),
+                ]
+                .into(),
+            ),
+        }
+    }
+    pub fn Func46() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "String20".into())].into()),
+            ..Union9()
+        }
+    }
+    pub fn Func40() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn Func44() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "String20".into())].into()),
+            ..Post()
+        }
+    }
+    pub fn Func43() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn Func41() -> NodeMeta {
+        NodeMeta { ..scalar() }
+    }
     pub fn Func45() -> NodeMeta {
         NodeMeta {
             arg_types: Some([("id".into(), "String20".into())].into()),
             ..scalar()
         }
     }
-    pub fn Func40() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn Func43() -> NodeMeta {
-        NodeMeta { ..Post() }
+    pub fn Func42() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("id".into(), "String4".into()),
+                    ("slug".into(), "String1".into()),
+                    ("title".into(), "String1".into()),
+                ]
+                .into(),
+            ),
+            ..scalar()
+        }
     }
 }
 use types::*;
 pub mod types {
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Object28Partial {
-        pub id: Option<String>,
-    }
     pub type StringUuid4 = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PostPartial {
         pub id: Option<StringUuid4>,
         pub slug: Option<String>,
         pub title: Option<String>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Object28Partial {
+        pub id: Option<String>,
     }
     pub type StringEmail5 = String;
     pub type Post7 = Vec<PostPartial>;

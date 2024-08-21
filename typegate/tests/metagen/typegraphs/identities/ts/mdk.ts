@@ -34,23 +34,23 @@ export type Handler<In, Out> = (
 ) => Out | Promise<Out>;
 
 export type String1 = "wan" | "tew" | "tree";
-export type StringUuid = string;
-export type StringEmail = string;
-export type StringEan = string;
-export type StringJson = string;
-export type StringUri = string;
-export type StringDate = string;
-export type StringDateTime = string;
+export type StringUuid6 = string;
+export type StringEmail7 = string;
+export type StringEan8 = string;
+export type StringJson9 = string;
+export type StringUri10 = string;
+export type StringDate11 = string;
+export type StringDateTime12 = string;
 export type Primitives = {
   str: string;
   "enum": String1;
-  uuid: StringUuid;
-  email: StringEmail;
-  ean: StringEan;
-  json: StringJson;
-  uri: StringUri;
-  date: StringDate;
-  datetime: StringDateTime;
+  uuid: StringUuid6;
+  email: StringEmail7;
+  ean: StringEan8;
+  json: StringJson9;
+  uri: StringUri10;
+  date: StringDate11;
+  datetime: StringDateTime12;
   int: number;
   float: number;
   "boolean": boolean;

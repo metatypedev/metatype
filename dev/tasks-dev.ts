@@ -110,6 +110,47 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     fn: ($) => $`cargo run -p typegate`,
   },
 
+  "dev-gate3": {
+    desc: "Launch the typegate from a locally found meta bin.",
+    inherit: "dev-gate1",
+    fn: ($) => $`meta typegate`,
+  },
+
+  "dev-gate4": {
+    desc: "Launch the typegate from the locally built typegate image.",
+    inherit: "dev-gate1",
+    fn: ($) =>
+      $`docker run --rm -it
+        --network=host
+        -e TG_PORT=7891
+        -e PACKAGED=false
+        -e LOG_LEVEL=DEBUG
+        -e DEBUG=true
+        -e REDIS_URL=redis://:password@localhost:6379/0
+        -e TG_SECRET=a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==
+        -e TG_ADMIN_PASSWORD=password
+        typegate:latest
+    `,
+  },
+
+  "dev-gate5": {
+    desc: "Launch the typegate from the latests published image.",
+    inherit: "dev-gate1",
+    fn: ($) =>
+      $`docker run --rm -it
+        --network=host
+        -p 7891:7891
+        -e TG_PORT=7891
+        -e PACKAGED=false
+        -e LOG_LEVEL=DEBUG
+        -e DEBUG=true
+        -e REDIS_URL=redis://:password@localhost:6379/0
+        -e TG_SECRET=a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==
+        -e TG_ADMIN_PASSWORD=password
+        ghcr.io/metatypedev/typegate:latest
+    `,
+  },
+
   "dev-website": {
     desc: "Launch the website",
     inherit: ["_ecma", "_python"],

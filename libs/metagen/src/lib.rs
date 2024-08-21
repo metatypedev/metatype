@@ -32,6 +32,7 @@ mod shared;
 
 mod mdk_python;
 mod mdk_rust;
+mod mdk_substantial;
 mod mdk_typescript;
 
 mod client_py;
@@ -138,6 +139,16 @@ impl GeneratorRunner {
                         op: |workspace_path: &Path, val| {
                             let config = mdk_python::MdkPythonGenConfig::from_json(val, workspace_path)?;
                             let generator = mdk_python::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
+                (
+                    "mdk_substantial".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = mdk_substantial::MdkSubstantialGenConfig::from_json(val, workspace_path)?;
+                            let generator = mdk_substantial::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },
