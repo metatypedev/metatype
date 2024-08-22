@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.8-0";
+        static MT_VERSION: &str = "0.4.8";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -219,16 +219,16 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    pub type StringDateTime = String;
-    pub type StringUri = String;
+    pub type StringDateTime4 = String;
+    pub type StringUri5 = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Idv3 {
         pub title: String,
         pub artist: String,
         #[serde(rename = "releaseTime")]
-        pub release_time: StringDateTime,
+        pub release_time: StringDateTime4,
         #[serde(rename = "mp3Url")]
-        pub mp3_url: StringUri,
+        pub mp3_url: StringUri5,
     }
 }
 pub mod stubs {

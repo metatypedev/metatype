@@ -3,7 +3,7 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 // gen-static-start
-#![allow(unused)]
+#![allow(dead_code)]
 
 pub mod wit {
     wit_bindgen::generate!({
@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.6";
+        static MT_VERSION: &str = "0.4.8";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -219,7 +219,6 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    use super::*;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct AddArgs {
         pub a: f64,
@@ -263,7 +262,6 @@ pub mod types {
     pub type Entity36 = Vec<Entity>;
     pub type Entity45 = Vec<Entity>;
 }
-use stubs::*;
 pub mod stubs {
     use super::*;
     pub trait Add: Sized + 'static {

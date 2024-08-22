@@ -1821,18 +1821,14 @@ pub mod graphql {
                     ph.key
                 ))));
             };
-            let value = match (ph.fun)(value) {
-                Ok(value) => value,
-                Err(err) => {
-                    return Err(PrepareRequestError::PlaceholderError(Box::from(format!(
-                        "error applying placeholder closure for value under key '{}': {err}",
-                        ph.key
-                    ))))
-                }
-            };
-            let mut value = match value {
-                serde_json::Value::Object(value) => value,
-                _ => unreachable!("placeholder closures must return structs"),
+            let value = (ph.fun)(value).map_err(|err| {
+                PrepareRequestError::PlaceholderError(Box::from(format!(
+                    "error applying placeholder closure for value under key '{}': {err}",
+                    ph.key
+                )))
+            })?;
+            let serde_json::Value::Object(mut value) = value else {
+                unreachable!("placeholder closures must return structs");
             };
             for (key, var_key) in key_map {
                 inline_variables.insert(
@@ -2170,8 +2166,55 @@ mod node_metas {
             ),
         }
     }
+    pub fn Union9() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: Some(
+                [
+                    ("post".into(), Post as NodeMetaFn),
+                    ("user".into(), User as NodeMetaFn),
+                ]
+                .into(),
+            ),
+        }
+    }
+    pub fn Func46() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "String20".into())].into()),
+            ..Union9()
+        }
+    }
     pub fn Func39() -> NodeMeta {
         NodeMeta { ..User() }
+    }
+    pub fn Func40() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn Func41() -> NodeMeta {
+        NodeMeta { ..scalar() }
+    }
+    pub fn Func42() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("id".into(), "String4".into()),
+                    ("slug".into(), "String1".into()),
+                    ("title".into(), "String1".into()),
+                ]
+                .into(),
+            ),
+            ..scalar()
+        }
+    }
+    pub fn Func43() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn Func45() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "String20".into())].into()),
+            ..scalar()
+        }
     }
     pub fn Union15() -> NodeMeta {
         NodeMeta {
@@ -2192,57 +2235,10 @@ mod node_metas {
             ..Union15()
         }
     }
-    pub fn Union9() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            sub_nodes: None,
-            variants: Some(
-                [
-                    ("post".into(), Post as NodeMetaFn),
-                    ("user".into(), User as NodeMetaFn),
-                ]
-                .into(),
-            ),
-        }
-    }
-    pub fn Func46() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String20".into())].into()),
-            ..Union9()
-        }
-    }
-    pub fn Func40() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
     pub fn Func44() -> NodeMeta {
         NodeMeta {
             arg_types: Some([("id".into(), "String20".into())].into()),
             ..Post()
-        }
-    }
-    pub fn Func43() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn Func41() -> NodeMeta {
-        NodeMeta { ..scalar() }
-    }
-    pub fn Func45() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String20".into())].into()),
-            ..scalar()
-        }
-    }
-    pub fn Func42() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("id".into(), "String4".into()),
-                    ("slug".into(), "String1".into()),
-                    ("title".into(), "String1".into()),
-                ]
-                .into(),
-            ),
-            ..scalar()
         }
     }
 }
@@ -2269,9 +2265,11 @@ pub mod types {
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
-    pub enum Union9 {
+    pub enum Union15 {
         PostPartial(PostPartial),
         UserPartial(UserPartial),
+        String(String),
+        I64(i64),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
@@ -2281,11 +2279,9 @@ pub mod types {
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
-    pub enum Union15 {
+    pub enum Union9 {
         PostPartial(PostPartial),
         UserPartial(UserPartial),
-        String(String),
-        I64(i64),
     }
 }
 #[derive(Default, Debug)]
@@ -2303,17 +2299,17 @@ pub struct UserSelections<ATy = NoAlias> {
 }
 impl_selection_traits!(UserSelections, id, email, posts);
 #[derive(Default, Debug)]
-pub struct Union15Selections<ATy = NoAlias> {
-    pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
-    pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
-}
-impl_union_selection_traits!(Union15Selections, ("post", post), ("user", user));
-#[derive(Default, Debug)]
 pub struct Union9Selections<ATy = NoAlias> {
     pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
     pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
 }
 impl_union_selection_traits!(Union9Selections, ("post", post), ("user", user));
+#[derive(Default, Debug)]
+pub struct Union15Selections<ATy = NoAlias> {
+    pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
+    pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
+}
+impl_union_selection_traits!(Union15Selections, ("post", post), ("user", user));
 
 impl QueryGraph {
     pub fn new(addr: Url) -> Self {
