@@ -487,9 +487,19 @@ interface runtimes {
     register-typegraph-materializer: func(operation: typegraph-operation) -> result<materializer-id, error>;
 
     // substantial
+    record redis-backend {
+        host: string,
+        port: u16,
+    }
+
+    variant substantial-backend {
+        memory,
+        fs,
+        redis(redis-backend)
+    }
+
     record substantial-runtime-data {
-        endpoint: string,
-        basic-auth-secret: option<string>,
+        backend: substantial-backend
     }
 
     enum workflow-kind {
@@ -517,7 +527,7 @@ interface runtimes {
 
     register-substantial-runtime: func(data: substantial-runtime-data) -> result<runtime-id, error>;
     generate-substantial-operation: func(runtime: runtime-id, data: substantial-operation-data) -> result<func-params, error>;
-    
+
     // kv
     record kv-runtime-data {
         url: string

@@ -4,6 +4,11 @@
 from typing import List, Union
 from typegraph import t
 from typegraph.gen.exports.runtimes import (
+    RedisBackend,
+    SubstantialBackend,
+    SubstantialBackendFs,
+    SubstantialBackendMemory,
+    SubstantialBackendRedis,
     SubstantialOperationData,
     SubstantialOperationType,
     SubstantialOperationTypeSend,
@@ -18,10 +23,22 @@ from typegraph.runtimes.base import Runtime
 from typegraph.wit import runtimes, store
 
 
+class Backend:
+    def memory():
+        return SubstantialBackendMemory()
+
+    def fs(config: RedisBackend):
+        return SubstantialBackendFs()
+
+    def redis(config: RedisBackend):
+        return SubstantialBackendRedis(value=config)
+
+
 class SubstantialRuntime(Runtime):
-    def __init__(self, endpoint: str, basic_auth: str):
-        data = SubstantialRuntimeData(endpoint=endpoint, basic_auth_secret=basic_auth)
+    def __init__(self, backend: SubstantialBackend):
+        data = SubstantialRuntimeData(backend)
         super().__init__(runtimes.register_substantial_runtime(store, data))
+        self.backend = backend
 
     def _using_workflow(
         self,

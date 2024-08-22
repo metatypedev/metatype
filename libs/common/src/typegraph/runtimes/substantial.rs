@@ -6,9 +6,21 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct RedisConfig {
+    pub host: String,
+    pub port: u16,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum SubstantialBackend {
+    Fs,
+    Memory,
+    Redis(RedisConfig),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SubstantialRuntimeData {
-    pub endpoint: String,
-    pub basic_auth_secret: Option<String>,
+    pub backend: SubstantialBackend,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

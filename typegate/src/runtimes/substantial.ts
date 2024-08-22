@@ -22,6 +22,7 @@ export class SubstantialRuntime extends Runtime {
   static init(params: RuntimeInitParams): Runtime {
     logger.info("initializing SubstantialRuntime");
     logger.debug(`init params: ${JSON.stringify(params)}`);
+    logger.debug(`init args: ${JSON.stringify(params.args)}`);
     const { typegraph, args: _args, secretManager: _secrets } = params;
     const typegraphName = TypeGraph.formatName(typegraph);
 

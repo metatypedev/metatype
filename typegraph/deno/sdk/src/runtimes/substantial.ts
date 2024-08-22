@@ -5,30 +5,37 @@ import { Materializer, Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../wit.ts";
 import { Func, Typedef } from "../types.ts";
 import {
+  RedisBackend,
+  SubstantialBackend,
   SubstantialOperationData,
   SubstantialOperationType,
   Workflow,
 } from "../gen/typegraph_core.d.ts";
 
+export class Backend {
+  static memory(): SubstantialBackend {
+    return { tag: "memory" };
+  }
+
+  static fs(): SubstantialBackend {
+    return { tag: "fs" };
+  }
+
+  static redis(config: RedisBackend): SubstantialBackend {
+    return { tag: "redis", val: config };
+  }
+}
+
 export class SubstantialRuntime extends Runtime {
-  endpoint: string;
-  basicAuthSecret: string;
+  backend: SubstantialBackend;
   workflow?: Workflow;
 
-  constructor({
-    endpoint,
-    basicAuthSecret,
-  }: {
-    endpoint: string;
-    basicAuthSecret: string;
-  }) {
+  constructor(backend: SubstantialBackend) {
     const id = runtimes.registerSubstantialRuntime({
-      endpoint,
-      basicAuthSecret: basicAuthSecret,
+      backend,
     });
     super(id);
-    this.endpoint = endpoint;
-    this.basicAuthSecret = basicAuthSecret;
+    this.backend = backend;
   }
 
   _usingWorkflow(

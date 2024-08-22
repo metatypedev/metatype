@@ -3,7 +3,7 @@
 
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
-import { Effect } from "../gen/typegraph_core.d.ts";
+import { Effect, SubstantialBackend } from "../gen/typegraph_core.d.ts";
 import { Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 import { SubstantialRuntime } from "../runtimes/substantial.ts";
@@ -119,13 +119,12 @@ export class PythonRuntime extends Runtime {
   }
 
   workflow(
-    endpoint: string,
-    basicAuthSecret: string,
+    backend: SubstantialBackend,
     file: string,
     name: string,
     deps: Array<string> = [],
   ): SubstantialRuntime {
-    const substantial = new SubstantialRuntime({ endpoint, basicAuthSecret });
+    const substantial = new SubstantialRuntime(backend);
     return substantial._usingWorkflow(file, name, deps);
   }
 }
