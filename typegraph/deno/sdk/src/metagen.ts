@@ -10,6 +10,34 @@ import { TypegraphOutput } from "./typegraph.ts";
 import { wit_utils } from "./wit.ts";
 import { freezeTgOutput } from "./utils/func_utils.ts";
 
+/**
+ * @module
+ *
+ * Metagen is a code generator suite that contains implementations that help with development on the Metatype platform.
+ *
+ * @example
+ * ```ts
+ * const rootPath = "path/to/typegraph/dir"
+ * const metagen = new Metagen(
+ *   path,
+ *   {
+ *     targets: {
+ *       main: [
+ *         {
+ *           generator: "mdk_typescript",
+ *           typegraph_path: rootPath + "/mytypegraph.ts",
+ *           path: "funcs/",
+ *         }
+ *       ],
+ *     },
+ *   },
+ * );
+ *
+ * metagen.dryRun(tg, "main");
+ * ```
+ */
+
+/** metagen class */
 export class Metagen {
   constructor(private workspacePath: string, private genConfig: unknown) {}
 

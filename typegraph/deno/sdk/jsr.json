@@ -9,11 +9,7 @@
     ]
   },
   "exports": {
-    "./deps/_import.ts": "./src/deps/_import.ts",
-    "./deps/mod.ts": "./src/deps/mod.ts",
     "./effects.ts": "./src/effects.ts",
-    "./gen/typegraph_core.d.ts": "./src/gen/typegraph_core.d.ts",
-    "./host/host.d.ts": "./src/host/host.d.ts",
     "./index.ts": "./src/index.ts",
     "./metagen.ts": "./src/metagen.ts",
     "./params.ts": "./src/params.ts",
