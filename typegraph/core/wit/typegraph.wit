@@ -350,6 +350,8 @@ interface runtimes {
         secrets: list<string>
     }
 
+    // TODO: host:port
+
     register-python-runtime: func() -> result<runtime-id, error>;
     from-python-lambda: func(base: base-materializer, data: materializer-python-lambda) -> result<materializer-id, error>;
     from-python-def: func(base: base-materializer, data: materializer-python-def) -> result<materializer-id, error>;
@@ -483,6 +485,55 @@ interface runtimes {
     }
 
     register-typegraph-materializer: func(operation: typegraph-operation) -> result<materializer-id, error>;
+
+    // substantial
+    record substantial-runtime-data {
+        endpoint: string,
+        basic-auth-secret: option<string>,
+    }
+
+    enum workflow-kind {
+        python, // for now
+    }
+
+    record workflow {
+        name: string,
+        file: string,
+        deps: list<string>,
+        kind: workflow-kind
+    }
+
+    variant substantial-operation-type {
+        start(workflow),
+        stop(workflow),
+        send(workflow),
+    }
+
+    record substantial-operation-data {
+        func-arg: option<type-id>,
+        // func-out: option<type-id>,
+        operation: substantial-operation-type,
+    }
+
+    register-substantial-runtime: func(data: substantial-runtime-data) -> result<runtime-id, error>;
+    generate-substantial-operation: func(runtime: runtime-id, data: substantial-operation-data) -> result<func-params, error>;
+    
+    // kv
+    record kv-runtime-data {
+        url: string
+    }
+    
+    register-kv-runtime: func(data: kv-runtime-data) -> result<runtime-id, error>;
+
+    enum kv-materializer {
+        get,
+        set,
+        delete,
+        keys,
+        values,
+    }
+
+    kv-operation: func(base: base-materializer, data: kv-materializer) -> result<materializer-id, error>;
 }
 
 interface aws {

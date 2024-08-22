@@ -5,10 +5,12 @@ use std::path::PathBuf;
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+use substantial::SubstantialRuntimeData;
 
 use self::deno::DenoRuntimeData;
 use self::graphql::GraphQLRuntimeData;
 use self::http::HTTPRuntimeData;
+use self::kv::KvRuntimeData;
 use self::prisma::PrismaRuntimeData;
 use self::python::PythonRuntimeData;
 use self::random::RandomRuntimeData;
@@ -19,10 +21,12 @@ use self::wasm::WasmRuntimeData;
 pub mod deno;
 pub mod graphql;
 pub mod http;
+pub mod kv;
 pub mod prisma;
 pub mod python;
 pub mod random;
 pub mod s3;
+pub mod substantial;
 pub mod temporal;
 pub mod wasm;
 
@@ -53,6 +57,8 @@ pub enum KnownRuntime {
     WasmWire(WasmRuntimeData),
     Typegate(TypegateRuntimeData),
     Typegraph(TypegraphRuntimeData),
+    Substantial(SubstantialRuntimeData),
+    Kv(KvRuntimeData),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -85,6 +91,8 @@ impl TGRuntime {
                 KnownRuntime::WasmReflected(_) => "wasm_reflected",
                 KnownRuntime::Typegate(_) => "typegate",
                 KnownRuntime::Typegraph(_) => "typegraph",
+                KnownRuntime::Substantial(_) => "substantial",
+                KnownRuntime::Kv(_) => "kv",
             },
             TGRuntime::Unknown(UnknownRuntime { name, .. }) => name,
         }

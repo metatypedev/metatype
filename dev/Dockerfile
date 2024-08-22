@@ -73,7 +73,7 @@ RUN . "$GHJK_ACTIVATE" \
 COPY . .
 
 RUN . "$GHJK_ACTIVATE" \
-    && cargo build --profile $CARGO_PROFILE --package typegate \
+    && cargo build --profile $CARGO_PROFILE --package typegate --locked \
     && ( \
         [ $CARGO_PROFILE = 'release' ]  \
             && cp target/release/typegate typegate-bin \

@@ -1,6 +1,6 @@
 {
   "name": "@typegraph/sdk",
-  "version": "0.4.8-0",
+  "version": "0.4.8",
   "publish": {
     "exclude": [
       "!src/gen",
@@ -23,6 +23,7 @@
     "./runtimes/mod.ts": "./src/runtimes/mod.ts",
     "./runtimes/python.ts": "./src/runtimes/python.ts",
     "./runtimes/random.ts": "./src/runtimes/random.ts",
+    "./runtimes/substantial.ts": "./src/runtimes/substantial.ts",
     "./runtimes/wasm.ts": "./src/runtimes/wasm.ts",
     "./tg_artifact_upload.ts": "./src/tg_artifact_upload.ts",
     "./tg_deploy.ts": "./src/tg_deploy.ts",
