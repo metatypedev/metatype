@@ -32,6 +32,8 @@ env("main")
     RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off",
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
+    CROSS_CONFIG: "tools/Cross.toml",
+    GIT_CLIFF_CONFIG: "tools/cliff.toml",
   })
   .allowedBuildDeps(
     ...stdDeps(),

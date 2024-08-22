@@ -22,25 +22,25 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     ['(  GHJK_VERSION: ").+(")', GHJK_VERSION],
     [/([\s-]+uses:\s+metatypedev\/setup-ghjk@).+()/, GHJK_ACTION_VERSION],
   ],
-  "meta-lsp/package.json": [
+  "src/meta-lsp/package.json": [
     [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
   ],
-  "meta-lsp/ts-language-server/package.json": [
+  "src/meta-lsp/ts-language-server/package.json": [
     [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
   ],
-  "meta-lsp/vscode-metatype-support/package.json": [
+  "src/meta-lsp/vscode-metatype-support/package.json": [
     [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
   ],
-  "typegate/tests/**/*.snap": [
+  "src/typegate/tests/**/*.snap": [
     [/(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)/, METATYPE_VERSION],
   ],
-  "typegraph/python/typegraph/__init__.py": [
+  "src/typegraph/python/typegraph/__init__.py": [
     ['(version = ").+(")', METATYPE_VERSION],
   ],
-  "typegraph/core/src/global_store.rs": [
+  "src/typegraph/core/src/global_store.rs": [
     [/(\s{4}pub static SDK_VERSION.+=\s?").*(".+;)/, METATYPE_VERSION],
   ],
-  "typegraph/python/pyproject.toml": [['(description = ").+(")', TAGLINE]],
+  "src/typegraph/python/pyproject.toml": [['(description = ").+(")', TAGLINE]],
   "**/Cargo.toml": [
     [/^(version = ").+(")/, METATYPE_VERSION],
     ['(description = ").+(")', TAGLINE],
@@ -55,30 +55,30 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     ['(wasmtime = ").+(")', WASMTIME_VERSION],
     ['(wasmtime-wasi = ").+(")', WASMTIME_VERSION],
   ],
-  "typegraph/deno/sdk/jsr.json": [
+  "src/typegraph/deno/sdk/jsr.json": [
     [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
   ],
-  "dev/deps.ts": [[/(.*\/metatypedev\/ghjk\/)[^\/]*(\/.*)/, GHJK_VERSION]],
-  "dev/cross.Dockerfile": [["(ARG GHJK_VERSION=).*()", GHJK_VERSION]],
-  "dev/Dockerfile": [
+  "tools/deps.ts": [[/(.*\/metatypedev\/ghjk\/)[^\/]*(\/.*)/, GHJK_VERSION]],
+  "tools/cross.Dockerfile": [["(ARG GHJK_VERSION=).*()", GHJK_VERSION]],
+  "tools/Dockerfile": [
     ["(ARG DENO_VERSION=).*()", DENO_VERSION],
     ["(ARG RUST_VERSION=).*()", RUST_VERSION],
     ["(ARG GHJK_VERSION=).*()", GHJK_VERSION],
   ],
-  "typegate/src/runtimes/wit_wire/mod.ts": [
+  "src/typegate/src/runtimes/wit_wire/mod.ts": [
     [/(const\s+METATYPE_VERSION = ").*(";)/, METATYPE_VERSION],
   ],
-  "typegate/src/typegraph/versions.ts": [
+  "src/typegate/src/typegraph/versions.ts": [
     ['(const typegraphVersion = ").*(";)', TYPEGRAPH_VERSION],
   ],
-  "typegraph/core/src/typegraph.rs": [
+  "src/typegraph/core/src/typegraph.rs": [
     [/(static TYPEGRAPH_VERSION: &str = ").*(";)/, TYPEGRAPH_VERSION],
   ],
   "whiz.yaml": [
     ['(  TYPEGRAPH_VERSION: ").+(")', TYPEGRAPH_VERSION],
     ['(    GHJK_VERSION: ").+(")', GHJK_VERSION],
   ],
-  "website/docusaurus.config.js": [['(  tagline: ").+(",)', TAGLINE]],
+  "src/website/docusaurus.config.js": [['(  tagline: ").+(",)', TAGLINE]],
   "**/pyproject.toml": [
     ['(version = ").+(")', METATYPE_VERSION],
     [/(wasmtime = "\^).+(")/, WASMTIME_PY_VERSION],
@@ -98,5 +98,5 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
       PUBLISHED_VERSION,
     ],
   ],
-  "CONTRIBUTING.md": [[/(GHJK_VERSION=").*(")/, GHJK_VERSION]],
+  "docs/CONTRIBUTING.md": [[/(GHJK_VERSION=").*(")/, GHJK_VERSION]],
 };

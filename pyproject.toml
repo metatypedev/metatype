@@ -1,3 +1,9 @@
+# The main thing we need to install into the local
+# venv is the typegraph itself. 
+# The tests for the typegraph import the typegraph from
+# venv and not directly from the python source.
+# Use `build-tgraph-py` task to build and install the typegraph.
+
 [tool.poetry]
 name = "metatype"
 version = "0.4.8"
@@ -9,7 +15,9 @@ python = ">=3.8,<4.0"
 typegraph = { path = "typegraph/python", develop = true }
 
 [tool.poetry.group.dev.dependencies]
+# used in ./src/typegate/tests/importers/*.py
 respx = "^0.21.1"
+# used in examples/programmable-api-gateway
 pyyaml = "^6.0.1"
 
 [build-system]

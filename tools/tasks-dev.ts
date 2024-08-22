@@ -7,14 +7,14 @@ const DOCKER_CMD = Deno.env.get("DOCKER_CMD") ?? "docker";
 
 const tasks: Record<string, DenoTaskDefArgs> = {
   dev: {
-    desc: "Execute dev/*.ts scripts.",
+    desc: "Execute tools/*.ts scripts.",
     async fn($) {
       if ($.argv.length == 0) {
         $.log("Usage: dev <dev-script-name> [args...]");
         return;
       }
       const [cmd, ...args] = $.argv;
-      const script = $.workingDir.join(`dev/${cmd}.ts`);
+      const script = $.workingDir.join(`tools/${cmd}.ts`);
       $.logStep(`Running ${script}`, args);
       await $`deno run --allow-all ${script} ${args}`;
     },
@@ -24,7 +24,7 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     desc: "Wrapper around docker compose to manage runtime dependencies",
     async fn($) {
       const dcs = await Array.fromAsync(
-        $.workingDir.join("dev/envs").expandGlob("compose.*.yml", {
+        $.workingDir.join("tools/envs").expandGlob("compose.*.yml", {
           includeDirs: false,
           globstar: true,
         }),

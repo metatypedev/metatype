@@ -1,3 +1,7 @@
+# FIXME: ghjk created processes are leaky. If a task
+# like the gate tasks are terminated manually, the typegate
+# process will leak in the bg and hog the port
+
 env:
   TYPEGRAPH_VERSION: "0.0.3"
   CLICOLOR_FORCE: "1"
