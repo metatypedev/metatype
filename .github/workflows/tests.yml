@@ -16,7 +16,7 @@ on:
       - ready_for_review
 
 env:
-  GHJK_VERSION: "b702292"
+  GHJK_VERSION: "db40575"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir

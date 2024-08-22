@@ -1,5 +1,5 @@
 import { METATYPE_VERSION, PUBLISHED_VERSION } from "./dev/consts.ts";
-import { file, ports, sedLock, semver, stdDeps } from "./dev/deps.ts";
+import { file, ports, sedLock, semver, stdDeps, pyEnv } from "./dev/deps.ts";
 import installs from "./dev/installs.ts";
 import tasksBuild from "./dev/tasks-build.ts";
 import tasksDev from "./dev/tasks-dev.ts";
@@ -117,7 +117,9 @@ env("dev")
     ports.cargobi({ crateName: "whiz", locked: true }),
     ports.cargobi({ crateName: "wit-deps-cli", locked: true }),
     ports.cargobi({ crateName: "git-cliff", locked: true }),
-  );
+  )
+  .var("HAHA", "hoho")
+  .mixin(pyEnv());
 
 task("version-print", () => console.log(METATYPE_VERSION), {
   desc: "Print $METATYPE_VERSION",
