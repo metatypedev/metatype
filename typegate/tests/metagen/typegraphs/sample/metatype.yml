@@ -7,12 +7,12 @@ typegates:
 metagen:
   targets:
     main:
-      # - generator: client_ts
-      #   path: ./ts/
-      #   typegraph_path: ../sample.ts
-      # - generator: client_py
-      #   path: ./py/
-      #   typegraph_path: ../sample.ts
+      - generator: client_ts
+        path: ./ts/
+        typegraph_path: ../sample.ts
+      - generator: client_py
+        path: ./py/
+        typegraph_path: ../sample.ts
       - generator: client_rs
         path: ./rs/
         typegraph_path: ../sample.ts

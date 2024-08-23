@@ -13,7 +13,7 @@ function _selectionToNodeSet(
   const foundNodes = new Set(Object.keys(selection));
 
   for (
-    const [nodeName, metaFn] of metas ?? []
+    const [nodeName, metaFn] of metas
   ) {
     foundNodes.delete(nodeName);
 
@@ -646,20 +646,6 @@ const nodeMetas = {
     return {};
   },
 
-  Post(): NodeMeta {
-    return {
-      subNodes: [
-        ["id", nodeMetas.scalar],
-        ["slug", nodeMetas.scalar],
-        ["title", nodeMetas.scalar],
-      ],
-    };
-  },
-  Func24(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
   Func26(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
@@ -668,6 +654,15 @@ const nodeMetas = {
         slug: "String1",
         title: "String1",
       },
+    };
+  },
+  Post(): NodeMeta {
+    return {
+      subNodes: [
+        ["id", nodeMetas.scalar],
+        ["slug", nodeMetas.scalar],
+        ["title", nodeMetas.scalar],
+      ],
     };
   },
   Func28(): NodeMeta {
@@ -692,7 +687,7 @@ const nodeMetas = {
       ...nodeMetas.User(),
     };
   },
-  Func27(): NodeMeta {
+  Func24(): NodeMeta {
     return {
       ...nodeMetas.Post(),
     };
@@ -702,21 +697,26 @@ const nodeMetas = {
       ...nodeMetas.scalar(),
     };
   },
+  Func27(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
 };
-export type StringUuid = string;
+export type StringUuid4 = string;
 export type Post = {
-  id: StringUuid;
+  id: StringUuid4;
   slug: string;
   title: string;
 };
 export type Object21 = {
   id: string;
 };
-export type StringEmail = string;
+export type StringEmail5 = string;
 export type Post7 = Array<Post>;
 export type User = {
-  id: StringUuid;
-  email: StringEmail;
+  id: StringUuid4;
+  email: StringEmail5;
   posts: Post7;
 };
 
@@ -736,9 +736,9 @@ export type UserSelections = {
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
-      "String4": "Any",
-      "String1": "Any",
-      "String13": "Any",
+      "String4": "ID!",
+      "String1": "String!",
+      "String13": "String!",
     });
   }
 

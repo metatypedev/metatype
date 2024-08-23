@@ -2152,6 +2152,9 @@ mod node_metas {
             ),
         }
     }
+    pub fn Func27() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
     pub fn User() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2166,35 +2169,19 @@ mod node_metas {
             ),
         }
     }
-    pub fn Union9() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            sub_nodes: None,
-            variants: Some(
-                [
-                    ("post".into(), Post as NodeMetaFn),
-                    ("user".into(), User as NodeMetaFn),
-                ]
-                .into(),
-            ),
-        }
-    }
-    pub fn Func46() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String20".into())].into()),
-            ..Union9()
-        }
-    }
-    pub fn Func39() -> NodeMeta {
+    pub fn Func23() -> NodeMeta {
         NodeMeta { ..User() }
     }
-    pub fn Func40() -> NodeMeta {
+    pub fn Func24() -> NodeMeta {
         NodeMeta { ..Post() }
     }
-    pub fn Func41() -> NodeMeta {
-        NodeMeta { ..scalar() }
+    pub fn Func28() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "String13".into())].into()),
+            ..Post()
+        }
     }
-    pub fn Func42() -> NodeMeta {
+    pub fn Func26() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
@@ -2207,39 +2194,8 @@ mod node_metas {
             ..scalar()
         }
     }
-    pub fn Func43() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn Func45() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String20".into())].into()),
-            ..scalar()
-        }
-    }
-    pub fn Union15() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            sub_nodes: None,
-            variants: Some(
-                [
-                    ("post".into(), Post as NodeMetaFn),
-                    ("user".into(), User as NodeMetaFn),
-                ]
-                .into(),
-            ),
-        }
-    }
-    pub fn Func47() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String20".into())].into()),
-            ..Union15()
-        }
-    }
-    pub fn Func44() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String20".into())].into()),
-            ..Post()
-        }
+    pub fn Func25() -> NodeMeta {
+        NodeMeta { ..scalar() }
     }
 }
 use types::*;
@@ -2252,7 +2208,7 @@ pub mod types {
         pub title: Option<String>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Object28Partial {
+    pub struct Object21Partial {
         pub id: Option<String>,
     }
     pub type StringEmail5 = String;
@@ -2262,26 +2218,6 @@ pub mod types {
         pub id: Option<StringUuid4>,
         pub email: Option<StringEmail5>,
         pub posts: Option<Post7>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum Union15 {
-        PostPartial(PostPartial),
-        UserPartial(UserPartial),
-        String(String),
-        I64(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum Union12 {
-        String(String),
-        I64(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum Union9 {
-        PostPartial(PostPartial),
-        UserPartial(UserPartial),
     }
 }
 #[derive(Default, Debug)]
@@ -2298,18 +2234,6 @@ pub struct UserSelections<ATy = NoAlias> {
     pub posts: CompositeSelect<PostSelections<ATy>, ATy>,
 }
 impl_selection_traits!(UserSelections, id, email, posts);
-#[derive(Default, Debug)]
-pub struct Union9Selections<ATy = NoAlias> {
-    pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
-    pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
-}
-impl_union_selection_traits!(Union9Selections, ("post", post), ("user", user));
-#[derive(Default, Debug)]
-pub struct Union15Selections<ATy = NoAlias> {
-    pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
-    pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
-}
-impl_union_selection_traits!(Union15Selections, ("post", post), ("user", user));
 
 impl QueryGraph {
     pub fn new(addr: Url) -> Self {
@@ -2319,9 +2243,7 @@ impl QueryGraph {
                 [
                     ("String4".into(), "ID!".into()),
                     ("String1".into(), "String!".into()),
-                    ("String20".into(), "String!".into()),
-                    ("post".into(), "post!".into()),
-                    ("user".into(), "user!".into()),
+                    ("String13".into(), "String!".into()),
                 ]
                 .into(),
             ),
@@ -2333,7 +2255,7 @@ impl QueryGraph {
     ) -> UnselectedNode<UserSelections, UserSelections<HasAlias>, QueryMarker, UserPartial> {
         UnselectedNode {
             root_name: "getUser".into(),
-            root_meta: node_metas::Func39,
+            root_meta: node_metas::Func23,
             args: NodeArgsErased::None,
             _marker: PhantomData,
         }
@@ -2343,7 +2265,7 @@ impl QueryGraph {
     ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, QueryMarker, PostPartial> {
         UnselectedNode {
             root_name: "getPosts".into(),
-            root_meta: node_metas::Func40,
+            root_meta: node_metas::Func24,
             args: NodeArgsErased::None,
             _marker: PhantomData,
         }
@@ -2351,7 +2273,7 @@ impl QueryGraph {
     pub fn scalar_no_args(&self) -> QueryNode<String> {
         let nodes = selection_to_node_set(
             SelectionErasedMap([("scalarNoArgs".into(), SelectionErased::Scalar)].into()),
-            &[("scalarNoArgs".into(), node_metas::Func41 as NodeMetaFn)].into(),
+            &[("scalarNoArgs".into(), node_metas::Func25 as NodeMetaFn)].into(),
             "$q".into(),
         )
         .unwrap();
@@ -2366,7 +2288,7 @@ impl QueryGraph {
                 )]
                 .into(),
             ),
-            &[("scalarArgs".into(), node_metas::Func42 as NodeMetaFn)].into(),
+            &[("scalarArgs".into(), node_metas::Func26 as NodeMetaFn)].into(),
             "$q".into(),
         )
         .unwrap();
@@ -2377,55 +2299,18 @@ impl QueryGraph {
     ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial> {
         UnselectedNode {
             root_name: "compositeNoArgs".into(),
-            root_meta: node_metas::Func43,
+            root_meta: node_metas::Func27,
             args: NodeArgsErased::None,
             _marker: PhantomData,
         }
     }
     pub fn composite_args(
         &self,
-        args: impl Into<NodeArgs<Object28Partial>>,
+        args: impl Into<NodeArgs<Object21Partial>>,
     ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial> {
         UnselectedNode {
             root_name: "compositeArgs".into(),
-            root_meta: node_metas::Func44,
-            args: args.into().into(),
-            _marker: PhantomData,
-        }
-    }
-    pub fn scalar_union(&self, args: impl Into<NodeArgs<Object28Partial>>) -> QueryNode<Union12> {
-        let nodes = selection_to_node_set(
-            SelectionErasedMap(
-                [(
-                    "scalarUnion".into(),
-                    SelectionErased::ScalarArgs(args.into().into()),
-                )]
-                .into(),
-            ),
-            &[("scalarUnion".into(), node_metas::Func45 as NodeMetaFn)].into(),
-            "$q".into(),
-        )
-        .unwrap();
-        QueryNode(nodes.into_iter().next().unwrap(), PhantomData)
-    }
-    pub fn composite_union(
-        &self,
-        args: impl Into<NodeArgs<Object28Partial>>,
-    ) -> UnselectedNode<Union9Selections, Union9Selections<HasAlias>, QueryMarker, Union9> {
-        UnselectedNode {
-            root_name: "compositeUnion".into(),
-            root_meta: node_metas::Func46,
-            args: args.into().into(),
-            _marker: PhantomData,
-        }
-    }
-    pub fn mixed_union(
-        &self,
-        args: impl Into<NodeArgs<Object28Partial>>,
-    ) -> UnselectedNode<Union15Selections, Union15Selections<HasAlias>, QueryMarker, Union15> {
-        UnselectedNode {
-            root_name: "mixedUnion".into(),
-            root_meta: node_metas::Func47,
+            root_meta: node_metas::Func28,
             args: args.into().into(),
             _marker: PhantomData,
         }

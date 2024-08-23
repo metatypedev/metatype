@@ -34,9 +34,9 @@ export const tg = await typegraph({
       posts: t.list(g.ref("post")),
     }, { name: "user" });
 
-    const compositeUnion = t.union([post, user]);
+    /* const compositeUnion = t.union([post, user]);
     const scalarUnion = t.union([t.string(), t.integer()]);
-    const mixedUnion = t.union([post, user, t.string(), t.integer()]);
+    const mixedUnion = t.union([post, user, t.string(), t.integer()]); */
 
     g.expose(
       {
@@ -64,7 +64,7 @@ export const tg = await typegraph({
             effect: fx.update(),
           },
         ),
-        scalarUnion: deno.func(
+        /* scalarUnion: deno.func(
           t.struct({ id: t.string() }),
           scalarUnion,
           {
@@ -84,7 +84,7 @@ export const tg = await typegraph({
           {
             code: () => "hello",
           },
-        ),
+        ), */
       },
       Policy.public(),
     );

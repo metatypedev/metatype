@@ -532,6 +532,22 @@ class NodeDescs:
         )
 
     @staticmethod
+    def User():
+        return NodeMeta(
+            sub_nodes={
+                "id": NodeDescs.scalar,
+                "email": NodeDescs.scalar,
+                "posts": NodeDescs.Post,
+            },
+        )
+
+    @staticmethod
+    def Func23():
+        return NodeMeta(
+            sub_nodes=NodeDescs.User().sub_nodes,
+        )
+
+    @staticmethod
     def Func27():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
@@ -558,19 +574,9 @@ class NodeDescs:
         )
 
     @staticmethod
-    def User():
+    def Func25():
         return NodeMeta(
-            sub_nodes={
-                "id": NodeDescs.scalar,
-                "email": NodeDescs.scalar,
-                "posts": NodeDescs.Post,
-            },
-        )
-
-    @staticmethod
-    def Func23():
-        return NodeMeta(
-            sub_nodes=NodeDescs.User().sub_nodes,
+            sub_nodes=NodeDescs.scalar().sub_nodes,
         )
 
     @staticmethod
@@ -579,19 +585,13 @@ class NodeDescs:
             sub_nodes=NodeDescs.Post().sub_nodes,
         )
 
-    @staticmethod
-    def Func25():
-        return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
-        )
 
-
-StringUuid = str
+StringUuid4 = str
 
 Post = typing.TypedDict(
     "Post",
     {
-        "id": StringUuid,
+        "id": StringUuid4,
         "slug": str,
         "title": str,
     },
@@ -606,15 +606,15 @@ Object21 = typing.TypedDict(
     total=False,
 )
 
-StringEmail = str
+StringEmail5 = str
 
 Post7 = typing.List[Post]
 
 User = typing.TypedDict(
     "User",
     {
-        "id": StringUuid,
-        "email": StringEmail,
+        "id": StringUuid4,
+        "email": StringEmail5,
         "posts": Post7,
     },
     total=False,
@@ -648,9 +648,9 @@ class QueryGraph(QueryGraphBase):
     def __init__(self):
         super().__init__(
             {
-                "String4": "Any",
-                "String1": "Any",
-                "String13": "Any",
+                "String4": "ID!",
+                "String1": "String!",
+                "String13": "String!",
             }
         )
 
