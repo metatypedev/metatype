@@ -1,14 +1,14 @@
 import TabItem from "@theme/TabItem";
 import SDKTabs from "@site/src/components/SDKTabs";
 
-
-# Execution flow paradigms
+# Distributed execution flow paradigms
 
 In this age of cloud development and microservices architecture, problems start to arise with the increased workloads that run in the system. Imagine an e-commerce platform where a customer places an order for a product during a high-demand sale event. The order triggers a series of interconnected processes: payment processing, inventory checks, packaging, shipping, and final delivery. Each of these processes might be handled by different microservices, potentially running on different servers or even in different data centers. What happens if the payment service goes down right after the payment is authorized but before the inventory is updated? Or if the packaging service fails just after the inventory is deducted but before the item is packed? Without a robust mechanism to ensure that each step in the workflow completes successfully and that failures are properly handled, you could end up with unhappy customers, lost orders, and inventory discrepancies.
+
 Having multiple components in your system introduces more failure points, which is a common phenomenon in complex systems. But one important behavior any application must ensure is that the execution flow reaches its completion. As systems grow in features and complexity, the likelihood of long-running processes increases. To ensure these processes complete as intended, several solutions have been introduced over the last few decades.
 Let's explore some of the solutions that have been proposed to achieve workflow completeness.
 
-1. Event-Driven Architecture with Message Queues
+### 1. Event-Driven Architecture with Message Queues
 
 This architecture relies heavily on services communicating by publishing and subscribing to events using message queues. Message queues are persistent storages that ensure data is not lost during failures or service unavailability. Components in a distributed system synchronize by using events/messages through these independent services. While this approach offers service decomposability and fault tolerance, it has some shortcomings. For example, using message queues comes with the overhead of managing messages (e.g., deduplication and message ordering). It also isn’t ideal for systems requiring immediate consistency across components. Some technologies and patterns that utilize this architecture include:
 
@@ -19,27 +19,29 @@ This architecture relies heavily on services communicating by publishing and sub
   src="/images/blog/execution-flow-paradigms/eda.png"
   alt="Event Driven Architecture with Message Queues - RabbitMQ"
 />
-Fig. [Event Driven Architecture with Message Queues -
-RabbitMQ](https://miro.medium.com/v2/resize:fit:1400/1*lQIAGbhDfo-2VfiibkRL1w.png)
+<div style={{ marginLeft: 5 + "em" }}>
+  Fig. [Event Driven Architecture with Message Queues -
+  RabbitMQ](https://miro.medium.com/v2/resize:fit:1400/1*lQIAGbhDfo-2VfiibkRL1w.png)
+</div>
 
-### Advantages of Event Driven Architecture
+#### Advantages of Event Driven Architecture
 
-Improved Scalability
-Enhanced Responsiveness
-Enhanced Fault Tolerance
-Simplified Complex Workflows
-Real-Time Data Processing
+- Improved Scalability
+- Enhanced Responsiveness
+- Enhanced Fault Tolerance
+- Simplified Complex Workflows
+- Real-Time Data Processing
 
-### Challenges of Event Driven Architecture
+#### Challenges of Event Driven Architecture
 
-Event Ordering
-Data Consistency
-Monitoring and Debugging
-Event Deduplication
+- Event Ordering
+- Data Consistency
+- Monitoring and Debugging
+- Event Deduplication
 
 You can mitigate or reduce these challenges by following best practices like Event Sourcing, Idempotent Processing, CQRS (Command Query Responsibility Segregation), and Event Versioning.
 
-2. The [Saga Pattern](https://microservices.io/patterns/data/saga.html)
+### 2. The [Saga Pattern](https://microservices.io/patterns/data/saga.html)
 
 This design pattern aims to achieve consistency across different services in a distributed system by breaking complex transactions spanning multiple components into a series of local transactions. Each of these transactions triggers an event or message that starts the next transaction in the sequence. If any local transaction fails to complete, a series of compensating actions rollback the effects of preceding transactions. While the orchestration of local transactions can vary, the pattern aims to achieve consistency in a microservices-based system. Events are designed to be stored in durable storage systems or logs, providing a trail to reconstruct the system to a state after a failure. While the saga pattern is an effective way to ensure consistency, it can be challenging to implement timer/timeout-based workflows and to design and implement the compensating actions for local transactions.
 
@@ -49,47 +51,51 @@ This design pattern aims to achieve consistency across different services in a d
   src="/images/blog/execution-flow-paradigms/saga-overview.png"
   alt="The Saga Pattern"
 />
-Fig. [The Saga
-Pattern](​​https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga#solution)
+<div style={{ marginLeft: 15 + "em" }}>
+  Fig. [The Saga
+  Pattern](​​https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga#solution)
+</div>
 
 <img
   src="/images/blog/execution-flow-paradigms/saga-pattern-order-delivery.png"
   alt="The Saga Pattern for 
 Order delivery system"
 />
-Fig. [The Saga Pattern for Order delivery
-system](https://www.baeldung.com/cs/saga-pattern-microservices#1-what-is-saga-architecture-pattern)
+<div style={{ marginLeft: 10 + "em" }}>
+  Fig. [The Saga Pattern for Order delivery
+  system](https://www.baeldung.com/cs/saga-pattern-microservices#1-what-is-saga-architecture-pattern)
+</div>
 
-### Advantages of Saga Pattern
+#### Advantages of Saga Pattern
 
-Ensures data consistency in a distributed system without tight coupling.
-Provides Roll back if one of the operations in the sequence fails.
+- Ensures data consistency in a distributed system without tight coupling.
+- Provides Roll back if one of the operations in the sequence fails.
 
-### Drawbacks
+#### Drawbacks
 
-Might be challenging to implement initially.
-Hard to debug.
-Compensating transactions don’t always work.
+- Might be challenging to implement initially.
+- Hard to debug.
+- Compensating transactions don’t always work.
 
-3. [Stateful Orchestrators](https://docs.oracle.com/en/applications/jd-edwards/cross-product/9.2/eotos/creating-a-stateful-orchestration-release-9-2-8-3.html#u30249073)
+### 3. [Stateful Orchestrators](https://docs.oracle.com/en/applications/jd-edwards/cross-product/9.2/eotos/creating-a-stateful-orchestration-release-9-2-8-3.html#u30249073)
 
 Stateful orchestrators provide a solution for long-running workflows by maintaining the state of each step in a workflow. Each step in a workflow represents a task, and these tasks are represented as states inside workflows. Workflows are defined as state machines or directed acyclic graphs (DAGs). In this approach, an orchestrator handles task execution order, transitioning, handling retries, and maintaining state. In the event of a failure, the system can recover from the persisted state. Stateful orchestrators offer significant value in fault tolerance, consistency, and observability. It’s one of the solutions proven effective in modern distributed computing. Some well-known services that provide this solution include:
 
 - [Apache Airflow](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html)
 - [Azure Logic Apps](https://azure.microsoft.com/en-us/products/logic-apps)
 
-### Advantages of Using Stateful Orchestrators
+#### Advantages of Using Stateful Orchestrators
 
 High Resiliency: Stateful orchestrators provide high resiliency in case of outages, ensuring that workflows can continue from where they left off.
 Data Persistence: They allow you to keep, review, or reference data from previous events, which is useful for long-running processes.
 Extended Runtime: Stateful workflows can continue running for much longer than stateless workflows, making them suitable for complex and long-running tasks.
 
-### Challenges of Using Stateful Orchestrators
+#### Challenges of Using Stateful Orchestrators
 
 Additional Complexity: They introduce additional complexity, requiring you to manage issues such as load balancing, CPU and memory usage, and networking.
 Cost: With stateful workflows, you pay for the VMs that are running in the cluster, whereas with stateless workflows, you pay only for the actual compute resources consumed.
 
-4. Durable Execution
+### 4. Durable Execution
 
 Durable execution refers to the ability of a system to preserve the state of an application and persist execution despite failures or interruptions. Durable execution ensures that for every task, its inputs, outputs, call stack, and local variables are persisted. These constraints, or rather features, allow a system to automatically retry or continue running in the face of infrastructure or system failures, ultimately ensuring completion.
 
@@ -99,16 +105,18 @@ Durable execution isn’t a completely distinct solution from the ones listed ab
   src="/images/blog/execution-flow-paradigms/durable-exec-temporal.png"
   alt="Durable workflow engine - Temporal"
 />
-Fig. [Durable workflow engine -
-Temporal](https://temporal.io/blog/workflow-engine-principles)
+<div style={{ marginLeft: 10 + "em" }}>
+  Fig. [Durable workflow engine -
+  Temporal](https://temporal.io/blog/workflow-engine-principles)
+</div>
 
-### Advantages of Durable Execution
+#### Advantages of Durable Execution
 
 **Reduced Manual Intervention**: Minimizes the need for human intervention by handling retries and failures programmatically.
 **Improved Observability**: Provides a clear audit trail and visibility into the state of workflows, which aids in debugging and monitoring.
 **Scalability**: Scales efficiently across distributed systems while maintaining workflow integrity.
 
-### Challenges of Durable Execution
+#### Challenges of Durable Execution
 
 **Resource Intensive**: Persistent state storage and management can consume significant resources, especially in large-scale systems.
 **Latency**: The need to persist state and handle retries can introduce latency in the execution flow.
@@ -127,18 +135,18 @@ At Metatype, we recognize the value of durable execution and are committed to ma
 
 Below is an example of how you can build a simple API to interact with an order delivery temporal workflow within Metatype.
 
-note:::
+:::note
 If you are new to Metatype or haven’t set it up yet in your development environment. You can follow this [guideline](/docs/tutorials/quick-start).
 :::
 
 For this example, the order delivery system will have few components/services such as Payment, Inventory and Delivery.
 
-Your temporal workflow definition should look similar like the one below.
+Your temporal workflow definition should look similar to the one below.
 
 <SDKTabs>
 
     <TabItem value="typescript">
-    
+
 ```typescript
 import { Worker, WorkflowClient } from "@temporalio/client";
 import { proxyActivities } from "@temporalio/workflow";
@@ -175,7 +183,7 @@ main().catch((err) => {
 });
 ```
 
-Down below is the workflow communication bridge for this system expressed within a [typegraph](/docs/reference/typegraph).
+Down below is the workflow communication bridge for this system expressed within a [Typegraph](/docs/reference/typegraph).
 
 ```typescript
 import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
@@ -228,10 +236,10 @@ typegraph(
 ```
 
     </TabItem>
-    
+
     {/* break */}
     <TabItem value="python">
-    
+
 ```python
 from temporalio import workflow, activity
 from temporalio.client import WorkflowClient
