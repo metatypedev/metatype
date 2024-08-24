@@ -1,55 +1,119 @@
-```
+import TabItem from "@theme/TabItem";
+import SDKTabs from "@site/src/components/SDKTabs";
 
-# Possible titles (sth that relates with the solution we are providing)
-- Integrating durable execution into existing systems
-- Durable Workflow Execution Paradigms
-- Execution flow Paradigms
--
 
-# Items to include
-- The Problem statement [Done]
-- The history behind
-- The current technology and different solutions available
-- The different approach to the current one and also other interesting alternatives
-- Solution in metatype and compare with the above solutions and what metatype enables devs in achieving durable execution
-- Example in metatype
+# Execution flow paradigms
 
-# Questions
-- What are we improving here, or what makes us different, what are we enabling
-
-```
-
-# Integrating Durable Execution into existing systems.
-
-In this age of cloud development and microservices architecture, problems start to arise with the amounts of workloads that run in the system. **ADD Real World Example Here** Having multiple components in your system introduces more failure points and that's a common phenomenon in complex systems. But one important behavior of any application which the business side expects is for an execution flow to reach its completion. Especially as systems grow in feature and complexity, chances are high that long-running processes will start to appear in our systems. To ensure that these processes complete in the intended manner, solutions were introduced in the last few decades.
-
-To explore some of the solutions that were presented to achieve completeness of a workflow.
+In this age of cloud development and microservices architecture, problems start to arise with the increased workloads that run in the system. Imagine an e-commerce platform where a customer places an order for a product during a high-demand sale event. The order triggers a series of interconnected processes: payment processing, inventory checks, packaging, shipping, and final delivery. Each of these processes might be handled by different microservices, potentially running on different servers or even in different data centers. What happens if the payment service goes down right after the payment is authorized but before the inventory is updated? Or if the packaging service fails just after the inventory is deducted but before the item is packed? Without a robust mechanism to ensure that each step in the workflow completes successfully and that failures are properly handled, you could end up with unhappy customers, lost orders, and inventory discrepancies.
+Having multiple components in your system introduces more failure points, which is a common phenomenon in complex systems. But one important behavior any application must ensure is that the execution flow reaches its completion. As systems grow in features and complexity, the likelihood of long-running processes increases. To ensure these processes complete as intended, several solutions have been introduced over the last few decades.
+Let's explore some of the solutions that have been proposed to achieve workflow completeness.
 
 1. Event-Driven Architecture with Message Queues
 
-This architecture heavily relies on services communicating by publishing and subscribing to events using message queues. Message queues are persistent storages which ensure the data is not lost during failures and service unavailability. Your components in your distributed system synchronize by using events/messages in these independent services. Even though this path offers service decomposability and fault tolerance to the most part, it can have some shortcomings. i.e using message queues comes with the overhead of managing the messages well(deduplication and message ordering). It isn't also ideal for systems which require immediate consistency across the components. Some of the techs and patterns which use this architecture are
+This architecture relies heavily on services communicating by publishing and subscribing to events using message queues. Message queues are persistent storages that ensure data is not lost during failures or service unavailability. Components in a distributed system synchronize by using events/messages through these independent services. While this approach offers service decomposability and fault tolerance, it has some shortcomings. For example, using message queues comes with the overhead of managing messages (e.g., deduplication and message ordering). It also isn’t ideal for systems requiring immediate consistency across components. Some technologies and patterns that utilize this architecture include:
 
 - [RabbitMq](https://www.rabbitmq.com/)
 - [Amazon SQS](https://aws.amazon.com/sqs/)
 
+<img
+  src="/images/blog/execution-flow-paradigms/eda.png"
+  alt="Event Driven Architecture with Message Queues - RabbitMQ"
+/>
+Fig. [Event Driven Architecture with Message Queues -
+RabbitMQ](https://miro.medium.com/v2/resize:fit:1400/1*lQIAGbhDfo-2VfiibkRL1w.png)
+
+### Advantages of Event Driven Architecture
+
+Improved Scalability
+Enhanced Responsiveness
+Enhanced Fault Tolerance
+Simplified Complex Workflows
+Real-Time Data Processing
+
+### Challenges of Event Driven Architecture
+
+Event Ordering
+Data Consistency
+Monitoring and Debugging
+Event Deduplication
+
+You can mitigate or reduce these challenges by following best practices like Event Sourcing, Idempotent Processing, CQRS (Command Query Responsibility Segregation), and Event Versioning.
+
 2. The [Saga Pattern](https://microservices.io/patterns/data/saga.html)
 
-This design pattern tries to achieve consistency across different services of a distributed system by breaking complex transactions which span across more than one component in to a series of local transactions. Each of these transactions trigger an event or a message which starts the next transaction in the sequence. If any of the local transactions fail to complete, a series of compensating actions which rollback the effects that came from the preceding transactions. While the orchestration of the local transaction have different approaches, the pattern aims to achieve consistency in a microservices based system. As the events are designed to be stored in a durable storage system or in logs. This enables the system to have a trail to reconstruct the system to a state after a failure. The saga pattern can be a great way to ensure consistency, it can be challenging to implement timer/timeout based workflows, including designing and implementing the compensating actions of the local transactions.
+This design pattern aims to achieve consistency across different services in a distributed system by breaking complex transactions spanning multiple components into a series of local transactions. Each of these transactions triggers an event or message that starts the next transaction in the sequence. If any local transaction fails to complete, a series of compensating actions rollback the effects of preceding transactions. While the orchestration of local transactions can vary, the pattern aims to achieve consistency in a microservices-based system. Events are designed to be stored in durable storage systems or logs, providing a trail to reconstruct the system to a state after a failure. While the saga pattern is an effective way to ensure consistency, it can be challenging to implement timer/timeout-based workflows and to design and implement the compensating actions for local transactions.
 
-3. Stateful Orchestrators
+**Note**: In the Saga pattern, a compensating transaction must be idempotent and retryable. These principles ensure that transactions can be managed without manual intervention.
 
-Stateful orchestrators provide a solution for long-running workflows by maintaining the state of each step in a workflow. A step in a workflow represents a task and these tasks are represented as states inside workflows. Workflows are defined as a state machine or direct acyclic graphs(DAGs). In this approach, there is an orchestrator which handles task's execution order, transitioning, handling retries and maintaining the state. In case of any failures, the system can recover from the persisted state. Stateful orchestrators offer great value in fault tolerance, consistency and observability. It is one of the solutions which have proven applicable for the modern age of distributed computing. Some of the well known services which provide this solution as a service are
+<img
+  src="/images/blog/execution-flow-paradigms/saga-overview.png"
+  alt="The Saga Pattern"
+/>
+Fig. [The Saga
+Pattern](​​https://learn.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga#solution)
 
-- [AWS Step Functions](https://aws.amazon.com/step-functions/)
+<img
+  src="/images/blog/execution-flow-paradigms/saga-pattern-order-delivery.png"
+  alt="The Saga Pattern for 
+Order delivery system"
+/>
+Fig. [The Saga Pattern for Order delivery
+system](https://www.baeldung.com/cs/saga-pattern-microservices#1-what-is-saga-architecture-pattern)
+
+### Advantages of Saga Pattern
+
+Ensures data consistency in a distributed system without tight coupling.
+Provides Roll back if one of the operations in the sequence fails.
+
+### Drawbacks
+
+Might be challenging to implement initially.
+Hard to debug.
+Compensating transactions don’t always work.
+
+3. [Stateful Orchestrators](https://docs.oracle.com/en/applications/jd-edwards/cross-product/9.2/eotos/creating-a-stateful-orchestration-release-9-2-8-3.html#u30249073)
+
+Stateful orchestrators provide a solution for long-running workflows by maintaining the state of each step in a workflow. Each step in a workflow represents a task, and these tasks are represented as states inside workflows. Workflows are defined as state machines or directed acyclic graphs (DAGs). In this approach, an orchestrator handles task execution order, transitioning, handling retries, and maintaining state. In the event of a failure, the system can recover from the persisted state. Stateful orchestrators offer significant value in fault tolerance, consistency, and observability. It’s one of the solutions proven effective in modern distributed computing. Some well-known services that provide this solution include:
+
+- [Apache Airflow](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html)
 - [Azure Logic Apps](https://azure.microsoft.com/en-us/products/logic-apps)
+
+### Advantages of Using Stateful Orchestrators
+
+High Resiliency: Stateful orchestrators provide high resiliency in case of outages, ensuring that workflows can continue from where they left off.
+Data Persistence: They allow you to keep, review, or reference data from previous events, which is useful for long-running processes.
+Extended Runtime: Stateful workflows can continue running for much longer than stateless workflows, making them suitable for complex and long-running tasks.
+
+### Challenges of Using Stateful Orchestrators
+
+Additional Complexity: They introduce additional complexity, requiring you to manage issues such as load balancing, CPU and memory usage, and networking.
+Cost: With stateful workflows, you pay for the VMs that are running in the cluster, whereas with stateless workflows, you pay only for the actual compute resources consumed.
 
 4. Durable Execution
 
-Durable Execution is a behavior of a system to preserve the state of the application and persist the execution despite failures or system interruptions. Durable execution enforces for every task, its inputs and outputs, call stack and including local variables to be persisted. These constraints or rather features of durable execution allows a system to automatically retry or continue running in the face of infrastructure or system failures, ultimately getting through to completion.
+Durable execution refers to the ability of a system to preserve the state of an application and persist execution despite failures or interruptions. Durable execution ensures that for every task, its inputs, outputs, call stack, and local variables are persisted. These constraints, or rather features, allow a system to automatically retry or continue running in the face of infrastructure or system failures, ultimately ensuring completion.
 
-Durable execution isn't a distinctive or novel solution from the ones listed above, but includes some of the strong points and tries to present a somewhat complete approach to achieving consistency, fault tolerance, data integrity, resilience for long-running processes and observability.
+Durable execution isn’t a completely distinct solution from the ones listed above but rather incorporates some of their strengths while presenting a more comprehensive approach to achieving consistency, fault tolerance, data integrity, resilience for long-running processes, and observability.
 
-As durable execution grows to be a fundamental driver of distributed computing, some of the solutions which use this style are
+<img
+  src="/images/blog/execution-flow-paradigms/durable-exec-temporal.png"
+  alt="Durable workflow engine - Temporal"
+/>
+Fig. [Durable workflow engine -
+Temporal](https://temporal.io/blog/workflow-engine-principles)
+
+### Advantages of Durable Execution
+
+**Reduced Manual Intervention**: Minimizes the need for human intervention by handling retries and failures programmatically.
+**Improved Observability**: Provides a clear audit trail and visibility into the state of workflows, which aids in debugging and monitoring.
+**Scalability**: Scales efficiently across distributed systems while maintaining workflow integrity.
+
+### Challenges of Durable Execution
+
+**Resource Intensive**: Persistent state storage and management can consume significant resources, especially in large-scale systems.
+**Latency**: The need to persist state and handle retries can introduce latency in the execution flow.
+
+As durable execution grows to be a fundamental driver of distributed computing, some of the solutions which use this architecture are
 
 - [Temporal](https://temporal.io/)
 - [Azure Durable Functions](https://learn.microsoft.com/en-us/azure/azure-functions/durable/)
@@ -57,16 +121,210 @@ As durable execution grows to be a fundamental driver of distributed computing, 
 - [Uber Cadence](https://cadenceworkflow.io/)
 - [Infinitic](https://www.infinitic.io/)
 
-If you are interested more in durable execution, you can check out [this](https://temporal.io/blog/workflow-engine-principles) blog by one of the devs in temporal about the complex design of workflow engines and ensuring durable execution within them.
+Among these, [Temporal](https://temporal.io/) has grown in influence, used by companies like SnapChat, HashiCorp, Stripe, DoorDash, and DataDog. Its success is driven by its practical application in real-world scenarios and the expertise of its founders.
 
-{/* FIXME: refactor to a smooth transitioning */}
+At Metatype, we recognize the value of durable execution and are committed to making it accessible. Our [Temporal Runtime](/docs/reference/runtimes/temporal) integrates seamlessly into our declarative API development platform, enabling users to harness the power of Temporal directly within Metatype. For those interested in exploring further, our documentation provides a detailed guide on getting started with [Temporal Runtime](/docs/reference/runtimes/temporal).
 
-:::Note
-Bonus Content ahead
+Below is an example of how you can build a simple API to interact with an order delivery temporal workflow within Metatype.
+
+note:::
+If you are new to Metatype or haven’t set it up yet in your development environment. You can follow this [guideline](/docs/tutorials/quick-start).
 :::
 
-Here in metatype, we recognize the need for workflow management capabilities. Thus, a dedicated runtime namely [Temporal Runtime](/docs/reference/runtimes/temporal), is included among a few other runtimes we support. We chose temporal instead of the other available solutions mainly as it is an open source project and due to its rich capabilities.
+For this example, the order delivery system will have few components/services such as Payment, Inventory and Delivery.
 
-The `Temporal Runtime` allows you to easily integrate durable workflows into your APIs. You can check the [reference here](/docs/reference/runtimes/temporal) to check in the details.
+Your temporal workflow definition should look similar like the one below.
 
-{/* TODO: ADD a simple real world example?? */}
+<SDKTabs>
+
+    <TabItem value="typescript">
+    
+```typescript
+import { Worker, WorkflowClient } from "@temporalio/client";
+import { proxyActivities } from "@temporalio/workflow";
+
+export const { processPayment, checkInventory, deliverOrder } =
+  proxyActivities<{
+    processPayment(orderId: string): Promise<string>;
+    checkInventory(orderId: string): Promise<string>;
+    deliverOrder(orderId: string): Promise<string>;
+  }>({
+    startToCloseTimeout: "10 seconds",
+  });
+
+export async function orderWorkflow(orderId: string): Promise<string> {
+  const paymentResult = await processPayment(orderId);
+  const inventoryResult = await checkInventory(orderId);
+  const deliveryResult = await deliverOrder(orderId);
+  return `Order ${orderId} completed with results: ${paymentResult}, ${inventoryResult}, ${deliveryResult}`;
+}
+
+async function main() {
+  const client = new WorkflowClient();
+  const result = await client.execute(orderWorkflow, {
+    taskQueue: "order-task-queue",
+    workflowId: "order123",
+    args: ["order123"],
+  });
+  console.log(result);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+```
+
+Down below is the workflow communication bridge for this system expressed within a [typegraph](/docs/reference/typegraph).
+
+```typescript
+import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
+
+function getEnvVariable(
+  key: string,
+  defaultValue?: string,
+): string | undefined {
+  const glob = globalThis as any;
+  const value = glob?.process
+    ? glob?.process.env?.[key]
+    : glob?.Deno.env.get(key);
+  return value ?? defaultValue;
+}
+
+typegraph(
+  {
+    name: "order_delivery",
+  },
+  (g: any) => {
+    const pub = Policy.public();
+
+    // define temporal cluster config
+    const temporal = new TemporalRuntime({
+      name: "order_delivery",
+      hostSecret: "<host_secret>",
+      namespaceSecret: "<ns_secret>",
+    });
+
+    // order delivery workflow id
+    const workflow_id = getEnvVariable("ID_FROM_ENV");
+
+    // parameters needed for the workflow
+    const arg = t.struct({ proudct_id: t.string() });
+
+    g.expose(
+      {
+        start: temporal.startWorkflow("<workflow_type>", arg),
+        query: temporal.queryWorkflow("<query_type>", arg, t.string()),
+        signal: temporal.signalWorkflow("<signal_name>", arg),
+        describe: workflow_id
+          ? temporal.describeWorkflow().reduce({ workflow_id })
+          : temporal.describeWorkflow(),
+      },
+      pub,
+    );
+  },
+);
+```
+
+    </TabItem>
+    
+    {/* break */}
+    <TabItem value="python">
+    
+```python
+from temporalio import workflow, activity
+from temporalio.client import WorkflowClient
+from temporalio.worker import Worker
+
+@activity.defn
+async def process_payment(order_id: str) -> str:
+    print(f"Processing payment for order {order_id}")
+    # Simulate payment processing logic
+    return "Payment processed"
+
+@activity.defn
+async def check_inventory(order_id: str) -> str:
+    print(f"Checking inventory for order {order_id}")
+    # Simulate inventory check logic
+    return "Inventory available"
+
+@activity.defn
+async def deliver_order(order_id: str) -> str:
+    print(f"Delivering order {order_id}")
+    # Simulate delivery logic
+    return "Order delivered"
+
+@workflow.defn
+class OrderWorkflow:
+    @workflow.run
+    async def run(self, order_id: str) -> str:
+        # Process payment
+        payment_result = await workflow.execute_activity(
+            process_payment, order_id, start_to_close_timeout=timedelta(seconds=10)
+        )
+        # Check inventory
+        inventory_result = await workflow.execute_activity(
+            check_inventory, order_id, start_to_close_timeout=timedelta(seconds=10)
+        )
+        # Deliver order
+        delivery_result = await workflow.execute_activity(
+            deliver_order, order_id, start_to_close_timeout=timedelta(seconds=10)
+        )
+
+        return f"Order {order_id} completed with results: {payment_result}, {inventory_result}, {delivery_result}"
+
+# To run the workflow
+async def main():
+    client = await WorkflowClient.connect("localhost:7233")
+    worker = Worker(client, task_queue="order_task_queue", workflows=[OrderWorkflow], activities=[process_payment, check_inventory, deliver_order])
+    await worker.run()
+
+    # Start a workflow
+    result = await client.execute_workflow(OrderWorkflow.run, "order123", task_queue="order_task_queue")
+    print(result)
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+
+```
+
+Down below is the workflow communication bridge for this system expressed within a [typegraph](/docs/reference/typegraph).
+
+```python
+from typegraph import t, typegraph, Policy, Graph
+from typegraph.graph.params import Cors
+from typegraph.providers.temporal import TemporalRuntime
+import os
+
+
+@typegraph()
+def temporal(g: Graph):
+  public = Policy.public()
+
+  # define temporal cluster config
+  temporal = TemporalRuntime(
+    "order_delivery", "<host_secret>", namespace_secret="<ns_secret>"
+  )
+
+  # order delivery workflow id
+  workflow_id = os.getenv("ID_FROM_ENV")
+
+  # parameters needed for the workflow
+  arg = t.struct({"product_id": t.string()})
+
+  g.expose(
+    public,
+    start=temporal.start_workflow("<workflow_type>", arg),
+    query=temporal.query_workflow("<query_type>", arg, t.string()),
+    signal=temporal.signal_workflow("<signal_name>", arg),
+    describe=temporal.describe_workflow().reduce({"workflow_id": workflow_id})
+    if workflow_id
+    else temporal.describe_workflow(),
+  )
+```
+
+    </TabItem>
+
+</SDKTabs>
