@@ -17,6 +17,7 @@ use common::typegraph::runtimes::kv::KvRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
+use common::typegraph::runtimes::substantial::SubstantialRuntimeData;
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasm::WasmRuntimeData;
 use common::typegraph::runtimes::{
@@ -496,6 +497,13 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             path_style_secret: d.path_style_secret.clone(),
         }))
         .into()),
+        Runtime::Substantial(data) => {
+            Ok(TGRuntime::Known(Rt::Substantial(SubstantialRuntimeData {
+                endpoint: data.endpoint.clone(),
+                basic_auth_secret: data.basic_auth_secret.clone(),
+            }))
+            .into())
+        }
         Runtime::Kv(d) => Ok(TGRuntime::Known(Rt::Kv(KvRuntimeData { url: d.url.clone() })).into()),
     }
 }

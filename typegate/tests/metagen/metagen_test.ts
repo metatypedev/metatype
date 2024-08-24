@@ -121,6 +121,11 @@ Meta.test("Metagen within sdk", async (t) => {
           path: "some/base/path/ts",
           stubbed_runtimes: ["python"],
         },
+        {
+          generator: "mdk_substantial",
+          typegraph: "example-metagen",
+          path: "some/base/path/ts",
+        },
       ],
     },
   };

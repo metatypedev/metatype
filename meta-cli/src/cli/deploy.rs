@@ -114,7 +114,7 @@ impl Deploy {
         let options = deploy.options.clone();
 
         let node_config = config.node(&deploy.node, &deploy.target);
-        let secrets = Secrets::load_from_node_config(&node_config);
+        let secrets = Secrets::load_from_node_config(&node_config, dir.to_path_buf());
         let node = node_config
             .build(&dir)
             .await
@@ -209,8 +209,7 @@ mod default_mode {
 
         let action_generator = DeployActionGenerator::new(
             deploy.node.into(),
-            // TODO no hydrate here
-            secrets.hydrate(deploy.base_dir.clone()).await?.into(),
+            secrets.into(),
             deploy.config.dir().unwrap_or_log().into(),
             deploy.base_dir.clone(),
             deploy
@@ -293,8 +292,7 @@ mod watch_mode {
 
         let action_generator = DeployActionGenerator::new(
             deploy.node.into(),
-            // TODO no hydrate here
-            secrets.hydrate(deploy.base_dir.clone()).await?.into(),
+            secrets.into(),
             deploy.config.dir().unwrap_or_log().into(),
             deploy.base_dir.clone(),
             deploy
