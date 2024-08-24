@@ -304,7 +304,7 @@ impl TaskAction for DeployAction {
                 Ok(serde_json::to_value(deploy_target)?)
             }
 
-            RpcCall::GetDeployData { typegraph } => Ok(self.get_deploy_data(typegraph)),
+            RpcCall::GetDeployData { typegraph } => Ok(self.get_deploy_data(typegraph).await?),
         }
     }
 }
@@ -321,7 +321,7 @@ impl MigrationAction {
 }
 
 impl DeployActionInner {
-    fn get_deploy_data(&self, typegraph: &str) -> serde_json::Value {
+    async fn get_deploy_data(&self, typegraph: &str) -> Result<serde_json::Value> {
         let default_action = &self.shared_config.default_migration_action;
         let actions = self
             .task_options
@@ -339,11 +339,10 @@ impl DeployActionInner {
             })
             .collect::<HashMap<_, _>>();
 
-        // TODO hydrate secrets here + cache
-        serde_json::json!({
-            "secrets": self.secrets.get(typegraph),
+        Ok(serde_json::json!({
+            "secrets": self.secrets.get(typegraph).await?,
             "defaultMigrationAction": default_action,
             "migrationActions": actions
-        })
+        }))
     }
 }

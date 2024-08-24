@@ -4,10 +4,12 @@
 use crate::wit::core::SerializeParams;
 use common::typegraph::Typegraph;
 use std::path::PathBuf;
+use substantial_rt::SubstantialProcessor;
 
 pub mod deno_rt;
 pub mod prisma_rt;
 pub mod python_rt;
+pub mod substantial_rt;
 pub mod validation;
 pub mod wasm_rt;
 
@@ -48,6 +50,7 @@ impl PostProcessor for TypegraphPostProcessor {
             DenoProcessor::new(typegraph_dir.clone()).postprocess(tg)?;
             PythonProcessor::new(typegraph_dir.clone()).postprocess(tg)?;
             WasmProcessor::new(typegraph_dir.clone()).postprocess(tg)?;
+            SubstantialProcessor::new(typegraph_dir.clone()).postprocess(tg)?;
         }
 
         ValidationProcessor.postprocess(tg)?;
