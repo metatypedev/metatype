@@ -3,7 +3,7 @@
 
 import type { ComputeStage } from "./engine/query_engine.ts";
 import * as ast from "graphql/ast";
-import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
+import { decodeBase64, encodeBase64 } from "@std/encoding";
 import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
 

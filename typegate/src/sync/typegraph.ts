@@ -11,7 +11,7 @@ import {
 import { SyncConfig } from "../config.ts";
 import { TypegateCryptoKeys } from "../crypto.ts";
 
-import { encodeHex } from "@std/encoding/hex";
+import { encodeHex } from "@std/encoding";
 import { z } from "zod";
 
 export const typegraphIdSchema = z.object({
