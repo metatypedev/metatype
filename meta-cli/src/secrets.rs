@@ -1,24 +1,24 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::interlude::*;
+use tokio::sync::Mutex;
 
 use crate::config::NodeConfig;
+use crate::interlude::*;
 
-#[derive(Debug, Clone)]
-pub struct Raw;
-#[derive(Debug, Clone, Default)]
-pub struct Hydrated;
+lazy_static::lazy_static! {
+    static ref CACHED_SECRETS: Mutex<HashMap<String, HashMap<String, String>>> = Mutex::new(HashMap::new());
+}
 
 // tg_name -> key -> value
 #[derive(Debug, Clone, Default)]
-pub struct Secrets<T = Hydrated> {
+pub struct Secrets {
     by_typegraph: HashMap<String, HashMap<String, String>>,
     overrides: HashMap<String, String>,
-    _type_state: std::marker::PhantomData<T>,
+    path: PathBuf,
 }
 
-pub type RawSecrets = Secrets<Raw>;
+pub type RawSecrets = Secrets;
 
 struct SecretOverride<'a> {
     tg_name: Option<&'a str>,
@@ -54,12 +54,12 @@ impl<'a> SecretOverride<'a> {
     }
 }
 
-impl Secrets<Raw> {
-    pub fn load_from_node_config(node_config: &NodeConfig) -> Secrets<Raw> {
+impl Secrets {
+    pub fn load_from_node_config(node_config: &NodeConfig, path: PathBuf) -> Secrets {
         Secrets {
             by_typegraph: node_config.secrets.clone(),
             overrides: HashMap::new(),
-            _type_state: std::marker::PhantomData,
+            path,
         }
     }
 
@@ -87,43 +87,34 @@ impl Secrets<Raw> {
         Ok(())
     }
 
-    #[tracing::instrument(err)]
-    pub async fn hydrate(self, dir: Arc<Path>) -> Result<Secrets<Hydrated>> {
-        let by_typegraph: HashMap<String, _> =
-            futures::future::join_all(self.by_typegraph.into_iter().map(|(tg_name, secrets)| {
-                let dir = dir.clone();
-                async move {
-                    let secrets = lade_sdk::hydrate(secrets, dir.clone().to_path_buf())
-                        .await
-                        .map_err(anyhow_to_eyre!())
-                        .with_context(|| format!("error hydrating secrets for {tg_name}"))?;
-                    Ok((tg_name, secrets))
-                }
-            }))
-            .await
-            .into_iter()
-            .collect::<Result<_>>()?;
-
-        let overrides = lade_sdk::hydrate(self.overrides, dir.to_path_buf())
-            .await
-            .map_err(|err| ferr!("error hydrating secrets overrides: {err}"))?;
-
-        Ok(Secrets {
-            by_typegraph,
-            overrides,
-            _type_state: std::marker::PhantomData,
-        })
-    }
-}
-
-impl Secrets<Hydrated> {
-    pub fn get(&self, tg_name: &str) -> HashMap<String, String> {
-        let mut secrets = self.by_typegraph.get(tg_name).cloned().unwrap_or_default();
-
-        for (key, value) in &self.overrides {
-            secrets.insert(key.clone(), value.clone());
+    pub async fn get(&self, tg_name: &str) -> Result<HashMap<String, String>> {
+        let mut cache = CACHED_SECRETS.lock().await;
+        if let Some(cached_result) = cache.get(tg_name) {
+            return Ok(cached_result.clone());
         }
 
-        secrets
+        let mut secrets = self.by_typegraph.get(tg_name).cloned().unwrap_or_default();
+
+        lade_sdk::hydrate(secrets.clone(), self.path.clone())
+            .await
+            .map_err(anyhow_to_eyre!())
+            .with_context(|| format!("error hydrating secrets for {tg_name}"))?;
+
+        if !cache.contains_key("overrides") {
+            let hydrated_overrides = lade_sdk::hydrate(self.overrides.clone(), self.path.clone())
+                .await
+                .map_err(|err| ferr!("error hydrating secrets overrides: {err}"))?;
+            cache.insert("overrides".to_string(), hydrated_overrides);
+        }
+
+        if let Some(overrides) = cache.get("overrides") {
+            for (key, value) in overrides {
+                secrets.insert(key.clone(), value.clone());
+            }
+        }
+
+        cache.insert(tg_name.to_string(), secrets.clone());
+
+        Ok(secrets)
     }
 }
