@@ -10,6 +10,11 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 
 const logger = getLogger(import.meta);
 
+interface GrpcRuntimeData {
+  protoFile: string;
+  endpoint: string;
+}
+
 export class GrpcRuntime extends Runtime {
   private logger: Logger;
 
@@ -18,39 +23,43 @@ export class GrpcRuntime extends Runtime {
     this.logger = getLogger(`grpc: '${typegraphName}'`);
   }
 
-  // deno-lint-ignore require-await
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     logger.info("Initliazing GrpcRuntime");
     logger.debug(`Init params: ${JSON.stringify(params)}`);
 
-    const { typegraph } = params as RuntimeInitParams;
+    const { typegraph, args } = params as RuntimeInitParams<GrpcRuntimeData>;
     const typegraphName = TypeGraph.formatName(typegraph);
     const instance = new GrpcRuntime(typegraphName);
+
+    await native.grpc_register({
+      protoFile: args.protoFile,
+      endpoint: args.endpoint,
+      client_id: instance.id,
+    });
+
     instance.logger.info("registering GrpcRuntime");
+
     return instance;
   }
 
-  deinit(): Promise<void> {
-    throw new Error("Method not implemented.");
+  // deno-lint-ignore require-await
+  async deinit(): Promise<void> {
+    native.grpc_unregister({ client_id: this.id });
   }
+
   materialize(
     stage: ComputeStage,
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] | Promise<ComputeStage[]> {
-    const {
-      proto_file,
-      method,
-      endpoint,
-    } = stage.props.materializer?.data ?? {};
+    const { method } = stage.props.materializer?.data ?? {};
 
     const resolver: Resolver = async (args) => {
       const { payload } = args;
       return await native.call_grpc_method({
-        proto_file: String(proto_file),
         method: String(method),
         payload,
-        endpoint: String(endpoint),
+        client_id: this.id,
       });
     };
 

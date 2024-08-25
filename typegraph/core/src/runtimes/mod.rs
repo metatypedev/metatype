@@ -28,9 +28,9 @@ use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, GrpcMaterializer,
-    HttpRuntimeData, KvMaterializer, KvRuntimeData, MaterializerHttpRequest, PrismaLinkData,
-    PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData, SubstantialRuntimeData,
-    TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
+    GrpcRuntimeData, HttpRuntimeData, KvMaterializer, KvRuntimeData, MaterializerHttpRequest,
+    PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData,
+    SubstantialRuntimeData, TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -70,7 +70,7 @@ pub enum Runtime {
     S3(Rc<S3RuntimeData>),
     Substantial(Rc<SubstantialRuntimeData>),
     Kv(Rc<KvRuntimeData>),
-    Grpc,
+    Grpc(Rc<GrpcRuntimeData>),
 }
 
 #[derive(Debug, Clone)]
@@ -706,8 +706,8 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         Ok(Store::register_materializer(mat))
     }
 
-    fn register_grpc_runtime() -> Result<RuntimeId, wit::Error> {
-        Ok(Store::register_runtime(Runtime::Grpc))
+    fn register_grpc_runtime(data: GrpcRuntimeData) -> Result<RuntimeId, wit::Error> {
+        Ok(Store::register_runtime(Runtime::Grpc(data.into())))
     }
 
     fn call_grpc_methode(

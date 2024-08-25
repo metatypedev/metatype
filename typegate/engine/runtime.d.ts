@@ -63,6 +63,8 @@ type MetaNS = {
   };
 
   grpc: {
+    register: (inp: GrpcRegisterInput) => Promise<void>;
+    unregister: (client_id: string) => void;
     callGrpcMethod: (inp: GrpcCallMethodInput) => Promise<string>;
   };
 };
@@ -265,8 +267,13 @@ export type WitWireHandleResponse =
   };
 
 export type GrpcCallMethodInput = {
-  proto_file: string;
   method: string;
   payload: string;
+  client_id: string;
+};
+
+export type GrpcRegisterInput = {
+  protoFile: string;
   endpoint: string;
+  client_id: string;
 };

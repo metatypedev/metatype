@@ -4,4 +4,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct GrpcRuntimeData {}
+pub struct GrpcRuntimeData {
+    pub proto_file: String,
+    pub endpoint: String,
+}

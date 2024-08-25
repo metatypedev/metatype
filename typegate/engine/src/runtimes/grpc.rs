@@ -169,10 +169,14 @@ fn get_relative_message_name(absolute_message_name: &str) -> anyhow::Result<Stri
     Ok(message.to_string())
 }
 
+struct GrpcClient {
+    client: Grpc<Channel>,
+    proto_file: String,
+}
+
 #[derive(Default)]
 pub struct Ctx {
-    clients: Arc<DashMap<String, Grpc<Channel>>>,
-    proto_files: Arc<DashMap<String, String>>,
+    grpc_client: Arc<DashMap<String, GrpcClient>>,
 }
 
 #[derive(Deserialize)]
@@ -195,8 +199,23 @@ pub async fn op_grpc_register(
 
     let state = state.borrow();
     let ctx = state.borrow::<Ctx>();
-    ctx.clients.insert(input.client_id.clone(), client);
-    ctx.proto_files.insert(input.client_id, input.proto_file);
+
+    let grpc_client = GrpcClient {
+        client,
+        proto_file: input.proto_file,
+    };
+    ctx.grpc_client.insert(input.client_id.clone(), grpc_client);
+
+    Ok(())
+}
+
+#[deno_core::op2(fast)]
+pub fn op_grpc_unregister(#[state] ctx: &mut Ctx, #[string] client_id: &str) -> Result<()> {
+    let Some((_, _client)) = ctx.grpc_client.remove(client_id) else {
+        anyhow::bail!("Could not remove engine {:?}: entry not found.", {
+            client_id
+        });
+    };
     Ok(())
 }
 
@@ -214,22 +233,17 @@ pub async fn op_call_grpc_method(
     state: Rc<RefCell<OpState>>,
     #[serde] input: GrpcCallMethodInput,
 ) -> Result<String> {
-    let (clients, proto_files) = {
+    let grpc_client = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
-        (ctx.clients.clone(), ctx.proto_files.clone())
+        ctx.grpc_client.clone()
     };
 
-    let client_id = input.client_id.clone();
-    let mut client = clients
-        .get_mut(&client_id)
-        .with_context(|| format!("Could not find client '{client_id}'"))?;
+    let mut grpc_client = grpc_client
+        .get_mut(&input.client_id)
+        .with_context(|| format!("Could not find client '{}'", &input.client_id))?;
 
-    let proto_file = proto_files
-        .get(&client_id)
-        .with_context(|| format!("Could not find proto_file '{client_id}'"))?;
-
-    let path = PathBuf::from_str(&proto_file).unwrap();
+    let path = PathBuf::from_str(&grpc_client.proto_file).unwrap();
     let file_descriptor = get_file_descriptor(&path).unwrap();
 
     let method_name = get_relative_method_name(&input.method).unwrap();
@@ -240,14 +254,18 @@ pub async fn op_call_grpc_method(
     let req = json2request(input.payload, request_message, file_descriptor.clone())?.into_request();
 
     let path_query = PathAndQuery::from_str(input.method.as_str()).unwrap();
-    client.ready().await.unwrap();
+    grpc_client.client.ready().await.unwrap();
 
     let codec = DynCodec {
         method_descriptor_proto,
         file_descriptor,
     };
 
-    let response = client.unary(req, path_query, codec).await.unwrap();
+    let response = grpc_client
+        .client
+        .unary(req, path_query, codec)
+        .await
+        .unwrap();
     let response = response.get_ref().deref();
     let json_response = protobuf_json_mapping::print_to_string(response).unwrap();
     Ok(json_response)

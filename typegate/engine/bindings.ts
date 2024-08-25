@@ -3,6 +3,7 @@
 
 import type {
   GrpcCallMethodInput,
+  GrpcRegisterInput,
   ParsedDiff,
   PrismaApplyOut,
   PrismaCreateOut,
@@ -452,6 +453,28 @@ export function archive(a0: ArchiveInp): ArchiveResult {
     return { Ok: { base64: res } };
   } catch (err) {
     return { Err: { message: err.toString() } };
+  }
+}
+
+export async function grpc_register(a0: GrpcRegisterInput): Promise<string> {
+  try {
+    return await Meta.grpc.register(a0);
+  } catch (err) {
+    return err.toString();
+  }
+}
+
+export type GrpcUnregisterInput = {
+  client_id: string;
+};
+
+export async function grpc_unregister(
+  a0: GrpcUnregisterInput,
+): Promise<string> {
+  try {
+    return await Meta.grpc.unregister(a0.client_id);
+  } catch (err) {
+    return err.toString();
   }
 }
 

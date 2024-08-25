@@ -20,7 +20,7 @@ export function delete_(idempotent = true): EffectDelete {
   return { tag: "delete", val: idempotent };
 }
 
-export function update(idempotent = true): EffectUpdate {
+export function update(idempotent = false): EffectUpdate {
   return { tag: "update", val: idempotent };
 }
 
