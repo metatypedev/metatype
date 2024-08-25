@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals, assertStringIncludes } from "std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { gql, Meta, rest } from "../utils/mod.ts";
 import { RestSchemaGenerator } from "../../src/transports/rest/rest_schema_generator.ts";
 

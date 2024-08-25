@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
-import { dirname, extname, join } from "std/path/posix";
+import { dirname, extname, join } from "@std/path/posix";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
-import { assertSnapshot } from "std/testing/snapshot";
-import { type SnapshotOptions } from "std/testing/snapshot";
-import { assertEquals, assertNotEquals } from "std/assert";
+import { assertSnapshot } from "@std/testing/snapshot";
+import { type SnapshotOptions } from "@std/testing/snapshot";
+import { assertEquals, assertNotEquals } from "@std/assert";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals } from "std/assert";
+import { assertEquals } from "@std/assert";
 import { PrismaRuntime } from "../../../src/runtimes/prisma/prisma.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { randomPGConnStr } from "../../utils/database.ts";

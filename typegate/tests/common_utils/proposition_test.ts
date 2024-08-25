@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals } from "std/assert";
+import { assertEquals } from "@std/assert";
 import { closestWord } from "../../src/utils.ts";
 Deno.test("closest word proposition", async (t) => {
   await t.step("basic edgecases", () => {

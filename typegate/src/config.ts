@@ -3,9 +3,9 @@
 
 import { z } from "zod";
 
-import { parseArgs } from "std/cli/parse-args";
-import { mapKeys } from "std/collections/map-keys";
-import { filterKeys } from "std/collections/filter-keys";
+import { parseArgs } from "@std/cli/parse-args";
+import { mapKeys } from "@std/collections/map-keys";
+import { filterKeys } from "@std/collections/filter-keys";
 import { configOrExit, configOrThrow } from "./config/loader.ts";
 import {
   globalConfigSchema,

@@ -15,9 +15,9 @@ import { ArtifactMeta, ArtifactStore } from "./mod.ts";
 import { HashTransformStream } from "../../utils/hash.ts";
 import { SyncConfig } from "../../config.ts";
 import { LocalArtifactPersistence } from "./local.ts";
-import { exists } from "std/fs/exists";
-import { dirname } from "std/path/";
-import { chunk } from "std/collections/chunk";
+import { exists } from "@std/fs/exists";
+import { dirname } from "@std/path/";
+import { chunk } from "@std/collections/chunk";
 import { ArtifactError } from "./mod.ts";
 
 const logger = getLogger(import.meta);

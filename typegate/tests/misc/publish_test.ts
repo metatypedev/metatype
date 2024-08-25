@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
-import { assert } from "std/assert";
-import { exists } from "std/fs/exists";
+import { assert } from "@std/assert";
+import { exists } from "@std/fs/exists";
 import { Meta } from "test-utils/mod.ts";
 
 Meta.test({ name: "simulate publish on npm and jsr" }, async (t) => {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { ComputeStage } from "../engine/query_engine.ts";
-import { equal } from "std/assert";
+import { equal } from "@std/assert";
 import { Resolver } from "../types.ts";
 
 export abstract class Runtime {

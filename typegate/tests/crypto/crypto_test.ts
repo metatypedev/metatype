@@ -6,7 +6,7 @@ import {
   getTypegateConfig,
 } from "../../src/config.ts";
 import { TypegateCryptoKeys, unsafeExtractJWT } from "../../src/crypto.ts";
-import { assertEquals } from "std/assert";
+import { assertEquals } from "@std/assert";
 
 const gateConfig = getTypegateConfig({
   base: defaultTypegateConfigBase,

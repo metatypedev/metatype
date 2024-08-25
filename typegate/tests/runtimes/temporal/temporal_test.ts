@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertExists } from "std/assert";
+import { assertExists } from "@std/assert";
 import { gql, Meta } from "test-utils/mod.ts";
 import { MetaTest } from "test-utils/test.ts";
-import { join } from "std/path/join";
+import { join } from "@std/path/join";
 
 async function testSerialize(t: MetaTest, file: string) {
   await t.should(`serialize typegraph ${file}`, async () => {

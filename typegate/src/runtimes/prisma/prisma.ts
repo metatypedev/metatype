@@ -11,7 +11,7 @@ import { ComputeArgParams } from "../../engine/planner/args.ts";
 import { PrismaOperationMatData } from "../../typegraph/types.ts";
 import { getLogger, Logger } from "../../log.ts";
 import * as PrismaRT from "./types.ts";
-import { filterValues } from "std/collections/filter-values";
+import { filterValues } from "@std/collections/filter-values";
 
 const logger = getLogger(import.meta);
 

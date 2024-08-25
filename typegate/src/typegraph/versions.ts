@@ -3,7 +3,7 @@
 
 import { TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
 import { globalConfig } from "../config.ts";
-import * as semver from "std/semver";
+import * as semver from "@std/semver";
 
 const typegraphVersion = "0.0.3";
 

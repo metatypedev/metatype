@@ -4,7 +4,7 @@
 import { TypeGraph } from "../../typegraph/mod.ts";
 import { TypeNode } from "../../typegraph/types.ts";
 import { CodeGenerator } from "./code_generator.ts";
-import { mapValues } from "std/collections/map-values";
+import { mapValues } from "@std/collections/map-values";
 import {
   ErrorEntry,
   validationContext,

@@ -3,7 +3,7 @@
 
 import { TestModule } from "test-utils/test_module.ts";
 import { Meta } from "test-utils/mod.ts";
-import { fail } from "std/assert";
+import { fail } from "@std/assert";
 
 const m = new TestModule(import.meta);
 

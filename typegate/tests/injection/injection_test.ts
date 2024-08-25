@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "../utils/mod.ts";
-import { assertRejects } from "std/assert";
+import { assertRejects } from "@std/assert";
 import { buildSchema, graphql } from "graphql";
 import * as mf from "test/mock_fetch";
 import { dropSchemas, recreateMigrations } from "../utils/migrations.ts";

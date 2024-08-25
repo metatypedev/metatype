@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta, sleep } from "../../utils/mod.ts";
-import { join } from "std/path/join";
+import { join } from "@std/path/join";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
 
 const syncConfig = {

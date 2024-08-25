@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "test-utils/mod.ts";
-import { join, resolve } from "std/path/posix";
-import { assert, assertEquals, assertRejects } from "std/assert";
+import { join, resolve } from "@std/path/posix";
+import { assert, assertEquals, assertRejects } from "@std/assert";
 import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "dax";

@@ -3,17 +3,17 @@
 
 import type { ComputeStage } from "./engine/query_engine.ts";
 import * as ast from "graphql/ast";
-import { decodeBase64, encodeBase64 } from "std/encoding/base64";
+import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
 
 import { Type } from "./typegraph/type_node.ts";
 import type { TypeGraph } from "./typegraph/mod.ts";
 
-import { ensureDir, ensureFile } from "std/fs/";
-import { Untar } from "std/archive/untar";
-import { readerFromStreamReader } from "std/io/reader-from-stream-reader";
-import { toReadableStream } from "std/io/to-readable-stream";
+import { ensureDir, ensureFile } from "@std/fs/";
+import { Untar } from "@std/archive/untar";
+import { readerFromStreamReader } from "@std/io/reader-from-stream-reader";
+import { toReadableStream } from "@std/io/to-readable-stream";
 import { path } from "compress/deps.ts";
 import { sha1 } from "./crypto.ts";
 import { BRANCH_NAME_SEPARATOR } from "./engine/computation_engine.ts";

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals } from "std/assert";
+import { assertEquals } from "@std/assert";
 import { replaceDynamicPathParams } from "../../src/runtimes/utils/http.ts";
 
 Deno.test("dynamic path params", async (t) => {

@@ -5,7 +5,7 @@ import { gql, Meta, sleep } from "../../utils/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
-import { assert, assertEquals } from "std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { QueryEngine } from "../../../src/engine/query_engine.ts";
 
 const redisKey = "typegraph";

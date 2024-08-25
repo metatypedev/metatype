@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { distinct } from "std/collections/distinct";
+import { distinct } from "@std/collections/distinct";
 import { ComputeStage } from "./query_engine.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { RateLimit } from "../typegate/rate_limiter.ts";

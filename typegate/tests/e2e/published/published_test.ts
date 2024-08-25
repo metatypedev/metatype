@@ -6,15 +6,15 @@ import { projectDir } from "@dev/utils.ts";
 import { $ } from "@dev/deps.ts";
 import { PUBLISHED_VERSION, PYTHON_VERSION } from "@dev/consts.ts";
 import { download } from "download";
-import { Untar } from "std/archive/untar";
-import { readerFromIterable } from "std/streams";
-import { copy } from "std/io/copy";
-import { encodeBase64 } from "std/encoding";
+import { Untar } from "@std/archive/untar";
+import { readerFromIterable } from "@std/streams";
+import { copy } from "@std/io/copy";
+import { encodeBase64 } from "@std/encoding";
 import { Lines } from "test-utils/process.ts";
 import { newTempDir } from "test-utils/dir.ts";
 import { transformSyncConfig } from "@typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
-import { assertEquals } from "std/assert";
+import { assertEquals } from "@std/assert";
 
 const previousVersion = PUBLISHED_VERSION;
 

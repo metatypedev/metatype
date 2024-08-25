@@ -19,7 +19,7 @@ import {
 import { TypeGraph } from "../../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { getChildTypes } from "../../typegraph/visitor.ts";
-import { mapValues } from "std/collections/map-values";
+import { mapValues } from "@std/collections/map-values";
 import {
   ErrorEntry,
   validationContext,

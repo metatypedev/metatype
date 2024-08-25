@@ -21,8 +21,8 @@ import {
   TypeNode,
   UnionNode,
 } from "../../typegraph/type_node.ts";
-import { mapValues } from "std/collections/map-values";
-import { filterValues } from "std/collections/filter-values";
+import { mapValues } from "@std/collections/map-values";
+import { filterValues } from "@std/collections/filter-values";
 
 import {
   EffectType,

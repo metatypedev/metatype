@@ -4,7 +4,7 @@
 import { gql, Meta } from "../../utils/mod.ts";
 import { TestModule } from "../../utils/test_module.ts";
 import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
-import { assertRejects, assertStringIncludes } from "std/assert";
+import { assertRejects, assertStringIncludes } from "@std/assert";
 import { randomPGConnStr, reset } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);

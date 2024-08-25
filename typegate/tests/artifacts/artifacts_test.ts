@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Meta } from "test-utils/mod.ts";
-import { join } from "std/path/join";
-import { exists } from "std/fs/exists";
-import { assert, assertFalse } from "std/assert";
+import { join } from "@std/path/join";
+import { exists } from "@std/fs/exists";
+import { assert, assertFalse } from "@std/assert";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, hasObject, tryDeleteBucket } from "test-utils/s3.ts";

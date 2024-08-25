@@ -4,7 +4,7 @@
 import { EitherNode, Type, UnionNode } from "../../typegraph/type_node.ts";
 import { TypeGraph } from "../../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
-import { mapValues } from "std/collections/map-values";
+import { mapValues } from "@std/collections/map-values";
 import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";
 
 export type VariantMatcher = (value: unknown) => string | null;

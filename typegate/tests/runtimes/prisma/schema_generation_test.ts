@@ -5,7 +5,7 @@ import { Meta } from "../../utils/mod.ts";
 import { serialize } from "../../utils/meta.ts";
 import { SchemaGenerator } from "../../../src/runtimes/prisma/hooks/generate_schema.ts";
 import * as PrismaRT from "../../../src/runtimes/prisma/types.ts";
-import { assertEquals } from "std/assert";
+import { assertEquals } from "@std/assert";
 import outdent from "outdent";
 import { SecretManager, TypeGraph } from "../../../src/typegraph/mod.ts";
 import { Model } from "../../../src/typegraph/types.ts";

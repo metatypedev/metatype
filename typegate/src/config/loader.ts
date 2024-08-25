@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { z } from "zod";
-import { deepMerge } from "std/collections/deep-merge";
+import { deepMerge } from "@std/collections/deep-merge";
 
 export class ConfigError extends Error {
   constructor(public issues: any) {

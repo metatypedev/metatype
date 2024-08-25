@@ -6,9 +6,9 @@ import { Runtime } from "./Runtime.ts";
 import { createUrl } from "../utils.ts";
 import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { encodeBase64 } from "std/encoding";
+import { encodeBase64 } from "@std/encoding";
 import { getLogger } from "../log.ts";
-import { Logger } from "std/log";
+import { Logger } from "@std/log";
 import { HTTPRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
 
