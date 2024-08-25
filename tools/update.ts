@@ -13,8 +13,8 @@ import {
 } from "./deps.ts";
 import { projectDir, runOrExit } from "./utils.ts";
 
-const denoConfigPath = resolve(projectDir, "typegate/deno.jsonc");
-const devConfigPath = resolve(projectDir, "dev/deps.ts");
+const denoConfigPath = resolve(projectDir, "deno.jsonc");
+const devConfigPath = resolve(projectDir, "tools/deps.ts");
 
 const flags = parseArgs(Deno.args, {
   boolean: ["outdated", "upgrade", "cache-only", "src-only"],
@@ -65,13 +65,13 @@ if (flags.outdated || flags.upgrade) {
 
 const tsFiles = [
   ...expandGlobSync(
-    `typegate/{${flags["src-only"] ? "src" : "src,tests"}}/**/*.ts`,
+    `src/typegate/{${flags["src-only"] ? "src" : "src,tests"}}/**/*.ts`,
     {
       root: projectDir,
       globstar: true,
       exclude: [
-        "typegate/tests/e2e/nextjs",
-        "typegate/tests/runtimes/temporal/worker",
+        "src/typegate/tests/e2e/nextjs",
+        "src/typegate/tests/runtimes/temporal/worker",
       ],
     },
   ),

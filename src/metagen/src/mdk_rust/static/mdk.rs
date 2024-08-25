@@ -8,7 +8,7 @@ pub mod wit {
         // wit-start
         // this bit gets replaced by the inline wit string
         world: "wit-wire",
-        path: "../../../../../wit",
+        path: "../../../../wit",
         // wit-end
     });
 }

@@ -50,7 +50,7 @@ async function listTestFiles(filesArg: string[]): Promise<string[]> {
         let path = wd.resolve(inPath);
         let stat = await path.stat();
         if (!stat) {
-          path = wd.resolve("typegate/tests", inPath);
+          path = wd.resolve("src/typegate/tests", inPath);
           stat = await path.stat();
           if (!stat) {
             throw new Error(`unable to resolve test files under "${inPath}"`);
@@ -82,7 +82,7 @@ async function listTestFiles(filesArg: string[]): Promise<string[]> {
     return (
       await Array.fromAsync(
         wd
-          .join("typegate/tests")
+          .join("src/typegate/tests")
           .expandGlob("**/*_test.ts", { globstar: true }),
       )
     ).map((ent) => ent.path.toString());
@@ -103,7 +103,7 @@ interface Run {
 }
 
 function applyFilter(files: string[], filter: string | undefined): string[] {
-  const prefixLength = `${projectDir}/typegate/tests/`.length;
+  const prefixLength = `${projectDir}/src/typegate/tests/`.length;
   const fuse = new Fuse(
     files.map((f) => f.slice(prefixLength)),
     {
@@ -172,7 +172,7 @@ export async function testE2e(args: {
   $.logStep(`${prefix} Testing with ${threads} threads`);
 
   const xtask = wd.join(`target/${profile}/xtask`);
-  const denoConfig = wd.join("typegate/deno.jsonc");
+  const denoConfig = wd.join("deno.jsonc");
 
   function createRun(testFile: string, streamed: boolean): Run {
     const start = Date.now();
@@ -554,7 +554,7 @@ class TestThread {
       const testFile = this.queue.shift();
       if (!testFile) break;
 
-      const pathPrefix = `${projectDir}/typegate/tests/`;
+      const pathPrefix = `${projectDir}/src/typegate/tests/`;
       const relativePath = testFile.slice(pathPrefix.length);
 
       this.logger.threadState(this.threadId, {

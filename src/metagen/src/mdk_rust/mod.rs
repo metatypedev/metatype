@@ -214,7 +214,7 @@ pub fn gen_static(dest: &mut GenDestBuf) -> core::fmt::Result {
     let mod_rs = include_str!("static/mdk.rs").to_string();
     let mod_rs = mod_rs.replace("__METATYPE_VERSION__", std::env!("CARGO_PKG_VERSION"));
 
-    let mdk_wit = include_str!("../../../../wit/wit-wire.wit");
+    let mdk_wit = include_str!("../../../wit/wit-wire.wit");
     writeln!(dest, "// gen-static-start")?;
 
     let gen_start = "// gen-start\n";

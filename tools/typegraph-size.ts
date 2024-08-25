@@ -8,7 +8,8 @@ const cargoManifestPath = resolve(projectDir, "Cargo.toml");
 
 const arg = Deno.args[0];
 if (!arg) {
-  const usage = "Usage: deno run -A dev/typegraph-size.ts <path-to-typegraph>";
+  const usage =
+    "Usage: deno run -A tools/typegraph-size.ts <path-to-typegraph>";
   console.error(usage);
   Deno.exit(1);
 }

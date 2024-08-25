@@ -7,7 +7,7 @@ import { DenoTaskDefArgs } from "./deps.ts";
 export default {
   "test-e2e": {
     inherit: "ci",
-    desc: "Shorthand for `dev/test.ts`",
+    desc: "Shorthand for `tools/test.ts`",
     fn: async ($) => {
       if (await testE2eCli($.argv) != 0) {
         throw new Error("tests failed");
@@ -41,6 +41,6 @@ export default {
     inherit: "_ecma",
     fn: ($) =>
       $`bash -sx`.stdinText("node --test --import=tsx tests/*.test.ts")
-        .cwd("meta-lsp/ts-language-server"),
+        .cwd("src/meta-lsp/ts-language-server"),
   },
 } satisfies Record<string, DenoTaskDefArgs>;

@@ -45,7 +45,7 @@ export default {
         [
           `. .venv/bin/activate`,
           `poetry install --no-root`,
-          `cd typegraph/python`,
+          `cd src/typegraph/python`,
           `poetry install --no-root`,
         ].join("\n"),
       );
@@ -57,8 +57,8 @@ export default {
     fn: ($) =>
       $`pnpm install --recursive 
           --filter ./examples/typegraphs/ 
-          --filter ./typegraph/node/
-          --filter ./libs/metagen/tests/*...`.stdinText(
+          --filter ./src/typegraph/node/
+          --filter ./src/metagen/tests/*...`.stdinText(
         Array(1000)
           .map(() => "y")
           .join("\n"),
@@ -72,7 +72,7 @@ export default {
 
   "install-lsp": {
     inherit: "_ecma",
-    fn: ($) => $`pnpm install -C ./meta-lsp/ --frozen-lockfile --recursive`,
+    fn: ($) => $`pnpm install -C ./src/meta-lsp/ --frozen-lockfile --recursive`,
   },
 
   // this is used somewhere in a test build.sh file
@@ -89,7 +89,7 @@ export default {
               return $.request(url)
                 .showProgress()
                 .pipeToPath(
-                  $.workingDir.join("tmp").join(std_url.basename(url)),
+                  $.workingDir.join(".metatype").join(std_url.basename(url)),
                   {
                     create: true,
                   },

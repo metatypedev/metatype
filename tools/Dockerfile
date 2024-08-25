@@ -56,7 +56,7 @@ ARG GHJK_VERSION=v0.2.1
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
-COPY dev/*.ts dev/
+COPY tools/*.ts tools/
 COPY ghjk.ts .
 ENV GHJK_ENV=oci
 ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
@@ -81,7 +81,7 @@ RUN . "$GHJK_ACTIVATE" \
     )
 
 RUN . "$GHJK_ACTIVATE" \
-    && deno run -A dev/update.ts --cache-only --src-only \
+    && deno run -A tools/update.ts --cache-only --src-only \
     && mkdir -p typegate/tmp
 
 #
@@ -124,16 +124,16 @@ COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
 COPY --from=builder /app/typegate-bin /bin/typegate
 # the typegate ecma sources
-COPY --from=builder /app/typegate/deno.jsonc /app/typegate/import_map.json ./typegate/
-COPY --from=builder /app/typegate/engine/*.js /app/typegate/engine/*.ts ./typegate/engine/
-COPY --from=builder /app/typegate/src ./typegate/src/
-COPY --from=builder /app/typegate/tests ./typegate/tests/
-COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
+COPY --from=builder /app/deno.jsonc /app/import_map.json ./
+COPY --from=builder /app/src/typegate/engine/*.js /app/src/typegate/engine/*.ts ./src/typegate/engine/
+COPY --from=builder /app/src/typegate/src ./src/typegate/src/
+COPY --from=builder /app/src/typegate/tests ./src/typegate/tests/
+COPY tools/LICENSE-Elastic-2.0.md LICENSE.md
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
-COPY --from=builder --chown=nonroot:nonroot /app/typegate/deno.lock ./typegate/
-COPY --from=builder --chown=nonroot:nonroot /app/typegate/tmp ./tmp
+COPY --from=builder --chown=nonroot:nonroot /app/deno.lock ./typegate/
+COPY --from=builder --chown=nonroot:nonroot /app/src/typegate/tmp ./tmp
 
 #
 # run the checks in a separate target to avoid bloating
@@ -149,9 +149,9 @@ USER root
 # to make sure all required ts files are found in the image
 COPY --from=deno-bin --chown=nonroot:nonroot /usr/bin/deno /bin/deno
 RUN /bin/deno check \
-    --config /app/typegate/deno.jsonc \
-    /app/typegate/src/**/*.ts \
-    /app/typegate/tests/utils/**/*.ts \
+    --config /app/deno.jsonc \
+    /app/src/typegate/src/**/*.ts \
+    /app/src/typegate/tests/utils/**/*.ts \
     && rm /bin/deno
 
 #

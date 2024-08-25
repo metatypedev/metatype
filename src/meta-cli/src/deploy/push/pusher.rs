@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 use crate::interlude::*;
 
-use std::sync::Mutex;
 use std::time::Duration;
 
 use serde::Deserialize;
@@ -63,8 +62,8 @@ struct ResolveNullConstraintViolation {
     failure: NullConstraintViolation,
 }
 
-static RETRY_COUNTER: once_cell::sync::Lazy<dashmap::DashMap<PathBuf, Arc<u8>>> =
-    once_cell::sync::Lazy::new(Default::Default);
+static RETRY_COUNTERS: once_cell::sync::Lazy<dashmap::DashMap<PathBuf, Arc<u8>>> =
+    once_cell::sync::Lazy::new(Default::default);
 
 pub struct RetryManager;
 
@@ -76,25 +75,22 @@ pub struct DelayOutput {
 
 impl RetryManager {
     pub fn reset() {
-        let mut counters = RETRY_COUNTERS.lock().unwrap();
-        counters.clear();
+        RETRY_COUNTERS.clear();
     }
 
-    pub fn clear_counter(key: &PathBuf) {
-        let mut counters = RETRY_COUNTERS.lock().unwrap();
-        counters.remove_entry(key);
+    pub fn clear_counter(key: &Path) {
+        RETRY_COUNTERS.remove(key);
     }
 
     pub fn next_delay(key: &PathBuf) -> Option<DelayOutput> {
-        let mut counters = RETRY_COUNTERS.lock().unwrap();
         let max_retries = 3;
         let delay = 3000;
         let compute_delay = |retry: u8| (retry as u64) * delay;
-        match counters.get(key) {
+        match RETRY_COUNTERS.get(key) {
             Some(counter) => {
                 let inc = *counter.as_ref() + 1;
                 if inc <= max_retries {
-                    counters.insert(key.clone(), inc.into());
+                    RETRY_COUNTERS.insert(key.clone(), inc.into());
                     let ms = compute_delay(inc);
                     Some(DelayOutput {
                         retry: inc,
@@ -107,7 +103,7 @@ impl RetryManager {
             }
             None => {
                 let inc_init = 1;
-                counters.insert(key.clone(), inc_init.into());
+                RETRY_COUNTERS.insert(key.clone(), inc_init.into());
                 let ms = compute_delay(inc_init);
                 Some(DelayOutput {
                     retry: inc_init,

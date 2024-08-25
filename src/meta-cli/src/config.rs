@@ -8,7 +8,6 @@ use crate::fs::find_in_parents;
 use crate::utils::BasicAuth;
 use common::node::Node;
 use globset::{Glob, GlobSet, GlobSetBuilder};
-use lazy_static::lazy_static;
 use reqwest::Url;
 use std::fs::{self, File};
 use std::io;
@@ -21,10 +20,10 @@ pub const PYPROJECT_FILES: &[&str] = &["pyproject.toml"];
 pub const PIPFILE_FILES: &[&str] = &["Pipfile"];
 pub const REQUIREMENTS_FILES: &[&str] = &["requirements.txt"];
 
-lazy_static! {
-    static ref DEFAULT_NODE_CONFIG: NodeConfig = Default::default();
-    static ref DEFAULT_LOADER_CONFIG: TypegraphLoaderConfig = Default::default();
-}
+static DEFAULT_NODE_CONFIG: once_cell::sync::Lazy<NodeConfig> =
+    once_cell::sync::Lazy::new(Default::default);
+static DEFAULT_LOADER_CONFIG: once_cell::sync::Lazy<TypegraphLoaderConfig> =
+    once_cell::sync::Lazy::new(Default::default);
 
 const DEFAULT_PRISMA_MIGRATIONS_PATH: &str = "prisma-migrations";
 

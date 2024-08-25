@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { copySync, dirname, fromFileUrl, join, resolve, yaml } from "./deps.ts";
+import { copySync, dirname, fromFileUrl, join, resolve } from "./deps.ts";
 
 export const projectDir = resolve(dirname(fromFileUrl(import.meta.url)), "..");
 
@@ -34,13 +34,6 @@ interface Lockfile {
     lines: Record<string, Record<string, string>>;
     lock: Record<string, string>;
   };
-}
-
-export const lockfileUrl = resolve(projectDir, "dev/lock.yml");
-
-export async function getLockfile() {
-  const file = await Deno.readTextFile(lockfileUrl);
-  return yaml.parse(file) as Lockfile;
 }
 
 export type Cursor = {

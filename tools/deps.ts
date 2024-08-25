@@ -48,7 +48,6 @@ export {
   TextLineStream,
 } from "https://deno.land/std@0.219.0/streams/mod.ts";
 export type { WalkEntry } from "https://deno.land/std@0.219.0/fs/mod.ts";
-export * as yaml from "https://deno.land/std@0.219.0/yaml/mod.ts";
 export * as semver from "https://deno.land/std@0.219.0/semver/mod.ts";
 // https://github.com/hayd/deno-udd/pull/108
 // export { udd } from "https://deno.land/x/udd@0.8.2/mod.ts";

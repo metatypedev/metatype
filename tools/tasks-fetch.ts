@@ -10,18 +10,17 @@ export default {
     fn: ($) =>
       $`bash -sx`
         .stdinText(
-          "deno cache --import-map typegate/import_map.json " +
+          "deno cache --import-map import_map.json " +
             [
-              "typegate/src/main.ts",
-              "typegate/tests/utils/mod.ts",
+              "src/typegate/src/main.ts",
+              "tests/utils/mod.ts",
               ...($.argv[0] == "full"
                 ? [
-                  "typegate/tests/utils/*.ts",
-                  "typegate/tests/runtimes/wasm_wire/*.ts",
-                  "typegate/tests/runtimes/wasm_reflected/*.ts",
-                  "typegate/tests/runtimes/python/*.ts",
-                  "dev/deps.ts",
-                  "dev/utils.ts",
+                  "tests/utils/*.ts",
+                  "tests/runtimes/wasm_wire/*.ts",
+                  "tests/runtimes/wasm_reflected/*.ts",
+                  "tests/runtimes/python/*.ts",
+                  "tools/*.ts",
                 ]
                 : []),
             ].join(" "),

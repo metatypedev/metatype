@@ -14,7 +14,7 @@ export default {
       });
 
       const ignores = [
-        "dev/tasks-lock.ts",
+        "tools/tasks-lock.ts",
         ...(await $.workingDir.resolve(".gitignore").readText())
           .split("\n")
           .map((l) => l.trim())
@@ -28,9 +28,9 @@ export default {
         ignores,
       });
       dirty = (await copyLock($.workingDir, {
-        "dev/LICENSE-MPL-2.0.md": [
-          "typegraph/python/LICENSE.md",
-          "typegraph/deno/sdk/LICENSE.md",
+        "tools/LICENSE-MPL-2.0.md": [
+          "src/typegraph/python/LICENSE.md",
+          "src/typegraph/deno/sdk/LICENSE.md",
         ],
       })) || dirty;
 
