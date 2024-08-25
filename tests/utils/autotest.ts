@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dirname, join } from "std/path/mod.ts";
+import { dirname, join } from "@std/path";
 
-import { expandGlob } from "std/fs/expand_glob.ts";
-import * as yaml from "std/yaml/mod.ts";
+import { expandGlob } from "@std/fs/expand-glob";
+import * as yaml from "@std/yaml";
 import * as graphql from "graphql";
-import { exists } from "std/fs/exists.ts";
+import { exists } from "@std/fs/exists";
 import { dropSchemas, recreateMigrations } from "./migrations.ts";
 
 import { test } from "./test.ts";

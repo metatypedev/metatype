@@ -1,0 +1,23 @@
+{
+  "imports": {
+    "ajv": "https://esm.sh/ajv@8.12.0?pin=v131",
+    "download": "https://deno.land/x/download@v1.0.1/mod.ts",
+    "json-schema-faker": "npm:json-schema-faker@0.5.3",
+    "outdent": "https://deno.land/x/outdent@v0.8.0/mod.ts",
+    "pg": "npm:pg@8.12.0",
+    "test-utils/": "./tests/utils/",
+    "test/mock_fetch": "./utils/mock_fetch.ts"
+  },
+  "lint": {
+    "exclude": [
+      "e2e/nextjs",
+      "runtimes/temporal/worker"
+    ],
+    "rules": {
+      "include": [],
+      "exclude": [
+        "no-explicit-any"
+      ]
+    }
+  }
+}

@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "test-utils/mod.ts";
-import { join, resolve } from "std/path/mod.ts";
-import { assert, assertEquals, assertRejects } from "std/assert/mod.ts";
+import { join, resolve } from "@std/path";
+import { assert, assertEquals, assertRejects } from "@std/assert";
 import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
-import { $ } from "dax";
+import { $ } from "@david/dax";
 import { killProcess, Lines, LineWriter } from "../../utils/process.ts";
 import { workspaceDir } from "../../utils/dir.ts";
 
@@ -267,7 +267,7 @@ Meta.test("meta dev with typegate", async (t) => {
     args: [
       "dev",
       `--main-url`,
-      import.meta.resolve("../../../src/main.ts"),
+      import.meta.resolve("@metatype/typegate/main.ts"),
       `--import-map-url`,
       import.meta.resolve("../../../import_map.json"),
       `--gate=http://localhost:${port}`,

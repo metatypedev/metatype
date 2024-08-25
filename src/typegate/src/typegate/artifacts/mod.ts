@@ -1,16 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { sha256, TypegateCryptoKeys } from "@typegate/crypto.ts";
-import { getLogger } from "@typegate/log.ts";
+import { sha256, type TypegateCryptoKeys } from "../../crypto.ts";
+import { getLogger } from "../../log.ts";
 import * as jwt from "jwt";
 import { z } from "zod";
-import { dirname } from "std/path/dirname.ts";
-import { resolve } from "std/path/resolve.ts";
-import { exists } from "std/fs/exists.ts";
+import { dirname } from "@std/path/dirname";
+import { resolve } from "@std/path/resolve";
+import { exists } from "@std/fs/exists";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
-import { BaseError, ErrorKind, NotImplemented } from "@typegate/errors.ts";
+import { BaseError, ErrorKind, NotImplemented } from "../../errors.ts";
 
 class InvalidUploadToken extends BaseError {
   constructor(token: string, kind: "unknown" | "expired" = "unknown") {

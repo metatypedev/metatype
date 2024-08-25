@@ -4,12 +4,12 @@
 import { ComputeStage } from "../engine/query_engine.ts";
 import { Runtime } from "./Runtime.ts";
 import { createUrl } from "../utils.ts";
-import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
-import { encodeBase64 } from "std/encoding/base64.ts";
+import { type MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
+import { encodeBase64 } from "@std/encoding/base64";
 import { getLogger } from "../log.ts";
-import { Logger } from "std/log/logger.ts";
-import { HTTPRuntimeData } from "../typegraph/types.ts";
+import type { Logger } from "@std/log/logger";
+import type { HTTPRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
 
 const logger = getLogger(import.meta);

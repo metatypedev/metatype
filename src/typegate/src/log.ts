@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ConsoleHandler, LevelName, Logger } from "std/log/mod.ts";
-import { basename, dirname } from "std/url/mod.ts";
-import { extname } from "std/path/mod.ts";
+import { ConsoleHandler, type LevelName, Logger } from "@std/log";
+import { basename, dirname } from "@std/url";
+import { extname } from "@std/path";
 import { sharedConfig } from "./config/shared.ts";
 
 // set rust log level is not explicit set

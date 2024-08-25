@@ -8,7 +8,7 @@ import type { GraphQLRuntimeData } from "../typegraph/types.ts";
 import { Runtime } from "./Runtime.ts";
 import * as GraphQL from "graphql";
 import { Kind } from "graphql";
-import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
+import { type OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
 import { QueryRebuilder } from "./utils/graphql_forward_vars.ts";
 import { withInlinedVars } from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";

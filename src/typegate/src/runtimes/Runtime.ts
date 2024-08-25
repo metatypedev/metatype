@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../engine/query_engine.ts";
-import { equal } from "std/assert/equal.ts";
-import { Resolver } from "../types.ts";
+import type { ComputeStage } from "../engine/query_engine.ts";
+import { equal } from "@std/assert/equal";
+import type { Resolver } from "../types.ts";
 
 export abstract class Runtime {
   readonly id: string;

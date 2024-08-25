@@ -1,16 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { QueryEngine } from "../../src/engine/query_engine.ts";
-import { join } from "std/path/mod.ts";
-import { PrismaMigrate } from "../../src/runtimes/prisma/migration.ts";
+import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import { join } from "@std/path";
+import { PrismaMigrate } from "@metatype/typegate/runtimes/prisma/migration.ts";
 import * as native from "native";
-import { PrismaRuntime } from "../../src/runtimes/prisma/mod.ts";
-import * as PrismaRT from "../../src/runtimes/prisma/types.ts";
+import { PrismaRuntime } from "@metatype/typegate/runtimes/prisma/mod.ts";
+import * as PrismaRT from "@metatype/typegate/runtimes/prisma/types.ts";
 
-import { ensure } from "../../src/utils.ts";
+import { ensure } from "@metatype/typegate/utils.ts";
 import { testDir } from "./dir.ts";
-import { KnownRuntime } from "../../src/typegraph/types.ts";
+import { KnownRuntime } from "@metatype/typegate/typegraph/types.ts";
 
 type PrismaRuntimeDS = KnownRuntime & { name: "prisma" };
 

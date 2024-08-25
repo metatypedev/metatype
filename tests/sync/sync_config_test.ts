@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assert, assertEquals } from "std/assert/mod.ts";
+import { assert, assertEquals } from "@std/assert";
 import {
   defaultTypegateConfigBase,
   getTypegateConfig,
   SyncConfig,
-} from "@typegate/config.ts";
-import { ConfigError } from "../../src/config/loader.ts";
+} from "@metatype/typegate/config.ts";
+import { ConfigError } from "@metatype/typegate/config/loader.ts";
 
 function clearSyncVars() {
   for (const key of Object.keys(Deno.env.toObject())) {

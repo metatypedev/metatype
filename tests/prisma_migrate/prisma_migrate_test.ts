@@ -6,10 +6,10 @@ import {
   assertArrayIncludes,
   assertEquals,
   assertExists,
-} from "std/assert/mod.ts";
-import { join } from "std/path/mod.ts";
+} from "@std/assert";
+import { join } from "@std/path";
 import * as native from "native";
-import { nativeResult } from "../../src/utils.ts";
+import { nativeResult } from "@metatype/typegate/utils.ts";
 import { gql, Meta } from "../utils/mod.ts";
 import { dropSchemas, removeMigrations } from "../utils/migrations.ts";
 import { testDir } from "../utils/dir.ts";

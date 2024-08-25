@@ -1,15 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { QueryEngine } from "../engine/query_engine.ts";
-import { RedisConnectOptions, XIdInput } from "redis";
+import type { QueryEngine } from "../engine/query_engine.ts";
+import type { RedisConnectOptions, XIdInput } from "redis";
 import { SystemTypegraph } from "../system_typegraphs.ts";
-import { Typegate } from "./mod.ts";
+import type { Typegate } from "./mod.ts";
 import {
   isTypegraphUpToDate,
   upgradeTypegraph,
 } from "../typegraph/versions.ts";
-import { typegraphIdSchema, TypegraphStore } from "../sync/typegraph.ts";
+import { typegraphIdSchema, type TypegraphStore } from "../sync/typegraph.ts";
 import { RedisReplicatedMap } from "../sync/replicated_map.ts";
 
 export interface MessageEntry {

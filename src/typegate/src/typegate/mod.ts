@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Register, ReplicatedRegister } from "./register.ts";
+import { type Register, ReplicatedRegister } from "./register.ts";
 import * as Sentry from "sentry";
-import { RateLimiter, RedisRateLimiter } from "./rate_limiter.ts";
+import { type RateLimiter, RedisRateLimiter } from "./rate_limiter.ts";
 import { handlePlaygroundGraphQL } from "../services/playground_service.ts";
 import { ensureJWT, handleAuth } from "../services/auth/mod.ts";
 import { handleInfo } from "../services/info_service.ts";
@@ -15,15 +15,15 @@ import {
 } from "../services/responses.ts";
 import { handleRest } from "../services/rest_service.ts";
 import { QueryEngine } from "../engine/query_engine.ts";
-import { PushHandler, PushResponse } from "../typegate/hooks.ts";
+import { type PushHandler, PushResponse } from "../typegate/hooks.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../transports/graphql/typegraph.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
 import {
-  RuntimeResolver,
+  type RuntimeResolver,
   SecretManager,
   TypeGraph,
-  TypeGraphDS,
+  type TypeGraphDS,
 } from "../typegraph/mod.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
@@ -35,15 +35,15 @@ import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
 import { ArtifactService } from "../services/artifact_service.ts";
-import { ArtifactStore } from "./artifacts/mod.ts";
+import type { ArtifactStore } from "./artifacts/mod.ts";
 // TODO move from tests (MET-497)
-import { MemoryRegister } from "test-utils/memory_register.ts";
-import { NoLimiter } from "test-utils/no_limiter.ts";
+import { MemoryRegister } from "./memory_register.ts";
+import { NoLimiter } from "./no_limiter.ts";
 import { TypegraphStore } from "../sync/typegraph.ts";
 import { createLocalArtifactStore } from "./artifacts/local.ts";
 import { createSharedArtifactStore } from "./artifacts/shared.ts";
 import { AsyncDisposableStack } from "dispose";
-import { globalConfig, TypegateConfig } from "../config.ts";
+import { globalConfig, type TypegateConfig } from "../config.ts";
 import { TypegateCryptoKeys } from "../crypto.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);

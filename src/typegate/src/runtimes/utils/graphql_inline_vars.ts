@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { JSONValue } from "../../utils.ts";
+import type { JSONValue } from "../../utils.ts";
 import type { FromVars } from "../graphql.ts";
-import { filterValues } from "std/collections/filter_values.ts";
+import { filterValues } from "@std/collections/filter-values";
 import {
-  ComputeArg,
+  type ComputeArg,
   DEFAULT_COMPUTE_PARAMS,
 } from "../../engine/planner/args.ts";
-import { mapValues } from "std/collections/map_values.ts";
+import { mapValues } from "@std/collections/map-values";
 import { isNameContinue, isNameStart } from "graphql/characters";
 
 export function stringifyQL(

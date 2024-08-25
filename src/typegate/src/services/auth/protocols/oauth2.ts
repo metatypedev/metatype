@@ -1,19 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypegateConfigBase } from "../../../config.ts";
-import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
-import { randomUUID, TypegateCryptoKeys } from "../../../crypto.ts";
-import { AdditionalAuthParams, JWTClaims } from "../mod.ts";
+import type { TypegateConfigBase } from "../../../config.ts";
+import { OAuth2Client, type OAuth2ClientConfig, type Tokens } from "oauth2_client";
+import { randomUUID, type TypegateCryptoKeys } from "../../../crypto.ts";
+import type { AdditionalAuthParams, JWTClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";
-import { SecretManager } from "../../../typegraph/mod.ts";
+import type { SecretManager } from "../../../typegraph/mod.ts";
 import {
   clearCookie,
   getEncryptedCookie,
   setEncryptedSessionCookie,
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
-import { Auth } from "../../../typegraph/types.ts";
+import type { Auth } from "../../../typegraph/types.ts";
 import { Type } from "../../../typegraph/type_node.ts";
 import { ComputeStage } from "../../../engine/query_engine.ts";
 import * as ast from "graphql/ast";
@@ -21,7 +21,7 @@ import {
   generateValidator,
   generateWeakValidator,
 } from "../../../engine/typecheck/input.ts";
-import { TokenMiddlewareOutput } from "./protocol.ts";
+import type { TokenMiddlewareOutput } from "./protocol.ts";
 
 const logger = getLogger(import.meta);
 

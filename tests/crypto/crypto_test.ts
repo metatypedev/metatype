@@ -4,9 +4,9 @@
 import {
   defaultTypegateConfigBase,
   getTypegateConfig,
-} from "../../src/config.ts";
-import { TypegateCryptoKeys, unsafeExtractJWT } from "../../src/crypto.ts";
-import { assertEquals } from "std/assert/mod.ts";
+} from "@metatype/typegate/config.ts";
+import { TypegateCryptoKeys, unsafeExtractJWT } from "@metatype/typegate/crypto.ts";
+import { assertEquals } from "@std/assert";
 
 const gateConfig = getTypegateConfig({
   base: defaultTypegateConfigBase,

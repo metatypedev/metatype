@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dirname, fromFileUrl } from "std/path/mod.ts";
+import { dirname, fromFileUrl } from "@std/path";
 import { shell, ShellOptions, ShellOutput } from "./shell.ts";
 import { metaCli } from "./meta.ts";
 

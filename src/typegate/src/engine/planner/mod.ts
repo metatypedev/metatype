@@ -1,15 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import * as ast from "graphql/ast";
-import { FieldNode, Kind } from "graphql";
+import type * as ast from "graphql/ast";
+import { type FieldNode, Kind } from "graphql";
 import { ComputeStage } from "../query_engine.ts";
 import {
-  FragmentDefs,
+  type FragmentDefs,
   resolveSelection,
 } from "../../transports/graphql/graphql.ts";
 import { TypeGraph } from "../../typegraph/mod.ts";
-import { ComputeStageProps } from "../../types.ts";
+import type { ComputeStageProps } from "../../types.ts";
 import { ensureNonNullable, getReverseMapNameToQuery } from "../../utils.ts";
 import {
   getWrappedType,
@@ -17,11 +17,14 @@ import {
   Type,
 } from "../../typegraph/type_node.ts";
 import { closestWord, unparse } from "../../utils.ts";
-import { collectArgs, ComputeArg } from "./args.ts";
-import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
+import { collectArgs, type ComputeArg } from "./args.ts";
+import {
+  type OperationPolicies,
+  OperationPoliciesBuilder,
+} from "./policies.ts";
 import { getLogger } from "../../log.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
-import { mapValues } from "std/collections/map_values.ts";
+import { mapValues } from "@std/collections/map-values";
 import { DependencyResolver } from "./dependency_resolver.ts";
 
 const logger = getLogger(import.meta);

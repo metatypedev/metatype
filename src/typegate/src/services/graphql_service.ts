@@ -3,16 +3,16 @@
 
 import { getLogger } from "../log.ts";
 import { parse } from "graphql";
-import { Context, Info } from "../types.ts";
-import { RateLimit } from "../typegate/rate_limiter.ts";
+import type { Context, Info } from "../types.ts";
+import type { RateLimit } from "../typegate/rate_limiter.ts";
 import {
-  Operations,
+  type Operations,
   parseRequest,
 } from "../transports/graphql/request_parser.ts";
-import { findOperation, FragmentDefs } from "../transports/graphql/graphql.ts";
+import { findOperation, type FragmentDefs } from "../transports/graphql/graphql.ts";
 import { forceAnyToOption } from "../utils.ts";
-import { QueryEngine } from "../engine/query_engine.ts";
-import * as ast from "graphql/ast";
+import type { QueryEngine } from "../engine/query_engine.ts";
+import type * as ast from "graphql/ast";
 import { BadContext, ResolverError } from "../errors.ts";
 import { badRequest, jsonError, jsonOk } from "./responses.ts";
 import { BaseError, ErrorKind } from "../errors.ts";

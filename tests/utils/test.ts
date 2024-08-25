@@ -1,22 +1,22 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { SystemTypegraph } from "../../src/system_typegraphs.ts";
-import { dirname, extname, join } from "std/path/mod.ts";
+import { SystemTypegraph } from "@metatype/typegate/system_typegraphs.ts";
+import { dirname, extname, join } from "@std/path";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
-import { assertSnapshot } from "std/testing/snapshot.ts";
-import { type SnapshotOptions } from "std/testing/snapshot.ts";
-import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
-import { QueryEngine } from "../../src/engine/query_engine.ts";
-import { Typegate } from "../../src/typegate/mod.ts";
+import { assertSnapshot } from "@std/testing/snapshot";
+import { type SnapshotOptions } from "@std/testing/snapshot";
+import { assertEquals, assertNotEquals } from "@std/assert";
+import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import { Typegate } from "@metatype/typegate/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
-import { TypeGraph } from "../../src/typegraph/mod.ts";
+import { TypeGraph } from "@metatype/typegate/typegraph/mod.ts";
 import {
   defaultTypegateConfigBase,
   getTypegateConfig,
   SyncConfig,
-} from "../../src/config.ts";
+} from "@metatype/typegate/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
 

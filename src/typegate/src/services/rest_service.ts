@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { QueryEngine } from "../engine/query_engine.ts";
+import type { QueryEngine } from "../engine/query_engine.ts";
 import { BadContext, ResolverError } from "../errors.ts";
 import { getLogger } from "../log.ts";
-import { RateLimit } from "../typegate/rate_limiter.ts";
-import { Context, Info } from "../types.ts";
+import type { RateLimit } from "../typegate/rate_limiter.ts";
+import type { Context, Info } from "../types.ts";
 import { handlePlaygroundRestAPI } from "./playground_service.ts";
 import { globalConfig } from "../config.ts";
 import { BaseError, ErrorKind } from "../errors.ts";

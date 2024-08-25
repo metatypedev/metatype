@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { SyncConfig } from "@typegate/config.ts";
+import { SyncConfig } from "@metatype/typegate/config.ts";
 import { createBucket, tryDeleteBucket } from "test-utils/s3.ts";
 import { connect } from "redis";
 import { S3Client, S3ClientConfig } from "aws-sdk/client-s3";

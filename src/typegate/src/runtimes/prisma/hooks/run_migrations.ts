@@ -1,17 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import {
+import type {
   PushFailure,
   PushHandler,
   PushResponse,
 } from "../../../typegate/hooks.ts";
 import { makeDatasource } from "../prisma.ts";
-import { PrismaRT } from "../mod.ts";
+import type { PrismaRT } from "../mod.ts";
 import * as native from "native";
 import { nativeResult, pluralSuffix } from "../../../utils.ts";
-import { MigrationOptions } from "../../../typegraph/types.ts";
-import { SecretManager } from "../../../typegraph/mod.ts";
+import type { MigrationOptions } from "../../../typegraph/types.ts";
+import type { SecretManager } from "../../../typegraph/mod.ts";
 import type { ParsedDiff } from "../../../../engine/runtime.js";
 
 export class MigrationFailure extends Error {

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypegateConfig } from "../../src/config.ts";
+import { TypegateConfig } from "@metatype/typegate/config.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
 async function genSecretKey(

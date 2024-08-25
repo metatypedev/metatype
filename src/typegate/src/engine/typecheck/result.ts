@@ -1,30 +1,30 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { FragmentDefs } from "../../transports/graphql/graphql.ts";
-import {
+import type { FragmentDefs } from "../../transports/graphql/graphql.ts";
+import type {
   InlineFragmentNode,
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
 } from "graphql/ast";
-import { FieldNode, Kind } from "graphql";
+import { type FieldNode, Kind } from "graphql";
 import {
-  EitherNode,
+  type EitherNode,
   isScalar,
-  ObjectNode,
+  type ObjectNode,
   Type,
-  UnionNode,
+  type UnionNode,
 } from "../../typegraph/type_node.ts";
-import { TypeGraph } from "../../typegraph/mod.ts";
+import type { TypeGraph } from "../../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { getChildTypes } from "../../typegraph/visitor.ts";
-import { mapValues } from "std/collections/map_values.ts";
+import { mapValues } from "@std/collections/map-values";
 import {
-  ErrorEntry,
+  type ErrorEntry,
   validationContext,
-  Validator,
-  ValidatorFn,
+  type Validator,
+  type ValidatorFn,
 } from "./common.ts";
 
 export function generateValidator(

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import * as ast from "graphql/ast";
+import type * as ast from "graphql/ast";
 
 export const gq = async (
   url: string,

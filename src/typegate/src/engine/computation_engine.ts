@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { distinct } from "std/collections/distinct.ts";
-import { ComputeStage } from "./query_engine.ts";
-import { OperationPolicies } from "./planner/policies.ts";
-import { RateLimit } from "../typegate/rate_limiter.ts";
-import { Context, Info, Parents } from "../types.ts";
-import { JSONValue } from "../utils.ts";
+import { distinct } from "@std/collections/distinct";
+import type { ComputeStage } from "./query_engine.ts";
+import type { OperationPolicies } from "./planner/policies.ts";
+import type { RateLimit } from "../typegate/rate_limiter.ts";
+import type { Context, Info, Parents } from "../types.ts";
+import type { JSONValue } from "../utils.ts";
 import { BaseError, ErrorKind } from "../errors.ts";
 
 class InvalidPlan extends BaseError {

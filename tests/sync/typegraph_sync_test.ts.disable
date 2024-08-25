@@ -5,7 +5,7 @@ import { Meta } from "test-utils/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { assertEquals } from "std/assert/mod.ts";
-import { Typegate } from "../../src/typegate/mod.ts";
+import { Typegate } from "@metatype/typegate/typegate/mod.ts";
 import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
 import { lazyAssert } from "test-utils/assert.ts";
 

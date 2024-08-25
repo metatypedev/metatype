@@ -22,7 +22,7 @@
  * with the -q flag.
  */
 
-import { CommandChild } from "jsr:@david/dax@0.41.0";
+import type { CommandChild } from "@david/dax";
 import {
   $,
   ctrlc,
@@ -40,7 +40,7 @@ import { projectDir } from "./utils.ts";
 
 const wd = $.path(projectDir);
 
-const profile: string = "debug";
+const profile = "debug";
 
 async function listTestFiles(filesArg: string[]): Promise<string[]> {
   if (filesArg.length > 0) {
@@ -50,7 +50,7 @@ async function listTestFiles(filesArg: string[]): Promise<string[]> {
         let path = wd.resolve(inPath);
         let stat = await path.stat();
         if (!stat) {
-          path = wd.resolve("src/typegate/tests", inPath);
+          path = wd.resolve("tests", inPath);
           stat = await path.stat();
           if (!stat) {
             throw new Error(`unable to resolve test files under "${inPath}"`);
@@ -82,7 +82,7 @@ async function listTestFiles(filesArg: string[]): Promise<string[]> {
     return (
       await Array.fromAsync(
         wd
-          .join("src/typegate/tests")
+          .join("tests")
           .expandGlob("**/*_test.ts", { globstar: true }),
       )
     ).map((ent) => ent.path.toString());
@@ -103,7 +103,7 @@ interface Run {
 }
 
 function applyFilter(files: string[], filter: string | undefined): string[] {
-  const prefixLength = `${projectDir}/src/typegate/tests/`.length;
+  const prefixLength = `${projectDir}/tests/`.length;
   const fuse = new Fuse(
     files.map((f) => f.slice(prefixLength)),
     {
@@ -554,7 +554,7 @@ class TestThread {
       const testFile = this.queue.shift();
       if (!testFile) break;
 
-      const pathPrefix = `${projectDir}/src/typegate/tests/`;
+      const pathPrefix = `${projectDir}/tests/`;
       const relativePath = testFile.slice(pathPrefix.length);
 
       this.logger.threadState(this.threadId, {

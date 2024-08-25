@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.ts";
-import * as path from "std/path/mod.ts";
+import * as path from "@std/path";
 
 const cwd = Deno.args[0];
 const PORT = Deno.args[1];

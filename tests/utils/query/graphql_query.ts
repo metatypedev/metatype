@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { QueryEngine } from "@typegate/engine/query_engine.ts";
+import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { FileExtractor } from "./file_extractor.ts";
 import {
   Context,
@@ -11,8 +11,8 @@ import {
   Query,
   Variables,
 } from "./mod.ts";
-import { findOperation } from "@typegate/transports/graphql/graphql.ts";
-import { TypegateCryptoKeys } from "@typegate/crypto.ts";
+import { findOperation } from "@metatype/typegate/transports/graphql/graphql.ts";
+import { TypegateCryptoKeys } from "@metatype/typegate/crypto.ts";
 import { parse } from "graphql";
 import { None } from "monads";
 import { MetaTest } from "../test.ts";

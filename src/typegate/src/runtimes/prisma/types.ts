@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { RuntimeDataBase } from "../../types.ts";
-import { PrismaRuntimeData, TGRuntime } from "../../typegraph/types.ts";
+import type { RuntimeDataBase } from "../../types.ts";
+import type { PrismaRuntimeData, TGRuntime } from "../../typegraph/types.ts";
 
 // from the CLI
 // export type DataRaw = Omit<PrismaRuntimeData, "datamodel">;

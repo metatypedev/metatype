@@ -1,15 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { basename } from "std/url/mod.ts";
-import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
+import { basename } from "@std/url";
+import { fromFileUrl, toFileUrl } from "@std/path";
 
-import { Register } from "./typegate/register.ts";
+import type { Register } from "./typegate/register.ts";
 import { PrismaMigrationRuntime } from "./runtimes/prisma/mod.ts";
-import { RuntimeResolver, TypeGraph } from "./typegraph/mod.ts";
+import { type RuntimeResolver, TypeGraph } from "./typegraph/mod.ts";
 import { getLogger } from "./log.ts";
 import { TypeGateRuntime } from "./runtimes/typegate.ts";
-import { Typegate } from "./typegate/mod.ts";
+import type { Typegate } from "./typegate/mod.ts";
 
 const logger = getLogger();
 

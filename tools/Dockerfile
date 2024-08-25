@@ -127,7 +127,7 @@ COPY --from=builder /app/typegate-bin /bin/typegate
 COPY --from=builder /app/deno.jsonc /app/import_map.json ./
 COPY --from=builder /app/src/typegate/engine/*.js /app/src/typegate/engine/*.ts ./src/typegate/engine/
 COPY --from=builder /app/src/typegate/src ./src/typegate/src/
-COPY --from=builder /app/src/typegate/tests ./src/typegate/tests/
+COPY --from=builder /app/tests ./tests/
 COPY tools/LICENSE-Elastic-2.0.md LICENSE.md
 
 # writeable
@@ -151,7 +151,7 @@ COPY --from=deno-bin --chown=nonroot:nonroot /usr/bin/deno /bin/deno
 RUN /bin/deno check \
     --config /app/deno.jsonc \
     /app/src/typegate/src/**/*.ts \
-    /app/src/typegate/tests/utils/**/*.ts \
+    /app/tests/utils/**/*.ts \
     && rm /bin/deno
 
 #

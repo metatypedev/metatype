@@ -1,12 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../query_engine.ts";
-import { FieldNode, Kind, SelectionSetNode } from "graphql";
-import * as ast from "graphql/ast";
-import { distinct } from "std/collections/distinct.ts";
-import { PossibleSelectionFields, TypeGraph } from "../../typegraph/mod.ts";
-import { ObjectNode } from "../../typegraph/type_node.ts";
+import type { ComputeStage } from "../query_engine.ts";
+import { type FieldNode, Kind, type SelectionSetNode } from "graphql";
+import type * as ast from "graphql/ast";
+import { distinct } from "@std/collections/distinct";
+import type {
+  PossibleSelectionFields,
+  TypeGraph,
+} from "../../typegraph/mod.ts";
+import type { ObjectNode } from "../../typegraph/type_node.ts";
 import { ensure } from "../../utils.ts";
 import { getChildId, getChildNode, startsWith } from "../stage_id.ts";
 

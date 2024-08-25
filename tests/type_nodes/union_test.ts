@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { JSONValue } from "../../src/utils.ts";
+import { JSONValue } from "@metatype/typegate/utils.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test(

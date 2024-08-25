@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { RouteParams } from "./mod.ts";
+import type { RouteParams } from "./mod.ts";
 
 export function badRequest(message: string): Response {
   return new Response(message, {

@@ -1,15 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
+import type { TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
 import {
-  EitherNode,
+  type EitherNode,
   isObject,
   Type,
-  TypeNode,
-  UnionNode,
+  type TypeNode,
+  type UnionNode,
 } from "./type_node.ts";
-import { TypeIdx } from "../types.ts";
+import type { TypeIdx } from "../types.ts";
 
 export function isInjected(tg: TypeGraphDS, t: TypeNode): boolean {
   return (

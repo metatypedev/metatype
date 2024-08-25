@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { getLogger } from "../../../log.ts";
-import { Answer, Message, TaskData } from "./types.ts";
+import type { Answer, Message, TaskData } from "./types.ts";
 import { maxi32 } from "../../../utils.ts";
-import { TypegateConfigBase } from "../../../config/types.ts";
+import type { TypegateConfigBase } from "../../../config/types.ts";
 
 const logger = getLogger(import.meta);
 

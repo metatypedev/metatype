@@ -1,4 +1,13 @@
 {
+  "workspace": {
+    "members": [
+      "./src/typegate/",
+      "./tests",
+      "./tools",
+      "./src/typegraph/deno",
+      "./src/typegraph/node"
+    ]
+  },
   "compilerOptions": {
     "allowJs": false,
     "strict": true,
@@ -14,5 +23,41 @@
   },
   "nodeModulesDir": false,
   "lock": "deno.lock",
-  "importMap": "import_map.json"
+  "lint": {
+    "rules": {
+      "include": [
+        "no-sync-fn-in-async-fn",
+        "no-external-import",
+        "no-inferrable-types",
+        "no-self-compare",
+        "no-throw-literal"
+        // "verbatim-module-syntax"
+        // "no-await-in-loop"
+        // "ban-untagged-todo"
+      ],
+      "exclude": []
+    }
+  },
+  "imports": {
+    "@metatype/typegate/": "./src/typegate/src/",
+    "@david/dax": "jsr:@david/dax@0.41.0",
+    "@std/archive": "jsr:@std/archive@^0.225.0",
+    "@std/assert": "jsr:@std/assert@^1.0.2",
+    "@std/async": "jsr:@std/async@^1.0.3",
+    "@std/collections": "jsr:@std/collections@^1.0.5",
+    "@std/encoding": "jsr:@std/encoding@^1.0.2",
+    "@std/fs": "jsr:@std/fs@^1.0.1",
+    "@std/io": "jsr:@std/io@^0.224.5",
+    "@std/path": "jsr:@std/path@^1.0.2",
+    "@std/uuid": "jsr:@std/uuid@^1.0.1",
+    "@std/streams": "jsr:@std/streams@^1.0.2",
+    "aws-sdk/client-s3": "https://esm.sh/@aws-sdk/client-s3@3.335.0?pin=v131",
+    "aws-sdk/s3-request-presigner": "https://esm.sh/@aws-sdk/s3-request-presigner@3.335.0?pin=v131",
+    "dispose": "https://deno.land/x/dispose@1.1.0/mod.ts",
+    "graphql": "npm:graphql@16.8.1",
+    "monads": "https://deno.land/x/monads@v0.5.10/mod.ts",
+    "native": "./src/typegate/engine/bindings.ts",
+    "redis": "https://deno.land/x/redis@v0.32.1/mod.ts",
+    "zod": "https://deno.land/x/zod@v3.22.2/mod.ts"
+  }
 }

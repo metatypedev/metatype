@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { QueryFn, QueryFunction } from "../../libs/jsonpath.ts";
-import { TypeGraph } from "../../typegraph/mod.ts";
+import { type QueryFn, QueryFunction } from "../../libs/jsonpath.ts";
+import type { TypeGraph } from "../../typegraph/mod.ts";
 import { Type } from "../../typegraph/type_node.ts";
-import { ParameterTransformNode } from "../../typegraph/types.ts";
-import { ValidationContext, validationContext } from "../typecheck/common.ts";
+import type { ParameterTransformNode } from "../../typegraph/types.ts";
+import { type ValidationContext, validationContext } from "../typecheck/common.ts";
 import { generateListValidator } from "../typecheck/inline_validators/list.ts";
 import { generateNumberValidator } from "../typecheck/inline_validators/number.ts";
 import {

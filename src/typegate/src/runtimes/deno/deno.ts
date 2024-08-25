@@ -1,16 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "../../engine/query_engine.ts";
-import { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
-import { Typegate } from "../../typegate/mod.ts";
+import type { ComputeStage } from "../../engine/query_engine.ts";
+import type { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
+import type { Typegate } from "../../typegate/mod.ts";
 import { Runtime } from "../Runtime.ts";
-import { Resolver, RuntimeInitParams } from "../../types.ts";
-import { DenoRuntimeData } from "../../typegraph/types.ts";
+import type { Resolver, RuntimeInitParams } from "../../types.ts";
+import type { DenoRuntimeData } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
-import { Task } from "./shared_types.ts";
+import type { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
 import { getLogger } from "../../log.ts";

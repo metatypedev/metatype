@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import * as ast from "graphql/ast";
+import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { TypeGraph } from "../../typegraph/mod.ts";
-import {
+import type { TypeGraph } from "../../typegraph/mod.ts";
+import type {
   Context,
   Parents,
   PolicyIdx,
@@ -12,19 +12,19 @@ import {
   TypeIdx,
   Variables,
 } from "../../types.ts";
-import { JSONValue } from "../../utils.ts";
+import type { JSONValue } from "../../utils.ts";
 import {
   getVariantTypesIndexes,
-  ListNode,
-  ObjectNode,
+  type ListNode,
+  type ObjectNode,
   Type,
-  TypeNode,
-  UnionNode,
+  type TypeNode,
+  type UnionNode,
 } from "../../typegraph/type_node.ts";
-import { mapValues } from "std/collections/map_values.ts";
-import { filterValues } from "std/collections/filter_values.ts";
+import { mapValues } from "@std/collections/map-values";
+import { filterValues } from "@std/collections/filter-values";
 
-import {
+import type {
   EffectType,
   EitherNode,
   FunctionParameterTransform,

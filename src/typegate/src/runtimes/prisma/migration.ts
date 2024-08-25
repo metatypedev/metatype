@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "../Runtime.ts";
-import { Resolver, ResolverArgs } from "../../types.ts";
-import { ComputeStage, QueryEngine } from "../../engine/query_engine.ts";
-import { Register } from "../../typegate/register.ts";
+import type { Resolver, ResolverArgs } from "../../types.ts";
+import { ComputeStage, type QueryEngine } from "../../engine/query_engine.ts";
+import type { Register } from "../../typegate/register.ts";
 import * as native from "native";
 import { nativeResult } from "../../utils.ts";
 import { makeDatasource } from "./prisma.ts";
 import type { PrismaRT } from "./mod.ts";
-import { getLogger } from "@typegate/log.ts";
+import { getLogger } from "../../log.ts";
 
 const logger = getLogger(import.meta);
 

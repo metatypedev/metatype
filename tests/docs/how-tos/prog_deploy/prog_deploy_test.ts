@@ -3,8 +3,8 @@
 
 import { Meta } from "test-utils/mod.ts";
 import { MetaTest } from "../../../utils/test.ts";
-import * as path from "std/path/mod.ts";
-import { assertEquals, assertExists } from "std/assert/mod.ts";
+import * as path from "@std/path";
+import { assertEquals, assertExists } from "@std/assert";
 
 Meta.test(
   {

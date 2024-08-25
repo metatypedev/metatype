@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { MessageEntry, Migrations } from "../typegate/register.ts";
-import { SecretManager, TypeGraphDS } from "../typegraph/mod.ts";
+import type { MessageEntry, Migrations } from "../typegate/register.ts";
+import type { SecretManager, TypeGraphDS } from "../typegraph/mod.ts";
 
 const Message = {
   INFO: "info",

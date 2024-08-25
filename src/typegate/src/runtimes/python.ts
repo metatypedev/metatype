@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { registerRuntime } from "./mod.ts";
-import { getLogger, Logger } from "../log.ts";
+import { getLogger, type Logger } from "../log.ts";
 import { Runtime } from "./Runtime.ts";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
-import { ComputeStage } from "../engine/query_engine.ts";
-import { Materializer } from "../typegraph/types.ts";
+import type { ComputeStage } from "../engine/query_engine.ts";
+import type { Materializer } from "../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { WitWireMessenger } from "./wit_wire/mod.ts";
-import { WitWireMatInfo } from "../../engine/runtime.js";
+import type { WitWireMatInfo } from "../../engine/runtime.js";
 import { sha256 } from "../crypto.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 

@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { expandGlob } from "std/fs/expand_glob.ts";
-import { basename, dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { expandGlob } from "@std/fs/expand-glob";
+import { basename, dirname, fromFileUrl, join } from "@std/path";
 import { Meta } from "../../utils/mod.ts";
 import { MetaTest } from "../../utils/test.ts";
-import { assertEquals } from "std/assert/assert_equals.ts";
-import { TypeGraphDS } from "../../../src/typegraph/mod.ts";
+import { assertEquals } from "@std/assert/assert-equals";
+import { TypeGraphDS } from "@metatype/typegate/typegraph/mod.ts";
 
 export const thisDir = dirname(fromFileUrl(import.meta.url));
 const typegraphsDir = "examples/typegraphs";

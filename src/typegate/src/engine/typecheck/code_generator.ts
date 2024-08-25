@@ -2,19 +2,19 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import {
-  BooleanNode,
-  FileNode,
-  FloatNode,
-  IntegerNode,
-  ListNode,
-  ObjectNode,
-  OptionalNode,
-  StringNode,
+  type BooleanNode,
+  type FileNode,
+  type FloatNode,
+  type IntegerNode,
+  type ListNode,
+  type ObjectNode,
+  type OptionalNode,
+  type StringNode,
   Type,
-  TypeNode,
-  UnionNode,
+  type TypeNode,
+  type UnionNode,
 } from "../../typegraph/type_node.ts";
-import { EitherNode } from "../../typegraph/types.ts";
+import type { EitherNode } from "../../typegraph/types.ts";
 
 export class CodeGenerator {
   lines: string[] = [];

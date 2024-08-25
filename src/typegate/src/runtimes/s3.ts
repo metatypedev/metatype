@@ -2,25 +2,25 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine/query_engine.ts";
-import { RuntimeInitParams } from "../types.ts";
+import type { ComputeStage } from "../engine/query_engine.ts";
+import type { RuntimeInitParams } from "../types.ts";
 // import { iterParentStages, JSONValue } from "../utils.ts";
 import {
   GetObjectCommand,
-  GetObjectCommandInput,
+  type GetObjectCommandInput,
   ListObjectsCommand,
   PutObjectCommand,
-  PutObjectCommandInput,
+  type PutObjectCommandInput,
   S3Client,
 } from "aws-sdk/client-s3";
 import { getSignedUrl } from "aws-sdk/s3-request-presigner";
-import {
+import type {
   Materializer,
   S3Materializer,
   S3RuntimeData,
 } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
-import { getLogger, Logger } from "../log.ts";
+import { getLogger, type Logger } from "../log.ts";
 
 const logger = getLogger(import.meta);
 

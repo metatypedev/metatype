@@ -3,11 +3,11 @@
 
 import { registerRuntime } from "./mod.ts";
 import { Runtime } from "./Runtime.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
-import { ComputeStage } from "../engine/query_engine.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
+import type { ComputeStage } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
-import { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
-import { getLogger, Logger } from "../log.ts";
+import type { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
+import { getLogger, type Logger } from "../log.ts";
 import { WitWireMessenger } from "./wit_wire/mod.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 

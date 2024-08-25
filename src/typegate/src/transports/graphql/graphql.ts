@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import * as ast from "graphql/ast";
+import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { None, Option, Some } from "monads";
+import { None, type Option, Some } from "monads";
 import { forceOptionToValue } from "../../utils.ts";
 
 export type FragmentDefs = Record<string, ast.FragmentDefinitionNode>;

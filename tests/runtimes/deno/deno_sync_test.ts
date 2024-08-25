@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta, sleep } from "../../utils/mod.ts";
-import * as path from "std/path/mod.ts";
+import * as path from "@std/path";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
 
 const syncConfig = {
@@ -317,7 +317,7 @@ Meta.test(
   },
   async (t) => {
     const denoScript = path.join(
-      "typegate/tests/runtimes/deno",
+      "tests/runtimes/deno",
       "reload",
       "template.ts",
     );

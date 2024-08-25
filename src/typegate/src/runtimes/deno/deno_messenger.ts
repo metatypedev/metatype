@@ -3,9 +3,9 @@
 
 import * as Sentry from "sentry";
 import { envSharedWithWorkers } from "../../config/shared.ts";
-import { Task } from "./shared_types.ts";
+import type { Task } from "./shared_types.ts";
 import {
-  AsyncMessengerConfig,
+  type AsyncMessengerConfig,
   LazyAsyncMessenger,
 } from "../patterns/messenger/lazy_async_messenger.ts";
 

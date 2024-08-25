@@ -15,8 +15,9 @@
  */
 
 import { cyan, green, parseArgs } from "./deps.ts";
-import { TypeGraphDS } from "../typegate/src/typegraph/mod.ts";
-import { visitType } from "../typegate/src/typegraph/visitor.ts";
+// FIXME: import from @metatype/typegate
+import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
+import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
 import { projectDir } from "./utils.ts";
 
 export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";
-import { TypeGraph } from "../../typegraph/mod.ts";
-import {
+import type { TypeGraph } from "../../typegraph/mod.ts";
+import type {
   Context,
   Info,
   PolicyIdx,
@@ -12,11 +12,11 @@ import {
   StageId,
   TypeIdx,
 } from "../../types.ts";
-import { EffectType, PolicyIndices } from "../../typegraph/types.ts";
+import type { EffectType, PolicyIndices } from "../../typegraph/types.ts";
 import { ensure } from "../../utils.ts";
 import { getLogger } from "../../log.ts";
 import { Type } from "../../typegraph/type_node.ts";
-import { ArgPolicies } from "./args.ts";
+import type { ArgPolicies } from "./args.ts";
 import { BadContext } from "../../errors.ts";
 
 export interface FunctionSubtreeData {

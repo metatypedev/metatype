@@ -4,13 +4,13 @@
 import { registerRuntime } from "./mod.ts";
 import { Runtime } from "./Runtime.ts";
 import * as native from "native";
-import { Resolver, RuntimeInitParams } from "../types.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult } from "../utils.ts";
-import { ComputeStage } from "../engine/query_engine.ts";
+import type { ComputeStage } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
-import { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
-import { Typegate } from "../typegate/mod.ts";
-import { getLogger, Logger } from "../log.ts";
+import type { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
+import type { Typegate } from "../typegate/mod.ts";
+import { getLogger, type Logger } from "../log.ts";
 
 const logger = getLogger(import.meta);
 

@@ -5,6 +5,7 @@
 
 import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+// deno-lint-ignore no-external-import
 import * as path from "node:path";
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.ts";
 

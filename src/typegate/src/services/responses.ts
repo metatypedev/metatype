@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { JSONValue } from "../utils.ts";
+import type { JSONValue } from "../utils.ts";
 import { BaseError, ErrorKind } from "../errors.ts";
 
 export const jsonOk = (data: JSONValue, headers: Headers) => {

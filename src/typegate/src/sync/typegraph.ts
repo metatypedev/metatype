@@ -1,17 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { SecretManager, TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
+import { SecretManager, TypeGraph, type TypeGraphDS } from "../typegraph/mod.ts";
 import {
   GetObjectCommand,
   PutObjectCommand,
-  PutObjectCommandInput,
+  type PutObjectCommandInput,
   S3Client,
 } from "aws-sdk/client-s3";
-import { SyncConfig } from "../config.ts";
-import { TypegateCryptoKeys } from "../crypto.ts";
+import type { SyncConfig } from "../config.ts";
+import type { TypegateCryptoKeys } from "../crypto.ts";
 
-import { encodeHex } from "std/encoding/hex.ts";
+import { encodeHex } from "@std/encoding/hex";
 import { z } from "zod";
 
 export const typegraphIdSchema = z.object({

@@ -1,12 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { connect, Redis, RedisConnectOptions } from "redis";
-import {
-  Deferred,
-  deferred,
-} from "https://deno.land/std@0.208.0/async/deferred.ts";
-import { QueryEngine } from "../engine/query_engine.ts";
+import { connect, type Redis, type RedisConnectOptions } from "redis";
+import { type Deferred, deferred } from "@std/async/delay";
+import type { QueryEngine } from "../engine/query_engine.ts";
 
 // keys: tokens, latest
 // args: n

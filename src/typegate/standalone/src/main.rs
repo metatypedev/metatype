@@ -48,19 +48,19 @@ fn main_main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>
     let workspace_dir = Path::new(location_macros::workspace_dir!());
     let main_url = config.main_url.unwrap_or_else(|| {
         workspace_dir
-            .join("typegate/src/main.ts")
+            .join("src/typegate/src/main.ts")
             .to_string_lossy()
             .into()
     });
-    let import_map_url = config.import_map_url.unwrap_or_else(|| {
+    let config_url = config.deno_config_url.unwrap_or_else(|| {
         workspace_dir
-            .join("typegate/import_map.json")
+            .join("src/typegate/deno.jsonc")
             .to_string_lossy()
             .into()
     });
     runtime.block_on(typegate_engine::launch_typegate_deno(
         typegate_engine::resolve_url_or_path(&main_url, workspace_dir)?,
-        Some(import_map_url),
+        Some(config_url),
     ))?;
 
     Ok(())

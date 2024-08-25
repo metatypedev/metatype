@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { BooleanNode } from "../../../typegraph/types.ts";
+import type { BooleanNode } from "../../../typegraph/types.ts";
 import { check } from "./common.ts";
 
 export function generateBooleanValidator(

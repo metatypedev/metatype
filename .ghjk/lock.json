@@ -946,13 +946,18 @@
             "test-e2e": {
               "ty": "denoFile@v1",
               "key": "test-e2e",
-              "desc": "Shorthand for `dev/test.ts`",
+              "desc": "Shorthand for `tools/test.ts`",
               "envKey": "bciqeobre32n4w56valwmxn5jntfwtbcpturauzq2mteegbcikftwq2q"
             },
             "lock-sed": {
               "ty": "denoFile@v1",
               "key": "lock-sed",
               "desc": "Update versions",
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
+            },
+            "lint-deno": {
+              "ty": "denoFile@v1",
+              "key": "lint-deno",
               "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "lint-udeps": {
@@ -1123,6 +1128,7 @@
             "test-website",
             "test-e2e",
             "lock-sed",
+            "lint-deno",
             "lint-udeps",
             "install-wasi-adapter",
             "install-lsp",

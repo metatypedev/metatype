@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { z } from "zod";
+import type { z } from "zod";
 
-import { parse } from "std/flags/mod.ts";
-import { mapKeys } from "std/collections/map_keys.ts";
-import { filterKeys } from "std/collections/filter_keys.ts";
+import { parse } from "@std/flags";
+import { mapKeys } from "@std/collections/map-keys";
+import { filterKeys } from "@std/collections/filter-keys";
 import { configOrExit, configOrThrow } from "./config/loader.ts";
 import {
   globalConfigSchema,
-  SyncConfig,
+  type SyncConfig,
   syncConfigSchema,
-  SyncConfigX,
-  TypegateConfigBase,
+  type SyncConfigX,
+  type TypegateConfigBase,
   typegateConfigBaseSchema,
 } from "./config/types.ts";
 import type { TypegateConfig } from "./config/types.ts";

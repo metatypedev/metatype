@@ -3,11 +3,11 @@
 
 import { SystemTypegraph } from "../../../system_typegraphs.ts";
 import { b64decode } from "../../../utils.ts";
-import { SecretManager } from "../../../typegraph/mod.ts";
-import { TypegateConfigBase } from "../../../config.ts";
-import { Protocol, TokenMiddlewareOutput } from "./protocol.ts";
-import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
-import { Auth } from "../../../typegraph/types.ts";
+import type { SecretManager } from "../../../typegraph/mod.ts";
+import type { TypegateConfigBase } from "../../../config.ts";
+import { Protocol, type TokenMiddlewareOutput } from "./protocol.ts";
+import type { DenoRuntime } from "../../../runtimes/deno/deno.ts";
+import type { Auth } from "../../../typegraph/types.ts";
 
 type BasicAuthConfig = Pick<TypegateConfigBase, "tg_admin_password">;
 

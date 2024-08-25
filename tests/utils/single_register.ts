@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { QueryEngine } from "../../src/engine/query_engine.ts";
-import { Register } from "../../src/typegate/register.ts";
+import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import { Register } from "@metatype/typegate/typegate/register.ts";
 
 export class SingleRegister extends Register {
   constructor(private name: string, private engine: QueryEngine) {

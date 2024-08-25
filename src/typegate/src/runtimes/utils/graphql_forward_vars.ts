@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { ensure } from "../../utils.ts";
-import { ComputeStage } from "../../engine/query_engine.ts";
+import type { ComputeStage } from "../../engine/query_engine.ts";
 import { iterParentStages } from "../../utils.ts";
-import {
+import type {
   ArgumentNode,
   FieldNode,
   SelectionNode,

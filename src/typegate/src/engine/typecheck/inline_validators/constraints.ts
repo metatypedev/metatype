@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeNode } from "../../../typegraph/type_node.ts";
+import type { TypeNode } from "../../../typegraph/type_node.ts";
 import { check } from "./common.ts";
 
 // binary operator or function

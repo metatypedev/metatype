@@ -6,16 +6,16 @@ import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
 import type { Auth } from "../../typegraph/types.ts";
-import { SecretManager, TypeGraph } from "../../typegraph/mod.ts";
+import type { SecretManager, TypeGraph } from "../../typegraph/mod.ts";
 
-import { Protocol } from "./protocols/protocol.ts";
-import { DenoRuntime } from "../../runtimes/deno/deno.ts";
+import type { Protocol } from "./protocols/protocol.ts";
+import type { DenoRuntime } from "../../runtimes/deno/deno.ts";
 import { unsafeExtractJWT } from "../../crypto.ts";
-import { QueryEngine } from "../../engine/query_engine.ts";
+import type { QueryEngine } from "../../engine/query_engine.ts";
 import * as routes from "./routes/mod.ts";
 import { getLogger } from "../../log.ts";
 import { methodNotAllowed } from "../../services/responses.ts";
-import { Runtime } from "../../runtimes/Runtime.ts";
+import type { Runtime } from "../../runtimes/Runtime.ts";
 
 const logger = getLogger(import.meta);
 

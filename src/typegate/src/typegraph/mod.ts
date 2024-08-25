@@ -4,7 +4,7 @@
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
 import type { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { Runtime } from "../runtimes/Runtime.ts";
+import type { Runtime } from "../runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "../utils.ts";
 import { typegraph_validate } from "native";
 import Chance from "chance";
@@ -25,9 +25,9 @@ import {
   isString,
   isUnion,
   Type,
-  TypeNode,
+  type TypeNode,
 } from "./type_node.ts";
-import { Batcher } from "../types.ts";
+import type { Batcher } from "../types.ts";
 import type {
   Cors,
   Materializer as TypeMaterializer,
@@ -37,13 +37,13 @@ import type {
   Typegraph as TypeGraphDS,
 } from "./types.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
-import { Protocol } from "../services/auth/protocols/protocol.ts";
+import type { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
 import randomizeRecursively from "../runtimes/random.ts";
-import { Typegate } from "../typegate/mod.ts";
+import type { Typegate } from "../typegate/mod.ts";
 import { TypeUtils } from "./utils.ts";
 
-export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
+export type { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
 export type RuntimeResolver = Record<string, Runtime>;
 

@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { connect, parseURL, Redis } from "redis";
+import { connect, parseURL, type Redis } from "redis";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { getLogger, Logger } from "../log.ts";
+import { getLogger, type Logger } from "../log.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
-import { KvRuntimeData } from "../typegraph/types.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
+import type { KvRuntimeData } from "../typegraph/types.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
 import { registerRuntime } from "./mod.ts";
 import { Runtime } from "./Runtime.ts";
 

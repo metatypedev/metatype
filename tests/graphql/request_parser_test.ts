@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { FormDataParser } from "../../src/transports/graphql/request_parser.ts";
+import { FormDataParser } from "@metatype/typegate/transports/graphql/request_parser.ts";
 import { gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
-import { assertEquals, assertExists } from "std/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 
 mf.install();
 

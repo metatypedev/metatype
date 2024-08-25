@@ -330,7 +330,7 @@ function buildGql(
   typeToGqlTypeMap: Record<string, string>,
   query: Record<string, SelectNode>,
   ty: "query" | "mutation",
-  name: string = "",
+  name = "",
 ) {
   const variables = new Map<string, NodeArgValue>();
 

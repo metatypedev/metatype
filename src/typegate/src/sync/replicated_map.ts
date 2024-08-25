@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
+import { connect, type Redis, type RedisConnectOptions, type XIdInput } from "redis";
 import * as Sentry from "sentry";
 import { getLogger } from "../log.ts";
 import { ensure } from "../utils.ts";

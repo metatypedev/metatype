@@ -3,13 +3,13 @@
 
 import { Runtime } from "./Runtime.ts";
 import * as native from "native";
-import { Resolver, RuntimeInitParams } from "../types.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult, nativeVoid } from "../utils.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
-import { TemporalRuntimeData } from "../typegraph/types.ts";
+import type { TemporalRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
-import { getLogger, Logger } from "../log.ts";
+import { getLogger, type Logger } from "../log.ts";
 
 const logger = getLogger(import.meta);
 

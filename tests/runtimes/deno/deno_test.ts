@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta, sleep } from "../../utils/mod.ts";
-import * as path from "std/path/mod.ts";
+import * as path from "@std/path";
 
 Meta.test(
   {

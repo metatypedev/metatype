@@ -1,23 +1,24 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { connect, Redis, RedisConnectOptions } from "redis";
-import { getLogger } from "@typegate/log.ts";
+import { connect, type Redis, type RedisConnectOptions } from "redis";
+import { getLogger } from "../../log.ts";
+// deno-lint-ignore no-external-import
 import { createHash } from "node:crypto";
-import { TypegateCryptoKeys } from "../../crypto.ts";
+import type { TypegateCryptoKeys } from "../../crypto.ts";
 import { S3 } from "aws-sdk/client-s3";
-import {
+import type {
   ArtifactPersistence,
   RefCounter,
   UploadEndpointManager,
 } from "./mod.ts";
-import { ArtifactMeta, ArtifactStore } from "./mod.ts";
+import { type ArtifactMeta, ArtifactStore } from "./mod.ts";
 import { HashTransformStream } from "../../utils/hash.ts";
-import { SyncConfig } from "../../config.ts";
+import type { SyncConfig } from "../../config.ts";
 import { LocalArtifactPersistence } from "./local.ts";
-import { exists } from "std/fs/exists.ts";
-import { dirname } from "std/path/mod.ts";
-import { chunk } from "std/collections/chunk.ts";
+import { exists } from "@std/fs/exists";
+import { dirname } from "@std/path";
+import { chunk } from "@std/collections/chunk";
 import { ArtifactError } from "./mod.ts";
 
 const logger = getLogger(import.meta);

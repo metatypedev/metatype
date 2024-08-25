@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Meta } from "test-utils/mod.ts";
-import { join } from "std/path/join.ts";
-import { exists } from "std/fs/exists.ts";
-import { assert, assertFalse } from "std/assert/mod.ts";
+import { join } from "@std/path/join";
+import { exists } from "@std/fs/exists";
+import { assert, assertFalse } from "@std/assert";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, hasObject, tryDeleteBucket } from "test-utils/s3.ts";
 import {
   REDIS_REF_COUNTER,
   resolveS3Key,
-} from "@typegate/typegate/artifacts/shared.ts";
+} from "@metatype/typegate/typegate/artifacts/shared.ts";
 import { MetaTest } from "../utils/test.ts";
 
 const syncConfig = {

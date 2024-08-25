@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import {
-  ArtifactMeta,
+  type ArtifactMeta,
   artifactMetaSchema,
-  ArtifactStore,
+  type ArtifactStore,
 } from "../typegate/artifacts/mod.ts";
 import { z } from "zod";
 import { getLogger } from "../log.ts";

@@ -1,19 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ComputeStage } from "./engine/query_engine.ts";
-import { Runtime } from "./runtimes/Runtime.ts";
+import type { ComputeStage } from "./engine/query_engine.ts";
+import type { Runtime } from "./runtimes/Runtime.ts";
 import type {
   SecretManager,
   TypeGraphDS,
   TypeMaterializer,
 } from "./typegraph/mod.ts";
-import { TypeNode } from "./typegraph/type_node.ts";
-import * as ast from "graphql/ast";
-import { ComputeArg } from "./engine/planner/args.ts";
-import { EffectType, PolicyIndices } from "./typegraph/types.ts";
-import { VariantMatcher } from "./engine/typecheck/matching_variant.ts";
-import { Typegate } from "./typegate/mod.ts";
+import type { TypeNode } from "./typegraph/type_node.ts";
+import type * as ast from "graphql/ast";
+import type { ComputeArg } from "./engine/planner/args.ts";
+import type { EffectType, PolicyIndices } from "./typegraph/types.ts";
+import type { VariantMatcher } from "./engine/typecheck/matching_variant.ts";
+import type { Typegate } from "./typegate/mod.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;

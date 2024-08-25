@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join } from "@std/path";
 
 export const testDir = dirname(dirname(fromFileUrl(import.meta.url)));
 export const workspaceDir = dirname(dirname(testDir));

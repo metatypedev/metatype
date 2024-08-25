@@ -2,19 +2,19 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Meta } from "test-utils/mod.ts";
-import { projectDir } from "@dev/utils.ts";
-import { $ } from "@dev/deps.ts";
-import { PUBLISHED_VERSION, PYTHON_VERSION } from "@dev/consts.ts";
+import { projectDir } from "@local/tools/utils.ts";
+import { $ } from "@local/tools/deps.ts";
+import { PUBLISHED_VERSION, PYTHON_VERSION } from "@local/tools/consts.ts";
 import { download } from "download";
-import { Untar } from "std/archive/untar.ts";
-import { readerFromIterable } from "std/streams/mod.ts";
-import { copy } from "std/io/copy.ts";
-import { encodeBase64 } from "std/encoding/base64.ts";
-import { Lines } from "test-utils/process.ts";
+import { Untar } from "@std/archive";
+import { readerFromIterable } from "@std/streams";
+import { copy } from "@std/io/copy";
+import { encodeBase64 } from "std/encoding/base64";
+import { Lines } from "test-utils/process";
 import { newTempDir } from "test-utils/dir.ts";
-import { transformSyncConfig } from "@typegate/config.ts";
+import { transformSyncConfig } from "@metatype/typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
-import { assertEquals } from "std/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 
 const previousVersion = PUBLISHED_VERSION;
 
@@ -133,7 +133,7 @@ Meta.test(
     },
   },
   async (t) => {
-    let publishedBin: string = "";
+    let publishedBin = "";
     await t.should("download published cli (fat version)", async () => {
       publishedBin = await downloadAndExtractCli(previousVersion);
     });
@@ -245,7 +245,7 @@ Meta.test(
         args: [
           "typegate",
           `--main-url`,
-          import.meta.resolve("../../../src/main.ts"),
+          import.meta.resolve("@metatype/typegate/main.ts"),
           `--import-map-url`,
           import.meta.resolve("../../../import_map.json"),
         ],
@@ -299,7 +299,7 @@ Meta.test(
     },
   },
   async (t) => {
-    let publishedBin: string = "";
+    let publishedBin = "";
     await t.should("download published cli (fat version)", async () => {
       publishedBin = await downloadAndExtractCli(previousVersion);
     });

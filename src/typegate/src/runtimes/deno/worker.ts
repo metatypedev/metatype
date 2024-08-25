@@ -5,9 +5,9 @@
 /// <reference lib="deno.worker" />
 
 import { getLogger } from "../../log.ts";
-import { Answer, Message } from "../patterns/messenger/types.ts";
+import type { Answer, Message } from "../patterns/messenger/types.ts";
 
-import {
+import type {
   FuncTask,
   ImportFuncTask,
   RegisterFuncTask,

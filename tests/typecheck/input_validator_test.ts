@@ -3,9 +3,9 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-import { Type } from "../../src/typegraph/type_node.ts";
-import { InputValidationCompiler } from "../../src/engine/typecheck/input.ts";
-import { assert, assertEquals } from "std/assert/mod.ts";
+import { Type } from "@metatype/typegate/typegraph/type_node.ts";
+import { InputValidationCompiler } from "@metatype/typegate/engine/typecheck/input.ts";
+import { assert, assertEquals } from "@std/assert";
 
 function getFunctionName(idx: number): string {
   return `validate_${idx}`;

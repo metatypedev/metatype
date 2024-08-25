@@ -5,10 +5,10 @@ import { getLogger } from "../../../log.ts";
 import { maxi32 } from "../../../utils.ts";
 import {
   AsyncMessenger,
-  AsyncMessengerConfig,
-  MessengerSend,
-  MessengerStart,
-  MessengerStop,
+  type AsyncMessengerConfig,
+  type MessengerSend,
+  type MessengerStart,
+  type MessengerStop,
 } from "./async_messenger.ts";
 
 export type { AsyncMessengerConfig };

@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TextLineStream } from "@dev/deps.ts";
-import { deadline } from "std/async/mod.ts";
+import { TextLineStream } from "@local/tools/deps.ts";
+import { deadline } from "@std/async";
 
 export type Consumer = {
   (line: string): boolean | Promise<boolean>; // return false to stop

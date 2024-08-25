@@ -2,13 +2,16 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { parse } from "graphql";
-import * as ast from "graphql/ast";
+import type * as ast from "graphql/ast";
 import type { TypeGraph } from "../typegraph/mod.ts";
-import { JSONValue } from "../utils.ts";
-import { findOperation, FragmentDefs } from "../transports/graphql/graphql.ts";
-import * as log from "std/log/mod.ts";
+import type { JSONValue } from "../utils.ts";
+import {
+  findOperation,
+  type FragmentDefs,
+} from "../transports/graphql/graphql.ts";
+import * as log from "@std/log";
 import { sha1 } from "../crypto.ts";
-import { RateLimit } from "../typegate/rate_limiter.ts";
+import type { RateLimit } from "../typegate/rate_limiter.ts";
 import type {
   ComputeStageProps,
   Context,
@@ -17,15 +20,15 @@ import type {
   Variables,
 } from "../types.ts";
 import { Planner } from "./planner/mod.ts";
-import { OperationPolicies } from "./planner/policies.ts";
+import type { OperationPolicies } from "./planner/policies.ts";
 import { None } from "monads";
-import { Validator } from "./typecheck/common.ts";
+import type { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./computation_engine.ts";
 import { isIntrospectionQuery } from "../services/graphql_service.ts";
-import { ObjectNode } from "../typegraph/type_node.ts";
+import type { ObjectNode } from "../typegraph/type_node.ts";
 import { RestSchemaGenerator } from "../transports/rest/rest_schema_generator.ts";
-import { BaseError, ErrorConstructor, ErrorKind } from "../errors.ts";
+import { BaseError, type ErrorConstructor, ErrorKind } from "../errors.ts";
 
 class GraphQLVariableNotFound extends BaseError {
   constructor(variable: string) {

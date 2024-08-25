@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { StringFormat } from "../../typegraph/types.ts";
-import * as uuid from "std/uuid/mod.ts";
+import type { StringFormat } from "../../typegraph/types.ts";
+import * as uuid from "@std/uuid";
 import validator from "validator";
 import lodash from "lodash";
 

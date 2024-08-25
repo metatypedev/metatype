@@ -10,9 +10,9 @@ import {
 } from "aws-sdk/client-s3";
 import { TestModule } from "test-utils/test_module.ts";
 import { testDir } from "test-utils/dir.ts";
-import { join } from "std/path/mod.ts";
-import { assertEquals } from "std/assert/assert_equals.ts";
-import { TextLineStream } from "std/streams/text_line_stream.ts";
+import { join } from "@std/path";
+import { assertEquals } from "@std/assert/assert-equals";
+import { TextLineStream } from "@std/streams/text-line-stream";
 
 const HOST = "http://localhost:9000";
 const REGION = "local";

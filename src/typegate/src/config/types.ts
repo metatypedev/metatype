@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { z } from "zod";
-import { decodeBase64 } from "std/encoding/base64.ts";
-import { RedisConnectOptions } from "redis";
-import { S3ClientConfig } from "aws-sdk/client-s3";
+import { decodeBase64 } from "@std/encoding/base64";
+import type { RedisConnectOptions } from "redis";
+import type { S3ClientConfig } from "aws-sdk/client-s3";
 
 const zBooleanString = z.preprocess(
   (a: unknown) => z.coerce.string().parse(a) === "true",

@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let target = std::env::var("TARGET")?;
     println!(
         "cargo:rerun-if-changed={}/main.py",
-        cwd.join("../../libs/pyrt_wit_wire")
+        cwd.join("../../pyrt_wit_wire")
             .canonicalize()
             .unwrap()
             .to_string_lossy()
@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .args(["x", "build-pyrt"])
             .env("PYRT_WASM_OUT", &wasm_path)
             .env("PYRT_TARGET", &wasm_path)
-            .current_dir(cwd.join("../../"))
+            .current_dir(cwd.join("../../../"))
             .spawn()
             .expect("error spawning ghjk")
             .wait()

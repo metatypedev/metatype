@@ -11,7 +11,8 @@ src/metagen/tests/
 !src/typegate/engine
 !src/typegate/src
 !src/typegate/standalone
-!src/typegate/tests/utils
+# FIXME: WHY?
+!tests/utils
 !src/typegate/deno.jsonc
 !src/typegate/deno.lock
 !src/typegate/import_map.json

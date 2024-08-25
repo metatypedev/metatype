@@ -3,9 +3,9 @@
 
 import { Meta } from "test-utils/mod.ts";
 import { newTempDir, workspaceDir } from "test-utils/dir.ts";
-import { exists, expandGlob } from "std/fs/mod.ts";
-import { join } from "std/path/mod.ts";
-import { assert } from "std/assert/mod.ts";
+import { exists, expandGlob } from "@std/fs";
+import { join } from "@std/path";
+import { assert } from "@std/assert";
 import { shell } from "test-utils/shell.ts";
 
 type LangRuntimeConfig<V> = {

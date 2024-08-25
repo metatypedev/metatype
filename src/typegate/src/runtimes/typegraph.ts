@@ -1,7 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../typegraph/mod.ts";
+import {
+  TypeGraph,
+  type TypeGraphDS,
+  type TypeMaterializer,
+} from "../typegraph/mod.ts";
 import { TypeKind } from "graphql";
 import { ensure } from "../utils.ts";
 import { Runtime } from "./Runtime.ts";
@@ -15,19 +19,19 @@ import {
   isQuantifier,
   isScalar,
   isUnion,
-  ObjectNode,
+  type ObjectNode,
   Type,
-  TypeNode,
+  type TypeNode,
 } from "../typegraph/type_node.ts";
-import { Resolver } from "../types.ts";
+import type { Resolver } from "../types.ts";
 import {
   getChildTypes,
-  TypeVisitorMap,
+  type TypeVisitorMap,
   visitTypes,
 } from "../typegraph/visitor.ts";
-import { distinctBy } from "std/collections/distinct_by.ts";
+import { distinctBy } from "@std/collections/distinct-by";
 import { isInjected } from "../typegraph/utils.ts";
-import { PolicyIndices } from "../typegraph/types.ts";
+import type { PolicyIndices } from "../typegraph/types.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 

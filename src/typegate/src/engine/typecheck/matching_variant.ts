@@ -1,11 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { EitherNode, Type, UnionNode } from "../../typegraph/type_node.ts";
-import { TypeGraph } from "../../typegraph/mod.ts";
+import {
+  type EitherNode,
+  Type,
+  type UnionNode,
+} from "../../typegraph/type_node.ts";
+import type { TypeGraph } from "../../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
-import { mapValues } from "std/collections/map_values.ts";
-import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";
+import { mapValues } from "@std/collections/map-values";
+import {
+  type ErrorEntry,
+  validationContext,
+  type ValidatorFn,
+} from "./common.ts";
 
 export type VariantMatcher = (value: unknown) => string | null;
 

@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { FloatNode, IntegerNode } from "../../../typegraph/types.ts";
+import type { FloatNode, IntegerNode } from "../../../typegraph/types.ts";
 import { check } from "./common.ts";
 import {
-  ConstraintSpec,
+  type ConstraintSpec,
   generateConstraintValidatorsFor,
 } from "./constraints.ts";
 

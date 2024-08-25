@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { QueryEngine } from "../../../src/engine/query_engine.ts";
+import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { removeMigrations } from "../../utils/migrations.ts";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";

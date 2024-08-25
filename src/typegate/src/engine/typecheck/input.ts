@@ -1,15 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeGraph } from "../../typegraph/mod.ts";
-import { TypeNode } from "../../typegraph/types.ts";
+import type { TypeGraph } from "../../typegraph/mod.ts";
+import type { TypeNode } from "../../typegraph/types.ts";
 import { CodeGenerator } from "./code_generator.ts";
-import { mapValues } from "std/collections/map_values.ts";
+import { mapValues } from "@std/collections/map-values";
 import {
-  ErrorEntry,
+  type ErrorEntry,
   validationContext,
-  Validator,
-  ValidatorFn,
+  type Validator,
+  type ValidatorFn,
 } from "./common.ts";
 
 export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { globalConfig } from "../config.ts";
-import { QueryEngine } from "../engine/query_engine.ts";
+import type { QueryEngine } from "../engine/query_engine.ts";
 import { getLogger } from "../log.ts";
 
 const logger = getLogger(import.meta);

@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 // import { SingleRegister } from "test-utils/single_register.ts";
-// import { Typegate } from "@typegate/typegate/mod.ts";
-import { QueryEngine } from "../../src/engine/query_engine.ts";
-import { dirname, join } from "std/path/mod.ts";
-import { copy } from "std/fs/copy.ts";
+// import { Typegate } from "@metatype/typegate/typegate/mod.ts";
+import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import { dirname, join } from "@std/path";
+import { copy } from "@std/fs/copy";
 import { init_native } from "native";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";
@@ -13,7 +13,7 @@ import { test } from "./test.ts";
 import { metaCli } from "./meta.ts";
 import { testDir } from "./dir.ts";
 import { autoTest } from "./autotest.ts";
-import { init_runtimes } from "../../src/runtimes/mod.ts";
+import { init_runtimes } from "@metatype/typegate/runtimes/mod.ts";
 import { getCurrentTest } from "./test.ts";
 
 // native must load first to avoid import race conditions and panic

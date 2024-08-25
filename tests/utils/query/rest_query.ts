@@ -9,7 +9,7 @@ import {
   Query,
   Variables,
 } from "./mod.ts";
-import { TypegateCryptoKeys } from "@typegate/crypto.ts";
+import { TypegateCryptoKeys } from "@metatype/typegate/crypto.ts";
 
 export class RestQuery extends Query {
   constructor(

@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypegateCryptoKeys } from "../../../crypto.ts";
-import { getLogger } from "@typegate/log.ts";
-import { Protocol, TokenMiddlewareOutput } from "./protocol.ts";
+import type { TypegateCryptoKeys } from "../../../crypto.ts";
+import { getLogger } from "../../../log.ts";
+import { Protocol, type TokenMiddlewareOutput } from "./protocol.ts";
 
 const logger = getLogger(import.meta);
 

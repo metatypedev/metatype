@@ -1,7 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ObjectNode, Type, TypeNode } from "../../../typegraph/type_node.ts";
+import {
+  type ObjectNode,
+  Type,
+  type TypeNode,
+} from "../../../typegraph/type_node.ts";
 import { check } from "./common.ts";
 
 export function generateObjectValidator(

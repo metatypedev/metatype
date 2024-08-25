@@ -3,8 +3,8 @@
 
 import * as zod from "zod";
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
-import { ResolverArgs } from "../../types.ts";
-import { Typegate } from "../../typegate/mod.ts";
+import type { ResolverArgs } from "../../types.ts";
+import type { Typegate } from "../../typegate/mod.ts";
 import { getLogger } from "../../log.ts";
 
 const logger = getLogger(import.meta);

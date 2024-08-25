@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Context } from "../../types.ts";
-import { EffectType } from "../../typegraph/types.ts";
+import type { Context } from "../../types.ts";
+import type { EffectType } from "../../typegraph/types.ts";
 
 export interface Code {
   name: string;

@@ -3,7 +3,7 @@
 
 import { getLogger } from "../../../log.ts";
 import { clearCookie, getEncryptedCookie } from "../cookies.ts";
-import { RouteParams } from "./mod.ts";
+import type { RouteParams } from "./mod.ts";
 
 const logger = getLogger(import.meta);
 

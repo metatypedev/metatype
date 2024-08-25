@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "../utils/mod.ts";
-import { assertThrows } from "std/assert/mod.ts";
-import { findOperation } from "../../src/transports/graphql/graphql.ts";
+import { assertThrows } from "@std/assert";
+import { findOperation } from "@metatype/typegate/transports/graphql/graphql.ts";
 import { parse } from "graphql";
 import { None } from "monads";
 import {
   generateValidator,
   ResultValidationCompiler,
-} from "../../src/engine/typecheck/result.ts";
+} from "@metatype/typegate/engine/typecheck/result.ts";
 
 Meta.test("typecheck", async (t) => {
   const e = await t.engine("typecheck/typecheck.py");

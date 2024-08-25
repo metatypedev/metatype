@@ -1,8 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+// FIXME: we can't use the import map in ghjk so we must
+// rely on ghjk.ts
+
 export { file } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/mod.ts";
-export * from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/mod.ts";
+export * from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1//mod.ts";
 export * as ports from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/ports/mod.ts";
 export {
   std_url,
@@ -27,28 +30,19 @@ export {
   join,
   relative,
   resolve,
-} from "https://deno.land/std@0.219.0/path/mod.ts";
-export { parseArgs } from "https://deno.land/std@0.219.0/cli/mod.ts";
+} from "jsr:@std/path@^1.0.2";
+export { parseArgs } from "jsr:@std/cli@^1.0.3";
 export {
   copySync,
   existsSync,
   expandGlob,
   expandGlobSync,
-} from "https://deno.land/std@0.219.0/fs/mod.ts";
-export {
-  cyan,
-  gray,
-  green,
-  red,
-  yellow,
-} from "https://deno.land/std@0.219.0/fmt/colors.ts";
-export { format as formatDuration } from "https://deno.land/std@0.219.0/fmt/duration.ts";
-export {
-  mergeReadableStreams,
-  TextLineStream,
-} from "https://deno.land/std@0.219.0/streams/mod.ts";
-export type { WalkEntry } from "https://deno.land/std@0.219.0/fs/mod.ts";
-export * as semver from "https://deno.land/std@0.219.0/semver/mod.ts";
+} from "jsr:@std/fs@^1.0.1";
+export { cyan, gray, green, red, yellow } from "jsr:@std/fmt@^1.0.0/colors";
+export { format as formatDuration } from "jsr:@std/fmt@^1.0.0/duration";
+export { mergeReadableStreams, TextLineStream } from "jsr:@std/streams@1";
+export type {} from "jsr:@std/path@^1.0.2";
+export * as semver from "jsr:@std/semver@^1.0.1";
 // https://github.com/hayd/deno-udd/pull/108
 // export { udd } from "https://deno.land/x/udd@0.8.2/mod.ts";
 export { udd } from "https://github.com/levibostian/deno-udd/raw/ignore-prerelease/mod.ts";

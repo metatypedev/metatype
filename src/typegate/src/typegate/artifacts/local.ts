@@ -1,24 +1,25 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { resolve } from "std/path/resolve.ts";
+import { resolve } from "@std/path/resolve";
 import { HashTransformStream } from "../../utils/hash.ts";
 import {
   ArtifactError,
-  ArtifactMeta,
-  ArtifactPersistence,
+  type ArtifactMeta,
+  type ArtifactPersistence,
   ArtifactStore,
-  Dirs,
-  RefCounter,
-  UploadEndpointManager,
+  type Dirs,
+  type RefCounter,
+  type UploadEndpointManager,
 } from "./mod.ts";
 import { getLogger } from "../../log.ts";
+// deno-lint-ignore no-external-import
 import { createHash } from "node:crypto";
 import * as jwt from "jwt";
-import { join } from "std/path/join.ts";
-import { exists } from "std/fs/exists.ts";
-import { BaseError, ErrorKind } from "@typegate/errors.ts";
-import { TypegateCryptoKeys } from "../../crypto.ts";
+import { join } from "@std/path/join";
+import { exists } from "@std/fs/exists";
+import { BaseError, ErrorKind } from "../../errors.ts";
+import type { TypegateCryptoKeys } from "../../crypto.ts";
 
 const logger = getLogger(import.meta);
 

@@ -6,11 +6,11 @@ import {
   assertEquals,
   AssertionError,
   assertStringIncludes,
-} from "std/assert/mod.ts";
-import { QueryEngine } from "@typegate/engine/query_engine.ts";
-import { JSONValue } from "@typegate/utils.ts";
-import { deepMerge } from "std/collections/deep_merge.ts";
-import { TypegateCryptoKeys } from "@typegate/crypto.ts";
+} from "@std/assert";
+import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import { JSONValue } from "@metatype/typegate/utils.ts";
+import { deepMerge } from "@std/collections/deep-merge";
+import { TypegateCryptoKeys } from "@metatype/typegate/crypto.ts";
 
 import { execute } from "../mod.ts";
 

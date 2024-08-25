@@ -9,7 +9,7 @@ import {
   parseArgs,
   resolve,
   udd,
-  WalkEntry,
+  type WalkEntry,
 } from "./deps.ts";
 import { projectDir, runOrExit } from "./utils.ts";
 
@@ -70,8 +70,8 @@ const tsFiles = [
       root: projectDir,
       globstar: true,
       exclude: [
-        "src/typegate/tests/e2e/nextjs",
-        "src/typegate/tests/runtimes/temporal/worker",
+        "tests/e2e/nextjs",
+        "tests/runtimes/temporal/worker",
       ],
     },
   ),

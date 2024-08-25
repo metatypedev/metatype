@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Type, TypeNode } from "../../../typegraph/type_node.ts";
-import { PushHandler } from "../../../typegate/hooks.ts";
-import { SecretManager, TypeGraphDS } from "../../../typegraph/mod.ts";
-import {
+import { Type, type TypeNode } from "../../../typegraph/type_node.ts";
+import type { PushHandler } from "../../../typegate/hooks.ts";
+import type { SecretManager, TypeGraphDS } from "../../../typegraph/mod.ts";
+import type {
   Cardinality,
   Model,
   Property,
@@ -12,7 +12,7 @@ import {
   StringNode,
 } from "../../../typegraph/types.ts";
 import { ensureNonNullable } from "../../../utils.ts";
-import { PrismaRT } from "../mod.ts";
+import type { PrismaRT } from "../mod.ts";
 import { validate_prisma_runtime_data } from "native";
 
 type QuantifierSuffix = "" | "?" | "[]";

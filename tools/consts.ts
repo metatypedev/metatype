@@ -14,7 +14,7 @@ export const PRISMA_VERSION = "5.6.0";
 export const SDK_PACKAGE_NAME_TS = "@typegraph/sdk";
 export const PYTHON_VERSION = "3.8.18";
 export const TAGLINE =
-  `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.`;
+  `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.` as string;
 
 export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "rust-toolchain.toml": [[/(channel = ").+(")/, RUST_VERSION]],
@@ -31,7 +31,7 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "src/meta-lsp/vscode-metatype-support/package.json": [
     [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
   ],
-  "src/typegate/tests/**/*.snap": [
+  "tests/**/*.snap": [
     [/(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)/, METATYPE_VERSION],
   ],
   "src/typegraph/python/typegraph/__init__.py": [

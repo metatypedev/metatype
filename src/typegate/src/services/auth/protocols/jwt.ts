@@ -3,10 +3,10 @@
 
 import * as jwt from "jwt";
 import { getLogger } from "../../../log.ts";
-import { SecretManager } from "../../../typegraph/mod.ts";
-import { Protocol, TokenMiddlewareOutput } from "./protocol.ts";
-import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
-import { Auth } from "../../../typegraph/types.ts";
+import type { SecretManager } from "../../../typegraph/mod.ts";
+import { Protocol, type TokenMiddlewareOutput } from "./protocol.ts";
+import type { DenoRuntime } from "../../../runtimes/deno/deno.ts";
+import type { Auth } from "../../../typegraph/types.ts";
 
 const logger = getLogger(import.meta);
 const encoder = new TextEncoder();

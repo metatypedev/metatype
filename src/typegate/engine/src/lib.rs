@@ -133,7 +133,7 @@ pub fn runtime() -> tokio::runtime::Runtime {
 /// it on a [`LocalSet`](tokio::task::LocalSet)
 pub async fn launch_typegate_deno(
     main_mod: deno_core::ModuleSpecifier,
-    import_map_url: Option<String>,
+    deno_config_url: Option<String>,
 ) -> Result<()> {
     std::env::var("REDIS_URL")
         .ok()
@@ -183,7 +183,7 @@ pub async fn launch_typegate_deno(
 
     mt_deno::run(
         main_mod,
-        import_map_url,
+        deno_config_url,
         permissions,
         Arc::new(|| ext::extensions(OpDepInjector::from_env())),
     )

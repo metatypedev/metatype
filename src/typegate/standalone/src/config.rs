@@ -15,6 +15,6 @@ pub struct Config {
     pub sentry_traces_sample_rate: f32,
     #[envconfig(from = "TG_MAIN_URL")]
     pub main_url: Option<String>,
-    #[envconfig(from = "TG_IMPORT_MAP_URL")]
-    pub import_map_url: Option<String>,
+    #[envconfig(from = "TG_DENO_CONFIG_URL")]
+    pub deno_config_url: Option<String>,
 }

@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Runtime } from "./Runtime.ts";
-import { RuntimeInit, RuntimeInitParams } from "../types.ts";
+import type { Runtime } from "./Runtime.ts";
+import type { RuntimeInit, RuntimeInitParams } from "../types.ts";
 
 const registeredRuntimes: Map<string, RuntimeInit> = new Map();
 

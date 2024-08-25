@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Meta } from "test-utils/mod.ts";
-import { assertRejects } from "std/assert/mod.ts";
+import { assertRejects } from "@std/assert";
 
 Meta.test("invalid ref", async (t) => {
   await assertRejects(

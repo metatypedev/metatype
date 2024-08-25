@@ -63,7 +63,7 @@ pub fn run_sync(
 
 pub async fn run(
     main_module: ModuleSpecifier,
-    import_map_url: Option<String>,
+    deno_config_url: Option<String>,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) -> anyhow::Result<()> {
@@ -74,10 +74,12 @@ pub async fn run(
         Box::new(util::draw_thread::DrawThread::show),
     );
 
+    // NOTE: avoid using the Run subcommand
+    // as it breaks our custom_extensions patch for some reason
     let flags = args::Flags {
-        // NOTE: avoid using the Run subcommand
-        // as it breaks our custom_extensions patch for some reason
-        import_map_path: import_map_url,
+        config_flag: deno_config_url
+            .map(deno_config::ConfigFlag::Path)
+            .unwrap_or(deno_config::ConfigFlag::Discover),
         unstable_config: args::UnstableConfig {
             features: DEFAULT_UNSTABLE_FLAGS
                 .iter()
