@@ -2,11 +2,16 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 use std::{
+    cell::RefCell,
     ops::Deref,
     path::{Path, PathBuf},
+    rc::Rc,
     str::FromStr,
+    sync::Arc,
 };
 
+use dashmap::DashMap;
+use deno_core::OpState;
 use protobuf::{
     descriptor::{FileDescriptorProto, MethodDescriptorProto},
     reflect::FileDescriptor,
@@ -164,24 +169,67 @@ fn get_relative_message_name(absolute_message_name: &str) -> anyhow::Result<Stri
     Ok(message.to_string())
 }
 
+#[derive(Default)]
+pub struct Ctx {
+    clients: Arc<DashMap<String, Grpc<Channel>>>,
+    proto_files: Arc<DashMap<String, String>>,
+}
+
+#[derive(Deserialize)]
+#[serde(crate = "serde")]
+pub struct GrpcRegisterInput {
+    proto_file: String,
+    endpoint: String,
+    client_id: String,
+}
+
+#[deno_core::op2(async)]
+pub async fn op_grpc_register(
+    state: Rc<RefCell<OpState>>,
+    #[serde] input: GrpcRegisterInput,
+) -> Result<()> {
+    let endpoint = Endpoint::from_str(&input.endpoint)?;
+    let channel = Channel::builder(endpoint.uri().to_owned());
+    let channel = channel.connect().await?;
+    let client = Grpc::new(channel);
+
+    let state = state.borrow();
+    let ctx = state.borrow::<Ctx>();
+    ctx.clients.insert(input.client_id.clone(), client);
+    ctx.proto_files.insert(input.client_id, input.proto_file);
+    Ok(())
+}
+
 #[derive(Deserialize)]
 #[serde(crate = "serde")]
 pub struct GrpcCallMethodInput {
-    proto_file: String,
     method: String,
     payload: String,
-    endpoint: String,
+    client_id: String,
 }
 
 #[deno_core::op2(async)]
 #[string]
-pub async fn op_call_grpc_method(#[serde] input: GrpcCallMethodInput) -> Result<String> {
-    let endpoint = Endpoint::from_str(&input.endpoint)?;
-    let channel = Channel::builder(endpoint.uri().to_owned());
-    let channel = channel.connect().await?;
-    let mut client = Grpc::new(channel);
+pub async fn op_call_grpc_method(
+    state: Rc<RefCell<OpState>>,
+    #[serde] input: GrpcCallMethodInput,
+) -> Result<String> {
+    let (clients, proto_files) = {
+        let state = state.borrow();
+        let ctx = state.borrow::<Ctx>();
+        (ctx.clients.clone(), ctx.proto_files.clone())
+    };
 
-    let path = PathBuf::from_str(&input.proto_file).unwrap();
+    let client_id = input.client_id.clone();
+    let mut client = clients
+        .get_mut(&client_id)
+        .with_context(|| format!("Could not find client '{client_id}'"))?;
+
+    let proto_file = proto_files
+        .get(&client_id)
+        .with_context(|| format!("Could not find proto_file '{client_id}'"))?;
+
+    let path = PathBuf::from_str(&proto_file).unwrap();
     let file_descriptor = get_file_descriptor(&path).unwrap();
 
     let method_name = get_relative_method_name(&input.method).unwrap();
