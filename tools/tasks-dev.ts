@@ -5,7 +5,7 @@ import { DenoTaskDefArgs } from "./deps.ts";
 
 const DOCKER_CMD = Deno.env.get("DOCKER_CMD") ?? "docker";
 
-const tasks: Record<string, DenoTaskDefArgs> = {
+export default {
   dev: {
     desc: "Execute tools/*.ts scripts.",
     async fn($) {
@@ -160,5 +160,4 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     },
     fn: ($) => $`pnpm start --no-open`,
   },
-};
-export default tasks;
+} satisfies Record<string, DenoTaskDefArgs>;

@@ -919,144 +919,144 @@
             "version-bump": {
               "ty": "denoFile@v1",
               "key": "version-bump",
-              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "version-print": {
               "ty": "denoFile@v1",
               "key": "version-print",
               "desc": "Print $METATYPE_VERSION",
-              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "test-lsp": {
               "ty": "denoFile@v1",
               "key": "test-lsp",
-              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
+              "envKey": "bciqjiey2fopzqscssr4mkjlrn2444c7i7am6b7d6retgrudosl2iakq"
             },
             "test-rust": {
               "ty": "denoFile@v1",
               "key": "test-rust",
-              "envKey": "bciqov4rontailrkkhq4mmg6unksfithoszn3abi3pyfqnvlh6ynkvka"
+              "envKey": "bciqpkuapmicbwlczmxgv5nd7pupxghlmbujw6lmgdtdjzqahawhrn2y"
             },
             "test-website": {
               "ty": "denoFile@v1",
               "key": "test-website",
               "workingDir": "./website",
-              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
+              "envKey": "bciqjiey2fopzqscssr4mkjlrn2444c7i7am6b7d6retgrudosl2iakq"
             },
             "test-e2e": {
               "ty": "denoFile@v1",
               "key": "test-e2e",
               "desc": "Shorthand for `dev/test.ts`",
-              "envKey": "bciqdyc67uwyl5pkoaaohvgmnpdtuamame6zvktiegfai562fuw5oiiq"
+              "envKey": "bciqeobre32n4w56valwmxn5jntfwtbcpturauzq2mteegbcikftwq2q"
             },
             "lock-sed": {
               "ty": "denoFile@v1",
               "key": "lock-sed",
               "desc": "Update versions",
-              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "lint-udeps": {
               "ty": "denoFile@v1",
               "key": "lint-udeps",
               "desc": "Check for unused cargo depenencies",
-              "envKey": "bciqgbrnhfvvtmoua3evkupx3f7tt6ma45tpnjsoh5lw5y2igquul76y"
+              "envKey": "bciqfxryixpstewtpcu63rvztnjctnhn5pj23s74med2ef4wbiigbvlq"
             },
             "install-wasi-adapter": {
               "ty": "denoFile@v1",
               "key": "install-wasi-adapter",
-              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "install-lsp": {
               "ty": "denoFile@v1",
               "key": "install-lsp",
-              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
+              "envKey": "bciqjiey2fopzqscssr4mkjlrn2444c7i7am6b7d6retgrudosl2iakq"
             },
             "install-website": {
               "ty": "denoFile@v1",
               "key": "install-website",
-              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
+              "envKey": "bciqjiey2fopzqscssr4mkjlrn2444c7i7am6b7d6retgrudosl2iakq"
             },
             "install-ts": {
               "ty": "denoFile@v1",
               "key": "install-ts",
-              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
+              "envKey": "bciqjiey2fopzqscssr4mkjlrn2444c7i7am6b7d6retgrudosl2iakq"
             },
             "install-py": {
               "ty": "denoFile@v1",
               "key": "install-py",
-              "envKey": "bciqmpo7soabnkxibgqgurlc5lfy4a7jeglk6v45x4e4k7wnmwmztaqq"
+              "envKey": "bciqavymvs4fufpzasau5dpqcuortxf5fk4ar5fc7sfldpld5327hiyi"
             },
             "install-sys": {
               "ty": "denoFile@v1",
               "key": "install-sys",
               "desc": "Print a command you can use to install system items",
-              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "fetch-deno": {
               "ty": "denoFile@v1",
               "key": "fetch-deno",
               "desc": "Cache remote deno modules.",
-              "envKey": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq"
+              "envKey": "bciqjiey2fopzqscssr4mkjlrn2444c7i7am6b7d6retgrudosl2iakq"
             },
             "dev-website": {
               "ty": "denoFile@v1",
               "key": "dev-website",
               "workingDir": "./website",
               "desc": "Launch the website",
-              "envKey": "bciqadrkruydvgov2zwklcwohmuno4nalyc3pg3yomdumdxfstvo4pby"
+              "envKey": "bciqmvlgp4a6wsusfb5fnvbdigygfoseguuckxlnxg2lwwei7fk32sqy"
             },
             "dev-gate5": {
               "ty": "denoFile@v1",
               "key": "dev-gate5",
               "desc": "Launch the typegate from the latests published image.",
-              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+              "envKey": "bciqcxytiajt2elg6uwbwynwkuymeudoermcqmp2va275sonxsv6iemq"
             },
             "dev-gate4": {
               "ty": "denoFile@v1",
               "key": "dev-gate4",
               "desc": "Launch the typegate from the locally built typegate image.",
-              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+              "envKey": "bciqcxytiajt2elg6uwbwynwkuymeudoermcqmp2va275sonxsv6iemq"
             },
             "dev-gate3": {
               "ty": "denoFile@v1",
               "key": "dev-gate3",
               "desc": "Launch the typegate from a locally found meta bin.",
-              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+              "envKey": "bciqcxytiajt2elg6uwbwynwkuymeudoermcqmp2va275sonxsv6iemq"
             },
             "dev-gate2": {
               "ty": "denoFile@v1",
               "key": "dev-gate2",
               "desc": "Launch the typegate in sync mode.",
-              "envKey": "bciqh7p45mporp4lmdynwq3xdlhbkauaww7ggluc2bzqgpkxyw7j76fq"
+              "envKey": "bciqjchayotgckjrkrk7tvbztqnfymp5ku3fkjlmqenuck7i4n2ca33y"
             },
             "dev-gate1": {
               "ty": "denoFile@v1",
               "key": "dev-gate1",
               "desc": "Launch the typegate in single-instance mode.",
-              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+              "envKey": "bciqcxytiajt2elg6uwbwynwkuymeudoermcqmp2va275sonxsv6iemq"
             },
             "dev-eg-tgraphs": {
               "ty": "denoFile@v1",
               "key": "dev-eg-tgraphs",
               "desc": "meta dev example/typegraphs",
-              "envKey": "bciqgpx2na2og2c3ty363m2kq3gficj4l4wxlpnrwl5gqiuzooondwja"
+              "envKey": "bciqgcnlco6qwpzfwoao4s6fxugobghedwyshklfs4cbtwy5zk5sxo3a"
             },
             "dev-compose": {
               "ty": "denoFile@v1",
               "key": "dev-compose",
               "desc": "Wrapper around docker compose to manage runtime dependencies",
-              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "dev": {
               "ty": "denoFile@v1",
               "key": "dev",
-              "desc": "Execute dev/*.ts scripts.",
-              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
+              "desc": "Execute tools/*.ts scripts.",
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "gen-pyrt-bind": {
               "ty": "denoFile@v1",
               "key": "gen-pyrt-bind",
-              "envKey": "bciqbc7tuunt52ewlomqkynauomfweotxpf6hzut7yz532bwk2gckn5a"
+              "envKey": "bciqdytbbqfocitmm2cnb2rthmettyhkqbkbrh24vqvxj2dipkazdo7y"
             },
             "build-pyrt": {
               "ty": "denoFile@v1",
@@ -1064,17 +1064,17 @@
               "dependsOn": [
                 "gen-pyrt-bind"
               ],
-              "envKey": "bciqbc7tuunt52ewlomqkynauomfweotxpf6hzut7yz532bwk2gckn5a"
+              "envKey": "bciqdytbbqfocitmm2cnb2rthmettyhkqbkbrh24vqvxj2dipkazdo7y"
             },
             "build-tgraph-ts-jsr": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-ts-jsr",
-              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "build-tgraph-core": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-core",
-              "envKey": "bciqlo5nwzz6bg3k475s2w42hxaqdkixdva6tnew5gghedac5d3ng43y"
+              "envKey": "bciqhri2byfso3rdcghlmlgtdwhozu3trsgcbrlvadkxltaokcbjbjsq"
             },
             "build-tgraph-py": {
               "ty": "denoFile@v1",
@@ -1082,7 +1082,7 @@
               "dependsOn": [
                 "build-tgraph-core"
               ],
-              "envKey": "bciqi3ve7wig2zhcduvq2kt63yovunribk6kzbha3nucg5fkcuabt7xa"
+              "envKey": "bciqah4lry7ht5sf5s25equyxpd5cy2jahhizw2oeoexvqymrruxgxji"
             },
             "build-tgraph-ts": {
               "ty": "denoFile@v1",
@@ -1090,7 +1090,7 @@
               "dependsOn": [
                 "build-tgraph-core"
               ],
-              "envKey": "bciqasechgtqcnyliotc6k53o62vzvfm5jut74mgewfwoz7j7szvibci"
+              "envKey": "bciqgwqxtmjtjzvoircyredleiwuc574tqq72eybuww4xx7b4k4um3ya"
             },
             "build-tgraph-ts-node": {
               "ty": "denoFile@v1",
@@ -1098,7 +1098,7 @@
               "dependsOn": [
                 "build-tgraph-ts"
               ],
-              "envKey": "bciqasechgtqcnyliotc6k53o62vzvfm5jut74mgewfwoz7j7szvibci"
+              "envKey": "bciqgwqxtmjtjzvoircyredleiwuc574tqq72eybuww4xx7b4k4um3ya"
             },
             "build-tgraph": {
               "ty": "denoFile@v1",
@@ -1107,12 +1107,12 @@
                 "build-tgraph-py",
                 "build-tgraph-ts-node"
               ],
-              "envKey": "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi"
+              "envKey": "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y"
             },
             "build-sys-tgraphs": {
               "ty": "denoFile@v1",
               "key": "build-sys-tgraphs",
-              "envKey": "bciqdvyz2p7j7h7mk6edcuetyuu3qaexepnlzvh57auyrscxa7nx6n2q"
+              "envKey": "bciqduxy7536z5erz7iaym4mhxmgvvx32axc4xqcnkhkvox7wqmcsrgy"
             }
           },
           "tasksNamed": [
@@ -1156,7 +1156,7 @@
         "id": "envs",
         "config": {
           "envs": {
-            "bciqc6sjkyyjd32glkf553dkax7lw66qkdlk4cvpwlnkqy62h3yz3bcy": {
+            "bciqn7xl3b6vm55cog3vkcgh2gwpqi7xmjbn637no2opwegy2tyufwra": {
               "desc": "the default default environment.",
               "provides": [
                 {
@@ -1175,12 +1175,22 @@
                   "val": "1"
                 },
                 {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
+                },
+                {
                   "ty": "ghjk.ports.InstallSetRef",
                   "setId": "ghjkEnvProvInstSet___main"
                 }
               ]
             },
-            "bciqafqvagd25nwvgyjqhk2rad3icmbdk5ezxckgfmqklfkb6lc7jvpi": {
+            "bciqpqbcyprkzturlu5xcrumw3w7naeug6qux3q7kxax6e4547452b6y": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1198,12 +1208,22 @@
                   "val": "1"
                 },
                 {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
+                },
+                {
                   "ty": "ghjk.ports.InstallSetRef",
                   "setId": "ghjkEnvProvInstSet___main"
                 }
               ]
             },
-            "bciqgbrnhfvvtmoua3evkupx3f7tt6ma45tpnjsoh5lw5y2igquul76y": {
+            "bciqfxryixpstewtpcu63rvztnjctnhn5pj23s74med2ef4wbiigbvlq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1219,6 +1239,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1226,7 +1256,7 @@
                 }
               ]
             },
-            "bciqbc7tuunt52ewlomqkynauomfweotxpf6hzut7yz532bwk2gckn5a": {
+            "bciqdytbbqfocitmm2cnb2rthmettyhkqbkbrh24vqvxj2dipkazdo7y": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1242,6 +1272,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1249,7 +1289,7 @@
                 }
               ]
             },
-            "bciqmpo7soabnkxibgqgurlc5lfy4a7jeglk6v45x4e4k7wnmwmztaqq": {
+            "bciqavymvs4fufpzasau5dpqcuortxf5fk4ar5fc7sfldpld5327hiyi": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1265,6 +1305,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1272,7 +1322,7 @@
                 }
               ]
             },
-            "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq": {
+            "bciqjiey2fopzqscssr4mkjlrn2444c7i7am6b7d6retgrudosl2iakq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1288,6 +1338,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1295,7 +1355,7 @@
                 }
               ]
             },
-            "bciqadrkruydvgov2zwklcwohmuno4nalyc3pg3yomdumdxfstvo4pby": {
+            "bciqmvlgp4a6wsusfb5fnvbdigygfoseguuckxlnxg2lwwei7fk32sqy": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1311,6 +1371,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1323,7 +1393,7 @@
                 }
               ]
             },
-            "bciqahf2tfeocjdxm6vt4py7nen4konon5ufmjszqkuo4drhtj445zyi": {
+            "bciqheimwpamoxd2izbcabykhjp3oni4ruckjmh4hmcfiq55tlczvtdy": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1339,6 +1409,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1346,7 +1426,7 @@
                 }
               ]
             },
-            "bciqov4rontailrkkhq4mmg6unksfithoszn3abi3pyfqnvlh6ynkvka": {
+            "bciqpkuapmicbwlczmxgv5nd7pupxghlmbujw6lmgdtdjzqahawhrn2y": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1362,6 +1442,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1369,7 +1459,7 @@
                 }
               ]
             },
-            "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq": {
+            "bciqcxytiajt2elg6uwbwynwkuymeudoermcqmp2va275sonxsv6iemq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1385,6 +1475,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1427,7 +1527,7 @@
                 }
               ]
             },
-            "bciqh7p45mporp4lmdynwq3xdlhbkauaww7ggluc2bzqgpkxyw7j76fq": {
+            "bciqjchayotgckjrkrk7tvbztqnfymp5ku3fkjlmqenuck7i4n2ca33y": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1443,6 +1543,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1525,7 +1635,7 @@
                 }
               ]
             },
-            "bciqgpx2na2og2c3ty363m2kq3gficj4l4wxlpnrwl5gqiuzooondwja": {
+            "bciqgcnlco6qwpzfwoao4s6fxugobghedwyshklfs4cbtwy5zk5sxo3a": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1541,6 +1651,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1548,7 +1668,7 @@
                 }
               ]
             },
-            "bciqlo5nwzz6bg3k475s2w42hxaqdkixdva6tnew5gghedac5d3ng43y": {
+            "bciqhri2byfso3rdcghlmlgtdwhozu3trsgcbrlvadkxltaokcbjbjsq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1564,6 +1684,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1576,7 +1706,7 @@
                 }
               ]
             },
-            "bciqi3ve7wig2zhcduvq2kt63yovunribk6kzbha3nucg5fkcuabt7xa": {
+            "bciqah4lry7ht5sf5s25equyxpd5cy2jahhizw2oeoexvqymrruxgxji": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1592,6 +1722,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1604,7 +1744,7 @@
                 }
               ]
             },
-            "bciqasechgtqcnyliotc6k53o62vzvfm5jut74mgewfwoz7j7szvibci": {
+            "bciqgwqxtmjtjzvoircyredleiwuc574tqq72eybuww4xx7b4k4um3ya": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1620,6 +1760,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1632,7 +1782,7 @@
                 }
               ]
             },
-            "bciqdvyz2p7j7h7mk6edcuetyuu3qaexepnlzvh57auyrscxa7nx6n2q": {
+            "bciqduxy7536z5erz7iaym4mhxmgvvx32axc4xqcnkhkvox7wqmcsrgy": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1648,6 +1798,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1655,7 +1815,7 @@
                 }
               ]
             },
-            "bciqdyc67uwyl5pkoaaohvgmnpdtuamame6zvktiegfai562fuw5oiiq": {
+            "bciqeobre32n4w56valwmxn5jntfwtbcpturauzq2mteegbcikftwq2q": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1671,6 +1831,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1678,7 +1848,7 @@
                 }
               ]
             },
-            "bciqf76zyyuyjv6qftg3snjga2c5me32myn2nxlclr4kryuy2nobtbii": {
+            "bciqkvfxfs2uw5v3ybusvuinaie67ywzeamjtthggxndpzz7mhr66pzq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1694,6 +1864,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1701,7 +1881,7 @@
                 }
               ]
             },
-            "bciqkx557bvfx3hn4pl47jx75x37twor5h5jarz7kbk2tvzqv4xpw3vq": {
+            "bciqbkaskf4izyf3gv4rq5jtdrdk76n7wmnp3clxqmlezsxkqw3itt2i": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1717,6 +1897,16 @@
                   "ty": "posix.envVar",
                   "key": "CLICOLOR_FORCE",
                   "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1727,14 +1917,14 @@
           },
           "defaultEnv": "dev",
           "envsNamed": {
-            "main": "bciqc6sjkyyjd32glkf553dkax7lw66qkdlk4cvpwlnkqy62h3yz3bcy",
-            "_wasm": "bciqbc7tuunt52ewlomqkynauomfweotxpf6hzut7yz532bwk2gckn5a",
-            "_python": "bciqmpo7soabnkxibgqgurlc5lfy4a7jeglk6v45x4e4k7wnmwmztaqq",
-            "_ecma": "bciqg5tyxjk3n5hnomlukrr4jty54ne4kfzthqbqmef6tsze4thjl6xq",
-            "_rust": "bciqahf2tfeocjdxm6vt4py7nen4konon5ufmjszqkuo4drhtj445zyi",
-            "ci": "bciqdyc67uwyl5pkoaaohvgmnpdtuamame6zvktiegfai562fuw5oiiq",
-            "dev": "bciqf76zyyuyjv6qftg3snjga2c5me32myn2nxlclr4kryuy2nobtbii",
-            "oci": "bciqkx557bvfx3hn4pl47jx75x37twor5h5jarz7kbk2tvzqv4xpw3vq"
+            "main": "bciqn7xl3b6vm55cog3vkcgh2gwpqi7xmjbn637no2opwegy2tyufwra",
+            "_wasm": "bciqdytbbqfocitmm2cnb2rthmettyhkqbkbrh24vqvxj2dipkazdo7y",
+            "_python": "bciqavymvs4fufpzasau5dpqcuortxf5fk4ar5fc7sfldpld5327hiyi",
+            "_ecma": "bciqjiey2fopzqscssr4mkjlrn2444c7i7am6b7d6retgrudosl2iakq",
+            "_rust": "bciqheimwpamoxd2izbcabykhjp3oni4ruckjmh4hmcfiq55tlczvtdy",
+            "ci": "bciqeobre32n4w56valwmxn5jntfwtbcpturauzq2mteegbcikftwq2q",
+            "dev": "bciqkvfxfs2uw5v3ybusvuinaie67ywzeamjtthggxndpzz7mhr66pzq",
+            "oci": "bciqbkaskf4izyf3gv4rq5jtdrdk76n7wmnp3clxqmlezsxkqw3itt2i"
           }
         }
       }

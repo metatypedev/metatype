@@ -1,27 +1,13 @@
 // @ts-nocheck: Deno file
 
-import { METATYPE_VERSION, PUBLISHED_VERSION } from "./dev/consts.ts";
-import { file, ports, sedLock, semver, stdDeps } from "./dev/deps.ts";
-import installs from "./dev/installs.ts";
-import tasksBuild from "./dev/tasks-build.ts";
-import tasksDev from "./dev/tasks-dev.ts";
-import tasksFetch from "./dev/tasks-fetch.ts";
-import tasksInstall from "./dev/tasks-install.ts";
-import tasksLint from "./dev/tasks-lint.ts";
-import tasksLock from "./dev/tasks-lock.ts";
-import tasksTest from "./dev/tasks-test.ts";
+import { METATYPE_VERSION, PUBLISHED_VERSION } from "./tools/consts.ts";
+import { file, ports, sedLock, semver, stdDeps } from "./tools/deps.ts";
+import installs from "./tools/installs.ts";
+import tasks from "./tools/tasks.ts";
 
 const ghjk = file({
   defaultEnv: Deno.env.get("CI") ? "ci" : Deno.env.get("OCI") ? "oci" : "dev",
-  tasks: {
-    ...tasksBuild,
-    ...tasksDev,
-    ...tasksFetch,
-    ...tasksInstall,
-    ...tasksLint,
-    ...tasksLock,
-    ...tasksTest,
-  },
+  tasks,
 });
 export const sophon = ghjk.sophon;
 const { env, task } = ghjk;

@@ -3,7 +3,7 @@
 
 import { DenoTaskDefArgs } from "./deps.ts";
 
-const tasks: Record<string, DenoTaskDefArgs> = {
+export default {
   "fetch-deno": {
     inherit: "_ecma",
     desc: "Cache remote deno modules.",
@@ -27,5 +27,4 @@ const tasks: Record<string, DenoTaskDefArgs> = {
             ].join(" "),
         ),
   },
-};
-export default tasks;
+} satisfies Record<string, DenoTaskDefArgs>;

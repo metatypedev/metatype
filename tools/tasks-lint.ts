@@ -4,7 +4,7 @@
 import { DenoTaskDefArgs, ports } from "./deps.ts";
 import installs from "./installs.ts";
 
-const tasks: Record<string, DenoTaskDefArgs> = {
+export default {
   "lint-udeps": {
     desc: "Check for unused cargo depenencies",
     installs: [
@@ -18,5 +18,4 @@ const tasks: Record<string, DenoTaskDefArgs> = {
     ],
     fn: ($) => $`cargo udeps --all-targets --all-features ${$.argv}`,
   },
-};
-export default tasks;
+} satisfies Record<string, DenoTaskDefArgs>;

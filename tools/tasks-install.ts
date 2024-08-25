@@ -4,7 +4,7 @@
 import { DenoTaskDefArgs, std_url } from "./deps.ts";
 import { WASMTIME_VERSION } from "./consts.ts";
 
-const tasks: Record<string, DenoTaskDefArgs> = {
+export default {
   "install-sys": {
     desc: "Print a command you can use to install system items",
     fn: async ($) => {
@@ -99,5 +99,4 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       });
     },
   },
-};
-export default tasks;
+} satisfies Record<string, DenoTaskDefArgs>;

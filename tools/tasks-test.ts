@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { testE2eCli } from "../dev/test.ts";
+import { testE2eCli } from "./test.ts";
 import { DenoTaskDefArgs } from "./deps.ts";
 
-const tasks: Record<string, DenoTaskDefArgs> = {
+export default {
   "test-e2e": {
     inherit: "ci",
     desc: "Shorthand for `dev/test.ts`",
@@ -43,5 +43,4 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       $`bash -sx`.stdinText("node --test --import=tsx tests/*.test.ts")
         .cwd("meta-lsp/ts-language-server"),
   },
-};
-export default tasks;
+} satisfies Record<string, DenoTaskDefArgs>;

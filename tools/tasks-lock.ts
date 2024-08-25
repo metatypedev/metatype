@@ -4,7 +4,7 @@
 import { copyLock, DenoTaskDefArgs, parseArgs, sedLock } from "./deps.ts";
 import * as consts from "./consts.ts";
 
-const tasks: Record<string, DenoTaskDefArgs> = {
+export default {
   "lock-sed": {
     desc: "Update versions",
     fn: async ($) => {
@@ -48,5 +48,4 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       }
     },
   },
-};
-export default tasks;
+} satisfies Record<string, DenoTaskDefArgs>;

@@ -5,23 +5,12 @@
     "website/node_modules": true
   },
   "deno.disablePaths": [
-    "meta-lsp",
-    "typegraph/node",
+    "src/meta-lsp",
+    "src/typegraph/node",
     "examples/templates/node",
-    "website"
+    "docs/metatype.dev"
   ],
-  // "deno.enablePaths": [
-  //   "typegate",
-  //   "dev",
-  //   "examples/templates/deno",
-  //   "examples/typegraphs",
-  //   "typegraph/deno/dev",
-  //   "typegraph/deno/sdk",
-  //   "libs/metagen",
-  //   "ghjk.ts",
-  //   ".ghjk"
-  // ],
-  // "deno.config": "typegate/deno.jsonc",
+  "deno.config": "deno.jsonc",
   "deno.unstable": true,
   "typescript.suggest.completeFunctionCalls": true,
   "typescript.inlayHints.variableTypes.enabled": true,

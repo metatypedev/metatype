@@ -3,7 +3,7 @@
 
 import { DenoTaskDefArgs } from "./deps.ts";
 
-const tasks: Record<string, DenoTaskDefArgs> = {
+export default {
   "build-sys-tgraphs": {
     inherit: ["_rust", "_python"],
     async fn($) {
@@ -98,5 +98,4 @@ const tasks: Record<string, DenoTaskDefArgs> = {
       // await `wasmtime compile -W component-model ${target} ${wasmOut} -o ${cwasmOut}`;
     },
   },
-};
-export default tasks;
+} satisfies Record<string, DenoTaskDefArgs>;
