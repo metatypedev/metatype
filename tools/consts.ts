@@ -98,5 +98,5 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
       PUBLISHED_VERSION,
     ],
   ],
-  "docs/CONTRIBUTING.md": [[/(GHJK_VERSION=").*(")/, GHJK_VERSION]],
+  "CONTRIBUTING.md": [[/(GHJK_VERSION=").*(")/, GHJK_VERSION]],
 };

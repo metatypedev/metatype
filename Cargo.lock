@@ -6493,6 +6493,7 @@ dependencies = [
  "common",
  "crossbeam-channel",
  "ctrlc",
+ "dashmap",
  "derive_more",
  "dialoguer",
  "directories 5.0.1",

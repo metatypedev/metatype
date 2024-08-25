@@ -39,6 +39,7 @@ metagen.workspace = true
 chrono = { workspace = true, features = ["serde"] }
 semver.workspace = true
 indexmap.workspace = true
+dashmap.workspace = true
 
 # patterns
 once_cell.workspace = true

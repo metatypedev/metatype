@@ -1,8 +1,8 @@
 {
   "editor.formatOnSave": true,
   "files.exclude": {
-    "website/.docusaurus": true,
-    "website/node_modules": true
+    "docs/metatype.dev/.docusaurus": true,
+    "docs/metatype.dev/node_modules": true
   },
   "deno.disablePaths": [
     "src/meta-lsp",
@@ -12,6 +12,9 @@
   ],
   "deno.config": "deno.jsonc",
   "deno.unstable": true,
+  "deno.codeLens.implementations": true,
+  "deno.codeLens.references": true,
+  "deno.codeLens.referencesAllFunctions": true,
   "typescript.suggest.completeFunctionCalls": true,
   "typescript.inlayHints.variableTypes.enabled": true,
   "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
@@ -22,9 +25,6 @@
   "typescript.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
   "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
   "rust-analyzer.checkOnSave": true,
-  "deno.codeLens.implementations": true,
-  "deno.codeLens.references": true,
-  "deno.codeLens.referencesAllFunctions": true,
   "editor.wordWrap": "on",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",

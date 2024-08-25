@@ -7,8 +7,6 @@ use std::time::Duration;
 
 use serde::Deserialize;
 
-use lazy_static::lazy_static;
-
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum MessageType {
@@ -65,9 +63,8 @@ struct ResolveNullConstraintViolation {
     failure: NullConstraintViolation,
 }
 
-lazy_static! {
-    static ref RETRY_COUNTERS: Mutex<HashMap<PathBuf, Arc<u8>>> = Mutex::new(HashMap::new());
-}
+static RETRY_COUNTER: once_cell::sync::Lazy<dashmap::DashMap<PathBuf, Arc<u8>>> =
+    once_cell::sync::Lazy::new(Default::Default);
 
 pub struct RetryManager;
 
