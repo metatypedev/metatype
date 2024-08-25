@@ -21,7 +21,7 @@ import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../../log.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
-import { mapValues } from "std/collections/map_values.ts";
+import { mapValues } from "std/collections/map-values";
 import { DependencyResolver } from "./dependency_resolver.ts";
 
 const logger = getLogger(import.meta);

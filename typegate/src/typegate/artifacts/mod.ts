@@ -5,9 +5,9 @@ import { sha256, TypegateCryptoKeys } from "@typegate/crypto.ts";
 import { getLogger } from "@typegate/log.ts";
 import * as jwt from "jwt";
 import { z } from "zod";
-import { dirname } from "std/path/dirname.ts";
-import { resolve } from "std/path/resolve.ts";
-import { exists } from "std/fs/exists.ts";
+import { dirname } from "std/path/dirname";
+import { resolve } from "std/path/resolve";
+import { exists } from "std/fs/exists";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
 import { BaseError, ErrorKind, NotImplemented } from "@typegate/errors.ts";

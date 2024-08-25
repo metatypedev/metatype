@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { resolve } from "std/path/resolve.ts";
+import { resolve } from "std/path/resolve";
 import { HashTransformStream } from "../../utils/hash.ts";
 import {
   ArtifactError,
@@ -15,8 +15,8 @@ import {
 import { getLogger } from "../../log.ts";
 import { createHash } from "node:crypto";
 import * as jwt from "jwt";
-import { join } from "std/path/join.ts";
-import { exists } from "std/fs/exists.ts";
+import { join } from "std/path/join";
+import { exists } from "std/fs/exists";
 import { BaseError, ErrorKind } from "@typegate/errors.ts";
 import { TypegateCryptoKeys } from "../../crypto.ts";
 

@@ -1,10 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dirname } from "std/path/dirname.ts";
-import { resolve } from "std/path/resolve.ts";
-import { join } from "std/path/join.ts";
-import { fromFileUrl } from "std/path/from_file_url.ts";
+import { dirname, fromFileUrl, join, resolve } from "std/path/posix";
 
 const customDir = resolve(dirname(fromFileUrl(import.meta.url)));
 

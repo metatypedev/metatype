@@ -1,9 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { basename } from "std/url/mod.ts";
-import { fromFileUrl, toFileUrl } from "std/path/mod.ts";
-
+import { basename, fromFileUrl, toFileUrl } from "std/path/posix";
 import { Register } from "./typegate/register.ts";
 import { PrismaMigrationRuntime } from "./runtimes/prisma/mod.ts";
 import { RuntimeResolver, TypeGraph } from "./typegraph/mod.ts";

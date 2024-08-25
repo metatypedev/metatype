@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "test-utils/mod.ts";
-import { join, resolve } from "std/path/mod.ts";
-import { assert, assertEquals, assertRejects } from "std/assert/mod.ts";
+import { join, resolve } from "std/path/posix";
+import { assert, assertEquals, assertRejects } from "std/assert";
 import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "dax";
@@ -296,24 +296,27 @@ Meta.test("meta dev with typegate", async (t) => {
     return true;
   }, null);
 
-  await stderr.readWhile((rawLine) => {
-    const line = $.stripAnsi(rawLine);
-    console.log("meta-full dev[E]>", line);
-    if (line.match(/failed to deploy/i)) {
-      throw new Error("error detected on line: " + rawLine);
-    }
-    const match = line.match(
-      /successfully deployed typegraph ([\w_-]+) from (.+)$/,
-    );
-    if (match) {
-      const prefix = "typegraphs/";
-      if (!match[2].startsWith(prefix)) {
-        throw new Error("unexpected");
+  await stderr.readWhile(
+    (rawLine) => {
+      const line = $.stripAnsi(rawLine);
+      console.log("meta-full dev[E]>", line);
+      if (line.match(/failed to deploy/i)) {
+        throw new Error("error detected on line: " + rawLine);
       }
-      deployed.push([match[2].slice(prefix.length), match[1]]);
-    }
-    return deployed.length < 41;
-  }, 3 * 60 * 1000);
+      const match = line.match(
+        /successfully deployed typegraph ([\w_-]+) from (.+)$/,
+      );
+      if (match) {
+        const prefix = "typegraphs/";
+        if (!match[2].startsWith(prefix)) {
+          throw new Error("unexpected");
+        }
+        deployed.push([match[2].slice(prefix.length), match[1]]);
+      }
+      return deployed.length < 41;
+    },
+    3 * 60 * 1000,
+  );
 
   await t.should("have deployed all the typegraphs", () => {
     // TODO use `meta list`

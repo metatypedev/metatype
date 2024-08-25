@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals, assertStringIncludes } from "std/assert/mod.ts";
+import { assertEquals, assertStringIncludes } from "std/assert";
 import { execute, gql, Meta, sleep } from "../utils/mod.ts";
 
 import * as mf from "test/mock_fetch";
 import { randomUUID } from "../../src/crypto.ts";
 import { nextAuthorizationHeader } from "../../src/services/auth/mod.ts";
 import { JWTClaims } from "../../src/services/auth/mod.ts";
-import { getSetCookies } from "std/http/cookie.ts";
+import { getSetCookies } from "std/http/cookie";
 import { b64decode } from "../../src/utils.ts";
 
 Meta.test("Auth", async (t) => {

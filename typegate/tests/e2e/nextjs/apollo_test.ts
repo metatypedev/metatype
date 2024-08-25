@@ -10,9 +10,9 @@ import {
 } from "aws-sdk/client-s3";
 import { TestModule } from "test-utils/test_module.ts";
 import { testDir } from "test-utils/dir.ts";
-import { join } from "std/path/mod.ts";
-import { assertEquals } from "std/assert/assert_equals.ts";
-import { TextLineStream } from "std/streams/text_line_stream.ts";
+import { join } from "std/path/join";
+import { assertEquals } from "std/assert";
+import { TextLineStream } from "std/streams;
 
 const HOST = "http://localhost:9000";
 const REGION = "local";
@@ -105,8 +105,7 @@ class CancellableReader {
   private constructor(
     private status: ReaderStatus,
     private promise: Promise<void>,
-  ) {
-  }
+  ) {}
 
   async cancel() {
     this.status.cancelled = true;
@@ -119,8 +118,7 @@ class NextJsServer {
     public process: Deno.ChildProcess,
     private stdout: OutputChannel,
     private stderr: OutputChannel,
-  ) {
-  }
+  ) {}
 
   public static init(command: Deno.Command) {
     const process = command.spawn();
@@ -275,38 +273,41 @@ async function undeployTypegraph(port: number) {
   );
 }
 
-Meta.test({
-  name: "apollo client",
-  introspection: true,
-}, async (t) => {
-  await initBucket();
-  await deployTypegraph(t.port!);
+Meta.test(
+  {
+    name: "apollo client",
+    introspection: true,
+  },
+  async (t) => {
+    await initBucket();
+    await deployTypegraph(t.port!);
 
-  // install nextjs app
-  const install = await t.shell(["pnpm", "install"], {
-    currentDir: apolloDir,
-  });
-  console.log("Nextjs initialization", install);
+    // install nextjs app
+    const install = await t.shell(["pnpm", "install"], {
+      currentDir: apolloDir,
+    });
+    console.log("Nextjs initialization", install);
 
-  // start nextjs app
-  const nextjs = startNextServer(t.port!);
-  const { port: nextjsPort } = await nextjs.ready();
-  console.log(`Nextjs server ready: listening on port ${nextjsPort}`);
+    // start nextjs app
+    const nextjs = startNextServer(t.port!);
+    const { port: nextjsPort } = await nextjs.ready();
+    console.log(`Nextjs server ready: listening on port ${nextjsPort}`);
 
-  try {
-    const url = `http://localhost:${nextjsPort}/api/apollo`;
-    console.log("Fetch", url);
-    const res = await fetch(url);
-    const jsonResponse = await res.json();
+    try {
+      const url = `http://localhost:${nextjsPort}/api/apollo`;
+      console.log("Fetch", url);
+      const res = await fetch(url);
+      const jsonResponse = await res.json();
 
-    console.log("Nextjs API response", jsonResponse);
-    assertEquals(jsonResponse, { success: { data: { uploadMany: true } } });
-  } catch (err) {
-    throw err;
-  } finally {
-    const status = await nextjs.stop();
-    console.log("Nextjs server stopped", status);
-  }
+      console.log("Nextjs API response", jsonResponse);
+      assertEquals(jsonResponse, { success: { data: { uploadMany: true } } });
+    } catch (err) {
+      throw err;
+    } finally {
+      const status = await nextjs.stop();
+      console.log("Nextjs server stopped", status);
+    }
 
-  await undeployTypegraph(t.port!);
-});
+    await undeployTypegraph(t.port!);
+  },
+);

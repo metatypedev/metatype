@@ -6,8 +6,8 @@ import {
   assertArrayIncludes,
   assertEquals,
   assertExists,
-} from "std/assert/mod.ts";
-import { join } from "std/path/mod.ts";
+} from "std/assert";
+import { join } from "std/path/join";
 import * as native from "native";
 import { nativeResult } from "../../src/utils.ts";
 import { gql, Meta } from "../utils/mod.ts";

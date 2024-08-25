@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta, sleep } from "../../utils/mod.ts";
-import * as path from "std/path/mod.ts";
+import { join } from "std/path/join";
 
 Meta.test(
   {
@@ -200,7 +200,7 @@ Meta.test(
   },
   async (t) => {
     const load = async (value: number) => {
-      Deno.env.set("DYNAMIC", path.join("dynamic", `${value}.ts`));
+      Deno.env.set("DYNAMIC", join("dynamic", `${value}.ts`));
       const e = await t.engine("runtimes/deno/deno_reload.py");
       Deno.env.delete("DYNAMIC");
       return e;
@@ -241,7 +241,7 @@ Meta.test(
     name: "Deno runtime: script reloading",
   },
   async (t) => {
-    const denoScript = path.join(import.meta.dirname!, "reload", "template.ts");
+    const denoScript = join(import.meta.dirname!, "reload", "template.ts");
     const originalContent = await Deno.readTextFile(denoScript);
     const testReload = async (value: number) => {
       try {

@@ -5,7 +5,7 @@ import { Meta } from "../../utils/mod.ts";
 import { serialize } from "../../utils/meta.ts";
 import { SchemaGenerator } from "../../../src/runtimes/prisma/hooks/generate_schema.ts";
 import * as PrismaRT from "../../../src/runtimes/prisma/types.ts";
-import { assertEquals } from "std/assert/mod.ts";
+import { assertEquals } from "std/assert";
 import outdent from "outdent";
 import { SecretManager, TypeGraph } from "../../../src/typegraph/mod.ts";
 import { Model } from "../../../src/typegraph/types.ts";
@@ -26,8 +26,8 @@ async function assertGeneratedSchema(
     }),
   );
 
-  const runtime = tg.runtimes.filter((rt) =>
-    rt.name === "prisma"
+  const runtime = tg.runtimes.filter(
+    (rt) => rt.name === "prisma",
   )[0] as PrismaRT.DS<PrismaRT.DataRaw>;
 
   if (reorderModels) {
@@ -42,10 +42,7 @@ async function assertGeneratedSchema(
     }),
   );
 
-  assertEquals(
-    schemaGenerator.generate(),
-    schema,
-  );
+  assertEquals(schemaGenerator.generate(), schema);
 }
 
 Meta.test("schema generation", async (t) => {
@@ -315,12 +312,10 @@ Meta.test("schema generation", async (t) => {
     },
   );
 
-  await t.should(
-    "generate datamodel with one to many self",
-    async () => {
-      await assertGeneratedSchema(
-        "one-to-many-self",
-        outdent`
+  await t.should("generate datamodel with one to many self", async () => {
+    await assertGeneratedSchema(
+      "one-to-many-self",
+      outdent`
           model TreeNode {
               id Int @default(autoincrement()) @id
               children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
@@ -328,11 +323,11 @@ Meta.test("schema generation", async (t) => {
               parentId Int
           }
         `,
-      );
+    );
 
-      await assertGeneratedSchema(
-        "explicit-one-to-many-self",
-        outdent`
+    await assertGeneratedSchema(
+      "explicit-one-to-many-self",
+      outdent`
           model TreeNode {
               id Int @default(autoincrement()) @id
               children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
@@ -340,11 +335,11 @@ Meta.test("schema generation", async (t) => {
               parentId Int
           }
         `,
-      );
+    );
 
-      await assertGeneratedSchema(
-        "one-to-many-self-2",
-        outdent`
+    await assertGeneratedSchema(
+      "one-to-many-self-2",
+      outdent`
           model TreeNode {
               id Int @default(autoincrement()) @id
               parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
@@ -352,11 +347,11 @@ Meta.test("schema generation", async (t) => {
               children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
           }
         `,
-      );
+    );
 
-      await assertGeneratedSchema(
-        "explicit-one-to-many-self-2",
-        outdent`
+    await assertGeneratedSchema(
+      "explicit-one-to-many-self-2",
+      outdent`
           model TreeNode {
               id Int @default(autoincrement()) @id
               parent TreeNode @relation(name: "__rel_TreeNode_TreeNode_1", fields: [parentId], references: [id])
@@ -364,9 +359,8 @@ Meta.test("schema generation", async (t) => {
               children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_1")
           }
         `,
-      );
-    },
-  );
+    );
+  });
 
   await t.should("generate datamodel with one to one self", async () => {
     await assertGeneratedSchema(
@@ -398,12 +392,10 @@ Meta.test("schema generation", async (t) => {
     );
   });
 
-  await t.should(
-    "generate typegraph with multiple relationships",
-    async () => {
-      await assertGeneratedSchema(
-        "multiple-relationships",
-        outdent`
+  await t.should("generate typegraph with multiple relationships", async () => {
+    await assertGeneratedSchema(
+      "multiple-relationships",
+      outdent`
           model User {
               id String @db.Uuid @default(uuid()) @id
               email String @db.Text @unique
@@ -421,11 +413,11 @@ Meta.test("schema generation", async (t) => {
               favorite_of User[] @relation(name: "__rel_User_Post_2")
           }
         `,
-      );
+    );
 
-      await assertGeneratedSchema(
-        "multiple-relationships-2",
-        outdent`
+    await assertGeneratedSchema(
+      "multiple-relationships-2",
+      outdent`
           model User {
               id String @db.Uuid @default(uuid()) @id
               email String @db.Text @unique
@@ -446,11 +438,11 @@ Meta.test("schema generation", async (t) => {
               favorite_of User[] @relation(name: "__rel_User_Post_3")
           }
         `,
-      );
+    );
 
-      await assertGeneratedSchema(
-        "multiple-self-relationships",
-        outdent`
+    await assertGeneratedSchema(
+      "multiple-self-relationships",
+      outdent`
           model Person {
               id String @db.Uuid @default(uuid()) @id
               personal_hero Person? @relation(name: "__rel_Person_Person_1", fields: [personal_heroId], references: [id])
@@ -463,16 +455,13 @@ Meta.test("schema generation", async (t) => {
               @@unique([personal_heroId])
           }
         `,
-      );
-    },
-  );
+    );
+  });
 
-  await t.should(
-    "typegraph with injections and nested function",
-    async () => {
-      await assertGeneratedSchema(
-        "injection",
-        outdent`
+  await t.should("typegraph with injections and nested function", async () => {
+    await assertGeneratedSchema(
+      "injection",
+      outdent`
           model User {
               id String @db.Uuid @default(uuid()) @id
               email String @db.Text @unique
@@ -481,9 +470,8 @@ Meta.test("schema generation", async (t) => {
               updatedAt DateTime @updatedAt
           }
         `,
-      );
-    },
-  );
+    );
+  });
 
   await t.should("generate with multi-field id", async () => {
     await assertGeneratedSchema(

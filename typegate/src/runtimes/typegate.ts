@@ -7,13 +7,13 @@ import { Resolver, ResolverArgs } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { getLogger } from "../log.ts";
 import { globalConfig } from "../config.ts";
-import * as semver from "std/semver/mod.ts";
+import * as semver from "std/semver";
 import { Typegate } from "../typegate/mod.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
 import { closestWord } from "../utils.ts";
 import { Type, TypeNode } from "../typegraph/type_node.ts";
 import { StringFormat } from "../typegraph/types.ts";
-import { mapValues } from "std/collections/map_values.ts";
+import { mapValues } from "std/collections/map-values";
 import { PrismaRT, PrismaRuntime } from "./prisma/mod.ts";
 import { SingleQuery } from "./prisma/prisma.ts";
 

@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Meta } from "../utils/mod.ts";
-import { join } from "std/path/join.ts";
-import { resolve } from "std/path/resolve.ts";
-import { assertEquals } from "std/assert/mod.ts";
+import { join, resolve } from "std/path/posix";
+import { assertEquals } from "std/assert";
 import { GraphQLQuery } from "../utils/query/graphql_query.ts";
 import { JSONValue } from "../../src/utils.ts";
 import { testDir } from "../utils/dir.ts";

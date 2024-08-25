@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { z } from "zod";
-import { decodeBase64 } from "std/encoding/base64.ts";
+import { decodeBase64 } from "std/encoding/base64";
 import { RedisConnectOptions } from "redis";
 import { S3ClientConfig } from "aws-sdk/client-s3";
 

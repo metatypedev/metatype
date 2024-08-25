@@ -6,7 +6,7 @@ import {
   RateLimit,
   RedisRateLimiter,
 } from "../../src/typegate/rate_limiter.ts";
-import { assertEquals, assertThrows } from "std/assert/mod.ts";
+import { assertEquals, assertThrows } from "std/assert";
 import { connect, Raw } from "redis";
 import { sleep } from "test-utils/mod.ts";
 

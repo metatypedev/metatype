@@ -6,7 +6,7 @@ import * as ast from "graphql/ast";
 import type { TypeGraph } from "../typegraph/mod.ts";
 import { JSONValue } from "../utils.ts";
 import { findOperation, FragmentDefs } from "../transports/graphql/graphql.ts";
-import * as log from "std/log/mod.ts";
+import * as log from "std/log";
 import { sha1 } from "../crypto.ts";
 import { RateLimit } from "../typegate/rate_limiter.ts";
 import type {

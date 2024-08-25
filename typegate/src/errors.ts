@@ -1,8 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { basename, dirname } from "std/url/mod.ts";
-import { extname } from "std/path/mod.ts";
+import { basename, dirname, extname } from "std/path/posix";
 import { getLogger } from "./log.ts";
 import { globalConfig } from "./config.ts";
 

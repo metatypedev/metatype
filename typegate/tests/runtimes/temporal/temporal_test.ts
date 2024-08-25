@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertExists } from "std/assert/mod.ts";
+import { assertExists } from "std/assert";
 import { gql, Meta } from "test-utils/mod.ts";
 import { MetaTest } from "test-utils/test.ts";
-import * as std_path from "std/path/mod.ts";
+import { join } from "std/path/join";
 
 async function testSerialize(t: MetaTest, file: string) {
   await t.should(`serialize typegraph ${file}`, async () => {
@@ -31,12 +31,15 @@ async function waitForHealthy(
   throw Error("stderr lost before healthy");
 }
 
-Meta.test({
-  name: "Typegraph using temporal",
-}, async (t) => {
-  await testSerialize(t, "runtimes/temporal/temporal.py");
-  await testSerialize(t, "runtimes/temporal/temporal.ts");
-});
+Meta.test(
+  {
+    name: "Typegraph using temporal",
+  },
+  async (t) => {
+    await testSerialize(t, "runtimes/temporal/temporal.py");
+    await testSerialize(t, "runtimes/temporal/temporal.ts");
+  },
+);
 
 Meta.test("temporal integ", async (t) => {
   const greenFlag = [];
@@ -44,21 +47,16 @@ Meta.test("temporal integ", async (t) => {
   const temporalProc = new Deno.Command("temporal", {
     args: `server start-dev --headless`.split(" "),
     stdout: "piped",
-  })
-    .spawn();
+  }).spawn();
   t.addCleanup(async () => {
     await temporalProc.stdout.cancel();
     temporalProc.kill();
     await temporalProc.status;
   });
 
-  greenFlag.push(waitForHealthy(
-    temporalProc,
-    "Temporal server: ",
-    "stdout",
-  ));
+  greenFlag.push(waitForHealthy(temporalProc, "Temporal server: ", "stdout"));
 
-  const workerDir = std_path.join(import.meta.dirname!, "worker");
+  const workerDir = join(import.meta.dirname!, "worker");
   await t.shell(`pnpm install`.split(" "), {
     currentDir: workerDir,
   });
@@ -67,8 +65,7 @@ Meta.test("temporal integ", async (t) => {
     args: `tsx worker.ts`.split(" "),
     stderr: "piped",
     cwd: workerDir,
-  })
-    .spawn();
+  }).spawn();
   greenFlag.push(waitForHealthy(workerProc, "RUNNING"));
 
   t.addCleanup(async () => {
@@ -91,42 +88,54 @@ Meta.test("temporal integ", async (t) => {
   const tq = "myTq";
 
   let runId: string;
-  await gql`mutation ($wflowId: String!, $tq: String!) {
-      runId: startKv(workflow_id: $wflowId, task_queue: $tq, args: [{ }])
-    }`.withVars({ wflowId, tq }).expectBody((body) => {
-    assertExists(body.data);
-    runId = body.data.runId;
-  }).on(e);
+  await gql`
+    mutation ($wflowId: String!, $tq: String!) {
+      runId: startKv(workflow_id: $wflowId, task_queue: $tq, args: [{}])
+    }
+  `
+    .withVars({ wflowId, tq })
+    .expectBody((body) => {
+      assertExists(body.data);
+      runId = body.data.runId;
+    })
+    .on(e);
 
   const key = "hello";
   const val = "metatype";
 
-  await gql`mutation ($wflowId: String!, $runId: String!, $key: String!, $val: String!) {
+  await gql`
+    mutation (
+      $wflowId: String!
+      $runId: String!
+      $key: String!
+      $val: String!
+    ) {
       result: signal(
-        workflow_id: $wflowId, 
-        run_id: $runId, 
+        workflow_id: $wflowId
+        run_id: $runId
         args: [{ key: $key, value: $val }]
       )
-    }`.withVars({
-    wflowId,
-    runId: runId!,
-    key,
-    val,
-  })
+    }
+  `
+    .withVars({
+      wflowId,
+      runId: runId!,
+      key,
+      val,
+    })
     .expectData({ result: true })
     .on(e);
 
-  await gql`query ($wflowId: String!, $runId: String!, $key: String!) {
-      result: query(
-        workflow_id: $wflowId, 
-        run_id: $runId, 
-        args: [$key]
-      )
-    }`.withVars({
-    wflowId,
-    runId: runId!,
-    key,
-  })
+  await gql`
+    query ($wflowId: String!, $runId: String!, $key: String!) {
+      result: query(workflow_id: $wflowId, run_id: $runId, args: [$key])
+    }
+  `
+    .withVars({
+      wflowId,
+      runId: runId!,
+      key,
+    })
     .expectData({ result: val })
     .on(e);
 });

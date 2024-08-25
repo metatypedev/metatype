@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { v4 } from "std/uuid/mod.ts";
-import { assert } from "std/assert/mod.ts";
+import { v4 } from "std/uuid";
+import { assert } from "std/assert";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 

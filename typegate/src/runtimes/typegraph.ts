@@ -25,7 +25,7 @@ import {
   TypeVisitorMap,
   visitTypes,
 } from "../typegraph/visitor.ts";
-import { distinctBy } from "std/collections/distinct_by.ts";
+import { distinctBy } from "std/collections/distinct-by";
 import { isInjected } from "../typegraph/utils.ts";
 import { PolicyIndices } from "../typegraph/types.ts";
 

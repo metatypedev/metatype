@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { QueryEngine } from "../../src/engine/query_engine.ts";
-import { join } from "std/path/mod.ts";
+import { join } from "std/path/join";
 import { PrismaMigrate } from "../../src/runtimes/prisma/migration.ts";
 import * as native from "native";
 import { PrismaRuntime } from "../../src/runtimes/prisma/mod.ts";

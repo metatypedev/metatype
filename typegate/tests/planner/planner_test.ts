@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "../utils/mod.ts";
-import { mapValues } from "std/collections/map_values.ts";
-import { filterKeys } from "std/collections/filter_keys.ts";
+import { mapValues } from "std/collections/map-values";
+import { filterKeys } from "std/collections/filter-keys";
 
 Meta.test("planner", async (t) => {
   const e = await t.engine("planner/planner.py");

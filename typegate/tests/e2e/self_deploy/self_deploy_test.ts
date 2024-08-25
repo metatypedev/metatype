@@ -5,9 +5,8 @@ import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.ts";
 import { Meta } from "test-utils/mod.ts";
 import { tg } from "./self_deploy.ts";
 import { testDir } from "test-utils/dir.ts";
-import { join } from "std/path/join.ts";
-import { assertEquals, assertExists } from "std/assert/mod.ts";
-import * as path from "std/path/mod.ts";
+import { join } from "std/path/join";
+import { assertEquals, assertExists } from "std/assert";
 
 Meta.test(
   {
@@ -21,7 +20,7 @@ Meta.test(
     const { serialized, response: gateResponseAdd } = await tgDeploy(tg, {
       typegate: { url: gate, auth },
       secrets: {},
-      typegraphPath: path.join(cwdDir, "self_deploy.mjs"),
+      typegraphPath: join(cwdDir, "self_deploy.mjs"),
       migrationsDir: `${cwdDir}/prisma-migrations`,
       defaultMigrationAction: {
         apply: true,

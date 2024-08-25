@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { crypto } from "std/crypto/mod.ts";
-import { decodeBase64Url, encodeBase64Url } from "std/encoding/base64url.ts";
+import { crypto } from "std/crypto/crypto";
+import { decodeBase64Url, encodeBase64Url } from "std/encoding";
 import * as jwt from "jwt";
 
 export const sha1 = (text: string | Uint8Array): Promise<string> => {

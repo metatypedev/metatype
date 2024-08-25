@@ -1,15 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals } from "std/assert/mod.ts";
+import { assertEquals } from "std/assert";
 import { createUrl } from "../../src/utils.ts";
 Deno.test("createUrl behavior", async (t) => {
   await t.step("append path and remove dbl slashes", () => {
     const base = "https://example.com";
-    assertEquals(
-      createUrl(base, "///to////path"),
-      createUrl(base, "/to/path"),
-    );
+    assertEquals(createUrl(base, "///to////path"), createUrl(base, "/to/path"));
   });
 
   await t.step("append path and add query parameters", () => {

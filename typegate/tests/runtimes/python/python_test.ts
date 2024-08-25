@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assert, assertEquals } from "std/assert/mod.ts";
+import { assert, assertEquals } from "std/assert";
 import { gql, Meta } from "test-utils/mod.ts";
-import { WitWireMessenger } from "../../../src/runtimes/wit_wire/mod.ts";
-import { QueryEngine } from "../../../src/engine/query_engine.ts";
-import type { ResolverArgs } from "../../../src/types.ts";
+import { WitWireMessenger } from "@typegate/runtimes/wit_wire/mod.ts";
+import { QueryEngine } from "@typegate/engine/query_engine.ts";
+import type { ResolverArgs } from "@typegate/types.ts";
 
 Meta.test("Python VM performance", async (t) => {
   await t.should("work with low latency for lambdas", async () => {

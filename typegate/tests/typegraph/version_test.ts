@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { expandGlobSync } from "std/fs/expand_glob.ts";
+import { expandGlobSync } from "std/fs/expand-glob";
 import { Meta } from "../utils/mod.ts";
-import { join } from "std/path/mod.ts";
+import { join } from "std/path/join";
 import { JSONSchemaFaker } from "json-schema-faker";
 import Ajv from "ajv";
-import { assertNotStrictEquals } from "std/assert/mod.ts";
+import { assertNotStrictEquals } from "std/assert";
 import { upgradeTypegraph } from "../../src/typegraph/versions.ts";
 import { testDir } from "../utils/dir.ts";
 

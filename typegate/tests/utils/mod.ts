@@ -4,8 +4,8 @@
 // import { SingleRegister } from "test-utils/single_register.ts";
 // import { Typegate } from "@typegate/typegate/mod.ts";
 import { QueryEngine } from "../../src/engine/query_engine.ts";
-import { dirname, join } from "std/path/mod.ts";
-import { copy } from "std/fs/copy.ts";
+import { dirname, join } from "std/path/posix";
+import { copy } from "std/fs/copy";
 import { init_native } from "native";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { StringFormat } from "../../typegraph/types.ts";
-import * as uuid from "std/uuid/mod.ts";
+import * as uuid from "std/uuid";
 import validator from "validator";
 import lodash from "lodash";
 

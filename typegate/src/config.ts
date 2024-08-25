@@ -3,9 +3,9 @@
 
 import { z } from "zod";
 
-import { parse } from "std/flags/mod.ts";
-import { mapKeys } from "std/collections/map_keys.ts";
-import { filterKeys } from "std/collections/filter_keys.ts";
+import { parseArgs } from "std/cli/parse-args";
+import { mapKeys } from "std/collections/map-keys";
+import { filterKeys } from "std/collections/filter-keys";
 import { configOrExit, configOrThrow } from "./config/loader.ts";
 import {
   globalConfigSchema,
@@ -50,7 +50,7 @@ export const globalConfig = configOrExit(
   },
   [
     mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
-    parse(Deno.args) as Record<string, unknown>,
+    parseArgs(Deno.args) as Record<string, unknown>,
   ],
 );
 
@@ -77,7 +77,7 @@ function envsAsConfig() {
 
 function argsAsConfig() {
   return mapKeys(
-    parse(Deno.args) as Record<string, unknown>,
+    parseArgs(Deno.args) as Record<string, unknown>,
     (k) => k.toLocaleLowerCase().replace("-", "_"),
   );
 }

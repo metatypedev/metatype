@@ -4,7 +4,7 @@
 import { ComputeStage } from "../query_engine.ts";
 import { FieldNode, Kind, SelectionSetNode } from "graphql";
 import * as ast from "graphql/ast";
-import { distinct } from "std/collections/distinct.ts";
+import { distinct } from "std/collections/distinct";
 import { PossibleSelectionFields, TypeGraph } from "../../typegraph/mod.ts";
 import { ObjectNode } from "../../typegraph/type_node.ts";
 import { ensure } from "../../utils.ts";

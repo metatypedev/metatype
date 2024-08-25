@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.ts";
-import * as path from "std/path/mod.ts";
+import { basename, join } from "std/path/posix";
 
 const cwd = Deno.args[0];
 const PORT = Deno.args[1];
@@ -19,8 +19,8 @@ const gate = `http://localhost:${PORT}`;
 const auth = new BasicAuth("admin", "password");
 
 // resolve the module
-const moduleName = path.basename(modulePathStr);
-const tgPath = path.join(cwd, moduleName);
+const moduleName = basename(modulePathStr);
+const tgPath = join(cwd, moduleName);
 
 const module = await import(tgPath);
 let tg;

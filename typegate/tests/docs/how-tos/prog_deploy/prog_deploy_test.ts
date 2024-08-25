@@ -3,8 +3,8 @@
 
 import { Meta } from "test-utils/mod.ts";
 import { MetaTest } from "../../../utils/test.ts";
-import * as path from "std/path/mod.ts";
-import { assertEquals, assertExists } from "std/assert/mod.ts";
+import { join } from "std/path/join";
+import { assertEquals, assertExists } from "std/assert";
 
 Meta.test(
   {
@@ -12,10 +12,10 @@ Meta.test(
   },
   async (t: MetaTest) => {
     const port = t.port;
-    const scriptsPath = path.join(t.workingDir, "docs/how-tos/prog_deploy");
+    const scriptsPath = join(t.workingDir, "docs/how-tos/prog_deploy");
 
     await t.should("deploy python typegraph to typegate", async () => {
-      const pythonDeploy = path.join(scriptsPath, "prog_deploy.py");
+      const pythonDeploy = join(scriptsPath, "prog_deploy.py");
       const deployCommand = [
         ...(Deno.env.get("MCLI_LOADER_PY")?.split(" ") ?? ["python3"]),
         pythonDeploy,
@@ -31,7 +31,7 @@ Meta.test(
     });
 
     await t.should("remove typegraph from typegate", async () => {
-      const pythonRemove = path.join(scriptsPath, "prog_remove.py");
+      const pythonRemove = join(scriptsPath, "prog_remove.py");
       const removeCommand = [
         ...(Deno.env.get("MCLI_LOADER_PY")?.split(" ") ?? ["python3"]),
         pythonRemove,
@@ -55,10 +55,10 @@ Meta.test(
   },
   async (t: MetaTest) => {
     const port = t.port;
-    const scriptsPath = path.join(t.workingDir, "docs/how-tos/prog_deploy");
+    const scriptsPath = join(t.workingDir, "docs/how-tos/prog_deploy");
 
     await t.should("deploy typegraph to typegate", async () => {
-      const tsDeploy = path.join(scriptsPath, "prog_deploy.ts");
+      const tsDeploy = join(scriptsPath, "prog_deploy.ts");
       const deployCommand = [
         "deno",
         "run",
@@ -75,7 +75,7 @@ Meta.test(
     });
 
     await t.should("remove typegraph from typegate", async () => {
-      const tsRemove = path.join(scriptsPath, "prog_remove.ts");
+      const tsRemove = join(scriptsPath, "prog_remove.ts");
       const removeCommand = ["deno", "run", "-A", tsRemove, port.toString()];
       const removeResult = await t.shell(removeCommand);
       if (removeResult.code !== 0) {
