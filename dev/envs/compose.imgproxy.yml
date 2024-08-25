@@ -1,6 +1,6 @@
 services:
   imgproxy:
-    image: darthsim/imgproxy:v3.9
+    image: docker.io/darthsim/imgproxy:v3.9
     restart: unless-stopped
     ports:
       - "9002:8080"

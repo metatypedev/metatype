@@ -1,19 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-mod types;
-mod utils;
+pub mod types;
+pub mod utils;
 
 use core::fmt::Write;
 
 use crate::interlude::*;
-use crate::mdk::*;
+use crate::shared::*;
 use crate::*;
 
 use crate::utils::GenDestBuf;
 
-use self::mdk::types::NameMemo;
-use self::mdk::types::TypeRenderer;
+use self::shared::types::NameMemo;
+use self::shared::types::TypeRenderer;
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct MdkTypescriptGenConfig {
@@ -147,7 +147,10 @@ fn gen_static(dest: &mut GenDestBuf) -> core::fmt::Result {
 }
 
 fn render_types(dest: &mut GenDestBuf, tg: &Typegraph) -> anyhow::Result<NameMemo> {
-    let mut renderer = TypeRenderer::new(&tg.types, Rc::new(types::TypescriptTypeRenderer {}));
+    let mut renderer = TypeRenderer::new(
+        tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
+        Rc::new(types::TypescriptTypeRenderer {}),
+    );
     // remove the root type which we don't want to generate types for
     // TODO: gql types || function wrappers for exposed functions
     // skip object 0, the root object where the `exposed` items are locted
@@ -160,7 +163,7 @@ fn render_types(dest: &mut GenDestBuf, tg: &Typegraph) -> anyhow::Result<NameMem
 }
 
 #[test]
-fn mdk_rs_e2e() -> anyhow::Result<()> {
+fn e2e() -> anyhow::Result<()> {
     use crate::tests::*;
 
     let tg_name = "gen-test";
@@ -222,7 +225,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                         Ok(())
                     })
                 },
-                target_dir: "./tests/mat_rust/".into(),
+                target_dir: None,
             }])
             .await
         })?;

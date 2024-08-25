@@ -3,7 +3,7 @@
 
 use super::utils::*;
 use crate::interlude::*;
-use crate::mdk::types::*;
+use crate::shared::types::*;
 use common::typegraph::*;
 use heck::ToPascalCase;
 use std::fmt::Write;
@@ -11,6 +11,10 @@ use std::fmt::Write;
 pub struct RustTypeRenderer {
     pub derive_debug: bool,
     pub derive_serde: bool,
+    // this is used by the client since
+    // users might exclude fields on return
+    // types
+    pub all_fields_optional: bool,
 }
 
 impl RustTypeRenderer {
@@ -81,21 +85,42 @@ impl RustTypeRenderer {
     }
 }
 impl RenderType for RustTypeRenderer {
-    fn render_name(&self, _renderer: &mut TypeRenderer, cursor: &VisitCursor) -> RenderedName {
-        use RenderedName::*;
-        let body_required = self.type_body_required(cursor.node.clone());
-        match cursor.node.clone().deref() {
-            // functions will be absent in our generated types
-            TypeNode::Function { .. } => Name("()".to_string()),
+    fn render(
+        &self,
+        renderer: &mut TypeRenderer,
+        cursor: &mut VisitCursor,
+    ) -> anyhow::Result<String> {
+        let body_required = type_body_required(cursor.node.clone());
+        let name = match cursor.node.clone().deref() {
+            TypeNode::Function { .. } => "()".into(),
 
+            // if [type_body_required] says so, we usually need to generate
+            // aliases for even simple primitie types
+            TypeNode::Boolean { base, .. } if body_required => {
+                let ty_name = normalize_type_title(&base.title);
+                self.render_alias(renderer, &ty_name, "bool")?;
+                ty_name
+            }
             // under certain conditionds, we don't want to  generate aliases
             // for primitive types. this includes
             // - types with defualt generated names
             // - types with no special semantics
-            TypeNode::Boolean { .. } if !body_required => Name("bool".to_string()),
-            TypeNode::Integer { .. } if !body_required => Name("i64".to_string()),
-            TypeNode::Float { .. } if !body_required => Name("f64".to_string()),
-            TypeNode::String { .. } if !body_required => Name("String".to_string()),
+            TypeNode::Boolean { .. } => "bool".into(),
+
+            TypeNode::Float { base, .. } if body_required => {
+                let ty_name = normalize_type_title(&base.title);
+                self.render_alias(renderer, &ty_name, "f64")?;
+                ty_name
+            }
+            TypeNode::Float { .. } => "f64".into(),
+
+            TypeNode::Integer { base, .. } if body_required => {
+                let ty_name = normalize_type_title(&base.title);
+                self.render_alias(renderer, &ty_name, "i64")?;
+                ty_name
+            }
+            TypeNode::Integer { .. } => "i64".into(),
+
             TypeNode::String {
                 data:
                     StringTypeData {
@@ -111,81 +136,32 @@ impl RenderType for RustTypeRenderer {
                         ..
                     },
             } if title.starts_with("string_") => {
-                Name(normalize_type_title(&format!("string_{format}")))
+                let ty_name = normalize_type_title(&format!("string_{format}_{}", cursor.id));
+                self.render_alias(renderer, &ty_name, "String")?;
+                ty_name
             }
-            TypeNode::File { .. } if !body_required => Name("Vec<u8>".to_string()),
-            TypeNode::Optional {
-                // NOTE: keep this condition
-                // in sync with similar one
-                // below
-                base,
-                data:
-                    OptionalTypeData {
-                        default_value: None,
-                        ..
-                    },
-            } if base.title.starts_with("optional_") => {
-                // since the type name of Optionl<T> | Vec<T> depends on
-                // the name of the inner type, we use placeholders at this ploint
-                // as cycles are dealt with later
-                Placeholder
+            TypeNode::String { base, .. } if body_required => {
+                let ty_name = normalize_type_title(&base.title);
+                self.render_alias(renderer, &ty_name, "String")?;
+                ty_name
             }
-            TypeNode::List {
-                // NOTE: keep this condition
-                // in sync with similar one
-                // below
-                base,
-                data:
-                    ListTypeData {
-                        min_items: None,
-                        max_items: None,
-                        ..
-                    },
-            } if base.title.starts_with("list_") => {
-                // since the type name of Optionl<T> | Vec<T> depends on
-                // the name of the inner type, we use placeholders at this point
-                // as cycles are dealt with later
-                Placeholder
-            }
-            ty => Name(normalize_type_title(&ty.base().title)),
-            /*
-             TypeNode::Union { base, .. } => {
-                format!("{}Union", normalize_type_title(&base.title))
-            }
-            TypeNode::Either { base, .. } => {
-                format!("{}Either", normalize_type_title(&base.title))
-            }
-            */
-        }
-    }
+            TypeNode::String { .. } => "String".into(),
 
-    fn render_body(
-        &self,
-        renderer: &mut TypeRenderer,
-        ty_name: &str,
-        cursor: &mut VisitCursor,
-    ) -> anyhow::Result<()> {
-        match cursor.node.clone().deref() {
-            TypeNode::Function { .. } => {}
-            TypeNode::Boolean { .. } => {
-                self.render_alias(renderer, ty_name, "bool")?;
+            TypeNode::File { base, .. } if body_required => {
+                let ty_name = normalize_type_title(&base.title);
+                self.render_alias(renderer, &ty_name, "Vec<u8>")?;
+                ty_name
             }
-            TypeNode::Float { .. } => {
-                self.render_alias(renderer, ty_name, "f64")?;
+            TypeNode::File { .. } => "Vec<u8>".into(),
+
+            TypeNode::Any { base, .. } if body_required => {
+                let ty_name = normalize_type_title(&base.title);
+                self.render_alias(renderer, &ty_name, "serde_json::Value")?;
+                ty_name
             }
-            TypeNode::Integer { .. } => {
-                self.render_alias(renderer, ty_name, "i64")?;
-            }
-            TypeNode::String { .. } => {
-                self.render_alias(renderer, ty_name, "String")?;
-            }
-            TypeNode::File { .. } => {
-                self.render_alias(renderer, ty_name, "Vec<u8>")?;
-            }
-            TypeNode::Any { .. } => {
-                self.render_alias(renderer, ty_name, "serde_json::Value")?;
-            }
-            TypeNode::Object { data, .. } => {
+            TypeNode::Any { .. } => "serde_json::Value".into(),
+
+            TypeNode::Object { data, base } => {
                 let props = data
                     .properties
                     .iter()
@@ -193,10 +169,21 @@ impl RenderType for RustTypeRenderer {
                     .map(|(name, &dep_id)| {
                         let (ty_name, cyclic) = renderer.render_subgraph(dep_id, cursor)?;
 
+                        let ty_name = match ty_name {
+                            RenderedName::Name(name) => name,
+                            RenderedName::Placeholder(name) => name,
+                        };
+
+                        let ty_name = match renderer.nodes[dep_id as usize].deref() {
+                            TypeNode::Optional { .. } => ty_name.to_string(),
+                            _ if !self.all_fields_optional => ty_name.to_string(),
+                            _ => format!("Option<{ty_name}>"),
+                        };
+
                         let ty_name = if let Some(true) = cyclic {
                             format!("Box<{ty_name}>")
                         } else {
-                            ty_name.to_string()
+                            ty_name
                         };
 
                         let normalized_prop_name = normalize_struct_prop_name(name);
@@ -208,21 +195,40 @@ impl RenderType for RustTypeRenderer {
                         Ok::<_, anyhow::Error>((normalized_prop_name, (ty_name, rename_name)))
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
-                self.render_struct(renderer, ty_name, props)?;
+
+                let ty_name = normalize_type_title(&base.title);
+                let ty_name = if self.all_fields_optional {
+                    format!("{ty_name}Partial")
+                } else {
+                    ty_name
+                };
+                self.render_struct(renderer, &ty_name, props)?;
+                ty_name
             }
             TypeNode::Union {
                 data: UnionTypeData { any_of: variants },
-                ..
+                base,
             }
             | TypeNode::Either {
                 data: EitherTypeData { one_of: variants },
-                ..
+                base,
             } => {
                 let variants = variants
                     .iter()
                     .map(|&inner| {
                         let (ty_name, cyclic) = renderer.render_subgraph(inner, cursor)?;
-                        let variant_name = ty_name.to_pascal_case();
+                        let (variant_name, ty_name) = match ty_name {
+                            RenderedName::Name(name) => (name.to_pascal_case(), name),
+                            RenderedName::Placeholder(name) => (
+                                renderer
+                                    .placeholder_string(
+                                        inner,
+                                        Box::new(|final_name| final_name.to_pascal_case()),
+                                    )
+                                    .to_string(),
+                                name,
+                            ),
+                        };
                         let ty_name = if let Some(true) = cyclic {
                             format!("Box<{ty_name}>")
                         } else {
@@ -231,11 +237,12 @@ impl RenderType for RustTypeRenderer {
                         Ok::<_, anyhow::Error>((variant_name, ty_name))
                     })
                     .collect::<Result<Vec<_>, _>>()?;
-                self.render_enum(renderer, ty_name, variants)?;
+                let ty_name = normalize_type_title(&base.title);
+                self.render_enum(renderer, &ty_name, variants)?;
+                ty_name
             }
+            // Simple optionals don't require aliases
             TypeNode::Optional {
-                // NOTE: keep this condition
-                // in sync with similar one above
                 base,
                 data:
                     OptionalTypeData {
@@ -245,33 +252,35 @@ impl RenderType for RustTypeRenderer {
             } if base.title.starts_with("optional_") => {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, cyclic) = renderer.render_subgraph(*item, cursor)?;
+                let inner_ty_name = match inner_ty_name {
+                    RenderedName::Name(name) => name,
+                    RenderedName::Placeholder(name) => name,
+                };
                 let inner_ty_name = if let Some(true) = cyclic {
                     format!("Box<{inner_ty_name}>")
                 } else {
                     inner_ty_name.to_string()
                 };
-                let true_ty_name = format!("Option<{inner_ty_name}>");
-                let true_ty_name: Rc<str> = true_ty_name.into();
-                let normalized_true_name = normalize_struct_prop_name(&true_ty_name);
-                renderer.replace_placeholder_ty_name(
-                    cursor.id,
-                    true_ty_name,
-                    vec![(normalize_struct_prop_name(ty_name), normalized_true_name)],
-                );
+                format!("Option<{inner_ty_name}>")
             }
-            TypeNode::Optional { data, .. } => {
+            TypeNode::Optional { data, base } => {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, cyclic) = renderer.render_subgraph(data.item, cursor)?;
+                let inner_ty_name = match inner_ty_name {
+                    RenderedName::Name(name) => name,
+                    RenderedName::Placeholder(name) => name,
+                };
                 let inner_ty_name = if let Some(true) = cyclic {
                     format!("Box<{inner_ty_name}>")
                 } else {
                     inner_ty_name.to_string()
                 };
-                self.render_alias(renderer, ty_name, &format!("Option<{inner_ty_name}>"))?;
+                let ty_name = normalize_type_title(&base.title);
+                self.render_alias(renderer, &ty_name, &format!("Option<{inner_ty_name}>"))?;
+                ty_name
             }
+            // simple list types don't require aliases
             TypeNode::List {
-                // NOTE: keep this condition
-                // in sync with similar one above
                 base,
                 data:
                     ListTypeData {
@@ -283,36 +292,39 @@ impl RenderType for RustTypeRenderer {
             } if base.title.starts_with("list_") => {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, _) = renderer.render_subgraph(*items, cursor)?;
-                let true_ty_name = if let Some(true) = unique_items {
+                let inner_ty_name = match inner_ty_name {
+                    RenderedName::Name(name) => name,
+                    RenderedName::Placeholder(name) => name,
+                };
+                if let Some(true) = unique_items {
                     format!("std::collections::HashSet<{inner_ty_name}>")
                 } else {
                     format!("Vec<{inner_ty_name}>")
-                };
-                let true_ty_name: Rc<str> = true_ty_name.into();
-                let normalized_true_name = normalize_struct_prop_name(&true_ty_name);
-                renderer.replace_placeholder_ty_name(
-                    cursor.id,
-                    true_ty_name,
-                    vec![(normalize_struct_prop_name(ty_name), normalized_true_name)],
-                );
+                }
             }
-            TypeNode::List { data, .. } => {
+            TypeNode::List { data, base } => {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, _) = renderer.render_subgraph(data.items, cursor)?;
+                let inner_ty_name = match inner_ty_name {
+                    RenderedName::Name(name) => name,
+                    RenderedName::Placeholder(name) => name,
+                };
+                let ty_name = normalize_type_title(&base.title);
                 if let Some(true) = data.unique_items {
                     // let ty_name = format!("{inner_ty_name}Set");
                     self.render_alias(
                         renderer,
-                        ty_name,
+                        &ty_name,
                         &format!("std::collections::HashSet<{inner_ty_name}>"),
                     )?;
                 } else {
                     // let ty_name = format!("{inner_ty_name}List");
-                    self.render_alias(renderer, ty_name, &format!("Vec<{inner_ty_name}>"))?;
+                    self.render_alias(renderer, &ty_name, &format!("Vec<{inner_ty_name}>"))?;
                 };
+                ty_name
             }
         };
-        Ok(())
+        Ok(name)
     }
 }
 
@@ -740,10 +752,11 @@ pub enum CEither {
         ];
         for (test_name, nodes, name, test_out) in cases {
             let mut renderer = TypeRenderer::new(
-                &nodes,
+                nodes.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
                 Rc::new(RustTypeRenderer {
                     derive_serde: true,
                     derive_debug: true,
+                    all_fields_optional: false,
                 }),
             );
             let gen_name = renderer.render(nodes.len() as u32 - 1)?;

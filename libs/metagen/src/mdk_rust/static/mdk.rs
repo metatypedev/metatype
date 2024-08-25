@@ -1,6 +1,6 @@
 // no-auto-license-header | @generated (pre-commit doesn't support two headers)
 // gen-start
-#![allow(unused)]
+#![allow(dead_code)]
 
 pub mod wit {
     wit_bindgen::generate!({

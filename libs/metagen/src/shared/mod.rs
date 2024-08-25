@@ -4,6 +4,7 @@
 //! This module contains common logic for mdk generation
 //! imlementations
 
+pub mod client;
 pub mod types;
 
 use common::typegraph::{runtimes::TGRuntime, Materializer};
@@ -62,3 +63,53 @@ pub fn filter_stubbed_funcs(
         .collect();
     Ok(stubbed_funcs)
 }
+
+pub fn is_composite(types: &[TypeNode], id: u32) -> bool {
+    match &types[id as usize] {
+        TypeNode::Function { .. } => panic!("function type isn't composite or scalar"),
+        TypeNode::Any { .. } => panic!("unexpected Any type as output"),
+        TypeNode::Boolean { .. }
+        | TypeNode::Float { .. }
+        | TypeNode::Integer { .. }
+        | TypeNode::String { .. }
+        | TypeNode::File { .. } => false,
+        TypeNode::Object { .. } => true,
+        TypeNode::Optional { data, .. } => is_composite(types, data.item),
+        TypeNode::List { data, .. } => is_composite(types, data.items),
+        TypeNode::Union { data, .. } => data.any_of.iter().any(|&id| is_composite(types, id)),
+        TypeNode::Either { data, .. } => data.one_of.iter().any(|&id| is_composite(types, id)),
+    }
+}
+
+pub fn get_gql_type(types: &[TypeNode], id: u32, optional: bool) -> String {
+    let name = match &types[id as usize] {
+        TypeNode::Optional { data, .. } => return get_gql_type(types, data.item, true),
+        TypeNode::List { data, .. } => format!("[{}]", get_gql_type(types, data.items, true)),
+        TypeNode::String { base, .. } => {
+            if base.as_id {
+                "ID".into()
+            } else {
+                "String".into()
+            }
+        }
+        TypeNode::Boolean { .. } => "Boolean".into(),
+        TypeNode::Float { .. } => "Float".into(),
+        TypeNode::Integer { .. } => "Int".into(),
+        node => node.base().title.clone(),
+    };
+    if !optional {
+        format!("{name}!")
+    } else {
+        name
+    }
+}
+/*
+  getGraphQLType(typeNode: TypeNode, optional = false): string {
+    const scalarType = GRAPHQL_SCALAR_TYPES[typeNode.type];
+    if (scalarType != null) {
+      return scalarType;
+    }
+
+    return typeNode.title;
+  }
+*/

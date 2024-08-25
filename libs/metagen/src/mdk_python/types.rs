@@ -98,7 +98,7 @@ fn visit_union_or_either(
     tg: &Typegraph,
 ) -> anyhow::Result<TypeGenerated> {
     let mut visit_variants = |variants: &[u32]| -> anyhow::Result<TypeGenerated> {
-        let mut variants_repr = HashSet::new();
+        let mut variants_repr = std::collections::BTreeSet::new();
         for idx in variants.iter() {
             let field_tpe = &tg.types[*idx as usize];
             let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
