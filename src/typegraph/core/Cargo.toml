@@ -7,27 +7,33 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-enum_dispatch = "0.3.13"
-once_cell.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-wit-bindgen = "0.26.0"
-regex.workspace = true
-indexmap.workspace = true
 common.workspace = true
 metagen.workspace = true
-indoc.workspace = true
+
+enum_dispatch.workspace = true
 color-eyre.workspace = true
 anyhow.workspace = true
-graphql-parser = "0.4.0"
-sha2 = "0.10.8"
-paste = "1.0.15"
-seahash = "4.1.0"
-ordered-float = "4.2.0"
-glob = "0.3.1"
-unindent = "0.2.3"
+paste.workspace = true
+
+serde.workspace = true
+serde_json.workspace = true
+indoc.workspace = true
+unindent.workspace = true
+
+wit-bindgen.workspace = true
+
+once_cell.workspace = true
+regex.workspace = true
+indexmap.workspace = true
+ordered-float.workspace = true
+graphql-parser.workspace = true
+
+sha2.workspace = true
+seahash.workspace = true
+
+glob.workspace = true
 
 [dev-dependencies]
-insta = { version = "1.39.0", features = ["glob"] }
-ptree = "0.4.0"
+insta = { workspace = true, features = ["glob"] }
+ptree.workspace = true
 indoc.workspace = true

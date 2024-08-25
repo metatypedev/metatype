@@ -5,5 +5,5 @@ version.workspace = true
 
 [dependencies]
 deno.workspace = true
-log.workspace = true
+tracing.workspace = true
 anyhow.workspace = true

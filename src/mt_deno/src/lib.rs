@@ -16,9 +16,6 @@ use deno::{
 
 use std::{future::Future, sync::Arc};
 
-#[allow(unused_imports)]
-pub(crate) use log::{debug, error, info, trace, warn};
-
 #[rustfmt::skip]
 use deno_runtime::deno_core as deno_core; // necessary for re-exported macros to work
 
@@ -111,7 +108,7 @@ pub async fn run(
             permissions,
         )
         .await?;
-    info!("running worker");
+    tracing::info!("running worker");
     let exit_code = worker.run().await?;
     println!("exit_code: {exit_code}");
     Ok(())

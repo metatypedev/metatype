@@ -7,20 +7,32 @@ version.workspace = true
 # this library is used by typegraph_core
 # so keep the codesize lite
 common.workspace = true
+
+# logging
 log.workspace = true
+
+# encodding
 serde.workspace = true
 serde_json.workspace = true
+heck.workspace = true
+
+# ds
 indexmap.workspace = true
-garde = { version = "0.18", features = ["derive"] }
-heck = "0.5.0-rc.1"
 regex.workspace = true
+tera = { workspace = true, default-features = false }
+
+# pattern
+garde = { workspace = true, features = ["derive"] }
 once_cell.workspace = true
-pretty_assertions = "1.4.0"
 color-eyre.workspace = true
-tera = { version = "1.20", default-features = false }
+
+# test
+pretty_assertions.workspace = true
+
+# async
 futures-concurrency.workspace = true
 futures-lite.workspace = true
 
 [dev-dependencies]
-tokio = { workspace = true, features =["full"] }
+tokio = { workspace = true, features = ["full"] }
 tempfile.workspace = true

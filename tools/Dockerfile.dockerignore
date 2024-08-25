@@ -4,7 +4,7 @@
 !src/metagen
 src/metagen/tests/
 !src/common
-!src/deno
+!src/mt_deno
 !src/wit/
 !src/meta-cli/Cargo.toml
 !src/typegraph/core/
