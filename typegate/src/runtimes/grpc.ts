@@ -7,6 +7,7 @@ import { ComputeStage } from "@typegate/engine/query_engine.ts";
 import { getLogger, Logger } from "@typegate/log.ts";
 import { TypeGraph } from "@typegate/typegraph/mod.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
+import { nativeResult, nativeVoid } from "@typegate/utils.ts";
 
 const logger = getLogger(import.meta);
 
@@ -31,20 +32,23 @@ export class GrpcRuntime extends Runtime {
     const typegraphName = TypeGraph.formatName(typegraph);
     const instance = new GrpcRuntime(typegraphName);
 
-    await native.grpc_register({
-      protoFile: args.protoFile,
-      endpoint: args.endpoint,
-      client_id: instance.id,
-    });
+    nativeVoid(
+      await native.grpc_register({
+        protoFile: args.protoFile,
+        endpoint: args.endpoint,
+        client_id: instance.id,
+      }),
+    );
 
     instance.logger.info("registering GrpcRuntime");
 
     return instance;
   }
 
-  // deno-lint-ignore require-await
   async deinit(): Promise<void> {
-    native.grpc_unregister({ client_id: this.id });
+    nativeVoid(
+      await native.grpc_unregister({ client_id: this.id }),
+    );
   }
 
   materialize(
@@ -56,11 +60,13 @@ export class GrpcRuntime extends Runtime {
 
     const resolver: Resolver = async (args) => {
       const { payload } = args;
-      return await native.call_grpc_method({
-        method: String(method),
-        payload,
-        client_id: this.id,
-      });
+      return nativeResult(
+        await native.call_grpc_method({
+          method: String(method),
+          payload,
+          client_id: this.id,
+        }),
+      );
     };
 
     return [new ComputeStage({ ...stage.props, resolver })];

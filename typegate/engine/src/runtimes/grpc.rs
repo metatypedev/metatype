@@ -176,7 +176,7 @@ struct GrpcClient {
 
 #[derive(Default)]
 pub struct Ctx {
-    grpc_client: Arc<DashMap<String, GrpcClient>>,
+    grpc_clients: Arc<DashMap<String, GrpcClient>>,
 }
 
 #[derive(Deserialize)]
@@ -192,30 +192,32 @@ pub async fn op_grpc_register(
     state: Rc<RefCell<OpState>>,
     #[serde] input: GrpcRegisterInput,
 ) -> Result<()> {
-    let endpoint = Endpoint::from_str(&input.endpoint)?;
-    let channel = Channel::builder(endpoint.uri().to_owned());
-    let channel = channel.connect().await?;
-    let client = Grpc::new(channel);
+    let endpoint = Endpoint::from_str(&input.endpoint).context("Failed to parse endpoint")?;
+
+    let channel = Channel::builder(endpoint.uri().to_owned())
+        .connect()
+        .await
+        .context("Failed to estabilish channel connection")?;
 
     let state = state.borrow();
     let ctx = state.borrow::<Ctx>();
 
     let grpc_client = GrpcClient {
-        client,
+        client: Grpc::new(channel),
         proto_file: input.proto_file,
     };
-    ctx.grpc_client.insert(input.client_id.clone(), grpc_client);
+    ctx.grpc_clients
+        .insert(input.client_id.clone(), grpc_client);
 
     Ok(())
 }
 
 #[deno_core::op2(fast)]
 pub fn op_grpc_unregister(#[state] ctx: &mut Ctx, #[string] client_id: &str) -> Result<()> {
-    let Some((_, _client)) = ctx.grpc_client.remove(client_id) else {
-        anyhow::bail!("Could not remove engine {:?}: entry not found.", {
-            client_id
-        });
-    };
+    ctx.grpc_clients
+        .remove(client_id)
+        .with_context(|| format!("Failed to remove gRPC client with ID: {}", client_id))?;
+
     Ok(())
 }
 
@@ -233,28 +235,32 @@ pub async fn op_call_grpc_method(
     state: Rc<RefCell<OpState>>,
     #[serde] input: GrpcCallMethodInput,
 ) -> Result<String> {
-    let grpc_client = {
+    let grpc_clients = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
-        ctx.grpc_client.clone()
+        ctx.grpc_clients.clone()
     };
 
-    let mut grpc_client = grpc_client
+    let mut grpc_client = grpc_clients
         .get_mut(&input.client_id)
-        .with_context(|| format!("Could not find client '{}'", &input.client_id))?;
+        .with_context(|| format!("Could not find gRPC client '{}'", &input.client_id))?;
 
-    let path = PathBuf::from_str(&grpc_client.proto_file).unwrap();
-    let file_descriptor = get_file_descriptor(&path).unwrap();
+    let path = PathBuf::from_str(&grpc_client.proto_file)?;
 
-    let method_name = get_relative_method_name(&input.method).unwrap();
+    let file_descriptor = get_file_descriptor(&path)?;
+
+    let method_name = get_relative_method_name(&input.method)?;
+
     let method_descriptor_proto =
         get_method_descriptor_proto(file_descriptor.clone(), &method_name)?;
 
     let request_message = get_relative_message_name(method_descriptor_proto.input_type())?;
+
     let req = json2request(input.payload, request_message, file_descriptor.clone())?.into_request();
 
-    let path_query = PathAndQuery::from_str(input.method.as_str()).unwrap();
-    grpc_client.client.ready().await.unwrap();
+    let path_query = PathAndQuery::from_str(input.method.as_str())?;
+
+    grpc_client.client.ready().await?;
 
     let codec = DynCodec {
         method_descriptor_proto,
@@ -265,8 +271,11 @@ pub async fn op_call_grpc_method(
         .client
         .unary(req, path_query, codec)
         .await
-        .unwrap();
+        .context("Failed to perform unary gRPC call")?;
+
     let response = response.get_ref().deref();
+
     let json_response = protobuf_json_mapping::print_to_string(response).unwrap();
+
     Ok(json_response)
 }

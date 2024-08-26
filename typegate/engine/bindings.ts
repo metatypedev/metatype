@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import type {
-  GrpcCallMethodInput,
+  CallGrpcMethodInput,
   GrpcRegisterInput,
   ParsedDiff,
   PrismaApplyOut,
@@ -456,11 +456,22 @@ export function archive(a0: ArchiveInp): ArchiveResult {
   }
 }
 
-export async function grpc_register(a0: GrpcRegisterInput): Promise<string> {
+export type GrpcRegisterOutput =
+  | "Ok"
+  | {
+    Err: {
+      message: string;
+    };
+  };
+
+export async function grpc_register(
+  a0: GrpcRegisterInput,
+): Promise<GrpcRegisterOutput> {
   try {
-    return await Meta.grpc.register(a0);
+    await Meta.grpc.register(a0);
+    return "Ok";
   } catch (err) {
-    return err.toString();
+    return { Err: { message: err.toString() } };
   }
 }
 
@@ -468,22 +479,41 @@ export type GrpcUnregisterInput = {
   client_id: string;
 };
 
+export type GrpcUnRegisterOutput =
+  | "Ok"
+  | {
+    Err: {
+      message: string;
+    };
+  };
+
 export async function grpc_unregister(
   a0: GrpcUnregisterInput,
-): Promise<string> {
+): Promise<GrpcUnRegisterOutput> {
   try {
-    return await Meta.grpc.unregister(a0.client_id);
+    await Meta.grpc.unregister(a0.client_id);
+    return "Ok";
   } catch (err) {
-    return err.toString();
+    return { Err: { message: err.toString() } };
   }
 }
 
+export type CallGrpcMethodOutput =
+  | {
+    Ok: string;
+  }
+  | {
+    Err: {
+      message: string;
+    };
+  };
+
 export async function call_grpc_method(
-  a0: GrpcCallMethodInput,
-): Promise<string> {
+  a0: CallGrpcMethodInput,
+): Promise<CallGrpcMethodOutput> {
   try {
     return await Meta.grpc.callGrpcMethod(a0);
   } catch (err) {
-    return err.toString();
+    return { Err: { message: err.toString() } };
   }
 }
