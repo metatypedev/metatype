@@ -144,8 +144,31 @@ Your temporal workflow definition should look similar to the one below.
 
     <TabItem value="typescript">
 
+Activities definition. Create a file for the workflow, e.g., orderWorkflow.ts:
+
 ```typescript
-import { Worker, WorkflowClient } from "@temporalio/client";
+export async function processPayment(orderId: string): Promise<string> {
+  console.log(`Processing payment for order ${orderId}`);
+  // Simulate payment processing logic
+  return "Payment processed";
+}
+
+export async function checkInventory(orderId: string): Promise<string> {
+  console.log(`Checking inventory for order ${orderId}`);
+  // Simulate inventory check logic
+  return "Inventory available";
+}
+
+export async function deliverOrder(orderId: string): Promise<string> {
+  console.log(`Delivering order ${orderId}`);
+  // Simulate delivery logic
+  return "Order delivered";
+}
+```
+
+Workflow definition. Create a file for the workflow, e.g., orderWorkflow.ts:
+
+```typescript
 import { proxyActivities } from "@temporalio/workflow";
 
 export const { processPayment, checkInventory, deliverOrder } =
@@ -163,10 +186,49 @@ export async function orderWorkflow(orderId: string): Promise<string> {
   const deliveryResult = await deliverOrder(orderId);
   return `Order ${orderId} completed with results: ${paymentResult}, ${inventoryResult}, ${deliveryResult}`;
 }
+```
+
+Worker definintion
+
+```typescript
+import { Worker } from "@temporalio/worker";
+import * as activities from "./activities";
+
+async function run() {
+  // Step 1: Register Workflows and Activities with the Worker and connect to
+  // the Temporal server.
+  const worker = await Worker.create({
+    // for production, you want to bundle your workflows under a single file
+    workflowsPath: require.resolve("orderWorkflow.ts"),
+    activities,
+    taskQueue: "order-task-queue",
+  });
+  // Worker connects to localhost by default and uses console.error for logging.
+  // Customize the Worker by passing more options to create():
+  // https://typescript.temporal.io/api/classes/worker.Worker
+  // If you need to configure server connection parameters, see docs:
+  // /typescript/security#encryption-in-transit-with-mtls
+
+  // Step 2: Start accepting tasks on the `tutorial` queue
+  await worker.run();
+}
+
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+```
+
+Starting the workflow execution
+
+```typescript
+import { Connection, Client } from "@temporalio/client";
+import { orderWorkflow } from "./orderWorkflow";
 
 async function main() {
-  const client = new WorkflowClient();
-  const result = await client.execute(orderWorkflow, {
+  const connection = await Connection.create();
+  const client = new Client({ connection });
+  const result = await client.workflow.execute(orderWorkflow, {
     taskQueue: "order-task-queue",
     workflowId: "order123",
     args: ["order123"],
@@ -186,15 +248,14 @@ Down below is the workflow communication bridge for this system expressed within
 import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
 import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
 
-function getEnvVariable(
-  key: string,
-  defaultValue?: string,
-): string | undefined {
-  const glob = globalThis as any;
-  const value = glob?.process
-    ? glob?.process.env?.[key]
-    : glob?.Deno.env.get(key);
-  return value ?? defaultValue;
+function getEnvVariable(key: string) {
+  const value = process.env[key];
+
+  if (!value) {
+    throw new Error(`Environment variable ${key} is not set.`);
+  }
+
+  return value;
 }
 
 typegraph(
@@ -219,9 +280,7 @@ typegraph(
 
     g.expose(
       {
-        start: temporal.startWorkflow("<workflow_type>", arg),
-        query: temporal.queryWorkflow("<query_type>", arg, t.string()),
-        signal: temporal.signalWorkflow("<signal_name>", arg),
+        start: temporal.startWorkflow("orderWorkflow", arg),
         describe: workflow_id
           ? temporal.describeWorkflow().reduce({ workflow_id })
           : temporal.describeWorkflow(),
@@ -237,11 +296,9 @@ typegraph(
     {/* break */}
     <TabItem value="python">
 
-```python
-from temporalio import workflow, activity
-from temporalio.client import WorkflowClient
-from temporalio.worker import Worker
+Activities definition
 
+```python
 @activity.defn
 async def process_payment(order_id: str) -> str:
     print(f"Processing payment for order {order_id}")
@@ -259,7 +316,11 @@ async def deliver_order(order_id: str) -> str:
     print(f"Delivering order {order_id}")
     # Simulate delivery logic
     return "Order delivered"
+```
 
+Workflow definition
+
+```python
 @workflow.defn
 class OrderWorkflow:
     @workflow.run
@@ -278,6 +339,17 @@ class OrderWorkflow:
         )
 
         return f"Order {order_id} completed with results: {payment_result}, {inventory_result}, {delivery_result}"
+```
+
+Starting workflow execution
+
+```python
+from temporalio import workflow, activity
+from temporalio.client import WorkflowClient
+from temporalio.worker import Worker
+from .activities import process_payment, check_inventory, deliver_order
+from .orderWorkflow import OrderWorkflow
+
 
 # To run the workflow
 async def main():
@@ -292,7 +364,6 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-
 ```
 
 Down below is the workflow communication bridge for this system expressed within a [typegraph](/docs/reference/typegraph).
@@ -321,9 +392,7 @@ def temporal(g: Graph):
 
   g.expose(
     public,
-    start=temporal.start_workflow("<workflow_type>", arg),
-    query=temporal.query_workflow("<query_type>", arg, t.string()),
-    signal=temporal.signal_workflow("<signal_name>", arg),
+    start=temporal.start_workflow("orderWorkflow", arg),
     describe=temporal.describe_workflow().reduce({"workflow_id": workflow_id})
     if workflow_id
     else temporal.describe_workflow(),
