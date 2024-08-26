@@ -1,0 +1,241 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
+use std::fmt::Write;
+
+use common::typegraph::*;
+
+use super::utils::normalize_type_title;
+use crate::{interlude::*, shared::types::*};
+
+pub struct RsNodeMetasRenderer {
+    pub name_mapper: Rc<super::NameMapper>,
+    pub named_types: Rc<std::sync::Mutex<HashSet<u32>>>,
+}
+
+impl RsNodeMetasRenderer {
+    /// `props` is a map of prop_name -> (TypeName, subNodeName)
+    fn render_for_object(
+        &self,
+        dest: &mut impl Write,
+        ty_name: &str,
+        props: IndexMap<String, Rc<str>>,
+    ) -> std::fmt::Result {
+        write!(
+            dest,
+            r#"
+pub fn {ty_name}() -> NodeMeta {{
+    NodeMeta {{
+        arg_types: None,
+        variants: None,
+        sub_nodes: Some(
+            ["#
+        )?;
+        for (key, node_ref) in props {
+            write!(
+                dest,
+                r#"
+                ("{key}".into(), {node_ref} as NodeMetaFn),"#
+            )?;
+        }
+        write!(
+            dest,
+            r#"
+            ].into()
+        ),
+    }}
+}}"#
+        )?;
+        Ok(())
+    }
+
+    fn render_for_union(
+        &self,
+        dest: &mut impl Write,
+        ty_name: &str,
+        props: IndexMap<String, Rc<str>>,
+    ) -> std::fmt::Result {
+        write!(
+            dest,
+            r#"
+pub fn {ty_name}() -> NodeMeta {{
+    NodeMeta {{
+        arg_types: None,
+        sub_nodes: None,
+        variants: Some(
+            ["#
+        )?;
+        for (key, node_ref) in props {
+            write!(
+                dest,
+                r#"
+                ("{key}".into(), {node_ref} as NodeMetaFn),"#
+            )?;
+        }
+        write!(
+            dest,
+            r#"
+            ].into()
+        ),
+    }}
+}}"#
+        )?;
+        Ok(())
+    }
+
+    fn render_for_func(
+        &self,
+        dest: &mut impl Write,
+        ty_name: &str,
+        return_node: &str,
+        argument_fields: Option<IndexMap<String, Rc<str>>>,
+    ) -> std::fmt::Result {
+        write!(
+            dest,
+            r#"
+pub fn {ty_name}() -> NodeMeta {{
+    NodeMeta {{"#
+        )?;
+        if let Some(fields) = argument_fields {
+            write!(
+                dest,
+                r#"
+        arg_types: Some(
+            ["#
+            )?;
+
+            for (key, ty) in fields {
+                write!(
+                    dest,
+                    r#"
+                ("{key}".into(), "{ty}".into()),"#
+                )?;
+            }
+
+            write!(
+                dest,
+                r#"
+            ].into()
+        ),"#
+            )?;
+        }
+        write!(
+            dest,
+            r#"
+        ..{return_node}()
+    }}
+}}"#
+        )?;
+        Ok(())
+    }
+}
+
+impl RenderType for RsNodeMetasRenderer {
+    fn render(
+        &self,
+        renderer: &mut TypeRenderer,
+        cursor: &mut VisitCursor,
+    ) -> anyhow::Result<String> {
+        use heck::ToPascalCase;
+
+        let name = match cursor.node.clone().deref() {
+            TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
+            TypeNode::Boolean { .. }
+            | TypeNode::Float { .. }
+            | TypeNode::Integer { .. }
+            | TypeNode::String { .. }
+            | TypeNode::File { .. } => "scalar".into(),
+            // list and optional node just return the meta of the wrapped type
+            TypeNode::Optional {
+                data: OptionalTypeData { item, .. },
+                ..
+            }
+            | TypeNode::List {
+                data: ListTypeData { items: item, .. },
+                ..
+            } => renderer
+                .render_subgraph(*item, cursor)?
+                .0
+                .unwrap()
+                .to_string(),
+            TypeNode::Function { data, base } => {
+                let (return_ty_name, _cyclic) = renderer.render_subgraph(data.output, cursor)?;
+                let return_ty_name = return_ty_name.unwrap();
+                let props = match renderer.nodes[data.input as usize].deref() {
+                    TypeNode::Object { data, .. } if !data.properties.is_empty() => {
+                        let props = data
+                            .properties
+                            .iter()
+                            // generate property types first
+                            .map(|(name, &dep_id)| {
+                                eyre::Ok((name.clone(), self.name_mapper.name_for(dep_id)))
+                            })
+                            .collect::<Result<IndexMap<_, _>, _>>()?;
+                        Some(props)
+                    }
+                    _ => None,
+                };
+                let node_name = &base.title;
+                let ty_name = normalize_type_title(node_name).to_pascal_case();
+                self.render_for_func(renderer, &ty_name, &return_ty_name, props)?;
+                ty_name
+            }
+            TypeNode::Object { data, base } => {
+                let props = data
+                    .properties
+                    .iter()
+                    // generate property types first
+                    .map(|(name, &dep_id)| {
+                        let (ty_name, _cyclic) = renderer.render_subgraph(dep_id, cursor)?;
+                        let ty_name = ty_name.unwrap();
+                        eyre::Ok((name.clone(), ty_name))
+                    })
+                    .collect::<Result<IndexMap<_, _>, _>>()?;
+                let node_name = &base.title;
+                let ty_name = normalize_type_title(node_name).to_pascal_case();
+                self.render_for_object(renderer, &ty_name, props)?;
+                ty_name
+            }
+            TypeNode::Either {
+                data: EitherTypeData { one_of: variants },
+                base,
+            }
+            | TypeNode::Union {
+                data: UnionTypeData { any_of: variants },
+                base,
+            } => {
+                let mut named_set = vec![];
+                let variants = variants
+                    .iter()
+                    .filter_map(|&inner| {
+                        if !renderer.is_composite(inner) {
+                            return None;
+                        }
+                        named_set.push(inner);
+                        let (ty_name, _cyclic) = match renderer.render_subgraph(inner, cursor) {
+                            Ok(val) => val,
+                            Err(err) => return Some(Err(err)),
+                        };
+                        let ty_name = ty_name.unwrap();
+                        Some(eyre::Ok((
+                            renderer.nodes[inner as usize].deref().base().title.clone(),
+                            ty_name,
+                        )))
+                    })
+                    .collect::<Result<IndexMap<_, _>, _>>()?;
+                if !variants.is_empty() {
+                    {
+                        let mut named_types = self.named_types.lock().unwrap();
+                        named_types.extend(named_set)
+                    }
+                    let ty_name = normalize_type_title(&base.title);
+                    self.render_for_union(renderer, &ty_name, variants)?;
+                    ty_name
+                } else {
+                    "scalar".into()
+                }
+            }
+        };
+        Ok(name)
+    }
+}

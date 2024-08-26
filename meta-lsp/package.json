@@ -44,5 +44,6 @@
     "typescript": "^5.3.2",
     "tsx": "4.7",
     "lcov": "1.16"
-  }
+  },
+  "packageManager": "pnpm@9.5.0+sha1.8c155dc114e1689d18937974f6571e0ceee66f1d"
 }

@@ -3,7 +3,7 @@
 
 use super::utils::normalize_type_title;
 use crate::interlude::*;
-use crate::mdk::*;
+use crate::shared::*;
 use crate::utils::*;
 use std::fmt::Write;
 
@@ -12,7 +12,7 @@ pub struct GenStubOptions {}
 pub fn gen_stub(
     fun: &StubbedFunction,
     mod_stub_traits: &mut GenDestBuf,
-    type_names: &HashMap<u32, Rc<str>>,
+    type_names: &BTreeMap<u32, Rc<str>>,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<String> {
     let TypeNode::Function { base, data } = &fun.node else {
@@ -55,7 +55,7 @@ pub fn gen_stub(
 }
 
 pub fn gen_op_to_mat_map(
-    op_to_trait_map: &HashMap<String, String>,
+    op_to_trait_map: &BTreeMap<String, String>,
     dest: &mut GenDestBuf,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<()> {
@@ -176,10 +176,8 @@ mod test {
             r#"// gen-static-end
 use types::*;
 pub mod types {
-    use super::*;
     pub type MyInt = i64;
 }
-use stubs::*;
 pub mod stubs {
     use super::*;
     pub trait MyFunc: Sized + 'static {

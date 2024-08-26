@@ -3,7 +3,7 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
 // gen-static-start
-#![allow(unused)]
+#![allow(dead_code)]
 
 pub mod wit {
     wit_bindgen::generate!({
@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.8-0";
+        static MT_VERSION: &str = "0.4.8";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -219,27 +219,26 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    use super::*;
     pub type String1 = String;
-    pub type StringUuid = String;
-    pub type StringEmail = String;
-    pub type StringEan = String;
-    pub type StringJson = String;
-    pub type StringUri = String;
-    pub type StringDate = String;
-    pub type StringDateTime = String;
+    pub type StringUuid6 = String;
+    pub type StringEmail7 = String;
+    pub type StringEan8 = String;
+    pub type StringJson9 = String;
+    pub type StringUri10 = String;
+    pub type StringDate11 = String;
+    pub type StringDateTime12 = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Primitives {
         pub str: String,
         #[serde(rename = "enum")]
         pub r#enum: String1,
-        pub uuid: StringUuid,
-        pub email: StringEmail,
-        pub ean: StringEan,
-        pub json: StringJson,
-        pub uri: StringUri,
-        pub date: StringDate,
-        pub datetime: StringDateTime,
+        pub uuid: StringUuid6,
+        pub email: StringEmail7,
+        pub ean: StringEan8,
+        pub json: StringJson9,
+        pub uri: StringUri10,
+        pub date: StringDate11,
+        pub datetime: StringDateTime12,
         pub int: i64,
         pub float: f64,
         pub boolean: bool,
@@ -340,7 +339,6 @@ pub mod types {
         pub data: SimpleCycles1,
     }
 }
-use stubs::*;
 pub mod stubs {
     use super::*;
     pub trait RsPrimitives: Sized + 'static {

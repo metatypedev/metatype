@@ -1,0 +1,20 @@
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+
+metagen:
+  targets:
+    main:
+      - generator: client_ts
+        path: ./ts/
+        typegraph_path: ../sample.ts
+      - generator: client_py
+        path: ./py/
+        typegraph_path: ../sample.ts
+      - generator: client_rs
+        path: ./rs/
+        typegraph_path: ../sample.ts
+        # skip_cargo_toml: true
+        skip_lib_rs: true

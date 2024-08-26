@@ -34,23 +34,23 @@ export type Handler<In, Out> = (
 ) => Out | Promise<Out>;
 
 export type String1 = "wan" | "tew" | "tree";
-export type StringUuid = string;
-export type StringEmail = string;
-export type StringEan = string;
-export type StringJson = string;
-export type StringUri = string;
-export type StringDate = string;
-export type StringDateTime = string;
+export type StringUuid6 = string;
+export type StringEmail7 = string;
+export type StringEan8 = string;
+export type StringJson9 = string;
+export type StringUri10 = string;
+export type StringDate11 = string;
+export type StringDateTime12 = string;
 export type Primitives = {
   str: string;
   "enum": String1;
-  uuid: StringUuid;
-  email: StringEmail;
-  ean: StringEan;
-  json: StringJson;
-  uri: StringUri;
-  date: StringDate;
-  datetime: StringDateTime;
+  uuid: StringUuid6;
+  email: StringEmail7;
+  ean: StringEan8;
+  json: StringJson9;
+  uri: StringUri10;
+  date: StringDate11;
+  datetime: StringDateTime12;
   int: number;
   float: number;
   "boolean": boolean;
@@ -73,7 +73,7 @@ export type Union27 =
   | (string)
   | (Branch4again);
 export type Composites = {
-  opt: (string) | null | undefined;
+  opt?: (string) | null | undefined;
   either: Either19;
   union: Union27;
   list: Array<string>;
@@ -83,13 +83,13 @@ export type CompositesArgs = {
 };
 export type Cycles148 = Cycles1 | null | undefined;
 export type Branch33A = {
-  phantom3a: (string) | null | undefined;
-  to1: Cycles148;
+  phantom3a?: (string) | null | undefined;
+  to1?: Cycles148;
 };
 export type Cycles254 = Cycles2 | null | undefined;
 export type Branch33B = {
-  phantom3b: (string) | null | undefined;
-  to2: Cycles254;
+  phantom3b?: (string) | null | undefined;
+  to2?: Cycles254;
 };
 export type Cycles3 =
   | (Branch33A)
@@ -101,27 +101,27 @@ export type Cycles235 = Cycles2 | null | undefined;
 export type Cycles337 = Array<Cycles3>;
 export type Cycles33837 = Cycles337 | null | undefined;
 export type Cycles1 = {
-  phantom1: (string) | null | undefined;
-  to2: Cycles235;
-  list3: Cycles33837;
+  phantom1?: (string) | null | undefined;
+  to2?: Cycles235;
+  list3?: Cycles33837;
 };
 export type Cycles1Args = {
   data: Cycles1;
 };
 export type SimpleCycles174 = SimpleCycles1 | null | undefined;
 export type SimpleCycles3 = {
-  phantom3: (string) | null | undefined;
-  to1: SimpleCycles174;
+  phantom3?: (string) | null | undefined;
+  to1?: SimpleCycles174;
 };
 export type SimpleCycles368 = SimpleCycles3 | null | undefined;
 export type SimpleCycles2 = {
-  phantom2: (string) | null | undefined;
-  to3: SimpleCycles368;
+  phantom2?: (string) | null | undefined;
+  to3?: SimpleCycles368;
 };
 export type SimpleCycles262 = SimpleCycles2 | null | undefined;
 export type SimpleCycles1 = {
-  phantom1: (string) | null | undefined;
-  to2: SimpleCycles262;
+  phantom1?: (string) | null | undefined;
+  to2?: SimpleCycles262;
 };
 export type SimpleCycles1Args = {
   data: SimpleCycles1;

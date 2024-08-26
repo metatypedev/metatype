@@ -11,11 +11,11 @@
 //!  - Will not be replaced on second generation.
 
 mod stubs;
-mod types;
-mod utils;
+pub mod types;
+pub mod utils;
 
 use crate::interlude::*;
-use crate::mdk::*;
+use crate::shared::*;
 use crate::utils::*;
 use crate::*;
 
@@ -149,13 +149,13 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
     gen_static(&mut mod_rs)?;
     writeln!(&mut mod_rs.buf, "use types::*;")?;
     writeln!(&mut mod_rs.buf, "pub mod types {{")?;
-    writeln!(&mut mod_rs.buf, "    use super::*;")?;
     let ty_name_memo = {
-        let mut renderer = mdk::types::TypeRenderer::new(
-            &tg.types,
+        let mut renderer = shared::types::TypeRenderer::new(
+            tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
             Rc::new(types::RustTypeRenderer {
                 derive_serde: true,
                 derive_debug: true,
+                all_fields_optional: false,
             }),
         );
         // remove the root type which we don't want to generate types for
@@ -175,7 +175,6 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
         name_memo
     };
     writeln!(&mut mod_rs.buf, "}}")?;
-    writeln!(&mut mod_rs.buf, "use stubs::*;")?;
     writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
     writeln!(&mut mod_rs.buf, "    use super::*;")?;
     {
@@ -190,7 +189,7 @@ fn gen_mod_rs(config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<Strin
         let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
             format!("error collecting materializers for runtimes {stubbed_rts:?}")
         })?;
-        let mut op_to_mat_map = HashMap::new();
+        let mut op_to_mat_map = BTreeMap::new();
         for fun in &stubbed_funs {
             let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &ty_name_memo, &gen_stub_opts)?;
             if let Some(Some(op_name)) = fun.mat.data.get("op_name").map(|val| val.as_str()) {
@@ -291,7 +290,7 @@ impl stubs::MyFunc for MyMat {
 }
 
 #[test]
-fn mdk_rs_e2e() -> anyhow::Result<()> {
+fn e2e() -> anyhow::Result<()> {
     use crate::tests::*;
 
     let tg_name = "gen-test";
@@ -334,7 +333,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                 build_fn: |args| {
                     Box::pin(async move {
                         let status = tokio::process::Command::new("cargo")
-                            .args("build --target wasm32-wasi".split(' ').collect::<Vec<_>>())
+                            .args("clippy --target wasm32-wasi".split(' ').collect::<Vec<_>>())
                             .current_dir(args.path)
                             .kill_on_drop(true)
                             .spawn()?
@@ -346,7 +345,7 @@ fn mdk_rs_e2e() -> anyhow::Result<()> {
                         Ok(())
                     })
                 },
-                target_dir: "./tests/mat_rust/".into(),
+                target_dir: Some("./fixtures/mat_rust/".into()),
             }])
             .await
         })?;
