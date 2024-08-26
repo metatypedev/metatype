@@ -1,8 +1,3 @@
-import SDKTabs from "@site/src/components/SDKTabs";
-import TabItem from "@theme/TabItem";
-import UpgradePythonSDK from "../../shared/upgrade/python-sdk.mdx";
-import UpgradeTsSDK from "../../shared/upgrade/typescript-sdk.mdx";
-
 # Running Python code with WebAssembly
 
 Language runtimes are nice, but integrating one is an entire story. Let's discover how we managed to integrate the Python runtime within the metatype ecosystem.
@@ -13,7 +8,7 @@ You have probably heard of "Function as a service" or FaaS. In simple terms, Faa
 
 This capability was initially added into metatype through deno workers, which provided ways to execute functions authored in typescript with ease.
 
-On the other hand, people might also want to write functions in Python, which, as you may know, is very popular and its standard library can be quite resourceful for this type of use case.
+On the other hand, people might also want to write functions in Python, which, as you may know, is very popular, and its standard library can be quite resourceful for this type of use case.
 
 However, integrating a Python runtime isn't as straightforward as integrating deno.
 
@@ -24,14 +19,14 @@ There are few constraints that had to be met:
 
 1. **Security**: functions should have limited access to the execution evironment
 2. **Speed**: functions should run with low latency
-3. **User-friendliness**: writting a function in one langauge should be as near identical as writting one in another
+3. **User-friendliness**: writing a function in one language should be as near identical as writing one in another
 
-## Choosing an approach..
+## Choosing an approach...
 
-Let's start simple, we want to run python code so what do we need?
+Let's start simple, we want to run python code, so what do we need?
 * A python runtime
 
-We do not want to be platform dependent, but how can we achieve that?
+We do not want to be platform-dependent, but how can we achieve that?
 * docker
 * WebAssembly
 
