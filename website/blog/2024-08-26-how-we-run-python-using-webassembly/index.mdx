@@ -12,7 +12,6 @@ On the other hand, people might also want to write functions in Python, which, a
 
 However, integrating a Python runtime isn't as straightforward as integrating deno.
 
-
 ## What are the constraints?
 
 There are few constraints that had to be met:
@@ -24,11 +23,13 @@ There are few constraints that had to be met:
 ## Choosing an approach...
 
 Let's start simple, we want to run python code, so what do we need?
-* A python runtime
+
+- A python runtime
 
 We do not want to be platform-dependent, but how can we achieve that?
-* docker
-* WebAssembly
+
+- docker
+- WebAssembly
 
 At a higher level, docker and WebAssembly all share the same idea: package an application into one build and make it platform independent.
 
@@ -60,11 +61,9 @@ Our first solution was to use [wasi-vfs](https://github.com/kateinoigakukun/wasi
 
 ![](wasi-vfs-python-and-rust.svg)
 
-
 This approach turned out to be quite hacky.
 
 After encountering several issues, we ultimately decided to use **preopens**, which provided the features we needed for our situation.
-
 
 ```rust
 fn init_python_vm() -> Result<Vm> {
@@ -84,7 +83,7 @@ fn init_python_vm() -> Result<Vm> {
   // Now we can instantiate the WASI module with all the configurations above
   let vm = wasi_vm::init_reactor_vm(preopens, pylib, wasi_mod)?;
   vm.run_func(None, "init_python", params!())?;
-  
+
   // ..
 
   Ok(vm)
