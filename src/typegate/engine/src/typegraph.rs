@@ -13,7 +13,7 @@ pub fn op_typegraph_validate(#[string] input: &str) -> Result<String> {
     Ok(serde_json::to_string(&tg)?)
 }
 
-#[deno_core::op2]
+#[deno_core::op2(fast)]
 pub fn op_validate_prisma_runtime_data(
     scope: &mut v8::HandleScope,
     inp: v8::Local<v8::Value>,

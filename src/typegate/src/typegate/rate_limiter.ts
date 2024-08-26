@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { connect, type Redis, type RedisConnectOptions } from "redis";
-import { type Deferred, deferred } from "@std/async/delay";
 import type { QueryEngine } from "../engine/query_engine.ts";
 
 // keys: tokens, latest
@@ -102,7 +101,7 @@ export abstract class RateLimiter {
 export class RedisRateLimiter extends RateLimiter {
   localHit: TTLMap;
   local: TTLMap;
-  backgroundWork: Map<number, Deferred<void>>;
+  backgroundWork: Map<number, PromiseWithResolvers<void>>;
 
   private constructor(
     private redis: Redis,
@@ -203,7 +202,7 @@ export class RedisRateLimiter extends RateLimiter {
     const tokensKey = `${id}:tokens`;
     const lastKey = `${id}:last`;
 
-    const def = deferred<void>();
+    const def = Promise.withResolvers<void>();
     this.backgroundWork.set(backgroundId, def);
 
     const tx = await this.redis.eval(

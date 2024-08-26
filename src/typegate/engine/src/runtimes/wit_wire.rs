@@ -173,10 +173,10 @@ impl Host for TypegateHost {
         op_name: String,
         json: String,
     ) -> wasmtime::Result<Result<String, String>> {
-        if op_name.len() > v8::String::max_length() {
+        if op_name.len() > v8::String::MAX_LENGTH {
             return Ok(Err("invalid op_name: too long".to_string()));
         }
-        if json.len() > v8::String::max_length() {
+        if json.len() > v8::String::MAX_LENGTH {
             return Ok(Err("invalid json: too long".to_string()));
         }
         let js_fn = SendPtr(self.js_fn.0);
@@ -401,7 +401,7 @@ pub async fn op_wit_wire_init<'scope>(
     Ok(WitWireInitResponse {})
 }
 
-#[deno_core::op2]
+#[deno_core::op2(fast)]
 pub fn op_wit_wire_destroy(
     state: Rc<RefCell<OpState>>,
     scope: &mut v8::HandleScope<'_>,

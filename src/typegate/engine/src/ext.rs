@@ -105,13 +105,13 @@ pub mod tests {
     #[tokio::test(flavor = "current_thread")]
     #[ignore]
     async fn test_obj_go_round() -> Result<()> {
-        let deno_factory = deno::factory::CliFactory::from_flags(deno::args::Flags {
+        let deno_factory = deno::factory::CliFactory::from_flags(Arc::new(deno::args::Flags {
             unstable_config: deno::args::UnstableConfig {
                 legacy_flag_enabled: true,
                 ..Default::default()
             },
             ..Default::default()
-        })?
+        }))
         .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;

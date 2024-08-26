@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { TextLineStream } from "@local/tools/deps.ts";
-import { deadline } from "@std/async";
+import { deadline } from "@std/async/deadline";
 
 export type Consumer = {
   (line: string): boolean | Promise<boolean>; // return false to stop

@@ -23,10 +23,12 @@ src/meta-lsp/*.vsix
 
 src/typegate/workers
 src/typegate/codegen
-src/typegate/tests/prisma-migrations
-src/typegate/tests/e2e/cli/prisma-migrations
-src/typegate/tests/importers/copy/
-src/typegate/tests/**/*.wasm
+
+tests/prisma-migrations
+tests/e2e/cli/prisma-migrations
+tests/importers/copy/
+tests/**/*.wasm
+
 .env
 src/typegate/native/bindings.json
 bindings
@@ -42,8 +44,8 @@ recipe.json
 tmp/
 coverage*
 
-src/typegraph/deno/sdk/src/gen
-src/typegraph/deno/sdk/README.md
+src/typegraph/deno/src/gen
+src/typegraph/deno/README.md
 src/typegraph/node
 src/typegraph/python/typegraph/gen
 
