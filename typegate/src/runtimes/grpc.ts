@@ -8,6 +8,7 @@ import { getLogger, Logger } from "@typegate/log.ts";
 import { TypeGraph } from "@typegate/typegraph/mod.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult, nativeVoid } from "@typegate/utils.ts";
+import { registerRuntime } from "@typegate/runtimes/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -16,6 +17,7 @@ interface GrpcRuntimeData {
   endpoint: string;
 }
 
+@registerRuntime("grpc")
 export class GrpcRuntime extends Runtime {
   private logger: Logger;
 

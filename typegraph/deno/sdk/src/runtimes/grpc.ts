@@ -16,21 +16,17 @@ class CallGrpcMethodMat implements Materializer {
 }
 
 export class GrpcRuntime extends Runtime {
-  constructor() {
-    const id = runtimes.registerGrpcRuntime();
+  constructor(protoFile: string, endpoint: string) {
+    const id = runtimes.registerGrpcRuntime({
+      protoFile,
+      endpoint,
+    });
     super(id);
   }
 
-  call_grpc_method(
-    proto_file: string,
-    method: string,
-    endpoint: string,
-    fx: Effect,
-  ) {
+  call_grpc_method(method: string, fx: Effect) {
     const grpc_materializer: GrpcMaterializer = {
-      protoFile: proto_file,
       method: method,
-      endpoint: endpoint,
     };
     const mat_id = runtimes.callGrpcMethode(
       { runtime: this._id, effect: fx },
