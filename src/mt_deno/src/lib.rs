@@ -78,8 +78,8 @@ pub async fn run(
     // as it breaks our custom_extensions patch for some reason
     let flags = args::Flags {
         config_flag: deno_config_url
-            .map(deno_config::ConfigFlag::Path)
-            .unwrap_or(deno_config::ConfigFlag::Discover),
+            .map(args::ConfigFlag::Path)
+            .unwrap_or(args::ConfigFlag::Discover),
         unstable_config: args::UnstableConfig {
             features: DEFAULT_UNSTABLE_FLAGS
                 .iter()
@@ -97,7 +97,9 @@ pub async fn run(
         ..Default::default()
     };
 
-    let cli_factory = factory::CliFactory::from_flags(flags)?.with_custom_ext_cb(custom_extensions);
+    let flags = Arc::new(flags);
+
+    let cli_factory = factory::CliFactory::from_flags(flags).with_custom_ext_cb(custom_extensions);
 
     let worker_factory = cli_factory.create_cli_main_worker_factory().await?;
     let permissions = deno_permissions::PermissionsContainer::new(
@@ -203,7 +205,7 @@ pub async fn test(
             ..Default::default()
         },
         type_check_mode: args::TypeCheckMode::Local,
-        config_flag: deno_config::ConfigFlag::Path(config_file.to_string_lossy().into()),
+        config_flag: args::ConfigFlag::Path(config_file.to_string_lossy().into()),
         argv,
         subcommand: args::DenoSubcommand::Test(test_flags.clone()),
         cache_blocklist: CACHE_BLOCKLIST
@@ -214,9 +216,11 @@ pub async fn test(
         ..Default::default()
     };
 
-    let cli_factory = factory::CliFactory::from_flags(flags)?.with_custom_ext_cb(custom_extensions);
+    let flags = Arc::new(flags);
 
-    let options = cli_factory.cli_options().clone();
+    let cli_factory = factory::CliFactory::from_flags(flags).with_custom_ext_cb(custom_extensions);
+
+    let options = cli_factory.cli_options()?.clone();
 
     let test_options = args::WorkspaceTestOptions {
         // files,
@@ -288,6 +292,7 @@ pub async fn test(
                 shuffle: test_options.shuffle,
                 trace_leaks: test_options.trace_leaks,
             },
+            hide_stacktraces: true,
         },
     )
     .await?;

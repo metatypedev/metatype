@@ -5,8 +5,8 @@ export const METATYPE_VERSION = "0.4.8";
 export const PUBLISHED_VERSION = "0.4.7";
 export const GHJK_VERSION = "v0.2.1";
 export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";
-export const RUST_VERSION = "1.79.0";
-export const DENO_VERSION = "1.45.2";
+export const RUST_VERSION = "1.80.1";
+export const DENO_VERSION = "1.46.1";
 export const WASMTIME_VERSION = "21.0.0";
 export const WASMTIME_PY_VERSION = "21.0.0";
 export const TYPEGRAPH_VERSION = "0.0.3";
@@ -55,7 +55,7 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     ['(wasmtime = ").+(")', WASMTIME_VERSION],
     ['(wasmtime-wasi = ").+(")', WASMTIME_VERSION],
   ],
-  "src/typegraph/deno/sdk/jsr.json": [
+  "src/typegraph/deno/deno.jsonc": [
     [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
   ],
   "tools/deps.ts": [[/(.*\/metatypedev\/ghjk\/)[^\/]*(\/.*)/, GHJK_VERSION]],

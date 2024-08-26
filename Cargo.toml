@@ -32,14 +32,15 @@ metagen = { path = "src/metagen/" }
 typegate_engine = { path = "src/typegate/engine" }
 
 # cli
-clap = "=4.4.17"
-clap_complete = "=4.4.7"
-clap-verbosity-flag = "2.2.0"
+clap = "=4.5.13"
+clap_complete = "=4.5.12"
+clap-verbosity-flag = "2.2.1"
 colored = "2.0.4"
 dialoguer = "0.11.0"
 self_update = "0.39.0"
 tabled = "0.15.0"
-lade-sdk = { git = "https://github.com/zifeo/lade", branch = "main" }
+# FIXME: use main branch when deno move to 1.37
+lade-sdk = { git = "https://github.com/zifeo/lade", branch = "fix/loosen-deps" }
 git2 = { version = "0.18.3", default-features = false }
 
 # http
@@ -84,7 +85,8 @@ paste = "1.0.15"
 # os
 ctrlc = "3.4.4"
 rand = "0.8.5"
-process-wrap = "8.0.2"
+# FIXME: go back to published crate when deno move to 1.37
+process-wrap = { git = "https://github.com/metatypedev/process-wrap", branch = "fix/decrement-tokio-version" }
 nix = "0.29.0"
 
 # fs
@@ -121,13 +123,11 @@ wasmtime-wasi = "21.0.0"
 wit-bindgen = "0.26.0"
 
 # deno
-# deno = { path =  "../deno/cli"}
-deno = { git = "https://github.com/metatypedev/deno", branch = "v1.45.2-embeddable" }
-deno_core = { version = "=0.293.0" }
+# deno = { path =  "../deno/cli" }
+deno = { git = "https://github.com/metatypedev/deno", branch = "v1.46.1-embeddable" }
+deno_core = { version = "=0.306.0" }
 
 # logging
-# pinned to match version brought in
-# https://github.com/metatypedev/deno/blob/librarify-cli/cli/Cargo.toml#L51
 env_logger = "=0.11.0"
 log = "0.4.20" # FIXME: replace with tracing
 tracing = "0.1"
@@ -144,7 +144,7 @@ tracing-appender = "0.2.3"
 futures = "0.3.30"
 futures-concurrency = "7.6"
 futures-lite = "2.3"
-tokio = { version = "1.38.0", features = ["parking_lot"] }
+tokio = { version = "1.36.0", features = ["parking_lot"] }
 async-trait = "0.1.80"
 actix = "0.13.3"
 

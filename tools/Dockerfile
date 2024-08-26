@@ -1,6 +1,6 @@
 # disable SHELL cmd down below if switching to non-debug
-ARG RUST_VERSION=1.79.0
-ARG DENO_VERSION=1.45.2
+ARG RUST_VERSION=1.80.1
+ARG DENO_VERSION=1.46.1
 ARG DISTROLESS_TAG=debug-nonroot
 
 #

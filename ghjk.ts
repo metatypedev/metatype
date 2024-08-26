@@ -28,6 +28,7 @@ env("main")
     installs.rust_stable,
   );
 
+
 env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v24.1" }),

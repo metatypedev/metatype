@@ -30,7 +30,7 @@ export default {
       dirty = (await copyLock($.workingDir, {
         "tools/LICENSE-MPL-2.0.md": [
           "src/typegraph/python/LICENSE.md",
-          "src/typegraph/deno/sdk/LICENSE.md",
+          "src/typegraph/deno/LICENSE.md",
         ],
       })) || dirty;
 
