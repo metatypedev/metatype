@@ -15,7 +15,7 @@ const { env, task } = ghjk;
 env("main")
   .install(installs.deno)
   .vars({
-    RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off",
+    RUST_LOG: "info,deno=warn,swc_ecma_codegen=off,tracing::span=off",
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
     CROSS_CONFIG: "tools/Cross.toml",
@@ -27,7 +27,6 @@ env("main")
     installs.node,
     installs.rust_stable,
   );
-
 
 env("_rust").install(
   // use rustup for the actual toolchain
@@ -59,7 +58,7 @@ env("_python").install(
   })[0],
   ports.pipi({
     packageName: "poetry",
-    version: "1.7.0",
+    version: "1.8.3",
   })[0],
 );
 

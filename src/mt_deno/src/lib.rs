@@ -78,6 +78,10 @@ pub async fn run(
     // as it breaks our custom_extensions patch for some reason
     let flags = args::Flags {
         config_flag: deno_config_url
+            .map(|str| match str.strip_prefix("file://") {
+                Some(clean) => clean.into(),
+                None => str,
+            })
             .map(args::ConfigFlag::Path)
             .unwrap_or(args::ConfigFlag::Discover),
         unstable_config: args::UnstableConfig {

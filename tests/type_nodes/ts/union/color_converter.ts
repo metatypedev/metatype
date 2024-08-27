@@ -3,7 +3,7 @@
 
 // deno-lint-ignore no-external-import
 import {
-  HexColor,
+  HexColor as HexColorUtil,
   RGBColor,
 } from "https://deno.land/x/color_util@1.0.1/mod.ts";
 
@@ -91,14 +91,14 @@ export function convert(
 
       if (to == "hex") {
         const colorHex = rgb.toHex();
-        return colorHex.toString();
+        return colorHex.toString() as HexColor;
       }
 
       throw new Error("RGB to color name not supported");
     }
 
     case "hex": {
-      const hex = new HexColor(color as string);
+      const hex = new HexColorUtil(color as string);
 
       if (to == "rgb_array" || to == "rgb_struct") {
         return rgbToArray(hex.toRGB());
@@ -121,7 +121,7 @@ export function convert(
 
       if (to == "hex") {
         const colorHex = rgb.toHex();
-        return colorHex.toString();
+        return colorHex.toString() as HexColor;
       }
 
       return color;

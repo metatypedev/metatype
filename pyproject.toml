@@ -12,7 +12,7 @@ authors = []
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-typegraph = { path = "typegraph/python", develop = true }
+typegraph = { path = "src/typegraph/python", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 # used in ./tests/importers/*.py

@@ -1,11 +1,5 @@
 {
-  "name": "@local/tools",
-  "version": "0.0.0",
-  "exports": {
-    "./consts.ts": "./consts.ts",
-    "./deps.ts": "./deps.ts"
-  },
   "imports": {
-    "@metatype/ghjk/": "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/",
+    "@metatype/ghjk/": "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/"
   }
 }

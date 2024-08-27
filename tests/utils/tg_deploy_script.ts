@@ -46,13 +46,14 @@ if (globalActionCreate !== true) {
   globalActionCreate = globalActionCreate === "true";
 }
 
-const { serialized, typegate: _gateResponseAdd } = await tgDeploy(tg, {
+const { serialized, response: _gateResponseAdd } = await tgDeploy(tg, {
   typegate: { url: gate, auth },
   typegraphPath: tgPath,
   prefix: Deno.env.get("PREFIX") ?? undefined,
   secrets: secrets,
   migrationsDir: `${cwd}/${migrationDir}`,
   defaultMigrationAction: {
+    apply: true,
     create: globalActionCreate,
     reset: globalActionReset,
   },

@@ -7,10 +7,10 @@ import { $ } from "@local/tools/deps.ts";
 import { PUBLISHED_VERSION, PYTHON_VERSION } from "@local/tools/consts.ts";
 import { download } from "download";
 import { Untar } from "@std/archive";
-import { readerFromIterable } from "@std/streams";
 import { copy } from "@std/io/copy";
-import { encodeBase64 } from "std/encoding/base64";
-import { Lines } from "test-utils/process";
+import { readerFromStreamReader } from "@std/io";
+import { encodeBase64 } from "@std/encoding/base64";
+import { Lines } from "test-utils/process.ts";
 import { newTempDir } from "test-utils/dir.ts";
 import { transformSyncConfig } from "@metatype/typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
@@ -92,10 +92,8 @@ export async function downloadAndExtractCli(version: string) {
   });
   const archivePath = tempDir.join(archiveName);
   using file = await Deno.open(archivePath.toString());
-  const reader = readerFromIterable(
-    file.readable.pipeThrough(new DecompressionStream("gzip")),
-  );
-  const untar = new Untar(reader);
+  const reader = file.readable.pipeThrough(new DecompressionStream("gzip"));
+  const untar = new Untar(readerFromStreamReader(reader.getReader()));
 
   await extractTargetDir.ensureDir();
 
@@ -245,9 +243,9 @@ Meta.test(
         args: [
           "typegate",
           `--main-url`,
-          import.meta.resolve("@metatype/typegate/main.ts"),
-          `--import-map-url`,
-          import.meta.resolve("../../../import_map.json"),
+          import.meta.resolve("../../../src/typegate/src/main.ts"),
+          `--deno-config-url`,
+          import.meta.resolve("../../../src/typegate/deno.jsonc"),
         ],
         env: {
           ...Deno.env.toObject(),
@@ -340,7 +338,7 @@ Meta.test(
     });
 
     const tgsDir = $.path(await newTempDir());
-    t.addCleanup(() => $.removeIfExists(tgsDir));
+    // t.addCleanup(() => $.removeIfExists(tgsDir));
 
     await tgsDir.join("metatype.yml").writeText(`
 typegates:

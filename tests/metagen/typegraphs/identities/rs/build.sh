@@ -2,7 +2,7 @@
 
 set -eux
 
-ADAPTOR="../../../../../../../.metatype/wasi_snapshot_preview1.reactor.wasm"
+ADAPTOR="../../../../../.metatype/wasi_snapshot_preview1.reactor.wasm"
 [ -f "$ADAPTOR" ] || ghjk x install-wasi-adapter
 
 TARGET=wasm32-wasi

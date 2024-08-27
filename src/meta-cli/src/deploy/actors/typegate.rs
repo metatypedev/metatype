@@ -36,7 +36,7 @@ pub struct TypegateInit {
     port: u16,
     admin_password: String,
     main_url: Option<String>,
-    import_map_url: Option<String>,
+    deno_config_url: Option<String>,
 }
 
 impl TypegateInit {
@@ -44,7 +44,7 @@ impl TypegateInit {
         node_config: &NodeConfig,
         working_dir: impl AsRef<Path> + std::fmt::Debug,
         main_url: Option<String>,
-        import_map_url: Option<String>,
+        deno_config_url: Option<String>,
     ) -> Result<Self> {
         let host = node_config
             .url
@@ -67,7 +67,7 @@ impl TypegateInit {
             port,
             admin_password,
             main_url,
-            import_map_url,
+            deno_config_url,
         })
     }
 
@@ -118,8 +118,8 @@ impl TypegateInit {
         if let Some(url) = &self.main_url {
             command.arg(format!("--main-url={url}"));
         }
-        if let Some(url) = &self.import_map_url {
-            command.arg(format!("--import-map-url={url}"));
+        if let Some(url) = &self.deno_config_url {
+            command.arg(format!("--deno-config-url={url}"));
         }
 
         Ok(command)

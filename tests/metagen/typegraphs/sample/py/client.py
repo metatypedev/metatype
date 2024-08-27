@@ -520,7 +520,7 @@ class NodeDescs:
     @staticmethod
     def scalar():
         return NodeMeta()
-
+    
     @staticmethod
     def Post():
         return NodeMeta(
@@ -554,6 +554,18 @@ class NodeDescs:
         )
 
     @staticmethod
+    def Func25():
+        return NodeMeta(
+            sub_nodes=NodeDescs.scalar().sub_nodes,
+        )
+
+    @staticmethod
+    def Func24():
+        return NodeMeta(
+            sub_nodes=NodeDescs.Post().sub_nodes,
+        )
+
+    @staticmethod
     def Func28():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
@@ -573,129 +585,97 @@ class NodeDescs:
             },
         )
 
-    @staticmethod
-    def Func25():
-        return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
-        )
-
-    @staticmethod
-    def Func24():
-        return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
-        )
-
-
 StringUuid4 = str
 
-Post = typing.TypedDict(
-    "Post",
-    {
-        "id": StringUuid4,
-        "slug": str,
-        "title": str,
-    },
-    total=False,
-)
+Post = typing.TypedDict("Post", {
+    "id": StringUuid4,
+    "slug": str,
+    "title": str,
+}, total=False)
 
-Object21 = typing.TypedDict(
-    "Object21",
-    {
-        "id": str,
-    },
-    total=False,
-)
+Object21 = typing.TypedDict("Object21", {
+    "id": str,
+}, total=False)
 
 StringEmail5 = str
 
 Post7 = typing.List[Post]
 
-User = typing.TypedDict(
-    "User",
-    {
-        "id": StringUuid4,
-        "email": StringEmail5,
-        "posts": Post7,
-    },
-    total=False,
-)
+User = typing.TypedDict("User", {
+    "id": StringUuid4,
+    "email": StringEmail5,
+    "posts": Post7,
+}, total=False)
 
 
-PostSelections = typing.TypedDict(
-    "PostSelections",
-    {
-        "_": SelectionFlags,
-        "id": ScalarSelectNoArgs,
-        "slug": ScalarSelectNoArgs,
-        "title": ScalarSelectNoArgs,
-    },
-    total=False,
-)
+PostSelections = typing.TypedDict("PostSelections", {
+    "_": SelectionFlags,
+    "id": ScalarSelectNoArgs,
+    "slug": ScalarSelectNoArgs,
+    "title": ScalarSelectNoArgs,
+}, total=False)
 
-UserSelections = typing.TypedDict(
-    "UserSelections",
-    {
-        "_": SelectionFlags,
-        "id": ScalarSelectNoArgs,
-        "email": ScalarSelectNoArgs,
-        "posts": CompositeSelectNoArgs["PostSelections"],
-    },
-    total=False,
-)
+UserSelections = typing.TypedDict("UserSelections", {
+    "_": SelectionFlags,
+    "id": ScalarSelectNoArgs,
+    "email": ScalarSelectNoArgs,
+    "posts": CompositeSelectNoArgs["PostSelections"],
+}, total=False)
 
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
-        super().__init__(
-            {
-                "String4": "ID!",
-                "String1": "String!",
-                "String13": "String!",
-            }
-        )
-
+        super().__init__({
+            "String4": "ID!",
+            "String1": "String!",
+            "String13": "String!",
+        })
+    
     def get_user(self, select: UserSelections) -> QueryNode[User]:
         node = selection_to_nodes(
-            {"getUser": select}, {"getUser": NodeDescs.Func23}, "$q"
+            {"getUser": select}, 
+            {"getUser": NodeDescs.Func23}, 
+            "$q"
         )[0]
         return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes)
 
     def get_posts(self, select: PostSelections) -> QueryNode[Post]:
         node = selection_to_nodes(
-            {"getPosts": select}, {"getPosts": NodeDescs.Func24}, "$q"
+            {"getPosts": select}, 
+            {"getPosts": NodeDescs.Func24}, 
+            "$q"
         )[0]
         return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes)
 
     def scalar_no_args(self) -> QueryNode[str]:
         node = selection_to_nodes(
-            {"scalarNoArgs": True}, {"scalarNoArgs": NodeDescs.Func25}, "$q"
+            {"scalarNoArgs": True}, 
+            {"scalarNoArgs": NodeDescs.Func25}, 
+            "$q"
         )[0]
         return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes)
 
-    def scalar_args(
-        self, args: typing.Union[Post, PlaceholderArgs]
-    ) -> MutationNode[str]:
+    def scalar_args(self, args: typing.Union[Post, PlaceholderArgs]) -> MutationNode[str]:
         node = selection_to_nodes(
-            {"scalarArgs": args}, {"scalarArgs": NodeDescs.Func26}, "$q"
+            {"scalarArgs": args}, 
+            {"scalarArgs": NodeDescs.Func26}, 
+            "$q"
         )[0]
-        return MutationNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes
-        )
+        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes)
 
     def composite_no_args(self, select: PostSelections) -> MutationNode[Post]:
         node = selection_to_nodes(
-            {"compositeNoArgs": select}, {"compositeNoArgs": NodeDescs.Func27}, "$q"
+            {"compositeNoArgs": select}, 
+            {"compositeNoArgs": NodeDescs.Func27}, 
+            "$q"
         )[0]
-        return MutationNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes
-        )
+        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes)
 
-    def composite_args(
-        self, args: typing.Union[Object21, PlaceholderArgs], select: PostSelections
-    ) -> MutationNode[Post]:
+    def composite_args(self, args: typing.Union[Object21, PlaceholderArgs], select: PostSelections) -> MutationNode[Post]:
         node = selection_to_nodes(
-            {"compositeArgs": (args, select)}, {"compositeArgs": NodeDescs.Func28}, "$q"
+            {"compositeArgs": (args, select)}, 
+            {"compositeArgs": NodeDescs.Func28}, 
+            "$q"
         )[0]
-        return MutationNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes
-        )
+        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes)
+

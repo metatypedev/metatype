@@ -12,4 +12,5 @@ export default {
   rust_stable: ports.rust({ version: RUST_VERSION }),
   rust_nightly: ports.rust({ version: "nightly-2024-05-26" }),
   deno: ports.deno_ghrel({ version: DENO_VERSION }),
+  // deno: ports.deno_ghrel({ version: "1.45.2" }),
 };

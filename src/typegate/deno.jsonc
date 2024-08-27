@@ -1,6 +1,4 @@
 {
-  "name": "@metatype/typegate",
-  "version": "0.4.8",
   "lint": {
     "exclude": [],
     "rules": {
@@ -16,7 +14,6 @@
   "imports": {
     "@std/crypto": "jsr:@std/crypto@^1.0.2",
     "@std/flags": "jsr:@std/flags@^0.224.0",
-    "@std/http": "jsr:@std/http@^1.0.3",
     "@std/log": "jsr:@std/log@^0.224.5",
     "@std/semver": "jsr:@std/semver@^1.0.1",
     "@std/url": "jsr:@std/url@^0.225.0",
@@ -25,7 +22,6 @@
     "dataloader": "npm:dataloader@2.2.2",
     "graphql/ast": "npm:graphql@16.8.1/language/ast.js",
     "graphql/characters": "npm:graphql@16.8.1/language/characterClasses.js",
-    "jwt": "https://deno.land/x/djwt@v3.0.1/mod.ts",
     "levenshtein": "https://deno.land/x/levenshtein@v1.0.1/mod.ts",
     "lodash": "npm:lodash@4.17.21",
     "oauth2_client": "https://deno.land/x/oauth2_client@v1.0.2/mod.ts",

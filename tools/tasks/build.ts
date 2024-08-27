@@ -43,23 +43,25 @@ export default {
     dependsOn: "build-tgraph-core",
     inherit: ["build-tgraph-core", "_ecma"],
     async fn($) {
-      const denoSdkPath = $.workingDir.join("src/typegraph/deno/sdk");
-      const genPath = await $.removeIfExists(denoSdkPath.join("src/gen"));
+      const genPath = await $.removeIfExists(
+        $.workingDir.join("src/typegraph/deno/src/gen"),
+      );
 
       await $`jco transpile $WASM_FILE -o ${genPath} --map metatype:typegraph/host=../host/host.js`;
-      await $`deno run -A src/typegraph/deno/dev/fix-declarations.ts`;
+      // FIXME: deno workspace discovery broken when
+      await $`bash -c "deno run -A tools/jsr/fix-declarations.ts"`;
     },
   },
   "build-tgraph-ts-node": {
     dependsOn: "build-tgraph-ts",
     inherit: ["build-tgraph-ts"],
     async fn($) {
-      await $`deno run -A src/typegraph/deno/dev/deno2node.ts`;
+      await $`bash -c "deno run -A tools/jsr/deno2node.ts"`;
     },
   },
   "build-tgraph-ts-jsr": {
     async fn($) {
-      await $`deno run -A src/typegraph/deno/dev/jsr-gen.ts`;
+      await $`bash -c "deno run -A tools/jsr/jsr-gen.ts"`;
     },
   },
   "build-tgraph-py": {

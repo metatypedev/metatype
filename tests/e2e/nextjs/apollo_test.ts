@@ -11,7 +11,7 @@ import {
 import { TestModule } from "test-utils/test_module.ts";
 import { testDir } from "test-utils/dir.ts";
 import { join } from "@std/path";
-import { assertEquals } from "@std/assert/assert-equals";
+import { assertEquals } from "@std/assert/equals";
 import { TextLineStream } from "@std/streams/text-line-stream";
 
 const HOST = "http://localhost:9000";

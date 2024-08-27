@@ -267,9 +267,9 @@ Meta.test("meta dev with typegate", async (t) => {
     args: [
       "dev",
       `--main-url`,
-      import.meta.resolve("@metatype/typegate/main.ts"),
-      `--import-map-url`,
-      import.meta.resolve("../../../import_map.json"),
+      import.meta.resolve("../../../src/typegate/src/main.ts"),
+      `--deno-config-url`,
+      import.meta.resolve("../../../src/typegate/deno.jsonc"),
       `--gate=http://localhost:${port}`,
     ],
     stdout: "piped",

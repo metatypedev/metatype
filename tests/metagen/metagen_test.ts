@@ -1,17 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Meta } from "../utils/mod.ts";
+import { Meta } from "test-utils/mod.ts";
 import { join } from "@std/path/join";
 import { resolve } from "@std/path/resolve";
 import { assertEquals } from "@std/assert";
-import { GraphQLQuery } from "../utils/query/graphql_query.ts";
+import { GraphQLQuery } from "test-utils/query/graphql_query.ts";
 import { JSONValue } from "@metatype/typegate/utils.ts";
-import { testDir } from "../utils/dir.ts";
+import { testDir } from "test-utils/dir.ts";
 import $ from "@david/dax";
 import { z as zod } from "zod";
 
-const denoJson = resolve(testDir, "../deno.jsonc");
+const denoJson = resolve(testDir, "./deno.jsonc");
 
 Meta.test("metagen rust builds", async (t) => {
   const tmpDir = t.tempDir;
@@ -545,7 +545,6 @@ Meta.test({
     await metaTest.should(name, async () => {
       const res = await command
         .env({ "TG_PORT": metaTest.port.toString() }).text();
-      console.log(res);
       expected.parse(JSON.parse(res));
     });
   }

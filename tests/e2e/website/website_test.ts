@@ -3,9 +3,9 @@
 
 import { expandGlob } from "@std/fs/expand-glob";
 import { basename, dirname, fromFileUrl, join } from "@std/path";
-import { Meta } from "../../utils/mod.ts";
-import { MetaTest } from "../../utils/test.ts";
-import { assertEquals } from "@std/assert/assert-equals";
+import { Meta } from "test-utils/mod.ts";
+import { MetaTest } from "test-utils/test.ts";
+import { assertEquals } from "@std/assert/equals";
 import { TypeGraphDS } from "@metatype/typegate/typegraph/mod.ts";
 
 export const thisDir = dirname(fromFileUrl(import.meta.url));

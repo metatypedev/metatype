@@ -1,6 +1,0 @@
-services:
-  adminer:
-    image: docker.io/library/adminer:latest
-    restart: unless-stopped
-    ports:
-      - 8080:8080

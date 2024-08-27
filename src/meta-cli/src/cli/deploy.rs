@@ -312,7 +312,7 @@ mod watch_mode {
                     &deploy.node_config,
                     &deploy.base_dir,
                     tg_opts.main_url,
-                    tg_opts.import_map_url,
+                    tg_opts.deno_config_url,
                 )
                 .await?
                 .start(console.clone())

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { dirname, fromFileUrl, resolve } from "@std/path";
-import { expandGlobSync } from "@std/fs";
+import { expandGlob } from "@std/fs";
 import { join, relative } from "../deps.ts";
 import { denoSdkDir } from "./common.ts";
 
@@ -13,17 +13,17 @@ type Replacer = {
   op: (s: string) => string;
 };
 
-const basePath = import.meta.resolve("../../src/typegraph/deno/src/gen");
+const basePath = "../../src/typegraph/deno/src/gen";
 
 const replacements = [
   // Imports should refer to the actual file
-  ...Array.from(
-    expandGlobSync(join(basePath, "/**/*.d.ts"), {
+  ...(await Array.fromAsync(
+    expandGlob(join(basePath, "/**/*.d.ts"), {
       root: thisDir,
       includeDirs: false,
       globstar: true,
     }),
-  ).map(({ path }) => ({
+  )).map(({ path }) => ({
     path,
     op: (s: string) => s.replace(/^(import .*)(\.js)\';$/, "$1.d.ts';"),
   })),
@@ -42,7 +42,7 @@ const replacements = [
 
 console.log("Fixing declarations..");
 for (const { path, op } of replacements) {
-  const text = Deno.readTextFileSync(path);
+  const text = await Deno.readTextFile(path);
   const rewrite = [...text.split("\n")];
 
   for (let i = 0; i < rewrite.length; i += 1) {
@@ -52,19 +52,19 @@ for (const { path, op } of replacements) {
   const newText = rewrite.join("\n");
   if (text != newText) {
     console.log(`  Fixed generated code at ${relative(thisDir, path)}`);
-    Deno.writeTextFileSync(path, newText);
+    await Deno.writeTextFile(path, newText);
   }
 }
 
 console.log("Merge types");
 // Merge everything at interfaces/*
-const merged = Array.from(
-  expandGlobSync(join(basePath, "/interfaces/*.d.ts"), {
+const merged = (await Array.fromAsync(
+  expandGlob(join(basePath, "/interfaces/*.d.ts"), {
     root: thisDir,
     includeDirs: false,
     globstar: true,
   }),
-).reduce((curr, { path }) => {
+)).reduce((curr, { path }) => {
   console.log(`  < ${path}`);
   const next = `
 // ${relative(denoSdkDir, path)}
@@ -94,5 +94,5 @@ for (const dup of dupDecl) {
 }
 mergedContent += `\n${dupDecl.join("\n")}`;
 
-Deno.writeTextFileSync(hintMainPath, mergedContent);
-Deno.removeSync(join(thisDir, basePath, "/interfaces"), { recursive: true });
+await Deno.writeTextFile(hintMainPath, mergedContent);
+await Deno.remove(join(thisDir, basePath, "/interfaces"), { recursive: true });

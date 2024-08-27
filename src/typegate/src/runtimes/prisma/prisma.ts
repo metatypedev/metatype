@@ -9,7 +9,7 @@ import { iterParentStages, nativeResult, nativeVoid } from "../../utils.ts";
 import { ComputeStage } from "../../engine/query_engine.ts";
 import type { ComputeArgParams } from "../../engine/planner/args.ts";
 import type { PrismaOperationMatData } from "../../typegraph/types.ts";
-import type { getLogger, Logger } from "../../log.ts";
+import { getLogger, type Logger } from "../../log.ts";
 import type * as PrismaRT from "./types.ts";
 import { filterValues } from "@std/collections/filter-values";
 

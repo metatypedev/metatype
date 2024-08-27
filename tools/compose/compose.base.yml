@@ -1,0 +1,32 @@
+services:
+  envoy:
+    image: docker.io/envoyproxy/envoy:v1.26-latest
+    restart: unless-stopped
+    ports:
+      - "9901:9901"
+      - "7890:10000"
+    volumes:
+      - ../envoy.yaml:/etc/envoy/envoy.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  redis:
+    image: docker.io/bitnami/redis:7.0
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    environment:
+      REDIS_PASSWORD: password
+
+  minio:
+    image: bitnami/minio:2024
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_REGION_NAME: local
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: password
+      MINIO_DEFAULT_BUCKETS: "gate2"

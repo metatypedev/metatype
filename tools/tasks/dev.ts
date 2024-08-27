@@ -16,7 +16,7 @@ export default {
       const [cmd, ...args] = $.argv;
       const script = $.workingDir.join(`tools/${cmd}.ts`);
       $.logStep(`Running ${script}`, args);
-      await $`deno run --allow-all ${script} ${args}`;
+      await $`bash -c "deno run --allow-all ${script} ${args}"`;
     },
   },
 
@@ -24,7 +24,7 @@ export default {
     desc: "Wrapper around docker compose to manage runtime dependencies",
     async fn($) {
       const dcs = await Array.fromAsync(
-        $.workingDir.join("tools/envs").expandGlob("compose.*.yml", {
+        $.workingDir.join("tools/compose").expandGlob("compose.*.yml", {
           includeDirs: false,
           globstar: true,
         }),

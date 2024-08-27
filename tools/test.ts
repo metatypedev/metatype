@@ -132,7 +132,8 @@ export async function testE2e(args: {
   const tmpDir = wd.join("tmp");
   const env: Record<string, string> = {
     CLICOLOR_FORCE: "1",
-    RUST_LOG: "off,xtask=debug,meta=debug",
+    RUST_LOG:
+      "info,xtask=debug,meta=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
     RUST_SPANTRACE: "1",
     // "RUST_BACKTRACE": "short",
     RUST_MIN_STACK: "8388608",
@@ -172,13 +173,14 @@ export async function testE2e(args: {
   $.logStep(`${prefix} Testing with ${threads} threads`);
 
   const xtask = wd.join(`target/${profile}/xtask`);
-  const denoConfig = wd.join("deno.jsonc");
+  const denoConfig = wd.join("tests/deno.jsonc");
 
   function createRun(testFile: string, streamed: boolean): Run {
     const start = Date.now();
     const outputOption = streamed ? "inherit" : "piped";
     const child = $
       .raw`${xtask} deno test --config=${denoConfig} ${testFile} ${flags}`
+      // .raw`deno test --config=${denoConfig} ${testFile} ${flags}`
       .cwd(wd)
       .env(env)
       .stdout(outputOption)
