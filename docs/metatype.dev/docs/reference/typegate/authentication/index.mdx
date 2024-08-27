@@ -16,8 +16,8 @@ Basic authentication is the simplest way to authenticate requests. It is done by
 | Context    | `{ username }`                                   |
 
 <TGExample typegraph="basic-authentication"
-  python={require("!!code-loader!../../../../../examples/typegraphs/basic.py")}
-  typescript={require("!!code-loader!../../../../../examples/typegraphs/basic.ts")}
+  python={require("!!code-loader!../../../../../../examples/typegraphs/basic.py")}
+  typescript={require("!!code-loader!../../../../../../examples/typegraphs/basic.ts")}
 
 query={require("./basic.graphql")} headers={{
     Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",
@@ -53,8 +53,8 @@ Even though, asymmetric encryption is recommended, HMAC-SHA256 is so commonly us
 
 <TGExample
   typegraph="jwt-authentification"
-  python={require("!!code-loader!../../../../../examples/typegraphs/jwt.py")}
-  typescript={require("!!code-loader!../../../../../examples/typegraphs/jwt.ts")}
+  python={require("!!code-loader!../../../../../../examples/typegraphs/jwt.py")}
+  typescript={require("!!code-loader!../../../../../../examples/typegraphs/jwt.ts")}
   query={require("./jwt.graphql")}
   headers={{
     Authorization:
@@ -99,8 +99,8 @@ const { token } = await take.json();
 
 <TGExample
   typegraph="oauth2_authentication"
-  python={require("!!code-loader!../../../../../examples/typegraphs/oauth2.py")}
-  typescript={require("!!code-loader!../../../../../examples/typegraphs/oauth2.ts")}
+  python={require("!!code-loader!../../../../../../examples/typegraphs/oauth2.py")}
+  typescript={require("!!code-loader!../../../../../../examples/typegraphs/oauth2.ts")}
 
 query={require("./oauth2.graphql")} headers={{
     Authorization: "Bearer your-token",

@@ -30,8 +30,8 @@ The `WasmRuntime` currently comes in two flavours that are both based on the was
 Before anything though, we need to author the typegraph:
 
 <TGExample
-  python={require("!!code-loader!../../../../examples/typegraphs/metagen-rs.py")}
-  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-rs.ts")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/metagen-rs.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/metagen-rs.ts")}
   disablePlayground
 />
 
@@ -73,7 +73,7 @@ By default, the `mdk_rust` generator outputs all the necessary files required to
 
 <CodeBlock language="toml">
   {
-    require("!!code-loader!../../../../examples/typegraphs/metagen/rs/Cargo.toml")
+    require("!!code-loader!../../../../../examples/typegraphs/metagen/rs/Cargo.toml")
       .content
   }
 </CodeBlock>
@@ -89,7 +89,7 @@ The `mdk.rs` file contains all the glue code including the typegraph types.
   </summary>
   <CodeBlock language="rust">
     {
-      require("!!code-loader!../../../../examples/typegraphs/metagen/rs/mdk.rs")
+      require("!!code-loader!../../../../../examples/typegraphs/metagen/rs/mdk.rs")
         .content
     }
   </CodeBlock>
@@ -101,7 +101,7 @@ The generator also includes a sample `lib.rs` entrypoint file for our crate. We'
 
 <CodeBlock language="rust">
   {
-    require("!!code-loader!../../../../examples/typegraphs/metagen/rs/lib.rs")
+    require("!!code-loader!../../../../../examples/typegraphs/metagen/rs/lib.rs")
       .content
   }
 </CodeBlock>
@@ -138,7 +138,7 @@ Put the shell script into a file like `build.sh` and execute it with a posix com
 
 <TGExample
   typegraph="metagen-rs"
-  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-rs.ts")}
-  python={require("!!code-loader!../../../../examples/typegraphs/metagen-rs.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/metagen-rs.ts")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/metagen-rs.py")}
   query={require("./metagen.graphql")}
 />

@@ -67,7 +67,7 @@ export default {
 
   "install-website": {
     inherit: "_ecma",
-    fn: ($) => $`pnpm install -C ./website/`,
+    fn: ($) => $`pnpm install -C ./docs/metatype.dev/`,
   },
 
   "install-lsp": {

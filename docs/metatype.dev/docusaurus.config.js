@@ -25,7 +25,8 @@ const config = {
   },
   stylesheets: [
     {
-      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      href:
+        "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
       type: "text/css",
     },
   ],
@@ -49,7 +50,8 @@ const config = {
         path: "use-cases",
         routeBasePath: "/use-cases",
         sidebarPath: require.resolve("./use-cases/sidebars.js"),
-        editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
+        editUrl:
+          "https://github.com/metatypedev/metatype/tree/main/docs/metatype.dev/",
       },
     ],
     "docusaurus-lunr-search",
@@ -68,14 +70,16 @@ const config = {
           path: "docs",
           routeBasePath: "/docs",
           sidebarPath: require.resolve("./docs/sidebars.js"),
-          editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
+          editUrl:
+            "https://github.com/metatypedev/metatype/tree/main/docs/metatype.dev/",
         },
         blog: {
           id: "blog",
           path: "blog",
           routeBasePath: "/blog",
           showReadingTime: true,
-          editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
+          editUrl:
+            "https://github.com/metatypedev/metatype/tree/main/docs/metatype.dev/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.scss"),

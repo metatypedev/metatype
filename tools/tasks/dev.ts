@@ -154,7 +154,7 @@ export default {
   "dev-website": {
     desc: "Launch the website",
     inherit: ["_ecma", "_python"],
-    workingDir: "./website",
+    workingDir: "./docs/metatype.dev",
     vars: {
       TG_URL: "http://localhost:7890",
     },

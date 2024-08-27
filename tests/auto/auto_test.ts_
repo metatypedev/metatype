@@ -8,6 +8,6 @@ const localDir = dirname(fromFileUrl(import.meta.url));
 
 await Meta.autoTest(localDir);
 
-const websiteDir = join(localDir, "../../../website");
+const websiteDir = join(localDir, "../../../docs/metatype.dev");
 
 await Meta.autoTest(websiteDir);

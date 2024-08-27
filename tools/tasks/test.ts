@@ -16,7 +16,7 @@ export default {
   },
   "test-website": {
     inherit: "_ecma",
-    workingDir: "./website",
+    workingDir: "./docs/metatype.dev",
     async fn($) {
       await $`pnpm lint`;
       await $`pnpm build`;

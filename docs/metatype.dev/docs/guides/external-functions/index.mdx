@@ -17,15 +17,15 @@ The following example uses the `DenoRuntime` to respond to requests and define a
 
 <TGExample
   typegraph="math"
-  typescript={require("!!code-loader!../../../../examples/typegraphs/math.ts")}
-  python={require("!!code-loader!../../../../examples/typegraphs/math.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/math.ts")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/math.py")}
   query={require("./math.graphql")}
 />
 
 Note that for the `fib` root function, we're using a typescript module in an external file. Here's what `scripts/fib.ts` looks like:
 
 <TGExample
-  typescript={require("!!code-loader!../../../../examples/typegraphs/scripts/fib.ts")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/scripts/fib.ts")}
   disablePlayground
 />
 
@@ -48,8 +48,8 @@ On some runtimes, custom functions are passed to the context object along with t
 
 <TGExample
   typegraph="func-ctx"
-  typescript={require("!!code-loader!../../../../examples/typegraphs/func-ctx.ts")}
-  python={require("!!code-loader!../../../../examples/typegraphs/func-ctx.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/func-ctx.ts")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/func-ctx.py")}
   query={require("./ctx.graphql")}
 />
 
@@ -67,15 +67,15 @@ To do anything meaningful with custom functions, you'll want to access the rest 
 
 <TGExample
   typegraph="func-gql"
-  typescript={require("!!code-loader!../../../../examples/typegraphs/func-gql.ts")}
-  python={require("!!code-loader!../../../../examples/typegraphs/func-gql.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/func-gql.ts")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/func-gql.py")}
   query={require("./gql.graphql")}
 />
 
 And `scripts/createVote.ts` looks like:
 
 <TGExample
-  typescript={require("!!code-loader!../../../../examples/typegraphs/scripts/createVote.ts")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/scripts/createVote.ts")}
   disablePlayground
 />
 ## Generating types
@@ -92,8 +92,8 @@ The metagen library is availaible within the [meta CLI](/docs/reference/meta-cli
 
 <TGExample
   typegraph="metagen-deno"
-  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen-deno.ts")}
-  python={require("!!code-loader!../../../../examples/typegraphs/metagen-deno.py")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/metagen-deno.ts")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/metagen-deno.py")}
   query={require("./metagen.graphql")}
 />
 
@@ -136,7 +136,7 @@ Within `mdk.ts` and the types and helpers, all the types from your typegraph sho
 <summary>Code generation sample. Collapsed for aesthetic reasons.</summary>
 
 <TGExample
-  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen/ts/mdk.ts")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/metagen/ts/mdk.ts")}
   disablePlayground
 />
 
@@ -147,7 +147,7 @@ Note, this also include typescript function types for specific typegraph functio
 We can then use these types in the following manner. Add the following snippet into `metagen/ts/remix.ts`.
 
 <TGExample
-  typescript={require("!!code-loader!../../../../examples/typegraphs/metagen/ts/remix.ts")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/metagen/ts/remix.ts")}
   disablePlayground
 />
 

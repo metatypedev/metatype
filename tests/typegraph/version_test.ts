@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { expandGlobSync } from "@std/fs/expand-glob";
+import { expandGlob } from "@std/fs/expand-glob";
 import { Meta } from "../utils/mod.ts";
 import { join } from "@std/path";
 import { JSONSchemaFaker } from "json-schema-faker";
@@ -26,9 +26,9 @@ JSONSchemaFaker.option({
 });
 
 Meta.test("typegraphs creation", async (t) => {
-  const folder = join(testDir, "../../website/static/specs");
-  const specs = Array.from(
-    expandGlobSync("*.json", {
+  const folder = join(testDir, "../docs/metatype.dev/static/specs");
+  const specs = await Array.fromAsync(
+    expandGlob("*.json", {
       root: folder,
       includeDirs: false,
       globstar: true,
