@@ -5,6 +5,9 @@ import { z } from "zod";
 import { decodeBase64 } from "std/encoding/base64.ts";
 import { RedisConnectOptions } from "redis";
 import { S3ClientConfig } from "aws-sdk/client-s3";
+import { getLogger } from "@typegate/log.ts";
+
+const logger = getLogger(import.meta);
 
 const zBooleanString = z.preprocess(
   (a: unknown) => z.coerce.string().parse(a) === "true",
@@ -32,21 +35,43 @@ export type GlobalConfig = z.infer<typeof globalConfigSchema>;
 // These config entries are only accessible on a Typegate instance.
 // They are not read from a global variable to enable test isolation and configurability.
 export const typegateConfigBaseSchema = z.object({
-  tg_secret: z.string().transform((s: string, ctx) => {
-    const bytes = decodeBase64(s);
-    if (bytes.length != 64) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
-      });
-    }
-    return bytes;
-  }),
+  tg_secret: z
+    .string()
+    .optional()
+    .transform((s: string | undefined, ctx) => {
+      if (s === undefined) {
+        logger.warn(
+          "TG_SECRET is not configured. Exiting from the application.",
+        );
+        Deno.exit(1);
+      }
+
+      const bytes = decodeBase64(s);
+      if (bytes.length != 64) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
+        });
+      }
+      return bytes;
+    }),
   timer_max_timeout_ms: z.coerce.number().positive().max(60000),
   timer_destroy_resources: z.boolean(),
   timer_policy_eval_retries: z.number().nonnegative().max(5),
-  tg_admin_password: z.string(),
+  tg_admin_password: z
+    .string()
+    .optional()
+    .transform((s: string | undefined, _ctx) => {
+      if (s === undefined) {
+        logger.warn(
+          "TG_ADMIN_PASSWORD is not configured. Exiting from the application.",
+        );
+        Deno.exit(1);
+      }
+
+      return s;
+    }),
   tmp_dir: z.string(),
   jwt_max_duration_sec: z.coerce.number().positive(),
   jwt_refresh_duration_sec: z.coerce.number().positive(),
