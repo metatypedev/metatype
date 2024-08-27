@@ -1,13 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from dataclasses import dataclass
 from typegraph import t
-from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.runtimes.base import Runtime
 from typegraph.gen.exports.runtimes import (
-    BaseMaterializer,
-    Effect,
-    GrpcMaterializer,
+    GrpcData,
     GrpcRuntimeData,
 )
 from typegraph.gen.types import Err
@@ -23,21 +20,11 @@ class GrpcRuntime(Runtime):
 
         super().__init__(runtime_id.value)
 
-    def call_grpc_method(self, method: str, effect: Effect):
-        base = BaseMaterializer(self.id, effect)
+    def call_grpc_method(self, method: str):
+        data = GrpcData(method)
+        func_data = runtimes.call_grpc_method(store, self.id, data)
 
-        grpc_materialier = GrpcMaterializer(method)
+        if isinstance(func_data, Err):
+            raise Exception(func_data.value)
 
-        mat_id = runtimes.call_grpc_methode(store, base, grpc_materialier)
-
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
-
-        mat = CallGrpcMethodMat(mat_id.value, effect, mat=grpc_materialier)
-
-        return t.func(t.struct({"payload": t.optional(t.string())}), t.string(), mat)
-
-
-@dataclass
-class CallGrpcMethodMat(Materializer):
-    mat: GrpcMaterializer
+        return t.func.from_type_func(func_data.value)

@@ -8,7 +8,7 @@ use crate::runtimes::{
     Runtime, TemporalMaterializer, WasmMaterializer,
 };
 use crate::wit::core::{Artifact as WitArtifact, RuntimeId};
-use crate::wit::runtimes::{GrpcMaterializer, HttpMethod, KvMaterializer, MaterializerHttpRequest};
+use crate::wit::runtimes::{HttpMethod, KvMaterializer, MaterializerHttpRequest};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
@@ -398,24 +398,6 @@ impl MaterializerConverter for KvMaterializer {
         };
         Ok(Materializer {
             name,
-            runtime,
-            effect: effect.into(),
-            data,
-        })
-    }
-}
-
-impl MaterializerConverter for GrpcMaterializer {
-    fn convert(
-        &self,
-        c: &mut TypegraphContext,
-        runtime_id: RuntimeId,
-        effect: WitEffect,
-    ) -> Result<common::typegraph::Materializer> {
-        let runtime = c.register_runtime(runtime_id)?;
-        let data = serde_json::from_value(json!({})).map_err(|e| e.to_string())?;
-        Ok(Materializer {
-            name: "grpc".into(),
             runtime,
             effect: effect.into(),
             data,

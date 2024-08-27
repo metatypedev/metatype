@@ -543,11 +543,11 @@ interface runtimes {
 
     register-grpc-runtime: func(data: grpc-runtime-data) -> result<runtime-id, error>;
 
-    record grpc-materializer {
+    record grpc-data {
         method: string,
     }
 
-    call-grpc-methode: func(base: base-materializer, data: grpc-materializer) -> result<materializer-id, error>;
+    call-grpc-method: func(runtime: runtime-id, data: grpc-data) -> result<func-params, error>;
 }
 
 interface aws {
