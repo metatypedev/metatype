@@ -1,16 +1,16 @@
 # Running Python code with WebAssembly
 
-Language runtimes are nice, but integrating one is an entire story. Let's discover how we managed to integrate the Python runtime within the metatype ecosystem.
+Language runtimes are nice, but integrating one is an entire story. Let's discover how we managed to integrate the Python runtime within the Metatype ecosystem.
 
 ## Why?
 
-You have probably heard of "Function as a service" or FaaS. In simple terms, FaaS enables anyone to run code in response to events without the hassle of managing the underlying infrastructure needed for microservices.
+You have probably heard of "Function as a Service" or FaaS. In simple terms, FaaS enables anyone to run code in response to events without the hassle of managing the underlying infrastructure needed for microservices.
 
-This capability was initially added into metatype through deno workers, which provided ways to execute functions authored in typescript with ease.
+This capability was initially added into Metatype through Deno workers, which provided ways to execute functions authored in Typescript with ease.
 
 On the other hand, people might also want to write functions in Python, which, as you may know, is very popular, and its standard library can be quite resourceful for this type of use case.
 
-However, integrating a Python runtime isn't as straightforward as integrating deno.
+However, integrating a Python runtime isn't as straightforward as integrating Deno.
 
 ## What are the constraints?
 
@@ -22,67 +22,67 @@ There are few constraints that had to be met:
 
 ## Choosing an approach...
 
-Let's start simple, we want to run python code, so what do we need?
+Let's start simple, we want to run Python code, so what do we need?
 
-- A python runtime
+- A Python runtime
 
 We do not want to be platform-dependent, but how can we achieve that?
 
-- docker
+- Docker
 - WebAssembly
 
-At a higher level, docker and WebAssembly all share the same idea: package an application into one build and make it platform independent.
+At a higher level, Docker and WebAssembly all share the same idea: package an application into one build and make it platform independent.
 
 ## The WebAssembly Interface (WASI)
 
 This is basically WebAssembly but with more capabilities such as file system access and networking.
 
-Just like x86, or wasm, WASI is a compilation target.
+Just like x86, or Wasm, WASI is a compilation target.
 The **build** can then be executed in a sandboxed environment within a WASI-compliant runtime (WasmEdge, Wasmtime, Wasmer).
 
-This fits very well to our use case, and as opposed to docker, we can instantiate, manage and expose ressources programmatically with ease.
+This fits very well to our use case, and as opposed to Docker, we can instantiate, manage and expose ressources programmatically with ease.
 
-And luckily for us at the time, some [community works](https://github.com/vmware-labs/webassembly-language-runtimes) has already been done on enabling the use of python into WASI.
+And luckily for us at the time, some [community works](https://github.com/vmware-labs/webassembly-language-runtimes) has already been done on enabling the use of Python into WASI.
 
 To complicate things a bit, the WASI spec itself is a work in progress.
 The one that is supported the most is the [preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md).
 
 ### File system access
 
-Since we relied on PyO3's abi3-py311 for running python script in rust, it required libpython to be available at runtime.
+Since we relied on PyO3's abi3-py311 for running Python script in rust, it required libPython to be available at runtime.
 
 ```toml
 pyo3 = { version = "0.19.1", features = ["abi3-py311"] }
 ```
 
-In short, we had to find a way to expose a **script folder** and also **libpython** to the WASI build.
+In short, we had to find a way to expose a **script folder** and also **libPython** to the WASI build.
 
 Our first solution was to use [wasi-vfs](https://github.com/kateinoigakukun/wasi-vfs), here is our first architecture design:
 
-![](wasi-vfs-python-and-rust.svg)
+![](wasi-vfs-Python-and-rust.svg)
 
 This approach turned out to be quite hacky.
 
 After encountering several issues, we ultimately decided to use **preopens**, which provided the features we needed for our situation.
 
 ```rust
-fn init_python_vm() -> Result<Vm> {
+fn init_Python_vm() -> Result<Vm> {
   let preopens = vec![
-    // User script will be uploaded at ./src/python which is virtually seen as /app
+    // User script will be uploaded at ./src/Python which is virtually seen as /app
     // Each script only has readonly access to /app
-    "/app:./src/python:readonly".to_owned()
+    "/app:./src/Python:readonly".to_owned()
   ];
 
   // This follow the same idea as above, but for clarity's sake we decided to separate it
-  let pylib = PathBuf::from("./vendor/libpython/usr/local/lib");
+  let pylib = PathBuf::from("./vendor/libPython/usr/local/lib");
 
-  // This is our WASI module reponsible for running python scripts at runtime
-  // It assumes /app and libpython to be available in its world
-  let wasi_mod = PathBuf::from("./build/python-wasi-reactor.wasm");
+  // This is our WASI module reponsible for running Python scripts at runtime
+  // It assumes /app and libPython to be available in its world
+  let wasi_mod = PathBuf::from("./build/Python-wasi-reactor.wasm");
 
   // Now we can instantiate the WASI module with all the configurations above
   let vm = wasi_vm::init_reactor_vm(preopens, pylib, wasi_mod)?;
-  vm.run_func(None, "init_python", params!())?;
+  vm.run_func(None, "init_Python", params!())?;
 
   // ..
 
