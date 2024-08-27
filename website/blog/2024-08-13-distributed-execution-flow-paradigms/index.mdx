@@ -144,31 +144,41 @@ Your temporal workflow definition should look similar to the one below.
 
     <TabItem value="typescript">
 
-Activities definition. Create a file for the workflow, e.g., orderWorkflow.ts:
+Activities definition inside `src/activities.ts`:`
 
 ```typescript
+async function sleep(time: number) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, time);
+    });
+}
+
 export async function processPayment(orderId: string): Promise<string> {
   console.log(`Processing payment for order ${orderId}`);
   // Simulate payment processing logic
+  await sleep(2);
   return "Payment processed";
 }
 
 export async function checkInventory(orderId: string): Promise<string> {
   console.log(`Checking inventory for order ${orderId}`);
   // Simulate inventory check logic
+  await sleep(2);
   return "Inventory available";
 }
 
 export async function deliverOrder(orderId: string): Promise<string> {
   console.log(`Delivering order ${orderId}`);
   // Simulate delivery logic
+  await sleep(5);
   return "Order delivered";
 }
 ```
 
-Workflow definition. Create a file for the workflow, e.g., orderWorkflow.ts:
+Workflow definition inside `src/workflows.ts`:
 
 ```typescript
+// Add Workflow Definitions here.
 import { proxyActivities } from "@temporalio/workflow";
 
 export const { processPayment, checkInventory, deliverOrder } =
@@ -188,28 +198,40 @@ export async function orderWorkflow(orderId: string): Promise<string> {
 }
 ```
 
-Worker definintion
+Worker definintion inside `src/worker.ts`:
 
 ```typescript
-import { Worker } from "@temporalio/worker";
-import * as activities from "./activities";
+import { NativeConnection, Worker } from '@temporalio/worker';
+import * as activities from './activities';
+import { TASK_QUEUE_NAME } from './shared';
 
 async function run() {
-  // Step 1: Register Workflows and Activities with the Worker and connect to
-  // the Temporal server.
-  const worker = await Worker.create({
-    // for production, you want to bundle your workflows under a single file
-    workflowsPath: require.resolve("orderWorkflow.ts"),
-    activities,
-    taskQueue: "order-task-queue",
+  // Step 1: Establish a connection with Temporal server.
+  //
+  // Worker code uses `@temporalio/worker.NativeConnection`.
+  // (But in your application code it's `@temporalio/client.Connection`.)
+  const connection = await NativeConnection.connect({
+    address: 'localhost:7233',
+    // TLS and gRPC metadata configuration goes here.
   });
-  // Worker connects to localhost by default and uses console.error for logging.
-  // Customize the Worker by passing more options to create():
-  // https://typescript.temporal.io/api/classes/worker.Worker
-  // If you need to configure server connection parameters, see docs:
-  // /typescript/security#encryption-in-transit-with-mtls
+  // Step 2: Register Workflows and Activities with the Worker.
+  const worker = await Worker.create({
+    connection,
+    namespace: 'default',
+    taskQueue: TASK_QUEUE_NAME,
+    // Workflows are registered using a path as they run in a separate JS context.
+    workflowsPath: require.resolve("./workflows"),
+    activities,
+  });
 
-  // Step 2: Start accepting tasks on the `tutorial` queue
+  // Step 3: Start accepting tasks on the Task Queue specified in TASK_QUEUE_NAME
+  //
+  // The worker runs until it encounters an unexpected error or the process receives a shutdown signal registered on
+  // the SDK Runtime object.
+  //
+  // By default, worker logs are written via the Runtime logger to STDERR at INFO level.
+  //
+  // See https://typescript.temporal.io/api/classes/worker.Runtime#install to customize these defaults.
   await worker.run();
 }
 
@@ -219,24 +241,44 @@ run().catch((err) => {
 });
 ```
 
-Starting the workflow execution
+Starting the workflow execution inside `src/client.ts`
 
 ```typescript
-import { Connection, Client } from "@temporalio/client";
-import { orderWorkflow } from "./orderWorkflow";
+import { Connection, Client } from '@temporalio/client';
+import { nanoid } from 'nanoid';
+import { TASK_QUEUE_NAME } from './shared';
 
-async function main() {
-  const connection = await Connection.create();
-  const client = new Client({ connection });
-  const result = await client.workflow.execute(orderWorkflow, {
-    taskQueue: "order-task-queue",
-    workflowId: "order123",
-    args: ["order123"],
+// import your workflow
+import { orderWorkflow as YOUR_WORKFLOW } from './workflows';
+
+async function run() {
+  // Connect to the default Server location
+  const connection = await Connection.connect({ address: 'localhost:7233' });
+  // In production, pass options to configure TLS and other settings:
+  // {
+  //   address: 'foo.bar.tmprl.cloud',
+  //   tls: {}
+  // }
+
+  const client = new Client({
+    connection,
+    // namespace: 'foo.bar', // connects to 'default' namespace if not specified
   });
-  console.log(result);
+
+  const handle = await client.workflow.start(YOUR_WORKFLOW, {
+    taskQueue: TASK_QUEUE_NAME,
+    // type inference works! args: [name: string]
+    args: ['Temporal'],
+    // in practice, use a meaningful business ID, like customerId or transactionId
+    workflowId: 'workflow-' + nanoid(),
+  });
+  console.log(`Started workflow ${handle.workflowId}`);
+
+  // optional: wait for client result
+  console.log(await handle.result());
 }
 
-main().catch((err) => {
+run().catch((err) => {
   console.error(err);
   process.exit(1);
 });
