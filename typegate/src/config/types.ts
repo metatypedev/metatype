@@ -5,9 +5,6 @@ import { z } from "zod";
 import { decodeBase64 } from "std/encoding/base64.ts";
 import { RedisConnectOptions } from "redis";
 import { S3ClientConfig } from "aws-sdk/client-s3";
-import { getLogger } from "@typegate/log.ts";
-
-const logger = getLogger(import.meta);
 
 const zBooleanString = z.preprocess(
   (a: unknown) => z.coerce.string().parse(a) === "true",
@@ -40,8 +37,9 @@ export const typegateConfigBaseSchema = z.object({
     .optional()
     .transform((s: string | undefined, ctx) => {
       if (s === undefined) {
-        logger.warn(
-          "TG_SECRET is not configured. Exiting from the application.",
+        console.error(
+          "\x1b[31m%s\x1b[0m",
+          "Error: Env var TG_SECRET is not configured. Exiting from the application.",
         );
         Deno.exit(1);
       }
@@ -64,8 +62,9 @@ export const typegateConfigBaseSchema = z.object({
     .optional()
     .transform((s: string | undefined, _ctx) => {
       if (s === undefined) {
-        logger.warn(
-          "TG_ADMIN_PASSWORD is not configured. Exiting from the application.",
+        console.error(
+          "\x1b[31m%s\x1b[0m",
+          "Error: Env var TG_ADMIN_PASSWORD is not configured. Exiting from the application.",
         );
         Deno.exit(1);
       }
