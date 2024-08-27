@@ -33,7 +33,7 @@ export class SubstantialRuntime extends Runtime {
 
   async deinit(): Promise<void> {
     logger.info("deinitializing SubstantialRuntime");
-    return await Promise.reject("not implemented");
+    return await Promise.resolve();
   }
 
   materialize(

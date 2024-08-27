@@ -125,6 +125,6 @@ export class PythonRuntime extends Runtime {
     deps: Array<string> = [],
   ): SubstantialRuntime {
     const substantial = new SubstantialRuntime(backend);
-    return substantial._usingWorkflow(file, name, deps);
+    return substantial._usingWorkflow({ file, name, deps, kind: "python" });
   }
 }

@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import List, Union
+from typing import Union
 from typegraph import t
 from typegraph.gen.exports.runtimes import (
     RedisBackend,
@@ -16,7 +16,6 @@ from typegraph.gen.exports.runtimes import (
     SubstantialOperationTypeStop,
     SubstantialRuntimeData,
     Workflow,
-    WorkflowKind,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Runtime
@@ -42,13 +41,9 @@ class SubstantialRuntime(Runtime):
 
     def _using_workflow(
         self,
-        file: str,
-        name: str,
-        deps: List[str] = [],
+        workflow: Workflow,
     ):
-        self.workflow = Workflow(
-            name=name, file=file, deps=deps, kind=WorkflowKind.PYTHON
-        )
+        self.workflow = workflow
         return self
 
     def _generic_substantial_func(

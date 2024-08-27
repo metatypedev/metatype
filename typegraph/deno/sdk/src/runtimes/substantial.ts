@@ -38,16 +38,8 @@ export class SubstantialRuntime extends Runtime {
     this.backend = backend;
   }
 
-  _usingWorkflow(
-    file: string,
-    name: string,
-    deps: Array<string> = [],
-  ): SubstantialRuntime {
-    this.workflow = {
-      name,
-      file,
-      deps,
-    } as Workflow;
+  _usingWorkflow(workflow: Workflow): SubstantialRuntime {
+    this.workflow = workflow;
     return this;
   }
 

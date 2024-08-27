@@ -503,7 +503,8 @@ interface runtimes {
     }
 
     enum workflow-kind {
-        python, // for now
+        python,
+        deno
     }
 
     record workflow {

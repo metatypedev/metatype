@@ -27,12 +27,13 @@ pub struct SubstantialRuntimeData {
 #[serde(rename_all = "lowercase")]
 pub enum WorkflowKind {
     Python,
+    Deno,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WorkflowMatData {
     pub name: String,
-    pub file: String,
+    pub file: PathBuf,
     pub kind: WorkflowKind,
     pub deps: Vec<PathBuf>,
 }
@@ -42,13 +43,4 @@ pub struct WorkflowMatData {
 pub struct ModuleMatData {
     pub entry_point: PathBuf,
     pub deps: Vec<PathBuf>,
-}
-
-impl From<WorkflowMatData> for ModuleMatData {
-    fn from(value: WorkflowMatData) -> Self {
-        Self {
-            entry_point: PathBuf::from(value.file),
-            deps: value.deps,
-        }
-    }
 }

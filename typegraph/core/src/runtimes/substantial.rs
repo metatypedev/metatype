@@ -120,13 +120,14 @@ pub fn substantial_operation(
 
 impl From<wit::runtimes::Workflow> for WorkflowMatData {
     fn from(value: wit::runtimes::Workflow) -> Self {
+        use common::typegraph::runtimes::substantial;
+
         Self {
             name: value.name,
-            file: value.file,
+            file: PathBuf::from(value.file),
             kind: match value.kind {
-                wit::runtimes::WorkflowKind::Python => {
-                    common::typegraph::runtimes::substantial::WorkflowKind::Python
-                }
+                wit::runtimes::WorkflowKind::Python => substantial::WorkflowKind::Python,
+                wit::runtimes::WorkflowKind::Deno => substantial::WorkflowKind::Deno,
             },
             deps: value.deps.iter().map(PathBuf::from).collect(),
         }
