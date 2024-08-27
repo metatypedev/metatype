@@ -7,11 +7,11 @@
 //!
 //! Note: On the task process
 //! - stdout is used for logging and task output; each line is prefix by
-//! either one of  "debug: ", "info: ", "warn: ", "error: " for logging,
-//! or "success: "/"failure: " for reporting operation result (serialization, or
-//! deployment) for each typegraph with for JSON-serialized data.
+//!   either one of  "debug: ", "info: ", "warn: ", "error: " for logging,
+//!   or "success: "/"failure: " for reporting operation result (serialization, or
+//!   deployment) for each typegraph with for JSON-serialized data.
 //! - stderr is used for fatal errors that causes the program to exit; mainly
-//! unhandled exception in JavaScript or Python
+//!   unhandled exception in JavaScript or Python
 
 pub mod action;
 mod command;
