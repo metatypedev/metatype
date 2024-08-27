@@ -75,8 +75,7 @@ const prepare = {
           await t.shell("bash build.sh".split(" "), {
             currentDir: "examples/typegraphs/metagen/rs",
             env: {
-              MCLI_LOADER_CMD:
-                "deno run -A --import-map=../typegate/import_map.json {filepath}",
+              MCLI_LOADER_CMD: "deno run -A {filepath}",
             },
           })
         ).code,
@@ -135,8 +134,7 @@ for (const name of list) {
             currentDir: "examples",
             env: {
               RUST_LOG: "trace",
-              MCLI_LOADER_CMD:
-                "deno run -A --import-map=../typegate/import_map.json {filepath}",
+              MCLI_LOADER_CMD: "deno run -A {filepath}",
             },
           },
           "serialize",

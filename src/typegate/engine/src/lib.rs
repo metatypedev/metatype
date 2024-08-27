@@ -231,7 +231,7 @@ mod tests {
             super::resolve_url_or_path("", &std::env::current_dir()?.join("../src/main.ts"))?,
             Some(
                 std::env::current_dir()?
-                    .join("../import_map.json")
+                    .join("../deno.jsonc")
                     .to_string_lossy()
                     .into(),
             ),

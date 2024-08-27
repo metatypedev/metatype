@@ -51,11 +51,9 @@
       "jsr:@std/url@^0.225.0": "jsr:@std/url@0.225.0",
       "jsr:@std/uuid@^1.0.1": "jsr:@std/uuid@1.0.2",
       "jsr:@std/yaml@^1.0.4": "jsr:@std/yaml@1.0.4",
-      "npm:@deno/shim-deno@~0.16.1": "npm:@deno/shim-deno@0.16.1",
       "npm:@noble/hashes@1.4.0": "npm:@noble/hashes@1.4.0",
       "npm:@sentry/node@7.70.0": "npm:@sentry/node@7.70.0",
       "npm:@types/node": "npm:@types/node@18.16.19",
-      "npm:@types/node@^18.11.9": "npm:@types/node@18.16.19",
       "npm:chance@1.1.11": "npm:chance@1.1.11",
       "npm:graphql@16.8.1": "npm:graphql@16.8.1",
       "npm:json-schema-faker@0.5.3": "npm:json-schema-faker@0.5.3",
@@ -312,17 +310,6 @@
           "regenerator-runtime": "regenerator-runtime@0.14.1"
         }
       },
-      "@deno/shim-deno-test@0.4.0": {
-        "integrity": "sha512-oYWcD7CpERZy/TXMTM9Tgh1HD/POHlbY9WpzmAk+5H8DohcxG415Qws8yLGlim3EaKBT2v3lJv01x4G0BosnaQ==",
-        "dependencies": {}
-      },
-      "@deno/shim-deno@0.16.1": {
-        "integrity": "sha512-s9v0kzF5bm/o9TgdwvsraHx6QNllYrXXmKzgOG2lh4LFXnVMr2gpjK/c/ve6EflQn1MqImcWmVD8HAv5ahuuZQ==",
-        "dependencies": {
-          "@deno/shim-deno-test": "@deno/shim-deno-test@0.4.0",
-          "which": "which@2.0.2"
-        }
-      },
       "@noble/hashes@1.4.0": {
         "integrity": "sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==",
         "dependencies": {}
@@ -436,10 +423,6 @@
           "agent-base": "agent-base@6.0.2",
           "debug": "debug@4.3.6"
         }
-      },
-      "isexe@2.0.0": {
-        "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==",
-        "dependencies": {}
       },
       "javascript-natural-sort@0.7.1": {
         "integrity": "sha512-nO6jcEfZWQXDhOiBtG2KvKyEptz7RVbpGP4vTD2hLBdmNQSsCiicO2Ioinv6UI4y9ukqnBpy+XZ9H6uLNgJTlw==",
@@ -605,12 +588,6 @@
       "validator@13.12.0": {
         "integrity": "sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==",
         "dependencies": {}
-      },
-      "which@2.0.2": {
-        "integrity": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==",
-        "dependencies": {
-          "isexe": "isexe@2.0.0"
-        }
       },
       "xtend@4.0.2": {
         "integrity": "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==",
@@ -2105,14 +2082,6 @@
           "npm:lodash@4.17.21",
           "npm:validator@13.12.0"
         ]
-      },
-      "src/typegraph/node": {
-        "packageJson": {
-          "dependencies": [
-            "npm:@deno/shim-deno@~0.16.1",
-            "npm:@types/node@^18.11.9"
-          ]
-        }
       },
       "tests": {
         "dependencies": [

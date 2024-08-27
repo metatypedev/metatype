@@ -124,7 +124,7 @@ COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
 COPY --from=builder /app/typegate-bin /bin/typegate
 # the typegate ecma sources
-COPY --from=builder /app/deno.jsonc /app/import_map.json ./
+COPY --from=builder /app/deno.jsonc ./
 COPY --from=builder /app/src/typegate/engine/*.js /app/src/typegate/engine/*.ts ./src/typegate/engine/
 COPY --from=builder /app/src/typegate/src ./src/typegate/src/
 COPY --from=builder /app/tests ./tests/

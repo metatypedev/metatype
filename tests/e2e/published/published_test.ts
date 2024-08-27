@@ -143,7 +143,11 @@ Meta.test(
 
     const typegateTempDir = await newTempDir();
     const repoDir = await newTempDir();
-    const examplesDir = $.path(await newTempDir());
+    const examplesDir = $.path(
+      await newTempDir({
+        dir: undefined,
+      }),
+    );
     t.addCleanup(async () => {
       await $.co([
         $.removeIfExists(typegateTempDir),
@@ -337,7 +341,11 @@ Meta.test(
       return !line.includes(`typegate ready on ${port}`);
     });
 
-    const tgsDir = $.path(await newTempDir());
+    const tgsDir = $.path(
+      await newTempDir({
+        dir: undefined,
+      }),
+    );
     // t.addCleanup(() => $.removeIfExists(tgsDir));
 
     await tgsDir.join("metatype.yml").writeText(`
@@ -359,9 +367,10 @@ typegraphs:
     await t.should("work with JSR npm", async () => {
       const npmJsrDir = await tgsDir.join("npm_jsr").ensureDir();
       await $`pnpm init`.cwd(npmJsrDir);
-      await $`pnpm dlx jsr add @typegraph/sdk@${PUBLISHED_VERSION}`.cwd(
-        npmJsrDir,
-      );
+      await $`pnpm --package=jsr dlx jsr add @typegraph/sdk@${PUBLISHED_VERSION}`
+        .cwd(
+          npmJsrDir,
+        );
       await $.co([
         $.path("examples/typegraphs/func.ts").copy(npmJsrDir.join("tg.ts")),
         $.path("examples/typegraphs/scripts").copyToDir(npmJsrDir),
@@ -381,7 +390,7 @@ typegraphs:
       await $`bash -c ${command}`
         .cwd(npmJsrDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        .env("MCLI_LOADER_CMD", "pnpm dlx tsx")
+        .env("MCLI_LOADER_CMD", "pnpm --package=tsx dlx tsx")
         .env("RUST_LOG", "trace");
     });
 
@@ -413,13 +422,17 @@ typegraphs:
           pypaDir,
         );
       await $.co([
-        $`bash -c 'poetry env use python && poetry install'`.cwd(pypaDir),
+        pypaDir.join("README.md").ensureFile(),
+        $`bash -c 'python3 -m venv .venv && source .venv/bin/activate && poetry install --no-root'`
+          .cwd(
+            pypaDir,
+          ),
         $.path("examples/typegraphs/func.py").copy(pypaDir.join("tg.py")),
         $.path("examples/typegraphs/scripts").copyToDir(pypaDir),
       ]);
 
-      const command =
-        `poetry env use python && meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.py`;
+      const command = `source .venv/bin/activate &&` +
+        ` meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.py`;
       await $`bash -c ${command}`
         .cwd(pypaDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)

@@ -19,8 +19,7 @@ const envs = {
     RUST_LOG: "trace",
   },
   deno: {
-    MCLI_LOADER_CMD:
-      "deno run -A --import-map=../../typegate/import_map.json {filepath}",
+    MCLI_LOADER_CMD: "deno run -A  {filepath}",
     RUST_LOG: "trace",
   },
   node: {
@@ -61,7 +60,7 @@ const install = {
     await shell("pnpm install".split(/\s+/), opt);
 
     // Use local node
-    const localNodeSdk = join(dir, "../../typegraph/node");
+    const localNodeSdk = join(dir, "../../src/typegraph/node");
     if (!(await exists(localNodeSdk))) {
       throw new Error(`Node sdk not found at ${localNodeSdk}`);
     }
