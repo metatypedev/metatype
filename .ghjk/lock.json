@@ -974,7 +974,7 @@
             "test-website": {
               "ty": "denoFile@v1",
               "key": "test-website",
-              "workingDir": "./website",
+              "workingDir": "./docs/metatype.dev",
               "envKey": "bciqclszw6iggx6sevxab56z3k7gh5hne7jzx24clywryxz24qjo5gji"
             },
             "test-e2e": {
@@ -1040,7 +1040,7 @@
             "dev-website": {
               "ty": "denoFile@v1",
               "key": "dev-website",
-              "workingDir": "./website",
+              "workingDir": "./docs/metatype.dev",
               "desc": "Launch the website",
               "envKey": "bciqn4urah5beauhii24btx3t5eh2gsoqldg6hqiqn7wstpbcuecfj2y"
             },

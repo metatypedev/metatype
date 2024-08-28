@@ -9,7 +9,7 @@ Meta.test({ name: "simulate publish on npm and jsr" }, async (t) => {
     const output = await t.shell(
       "pnpm publish --dry-run --no-git-check".split(/\s+/),
       {
-        currentDir: "typegraph/node",
+        currentDir: "src/typegraph/node",
       },
     );
     console.log("code", output.code);
@@ -19,7 +19,7 @@ Meta.test({ name: "simulate publish on npm and jsr" }, async (t) => {
 
   await t.should("simulate publish on jsr", async () => {
     assert(
-      await exists("typegraph/deno/sdk/jsr.json"),
+      await exists("src/typegraph/deno/deno.json"),
       "jsr export map exists",
     );
 
@@ -27,7 +27,7 @@ Meta.test({ name: "simulate publish on npm and jsr" }, async (t) => {
     const output = await t.shell(
       "deno publish --dry-run --allow-slow-types --allow-dirty".split(/\s+/),
       {
-        currentDir: "typegraph/deno/sdk",
+        currentDir: "src/typegraph/deno",
       },
     );
     console.log("code", output.code);

@@ -15,7 +15,7 @@
     "test/mock_fetch": "./utils/mock_fetch.ts"
   },
   "exclude": [
-    "e2e/nextjs",
+    "e2e/nextjs/apollo",
     "runtimes/temporal/worker"
   ],
   "lint": {

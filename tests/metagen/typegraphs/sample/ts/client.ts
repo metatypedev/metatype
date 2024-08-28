@@ -330,7 +330,7 @@ function buildGql(
   typeToGqlTypeMap: Record<string, string>,
   query: Record<string, SelectNode>,
   ty: "query" | "mutation",
-  name = "",
+  name: string = "",
 ) {
   const variables = new Map<string, NodeArgValue>();
 
@@ -641,16 +641,12 @@ class _QueryGraphBase {
 
 // -------------------------------------------------- //
 
+
 const nodeMetas = {
   scalar() {
     return {};
   },
-
-  Func25(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
+  
   Post(): NodeMeta {
     return {
       subNodes: [
@@ -658,11 +654,6 @@ const nodeMetas = {
         ["slug", nodeMetas.scalar],
         ["title", nodeMetas.scalar],
       ],
-    };
-  },
-  Func27(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
     };
   },
   Func28(): NodeMeta {
@@ -692,6 +683,11 @@ const nodeMetas = {
       ...nodeMetas.Post(),
     };
   },
+  Func25(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
   Func26(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
@@ -702,15 +698,20 @@ const nodeMetas = {
       },
     };
   },
-};
-export type Object21 = {
-  id: string;
+  Func27(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
 };
 export type StringUuid4 = string;
 export type Post = {
   id: StringUuid4;
   slug: string;
   title: string;
+};
+export type Object21 = {
+  id: string;
 };
 export type StringEmail5 = string;
 export type Post7 = Array<Post>;
@@ -741,7 +742,7 @@ export class QueryGraph extends _QueryGraphBase {
       "String13": "String!",
     });
   }
-
+    
   getUser(select: UserSelections) {
     const inner = _selectionToNodeSet(
       { "getUser": select },
@@ -782,10 +783,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new MutationNode(inner) as MutationNode<Post>;
   }
-  compositeArgs(
-    args: Object21 | PlaceholderArgs<Object21>,
-    select: PostSelections,
-  ) {
+  compositeArgs(args: Object21 | PlaceholderArgs<Object21>, select: PostSelections) {
     const inner = _selectionToNodeSet(
       { "compositeArgs": [args, select] },
       [["compositeArgs", nodeMetas.Func28]],
