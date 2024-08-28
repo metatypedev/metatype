@@ -148,9 +148,9 @@ Activities definition inside `src/activities.ts`:`
 
 ```typescript
 async function sleep(time: number) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, time);
-    });
+  return new Promise((resolve) => {
+    setTimeout(resolve, time);
+  });
 }
 
 export async function processPayment(orderId: string): Promise<string> {
@@ -190,7 +190,7 @@ export const { processPayment, checkInventory, deliverOrder } =
     startToCloseTimeout: "10 seconds",
   });
 
-export async function orderWorkflow(orderId: string): Promise<string> {
+export async function OrderWorkflow(orderId: string): Promise<string> {
   const paymentResult = await processPayment(orderId);
   const inventoryResult = await checkInventory(orderId);
   const deliveryResult = await deliverOrder(orderId);
@@ -201,9 +201,9 @@ export async function orderWorkflow(orderId: string): Promise<string> {
 Worker definintion inside `src/worker.ts`:
 
 ```typescript
-import { NativeConnection, Worker } from '@temporalio/worker';
-import * as activities from './activities';
-import { TASK_QUEUE_NAME } from './shared';
+import { NativeConnection, Worker } from "@temporalio/worker";
+import * as activities from "./activities";
+import { TASK_QUEUE_NAME } from "./shared";
 
 async function run() {
   // Step 1: Establish a connection with Temporal server.
@@ -211,13 +211,13 @@ async function run() {
   // Worker code uses `@temporalio/worker.NativeConnection`.
   // (But in your application code it's `@temporalio/client.Connection`.)
   const connection = await NativeConnection.connect({
-    address: 'localhost:7233',
+    address: "localhost:7233",
     // TLS and gRPC metadata configuration goes here.
   });
   // Step 2: Register Workflows and Activities with the Worker.
   const worker = await Worker.create({
     connection,
-    namespace: 'default',
+    namespace: "default",
     taskQueue: TASK_QUEUE_NAME,
     // Workflows are registered using a path as they run in a separate JS context.
     workflowsPath: require.resolve("./workflows"),
@@ -244,16 +244,15 @@ run().catch((err) => {
 Starting the workflow execution inside `src/client.ts`
 
 ```typescript
-import { Connection, Client } from '@temporalio/client';
-import { nanoid } from 'nanoid';
-import { TASK_QUEUE_NAME } from './shared';
+import { Connection, Client } from "@temporalio/client";
+import { TASK_QUEUE_NAME } from "./shared";
 
 // import your workflow
-import { orderWorkflow as YOUR_WORKFLOW } from './workflows';
+import { OrderWorkflow as YOUR_WORKFLOW } from "./workflows";
 
 async function run() {
   // Connect to the default Server location
-  const connection = await Connection.connect({ address: 'localhost:7233' });
+  const connection = await Connection.connect({ address: "localhost:7233" });
   // In production, pass options to configure TLS and other settings:
   // {
   //   address: 'foo.bar.tmprl.cloud',
@@ -268,9 +267,9 @@ async function run() {
   const handle = await client.workflow.start(YOUR_WORKFLOW, {
     taskQueue: TASK_QUEUE_NAME,
     // type inference works! args: [name: string]
-    args: ['Temporal'],
+    args: ["order13"],
     // in practice, use a meaningful business ID, like customerId or transactionId
-    workflowId: 'workflow-' + nanoid(),
+    workflowId: "order-delivery-1",
   });
   console.log(`Started workflow ${handle.workflowId}`);
 
@@ -290,16 +289,6 @@ Down below is the workflow communication bridge for this system expressed within
 import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
 import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
 
-function getEnvVariable(key: string) {
-  const value = process.env[key];
-
-  if (!value) {
-    throw new Error(`Environment variable ${key} is not set.`);
-  }
-
-  return value;
-}
-
 typegraph(
   {
     name: "order_delivery",
@@ -310,19 +299,19 @@ typegraph(
     // define temporal cluster config
     const temporal = new TemporalRuntime({
       name: "order_delivery",
-      hostSecret: "<host_secret>",
-      namespaceSecret: "<ns_secret>",
+      hostSecret: "HOST",
+      namespaceSecret: "NAMESPACE",
     });
 
     // order delivery workflow id
-    const workflow_id = getEnvVariable("ID_FROM_ENV");
+    const workflow_id = "order-delivery-1";
 
     // parameters needed for the workflow
-    const arg = t.struct({ proudct_id: t.string() });
+    const order_id = t.string();
 
     g.expose(
       {
-        start: temporal.startWorkflow("orderWorkflow", arg),
+        start: temporal.startWorkflow("OrderWorkflow", order_id),
         describe: workflow_id
           ? temporal.describeWorkflow().reduce({ workflow_id })
           : temporal.describeWorkflow(),
@@ -341,28 +330,42 @@ typegraph(
 Activities definition inside `activities.py`.
 
 ```python
+from temporalio import activity
+import time
+
 @activity.defn
 async def process_payment(order_id: str) -> str:
     print(f"Processing payment for order {order_id}")
     # Simulate payment processing logic
+    time.sleep(5)
     return "Payment processed"
 
 @activity.defn
 async def check_inventory(order_id: str) -> str:
     print(f"Checking inventory for order {order_id}")
     # Simulate inventory check logic
+    time.sleep(4)
     return "Inventory available"
 
 @activity.defn
 async def deliver_order(order_id: str) -> str:
     print(f"Delivering order {order_id}")
+    time.sleep(8)
     # Simulate delivery logic
     return "Order delivered"
 ```
 
-Workflow definition
+Workflow definition inside `workflows.py`.
 
 ```python
+from datetime import timedelta
+
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from activities import process_payment, check_inventory, deliver_order
+
+
 @workflow.defn
 class OrderWorkflow:
     @workflow.run
@@ -383,28 +386,68 @@ class OrderWorkflow:
         return f"Order {order_id} completed with results: {payment_result}, {inventory_result}, {delivery_result}"
 ```
 
-Starting workflow execution
+Worker defintion inside `run_worker.py`.
 
 ```python
-from temporalio import workflow, activity
-from temporalio.client import WorkflowClient
+import asyncio
+
+from temporalio.client import Client
 from temporalio.worker import Worker
-from .activities import process_payment, check_inventory, deliver_order
-from .orderWorkflow import OrderWorkflow
+
+from activities import process_payment, deliver_order, check_inventory
+from shared import ORDER_DELIVERY_QUEUE
+from workflows import OrderWorkflow
 
 
-# To run the workflow
-async def main():
-    client = await WorkflowClient.connect("localhost:7233")
-    worker = Worker(client, task_queue="order_task_queue", workflows=[OrderWorkflow], activities=[process_payment, check_inventory, deliver_order])
+async def main() -> None:
+    client: Client = await Client.connect("localhost:7233", namespace="default")
+    # Run the worker
+    worker: Worker = Worker(
+        client,
+        task_queue=ORDER_DELIVERY_QUEUE,
+        workflows=[OrderWorkflow],
+        activities=[process_payment, check_inventory, deliver_order],
+    )
     await worker.run()
 
-    # Start a workflow
-    result = await client.execute_workflow(OrderWorkflow.run, "order123", task_queue="order_task_queue")
-    print(result)
 
 if __name__ == "__main__":
-    import asyncio
+    asyncio.run(main())
+```
+
+Starting workflow execution inside `run_workflow.py`.
+
+```python
+import asyncio
+import traceback
+
+from temporalio.client import Client, WorkflowFailureError
+
+from shared import ORDER_DELIVERY_QUEUE
+from workflows import OrderWorkflow
+
+
+async def main() -> None:
+    # Create client connected to server at the given address
+    client: Client = await Client.connect("localhost:7233")
+
+    order_id = "order1"
+
+    try:
+        result = await client.execute_workflow(
+            OrderWorkflow,
+            order_id,
+            id="order-delivery-1",
+            task_queue=ORDER_DELIVERY_QUEUE,
+        )
+
+        print(f"Result: {result}")
+
+    except WorkflowFailureError:
+        print("Got expected exception: ", traceback.format_exc())
+
+
+if __name__ == "__main__":
     asyncio.run(main())
 ```
 
@@ -412,29 +455,27 @@ Down below is the workflow communication bridge for this system expressed within
 
 ```python
 from typegraph import t, typegraph, Policy, Graph
-from typegraph.graph.params import Cors
 from typegraph.providers.temporal import TemporalRuntime
-import os
 
 
 @typegraph()
-def temporal(g: Graph):
+def example(g: Graph):
   public = Policy.public()
 
   # define temporal cluster config
   temporal = TemporalRuntime(
-    "order_delivery", "<host_secret>", namespace_secret="<ns_secret>"
+    "example", "HOST", namespace_secret="NAMESPACE"
   )
 
   # order delivery workflow id
-  workflow_id = os.getenv("ID_FROM_ENV")
+  workflow_id = "order-delivery-1"
 
   # parameters needed for the workflow
-  arg = t.struct({"product_id": t.string()})
+  order_id = t.string()
 
   g.expose(
     public,
-    start=temporal.start_workflow("orderWorkflow", arg),
+    start=temporal.start_workflow("OrderWorkflow", order_id),
     describe=temporal.describe_workflow().reduce({"workflow_id": workflow_id})
     if workflow_id
     else temporal.describe_workflow(),
@@ -444,3 +485,78 @@ def temporal(g: Graph):
     </TabItem>
 
 </SDKTabs>
+
+You need to add the secrets `HOST` and `NAMESPACE` under your typegraph name inside the `metatype.yaml` file. These secrets are important to connect with your temporal cluster and can be safely stored in the config file as shown below.
+
+```yaml
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+    secrets:
+      example:
+        POSTGRES: "postgresql://postgres:password@postgres:5432/db"
+        MONGO: "mongodb://root:password@mongo:27017/db"
+        HOST: "http://localhost:7233"
+        NAMESPACE: "default"
+```
+
+You need to add only the last two lines as the others are auto generated. Note that secrets are defined under the `example` parent, which is the name of your typegraph. If the name doesn't match, you will face secret not found issues when deploying your typegraph.
+
+Before deploying the above typegraph, you need to start the temporal server and the worker. You need to have [temporal](https://learn.temporal.io/getting_started/typescript/dev_environment/#set-up-a-local-temporal-service-for-development-with-temporal-cli) installed on your machine.
+Start the temporal server.
+
+```bash
+temporal server start-dev
+```
+
+Start the worker.
+
+<SDKTabs>
+
+{" "}
+<TabItem value="typescript">
+  ```typescript npx ts-node src/worker.ts ```
+</TabItem>
+
+{" "}
+<TabItem value="python">```python python run_worker.py ```</TabItem>
+
+</SDKTabs>
+
+After booting the temporal server, run the command down below to get a locally spinning [typegate](/docs/reference/typegate) instance with your typegraph deployed.
+
+```bash
+meta dev
+```
+
+After completing the above steps, you can access the web GraphQL client of the typegate at [`http://localhost:7890/example`](http://localhost:7890/example). Run this query inside the client to start your workflow.
+
+```graphql
+mutation {
+  start(
+    workflow_id: "order-delivery-3"
+    task_queue: "order-delivery-queue"
+    args: ["order12"]
+  )
+}
+```
+
+After a successful run, you will get following result which includes the `run_id` of the workflow which has just been started.
+
+<img
+  src="/images/blog/execution-flow-paradigms/start-workflow-result.png"
+  alt="Query result"
+/>
+
+You can also check the temporal web UI to monitor your workflows and you should see a result similar to this one.
+
+<img
+  src="/images/blog/execution-flow-paradigms/temporal-web-ui.png"
+  alt="Workflows dashboard"
+/>
+
+You can explore the [Temporal Runtime](/docs/reference/runtimes/temporal) for more info.
+
+This wraps up the blog, thanks for reading until the end :)
