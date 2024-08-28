@@ -28,6 +28,7 @@ mt_deno = { path = "libs/deno/" }
 common = { path = "libs/common/" }
 metagen = { path = "libs/metagen/" }
 typegate_engine = { path = "typegate/engine" }
+substantial = { path = "libs/substantial/" }
 
 # cli
 clap = "=4.4.17"

@@ -6,23 +6,24 @@ use crate::protocol::{
 use anyhow::{Context, Ok, Result};
 use chrono::{DateTime, Utc};
 use protobuf::Message;
-use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::{fs, path::Path};
 
 pub struct FsBackend {
     root: PathBuf,
 }
 
 impl FsBackend {
-    pub fn new(root: &str) -> Self {
-        let root = PathBuf::from(root);
+    pub fn new(root: &Path) -> Self {
         for d in &["runs", "schedules", "leases"] {
             fs::create_dir_all(root.join(d))
                 .with_context(|| "Failed to create directory")
                 .unwrap();
         }
-        Self { root }
+        Self {
+            root: root.to_owned(),
+        }
     }
 
     pub fn run_path(&self, run_id: &str) -> PathBuf {

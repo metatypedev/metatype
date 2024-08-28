@@ -41,6 +41,7 @@ tempfile.workspace = true
 mt_deno.workspace = true
 deno_core.workspace = true
 common.workspace = true
+substantial.workspace = true
 
 wasmtime = { workspace = true,  features = ["component-model"] }
 wasmtime-wasi.workspace = true
