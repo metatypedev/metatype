@@ -5,7 +5,7 @@
 // rely on ghjk.ts
 
 export { file } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/mod.ts";
-export * from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1//mod.ts";
+export * from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/mod.ts";
 export * as ports from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/ports/mod.ts";
 export {
   std_url,

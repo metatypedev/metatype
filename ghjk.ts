@@ -36,12 +36,12 @@ env("_rust").install(
 );
 
 if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
-  env("dev").install(
-    ports.mold({
-      version: "v2.4.0",
-      replaceLd: true,
-    }),
-  );
+  const mold = ports.mold({
+    version: "v2.4.0",
+    replaceLd: true,
+  });
+  env("dev").install(mold);
+  env("oci").install(mold);
 }
 
 env("_ecma").install(

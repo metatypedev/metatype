@@ -45,17 +45,6 @@ const syncConfig = transformSyncConfig({
 });
 console.log(syncConfig);
 
-// TODO remove after the next release
-// These typegates are disabled because a compatibity issue on the pyrt wasm:
-//  Module was  WebAssembly backtrace support but it is enabled for the host
-const disabled = [
-  "quick-start-project.ts",
-  "faas-runner.ts",
-  "microservice-orchestration.ts",
-  "metagen-rs.ts",
-  "metagen-py.ts",
-];
-
 async function checkMetaBin(path: typeof tempDir, version: string) {
   try {
     if (!(await path.exists())) {
@@ -192,9 +181,6 @@ Meta.test(
         const typegraphsDir = examplesDir.join("typegraphs");
         for await (const entry of typegraphsDir.readDir()) {
           const path = typegraphsDir.relative(entry.path);
-          if (disabled.includes(path.toString())) {
-            await entry.path.remove().catch((_e) => {});
-          }
         }
 
         // NOTE: we clean out the deno.json used by the examples
@@ -410,6 +396,7 @@ typegraphs:
       await $`bash -c ${command}`
         .cwd(denoJsrDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
+        // FIXME: rename to deno.jsonc on bump 0.4.9
         .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`)
         .env("RUST_LOG", "trace");
     });

@@ -3,6 +3,12 @@ name = "metagen"
 edition.workspace = true
 version.workspace = true
 
+# this allows us to exclude the rust files
+# from the dockerfile while keeping the Cargo.toml
+# for cargo chef. Useful to improve cache hit in docker
+[lib]
+path = "src/lib.rs"
+
 [dependencies]
 # this library is used by typegraph_core
 # so keep the codesize lite

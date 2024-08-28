@@ -11,7 +11,7 @@ WORKDIR /app
 
 RUN cargo install cargo-chef --locked --debug
 
-FROM base as plan
+FROM base AS plan
 
 COPY . .
 
@@ -56,7 +56,7 @@ ARG GHJK_VERSION=v0.2.1
 RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
-COPY tools/*.ts tools/
+COPY tools/ tools/
 COPY ghjk.ts .
 ENV GHJK_ENV=oci
 ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
@@ -82,10 +82,10 @@ RUN . "$GHJK_ACTIVATE" \
 
 RUN . "$GHJK_ACTIVATE" \
     && deno run -A tools/update.ts --cache-only --src-only \
-    && mkdir -p typegate/tmp
+    && mkdir -p .metatype
 
 #
-FROM builder as dev
+FROM builder AS dev
 
 RUN . "$GHJK_ACTIVATE" \
     && mv target /tmp/target \
@@ -107,7 +107,7 @@ RUN . "$GHJK_ACTIVATE" \
     && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64
 
 #
-FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} as prd
+FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} AS prd
 
 SHELL ["/busybox/sh", "-c"]
 
@@ -127,19 +127,23 @@ COPY --from=builder /app/typegate-bin /bin/typegate
 COPY --from=builder /app/deno.jsonc ./
 COPY --from=builder /app/src/typegate/engine/*.js /app/src/typegate/engine/*.ts ./src/typegate/engine/
 COPY --from=builder /app/src/typegate/src ./src/typegate/src/
-COPY --from=builder /app/tests ./tests/
+COPY --from=builder /app/src/typegate/deno.jsonc ./src/typegate/
+COPY --from=builder /app/src/typegraph/deno/deno.json ./src/typegraph/deno/
+COPY --from=builder /app/tests/deno.jsonc ./tests/
+COPY --from=builder /app/examples/deno.jsonc ./examples/
+COPY --from=builder /app/tools/deno.jsonc ./tools/
 COPY tools/LICENSE-Elastic-2.0.md LICENSE.md
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
 COPY --from=builder --chown=nonroot:nonroot /app/deno.lock ./typegate/
-COPY --from=builder --chown=nonroot:nonroot /app/src/typegate/tmp ./tmp
+COPY --from=builder --chown=nonroot:nonroot /app/.metatype ./.metatype
 
 #
 # run the checks in a separate target to avoid bloating
 # the final image with the deno bin
 # https://forums.docker.com/t/why-run-command-which-deletes-files-inflates-image-size/33670
-FROM prd as check
+FROM prd AS check
 
 # distroless-nonroot is by default the nonroot user
 # which prevents us from removing the /deno bin down below
@@ -155,12 +159,10 @@ RUN /bin/deno check \
     && rm /bin/deno
 
 #
-FROM prd as epoint
+FROM prd AS epoint
 
 USER nonroot
 EXPOSE 7890
-
-ENV MT_DIR=/app/tmp
 
 ENTRYPOINT ["/tini", "--"]
 CMD ["/bin/typegate"]
