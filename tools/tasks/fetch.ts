@@ -10,7 +10,7 @@ export default {
     fn: ($) =>
       $`bash -sx`
         .stdinText(
-          "deno cache --config deno.jsonc " +
+          "deno cache --config src/typegate/deno.jsonc " +
             [
               "src/typegate/src/main.ts",
               "tests/utils/mod.ts",
