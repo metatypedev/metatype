@@ -178,7 +178,6 @@ export async function deliverOrder(orderId: string): Promise<string> {
 Workflow definition inside `src/workflows.ts`:
 
 ```typescript
-// Add Workflow Definitions here.
 import { proxyActivities } from "@temporalio/workflow";
 
 export const { processPayment, checkInventory, deliverOrder } =
@@ -206,32 +205,18 @@ import * as activities from "./activities";
 import { TASK_QUEUE_NAME } from "./shared";
 
 async function run() {
-  // Step 1: Establish a connection with Temporal server.
-  //
-  // Worker code uses `@temporalio/worker.NativeConnection`.
-  // (But in your application code it's `@temporalio/client.Connection`.)
   const connection = await NativeConnection.connect({
     address: "localhost:7233",
-    // TLS and gRPC metadata configuration goes here.
   });
-  // Step 2: Register Workflows and Activities with the Worker.
+
   const worker = await Worker.create({
     connection,
     namespace: "default",
     taskQueue: TASK_QUEUE_NAME,
-    // Workflows are registered using a path as they run in a separate JS context.
     workflowsPath: require.resolve("./workflows"),
     activities,
   });
 
-  // Step 3: Start accepting tasks on the Task Queue specified in TASK_QUEUE_NAME
-  //
-  // The worker runs until it encounters an unexpected error or the process receives a shutdown signal registered on
-  // the SDK Runtime object.
-  //
-  // By default, worker logs are written via the Runtime logger to STDERR at INFO level.
-  //
-  // See https://typescript.temporal.io/api/classes/worker.Runtime#install to customize these defaults.
   await worker.run();
 }
 
@@ -247,33 +232,22 @@ Starting the workflow execution inside `src/client.ts`
 import { Connection, Client } from "@temporalio/client";
 import { TASK_QUEUE_NAME } from "./shared";
 
-// import your workflow
 import { OrderWorkflow as YOUR_WORKFLOW } from "./workflows";
 
 async function run() {
-  // Connect to the default Server location
   const connection = await Connection.connect({ address: "localhost:7233" });
-  // In production, pass options to configure TLS and other settings:
-  // {
-  //   address: 'foo.bar.tmprl.cloud',
-  //   tls: {}
-  // }
 
   const client = new Client({
     connection,
-    // namespace: 'foo.bar', // connects to 'default' namespace if not specified
   });
 
   const handle = await client.workflow.start(YOUR_WORKFLOW, {
     taskQueue: TASK_QUEUE_NAME,
-    // type inference works! args: [name: string]
     args: ["order13"],
-    // in practice, use a meaningful business ID, like customerId or transactionId
     workflowId: "order-delivery-1",
   });
   console.log(`Started workflow ${handle.workflowId}`);
 
-  // optional: wait for client result
   console.log(await handle.result());
 }
 
@@ -296,17 +270,14 @@ typegraph(
   (g: any) => {
     const pub = Policy.public();
 
-    // define temporal cluster config
     const temporal = new TemporalRuntime({
       name: "order_delivery",
       hostSecret: "HOST",
       namespaceSecret: "NAMESPACE",
     });
 
-    // order delivery workflow id
     const workflow_id = "order-delivery-1";
 
-    // parameters needed for the workflow
     const order_id = t.string();
 
     g.expose(
@@ -370,15 +341,14 @@ with workflow.unsafe.imports_passed_through():
 class OrderWorkflow:
     @workflow.run
     async def run(self, order_id: str) -> str:
-        # Process payment
         payment_result = await workflow.execute_activity(
             process_payment, order_id, start_to_close_timeout=timedelta(seconds=10)
         )
-        # Check inventory
+
         inventory_result = await workflow.execute_activity(
             check_inventory, order_id, start_to_close_timeout=timedelta(seconds=10)
         )
-        # Deliver order
+
         delivery_result = await workflow.execute_activity(
             deliver_order, order_id, start_to_close_timeout=timedelta(seconds=10)
         )
@@ -401,7 +371,6 @@ from workflows import OrderWorkflow
 
 async def main() -> None:
     client: Client = await Client.connect("localhost:7233", namespace="default")
-    # Run the worker
     worker: Worker = Worker(
         client,
         task_queue=ORDER_DELIVERY_QUEUE,
@@ -428,7 +397,6 @@ from workflows import OrderWorkflow
 
 
 async def main() -> None:
-    # Create client connected to server at the given address
     client: Client = await Client.connect("localhost:7233")
 
     order_id = "order1"
@@ -462,15 +430,12 @@ from typegraph.providers.temporal import TemporalRuntime
 def example(g: Graph):
   public = Policy.public()
 
-  # define temporal cluster config
   temporal = TemporalRuntime(
     "example", "HOST", namespace_secret="NAMESPACE"
   )
 
-  # order delivery workflow id
   workflow_id = "order-delivery-1"
 
-  # parameters needed for the workflow
   order_id = t.string()
 
   g.expose(
@@ -516,11 +481,15 @@ Start the worker.
 <SDKTabs>
 
 {" "}
+
 <TabItem value="typescript">
   ```typescript npx ts-node src/worker.ts ```
 </TabItem>
 
+{/* break */}
+
 {" "}
+
 <TabItem value="python">```python python run_worker.py ```</TabItem>
 
 </SDKTabs>
