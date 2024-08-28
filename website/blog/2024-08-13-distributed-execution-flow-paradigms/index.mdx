@@ -12,7 +12,7 @@ Let's explore some of the solutions that have been proposed to achieve workflow 
 
 This architecture relies heavily on services communicating by publishing and subscribing to events using message queues. Message queues are persistent storages that ensure data is not lost during failures or service unavailability. Components in a distributed system synchronize by using events/messages through these independent services. While this approach offers service decomposability and fault tolerance, it has some shortcomings. For example, using message queues comes with the overhead of managing messages (e.g., deduplication and message ordering). It also isn’t ideal for systems requiring immediate consistency across components. Some technologies and patterns that utilize this architecture include:
 
-- [RabbitMq](https://www.rabbitmq.com/)
+- [RabbitMQ](https://www.rabbitmq.com/)
 - [Amazon SQS](https://aws.amazon.com/sqs/)
 
 <img
@@ -24,7 +24,7 @@ This architecture relies heavily on services communicating by publishing and sub
   RabbitMQ](https://miro.medium.com/v2/resize:fit:1400/1*lQIAGbhDfo-2VfiibkRL1w.png)
 </div>
 
-#### Advantages of Event Driven Architecture
+#### Advantages
 
 - Improved Scalability
 - Enhanced Responsiveness
@@ -32,7 +32,7 @@ This architecture relies heavily on services communicating by publishing and sub
 - Simplified Complex Workflows
 - Real-Time Data Processing
 
-#### Challenges of Event Driven Architecture
+#### Challenges
 
 - Event Ordering
 - Data Consistency
@@ -48,12 +48,6 @@ This design pattern aims to achieve consistency across different services in a d
 **Note**: In the Saga pattern, a compensating transaction must be idempotent and retryable. These principles ensure that transactions can be managed without manual intervention.
 
 <img
-  src="/images/blog/execution-flow-paradigms/saga-overview.png"
-  alt="The Saga Pattern"
-/>
-<div style={{ marginLeft: 15 + "em" }}>Fig. The Saga Pattern</div>
-
-<img
   src="/images/blog/execution-flow-paradigms/saga-pattern-order-delivery.png"
   alt="The Saga Pattern for 
 Order delivery system"
@@ -63,7 +57,7 @@ Order delivery system"
   system](https://www.baeldung.com/cs/saga-pattern-microservices#1-what-is-saga-architecture-pattern)
 </div>
 
-#### Advantages of Saga Pattern
+#### Advantages
 
 - Ensures data consistency in a distributed system without tight coupling.
 - Provides Roll back if one of the operations in the sequence fails.
@@ -81,16 +75,16 @@ Stateful orchestrators provide a solution for long-running workflows by maintain
 - [Apache Airflow](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html)
 - [Azure Logic Apps](https://azure.microsoft.com/en-us/products/logic-apps)
 
-#### Advantages of Using Stateful Orchestrators
+#### Advantages
 
-High Resiliency: Stateful orchestrators provide high resiliency in case of outages, ensuring that workflows can continue from where they left off.
-Data Persistence: They allow you to keep, review, or reference data from previous events, which is useful for long-running processes.
-Extended Runtime: Stateful workflows can continue running for much longer than stateless workflows, making them suitable for complex and long-running tasks.
+- **High Resiliency**: Stateful orchestrators provide high resiliency in case of outages, ensuring that workflows can continue from where they left off.
+- **Data Persistence**: They allow you to keep, review, or reference data from previous events, which is useful for long-running processes.
+- **Extended Runtime**: Stateful workflows can continue running for much longer than stateless workflows, making them suitable for complex and long-running tasks.
 
-#### Challenges of Using Stateful Orchestrators
+#### Challenges
 
-Additional Complexity: They introduce additional complexity, requiring you to manage issues such as load balancing, CPU and memory usage, and networking.
-Cost: With stateful workflows, you pay for the VMs that are running in the cluster, whereas with stateless workflows, you pay only for the actual compute resources consumed.
+- **Additional Complexity**: They introduce additional complexity, requiring you to manage issues such as load balancing, CPU and memory usage, and networking.
+- **Cost**: With stateful workflows, you pay for the VMs that are running in the cluster, whereas with stateless workflows, you pay only for the actual compute resources consumed.
 
 ### 4. Durable Execution
 
@@ -107,24 +101,21 @@ Durable execution isn’t a completely distinct solution from the ones listed ab
   Temporal](https://temporal.io/blog/workflow-engine-principles)
 </div>
 
-#### Advantages of Durable Execution
+#### Advantages
 
-**Reduced Manual Intervention**: Minimizes the need for human intervention by handling retries and failures programmatically.
-**Improved Observability**: Provides a clear audit trail and visibility into the state of workflows, which aids in debugging and monitoring.
-**Scalability**: Scales efficiently across distributed systems while maintaining workflow integrity.
+- **Reduced Manual Intervention**: Minimizes the need for human intervention by handling retries and failures programmatically.
+- **Improved Observability**: Provides a clear audit trail and visibility into the state of workflows, which aids in debugging and monitoring.
+- **Scalability**: Scales efficiently across distributed systems while maintaining workflow integrity.
 
-#### Challenges of Durable Execution
+#### Challenges
 
-**Resource Intensive**: Persistent state storage and management can consume significant resources, especially in large-scale systems.
-**Latency**: The need to persist state and handle retries can introduce latency in the execution flow.
+- **Resource Intensive**: Persistent state storage and management can consume significant resources, especially in large-scale systems.
+- **Latency**: The need to persist state and handle retries can introduce latency in the execution flow.
 
 As durable execution grows to be a fundamental driver of distributed computing, some of the solutions which use this architecture are
 
 - [Temporal](https://temporal.io/)
-- [Azure Durable Functions](https://learn.microsoft.com/en-us/azure/azure-functions/durable/)
-- [Amazon SWF](https://docs.aws.amazon.com/swf/)
 - [Uber Cadence](https://cadenceworkflow.io/)
-- [Infinitic](https://www.infinitic.io/)
 
 Among these, [Temporal](https://temporal.io/) has grown in influence, used by companies like SnapChat, HashiCorp, Stripe, DoorDash, and DataDog. Its success is driven by its practical application in real-world scenarios and the expertise of its founders.
 
@@ -144,7 +135,9 @@ Your temporal workflow definition should look similar to the one below.
 
     <TabItem value="typescript">
 
-Activities definition inside `src/activities.ts`:`
+<details>
+
+<summary>Activities definition inside `src/activities.ts`:`</summary>
 
 ```typescript
 async function sleep(time: number) {
@@ -175,10 +168,12 @@ export async function deliverOrder(orderId: string): Promise<string> {
 }
 ```
 
-Workflow definition inside `src/workflows.ts`:
+</details>
 
-```typescript
-import { proxyActivities } from "@temporalio/workflow";
+<details>
+
+<summary>Workflow definition inside `src/workflows.ts`:</summary>
+```typescript import {proxyActivities} from "@temporalio/workflow";
 
 export const { processPayment, checkInventory, deliverOrder } =
   proxyActivities<{
@@ -196,8 +191,10 @@ export async function OrderWorkflow(orderId: string): Promise<string> {
   return `Order ${orderId} completed with results: ${paymentResult}, ${inventoryResult}, ${deliveryResult}`;
 }
 ```
+</details>
 
-Worker definintion inside `src/worker.ts`:
+<details>
+<summary>Worker definintion inside `src/worker.ts`:</summary>
 
 ```typescript
 import { NativeConnection, Worker } from "@temporalio/worker";
@@ -226,38 +223,10 @@ run().catch((err) => {
 });
 ```
 
-Starting the workflow execution inside `src/client.ts`
+</details>
 
-```typescript
-import { Connection, Client } from "@temporalio/client";
-import { TASK_QUEUE_NAME } from "./shared";
-
-import { OrderWorkflow as YOUR_WORKFLOW } from "./workflows";
-
-async function run() {
-  const connection = await Connection.connect({ address: "localhost:7233" });
-
-  const client = new Client({
-    connection,
-  });
-
-  const handle = await client.workflow.start(YOUR_WORKFLOW, {
-    taskQueue: TASK_QUEUE_NAME,
-    args: ["order13"],
-    workflowId: "order-delivery-1",
-  });
-  console.log(`Started workflow ${handle.workflowId}`);
-
-  console.log(await handle.result());
-}
-
-run().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
-```
-
-Down below is the workflow communication bridge for this system expressed within a [Typegraph](/docs/reference/typegraph).
+After you have setup the above components, now you need a client to start of any `OrderWorkflow`. Here is where metatype comes in, through the simple APIs [Temporal Runtime](/docs/reference/runtimes/temporal) exposes, you can communicate with your temporal cluster.
+Down below is the workflow communication bridge for this system expressed within a [typegraph](/docs/reference/typegraph) which includes endpoints to start a new workflow and describe an existing one.
 
 ```typescript
 import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
@@ -298,7 +267,8 @@ typegraph(
     {/* break */}
     <TabItem value="python">
 
-Activities definition inside `activities.py`.
+<details>
+<summary>Activities definition inside `activities.py`.</summary>
 
 ```python
 from temporalio import activity
@@ -326,37 +296,10 @@ async def deliver_order(order_id: str) -> str:
     return "Order delivered"
 ```
 
-Workflow definition inside `workflows.py`.
+</details>
 
-```python
-from datetime import timedelta
-
-from temporalio import workflow
-
-with workflow.unsafe.imports_passed_through():
-    from activities import process_payment, check_inventory, deliver_order
-
-
-@workflow.defn
-class OrderWorkflow:
-    @workflow.run
-    async def run(self, order_id: str) -> str:
-        payment_result = await workflow.execute_activity(
-            process_payment, order_id, start_to_close_timeout=timedelta(seconds=10)
-        )
-
-        inventory_result = await workflow.execute_activity(
-            check_inventory, order_id, start_to_close_timeout=timedelta(seconds=10)
-        )
-
-        delivery_result = await workflow.execute_activity(
-            deliver_order, order_id, start_to_close_timeout=timedelta(seconds=10)
-        )
-
-        return f"Order {order_id} completed with results: {payment_result}, {inventory_result}, {delivery_result}"
-```
-
-Worker defintion inside `run_worker.py`.
+<details>
+<summary>Worker defintion inside `run_worker.py`.</summary>
 
 ```python
 import asyncio
@@ -384,42 +327,10 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-Starting workflow execution inside `run_workflow.py`.
+</details>
 
-```python
-import asyncio
-import traceback
-
-from temporalio.client import Client, WorkflowFailureError
-
-from shared import ORDER_DELIVERY_QUEUE
-from workflows import OrderWorkflow
-
-
-async def main() -> None:
-    client: Client = await Client.connect("localhost:7233")
-
-    order_id = "order1"
-
-    try:
-        result = await client.execute_workflow(
-            OrderWorkflow,
-            order_id,
-            id="order-delivery-1",
-            task_queue=ORDER_DELIVERY_QUEUE,
-        )
-
-        print(f"Result: {result}")
-
-    except WorkflowFailureError:
-        print("Got expected exception: ", traceback.format_exc())
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-Down below is the workflow communication bridge for this system expressed within a [typegraph](/docs/reference/typegraph).
+After you have setup the above components, now you need a client to start of any `OrderWorkflow`. Here is where metatype comes in, through the simple APIs [Temporal Runtime](/docs/reference/runtimes/temporal) exposes, you can communicate with your temporal cluster.
+Down below is the workflow communication bridge for this system expressed within a [typegraph](/docs/reference/typegraph) which includes endpoints to start a new workflow and describe an existing one.
 
 ```python
 from typegraph import t, typegraph, Policy, Graph
@@ -453,6 +364,9 @@ def example(g: Graph):
 
 You need to add the secrets `HOST` and `NAMESPACE` under your typegraph name inside the `metatype.yaml` file. These secrets are important to connect with your temporal cluster and can be safely stored in the config file as shown below.
 
+<details>
+<summary>metatype.yaml</summary>
+
 ```yaml
 typegates:
   dev:
@@ -467,9 +381,15 @@ typegates:
         NAMESPACE: "default"
 ```
 
+</details>
+
 You need to add only the last two lines as the others are auto generated. Note that secrets are defined under the `example` parent, which is the name of your typegraph. If the name doesn't match, you will face secret not found issues when deploying your typegraph.
 
 Before deploying the above typegraph, you need to start the temporal server and the worker. You need to have [temporal](https://learn.temporal.io/getting_started/typescript/dev_environment/#set-up-a-local-temporal-service-for-development-with-temporal-cli) installed on your machine.
+
+<details>
+<summary>Boot up temporal</summary>
+
 Start the temporal server.
 
 ```bash
@@ -480,19 +400,14 @@ Start the worker.
 
 <SDKTabs>
 
-{" "}
-
 <TabItem value="typescript">
   ```typescript npx ts-node src/worker.ts ```
 </TabItem>
 
-{/* break */}
-
-{" "}
-
 <TabItem value="python">```python python run_worker.py ```</TabItem>
 
 </SDKTabs>
+</details>
 
 After booting the temporal server, run the command down below to get a locally spinning [typegate](/docs/reference/typegate) instance with your typegraph deployed.
 
