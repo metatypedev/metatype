@@ -41,6 +41,7 @@ use substantial::{substantial_operation, SubstantialMaterializer};
 use self::aws::S3Materializer;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
+use self::grpc::type_generation::generate_type;
 use self::grpc::GrpcMaterializer;
 use self::prisma::context::PrismaContext;
 use self::prisma::get_prisma_context;
@@ -714,27 +715,21 @@ impl crate::wit::runtimes::Guest for crate::Lib {
     }
 
     fn call_grpc_method(runtime: RuntimeId, data: GrpcData) -> Result<FuncParams, wit::Error> {
-        let _grpc_runtime_data = get_gprc_data(runtime);
+        let grpc_runtime_data = get_gprc_data(runtime);
+
         let mat = GrpcMaterializer {
-            method: data.method,
+            method: data.method.clone(),
         };
 
-        #[allow(unused_variables)]
         let mat_id =
             Store::register_materializer(Materializer::grpc(runtime, mat, WitEffect::Read));
 
-        // let type = generate_type(grpc_runtime_data.proto_file, data.method);
-
-        // Ok(FuncParams {
-        //     inp: type.inp,
-        //     out: type.out,
-        //     mat: mat_id,
-        // })
+        let t = generate_type(&grpc_runtime_data.proto_file, &data.method)
+            .map_err(|err| err.to_string())?;
 
         Ok(FuncParams {
-            inp: todo!(),
-            #[allow(unreachable_code)]
-            out: todo!(),
+            inp: t.input.0,
+            out: t.output.0,
             mat: mat_id,
         })
     }

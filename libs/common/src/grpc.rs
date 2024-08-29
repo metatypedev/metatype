@@ -18,7 +18,7 @@ pub type Client = Grpc<Channel>;
 
 use protobuf::{
     descriptor::{FileDescriptorProto, MethodDescriptorProto},
-    reflect::FileDescriptor,
+    reflect::{FieldDescriptor, FileDescriptor},
     MessageDyn,
 };
 
@@ -172,4 +172,17 @@ pub fn get_relative_message_name(absolute_message_name: &str) -> anyhow::Result<
 
 pub fn response_print_to_string(response: &dyn MessageDyn) -> String {
     protobuf_json_mapping::print_to_string(response).unwrap()
+}
+
+pub type Fields = Vec<FieldDescriptor>;
+
+pub fn get_message_field_descriptor(
+    file_descriptor: &FileDescriptor,
+    type_name: &str,
+) -> Result<Fields> {
+    let message_descriptor = file_descriptor
+        .message_by_full_name(type_name)
+        .context(format!("Message not found: {}", type_name))?;
+
+    Ok(message_descriptor.fields().collect())
 }
