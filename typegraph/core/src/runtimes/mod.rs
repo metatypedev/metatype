@@ -19,7 +19,6 @@ use std::rc::Rc;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::Store;
-use crate::runtimes::grpc::get_gprc_data;
 use crate::runtimes::prisma::migration::{
     prisma_apply, prisma_create, prisma_deploy, prisma_diff, prisma_reset,
 };
@@ -41,8 +40,7 @@ use substantial::{substantial_operation, SubstantialMaterializer};
 use self::aws::S3Materializer;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
-use self::grpc::type_generation::generate_type;
-use self::grpc::GrpcMaterializer;
+use self::grpc::{call_grpc_method, GrpcMaterializer};
 use self::prisma::context::PrismaContext;
 use self::prisma::get_prisma_context;
 use self::prisma::relationship::prisma_link;
@@ -715,22 +713,6 @@ impl crate::wit::runtimes::Guest for crate::Lib {
     }
 
     fn call_grpc_method(runtime: RuntimeId, data: GrpcData) -> Result<FuncParams, wit::Error> {
-        let grpc_runtime_data = get_gprc_data(runtime);
-
-        let mat = GrpcMaterializer {
-            method: data.method.clone(),
-        };
-
-        let mat_id =
-            Store::register_materializer(Materializer::grpc(runtime, mat, WitEffect::Read));
-
-        let t = generate_type(&grpc_runtime_data.proto_file, &data.method)
-            .map_err(|err| err.to_string())?;
-
-        Ok(FuncParams {
-            inp: t.input.0,
-            out: t.output.0,
-            mat: mat_id,
-        })
+        call_grpc_method(runtime, data)
     }
 }

@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::path::Path;
+
 use anyhow::Result;
 use common::grpc::{
     get_file_descriptor, get_message_field_descriptor, get_method_descriptor_proto,
     get_relative_method_name, Fields,
 };
-
-use std::path::Path;
 
 use crate::{
     t::{self, TypeBuilder},
