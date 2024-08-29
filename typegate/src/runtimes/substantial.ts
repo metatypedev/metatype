@@ -9,6 +9,8 @@ import { registerRuntime } from "./mod.ts";
 import { getLogger, Logger } from "../log.ts";
 import * as native from "native";
 import { nativeResult } from "../utils.ts";
+import { WorkerManager } from "./substantial/deno_worker_manager.ts";
+import { path } from "compress/deps.ts";
 
 const logger = getLogger(import.meta);
 
@@ -21,21 +23,75 @@ export class SubstantialRuntime extends Runtime {
     this.logger = getLogger(`substantial:'${typegraphName}'`);
   }
 
-  static init(params: RuntimeInitParams): Runtime {
+  static async init(params: RuntimeInitParams): Promise<Runtime> {
     logger.info("initializing SubstantialRuntime");
     logger.debug(`init params: ${JSON.stringify(params)}`);
-    logger.debug(`init args: ${JSON.stringify(params.args)}`);
-    const { typegraph, args: _args, secretManager: _secrets } = params;
-    const typegraphName = TypeGraph.formatName(typegraph);
+    const {
+      typegraph: tg,
+      typegraphName,
+      args: _,
+      materializers,
+      secretManager,
+      typegate,
+    } = params;
 
-    const instance = new SubstantialRuntime(typegraphName);
+    const artifacts = tg.meta.artifacts;
 
+    const secrets: Record<string, string> = {};
+
+    for (const m of materializers) {
+      for (const secretName of (m.data.secrets as []) ?? []) {
+        secrets[secretName] = secretManager.secretOrFail(secretName);
+      }
+    }
+
+    // Allocate workers for the loaaded files
+    const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
+    for (const mat of materializers) {
+      if (!["start", "stop", "send"].includes(mat.name)) {
+        continue;
+      }
+
+      const matData = mat.data;
+      const entryPoint = artifacts[matData.file as string];
+      const deps = (matData.deps as string[]).map((dep) => artifacts[dep]);
+
+      const moduleMeta = {
+        typegraphName: typegraphName,
+        relativePath: entryPoint.path,
+        hash: entryPoint.hash,
+        sizeInBytes: entryPoint.size,
+      };
+
+      const depMetas = deps.map((dep) => {
+        return {
+          typegraphName: typegraphName,
+          relativePath: dep.path,
+          hash: dep.hash,
+          sizeInBytes: dep.size,
+        };
+      });
+
+      const entryModulePath = await typegate.artifactStore.getLocalPath(
+        moduleMeta,
+        depMetas,
+      );
+
+      const workerManager = WorkerManager.getInstance();
+      workerManager.createWorker(matData.name as string, entryModulePath);
+
+      logger.info(`Resolved runtime artifacts at ${basePath}`);
+    }
+
+    const tgName = TypeGraph.formatName(tg);
+    const instance = new SubstantialRuntime(tgName);
     return instance;
   }
 
-  async deinit(): Promise<void> {
+  deinit(): Promise<void> {
     logger.info("deinitializing SubstantialRuntime");
-    return await Promise.resolve();
+    WorkerManager.destroyAllWorkers();
+    return Promise.resolve();
   }
 
   materialize(
@@ -44,51 +100,31 @@ export class SubstantialRuntime extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     const name = stage.props.materializer?.name;
+    const mat = stage.props.materializer;
     const resolver: Resolver = (() => {
-      const data = stage.props.materializer?.data ?? {};
+      const data = mat?.data ?? {};
+
       if (name === "start") {
-        const { run } = nativeResult(
-          native.createOrGetRun({
-            run_id: "one",
-            backend: "Memory",
-          }),
-        );
+        return async () => {
+          const runId = data.name as string;
+          const { run } = nativeResult(
+            native.createOrGetRun({
+              backend: "Memory",
+              run_id: runId,
+            }),
+          );
 
-        if (run.operations.length == 0) {
-          run.operations = [
-            {
-              Start: {
-                kwargs: {},
-              },
-            },
-            {
-              Save: {
-                id: 1,
-                value: 11,
-              },
-            },
-            {
-              Save: {
-                id: 2,
-                value: 22,
-              },
-            },
-          ];
-          console.log("Init");
-        } else {
-          console.log("Recovered from backend");
-        }
+          const result = await WorkerManager.execute(data.name as string, run);
+          console.log("Workflow result", result);
 
-        console.log(
-          nativeResult(
+          const persistedRes = nativeResult(
             native.persistRun({
               backend: "Memory",
               run,
             }),
-          ),
-        );
-
-        throw new Error(JSON.stringify(data));
+          );
+          return persistedRes;
+        };
       }
 
       if (name === "stop") {
