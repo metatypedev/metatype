@@ -15,10 +15,6 @@ This architecture relies heavily on services communicating by publishing and sub
 - [RabbitMQ](https://www.rabbitmq.com/)
 - [Amazon SQS](https://aws.amazon.com/sqs/)
 
-{/_ <img
-  src="/images/blog/execution-flow-paradigms/eda.png"
-  alt="Event Driven Architecture with Message Queues - RabbitMQ"
-/> _/}
 ![](eda.drawio.svg)
 
 <div style={{ marginLeft: 5 + "em" }}>
@@ -48,11 +44,6 @@ This design pattern aims to achieve consistency across different services in a d
 
 **Note**: In the Saga pattern, a compensating transaction must be idempotent and retryable. These principles ensure that transactions can be managed without manual intervention.
 
-{/_ <img
-  src="/images/blog/execution-flow-paradigms/saga-pattern-order-delivery.png"
-  alt="The Saga Pattern for 
-Order delivery system"
-/> _/}
 ![](saga.drawio.svg)
 
 <div style={{ marginLeft: 10 + "em" }}>
