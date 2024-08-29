@@ -153,9 +153,8 @@ USER root
 # to make sure all required ts files are found in the image
 COPY --from=deno-bin --chown=nonroot:nonroot /usr/bin/deno /bin/deno
 RUN /bin/deno check \
-    --config /app/deno.jsonc \
+    --config /app/src/typegate/deno.jsonc \
     /app/src/typegate/src/**/*.ts \
-    /app/tests/utils/**/*.ts \
     && rm /bin/deno
 
 #

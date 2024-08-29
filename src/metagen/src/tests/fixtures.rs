@@ -14,7 +14,7 @@ pub async fn test_typegraph_1() -> anyhow::Result<Box<Typegraph>> {
         )
         .env(
             "MCLI_LOADER_CMD",
-            "deno run -A --import-map=../../typegate/import_map.json {filepath}",
+            "deno run -A --config=../../examples/deno.jsonc {filepath}",
         )
         .kill_on_drop(true)
         .output()
@@ -116,7 +116,7 @@ pub async fn test_typegraph_3() -> anyhow::Result<Box<Typegraph>> {
         )
         .env(
             "MCLI_LOADER_CMD",
-            "deno run -A --import-map=../../typegate/import_map.json {filepath}",
+            "deno run -A --config=../../examples/deno.jsonc {filepath}",
         )
         .kill_on_drop(true)
         .output()
