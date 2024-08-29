@@ -37,11 +37,13 @@ export const typegateConfigBaseSchema = z.object({
     .optional()
     .transform((s: string | undefined, ctx) => {
       if (s === undefined) {
-        console.error(
-          "\x1b[31m%s\x1b[0m",
-          "Error: Env var TG_SECRET is not configured. Exiting from the application.",
-        );
-        Deno.exit(1);
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "Error: Env var TG_SECRET is not configured. Exiting from the application.",
+        });
+
+        return z.NEVER;
       }
 
       const bytes = decodeBase64(s);
@@ -60,13 +62,15 @@ export const typegateConfigBaseSchema = z.object({
   tg_admin_password: z
     .string()
     .optional()
-    .transform((s: string | undefined, _ctx) => {
+    .transform((s: string | undefined, ctx) => {
       if (s === undefined) {
-        console.error(
-          "\x1b[31m%s\x1b[0m",
-          "Error: Env var TG_ADMIN_PASSWORD is not configured. Exiting from the application.",
-        );
-        Deno.exit(1);
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "Error: Env var TG_ADMIN_PASSWORD is not configured. Exiting from the application.",
+        });
+
+        return z.NEVER;
       }
 
       return s;

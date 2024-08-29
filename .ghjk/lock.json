@@ -1036,31 +1036,31 @@
               "ty": "denoFile@v1",
               "key": "dev-gate5",
               "desc": "Launch the typegate from the latests published image.",
-              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+              "envKey": "bciqf6ly2orfkhcrpjkb6jx2p2igz6bvllqpuhotzlfmcjzwymmwr55q"
             },
             "dev-gate4": {
               "ty": "denoFile@v1",
               "key": "dev-gate4",
               "desc": "Launch the typegate from the locally built typegate image.",
-              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+              "envKey": "bciqf6ly2orfkhcrpjkb6jx2p2igz6bvllqpuhotzlfmcjzwymmwr55q"
             },
             "dev-gate3": {
               "ty": "denoFile@v1",
               "key": "dev-gate3",
               "desc": "Launch the typegate from a locally found meta bin.",
-              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+              "envKey": "bciqf6ly2orfkhcrpjkb6jx2p2igz6bvllqpuhotzlfmcjzwymmwr55q"
             },
             "dev-gate2": {
               "ty": "denoFile@v1",
               "key": "dev-gate2",
               "desc": "Launch the typegate in sync mode.",
-              "envKey": "bciqh7p45mporp4lmdynwq3xdlhbkauaww7ggluc2bzqgpkxyw7j76fq"
+              "envKey": "bciqolirh75zgvw6slig4cdhdupwepxo7tuqo53aoqmrptr5k66ubjei"
             },
             "dev-gate1": {
               "ty": "denoFile@v1",
               "key": "dev-gate1",
               "desc": "Launch the typegate in single-instance mode.",
-              "envKey": "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq"
+              "envKey": "bciqf6ly2orfkhcrpjkb6jx2p2igz6bvllqpuhotzlfmcjzwymmwr55q"
             },
             "dev-eg-tgraphs": {
               "ty": "denoFile@v1",
@@ -1396,7 +1396,7 @@
                 }
               ]
             },
-            "bciqikizsspknj3opc7ld3zvrfnjlv37e67vhqcz6igd4dtvffgcyokq": {
+            "bciqf6ly2orfkhcrpjkb6jx2p2igz6bvllqpuhotzlfmcjzwymmwr55q": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1432,16 +1432,6 @@
                   "ty": "posix.envVar",
                   "key": "REDIS_URL",
                   "val": "redis://:password@localhost:6379/0"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "TG_SECRET",
-                  "val": "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "TG_ADMIN_PASSWORD",
-                  "val": "password"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1454,7 +1444,7 @@
                 }
               ]
             },
-            "bciqh7p45mporp4lmdynwq3xdlhbkauaww7ggluc2bzqgpkxyw7j76fq": {
+            "bciqolirh75zgvw6slig4cdhdupwepxo7tuqo53aoqmrptr5k66ubjei": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1490,16 +1480,6 @@
                   "ty": "posix.envVar",
                   "key": "REDIS_URL",
                   "val": "redis://:password@localhost:6379/0"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "TG_SECRET",
-                  "val": "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "TG_ADMIN_PASSWORD",
-                  "val": "password"
                 },
                 {
                   "ty": "posix.envVar",
