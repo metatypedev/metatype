@@ -4,22 +4,130 @@
 use std::{cell::RefCell, ops::Deref, path::PathBuf, rc::Rc, str::FromStr, sync::Arc};
 
 use common::grpc::{
-    create_client, get_file_descriptor, get_method_descriptor_proto, get_relative_message_name,
-    get_relative_method_name, json2request, response_print_to_string, Client, DynCodec,
-    PathAndQuery,
+    get_file_descriptor, get_method_descriptor_proto, get_relative_message_name,
+    get_relative_method_name,
 };
 
+use bytes::{Buf, BufMut};
 use dashmap::DashMap;
 use deno_core::OpState;
 
 use anyhow::{Context, Result};
+use protobuf::{descriptor::MethodDescriptorProto, reflect::FileDescriptor, MessageDyn};
 use serde::Deserialize;
 
 #[rustfmt::skip]
 use deno_core as deno_core;
+use tonic::codegen::http::uri::PathAndQuery;
+use tonic::{
+    client::Grpc,
+    codec::{Codec, DecodeBuf, Decoder, EncodeBuf, Encoder},
+    transport::{Channel, Endpoint},
+    IntoRequest, Request, Status,
+};
+
+type DynRequest = Box<dyn MessageDyn>;
+type DynResponse = Box<dyn MessageDyn>;
+
+#[derive(Clone)]
+pub struct DynCodec {
+    pub file_descriptor: FileDescriptor,
+    pub method_descriptor_proto: MethodDescriptorProto,
+}
+
+impl Codec for DynCodec {
+    type Encode = DynRequest;
+    type Decode = DynResponse;
+
+    type Encoder = DynCodec;
+    type Decoder = DynCodec;
+
+    fn encoder(&mut self) -> Self::Encoder {
+        self.clone()
+    }
+
+    fn decoder(&mut self) -> Self::Decoder {
+        self.clone()
+    }
+}
+
+impl Encoder for DynCodec {
+    type Item = DynRequest;
+
+    type Error = Status;
+
+    fn encode(
+        &mut self,
+        item: Self::Item,
+        dst: &mut EncodeBuf<'_>,
+    ) -> std::prelude::v1::Result<(), Self::Error> {
+        item.write_to_bytes_dyn()
+            .map(|buf| dst.put(buf.as_slice()))
+            .map_err(|err| Status::internal(format!("{:?}", err)))
+    }
+}
+
+impl Decoder for DynCodec {
+    type Item = DynResponse;
+    type Error = Status;
+
+    fn decode(&mut self, src: &mut DecodeBuf<'_>) -> Result<Option<Self::Item>, Self::Error> {
+        let buf = src.chunk();
+        let length = buf.len();
+
+        let response_message =
+            get_relative_message_name(self.method_descriptor_proto.output_type()).unwrap();
+
+        let response = buf2response(buf, response_message, self.file_descriptor.clone())
+            .map(Some)
+            .map_err(|err| Status::internal(format!("{:?}", err)));
+        src.advance(length);
+        response
+    }
+}
+
+async fn create_client(endpoint: &str) -> Result<Grpc<Channel>> {
+    let endpoint = Endpoint::from_str(endpoint).context("Failed to parse endpoint")?;
+
+    let channel = Channel::builder(endpoint.uri().to_owned())
+        .connect()
+        .await
+        .context("Failed to connect to endpoint")?;
+
+    Ok(Grpc::new(channel))
+}
+
+pub fn json2request(
+    json: String,
+    input_message: String,
+    file_descriptor: FileDescriptor,
+) -> anyhow::Result<Request<DynRequest>> {
+    let msg_descriptor = file_descriptor
+        .message_by_package_relative_name(&input_message)
+        .with_context(|| format!("Input message {input_message} not found"))?;
+    let mut msg = msg_descriptor.new_instance();
+    protobuf_json_mapping::merge_from_str(&mut *msg, &json)?;
+
+    Ok(msg.into_request())
+}
+
+fn buf2response(
+    buffer: &[u8],
+    output_message: String,
+    file_descriptor: FileDescriptor,
+) -> anyhow::Result<DynResponse> {
+    let msg_descriptor = file_descriptor
+        .message_by_package_relative_name(&output_message)
+        .with_context(|| format!("Output message {output_message} not found"))?;
+
+    let mut msg = msg_descriptor.new_instance();
+    msg.merge_from_bytes_dyn(buffer)?;
+
+    Ok(msg)
+}
 
 struct GrpcClient {
-    client: Client,
+    client: Grpc<Channel>,
     proto_file: String,
 }
 
@@ -119,7 +227,7 @@ pub async fn op_call_grpc_method(
 
     let response = response.get_ref().deref();
 
-    let json_response = response_print_to_string(response);
+    let json_response = protobuf_json_mapping::print_to_string(response).unwrap();
 
     Ok(json_response)
 }

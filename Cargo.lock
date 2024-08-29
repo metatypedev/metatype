@@ -1577,7 +1577,6 @@ dependencies = [
  "anyhow",
  "async-trait",
  "base64 0.22.1",
- "bytes",
  "colored",
  "flate2",
  "ignore",
@@ -1585,7 +1584,6 @@ dependencies = [
  "indoc",
  "itertools 0.11.0",
  "protobuf",
- "protobuf-json-mapping",
  "protobuf-parse",
  "reqwest 0.11.27",
  "serde 1.0.204",
@@ -1593,7 +1591,6 @@ dependencies = [
  "serde_with 3.9.0",
  "tar",
  "thiserror",
- "tonic 0.12.1",
  "url",
 ]
 
@@ -12306,6 +12303,7 @@ version = "0.4.8"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
+ "bytes",
  "common",
  "connection-string",
  "convert_case 0.6.0",
@@ -12318,6 +12316,8 @@ dependencies = [
  "mt_deno",
  "once_cell",
  "prisma-models",
+ "protobuf",
+ "protobuf-json-mapping",
  "psl",
  "query-connector",
  "query-core",
@@ -12334,6 +12334,7 @@ dependencies = [
  "temporal-sdk-core-protos",
  "thiserror",
  "tokio",
+ "tonic 0.12.1",
  "user-facing-errors",
  "wasmtime",
  "wasmtime-wasi",
