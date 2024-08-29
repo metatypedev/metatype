@@ -6,19 +6,20 @@
 use crate::interlude::*;
 
 use common::typegraph::runtimes::substantial::SubstantialBackend;
+use dashmap::DashMap;
+use deno_core::OpState;
 use substantial::{
     backends::{fs::FsBackend, memory::MemoryBackend, Backend},
     operations::Run,
 };
 
-use deno_core::OpState;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
 
-// #[derive(Default)]
-// pub struct Ctx {
-//     pub runs: Arc<DashMap<String, Run>>,
-// }
+#[derive(Clone, Default)]
+pub struct Ctx {
+    pub backends: Arc<DashMap<String, Box<dyn Backend>>>,
+}
 
 fn get_backend(kind: &SubstantialBackend) -> Box<dyn Backend> {
     match kind {
@@ -30,43 +31,62 @@ fn get_backend(kind: &SubstantialBackend) -> Box<dyn Backend> {
 }
 
 #[derive(Deserialize)]
-pub struct InitRunInput {
+pub struct CreateOrGetInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
 }
 
 #[derive(Serialize)]
 #[serde(crate = "serde")]
-pub struct InitRunOutput {
+pub struct CreateOrGetOutput {
     pub run: Run,
 }
 
-#[deno_core::op2(async)]
+#[deno_core::op2]
 #[serde]
-pub async fn op_substantial_init_run(
+pub fn op_create_or_get_run(
     state: Rc<RefCell<OpState>>,
-    #[serde] input: InitRunInput,
-) -> Result<InitRunOutput> {
-    // TODO: register runs globally
-    // let ctx = {
-    //     let state = state.borrow();
-    //     state.borrow::<Ctx>().clone()
-    // };
+    #[serde] input: CreateOrGetInput,
+) -> Result<CreateOrGetOutput> {
+    let ctx = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().clone()
+    };
 
-    // if let Some(run) = ctx.runs.get(&input.run_id) {
-    //     let backend = get_backend(&input.backend);
-    //     run.init_from(input.run_id.clone(), backend);
-
-    //     Ok(ReadEventOutput { run: run.clone() })
-    // } else {
-    //     let run = Run::new(input.run_id.clone());
-
-    //     Ok(ReadEventOutput { run })
-    // }
+    let backend = ctx
+        .backends
+        .entry(input.run_id.clone())
+        .or_insert_with(|| get_backend(&input.backend));
 
     let mut run = Run::new(input.run_id.clone());
-    let backend = get_backend(&input.backend);
-    run.init_from(backend)?;
+    run.init_from(backend.as_ref())?;
 
-    Ok(InitRunOutput { run })
+    Ok(CreateOrGetOutput { run })
+}
+
+#[derive(Deserialize)]
+pub struct PersistRunInput {
+    pub run: Run,
+    pub backend: SubstantialBackend,
+}
+
+#[deno_core::op2]
+#[string]
+pub fn op_persist_run(
+    state: Rc<RefCell<OpState>>,
+    #[serde] input: PersistRunInput,
+) -> Result<String> {
+    let ctx = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().clone()
+    };
+
+    let backend = ctx
+        .backends
+        .entry(input.run.run_id.clone())
+        .or_insert_with(|| get_backend(&input.backend));
+
+    input.run.materialize_into(backend.as_ref())?;
+
+    Ok(input.run.run_id)
 }

@@ -7,6 +7,8 @@ import { ComputeStage } from "../engine/query_engine.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
 import { getLogger, Logger } from "../log.ts";
+import * as native from "native";
+import { nativeResult } from "../utils.ts";
 
 const logger = getLogger(import.meta);
 
@@ -45,6 +47,47 @@ export class SubstantialRuntime extends Runtime {
     const resolver: Resolver = (() => {
       const data = stage.props.materializer?.data ?? {};
       if (name === "start") {
+        const { run } = nativeResult(
+          native.createOrGetRun({
+            run_id: "one",
+            backend: "Memory",
+          }),
+        );
+
+        if (run.operations.length == 0) {
+          run.operations = [
+            {
+              Start: {
+                kwargs: {},
+              },
+            },
+            {
+              Save: {
+                id: 1,
+                value: 11,
+              },
+            },
+            {
+              Save: {
+                id: 2,
+                value: 22,
+              },
+            },
+          ];
+          console.log("Init");
+        } else {
+          console.log("Recovered from backend");
+        }
+
+        console.log(
+          nativeResult(
+            native.persistRun({
+              backend: "Memory",
+              run,
+            }),
+          ),
+        );
+
         throw new Error(JSON.stringify(data));
       }
 

@@ -60,7 +60,7 @@ impl Run {
         }
     }
 
-    pub fn init_from(&mut self, backend: Box<dyn Backend>) -> Result<()> {
+    pub fn init_from(&mut self, backend: &dyn Backend) -> Result<()> {
         if let Some(records) = backend.read_events(self.run_id.clone())? {
             let operations = records
                 .events
@@ -76,7 +76,7 @@ impl Run {
         Ok(())
     }
 
-    pub fn materialize_into(&self, backend: Box<dyn Backend>) -> Result<()> {
+    pub fn materialize_into(&self, backend: &dyn Backend) -> Result<()> {
         let mut records = Records::new();
         records.events = self
             .operations

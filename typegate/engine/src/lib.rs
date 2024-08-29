@@ -91,6 +91,7 @@ impl OpDepInjector {
                 .expect("error initializing wit_wire state"),
         );
         state.put(runtimes::prisma::Ctx::new(tmp_dir));
+        state.put(runtimes::substantial::Ctx::default());
     }
 }
 

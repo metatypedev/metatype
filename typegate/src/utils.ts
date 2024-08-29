@@ -10,12 +10,6 @@ import { None, Option, Some } from "monads";
 import { Type } from "./typegraph/type_node.ts";
 import type { TypeGraph } from "./typegraph/mod.ts";
 
-import { ensureDir, ensureFile } from "std/fs/mod.ts";
-import { Untar } from "std/archive/untar.ts";
-import { readerFromStreamReader } from "std/io/reader_from_stream_reader.ts";
-import { toReadableStream } from "std/io/to_readable_stream.ts";
-import { path } from "compress/deps.ts";
-import { sha1 } from "./crypto.ts";
 import { BRANCH_NAME_SEPARATOR } from "./engine/computation_engine.ts";
 
 export const maxi32 = 2_147_483_647;
@@ -116,8 +110,10 @@ export function toPrettyJSON(value: unknown) {
 }
 
 function isChildStage(parentId: string, stageId: string) {
-  return stageId.startsWith(`${parentId}.`) ||
-    stageId.startsWith(`${parentId}${BRANCH_NAME_SEPARATOR}`);
+  return (
+    stageId.startsWith(`${parentId}.`) ||
+    stageId.startsWith(`${parentId}${BRANCH_NAME_SEPARATOR}`)
+  );
 }
 
 export function iterParentStages(
@@ -127,7 +123,8 @@ export function iterParentStages(
   let cursor = 0;
   while (cursor < stages.length) {
     const stage = stages[cursor];
-    const children = stages.slice(cursor + 1)
+    const children = stages
+      .slice(cursor + 1)
       .filter((s) => isChildStage(stage.id(), s.id()));
     cb(stage, children);
     cursor += 1 + children.length;
@@ -190,9 +187,9 @@ export function closestWord(
  * => a1: [query, mutation], a2: [query], ..., b1: [mutation] ...
  */
 export function getReverseMapNameToQuery(tg: TypeGraph, names: string[]) {
-  const indices = names.map((name) =>
-    tg.type(0, Type.OBJECT).properties?.[name]
-  ).filter((idx) => idx != null);
+  const indices = names
+    .map((name) => tg.type(0, Type.OBJECT).properties?.[name])
+    .filter((idx) => idx != null);
   const res = new Map<string, Set<string>>();
 
   for (const idx of indices) {
@@ -215,83 +212,4 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
     return { title: typ.title, fields: Object.keys(typ.properties ?? {}) };
   }
   return { title: typ?.title, fields: [] };
-}
-
-/**
- * base64 decode and untar at cwd/{dir}
- */
-export async function uncompress(
-  dir: string,
-  tarb64: string,
-): Promise<string[]> {
-  const buffer = decodeBase64(tarb64);
-  const streamReader = new Blob([buffer])
-    .stream()
-    .pipeThrough(new DecompressionStream("gzip"))
-    .getReader();
-  const denoReader = readerFromStreamReader(streamReader);
-
-  const untar = new Untar(denoReader);
-  const entries = [];
-  for await (const entry of untar) {
-    entries.push(entry.fileName);
-    if (entry.fileName == ".") {
-      continue;
-    }
-    let file: Deno.FsFile | undefined;
-    try {
-      if (entry.type === "directory") {
-        const resDirPath = path.join(dir, entry.fileName);
-        await ensureDir(resDirPath);
-        continue;
-      }
-      const resFilePath = path.join(dir, entry.fileName);
-      await ensureFile(resFilePath);
-
-      file = await Deno.open(resFilePath, { write: true });
-      await toReadableStream(entry).pipeTo(file.writable);
-    } catch (e) {
-      throw e;
-    } finally {
-      file?.close();
-    }
-  }
-  return entries;
-}
-
-/**
- * Convert string `file:SCRIPT;base64:TARBALL` to FolderRepr object.
- * * `SCRIPT`: refers to a file relative to the typegraph path
- * * `TARBALL`: base64 encoded tarball of scripts/(deno|python)
- * `FolderRepr` is expected to provide all the minimum information necessary
- * to extract the tarball to typegate
- */
-export async function structureRepr(str: string): Promise<FolderRepr> {
-  const [fileStr, base64Str] = str.split(";");
-  if (!base64Str) {
-    throw Error("given string is malformed");
-  }
-  const filePrefix = "file:", b64Prefix = "base64:";
-
-  if (!fileStr.startsWith(filePrefix)) {
-    throw Error(`${filePrefix} prefix not specified`);
-  }
-
-  if (!base64Str.startsWith(b64Prefix)) {
-    throw Error(`${b64Prefix} prefix not specified`);
-  }
-
-  const entryPoint = fileStr.substring(filePrefix.length);
-
-  const base64 = base64Str.substring(b64Prefix.length);
-  const entryPointHash = await sha1(entryPoint);
-  const contentHash = await sha1(base64);
-  return {
-    entryPoint,
-    base64,
-    hashes: {
-      entryPoint: entryPointHash,
-      content: contentHash,
-    },
-  };
 }

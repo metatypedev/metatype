@@ -51,4 +51,8 @@ globalThis.Meta = {
     destroy: getOp("op_wit_wire_destroy"),
     handle: getOp("op_wit_wire_handle"),
   },
+  substantial: {
+    createOrGetRun: getOp("op_create_or_get_run"),
+    persistRun: getOp("op_persist_run"),
+  },
 };

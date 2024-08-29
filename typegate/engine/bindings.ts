@@ -333,7 +333,7 @@ export async function prisma_apply(
   a0: PrismaDevInp,
 ): Promise<PrismaApplyResult> {
   try {
-    return await Meta.prisma.apply(a0) as PrismaApplyResult;
+    return (await Meta.prisma.apply(a0)) as PrismaApplyResult;
   } catch (err) {
     return { Err: { message: err.toString() } };
   }
@@ -449,6 +449,71 @@ export function archive(a0: ArchiveInp): ArchiveResult {
   try {
     const res = Meta.prisma.archive(a0.path);
     return { Ok: { base64: res } };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}
+
+export type Backend =
+  | "Fs"
+  | "Memory"
+  | {
+    Redis: {
+      host: string;
+      port: number;
+    };
+  };
+
+export type Run = {
+  run_id: string;
+  operations: Array<unknown>;
+};
+
+export type CreateOrGetInput = {
+  run_id: string;
+  backend: Backend;
+};
+
+export type CreateOrGetResult =
+  | {
+    Ok: {
+      run: Run;
+    };
+  }
+  | {
+    Err: {
+      message: string;
+    };
+  };
+
+export function createOrGetRun(inp: CreateOrGetInput): CreateOrGetResult {
+  try {
+    const res = Meta.substantial.createOrGetRun(inp);
+    return { Ok: res };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}
+
+export type PersistRunInput = {
+  run: Run;
+  backend: Backend;
+};
+
+export type PersistRunResult =
+  | {
+    Ok: string;
+  }
+  | {
+    Err: {
+      message: string;
+    };
+  };
+
+export function persistRun(inp: PersistRunInput): PersistRunResult {
+  try {
+    const res = Meta.substantial.persistRun(inp);
+    return { Ok: res };
   } catch (err) {
     return { Err: { message: err.toString() } };
   }
