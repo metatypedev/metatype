@@ -15,13 +15,14 @@ This architecture relies heavily on services communicating by publishing and sub
 - [RabbitMQ](https://www.rabbitmq.com/)
 - [Amazon SQS](https://aws.amazon.com/sqs/)
 
-<img
+{/_ <img
   src="/images/blog/execution-flow-paradigms/eda.png"
   alt="Event Driven Architecture with Message Queues - RabbitMQ"
-/>
+/> _/}
+![](eda.drawio.svg)
+
 <div style={{ marginLeft: 5 + "em" }}>
-  Fig. [Event Driven Architecture with Message Queues -
-  RabbitMQ](https://miro.medium.com/v2/resize:fit:1400/1*lQIAGbhDfo-2VfiibkRL1w.png)
+  Fig. Event Driven Architecture with Message Queues - RabbitMQ
 </div>
 
 #### Advantages
@@ -43,18 +44,19 @@ You can mitigate or reduce these challenges by following best practices like Eve
 
 ### 2. The [Saga Pattern](https://microservices.io/patterns/data/saga.html)
 
-This design pattern aims to achieve consistency across different services in a distributed system by breaking complex transactions spanning multiple components into a series of local transactions. Each of these transactions triggers an event or message that starts the next transaction in the sequence. If any local transaction fails to complete, a series of compensating actions rollback the effects of preceding transactions. While the orchestration of local transactions can vary, the pattern aims to achieve consistency in a microservices-based system. Events are designed to be stored in durable storage systems or logs, providing a trail to reconstruct the system to a state after a failure. While the saga pattern is an effective way to ensure consistency, it can be challenging to implement timer/timeout-based workflows and to design and implement the compensating actions for local transactions.
+This design pattern aims to achieve consistency across different services in a distributed system by breaking complex transactions spanning multiple components into a series of local transactions. Each of these transactions triggers an event or message that starts the next transaction in the sequence. If any local transaction fails to complete, a series of compensating actions roll back the effects of preceding transactions. While the orchestration of local transactions can vary, the pattern aims to achieve consistency in a microservices-based system. Events are designed to be stored in durable storage systems or logs, providing a trail to reconstruct the system to a state after a failure. While the saga pattern is an effective way to ensure consistency, it can be challenging to implement timer/timeout-based workflows and to design and implement the compensating actions for local transactions.
 
 **Note**: In the Saga pattern, a compensating transaction must be idempotent and retryable. These principles ensure that transactions can be managed without manual intervention.
 
-<img
+{/_ <img
   src="/images/blog/execution-flow-paradigms/saga-pattern-order-delivery.png"
   alt="The Saga Pattern for 
 Order delivery system"
-/>
+/> _/}
+![](saga.drawio.svg)
+
 <div style={{ marginLeft: 10 + "em" }}>
-  Fig. [The Saga Pattern for Order delivery
-  system](https://www.baeldung.com/cs/saga-pattern-microservices#1-what-is-saga-architecture-pattern)
+  Fig. The Saga Pattern for Order delivery system
 </div>
 
 #### Advantages
@@ -93,13 +95,10 @@ Durable execution refers to the ability of a system to preserve the state of an 
 Durable execution isn’t a completely distinct solution from the ones listed above but rather incorporates some of their strengths while presenting a more comprehensive approach to achieving consistency, fault tolerance, data integrity, resilience for long-running processes, and observability.
 
 <img
-  src="/images/blog/execution-flow-paradigms/durable-exec-temporal.png"
+  src="/images/blog/execution-flow-paradigms/durable-exec.svg"
   alt="Durable workflow engine - Temporal"
 />
-<div style={{ marginLeft: 10 + "em" }}>
-  Fig. [Durable workflow engine -
-  Temporal](https://temporal.io/blog/workflow-engine-principles)
-</div>
+<div style={{ marginLeft: 15 + "em" }}>Fig. Durable workflow engine</div>
 
 #### Advantages
 
@@ -383,7 +382,7 @@ typegates:
 
 </details>
 
-You need to add only the last two lines as the others are auto generated. Note that secrets are defined under the `example` parent, which is the name of your typegraph. If the name doesn't match, you will face secret not found issues when deploying your typegraph.
+You need to add only the last two lines as the others are auto-generated. Note that secrets are defined under the `example` parent, which is the name of your typegraph. If the name doesn't match, you will face secret not found issues when deploying your typegraph.
 
 Before deploying the above typegraph, you need to start the temporal server and the worker. You need to have [temporal](https://learn.temporal.io/getting_started/typescript/dev_environment/#set-up-a-local-temporal-service-for-development-with-temporal-cli) installed on your machine.
 
@@ -427,7 +426,7 @@ mutation {
 }
 ```
 
-After a successful run, you will get following result which includes the `run_id` of the workflow which has just been started.
+After a successful run, you will get the following result which includes the `run_id` of the workflow which has just been started.
 
 <img
   src="/images/blog/execution-flow-paradigms/start-workflow-result.png"
