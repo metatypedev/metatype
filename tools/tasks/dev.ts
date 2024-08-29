@@ -113,7 +113,7 @@ export default {
   "dev-gate3": {
     desc: "Launch the typegate from a locally found meta bin.",
     inherit: "dev-gate1",
-    fn: ($) => $`meta typegate`,
+    fn: ($) => $`meta dev`,
   },
 
   "dev-gate4": {
