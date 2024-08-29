@@ -20,3 +20,9 @@ itertools = "0.11.0"
 colored = "2.0.4"
 indoc.workspace = true
 thiserror.workspace = true
+
+tonic = "0.12.1"
+bytes = "1.7.1"
+protobuf = "3.5.0"
+protobuf-parse = "3.5.1"
+protobuf-json-mapping = "3.5.1"

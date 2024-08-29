@@ -15,6 +15,8 @@ use serde_json::{from_value, json};
 
 use super::Runtime;
 
+pub mod type_generation;
+
 pub fn get_gprc_data(runtime_id: RuntimeId) -> Rc<GrpcRuntimeData> {
     match Store::get_runtime(runtime_id).unwrap() {
         Runtime::Grpc(data) => data,
