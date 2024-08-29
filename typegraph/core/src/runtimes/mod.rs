@@ -723,7 +723,13 @@ impl crate::wit::runtimes::Guest for crate::Lib {
         let mat_id =
             Store::register_materializer(Materializer::grpc(runtime, mat, WitEffect::Read));
 
-        // generate_type()
+        // let type = generate_type(grpc_runtime_data.proto_file, data.method);
+
+        // Ok(FuncParams {
+        //     inp: type.inp,
+        //     out: type.out,
+        //     mat: mat_id,
+        // })
 
         Ok(FuncParams {
             inp: todo!(),

@@ -512,7 +512,7 @@ export async function call_grpc_method(
   a0: CallGrpcMethodInput,
 ): Promise<CallGrpcMethodOutput> {
   try {
-    return await Meta.grpc.callGrpcMethod(a0);
+    return { Ok: await Meta.grpc.callGrpcMethod(a0) };
   } catch (err) {
     return { Err: { message: err.toString() } };
   }
