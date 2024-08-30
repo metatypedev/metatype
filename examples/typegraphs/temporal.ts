@@ -22,10 +22,11 @@ typegraph(
   },
   (g: any) => {
     const pub = Policy.public();
+    // set `HOST` and `NAMESPACE` under secrets inside metatype.yaml
     const temporal = new TemporalRuntime({
       name: "<name>",
-      hostSecret: "<host_secret>",
-      namespaceSecret: "<ns_secret>",
+      hostSecret: "HOST",
+      namespaceSecret: "NAMESPACE",
     });
 
     const workflow_id = getEnvVariable("ID_FROM_ENV");

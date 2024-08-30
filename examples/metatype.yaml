@@ -70,6 +70,9 @@ typegates:
         BASIC_andim: hunter2
       func-gql:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=func_gql"
+      temporal:
+        HOST: "http://localhost:7233"
+        NAMESPACE: "default"
 
   prd:
     url: https://demo.metatype.dev
