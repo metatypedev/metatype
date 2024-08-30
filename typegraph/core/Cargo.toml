@@ -27,8 +27,6 @@ ordered-float = "4.2.0"
 glob = "0.3.1"
 unindent = "0.2.3"
 
-protobuf = "3.5.1"
-protobuf-parse = "3.5.1"
 
 [dev-dependencies]
 insta = { version = "1.39.0", features = ["glob"] }

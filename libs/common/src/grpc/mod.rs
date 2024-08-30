@@ -1,33 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+pub mod proto_parser;
+
 use anyhow::{Context, Result};
 
-use std::path::Path;
-
 use protobuf::{
-    descriptor::{FileDescriptorProto, MethodDescriptorProto},
+    descriptor::MethodDescriptorProto,
     reflect::{FieldDescriptor, FileDescriptor},
 };
-
-pub fn get_file_descriptor(proto_file: &Path) -> Result<FileDescriptor> {
-    let proto_folder = proto_file
-        .parent()
-        .context("Proto file is not within a folder")?;
-
-    let mut file_descriptors_protos = protobuf_parse::Parser::new()
-        .include(proto_folder)
-        .input(proto_file)
-        .parse_and_typecheck()
-        .unwrap()
-        .file_descriptors;
-
-    let file_descriptor_proto: FileDescriptorProto = file_descriptors_protos.pop().unwrap();
-
-    let file_descriptor = FileDescriptor::new_dynamic(file_descriptor_proto, &[])?;
-
-    Ok(file_descriptor)
-}
 
 pub fn get_method_descriptor_proto(
     file_descriptor: FileDescriptor,

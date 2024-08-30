@@ -1584,7 +1584,6 @@ dependencies = [
  "indoc",
  "itertools 0.11.0",
  "protobuf",
- "protobuf-parse",
  "reqwest 0.11.27",
  "serde 1.0.204",
  "serde_json",
@@ -8570,22 +8569,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "protobuf-parse"
-version = "3.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b0e9b447d099ae2c4993c0cbb03c7a9d6c937b17f2d56cfc0b1550e6fcfdb76"
-dependencies = [
- "anyhow",
- "indexmap 2.2.6",
- "log",
- "protobuf",
- "protobuf-support",
- "tempfile",
- "thiserror",
- "which 4.4.2",
-]
-
-[[package]]
 name = "protobuf-support"
 version = "3.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12358,8 +12341,6 @@ dependencies = [
  "once_cell",
  "ordered-float 4.2.1",
  "paste",
- "protobuf",
- "protobuf-parse",
  "ptree",
  "regex",
  "seahash",

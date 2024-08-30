@@ -49,7 +49,7 @@ shadow-rs.workspace = true
 
 tonic = "0.12.1"
 bytes = "1.7.1"
-protobuf = "3.5.0"
+protobuf = "3.5.1"
 protobuf-json-mapping = "3.5.1"
 
 [dev-dependencies]

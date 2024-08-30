@@ -1,12 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::Path;
-
 use anyhow::Result;
 use common::grpc::{
-    get_file_descriptor, get_message_field_descriptor, get_method_descriptor_proto,
-    get_relative_method_name, Fields,
+    get_message_field_descriptor, get_method_descriptor_proto, get_relative_method_name,
+    proto_parser::get_file_descriptor, Fields,
 };
 
 use crate::{
@@ -20,8 +18,7 @@ pub struct Type {
 }
 
 pub fn generate_type(proto_file: &str, method_name: &str) -> Result<Type> {
-    let proto_path = Path::new(proto_file);
-    let file_descriptor = get_file_descriptor(proto_path)?;
+    let file_descriptor = get_file_descriptor(proto_file)?;
 
     let method_descriptor = get_method_descriptor_proto(file_descriptor.clone(), method_name)?;
 

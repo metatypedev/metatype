@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-use std::{cell::RefCell, ops::Deref, path::PathBuf, rc::Rc, str::FromStr, sync::Arc};
+use std::{cell::RefCell, ops::Deref, rc::Rc, str::FromStr, sync::Arc};
 
 use common::grpc::{
-    get_file_descriptor, get_method_descriptor_proto, get_relative_message_name,
-    get_relative_method_name,
+    get_method_descriptor_proto, get_relative_message_name, get_relative_method_name,
+    proto_parser::get_file_descriptor,
 };
 
 use bytes::{Buf, BufMut};
@@ -197,9 +197,7 @@ pub async fn op_call_grpc_method(
         .get_mut(&input.client_id)
         .with_context(|| format!("Could not find gRPC client '{}'", &input.client_id))?;
 
-    let path = PathBuf::from_str(&grpc_client.proto_file)?;
-
-    let file_descriptor = get_file_descriptor(&path)?;
+    let file_descriptor = get_file_descriptor(&grpc_client.proto_file)?;
 
     let method_name = get_relative_method_name(&input.method)?;
 

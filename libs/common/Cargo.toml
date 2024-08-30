@@ -20,6 +20,4 @@ itertools = "0.11.0"
 colored = "2.0.4"
 indoc.workspace = true
 thiserror.workspace = true
-
-protobuf = "3.5.0"
-protobuf-parse = "3.5.1"
+protobuf = "3.5.1"
