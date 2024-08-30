@@ -30,12 +30,12 @@ pub fn generate_type(proto_file: &str, method_name: &str) -> Result<Type> {
     let output_fields = get_message_field_descriptor(&file_descriptor, &out_message)?;
 
     Ok(Type {
-        input: traduct(input_fields)?,
-        output: traduct(output_fields)?,
+        input: convert_proto_fields_to_type_id(input_fields)?,
+        output: convert_proto_fields_to_type_id(output_fields)?,
     })
 }
 
-fn traduct(fields: Fields) -> Result<TypeId> {
+fn convert_proto_fields_to_type_id(fields: Fields) -> Result<TypeId> {
     let mut r#type = t::struct_();
     for field in fields {
         let the_type = match field.proto().type_name() {

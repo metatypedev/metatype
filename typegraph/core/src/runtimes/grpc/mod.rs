@@ -40,15 +40,15 @@ impl MaterializerConverter for GrpcMaterializer {
     }
 }
 
-fn get_gprc_data(runtime_id: RuntimeId) -> Rc<GrpcRuntimeData> {
-    match Store::get_runtime(runtime_id).unwrap() {
-        Runtime::Grpc(data) => data,
+fn get_gprc_data(runtime_id: RuntimeId) -> Result<Rc<GrpcRuntimeData>> {
+    match Store::get_runtime(runtime_id)? {
+        Runtime::Grpc(data) => Ok(data),
         _ => unreachable!(),
     }
 }
 
 pub fn call_grpc_method(runtime: RuntimeId, data: GrpcData) -> Result<FuncParams> {
-    let grpc_runtime_data = get_gprc_data(runtime);
+    let grpc_runtime_data = get_gprc_data(runtime)?;
 
     let mat = GrpcMaterializer {
         method: data.method.clone(),
