@@ -26,6 +26,13 @@ Let's start simple, we want to run Python code, so what do we need?
 
 - A Python runtime
 
+What limitations should be lifted for Python?
+
+- **Interoperability**: Typegate is written in Rust and TypeScript, which made the [Deno Runtime](/docs/reference/runtimes/deno) easier to implement. However, Python presents unique challenges due to its significant differences.
+- **Security**: Python does not have built-in features for limiting resource access out of the box unlike Deno.
+
+The interoperability issue can be addressed using solutions like **PyO3**. With PyO3, it is possible to programmatically execute Python code within various contexts in Rust. But also has its own sets of constraints, like needing read access to the File System.
+
 We do not want to be platform-dependent, but how can we achieve that?
 
 - Docker
@@ -33,7 +40,7 @@ We do not want to be platform-dependent, but how can we achieve that?
 
 At a higher level, Docker and WebAssembly all share the same idea: package an application into one build and make it platform independent.
 
-## The WebAssembly Interface (WASI)
+## The WebAssembly System Interface (WASI)
 
 This is basically WebAssembly but with more capabilities such as file system access and networking.
 
@@ -42,7 +49,7 @@ The **build** can then be executed in a sandboxed environment within a WASI-comp
 
 This fits very well to our use case, and as opposed to Docker, we can instantiate, manage and expose ressources programmatically with ease.
 
-And luckily for us at the time, some [community works](https://github.com/vmware-labs/webassembly-language-runtimes) has already been done on enabling the use of Python into WASI.
+And luckily for us at the time, some [community work](https://github.com/vmware-labs/webassembly-language-runtimes) has already been done on enabling the use of Python into WASI.
 
 To complicate things a bit, the WASI spec itself is a work in progress.
 The one that is supported the most is the [preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md).
@@ -57,9 +64,9 @@ pyo3 = { version = "0.19.1", features = ["abi3-py311"] }
 
 In short, we had to find a way to expose a **script folder** and also **libpython** to the WASI build.
 
-Our first solution was to use [wasi-vfs](https://github.com/kateinoigakukun/wasi-vfs), here is our first architecture design:
+Our first solution was to use [wasi-vfs](https://github.com/kateinoigakukun/wasi-vfs), here was our first architectural design:
 
-![](wasi-vfs-Python-and-rust.svg)
+<img src="/images/wasi_vfs_python_and_rust.svg" alt="FIRST SOLUTION" />
 
 This approach turned out to be quite hacky.
 
@@ -69,7 +76,7 @@ After encountering several issues, we ultimately decided to use **preopens**, wh
 fn init_Python_vm() -> Result<Vm> {
   let preopens = vec![
     // User script will be uploaded at ./src/Python which is virtually seen as /app
-    // Each script only has readonly access to /app
+    // Each script has access only to /app
     "/app:./src/Python:readonly".to_owned()
   ];
 
