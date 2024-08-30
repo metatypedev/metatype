@@ -21,7 +21,7 @@ export class WorkerManager {
 
   createWorker(name: string, modulePath: string): void {
     if (this.records.has(name)) {
-      logger.warn(`Worker with name ${name} already exists, ovewrite`);
+      logger.warn(`Worker with name ${name} already exists, overwriting..`);
       this.destroyWorker(name);
     }
 
@@ -42,22 +42,22 @@ export class WorkerManager {
     }
   }
 
-  static destroyAllWorkers() {
-    const instance = WorkerManager.getInstance();
-    for (const name of instance.records.keys()) {
-      instance.destroyWorker(name);
+  destroyAllWorkers() {
+    const workerNames = Array.from(this.records.keys());
+    for (const name of workerNames) {
+      this.destroyWorker(name);
     }
+
+    logger.warn(`Destroyed workers: ${workerNames.join(", ")}`);
   }
 
-  static execute(
+  execute(
     name: string,
     run: unknown,
   ): Promise<{ result: unknown; run: unknown }> {
-    const instance = WorkerManager.getInstance();
-
-    const record = instance.records.get(name);
+    const record = this.records.get(name);
     if (!record) {
-      throw new Error(`Worker with name ${name} does not exist`);
+      throw new Error(`Cannot execute Worker with name ${name} does not exist`);
     }
 
     const { worker, modulePath } = record;

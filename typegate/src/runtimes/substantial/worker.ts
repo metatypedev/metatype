@@ -11,7 +11,7 @@ self.onmessage = async function (e) {
 
   if (typeof workflowFn !== "function") {
     self.postMessage({ error: `Function ${functionName} is not found` });
-    self.close();
+    // self.close();
     return;
   }
 
@@ -22,5 +22,5 @@ self.onmessage = async function (e) {
   ctx.stop(result);
 
   self.postMessage({ result, run: ctx.getRun() });
-  self.close();
+  // self.close();
 };

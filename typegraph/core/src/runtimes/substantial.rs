@@ -76,7 +76,7 @@ pub fn substantial_operation(
     let mut inp = t::struct_();
     let (effect, mat_data, out_ty) = match data.operation {
         SubstantialOperationType::Start(workflow) => {
-            inp.prop("name", t::string().build()?);
+            // inp.prop("name", t::string().build()?);
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::Start {
@@ -86,7 +86,7 @@ pub fn substantial_operation(
             )
         }
         SubstantialOperationType::Stop(workflow) => {
-            inp.prop("name", t::string().build()?);
+            // inp.prop("name", t::string().build()?);
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::Stop {

@@ -11,16 +11,26 @@ import * as native from "native";
 import { nativeResult } from "../utils.ts";
 import { WorkerManager } from "./substantial/deno_worker_manager.ts";
 import { path } from "compress/deps.ts";
+import { Artifact, Materializer } from "@typegate/typegraph/types.ts";
+import { Typegate } from "@typegate/typegate/mod.ts";
 
 const logger = getLogger(import.meta);
 
 @registerRuntime("substantial")
 export class SubstantialRuntime extends Runtime {
   private logger: Logger;
+  private backend: native.Backend;
+  private workerManager: WorkerManager;
 
-  private constructor(typegraphName: string) {
+  private constructor(
+    typegraphName: string,
+    backend: native.Backend,
+    workerManager: WorkerManager,
+  ) {
     super(typegraphName);
     this.logger = getLogger(`substantial:'${typegraphName}'`);
+    this.backend = backend;
+    this.workerManager = workerManager;
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
@@ -28,14 +38,11 @@ export class SubstantialRuntime extends Runtime {
     logger.debug(`init params: ${JSON.stringify(params)}`);
     const {
       typegraph: tg,
-      typegraphName,
-      args: _,
+      args,
       materializers,
       secretManager,
       typegate,
     } = params;
-
-    const artifacts = tg.meta.artifacts;
 
     const secrets: Record<string, string> = {};
 
@@ -45,52 +52,21 @@ export class SubstantialRuntime extends Runtime {
       }
     }
 
-    // Allocate workers for the loaaded files
-    const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
-    for (const mat of materializers) {
-      if (!["start", "stop", "send"].includes(mat.name)) {
-        continue;
-      }
-
-      const matData = mat.data;
-      const entryPoint = artifacts[matData.file as string];
-      const deps = (matData.deps as string[]).map((dep) => artifacts[dep]);
-
-      const moduleMeta = {
-        typegraphName: typegraphName,
-        relativePath: entryPoint.path,
-        hash: entryPoint.hash,
-        sizeInBytes: entryPoint.size,
-      };
-
-      const depMetas = deps.map((dep) => {
-        return {
-          typegraphName: typegraphName,
-          relativePath: dep.path,
-          hash: dep.hash,
-          sizeInBytes: dep.size,
-        };
-      });
-
-      const entryModulePath = await typegate.artifactStore.getLocalPath(
-        moduleMeta,
-        depMetas,
-      );
-
-      const workerManager = WorkerManager.getInstance();
-      workerManager.createWorker(matData.name as string, entryModulePath);
-
-      logger.info(`Resolved runtime artifacts at ${basePath}`);
-    }
-
     const tgName = TypeGraph.formatName(tg);
-    const instance = new SubstantialRuntime(tgName);
+    const backend = (args as any)!.backend as native.Backend;
+    const workerManager = WorkerManager.getInstance();
+
+    const instance = new SubstantialRuntime(tgName, backend, workerManager);
+
+    // Allocate workers for the loaaded files
+    await instance.prepareWorkers(tg.meta.artifacts, materializers, typegate);
+
     return instance;
   }
 
   deinit(): Promise<void> {
     logger.info("deinitializing SubstantialRuntime");
-    WorkerManager.destroyAllWorkers();
+    this.workerManager.destroyAllWorkers();
     return Promise.resolve();
   }
 
@@ -109,17 +85,20 @@ export class SubstantialRuntime extends Runtime {
           const runId = data.name as string;
           const { run } = nativeResult(
             native.createOrGetRun({
-              backend: "Memory",
+              backend: this.backend,
               run_id: runId,
             }),
           );
 
-          const result = await WorkerManager.execute(data.name as string, run);
+          const result = await this.workerManager.execute(
+            data.name as string,
+            run,
+          );
           console.log("Workflow result", result);
 
           const persistedRes = nativeResult(
             native.persistRun({
-              backend: "Memory",
+              backend: this.backend,
               run,
             }),
           );
@@ -144,5 +123,53 @@ export class SubstantialRuntime extends Runtime {
         resolver,
       }),
     ];
+  }
+
+  async prepareWorkers(
+    artifacts: Record<string, Artifact>,
+    materializers: Materializer[],
+    typegate: Typegate,
+  ) {
+    const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
+
+    for (const mat of materializers) {
+      if (!["start", "stop", "send"].includes(mat.name)) {
+        continue;
+      }
+
+      const matData = mat.data;
+      const entryModulePath = await this.#getWorkflowEntryPointPath(
+        artifacts,
+        matData,
+        typegate,
+      );
+      this.workerManager.createWorker(matData.name as string, entryModulePath);
+      logger.info(`Resolved runtime artifacts at ${basePath}`);
+    }
+  }
+
+  async #getWorkflowEntryPointPath(
+    artifacts: Record<string, Artifact>,
+    matData: Record<string, unknown>,
+    typegate: Typegate,
+  ) {
+    const entryPoint = artifacts[matData.file as string];
+    const deps = (matData.deps as string[]).map((dep) => artifacts[dep]);
+    const moduleMeta = {
+      typegraphName: this.typegraphName,
+      relativePath: entryPoint.path,
+      hash: entryPoint.hash,
+      sizeInBytes: entryPoint.size,
+    };
+    const depMetas = deps.map((dep) => {
+      return {
+        typegraphName: this.typegraphName,
+        relativePath: dep.path,
+        hash: dep.hash,
+        sizeInBytes: dep.size,
+      };
+    });
+
+    return await typegate.artifactStore.getLocalPath(moduleMeta, depMetas);
   }
 }
