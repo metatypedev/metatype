@@ -273,7 +273,7 @@ jobs:
           ghjk x test-e2e -- --coverage=coverage
 
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
-          deno cache --config deno.jsonc \
+          deno cache --config src/typegate/deno.jsonc \
             src/typegate/src/main.ts \
             tests/utils/*.ts \
             tests/runtimes/wasm_wire/*.ts \

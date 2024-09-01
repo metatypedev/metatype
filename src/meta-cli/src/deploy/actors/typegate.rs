@@ -112,6 +112,7 @@ impl TypegateInit {
             .env("TG_SECRET", tg_secret)
             .env("TG_ADMIN_PASSWORD", &self.admin_password)
             .env("TMP_DIR", temp_dir.to_str().unwrap())
+            .env("DEBUG", "true")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
