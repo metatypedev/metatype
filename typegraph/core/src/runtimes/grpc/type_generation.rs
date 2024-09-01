@@ -3,8 +3,8 @@
 
 use anyhow::Result;
 use common::grpc::{
-    get_message_field_descriptor, get_method_descriptor_proto, get_relative_method_name,
-    proto_parser::get_file_descriptor, Fields,
+    get_file_descriptor, get_message_field_descriptor, get_method_descriptor_proto,
+    get_relative_method_name, Fields,
 };
 
 use crate::{

@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-pub mod proto_parser;
+mod proto_parser;
+
+pub use proto_parser::get_file_descriptor;
 
 use anyhow::{Context, Result};
 

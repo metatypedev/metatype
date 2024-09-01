@@ -1,11 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use std::{cell::RefCell, ops::Deref, rc::Rc, str::FromStr, sync::Arc};
 
 use common::grpc::{
-    get_method_descriptor_proto, get_relative_message_name, get_relative_method_name,
-    proto_parser::get_file_descriptor,
+    get_file_descriptor, get_method_descriptor_proto, get_relative_message_name,
+    get_relative_method_name,
 };
 
 use anyhow::{Context, Result};
