@@ -6,7 +6,7 @@ version.workspace = true
 [dependencies]
 colored = "2.1.0"
 envconfig = "0.10.0"
-sentry = { version = "0.32.0", features = ["anyhow"] }
+sentry = { version = "0.34.0", features = ["anyhow"] }
 env_logger.workspace = true
 log.workspace = true 
 typegate_engine.workspace = true

@@ -22,7 +22,7 @@ base64.workspace = true
 convert_case = "0.6.0"
 
 once_cell.workspace = true
-dashmap = "5.5.3"
+dashmap = "6.0.1"
 
 temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
@@ -32,7 +32,7 @@ request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.
 prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
-query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.19.0" }
 schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }

@@ -29,7 +29,7 @@ default = []
 typegate = ["dep:typegate_engine"]
 
 [dependencies]
-tabled = "0.15.0"
+tabled = "0.16.0"
 
 # internal
 typegate_engine = { workspace = true, optional = true }
@@ -47,9 +47,9 @@ lazy_static = "1.4.0"
 crossbeam-channel = "0.5.13"
 itertools.workspace = true
 enum_dispatch = "0.3.13"
-derive_more = "0.99.17"
+derive_more = "1.0.0"
 indoc.workspace = true
-cached = { version = "0.51.3", features = ["proc_macro", "async"] }
+cached = { version = "0.53.1", features = ["proc_macro", "async"] }
 
 # concurrency
 tokio = { workspace = true, features = ["full"] }
@@ -62,10 +62,10 @@ num_cpus = "1.16.0"
 shadow-rs.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 clap_complete.workspace = true
-clap-verbosity-flag = "2.2.0"
-ctrlc = "3.4.4"
+clap-verbosity-flag = "2.2.1"
+ctrlc = "3.4.5"
 dialoguer = "0.11.0"
-self_update = { version = "0.39.0", features = [
+self_update = { version = "0.41.0", features = [
     "archive-tar",
     "archive-zip",
     "compression-flate2",
@@ -84,11 +84,11 @@ base64.workspace = true
 strip-ansi-escapes = "0.2.0"
 
 # fs
-normpath = "1.2.0"
+normpath = "1.3.0"
 directories = "5.0.1"
 include_dir = "0.7.3"
 grep = "0.3.1"
-filetime = "0.2.23"
+filetime = "0.2.25"
 notify-debouncer-mini = { version = "0.4.1", default-features = false }
 ignore = "0.4.20"
 globset = "0.4.14"
@@ -120,7 +120,7 @@ rand = "0.8.5"
 
 [dev-dependencies]
 # testing
-assert_cmd = "2.0.14"
+assert_cmd = "2.0.16"
 
 # fs
 project-root = "0.2.2"
