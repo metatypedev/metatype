@@ -1067,7 +1067,7 @@
               "ty": "denoFile@v1",
               "key": "dev-gate2",
               "desc": "Launch the typegate in sync mode.",
-              "envKey": "bciqmcv2nnec5f6dcqafb3qqw3ddttqiuhoehsfjv6n4i42nhvnbh54q"
+              "envKey": "bciqk6b2h5s7wljd5gjygkc6wpoqvmt77xkgwfnnx7um2rhid5xb3tci"
             },
             "dev-gate1": {
               "ty": "denoFile@v1",
@@ -1568,7 +1568,7 @@
                 }
               ]
             },
-            "bciqmcv2nnec5f6dcqafb3qqw3ddttqiuhoehsfjv6n4i42nhvnbh54q": {
+            "bciqk6b2h5s7wljd5gjygkc6wpoqvmt77xkgwfnnx7um2rhid5xb3tci": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1638,12 +1638,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "SYNC_REDIS_URL",
-                  "val": "redis://localhost:6379/0"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "SYNC_REDIS_PASSWORD",
-                  "val": "password"
+                  "val": "redis://:password@localhost:6379/123"
                 },
                 {
                   "ty": "posix.envVar",

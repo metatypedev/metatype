@@ -3,6 +3,9 @@
 
 import { connect, type Redis, type RedisConnectOptions } from "redis";
 import type { QueryEngine } from "../engine/query_engine.ts";
+// FIXME: replace with Promise.withDeferred
+// (yohe): tried to repalce this but it broke in an inscrutable way
+import { Deferred, deferred } from "@std/async_old/deferred.ts";
 
 // keys: tokens, latest
 // args: n
@@ -101,7 +104,7 @@ export abstract class RateLimiter {
 export class RedisRateLimiter extends RateLimiter {
   localHit: TTLMap;
   local: TTLMap;
-  backgroundWork: Map<number, PromiseWithResolvers<void>>;
+  backgroundWork: Map<number, Deferred<void>>;
 
   private constructor(
     private redis: Redis,
@@ -202,7 +205,7 @@ export class RedisRateLimiter extends RateLimiter {
     const tokensKey = `${id}:tokens`;
     const lastKey = `${id}:last`;
 
-    const def = Promise.withResolvers<void>();
+    const def = deferred<void>();
     this.backgroundWork.set(backgroundId, def);
 
     const tx = await this.redis.eval(

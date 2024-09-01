@@ -98,8 +98,7 @@ export default {
     inherit: "dev-gate1",
     vars: {
       SYNC_ENABLED: "true",
-      SYNC_REDIS_URL: "redis://localhost:6379/0",
-      SYNC_REDIS_PASSWORD: "password",
+      SYNC_REDIS_URL: "redis://:password@localhost:6379/0",
       SYNC_S3_HOST: "http://localhost:9000",
       SYNC_S3_REGION: "local",
       SYNC_S3_ACCESS_KEY: "minio",

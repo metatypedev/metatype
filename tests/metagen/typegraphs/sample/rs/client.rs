@@ -2152,31 +2152,6 @@ mod node_metas {
             ),
         }
     }
-    pub fn Func24() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn Func26() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("id".into(), "String4".into()),
-                    ("slug".into(), "String1".into()),
-                    ("title".into(), "String1".into()),
-                ]
-                .into(),
-            ),
-            ..scalar()
-        }
-    }
-    pub fn Func27() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn Func28() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String13".into())].into()),
-            ..Post()
-        }
-    }
     pub fn User() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2196,6 +2171,31 @@ mod node_metas {
     }
     pub fn Func25() -> NodeMeta {
         NodeMeta { ..scalar() }
+    }
+    pub fn Func24() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn Func26() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("id".into(), "String4".into()),
+                    ("slug".into(), "String1".into()),
+                    ("title".into(), "String1".into()),
+                ]
+                .into(),
+            ),
+            ..scalar()
+        }
+    }
+    pub fn Func28() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "String13".into())].into()),
+            ..Post()
+        }
+    }
+    pub fn Func27() -> NodeMeta {
+        NodeMeta { ..Post() }
     }
 }
 use types::*;

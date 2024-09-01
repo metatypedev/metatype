@@ -34,7 +34,7 @@ async function writeTypegraph(version: number | null, target = "migration.py") {
 
 Meta.test(
   {
-    // FIXME:
+    // FIXME: MET-622
     ignore: true,
     name: "meta dev: choose to reset the database",
     gitRepo: {
@@ -258,7 +258,9 @@ Meta.test(
 
 const examplesDir = $.path(workspaceDir).join("examples");
 
-Meta.test("meta dev with typegate", async (t) => {
+Meta.test({
+  name: "meta dev with typegate",
+}, async (t) => {
   await $`bash build.sh`.cwd(examplesDir.join("typegraphs/metagen/rs"));
 
   const port = String(t.port + 1);
@@ -275,7 +277,7 @@ Meta.test("meta dev with typegate", async (t) => {
     stdout: "piped",
     stderr: "piped",
     env: {
-      MCLI_LOADER_CMD: "deno run -A --config deno.json",
+      MCLI_LOADER_CMD: "deno run -A --config deno.jsonc",
     },
   }).spawn();
   const stderr = new Lines(metadev.stderr);

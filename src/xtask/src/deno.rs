@@ -65,6 +65,8 @@ impl Test {
                     "deno",
                     "poetry",
                     "xtask",
+                    "env",
+                    "ls",
                 ]
                 .into_iter()
                 .map(str::to_owned)

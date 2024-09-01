@@ -1,7 +1,8 @@
 set -eux
 
 cd ../../
-cargo run -p meta-cli -- -C metagen/ gen metagen_rs
+META_CMD="cargo run -p meta-cli --"
+$META_CMD -C metagen/ gen metagen_rs
 cd -
 
 ADAPTOR="../../../../.metatype/wasi_snapshot_preview1.reactor.wasm"

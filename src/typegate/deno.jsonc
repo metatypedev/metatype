@@ -13,10 +13,11 @@
   },
   "imports": {
     "@std/crypto": "jsr:@std/crypto@^1.0.2",
-    "@std/flags": "jsr:@std/flags@^0.224.0",
     "@std/log": "jsr:@std/log@^0.224.5",
     "@std/semver": "jsr:@std/semver@^1.0.1",
     "@std/url": "jsr:@std/url@^0.225.0",
+    // FIXME: repalec with Promise.withDeferred
+    "@std/async_old/": "https://deno.land/std@0.208.0/async/",
     "chance": "npm:chance@1.1.11",
     "compress/": "https://deno.land/x/compress@v0.4.5/",
     "dataloader": "npm:dataloader@2.2.2",

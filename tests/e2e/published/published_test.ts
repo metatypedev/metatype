@@ -45,6 +45,13 @@ const syncConfig = transformSyncConfig({
 });
 console.log(syncConfig);
 
+// TODO remove after the next release
+// The build.rs script now uses a META_CMD env var allowing us
+// to use meta-old
+const disabled = [
+  "metagen-rs.ts",
+];
+
 async function checkMetaBin(path: typeof tempDir, version: string) {
   try {
     if (!(await path.exists())) {
@@ -141,7 +148,7 @@ Meta.test(
       await $.co([
         $.removeIfExists(typegateTempDir),
         $.removeIfExists(repoDir),
-        $.removeIfExists(examplesDir),
+        // $.removeIfExists(examplesDir),
       ]);
     });
 
@@ -181,6 +188,9 @@ Meta.test(
         const typegraphsDir = examplesDir.join("typegraphs");
         for await (const entry of typegraphsDir.readDir()) {
           const path = typegraphsDir.relative(entry.path);
+          if (disabled.includes(path.toString())) {
+            await entry.path.remove().catch((_e) => {});
+          }
         }
 
         // NOTE: we clean out the deno.json used by the examples
@@ -419,7 +429,7 @@ typegraphs:
       ]);
 
       const command = `source .venv/bin/activate &&` +
-        ` meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.py`;
+        ` ${metaBinDir}/meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.py`;
       await $`bash -c ${command}`
         .cwd(pypaDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)

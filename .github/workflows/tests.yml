@@ -252,6 +252,7 @@ jobs:
 
           ghjk x install-sys | bash
           ghjk x install-py
+          ghjk x install-wasi-adapter
           source .venv/bin/activate
 
           # this doesn't publish it but only builds it

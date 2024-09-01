@@ -42,6 +42,7 @@
     "@david/dax": "jsr:@david/dax@0.41.0",
     "@std/archive": "jsr:@std/archive@^0.225.0",
     "@std/assert": "jsr:@std/assert@^1.0.2",
+    "@std/cli": "jsr:@std/cli@^1.0.4",
     "@std/collections": "jsr:@std/collections@^1.0.5",
     "@std/encoding": "jsr:@std/encoding@^1.0.2",
     "@std/fs": "jsr:@std/fs@^1.0.1",
