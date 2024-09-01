@@ -267,7 +267,7 @@ export type WitWireHandleResponse =
   };
 
 export type GrpcRegisterInput = {
-  protoFile: string;
+  protoFileContent: string;
   endpoint: string;
   client_id: string;
 };

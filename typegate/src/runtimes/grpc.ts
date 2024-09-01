@@ -13,7 +13,7 @@ import { registerRuntime } from "@typegate/runtimes/mod.ts";
 const logger = getLogger(import.meta);
 
 interface GrpcRuntimeData {
-  protoFile: string;
+  protoFileContent: string;
   endpoint: string;
 }
 
@@ -36,7 +36,7 @@ export class GrpcRuntime extends Runtime {
 
     nativeVoid(
       await native.grpc_register({
-        protoFile: args.protoFile,
+        protoFileContent: args.protoFileContent,
         endpoint: args.endpoint,
         client_id: instance.id,
       }),

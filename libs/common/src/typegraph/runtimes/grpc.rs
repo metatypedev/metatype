@@ -5,6 +5,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GrpcRuntimeData {
-    pub proto_file: String,
+    pub proto_file_content: String,
     pub endpoint: String,
 }

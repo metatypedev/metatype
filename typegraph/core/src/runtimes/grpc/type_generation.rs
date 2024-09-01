@@ -17,8 +17,8 @@ pub struct Type {
     pub output: TypeId,
 }
 
-pub fn generate_type(proto_file: &str, method_name: &str) -> Result<Type> {
-    let file_descriptor = get_file_descriptor(proto_file)?;
+pub fn generate_type(proto_file_content: &str, method_name: &str) -> Result<Type> {
+    let file_descriptor = get_file_descriptor(proto_file_content)?;
 
     let method_descriptor = get_method_descriptor_proto(file_descriptor.clone(), method_name)?;
 

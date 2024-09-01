@@ -57,7 +57,7 @@ pub fn call_grpc_method(runtime: RuntimeId, data: GrpcData) -> Result<FuncParams
     let mat_id =
         Store::register_materializer(super::Materializer::grpc(runtime, mat, WitEffect::Read));
 
-    let t = type_generation::generate_type(&grpc_runtime_data.proto_file, &data.method)
+    let t = type_generation::generate_type(&grpc_runtime_data.proto_file_content, &data.method)
         .map_err(|err| err.to_string())?;
 
     Ok(FuncParams {

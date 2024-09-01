@@ -8,16 +8,16 @@ use common::grpc::{
     proto_parser::get_file_descriptor,
 };
 
+use anyhow::{Context, Result};
 use bytes::{Buf, BufMut};
 use dashmap::DashMap;
-use deno_core::OpState;
-
-use anyhow::{Context, Result};
 use protobuf::{descriptor::MethodDescriptorProto, reflect::FileDescriptor, MessageDyn};
-use serde::Deserialize;
 
+use deno_core::OpState;
+use serde::Deserialize;
 #[rustfmt::skip]
 use deno_core as deno_core;
+
 use tonic::codegen::http::uri::PathAndQuery;
 use tonic::{
     client::Grpc,
@@ -128,7 +128,7 @@ fn buf2response(
 
 struct GrpcClient {
     client: Grpc<Channel>,
-    proto_file: String,
+    proto_file_content: String,
 }
 
 #[derive(Default)]
@@ -139,7 +139,7 @@ pub struct Ctx {
 #[derive(Deserialize)]
 #[serde(crate = "serde")]
 pub struct GrpcRegisterInput {
-    proto_file: String,
+    proto_file_content: String,
     endpoint: String,
     client_id: String,
 }
@@ -156,7 +156,7 @@ pub async fn op_grpc_register(
 
     let grpc_client = GrpcClient {
         client,
-        proto_file: input.proto_file,
+        proto_file_content: input.proto_file_content,
     };
     ctx.grpc_clients
         .insert(input.client_id.clone(), grpc_client);
@@ -197,7 +197,7 @@ pub async fn op_call_grpc_method(
         .get_mut(&input.client_id)
         .with_context(|| format!("Could not find gRPC client '{}'", &input.client_id))?;
 
-    let file_descriptor = get_file_descriptor(&grpc_client.proto_file)?;
+    let file_descriptor = get_file_descriptor(&grpc_client.proto_file_content)?;
 
     let method_name = get_relative_method_name(&input.method)?;
 

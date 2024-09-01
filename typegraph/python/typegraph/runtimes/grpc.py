@@ -13,7 +13,10 @@ from typegraph.wit import runtimes, store
 
 class GrpcRuntime(Runtime):
     def __init__(self, proto_file: str, endpoint: str):
-        data = GrpcRuntimeData(proto_file, endpoint)
+        file = open(proto_file, "r")
+        proto_file_content = file.read()
+        file.close()
+        data = GrpcRuntimeData(proto_file_content, endpoint)
         runtime_id = runtimes.register_grpc_runtime(store, data)
         if isinstance(runtime_id, Err):
             raise Exception(runtime_id.value)
