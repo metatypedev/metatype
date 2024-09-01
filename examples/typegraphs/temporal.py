@@ -11,9 +11,8 @@ import os
 )
 def temporal(g: Graph):
     public = Policy.public()
-    temporal = TemporalRuntime(
-        "<name>", "<host_secret>", namespace_secret="<ns_secret>"
-    )
+    # set `HOST` and `NAMESPACE` under secrets inside metatype.yaml
+    temporal = TemporalRuntime("<name>", "HOST", namespace_secret="NAMESPACE")
 
     workflow_id = os.getenv("ID_FROM_ENV")
     arg = t.struct({"some_field": t.string()})
