@@ -86,7 +86,14 @@ export default {
             ["command", "reactor", "proxy"].map((kind) => {
               const url = `https://github.com/bytecodealliance/wasmtime` +
                 `/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.${kind}.wasm`;
-              return $.request(url)
+              const token = Deno.env.get("GITHUB_TOKEN") ||
+                Deno.env.get("GH_TOKEN");
+              const headers = token
+                ? {
+                  "Authorization": `Bearer ${token}`,
+                }
+                : {};
+              return $.request(url).header(headers)
                 .showProgress()
                 .pipeToPath(
                   $.workingDir.join(".metatype").join(std_url.basename(url)),
