@@ -81,8 +81,9 @@ export default {
       await $.withRetries({
         count: 10,
         delay: $.exponentialBackoff(500),
-        action: async () =>
-          await $.co(
+        action: async () => {
+          const dir = await $.workingDir.join(".metatype").ensureDir();
+          return await $.co(
             ["command", "reactor", "proxy"].map((kind) => {
               const url = `https://github.com/bytecodealliance/wasmtime` +
                 `/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.${kind}.wasm`;
@@ -96,13 +97,14 @@ export default {
               return $.request(url).header(headers)
                 .showProgress()
                 .pipeToPath(
-                  $.workingDir.join(".metatype").join(std_url.basename(url)),
+                  dir.join(std_url.basename(url)),
                   {
                     create: true,
                   },
                 );
             }),
-          ),
+          );
+        },
       });
     },
   },
