@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { z } from "zod";
+import { RefinementCtx, z } from "zod";
 import { decodeBase64 } from "std/encoding/base64.ts";
 import { RedisConnectOptions } from "redis";
 import { S3ClientConfig } from "aws-sdk/client-s3";
@@ -10,6 +10,15 @@ const zBooleanString = z.preprocess(
   (a: unknown) => z.coerce.string().parse(a) === "true",
   z.boolean(),
 );
+
+const addMissingEnvVarIssue = (envVar: string, ctx: RefinementCtx) => {
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    message: `Error: Env var ${envVar} is not configured.`,
+  });
+
+  return z.NEVER;
+};
 
 export const globalConfigSchema = z.object({
   debug: zBooleanString,
@@ -37,13 +46,7 @@ export const typegateConfigBaseSchema = z.object({
     .optional()
     .transform((s: string | undefined, ctx) => {
       if (s === undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            "Error: Env var TG_SECRET is not configured. Exiting from the application.",
-        });
-
-        return z.NEVER;
+        return addMissingEnvVarIssue("TG_SECRET", ctx);
       }
 
       const bytes = decodeBase64(s);
@@ -64,13 +67,7 @@ export const typegateConfigBaseSchema = z.object({
     .optional()
     .transform((s: string | undefined, ctx) => {
       if (s === undefined) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            "Error: Env var TG_ADMIN_PASSWORD is not configured. Exiting from the application.",
-        });
-
-        return z.NEVER;
+        return addMissingEnvVarIssue("TG_ADMIN_PASSWORD", ctx);
       }
 
       return s;
@@ -88,12 +85,48 @@ export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;
 // These config entries are only accessible on a Typegate instance.
 // They are not read from a global variable to enable test isolation and configurability.
 export const syncConfigSchema = z.object({
-  redis_url: z.string().transform((s) => new URL(s)),
-  s3_host: z.string().transform((s) => new URL(s)),
-  s3_region: z.string(),
-  s3_bucket: z.string(),
-  s3_access_key: z.string(),
-  s3_secret_key: z.string(),
+  redis_url: z.string().transform((s, ctx) => {
+    if (s === undefined) {
+      return addMissingEnvVarIssue("TG_ADMIN_PASSWORD", ctx);
+    }
+
+    return new URL(s);
+  }),
+  s3_host: z.string().transform((s, ctx) => {
+    if (s === undefined) {
+      return addMissingEnvVarIssue("S3_HOST", ctx);
+    }
+
+    return new URL(s);
+  }),
+  s3_region: z.string().transform((s: string | undefined, ctx) => {
+    if (s === undefined) {
+      return addMissingEnvVarIssue("S3_REGION", ctx);
+    }
+
+    return s;
+  }),
+  s3_bucket: z.string().transform((s: string | undefined, ctx) => {
+    if (s === undefined) {
+      return addMissingEnvVarIssue("S3_BUCKET", ctx);
+    }
+
+    return s;
+  }),
+  s3_access_key: z.string().transform((s: string | undefined, ctx) => {
+    if (s === undefined) {
+      return addMissingEnvVarIssue("S3_ACCESS_KEY", ctx);
+    }
+
+    return s;
+  }),
+  s3_secret_key: z.string().transform((s: string | undefined, ctx) => {
+    if (s === undefined) {
+      return addMissingEnvVarIssue("S3_SECRET_KEY", ctx);
+    }
+
+    return s;
+  }),
   s3_path_style: zBooleanString.default(false),
 });
 export type SyncConfig = z.infer<typeof syncConfigSchema>;
