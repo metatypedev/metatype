@@ -1,4 +1,5 @@
 [toolchain]
-channel = "1.79.0"
+# this is currently tracking the version used by denoland/deno
+channel = "1.80.1"
 components = ["rustfmt", "clippy"]
 targets = ["wasm32-unknown-unknown", "wasm32-wasi"]

@@ -1,0 +1,65 @@
+import SDKTabs from "@site/src/components/SDKTabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme/CodeBlock";
+
+# Programmatic deployment
+
+The SDKs are complete enough to enable deploying typegraphs without using [meta cli](/docs/reference/meta-cli), the later being built as a convenience tool for everyday use.
+
+Common use cases:
+
+- Testing
+- Manage everything programmatically
+
+## Deploy typegraphs
+
+This can be done using the `tgDeploy`/`tg_deploy` function.\
+You are required to provide the configurations and also handle migrations by yourself (if any).
+
+<SDKTabs>
+    <TabItem value="python">
+
+    <CodeBlock language="python">
+
+{require("!!code-loader!../../../../../tests/docs/how-tos/prog_deploy/prog_deploy.py").content}
+
+</CodeBlock>
+
+    </TabItem>
+    <TabItem value="typescript">
+
+    <CodeBlock language="typescript">
+
+{require("!!code-loader!../../../../../tests/docs/how-tos/prog_deploy/prog_deploy.ts").content}
+
+</CodeBlock>
+
+    </TabItem>
+
+</SDKTabs>
+
+## Undeploy typegraphs
+
+Similarly to the above, you can undeploy typegraphs using the `tgRemove`/`tg_remove` function.
+
+<SDKTabs>
+    <TabItem value="python">
+
+    <CodeBlock language="python">
+
+{require("!!code-loader!../../../../../tests/docs/how-tos/prog_deploy/prog_remove.py").content}
+
+</CodeBlock>
+
+    </TabItem>
+    <TabItem value="typescript">
+
+      <CodeBlock language="typescript">
+
+{require("!!code-loader!../../../../../tests/docs/how-tos/prog_deploy/prog_remove.ts").content}
+
+</CodeBlock>
+
+    </TabItem>
+
+</SDKTabs>

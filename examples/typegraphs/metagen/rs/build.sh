@@ -1,10 +1,11 @@
 set -eux
 
 cd ../../
-cargo run -p meta-cli -- -C metagen/ gen metagen_rs
+META_CMD="cargo run -p meta-cli --"
+$META_CMD -C metagen/ gen metagen_rs
 cd -
 
-ADAPTOR="../../../../tmp/wasi_snapshot_preview1.reactor.wasm"
+ADAPTOR="../../../../.metatype/wasi_snapshot_preview1.reactor.wasm"
 [ -f "$ADAPTOR" ] || ghjk x install-wasi-adapter
 
 TARGET=wasm32-wasi

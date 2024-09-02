@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "@metatype/ghjk/": "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/"
+  }
+}

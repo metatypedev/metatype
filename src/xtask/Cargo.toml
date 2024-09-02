@@ -1,0 +1,19 @@
+[package]
+name = "xtask"
+version = "0.4.9-rc1"
+edition = "2021"
+
+# this allows us to exclude the rust files
+# from the dockerfile while keeping the Cargo.toml
+# for cargo chef. Useful to improve cache hit in docker
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap = { workspace = true, features = ["derive"] }
+mt_deno.workspace = true
+typegate_engine.workspace = true
+log.workspace = true
+env_logger.workspace = true

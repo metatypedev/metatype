@@ -17,38 +17,40 @@ crash.log
 target
 **/*.rs.bk
 
-meta-lsp/ts-language-server/out/
-meta-lsp/vscode-metatype-support/out/
-meta-lsp/*.vsix
+src/meta-lsp/ts-language-server/out/
+src/meta-lsp/vscode-metatype-support/out/
+src/meta-lsp/*.vsix
 
-typegate/workers
-typegate/codegen
-typegate/tests/prisma-migrations
-typegate/tests/e2e/cli/prisma-migrations
-typegate/tests/importers/copy/
-typegate/tests/**/*.wasm
+src/typegate/workers
+src/typegate/codegen
+
+tests/prisma-migrations
+tests/e2e/cli/prisma-migrations
+tests/importers/copy/
+tests/**/*.wasm
+
 .env
-typegate/native/bindings.json
+src/typegate/native/bindings.json
 bindings
 
 node_modules
 build
 .docusaurus
 .cache-loader
-website/vale/Google
+docs/metatype.dev/vale/Google
 recipe.json
 *-debug.whiz.yaml
 
 tmp/
 coverage*
 
-typegraph/deno/sdk/src/gen
-typegraph/deno/sdk/README.md
-typegraph/node
-typegraph/python/typegraph/gen
+src/typegraph/deno/src/gen
+src/typegraph/deno/README.md
+src/typegraph/node
+src/typegraph/python/typegraph/gen
 
 *.egg-info/
 
 examples/typegraphs/migrations
 examples/typegraphs/**/*.wasm
-libs/pyrt_wit_wire/wit_wire
+src/pyrt_wit_wire/wit_wire

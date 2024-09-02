@@ -1,0 +1,131 @@
+[package]
+name = "meta-cli"
+version.workspace = true
+edition.workspace = true
+
+description = "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are."
+authors = ["Metatype Contributors <support@metatype.dev>"]
+license-file = "../dev/LICENSE-MPL-2.0.md"
+homepage = "https://metatype.dev"
+documentation = "https://metatype.dev"
+repository = "https://github.com/metatypedev/metatype"
+include = ["src"]
+keywords = ["api", "composition", "typesystem", "graphql", "ecosystem"]
+categories = [
+    "accessibility",
+    "api-bindings",
+    "data-structures",
+    "development-tools",
+    "wasm",
+]
+build = "build.rs"
+
+[[bin]]
+name = "meta"
+path = "src/main.rs"
+
+[features]
+default = []
+typegate = ["dep:typegate_engine"]
+
+[dependencies]
+
+# internal
+typegate_engine = { workspace = true, optional = true }
+common.workspace = true
+metagen.workspace = true
+
+# data structures
+chrono = { workspace = true, features = ["serde"] }
+semver.workspace = true
+indexmap.workspace = true
+dashmap.workspace = true
+
+# patterns
+once_cell.workspace = true
+lazy_static.workspace = true
+crossbeam-channel.workspace = true
+itertools.workspace = true
+enum_dispatch.workspace = true
+derive_more.workspace = true
+indoc.workspace = true
+cached = { workspace = true, features = ["proc_macro", "async"] }
+
+# async
+tokio = { workspace = true, features = ["full"] }
+futures.workspace = true
+futures-concurrency.workspace = true
+async-trait.workspace = true
+actix.workspace = true
+
+# cli
+shadow-rs.workspace = true
+clap = { workspace = true, features = ["derive", "env"] }
+clap_complete.workspace = true
+clap-verbosity-flag.workspace = true
+dialoguer.workspace = true
+self_update = { workspace = true, features = [
+    "archive-tar",
+    "archive-zip",
+    "compression-flate2",
+    "compression-zip-deflate",
+    "compression-zip-bzip2",
+] }
+tabled.workspace = true
+lade-sdk.workspace = true
+git2 = { workspace = true, features = [
+    "vendored-libgit2",
+], default-features = false }
+
+# codecs
+serde.workspace = true
+serde_json = { workspace = true, features = ["preserve_order"] }
+flate2.workspace = true
+tar.workspace = true
+serde_yaml.workspace = true
+base64.workspace = true
+strip-ansi-escapes.workspace = true
+
+# fs
+normpath.workspace = true
+directories.workspace = true
+include_dir.workspace = true
+grep.workspace = true
+filetime.workspace = true
+notify-debouncer-mini = { workspace = true, default-features = false }
+ignore.workspace = true
+globset.workspace = true
+pathdiff.workspace = true
+textwrap.workspace = true
+tempfile.workspace = true
+
+# http
+reqwest = { workspace = true, features = ["json"] }
+
+# logging
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tracing-error.workspace = true
+tracing-unwrap.workspace = true
+# tracing-appender.workspace = true
+color-eyre.workspace = true
+
+# prisma
+prisma-models.workspace = true
+
+# os
+num_cpus.workspace = true
+ctrlc.workspace = true
+rand.workspace = true
+process-wrap = { workspace = true, features = ["tokio1"] }
+nix = { workspace = true, features = ["signal"] }
+
+[dev-dependencies]
+# testing
+assert_cmd.workspace = true
+
+# fs
+project-root.workspace = true
+
+[build-dependencies]
+shadow-rs.workspace = true

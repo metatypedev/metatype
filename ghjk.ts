@@ -1,27 +1,13 @@
 // @ts-nocheck: Deno file
 
-import { METATYPE_VERSION, PUBLISHED_VERSION } from "./dev/consts.ts";
-import { file, ports, sedLock, semver, stdDeps } from "./dev/deps.ts";
-import installs from "./dev/installs.ts";
-import tasksBuild from "./dev/tasks-build.ts";
-import tasksDev from "./dev/tasks-dev.ts";
-import tasksFetch from "./dev/tasks-fetch.ts";
-import tasksInstall from "./dev/tasks-install.ts";
-import tasksLint from "./dev/tasks-lint.ts";
-import tasksLock from "./dev/tasks-lock.ts";
-import tasksTest from "./dev/tasks-test.ts";
+import { METATYPE_VERSION, PUBLISHED_VERSION } from "./tools/consts.ts";
+import { file, ports, sedLock, semver, stdDeps } from "./tools/deps.ts";
+import installs from "./tools/installs.ts";
+import tasks from "./tools/tasks/mod.ts";
 
 const ghjk = file({
   defaultEnv: Deno.env.get("CI") ? "ci" : Deno.env.get("OCI") ? "oci" : "dev",
-  tasks: {
-    ...tasksBuild,
-    ...tasksDev,
-    ...tasksFetch,
-    ...tasksInstall,
-    ...tasksLint,
-    ...tasksLock,
-    ...tasksTest,
-  },
+  tasks,
 });
 export const sophon = ghjk.sophon;
 const { env, task } = ghjk;
@@ -29,9 +15,11 @@ const { env, task } = ghjk;
 env("main")
   .install(installs.deno)
   .vars({
-    RUST_LOG: "info,swc_ecma_codegen=off,tracing::span=off",
+    RUST_LOG: "info,deno=warn,swc_ecma_codegen=off,tracing::span=off",
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
+    CROSS_CONFIG: "tools/Cross.toml",
+    GIT_CLIFF_CONFIG: "tools/cliff.toml",
   })
   .allowedBuildDeps(
     ...stdDeps(),
@@ -43,17 +31,16 @@ env("main")
 env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v24.1" }),
-  // TODO: add default param for cmake port
-  ports.cmake({})[0],
+  ports.cmake()[0],
 );
 
 if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
-  env("dev").install(
-    ports.mold({
-      version: "v2.4.0",
-      replaceLd: true,
-    }),
-  );
+  const mold = ports.mold({
+    version: "v2.4.0",
+    replaceLd: true,
+  });
+  env("dev").install(mold);
+  env("oci").install(mold);
 }
 
 env("_ecma").install(
@@ -70,7 +57,7 @@ env("_python").install(
   })[0],
   ports.pipi({
     packageName: "poetry",
-    version: "1.7.0",
+    version: "1.8.3",
   })[0],
 );
 

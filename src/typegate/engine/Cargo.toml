@@ -1,0 +1,68 @@
+[package]
+name = "typegate_engine"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+# patterns
+anyhow.workspace = true
+thiserror.workspace = true
+tap.workspace = true
+
+# async
+futures.workspace = true
+tokio = { workspace = true, features = ["full"] }
+
+# logging
+log.workspace = true
+
+# encoding
+serde.workspace = true
+regex.workspace = true
+zstd.workspace = true
+base64.workspace = true
+convert_case.workspace = true
+
+# data structures
+once_cell.workspace = true
+dashmap.workspace = true
+connection-string.workspace = true
+
+# temporal
+temporal-client.workspace = true
+temporal-sdk-core-protos.workspace = true
+
+# prisma
+query-core.workspace = true
+query-connector.workspace = true
+request-handlers.workspace = true
+prisma-models.workspace = true
+datamodel-renderer.workspace = true
+user-facing-errors.workspace = true
+query-engine-metrics.workspace = true
+schema-core.workspace = true
+psl.workspace = true
+schema-connector.workspace = true
+
+# os
+tempfile.workspace = true
+
+# internal
+mt_deno.workspace = true
+common.workspace = true
+
+# runtimes
+deno_core.workspace = true
+wasmtime = { workspace = true,  features = ["component-model"] }
+wasmtime-wasi.workspace = true
+
+# build
+shadow-rs.workspace = true
+
+[dev-dependencies]
+env_logger.workspace = true
+
+[build-dependencies]
+shadow-rs.workspace = true
+wasmtime = { workspace = true,  features = ["component-model"] }
+zstd.workspace = true

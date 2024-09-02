@@ -30,7 +30,7 @@ jobs:
       - uses: docker/build-push-action@v6
         id: dev
         with:
-          file: dev/Dockerfile
+          file: tools/Dockerfile
           platforms: ${{ matrix.platform }}
           target: dev
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:base
@@ -44,7 +44,7 @@ jobs:
       - uses: docker/build-push-action@v6
         id: prd
         with:
-          file: dev/Dockerfile
+          file: tools/Dockerfile
           platforms: ${{ matrix.platform }}
           target: prd
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:nightly
