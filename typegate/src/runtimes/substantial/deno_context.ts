@@ -1,9 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-export class Context<R extends { operations: Array<unknown> }> {
+import { Run } from "./types.ts";
+
+export class Context {
   private id: number = 0;
-  constructor(private run: R) {}
+  constructor(private run: Run) {}
 
   #nextId() {
     this.id += 1;
@@ -45,6 +47,15 @@ export class Context<R extends { operations: Array<unknown> }> {
     this.#appendOp({
       Stop: {
         result,
+      },
+    });
+  }
+
+  event(event_name: string, payload: unknown) {
+    this.#appendOp({
+      Send: {
+        event_name,
+        payload,
       },
     });
   }

@@ -13,6 +13,7 @@ import { WorkerManager } from "./substantial/deno_worker_manager.ts";
 import { path } from "compress/deps.ts";
 import { Artifact, Materializer } from "@typegate/typegraph/types.ts";
 import { Typegate } from "@typegate/typegate/mod.ts";
+import { WorkerData } from "@typegate/runtimes/substantial/types.ts";
 
 const logger = getLogger(import.meta);
 
@@ -79,10 +80,10 @@ export class SubstantialRuntime extends Runtime {
     const mat = stage.props.materializer;
     const resolver: Resolver = (() => {
       const data = mat?.data ?? {};
+      const runId = data.name as string;
 
       if (name === "start") {
-        return async () => {
-          const runId = data.name as string;
+        return () => {
           const { run } = nativeResult(
             native.createOrGetRun({
               backend: this.backend,
@@ -90,28 +91,21 @@ export class SubstantialRuntime extends Runtime {
             }),
           );
 
-          const result = await this.workerManager.execute(
-            data.name as string,
-            run,
-          );
-          console.log("Workflow result", result);
+          const startOutput = this.workerManager.triggerStart(runId, run);
+          logger.info(`Running workflow: ${startOutput}`);
 
-          const persistedRes = nativeResult(
-            native.persistRun({
-              backend: this.backend,
-              run,
-            }),
-          );
-          return persistedRes;
+          return startOutput;
         };
       }
 
       if (name === "stop") {
-        throw new Error(JSON.stringify(data));
+        this.workerManager.triggerStop(runId);
+        return runId;
       }
 
       if (name === "event") {
-        throw new Error(JSON.stringify(data));
+        this.workerManager.trigger("SEND", runId, data);
+        return runId;
       }
 
       return () => null;
@@ -143,7 +137,55 @@ export class SubstantialRuntime extends Runtime {
         matData,
         typegate,
       );
+
+      // Note: for now, this is just the function name
+      const runId = matData.name as string;
       this.workerManager.createWorker(matData.name as string, entryModulePath);
+
+      this.workerManager.listen(matData.name as string, (result) => {
+        if (result.error) {
+          // TODO: better way to notify back through gql
+          logger.error(result.payload);
+          return;
+        }
+
+        const backend = this.backend;
+        const payload = result.payload as WorkerData;
+        switch (payload.type) {
+          case "START": {
+            // gracefull completion
+            const result = nativeResult(
+              native.persistRun({
+                backend,
+                run: payload.data.run,
+              }),
+            );
+            // TODO: better way to notify back through gql
+            // Through start maybe? or mutation { resultOf(name: "example") }
+            logger.info(
+              `completed execution ${runId}: ${result} :: ${
+                JSON.stringify(
+                  payload,
+                )
+              }`,
+            );
+            break;
+          }
+          case "SEND": {
+            logger.info(`event sent ${runId}: ${JSON.stringify(payload)}`);
+            break;
+          }
+          case "STOP": {
+            logger.info(
+              `forcefully stopped ${runId}: ${JSON.stringify(payload)}`,
+            );
+            break;
+          }
+          default:
+            logger.error(payload);
+        }
+      });
+
       logger.info(`Resolved runtime artifacts at ${basePath}`);
     }
   }

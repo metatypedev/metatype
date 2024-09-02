@@ -2,13 +2,22 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { getLogger } from "../../log.ts";
+import {
+  Err,
+  Ok,
+  Run,
+  WorkerData,
+  WorkerEvent,
+  WorkerEventHandler,
+} from "./types.ts";
 
 const logger = getLogger();
 
+export type WorkerRecord = { worker: Worker; modulePath: string };
+
 export class WorkerManager {
   private static instance: WorkerManager;
-  private records: Map<string, { worker: Worker; modulePath: string }> =
-    new Map();
+  private records: Map<string, WorkerRecord> = new Map();
 
   private constructor() {}
 
@@ -51,35 +60,46 @@ export class WorkerManager {
     logger.warn(`Destroyed workers: ${workerNames.join(", ")}`);
   }
 
-  execute(
-    name: string,
-    run: unknown,
-  ): Promise<{ result: unknown; run: unknown }> {
+  #getRecord(name: string): WorkerRecord {
     const record = this.records.get(name);
     if (!record) {
-      throw new Error(`Cannot execute Worker with name ${name} does not exist`);
+      throw new Error(`Worker with name ${name} does not exist`);
     }
+    return record;
+  }
 
-    const { worker, modulePath } = record;
+  listen(name: string, handlerFn: WorkerEventHandler) {
+    const { worker } = this.#getRecord(name);
 
-    return new Promise((resolve, reject) => {
-      // listeners
-      worker.onmessage = (e) => {
-        if (e.data.error) {
-          reject(new Error(e.data.error));
-        } else {
-          resolve(e.data as { result: unknown; run: unknown });
-        }
-      };
+    worker.onmessage = (e) => {
+      if (e.data.error) {
+        handlerFn(Err(e.data.error));
+      } else {
+        handlerFn(Ok(e.data));
+      }
+    };
 
-      worker.onerror = (err) => reject(err);
+    worker.onerror = (e) => handlerFn(Err(e));
+  }
 
-      // trigger execution
-      worker.postMessage({
-        modulePath,
-        functionName: name,
-        run,
-      });
+  trigger(type: WorkerEvent, name: string, data: unknown) {
+    const { worker } = this.#getRecord(name);
+    worker.postMessage({
+      type,
+      data,
+    } as WorkerData);
+  }
+
+  triggerStart(name: string, storedRun: Run) {
+    const { modulePath } = this.#getRecord(name);
+    this.trigger("START", name, {
+      modulePath,
+      functionName: name,
+      run: storedRun,
     });
+  }
+
+  triggerStop(name: string) {
+    this.trigger("STOP", name, {});
   }
 }
