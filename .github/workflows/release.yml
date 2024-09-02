@@ -208,7 +208,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
-          file: "typegraph/python/dist/*"
+          file: "src/typegraph/python/dist/*"
           file_glob: true
           overwrite: ${{ inputs.ovewriteArtifacts }}
 
@@ -323,7 +323,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
-          file: "meta-lsp/*.vsix"
+          file: "src/meta-lsp/*.vsix"
           file_glob: true
           overwrite: ${{ inputs.ovewriteArtifacts }}
 
