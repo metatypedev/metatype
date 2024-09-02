@@ -42,9 +42,9 @@ RUN curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh 
 
 WORKDIR /app
 
-COPY tools/*.ts tools/
+COPY tools/ tools/
 COPY ghjk.ts .
-# mold breaks builds for aarch64 linux
+# we don't use the oci env since mold breaks builds for aarch64 linux
 ENV GHJK_ENV=_rust
 RUN ghjk envs cook
 ENV BASH_ENV=$GHJK_SHARE_DIR/env.sh
