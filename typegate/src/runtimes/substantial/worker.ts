@@ -23,8 +23,10 @@ self.onmessage = async function (event) {
       runCtx = new Context(run);
 
       workflowFn(runCtx)
-        .then((result: unknown) => {
-          self.postMessage(Ok({ type, result, run: runCtx?.getRun() }));
+        .then((wfResult: unknown) => {
+          self.postMessage(
+            Ok({ type, result: wfResult, run: runCtx?.getRun() }),
+          );
         })
         .catch((wfException: unknown) => {
           self.postMessage(
@@ -51,6 +53,6 @@ self.onmessage = async function (event) {
       break;
     }
     default:
-      self.postMessage({ type, result: `Unknown command ${type}` });
+      self.postMessage(Err({ type, result: `Unknown command ${type}` }));
   }
 };

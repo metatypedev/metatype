@@ -3,7 +3,6 @@
 
 export type { Run } from "native";
 
-// disable es-lint
 export type AnyString = string & Record<string | number | symbol, never>;
 
 export type WorkerEvent = "START" | "STOP" | "SEND" | AnyString;
