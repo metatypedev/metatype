@@ -1,6 +1,5 @@
 {
   "imports": {
-    "//": "general section",
     "@david/dax": "jsr:@david/dax@0.41.0",
     "@std/archive": "jsr:@std/archive@^0.225.0",
     "@std/assert": "jsr:@std/assert@^1.0.2",
@@ -22,12 +21,10 @@
     "native": "./src/typegate/engine/bindings.ts",
     "redis": "https://deno.land/x/redis@v0.32.1/mod.ts",
     "zod": "https://deno.land/x/zod@v3.22.2/mod.ts",
-    "//2": "typegate section",
     "@std/crypto": "jsr:@std/crypto@^1.0.2",
     "@std/log": "jsr:@std/log@^0.224.5",
     "@std/semver": "jsr:@std/semver@^1.0.1",
     "@std/url": "jsr:@std/url@^0.225.0",
-    "//3": "FIXME: repalec with Promise.withDeferred",
     "@std/async_old/": "https://deno.land/std@0.208.0/async/",
     "chance": "npm:chance@1.1.11",
     "compress/": "https://deno.land/x/compress@v0.4.5/",
