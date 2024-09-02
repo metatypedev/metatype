@@ -6,6 +6,6 @@ pub mod discovery;
 pub mod task;
 mod task_io;
 pub mod task_manager;
-#[cfg(feature = "typegate")]
+// #[cfg(feature = "typegate")]
 pub mod typegate;
 pub mod watcher;

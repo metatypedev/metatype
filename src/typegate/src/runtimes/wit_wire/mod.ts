@@ -9,7 +9,7 @@ import { getLogger } from "../../log.ts";
 
 const logger = getLogger(import.meta);
 
-const METATYPE_VERSION = "0.4.9";
+const METATYPE_VERSION = "0.4.10-rc1";
 
 export class WitWireMessenger {
   static async init(
