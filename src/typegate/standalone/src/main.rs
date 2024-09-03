@@ -52,15 +52,15 @@ fn main_main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>
             .to_string_lossy()
             .into()
     });
-    let config_url = config.deno_config_url.unwrap_or_else(|| {
+    let import_map_url = config.import_map_url.unwrap_or_else(|| {
         workspace_dir
-            .join("src/typegate/deno.jsonc")
+            .join("import_map.json")
             .to_string_lossy()
             .into()
     });
     runtime.block_on(typegate_engine::launch_typegate_deno(
         typegate_engine::resolve_url_or_path(&main_url, workspace_dir)?,
-        Some(config_url),
+        Some(import_map_url),
     ))?;
 
     Ok(())

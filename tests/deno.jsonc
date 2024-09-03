@@ -1,5 +1,6 @@
 {
   "imports": {
+    "@std/streams": "jsr:@std/streams@^1.0.2",
     "@typegraph/sdk/": "../src/typegraph/deno/src/",
     "@local/tools/": "../tools/",
     "@metatype/typegate/": "../src/typegate/src/",

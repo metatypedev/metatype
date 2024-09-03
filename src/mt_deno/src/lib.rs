@@ -63,7 +63,7 @@ pub fn run_sync(
 
 pub async fn run(
     main_module: ModuleSpecifier,
-    deno_config_url: Option<String>,
+    import_map_url: Option<String>,
     permissions: PermissionsOptions,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) -> anyhow::Result<()> {
@@ -77,13 +77,7 @@ pub async fn run(
     // NOTE: avoid using the Run subcommand
     // as it breaks our custom_extensions patch for some reason
     let flags = args::Flags {
-        config_flag: deno_config_url
-            .map(|str| match str.strip_prefix("file://") {
-                Some(clean) => clean.into(),
-                None => str,
-            })
-            .map(args::ConfigFlag::Path)
-            .unwrap_or(args::ConfigFlag::Discover),
+        import_map_path: import_map_url,
         unstable_config: args::UnstableConfig {
             features: DEFAULT_UNSTABLE_FLAGS
                 .iter()
