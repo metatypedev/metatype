@@ -1,11 +1,11 @@
-#!/bin/env -S ghjk deno run -A --config=typegate/deno.jsonc
+#!/bin/env -S ghjk deno run -A
 
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
 /**
  * Usage:
- *   deno run -A dev/tree-view.ts --config=typegate/deno.jsonc [<options>] <file.py>
+ *   deno run -A dev/tree-view.ts [<options>] <file.py>
  *
  * Options:
  *    --depth <N>   The depth of the tree

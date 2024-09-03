@@ -270,7 +270,7 @@ Meta.test({
       "dev",
       `--main-url`,
       import.meta.resolve("../../../src/typegate/src/main.ts"),
-      `--deno-config-url`,
+      `--import-map-url`,
       import.meta.resolve("../../../import_map.json"),
       `--gate=http://localhost:${port}`,
     ],

@@ -1,4 +1,4 @@
-#!/bin/env -S ghjk deno run -A --config=typegate/deno.jsonc
+#!/bin/env -S ghjk deno run -A
 
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
