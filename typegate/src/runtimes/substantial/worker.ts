@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Context } from "./deno_context.ts";
-import { Err, Ok, WorkerData } from "./types.ts";
+import { Err, Msg, Ok, WorkerData } from "./types.ts";
 
 let runCtx: Context | undefined;
 
@@ -24,17 +24,21 @@ self.onmessage = async function (event) {
 
       workflowFn(runCtx)
         .then((wfResult: unknown) => {
+          runCtx?.stop();
+
           self.postMessage(
-            Ok({ type, result: wfResult, run: runCtx?.getRun() }),
+            Ok(Msg(type, { result: wfResult, run: runCtx?.getRun() })),
           );
         })
         .catch((wfException: unknown) => {
           self.postMessage(
-            Ok({
-              type,
-              result: wfException,
-              run: runCtx?.getRun(),
-            }),
+            Ok(
+              Msg(type, {
+                type,
+                result: wfException,
+                run: runCtx?.getRun(),
+              }),
+            ),
           );
         });
       break;
@@ -42,14 +46,14 @@ self.onmessage = async function (event) {
     case "STOP": {
       runCtx?.stop();
 
-      self.postMessage(Ok({ type, run: runCtx?.getRun() }));
+      self.postMessage(Ok(Msg(type, { run: runCtx?.getRun() })));
       self.close();
       break;
     }
     case "SEND": {
       const { event_name, payload } = data;
       runCtx?.event(event_name, payload);
-      self.postMessage(Ok(data));
+      self.postMessage(Ok(Msg(type, data)));
       break;
     }
     default:

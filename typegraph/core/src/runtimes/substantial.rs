@@ -75,18 +75,15 @@ pub fn substantial_operation(
 ) -> Result<FuncParams> {
     let mut inp = t::struct_();
     let (effect, mat_data, out_ty) = match data.operation {
-        SubstantialOperationType::Start(workflow) => {
-            // inp.prop("name", t::string().build()?);
-            (
-                WitEffect::Create(false),
-                SubstantialMaterializer::Start {
-                    workflow: workflow.into(),
-                },
-                t::string().build()?,
-            )
-        }
+        SubstantialOperationType::Start(workflow) => (
+            WitEffect::Create(false),
+            SubstantialMaterializer::Start {
+                workflow: workflow.into(),
+            },
+            t::string().build()?,
+        ),
         SubstantialOperationType::Stop(workflow) => {
-            // inp.prop("name", t::string().build()?);
+            inp.prop("run_id", t::string().build()?);
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::Stop {
@@ -97,6 +94,7 @@ pub fn substantial_operation(
         }
         SubstantialOperationType::Send(workflow) => {
             let arg = data.func_arg.ok_or("query arg is undefined".to_string())?;
+            inp.prop("run_id", t::string().build()?);
             inp.prop("event_name", t::string().build()?);
             inp.prop("payload", arg.into());
             (

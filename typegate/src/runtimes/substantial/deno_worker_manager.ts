@@ -4,9 +4,9 @@
 import { getLogger } from "../../log.ts";
 import {
   Err,
-  Ok,
+  Msg,
+  Result,
   Run,
-  WorkerData,
   WorkerEvent,
   WorkerEventHandler,
 } from "./types.ts";
@@ -14,12 +14,89 @@ import {
 const logger = getLogger();
 
 export type WorkerRecord = { worker: Worker; modulePath: string };
+export type RunId = string;
+export type WorkflowName = string;
 
+export class WorkflowRecorder {
+  workflowRuns: Map<WorkflowName, Set<RunId>> = new Map();
+  private workers: Map<RunId, WorkerRecord> = new Map();
+
+  getRegisteredWorkflowNames() {
+    return Array.from(this.workflowRuns.keys());
+  }
+
+  getWorkerRecord(runId: RunId) {
+    const record = this.workers.get(runId);
+    if (!record) {
+      throw new Error(`Worker "${runId}" does not exist`);
+    }
+
+    return record!;
+  }
+
+  addWorker(name: WorkflowName, runId: RunId, worker: WorkerRecord) {
+    if (!this.workflowRuns.has(name)) {
+      this.workflowRuns.set(name, new Set());
+    }
+
+    this.workflowRuns.get(name)!.add(runId);
+    this.workers.set(runId, worker);
+  }
+
+  destroyAllWorkers() {
+    for (const name of this.getRegisteredWorkflowNames()) {
+      this.destroyRelatedWorkers(name);
+    }
+  }
+
+  destroyRelatedWorkers(name: WorkflowName) {
+    if (this.workflowRuns.has(name)) {
+      const runIds = this.workflowRuns.get(name)!.values();
+      for (const runId of runIds) {
+        this.destroyWorker(name, runId);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  destroyWorker(name: WorkflowName, runId: RunId) {
+    const record = this.workers.get(runId);
+    if (this.workflowRuns.has(name)) {
+      if (!record) {
+        // TODO: throw?
+        logger.error(
+          `invalid state: "${runId}" associated with "${name}" does not exist`,
+        );
+        return false;
+      }
+
+      record!.worker.terminate(); // !
+
+      this.workflowRuns.get(name)!.delete(runId);
+      this.workers.delete(runId);
+      return true;
+    }
+
+    return false;
+  }
+}
+
+/**
+ * - A workflow file can contain multiple workflows (functions)
+ * - A workflow can be run as many times as a START event is triggered (with a run_id)
+ * - The completion of a workflow is run async, it is entirely up to the event listeners to act upon the results
+ */
 export class WorkerManager {
   private static instance: WorkerManager;
-  private records: Map<string, WorkerRecord> = new Map();
+  private recorder: WorkflowRecorder = new WorkflowRecorder();
 
   private constructor() {}
+
+  #nextId(name: string): RunId {
+    const uuid = crypto.randomUUID();
+    return `${name}_${uuid}`;
+  }
 
   public static getInstance(): WorkerManager {
     if (!WorkerManager.instance) {
@@ -28,78 +105,69 @@ export class WorkerManager {
     return WorkerManager.instance;
   }
 
-  createWorker(name: string, modulePath: string): void {
-    if (this.records.has(name)) {
-      logger.warn(`Worker with name ${name} already exists, overwriting..`);
-      this.destroyWorker(name);
-    }
+  #createWorker(name: string, modulePath: string): RunId {
+    const runId = this.#nextId(name);
 
     const worker = new Worker(import.meta.resolve("./worker.ts"), {
       type: "module",
     });
 
-    this.records.set(name, { worker, modulePath });
+    this.recorder.addWorker(name, runId, { modulePath, worker });
+
+    return runId;
   }
 
-  destroyWorker(name: string): void {
-    const record = this.records.get(name);
-    if (record) {
-      record.worker.terminate();
-      this.records.delete(name);
-    } else {
-      throw new Error(`Worker with name ${name} does not exist`);
-    }
+  destroyWorker(name: string, runId: string) {
+    return this.recorder.destroyWorker(name, runId);
   }
 
   destroyAllWorkers() {
-    const workerNames = Array.from(this.records.keys());
-    for (const name of workerNames) {
-      this.destroyWorker(name);
-    }
-
-    logger.warn(`Destroyed workers: ${workerNames.join(", ")}`);
+    this.recorder.destroyAllWorkers();
+    logger.warn(
+      `Destroyed workers for ${
+        this.recorder
+          .getRegisteredWorkflowNames()
+          .map((w) => `"${w}"`)
+          .join(", ")
+      }`,
+    );
   }
 
-  #getRecord(name: string): WorkerRecord {
-    const record = this.records.get(name);
-    if (!record) {
-      throw new Error(`Worker with name ${name} does not exist`);
-    }
-    return record;
-  }
+  listen(runId: RunId, handlerFn: WorkerEventHandler) {
+    const { worker } = this.recorder.getWorkerRecord(runId);
 
-  listen(name: string, handlerFn: WorkerEventHandler) {
-    const { worker } = this.#getRecord(name);
-
-    worker.onmessage = (e) => {
-      if (e.data.error) {
-        handlerFn(Err(e.data.error));
+    worker.onmessage = (message) => {
+      if (message.data.error) {
+        // worker level failure
+        handlerFn(Err(message.data.error));
       } else {
-        handlerFn(Ok(e.data));
+        // logic level Result (Ok | Err)
+        logger.warn(message.data);
+        handlerFn(message.data as Result<unknown>);
       }
     };
 
-    worker.onerror = (e) => handlerFn(Err(e));
+    worker.onerror = (event) => handlerFn(Err(event));
   }
 
-  trigger(type: WorkerEvent, name: string, data: unknown) {
-    const { worker } = this.#getRecord(name);
-    worker.postMessage({
-      type,
-      data,
-    } as WorkerData);
+  trigger(type: WorkerEvent, runId: RunId, data: unknown) {
+    const { worker } = this.recorder.getWorkerRecord(runId);
+    worker.postMessage(Msg(type, data));
+    logger.info(`trigger ${type} for ${runId}: ${JSON.stringify(data)}`);
   }
 
-  triggerStart(name: string, storedRun: Run) {
-    const { modulePath } = this.#getRecord(name);
-    this.trigger("START", name, {
-      modulePath,
+  triggerStart(name: string, workflowModPath: string, storedRun: Run): RunId {
+    const runId = this.#createWorker(name, workflowModPath);
+    this.trigger("START", runId, {
+      modulePath: workflowModPath,
       functionName: name,
       run: storedRun,
     });
+
+    return runId;
   }
 
-  triggerStop(name: string) {
-    this.trigger("STOP", name, {});
+  triggerStop(runId: RunId) {
+    this.trigger("STOP", runId, {});
   }
 }

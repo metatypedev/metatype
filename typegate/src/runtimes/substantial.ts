@@ -13,7 +13,7 @@ import { WorkerManager } from "./substantial/deno_worker_manager.ts";
 import { path } from "compress/deps.ts";
 import { Artifact, Materializer } from "@typegate/typegraph/types.ts";
 import { Typegate } from "@typegate/typegate/mod.ts";
-import { WorkerData } from "@typegate/runtimes/substantial/types.ts";
+import { Result, WorkerData } from "@typegate/runtimes/substantial/types.ts";
 
 const logger = getLogger(import.meta);
 
@@ -22,6 +22,7 @@ export class SubstantialRuntime extends Runtime {
   private logger: Logger;
   private backend: native.Backend;
   private workerManager: WorkerManager;
+  private workflowFiles: Map<string, string> = new Map();
 
   private constructor(
     typegraphName: string,
@@ -59,8 +60,11 @@ export class SubstantialRuntime extends Runtime {
 
     const instance = new SubstantialRuntime(tgName, backend, workerManager);
 
-    // Allocate workers for the loaaded files
-    await instance.prepareWorkers(tg.meta.artifacts, materializers, typegate);
+    await instance.prepareWorkflowFiles(
+      tg.meta.artifacts,
+      materializers,
+      typegate,
+    );
 
     return instance;
   }
@@ -80,32 +84,43 @@ export class SubstantialRuntime extends Runtime {
     const mat = stage.props.materializer;
     const resolver: Resolver = (() => {
       const data = mat?.data ?? {};
-      const runId = data.name as string;
 
       if (name === "start") {
         return () => {
+          const workflowName = data.name as string;
+          const modPath = this.workflowFiles.get(workflowName);
+          if (!modPath) {
+            throw new Error(
+              `Fatal: cannot find workflow file for "${workflowName}"`,
+            );
+          }
+
           const { run } = nativeResult(
             native.createOrGetRun({
               backend: this.backend,
-              run_id: runId,
+              run_id: workflowName, // FIXME: rename to name
             }),
           );
 
-          const startOutput = this.workerManager.triggerStart(runId, run);
-          logger.info(`Running workflow: ${startOutput}`);
+          const runId = this.workerManager.triggerStart(
+            workflowName,
+            modPath,
+            run,
+          );
 
-          return startOutput;
+          this.workerManager.listen(runId, this.#eventResultHandlerFor(runId));
+
+          return runId;
         };
-      }
-
-      if (name === "stop") {
-        this.workerManager.triggerStop(runId);
-        return runId;
-      }
-
-      if (name === "event") {
-        this.workerManager.trigger("SEND", runId, data);
-        return runId;
+      } else if (name === "stop") {
+        return ({ run_id }: any) => {
+          this.workerManager.triggerStop(run_id);
+          return run_id;
+        };
+      } else if (name === "event") {
+        return ({ run_id }: any) => {
+          this.workerManager.trigger("SEND", run_id, data);
+        };
       }
 
       return () => null;
@@ -119,7 +134,7 @@ export class SubstantialRuntime extends Runtime {
     ];
   }
 
-  async prepareWorkers(
+  async prepareWorkflowFiles(
     artifacts: Record<string, Artifact>,
     materializers: Materializer[],
     typegate: Typegate,
@@ -131,61 +146,14 @@ export class SubstantialRuntime extends Runtime {
         continue;
       }
 
-      const matData = mat.data;
       const entryModulePath = await this.#getWorkflowEntryPointPath(
         artifacts,
-        matData,
+        mat.data,
         typegate,
       );
 
-      // Note: for now, this is just the function name
-      const runId = matData.name as string;
-      this.workerManager.createWorker(matData.name as string, entryModulePath);
-
-      this.workerManager.listen(matData.name as string, (result) => {
-        if (result.error) {
-          // TODO: better way to notify back through gql
-          logger.error(result.payload);
-          return;
-        }
-
-        const backend = this.backend;
-        const payload = result.payload as WorkerData;
-        switch (payload.type) {
-          case "START": {
-            // gracefull completion
-            const result = nativeResult(
-              native.persistRun({
-                backend,
-                run: payload.data.run,
-              }),
-            );
-            // TODO: better way to notify back through gql
-            // Through start maybe? or mutation { resultOf(name: "example") }
-            logger.info(
-              `completed execution ${runId}: ${result} :: ${
-                JSON.stringify(
-                  payload,
-                )
-              }`,
-            );
-            break;
-          }
-          case "SEND": {
-            logger.info(`event sent ${runId}: ${JSON.stringify(payload)}`);
-            break;
-          }
-          case "STOP": {
-            logger.info(
-              `forcefully stopped ${runId}: ${JSON.stringify(payload)}`,
-            );
-            break;
-          }
-          default:
-            logger.error(payload);
-        }
-      });
-
+      const { name: workflowName } = mat.data;
+      this.workflowFiles.set(workflowName as string, entryModulePath);
       logger.info(`Resolved runtime artifacts at ${basePath}`);
     }
   }
@@ -213,5 +181,61 @@ export class SubstantialRuntime extends Runtime {
     });
 
     return await typegate.artifactStore.getLocalPath(moduleMeta, depMetas);
+  }
+
+  #eventResultHandlerFor(runId: string) {
+    return (result: Result<unknown>) => {
+      if (result.error) {
+        // TODO: better way to notify back through gql
+        logger.error(
+          `result error for "${runId}": ${JSON.stringify(result.payload)}`,
+        );
+        return;
+      }
+
+      const answer = result.payload as WorkerData;
+      logger.info(`"${runId}" answered with: ${JSON.stringify(answer)}`);
+
+      const backend = this.backend;
+      switch (answer.type) {
+        case "START": {
+          // gracefull completion
+          const result = nativeResult(
+            native.persistRun({
+              backend,
+              run: answer.data.run,
+            }),
+          );
+          // TODO: better way to notify back through gql
+          // Through start maybe? or mutation { resultOf(name: "example") }
+          logger.info(
+            `completed execution "${runId}": ${result} :: ${
+              JSON.stringify(
+                answer.data,
+              )
+            }`,
+          );
+          break;
+        }
+        case "SEND": {
+          logger.info(`event sent "${runId}": ${JSON.stringify(answer.data)}`);
+          break;
+        }
+        case "STOP": {
+          logger.warn(
+            `forcefully stopped "${runId}": ${JSON.stringify(answer.data)}`,
+          );
+          break;
+        }
+        default:
+          logger.error(
+            `Invalid type ${answer.type} send by "${runId}": ${
+              JSON.stringify(
+                answer.data,
+              )
+            }`,
+          );
+      }
+    };
   }
 }
