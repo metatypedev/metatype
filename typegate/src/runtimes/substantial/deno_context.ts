@@ -5,7 +5,7 @@ import { Run } from "./types.ts";
 
 export class Context {
   private id: number = 0;
-  constructor(private run: Run) {}
+  constructor(private run: Run, private kwargs: Record<string, unknown>) {}
 
   #nextId() {
     this.id += 1;
@@ -38,15 +38,17 @@ export class Context {
   start() {
     this.#appendOp({
       Start: {
-        kwargs: {},
+        kwargs: this.kwargs,
       },
     });
   }
 
-  stop(result?: unknown) {
+  stop(nativeRustResultType: "Ok" | "Err", result?: unknown) {
     this.#appendOp({
       Stop: {
-        result,
+        result: {
+          [nativeRustResultType]: result,
+        },
       },
     });
   }

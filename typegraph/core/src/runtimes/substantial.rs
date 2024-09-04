@@ -24,6 +24,7 @@ pub enum SubstantialMaterializer {
     Stop { workflow: WorkflowMatData },
     Send { workflow: WorkflowMatData },
     Ressources { workflow: WorkflowMatData },
+    Results { workflow: WorkflowMatData },
 }
 
 impl MaterializerConverter for SubstantialMaterializer {
@@ -62,6 +63,9 @@ impl MaterializerConverter for SubstantialMaterializer {
             SubstantialMaterializer::Ressources { workflow } => {
                 ("ressources".to_string(), as_index_map(workflow))
             }
+            SubstantialMaterializer::Results { workflow } => {
+                ("results".to_string(), as_index_map(workflow))
+            }
         };
 
         Ok(Materializer {
@@ -79,13 +83,17 @@ pub fn substantial_operation(
 ) -> Result<FuncParams> {
     let mut inp = t::struct_();
     let (effect, mat_data, out_ty) = match data.operation {
-        SubstantialOperationType::Start(workflow) => (
-            WitEffect::Create(false),
-            SubstantialMaterializer::Start {
-                workflow: workflow.into(),
-            },
-            t::string().build()?,
-        ),
+        SubstantialOperationType::Start(workflow) => {
+            let arg = data.func_arg.ok_or("query arg is undefined".to_string())?;
+            inp.prop("kwargs", arg.into());
+            (
+                WitEffect::Create(false),
+                SubstantialMaterializer::Start {
+                    workflow: workflow.into(),
+                },
+                t::string().build()?,
+            )
+        }
         SubstantialOperationType::Stop(workflow) => {
             inp.prop("run_id", t::string().build()?);
             (
@@ -110,14 +118,6 @@ pub fn substantial_operation(
             )
         }
         SubstantialOperationType::Ressources(workflow) => {
-            //  ressources {
-            //     count
-            //     workflow
-            //     running { # list
-            //       run_id
-            //       started_at
-            //     }
-            //  }
             let row = t::struct_()
                 .prop("run_id", t::string().build()?)
                 .prop("started_at", t::string().build()?)
@@ -134,6 +134,28 @@ pub fn substantial_operation(
                     workflow: workflow.into(),
                 },
                 out,
+            )
+        }
+        SubstantialOperationType::Results(workflow) => {
+            let out = data.func_out.ok_or("query arg is undefined".to_string())?;
+
+            let result = t::struct_()
+                .prop("status", t::string().build()?)
+                .prop("value", t::optional(out.into()).build()?)
+                .build()?;
+
+            let row = t::struct_()
+                .prop("run_id", t::string().build()?)
+                .prop("started_at", t::string().build()?)
+                .prop("ended_at", t::string().build()?)
+                .prop("result", result)
+                .build()?;
+            (
+                WitEffect::Read,
+                SubstantialMaterializer::Results {
+                    workflow: workflow.into(),
+                },
+                t::list(row).build()?,
             )
         }
     };

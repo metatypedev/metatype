@@ -1,11 +1,6 @@
 interface Context {
+  kwargs: any;
   save<T>(fn: () => Promise<T>);
-}
-
-function heavyOp() {
-  let sum = 0;
-  for (let i = 0; i < 100; i++, sum += i);
-  return sum;
 }
 
 function sleep(duration: number) {
@@ -16,12 +11,18 @@ function sleep(duration: number) {
   });
 }
 
+async function rangeSum(a: number) {
+  let s = 0;
+  for (let i = 0; i < a; i++, s += i);
+  return s;
+}
+
 export async function example(ctx: Context) {
-  const sum = 1 + (await ctx.save(async () => heavyOp()));
-  const sum2 = 2 + (await ctx.save(async () => heavyOp()));
-  console.log("WAITING");
-  await sleep(10000);
-  return sum + sum2;
+  const { a, b } = ctx.kwargs;
+  const rangeA = await ctx.save(() => rangeSum(a as number));
+  await sleep(5000);
+  const rangeB = await ctx.save(() => rangeSum(b as number));
+  return rangeA + rangeB;
 }
 
 export function sayHello(ctx: any) {

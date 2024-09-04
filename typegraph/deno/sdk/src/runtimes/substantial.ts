@@ -46,20 +46,25 @@ export class SubstantialRuntime extends Runtime {
   #genericSubstantialFunc(
     operation: SubstantialOperationType,
     funcArg?: Typedef,
+    funcOut?: Typedef,
   ): Func<Typedef, Typedef, Materializer> {
     const data = {
       funcArg: funcArg?._id,
+      funcOut: funcOut?._id,
       operation,
     } as SubstantialOperationData;
     const funcData = runtimes.generateSubstantialOperation(this._id, data);
     return Func.fromTypeFunc(funcData);
   }
 
-  start(): Func<Typedef, Typedef, Materializer> {
-    return this.#genericSubstantialFunc({
-      tag: "start",
-      val: this.workflow!,
-    });
+  start(kwargs: Typedef): Func<Typedef, Typedef, Materializer> {
+    return this.#genericSubstantialFunc(
+      {
+        tag: "start",
+        val: this.workflow!,
+      },
+      kwargs,
+    );
   }
 
   stop(): Func<Typedef, Typedef, Materializer> {
@@ -79,10 +84,21 @@ export class SubstantialRuntime extends Runtime {
     );
   }
 
-  ressources(): Func<Typedef, Typedef, Materializer> {
+  queryRessources(): Func<Typedef, Typedef, Materializer> {
     return this.#genericSubstantialFunc({
       tag: "ressources",
       val: this.workflow!,
     });
+  }
+
+  queryResults(output: Typedef): Func<Typedef, Typedef, Materializer> {
+    return this.#genericSubstantialFunc(
+      {
+        tag: "results",
+        val: this.workflow!,
+      },
+      undefined,
+      output,
+    );
   }
 }

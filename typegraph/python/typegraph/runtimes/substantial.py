@@ -15,6 +15,7 @@ from typegraph.gen.exports.runtimes import (
     SubstantialOperationTypeStart,
     SubstantialOperationTypeStop,
     SubstantialOperationTypeRessources,
+    SubstantialOperationTypeResults,
     SubstantialRuntimeData,
     Workflow,
 )
@@ -51,9 +52,12 @@ class SubstantialRuntime(Runtime):
         self,
         operation: SubstantialOperationType,
         func_arg: Union[None, "t.typedef"] = None,
+        func_out: Union[None, "t.typedef"] = None,
     ):
         data = SubstantialOperationData(
-            func_arg=None if func_arg is None else func_arg.id, operation=operation
+            func_arg=None if func_arg is None else func_arg.id,
+            func_out=None if func_out is None else func_out.id,
+            operation=operation,
         )
         func_data = runtimes.generate_substantial_operation(store, self.id.value, data)
 
@@ -62,18 +66,22 @@ class SubstantialRuntime(Runtime):
 
         return t.func.from_type_func(func_data.value)
 
-    def start(self):
+    def start(self, kwargs: "t.struct"):
         operation = SubstantialOperationTypeStart(self.workflow)
-        return self._generic_substantial_func(operation, None)
+        return self._generic_substantial_func(operation, kwargs, None)
 
     def stop(self):
         operation = SubstantialOperationTypeStop(self.workflow)
-        return self._generic_substantial_func(operation, None)
+        return self._generic_substantial_func(operation, None, None)
 
     def send(self, payload: "t.typedef"):
         operation = SubstantialOperationTypeSend(self.workflow)
-        return self._generic_substantial_func(operation, payload)
+        return self._generic_substantial_func(operation, payload, None)
 
-    def ressources(self):
+    def query_ressources(self):
         operation = SubstantialOperationTypeRessources(self.workflow)
-        return self._generic_substantial_func(operation)
+        return self._generic_substantial_func(operation, None, None)
+
+    def query_results(self, output: "t.typedef"):
+        operation = SubstantialOperationTypeResults(self.workflow)
+        return self._generic_substantial_func(operation, None, output)

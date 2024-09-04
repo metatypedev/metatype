@@ -194,8 +194,8 @@ impl TryFrom<Operation> for Event {
             Operation::Stop { result } => {
                 let stop_result = match result {
                     Some(res) => Some(match res {
-                        RunResult::Ok(value) => stop::Result::Ok(serde_json::from_value(value)?),
-                        RunResult::Err(err) => stop::Result::Err(serde_json::from_value(err)?),
+                        RunResult::Ok(value) => stop::Result::Ok(serde_json::to_string(&value)?),
+                        RunResult::Err(err) => stop::Result::Err(serde_json::to_string(&err)?),
                     }),
                     None => None,
                 };

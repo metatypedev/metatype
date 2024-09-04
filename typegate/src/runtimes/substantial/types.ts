@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { Run } from "native";
 export type { Run } from "native";
 
 export type AnyString = string & Record<string | number | symbol, never>;
@@ -30,3 +31,9 @@ export function Err<E>(payload: E): Result<E> {
 export function Msg(type: WorkerEvent, data: unknown): WorkerData {
   return { type, data };
 }
+
+export type WorkflowResult = {
+  kind: "SUCCESS" | "FAIL";
+  result: unknown;
+  run: Run;
+};

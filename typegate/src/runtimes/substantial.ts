@@ -10,13 +10,27 @@ import { getLogger, Logger } from "../log.ts";
 import * as native from "native";
 import * as ast from "graphql/ast";
 import { nativeResult } from "../utils.ts";
-import { WorkerManager } from "./substantial/deno_worker_manager.ts";
+import { WorkerManager } from "./substantial/workflow_worker_manager.ts";
 import { path } from "compress/deps.ts";
 import { Artifact, Materializer } from "@typegate/typegraph/types.ts";
 import { Typegate } from "@typegate/typegate/mod.ts";
-import { Result, WorkerData } from "@typegate/runtimes/substantial/types.ts";
+import {
+  Result,
+  WorkerData,
+  WorkflowResult,
+} from "@typegate/runtimes/substantial/types.ts";
 
 const logger = getLogger(import.meta);
+
+type QueryWorkflowResult = {
+  run_id: string;
+  started_at: string;
+  ended_at: string;
+  result: {
+    status: "ABORTED" | "COMPLETED" | "COMPLETED_WITH_ERROR" | "UNKNOWN";
+    value: unknown; // hinted by the user
+  };
+};
 
 @registerRuntime("substantial")
 export class SubstantialRuntime extends Runtime {
@@ -24,6 +38,7 @@ export class SubstantialRuntime extends Runtime {
   private backend: native.Backend;
   private workerManager: WorkerManager;
   private workflowFiles: Map<string, string> = new Map();
+  private workflowResults: Map<string, Array<QueryWorkflowResult>> = new Map();
 
   private constructor(
     typegraphName: string,
@@ -144,13 +159,17 @@ export class SubstantialRuntime extends Runtime {
           const res = this.workerManager.getAllocatedRessources(workflowName);
           return JSON.parse(JSON.stringify(res));
         };
+      case "results":
+        return () => {
+          return this.workflowResults.get(workflowName) ?? [];
+        };
       default:
         return () => null;
     }
   }
 
   #startResolver(workflowName: string): Resolver {
-    return () => {
+    return ({ kwargs }) => {
       const modPath = this.workflowFiles.get(workflowName);
       if (!modPath) {
         throw new Error(
@@ -165,7 +184,12 @@ export class SubstantialRuntime extends Runtime {
         }),
       );
 
-      const runId = this.workerManager.triggerStart(workflowName, modPath, run);
+      const runId = this.workerManager.triggerStart(
+        workflowName,
+        modPath,
+        run,
+        kwargs,
+      );
 
       this.workerManager.listen(
         runId,
@@ -184,7 +208,9 @@ export class SubstantialRuntime extends Runtime {
     const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
 
     for (const mat of materializers) {
-      if (!["start", "stop", "send", "ressources"].includes(mat.name)) {
+      if (
+        !["start", "stop", "send", "ressources", "results"].includes(mat.name)
+      ) {
         continue;
       }
 
@@ -196,6 +222,7 @@ export class SubstantialRuntime extends Runtime {
 
       const { name: workflowName } = mat.data;
       this.workflowFiles.set(workflowName as string, entryModulePath);
+      this.workflowResults.set(workflowName as string, []);
       logger.info(`Resolved runtime artifacts at ${basePath}`);
     }
   }
@@ -238,25 +265,32 @@ export class SubstantialRuntime extends Runtime {
       const answer = result.payload as WorkerData;
       logger.info(`"${runId}" answered with: ${JSON.stringify(answer)}`);
 
+      const startedAt = this.workerManager.getTimeStartedAt(runId);
+
       const backend = this.backend;
       switch (answer.type) {
         case "START": {
-          // gracefull completion
-          const result = nativeResult(
+          const ret = answer.data as WorkflowResult;
+          const _run = nativeResult(
             native.persistRun({
               backend,
-              run: answer.data.run,
+              run: ret.run,
             }),
           );
-          // TODO: better way to notify back through gql
-          // Through start maybe? or mutation { resultOf(name: "example") }
+
           logger.info(
-            `completed execution "${runId}": ${result} :: ${
-              JSON.stringify(
-                answer.data,
-              )
-            }`,
+            `completed execution of "${runId}": ${JSON.stringify(ret.result)}`,
           );
+
+          this.#addResult(workflowName, {
+            run_id: runId,
+            started_at: startedAt.toJSON(),
+            ended_at: new Date().toJSON(),
+            result: {
+              status: ret.kind == "FAIL" ? "COMPLETED_WITH_ERROR" : "COMPLETED",
+              value: ret.result, // hinted by the user
+            },
+          });
 
           this.workerManager.destroyWorker(workflowName, runId);
           break;
@@ -269,6 +303,16 @@ export class SubstantialRuntime extends Runtime {
           logger.warn(
             `forcefully stopped "${runId}": ${JSON.stringify(answer.data)}`,
           );
+
+          this.#addResult(workflowName, {
+            run_id: runId,
+            started_at: startedAt.toJSON(),
+            ended_at: new Date().toJSON(),
+            result: {
+              status: "ABORTED",
+              value: null,
+            },
+          });
           break;
         }
         default:
@@ -281,5 +325,9 @@ export class SubstantialRuntime extends Runtime {
           );
       }
     };
+  }
+
+  #addResult(workflowName: string, result: QueryWorkflowResult) {
+    this.workflowResults.get(workflowName)!.push(result);
   }
 }

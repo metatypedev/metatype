@@ -23,7 +23,7 @@ export type WorkflowName = string;
 
 export class WorkflowRecorder {
   workflowRuns: Map<WorkflowName, Set<RunId>> = new Map();
-  private workers: Map<RunId, WorkerRecord> = new Map();
+  workers: Map<RunId, WorkerRecord> = new Map();
 
   getRegisteredWorkflowNames() {
     return Array.from(this.workflowRuns.keys());
@@ -32,7 +32,7 @@ export class WorkflowRecorder {
   getWorkerRecord(runId: RunId) {
     const record = this.workers.get(runId);
     if (!record) {
-      throw new Error(`Worker "${runId}" does not exist`);
+      throw new Error(`Run "${runId}" does not exist or has been completed`);
     }
 
     return record!;
@@ -153,6 +153,14 @@ export class WorkerManager {
     };
   }
 
+  getTimeStartedAt(runId: RunId): Date {
+    const rec = this.recorder.workers.get(runId);
+    if (!rec) {
+      throw new Error(`Cannot find run "${runId}"`);
+    }
+    return rec.startedAt;
+  }
+
   listen(runId: RunId, handlerFn: WorkerEventHandler) {
     const { worker } = this.recorder.getWorkerRecord(runId);
 
@@ -176,12 +184,18 @@ export class WorkerManager {
     logger.info(`trigger ${type} for ${runId}: ${JSON.stringify(data)}`);
   }
 
-  triggerStart(name: string, workflowModPath: string, storedRun: Run): RunId {
+  triggerStart(
+    name: string,
+    workflowModPath: string,
+    storedRun: Run,
+    kwargs: Record<string, unknown>,
+  ): RunId {
     const runId = this.#createWorker(name, workflowModPath);
     this.trigger("START", runId, {
       modulePath: workflowModPath,
       functionName: name,
       run: storedRun,
+      kwargs,
     });
 
     return runId;

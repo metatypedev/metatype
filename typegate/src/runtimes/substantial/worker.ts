@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Context } from "./deno_context.ts";
-import { Err, Msg, Ok, WorkerData } from "./types.ts";
+import { Err, Msg, Ok, WorkerData, WorkflowResult } from "./types.ts";
 
 let runCtx: Context | undefined;
 
@@ -10,8 +10,9 @@ self.onmessage = async function (event) {
   const { type, data } = event.data as WorkerData;
   switch (type) {
     case "START": {
-      const { modulePath, functionName, run } = data;
+      const { modulePath, functionName, run, kwargs } = data;
       const module = await import(modulePath);
+      // TODO: for python use the same strategy but instead call from native
       const workflowFn = module[functionName];
 
       if (typeof workflowFn !== "function") {
@@ -20,32 +21,47 @@ self.onmessage = async function (event) {
         return;
       }
 
-      runCtx = new Context(run);
+      runCtx = new Context(run, kwargs);
+      runCtx.start();
 
       workflowFn(runCtx)
         .then((wfResult: unknown) => {
-          runCtx?.stop();
+          runCtx?.stop("Ok", wfResult);
 
           self.postMessage(
-            Ok(Msg(type, { result: wfResult, run: runCtx?.getRun() })),
+            Ok(
+              Msg(
+                type,
+                {
+                  kind: "SUCCESS",
+                  result: wfResult,
+                  run: runCtx!.getRun(),
+                } satisfies WorkflowResult,
+              ),
+            ),
           );
         })
         .catch((wfException: unknown) => {
+          runCtx?.stop("Err", null);
+
           self.postMessage(
             Ok(
-              Msg(type, {
+              Msg(
                 type,
-                result: wfException,
-                run: runCtx?.getRun(),
-              }),
+                {
+                  kind: "FAIL",
+                  result: wfException?.toString() ??
+                    JSON.stringify(wfException),
+                  run: runCtx!.getRun(),
+                } satisfies WorkflowResult,
+              ),
             ),
           );
         });
       break;
     }
     case "STOP": {
-      runCtx?.stop();
-
+      runCtx?.stop("Err", "Stopped");
       self.postMessage(Ok(Msg(type, { run: runCtx?.getRun() })));
       self.close();
       break;
