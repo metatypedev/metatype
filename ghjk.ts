@@ -134,6 +134,9 @@ task("version-bump", async ($) => {
     semver.increment(
       semver.parse(METATYPE_VERSION),
       bump as semver.ReleaseType,
+      {
+        prerelease: "rc",
+      },
     ),
   );
 
@@ -151,7 +154,7 @@ task("version-bump", async ($) => {
 
   await sedLock($.workingDir, {
     lines: {
-      "./dev/consts.ts": lines,
+      "./tools/consts.ts": lines,
     },
   });
   await $`ghjk x lock-sed`;

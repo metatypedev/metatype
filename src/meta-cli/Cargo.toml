@@ -5,7 +5,7 @@ edition.workspace = true
 
 description = "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
-license-file = "../dev/LICENSE-MPL-2.0.md"
+license-file = "../../tools/LICENSE-MPL-2.0.md"
 homepage = "https://metatype.dev"
 documentation = "https://metatype.dev"
 repository = "https://github.com/metatypedev/metatype"
