@@ -57,6 +57,6 @@ self.onmessage = async function (event) {
       break;
     }
     default:
-      self.postMessage(Err({ type, result: `Unknown command ${type}` }));
+      self.postMessage(Err(Msg(type, `Unknown command ${type}`)));
   }
 };

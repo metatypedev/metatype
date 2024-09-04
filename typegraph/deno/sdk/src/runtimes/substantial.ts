@@ -78,4 +78,11 @@ export class SubstantialRuntime extends Runtime {
       payload,
     );
   }
+
+  ressources(): Func<Typedef, Typedef, Materializer> {
+    return this.#genericSubstantialFunc({
+      tag: "ressources",
+      val: this.workflow!,
+    });
+  }
 }

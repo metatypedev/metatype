@@ -14,6 +14,7 @@ from typegraph.gen.exports.runtimes import (
     SubstantialOperationTypeSend,
     SubstantialOperationTypeStart,
     SubstantialOperationTypeStop,
+    SubstantialOperationTypeRessources,
     SubstantialRuntimeData,
     Workflow,
 )
@@ -72,3 +73,7 @@ class SubstantialRuntime(Runtime):
     def send(self, payload: "t.typedef"):
         operation = SubstantialOperationTypeSend(self.workflow)
         return self._generic_substantial_func(operation, payload)
+
+    def ressources(self):
+        operation = SubstantialOperationTypeRessources(self.workflow)
+        return self._generic_substantial_func(operation)

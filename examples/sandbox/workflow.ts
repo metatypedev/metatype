@@ -8,10 +8,19 @@ function heavyOp() {
   return sum;
 }
 
+function sleep(duration: number) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, duration);
+  });
+}
+
 export async function example(ctx: Context) {
   const sum = 1 + (await ctx.save(async () => heavyOp()));
   const sum2 = 2 + (await ctx.save(async () => heavyOp()));
-
+  console.log("WAITING");
+  await sleep(10000);
   return sum + sum2;
 }
 

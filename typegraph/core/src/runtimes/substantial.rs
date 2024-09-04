@@ -23,6 +23,7 @@ pub enum SubstantialMaterializer {
     Start { workflow: WorkflowMatData },
     Stop { workflow: WorkflowMatData },
     Send { workflow: WorkflowMatData },
+    Ressources { workflow: WorkflowMatData },
 }
 
 impl MaterializerConverter for SubstantialMaterializer {
@@ -57,6 +58,9 @@ impl MaterializerConverter for SubstantialMaterializer {
             }
             SubstantialMaterializer::Send { workflow } => {
                 ("send".to_string(), as_index_map(workflow))
+            }
+            SubstantialMaterializer::Ressources { workflow } => {
+                ("ressources".to_string(), as_index_map(workflow))
             }
         };
 
@@ -103,6 +107,33 @@ pub fn substantial_operation(
                     workflow: workflow.into(),
                 },
                 t::string().build()?,
+            )
+        }
+        SubstantialOperationType::Ressources(workflow) => {
+            //  ressources {
+            //     count
+            //     workflow
+            //     running { # list
+            //       run_id
+            //       started_at
+            //     }
+            //  }
+            let row = t::struct_()
+                .prop("run_id", t::string().build()?)
+                .prop("started_at", t::string().build()?)
+                .build()?;
+            let out = t::struct_()
+                .prop("count", t::integer().build()?)
+                .prop("workflow", t::string().build()?)
+                .prop("running", t::list(row).build()?)
+                .build()?;
+
+            (
+                WitEffect::Read,
+                SubstantialMaterializer::Ressources {
+                    workflow: workflow.into(),
+                },
+                out,
             )
         }
     };

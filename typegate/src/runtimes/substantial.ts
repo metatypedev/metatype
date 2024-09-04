@@ -4,10 +4,11 @@
 import { Runtime } from "./Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { TypeGraph } from "../typegraph/mod.ts";
+import { TypeGraph, TypeMaterializer } from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
 import { getLogger, Logger } from "../log.ts";
 import * as native from "native";
+import * as ast from "graphql/ast";
 import { nativeResult } from "../utils.ts";
 import { WorkerManager } from "./substantial/deno_worker_manager.ts";
 import { path } from "compress/deps.ts";
@@ -60,7 +61,7 @@ export class SubstantialRuntime extends Runtime {
 
     const instance = new SubstantialRuntime(tgName, backend, workerManager);
 
-    await instance.prepareWorkflowFiles(
+    await instance.#prepareWorkflowFiles(
       tg.meta.artifacts,
       materializers,
       typegate,
@@ -80,61 +81,102 @@ export class SubstantialRuntime extends Runtime {
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const name = stage.props.materializer?.name;
-    const mat = stage.props.materializer;
-    const resolver: Resolver = (() => {
-      const data = mat?.data ?? {};
-
-      if (name === "start") {
-        return () => {
-          const workflowName = data.name as string;
-          const modPath = this.workflowFiles.get(workflowName);
-          if (!modPath) {
-            throw new Error(
-              `Fatal: cannot find workflow file for "${workflowName}"`,
-            );
+    if (stage.props.node === "__typename") {
+      return [
+        stage.withResolver(() => {
+          const { parent: parentStage } = stage.props;
+          if (parentStage != null) {
+            return parentStage.props.outType.title;
           }
+          switch (stage.props.operationType) {
+            case ast.OperationTypeNode.QUERY:
+              return "Query";
+            case ast.OperationTypeNode.MUTATION:
+              return "Mutation";
+            default:
+              throw new Error(
+                `Unsupported operation type '${stage.props.operationType}'`,
+              );
+          }
+        }),
+      ];
+    }
 
-          const { run } = nativeResult(
-            native.createOrGetRun({
-              backend: this.backend,
-              run_id: workflowName, // FIXME: rename to name
-            }),
-          );
+    if (stage.props.outType.config?.__namespace) {
+      return [stage.withResolver(() => ({}))];
+    }
 
-          const runId = this.workerManager.triggerStart(
-            workflowName,
-            modPath,
-            run,
-          );
-
-          this.workerManager.listen(runId, this.#eventResultHandlerFor(runId));
-
-          return runId;
-        };
-      } else if (name === "stop") {
-        return ({ run_id }: any) => {
-          this.workerManager.triggerStop(run_id);
-          return run_id;
-        };
-      } else if (name === "event") {
-        return ({ run_id }: any) => {
-          this.workerManager.trigger("SEND", run_id, data);
-        };
-      }
-
-      return () => null;
-    })();
+    if (stage.props.materializer != null) {
+      return [stage.withResolver(this.#delegate(stage.props.materializer))];
+    }
 
     return [
-      new ComputeStage({
-        ...stage.props,
-        resolver,
+      stage.withResolver(({ _: { parent } }) => {
+        if (stage.props.parent == null) {
+          // namespace
+          return {};
+        }
+        const resolver = parent[stage.props.node];
+        return typeof resolver === "function" ? resolver() : resolver;
       }),
     ];
   }
 
-  async prepareWorkflowFiles(
+  #delegate(mat: TypeMaterializer): Resolver {
+    const name = mat.name;
+    const data = mat?.data ?? {};
+    const workflowName = data.name as string;
+
+    switch (name) {
+      case "start":
+        return this.#startResolver(workflowName);
+      case "stop":
+        return ({ run_id }) => {
+          this.workerManager.triggerStop(run_id);
+          return run_id;
+        };
+      case "event":
+        return ({ run_id }) => {
+          this.workerManager.trigger("SEND", run_id, data);
+        };
+      case "ressources":
+        return () => {
+          const res = this.workerManager.getAllocatedRessources(workflowName);
+          return JSON.parse(JSON.stringify(res));
+        };
+      default:
+        return () => null;
+    }
+  }
+
+  #startResolver(workflowName: string): Resolver {
+    return () => {
+      const modPath = this.workflowFiles.get(workflowName);
+      if (!modPath) {
+        throw new Error(
+          `Fatal: cannot find workflow file for "${workflowName}"`,
+        );
+      }
+
+      const { run } = nativeResult(
+        native.createOrGetRun({
+          backend: this.backend,
+          run_id: workflowName, // FIXME: rename to name
+        }),
+      );
+
+      const runId = this.workerManager.triggerStart(workflowName, modPath, run);
+
+      this.workerManager.listen(
+        runId,
+        this.#eventResultHandlerFor(workflowName, runId),
+      );
+
+      return runId;
+    };
+  }
+
+  async #prepareWorkflowFiles(
     artifacts: Record<string, Artifact>,
     materializers: Materializer[],
     typegate: Typegate,
@@ -142,7 +184,7 @@ export class SubstantialRuntime extends Runtime {
     const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
 
     for (const mat of materializers) {
-      if (!["start", "stop", "send"].includes(mat.name)) {
+      if (!["start", "stop", "send", "ressources"].includes(mat.name)) {
         continue;
       }
 
@@ -183,7 +225,7 @@ export class SubstantialRuntime extends Runtime {
     return await typegate.artifactStore.getLocalPath(moduleMeta, depMetas);
   }
 
-  #eventResultHandlerFor(runId: string) {
+  #eventResultHandlerFor(workflowName: string, runId: string) {
     return (result: Result<unknown>) => {
       if (result.error) {
         // TODO: better way to notify back through gql
@@ -215,6 +257,8 @@ export class SubstantialRuntime extends Runtime {
               )
             }`,
           );
+
+          this.workerManager.destroyWorker(workflowName, runId);
           break;
         }
         case "SEND": {

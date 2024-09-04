@@ -518,6 +518,7 @@ interface runtimes {
         start(workflow),
         stop(workflow),
         send(workflow),
+        ressources(workflow),
     }
 
     record substantial-operation-data {

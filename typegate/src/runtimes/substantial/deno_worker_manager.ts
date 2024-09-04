@@ -13,7 +13,11 @@ import {
 
 const logger = getLogger();
 
-export type WorkerRecord = { worker: Worker; modulePath: string };
+export type WorkerRecord = {
+  worker: Worker;
+  modulePath: string;
+  startedAt: Date;
+};
 export type RunId = string;
 export type WorkflowName = string;
 
@@ -112,7 +116,11 @@ export class WorkerManager {
       type: "module",
     });
 
-    this.recorder.addWorker(name, runId, { modulePath, worker });
+    this.recorder.addWorker(name, runId, {
+      modulePath,
+      worker,
+      startedAt: new Date(),
+    });
 
     return runId;
   }
@@ -131,6 +139,18 @@ export class WorkerManager {
           .join(", ")
       }`,
     );
+  }
+
+  getAllocatedRessources(name: WorkflowName) {
+    const runIds = this.recorder.workflowRuns.get(name) ?? new Set<string>();
+    return {
+      count: runIds.size,
+      workflow: name,
+      running: Array.from(runIds).map((runId) => {
+        const { startedAt: started_at } = this.recorder.getWorkerRecord(runId);
+        return { run_id: runId, started_at };
+      }),
+    };
   }
 
   listen(runId: RunId, handlerFn: WorkerEventHandler) {
