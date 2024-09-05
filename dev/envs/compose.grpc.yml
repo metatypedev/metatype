@@ -1,0 +1,13 @@
+services:
+  grpc-runtime-test:
+    image: tkpd/gripmock
+    container_name: grpc-runtime-test
+    ports:
+      - "4770:4770"
+      - "4771:4771"
+    volumes:
+      - ./proto:/proto
+      - ./stub:/stub
+    command: >
+      --stub=/stub \
+      ../grpc/proto/helloworld.proto

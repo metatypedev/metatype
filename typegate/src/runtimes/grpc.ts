@@ -48,9 +48,7 @@ export class GrpcRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
-    nativeVoid(
-      await native.grpc_unregister({ client_id: this.id }),
-    );
+    nativeVoid(await native.grpc_unregister({ client_id: this.id }));
   }
 
   materialize(
@@ -61,11 +59,10 @@ export class GrpcRuntime extends Runtime {
     const { method } = stage.props.materializer?.data ?? {};
 
     const resolver: Resolver = async (args) => {
-      const { payload } = args;
       return nativeResult(
         await native.call_grpc_method({
           method: String(method),
-          payload,
+          payload: JSON.stringify(args),
           client_id: this.id,
         }),
       );
