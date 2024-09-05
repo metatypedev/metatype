@@ -180,8 +180,8 @@ impl TryFrom<Event> for Operation {
                         at,
                         event: OperationEvent::Sleep {
                             id: sleep.id,
-                            start: DateTime::from_timestamp_nanos(start.nanos.into()),
-                            end: DateTime::from_timestamp_nanos(end.nanos.into()),
+                            start: to_datetime_utc(start.get_or_default())?,
+                            end: to_datetime_utc(end.get_or_default())?,
                         },
                     });
                 }
