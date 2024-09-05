@@ -97,7 +97,7 @@ export class WorkerManager {
 
   private constructor() {}
 
-  #nextId(name: string): RunId {
+  static nextId(name: string): RunId {
     const uuid = crypto.randomUUID();
     return `${name}_${uuid}`;
   }
@@ -109,9 +109,7 @@ export class WorkerManager {
     return WorkerManager.instance;
   }
 
-  #createWorker(name: string, modulePath: string, knownRunId?: RunId): RunId {
-    const runId = knownRunId ?? this.#nextId(name);
-
+  #createWorker(name: string, modulePath: string, runId: RunId) {
     const worker = new Worker(import.meta.resolve("./worker.ts"), {
       type: "module",
     });
@@ -121,8 +119,6 @@ export class WorkerManager {
       worker,
       startedAt: new Date(),
     });
-
-    return runId;
   }
 
   destroyWorker(name: string, runId: string) {
@@ -186,20 +182,19 @@ export class WorkerManager {
 
   triggerStart(
     name: string,
+    runId: string,
     workflowModPath: string,
     storedRun: Run,
     kwargs: Record<string, unknown>,
-    knownRunId?: RunId,
-  ): RunId {
-    const runId = this.#createWorker(name, workflowModPath, knownRunId);
+  ) {
+    this.#createWorker(name, workflowModPath, runId);
+
     this.trigger("START", runId, {
       modulePath: workflowModPath,
       functionName: name,
       run: storedRun,
       kwargs,
     });
-
-    return runId;
   }
 
   triggerStop(runId: RunId) {

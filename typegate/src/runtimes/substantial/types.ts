@@ -61,8 +61,6 @@ export class Interrupt extends Error {
     return null;
   }
 
-  static Interrupt() {}
-
   static Variant(kind: InterruptType) {
     return new Interrupt(kind);
   }

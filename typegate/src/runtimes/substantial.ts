@@ -171,27 +171,23 @@ export class SubstantialRuntime extends Runtime {
 
   #startResolver(workflowName: string): Resolver {
     return ({ kwargs }) => {
-      const modPath = this.workflowFiles.get(workflowName);
-      if (!modPath) {
-        throw new Error(
-          `Fatal: cannot find workflow file for "${workflowName}"`,
-        );
-      }
+      const modPath = this.#getModPath(workflowName);
+      const runId = WorkerManager.nextId(workflowName);
 
       const { run } = nativeResult(
         native.createOrGetRun({
           backend: this.backend,
-          run_id: workflowName, // FIXME: rename to name
+          run_id: runId,
         }),
       );
 
-      const runId = this.workerManager.triggerStart(
+      this.workerManager.triggerStart(
         workflowName,
+        runId,
         modPath,
         run,
         kwargs,
       );
-
       this.workerManager.listen(
         runId,
         this.#eventResultHandlerFor(workflowName, runId),
@@ -279,28 +275,30 @@ export class SubstantialRuntime extends Runtime {
               run: ret.run,
             }),
           );
-          this.workerManager.destroyWorker(workflowName, runId); // !
 
           if (Interrupt.getTypeOf(ret.exception) != null) {
-            const knownRunId = runId;
             const deferMs = 3000;
             setTimeout(() => {
+              this.workerManager.destroyWorker(workflowName, runId); // !
+
               logger.warn(
-                `Interrupt "${workflowName}": ${ret.result}, relaunching under "${knownRunId}"`,
+                `Interrupt "${workflowName}": ${ret.result}, relaunching under "${runId}"`,
               );
               this.workerManager.triggerStart(
                 workflowName,
+                runId,
                 this.#getModPath(workflowName),
                 ret.run,
                 ret.run.operations[0],
-                knownRunId,
               );
               this.workerManager.listen(
-                knownRunId,
-                this.#eventResultHandlerFor(workflowName, knownRunId),
+                runId,
+                this.#eventResultHandlerFor(workflowName, runId),
               );
             }, deferMs);
           } else {
+            this.workerManager.destroyWorker(workflowName, runId); // !
+
             logger.info(
               `gracefull completion of "${runId}": ${
                 JSON.stringify(
@@ -321,6 +319,7 @@ export class SubstantialRuntime extends Runtime {
               },
             });
           }
+
           break;
         }
         case "SEND": {
