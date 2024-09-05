@@ -110,9 +110,9 @@ export default {
   },
 
   "dev-gate3": {
-    desc: "Launch the typegate from a locally found meta bin.",
+    desc: "Launch the typegate from meta-cli cmd.",
     inherit: "dev-gate1",
-    fn: ($) => $`meta dev`,
+    fn: ($) => $`cargo run -p meta-cli -F typegate -- typegate`,
   },
 
   "dev-gate4": {
@@ -148,6 +148,12 @@ export default {
         -e TG_ADMIN_PASSWORD=password
         ghcr.io/metatypedev/typegate:latest
     `,
+  },
+
+  "dev-gate6": {
+    desc: "Launch the typegate from a locally found meta bin.",
+    inherit: "dev-gate1",
+    fn: ($) => $`meta dev`,
   },
 
   "dev-website": {

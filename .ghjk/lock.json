@@ -1065,6 +1065,12 @@
               "desc": "Launch the website",
               "envKey": "bciqn4urah5beauhii24btx3t5eh2gsoqldg6hqiqn7wstpbcuecfj2y"
             },
+            "dev-gate6": {
+              "ty": "denoFile@v1",
+              "key": "dev-gate6",
+              "desc": "Launch the typegate from a locally found meta bin.",
+              "envKey": "bciqizu3vblpk5gaendo6cyg42jzqa7zu6teyiodnfhoajdtbbv7q6za"
+            },
             "dev-gate5": {
               "ty": "denoFile@v1",
               "key": "dev-gate5",
@@ -1080,7 +1086,7 @@
             "dev-gate3": {
               "ty": "denoFile@v1",
               "key": "dev-gate3",
-              "desc": "Launch the typegate from a locally found meta bin.",
+              "desc": "Launch the typegate from meta-cli cmd.",
               "envKey": "bciqizu3vblpk5gaendo6cyg42jzqa7zu6teyiodnfhoajdtbbv7q6za"
             },
             "dev-gate2": {
@@ -1193,6 +1199,7 @@
             "install-sys",
             "fetch-deno",
             "dev-website",
+            "dev-gate6",
             "dev-gate5",
             "dev-gate4",
             "dev-gate3",
