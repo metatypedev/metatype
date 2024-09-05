@@ -5,7 +5,10 @@ import { type QueryFn, QueryFunction } from "../../libs/jsonpath.ts";
 import type { TypeGraph } from "../../typegraph/mod.ts";
 import { Type } from "../../typegraph/type_node.ts";
 import type { ParameterTransformNode } from "../../typegraph/types.ts";
-import { type ValidationContext, validationContext } from "../typecheck/common.ts";
+import {
+  type ValidationContext,
+  validationContext,
+} from "../typecheck/common.ts";
 import { generateListValidator } from "../typecheck/inline_validators/list.ts";
 import { generateNumberValidator } from "../typecheck/inline_validators/number.ts";
 import {
@@ -174,9 +177,11 @@ class TransformerCompilationContext {
           return this.#compileSecretsInjection(typeIdx, nodeData.key);
         case "parent":
           return this.#compileParentInjection(typeIdx, nodeData.parentIdx);
+        case "static":
+          return this.#compileStaticInjection(typeIdx, nodeData.valueJson);
         default:
           throw new Error(
-            `Unknown source: ${nodeData.source} at ${this.#path}`,
+            `Unknown source: ${(nodeData as any).source} at ${this.#path}`,
           );
       }
     }
@@ -344,6 +349,15 @@ class TransformerCompilationContext {
       .find(([_key, idx]) => idx === parentIdx)!;
     const varName = this.#createVarName();
     this.#collector.push(`const ${varName} = parent[${JSON.stringify(key)}];`);
+    return varName;
+  }
+
+  #compileStaticInjection(_typeIdx: number, valueJson: string) {
+    // VALIDATION
+    // - the value is validated AOT with the typegraph
+
+    const varName = this.#createVarName();
+    this.#collector.push(`const ${varName} = ${valueJson};`);
     return varName;
   }
 
