@@ -178,7 +178,6 @@ export class Planner {
         }),
       );
       const unselectedVariants = new Set(selectableVariants.keys());
-
       if (unselectedVariants.size === 0 && selectionSet.selections.length > 0) {
         const path = this.formatPath(node.path);
         throw new Error(`at ${path}: Unexpected selections`);
@@ -238,6 +237,7 @@ export class Planner {
                     ...node,
                     path: parentPath,
                     typeIdx: idx,
+                    parentStage: stage,
                   },
                   outputType.properties,
                   stage,
