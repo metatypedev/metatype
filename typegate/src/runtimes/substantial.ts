@@ -292,7 +292,7 @@ export class SubstantialRuntime extends Runtime {
             },
           });
 
-          this.workerManager.destroyWorker(workflowName, runId);
+          this.workerManager.destroyWorker(workflowName, runId); // !
           break;
         }
         case "SEND": {
@@ -313,6 +313,8 @@ export class SubstantialRuntime extends Runtime {
               value: null,
             },
           });
+
+          this.workerManager.destroyWorker(workflowName, runId); // !
           break;
         }
         default:

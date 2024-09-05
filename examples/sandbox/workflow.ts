@@ -19,8 +19,9 @@ async function rangeSum(a: number) {
 
 export async function example(ctx: Context) {
   const { a, b } = ctx.kwargs;
+  // if (Math.random() < 0.5) throw new Error("Some error");
   const rangeA = await ctx.save(() => rangeSum(a as number));
-  await sleep(5000);
+  await sleep(10000);
   const rangeB = await ctx.save(() => rangeSum(b as number));
   return rangeA + rangeB;
 }

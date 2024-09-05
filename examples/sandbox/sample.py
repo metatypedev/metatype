@@ -29,5 +29,7 @@ def runtimes(g: Graph):
         start=wf.start(t.struct({"a": t.integer(), "b": t.integer()})),
         stop=wf.stop(),
         ressources=wf.query_ressources(),
-        results=wf.query_results(t.integer()),
+        results=wf.query_results(
+            t.either([t.integer(), t.string()]).rename("ResultOrError")
+        ),
     )
