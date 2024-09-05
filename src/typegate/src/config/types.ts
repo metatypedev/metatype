@@ -20,6 +20,14 @@ const addMissingEnvVarIssue = (envVar: string, ctx: RefinementCtx) => {
   return z.NEVER;
 };
 
+const refineEnvVar = (envVar: string) => z.string().optional().transform((s: string | undefined, ctx) => {
+  if (s === undefined) {
+    return addMissingEnvVarIssue(envVar, ctx);
+  }
+
+  return s;
+});
+
 export const globalConfigSchema = z.object({
   debug: zBooleanString,
   // To be set to false when running from source.
@@ -46,7 +54,7 @@ export const typegateConfigBaseSchema = z.object({
     .optional()
     .transform((s: string | undefined, ctx) => {
       if (s === undefined) {
-        return addMissingEnvVarIssue("TG_ADMIN_PASSWORD", ctx);
+        return addMissingEnvVarIssue("TG_SECRET", ctx);
       }
 
       const bytes = decodeBase64(s);
@@ -61,16 +69,7 @@ export const typegateConfigBaseSchema = z.object({
   timer_max_timeout_ms: z.coerce.number().positive().max(60000),
   timer_destroy_resources: z.boolean(),
   timer_policy_eval_retries: z.number().nonnegative().max(5),
-  tg_admin_password: z
-    .string()
-    .optional()
-    .transform((s: string | undefined, ctx) => {
-      if (s === undefined) {
-        return addMissingEnvVarIssue("TG_ADMIN_PASSWORD", ctx);
-      }
-
-      return s;
-    }),
+  tg_admin_password: refineEnvVar("TG_ADMIN_PASSWORD"),
   tmp_dir: z.string(),
   jwt_max_duration_sec: z.coerce.number().positive(),
   jwt_refresh_duration_sec: z.coerce.number().positive(),
@@ -84,48 +83,18 @@ export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;
 // These config entries are only accessible on a Typegate instance.
 // They are not read from a global variable to enable test isolation and configurability.
 export const syncConfigSchema = z.object({
-  redis_url: z.string().transform((s, ctx) => {
+  redis_url: z.string().optional().transform((s, ctx) => {
     if (s === undefined) {
-      return addMissingEnvVarIssue("TG_ADMIN_PASSWORD", ctx);
+      return addMissingEnvVarIssue("SYNC_REDIS_URL", ctx);
     }
 
     return new URL(s);
   }),
-  s3_host: z.string().transform((s, ctx) => {
-    if (s === undefined) {
-      return addMissingEnvVarIssue("S3_HOST", ctx);
-    }
-
-    return new URL(s);
-  }),
-  s3_region: z.string().transform((s: string | undefined, ctx) => {
-    if (s === undefined) {
-      return addMissingEnvVarIssue("S3_REGION", ctx);
-    }
-
-    return s;
-  }),
-  s3_bucket: z.string().transform((s: string | undefined, ctx) => {
-    if (s === undefined) {
-      return addMissingEnvVarIssue("S3_BUCKET", ctx);
-    }
-
-    return s;
-  }),
-  s3_access_key: z.string().transform((s: string | undefined, ctx) => {
-    if (s === undefined) {
-      return addMissingEnvVarIssue("S3_ACCESS_KEY", ctx);
-    }
-
-    return s;
-  }),
-  s3_secret_key: z.string().transform((s: string | undefined, ctx) => {
-    if (s === undefined) {
-      return addMissingEnvVarIssue("S3_SECRET_KEY", ctx);
-    }
-
-    return s;
-  }),
+  s3_host: refineEnvVar("SYNC_S3_HOST"),
+  s3_region: refineEnvVar("SYNC_S3_REGION"),
+  s3_bucket: refineEnvVar("SYNC_S3_BUCKET"),
+  s3_access_key: refineEnvVar("SYNC_S3_ACCESS_KEY"),
+  s3_secret_key: refineEnvVar("SYNC_S3_SECRET_KEY"),
   s3_path_style: zBooleanString.default(false),
 });
 export type SyncConfig = z.infer<typeof syncConfigSchema>;
