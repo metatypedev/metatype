@@ -464,9 +464,19 @@ export type Backend =
     };
   };
 
+export type OperationEvent =
+  | { type: "Sleep"; id: number; start: string; end: string }
+  | { type: "Save"; id: number; value: unknown }
+  | { type: "Send"; event_name: string; value: unknown }
+  | { type: "Stop"; result: unknown }
+  | { type: "Start"; kwargs: Record<string, unknown> }
+  | { type: "Compensate" };
+
+export type Operation = { at: string; event: OperationEvent };
+
 export type Run = {
   run_id: string;
-  operations: Array<unknown>;
+  operations: Array<Operation>;
 };
 
 export type CreateOrGetInput = {

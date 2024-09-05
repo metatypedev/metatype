@@ -109,8 +109,8 @@ export class WorkerManager {
     return WorkerManager.instance;
   }
 
-  #createWorker(name: string, modulePath: string): RunId {
-    const runId = this.#nextId(name);
+  #createWorker(name: string, modulePath: string, knownRunId?: RunId): RunId {
+    const runId = knownRunId ?? this.#nextId(name);
 
     const worker = new Worker(import.meta.resolve("./worker.ts"), {
       type: "module",
@@ -189,8 +189,9 @@ export class WorkerManager {
     workflowModPath: string,
     storedRun: Run,
     kwargs: Record<string, unknown>,
+    knownRunId?: RunId,
   ): RunId {
-    const runId = this.#createWorker(name, workflowModPath);
+    const runId = this.#createWorker(name, workflowModPath, knownRunId);
     this.trigger("START", runId, {
       modulePath: workflowModPath,
       functionName: name,

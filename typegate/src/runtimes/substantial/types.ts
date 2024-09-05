@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Run } from "native";
-export type { Run } from "native";
+export type { Operation, OperationEvent, Run } from "native";
 
 export type AnyString = string & Record<string | number | symbol, never>;
 
@@ -35,5 +35,35 @@ export function Msg(type: WorkerEvent, data: unknown): WorkerData {
 export type WorkflowResult = {
   kind: "SUCCESS" | "FAIL";
   result: unknown;
+  exception?: Error;
   run: Run;
 };
+
+// TODO: convert python exceptions into these
+// by using prefixes on the exception message for example
+
+// Note: Avoid refactoring with inheritance
+// inheritance information is erased when sending exceptions accross workers
+
+export type InterruptType = "SLEEP";
+
+export class Interrupt extends Error {
+  private static readonly PREFIX = "SUBSTANTIAL_INTERRUPT_";
+
+  private constructor(type: string) {
+    super(Interrupt.PREFIX + type);
+  }
+
+  static getTypeOf(err: unknown): InterruptType | null {
+    if (err instanceof Error && err.message.startsWith(this.PREFIX)) {
+      return err.message.substring(this.PREFIX.length) as InterruptType;
+    }
+    return null;
+  }
+
+  static Interrupt() {}
+
+  static Variant(kind: InterruptType) {
+    return new Interrupt(kind);
+  }
+}

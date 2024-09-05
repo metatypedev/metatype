@@ -50,8 +50,12 @@ self.onmessage = async function (event) {
                 type,
                 {
                   kind: "FAIL",
-                  result: wfException?.toString() ??
-                    JSON.stringify(wfException),
+                  result: wfException instanceof Error
+                    ? wfException.message
+                    : JSON.stringify(wfException),
+                  exception: wfException instanceof Error
+                    ? wfException
+                    : undefined,
                   run: runCtx!.getRun(),
                 } satisfies WorkflowResult,
               ),

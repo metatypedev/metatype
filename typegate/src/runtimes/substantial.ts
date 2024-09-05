@@ -15,6 +15,7 @@ import { path } from "compress/deps.ts";
 import { Artifact, Materializer } from "@typegate/typegraph/types.ts";
 import { Typegate } from "@typegate/typegate/mod.ts";
 import {
+  Interrupt,
   Result,
   WorkerData,
   WorkflowResult,
@@ -256,6 +257,7 @@ export class SubstantialRuntime extends Runtime {
     return (result: Result<unknown>) => {
       if (result.error) {
         // TODO: better way to notify back through gql
+        // All Worker/Runner level issue falls here
         logger.error(
           `result error for "${runId}": ${JSON.stringify(result.payload)}`,
         );
@@ -277,22 +279,48 @@ export class SubstantialRuntime extends Runtime {
               run: ret.run,
             }),
           );
-
-          logger.info(
-            `completed execution of "${runId}": ${JSON.stringify(ret.result)}`,
-          );
-
-          this.#addResult(workflowName, {
-            run_id: runId,
-            started_at: startedAt.toJSON(),
-            ended_at: new Date().toJSON(),
-            result: {
-              status: ret.kind == "FAIL" ? "COMPLETED_WITH_ERROR" : "COMPLETED",
-              value: ret.result, // hinted by the user
-            },
-          });
-
           this.workerManager.destroyWorker(workflowName, runId); // !
+
+          if (Interrupt.getTypeOf(ret.exception) != null) {
+            const knownRunId = runId;
+            const deferMs = 3000;
+            setTimeout(() => {
+              logger.warn(
+                `Interrupt "${workflowName}": ${ret.result}, relaunching under "${knownRunId}"`,
+              );
+              this.workerManager.triggerStart(
+                workflowName,
+                this.#getModPath(workflowName),
+                ret.run,
+                ret.run.operations[0],
+                knownRunId,
+              );
+              this.workerManager.listen(
+                knownRunId,
+                this.#eventResultHandlerFor(workflowName, knownRunId),
+              );
+            }, deferMs);
+          } else {
+            logger.info(
+              `gracefull completion of "${runId}": ${
+                JSON.stringify(
+                  ret.result,
+                )
+              }`,
+            );
+
+            this.#addResult(workflowName, {
+              run_id: runId,
+              started_at: startedAt.toJSON(),
+              ended_at: new Date().toJSON(),
+              result: {
+                status: ret.kind == "FAIL"
+                  ? "COMPLETED_WITH_ERROR"
+                  : "COMPLETED",
+                value: ret.result, // hinted by the user
+              },
+            });
+          }
           break;
         }
         case "SEND": {
@@ -331,5 +359,13 @@ export class SubstantialRuntime extends Runtime {
 
   #addResult(workflowName: string, result: QueryWorkflowResult) {
     this.workflowResults.get(workflowName)!.push(result);
+  }
+
+  #getModPath(workflowName: string) {
+    const modPath = this.workflowFiles.get(workflowName);
+    if (!modPath) {
+      throw new Error(`Fatal: cannot find workflow file for "${workflowName}"`);
+    }
+    return modPath;
   }
 }

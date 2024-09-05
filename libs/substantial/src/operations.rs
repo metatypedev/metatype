@@ -2,8 +2,12 @@ use std::collections::HashMap;
 
 use anyhow::{bail, Context, Ok, Result};
 use chrono::{DateTime, Utc};
+
 use protobuf::{
-    well_known_types::struct_::{self, Struct},
+    well_known_types::{
+        struct_::{self, Struct},
+        timestamp::Timestamp,
+    },
     MessageField,
 };
 use serde::{Deserialize, Serialize};
@@ -21,8 +25,10 @@ pub enum RunResult {
 
 /// Each Operation will be recovered from typescript
 #[derive(Serialize, Deserialize, Clone)]
-pub enum Operation {
+#[serde(tag = "type")]
+pub enum OperationEvent {
     Sleep {
+        id: u32,
         start: DateTime<Utc>,
         end: DateTime<Utc>,
     },
@@ -41,6 +47,12 @@ pub enum Operation {
         kwargs: HashMap<String, serde_json::Value>,
     },
     Compensate,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Operation {
+    at: DateTime<Utc>,
+    event: OperationEvent,
 }
 
 /// A Run is a set of operations
@@ -103,6 +115,7 @@ impl TryFrom<Event> for Operation {
         use crate::protocol::events::event::Of;
         use crate::protocol::events::stop;
 
+        let at = to_datetime_utc(event.at.get_or_default())?;
         if let Some(of) = event.of.clone() {
             match of {
                 Of::Start(start) => {
@@ -118,7 +131,10 @@ impl TryFrom<Event> for Operation {
                         })
                         .collect::<Result<_>>()?;
 
-                    return Ok(Operation::Start { kwargs });
+                    return Ok(Operation {
+                        at,
+                        event: OperationEvent::Start { kwargs },
+                    });
                 }
                 Of::Stop(stop) => {
                     if let Some(result) = stop.result {
@@ -126,31 +142,47 @@ impl TryFrom<Event> for Operation {
                             stop::Result::Ok(value) => RunResult::Ok(serde_json::from_str(&value)?),
                             stop::Result::Err(e) => RunResult::Err(serde_json::from_str(&e)?),
                         };
-                        return Ok(Operation::Stop {
-                            result: Some(result),
+                        return Ok(Operation {
+                            at,
+                            event: OperationEvent::Stop {
+                                result: Some(result),
+                            },
                         });
                     }
-                    return Ok(Operation::Stop { result: None });
+                    return Ok(Operation {
+                        at,
+                        event: OperationEvent::Stop { result: None },
+                    });
                 }
                 Of::Save(save) => {
                     let raw_value = save.clone().value;
                     let value = serde_json::from_str(&raw_value)?;
-                    return Ok(Operation::Save { id: save.id, value });
+                    return Ok(Operation {
+                        at,
+                        event: OperationEvent::Save { id: save.id, value },
+                    });
                 }
                 Of::Send(send) => {
                     let raw_value = send.clone().value;
                     let value = serde_json::from_str(&raw_value)?;
                     let event_name = send.name.clone();
 
-                    return Ok(Operation::Send { event_name, value });
+                    return Ok(Operation {
+                        at,
+                        event: OperationEvent::Send { event_name, value },
+                    });
                 }
                 Of::Sleep(sleep) => {
                     let start = sleep.start.clone();
                     let end = sleep.end.clone();
 
-                    return Ok(Operation::Sleep {
-                        start: DateTime::from_timestamp_nanos(start.nanos.into()),
-                        end: DateTime::from_timestamp_nanos(end.nanos.into()),
+                    return Ok(Operation {
+                        at,
+                        event: OperationEvent::Sleep {
+                            id: sleep.id,
+                            start: DateTime::from_timestamp_nanos(start.nanos.into()),
+                            end: DateTime::from_timestamp_nanos(end.nanos.into()),
+                        },
                     });
                 }
             }
@@ -164,10 +196,12 @@ impl TryFrom<Operation> for Event {
     type Error = anyhow::Error;
     fn try_from(operation: Operation) -> Result<Event> {
         use crate::protocol::events::event::Of;
-        use crate::protocol::events::{stop, Event, Save, Start, Stop};
+        use crate::protocol::events::{stop, Event, Save, Send, Sleep, Start, Stop};
 
-        match operation {
-            Operation::Start { kwargs } => {
+        let at = to_timestamp(&operation.at);
+
+        match operation.event {
+            OperationEvent::Start { kwargs } => {
                 let mut struct_ = Struct {
                     fields: HashMap::new(),
                     ..Default::default()
@@ -187,11 +221,12 @@ impl TryFrom<Operation> for Event {
                 };
 
                 Ok(Event {
+                    at: MessageField::some(at),
                     of: Some(Of::Start(start)),
                     ..Default::default()
                 })
             }
-            Operation::Stop { result } => {
+            OperationEvent::Stop { result } => {
                 let stop_result = match result {
                     Some(res) => Some(match res {
                         RunResult::Ok(value) => stop::Result::Ok(serde_json::to_string(&value)?),
@@ -206,11 +241,12 @@ impl TryFrom<Operation> for Event {
                 };
 
                 Ok(Event {
+                    at: MessageField::some(at),
                     of: Some(Of::Stop(stop)),
                     ..Default::default()
                 })
             }
-            Operation::Save { id, value } => {
+            OperationEvent::Save { id, value } => {
                 let save = Save {
                     id,
                     value: serde_json::to_string(&value)?,
@@ -218,41 +254,55 @@ impl TryFrom<Operation> for Event {
                 };
 
                 Ok(Event {
+                    at: MessageField::some(at),
                     of: Some(Of::Save(save)),
                     ..Default::default()
                 })
             }
-            // Operation::Sleep { start, end } => {
-            //     // TODO: normalize
-            //     // Timestamp::from(..);
-            //     let sleep = Sleep {
-            //         id,
-            //         start: start.timestamp_nanos(),
-            //         end: end.timestamp_nanos(),
-            //         ..Default::default()
-            //     };
+            OperationEvent::Sleep { id, start, end } => {
+                let sleep = Sleep {
+                    id,
+                    start: MessageField::some(to_timestamp(&start)),
+                    end: MessageField::some(to_timestamp(&end)),
+                    ..Default::default()
+                };
 
-            //     Ok(Event {
-            //         of: Some(Of::Sleep(sleep)),
-            //         ..Default::default()
-            //     })
-            // }
-            // Operation::Send { event_name, value } => {
-            //     let send = Send {
-            //         name: event_name,
-            //         value: serde_json::to_string(&value)?,
-            //         ..Default::default()
-            //     };
+                Ok(Event {
+                    at: MessageField::some(at),
+                    of: Some(Of::Sleep(sleep)),
+                    ..Default::default()
+                })
+            }
+            OperationEvent::Send { event_name, value } => {
+                let send = Send {
+                    name: event_name,
+                    value: serde_json::to_string(&value)?,
+                    ..Default::default()
+                };
 
-            //     Ok(Event {
-            //         of: Some(Of::Send(send)),
-            //         ..Default::default()
-            //     })
-            // }
-            // Operation::Compensate => {
-            //     unimplemented!()
-            // }
-            _ => unimplemented!(),
+                Ok(Event {
+                    at: MessageField::some(at),
+                    of: Some(Of::Send(send)),
+                    ..Default::default()
+                })
+            }
+            OperationEvent::Compensate => {
+                unimplemented!()
+            }
         }
     }
+}
+
+fn to_timestamp(datetime: &DateTime<Utc>) -> Timestamp {
+    let mut timestamp = Timestamp::new();
+    timestamp.seconds = datetime.timestamp();
+    timestamp.nanos = datetime.timestamp_subsec_nanos() as i32;
+    timestamp
+}
+
+fn to_datetime_utc(time: &Timestamp) -> Result<DateTime<Utc>> {
+    if let Some(converted) = DateTime::from_timestamp(time.seconds, time.nanos as u32) {
+        return Ok(converted);
+    }
+    bail!("Cannot convert timestamp: {time:?}");
 }
