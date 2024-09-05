@@ -22,6 +22,16 @@ def typename(g: Graph):
         code="() => ({ id: 12 })",
     ).with_policy(public)
 
+    u8 = t.integer(min=0, max=255, name="U8")
+
+    color = t.either(
+        [
+            t.enum(["red", "green", "blue"]).rename("NamedColor"),
+            t.string(pattern=r"^#[0-9a-f]{6}$").rename("HexColor"),
+            t.struct({"r": u8, "g": u8, "b": u8}).rename("RgbColor"),
+        ]
+    )
+
     g.expose(
         denoUser=deno_user,
         randomUser=randomUser,
@@ -31,4 +41,17 @@ def typename(g: Graph):
             effect=effects.delete(),
         ).with_policy(public),
         createUser=prisma.create(prisma_user).with_policy(public),
+        getRgbColor=deno.identity(t.struct({"color": color}))
+        .apply(
+            {
+                "color": g.set(
+                    {
+                        "r": 255,
+                        "g": 0,
+                        "b": 0,
+                    }
+                )
+            }
+        )
+        .with_policy(public),
     )

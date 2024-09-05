@@ -166,12 +166,9 @@ export class DenoRuntime extends Runtime {
     verbose: boolean,
   ): ComputeStage[] {
     if (stage.props.node === "__typename") {
-      return [
-        stage.withResolver(() => {
-          const { parent: parentStage } = stage.props;
-          if (parentStage != null) {
-            return parentStage.props.outType.title;
-          }
+      const getTypename = () => {
+        const parentStage = stage.props.parent;
+        if (parentStage == null) {
           switch (stage.props.operationType) {
             case ast.OperationTypeNode.QUERY:
               return "Query";
@@ -182,7 +179,19 @@ export class DenoRuntime extends Runtime {
                 `Unsupported operation type '${stage.props.operationType}'`,
               );
           }
-        }),
+        }
+
+        const idSlice = stage.id().slice(parentStage.id().length);
+        if (idSlice.startsWith("$")) {
+          return idSlice.split(".")[0].slice(1);
+        }
+        return parentStage.props.outType.title;
+      };
+
+      const typename = getTypename();
+
+      return [
+        stage.withResolver(() => typename),
       ];
     }
 
