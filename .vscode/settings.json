@@ -25,6 +25,9 @@
   "typescript.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
   "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
   "rust-analyzer.checkOnSave": true,
+  "rust-analyzer.cargo.allTargets": true,
+  "rust-analyzer.check.features": "all",
+  "rust-analyzer.check.allTargets": true,
   "editor.wordWrap": "on",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",

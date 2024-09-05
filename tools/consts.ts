@@ -12,7 +12,7 @@ export const WASMTIME_PY_VERSION = "21.0.0";
 export const TYPEGRAPH_VERSION = "0.0.3";
 export const PRISMA_VERSION = "5.6.0";
 export const SDK_PACKAGE_NAME_TS = "@typegraph/sdk";
-export const PYTHON_VERSION = "3.8.18";
+export const PYTHON_VERSION = "3.9.19";
 export const TAGLINE =
   `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.` as string;
 
