@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "typegraph"
+version = "0.4.10"
+description = "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are."
+authors = ["Metatype Contributors <support@metatype.dev>"]
+license = "MPL-2.0"
+homepage = "https://metatype.dev"
+repository = "https://github.com/metatypedev/metatype"
+include = ["typegraph/**/*", "LICENSE.md"]
+keywords = ["api", "composition", "typesystem", "graphql", "ecosystem"]
+classifiers = [
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+wasmtime = "^21.0.0"
+typing-extensions = "^4.8.0"
+python-box = "^7.1.1"
+astunparse = "^1.6.3"

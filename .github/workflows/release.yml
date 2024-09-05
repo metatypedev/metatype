@@ -184,21 +184,21 @@ jobs:
 
           WASM_OPT=1 ghjk x build-tgraph
 
-          cd typegraph/python
+          cd src/typegraph/python
           poetry build
           [ "$OVERWRITE" == 'true' ] \
             && poetry publish --skip-existing \
             || poetry publish
           cd -
 
-          cd typegraph/node
+          cd src/typegraph/node
           pnpm config set '//registry.npmjs.org/:_authToken' "${NODE_AUTH_TOKEN}"
           [ "$OVERWRITE" == 'true' ] \
             && (pnpm publish --no-git-checks --force || true) \
             || pnpm publish --no-git-checks
           cd -
 
-          cd typegraph/deno/sdk
+          cd src/typegraph/deno/
           ghjk x build-tgraph-ts-jsr
           [ "$OVERWRITE" == 'true' ] \
             && (deno publish --allow-slow-types --allow-dirty || true) \
@@ -208,7 +208,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
-          file: "typegraph/python/dist/*"
+          file: "src/typegraph/python/dist/*"
           file_glob: true
           overwrite: ${{ inputs.ovewriteArtifacts }}
 
@@ -241,7 +241,7 @@ jobs:
       - uses: docker/build-push-action@v6
         id: build
         with:
-          file: dev/Dockerfile
+          file: tools/Dockerfile
           platforms: ${{ matrix.platform }}
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:latest
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
@@ -306,7 +306,7 @@ jobs:
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         run: |
-          cd meta-lsp
+          cd src/meta-lsp
           pnpm install --frozen-lockfile
           cd ts-language-server
           pnpm install --frozen-lockfile
@@ -317,13 +317,16 @@ jobs:
           pnpm compile:vscode
           pnpm vscode:package
 
-          [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
-            && pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} --skip-duplicate \
-            || pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }}
+          # avoid publishing pre-release versions as they don't
+          # support it
+          [[ "$(ghjk x version-print)" != *-* ]] \
+            && ([ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
+              && pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} --skip-duplicate \
+              || pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }})
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
-          file: "meta-lsp/*.vsix"
+          file: "src/meta-lsp/*.vsix"
           file_glob: true
           overwrite: ${{ inputs.ovewriteArtifacts }}
 
@@ -340,6 +343,7 @@ jobs:
           fetch-depth: 0
       - uses: dsherret/rust-toolchain-file@v1
       - uses: kenji-miyake/setup-git-cliff@v2
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - id: bump
         run: |
           ghjk x version-bump prerelease

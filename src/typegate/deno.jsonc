@@ -1,0 +1,17 @@
+{
+  // NOTE: avoid adding imports or anything crtiical
+  // at runtime here since we only have acccess to the import
+  // map then
+  "lint": {
+    "exclude": [],
+    "rules": {
+      "include": [
+        // FIXME: replace console.log usage with logger
+        // "no-console"
+      ],
+      "exclude": [
+        "no-explicit-any"
+      ]
+    }
+  }
+}

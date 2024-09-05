@@ -17,7 +17,7 @@ jobs:
           filters: |
             website:
               - '.github/**'
-              - 'website/**'
+              - 'docs/metatype.dev/**'
     outputs:
       website: ${{ steps.filter.outputs.website }}
 
@@ -39,13 +39,13 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           poetry install --no-root
-          cd website
+          cd docs/metatype.dev
           pnpm install --frozen-lockfile
           pnpm build
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: website/build
+          publish_dir: docs/metatype.dev/build
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
           cname: metatype.dev

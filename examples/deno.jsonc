@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "@typegraph/sdk/": "../src/typegraph/deno/src/"
+  }
+}

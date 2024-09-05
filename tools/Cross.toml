@@ -1,0 +1,4 @@
+[build]
+dockerfile = "./tools/cross.Dockerfile"
+context = ".."
+env.passthrough = ["DENO_SKIP_CROSS_BUILD_CHECK", "OCI", "CI"]

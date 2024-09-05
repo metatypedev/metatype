@@ -1,0 +1,688 @@
+---
+sidebar_position: 1
+---
+
+import Features from "@site/src/components/Features";
+import TGExample from "@site/src/components/TGExample";
+import Link from "@docusaurus/Link";
+import CodeBlock from "@theme/CodeBlock";
+
+# Features overview
+
+:::info Suggestions
+
+We're taking any and all kinds of feature requests, suggestions and recommendations. Please direct them kindly to the github [ticket](https://github.com/metatypedev/metatype/issues) or better yet [discussion](https://github.com/metatypedev/metatype/discussions/) boards. Thank you!
+
+:::
+
+<br />
+
+## Typegate
+
+<Features
+  rows={[
+    [
+      {
+        title: "GraphQL API",
+        status: "complete",
+        link: "/docs/reference/typegate",
+        body: (
+          <>
+            Expose select functions in your graph through a GraphQL API. These
+            root-functions will serve as the entry point to your graph for any
+            incoming request. The typegraph model is a great fit for GraphQL
+            semantics and this is the best supported way to consume typegraphs.
+          </>
+        ),
+      },
+      {
+        title: "GraphQL Subscriptions",
+        status: "future",
+        link: "https://github.com/metatypedev/metatype/issues/726",
+        body: <>Get real-time data to clients.</>,
+      },
+    ],
+    [
+      {
+        title: "REST API",
+        status: "complete",
+        link: "/docs/guides/rest",
+        body: (
+          <>
+            You can expose select root functions through a simple REST API. This
+            is handy to serve endpoints for clients that are not GraphQl
+            capable, even though it hampers access to some typegraph features.
+            Inputs will be sourced from either HTTP bodies or search parameters
+            according to HTTP verb.
+          </>
+        ),
+      },
+      {
+        title: "gRPC API",
+        status: "future",
+        link: "/docs/reference/typegate",
+        body: <>Support to expose the typegraph through a gRPC API.</>,
+      },
+    ],
+    [
+      {
+        title: "Cron triggers",
+        status: "future",
+        link: "/docs/reference/typegate",
+        body: (
+          <>
+            Execute functions at certain time intervals. Useful for cleanup
+            jobs.
+          </>
+        ),
+      },
+      <div></div>,
+    ],
+    [
+      {
+        title: "Rate-limiting",
+        status: "complete",
+        link: "/docs/reference/typegate/cors",
+        body: (
+          <>
+            Rate-limit parts of your graph to minimize abuse. The limits can be
+            configured granularly for each function and for custom time windows.
+            Use custom request identifiers, in addition to ip addresses, to
+            track limits counters.
+          </>
+        ),
+      },
+      {
+        title: "CORS",
+        status: "complete",
+        link: "/docs/reference/typegate/cors",
+        body: (
+          <>
+            Specify cross-origin request rules to control which domains can
+            access your API from within a browser. Prevents abuse from websites
+            trying to use your API without permission.
+          </>
+        ),
+      },
+    ],
+    [
+      {
+        title: "Single-node",
+        status: "complete",
+        link: "/docs/reference/typegate/synchronization",
+        body: (
+          <>
+            The typegate can be run as a single node mode for simple deployments
+            and using the filesystem as its artifact store. Useful for local
+            development and testing.
+          </>
+        ),
+      },
+      {
+        title: "Multi-node",
+        status: "complete",
+        link: "/docs/reference/typegate/synchronization",
+        body: (
+          <>
+            Deploy multiple instances of the typegate to distribute loads across
+            machines and scale horizontally. You'll only need a Redis compatible
+            key-value cache, an S3 compatible object store, and your favorite
+            load-balancer in front of the instances to get it going. This mode
+            is recommended for production deployments even if only a single node
+            is used.
+          </>
+        ),
+      },
+    ],
+  ]}
+/>
+
+<br />
+
+## Typegraph
+
+<Features
+  rows={[
+    [
+      <TGExample
+        python={require("!!code-loader!../../../../../examples/typegraphs/first-typegraph.py")}
+        typescript={require("!!code-loader!../../../../../examples/typegraphs/first-typegraph.ts")}
+        disablePlayground
+      />,
+    ],
+    [
+      {
+        title: "Scalar types",
+        status: "complete",
+        link: "/docs/reference/types#scalar-types",
+        body: (
+          <>
+            The primitive types <code>integer</code>, <code>float</code>,{" "}
+            <code>boolean</code>, <code>string</code> and <code>file</code>. All
+            data that flows through a typegraph reduces down to these types.
+          </>
+        ),
+      },
+      {
+        title: "Type constraints",
+        status: "complete",
+        link: "/docs/reference/types/injections",
+        body: (
+          <>
+            Declare types in your graph that are subset of primitives like
+            string and integers by using regular expressions or min/max limits.
+            Useful to validate incoming data even more and distribute invariants
+            through your app.
+          </>
+        ),
+      },
+    ],
+    [
+      {
+        title: "Composite types",
+        status: "complete",
+        link: "/docs/reference/types#scalar-types",
+        body: (
+          <>
+            Support for <code>struct</code>, <code>list</code>,{" "}
+            <code>union</code>, <code>either</code> and <code>optional</code>{" "}
+            types. These allow you to represent types equivalent to most modern
+            type systems.
+          </>
+        ),
+      },
+      {
+        title: "Injections",
+        status: "complete",
+        link: "/docs/reference/types/injections",
+        body: (
+          <>
+            Injections resolve part of your graph inline instead of from
+            functions or provide defaults for incoming request data. This can be
+            used to set static values or source them from the context, other
+            parts of the graph...etc.
+          </>
+        ),
+      },
+    ],
+    [
+      {
+        title: "Functions",
+        status: "complete",
+        link: "/docs/reference/types/functions",
+        body: (
+          <>
+            Nodes in your typegraph that represent data to be resolved after
+            running some logic on a <code>Runtime</code>.
+          </>
+        ),
+      },
+      {
+        title: "Function chaining",
+        status: "future",
+        link: "https://github.com/metatypedev/metatype/issues/721",
+        body: (
+          <>
+            Compose functions together by feeding the output of one as the input
+            of another. Encourages code reuse by allowing one to extract common
+            middleware logic from each function, all within the typegraph layer.
+          </>
+        ),
+      },
+    ],
+    [
+      {
+        title: <code>reduce</code>,
+        status: "complete",
+        link: "/docs/reference/types/parameter-transformations#funcreducetree",
+        body: (
+          <>
+            <code>reduce</code> is useful to transform function input types so
+            that only certain struct fields are used, discarding the others.
+            Required fields can be hidden from the user and can instead be
+            injected from the request's context or a static default. This is
+            useful for remixing generated or core domain types to more targeted
+            forms appropriate for a function.
+          </>
+        ),
+      },
+      {
+        title: <code>apply</code>,
+        status: "complete",
+        link: "/docs/reference/types/parameter-transformations#funcapplytree",
+        body: (
+          <>
+            <code>apply</code> allows the flattening of deeply nested function
+            input types to something friendlier. Injection can also be used to
+            substitute required fields in the original type from another source.
+          </>
+        ),
+      },
+    ],
+    [
+      {
+        title: "Imports",
+        status: "future",
+        link: "https://github.com/metatypedev/metatype/issues/722",
+        body: (
+          <>
+            Imports will allow graphs to include nodes from other API
+            descriptions like GraphQL, OpenAPI, gRPC and database schemas. These
+            APIs can then be consumed in a typesafe manner through the{" "}
+            <code>GraphQL</code> and <code>Http</code> runtimes.
+          </>
+        ),
+      },
+      {
+        title: "Secrets",
+        status: "complete",
+        link: "#",
+        body: (
+          <>
+            First-class support for secrets to ease runtime substitution of
+            sensetive values. API keys or dynamic values only discovrable after
+            deployment, this is how you get them into your app.
+          </>
+        ),
+      },
+    ],
+  ]}
+/>
+
+<br />
+
+## Runtimes
+
+<Features
+  rows={[
+    [
+      {
+        title: "Deno runtime",
+        status: "complete",
+        link: "/docs/reference/runtimes/deno",
+        body: (
+          <>
+            Write functions that execute pieces of TypeScript code on a Deno worker.
+            Includes easy access to ESM and libraries through standard Deno features.
+          </>
+        ),
+      }, 
+    ],
+    [
+      <TGExample
+        python={require("!!code-loader!../../../../../examples/typegraphs/deno.py")}
+        typescript={require("!!code-loader!../../../../../examples/typegraphs/deno.ts")}
+        disablePlayground
+      />,
+    ],
+    [
+      {
+        title: "Python runtime",
+        status: "beta",
+        link: "/docs/reference/runtimes/python",
+        body: (
+          <>
+            Implement functions that execute python functions in code snippets or on disk modules.
+          </>
+        ),
+      }, 
+    ],
+    [
+      <CodeBlock
+        language="py"
+      >
+{`from typegraph import typegraph, Policy, t, Graph
+from typegraph.runtimes.deno import PythonRuntime
+
+@typegraph() def example_python(g: Graph): public = Policy.public() python = PythonRuntime()
+
+    g.expose(
+        public,
+        add=t.func(
+            t.struct({"a": t.integer(), "b": t.integer()}),
+            t.integer(),
+            # we can provide the code inline using lambdas
+            python.from_lambda(lambda x: x["a"] + x["b"]),
+        ),
+        sayHello=python.import_(
+            t.struct({"name": t.string()}),
+            t.string(),
+            # point to pythoin a file on disc
+            module="hello.py",
+            name="say_hello"
+        ),
+    )
+
+}`} </CodeBlock> ], [ { title: "S3 runtime", status: "complete", link: "/docs/reference/runtimes/s3", body: ( <> Store large blobs in S3 compatible object stores. This includes support for <Link to="/docs/guides/files-upload">GraphQL file uploads</Link> and presigned URLs making working with images and large uploads a breeze. </> ), }, { title: "Temporal runtime", status: "complete", link: "/docs/reference/runtimes/temporal", body: ( <> Kick off and query Temporal workflows from a typegraph. Temporal is a durable execution engine that can be used to implement long-running, failure-resistant business processes. </> ), }, { title: "Wasm runtime", status: "beta", link: "/docs/reference/runtimes/wasm", body: ( <> Make functions that use WASM components to implement their logic. Write core-wasm or wasi 0.2 based wasm components in languages like Rust, Python and Javascript to power all your custom functions. </> ), }, ], [ { title: "GraphQL runtime", status: "complete", link: "/docs/reference/runtimes/graphql", body: ( <> Include external GraphQL APIs as part of your typegraph. This runtime provides functions that resolve the data by querying an external GraphQL API. </> ), }, { title: "Http runtime", status: "complete", link: "/docs/reference/runtimes/http", body: ( <> Include external Http APIs as part of your typegraph. Source the data for your graph using external HTTP requests. </> ), }, ], [ { title: "Random runtime", status: "complete", link: "/docs/reference/runtimes/random", body: ( <> Functions to generate random data based on your types. Useful for quickly throwing together an API and testing. </> ), }, { title: "gRPC runtime", status: "future", link: "https://github.com/metatypedev/metatype/issues/723", body: ( <> Include external gRPC APIs as part of your typegraph. </> ), }, ], ]} />
+
+### Prisma
+
+Access a myriad of databases directly from your typegraph. Run queries, mange it's schema, the full orm featureset.
+
+<Features
+  rows={[
+    [
+      <TGExample
+        python={require("!!code-loader!../../../../../examples/typegraphs/database.py")}
+        typescript={require("!!code-loader!../../../../../examples/typegraphs/database.ts")}
+        disablePlayground
+      />,
+    ],
+    [
+      {
+        title: "Relational schemas",
+        status: "complete",
+        link: "/docs/reference/runtimes/prisma#relationships",
+        body: (
+          <>
+            Use the types in your graph to declare and manage relational schemas
+            to be used on your databse. This means support for primary keys,
+            unique constraints, one-to-one, one-to-many, many-to-many
+            relationships...etc.
+          </>
+        ),
+      },
+      {
+        title: "CRUD queries",
+        status: "complete",
+        link: "/docs/reference/runtimes/prisma#generators",
+        body: (
+          <>
+            Easily generate functions for common create, update, read and delete
+            queries. Includes nested filtering and aggregration paramters for
+            efficent and targeted requests.
+          </>
+        ),
+      },
+      {
+        title: "Raw queries",
+        status: "complete",
+        link: "/docs/reference/runtimes/prisma#raw-query",
+        body: (
+          <>
+            Drop down to raw SQL queries for cases not covered by the CRUD
+            generators. Useful to access unique features native to your database
+            or craft extra efficient queries.
+          </>
+        ),
+      },
+    ],
+    [
+      {
+        title: "PostgreSQL support",
+        status: "complete",
+        link: "/docs/reference/runtimes/prisma",
+        body: <>Support for PostgreSQL, a modern and established DBMS.</>,
+      },
+      {
+        title: "Beta databases",
+        status: "beta",
+        link: "https://github.com/metatypedev/metatype/issues/724",
+        body: (
+          <>
+            MySQL, MariaDB, AWS Aurora, AWS Aurora Serverless, Microsoft SQL
+            Server, Azure SQL, MongoDB, CockroachDB.
+          </>
+        ),
+      },
+    ],
+  ]}
+/>
+
+<br />
+
+## Authentication
+
+<Features
+  rows={[
+    [
+      {
+        title: "Policy-based access control",
+        status: "complete",
+        link: "/docs/reference/policies",
+        body: (
+          <>
+            Policies are simple functions that take the request as input and
+            return values to signal whether it's allowed/denied access. They can
+            be attached to any function in the graph and are evaluated right
+            before the request triggers one. They compose well and are the
+            primary authorization primitive available to typegraphs.
+          </>
+        ),
+      },
+    ],
+    [
+      <TGExample
+        python={require("!!code-loader!../../../../../examples/typegraphs/policies.py")}
+        typescript={require("!!code-loader!../../../../../examples/typegraphs/policies.ts")}
+        disablePlayground
+      />,
+    ],
+    [
+      {
+        title: "Basic authentication",
+        status: "complete",
+        link: "/docs/reference/typegate/authentication#basic-authentication",
+        body: (
+          <>
+            Requests can authenticate themselves using Basic HTTP headers.
+            Simple but useful for getting started or protecting admin only
+            requests.
+          </>
+        ),
+      },
+      <TGExample
+        python={require("!!code-loader!../../../../../examples/typegraphs/basic.py")}
+        typescript={require("!!code-loader!../../../../../examples/typegraphs/basic.ts")}
+        disablePlayground
+      />,
+    ],
+    [
+      {
+        title: "JWT authentication",
+        status: "complete",
+        link: "/docs/reference/typegate/authentication#jwt-authentication",
+        body: (
+          <>
+            Json Web Tokens can be used to attach more authentication and
+            context information to requests. The data in the tokens can then be
+            used by policies to make authorization decisions.
+          </>
+        ),
+      },
+      <TGExample
+        python={require("!!code-loader!../../../../../examples/typegraphs/jwt.py")}
+        typescript={require("!!code-loader!../../../../../examples/typegraphs/jwt.ts")}
+        disablePlayground
+      />,
+    ],
+    [
+      {
+        title: "OAuth2 authorization",
+        status: "complete",
+        link: "/docs/reference/typegate/authentication#oauth2-authorization",
+        body: (
+          <>
+            Use the Oauth2 scheme to implement social-sign in from common
+            identity providers like Github, Meta and Google.
+          </>
+        ),
+      },
+      <TGExample
+        python={require("!!code-loader!../../../../../examples/typegraphs/oauth2.py")}
+        typescript={require("!!code-loader!../../../../../examples/typegraphs/oauth2.ts")}
+        disablePlayground
+      />,
+    ],
+  ]}
+/>
+
+<br />
+
+## Tooling
+
+<Features
+  rows={[
+    [
+      {
+        title: "Meta CLI",
+        status: "complete",
+        link: "/docs/reference/meta-cli",
+        body: (
+          <>
+            Full-featured CLI to aid development and manage typegraph deployments on the typegate.
+            Supports watch mode to aid rapid-iteration, including support for interactive database migration management.
+            Bundles the typegate within it making the CLI all one needs to get started. (And a text editor, of course.)
+          </>
+        ),
+      }, 
+    ],
+    [
+      <CodeBlock
+        language="shell"
+      >
+{
+  `❯ meta --help                                                                                    at 02:03:36
+Declarative API development platform. Build backend components with WASM/Typescript/Python, no matter where and how your (legacy) systems are.
+
+Usage: meta [OPTIONS] [COMMAND]
+
+Commands: serialize Serialize the typegraphs defined in the specified python file(s) into JSON dev Push typegraph(s) with development mode features enabled deploy Push typegraph(s) to typegate undeploy Undeploy typegraph(s) from typegate gen Access metagen generators upgrade Upgrade completion Generate shell completion doctor Troubleshoot the installation new Create a new Metatype project typegate Access a minimal deno CLI help Print this message or the help of the given subcommand(s)
+
+Options: --version -v, --verbose... Increase logging verbosity -q, --quiet... Decrease logging verbosity -C, --dir <DIR> [default: .] --config <CONFIG> path to the config file -h, --help Print help ` } </CodeBlock> ], [ { title: "Metagen", status: "beta", link: "#", body: ( <> Code generation suite that supports Rust, Python and Typescript. Generate types from your graph and other helper functions for authoring custom functions for the Wasm, Python and Deno runtimes respectively. Can be accessed through the CLI under the <code>gen</code> subcommand or through the different SDKs. </> ), }, { title: "Meta LSP", status: "beta", body: ( <> Extension for your IDE to help authoring of typegraphs. Supports VSCode as of now. </> ), }, <div></div> ], [ { title: "Docker images", status: "complete", link: "https://github.com/orgs/metatypedev/packages/container/package/typegate", body: ( <> The typegate is primarily distributed as a docker image for deployment as a container. All the available configuration environment variables can be found <Link to="http://localhost:3000/docs/reference/typegate#environment-variables">here</Link>. </> ), }, { title: "Helm charts", status: "complete", link: "/docs/guides/self-hosting", body: ( <> Helm charts are published to ease installation of a typegate deployment in your Kubernetes cluster. </> ), }, ], [ <CodeBlock language="shell"> {`docker run --rm --pull always \\ -p 7890:7890 \\ -e TG_SECRET=$(openssl rand -base64 64 | tr -d '\\n') \\ -e TG_ADMIN_PASSWORD="password" \\ ghcr.io/metatypedev/typegate:latest`} </CodeBlock> ] ]} />
+
+<br />
+
+## SDKs
+
+<Features
+  rows={[
+    [
+      {
+        title: "Typescript SDK",
+        status: "complete",
+        link: "https://www.npmjs.com/package/@typegraph/sdk",
+        body: (
+          <>
+            Use typescript to author typegraphs and access other SDK tooling.
+            Supports Node and compatible runtimes like Deno and Bun.
+          </>
+        ),
+      },
+      {
+        title: "Python SDK",
+        status: "complete",
+        link: "http://localhost:3000/docs/reference/typegate#environment-variables",
+        body: (
+          <>Use Python to author typegraphs and access other SDK tooling.</>
+        ),
+      },
+      {
+        title: "Dart SDK",
+        status: "future",
+        link: "https://www.npmjs.com/package/@typegraph/sdk",
+        body: <>Use Dart to author typegraphs and access other SDK tooling.</>,
+      },
+    ],
+    [
+      {
+        title: "Deployments",
+        status: "complete",
+        link: "/docs/guides/programmatic-deployment",
+        body: (
+          <>
+            Programmatically upload your typegraphs to the typegate from within
+            the SDK. Useful for writing tests or building on top of the Metatype
+            platform.
+          </>
+        ),
+      },
+      {
+        title: "Migrations",
+        status: "beta",
+        link: "/docs/guides/programmatic-deployment",
+        body: (
+          <>
+            Programmaticaly manage necessary migrations returned by the Prisma
+            runtime. Useful for writing tests or building on top of the Metatype
+            platform.
+          </>
+        ),
+      },
+    ],
+    [
+      {
+        title: "Codegen",
+        status: "beta",
+        link: "/docs/guides/programmatic-deployment",
+        body: (
+          <>
+            Access metagen through the SDK directly to generate type
+            declarations and other helpful code. Useful for testing and to build
+            custom workflows/tooling.
+          </>
+        ),
+      },
+      <div></div>,
+    ],
+  ]}
+/>
+
+<!--
+
+# Features overview
+
+- Quickly put together modern APIs that are thoroughly typed, access controlled, and unconstrained. All backed by your preferred database.
+
+- When the project grows, you can easily introduce new APIs or break existing ones in smaller parts while keeping the same interface.
+
+- You can write complex business logic directly in Typescript, Python or WebAssembly and run them directly inside the composition engine.
+
+- Third-parties APIs can be easily integrated, providing you visibility and control over them.
+
+- Metatype boundaries are easily interoperable with existing systems. Introduce it into your stack in a gradual fashion.
+
+- When the time comes, easily switch to a multi-instance deployment and scale out.
+
+- Metatype can be easily self-hosted or customized according to your needs.
+
+- App frontends today are built on composable ecosystem components. Metatype envisions and is designed around a similar future for backend development.
+
+## GraphQL APIs
+
+- Easily expose business logic endpoints through generated [GraphQL APIs](/docs/reference/runtimes/graphql).
+- Helpers to auto-generate and expose CRUD operations from your types on [myriad of databases](/docs/reference/runtimes/prisma).
+- All built upon the typegraphs primitives, they compose well with every other feature and allow [granular control](/docs/reference/types/parameter-transformations) when required.
+- That ideal API your frontend engineers keep asking for is never out of reach. {/*TODO: error model docs */}
+- The typegraph allows for easy evolution of you API, adding or deprecating types and functions as needed.
+- You can expose sections of graph through [REST endpoints](/docs/guides/rest) with ease.
+
+## Auth
+
+- Expressive authorization primitives through [policy based access-control](/docs/reference/policies).
+- Oauth2 and JWT based [authentication](/docs/reference/typegate/authentication) ready to go.
+- [Rate limit](/docs/reference/typegate/rate-limiting) your APIs or add [CORS](/docs/reference/typegate/cors) control.
+
+## Type checking
+
+- Everything in Metatype starts with [types](/docs/reference/types).
+- Model exactly what's needed for your app with simple syntax and a modern type system.
+- Bring your own abstractions when needed leveraging the "imperatively declarative" SDKs.
+
+## Modern CLI
+
+- The [meta-cil](/docs/reference/meta-cli) is designed to get you up and productive in no time.
+- Live auto-reload, database migration management, type-checking and linting, it's all there.
+
+## Bring your own storage
+
+- Easy going with object file storage using the [S3Runtime](/docs/reference/runtimes/s3)
+- Includes support for [GraphQL file uploads](/docs/guides/files-upload) and presigned URLs.
+
+## Function runner
+
+- Different runtimes are available for running the exact, turing complete, code you need.
+- Code generators to get easily get your types where you need them.
+- [Typescript](/docs/reference/runtimes/deno), [Python](/docs/reference/runtimes/python) and [Wasm](/docs/reference/runtimes/wasmedge) today, all industrial languages and more tomorrow (open a ticket!).
+
+-->

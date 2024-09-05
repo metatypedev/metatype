@@ -1,0 +1,482 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
+/* eslint-disable @typescript-eslint/no-var-requires */
+
+import React, { useState } from "react";
+import Link from "@docusaurus/Link";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import Layout from "@theme/Layout";
+import TGExample from "../components/TGExample";
+import BrowserOnly from "@docusaurus/BrowserOnly";
+import LiteYouTubeEmbed from "react-lite-youtube-embed";
+import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
+
+import { ChoicePicker } from "../components/ChoicePicker";
+import { CompareLandscape } from "../components/CompareLandscape";
+import Heading from "@theme/Heading";
+
+function Header() {
+  return (
+    <header className="bg-gradient-to-b from-slate-200 from-0% to-white to-100%">
+      <div className="flex justify-end mt-5 mr-5 mb-0">
+        <Link to="https://devhunt.org/tool/metatype">
+          <img
+            src="images/homepage/devhunt_tab_solid.svg"
+            alt="Devhunt result"
+          />
+        </Link>
+      </div>
+      <div className="container text-center py-12">
+        <div className="rounded-full bg-white w-40 h-40 flex px-6 m-auto mb-10">
+          <img src="images/logo.svg" alt="Metatype logo" />
+        </div>
+        <Heading as="h1" className="text-5xl">
+          Declarative{" "}
+          <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-metared from-15% via-metablue via-50% to-metared to-85%">
+            API development
+          </span>{" "}
+          platform
+        </Heading>
+        <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[880px]">
+          Build <strong>backend components</strong> with <strong>WASM</strong>,{" "}
+          <strong>Typescript</strong> and <strong>Python</strong>, no matter
+          where and how your (legacy) systems are.
+        </p>
+        <div className="md:flex md:px-32 justify-center">
+          <Link
+            className="button button--primary button--lg m-2"
+            to="/docs/tutorials/quick-start"
+          >
+            Quick Start
+          </Link>
+          <Link
+            className="button bg-slate-400 hover:bg-slate-300  button--lg m-2"
+            to="/docs/concepts/features-overview"
+          >
+            Learn more
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Intro({
+  profile,
+  setProfile,
+}: {
+  profile: string;
+  setProfile: (p: string) => void;
+}): JSX.Element {
+  return (
+    <section>
+      <div>
+        <div className="flex text-sm mb-8">
+          <ChoicePicker
+            choices={profiles}
+            choice={profile}
+            onChange={setProfile}
+          />
+        </div>
+        <Heading as="h2">
+          <span className="text-metared">Programming</span> is like{" "}
+          <span className="text-metared">castle</span> building
+        </Heading>
+        <p>
+          And castle building is <strong>hard</strong>. Even the best teams can
+          struggle to build according to the plans, especially with the ever
+          evolving needs and the tech landscape complexities.
+        </p>
+      </div>
+      <BrowserOnly fallback={<div className="h-[300px]"></div>}>
+        {() => {
+          const Castle = require(`../components/castles`).BuildingCastle;
+          return <Castle />;
+        }}
+      </BrowserOnly>
+    </section>
+  );
+}
+
+function Stability(): JSX.Element {
+  return (
+    <section>
+      <div>
+        <Heading as="h2">
+          Build <span className="text-metared">reliable</span> castle with{" "}
+          <span className="text-metared">typegraphs</span>
+        </Heading>
+        <p>
+          Typegraphs are programmable <strong>virtual graphs</strong> describing
+          all the components of your stack. They enable you to compose APIs,
+          storage and business logic in a type safe manner.
+        </p>
+      </div>
+      <BrowserOnly fallback={<div className="h-[300px]"></div>}>
+        {() => {
+          const Castle = require(`../components/castles`).StableCastle;
+          return <Castle />;
+        }}
+      </BrowserOnly>
+    </section>
+  );
+}
+
+function Modularity(): JSX.Element {
+  return (
+    <section>
+      <div>
+        <Heading as="h2">
+          Build <span className="text-metared">modulable</span> castle with{" "}
+          <span className="text-metared">typegate</span>
+        </Heading>
+        <p>
+          Typegate is a GraphQL/REST <strong>composition engine</strong> that
+          compiles, optimizes, runs and caches queries over typegraphs. It
+          enforces authentication, authorization and security for you.
+        </p>
+      </div>
+      <BrowserOnly fallback={<div className="h-[300px]"></div>}>
+        {() => {
+          const Castle = require(`../components/castles`).ModulableCastle;
+          return <Castle />;
+        }}
+      </BrowserOnly>
+    </section>
+  );
+}
+
+function Reusability(): JSX.Element {
+  return (
+    <section>
+      <div>
+        <Heading as="h2">
+          Build <span className="text-metared">reusable</span> castle with{" "}
+          <span className="text-metared">Metatype</span>
+        </Heading>
+        <p>
+          Install third parties as <strong>dependencies</strong> and start
+          reusing components. The Meta CLI offers you live reloading and
+          one-command deployment to Metatype cloud or your self-hosted instance.
+        </p>
+      </div>
+      <BrowserOnly fallback={<div className="h-[300px]"></div>}>
+        {() => {
+          const Castle = require(`../components/castles`).ReusableCastle;
+          return <Castle />;
+        }}
+      </BrowserOnly>
+    </section>
+  );
+}
+
+const featureList = [
+  {
+    title: "Compose type safe APIs",
+    svg: require("@site/static/icons/compose-api-blocks.svg").default,
+    description: (
+      <>
+        No surprises. The typesystem of Metatype ensures the correctness of your
+        data across your frontends, backends, databases, models and
+        third-parties.
+      </>
+    ),
+  },
+  {
+    title: "Design and discovery oriented",
+    svg: require("@site/static/icons/design-discover.svg").default,
+    description: (
+      <>
+        Focus on what matters. Leave the implementation details and focus your
+        energy on designing efficient interfaces. Metatype covers the rest for
+        you.
+      </>
+    ),
+  },
+  {
+    title: "Productivity as your stacks evolve",
+    svg: require("@site/static/icons/iterate-quickly.svg").default,
+    description: (
+      <>
+        Cut your time to deployment in half. Metatype's iterative approach
+        enables you to innovate step by step with your (legacy) systems without
+        making compromises.
+      </>
+    ),
+  },
+  {
+    title: "Bring your own components",
+    svg: require("@site/static/icons/bring-your-own-components.svg").default,
+    description: (
+      <>
+        Enjoy being technology agnostic. Import, deploy, host and extend your
+        stacks with Metatype's open ecosystem without being afraid of vendor
+        lock-ins.
+      </>
+    ),
+  },
+  {
+    title: "Secure by default",
+    svg: require("@site/static/icons/secure-by-default.svg").default,
+    description: (
+      <>
+        Enforce Policy Based Access Control (PBAC). By default no access, unless
+        you provide one explicitly. Metatype also comes with many authentication
+        and delegation standards.
+      </>
+    ),
+  },
+  {
+    title: "Entreprise support",
+    svg: require("@site/static/icons/commercial-support.svg").default,
+    description: (
+      <>
+        Get expert advices. Metatype team is here to help you with your products
+        and business objectives. We offer training, consulting, managed services
+        and support options.
+      </>
+    ),
+  },
+];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function Features(): JSX.Element {
+  return (
+    <section className="grid-3 text-center">
+      {featureList.map((props, idx) => {
+        const Svg = props.svg;
+        return (
+          <div key={idx}>
+            <div>
+              <Svg width="200" height="200" role="img" />
+            </div>
+            <div>
+              <Heading as="h3">{props.title}</Heading>
+              <p>{props.description}</p>
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+function TryIt(): JSX.Element {
+  return (
+    <section>
+      <div>
+        <Heading as="h2">
+          Try the <span className="text-metared">playground</span> and{" "}
+          <span className="text-metared">deploy</span>
+        </Heading>
+        <p>
+          Metatype's unique approach combines the{" "}
+          <strong>best of the two worlds</strong>. You are quickly productive
+          thanks to the high-level abstractions, yet you can leverage all the
+          low-level developer tooling you are familiar with.
+        </p>
+      </div>
+      <div className="w-full">
+        <TGExample
+          python={require("!!code-loader!../../../../examples/typegraphs/index.py")}
+          typescript={require("!!code-loader!../../../../examples/typegraphs/index.ts")}
+          typegraph="homepage"
+          variables={{ email: "fill-me", message: "Great tool!" }}
+          noTool={true}
+          defaultMode="typegraph"
+          query={require("./index.graphql")}
+        />
+      </div>
+    </section>
+  );
+}
+
+const runtimeList = [
+  {
+    name: "MongoDB",
+    logo: "/images/runtimes/mongodb.svg",
+  },
+  {
+    name: "GraphQL",
+    logo: "/images/runtimes/graphql.svg",
+  },
+  {
+    name: "HTTP",
+    logo: "/images/runtimes/http.svg",
+  },
+  {
+    name: "GRPC",
+    logo: "/images/runtimes/grpc.svg",
+  },
+  {
+    name: "Deno",
+    logo: "/images/runtimes/deno.svg",
+  },
+  {
+    name: "SQLite",
+    logo: "/images/runtimes/sqlite.svg",
+  },
+  {
+    name: "PostgreSQL",
+    logo: "/images/runtimes/postgresql.svg",
+  },
+  {
+    name: "Google APIs Explorer",
+    logo: "/images/runtimes/google-apis-explorer.svg",
+  },
+  {
+    name: "MariaDB",
+    logo: "/images/runtimes/mariadb.svg",
+  },
+  {
+    name: "Python",
+    logo: "/images/runtimes/python.svg",
+  },
+  {
+    name: "WasmEdge",
+    logo: "/images/runtimes/wasmedge.svg",
+  },
+  {
+    name: "Temporal",
+    logo: "/images/runtimes/temporal.svg",
+  },
+  {
+    name: "S3",
+    logo: "/images/runtimes/s3.svg",
+  },
+];
+
+function Runtimes(): JSX.Element {
+  return (
+    <section>
+      <div>
+        <Heading as="h2">
+          <span className="text-metared">Easily</span> add your{" "}
+          <span className="text-metared">own</span> runtime
+        </Heading>
+        <p>
+          More than 12 runtimes are natively supported. Usually it takes less
+          than a day to integrate a new one and support the most frequent
+          usages.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-4 m-4">
+        {runtimeList.map((props, idx) => (
+          <img
+            key={idx}
+            src={props.logo}
+            alt={`${props.name} logo. All rights reserved to ${props.name}.`}
+            style={{ maxWidth: "150px", maxHeight: "80px" }}
+            className="p-4 flex-1"
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function DemoVideo(): JSX.Element {
+  return (
+    <section>
+      <div>
+        <Heading as="h2">
+          Forget weeks, <span className="text-metared">deliver</span> APIs{" "}
+          <span className="text-metared">in hours</span>
+        </Heading>
+        <p>
+          Watch the <strong>3 minutes introduction</strong> of the Metatype
+          platform and start designing your own typegraph. Once you have
+          understood the basics, you already feel productive.
+        </p>
+      </div>
+      <div className="flex justify-center">
+        <div
+          className="flex-1 rounded-lg border-2 border-black"
+          style={{ maxWidth: "800px" }}
+        >
+          <LiteYouTubeEmbed
+            id="D-n9BbGfqxE"
+            title="Metatype early preview in 3 minutes"
+            thumbnail="/images/demo-thumbnail.png"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Landscape(): JSX.Element {
+  return (
+    <section>
+      <div>
+        <Heading as="h2">
+          Bringing <span className="text-metared">speed</span> and{" "}
+          <span className="text-metared">novelty</span> to backend development
+        </Heading>
+        <p className="text-xl">
+          Metatype fills a gap in the tech landscape by introducing a new way to
+          build fast and developer-friendly APIs that are{" "}
+          <strong>interoperable</strong> with your existing (legacy) systems.
+        </p>
+      </div>
+
+      <CompareLandscape />
+    </section>
+  );
+}
+
+const profiles = {
+  leader: "I'm an engineering leader",
+  developer: "I'm a developer",
+  //business: "I'm not familiar with APIs",
+};
+
+type Profile = keyof typeof profiles;
+
+const order: Record<Profile, JSX.Element> = {
+  leader: (
+    <>
+      <Stability />
+      <Modularity />
+      <Reusability />
+      <TryIt />
+      <Landscape />
+      <Runtimes />
+    </>
+  ),
+  developer: (
+    <>
+      <Landscape />
+      <TryIt />
+      <Runtimes />
+    </>
+  ),
+  /*business: (
+    <>
+      <Features />
+      <Landscape />
+      <DemoVideo />
+      <Runtimes />
+    </>
+  ),*/
+};
+
+export default function Home(): JSX.Element {
+  const { siteConfig } = useDocusaurusContext();
+  const [profile, setProfile] = useState<Profile>(
+    Object.keys(profiles)[0] as Profile,
+  );
+
+  return (
+    <Layout title={siteConfig.title} description={siteConfig.tagline}>
+      <Header />
+      <main id="homepage" className="container">
+        <Intro profile={profile} setProfile={setProfile} />
+
+        {order[profile]}
+      </main>
+    </Layout>
+  );
+}
