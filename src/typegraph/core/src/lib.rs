@@ -2,15 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 mod conversion;
-mod errors;
 mod global_store;
 mod logger;
 mod params;
 mod runtimes;
-mod t;
 mod typedef;
 mod typegraph;
-mod types;
 mod utils;
 mod validation;
 
@@ -38,6 +35,11 @@ use wit::core::{
 };
 use wit::runtimes::{Guest, MaterializerDenoFunc};
 
+pub mod errors;
+pub mod t;
+pub mod types;
+
+#[cfg(feature = "wasm")]
 pub mod wit {
     wit_bindgen::generate!({
         world: "typegraph"
@@ -46,6 +48,19 @@ pub mod wit {
     pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
     export!(Lib);
 }
+
+#[cfg(not(feature = "wasm"))]
+mod wit {
+    wit_bindgen::generate!({
+        world: "typegraph"
+    });
+    pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
+}
+
+pub use crate::wit::aws::Guest as LibAws;
+pub use crate::wit::core::Guest as LibCore;
+pub use crate::wit::runtimes::Guest as LibRuntime;
+pub use crate::wit::utils::Guest as LibUtil;
 
 pub struct Lib {}
 

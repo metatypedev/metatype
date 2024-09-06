@@ -32,7 +32,6 @@ impl TypeBuilder for TypeId {
     }
 }
 
-#[allow(unused)]
 pub trait ConcreteTypeBuilder: TypeBuilder {
     fn base_mut(&mut self) -> &mut TypeBase;
     fn xbase_mut(&mut self) -> &mut ExtendedTypeBase;
@@ -105,25 +104,21 @@ impl Default for TypeInteger {
 }
 
 impl IntegerBuilder {
-    #[allow(dead_code)]
     pub fn min(mut self, min: i32) -> Self {
         self.data.min = Some(min);
         self
     }
 
-    #[allow(dead_code)]
     pub fn max(mut self, max: i32) -> Self {
         self.data.max = Some(max);
         self
     }
 
-    #[allow(dead_code)]
     pub fn x_min(mut self, min: i32) -> Self {
         self.data.exclusive_minimum = Some(min);
         self
     }
 
-    #[allow(dead_code)]
     pub fn x_max(mut self, max: i32) -> Self {
         self.data.exclusive_maximum = Some(max);
         self
@@ -156,25 +151,21 @@ impl Default for TypeFloat {
 }
 
 impl FloatBuilder {
-    #[allow(dead_code)]
     pub fn min(mut self, min: f64) -> Self {
         self.data.min = Some(min);
         self
     }
 
-    #[allow(dead_code)]
     pub fn max(mut self, max: f64) -> Self {
         self.data.max = Some(max);
         self
     }
 
-    #[allow(dead_code)]
     pub fn x_min(mut self, min: f64) -> Self {
         self.data.exclusive_minimum = Some(min);
         self
     }
 
-    #[allow(dead_code)]
     pub fn x_max(mut self, max: f64) -> Self {
         self.data.exclusive_maximum = Some(max);
         self
@@ -210,7 +201,6 @@ pub fn string() -> StringBuilder {
 }
 
 impl StringBuilder {
-    #[allow(dead_code)]
     pub fn format(&mut self, format: impl Into<String>) -> &mut Self {
         self.data.format = Some(format.into());
         self
@@ -425,7 +415,6 @@ impl StructBuilder {
         Ok(self)
     }
 
-    #[allow(dead_code)]
     pub fn props(&mut self, props: impl IntoIterator<Item = (String, TypeId)>) {
         self.data
             .props
@@ -437,7 +426,6 @@ impl StructBuilder {
         self
     }
 
-    #[allow(dead_code)]
     pub fn max(&mut self, max: u32) -> &mut Self {
         self.data.max = Some(max);
         self
@@ -464,7 +452,6 @@ impl Default for TypeFunc {
     }
 }
 
-#[allow(dead_code)]
 pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
     FuncBuilder {
         data: TypeFunc {

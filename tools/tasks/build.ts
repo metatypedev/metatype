@@ -31,7 +31,7 @@ export default {
     },
     async fn($) {
       const target = "wasm32-unknown-unknown";
-      await $`cargo build -p typegraph_core --target ${target} --release --target-dir target/wasm`;
+      await $`cargo rustc -p typegraph_core --target ${target} --crate-type=cdylib,rlib --features=wasm --release --target-dir target/wasm`;
       await $`cp target/wasm/${target}/release/typegraph_core.wasm $WASM_FILE.tmp`;
       if ($.env["WASM_OPT"]) {
         await $`wasm-opt -Oz $WASM_FILE.tmp -o $WASM_FILE.tmp`;

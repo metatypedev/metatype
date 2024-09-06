@@ -3,8 +3,9 @@ name = "typegraph_core"
 version = "0.4.11-rc.0"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
+# passed from the cmdline when compiling to wasm
+# [lib]
+# crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 common.workspace = true
@@ -32,6 +33,9 @@ sha2.workspace = true
 seahash.workspace = true
 
 glob.workspace = true
+
+[features]
+wasm = []
 
 [dev-dependencies]
 insta = { workspace = true, features = ["glob"] }

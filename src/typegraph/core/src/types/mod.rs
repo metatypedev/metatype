@@ -10,6 +10,39 @@ pub use type_def::*;
 pub use type_id::*;
 pub use type_ref::*;
 
+pub mod core {
+    pub use crate::wit::core::{
+        Artifact, ContextCheck, Cors, Error, FuncParams, MaterializerId, MigrationAction,
+        ParameterTransform, Policy, PolicyId, PolicyPerEffect, PolicySpec, PrismaMigrationConfig,
+        Rate, RuntimeId, SerializeParams, TypeId, TypegraphInitParams,
+    };
+}
+
+pub mod runtimes {
+    pub use crate::wit::runtimes::{
+        BaseMaterializer, Effect, GraphqlRuntimeData, HttpMethod, HttpRuntimeData, KvMaterializer,
+        KvRuntimeData, MaterializerDenoFunc, MaterializerDenoImport, MaterializerDenoPredefined,
+        MaterializerDenoStatic, MaterializerGraphqlQuery, MaterializerHttpRequest,
+        MaterializerPythonDef, MaterializerPythonImport, MaterializerPythonLambda,
+        MaterializerPythonModule, MaterializerRandom, MaterializerWasmReflectedFunc,
+        MaterializerWasmWireHandler, PrismaLinkData, PrismaMigrationOperation, PrismaRuntimeData,
+        RandomRuntimeData, SubstantialOperationData, SubstantialOperationType,
+        SubstantialRuntimeData, TemporalOperationData, TemporalOperationType, TemporalRuntimeData,
+        TypegateOperation, TypegraphOperation, WasmRuntimeData, Workflow, WorkflowKind,
+    };
+}
+
+pub mod aws {
+    pub use crate::wit::aws::{S3PresignGetParams, S3PresignPutParams, S3RuntimeData};
+}
+
+pub mod utils {
+    pub use crate::wit::utils::{
+        Auth, AuthProtocol, MdkConfig, MdkOutput, QueryDeployParams, Reduce, ReducePath,
+        ReduceValue,
+    };
+}
+
 #[derive(Clone, Debug)]
 pub enum Type {
     Ref(TypeRef),
