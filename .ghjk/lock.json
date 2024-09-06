@@ -1978,7 +1978,7 @@
               ]
             }
           },
-          "defaultEnv": "dev",
+          "defaultEnv": "ci",
           "envsNamed": {
             "main": "bciqkx2kodz5dx5pv3hjcc4vpirphyetattk4oks5pucb7dsqrgwzqwa",
             "_wasm": "bciqk7aif25pqtsyncbnbdapte4lixsodypfxvmkepsuey74vgr4zb5q",
