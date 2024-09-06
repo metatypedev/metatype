@@ -17,7 +17,7 @@ Metatype supports running multiple apps or typegraphs on a single deployed clust
 Subscribe to the [blog](https://metatype.dev/blog/rss.xml) or the [Github](https://github.com/metatypedev/metatype) repository for updates.
 :::
 
-Implementing the `DenoRuntime` was a very straightforward affair as the Typegate (the orchestrator at the heart of Metatype) is primarily written in Typescript and runs on a slightly modified version of the Deno runtime.
+Implementing the `DenoRuntime` was a very straightforward affair as the Typegate (the engine at the heart of Metatype) is primarily written in Typescript and runs on a slightly modified version of the Deno runtime.
 What's more, JavaScript has single threaded and asynchronous semantics and the v8 engine that it commonly runs on is of very high-quality by all regards. 
 These qualities lend themselves very well to the requirements of running a serverless platform like security (good sandboxing) and performance (low start-up latencies).
 This fact is reflected in the dominance of JavaScript in the serverless market though it doesn't hurt that it's also the most popular language in use today.
@@ -34,7 +34,8 @@ There are a number of Python runtimes available but a set of extra factors limit
 3. **User-friendliness**: functionalities provided in any of the languages supported by Metatype should, within reason, mirror each other and maintain a degree of uniformity. We support inline code snippets and external file references for `DenoRuntime` and this should be the case for Python as well.
 4. **Interoperability**: functions running in Python will need to have access to other parts of the app running on the Typegate like being able to invoke other functions.
 
-The Typegate is a TypeScript program with a bit of Rust sprinkled in that runs as a traditional POSIX process. 
+The Typegate is a TypeScript program with a bit of Rust sprinkled. 
+It runs as a traditional POSIX process. 
 Think Linux containers. 
 This fact renders multi-processing, one of the readily apparent approaches, undesirable as it would require investing is robust worker process management and distribution schemes.
 It'd be great if we could keep everything inside the Typegate process.
@@ -43,7 +44,7 @@ One solution that presents itself here is the [PyO3](https://pyo3.rs/) project w
 It'd not only allow us to run Python code in-process but it also provide an easy way to expose the functions written in Rust to Python and vice-versa. 
 A good solution for the bidirectional communication needed for our interoperability requirements.
 
-Unfortunately, PyO3 doesn't have any provisions for sandboxing which critical for our use case.
+Unfortunately, PyO3 doesn't have any provisions for sandboxing which is critical for our use case.
 This is where WebAssembly enters into the picture. 
 WebAssembly or Wasm for short is a executable bytecode format that originates from the web world and is designed for applications that run inside web-browsers. 
 This use case shares most of our requirements and the Wasm world promises excellent sandboxing properties that should be perfect for our use case.
@@ -57,13 +58,13 @@ Wasm + WASI fits very well to our use case. As opposed to mutli-processing, we c
 And as luck would have it, some [community work](https://github.com/vmware-labs/webassembly-language-runtimes) has already been done at the time that led to wasm builds of CPython being available.
 
 Unfortunately, the WASI spec itself is a work in progress.
-When we started out, only the limited "[preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md)" implementation was supported by most runtimes which meant having to rely on simple C ABI alike functions for __intra__-process communication.
+When we started out, only the limited "[preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md)" implementation was supported by most runtimes which meant having to rely on simple C ABI alike functions for _intra_-process communication.
 In order to make this work easier, we elected to bring PyO3 back into the picture so that all the IPC stuff is written in Rust, the language with the most support in the Wasm ecosystem today.
 
-All in all, this would mean the python interpreter wrapped in a PyO3. An based native API. \
-An assembly that accepts user code as strings and then invoke them in response to events.
+All in all, this would mean the python interpreter wrapped in a PyO3 based native API.
+An assembly that accepts user code as strings and then invokes them in response to events.
 All of this would be running inside a Wasm runtime, [WasmEdge](https://wasmedge.org/) in this case, which ticks of all of the sandboxing and security requirements.
-This is well described as the [Reactor pattern](https://wasmcloud.com/blog/webassembly-patterns-command-reactor-library#the-reactor-pattern), a common pattern used in Wasm land.
+This approach is well described as the [Reactor pattern](https://wasmcloud.com/blog/webassembly-patterns-command-reactor-library#the-reactor-pattern), a common pattern used in Wasm land.
 
 <img src="/images/wasi_vfs_python_and_rust.svg" alt="FIRST SOLUTION" />
 
@@ -110,7 +111,7 @@ fn init_Python_vm() -> Result<Rt> {
 
 ### WASI 0.2
 
-The solution described above worked well to an extent (find the code [here](https://github.com/metatypedev/python-wasi-reactor)) but the limitations of preview1 and all the wrangling with PyO3 resulted in complexity that we were always ready to get rid of.
+The solution described above worked well to an extent but the limitations of preview1 and all the wrangling with PyO3 resulted in complexity that we were always ready to get rid of.
 This was exactly what we did after the Bytecode Alliance finalized [WASI 0.2](https://bytecodealliance.org/articles/WASI-0.2) back in January 2024 and with it, a slew of new opportunuties.
 
 WASI 0.2 introduces a whole new concept of components, wasm modules that come with pre-specifed interfaces using the [Wit](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) format and based on a whole new [ABI](https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md) to boot.
@@ -195,29 +196,29 @@ It was also responsible for setting up the operating environment for the Python 
 For example, we'd need some kind of initialization to execute the user's Python snippets which are in free standing `lambda` form. 
 How does one create components out of Python anyways?
 
-[`componentize-py`](https://github.com/bytecodealliance/componentize-py) is a tool authored by the Bytecode Alliance that allows you to produce WASI components that are authored in Python.
+[componentize-py](https://github.com/bytecodealliance/componentize-py) is a tool authored by the Bytecode Alliance that allows you to produce WASI components that are authored in Python.
 It has code generation suite that emits guest bindings in Python for any WIT specification you feed it.
 It then takes your Python code written against these bindings and embeds them in a Wasm build of the Python interpreter to produce a component that supports the specified Wit.
 
 Unsurprisingly, componentize-py relies on PyO3 and preopens itself in addition to [component-init](https://github.com/dicej/component-init), a solution to pre-intialize components up to a certain point for improved startup latencies.
-The pre-intialization means we won't need to provide the actual preopens for the resulting component baking the `libpython` object code into the component.
-Practically, this allows us to write all of our glue code in Python itself.
+This pre-intialization means we won't need to provide the actual preopens for the resulting component, baking the `libpython` object code directly into it as PyO3 will have dynamically loaded the object code by that point.
+Ultimately, this allows us to write all of our glue code in Python itself.
 
 We still need a bit of Rust to support the `wit_wire` interface on the Typegate but this implementation is general across both the `PythonRuntime` and `WasmRuntime`.
-We've moved to the [Wasmtime](https://wasmtime.dev/), also by Bytecode Alliance, for our wasm workloads at this point and their Rust bindings are a pleasure to use.
+We'd also moved to the [Wasmtime](https://wasmtime.dev/), also by Bytecode Alliance, for our wasm workloads at this point and their Rust bindings are a pleasure to use.
 It's all smooth sailing from here.
 
-## Clouds?
+## Cloudy skies?
 
 A final stumbling block for this approach was 10+ seconds Wasmtime spends cooking all your CPU cores when it JITs the fat wasm module that contains the Python interpreter and all.
-Sure, you only pay this cost only the first time you load the Python runtime module as Wasmtime has great support for caching including on-disk caching.
-But 10 second is unacceptable in system that primarily serves HTTP requests as these usually mean web apps running in a browser.
+Sure, you only pay this cost the first time you load the Python runtime module as Wasmtime has great support for caching including on-disk caching.
+But 10 second cold-starts is unacceptable in system that primarily serves HTTP requests.
 What to do?
 
 Another Wasmtime feature comes to the rescue here specifically their [AOT compilation](https://docs.wasmtime.dev/cli-options.html#compile) feature.
 You can have Wasmtime pre-compile your wasm modules into a target ISA that you then give back to Wasmtime later again to run in a sandbox.
 This eliminates the JIT cost but the nature of Wasm's bytecode semantics and the runtime safe-guards means that this is just as safe as interpreting Wasm.
 We then statically embed this pre-compiled wasm artifact (after compressing it) in the Typegate binary itself ensuring minimal cold-starts for our python workloads.
-To be concrete, this means roughly around 200 ms of overhead for a cold function and 5 ms for a worm one.
+To be concrete, this means roughly around 200 ms of overhead for a cold function and 5 ms for a warm one.
 
 This post describes the technical journey we took to arrive to the current implementation of the `PythonRuntime`. Hopefully, all details were clear enough and please direct any feedback, questions, and thoughts to the comments down below and our Github issues/discussion board.
