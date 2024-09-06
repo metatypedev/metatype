@@ -186,7 +186,6 @@ export class WorkerManager {
         handlerFn(Err(message.data.error));
       } else {
         // logic level Result (Ok | Err)
-        logger.warn(message.data);
         handlerFn(message.data as Result<unknown>);
       }
     };

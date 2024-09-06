@@ -1,7 +1,14 @@
 interface Context {
+  // TODO: metagen including this
   kwargs: any;
   sleep: (ms: number) => void;
   save<T>(fn: () => Promise<T>);
+  receive<O>(eventName: string): O;
+  handle<I, O>(
+    eventName: string,
+    fn: (received: I) => O | Promise<O>
+  ): Promise<O>;
+  ensure(conditionFn: () => boolean | Promise<boolean>): Promise<boolean>;
 }
 
 function sleep(duration: number) {
@@ -12,27 +19,17 @@ function sleep(duration: number) {
   });
 }
 
-async function queryThatTakesAWhile(a: number) {
-  let s = 0;
-  for (let i = 0; i < a; i++, s += i);
-  await sleep(2000);
-  return s;
+async function queryThatTakesAWhile(input: number) {
+  // await sleep(2000);
+  return input;
 }
 
 export async function example(ctx: Context) {
   const { a, b } = ctx.kwargs;
-  // 2s
-  const rangeA = await ctx.save(() => queryThatTakesAWhile(a as number));
-  // 4s
-  const rangeB = await ctx.save(() => queryThatTakesAWhile(b as number));
+  const newA = await ctx.save(() => queryThatTakesAWhile(a as number));
+  const newB = await ctx.save(() => queryThatTakesAWhile(b as number));
+  const receivedC = ctx.receive("other") as string;
 
-  console.log("sleeping...");
-  ctx.sleep(10000);
-  console.log("stopped sleeping...");
-  // 14s
-  return rangeA + rangeB;
-}
-
-export function sayHello(ctx: any) {
-  return ctx.save(() => "Hello World");
+  ctx.sleep(1000);
+  return newA + newB + receivedC.length;
 }

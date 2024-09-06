@@ -54,6 +54,12 @@ export const typegateConfigBaseSchema = z.object({
    * Time in seconds in which a URL expires after being pushed to Redis
    */
   redis_url_queue_expire_sec: z.coerce.number().positive(),
+  substantial_relaunch_ms: z.coerce
+    .number()
+    .positive()
+    .min(1_000)
+    .max(60_000)
+    .default(2_000),
 });
 export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;
 

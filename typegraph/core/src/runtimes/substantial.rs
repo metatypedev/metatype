@@ -137,7 +137,9 @@ pub fn substantial_operation(
             )
         }
         SubstantialOperationType::Results(workflow) => {
-            let out = data.func_out.ok_or("query arg is undefined".to_string())?;
+            let out = data
+                .func_out
+                .ok_or("query output is undefined".to_string())?;
 
             let result = t::struct_()
                 .prop("status", t::string().build()?)

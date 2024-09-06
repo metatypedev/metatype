@@ -72,20 +72,53 @@ export class Context {
     });
   }
 
+  appendEvent(event_name: string, payload: unknown) {
+    this.#appendOp({
+      type: "Send",
+      event_name,
+      value: payload,
+    });
+  }
+
+  receive(eventName: string) {
+    for (const { event } of this.run.operations) {
+      if (event.type == "Send" && event.event_name == eventName) {
+        return event.value;
+      }
+    }
+
+    throw Interrupt.Variant("WAIT_RECEIVE_EVENT");
+  }
+
+  async handle(
+    eventName: string,
+    fn: (received: unknown) => unknown | Promise<unknown>,
+  ) {
+    for (const { event } of this.run.operations) {
+      if (event.type == "Send" && event.event_name == eventName) {
+        const payload = event.value;
+        return await fn(payload);
+      }
+    }
+
+    throw Interrupt.Variant("WAIT_HANDLE_EVENT");
+  }
+
+  async ensure(conditionFn: () => boolean | Promise<boolean>) {
+    const result = await conditionFn();
+    if (!result) {
+      throw Interrupt.Variant("WAIT_ENSURE_VALUE");
+    }
+
+    return result;
+  }
+
   stop(nativeRustResultType: "Ok" | "Err", result?: unknown) {
     this.#appendOp({
       type: "Stop",
       result: {
         [nativeRustResultType]: result,
       },
-    });
-  }
-
-  event(event_name: string, payload: unknown) {
-    this.#appendOp({
-      type: "Send",
-      event_name,
-      value: payload,
     });
   }
 }

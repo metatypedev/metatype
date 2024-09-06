@@ -16,6 +16,7 @@ import { Artifact, Materializer } from "@typegate/typegraph/types.ts";
 import { Typegate } from "@typegate/typegate/mod.ts";
 import {
   Interrupt,
+  Operation,
   Result,
   WorkerData,
   WorkflowResult,
@@ -33,23 +34,33 @@ type QueryWorkflowResult = {
   };
 };
 
+type UserEvent = {
+  receivedAt: Date;
+  eventName: string;
+  payload: unknown;
+};
+
 @registerRuntime("substantial")
 export class SubstantialRuntime extends Runtime {
   private logger: Logger;
   private backend: native.Backend;
   private workerManager: WorkerManager;
   private workflowFiles: Map<string, string> = new Map();
-  private workflowResults: Map<string, Array<QueryWorkflowResult>> = new Map();
+  private workflowResults: Map<string, Array<QueryWorkflowResult>> = new Map(); // TODO: move to backend
+  private receivedStagedEvents: Map<string, Array<UserEvent>> = new Map();
+  private workflowRelaunchDelayMs: number;
 
   private constructor(
     typegraphName: string,
     backend: native.Backend,
     workerManager: WorkerManager,
+    relaunchDelayMs: number,
   ) {
     super(typegraphName);
     this.logger = getLogger(`substantial:'${typegraphName}'`);
     this.backend = backend;
     this.workerManager = workerManager;
+    this.workflowRelaunchDelayMs = relaunchDelayMs;
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
@@ -75,7 +86,12 @@ export class SubstantialRuntime extends Runtime {
     const backend = (args as any)!.backend as native.Backend;
     const workerManager = WorkerManager.getInstance();
 
-    const instance = new SubstantialRuntime(tgName, backend, workerManager);
+    const instance = new SubstantialRuntime(
+      tgName,
+      backend,
+      workerManager,
+      typegate.config.base.substantial_relaunch_ms,
+    );
 
     await instance.#prepareWorkflowFiles(
       tg.meta.artifacts,
@@ -139,11 +155,11 @@ export class SubstantialRuntime extends Runtime {
   }
 
   #delegate(mat: TypeMaterializer): Resolver {
-    const name = mat.name;
+    const matName = mat.name;
     const data = mat?.data ?? {};
     const workflowName = data.name as string;
 
-    switch (name) {
+    switch (matName) {
       case "start":
         return this.#startResolver(workflowName);
       case "stop":
@@ -151,9 +167,15 @@ export class SubstantialRuntime extends Runtime {
           this.workerManager.triggerStop(run_id);
           return run_id;
         };
-      case "event":
-        return ({ run_id }) => {
-          this.workerManager.trigger("SEND", run_id, data);
+      case "send":
+        return ({ run_id, event_name, payload }) => {
+          this.#stageEvent(run_id, {
+            receivedAt: new Date(),
+            eventName: event_name,
+            payload,
+          });
+
+          return run_id;
         };
       case "ressources":
         return () => {
@@ -252,8 +274,7 @@ export class SubstantialRuntime extends Runtime {
   #eventResultHandlerFor(workflowName: string, runId: string) {
     return (result: Result<unknown>) => {
       if (result.error) {
-        // TODO: better way to notify back through gql
-        // All Worker/Runner level issue falls here
+        // All Worker/Runner non-user issue should fall here
         logger.error(
           `result error for "${runId}": ${JSON.stringify(result.payload)}`,
         );
@@ -265,25 +286,32 @@ export class SubstantialRuntime extends Runtime {
 
       const startedAt = this.workerManager.getInitialTimeStartedAt(runId);
 
-      const backend = this.backend;
+      const persist = (run: native.Run) => {
+        const _run = nativeResult(
+          native.persistRun({
+            backend: this.backend,
+            run,
+          }),
+        );
+      };
+
       switch (answer.type) {
         case "START": {
           const ret = answer.data as WorkflowResult;
-          const _run = nativeResult(
-            native.persistRun({
-              backend,
-              run: ret.run,
-            }),
-          );
+
+          // Keep the backend updated with the latest emitted events
+          const run = ret.run;
+          run.operations = [...run.operations, ...this.#getStagedEvents(runId)];
+          persist(ret.run);
 
           if (Interrupt.getTypeOf(ret.exception) != null) {
-            const deferMs = 1000;
             setTimeout(() => {
               this.workerManager.destroyWorker(workflowName, runId); // !
 
               logger.warn(
                 `Interrupt "${workflowName}": ${ret.result}, relaunching under "${runId}"`,
               );
+
               this.workerManager.triggerStart(
                 workflowName,
                 runId,
@@ -295,7 +323,7 @@ export class SubstantialRuntime extends Runtime {
                 runId,
                 this.#eventResultHandlerFor(workflowName, runId),
               );
-            }, deferMs);
+            }, this.workflowRelaunchDelayMs);
           } else {
             this.workerManager.destroyWorker(workflowName, runId); // !
 
@@ -320,10 +348,6 @@ export class SubstantialRuntime extends Runtime {
             });
           }
 
-          break;
-        }
-        case "SEND": {
-          logger.info(`event sent "${runId}": ${JSON.stringify(answer.data)}`);
           break;
         }
         case "STOP": {
@@ -366,5 +390,26 @@ export class SubstantialRuntime extends Runtime {
       throw new Error(`Fatal: cannot find workflow file for "${workflowName}"`);
     }
     return modPath;
+  }
+
+  #stageEvent(runId: string, event: UserEvent) {
+    if (!this.receivedStagedEvents.has(runId)) {
+      this.receivedStagedEvents.set(runId, []);
+    }
+    this.receivedStagedEvents.get(runId)!.push(event);
+  }
+
+  #getStagedEvents(runId: string): Array<Operation> {
+    const staged = this.receivedStagedEvents.get(runId) ?? [];
+    this.receivedStagedEvents.delete(runId);
+
+    return staged.map((e) => ({
+      at: e.receivedAt.toJSON(),
+      event: {
+        type: "Send",
+        event_name: e.eventName,
+        value: e.payload,
+      },
+    }));
   }
 }

@@ -6,7 +6,7 @@ export type { Operation, OperationEvent, Run } from "native";
 
 export type AnyString = string & Record<string | number | symbol, never>;
 
-export type WorkerEvent = "START" | "STOP" | "SEND" | AnyString;
+export type WorkerEvent = "START" | "STOP" | AnyString;
 
 export type WorkerData = {
   type: WorkerEvent;
@@ -42,10 +42,14 @@ export type WorkflowResult = {
 // TODO: convert python exceptions into these
 // by using prefixes on the exception message for example
 
-// Note: Avoid refactoring with inheritance
+// Note: Avoid refactoring with inheritance (e.g. `SleepInterrupt extends Interrupt`)
 // inheritance information is erased when sending exceptions accross workers
 
-export type InterruptType = "SLEEP";
+export type InterruptType =
+  | "SLEEP"
+  | "WAIT_RECEIVE_EVENT"
+  | "WAIT_HANDLE_EVENT"
+  | "WAIT_ENSURE_VALUE";
 
 export class Interrupt extends Error {
   private static readonly PREFIX = "SUBSTANTIAL_INTERRUPT_";

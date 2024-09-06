@@ -55,12 +55,13 @@ export const globalConfig = configOrExit(
 );
 
 export const defaultTypegateConfigBase = {
-  timer_max_timeout_ms: 3000,
+  timer_max_timeout_ms: 3_000,
   timer_destroy_resources: true,
   timer_policy_eval_retries: 1,
   jwt_max_duration_sec: 3600 * 24 * 30,
   jwt_refresh_duration_sec: 60 * 5,
   redis_url_queue_expire_sec: 60 * 5, // 5 minutes
+  substantial_relaunch_ms: 2_000,
 };
 
 const SYNC_PREFIX = "sync_";

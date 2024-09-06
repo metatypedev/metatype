@@ -70,12 +70,6 @@ self.onmessage = async function (event) {
       self.close();
       break;
     }
-    case "SEND": {
-      const { event_name, payload } = data;
-      runCtx?.event(event_name, payload);
-      self.postMessage(Ok(Msg(type, data)));
-      break;
-    }
     default:
       self.postMessage(Err(Msg(type, `Unknown command ${type}`)));
   }
