@@ -261,9 +261,9 @@ export class SubstantialRuntime extends Runtime {
       }
 
       const answer = result.payload as WorkerData;
-      logger.info(`"${runId}" answered with: ${JSON.stringify(answer)}`);
+      logger.info(`"${runId}" answered: type ${JSON.stringify(answer.type)}`);
 
-      const startedAt = this.workerManager.getTimeStartedAt(runId);
+      const startedAt = this.workerManager.getInitialTimeStartedAt(runId);
 
       const backend = this.backend;
       switch (answer.type) {
@@ -277,7 +277,7 @@ export class SubstantialRuntime extends Runtime {
           );
 
           if (Interrupt.getTypeOf(ret.exception) != null) {
-            const deferMs = 3000;
+            const deferMs = 1000;
             setTimeout(() => {
               this.workerManager.destroyWorker(workflowName, runId); // !
 

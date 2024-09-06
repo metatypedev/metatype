@@ -16,7 +16,6 @@ const logger = getLogger();
 export type WorkerRecord = {
   worker: Worker;
   modulePath: string;
-  startedAt: Date;
 };
 export type RunId = string;
 export type WorkflowName = string;
@@ -24,6 +23,7 @@ export type WorkflowName = string;
 export class WorkflowRecorder {
   workflowRuns: Map<WorkflowName, Set<RunId>> = new Map();
   workers: Map<RunId, WorkerRecord> = new Map();
+  startedAtRecords: Map<RunId, Date> = new Map();
 
   getRegisteredWorkflowNames() {
     return Array.from(this.workflowRuns.keys());
@@ -38,13 +38,21 @@ export class WorkflowRecorder {
     return record!;
   }
 
-  addWorker(name: WorkflowName, runId: RunId, worker: WorkerRecord) {
+  addWorker(
+    name: WorkflowName,
+    runId: RunId,
+    worker: WorkerRecord,
+    startedAt: Date,
+  ) {
     if (!this.workflowRuns.has(name)) {
       this.workflowRuns.set(name, new Set());
     }
 
     this.workflowRuns.get(name)!.add(runId);
     this.workers.set(runId, worker);
+    if (!this.startedAtRecords.has(runId)) {
+      this.startedAtRecords.set(runId, startedAt);
+    }
   }
 
   destroyAllWorkers() {
@@ -79,6 +87,9 @@ export class WorkflowRecorder {
 
       this.workflowRuns.get(name)!.delete(runId);
       this.workers.delete(runId);
+
+      // Let it alive throughout typegate lifetime
+      // x this.startedAtRecords.delete(runId);
       return true;
     }
 
@@ -114,11 +125,15 @@ export class WorkerManager {
       type: "module",
     });
 
-    this.recorder.addWorker(name, runId, {
-      modulePath,
-      worker,
-      startedAt: new Date(),
-    });
+    this.recorder.addWorker(
+      name,
+      runId,
+      {
+        modulePath,
+        worker,
+      },
+      new Date(),
+    );
   }
 
   destroyWorker(name: string, runId: string) {
@@ -143,18 +158,23 @@ export class WorkerManager {
       count: runIds.size,
       workflow: name,
       running: Array.from(runIds).map((runId) => {
-        const { startedAt: started_at } = this.recorder.getWorkerRecord(runId);
-        return { run_id: runId, started_at };
+        return {
+          run_id: runId,
+          started_at: this.getInitialTimeStartedAt(runId),
+        };
       }),
     };
   }
 
-  getTimeStartedAt(runId: RunId): Date {
-    const rec = this.recorder.workers.get(runId);
+  /** Returns a Date object representing the *initial* time the runId has been registered/run */
+  getInitialTimeStartedAt(runId: RunId): Date {
+    const rec = this.recorder.startedAtRecords.get(runId);
     if (!rec) {
-      throw new Error(`Cannot find run "${runId}"`);
+      throw new Error(
+        `Invalid state: cannot find initial time for run "${runId}"`,
+      );
     }
-    return rec.startedAt;
+    return rec;
   }
 
   listen(runId: RunId, handlerFn: WorkerEventHandler) {
@@ -177,7 +197,7 @@ export class WorkerManager {
   trigger(type: WorkerEvent, runId: RunId, data: unknown) {
     const { worker } = this.recorder.getWorkerRecord(runId);
     worker.postMessage(Msg(type, data));
-    logger.info(`trigger ${type} for ${runId}: ${JSON.stringify(data)}`);
+    logger.info(`trigger ${type} for ${runId}`);
   }
 
   triggerStart(
