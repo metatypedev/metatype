@@ -35,7 +35,6 @@ async function writeTypegraph(version: number | null, target = "migration.py") {
 Meta.test(
   {
     // FIXME: MET-622
-    ignore: true,
     name: "meta dev: choose to reset the database",
     gitRepo: {
       content: {

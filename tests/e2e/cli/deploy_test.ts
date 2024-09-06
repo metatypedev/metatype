@@ -139,8 +139,7 @@ Meta.test(
 
 Meta.test(
   {
-    // FIXME:
-    ignore: true,
+    // FIXME: MET-622
     name: "meta deploy: succeeds migration for new columns with default value",
   },
   async (t) => {
