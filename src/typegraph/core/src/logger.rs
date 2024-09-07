@@ -9,7 +9,7 @@ macro_rules! debug {
 
             let mut msg = "debug: ".to_string();
             write!(&mut msg, $($arg)*).unwrap();
-            $crate::wit::metatype::typegraph::host::print(&msg);
+            $crate::utils::io::print(&msg);
         }
     };
 }
@@ -22,7 +22,7 @@ macro_rules! info {
 
             let mut msg = "info: ".to_string();
             write!(&mut msg, $($arg)*).unwrap();
-            $crate::wit::metatype::typegraph::host::print(&msg);
+            $crate::utils::io::print(&msg);
         }
     };
 }
@@ -35,7 +35,7 @@ macro_rules! warning {
 
             let mut msg = "warn: ".to_string();
             write!(&mut msg, $($arg)*).unwrap();
-            $crate::wit::metatype::typegraph::host::print(&msg);
+            $crate::utils::io::print(&msg);
         }
     };
 }
@@ -48,7 +48,7 @@ macro_rules! error {
 
             let mut msg = "error: ".to_string();
             write!(&mut msg, $($arg)*).unwrap();
-            $crate::wit::metatype::typegraph::host::print(&msg);
+            $crate::utils::io::print(&msg);
         }
     };
 }

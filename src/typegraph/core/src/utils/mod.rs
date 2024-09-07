@@ -29,6 +29,9 @@ mod pathlib;
 pub mod postprocess;
 pub mod reduce;
 
+#[allow(unused)]
+pub mod io;
+
 fn find_missing_props(
     supertype_id: TypeId,
     new_props: &Vec<(String, u32)>,

@@ -2,14 +2,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::pathlib::PathLib;
-use crate::wit::metatype::typegraph::host::{
-    expand_path as expand_path_host, path_exists as path_exists_host, read_file as read_file_host,
-    write_file as write_file_host,
-};
 use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeSet,
     path::{Path, PathBuf},
+};
+
+use super::io::{
+    expand_path as expand_path_host, path_exists as path_exists_host, read_file as read_file_host,
+    write_file as write_file_host,
 };
 
 pub struct FsContext {
