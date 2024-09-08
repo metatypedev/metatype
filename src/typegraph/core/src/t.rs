@@ -5,8 +5,8 @@ use crate::errors::Result;
 use crate::global_store::{NameRegistration, Store};
 use crate::types::{ExtendedTypeBase, TypeDefExt, TypeId};
 use crate::wit::core::{
-    Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
-    TypeString, TypeStruct, TypeUnion,
+    FuncParams, Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList,
+    TypeOptional, TypeString, TypeStruct, TypeUnion,
 };
 
 pub trait TypeBuilder {
@@ -463,6 +463,12 @@ pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
         ..Default::default()
     }
     .build()
+}
+
+impl TypeBuilder for FuncParams {
+    fn build(&self) -> Result<TypeId> {
+        func(self.inp.into(), self.out.into(), self.mat)
+    }
 }
 
 pub struct RefBuilder {
