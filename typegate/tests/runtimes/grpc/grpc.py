@@ -13,8 +13,6 @@ BASE_DIR = Path(__file__).parent
 @typegraph()
 def grpc(g: Graph):
     proto_file = BASE_DIR.joinpath("proto/helloworld.proto")
-    grpc = GrpcRuntime(proto_file, "localhost:4770")
+    grpc = GrpcRuntime(proto_file, "tcp://localhost:4770")
 
-    g.expose(
-        Policy.public(), greet=grpc.call_grpc_method("/helloworld.Greeter/SayHello")
-    )
+    g.expose(Policy.public(), greet=grpc.call_grpc_method("SayHello"))

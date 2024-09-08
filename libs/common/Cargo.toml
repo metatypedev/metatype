@@ -20,4 +20,6 @@ itertools = "0.11.0"
 colored = "2.0.4"
 indoc.workspace = true
 thiserror.workspace = true
+
 protobuf = "3.5.1"
+proto-parser = { git = "https://github.com/metatypedev/proto-parser", branch = "main" }

@@ -13,9 +13,7 @@ type MetaNS = {
   wasmtimeWit: (inp: WasmInput) => string;
 
   prisma: {
-    registerEngine: (
-      inp: PrismaRegisterEngineInp,
-    ) => Promise<void>;
+    registerEngine: (inp: PrismaRegisterEngineInp) => Promise<void>;
     unregisterEngine: (engine_name: string) => Promise<void>;
     query: (inp: PrismaQueryInp) => Promise<string>;
     diff: (
@@ -32,15 +30,9 @@ type MetaNS = {
   temporal: {
     clientRegister: (inp: TemporalRegisterInput) => Promise<void>;
     clientUnregister: (client_id: string) => void;
-    workflowStart: (
-      inp: TemporalWorkflowStartInput,
-    ) => Promise<string>;
-    workflowSignal: (
-      inp: TemporalWorkflowSignalInput,
-    ) => Promise<void>;
-    workflowQuery: (
-      inp: TemporalWorkflowQueryInput,
-    ) => Promise<Array<string>>;
+    workflowStart: (inp: TemporalWorkflowStartInput) => Promise<string>;
+    workflowSignal: (inp: TemporalWorkflowSignalInput) => Promise<void>;
+    workflowQuery: (inp: TemporalWorkflowQueryInput) => Promise<Array<string>>;
     workflowDescribe: (
       inp: TemporalWorkflowDescribeInput,
     ) => Promise<TemporalWorkflowDescribeOutput>;
@@ -53,9 +45,7 @@ type MetaNS = {
       args: WitWireInitArgs,
       cb: (op_name: string, json: string) => Promise<string>,
     ) => Promise<WitWireInitResponse>;
-    destroy: (
-      instanceId: string,
-    ) => Promise<void>;
+    destroy: (instanceId: string) => Promise<void>;
     handle: (
       instanceId: string,
       args: WitWireReq,
@@ -267,7 +257,7 @@ export type WitWireHandleResponse =
   };
 
 export type GrpcRegisterInput = {
-  protoFileContent: string;
+  proto_file_content: string;
   endpoint: string;
   client_id: string;
 };

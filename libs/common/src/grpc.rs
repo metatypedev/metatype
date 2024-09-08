@@ -1,16 +1,21 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-mod proto_parser;
-
-pub use proto_parser::get_file_descriptor;
-
 use anyhow::{Context, Result};
 
 use protobuf::{
     descriptor::MethodDescriptorProto,
     reflect::{FieldDescriptor, FileDescriptor},
 };
+
+pub use protobuf::descriptor::field_descriptor_proto::Type;
+
+pub fn get_file_descriptor(content: &str) -> Result<FileDescriptor> {
+    let parsed = proto_parser::model::FileDescriptor::parse(content)?;
+    let file_descriptor_proto = proto_parser::convert::file_descriptor(&parsed)?;
+    let file_descriptor = FileDescriptor::new_dynamic(file_descriptor_proto, &[])?;
+    Ok(file_descriptor)
+}
 
 pub fn get_method_descriptor_proto(
     file_descriptor: FileDescriptor,
@@ -25,13 +30,6 @@ pub fn get_method_descriptor_proto(
         .context("method descriptor not found")?;
 
     Ok(method.clone())
-}
-
-pub fn get_relative_method_name(absolute_method_name: &str) -> anyhow::Result<String> {
-    let path: Vec<&str> = absolute_method_name.split('/').collect();
-    let method = path.get(2).context("Invalid path")?;
-
-    Ok(method.to_string())
 }
 
 pub fn get_relative_message_name(absolute_message_name: &str) -> anyhow::Result<String> {

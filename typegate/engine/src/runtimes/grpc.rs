@@ -3,10 +3,7 @@
 
 use std::{cell::RefCell, ops::Deref, rc::Rc, str::FromStr, sync::Arc};
 
-use common::grpc::{
-    get_file_descriptor, get_method_descriptor_proto, get_relative_message_name,
-    get_relative_method_name,
-};
+use common::grpc::{get_file_descriptor, get_method_descriptor_proto, get_relative_message_name};
 
 use anyhow::{Context, Result};
 use bytes::{Buf, BufMut};
@@ -199,10 +196,8 @@ pub async fn op_call_grpc_method(
 
     let file_descriptor = get_file_descriptor(&grpc_client.proto_file_content)?;
 
-    let method_name = get_relative_method_name(&input.method)?;
-
     let method_descriptor_proto =
-        get_method_descriptor_proto(file_descriptor.clone(), &method_name)?;
+        get_method_descriptor_proto(file_descriptor.clone(), &input.method)?;
 
     let request_message = get_relative_message_name(method_descriptor_proto.input_type())?;
 

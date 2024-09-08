@@ -3,8 +3,7 @@
 
 use anyhow::{bail, Result};
 use common::grpc::{
-    get_file_descriptor, get_message_field_descriptor, get_method_descriptor_proto,
-    get_relative_method_name, Fields,
+    get_file_descriptor, get_message_field_descriptor, get_method_descriptor_proto, Fields, Type,
 };
 
 use crate::{
@@ -12,22 +11,22 @@ use crate::{
     types::TypeId,
 };
 
-pub struct Type {
+pub struct TType {
     pub input: TypeId,
     pub output: TypeId,
 }
 
-pub fn generate_type(proto_file_content: &str, method_name: &str) -> Result<Type> {
+pub fn generate_type(proto_file_content: &str, method_name: &str) -> Result<TType> {
     let file_descriptor = get_file_descriptor(proto_file_content)?;
     let method_descriptor = get_method_descriptor_proto(file_descriptor.clone(), method_name)?;
 
-    let input_message = get_relative_method_name(&method_descriptor.input_type.unwrap())?;
-    let out_message = get_relative_method_name(&method_descriptor.output_type.unwrap())?;
+    let input_type = method_descriptor.input_type();
+    let output_type = method_descriptor.output_type();
 
-    let input_fields = get_message_field_descriptor(&file_descriptor, &input_message)?;
-    let output_fields = get_message_field_descriptor(&file_descriptor, &out_message)?;
+    let input_fields = get_message_field_descriptor(&file_descriptor, input_type)?;
+    let output_fields = get_message_field_descriptor(&file_descriptor, output_type)?;
 
-    Ok(Type {
+    Ok(TType {
         input: convert_proto_fields_to_type_id(input_fields)?,
         output: convert_proto_fields_to_type_id(output_fields)?,
     })
@@ -37,15 +36,14 @@ fn convert_proto_fields_to_type_id(fields: Fields) -> Result<TypeId> {
     let mut r#type = t::struct_();
     for field in fields {
         let field_name = field.name();
-        let type_name = field.proto().type_name();
+        let type_name = field.proto().type_();
         let type_id = match type_name {
-            "string" => t::string().build()?,
-            "int32" => t::integer().build()?,
-            "int64" => t::integer().build()?,
-            "bool" => t::boolean().build()?,
-            "float" => t::float().build()?,
+            Type::TYPE_STRING => t::string().build()?,
+            Type::TYPE_INT32 | Type::TYPE_INT64 => t::integer().build()?,
+            Type::TYPE_FLOAT => t::float().build()?,
+            Type::TYPE_BOOL => t::boolean().build()?,
             _ => bail!(
-                "Unsupported field type '{}' for field '{}'",
+                "Unsupported field type '{:?}' for field '{}'",
                 type_name,
                 field_name
             ),

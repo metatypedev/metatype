@@ -1583,6 +1583,7 @@ dependencies = [
  "indexmap 2.2.6",
  "indoc",
  "itertools 0.11.0",
+ "proto-parser",
  "protobuf",
  "reqwest 0.11.27",
  "serde 1.0.204",
@@ -8544,6 +8545,18 @@ dependencies = [
  "serde 1.0.204",
  "serde_derive",
  "serde_json",
+]
+
+[[package]]
+name = "proto-parser"
+version = "0.1.0"
+source = "git+https://github.com/metatypedev/proto-parser?branch=main#aa47da5a8eb16f07d28f7aeece77953401cce3a2"
+dependencies = [
+ "anyhow",
+ "indexmap 2.2.6",
+ "protobuf",
+ "protobuf-support",
+ "thiserror",
 ]
 
 [[package]]

@@ -1,19 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Runtime } from "@typegate/runtimes/Runtime.ts";
+import { Runtime } from "./Runtime.ts";
 import * as native from "native";
-import { ComputeStage } from "@typegate/engine/query_engine.ts";
-import { getLogger, Logger } from "@typegate/log.ts";
-import { TypeGraph } from "@typegate/typegraph/mod.ts";
+import { ComputeStage } from "../engine/query_engine.ts";
+import { getLogger, Logger } from "../log.ts";
+import { TypeGraph } from "../typegraph/mod.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { nativeResult, nativeVoid } from "@typegate/utils.ts";
-import { registerRuntime } from "@typegate/runtimes/mod.ts";
+import { nativeResult, nativeVoid } from "../utils.ts";
+import { registerRuntime } from "./mod.ts";
 
 const logger = getLogger(import.meta);
 
 interface GrpcRuntimeData {
-  protoFileContent: string;
+  proto_file_content: string;
   endpoint: string;
 }
 
@@ -36,7 +36,7 @@ export class GrpcRuntime extends Runtime {
 
     nativeVoid(
       await native.grpc_register({
-        protoFileContent: args.protoFileContent,
+        proto_file_content: args.proto_file_content,
         endpoint: args.endpoint,
         client_id: instance.id,
       }),
