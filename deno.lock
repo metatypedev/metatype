@@ -8,6 +8,7 @@
       "jsr:@std/assert@^0.221.0": "jsr:@std/assert@0.221.0",
       "jsr:@std/assert@^1.0.2": "jsr:@std/assert@1.0.3",
       "jsr:@std/assert@^1.0.3": "jsr:@std/assert@1.0.3",
+      "jsr:@std/async@^1.0.3": "jsr:@std/async@1.0.3",
       "jsr:@std/bytes@^0.221.0": "jsr:@std/bytes@0.221.0",
       "jsr:@std/bytes@^1.0.2": "jsr:@std/bytes@1.0.2",
       "jsr:@std/bytes@^1.0.2-rc.3": "jsr:@std/bytes@1.0.2",
@@ -42,6 +43,7 @@
       "jsr:@std/semver@^1.0.1": "jsr:@std/semver@1.0.2",
       "jsr:@std/streams@0.221.0": "jsr:@std/streams@0.221.0",
       "jsr:@std/streams@1": "jsr:@std/streams@1.0.3",
+      "jsr:@std/streams@^1.0.2": "jsr:@std/streams@1.0.3",
       "jsr:@std/testing@^1.0.1": "jsr:@std/testing@1.0.1",
       "jsr:@std/url@^0.225.0": "jsr:@std/url@0.225.0",
       "jsr:@std/uuid@^1.0.1": "jsr:@std/uuid@1.0.2",
@@ -55,6 +57,7 @@
       "npm:lodash@4.17.21": "npm:lodash@4.17.21",
       "npm:mathjs@11.11.1": "npm:mathjs@11.11.1",
       "npm:multiformats@13.1.0": "npm:multiformats@13.1.0",
+      "npm:pg@8.12.0": "npm:pg@8.12.0",
       "npm:validator@13.12.0": "npm:validator@13.12.0",
       "npm:zod-validation-error@3.3.0": "npm:zod-validation-error@3.3.0_zod@3.23.8",
       "npm:zod@3.23.8": "npm:zod@3.23.8"
@@ -419,12 +422,83 @@
         "integrity": "sha512-HzdtdBwxsIkzpeXzhQ5mAhhuxcHbjEHH+JQoxt7hG/2HGFjjwyolLo7hbaexcnhoEuV4e0TNJ8kkpMjiEYY4VQ==",
         "dependencies": {}
       },
+      "pg-cloudflare@1.1.1": {
+        "integrity": "sha512-xWPagP/4B6BgFO+EKz3JONXv3YDgvkbVrGw2mTo3D6tVDQRh1e7cqVGvyR3BE+eQgAvx1XhW/iEASj4/jCWl3Q==",
+        "dependencies": {}
+      },
+      "pg-connection-string@2.6.4": {
+        "integrity": "sha512-v+Z7W/0EO707aNMaAEfiGnGL9sxxumwLl2fJvCQtMn9Fxsg+lPpPkdcyBSv/KFgpGdYkMfn+EI1Or2EHjpgLCA==",
+        "dependencies": {}
+      },
+      "pg-int8@1.0.1": {
+        "integrity": "sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==",
+        "dependencies": {}
+      },
+      "pg-pool@3.6.2_pg@8.12.0": {
+        "integrity": "sha512-Htjbg8BlwXqSBQ9V8Vjtc+vzf/6fVUuak/3/XXKA9oxZprwW3IMDQTGHP+KDmVL7rtd+R1QjbnCFPuTHm3G4hg==",
+        "dependencies": {
+          "pg": "pg@8.12.0"
+        }
+      },
+      "pg-protocol@1.6.1": {
+        "integrity": "sha512-jPIlvgoD63hrEuihvIg+tJhoGjUsLPn6poJY9N5CnlPd91c2T18T/9zBtLxZSb1EhYxBRoZJtzScCaWlYLtktg==",
+        "dependencies": {}
+      },
+      "pg-types@2.2.0": {
+        "integrity": "sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==",
+        "dependencies": {
+          "pg-int8": "pg-int8@1.0.1",
+          "postgres-array": "postgres-array@2.0.0",
+          "postgres-bytea": "postgres-bytea@1.0.0",
+          "postgres-date": "postgres-date@1.0.7",
+          "postgres-interval": "postgres-interval@1.2.0"
+        }
+      },
+      "pg@8.12.0": {
+        "integrity": "sha512-A+LHUSnwnxrnL/tZ+OLfqR1SxLN3c/pgDztZ47Rpbsd4jUytsTtwQo/TLPRzPJMp/1pbhYVhH9cuSZLAajNfjQ==",
+        "dependencies": {
+          "pg-cloudflare": "pg-cloudflare@1.1.1",
+          "pg-connection-string": "pg-connection-string@2.6.4",
+          "pg-pool": "pg-pool@3.6.2_pg@8.12.0",
+          "pg-protocol": "pg-protocol@1.6.1",
+          "pg-types": "pg-types@2.2.0",
+          "pgpass": "pgpass@1.0.5"
+        }
+      },
+      "pgpass@1.0.5": {
+        "integrity": "sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==",
+        "dependencies": {
+          "split2": "split2@4.2.0"
+        }
+      },
+      "postgres-array@2.0.0": {
+        "integrity": "sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==",
+        "dependencies": {}
+      },
+      "postgres-bytea@1.0.0": {
+        "integrity": "sha512-xy3pmLuQqRBZBXDULy7KbaitYqLcmxigw14Q5sj8QBVLqEwXfeybIKVWiqAXTlcvdvb0+xkOtDbfQMOf4lST1w==",
+        "dependencies": {}
+      },
+      "postgres-date@1.0.7": {
+        "integrity": "sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q==",
+        "dependencies": {}
+      },
+      "postgres-interval@1.2.0": {
+        "integrity": "sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==",
+        "dependencies": {
+          "xtend": "xtend@4.0.2"
+        }
+      },
       "regenerator-runtime@0.14.1": {
         "integrity": "sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==",
         "dependencies": {}
       },
       "seedrandom@3.0.5": {
         "integrity": "sha512-8OwmbklUNzwezjGInmZ+2clQmExQPvomqjL7LFqOYqtmuxRgQYqOD3mHaU+MvZn5FLUeVxVfQjwLZW/n/JFuqg==",
+        "dependencies": {}
+      },
+      "split2@4.2.0": {
+        "integrity": "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==",
         "dependencies": {}
       },
       "tiny-emitter@2.1.0": {
@@ -441,6 +515,10 @@
       },
       "validator@13.12.0": {
         "integrity": "sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==",
+        "dependencies": {}
+      },
+      "xtend@4.0.2": {
+        "integrity": "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==",
         "dependencies": {}
       },
       "zod-validation-error@3.3.0_zod@3.23.8": {
@@ -1902,6 +1980,111 @@
     "https://raw.githubusercontent.com/metatypedev/metatype/54b487d5e3f83680c049a6a0d521dcff264e05c4/typegate/src/utils/hash.ts": "2f4ce3f1736df720def3b0fc89ac9e6e29afa0a33d7a988e15cb1d1bebcf026c",
     "https://raw.githubusercontent.com/metatypedev/metatype/54b487d5e3f83680c049a6a0d521dcff264e05c4/typegate/tests/utils/memory_register.ts": "de21f1494e4e378fc43280e04ea5b59aa791d417c655d47824769cde4fc63b19",
     "https://raw.githubusercontent.com/metatypedev/metatype/54b487d5e3f83680c049a6a0d521dcff264e05c4/typegate/tests/utils/no_limiter.ts": "730246db1c73b5ca77e01e1838194f3870f4024cbf29a850674564b20425a7f0",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/engine/bindings.ts": "e9391491bf5c4f682267a5cb4ae384ef33ed7c15273fcada13bea7b064cf1270",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/config.ts": "2d15bf427ed74be3203e81d56d3bc5c6ecdae74bca18fdf5160482ea2b4b0385",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/config/loader.ts": "91cc2b67cc9bee413b0b44f9aa2ea7814f50e2465e6bc114eece248554d7477d",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/config/shared.ts": "b2cc53588d6651b5261de312c4b92f517f0b764cd95eb1b8771e46c3f46376a0",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/config/types.ts": "04013979ff0c001e8a19547a14bfe2ee0a2c49dc346b22ceefd99f8c8aecb7f8",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/crypto.ts": "f550775b9e5bf9e7ec286a1596246a631b117fd91e093169bcad4898fb729634",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/computation_engine.ts": "c61c224909a334e6024c2b1f929ebb2721bbd00e5418178ec68bbcdc5391090f",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/planner/args.ts": "3cea07d4c49784c1cddbd449f5dcc7e5627c2c6c5a9056b5ccadb8542d13f3ed",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/planner/dependency_resolver.ts": "b851f4a6e2d500f9427dd1a59920d6c71f10904b31863bb1fac4d26e01d02b67",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/planner/injection_utils.ts": "d7dcd7d10fe7c610731b9a98905bb97eb96d591521245d9645f8b9a8a8ad510d",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/planner/mod.ts": "cb5ec29f08bb4617cad7581b28d453873227b246321f91175833b0264bf16ff1",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/planner/parameter_transformer.ts": "4407bc6f75215431b8790cd2ba39ec348c25a9f9c377a80d0bd7315e72a9afb3",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/planner/policies.ts": "3c316e95ab4cc28e5684b0362afdb1e0ba198c7d49453bdfa2470fd39c44104b",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/query_engine.ts": "dbbbe1f233f67fae4e0574ab8ceafe3f4a03f3c62fa0a9f7cc8d02c44fe79bc5",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/stage_id.ts": "b3b3c62215ff421103788079b77943af8f0026a56eafaa929415cb39ccde3cca",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/code_generator.ts": "edb77e2b98da2f040d3f7567d204dba2a3d8c66ae1a7c2709c049e464763f0cd",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/common.ts": "b585975e1a978dfa966df1a549261049ab159077bc90203a33bfe8ae055b3c6f",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/inline_validators/common.ts": "112f56c8e590215b0af0c1b46dc84b85cb5b9b43621a52646876c35a43103499",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/inline_validators/constraints.ts": "3237d0acce31aca8b2f2bbc0cae8a82d86f3671fcc7fabc3158037c4f79008f5",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/inline_validators/list.ts": "bd70fef3bc3840cfb6255a518de5fdb3db79a68a4481594475aebcbdd6a10102",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/inline_validators/number.ts": "9890c8af998dca2e573fc2ad02e63d9abc9b506b4a0c451d31f5916a8888e401",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/inline_validators/object.ts": "bd4f8891ee823bf82481df2ee181256514fd7299b5fe4fd7cd7194defa228f57",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/inline_validators/string.ts": "914a2b809a344075279578cb35ac3d03cb6025eb9f62c1f9f86958191b9857da",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/input.ts": "e34fec32501c9e4d9b427b097fd6565f54065562e101732e62b4c2799e60288c",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/matching_variant.ts": "aca8db649194921a01aca42b02113d0735262bb63d41ec44174e61c4cfa85369",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/engine/typecheck/result.ts": "b2ac55373242b157396f4b400112d02b45abb623e72d2ccfa6e168a10845211b",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/errors.ts": "29dfbfdc8b7a85ee9551831d6db882e50a4e0104102b5885b2bd9a42878365f6",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/libs/jsonpath.ts": "f6851288fb8600dec0e62d5f804f41332b6197b255b6497360ba7e4b7f375cba",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/log.ts": "50d9fd5a225312118b04317c89155ae5a37f66b3ff31af4b7ed92880fa7c6694",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/main.ts": "af5c054d8188afa43b3f5cf3f779a3b0fe2c2bccf2cb7dbde942f469a0ebaad7",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/Runtime.ts": "7ebf8f1903c46ddeb9b795c548561105e643ab5867319e4a9f1f72920048d14d",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/deno.ts": "c893dcf170b38547239d550080a856aca46a788de9922f282bbacf9b5841b5fe",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/deno/deno.ts": "c540c9049261a302e0cefd510fcca6e51e5d527ac2d432a32060d98fa5202ad3",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/deno/deno_messenger.ts": "81160c8a9c9817b46b52c4eee15cde880fb3f6b013c3b5110ee07a4c9c7f7a5e",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/graphql.ts": "e7b1126e80c433a3fa851aff47239b2571ba4ee0b175b25bda6d85804e8b50bd",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/http.ts": "f598a33aa3cafcf37a1f33d84c06bfd0ef5fd768f72837042c83ac6ae1d90762",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/kv.ts": "ea5365bf5cb3a2c1a7a82482d4b5c1f9fb5e84ed331edce4187464a4ca4e5801",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/mod.ts": "8be5c49d628052d172da6c6d8d40d416ec3212ac9776aad658c904a9ada06d02",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/patterns/messenger/async_messenger.ts": "40644e011e3a258138ff1fb7a5323754a547016da9c1deb2114cfc471ee28bf0",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/patterns/messenger/lazy_async_messenger.ts": "b93d5e7252231d27d6b76ec4172d67cc23880b78411fb371d0cba2db712e2161",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/prisma.ts": "e4b679c3b5e28a323d72bde5ebbcc113abe0efc8da82d70b3b2e390149c57d84",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/prisma/hooks/generate_schema.ts": "45d00aee4082e93e817f748fe27d765e5869373c69097a0186ddfcc62f0e152f",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/prisma/hooks/mod.ts": "3e33752e3676b538c7016f3ddd4f1f49d75e217c410bcaa6319d33ed987d3c60",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/prisma/hooks/run_migrations.ts": "aa21425f2383068d08accf99e40ca31046a3f8cec30bf5302a345fbf7fda019f",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/prisma/migration.ts": "f501540557b13a32f7b57e5a87f4ae1794cdd95214a49b34a429d7a33a96d5d8",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/prisma/mod.ts": "a0e44e86a45aad8b2bb0357ddbe8ba02802e6979451553940ec3688be571127f",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/prisma/prisma.ts": "2d9c5b0dd0805f043e7aabe4fc5ad39571a8bf01194dadc1f0ef17b121be2fc6",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/prisma/types.ts": "b4912f164aa8cdb1db3a98238a0271882864ff2778c10920dd7f0f3d59165dd6",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/python.ts": "00fefc5201b7f8600a5788ddf7f2db1d53098b34654c24f4f37c78052056645e",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/random.ts": "8623fa125804dd6302b3c18dc882a4988ce8f2510be55cdc3ddf9af84d05b8e7",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/s3.ts": "2f028f0564d07e789923dd8811ceaf3b4c92a57e390f10d235ac5da7cf18b4e5",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/temporal.ts": "ff8a21af119e67e30c4cb31f7ac677555ac3945fa6f94431c4535009bf9a4c9c",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/typegate.ts": "3f629905c99c49f372be0e05cc8ec27a113b0959f446273134d5eb75a3da8db4",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/typegraph.ts": "075d4a054ced6424529d9b7e8770d9e2579b3bcb3362007226e6b479afaa6013",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/utils/graphql_forward_vars.ts": "f0bb091aadd191eb1491dd86b7abd311ab60e09f532d226c8328b2cfa6025d9e",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/utils/graphql_inline_vars.ts": "9c3c339ee596c93cf65cda696d756c9ef08d34b78e4136472e27a92f2254ec8a",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/utils/http.ts": "842af99040fd0e3456690f7674311da3a0b9ea64c608d7bc588df1ab28f163a3",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/wasm_reflected.ts": "f27fc767b0d42d65729d7489ee61336ce2419a45cb1d52debec67ad3c1559084",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/wasm_wire.ts": "8d8ba5bc68bf6fa7842c193b7e86af0833087ff44da40d83ccf600e62a29d484",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/wit_wire/mod.ts": "e13ca5e0384357da52744640f9d535c2f84da668c8eb92893fe454c9cd66fb2b",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/artifact_service.ts": "84285d8e1e569d5f30918f6bf0c7a97011b37b2ab529787f0308194b875c4de3",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/cookies.ts": "ee17535cb19eab884732cefcdc46e63a2905041d5b5942e9ad6783c50a1f8624",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/mod.ts": "5b15823ec19cec1c985a77d525ee2e9e5c5aa367f5e24c96e305e485b6c633a9",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/protocols/basic.ts": "3c233ae1ccd0d3a8ff47a32c74682921abaf84e0de7c096f220f63b05756fc58",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/protocols/internal.ts": "7a9173406fbc1b885e08dd74a8dd34f168de2f1e9bedef4cdd88dad613e59166",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/protocols/jwt.ts": "e39249df7c2d088da07af1ccf5e97815addb46a994469efd4a335f6ae8618bc5",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/protocols/oauth2.ts": "7172cc6da5ecba71775bbc2d467d52d1f78505204e55452170f35004923b847b",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/protocols/protocol.ts": "158c55618be6165a9ee393ccd1a9da267b084ff04df7e627af1e4fc8fe636644",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/routes/mod.ts": "8fe85c16feb3da7086d3d6fd19a4579585b632893f3534c533c60aed84b9413a",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/routes/take.ts": "bc343c5d34870aeeaf9b0cc9473ba18fe7b324a23a630a57c9fd41eea4418a46",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/auth/routes/validate.ts": "56e52bb6d1660735683bdd398a86936f24ad8a00e402b7d88790867ad559e476",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/graphql_service.ts": "458e3cedcd22a44e166e531bcac4c65972916d81f3776c8161b2440ad212626f",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/info_service.ts": "a9a1f6ebdcbe64d55806597b879dd5714c32b8b861bed695a944f5e2f1213beb",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/middlewares.ts": "8af6277ce67c940564538f4def8e6567b5783b51f7c5f38c902736d620ffe405",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/playground_service.ts": "2cc8689899be7c31ad6c2e9c2c5adde0c6cc1f1442b27a55e8ead830e867dbe5",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/responses.ts": "5c45923c1374aab1ac8dd5b1a09ae69062ab34a448f8e92630678a236e38b2ba",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/services/rest_service.ts": "ae6ffdbddaccdbc7ed11dfb86511f2917332dcf5ae22ed814e1059e640ff7b08",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/sync/replicated_map.ts": "6b94fb884ce81d7e17572ae0abbeb91ceadb31f9356c4e9255982a00edcfe729",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/sync/typegraph.ts": "6dca5ca5c09289512252180e7db47f6cbb2a7881fb860e158ee711f4bf9ae991",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/system_typegraphs.ts": "51299d60c1bb75b3e74998eb77bdf1680ee9d4a2f29a267d3ca90b2867c577fb",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/transports/graphql/gq.ts": "78435e53ec1c5b7aec29364c051eb8f10802714050d24ee68a65e1e263495d7d",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/transports/graphql/graphql.ts": "9f4aa79276e05acc6020da2a18472a1cc54c0ecf42efcbf017d67a88b0b90af2",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/transports/graphql/request_parser.ts": "afbc95debcb1bbfa6fc2b88937d7abedbed1f4335bb2d17bf98c7293761cfdb0",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/transports/graphql/typegraph.ts": "d1ff14176f6ab1d6b3ba54cb2334e555ede11e769f832c4b1d6ac8ec1872185f",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/transports/graphql/utils.ts": "d09147add80f5e53a643ed3126ee8675a1655480728311de2def04ffe6262a4b",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/transports/rest/rest_schema_generator.ts": "c776e83c6a55e9bee3ec72c36c1d771b3ca711e4086b3728e4983ab866472624",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegate/artifacts/local.ts": "11482d663545af6110e4b75a46b21675c68f6c4df625d7867e0cdab9e267065a",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegate/artifacts/mod.ts": "5d207550b83b865d8df4cf023f8304935f410c81b3d18894aaefb570e56fbd93",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegate/artifacts/shared.ts": "7f6d99bcc6499446dcf019d1c3e7735ff5a7b590bfd8fbae89a94d06ac18d9f8",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegate/hooks.ts": "ea97c08285388300802676d03dbc06caadf060093736abce07ef8f99a60e9a04",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegate/memory_register.ts": "6eab24914a941f85c233037013dc13749d8b689c5f9ffb38600df4c7b00a94f0",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegate/mod.ts": "ce468fd7d0a32676f2867bf183c73e59da063f0a5ad3f0cde05d5f40e2bbf280",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegate/no_limiter.ts": "1e98610a737bd74668f80b7014c64669a59a801355340eaa14411e07f4a8a94e",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegate/rate_limiter.ts": "b5718ab9e718314f11f5d88d84795bd0e61575856470793f1fe83d499f4a9d40",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegate/register.ts": "d7a8732386ad019d4dcee0372b6cab93bfc55e0146729842db2aaecf1411b15d",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegraph/mod.ts": "71503ba14d0ad1e77d320d0fa044b93cba76e43ea2800828e0833cc4f0e36401",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegraph/type_node.ts": "76fcb35bfad244af1fcaa45798b29a7536f5a2a45e8c824ae36a0a8cb87aeab5",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegraph/utils.ts": "04ab4bd79523a4a599275a288c8ecb37798cb1615c73e97f080a0bd79b1c2c44",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegraph/versions.ts": "cdab4b07960f78c1f18511a8cc464a7e97c4c1fd15c6e8678c109483d3c26508",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegraph/visitor.ts": "0fb0f89d92cb1654c1b010494a14c1aad88c7923102ea3e89866b232d3bcdf04",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegraphs/introspection.json": "76e8796d99a71f93c6fd57e6af9708ef2d8f587f9ceca2ae9aec3f49d242e43e",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegraphs/prisma_migration.json": "05bcf740259abcedb1bb2d8b34e6d62cf2ef124481e01379b93ddaf05e99b1c1",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/typegraphs/typegate.json": "99da5fb4052c82a35a65ac18f94cbce47d7e49afdf7678b8127e2f4677805cdb",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/utils.ts": "51b8167e4f1d992d68e99b70cb326cc1793593b196c1e17c01775f210652871b",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/utils/hash.ts": "df6cf462c7a6a805b91dce9d3e7bbbd00ea3bfd8dcc973fb3e6c94e48e33d9b9",
     "https://raw.githubusercontent.com/metatypedev/metatype/db616a6ae26eb6fe04e356a777c11185613d97ad/typegate/engine/bindings.ts": "e9391491bf5c4f682267a5cb4ae384ef33ed7c15273fcada13bea7b064cf1270",
     "https://raw.githubusercontent.com/metatypedev/metatype/db616a6ae26eb6fe04e356a777c11185613d97ad/typegate/engine/runtime.js": "1ae55e76d3de8e79c37054d9127c92af496ce10aa905ea64021893048bb33794",
     "https://raw.githubusercontent.com/metatypedev/metatype/db616a6ae26eb6fe04e356a777c11185613d97ad/typegate/src/config.ts": "289820b743711beb9139bca83556f60774521f3c58addd5c441ae3205ef49e61",

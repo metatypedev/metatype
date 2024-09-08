@@ -132,6 +132,7 @@ export async function testE2e(args: {
   const tmpDir = wd.join("tmp");
   const env: Record<string, string> = {
     CLICOLOR_FORCE: "1",
+    // RUST_LOG: "trace",
     RUST_LOG:
       "info,xtask=debug,meta=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
     RUST_SPANTRACE: "1",
@@ -180,7 +181,7 @@ export async function testE2e(args: {
     const outputOption = streamed ? "inherit" : "piped";
     const child = $
       .raw`${xtask} deno test --config=${denoConfig} ${testFile} ${flags}`
-      // .raw`deno test --config=${denoConfig} ${testFile} ${flags}`
+      // .raw`bash -c 'deno test -A --config=${denoConfig} ${testFile} ${flags}'`
       .cwd(wd)
       .env(env)
       .stdout(outputOption)
