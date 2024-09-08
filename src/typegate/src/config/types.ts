@@ -28,6 +28,14 @@ const refineEnvVar = (envVar: string) => z.string().optional().transform((s: str
   return s;
 });
 
+const refineURLEnvVar = (envVar: string) => z.string().optional().transform((s: string | undefined, ctx) => {
+  if (s === undefined) {
+    return addMissingEnvVarIssue(envVar, ctx);
+  }
+
+  return new URL(s);
+});
+
 export const globalConfigSchema = z.object({
   debug: zBooleanString,
   // To be set to false when running from source.
@@ -83,14 +91,8 @@ export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;
 // These config entries are only accessible on a Typegate instance.
 // They are not read from a global variable to enable test isolation and configurability.
 export const syncConfigSchema = z.object({
-  redis_url: z.string().optional().transform((s, ctx) => {
-    if (s === undefined) {
-      return addMissingEnvVarIssue("SYNC_REDIS_URL", ctx);
-    }
-
-    return new URL(s);
-  }),
-  s3_host: refineEnvVar("SYNC_S3_HOST"),
+  redis_url: refineURLEnvVar("SYNC_REDIS_URL"),
+  s3_host: refineURLEnvVar("SYNC_S3_HOST"),
   s3_region: refineEnvVar("SYNC_S3_REGION"),
   s3_bucket: refineEnvVar("SYNC_S3_BUCKET"),
   s3_access_key: refineEnvVar("SYNC_S3_ACCESS_KEY"),
