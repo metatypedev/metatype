@@ -60,6 +60,7 @@ mod native {
     pub fn path_exists(path: &str) -> Result<bool, String> {
         match fs::metadata(path) {
             Ok(_) => Ok(true),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(false),
             Err(err) => Err(err.to_string()),
         }
     }
