@@ -551,7 +551,7 @@ impl wit::core::Guest for Lib {
     }
 }
 
-// TODO: How about this one?
+#[cfg(feature = "wasm")]
 #[macro_export]
 macro_rules! log {
     ($($arg:tt)*) => {

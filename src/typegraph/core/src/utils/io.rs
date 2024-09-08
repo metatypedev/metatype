@@ -13,7 +13,7 @@ mod native {
         patterns.iter().any(|pat| pat.is_match(path))
     }
 
-    fn find_path_matches(
+    fn expand_path_helper(
         path: &str,
         exclude: &[Regex],
         results: &mut Vec<String>,
@@ -22,10 +22,10 @@ mod native {
             let path = entry?.path();
             let path_str = path.to_string_lossy();
 
-            if path.is_file() && match_path(&path_str, exclude) {
+            if path.is_file() && !match_path(&path_str, exclude) {
                 results.push(path_str.to_string());
             } else if path.is_dir() {
-                find_path_matches(&path_str, exclude, results)?;
+                expand_path_helper(&path_str, exclude, results)?;
             }
         }
 
@@ -48,7 +48,7 @@ mod native {
             .flat_map(|pat| Regex::new(pat))
             .collect::<Vec<_>>();
 
-        match find_path_matches(path, &exclude, &mut results) {
+        match expand_path_helper(path, &exclude, &mut results) {
             Ok(_) => Ok(results),
             Err(err) => Err(err.to_string()),
         }
