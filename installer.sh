@@ -137,10 +137,10 @@ case $SHELL_TYPE in
 esac
 
 if [ -n $SHELL_CONFIG ]; then
-  echo "Detected shell: $SHELL_TYPE"
+  printf "\nDetected shell: %s\n" "$SHELL_TYPE"
   read -p "Do you want to append the new PATH to your configuration ($SHELL_CONFIG)? (y/n): " answer
 
-  answer=$(echo "$answer" | tr '[:upper:]' '[:lower:]')
+  answer=$(echo "$answer" | tr "[:upper:]" "[:lower:]")
 
   case $SHELL_TYPE in
     bash|zsh|ksh)
@@ -152,7 +152,6 @@ if [ -n $SHELL_CONFIG ]; then
   esac
 
   if [ "$answer" = "y" ] || [ "$answer" = "yes" ]; then
-
     echo "$APPEND_CMD" >> "$SHELL_CONFIG"
     printf "Path added to %s\nRun 'source %s' to apply changes." "$SHELL_CONFIG" "$SHELL_CONFIG"
   else
