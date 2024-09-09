@@ -16,7 +16,7 @@ LATEST_VERSION="${LATEST_VERSION##*v}"
 
 PLATFORM="${PLATFORM:-}"
 TMP_DIR=$(mktemp -d)
-OUT_DIR="${OUT_DIR:-/usr/local/bin}"
+OUT_DIR="${OUT_DIR:-$HOME/.metatype/bin}"
 VERSION="${VERSION:-$LATEST_VERSION}"
 MACHINE=$(uname -m)
 
@@ -102,24 +102,73 @@ Set the OUT_DIR environment variable to change the installation directory:
 $ curl -fsSL $INSTALLER_URL | OUT_DIR=. bash
 
 EOF
+  if [ ! -d "${OUT_DIR}" ]; then
+    mkdir -p "$OUT_DIR"
+  fi
+
   if [ -w "${OUT_DIR}" ]; then
     read -p "Press enter to continue (or cancel with Ctrl+C):"
     mv "$TMP_DIR/$EXE" "$OUT_DIR"
   else
-    printf "Sudo is required to run \"sudo mv %s %s\":\n" "$TMP_DIR/$EXE" "$OUT_DIR"
-    sudo mv "$TMP_DIR/$EXE" "$OUT_DIR"
+    echo "$OUT_DIR is not writable."
+    exit 1
   fi
 fi
 
 rm -r "$TMP_DIR"
 
-OUT_DIR=$(realpath $OUT_DIR)
-if [[ ":$PATH:" != *":$OUT_DIR:"* ]]; then
-  cat <<EOF
+SHELL_TYPE=$(basename "$SHELL")
+
+case $SHELL_TYPE in
+  bash)
+    SHELL_CONFIG="$HOME/.bashrc"
+    ;;
+  zsh)
+    SHELL_CONFIG="$HOME/.zshrc"
+    ;;
+  fish)
+    SHELL_CONFIG="$HOME/.config/fish/config.fish"
+    ;;
+  ksh)
+    SHELL_CONFIG="$HOME/.kshrc"
+    ;;
+  *)
+    SHELL_CONFIG=""
+esac
+
+if [ -n $SHELL_CONFIG ]; then
+  echo "Detected shell: $SHELL_TYPE"
+  read -p "Do you want to append the new PATH to your configuration ($SHELL_CONFIG)? (y/n): " answer
+
+  answer=$(echo "$answer" | tr '[:upper:]' '[:lower:]')
+
+  case $SHELL_TYPE in
+    bash|zsh|ksh)
+      APPEND_CMD="export PATH=\"$OUT_DIR:\$PATH\""
+      ;;
+    fish)
+      APPEND_CMD="set -gx PATH $OUT_DIR \$PATH"
+      ;;
+  esac
+
+  if [ "$answer" = "y" ] || [ "$answer" = "yes" ]; then
+
+    echo "$APPEND_CMD" >> "$SHELL_CONFIG"
+    printf "Path added to %s\nRun 'source %s' to apply changes." "$SHELL_CONFIG" "$SHELL_CONFIG"
+  else
+    cat <<EOF
+
+Consider adding $OUT_DIR to your PATH if it is not already configured.
+$ $APPEND_CMD
+EOF
+  fi
+else
+  OUT_DIR=$(realpath $OUT_DIR)
+  if [[ ":$PATH:" != *":$OUT_DIR:"* ]]; then
+    cat <<EOF
 
 The installation directory is not in your PATH, consider adding it:
 $ export PATH="\$PATH:$OUT_DIR"
-Or moving the executable to another directory in your PATH:
-$ sudo mv $EXE /usr/local/bin
 EOF
+  fi
 fi
