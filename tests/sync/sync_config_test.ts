@@ -72,11 +72,9 @@ Deno.test("test sync config", async (t) => {
         "s3_access_key",
         "s3_secret_key",
       ].map((k) => ({
-        code: "invalid_type",
-        expected: "string",
-        message: "Required",
+        code: "custom",
+        message: `Error: Env var SYNC_${k.toUpperCase()} is not configured.`,
         path: [k],
-        received: "undefined",
       })),
     );
 
@@ -90,11 +88,9 @@ Deno.test("test sync config", async (t) => {
     Deno.env.set("SYNC_S3_BUCKET", "bucket");
     assertInvalidSyncConfig([
       {
-        code: "invalid_type",
-        expected: "string",
-        message: "Required",
+        code: "custom",
+        message: "Error: Env var SYNC_S3_SECRET_KEY is not configured.",
         path: ["s3_secret_key"],
-        received: "undefined",
       },
     ]);
   });
