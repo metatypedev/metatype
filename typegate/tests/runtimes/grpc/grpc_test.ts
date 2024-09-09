@@ -27,16 +27,73 @@ Meta.test({ name: "Grpc Runtime" }, async (t) => {
   await t.should("Sum number", async () => {
     await gql`
       query {
-        sum(list: [1, 2, 3, 4]) {
+        sum(list: [1, 2, 3, 4, 5]) {
           total
         }
       }
     `
       .expectData({
         sum: {
-          total: 10,
+          total: 15,
         },
       })
       .on(maths);
   });
+
+  await t.should("Prime", async () => {
+    await gql`
+      query {
+        prime(number: 17) {
+          isPrime
+        }
+      }
+    `
+      .expectData({
+        prime: {
+          isPrime: true,
+        },
+      })
+      .on(maths);
+  });
+
+  // wasmtime._trap.Trap: error while executing at wasm backtrace
+
+  // const geography = await t.engine("runtimes/grpc/geography.py");
+
+  // await t.should("show Contry Demography", async () => {
+  //   await gql`
+  //     query {
+  //       dem(name: "France") {
+  //         name
+  //         capital
+  //         population
+  //         currencies {
+  //           code
+  //           name
+  //           symbol
+  //         }
+  //       }
+  //     }
+  //   `
+  //     .expectData({
+  //       dem: {
+  //         name: "France",
+  //         capital: "Paris",
+  //         population: 68035000,
+  //         currencies: [
+  //           {
+  //             code: "EURO",
+  //             name: "Euro",
+  //             symbol: "€",
+  //           },
+  //           {
+  //             code: "XPF",
+  //             name: "CFP franc",
+  //             symbol: "F",
+  //           },
+  //         ],
+  //       },
+  //     })
+  //     .on(geography);
+  // });
 });

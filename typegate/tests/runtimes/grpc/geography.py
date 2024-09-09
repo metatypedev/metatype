@@ -11,14 +11,13 @@ BASE_DIR = Path(__file__).parent
 
 
 @typegraph()
-def maths(g: Graph):
+def geography(g: Graph):
     endpoint = "tcp://localhost:4770"
 
-    maths = BASE_DIR.joinpath("proto/maths.proto")
-    maths_grpc = GrpcRuntime(maths, endpoint)
+    geography = BASE_DIR.joinpath("proto/geography.proto")
+    geography_grpc = GrpcRuntime(geography, endpoint)
 
     g.expose(
         Policy.public(),
-        sum=maths_grpc.call_grpc_method("/maths.Calculator/Sum"),
-        prime=maths_grpc.call_grpc_method("/maths.Calculator/IsPrime"),
+        dem=geography_grpc.call_grpc_method("/geography.Demography/Country"),
     )
