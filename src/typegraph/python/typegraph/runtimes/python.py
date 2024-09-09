@@ -14,6 +14,9 @@ from typegraph.gen.exports.runtimes import (
     MaterializerPythonImport,
     MaterializerPythonLambda,
     MaterializerPythonModule,
+    SubstantialBackend,
+    Workflow,
+    WorkflowKind,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
@@ -143,15 +146,16 @@ class PythonRuntime(Runtime):
 
     def workflow(
         self,
-        endpoint: str,
-        basic_auth: str,
+        backend: SubstantialBackend,
         *,
         file: str,
         name: str,
         deps: List[str] = [],
     ):
-        substantial = SubstantialRuntime(endpoint, basic_auth)
-        return substantial._using_workflow(file, name, deps)
+        substantial = SubstantialRuntime(backend)
+        return substantial._using_workflow(
+            Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.PYTHON)
+        )
 
 
 @dataclass

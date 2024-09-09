@@ -3,10 +3,11 @@
 
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
-import { Effect } from "../gen/typegraph_core.d.ts";
+import { Effect, SubstantialBackend } from "../gen/typegraph_core.d.ts";
 import Policy from "../policy.ts";
 import { Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
+import { SubstantialRuntime } from "../runtimes/substantial.ts";
 
 interface FunMat extends Materializer {
   code: string;
@@ -50,7 +51,7 @@ function stringifyFn(code: string | ((...any: []) => any)) {
       }
       if (/function\s[a-zA-Z0-9_]+\(\) { \[native code\] }/.test(source)) {
         throw new Error(
-          `"${name}" is not supported as it is a native function`,
+          `"${name}" is not supported as it is a native function`
         );
       }
     }
@@ -67,7 +68,7 @@ export class DenoRuntime extends Runtime {
   func<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    { code, secrets = [], effect = fx.read() }: DenoFunc,
+    { code, secrets = [], effect = fx.read() }: DenoFunc
   ): t.Func<I, O, FunMat> {
     const source = stringifyFn(code);
     const matId = runtimes.registerDenoFunc({ code: source, secrets }, effect);
@@ -83,7 +84,7 @@ export class DenoRuntime extends Runtime {
   import<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    { name, module, deps = [], effect = fx.read(), secrets = [] }: DenoImport,
+    { name, module, deps = [], effect = fx.read(), secrets = [] }: DenoImport
   ): t.Func<I, O, ImportMat> {
     const matId = runtimes.importDenoFunction(
       {
@@ -92,7 +93,7 @@ export class DenoRuntime extends Runtime {
         deps,
         secrets,
       },
-      effect,
+      effect
     );
     const mat: ImportMat = {
       _id: matId,
@@ -105,7 +106,7 @@ export class DenoRuntime extends Runtime {
   }
 
   identity<I extends t.Typedef = t.Typedef>(
-    inp: I,
+    inp: I
   ): t.Func<I, t.Typedef, PredefinedFuncMat> {
     const mat: PredefinedFuncMat = {
       _id: runtimes.getPredefinedDenoFunc({ name: "identity" }),
@@ -122,7 +123,7 @@ export class DenoRuntime extends Runtime {
         {
           value: JSON.stringify(value),
         },
-        out._id,
+        out._id
       ),
     };
     return t.func(t.struct({}), out, mat);
@@ -131,21 +132,23 @@ export class DenoRuntime extends Runtime {
   policy(name: string, _code: string): Policy;
   policy(name: string, data: Omit<DenoFunc, "effect">): Policy;
   policy(name: string, data: string | Omit<DenoFunc, "effect">): Policy {
-    const params = typeof data === "string"
-      ? { code: data, secrets: [] }
-      : { secrets: [], ...data };
+    const params =
+      typeof data === "string"
+        ? { code: data, secrets: [] }
+        : { secrets: [], ...data };
 
     return Policy.create(
       name,
       runtimes.registerDenoFunc(
         { ...params, code: stringifyFn(params.code) },
-        fx.read(),
-      ),
+        fx.read()
+      )
     );
   }
 
   importPolicy(data: Omit<DenoImport, "effect">, name?: string): Policy {
-    const policyName = name ??
+    const policyName =
+      name ??
       `__imp_${data.module}_${data.name}`.replace(/[^a-zA-Z0-9_]/g, "_");
     return Policy.create(
       policyName,
@@ -156,8 +159,18 @@ export class DenoRuntime extends Runtime {
           secrets: data.secrets ?? [],
           deps: data.deps ?? [],
         },
-        fx.read(),
-      ),
+        fx.read()
+      )
     );
+  }
+
+  workflow(
+    backend: SubstantialBackend,
+    file: string,
+    name: string,
+    deps: Array<string> = []
+  ): SubstantialRuntime {
+    const substantial = new SubstantialRuntime(backend);
+    return substantial._usingWorkflow({ file, name, deps, kind: "deno" });
   }
 }

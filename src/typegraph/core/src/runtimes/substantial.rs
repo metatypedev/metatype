@@ -23,6 +23,8 @@ pub enum SubstantialMaterializer {
     Start { workflow: WorkflowMatData },
     Stop { workflow: WorkflowMatData },
     Send { workflow: WorkflowMatData },
+    Ressources { workflow: WorkflowMatData },
+    Results { workflow: WorkflowMatData },
 }
 
 impl MaterializerConverter for SubstantialMaterializer {
@@ -58,6 +60,12 @@ impl MaterializerConverter for SubstantialMaterializer {
             SubstantialMaterializer::Send { workflow } => {
                 ("send".to_string(), as_index_map(workflow))
             }
+            SubstantialMaterializer::Ressources { workflow } => {
+                ("ressources".to_string(), as_index_map(workflow))
+            }
+            SubstantialMaterializer::Results { workflow } => {
+                ("results".to_string(), as_index_map(workflow))
+            }
         };
 
         Ok(Materializer {
@@ -76,7 +84,8 @@ pub fn substantial_operation(
     let mut inp = t::struct_();
     let (effect, mat_data, out_ty) = match data.operation {
         SubstantialOperationType::Start(workflow) => {
-            inp.prop("name", t::string().build()?);
+            let arg = data.func_arg.ok_or("query arg is undefined".to_string())?;
+            inp.prop("kwargs", arg.into());
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::Start {
@@ -86,7 +95,7 @@ pub fn substantial_operation(
             )
         }
         SubstantialOperationType::Stop(workflow) => {
-            inp.prop("name", t::string().build()?);
+            inp.prop("run_id", t::string().build()?);
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::Stop {
@@ -97,6 +106,7 @@ pub fn substantial_operation(
         }
         SubstantialOperationType::Send(workflow) => {
             let arg = data.func_arg.ok_or("query arg is undefined".to_string())?;
+            inp.prop("run_id", t::string().build()?);
             inp.prop("event_name", t::string().build()?);
             inp.prop("payload", arg.into());
             (
@@ -105,6 +115,49 @@ pub fn substantial_operation(
                     workflow: workflow.into(),
                 },
                 t::string().build()?,
+            )
+        }
+        SubstantialOperationType::Ressources(workflow) => {
+            let row = t::struct_()
+                .prop("run_id", t::string().build()?)
+                .prop("started_at", t::string().build()?)
+                .build()?;
+            let out = t::struct_()
+                .prop("count", t::integer().build()?)
+                .prop("workflow", t::string().build()?)
+                .prop("running", t::list(row).build()?)
+                .build()?;
+
+            (
+                WitEffect::Read,
+                SubstantialMaterializer::Ressources {
+                    workflow: workflow.into(),
+                },
+                out,
+            )
+        }
+        SubstantialOperationType::Results(workflow) => {
+            let out = data
+                .func_out
+                .ok_or("query output is undefined".to_string())?;
+
+            let result = t::struct_()
+                .prop("status", t::string().build()?)
+                .prop("value", t::optional(out.into()).build()?)
+                .build()?;
+
+            let row = t::struct_()
+                .prop("run_id", t::string().build()?)
+                .prop("started_at", t::string().build()?)
+                .prop("ended_at", t::string().build()?)
+                .prop("result", result)
+                .build()?;
+            (
+                WitEffect::Read,
+                SubstantialMaterializer::Results {
+                    workflow: workflow.into(),
+                },
+                t::list(row).build()?,
             )
         }
     };
@@ -120,13 +173,14 @@ pub fn substantial_operation(
 
 impl From<wit::runtimes::Workflow> for WorkflowMatData {
     fn from(value: wit::runtimes::Workflow) -> Self {
+        use common::typegraph::runtimes::substantial;
+
         Self {
             name: value.name,
-            file: value.file,
+            file: PathBuf::from(value.file),
             kind: match value.kind {
-                wit::runtimes::WorkflowKind::Python => {
-                    common::typegraph::runtimes::substantial::WorkflowKind::Python
-                }
+                wit::runtimes::WorkflowKind::Python => substantial::WorkflowKind::Python,
+                wit::runtimes::WorkflowKind::Deno => substantial::WorkflowKind::Deno,
             },
             deps: value.deps.iter().map(PathBuf::from).collect(),
         }

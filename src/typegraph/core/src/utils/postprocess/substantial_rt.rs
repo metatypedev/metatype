@@ -3,7 +3,7 @@
 
 use crate::utils::{artifacts::ArtifactsExt, fs::FsContext, postprocess::PostProcessor};
 use common::typegraph::{
-    runtimes::python::ModuleMatData,
+    runtimes::substantial::WorkflowMatData,
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
@@ -23,14 +23,15 @@ impl PostProcessor for SubstantialProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         let fs_ctx = FsContext::new(self.typegraph_dir.clone());
         let mut materializers = std::mem::take(&mut tg.materializers);
-        let has_workflow_def = &["start", "stop", "send"];
+        let has_workflow_def = &["start", "stop", "send", "ressources", "results"];
         for mat in materializers.iter_mut() {
             if has_workflow_def.contains(&mat.name.as_str()) {
                 let mat_data = std::mem::take(&mut mat.data);
-                let mut mat_data: ModuleMatData =
+
+                let mut mat_data: WorkflowMatData =
                     object_from_map(mat_data).map_err(|e| e.to_string())?;
 
-                fs_ctx.register_artifact(mat_data.entry_point.clone(), tg)?;
+                fs_ctx.register_artifact(mat_data.file.clone(), tg)?;
 
                 let deps = std::mem::take(&mut mat_data.deps);
                 for artifact in deps.into_iter() {

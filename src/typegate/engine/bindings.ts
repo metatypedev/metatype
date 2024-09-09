@@ -3,13 +3,16 @@
 
 import type {
   CallGrpcMethodInput,
+  CreateOrGetInput,
   GrpcRegisterInput,
   ParsedDiff,
+  PersistRunInput,
   PrismaApplyOut,
   PrismaCreateOut,
   PrismaDeployOut,
   PrismaQueryInp,
   PrismaRegisterEngineInp,
+  Run,
   TemporalRegisterInput,
   TemporalWorkflowDescribeInput,
   TemporalWorkflowDescribeOutput,
@@ -20,7 +23,7 @@ import type {
 } from "./runtime.js";
 
 export function get_version() {
-  return "0.4.10"
+  return "0.4.10";
   // return Meta.version();
 }
 
@@ -33,15 +36,15 @@ export type FormatCodeInp = {
 };
 export type FormatCodeOut =
   | {
-    Ok: {
-      formatted_code: string;
-    };
-  }
+      Ok: {
+        formatted_code: string;
+      };
+    }
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export type ValidateInput = {
   // deno-lint-ignore no-explicit-any
@@ -52,7 +55,7 @@ export type ValidateResult = {
 };
 
 export function validate_prisma_runtime_data(
-  a0: ValidateInput,
+  a0: ValidateInput
 ): ValidateResult {
   try {
     Meta.validatePrismaRuntimeData(a0.obj);
@@ -66,18 +69,18 @@ export type TypegraphValidateInp = {
 };
 export type TypegraphValidateOut =
   | {
-    Valid: {
-      json: string;
-    };
-  }
+      Valid: {
+        json: string;
+      };
+    }
   | {
-    NotValid: {
-      reason: string;
+      NotValid: {
+        reason: string;
+      };
     };
-  };
 
 export function typegraph_validate(
-  a0: TypegraphValidateInp,
+  a0: TypegraphValidateInp
 ): TypegraphValidateOut {
   try {
     const res = Meta.typegraphValidate(a0.json);
@@ -92,15 +95,15 @@ export function typegraph_validate(
 }
 export type WasiOutput =
   | {
-    Ok: {
-      res: string;
-    };
-  }
+      Ok: {
+        res: string;
+      };
+    }
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export function wasmtime_wit(a0: WasmInput): Promise<WasiOutput> {
   try {
@@ -114,13 +117,13 @@ export function wasmtime_wit(a0: WasmInput): Promise<WasiOutput> {
 export type TemporalRegisterOutput =
   | "Ok"
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export async function temporal_register(
-  a0: TemporalRegisterInput,
+  a0: TemporalRegisterInput
 ): Promise<TemporalRegisterOutput> {
   try {
     await Meta.temporal.clientRegister(a0);
@@ -136,13 +139,13 @@ export type TemporalUnregisterInput = {
 export type TemporalUnregisterOutput =
   | "Ok"
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export function temporal_unregister(
-  a0: TemporalUnregisterInput,
+  a0: TemporalUnregisterInput
 ): Promise<TemporalUnregisterOutput> {
   try {
     Meta.temporal.clientUnregister(a0.client_id);
@@ -154,17 +157,17 @@ export function temporal_unregister(
 
 export type TemporalWorkflowStartOutput =
   | {
-    Ok: {
-      run_id: string;
-    };
-  }
+      Ok: {
+        run_id: string;
+      };
+    }
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 export async function temporal_workflow_start(
-  a0: TemporalWorkflowStartInput,
+  a0: TemporalWorkflowStartInput
 ): Promise<TemporalWorkflowStartOutput> {
   try {
     const out = await Meta.temporal.workflowStart(a0);
@@ -177,13 +180,13 @@ export async function temporal_workflow_start(
 export type TemporalWorkflowSignalOutput =
   | "Ok"
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export async function temporal_workflow_signal(
-  a0: TemporalWorkflowSignalInput,
+  a0: TemporalWorkflowSignalInput
 ): Promise<TemporalWorkflowSignalOutput> {
   try {
     await Meta.temporal.workflowSignal(a0);
@@ -195,16 +198,16 @@ export async function temporal_workflow_signal(
 
 export type TemporalWorkflowDescribeRes =
   | {
-    Ok: TemporalWorkflowDescribeOutput;
-  }
+      Ok: TemporalWorkflowDescribeOutput;
+    }
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export async function temporal_workflow_describe(
-  a0: TemporalWorkflowDescribeInput,
+  a0: TemporalWorkflowDescribeInput
 ): Promise<TemporalWorkflowDescribeRes> {
   try {
     const out = await Meta.temporal.workflowDescribe(a0);
@@ -216,18 +219,18 @@ export async function temporal_workflow_describe(
 
 export type TemporalWorkflowQueryOutput =
   | {
-    Ok: {
-      data: Array<string>;
-    };
-  }
+      Ok: {
+        data: Array<string>;
+      };
+    }
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export async function temporal_workflow_query(
-  a0: TemporalWorkflowQueryInput,
+  a0: TemporalWorkflowQueryInput
 ): Promise<TemporalWorkflowQueryOutput> {
   try {
     const out = await Meta.temporal.workflowQuery(a0);
@@ -240,13 +243,13 @@ export async function temporal_workflow_query(
 export type PrismaRegisterEngineOut =
   | "Ok"
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export async function prisma_register_engine(
-  a0: PrismaRegisterEngineInp,
+  a0: PrismaRegisterEngineInp
 ): Promise<PrismaRegisterEngineOut> {
   try {
     await Meta.prisma.registerEngine(a0);
@@ -262,13 +265,13 @@ export type PrismaUnregisterEngineInp = {
 export type PrismaUnregisterEngineOut =
   | "Ok"
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export async function prisma_unregister_engine(
-  a0: PrismaUnregisterEngineInp,
+  a0: PrismaUnregisterEngineInp
 ): Promise<PrismaUnregisterEngineOut> {
   try {
     await Meta.prisma.unregisterEngine(a0.engine_name);
@@ -280,17 +283,17 @@ export async function prisma_unregister_engine(
 
 export type PrismaQueryOut =
   | {
-    Ok: {
-      res: string;
-    };
-  }
+      Ok: {
+        res: string;
+      };
+    }
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 export async function prisma_query(
-  a0: PrismaQueryInp,
+  a0: PrismaQueryInp
 ): Promise<PrismaQueryOut> {
   try {
     const res = await Meta.prisma.query(a0);
@@ -313,17 +316,17 @@ export type PrismaDiffInp = {
 };
 
 export async function prisma_diff(
-  a0: PrismaDiffInp,
+  a0: PrismaDiffInp
 ): Promise<[string, ParsedDiff[]] | null | undefined> {
   return await Meta.prisma.diff(a0);
 }
 
 export type PrismaApplyResult =
   | {
-    Err: {
-      message: string;
-    };
-  }
+      Err: {
+        message: string;
+      };
+    }
   | PrismaApplyOut;
 export type PrismaDevInp = {
   datasource: string;
@@ -333,10 +336,10 @@ export type PrismaDevInp = {
 };
 
 export async function prisma_apply(
-  a0: PrismaDevInp,
+  a0: PrismaDevInp
 ): Promise<PrismaApplyResult> {
   try {
-    return await Meta.prisma.apply(a0) as PrismaApplyResult;
+    return (await Meta.prisma.apply(a0)) as PrismaApplyResult;
   } catch (err) {
     return { Err: { message: err.toString() } };
   }
@@ -348,14 +351,14 @@ export type PrismaDeployInp = {
 };
 export type PrismaDeployRes =
   | {
-    Err: {
-      message: string;
-    };
-  }
+      Err: {
+        message: string;
+      };
+    }
   | { Ok: PrismaDeployOut };
 
 export async function prisma_deploy(
-  a0: PrismaDeployInp,
+  a0: PrismaDeployInp
 ): Promise<PrismaDeployRes> {
   try {
     const res = await Meta.prisma.deploy(a0);
@@ -374,14 +377,14 @@ export type PrismaCreateInp = {
 };
 export type PrismaCreateResult =
   | {
-    Err: {
-      message: string;
-    };
-  }
+      Err: {
+        message: string;
+      };
+    }
   | { Ok: PrismaCreateOut };
 
 export async function prisma_create(
-  a0: PrismaCreateInp,
+  a0: PrismaCreateInp
 ): Promise<PrismaCreateResult> {
   try {
     const res = await Meta.prisma.create(a0);
@@ -395,17 +398,17 @@ export type PrismaResetInp = {
 };
 export type PrismaResetResult =
   | {
-    Err: {
-      message: string;
-    };
-  }
+      Err: {
+        message: string;
+      };
+    }
   | {
-    Ok: {
-      reset: boolean;
+      Ok: {
+        reset: boolean;
+      };
     };
-  };
 export async function prisma_reset(
-  a0: PrismaResetInp,
+  a0: PrismaResetInp
 ): Promise<PrismaResetResult> {
   try {
     const res = await Meta.prisma.reset(a0.datasource);
@@ -421,10 +424,10 @@ export type UnpackInp = {
 export type UnpackResult =
   | "Ok"
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 export function unpack(a0: UnpackInp): UnpackResult {
   try {
     Meta.prisma.unpack(a0);
@@ -439,15 +442,15 @@ export type ArchiveInp = {
 };
 export type ArchiveResult =
   | {
-    Ok: {
-      base64: string | undefined | null;
-    };
-  }
+      Ok: {
+        base64: string | undefined | null;
+      };
+    }
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 export function archive(a0: ArchiveInp): ArchiveResult {
   try {
     const res = Meta.prisma.archive(a0.path);
@@ -460,13 +463,13 @@ export function archive(a0: ArchiveInp): ArchiveResult {
 export type GrpcRegisterOutput =
   | "Ok"
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export async function grpc_register(
-  a0: GrpcRegisterInput,
+  a0: GrpcRegisterInput
 ): Promise<GrpcRegisterOutput> {
   try {
     await Meta.grpc.register(a0);
@@ -483,13 +486,13 @@ export type GrpcUnregisterInput = {
 export type GrpcUnRegisterOutput =
   | "Ok"
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export async function grpc_unregister(
-  a0: GrpcUnregisterInput,
+  a0: GrpcUnregisterInput
 ): Promise<GrpcUnRegisterOutput> {
   try {
     await Meta.grpc.unregister(a0.client_id);
@@ -501,19 +504,59 @@ export async function grpc_unregister(
 
 export type CallGrpcMethodOutput =
   | {
-    Ok: string;
-  }
+      Ok: string;
+    }
   | {
-    Err: {
-      message: string;
+      Err: {
+        message: string;
+      };
     };
-  };
 
 export async function call_grpc_method(
-  a0: CallGrpcMethodInput,
+  a0: CallGrpcMethodInput
 ): Promise<CallGrpcMethodOutput> {
   try {
     return { Ok: await Meta.grpc.callGrpcMethod(a0) };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}
+
+export type CreateOrGetResult =
+  | {
+      Ok: {
+        run: Run;
+      };
+    }
+  | {
+      Err: {
+        message: string;
+      };
+    };
+
+export type PersistRunResult =
+  | {
+      Ok: string;
+    }
+  | {
+      Err: {
+        message: string;
+      };
+    };
+
+export function createOrGetRun(inp: CreateOrGetInput): CreateOrGetResult {
+  try {
+    const res = Meta.substantial.createOrGetRun(inp);
+    return { Ok: res };
+  } catch (err) {
+    return { Err: { message: err.toString() } };
+  }
+}
+
+export function persistRun(inp: PersistRunInput): PersistRunResult {
+  try {
+    const res = Meta.substantial.persistRun(inp);
+    return { Ok: res };
   } catch (err) {
     return { Err: { message: err.toString() } };
   }

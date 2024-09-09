@@ -92,6 +92,7 @@ impl OpDepInjector {
         );
         state.put(runtimes::prisma::Ctx::new(tmp_dir));
         state.put(runtimes::grpc::Ctx::default());
+        state.put(runtimes::substantial::Ctx::default());
     }
 }
 
@@ -136,6 +137,11 @@ pub async fn launch_typegate_deno(
     main_mod: deno_core::ModuleSpecifier,
     import_map_url: Option<String>,
 ) -> Result<()> {
+    std::env::var("REDIS_URL")
+        .ok()
+        .ok_or_else(|| std::env::set_var("REDIS_URL", "none"))
+        .ok();
+
     if std::env::var("TMP_DIR").is_err() {
         std::env::set_var(
             "TMP_DIR",
@@ -227,7 +233,7 @@ mod tests {
             super::resolve_url_or_path("", &std::env::current_dir()?.join("../src/main.ts"))?,
             Some(
                 std::env::current_dir()?
-                    .join("../deno.jsonc")
+                    .join("../import_map.json")
                     .to_string_lossy()
                     .into(),
             ),

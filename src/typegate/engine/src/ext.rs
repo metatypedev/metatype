@@ -3,7 +3,7 @@
 
 use crate::interlude::*;
 use crate::{
-    runtimes::{grpc, prisma, temporal, wasm, wit_wire},
+    runtimes::{grpc, prisma, substantial, temporal, wasm, wit_wire},
     typegraph,
 };
 
@@ -42,7 +42,10 @@ deno_core::extension!(
         wit_wire::op_wit_wire_destroy,
         grpc::op_grpc_register,
         grpc::op_grpc_unregister,
-        grpc::op_call_grpc_method
+        grpc::op_call_grpc_method,
+        substantial::op_create_or_get_run,
+        substantial::op_persist_run,
+
         // FIXME(yohe): this test broke and has proven difficult to fix
         // #[cfg(test)]
         // tests::op_obj_go_round,
@@ -108,13 +111,16 @@ pub mod tests {
     #[tokio::test(flavor = "current_thread")]
     #[ignore]
     async fn test_obj_go_round() -> Result<()> {
-        let deno_factory = deno::factory::CliFactory::from_flags(Arc::new(deno::args::Flags {
-            unstable_config: deno::args::UnstableConfig {
-                legacy_flag_enabled: true,
+        let deno_factory = deno::factory::CliFactory::from_flags(
+            deno::args::Flags {
+                unstable_config: deno::args::UnstableConfig {
+                    legacy_flag_enabled: true,
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        }))
+            }
+            .into(),
+        )
         .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;
