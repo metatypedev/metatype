@@ -11,6 +11,7 @@ import {
   SubstantialOperationType,
   Workflow,
 } from "../gen/typegraph_core.d.ts";
+import { t } from "../index.ts";
 
 export class Backend {
   static memory(): SubstantialBackend {
@@ -28,7 +29,6 @@ export class Backend {
 
 export class SubstantialRuntime extends Runtime {
   backend: SubstantialBackend;
-  workflow?: Workflow;
 
   constructor(backend: SubstantialBackend) {
     const id = runtimes.registerSubstantialRuntime({
@@ -38,12 +38,7 @@ export class SubstantialRuntime extends Runtime {
     this.backend = backend;
   }
 
-  _usingWorkflow(workflow: Workflow): SubstantialRuntime {
-    this.workflow = workflow;
-    return this;
-  }
-
-  #genericSubstantialFunc(
+  _genericSubstantialFunc(
     operation: SubstantialOperationType,
     funcArg?: Typedef,
     funcOut?: Typedef
@@ -57,8 +52,20 @@ export class SubstantialRuntime extends Runtime {
     return Func.fromTypeFunc(funcData);
   }
 
+  deno(file: string, name: string, deps: Array<string> = []): WorkflowHandle {
+    return new WorkflowHandle(this, { file, name, deps, kind: "deno" });
+  }
+
+  python(file: string, name: string, deps: Array<string> = []): WorkflowHandle {
+    return new WorkflowHandle(this, { file, name, deps, kind: "python" });
+  }
+}
+
+export class WorkflowHandle {
+  constructor(private sub: SubstantialRuntime, private workflow: Workflow) {}
+
   start(kwargs: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this.#genericSubstantialFunc(
+    return this.sub._genericSubstantialFunc(
       {
         tag: "start",
         val: this.workflow!,
@@ -68,31 +75,39 @@ export class SubstantialRuntime extends Runtime {
   }
 
   stop(): Func<Typedef, Typedef, Materializer> {
-    return this.#genericSubstantialFunc({
+    return this.sub._genericSubstantialFunc({
       tag: "stop",
       val: this.workflow!,
     });
   }
 
-  send(payload: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this.#genericSubstantialFunc(
+  send(
+    payload: Typedef,
+    eventName?: string
+  ): Func<Typedef, Typedef, Materializer> {
+    const event = t.struct({
+      name: eventName ? t.string().set(eventName) : t.string(),
+      payload,
+    });
+
+    return this.sub._genericSubstantialFunc(
       {
         tag: "send",
         val: this.workflow!,
       },
-      payload
+      event
     );
   }
 
-  queryRessources(): Func<Typedef, Typedef, Materializer> {
-    return this.#genericSubstantialFunc({
-      tag: "ressources",
+  queryResources(): Func<Typedef, Typedef, Materializer> {
+    return this.sub._genericSubstantialFunc({
+      tag: "resources",
       val: this.workflow!,
     });
   }
 
   queryResults(output: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this.#genericSubstantialFunc(
+    return this.sub._genericSubstantialFunc(
       {
         tag: "results",
         val: this.workflow!,
@@ -100,25 +115,5 @@ export class SubstantialRuntime extends Runtime {
       undefined,
       output
     );
-  }
-
-  static deno(
-    backend: SubstantialBackend,
-    file: string,
-    name: string,
-    deps: Array<string> = []
-  ): SubstantialRuntime {
-    const substantial = new SubstantialRuntime(backend);
-    return substantial._usingWorkflow({ file, name, deps, kind: "deno" });
-  }
-
-  static python(
-    backend: SubstantialBackend,
-    file: string,
-    name: string,
-    deps: Array<string> = []
-  ): SubstantialRuntime {
-    const substantial = new SubstantialRuntime(backend);
-    return substantial._usingWorkflow({ file, name, deps, kind: "python" });
   }
 }

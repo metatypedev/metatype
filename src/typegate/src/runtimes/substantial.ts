@@ -7,25 +7,16 @@ import { ComputeStage } from "../engine/query_engine.ts";
 import { TypeGraph, TypeMaterializer } from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
 import { getLogger, Logger } from "../log.ts";
-import * as native from "native";
 import * as ast from "graphql/ast";
-import { nativeResult, sleep } from "../utils.ts";
-import { WorkerManager } from "./substantial/workflow_worker_manager.ts";
 import { path } from "compress/deps.ts";
 import { Artifact, Materializer } from "../typegraph/types.ts";
 import { Typegate } from "../typegate/mod.ts";
-import {
-  Interrupt,
-  Operation,
-  Result,
-  WorkerData,
-  WorkflowResult,
-} from "./substantial/types.ts";
 import { Backend } from "../../engine/runtime.js";
+import { Agent, WorkflowDescription } from "./substantial/agent.ts";
 
 const logger = getLogger(import.meta);
 
-type QueryWorkflowResult = {
+interface QueryWorkflowResult {
   run_id: string;
   started_at: string;
   ended_at: string;
@@ -33,29 +24,28 @@ type QueryWorkflowResult = {
     status: "COMPLETED" | "COMPLETED_WITH_ERROR" | "UNKNOWN";
     value: unknown; // hinted by the user
   };
-};
+}
 
 @registerRuntime("substantial")
 export class SubstantialRuntime extends Runtime {
   private logger: Logger;
   private backend: Backend;
-  private workerManager: WorkerManager;
   private workflowFiles: Map<string, string> = new Map();
-  private workflowResults: Map<string, Array<QueryWorkflowResult>> = new Map(); // TODO: move to backend
-  private receivedStagedEvents: Map<string, Array<Operation>> = new Map();
-  private workflowRelaunchDelayMs: number;
+
+  private agent: Agent;
+  private queue: string;
 
   private constructor(
     typegraphName: string,
     backend: Backend,
-    workerManager: WorkerManager,
-    relaunchDelayMs: number
+    queue: string,
+    agent: Agent
   ) {
     super(typegraphName);
     this.logger = getLogger(`substantial:'${typegraphName}'`);
     this.backend = backend;
-    this.workerManager = workerManager;
-    this.workflowRelaunchDelayMs = relaunchDelayMs;
+    this.queue = queue;
+    this.agent = agent;
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
@@ -79,15 +69,23 @@ export class SubstantialRuntime extends Runtime {
 
     const tgName = TypeGraph.formatName(tg);
     const backend = (args as any)!.backend as Backend;
-    const workerManager = WorkerManager.getInstance();
 
-    const instance = new SubstantialRuntime(
+    const queue = "default";
+    const delayMs = typegate.config.base.substantial_relaunch_ms;
+
+    // Prepare the backend event poller
+    const agent = new Agent(backend, queue, delayMs);
+    const wfDescriptions = await getWorkflowDescriptions(
       tgName,
-      backend,
-      workerManager,
-      typegate.config.base.substantial_relaunch_ms
+      tg.meta.artifacts,
+      materializers,
+      typegate
     );
 
+    agent.start(wfDescriptions);
+
+    // Prepare the runtime
+    const instance = new SubstantialRuntime(tgName, backend, queue, agent);
     await instance.#prepareWorkflowFiles(
       tg.meta.artifacts,
       materializers,
@@ -99,7 +97,7 @@ export class SubstantialRuntime extends Runtime {
 
   deinit(): Promise<void> {
     logger.info("deinitializing SubstantialRuntime");
-    this.workerManager.destroyAllWorkers();
+    this.agent.stop();
     return Promise.resolve();
   }
 
@@ -158,71 +156,136 @@ export class SubstantialRuntime extends Runtime {
       case "start":
         return this.#startResolver(workflowName);
       case "stop":
-        return ({ run_id }) => {
-          this.#stageEvent(run_id, {
-            at: new Date().toJSON(),
-            event: {
-              type: "Stop",
-              result: {
-                Err: "ABORTED",
-              },
-            },
-          });
-
-          return run_id;
-        };
+        return this.#stopResolver();
       case "send":
-        return ({ run_id, event_name, payload }) => {
-          this.#stageEvent(run_id, {
-            at: new Date().toJSON(),
-            event: {
-              type: "Send",
-              event_name,
-              value: payload,
-            },
-          });
-
-          return run_id;
-        };
-      case "ressources":
+        return this.#sendResolver();
+      case "resources":
         return () => {
-          const res = this.workerManager.getAllocatedRessources(workflowName);
+          const res =
+            this.agent.workerManager.getAllocatedResources(workflowName);
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
-        return () => {
-          return this.workflowResults.get(workflowName) ?? [];
-        };
+        return this.#resultsResover(workflowName);
       default:
         return () => null;
     }
   }
 
   #startResolver(workflowName: string): Resolver {
-    return ({ kwargs }) => {
-      const modPath = this.#getModPath(workflowName);
-      const runId = WorkerManager.nextId(workflowName);
+    return async ({ kwargs }) => {
+      const runId = Agent.nextId(workflowName);
+      const schedule = new Date().toJSON();
 
-      const { run } = nativeResult(
-        native.createOrGetRun({
-          backend: this.backend,
-          run_id: runId,
-        })
-      );
+      await this.agent.schedule({
+        backend: this.backend,
+        queue: this.queue,
+        run_id: runId,
+        schedule,
+        operation: {
+          at: schedule,
+          event: {
+            type: "Start",
+            kwargs,
+          },
+        },
+      });
 
-      this.workerManager.triggerStart(
-        workflowName,
-        runId,
-        modPath,
-        run,
-        kwargs
-      );
-      this.workerManager.listen(
-        runId,
-        this.#eventResultHandlerFor(workflowName, runId)
-      );
+      await this.agent.link(workflowName, runId);
 
+      // TODO: return { workflow_name, run_id, schedule } instead
       return runId;
+    };
+  }
+
+  #resultsResover(workflowName: string): Resolver {
+    return async () => {
+      const relatedRuns = await this.agent.retrieveLinks(workflowName);
+      const ongoing = [];
+      const completed = [];
+      for (const runId of relatedRuns) {
+        const run = await this.agent.retrieveEvents(runId);
+        const startedAt = run.operations[0]!.at;
+        let endedAt, result: any;
+
+        let hasStoppedAtLeastOnce = false;
+        for (const op of run.operations) {
+          if (op.event.type == "Stop") {
+            endedAt = op.at;
+            result = op.event.result;
+            hasStoppedAtLeastOnce = true;
+          }
+        }
+
+        if (hasStoppedAtLeastOnce) {
+          const kind = "Ok" in result ? "Ok" : "Err";
+          completed.push({
+            run_id: runId,
+            started_at: startedAt,
+            ended_at: endedAt!,
+            result: {
+              status: kind == "Ok" ? "COMPLETED" : "COMPLETED_WITH_ERROR",
+              value: result[kind],
+            },
+          } satisfies QueryWorkflowResult);
+        } else {
+          ongoing.push({
+            run_id: runId,
+            started_at: startedAt,
+          } satisfies Omit<QueryWorkflowResult, "result" | "ended_at">);
+        }
+      }
+
+      return {
+        ongoing: { count: ongoing.length, runs: ongoing },
+        completed: { count: completed.length, runs: completed },
+      };
+    };
+  }
+
+  #stopResolver(): Resolver {
+    return async ({ run_id }) => {
+      const schedule = new Date().toJSON();
+      await this.agent.schedule({
+        backend: this.backend,
+        queue: this.queue,
+        run_id,
+        schedule,
+        operation: {
+          at: new Date().toJSON(),
+          event: {
+            type: "Stop",
+            result: {
+              Err: "ABORTED",
+            },
+          },
+        },
+      });
+
+      return run_id;
+    };
+  }
+
+  #sendResolver(): Resolver {
+    return async ({ run_id, event }) => {
+      const schedule = new Date().toJSON();
+
+      await this.agent.schedule({
+        backend: this.backend,
+        queue: this.queue,
+        run_id,
+        schedule,
+        operation: {
+          at: new Date().toJSON(),
+          event: {
+            type: "Send",
+            event_name: event.name,
+            value: event.payload,
+          },
+        },
+      });
+
+      return run_id;
     };
   }
 
@@ -231,182 +294,80 @@ export class SubstantialRuntime extends Runtime {
     materializers: Materializer[],
     typegate: Typegate
   ) {
-    const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
+    const descriptions = await getWorkflowDescriptions(
+      this.typegraphName,
+      artifacts,
+      materializers,
+      typegate
+    );
 
-    for (const mat of materializers) {
-      if (
-        !["start", "stop", "send", "ressources", "results"].includes(mat.name)
-      ) {
-        continue;
-      }
+    for (const wf of descriptions) {
+      this.workflowFiles.set(wf.name, wf.path);
+    }
+  }
+}
 
-      const entryModulePath = await this.#getWorkflowEntryPointPath(
+async function getWorkflowDescriptions(
+  typegraphName: string,
+  artifacts: Record<string, Artifact>,
+  materializers: Materializer[],
+  typegate: Typegate
+) {
+  const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
+
+  const workflowDescriptions = [] as Array<WorkflowDescription>;
+  const seen = new Set<string>();
+  for (const mat of materializers) {
+    if (!["start", "stop", "send", "resources", "results"].includes(mat.name)) {
+      continue;
+    }
+
+    const workflowName = mat.data.name as string;
+    if (!seen.has(workflowName)) {
+      const entryModulePath = await getWorkflowEntryPointPath(
+        typegraphName,
         artifacts,
         mat.data,
         typegate
       );
 
-      const { name: workflowName } = mat.data;
-      this.workflowFiles.set(workflowName as string, entryModulePath);
-      this.workflowResults.set(workflowName as string, []);
       logger.info(`Resolved runtime artifacts at ${basePath}`);
+
+      workflowDescriptions.push({
+        name: workflowName,
+        kind: (mat.data.kind as string).toUpperCase() as "DENO" | "PYTHON",
+        path: entryModulePath,
+      });
+
+      seen.add(workflowName);
     }
   }
 
-  async #getWorkflowEntryPointPath(
-    artifacts: Record<string, Artifact>,
-    matData: Record<string, unknown>,
-    typegate: Typegate
-  ) {
-    const entryPoint = artifacts[matData.file as string];
-    const deps = (matData.deps as string[]).map((dep) => artifacts[dep]);
-    const moduleMeta = {
-      typegraphName: this.typegraphName,
-      relativePath: entryPoint.path,
-      hash: entryPoint.hash,
-      sizeInBytes: entryPoint.size,
+  return workflowDescriptions;
+}
+
+async function getWorkflowEntryPointPath(
+  typegraphName: string,
+  artifacts: Record<string, Artifact>,
+  matData: Record<string, unknown>,
+  typegate: Typegate
+) {
+  const entryPoint = artifacts[matData.file as string];
+  const deps = (matData.deps as string[]).map((dep) => artifacts[dep]);
+  const moduleMeta = {
+    typegraphName,
+    relativePath: entryPoint.path,
+    hash: entryPoint.hash,
+    sizeInBytes: entryPoint.size,
+  };
+  const depMetas = deps.map((dep) => {
+    return {
+      typegraphName,
+      relativePath: dep.path,
+      hash: dep.hash,
+      sizeInBytes: dep.size,
     };
-    const depMetas = deps.map((dep) => {
-      return {
-        typegraphName: this.typegraphName,
-        relativePath: dep.path,
-        hash: dep.hash,
-        sizeInBytes: dep.size,
-      };
-    });
+  });
 
-    return await typegate.artifactStore.getLocalPath(moduleMeta, depMetas);
-  }
-
-  #eventResultHandlerFor(workflowName: string, runId: string) {
-    return async (result: Result<unknown>) => {
-      if (result.error) {
-        // All Worker/Runner non-user issue should fall here
-        // Note: Should never throw (typegate will panic), this will run in a worker
-        logger.error(
-          `result error for "${runId}": ${JSON.stringify(result.payload)}`
-        );
-        return;
-      }
-
-      const answer = result.payload as WorkerData;
-      logger.info(`"${runId}" answered: type ${JSON.stringify(answer.type)}`);
-
-      const startedAt = this.workerManager.getInitialTimeStartedAt(runId);
-
-      switch (answer.type) {
-        case "START": {
-          const ret = answer.data as WorkflowResult;
-
-          // Keep the backend updated with the latest emitted events
-          const run = ret.run;
-          run.operations = [...run.operations, ...this.#getStagedEvents(runId)];
-          const _run = nativeResult(
-            native.persistRun({
-              backend: this.backend,
-              run,
-            })
-          );
-
-          switch (Interrupt.getTypeOf(ret.exception)) {
-            case "SLEEP":
-            case "WAIT_ENSURE_VALUE":
-            case "WAIT_HANDLE_EVENT":
-            case "WAIT_RECEIVE_EVENT": {
-              await this.#workflowHandleInterrupts(workflowName, runId, ret);
-              break;
-            }
-            default: {
-              this.#workflowHandleGracefullCompletion(
-                startedAt,
-                workflowName,
-                runId,
-                ret
-              );
-            }
-          }
-
-          break;
-        }
-        default:
-          logger.error(
-            `Invalid type ${answer.type} send by "${runId}": ${JSON.stringify(
-              answer.data
-            )}`
-          );
-      }
-    };
-  }
-
-  #addResult(workflowName: string, result: QueryWorkflowResult) {
-    this.workflowResults.get(workflowName)!.push(result);
-  }
-
-  #getModPath(workflowName: string) {
-    const modPath = this.workflowFiles.get(workflowName);
-    if (!modPath) {
-      throw new Error(`Fatal: cannot find workflow file for "${workflowName}"`);
-    }
-    return modPath;
-  }
-
-  #stageEvent(runId: string, event: Operation) {
-    if (!this.receivedStagedEvents.has(runId)) {
-      this.receivedStagedEvents.set(runId, []);
-    }
-    this.receivedStagedEvents.get(runId)!.push(event);
-  }
-
-  #getStagedEvents(runId: string): Array<Operation> {
-    const staged = this.receivedStagedEvents.get(runId) ?? [];
-    this.receivedStagedEvents.delete(runId);
-    return staged;
-  }
-
-  async #workflowHandleInterrupts(
-    workflowName: string,
-    runId: string,
-    { result, run }: WorkflowResult
-  ) {
-    await sleep(this.workflowRelaunchDelayMs);
-
-    this.workerManager.destroyWorker(workflowName, runId); // !
-
-    logger.warn(
-      `Interrupt "${workflowName}": ${result}, relaunching under "${runId}"`
-    );
-    this.workerManager.triggerStart(
-      workflowName,
-      runId,
-      this.#getModPath(workflowName),
-      run,
-      (run.operations?.[0].event as any).kwargs
-    );
-    this.workerManager.listen(
-      runId,
-      this.#eventResultHandlerFor(workflowName, runId)
-    );
-  }
-
-  #workflowHandleGracefullCompletion(
-    startedAt: Date,
-    workflowName: string,
-    runId: string,
-    { result, kind }: WorkflowResult
-  ) {
-    this.workerManager.destroyWorker(workflowName, runId); // !
-
-    logger.info(
-      `gracefull completion of "${runId}": ${JSON.stringify(result)}`
-    );
-    this.#addResult(workflowName, {
-      run_id: runId,
-      started_at: startedAt.toJSON(),
-      ended_at: new Date().toJSON(),
-      result: {
-        status: kind == "FAIL" ? "COMPLETED_WITH_ERROR" : "COMPLETED",
-        value: result, // shape hinted by the user through the typegraph
-      },
-    });
-  }
+  return await typegate.artifactStore.getLocalPath(moduleMeta, depMetas);
 }

@@ -11055,10 +11055,12 @@ version = "0.4.11-rc.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "lazy_static 1.5.0",
  "protobuf",
  "serde 1.0.204",
  "serde_json",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -12634,6 +12636,7 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "bytes",
+ "chrono",
  "common",
  "connection-string",
  "convert_case 0.6.0",

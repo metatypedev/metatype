@@ -21,7 +21,14 @@ function getOp(name) {
   return op;
 }
 
-globalThis.Meta = {
+/**
+ * @typedef {import('./runtime.d.ts').MetaNS} MetaNS
+ */
+
+/**
+ * @type {MetaNS}
+ */
+const Meta = {
   prisma: {
     registerEngine: getOp("op_prisma_register_engine"),
     unregisterEngine: getOp("op_prisma_unregister_engine"),
@@ -51,13 +58,29 @@ globalThis.Meta = {
     destroy: getOp("op_wit_wire_destroy"),
     handle: getOp("op_wit_wire_handle"),
   },
+  substantial: {
+    storeCreateOrGetRun: getOp("op_sub_store_create_or_get_run"),
+    storePersistRun: getOp("op_sub_store_persist_run"),
+    storeAddSchedule: getOp("op_sub_store_add_schedule"),
+    storeReadSchedule: getOp("op_sub_store_read_schedule"),
+    storeCloseSchedule: getOp("op_sub_store_close_schedule"),
+    agentNextRun: getOp("op_sub_agent_next_run"),
+    agentActiveLeases: getOp("op_sub_agent_active_leases"),
+    agentAcquireLease: getOp("op_sub_agent_acquire_lease"),
+    agentRenewLease: getOp("op_sub_agent_renew_lease"),
+    agentRemoveLease: getOp("op_sub_agent_remove_lease"),
+    metadataReadAll: getOp("op_sub_metadata_read_all"),
+    metadataAppend: getOp("op_sub_metadata_append"),
+    metadataWriteWorkflowLink: getOp("op_sub_metadata_write_workflow_link"),
+    metadataReadWorkflowLinks: getOp("op_sub_metadata_read_workflow_links"),
+  },
   grpc: {
     register: getOp("op_grpc_register"),
     unregister: getOp("op_grpc_unregister"),
     callGrpcMethod: getOp("op_call_grpc_method"),
   },
-  substantial: {
-    createOrGetRun: getOp("op_create_or_get_run"),
-    persistRun: getOp("op_persist_run"),
-  },
 };
+
+
+
+globalThis.Meta = Meta;

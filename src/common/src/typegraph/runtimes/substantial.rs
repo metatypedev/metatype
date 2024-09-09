@@ -44,3 +44,10 @@ pub struct ModuleMatData {
     pub entry_point: PathBuf,
     pub deps: Vec<PathBuf>,
 }
+
+impl SubstantialBackend {
+    pub fn as_key(&self) -> String {
+        // Note: be wary of non-deterministic types
+        serde_json::to_string(&self).unwrap()
+    }
+}

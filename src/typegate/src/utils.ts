@@ -216,3 +216,9 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
+export function addSecondsToDate(date: Date, seconds: number) {
+  const ret = new Date(date.getTime());
+  ret.setSeconds(ret.getSeconds() + seconds);
+  return ret;
+}

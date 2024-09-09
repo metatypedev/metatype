@@ -3,16 +3,13 @@
 
 import type {
   CallGrpcMethodInput,
-  CreateOrGetInput,
   GrpcRegisterInput,
   ParsedDiff,
-  PersistRunInput,
   PrismaApplyOut,
   PrismaCreateOut,
   PrismaDeployOut,
   PrismaQueryInp,
   PrismaRegisterEngineInp,
-  Run,
   TemporalRegisterInput,
   TemporalWorkflowDescribeInput,
   TemporalWorkflowDescribeOutput,
@@ -517,46 +514,6 @@ export async function call_grpc_method(
 ): Promise<CallGrpcMethodOutput> {
   try {
     return { Ok: await Meta.grpc.callGrpcMethod(a0) };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-
-export type CreateOrGetResult =
-  | {
-      Ok: {
-        run: Run;
-      };
-    }
-  | {
-      Err: {
-        message: string;
-      };
-    };
-
-export type PersistRunResult =
-  | {
-      Ok: string;
-    }
-  | {
-      Err: {
-        message: string;
-      };
-    };
-
-export function createOrGetRun(inp: CreateOrGetInput): CreateOrGetResult {
-  try {
-    const res = Meta.substantial.createOrGetRun(inp);
-    return { Ok: res };
-  } catch (err) {
-    return { Err: { message: err.toString() } };
-  }
-}
-
-export function persistRun(inp: PersistRunInput): PersistRunResult {
-  try {
-    const res = Meta.substantial.persistRun(inp);
-    return { Ok: res };
   } catch (err) {
     return { Err: { message: err.toString() } };
   }

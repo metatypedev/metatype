@@ -5,7 +5,7 @@ declare global {
   const Meta: MetaNS;
 }
 
-type MetaNS = {
+export type MetaNS = {
   version: () => string;
   typescriptFormatCode: (source: string) => string;
   typegraphValidate: (json: string) => string;
@@ -59,8 +59,26 @@ type MetaNS = {
   };
 
   substantial: {
-    createOrGetRun: (inp: CreateOrGetInput) => CreateOrGetOutput;
-    persistRun: (inp: PersistRunInput) => string;
+    storeCreateOrGetRun: (inp: CreateOrGetInput) => Promise<CreateOrGetOutput>;
+    storePersistRun: (inp: PersistRunInput) => Promise<string>;
+    storeAddSchedule: (inp: AddScheduleInput) => Promise<void>;
+    storeReadSchedule: (
+      inp: ReadOrCloseScheduleInput
+    ) => Promise<Operation | undefined>;
+    storeCloseSchedule: (inp: ReadOrCloseScheduleInput) => Promise<void>;
+    agentNextRun: (inp: NextRunInput) => Promise<NextRun | undefined>;
+    agentActiveLeases: (inp: ActiveLeaseInput) => Promise<Array<string>>;
+    agentAcquireLease: (inp: LeaseInput) => Promise<boolean>;
+    agentRenewLease: (inp: LeaseInput) => Promise<boolean>;
+    agentRemoveLease: (inp: LeaseInput) => Promise<void>;
+    metadataReadAll: (
+      inp: ReadAllMetadataInput
+    ) => Promise<Array<MetadataEvent>>;
+    metadataAppend: (inp: AppendMetadataInput) => Promise<void>;
+    metadataWriteWorkflowLink: (inp: WriteLinkInput) => Promise<void>;
+    metadataReadWorkflowLinks: (
+      inp: ReadWorkflowLinkInput
+    ) => Promise<Array<string>>;
   };
 };
 
@@ -310,4 +328,73 @@ export interface CreateOrGetOutput {
 export interface PersistRunInput {
   run: Run;
   backend: Backend;
+}
+
+export interface AddScheduleInput {
+  backend: Backend;
+  run_id: string;
+  queue: string;
+  schedule: string;
+  operation?: Operation;
+}
+
+export interface ReadOrCloseScheduleInput {
+  backend: Backend;
+  run_id: string;
+  queue: string;
+  schedule: string;
+}
+
+export interface NextRunInput {
+  backend: Backend;
+  queue: string;
+  exclude: string[];
+}
+
+export interface ActiveLeaseInput {
+  backend: Backend;
+  lease_seconds: number;
+}
+
+export interface LeaseInput {
+  backend: Backend;
+  run_id: string;
+  lease_seconds: number;
+}
+
+export interface NextRun {
+  run_id: string;
+  schedule_date: string;
+}
+
+export interface WriteLinkInput {
+  backend: Backend;
+  workflow_name: string;
+  run_id: string;
+}
+
+export interface ReadAllMetadataInput {
+  backend: Backend;
+  run_id: string;
+}
+
+export interface AppendMetadataInput {
+  backend: Backend;
+  run_id: string;
+  schedule: string;
+  content: unknown;
+}
+
+export interface ReadWorkflowLinkInput {
+  backend: Backend;
+  workflow_name: string;
+}
+
+export type MetadataPayload =
+  | { type: "Info"; value: unknown }
+  | { type: "Error"; value: unknown };
+
+export interface MetadataEvent {
+  at: string;
+  metadata?: MetadataPayload;
 }
