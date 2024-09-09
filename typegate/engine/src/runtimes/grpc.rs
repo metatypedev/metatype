@@ -3,7 +3,7 @@
 
 use std::{cell::RefCell, ops::Deref, rc::Rc, str::FromStr, sync::Arc};
 
-use common::grpc::{get_file_descriptor, get_method_descriptor_proto, get_relative_message_name};
+use common::grpc::{get_file_descriptor, get_method_descriptor_proto};
 
 use anyhow::{Context, Result};
 use bytes::{Buf, BufMut};
@@ -72,8 +72,7 @@ impl Decoder for DynCodec {
         let buf = src.chunk();
         let length = buf.len();
 
-        let response_message =
-            get_relative_message_name(self.method_descriptor_proto.output_type()).unwrap();
+        let response_message = self.method_descriptor_proto.output_type().to_string();
 
         let response = buf2response(buf, response_message, self.file_descriptor.clone())
             .map(Some)
@@ -100,10 +99,11 @@ pub fn json2request(
     file_descriptor: FileDescriptor,
 ) -> anyhow::Result<Request<DynRequest>> {
     let msg_descriptor = file_descriptor
-        .message_by_package_relative_name(&input_message)
+        .message_by_full_name(&input_message)
         .with_context(|| format!("Input message {input_message} not found"))?;
     let mut msg = msg_descriptor.new_instance();
-    protobuf_json_mapping::merge_from_str(&mut *msg, &json)?;
+    protobuf_json_mapping::merge_from_str(&mut *msg, &json)
+        .context("failed to merge json to str")?;
 
     Ok(msg.into_request())
 }
@@ -114,7 +114,7 @@ fn buf2response(
     file_descriptor: FileDescriptor,
 ) -> anyhow::Result<DynResponse> {
     let msg_descriptor = file_descriptor
-        .message_by_package_relative_name(&output_message)
+        .message_by_full_name(&output_message)
         .with_context(|| format!("Output message {output_message} not found"))?;
 
     let mut msg = msg_descriptor.new_instance();
@@ -123,12 +123,13 @@ fn buf2response(
     Ok(msg)
 }
 
+#[derive(Clone)]
 struct GrpcClient {
     client: Grpc<Channel>,
     proto_file_content: String,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Ctx {
     grpc_clients: Arc<DashMap<String, GrpcClient>>,
 }
@@ -148,13 +149,16 @@ pub async fn op_grpc_register(
 ) -> Result<()> {
     let client = create_client(&input.endpoint).await?;
 
-    let state = state.borrow();
-    let ctx = state.borrow::<Ctx>();
+    let ctx = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().clone()
+    };
 
     let grpc_client = GrpcClient {
         client,
         proto_file_content: input.proto_file_content,
     };
+
     ctx.grpc_clients
         .insert(input.client_id.clone(), grpc_client);
 
@@ -199,7 +203,7 @@ pub async fn op_call_grpc_method(
     let method_descriptor_proto =
         get_method_descriptor_proto(file_descriptor.clone(), &input.method)?;
 
-    let request_message = get_relative_message_name(method_descriptor_proto.input_type())?;
+    let request_message = method_descriptor_proto.input_type().to_string();
 
     let req = json2request(input.payload, request_message, file_descriptor.clone())?;
 

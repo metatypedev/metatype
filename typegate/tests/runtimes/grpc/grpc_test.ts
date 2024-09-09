@@ -15,7 +15,9 @@ Meta.test({ name: "Grpc Runtime" }, async (t) => {
       }
     `
       .expectData({
-        message: "Hello Metatype",
+        greet: {
+          message: "Hello Metatype",
+        },
       })
       .on(e);
   });

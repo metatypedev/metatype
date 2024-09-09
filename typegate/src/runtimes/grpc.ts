@@ -56,15 +56,27 @@ export class GrpcRuntime extends Runtime {
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] | Promise<ComputeStage[]> {
+    if (stage.props.materializer == null) {
+      return [
+        stage.withResolver(({ _: { parent } }) => {
+          const resolver = parent[stage.props.node];
+          return typeof resolver === "function" ? resolver() : resolver;
+        }),
+      ];
+    }
+
     const { method } = stage.props.materializer?.data ?? {};
 
     const resolver: Resolver = async (args) => {
-      return nativeResult(
-        await native.call_grpc_method({
-          method: String(method),
-          payload: JSON.stringify(args),
-          client_id: this.id,
-        }),
+      const { _, ...payload } = args;
+      return JSON.parse(
+        nativeResult(
+          await native.call_grpc_method({
+            method: String(method),
+            payload: JSON.stringify(payload),
+            client_id: this.id,
+          }),
+        ),
       );
     };
 
