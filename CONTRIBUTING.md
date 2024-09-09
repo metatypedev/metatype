@@ -132,7 +132,7 @@ source .venv/bin/activate # depends on your shell
 ghjk x dev-compose all # or only the envs required (e.g. base prisma s3)
 ghjk x build-tgraph # build typegraph
 ghjk x test-e2e # all tests
-ghjk x test-e2e runtimes/prisma/full_prisma_mapping_test.ts # isolated test
+ghjk x test-e2e tests/runtimes/prisma/full_prisma_mapping_test.ts # isolated test
 ghjk x # more test tasks are availaible
 ghjk x dev-compose # shutdown all envs
 ```
@@ -170,12 +170,12 @@ rustflags = [
 
 #### Local typegraph with Nodejs
 
-Currently, the `typegraph/sdk/node/dist` project is generated dynamically. Depending on your package manager, the protocol used may differ.
+Currently, the `src/typegraph/node/` project is generated dynamically using the `build-tgraph-ts-node` ghjk task. Depending on your package manager, the protocol used may differ.
 
 ```bash
 # uses the `file:..` protocol
-npm install path/to/typegraph/sdk/node/dist
+npm install path/to/typegraph/sdk/node/
 
 # uses the `link:..` protocol (equivalent to `file:..` but for directories only)
-pnpm install path/to/typegraph/sdk/node/dist
+pnpm install path/to/typegraph/sdk/node/
 ```

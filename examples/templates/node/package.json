@@ -6,7 +6,7 @@
     "dev": "MCLI_LOADER_CMD='npm x tsx' meta dev"
   },
   "dependencies": {
-    "@typegraph/sdk": "^0.4.8"
+    "@typegraph/sdk": "^0.4.11-rc.0"
   },
   "devDependencies": {
     "tsx": "^3.13.0",

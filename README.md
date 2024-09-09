@@ -1,7 +1,7 @@
 <a name="top"></a>
 
 <p align="center">
-    <a href="https://metatype.dev?utm_source=github&utm_medium=readme&utm_campaign=metatype"><img src="website/static/images/logo-bg.svg" alt="Metatype" width="150px" /></a>
+    <a href="https://metatype.dev?utm_source=github&utm_medium=readme&utm_campaign=metatype"><img src="docs/metatype.dev/static/images/logo-bg.svg" alt="Metatype" width="150px" /></a>
 </p>
 
 <p>
@@ -45,12 +45,12 @@ Support us by <a href="https://github.com/metatypedev/metatype/stargazers">starr
             <p>And castle building is hard. Even the best teams can struggle to build according to the plans, especially with the ever evolving needs and the tech landscape complexities.</p>
         </td>
         <td>
-            <img src="website/static/images/castles/building.png" alt="Castle building" />
+            <img src="docs/metatype.dev/static/images/castles/building.png" alt="Castle building" />
         </td>
     </tr>
     <tr>
         <td>
-            <img src="website/static/images/castles/stable.png" alt="Stable castle" />
+            <img src="docs/metatype.dev/static/images/castles/stable.png" alt="Stable castle" />
         </td>
         <td>
             <h3>Build reliable castle with typegraphs</h3>
@@ -63,12 +63,12 @@ Support us by <a href="https://github.com/metatypedev/metatype/stargazers">starr
             <p>Typegate is a GraphQL/REST composition engine that compiles, optimizes, runs and caches queries over typegraphs. It enforces authentication, authorization and security for you.</p>
         </td>
         <td>
-            <img src="website/static/images/castles/modulable.png" alt="Modulable castle" />
+            <img src="docs/metatype.dev/static/images/castles/modulable.png" alt="Modulable castle" />
         </td>
     </tr>
     <tr>
         <td>
-            <img src="website/static/images/castles/reusable.png" alt="Reusable castle" />
+            <img src="docs/metatype.dev/static/images/castles/reusable.png" alt="Reusable castle" />
         </td>
         <td>
             <h3>Build reusable castle with Metatype</h3>

@@ -46,35 +46,25 @@ jobs:
           filters: |
             website:
               - '.github/workflows/tests.yml'
-              - 'website/**'
-            meta-cli:
-              - '.github/workflows/tests.yml'
-              - 'libs/**'
-              - 'meta-cli/**'
-              - 'Cargo.lock'
+              - 'src/metatype.dev/**'
             typegate: # for the standalone/image (not typegate tests which rely on everything)
               - '.github/workflows/tests.yml'
-              - 'libs/**'
-              - 'typegate/**' # consider moving tests to other dir to improve test detection
+              - 'src/common/**'
+              - 'src/mt_deno/**'
+              - 'src/pyrt_wit_wire/**'
+              - 'src/typegate/**'
+              - 'src/wit/**'
               - 'Cargo.lock'
             full:
               - '.github/workflows/tests.yml'
-              - 'libs/**'
-              - 'typegate/**'
-              - 'typegraph/**'
-              - 'meta-cli/**'
-              - 'Cargo.lock'
+              - 'src/**'
+              - 'tests/**'
               - 'examples/**'
-            rust:
-              - '.github/workflows/tests.yml'
-              - 'libs/**'
               - 'Cargo.lock'
     outputs:
       website: ${{ steps.filter.outputs.website }}
-      meta-cli: ${{ steps.filter.outputs.meta-cli }}
       typegate: ${{ steps.filter.outputs.typegate }}
       full: ${{ steps.filter.outputs.full }}
-      rust: ${{ steps.filter.outputs.rust }}
 
   pre-commit:
     runs-on: ubuntu-latest
@@ -194,7 +184,7 @@ jobs:
         uses: docker/build-push-action@v6
         if: steps.check.outputs.has-permission
         with:
-          file: dev/Dockerfile
+          file: tools/Dockerfile
           platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
@@ -208,7 +198,7 @@ jobs:
         uses: docker/build-push-action@v6
         if: "! steps.check.outputs.has-permission"
         with:
-          file: dev/Dockerfile
+          file: tools/Dockerfile
           platforms: ${{ matrix.platform }}
           push: false
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
@@ -262,6 +252,7 @@ jobs:
 
           ghjk x install-sys | bash
           ghjk x install-py
+          ghjk x install-wasi-adapter
           source .venv/bin/activate
 
           # this doesn't publish it but only builds it
@@ -271,7 +262,6 @@ jobs:
           ghjk x dev-compose base prisma
 
           WASM_OPT=1 ghjk x build-tgraph
-          ls -osha typegraph/node
 
           ghjk x install-ts
 
@@ -283,16 +273,16 @@ jobs:
           ghjk x test-e2e -- --coverage=coverage
 
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
-          deno cache --import-map typegate/import_map.json \
-            typegate/src/main.ts \
-            typegate/tests/utils/*.ts \
-            typegate/tests/runtimes/wasm_wire/*.ts \
-            typegate/tests/runtimes/wasm_reflected/*.ts \
-            typegate/tests/runtimes/python/*.ts \
-            typegate/tests/e2e/self_deploy/self_deploy.ts \
-            typegate/tests/metagen/typegraphs/metagen.ts \
-            typegraph/deno/sdk/src/*.ts \
-            dev/*.ts
+          deno cache --config src/typegate/deno.jsonc \
+            src/typegate/src/main.ts \
+            tests/utils/*.ts \
+            tests/runtimes/wasm_wire/*.ts \
+            tests/runtimes/wasm_reflected/*.ts \
+            tests/runtimes/python/*.ts \
+            tests/e2e/self_deploy/self_deploy.ts \
+            tests/metagen/typegraphs/metagen.ts \
+            src/typegraph/deno/src/*.ts \
+            tools/*.ts
 
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 

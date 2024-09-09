@@ -1,0 +1,45 @@
+{
+  "name": "@typegraph/sdk",
+  "version": "0.4.11-rc.0",
+  "publish": {
+    "exclude": [
+      "!src/gen",
+      "!LICENSE.md",
+      "!README.md"
+    ]
+  },
+  "exports": {
+    "./deps/_import.ts": "./src/deps/_import.ts",
+    "./deps/mod.ts": "./src/deps/mod.ts",
+    "./effects.ts": "./src/effects.ts",
+    "./envs/cli.ts": "./src/envs/cli.ts",
+    "./gen/typegraph_core.d.ts": "./src/gen/typegraph_core.d.ts",
+    "./host/host.d.ts": "./src/host/host.d.ts",
+    "./index.ts": "./src/index.ts",
+    "./io.ts": "./src/io.ts",
+    "./metagen.ts": "./src/metagen.ts",
+    "./params.ts": "./src/params.ts",
+    "./policy.ts": "./src/policy.ts",
+    "./providers/aws.ts": "./src/providers/aws.ts",
+    "./providers/prisma.ts": "./src/providers/prisma.ts",
+    "./providers/temporal.ts": "./src/providers/temporal.ts",
+    "./runtimes/deno.ts": "./src/runtimes/deno.ts",
+    "./runtimes/graphql.ts": "./src/runtimes/graphql.ts",
+    "./runtimes/http.ts": "./src/runtimes/http.ts",
+    "./runtimes/kv.ts": "./src/runtimes/kv.ts",
+    "./runtimes/mod.ts": "./src/runtimes/mod.ts",
+    "./runtimes/python.ts": "./src/runtimes/python.ts",
+    "./runtimes/random.ts": "./src/runtimes/random.ts",
+    "./runtimes/substantial.ts": "./src/runtimes/substantial.ts",
+    "./runtimes/wasm.ts": "./src/runtimes/wasm.ts",
+    "./tg_artifact_upload.ts": "./src/tg_artifact_upload.ts",
+    "./tg_deploy.ts": "./src/tg_deploy.ts",
+    "./tg_manage.ts": "./src/tg_manage.ts",
+    "./typegraph.ts": "./src/typegraph.ts",
+    "./types.ts": "./src/types.ts",
+    "./utils/func_utils.ts": "./src/utils/func_utils.ts",
+    "./utils/injection_utils.ts": "./src/utils/injection_utils.ts",
+    "./utils/type_utils.ts": "./src/utils/type_utils.ts",
+    "./wit.ts": "./src/wit.ts"
+  }
+}

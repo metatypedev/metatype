@@ -1,3 +1,7 @@
+# FIXME: ghjk created processes are leaky. If a task
+# like the gate tasks are terminated manually, the typegate
+# process will leak in the bg and hog the port
+
 env:
   TYPEGRAPH_VERSION: "0.0.3"
   CLICOLOR_FORCE: "1"
@@ -5,9 +9,9 @@ env:
 
 gate1: &tp
   watch:
-    - "typegate/src/**/*.ts"
-    - "typegate/{engine,standalone}/**/*.rs"
-    - "libs/{xtask,deno}/**/*.rs"
+    - "src/typegate/src/**/*.ts"
+    - "src/typegate/{engine,standalone}/**/*.rs"
+    - "src/{xtask,mt_deno}/**/*.rs"
   command: ghjk x dev-gate1
   pipe:
     "^.+DEBUG http .*$": whiz://http
@@ -22,27 +26,27 @@ http:
 meta-cli:
   workdir: .
   watch:
-    - "meta-cli/src/**/*.rs"
-    - "typegate/src/**/*.ts"
-    - "typegate/core/**/*.rs"
-    - "libs/deno/**/*"
+    - "src/meta-cli/src/**/*.rs"
+    - "src/typegate/src/**/*.ts"
+    - "src/typegate/core/**/*.rs"
+    - "src/mt_deno/**/*"
   depends_on:
     - typegraph
   command: ghjk x dev-eg-tgraphs
 
 typegraph:
   watch:
-    - "typegraph/core/src/**/*.rs"
-    - "typegraph/core/wit/*.wit"
-    - "typegraph/deno/sdk/src/**/*.ts"
-    - "libs/metagen/**/*"
+    - "src/typegraph/core/src/**/*.rs"
+    - "src/typegraph/core/wit/*.wit"
+    - "src/typegraph/deno/sdk/src/**/*.ts"
+    - "src/metagen/**/*"
   command: |
     ghjk x build-tgraph
 
 system_graphs:
   watch:
-    - typegate/src/typegraphs/*.py
-    - typegraph/**/*.py
+    - src/typegate/src/typegraphs/*.py
+    - src/typegraph/**/*.py
   depends_on:
     - typegraph
   command: ghjk x build-sys-tgraphs
@@ -50,8 +54,8 @@ system_graphs:
 setup:
   workdir: .
   watch:
-    - typegraph/python/pyproject.toml
-    - website/package.json
+    - src/typegraph/python/pyproject.toml
+    - docs/metatype.dev/package.json
   env:
     GHJK_VERSION: "v0.2.1"
   command: |

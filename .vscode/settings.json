@@ -1,28 +1,20 @@
 {
   "editor.formatOnSave": true,
   "files.exclude": {
-    "website/.docusaurus": true,
-    "website/node_modules": true
+    "docs/metatype.dev/.docusaurus": true,
+    "docs/metatype.dev/node_modules": true
   },
   "deno.disablePaths": [
-    "meta-lsp",
-    "typegraph/node",
+    "src/meta-lsp",
+    "src/typegraph/node",
     "examples/templates/node",
-    "website"
+    "docs/metatype.dev"
   ],
-  // "deno.enablePaths": [
-  //   "typegate",
-  //   "dev",
-  //   "examples/templates/deno",
-  //   "examples/typegraphs",
-  //   "typegraph/deno/dev",
-  //   "typegraph/deno/sdk",
-  //   "libs/metagen",
-  //   "ghjk.ts",
-  //   ".ghjk"
-  // ],
-  // "deno.config": "typegate/deno.jsonc",
+  "deno.config": "deno.jsonc",
   "deno.unstable": true,
+  "deno.codeLens.implementations": true,
+  "deno.codeLens.references": true,
+  "deno.codeLens.referencesAllFunctions": true,
   "typescript.suggest.completeFunctionCalls": true,
   "typescript.inlayHints.variableTypes.enabled": true,
   "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
@@ -33,9 +25,9 @@
   "typescript.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
   "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
   "rust-analyzer.checkOnSave": true,
-  "deno.codeLens.implementations": true,
-  "deno.codeLens.references": true,
-  "deno.codeLens.referencesAllFunctions": true,
+  "rust-analyzer.cargo.allTargets": true,
+  "rust-analyzer.check.features": "all",
+  "rust-analyzer.check.allTargets": true,
   "editor.wordWrap": "on",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",

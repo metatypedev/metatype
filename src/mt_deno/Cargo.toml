@@ -1,0 +1,9 @@
+[package]
+name = "mt_deno"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+deno.workspace = true
+tracing.workspace = true
+anyhow.workspace = true

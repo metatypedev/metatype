@@ -1,0 +1,3 @@
+# used by the fixture typegraphs
+# we don't actually need to fill this in since
+# we only ever serialize them
