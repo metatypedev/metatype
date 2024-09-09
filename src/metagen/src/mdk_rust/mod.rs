@@ -18,7 +18,6 @@ use crate::interlude::*;
 use crate::shared::*;
 use crate::utils::*;
 use crate::*;
-use mdk::MdkTemplate;
 use std::borrow::Cow;
 use std::fmt::Write;
 
@@ -60,7 +59,7 @@ struct MdkRustTemplate {
 
 impl MdkRustTemplate {
     pub fn new(override_path: Option<&Path>) -> Self {
-        let mut template = MdkTemplate::new(DEFAULT_TEMPLATE, override_path).entries;
+        let mut template = mdk::MdkTemplate::new(DEFAULT_TEMPLATE, override_path).entries;
         Self {
             mod_rs: template.remove("mdk.rs").unwrap(),
         }

@@ -11,7 +11,6 @@ use crate::interlude::*;
 use crate::shared::*;
 use crate::*;
 
-use self::mdk::MdkTemplate;
 use self::utils::Memo;
 use self::utils::TypeGenerated;
 
@@ -63,7 +62,7 @@ impl Generator {
     }
 
     fn load_template(template_dir: Option<&Path>) -> anyhow::Result<tera::Tera> {
-        let template = MdkTemplate::new(DEFAULT_TEMPLATE, template_dir);
+        let template = mdk::MdkTemplate::new(DEFAULT_TEMPLATE, template_dir);
         let mut tera = tera::Tera::default();
         for (file_name, content) in template.entries.into_iter() {
             tera.add_raw_template(file_name, &content)?;
