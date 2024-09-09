@@ -11,11 +11,18 @@ use crate::interlude::*;
 use crate::shared::*;
 use crate::*;
 
+use self::mdk::MdkTemplate;
 use self::utils::Memo;
 use self::utils::TypeGenerated;
 
 mod types;
 mod utils;
+
+const DEFAULT_TEMPLATE: &[(&str, &str)] = &[
+    ("main.py.jinja", include_str!("static/main.py.jinja")),
+    ("types.py.jinja", include_str!("static/types.py.jinja")),
+    ("struct.py.jinja", include_str!("static/struct.py.jinja")),
+];
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct MdkPythonGenConfig {
@@ -39,14 +46,29 @@ impl MdkPythonGenConfig {
 
 pub struct Generator {
     config: MdkPythonGenConfig,
+    template: tera::Tera,
 }
 
 impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
-    pub fn new(config: MdkPythonGenConfig) -> Result<Self, garde::Report> {
+
+    pub fn new(config: MdkPythonGenConfig) -> anyhow::Result<Self> {
         use garde::Validate;
-        config.validate(&())?;
-        Ok(Self { config })
+        config
+            .validate(&())
+            .context("validating MDK_PYTHON config")?;
+        let template = Self::load_template(config.base.template_dir.as_deref())
+            .context("loading MDK_PYTHON templates")?;
+        Ok(Self { config, template })
+    }
+
+    fn load_template(template_dir: Option<&Path>) -> anyhow::Result<tera::Tera> {
+        let template = MdkTemplate::new(DEFAULT_TEMPLATE, template_dir);
+        let mut tera = tera::Tera::default();
+        for (file_name, content) in template.entries.into_iter() {
+            tera.add_raw_template(file_name, &content)?;
+        }
+        Ok(tera)
     }
 }
 
@@ -85,11 +107,6 @@ impl crate::Plugin for Generator {
         };
         let mut mergeable_output: IndexMap<PathBuf, Vec<RequiredObjects>> = IndexMap::new();
 
-        let mut tera = tera::Tera::default();
-        tera.add_raw_template("main_template", include_str!("static/main.py.jinja"))?;
-        tera.add_raw_template("types_template", include_str!("static/types.py.jinja"))?;
-        tera.add_raw_template("struct_template", include_str!("static/struct.py.jinja"))?;
-
         let stubbed_funs = filter_stubbed_funcs(tg, &["python".to_string()])
             .wrap_err("error collecting materializers for \"python\" runtime")?;
         for fun in &stubbed_funs {
@@ -116,7 +133,7 @@ impl crate::Plugin for Generator {
                 )
             };
 
-            let required = gen_required_objects(&tera, fun, tg)?;
+            let required = gen_required_objects(&self.template, fun, tg)?;
             mergeable_output
                 .entry(entry_point_path.clone())
                 .or_default()
@@ -144,14 +161,14 @@ impl crate::Plugin for Generator {
             out.insert(
                 entry_point_path,
                 GeneratedFile {
-                    contents: render_main(&tera, &merged_req, file_stem)?,
+                    contents: render_main(&self.template, &merged_req, file_stem)?,
                     overwrite: false,
                 },
             );
             out.insert(
                 types_path,
                 GeneratedFile {
-                    contents: render_types(&tera, &merged_req)?,
+                    contents: render_types(&self.template, &merged_req)?,
                     overwrite: true,
                 },
             );

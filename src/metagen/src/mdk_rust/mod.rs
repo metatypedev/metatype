@@ -18,13 +18,11 @@ use crate::interlude::*;
 use crate::shared::*;
 use crate::utils::*;
 use crate::*;
-
-const DEFAULT_TEMPLATES: [(&str, &str); 1] = [("mdk.rs", include_str!("static/mdk.rs"))];
-
+use mdk::MdkTemplate;
 use std::borrow::Cow;
 use std::fmt::Write;
 
-use self::mdk::MdkTemplate;
+const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("mdk.rs", include_str!("static/mdk.rs"))];
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct MdkRustGenConfig {
@@ -61,12 +59,8 @@ struct MdkRustTemplate {
 }
 
 impl MdkRustTemplate {
-    pub fn new(
-        default_template: &[(&'static str, &'static str)],
-        override_path: Option<&Path>,
-    ) -> Self {
-        let mut template = MdkTemplate::new(default_template, override_path).entries;
-
+    pub fn new(override_path: Option<&Path>) -> Self {
+        let mut template = MdkTemplate::new(DEFAULT_TEMPLATE, override_path).entries;
         Self {
             mod_rs: template.remove("mdk.rs").unwrap(),
         }
@@ -83,8 +77,7 @@ impl Generator {
     pub fn new(config: MdkRustGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
         config.validate(&())?;
-        let template =
-            MdkRustTemplate::new(&DEFAULT_TEMPLATES, config.base.template_dir.as_deref());
+        let template = MdkRustTemplate::new(config.base.template_dir.as_deref());
         Ok(Self { config, template })
     }
 }
