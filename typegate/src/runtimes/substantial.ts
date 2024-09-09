@@ -9,7 +9,7 @@ import { registerRuntime } from "./mod.ts";
 import { getLogger, Logger } from "../log.ts";
 import * as native from "native";
 import * as ast from "graphql/ast";
-import { nativeResult } from "../utils.ts";
+import { nativeResult, sleep } from "../utils.ts";
 import { WorkerManager } from "./substantial/workflow_worker_manager.ts";
 import { path } from "compress/deps.ts";
 import { Artifact, Materializer } from "@typegate/typegraph/types.ts";
@@ -29,15 +29,9 @@ type QueryWorkflowResult = {
   started_at: string;
   ended_at: string;
   result: {
-    status: "ABORTED" | "COMPLETED" | "COMPLETED_WITH_ERROR" | "UNKNOWN";
+    status: "COMPLETED" | "COMPLETED_WITH_ERROR" | "UNKNOWN";
     value: unknown; // hinted by the user
   };
-};
-
-type UserEvent = {
-  receivedAt: Date;
-  eventName: string;
-  payload: unknown;
 };
 
 @registerRuntime("substantial")
@@ -47,7 +41,8 @@ export class SubstantialRuntime extends Runtime {
   private workerManager: WorkerManager;
   private workflowFiles: Map<string, string> = new Map();
   private workflowResults: Map<string, Array<QueryWorkflowResult>> = new Map(); // TODO: move to backend
-  private receivedStagedEvents: Map<string, Array<UserEvent>> = new Map();
+  private receivedStagedEvents: Map<string, Array<native.Operation>> =
+    new Map();
   private workflowRelaunchDelayMs: number;
 
   private constructor(
@@ -164,15 +159,27 @@ export class SubstantialRuntime extends Runtime {
         return this.#startResolver(workflowName);
       case "stop":
         return ({ run_id }) => {
-          this.workerManager.triggerStop(run_id);
+          this.#stageEvent(run_id, {
+            at: new Date().toJSON(),
+            event: {
+              type: "Stop",
+              result: {
+                Err: "ABORTED",
+              },
+            },
+          });
+
           return run_id;
         };
       case "send":
         return ({ run_id, event_name, payload }) => {
           this.#stageEvent(run_id, {
-            receivedAt: new Date(),
-            eventName: event_name,
-            payload,
+            at: new Date().toJSON(),
+            event: {
+              type: "Send",
+              event_name,
+              value: payload,
+            },
           });
 
           return run_id;
@@ -272,9 +279,10 @@ export class SubstantialRuntime extends Runtime {
   }
 
   #eventResultHandlerFor(workflowName: string, runId: string) {
-    return (result: Result<unknown>) => {
+    return async (result: Result<unknown>) => {
       if (result.error) {
         // All Worker/Runner non-user issue should fall here
+        // Note: Should never throw (typegate will panic), this will run in a worker
         logger.error(
           `result error for "${runId}": ${JSON.stringify(result.payload)}`,
         );
@@ -286,15 +294,6 @@ export class SubstantialRuntime extends Runtime {
 
       const startedAt = this.workerManager.getInitialTimeStartedAt(runId);
 
-      const persist = (run: native.Run) => {
-        const _run = nativeResult(
-          native.persistRun({
-            backend: this.backend,
-            run,
-          }),
-        );
-      };
-
       switch (answer.type) {
         case "START": {
           const ret = answer.data as WorkflowResult;
@@ -302,70 +301,31 @@ export class SubstantialRuntime extends Runtime {
           // Keep the backend updated with the latest emitted events
           const run = ret.run;
           run.operations = [...run.operations, ...this.#getStagedEvents(runId)];
-          persist(ret.run);
-
-          if (Interrupt.getTypeOf(ret.exception) != null) {
-            setTimeout(() => {
-              this.workerManager.destroyWorker(workflowName, runId); // !
-
-              logger.warn(
-                `Interrupt "${workflowName}": ${ret.result}, relaunching under "${runId}"`,
-              );
-
-              this.workerManager.triggerStart(
-                workflowName,
-                runId,
-                this.#getModPath(workflowName),
-                ret.run,
-                ret.run.operations[0],
-              );
-              this.workerManager.listen(
-                runId,
-                this.#eventResultHandlerFor(workflowName, runId),
-              );
-            }, this.workflowRelaunchDelayMs);
-          } else {
-            this.workerManager.destroyWorker(workflowName, runId); // !
-
-            logger.info(
-              `gracefull completion of "${runId}": ${
-                JSON.stringify(
-                  ret.result,
-                )
-              }`,
-            );
-
-            this.#addResult(workflowName, {
-              run_id: runId,
-              started_at: startedAt.toJSON(),
-              ended_at: new Date().toJSON(),
-              result: {
-                status: ret.kind == "FAIL"
-                  ? "COMPLETED_WITH_ERROR"
-                  : "COMPLETED",
-                value: ret.result, // hinted by the user
-              },
-            });
-          }
-
-          break;
-        }
-        case "STOP": {
-          logger.warn(
-            `forcefully stopped "${runId}": ${JSON.stringify(answer.data)}`,
+          const _run = nativeResult(
+            native.persistRun({
+              backend: this.backend,
+              run,
+            }),
           );
 
-          this.#addResult(workflowName, {
-            run_id: runId,
-            started_at: startedAt.toJSON(),
-            ended_at: new Date().toJSON(),
-            result: {
-              status: "ABORTED",
-              value: null,
-            },
-          });
+          switch (Interrupt.getTypeOf(ret.exception)) {
+            case "SLEEP":
+            case "WAIT_ENSURE_VALUE":
+            case "WAIT_HANDLE_EVENT":
+            case "WAIT_RECEIVE_EVENT": {
+              await this.#workflowHandleInterrupts(workflowName, runId, ret);
+              break;
+            }
+            default: {
+              this.#workflowHandleGracefullCompletion(
+                startedAt,
+                workflowName,
+                runId,
+                ret,
+              );
+            }
+          }
 
-          this.workerManager.destroyWorker(workflowName, runId); // !
           break;
         }
         default:
@@ -392,7 +352,7 @@ export class SubstantialRuntime extends Runtime {
     return modPath;
   }
 
-  #stageEvent(runId: string, event: UserEvent) {
+  #stageEvent(runId: string, event: native.Operation) {
     if (!this.receivedStagedEvents.has(runId)) {
       this.receivedStagedEvents.set(runId, []);
     }
@@ -402,14 +362,53 @@ export class SubstantialRuntime extends Runtime {
   #getStagedEvents(runId: string): Array<Operation> {
     const staged = this.receivedStagedEvents.get(runId) ?? [];
     this.receivedStagedEvents.delete(runId);
+    return staged;
+  }
 
-    return staged.map((e) => ({
-      at: e.receivedAt.toJSON(),
-      event: {
-        type: "Send",
-        event_name: e.eventName,
-        value: e.payload,
+  async #workflowHandleInterrupts(
+    workflowName: string,
+    runId: string,
+    { result, run }: WorkflowResult,
+  ) {
+    await sleep(this.workflowRelaunchDelayMs);
+
+    this.workerManager.destroyWorker(workflowName, runId); // !
+
+    logger.warn(
+      `Interrupt "${workflowName}": ${result}, relaunching under "${runId}"`,
+    );
+    this.workerManager.triggerStart(
+      workflowName,
+      runId,
+      this.#getModPath(workflowName),
+      run,
+      run.operations[0],
+    );
+    this.workerManager.listen(
+      runId,
+      this.#eventResultHandlerFor(workflowName, runId),
+    );
+  }
+
+  #workflowHandleGracefullCompletion(
+    startedAt: Date,
+    workflowName: string,
+    runId: string,
+    { result, kind }: WorkflowResult,
+  ) {
+    this.workerManager.destroyWorker(workflowName, runId); // !
+
+    logger.info(
+      `gracefull completion of "${runId}": ${JSON.stringify(result)}`,
+    );
+    this.#addResult(workflowName, {
+      run_id: runId,
+      started_at: startedAt.toJSON(),
+      ended_at: new Date().toJSON(),
+      result: {
+        status: kind == "FAIL" ? "COMPLETED_WITH_ERROR" : "COMPLETED",
+        value: result, // shape hinted by the user through the typegraph
       },
-    }));
+    });
   }
 }

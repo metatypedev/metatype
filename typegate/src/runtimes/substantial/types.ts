@@ -6,14 +6,14 @@ export type { Operation, OperationEvent, Run } from "native";
 
 export type AnyString = string & Record<string | number | symbol, never>;
 
-export type WorkerEvent = "START" | "STOP" | AnyString;
+export type WorkerEvent = "START" | AnyString;
 
 export type WorkerData = {
   type: WorkerEvent;
   data: any;
 };
 
-export type WorkerEventHandler = (message: Result<unknown>) => void;
+export type WorkerEventHandler = (message: Result<unknown>) => Promise<void>;
 
 export type Result<T> = {
   error: boolean;
@@ -32,8 +32,10 @@ export function Msg(type: WorkerEvent, data: unknown): WorkerData {
   return { type, data };
 }
 
+export type ExecutionResultKind = "SUCCESS" | "FAIL";
+
 export type WorkflowResult = {
-  kind: "SUCCESS" | "FAIL";
+  kind: ExecutionResultKind;
   result: unknown;
   exception?: Error;
   run: Run;

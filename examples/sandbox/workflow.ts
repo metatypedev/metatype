@@ -20,7 +20,7 @@ function sleep(duration: number) {
 }
 
 async function queryThatTakesAWhile(input: number) {
-  // await sleep(2000);
+  // await sleep(4000);
   return input;
 }
 

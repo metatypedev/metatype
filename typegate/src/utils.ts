@@ -213,3 +213,6 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
   }
   return { title: typ?.title, fields: [] };
 }
+
+export const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));

@@ -42,8 +42,6 @@ self.onmessage = async function (event) {
           );
         })
         .catch((wfException: unknown) => {
-          runCtx?.stop("Err", null);
-
           self.postMessage(
             Ok(
               Msg(
@@ -62,12 +60,6 @@ self.onmessage = async function (event) {
             ),
           );
         });
-      break;
-    }
-    case "STOP": {
-      runCtx?.stop("Err", "Stopped");
-      self.postMessage(Ok(Msg(type, { run: runCtx?.getRun() })));
-      self.close();
       break;
     }
     default:

@@ -29,6 +29,10 @@ export class WorkflowRecorder {
     return Array.from(this.workflowRuns.keys());
   }
 
+  hasRun(runId: RunId) {
+    return this.workers.has(runId);
+  }
+
   getWorkerRecord(runId: RunId) {
     const record = this.workers.get(runId);
     if (!record) {
@@ -178,19 +182,25 @@ export class WorkerManager {
   }
 
   listen(runId: RunId, handlerFn: WorkerEventHandler) {
+    if (!this.recorder.hasRun(runId)) {
+      // Note: never throw on worker events, this will make typegate panic!
+      logger.warn(`Attempt listening on missing ${runId}`);
+      return;
+    }
+
     const { worker } = this.recorder.getWorkerRecord(runId);
 
-    worker.onmessage = (message) => {
+    worker.onmessage = async (message) => {
       if (message.data.error) {
         // worker level failure
-        handlerFn(Err(message.data.error));
+        await handlerFn(Err(message.data.error));
       } else {
         // logic level Result (Ok | Err)
-        handlerFn(message.data as Result<unknown>);
+        await handlerFn(message.data as Result<unknown>);
       }
     };
 
-    worker.onerror = (event) => handlerFn(Err(event));
+    worker.onerror = /*async*/ (event) => handlerFn(Err(event));
   }
 
   trigger(type: WorkerEvent, runId: RunId, data: unknown) {
@@ -199,6 +209,7 @@ export class WorkerManager {
     logger.info(`trigger ${type} for ${runId}`);
   }
 
+  /** Just as the name indicates, this will also decide to actually run it or not depending on the `storedRun` value  */
   triggerStart(
     name: string,
     runId: string,
@@ -206,17 +217,22 @@ export class WorkerManager {
     storedRun: Run,
     kwargs: Record<string, unknown>,
   ) {
-    this.#createWorker(name, workflowModPath, runId);
+    const hasStopped = storedRun.operations.some(
+      ({ event }) => event.type == "Stop",
+    );
 
-    this.trigger("START", runId, {
-      modulePath: workflowModPath,
-      functionName: name,
-      run: storedRun,
-      kwargs,
-    });
-  }
-
-  triggerStop(runId: RunId) {
-    this.trigger("STOP", runId, {});
+    if (!hasStopped) {
+      this.#createWorker(name, workflowModPath, runId);
+      this.trigger("START", runId, {
+        modulePath: workflowModPath,
+        functionName: name,
+        run: storedRun,
+        kwargs,
+      });
+    } else {
+      logger.warn(
+        `Starting ${runId} aborted, since it has already been stopped.`,
+      );
+    }
   }
 }
