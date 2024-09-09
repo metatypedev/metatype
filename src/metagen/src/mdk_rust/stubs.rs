@@ -153,6 +153,7 @@ mod test {
                 path: "/".into(),
                 typegraph_name: Some(tg_name.clone()),
                 typegraph_path: None,
+                template_dir: None,
             },
             stubbed_runtimes: Some(vec!["wasm".into()]),
             crate_name: None,

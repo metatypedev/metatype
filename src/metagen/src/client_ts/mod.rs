@@ -326,6 +326,7 @@ fn e2e() -> anyhow::Result<()> {
                             typegraph_path: None,
                             // NOTE: root will map to the test's tempdir
                             path: "./".into(),
+                            template_dir: None,
                         },
                     })?,
                 }]
