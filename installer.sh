@@ -136,7 +136,7 @@ case $SHELL_TYPE in
     SHELL_CONFIG=""
 esac
 
-if [ -n $SHELL_CONFIG ]; then
+if [ -n "$SHELL_CONFIG" ]; then
   printf "\nDetected shell: %s\n" "$SHELL_TYPE"
   read -p "Do you want to append the new PATH to your configuration ($SHELL_CONFIG)? (y/n): " answer
 
@@ -147,7 +147,7 @@ if [ -n $SHELL_CONFIG ]; then
       APPEND_CMD="export PATH=\"$OUT_DIR:\$PATH\""
       ;;
     fish)
-      APPEND_CMD="set -gx PATH $OUT_DIR \$PATH"
+      APPEND_CMD="fish_add_path $OUT_DIR"
       ;;
   esac
 
@@ -162,12 +162,5 @@ $ $APPEND_CMD
 EOF
   fi
 else
-  OUT_DIR=$(realpath $OUT_DIR)
-  if [[ ":$PATH:" != *":$OUT_DIR:"* ]]; then
-    cat <<EOF
-
-The installation directory is not in your PATH, consider adding it:
-$ export PATH="\$PATH:$OUT_DIR"
-EOF
-  fi
+  printf "\nConsider adding %s to your PATH if it is not already configured." "$OUT_DIR"
 fi
