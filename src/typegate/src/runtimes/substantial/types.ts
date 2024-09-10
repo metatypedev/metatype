@@ -1,8 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Run } from "native";
-export type { Operation, OperationEvent, Run } from "native";
+import { Run } from "../../../engine/runtime.js";
+export type {
+  Operation,
+  OperationEvent,
+  Run,
+} from "../../../engine/runtime.js";
 
 export type AnyString = string & Record<string | number | symbol, never>;
 

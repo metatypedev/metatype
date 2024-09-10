@@ -21,6 +21,7 @@ import {
   WorkerData,
   WorkflowResult,
 } from "./substantial/types.ts";
+import { Backend } from "../../engine/runtime.js";
 
 const logger = getLogger(import.meta);
 
@@ -37,17 +38,16 @@ type QueryWorkflowResult = {
 @registerRuntime("substantial")
 export class SubstantialRuntime extends Runtime {
   private logger: Logger;
-  private backend: native.Backend;
+  private backend: Backend;
   private workerManager: WorkerManager;
   private workflowFiles: Map<string, string> = new Map();
   private workflowResults: Map<string, Array<QueryWorkflowResult>> = new Map(); // TODO: move to backend
-  private receivedStagedEvents: Map<string, Array<native.Operation>> =
-    new Map();
+  private receivedStagedEvents: Map<string, Array<Operation>> = new Map();
   private workflowRelaunchDelayMs: number;
 
   private constructor(
     typegraphName: string,
-    backend: native.Backend,
+    backend: Backend,
     workerManager: WorkerManager,
     relaunchDelayMs: number
   ) {
@@ -78,7 +78,7 @@ export class SubstantialRuntime extends Runtime {
     }
 
     const tgName = TypeGraph.formatName(tg);
-    const backend = (args as any)!.backend as native.Backend;
+    const backend = (args as any)!.backend as Backend;
     const workerManager = WorkerManager.getInstance();
 
     const instance = new SubstantialRuntime(
@@ -350,7 +350,7 @@ export class SubstantialRuntime extends Runtime {
     return modPath;
   }
 
-  #stageEvent(runId: string, event: native.Operation) {
+  #stageEvent(runId: string, event: Operation) {
     if (!this.receivedStagedEvents.has(runId)) {
       this.receivedStagedEvents.set(runId, []);
     }
