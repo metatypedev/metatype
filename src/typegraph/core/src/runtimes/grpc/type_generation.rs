@@ -6,6 +6,7 @@ use common::grpc::{
     get_file_descriptor, get_message_field_descriptor, get_method_descriptor_proto, Fields,
     FileDescriptor, Type,
 };
+use std::collections::HashMap;
 
 use crate::{
     t::{self, TypeBuilder},
@@ -17,6 +18,8 @@ pub struct GeneratedType {
     pub output: TypeId,
 }
 
+type Cache = HashMap<String, TypeId>;
+
 pub fn generate_type(proto_file_content: &str, method_name: &str) -> Result<GeneratedType> {
     let file_descriptor = get_file_descriptor(proto_file_content)?;
     let method_descriptor = get_method_descriptor_proto(file_descriptor.clone(), method_name)?;
@@ -24,24 +27,32 @@ pub fn generate_type(proto_file_content: &str, method_name: &str) -> Result<Gene
     let input_type = method_descriptor.input_type();
     let output_type = method_descriptor.output_type();
 
+    let mut cache = HashMap::new();
+
     let input_fields = get_message_field_descriptor(&file_descriptor, input_type)?;
     let output_fields = get_message_field_descriptor(&file_descriptor, output_type)?;
 
     Ok(GeneratedType {
-        input: convert_proto_fields_to_type_id(&file_descriptor, input_fields)?,
-        output: convert_proto_fields_to_type_id(&file_descriptor, output_fields)?,
+        input: convert_proto_fields_to_type_id(&file_descriptor, input_fields, &mut cache)?,
+        output: convert_proto_fields_to_type_id(&file_descriptor, output_fields, &mut cache)?,
     })
 }
 
 fn convert_proto_fields_to_type_id(
     file_descriptor: &FileDescriptor,
     fields: Fields,
+    cache: &mut Cache,
 ) -> Result<TypeId> {
     let mut r#type = t::struct_();
 
     for field in fields {
-        let field_name = field.name();
+        let field_name = field.name().to_string();
         let type_name = field.proto().type_();
+
+        if let Some(cached_type_id) = cache.get(&field_name) {
+            r#type.prop(&field_name, *cached_type_id);
+            continue;
+        }
 
         let mut type_id = match type_name {
             Type::TYPE_STRING => t::string().build()?,
@@ -49,15 +60,14 @@ fn convert_proto_fields_to_type_id(
             Type::TYPE_FLOAT => t::float().build()?,
             Type::TYPE_BOOL => t::boolean().build()?,
             Type::TYPE_MESSAGE => {
-                let nested_message_type = field.proto().name();
-                convert_proto_fields_to_type_id(
-                    file_descriptor,
-                    get_message_field_descriptor(file_descriptor, nested_message_type)?,
-                )?
+                let nested_message_type = field.proto().type_name().to_string();
+                let nested_fields =
+                    get_message_field_descriptor(file_descriptor, &nested_message_type)?;
+                convert_proto_fields_to_type_id(file_descriptor, nested_fields, cache)?
             }
             _ => bail!(
                 "Unsupported field type '{:?}' for field '{}'",
-                type_name,
+                field.proto().type_(),
                 field_name
             ),
         };
@@ -70,7 +80,9 @@ fn convert_proto_fields_to_type_id(
             type_id = t::optional(type_id).build()?;
         }
 
-        r#type.prop(field_name, type_id);
+        cache.insert(field_name.clone(), type_id);
+
+        r#type.prop(&field_name, type_id);
     }
 
     Ok(r#type.build()?)
