@@ -59,9 +59,17 @@ We're taking any and all kinds of feature requests, suggestions and recommendati
       },
       {
         title: "gRPC API",
-        status: "future",
+        status: "complete",
         link: "/docs/reference/typegate",
-        body: <>Support to expose the typegraph through a gRPC API.</>,
+        body: (
+          <>
+             Expose your typegraph through a gRPC API, enabling high-performance,
+             bi-directional communication between services. This allows you to call
+             gRPC methods directly from the typegraph, providing more flexibility
+             and better integration with existing gRPC-based microservices.
+             This approach supports a broader range of real-time use cases .
+          </>
+        ),
       },
     ],
     [
@@ -353,7 +361,7 @@ from typegraph.runtimes.deno import PythonRuntime
         ),
     )
 
-}`} </CodeBlock> ], [ { title: "S3 runtime", status: "complete", link: "/docs/reference/runtimes/s3", body: ( <> Store large blobs in S3 compatible object stores. This includes support for <Link to="/docs/guides/files-upload">GraphQL file uploads</Link> and presigned URLs making working with images and large uploads a breeze. </> ), }, { title: "Temporal runtime", status: "complete", link: "/docs/reference/runtimes/temporal", body: ( <> Kick off and query Temporal workflows from a typegraph. Temporal is a durable execution engine that can be used to implement long-running, failure-resistant business processes. </> ), }, { title: "Wasm runtime", status: "beta", link: "/docs/reference/runtimes/wasm", body: ( <> Make functions that use WASM components to implement their logic. Write core-wasm or wasi 0.2 based wasm components in languages like Rust, Python and Javascript to power all your custom functions. </> ), }, ], [ { title: "GraphQL runtime", status: "complete", link: "/docs/reference/runtimes/graphql", body: ( <> Include external GraphQL APIs as part of your typegraph. This runtime provides functions that resolve the data by querying an external GraphQL API. </> ), }, { title: "Http runtime", status: "complete", link: "/docs/reference/runtimes/http", body: ( <> Include external Http APIs as part of your typegraph. Source the data for your graph using external HTTP requests. </> ), }, ], [ { title: "Random runtime", status: "complete", link: "/docs/reference/runtimes/random", body: ( <> Functions to generate random data based on your types. Useful for quickly throwing together an API and testing. </> ), }, { title: "gRPC runtime", status: "future", link: "https://github.com/metatypedev/metatype/issues/723", body: ( <> Include external gRPC APIs as part of your typegraph. </> ), }, ], ]} />
+}`} </CodeBlock> ], [ { title: "S3 runtime", status: "complete", link: "/docs/reference/runtimes/s3", body: ( <> Store large blobs in S3 compatible object stores. This includes support for <Link to="/docs/guides/files-upload">GraphQL file uploads</Link> and presigned URLs making working with images and large uploads a breeze. </> ), }, { title: "Temporal runtime", status: "complete", link: "/docs/reference/runtimes/temporal", body: ( <> Kick off and query Temporal workflows from a typegraph. Temporal is a durable execution engine that can be used to implement long-running, failure-resistant business processes. </> ), }, { title: "Wasm runtime", status: "beta", link: "/docs/reference/runtimes/wasm", body: ( <> Make functions that use WASM components to implement their logic. Write core-wasm or wasi 0.2 based wasm components in languages like Rust, Python and Javascript to power all your custom functions. </> ), }, ], [ { title: "GraphQL runtime", status: "complete", link: "/docs/reference/runtimes/graphql", body: ( <> Include external GraphQL APIs as part of your typegraph. This runtime provides functions that resolve the data by querying an external GraphQL API. </> ), }, { title: "Http runtime", status: "complete", link: "/docs/reference/runtimes/http", body: ( <> Include external Http APIs as part of your typegraph. Source the data for your graph using external HTTP requests. </> ), }, ], [ { title: "Random runtime", status: "complete", link: "/docs/reference/runtimes/random", body: ( <> Functions to generate random data based on your types. Useful for quickly throwing together an API and testing. </> ), }, { title: "gRPC runtime", status: "complete", link: "/docs/reference/runtimes/grpc", body: ( <> Include external gRPC APIs as part of your typegraph. </> ), }, ], ]} />
 
 ### Prisma
 

@@ -314,7 +314,7 @@ Meta.test({
       }
       deployed.push([match[2].slice(prefix.length), match[1]]);
     }
-    return deployed.length < 41;
+    return deployed.length < 42;
   }, 3 * 60 * 1000);
 
   await t.should("have deployed all the typegraphs", () => {
@@ -336,6 +336,7 @@ Meta.test({
       ["func.ts", "roadmap-func"],
       ["graphql-server.ts", "graphql-server"],
       ["graphql.ts", "graphql"],
+      ["grpc.ts", "grpc"],
       ["http-runtime.ts", "http-runtime"],
       ["iam-provider.ts", "iam-provider"],
       ["index.ts", "homepage"],

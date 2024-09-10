@@ -1,7 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { MetaTest } from "../../utils/test.ts";
 import { gql, Meta } from "../../utils/mod.ts";
+
+async function testSerialize(t: MetaTest, file: string) {
+  await t.should(`serialize typegraph ${file}`, async () => {
+    const { stdout: tg } = await Meta.cli("serialize", "--pretty", "-f", file);
+    await t.assertSnapshot(tg);
+  });
+}
+
+Meta.test({ name: "Typegraph using grpc" }, async (t) => {
+  await testSerialize(t, "runtimes/grpc/helloworld.ts");
+  await testSerialize(t, "runtimes/grpc/helloworld.py");
+});
 
 Meta.test({ name: "Grpc Runtime" }, async (t) => {
   const hello_world = await t.engine("runtimes/grpc/helloworld.py");
