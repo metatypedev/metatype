@@ -120,17 +120,11 @@ rm -r "$TMP_DIR"
 SHELL_TYPE=$(basename "$SHELL")
 
 case $SHELL_TYPE in
-  bash)
-    SHELL_CONFIG="$HOME/.bashrc"
-    ;;
-  zsh)
-    SHELL_CONFIG="$HOME/.zshrc"
+  bash|zsh|ksh)
+    SHELL_CONFIG="$HOME/.$SHELL_TYPE"rc
     ;;
   fish)
     SHELL_CONFIG="$HOME/.config/fish/config.fish"
-    ;;
-  ksh)
-    SHELL_CONFIG="$HOME/.kshrc"
     ;;
   *)
     SHELL_CONFIG=""
