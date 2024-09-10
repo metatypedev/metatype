@@ -2,7 +2,7 @@ interface Context {
   // TODO: metagen including this
   kwargs: any;
   sleep: (ms: number) => void;
-  save<T>(fn: () => Promise<T>);
+  save<T>(fn: () => Promise<T>): Promise<T>;
   receive<O>(eventName: string): O;
   handle<I, O>(
     eventName: string,
