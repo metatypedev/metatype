@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package maths;
+
+service Calculator {
+  rpc Sum (SumRequest) returns (SumReply) {}
+  rpc IsPrime (IsPrimeRequest) returns (IsPrimeReply) {}
+}
+
+message SumRequest {
+  repeated int32 list = 1;
+}
+
+message SumReply {
+  int32 total = 1;
+}
+
+message IsPrimeRequest {
+  int32 number = 1;
+}
+
+message IsPrimeReply {
+  bool isPrime = 1;
+}
