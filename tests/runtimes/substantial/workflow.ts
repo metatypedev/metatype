@@ -1,6 +1,24 @@
-import { Context, queryThatTakesAWhile } from "./common_types.ts";
+import {
+  Context,
+  queryThatTakesAWhile,
+  sendSubscriptionEmail,
+} from "./common_types.ts";
 
-export async function saveAndSleep(ctx: Context) {
+export async function eventsAndExceptionExample(ctx: Context) {
+  const { to } = ctx.kwargs;
+  const messageDialog = await ctx.save(() => sendSubscriptionEmail(to));
+
+  // This will wait until a `confirmation` event is sent to THIS workflow
+  const confirmation = ctx.receive<boolean>("confirmation");
+
+  if (!confirmation) {
+    throw new Error(`${to} has denied the subscription`);
+  }
+
+  return `${messageDialog}: "confirmed!"`;
+}
+
+export async function saveAndSleepExample(ctx: Context) {
   const { a, b } = ctx.kwargs;
   const newA = await ctx.save(() => queryThatTakesAWhile(a as number));
   // + 2s
