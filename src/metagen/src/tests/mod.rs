@@ -20,6 +20,7 @@ impl InputResolver for TestCtx {
                 })
             }
             GeneratorInputOrder::TypegraphFromPath { .. } => unimplemented!(),
+            GeneratorInputOrder::LoadMdkTemplate { .. } => unimplemented!(),
         }
     }
 }

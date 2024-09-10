@@ -20,7 +20,7 @@ impl InputResolverSync for RawTgResolver {
                     raw: self.tg.clone().into(),
                 })
             }
-            GeneratorInputOrder::TypegraphFromPath { .. } => unimplemented!(),
+            _ => unimplemented!(),
         }
     }
 }

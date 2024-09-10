@@ -83,6 +83,7 @@ impl crate::Plugin for Generator {
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            _ => bail!("unexpected input type"),
         };
         let mut out = HashMap::new();
         out.insert(

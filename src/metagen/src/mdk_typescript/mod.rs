@@ -22,11 +22,11 @@ struct MdkTypescriptTemplate {
     mdk_ts: Cow<'static, str>,
 }
 
-impl MdkTypescriptTemplate {
-    pub fn new(override_path: Option<&Path>) -> Self {
-        let mut template = mdk::MdkTemplate::new(DEFAULT_TEMPLATE, override_path).entries;
+impl From<MdkTemplate> for MdkTypescriptTemplate {
+    fn from(mut mdk_template: MdkTemplate) -> Self {
+        let mdk_ts = mdk_template.entries.remove("mdk.ts").unwrap();
         Self {
-            mdk_ts: template.remove("mdk.ts").unwrap(),
+            mdk_ts: mdk_ts.clone(),
         }
     }
 }
@@ -56,7 +56,6 @@ impl MdkTypescriptGenConfig {
 
 pub struct Generator {
     config: MdkTypescriptGenConfig,
-    template: MdkTypescriptTemplate,
 }
 
 impl Generator {
@@ -65,10 +64,11 @@ impl Generator {
     pub fn new(config: MdkTypescriptGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
         config.validate(&())?;
-        let template = MdkTypescriptTemplate::new(config.base.template_dir.as_deref());
-        Ok(Self { config, template })
+        Ok(Self { config })
     }
+}
 
+impl MdkTypescriptTemplate {
     fn render_mdk_ts(
         &self,
         config: &MdkTypescriptGenConfig,
@@ -118,7 +118,7 @@ impl Generator {
     }
 
     pub fn gen_static(&self, dest: &mut GenDestBuf) -> core::fmt::Result {
-        let mdk_ts = self.template.mdk_ts.as_ref();
+        let mdk_ts = self.mdk_ts.as_ref();
         writeln!(dest, "{}", mdk_ts)?;
         Ok(())
     }
@@ -142,25 +142,38 @@ impl crate::Plugin for Generator {
             },
         )]
         .into_iter()
+        .chain(std::iter::once((
+            "template_dir".to_string(),
+            GeneratorInputOrder::LoadMdkTemplate {
+                default: DEFAULT_TEMPLATE,
+                override_path: self.config.base.template_dir.clone(),
+            },
+        )))
         .collect()
     }
 
     fn generate(
         &self,
-        inputs: HashMap<String, GeneratorInputResolved>,
+        mut inputs: HashMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
         let tg = match inputs
-            .get(Self::INPUT_TG)
+            .remove(Self::INPUT_TG)
             .context("missing generator input")?
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            _ => unreachable!(),
         };
+        let template: MdkTypescriptTemplate = match inputs.remove("template_dir").unwrap() {
+            GeneratorInputResolved::MdkTemplate { template } => template.into(),
+            _ => unreachable!(),
+        };
+
         let mut out = HashMap::new();
         out.insert(
             self.config.base.path.join("mdk.ts"),
             GeneratedFile {
-                contents: self.render_mdk_ts(&self.config, tg)?,
+                contents: template.render_mdk_ts(&self.config, &tg)?,
                 overwrite: true,
             },
         );

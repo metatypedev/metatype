@@ -47,17 +47,27 @@ use crate::interlude::*;
 
 pub use config::*;
 use futures_concurrency::future::FutureGroup;
+pub use shared::MdkTemplate;
 
 /// This implements a command object pattern API for generator
-/// implemntations to access the external world. See [InputResolver].
+/// implementations to access the external world. See [InputResolver].
 ///
 /// The rationale being that
-/// - Ease of mocking for tests through [InputResolver] implemntaiton.
+/// - Ease of mocking for tests through [InputResolver] implementaiton.
 /// - Ease of translating to wasm API for any future user implemented generators.
 #[derive(Debug)]
 pub enum GeneratorInputOrder {
-    TypegraphFromTypegate { name: String },
-    TypegraphFromPath { path: PathBuf, name: Option<String> },
+    TypegraphFromTypegate {
+        name: String,
+    },
+    TypegraphFromPath {
+        path: PathBuf,
+        name: Option<String>,
+    },
+    LoadMdkTemplate {
+        default: &'static [(&'static str, &'static str)],
+        override_path: Option<PathBuf>,
+    },
 }
 
 /// Response types for the command object API implemented
@@ -66,6 +76,7 @@ pub enum GeneratorInputOrder {
 pub enum GeneratorInputResolved {
     TypegraphFromTypegate { raw: Box<Typegraph> },
     TypegraphFromPath { raw: Box<Typegraph> },
+    MdkTemplate { template: MdkTemplate },
 }
 
 /// This type plays the "dispatcher" role to the command object
@@ -109,7 +120,7 @@ type PluginOutputResult = Result<Box<dyn Plugin>, anyhow::Error>;
 
 #[derive(Clone)]
 struct GeneratorRunner {
-    pub op: fn(&Path, serde_json::Value) -> PluginOutputResult,
+    op: fn(&Path, serde_json::Value) -> PluginOutputResult,
 }
 
 impl GeneratorRunner {

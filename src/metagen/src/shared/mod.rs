@@ -5,12 +5,16 @@
 //! imlementations
 
 pub mod client;
-pub mod mdk;
 pub mod types;
 
 use common::typegraph::{runtimes::TGRuntime, Materializer};
 
 use crate::interlude::*;
+
+#[derive(Debug, Clone)]
+pub struct MdkTemplate {
+    pub entries: HashMap<&'static str, std::borrow::Cow<'static, str>>,
+}
 
 pub struct StubbedFunction {
     #[allow(unused)]

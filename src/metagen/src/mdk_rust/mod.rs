@@ -53,13 +53,14 @@ impl MdkRustGenConfig {
     }
 }
 
+#[derive(Debug, Clone)]
 struct MdkRustTemplate {
     mod_rs: Cow<'static, str>,
 }
 
-impl MdkRustTemplate {
-    pub fn new(override_path: Option<&Path>) -> Self {
-        let mut template = mdk::MdkTemplate::new(DEFAULT_TEMPLATE, override_path).entries;
+impl From<MdkTemplate> for MdkRustTemplate {
+    fn from(template: MdkTemplate) -> Self {
+        let mut template = template.entries;
         Self {
             mod_rs: template.remove("mdk.rs").unwrap(),
         }
@@ -68,7 +69,6 @@ impl MdkRustTemplate {
 
 pub struct Generator {
     config: MdkRustGenConfig,
-    template: MdkRustTemplate,
 }
 
 impl Generator {
@@ -76,8 +76,7 @@ impl Generator {
     pub fn new(config: MdkRustGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
         config.validate(&())?;
-        let template = MdkRustTemplate::new(config.base.template_dir.as_deref());
-        Ok(Self { config, template })
+        Ok(Self { config })
     }
 }
 
@@ -99,26 +98,43 @@ impl crate::Plugin for Generator {
             },
         )]
         .into_iter()
+        .chain(std::iter::once((
+            "template_dir".to_string(),
+            GeneratorInputOrder::LoadMdkTemplate {
+                default: DEFAULT_TEMPLATE,
+                override_path: self.config.base.template_dir.clone(),
+            },
+        )))
         .collect()
     }
 
     fn generate(
         &self,
-        inputs: HashMap<String, GeneratorInputResolved>,
+        mut inputs: HashMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
-        // return Ok(GeneratorOutput(Default::default()))
+        // TODO remove code duplication in mdk generators
         let tg = match inputs
-            .get(Self::INPUT_TG)
-            .context("missing generator input")?
+            .remove(Self::INPUT_TG)
+            .context("missing generator input for typegraph")?
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            _ => bail!("unexpected generator input variant"),
         };
+
+        let template: MdkRustTemplate = match inputs
+            .remove("template_dir")
+            .context("missing generator input for template_dir")?
+        {
+            GeneratorInputResolved::MdkTemplate { template } => template.into(),
+            _ => bail!("unexpected generator input variant"),
+        };
+
         let mut out = HashMap::new();
         out.insert(
             self.config.base.path.join("mdk.rs"),
             GeneratedFile {
-                contents: self.template.gen_mod_rs(&self.config, tg)?,
+                contents: template.gen_mod_rs(&self.config, &tg)?,
                 overwrite: true,
             },
         );
