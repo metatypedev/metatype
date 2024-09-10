@@ -380,7 +380,7 @@ export class SubstantialRuntime extends Runtime {
       runId,
       this.#getModPath(workflowName),
       run,
-      run.operations[0]
+      (run.operations?.[0].event as any).kwargs
     );
     this.workerManager.listen(
       runId,

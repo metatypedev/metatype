@@ -117,14 +117,4 @@ export class PythonRuntime extends Runtime {
       name,
     });
   }
-
-  workflow(
-    backend: SubstantialBackend,
-    file: string,
-    name: string,
-    deps: Array<string> = []
-  ): SubstantialRuntime {
-    const substantial = new SubstantialRuntime(backend);
-    return substantial._usingWorkflow({ file, name, deps, kind: "python" });
-  }
 }

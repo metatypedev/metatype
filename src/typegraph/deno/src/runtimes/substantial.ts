@@ -101,4 +101,24 @@ export class SubstantialRuntime extends Runtime {
       output
     );
   }
+
+  static deno(
+    backend: SubstantialBackend,
+    file: string,
+    name: string,
+    deps: Array<string> = []
+  ): SubstantialRuntime {
+    const substantial = new SubstantialRuntime(backend);
+    return substantial._usingWorkflow({ file, name, deps, kind: "deno" });
+  }
+
+  static python(
+    backend: SubstantialBackend,
+    file: string,
+    name: string,
+    deps: Array<string> = []
+  ): SubstantialRuntime {
+    const substantial = new SubstantialRuntime(backend);
+    return substantial._usingWorkflow({ file, name, deps, kind: "python" });
+  }
 }

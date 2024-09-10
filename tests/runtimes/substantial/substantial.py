@@ -1,23 +1,22 @@
 from typegraph import typegraph, t, Graph
 from typegraph.policy import Policy
-from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.substantial import SubstantialRuntime
 from typegraph.runtimes.substantial import Backend
 
 
 @typegraph()
 def substantial(g: Graph):
-    deno = DenoRuntime()
     pub = Policy.public()
-    backend = Backend.memory()
 
-    save_and_sleep = deno.workflow(
+    backend = Backend.memory()
+    save_and_sleep = SubstantialRuntime.deno(
         backend,
         file="workflow.ts",
         name="saveAndSleepExample",
         deps=["common_types.ts"],
     )
 
-    sub_email = deno.workflow(
+    sub_email = SubstantialRuntime.deno(
         backend,
         file="workflow.ts",
         name="eventsAndExceptionExample",

@@ -132,37 +132,40 @@ Meta.test(
     // let's wait for a bit to make sure interrupts are doing their jobs
     await sleep(5 * 1000);
 
-    await t.should(`fire "confirmation" event for "${emails[0]}"`, async () => {
-      await gql`
-        mutation {
-          # will pass
-          one: send_confirmation(
-            event_name: "confirmation"
-            run_id: $one_run_id
-            payload: true
-          )
-          # will throw
-          two: send_confirmation(
-            event_name: "confirmation"
-            run_id: $two_run_id
-            payload: false
-          )
-          # will abort
-          three: abort_email_confirmation(run_id: $three_run_id)
-        }
-      `
-        .withVars({
-          one_run_id: runIds[0],
-          two_run_id: runIds[1],
-          three_run_id: runIds[2],
-        })
-        .expectData({
-          one: runIds[0],
-          two: runIds[1],
-          three: runIds[2],
-        })
-        .on(e);
-    });
+    await t.should(
+      `fire "confirmation" events for "${emails.join(", ")}"`,
+      async () => {
+        await gql`
+          mutation {
+            # will pass
+            one: send_confirmation(
+              event_name: "confirmation"
+              run_id: $one_run_id
+              payload: true
+            )
+            # will throw
+            two: send_confirmation(
+              event_name: "confirmation"
+              run_id: $two_run_id
+              payload: false
+            )
+            # will abort
+            three: abort_email_confirmation(run_id: $three_run_id)
+          }
+        `
+          .withVars({
+            one_run_id: runIds[0],
+            two_run_id: runIds[1],
+            three_run_id: runIds[2],
+          })
+          .expectData({
+            one: runIds[0],
+            two: runIds[1],
+            three: runIds[2],
+          })
+          .on(e);
+      }
+    );
 
     // This is arbitrary, if ops are leaking that means it should be increased
     // Noticing the fired event may take a few seconds depending on `substantial_relaunch_ms`
@@ -191,9 +194,30 @@ Meta.test(
             "zero workflow currently running"
           );
 
+          const localSorter = (a: any, b: any) =>
+            a.run_id.localeCompare(b.run_id);
+
+          const received = body?.data?.ask_email_results ?? ([] as Array<any>);
+          const expected = [
+            {
+              run_id: runIds[0],
+              result: {
+                value: 'Email sent to one@example.com: "confirmed!"',
+                status: "COMPLETED",
+              },
+            },
+            {
+              run_id: runIds[1],
+              result: {
+                value: "two@example.com has denied the subscription",
+                status: "COMPLETED_WITH_ERROR",
+              },
+            },
+          ];
+
           assertEquals(
-            body?.data?.ask_email_results?.length,
-            2,
+            received.sort(localSorter),
+            expected.sort(localSorter),
             "complete only two workflows as one was aborted"
           );
         })

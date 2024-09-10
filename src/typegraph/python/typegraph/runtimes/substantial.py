@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Union
+from typing import List, Union
 from typegraph import t
 from typegraph.gen.exports.runtimes import (
     RedisBackend,
@@ -18,6 +18,7 @@ from typegraph.gen.exports.runtimes import (
     SubstantialOperationTypeResults,
     SubstantialRuntimeData,
     Workflow,
+    WorkflowKind,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Runtime
@@ -85,3 +86,27 @@ class SubstantialRuntime(Runtime):
     def query_results(self, output: "t.typedef"):
         operation = SubstantialOperationTypeResults(self.workflow)
         return self._generic_substantial_func(operation, None, output)
+
+    def deno(
+        backend: SubstantialBackend,
+        *,
+        file: str,
+        name: str,
+        deps: List[str] = [],
+    ):
+        substantial = SubstantialRuntime(backend)
+        return substantial._using_workflow(
+            Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.DENO)
+        )
+
+    def python(
+        backend: SubstantialBackend,
+        *,
+        file: str,
+        name: str,
+        deps: List[str] = [],
+    ):
+        substantial = SubstantialRuntime(backend)
+        return substantial._using_workflow(
+            Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.PYTHON)
+        )

@@ -3,11 +3,10 @@
 
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
-import { Effect, SubstantialBackend } from "../gen/typegraph_core.d.ts";
+import type { Effect } from "../gen/typegraph_core.d.ts";
 import Policy from "../policy.ts";
-import { Materializer, Runtime } from "./mod.ts";
+import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
-import { SubstantialRuntime } from "../runtimes/substantial.ts";
 
 interface FunMat extends Materializer {
   code: string;
@@ -162,15 +161,5 @@ export class DenoRuntime extends Runtime {
         fx.read()
       )
     );
-  }
-
-  workflow(
-    backend: SubstantialBackend,
-    file: string,
-    name: string,
-    deps: Array<string> = []
-  ): SubstantialRuntime {
-    const substantial = new SubstantialRuntime(backend);
-    return substantial._usingWorkflow({ file, name, deps, kind: "deno" });
   }
 }

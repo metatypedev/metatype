@@ -13,14 +13,10 @@ from typegraph.gen.exports.runtimes import (
     MaterializerDenoImport,
     MaterializerDenoPredefined,
     MaterializerDenoStatic,
-    SubstantialBackend,
-    Workflow,
-    WorkflowKind,
 )
 from typegraph.gen.types import Err
 from typegraph.policy import Policy
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.runtimes.substantial import SubstantialRuntime
 from typegraph.wit import runtimes, store
 
 # from typegraph.wit import wit_utils
@@ -176,19 +172,6 @@ class DenoRuntime(Runtime):
             raise Exception(res.value)
 
         return Policy.create(name, res.value)
-
-    def workflow(
-        self,
-        backend: SubstantialBackend,
-        *,
-        file: str,
-        name: str,
-        deps: List[str] = [],
-    ):
-        substantial = SubstantialRuntime(backend)
-        return substantial._using_workflow(
-            Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.DENO)
-        )
 
 
 @dataclass

@@ -14,13 +14,9 @@ from typegraph.gen.exports.runtimes import (
     MaterializerPythonImport,
     MaterializerPythonLambda,
     MaterializerPythonModule,
-    SubstantialBackend,
-    Workflow,
-    WorkflowKind,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.runtimes.substantial import SubstantialRuntime
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
@@ -142,19 +138,6 @@ class PythonRuntime(Runtime):
                 secrets=secrets,
                 effect=effect,
             ),
-        )
-
-    def workflow(
-        self,
-        backend: SubstantialBackend,
-        *,
-        file: str,
-        name: str,
-        deps: List[str] = [],
-    ):
-        substantial = SubstantialRuntime(backend)
-        return substantial._using_workflow(
-            Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.PYTHON)
         )
 
 
