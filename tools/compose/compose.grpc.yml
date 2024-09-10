@@ -6,8 +6,8 @@ services:
       - "4770:4770"
       - "4771:4771"
     volumes:
-      - ./tools/compose/proto:/proto
-      - ./tools/compose/stub:/stub
+      - ./proto:/proto
+      - ./stub:/stub
     command:
       - --stub=/stub
       - /proto/helloworld.proto
