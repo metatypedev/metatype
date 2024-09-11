@@ -113,6 +113,7 @@ async fn load_mdk_template(
 ) -> anyhow::Result<MdkTemplate> {
     let mut group = FutureGroup::new();
     for (file_name, content) in default.iter() {
+        // TODO absolute path?
         let override_path: Option<PathBuf> = template_dir.map(Into::into);
         group.insert(Box::pin(async move {
             let content = if let Some(override_path) = override_path {

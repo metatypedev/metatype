@@ -264,12 +264,13 @@ impl crate::wit::utils::Guest for crate::Lib {
         remove_injections_recursive(id.into()).map(|id| id.into())
     }
 
-    fn metagen_exec(config: MdkConfig) -> Result<Vec<MdkOutput>, String> {
+    fn metagen_exec(config: MdkConfig) -> Result<Vec<MdkOutput>> {
         let gen_config: metagen::Config = serde_json::from_str(&config.config_json)
             .map_err(|e| format!("Load metagen config: {}", e))?;
 
         let tg = serde_json::from_str(&config.tg_json).map_err(|e| e.to_string())?;
-        let resolver = RawTgResolver { tg };
+        let fs = FsContext::new(PathBuf::from(&config.workspace_path));
+        let resolver = RawTgResolver { tg, fs };
 
         metagen::generate_target_sync(
             &gen_config,
@@ -287,10 +288,10 @@ impl crate::wit::utils::Guest for crate::Lib {
                 })
                 .collect::<Vec<_>>()
         })
-        .map_err(|e| format!("Generate target: {}", e))
+        .map_err(|e| format!("Generate target: {}", e).into())
     }
 
-    fn metagen_write_files(items: Vec<MdkOutput>, typegraph_dir: String) -> Result<(), String> {
+    fn metagen_write_files(items: Vec<MdkOutput>, typegraph_dir: String) -> Result<()> {
         let fs_ctx = FsContext::new(typegraph_dir.into());
         for item in items {
             if fs_ctx.exists(Path::new(&item.path))? && !item.overwrite {
