@@ -57,7 +57,7 @@ pub use mdk_typescript::DEFAULT_TEMPLATE as MDK_TYPESCRIPT_DEFAULT_TEMPLATE;
 /// implementations to access the external world. See [InputResolver].
 ///
 /// The rationale being that
-/// - Ease of mocking for tests through [InputResolver] implementaiton.
+/// - Ease of mocking for tests through [InputResolver] implementation.
 /// - Ease of translating to wasm API for any future user implemented generators.
 #[derive(Debug)]
 pub enum GeneratorInputOrder {
