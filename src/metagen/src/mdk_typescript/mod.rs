@@ -16,7 +16,7 @@ use crate::utils::GenDestBuf;
 use self::shared::types::NameMemo;
 use self::shared::types::TypeRenderer;
 
-const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("mdk.ts", include_str!("static/mdk.ts"))];
+pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("mdk.ts", include_str!("static/mdk.ts"))];
 
 struct MdkTypescriptTemplate {
     mdk_ts: Cow<'static, str>,

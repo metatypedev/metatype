@@ -21,7 +21,7 @@ use crate::*;
 use std::borrow::Cow;
 use std::fmt::Write;
 
-const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("mdk.rs", include_str!("static/mdk.rs"))];
+pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("mdk.rs", include_str!("static/mdk.rs"))];
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct MdkRustGenConfig {

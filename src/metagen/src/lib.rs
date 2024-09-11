@@ -49,6 +49,10 @@ pub use config::*;
 use futures_concurrency::future::FutureGroup;
 pub use shared::MdkTemplate;
 
+pub use mdk_python::DEFAULT_TEMPLATE as MDK_PYTHON_DEFAULT_TEMPLATE;
+pub use mdk_rust::DEFAULT_TEMPLATE as MDK_RUST_DEFAULT_TEMPLATE;
+pub use mdk_typescript::DEFAULT_TEMPLATE as MDK_TYPESCRIPT_DEFAULT_TEMPLATE;
+
 /// This implements a command object pattern API for generator
 /// implementations to access the external world. See [InputResolver].
 ///
