@@ -1,0 +1,103 @@
+# Type comparison
+
+A type A is called a **subtype of** a type B if any valid value for A is a valid value for B.
+The _"is subtype of"_ relation between types is [partial order relation](https://en.wikipedia.org/wiki/Partially_ordered_set)
+equivalent to the _"is subset of"_ relation (set inclusion) if types were defined as a set of values.
+
+Note that the reflexivity of partial orders translates to: any type A is a subtype of A.
+
+This type comparison is required for the validation of [_from parent_ injections](/docs/reference/types/injections#parent).
+
+## Semantics
+
+Let A and B be two types.
+
+If A is a subtype of B, then A and B are either both scalar types or both non-scalar types.
+
+### Scalar types
+
+Suppose that A and B are scalar types.
+
+A is subtype of B if and only if the following conditions hold:
+
+1. A and B are the same type or A is a `t.integer()` and B is a `t.float()`;
+
+2. [Type constraints](/docs/reference/types) defined on B are all defined on A and satisfy:
+
+| Type | Type Constraint | Condition |
+| ---- | --------------- | --------- |
+| `t.integer()`, `t.float()` | `min` | `A.min >= B.min` |
+| `t.integer()`, `t.float()` | `x_min` | `A.x_min >= B.x_min` |
+| `t.integer()`, `t.float()` | `max` | `A.max <= B.max` |
+| `t.integer()`, `t.float()` | `x_max` | `A.x_max <= B.x_max` |
+| `t.integer()`, `t.float()` | `multiple_of` | `A.multiple_of` is a multiple of `B.multiple_of` |
+| `t.string()` | `min` | `A.min >= B.min` |
+| `t.string()` | `max` | `A.max <= B.max` |
+| `t.string()` | `pattern` | `A.pattern == B.pattern`[^pat] |
+| `t.string()` | `format` | `A.format == B.format` |
+| `t.file()` | `min` | `A.min >= B.min` |
+| `t.file()` | `max` | `A.max <= B.max` |
+| `t.file()` | `allow` | `A.allow` is a subset of `B.allow` |
+
+[^pat]: The patterns are required to be exactly the same
+because we currently do not have any other comparison semantic for regular expressions.
+
+Note that type constraints defined on A are not required to be defined on B.
+
+### Optionals
+
+- A is a subtype of `t.optional(B)` if and only if A is subtype of B.
+
+- `t.optional(A)` is a subtype of `t.optional(B)` if and only if A is a subtype of B.
+
+- If B is not an optional type, then `t.optional(A)` is not a subtype of B.
+
+### Lists
+
+- If A and B are non-optional types and A is a subtype of B, then A and B are both lists or both non-lists.
+
+- If A and B are list types, then
+  A is a subtype of B if and only if 
+    1. The item type of A is a subtype of the item type of B,
+    2. Type constraints defined on B are all defined on A and satisfy:
+        | Type constraint | Condition |
+        | --------------- | --------- |
+        | `min` | `A.min >= B.min` |
+        | `max` | `A.max <= B.max` |
+        | `unique_items` | `A.unique_items == B.unique_items` |
+
+  Note that the type constraints defined on A are not required to be defined on B.
+
+
+### Objects: `t.struct()`
+
+- If A and B are non-optional types and A is a subtype of B,
+  then A and B are both object types or non-object types.
+
+- If A and B are object types, then
+  A is a subtype of B if and only if
+    1. All field key defined in A is defined in B, <!-- Hum? -->
+    2. For all field defined in B with key _K_,
+    either the field is optional on B
+    or A has a field with key _K_ whose type is a subtype of the one in B;
+    3. Type constraints defined on B are all defined on A and satisfy:
+        | Type constraint | Condition |
+        | --------------- | --------- |
+        | `min` | `A.min >= B.min` |
+        | `max` | `A.max <= B.max` |
+
+### Unions: `t.union()` and `t.either()`
+
+Let U and V be two lists of types.
+
+- `t.union(U)` is a subtype of `t.union(V)` if and only if
+for each type A in U, there is a type B in V such that A is a subtype of B.
+
+- `t.union(U)` is a subtype of `t.either(V)` if and only if
+for each type A in U, there is a unique type B in V such that A is a subtype of B.
+
+- `t.either(U)` is a subtype of `t.either(V)` if and only if
+for each type A in U, there is a unique type B in V such that A is a subtype of B.
+
+- `t.either(U)` is a subtype of `t.union(V)` if and only if
+for each type A in U, there is type B in V such that A is a subtype of B.
