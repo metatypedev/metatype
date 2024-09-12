@@ -54,7 +54,7 @@ type MetaNS = {
 
   grpc: {
     register: (inp: GrpcRegisterInput) => Promise<void>;
-    unregister: (client_id: string) => void;
+    unregister: (client_id: string) => Promise<void>;
     callGrpcMethod: (inp: CallGrpcMethodInput) => Promise<string>;
   };
 };

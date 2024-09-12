@@ -16,13 +16,13 @@ export const tg = await typegraph(
 
     const proto_file = `${__dirname}proto/helloworld.proto`;
     // highlight-next-line
-    const grpc_runtime = new GrpcRuntime(
-      proto_file,
-      endpoint,
-    );
+    const grpc_runtime = new GrpcRuntime(proto_file, endpoint);
 
-    g.expose({
-      greet: grpc_runtime.call_grpc_method("/helloworld.Greeter/SayHello"),
-    }, Policy.public());
+    g.expose(
+      {
+        greet: grpc_runtime.call("/helloworld.Greeter/SayHello"),
+      },
+      Policy.public(),
+    );
   },
 );

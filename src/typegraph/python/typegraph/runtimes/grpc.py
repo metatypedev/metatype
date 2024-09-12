@@ -23,7 +23,7 @@ class GrpcRuntime(Runtime):
 
         super().__init__(runtime_id.value)
 
-    def call_grpc_method(self, method: str):
+    def call(self, method: str):
         data = GrpcData(method)
         func_data = runtimes.call_grpc_method(store, self.id, data)
 

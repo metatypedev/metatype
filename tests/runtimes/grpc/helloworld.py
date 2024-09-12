@@ -14,10 +14,10 @@ BASE_DIR = Path(__file__).parent
 def helloworld(g: Graph):
     endpoint = "tcp://localhost:4770"
 
-    helloworld = BASE_DIR.joinpath("proto/helloworld.proto")
-    helloworld_grpc = GrpcRuntime(helloworld, endpoint)
+    proto_file = BASE_DIR.joinpath("proto/helloworld.proto")
+    grpc_runtime = GrpcRuntime(proto_file, endpoint)
 
     g.expose(
         Policy.public(),
-        greet=helloworld_grpc.call_grpc_method("/helloworld.Greeter/SayHello"),
+        greet=grpc_runtime.call("/helloworld.Greeter/SayHello"),
     )

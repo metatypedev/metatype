@@ -14,11 +14,11 @@ BASE_DIR = Path(__file__).parent
 def maths(g: Graph):
     endpoint = "tcp://localhost:4770"
 
-    maths = BASE_DIR.joinpath("proto/maths.proto")
-    maths_grpc = GrpcRuntime(maths, endpoint)
+    proto_file = BASE_DIR.joinpath("proto/maths.proto")
+    grpc_runtime = GrpcRuntime(proto_file, endpoint)
 
     g.expose(
         Policy.public(),
-        sum=maths_grpc.call_grpc_method("/maths.Calculator/Sum"),
-        prime=maths_grpc.call_grpc_method("/maths.Calculator/IsPrime"),
+        sum=grpc_runtime.call("/maths.Calculator/Sum"),
+        prime=grpc_runtime.call("/maths.Calculator/IsPrime"),
     )

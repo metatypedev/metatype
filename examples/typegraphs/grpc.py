@@ -28,5 +28,5 @@ def grpc(g: Graph):
 
     g.expose(
         Policy.public(),
-        greet=grpc_runtime.call_grpc_method("/helloworld.Greeter/SayHello"),
+        greet=grpc_runtime.call("/helloworld.Greeter/SayHello"),
     )

@@ -14,10 +14,10 @@ BASE_DIR = Path(__file__).parent
 def geography(g: Graph):
     endpoint = "tcp://localhost:4770"
 
-    geography = BASE_DIR.joinpath("proto/geography.proto")
-    geography_grpc = GrpcRuntime(geography, endpoint)
+    proto_file = BASE_DIR.joinpath("proto/geography.proto")
+    grpc_runtime = GrpcRuntime(proto_file, endpoint)
 
     g.expose(
         Policy.public(),
-        dem=geography_grpc.call_grpc_method("/geography.Demography/Country"),
+        dem=grpc_runtime.call("/geography.Demography/Country"),
     )

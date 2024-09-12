@@ -47,22 +47,25 @@ fn convert_proto_fields_to_type_id(
 
     for field in fields {
         let field_name = field.name().to_string();
-        let type_name = field.proto().type_();
+        let type_name = field.proto().type_name();
 
-        if let Some(cached_type_id) = cache.get(&field_name) {
+        let cache_key = format!("{}/{}", type_name, field_name);
+
+        // Check if the type is already cached
+        if let Some(cached_type_id) = cache.get(&cache_key) {
             r#type.prop(&field_name, *cached_type_id);
             continue;
         }
 
-        let mut type_id = match type_name {
+        let mut type_id = match field.proto().type_() {
             Type::TYPE_STRING => t::string().build()?,
             Type::TYPE_INT32 | Type::TYPE_INT64 => t::integer().build()?,
             Type::TYPE_FLOAT => t::float().build()?,
             Type::TYPE_BOOL => t::boolean().build()?,
             Type::TYPE_MESSAGE => {
-                let nested_message_type = field.proto().type_name().to_string();
+                let nested_message_type = field.proto().type_name();
                 let nested_fields =
-                    get_message_field_descriptor(file_descriptor, &nested_message_type)?;
+                    get_message_field_descriptor(file_descriptor, nested_message_type)?;
                 convert_proto_fields_to_type_id(file_descriptor, nested_fields, cache)?
             }
             _ => bail!(
@@ -80,7 +83,8 @@ fn convert_proto_fields_to_type_id(
             type_id = t::optional(type_id).build()?;
         }
 
-        cache.insert(field_name.clone(), type_id);
+        // Cache the type_id using the unique cache key
+        cache.insert(cache_key, type_id);
 
         r#type.prop(&field_name, type_id);
     }

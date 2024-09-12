@@ -23,9 +23,11 @@ The `proto_file` is the path to the `.proto` file that defines the gRPC service.
 
 The `endpoint` is the address of the gRPC server that the Typegraph will communicate with. It uses the format `tcp://<host>:<port>`, and is specified to point to the correct server and port where the gRPC service is running.
 
-### `call_grpc_method`
+## Method
 
-This method is used to call a specific method on the gRPC service. It accepts the full path to the gRPC method, usually in the form `/package_name.service_name/method_name`. The **package_name** refers to the package defined in the `.proto` file, and it must be included when calling the method. In the example below, `greet` will call the `SayHello` method of the `Greeter` service within the `helloworld` package, as defined in the `helloworld.proto` file.
+### `call`
+
+This method creates a typegraph function for gRPC method calls. It accepts the full path to the gRPC method, usually in the form `/package_name.service_name/method_name`. The **package_name** refers to the package defined in the `.proto` file, and it must be included when calling the method. In the example below, `greet` will call the `SayHello` method of the `Greeter` service within the `helloworld` package, as defined in the `helloworld.proto` file.
 
 ## Example
 
