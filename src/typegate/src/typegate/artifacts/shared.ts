@@ -77,6 +77,10 @@ class SharedArtifactPersistence implements ArtifactPersistence {
 
     const stream2 = stream.pipeThrough(new HashTransformStream(hasher));
     
+    // temporary key is needed as we won't be able to get the hash sum of the file,
+    // which we use as the key of the object,
+    // before going through whole stream.
+    // so we create a temporary key to store the file/object and then copy the object after we have computed the hash. 
     const tempKey = resolveS3Key(this.s3Bucket, 
       `tmp/${Math.random().toString(36).substring(2)}`,
     );
@@ -108,23 +112,6 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     });
     
     return hash;
-
-    // const tmpFile = await Deno.makeTempFile({ dir: this.dirs.temp });
-    // const file = await Deno.open(tmpFile, { write: true, truncate: true });
-    // await stream
-    //   .pipeThrough(new HashTransformStream(hasher))
-    //   .pipeTo(file.writable);
-
-    // const hash = hasher.digest("hex");
-    // const body = await Deno.readFile(tmpFile);
-    // logger.info(`persisting artifact to S3: ${hash}`);
-    // const _ = await this.s3.putObject({
-    //   Bucket: this.s3Bucket,
-    //   Body: body,
-    //   Key: resolveS3Key(this.s3Bucket, hash),
-    // });
-
-    // return hash;
   }
 
   async delete(hash: string): Promise<void> {
