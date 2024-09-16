@@ -743,6 +743,54 @@
           "portRef": "cpy_bs_ghrel@0.1.0",
           "releaseTag": "20240814",
           "specifiedVersion": true
+        },
+        "bciqe6tpdv6hffdbc7hql52w3ivpdls47lgpuhsa3hzsryrwx7ty5dgy": {
+          "version": "3.30.3",
+          "buildDepConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.5",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.35",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                },
+                "zstd_aa": {
+                  "version": "v1.5.6,",
+                  "buildDepConfigs": {},
+                  "portRef": "zstd_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240814",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "cmake",
+          "specifiedVersion": false
+        },
+        "bciqcsylkfsdlyzx76glxvivu4r236ivoynoaogmawn7wesftq4lht3a": {
+          "version": "3.12.5",
+          "buildDepConfigs": {
+            "tar_aa": {
+              "version": "1.35",
+              "buildDepConfigs": {},
+              "portRef": "tar_aa@0.1.0",
+              "specifiedVersion": false
+            },
+            "zstd_aa": {
+              "version": "v1.5.6,",
+              "buildDepConfigs": {},
+              "portRef": "zstd_aa@0.1.0",
+              "specifiedVersion": false
+            }
+          },
+          "portRef": "cpy_bs_ghrel@0.1.0",
+          "releaseTag": "20240814",
+          "specifiedVersion": true
         }
       }
     },

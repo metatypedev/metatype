@@ -121,7 +121,7 @@ export class ArtifactService {
     }
 
     // TODO key?
-    const hash = await this.store.persistence.save(stream);
+    const hash = await this.store.persistence.save(stream, meta.sizeInBytes);
     if (hash !== meta.hash) {
       await this.store.persistence.delete(hash);
       logger.warn("hash mismatch: {} {}", hash, meta.hash);
