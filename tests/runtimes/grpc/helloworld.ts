@@ -4,11 +4,9 @@
 import { Policy, typegraph } from "@typegraph/sdk/index.ts";
 import { GrpcRuntime } from "@typegraph/sdk/runtimes/grpc.ts";
 
-const __dirname = new URL(".", import.meta.url).pathname;
-
 export const tg = await typegraph("helloworld", (g) => {
   const endpoint = "tcp://localhost:4770";
-  const proto_file = `${__dirname}proto/helloworld.proto`;
+  const proto_file = "runtimes/grpc/proto/helloworld.proto";
 
   const grpc_runtime = new GrpcRuntime(proto_file, endpoint);
 

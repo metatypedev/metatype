@@ -7,12 +7,6 @@ from typegraph import Graph, Policy, typegraph
 from typegraph.runtimes.grpc import GrpcRuntime
 
 
-from pathlib import Path
-
-
-BASE_DIR = Path(__file__).parent
-
-
 @typegraph(
     # skip:start
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
@@ -20,8 +14,7 @@ BASE_DIR = Path(__file__).parent
 )
 def grpc(g: Graph):
     endpoint = "tcp://localhost:4770"
-
-    proto_file = BASE_DIR.joinpath("proto/helloworld.proto")
+    proto_file = "typegraphs/proto/helloworld.proto"
 
     # highlight-next-line
     grpc_runtime = GrpcRuntime(proto_file, endpoint)
