@@ -41,7 +41,10 @@ fn ensure_subtype_of_for_min<T>(
     match (left, right) {
         (Some(left), Some(right)) => {
             if left < right {
-                errors.push(format!("'{key}' cannot be lower on the subtype"));
+                errors.push(format!(
+                    "'{key}' cannot be lower on the subtype: {} < {}",
+                    left, right
+                ));
             }
         }
         (None, Some(_)) => {
@@ -64,7 +67,10 @@ fn ensure_subtype_of_for_max<T>(
     match (left, right) {
         (Some(left), Some(right)) => {
             if left > right {
-                errors.push(format!("'{key}' cannot be higher on the subtype"));
+                errors.push(format!(
+                    "'{key}' cannot be higher on the subtype: {} > {}",
+                    left, right
+                ));
             }
         }
         (None, Some(_)) => {
@@ -88,7 +94,8 @@ fn ensure_subtype_of_for_multiple_of<T>(
         (Some(left), Some(right)) => {
             if left % right != Default::default() {
                 errors.push(format!(
-                    "'{key}' is not a multiple of the '{key}' of the supertype"
+                    "'{key}' is not a multiple of the '{key}' of the supertype ({} % {} != 0)",
+                    left, right
                 ));
             }
         }
