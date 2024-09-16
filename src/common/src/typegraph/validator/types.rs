@@ -31,171 +31,208 @@ pub trait EnsureSubtypeOf {
 }
 
 fn ensure_subtype_of_for_min<T>(
-    sub_min: Option<T>,
-    sup_min: Option<T>,
+    left: Option<T>,
+    right: Option<T>,
     key: &str,
     errors: &mut ErrorCollector,
 ) where
     T: Display + PartialOrd,
 {
-    if let Some(sub_min) = sub_min {
-        if let Some(sup_min) = sup_min {
-            if sub_min < sup_min {
-                errors.push(format!("{key} is less than the {key} of the supertype"));
+    match (left, right) {
+        (Some(left), Some(right)) => {
+            if left < right {
+                errors.push(format!("'{key}' cannot be lower on the subtype"));
             }
         }
-    } else if sup_min.is_some() {
-        errors.push(format!("{key} is not defined in the subtype"));
+        (None, Some(_)) => {
+            errors.push(format!(
+                "'{key}' is required on the subtype if it is defined on the supertype"
+            ));
+        }
+        _ => {}
     }
 }
 
 fn ensure_subtype_of_for_max<T>(
-    sub_max: Option<T>,
-    sup_max: Option<T>,
+    left: Option<T>,
+    right: Option<T>,
     key: &str,
     errors: &mut ErrorCollector,
 ) where
     T: Display + PartialOrd,
 {
-    if let Some(sub_max) = sub_max {
-        if let Some(sup_max) = sup_max {
-            if sub_max > sup_max {
-                errors.push(format!("{key} is greater than the {key} of the supertype"));
+    match (left, right) {
+        (Some(left), Some(right)) => {
+            if left > right {
+                errors.push(format!("'{key}' cannot be higher on the subtype"));
             }
         }
-    } else if sup_max.is_some() {
-        errors.push(format!("{key} is not defined in the subtype"));
+        (None, Some(_)) => {
+            errors.push(format!(
+                "'{key}' is required on the subtype if it is defined on the supertype"
+            ));
+        }
+        _ => {}
     }
 }
 
 fn ensure_subtype_of_for_multiple_of<T>(
-    sub_multiple_of: Option<T>,
-    sup_multiple_of: Option<T>,
+    left: Option<T>,
+    right: Option<T>,
     key: &str,
     errors: &mut ErrorCollector,
 ) where
     T: Display + std::ops::Rem<Output = T> + Copy + Default + PartialEq,
 {
-    if let Some(sub_multiple_of) = sub_multiple_of {
-        if let Some(sup_multiple_of) = sup_multiple_of {
-            if sub_multiple_of % sup_multiple_of != Default::default() {
+    match (left, right) {
+        (Some(left), Some(right)) => {
+            if left % right != Default::default() {
                 errors.push(format!(
-                    "{key} is not a multiple of the {key} of the supertype"
+                    "'{key}' is not a multiple of the '{key}' of the supertype"
                 ));
             }
         }
-    } else if sup_multiple_of.is_some() {
-        errors.push(format!("{key} is not defined in the subtype"));
+        (None, Some(_)) => {
+            errors.push(format!(
+                "'{key}' is required on the subtype if it is defined on the supertype"
+            ));
+        }
+        _ => {}
     }
 }
 
 impl EnsureSubtypeOf for IntegerTypeData {
-    fn ensure_subtype_of(&self, sup: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
-        ensure_subtype_of_for_min(self.minimum, sup.minimum, "minimum", errors);
-        ensure_subtype_of_for_max(self.maximum, sup.maximum, "maximum", errors);
+    fn ensure_subtype_of(&self, other: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
+        ensure_subtype_of_for_min(self.minimum, other.minimum, "minimum", errors);
+        ensure_subtype_of_for_max(self.maximum, other.maximum, "maximum", errors);
         ensure_subtype_of_for_min(
             self.exclusive_minimum,
-            sup.exclusive_minimum,
+            other.exclusive_minimum,
             "exclusive_minimum",
             errors,
         );
         ensure_subtype_of_for_max(
             self.exclusive_maximum,
-            sup.exclusive_maximum,
+            other.exclusive_maximum,
             "exclusive_maximum",
             errors,
         );
-        ensure_subtype_of_for_multiple_of(self.multiple_of, sup.multiple_of, "multiple_of", errors);
+        ensure_subtype_of_for_multiple_of(
+            self.multiple_of,
+            other.multiple_of,
+            "multiple_of",
+            errors,
+        );
     }
 }
 
 impl EnsureSubtypeOf for FloatTypeData {
-    fn ensure_subtype_of(&self, sup: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
-        ensure_subtype_of_for_min(self.minimum, sup.minimum, "minimum", errors);
-        ensure_subtype_of_for_max(self.maximum, sup.maximum, "maximum", errors);
+    fn ensure_subtype_of(&self, other: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
+        ensure_subtype_of_for_min(self.minimum, other.minimum, "minimum", errors);
+        ensure_subtype_of_for_max(self.maximum, other.maximum, "maximum", errors);
         ensure_subtype_of_for_min(
             self.exclusive_minimum,
-            sup.exclusive_minimum,
+            other.exclusive_minimum,
             "exclusive_minimum",
             errors,
         );
         ensure_subtype_of_for_max(
             self.exclusive_maximum,
-            sup.exclusive_maximum,
+            other.exclusive_maximum,
             "exclusive_maximum",
             errors,
         );
-        ensure_subtype_of_for_multiple_of(self.multiple_of, sup.multiple_of, "multiple_of", errors);
+        ensure_subtype_of_for_multiple_of(
+            self.multiple_of,
+            other.multiple_of,
+            "multiple_of",
+            errors,
+        );
     }
 }
 
 impl EnsureSubtypeOf for StringTypeData {
-    fn ensure_subtype_of(&self, sup: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
-        ensure_subtype_of_for_min(self.min_length, sup.min_length, "minimum_length", errors);
-        ensure_subtype_of_for_max(self.max_length, sup.max_length, "maximum_length", errors);
+    fn ensure_subtype_of(&self, other: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
+        ensure_subtype_of_for_min(self.min_length, other.min_length, "minimum_length", errors);
+        ensure_subtype_of_for_max(self.max_length, other.max_length, "maximum_length", errors);
 
-        if let Some(sub_pattern) = &self.pattern {
-            if let Some(sup_pattern) = &sup.pattern {
-                if sub_pattern != sup_pattern {
-                    errors.push("pattern does not match the pattern of the supertype");
+        match (&self.pattern, &other.pattern) {
+            (Some(left), Some(right)) => {
+                if left != right {
+                    errors.push(format!(
+                        "'pattern' is required to be exactly the same as the supertype's: {} != {}",
+                        left, right
+                    ));
                 }
             }
-        } else if sup.pattern.is_some() {
-            errors.push("pattern is not defined in the subtype");
+            (None, Some(_)) => {
+                errors
+                    .push("'pattern' is required on the subtype if it is defined on the supertype");
+            }
+            _ => {}
         }
 
-        if let Some(sub_format) = &self.format {
-            if let Some(sup_format) = &sup.format {
-                if sub_format != sup_format {
-                    errors.push("format does not match the format of the supertype");
+        match (&self.format, &other.format) {
+            (Some(left), Some(right)) => {
+                if left != right {
+                    errors.push(format!(
+                        "'format' is required to be the same as the supertype's: {} != {}",
+                        left, right
+                    ));
                 }
             }
-        } else if sup.format.is_some() {
-            errors.push("format is not defined in the subtype");
+            (None, Some(_)) => {
+                errors
+                    .push("'format' is required on the subtype if it is defined on the supertype");
+            }
+            _ => {}
         }
     }
 }
 
 impl EnsureSubtypeOf for FileTypeData {
-    fn ensure_subtype_of(&self, sup: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
-        ensure_subtype_of_for_min(self.min_size, sup.min_size, "minimum_size", errors);
-        ensure_subtype_of_for_max(self.max_size, sup.max_size, "maximum_size", errors);
+    fn ensure_subtype_of(&self, other: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
+        ensure_subtype_of_for_min(self.min_size, other.min_size, "minimum_size", errors);
+        ensure_subtype_of_for_max(self.max_size, other.max_size, "maximum_size", errors);
 
-        if let Some(sub_mime_types) = &self.mime_types {
-            if let Some(sup_mime_types) = &sup.mime_types {
-                // check if sub_mime_types is a subset of sup_mime_types
-                if sub_mime_types
-                    .iter()
-                    .any(|sub| !sup_mime_types.contains(sub))
-                {
-                    errors.push("mime_types is not a subset of the mime_types of the supertype");
+        // FIXME consistency: the name on the SDK is 'allow'
+        match (&self.mime_types, &other.mime_types) {
+            (Some(left), Some(right)) => {
+                // O(n * m) but n and m are _usually_ small
+                if left.iter().any(|m| !right.contains(m)) {
+                    errors.push("'mime_types' is required to be a subset of the supertype's");
                 }
             }
-        } else if sup.mime_types.is_some() {
-            errors.push("mime_types is not defined in the subtype");
+            (None, Some(_)) => {
+                errors.push(
+                    "'mime_types' is required on the subtype if it is defined on the supertype",
+                );
+            }
+            _ => {}
         }
     }
 }
 
 impl EnsureSubtypeOf for ObjectTypeData {
-    fn ensure_subtype_of(&self, sup: &Self, tg: &Typegraph, errors: &mut ErrorCollector) {
-        let mut sup_props_left = sup.properties.keys().collect::<HashSet<_>>();
+    fn ensure_subtype_of(&self, other: &Self, tg: &Typegraph, errors: &mut ErrorCollector) {
+        let mut right_keys = other.properties.keys().collect::<HashSet<_>>();
 
-        for (key, sub_idx) in &self.properties {
-            if let Some(sup_idx) = sup.properties.get(key) {
-                ExtendedTypeNode::new(tg, *sub_idx).ensure_subtype_of(
-                    &ExtendedTypeNode::new(tg, *sup_idx),
+        for (key, left_idx) in &self.properties {
+            if let Some(right_idx) = other.properties.get(key) {
+                // TODO add some context on the error messages
+                ExtendedTypeNode::new(tg, *left_idx).ensure_subtype_of(
+                    &ExtendedTypeNode::new(tg, *right_idx),
                     tg,
                     errors,
                 );
             } else {
                 errors.push(format!("property {} is not defined in the supertype", key));
             }
-            sup_props_left.remove(key);
+            right_keys.remove(key);
         }
 
-        for key in sup_props_left {
-            let type_idx = sup.properties.get(key).unwrap();
+        for key in right_keys {
+            let type_idx = other.properties.get(key).unwrap();
             let type_node = tg.types.get(*type_idx as usize).unwrap();
             if !matches!(type_node, TypeNode::Optional { .. }) {
                 errors.push(format!("property {} is not optional in the supertype", key));
@@ -203,7 +240,7 @@ impl EnsureSubtypeOf for ObjectTypeData {
         }
 
         for key in &self.required {
-            if !sup.required.contains(key) {
+            if !other.required.contains(key) {
                 errors.push(format!("property {} is not required in the supertype", key));
             }
         }
