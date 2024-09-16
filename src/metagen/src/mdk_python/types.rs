@@ -7,6 +7,7 @@ use heck::ToPascalCase;
 use crate::interlude::*;
 
 use super::utils::{Memo, TypeGenerated};
+use super::STRUCT_TEMPLATE;
 
 /// Collect relevant definitions in `memo` if object, return the type in Python
 pub fn visit_type(
@@ -76,7 +77,7 @@ fn visit_object(
         context.insert("class_name", &base.title.to_pascal_case());
         context.insert("fields", &fields_repr);
 
-        let code = tera.render("struct_template", &context)?;
+        let code = tera.render(STRUCT_TEMPLATE, &context)?;
         let generated = TypeGenerated {
             hint: hint.clone(),
             def: Some(code),
