@@ -532,12 +532,25 @@ class NodeDescs:
         )
 
     @staticmethod
-    def Func28():
+    def User():
         return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
-            arg_types={
-                "id": "String13",
+            sub_nodes={
+                "id": NodeDescs.scalar,
+                "email": NodeDescs.scalar,
+                "posts": NodeDescs.Post,
             },
+        )
+
+    @staticmethod
+    def Func23():
+        return NodeMeta(
+            sub_nodes=NodeDescs.User().sub_nodes,
+        )
+
+    @staticmethod
+    def Func25():
+        return NodeMeta(
+            sub_nodes=NodeDescs.scalar().sub_nodes,
         )
 
     @staticmethod
@@ -553,25 +566,12 @@ class NodeDescs:
         )
 
     @staticmethod
-    def Func25():
+    def Func28():
         return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
-        )
-
-    @staticmethod
-    def User():
-        return NodeMeta(
-            sub_nodes={
-                "id": NodeDescs.scalar,
-                "email": NodeDescs.scalar,
-                "posts": NodeDescs.Post,
+            sub_nodes=NodeDescs.Post().sub_nodes,
+            arg_types={
+                "id": "String13",
             },
-        )
-
-    @staticmethod
-    def Func23():
-        return NodeMeta(
-            sub_nodes=NodeDescs.User().sub_nodes,
         )
 
     @staticmethod

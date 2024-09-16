@@ -10,6 +10,8 @@ import { JSONValue } from "@metatype/typegate/utils.ts";
 import { testDir } from "test-utils/dir.ts";
 import $ from "@david/dax";
 import { z as zod } from "zod";
+import { workspaceDir } from "test-utils/dir.ts";
+import { MdkOutput } from "@typegraph/sdk/gen/typegraph_core.d.ts";
 
 const denoJson = resolve(testDir, "./deno.jsonc");
 
@@ -139,13 +141,10 @@ Meta.test("Metagen within sdk", async (t) => {
     const { Metagen } = await import("@typegraph/sdk/metagen.ts");
     const metagen = new Metagen(workspace, genConfig);
     const generated = metagen.dryRun(tg, targetName);
-    await t.assertSnapshot(
-      Object.entries(generated).sort(([keyA], [keyB]) =>
-        keyA.localeCompare(keyB)
-      ),
-    );
+    const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
+    await t.assertSnapshot(sorted);
 
-    sdkResults.push(JSON.stringify(generated, null, 2));
+    sdkResults.push(JSON.stringify(sorted, null, 2));
   });
 
   await t.should("Run metagen within python", async () => {
@@ -165,14 +164,12 @@ Meta.test("Metagen within sdk", async (t) => {
     const output = await child.output();
     if (output.success) {
       const stdout = new TextDecoder().decode(output.stdout);
-      const generated = JSON.parse(stdout);
-      await t.assertSnapshot(
-        Object.entries(generated).sort(([keyA], [keyB]) =>
-          keyA.localeCompare(keyB)
-        ),
-      );
+      const generated = JSON.parse(stdout) as Array<MdkOutput>;
+      const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
 
-      sdkResults.push(JSON.stringify(generated, null, 2));
+      await t.assertSnapshot(sorted);
+
+      sdkResults.push(JSON.stringify(sorted, null, 2));
     } else {
       const err = new TextDecoder().decode(output.stderr);
       throw new Error(`metagen python: ${err}`);
@@ -188,7 +185,9 @@ Meta.test("Metagen within sdk", async (t) => {
 });
 
 Meta.test("Metagen within sdk with custom template", async (t) => {
-  const workspace = join(import.meta.dirname!, "typegraphs");
+  const workspace = join(import.meta.dirname!, "typegraphs")
+    .slice(workspaceDir.length);
+
   const targetName = "my_target";
   const genConfig = {
     targets: {
@@ -210,13 +209,10 @@ Meta.test("Metagen within sdk with custom template", async (t) => {
     const { Metagen } = await import("@typegraph/sdk/metagen.ts");
     const metagen = new Metagen(workspace, genConfig);
     const generated = metagen.dryRun(tg, targetName);
-    await t.assertSnapshot(
-      Object.entries(generated).sort(([keyA], [keyB]) =>
-        keyA.localeCompare(keyB)
-      ),
-    );
+    const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
+    await t.assertSnapshot(sorted);
 
-    sdkResults.push(JSON.stringify(generated, null, 2));
+    sdkResults.push(JSON.stringify(sorted, null, 2));
   });
 
   await t.should("Run metagen within python", async () => {
@@ -236,14 +232,11 @@ Meta.test("Metagen within sdk with custom template", async (t) => {
     const output = await child.output();
     if (output.success) {
       const stdout = new TextDecoder().decode(output.stdout);
-      const generated = JSON.parse(stdout);
-      await t.assertSnapshot(
-        Object.entries(generated).sort(([keyA], [keyB]) =>
-          keyA.localeCompare(keyB)
-        ),
-      );
+      const generated = JSON.parse(stdout) as Array<MdkOutput>;
+      const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
+      await t.assertSnapshot(sorted);
 
-      sdkResults.push(JSON.stringify(generated, null, 2));
+      sdkResults.push(JSON.stringify(sorted, null, 2));
     } else {
       const err = new TextDecoder().decode(output.stderr);
       throw new Error(`metagen python: ${err}`);

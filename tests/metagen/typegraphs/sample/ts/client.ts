@@ -647,11 +647,6 @@ const nodeMetas = {
     return {};
   },
   
-  Func25(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
   Post(): NodeMeta {
     return {
       subNodes: [
@@ -659,29 +654,6 @@ const nodeMetas = {
         ["slug", nodeMetas.scalar],
         ["title", nodeMetas.scalar],
       ],
-    };
-  },
-  Func28(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "String13",
-      },
-    };
-  },
-  Func24(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-  Func26(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "String4",
-        slug: "String1",
-        title: "String1",
-      },
     };
   },
   Func27(): NodeMeta {
@@ -703,15 +675,43 @@ const nodeMetas = {
       ...nodeMetas.User(),
     };
   },
+  Func25(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+  Func24(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+  Func28(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "String13",
+      },
+    };
+  },
+  Func26(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "String4",
+        slug: "String1",
+        title: "String1",
+      },
+    };
+  },
+};
+export type Object21 = {
+  id: string;
 };
 export type StringUuid4 = string;
 export type Post = {
   id: StringUuid4;
   slug: string;
   title: string;
-};
-export type Object21 = {
-  id: string;
 };
 export type StringEmail5 = string;
 export type Post7 = Array<Post>;
