@@ -26,8 +26,8 @@ impl ErrorCollector {
     }
 }
 
-pub trait EnsureSubtypeOf {
-    fn ensure_subtype_of(&self, sup: &Self, typegraph: &Typegraph, errors: &mut ErrorCollector);
+pub trait EnsureSubtypeOf<T = Self> {
+    fn ensure_subtype_of(&self, sup: &T, typegraph: &Typegraph, errors: &mut ErrorCollector);
 }
 
 fn ensure_subtype_of_for_min<T>(
@@ -158,6 +158,46 @@ impl EnsureSubtypeOf for FloatTypeData {
     }
 }
 
+impl EnsureSubtypeOf<FloatTypeData> for IntegerTypeData {
+    fn ensure_subtype_of(
+        &self,
+        other: &FloatTypeData,
+        _tg: &Typegraph,
+        errors: &mut ErrorCollector,
+    ) {
+        ensure_subtype_of_for_min(
+            self.minimum.map(|m| m as f64),
+            other.minimum,
+            "minimum",
+            errors,
+        );
+        ensure_subtype_of_for_max(
+            self.maximum.map(|m| m as f64),
+            other.maximum,
+            "maximum",
+            errors,
+        );
+        ensure_subtype_of_for_min(
+            self.exclusive_minimum.map(|m| m as f64),
+            other.exclusive_minimum,
+            "exclusive_minimum",
+            errors,
+        );
+        ensure_subtype_of_for_max(
+            self.exclusive_maximum.map(|m| m as f64),
+            other.exclusive_maximum,
+            "exclusive_maximum",
+            errors,
+        );
+        ensure_subtype_of_for_multiple_of(
+            self.multiple_of.map(|m| m as f64),
+            other.multiple_of,
+            "multiple_of",
+            errors,
+        );
+    }
+}
+
 impl EnsureSubtypeOf for StringTypeData {
     fn ensure_subtype_of(&self, other: &Self, _tg: &Typegraph, errors: &mut ErrorCollector) {
         ensure_subtype_of_for_min(self.min_length, other.min_length, "minimum_length", errors);
@@ -233,7 +273,10 @@ impl EnsureSubtypeOf for ObjectTypeData {
                     errors,
                 );
             } else {
-                errors.push(format!("property {} is not defined in the supertype", key));
+                errors.push(format!(
+                    "property {} is not allowed: it is not defined in the supertype",
+                    key
+                ));
             }
             right_keys.remove(key);
         }
@@ -242,10 +285,14 @@ impl EnsureSubtypeOf for ObjectTypeData {
             let type_idx = other.properties.get(key).unwrap();
             let type_node = tg.types.get(*type_idx as usize).unwrap();
             if !matches!(type_node, TypeNode::Optional { .. }) {
-                errors.push(format!("property {} is not optional in the supertype", key));
+                errors.push(format!(
+                    "property {} is required: it is not optional in the supertype",
+                    key
+                ));
             }
         }
 
+        // FIXME https://linear.app/metatypedev/issue/MET-664/graph-check-the-semantics-of-type-refinements-on-tstruct
         for key in &self.required {
             if !other.required.contains(key) {
                 errors.push(format!("property {} is not required in the supertype", key));
@@ -335,6 +382,9 @@ impl<'a> EnsureSubtypeOf for ExtendedTypeNode<'a> {
                     sub.ensure_subtype_of(sup, tg, errors)
                 }
                 (TypeNode::Float { data: sub, .. }, TypeNode::Float { data: sup, .. }) => {
+                    sub.ensure_subtype_of(sup, tg, errors)
+                }
+                (TypeNode::Integer { data: sub, .. }, TypeNode::Float { data: sup, .. }) => {
                     sub.ensure_subtype_of(sup, tg, errors)
                 }
                 (TypeNode::String { data: sub, .. }, TypeNode::String { data: sup, .. }) => {
