@@ -6,12 +6,14 @@ use crate::wit::metatype::typegraph::host::{
     expand_path as expand_path_host, path_exists as path_exists_host, read_file as read_file_host,
     write_file as write_file_host,
 };
+use crate::{errors::Result, wit::core::Error as TgError};
 use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeSet,
     path::{Path, PathBuf},
 };
 
+#[derive(Clone, Debug)]
 pub struct FsContext {
     pathlib: PathLib,
 }
@@ -23,15 +25,13 @@ impl FsContext {
         }
     }
 
-    pub fn exists(&self, path: &Path) -> Result<bool, String> {
-        path_exists_host(&self.pathlib.get_base_dir().join(path).to_string_lossy())
+    pub fn exists(&self, path: &Path) -> Result<bool> {
+        Ok(path_exists_host(
+            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
+        )?)
     }
 
-    pub fn expand_path(
-        &self,
-        path: &Path,
-        exclude_globs: &[String],
-    ) -> Result<Vec<PathBuf>, String> {
+    pub fn expand_path(&self, path: &Path, exclude_globs: &[String]) -> Result<Vec<PathBuf>> {
         let exclude_as_regex = exclude_globs
             .iter()
             .map(|glob_pattern| {
@@ -83,7 +83,7 @@ impl FsContext {
         parent_dir
     }
 
-    pub fn expand_glob(&self, path: &Path) -> Result<Vec<PathBuf>, String> {
+    pub fn expand_glob(&self, path: &Path) -> Result<Vec<PathBuf>> {
         let path_str = path.to_string_lossy();
         let parent_dir = Self::extract_glob_dirname(&path_str);
         let all_files = self.expand_path(&parent_dir, &[])?;
@@ -116,28 +116,30 @@ impl FsContext {
             .collect()
     }
 
-    pub fn read_file(&self, path: &Path) -> Result<Vec<u8>, String> {
-        read_file_host(&self.pathlib.get_base_dir().join(path).to_string_lossy())
+    pub fn read_file(&self, path: &Path) -> Result<Vec<u8>> {
+        Ok(read_file_host(
+            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
+        )?)
     }
 
-    pub fn read_text_file(&self, path: &Path) -> Result<String, String> {
+    pub fn read_text_file(&self, path: &Path) -> Result<String> {
         self.read_file(path)
-            .and_then(|bytes| String::from_utf8(bytes).map_err(|e| e.to_string()))
+            .and_then(|bytes| String::from_utf8(bytes).map_err(TgError::from_std))
     }
 
-    pub fn write_file(&self, path: &Path, bytes: &[u8]) -> Result<(), String> {
-        write_file_host(
+    pub fn write_file(&self, path: &Path, bytes: &[u8]) -> Result<()> {
+        Ok(write_file_host(
             &self.pathlib.get_base_dir().join(path).to_string_lossy(),
             bytes,
-        )
+        )?)
     }
 
-    pub fn write_text_file(&self, path: &Path, text: String) -> Result<(), String> {
+    pub fn write_text_file(&self, path: &Path, text: String) -> Result<()> {
         self.write_file(path, text.as_bytes())
     }
 
     // TODO limited buffer?
-    pub fn hash_file(&self, path: &Path) -> Result<(String, u32), String> {
+    pub fn hash_file(&self, path: &Path) -> Result<(String, u32)> {
         let mut sha256 = Sha256::new();
         let bytes = self.read_file(path)?;
         let size = bytes.len() as u32;

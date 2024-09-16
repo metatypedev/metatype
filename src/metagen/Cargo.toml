@@ -17,7 +17,7 @@ common.workspace = true
 # logging
 log.workspace = true
 
-# encodding
+# encoding
 serde.workspace = true
 serde_json.workspace = true
 heck.workspace = true

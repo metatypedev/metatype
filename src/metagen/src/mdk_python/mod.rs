@@ -17,6 +17,16 @@ use self::utils::TypeGenerated;
 mod types;
 mod utils;
 
+pub const MAIN_TEMPLATE: &str = "main.py.jinja";
+pub const TYPES_TEMPLATE: &str = "types.py.jinja";
+pub const STRUCT_TEMPLATE: &str = "struct.py.jinja";
+
+pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[
+    (MAIN_TEMPLATE, include_str!("static/main.py.jinja")),
+    (TYPES_TEMPLATE, include_str!("static/types.py.jinja")),
+    (STRUCT_TEMPLATE, include_str!("static/struct.py.jinja")),
+];
+
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct MdkPythonGenConfig {
     #[serde(flatten)]
@@ -43,10 +53,25 @@ pub struct Generator {
 
 impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
-    pub fn new(config: MdkPythonGenConfig) -> Result<Self, garde::Report> {
+
+    pub fn new(config: MdkPythonGenConfig) -> anyhow::Result<Self> {
         use garde::Validate;
-        config.validate(&())?;
+        config
+            .validate(&())
+            .context("validating MDK_PYTHON config")?;
         Ok(Self { config })
+    }
+}
+
+impl TryFrom<MdkTemplate> for tera::Tera {
+    type Error = anyhow::Error;
+
+    fn try_from(template: MdkTemplate) -> Result<Self, Self::Error> {
+        let mut tera = Self::default();
+        for (file_name, content) in template.entries {
+            tera.add_raw_template(file_name, &content)?;
+        }
+        Ok(tera)
     }
 }
 
@@ -68,35 +93,44 @@ impl crate::Plugin for Generator {
             },
         )]
         .into_iter()
+        .chain(std::iter::once((
+            "template_dir".to_string(),
+            GeneratorInputOrder::LoadMdkTemplate {
+                default: DEFAULT_TEMPLATE,
+                override_path: self.config.base.template_dir.clone(),
+            },
+        )))
         .collect()
     }
 
     fn generate(
         &self,
-        inputs: HashMap<String, GeneratorInputResolved>,
+        mut inputs: HashMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
         // return Ok(GeneratorOutput(Default::default()))
         let tg = match inputs
-            .get(Self::INPUT_TG)
+            .remove(Self::INPUT_TG)
             .context("missing generator input")?
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            _ => unreachable!(),
         };
+
+        let template: tera::Tera = match inputs.remove("template_dir").unwrap() {
+            GeneratorInputResolved::MdkTemplate { template } => template.try_into()?,
+            _ => unreachable!(),
+        };
+
         let mut mergeable_output: IndexMap<PathBuf, Vec<RequiredObjects>> = IndexMap::new();
 
-        let mut tera = tera::Tera::default();
-        tera.add_raw_template("main_template", include_str!("static/main.py.jinja"))?;
-        tera.add_raw_template("types_template", include_str!("static/types.py.jinja"))?;
-        tera.add_raw_template("struct_template", include_str!("static/struct.py.jinja"))?;
-
-        let stubbed_funs = filter_stubbed_funcs(tg, &["python".to_string()])
+        let stubbed_funs = filter_stubbed_funcs(&tg, &["python".to_string()])
             .wrap_err("error collecting materializers for \"python\" runtime")?;
         for fun in &stubbed_funs {
             if fun.mat.data.get("mod").is_none() {
                 continue;
             }
-            let (_, script_path) = get_module_infos(fun, tg)?;
+            let (_, script_path) = get_module_infos(fun, &tg)?;
             let target_path = self.config.base.path.clone();
             let entry_point_path = if target_path.as_os_str().to_string_lossy().trim() == "" {
                 self.config
@@ -116,7 +150,7 @@ impl crate::Plugin for Generator {
                 )
             };
 
-            let required = gen_required_objects(&tera, fun, tg)?;
+            let required = gen_required_objects(&template, fun, &tg)?;
             mergeable_output
                 .entry(entry_point_path.clone())
                 .or_default()
@@ -144,14 +178,14 @@ impl crate::Plugin for Generator {
             out.insert(
                 entry_point_path,
                 GeneratedFile {
-                    contents: render_main(&tera, &merged_req, file_stem)?,
+                    contents: render_main(&template, &merged_req, file_stem)?,
                     overwrite: false,
                 },
             );
             out.insert(
                 types_path,
                 GeneratedFile {
-                    contents: render_types(&tera, &merged_req)?,
+                    contents: render_types(&template, &merged_req)?,
                     overwrite: true,
                 },
             );
@@ -224,7 +258,7 @@ fn render_main(
     context.insert("mod_name", file_stem);
     context.insert("imports", &exports.join_compact(", ").to_string());
 
-    tera.render("main_template", &context)
+    tera.render(MAIN_TEMPLATE, &context)
         .with_context(|| "Failed to render main template")
 }
 
@@ -252,7 +286,7 @@ fn render_types(tera: &tera::Tera, required: &MergedRequiredObjects) -> anyhow::
     context.insert("types", &types);
     context.insert("funcs", &required.funcs);
 
-    tera.render("types_template", &context)
+    tera.render(TYPES_TEMPLATE, &context)
         .with_context(|| "Failed to render types template")
 }
 

@@ -47,6 +47,9 @@ pub struct MdkGeneratorConfigBase {
     pub typegraph_path: Option<PathBuf>,
     #[garde(skip)]
     pub path: PathBuf,
+    // TODO validation??
+    #[garde(skip)]
+    pub template_dir: Option<PathBuf>,
 }
 
 fn either_typegraph_name_or_path(config: &MdkGeneratorConfigBase) -> garde::Result {

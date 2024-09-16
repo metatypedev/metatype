@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::borrow::Cow;
+
 use super::serialize::SerializeReportExt;
 use crate::cli::{Action, ConfigArgs, NodeArgs};
 use crate::config::PathOption;
@@ -11,6 +13,7 @@ use crate::{config::Config, deploy::actors::console::ConsoleActor};
 use actix::Actor;
 use clap::Parser;
 use common::typegraph::Typegraph;
+use futures_concurrency::future::FutureGroup;
 use metagen::*;
 
 #[derive(Parser, Debug, Clone)]
@@ -104,6 +107,37 @@ struct MetagenCtx {
     dir: PathBuf,
 }
 
+async fn load_mdk_template(
+    default: &[(&'static str, &'static str)],
+    template_dir: Option<&std::path::Path>,
+) -> anyhow::Result<MdkTemplate> {
+    let mut group = FutureGroup::new();
+    for (file_name, content) in default.iter() {
+        // TODO absolute path?
+        let override_path: Option<PathBuf> = template_dir.map(Into::into);
+        group.insert(Box::pin(async move {
+            let content = if let Some(override_path) = override_path {
+                let path = override_path.join(file_name);
+                if tokio::fs::try_exists(&path).await? {
+                    Cow::Owned(tokio::fs::read_to_string(path).await?)
+                } else {
+                    Cow::Borrowed(*content)
+                }
+            } else {
+                Cow::Borrowed(*content)
+            };
+            anyhow::Ok((*file_name, content))
+        }));
+    }
+
+    let mut entries = HashMap::new();
+    while let Some(res) = group.next().await {
+        let (file_name, content) = res?;
+        entries.insert(file_name, content);
+    }
+    Ok(MdkTemplate { entries })
+}
+
 impl InputResolver for MetagenCtx {
     #[tracing::instrument]
     async fn resolve(&self, order: GeneratorInputOrder) -> Result<GeneratorInputResolved> {
@@ -126,6 +160,13 @@ impl InputResolver for MetagenCtx {
                     .wrap_err("unable to canonicalize typegraph path, make sure it exists")?;
                 let raw = load_tg_at(config, path, name.as_deref()).await?;
                 GeneratorInputResolved::TypegraphFromTypegate { raw }
+            }
+            GeneratorInputOrder::LoadMdkTemplate {
+                default,
+                override_path,
+            } => {
+                let template = load_mdk_template(default, override_path.as_deref()).await?;
+                GeneratorInputResolved::MdkTemplate { template }
             }
         })
     }
