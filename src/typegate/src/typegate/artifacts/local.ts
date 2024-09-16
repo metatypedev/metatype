@@ -60,7 +60,7 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
     await Deno.remove(this.dirs.artifacts, { recursive: true });
   }
 
-  async save(stream: ReadableStream): Promise<string> {
+  async save(stream: ReadableStream, size: number): Promise<string> {
     const tmpFile = await Deno.makeTempFile({ dir: this.dirs.temp });
     const file = await Deno.open(tmpFile, { write: true, truncate: true });
     const hasher = createHash("sha256");
