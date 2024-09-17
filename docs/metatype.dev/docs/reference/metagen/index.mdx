@@ -30,20 +30,20 @@ metagen:
   targets:
     main:
       # generator to use
-      - generator: mdk_rust
+      - generator: fdk_rust
         # path to generate to
         path: ./bff/
         # typegraph path to use
         typegraph_path: ./typegraphs/svc-bff.ts
         # we can have multiple generators per target
-      - generator: mdk_rust
+      - generator: fdk_rust
         path: ./telemetry/
         typegraph_path: ./typegraphs/svc-telemetry.ts
         # generators might have custom keys
         stubbed_runtimes: ["wasm_wire", "deno"]
     # more than one targets avail if you need them
     iter:
-      - generator: mdk_typescript
+      - generator: fdk_typescript
         path: ./ts/
         # name of typegraph to read from typegate
         typegraph: svc_products
@@ -77,7 +77,7 @@ To resolve this concern, the SDKs support a serialization mode that skips resolu
 
 :::
 
-### `mdk_typescript`
+### `fdk_typescript`
 
 This generator supports:
 
@@ -110,7 +110,7 @@ Custom function:
   </summary>
 
   <TGExample
-    typescript={require("!!code-loader!../../../../../examples/typegraphs/metagen/ts/mdk.ts")}
+    typescript={require("!!code-loader!../../../../../examples/typegraphs/metagen/ts/fdk.ts")}
     disablePlayground
   />
 </details>
@@ -121,14 +121,14 @@ It supports the following extra configuration keys.
 | ------------------ | ---------- | ---------- | ------------------------------------------ |
 | `stubbed_runtimes` | `string[]` | `["deno"]` | Runtimes for which to generate stub types. |
 
-### `mdk_python`
+### `fdk_python`
 
 This generator supports:
 
 - Python classes that map to typegraph types
 - Decorators for custom functions implementors that require adherance to typegraph function types.
   - By default, all functions from the `PythonRuntime` get stub types.
-  - TODO: `stubbed_runtimes` for `mdk_python`
+  - TODO: `stubbed_runtimes` for `fdk_python`
 - TODO: types for interacting with the typegate from within custom functions.
 
 If the referenced module for the custom function is not found, the generator will also output stub implementation (in addition to the types) at the given type. It will not replace our code on a second run.
@@ -160,7 +160,7 @@ Custom function:
   />
 </details>
 
-### `mdk_rust`
+### `fdk_rust`
 
 This generator generates types, serializers and bindings needed to implement custom functions in Rust. Rust implementations will need to be compiled to wasm components to be executed on the metatype platform and the generator assumes such usage.
 
@@ -200,7 +200,7 @@ Custom function:
   <summary>Code generation sample.</summary>
   <CodeBlock language="rust">
     {
-      require("!!code-loader!../../../../../examples/typegraphs/metagen/rs/mdk.rs")
+      require("!!code-loader!../../../../../examples/typegraphs/metagen/rs/fdk.rs")
         .content
     }
   </CodeBlock>
@@ -211,6 +211,6 @@ It supports the following extra configuration keys.
 | Key                | Type       | Default                | Description                                           |
 | ------------------ | ---------- | ---------------------- | ----------------------------------------------------- |
 | `stubbed_runtimes` | `string[]` | `["wasm_wire"]`        | Runtimes for which to generate stub types.            |
-| `crate_name`       | `string`   | `${typegraphName}_mdk` | Name to assign to crate when generating `Cargo.toml`. |
+| `crate_name`       | `string`   | `${typegraphName}_fdk` | Name to assign to crate when generating `Cargo.toml`. |
 | `skip_cargo_toml`  | `boolean`  | `false`                | Do not generate `Cargo.toml`.                         |
 | `skip_lib_rs`      | `boolean`  | `false`                | Do not generate `lib.rs`, the sample entrypoint.      |
