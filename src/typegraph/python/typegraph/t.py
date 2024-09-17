@@ -624,7 +624,7 @@ def serialize_apply_param_node(node: ApplyParamNode) -> Any:
     if isinstance(node, ApplyFromArg):
         return {"source": "arg", "name": node.name}
     if isinstance(node, ApplyFromStatic):
-        return {"source": "static", "value": JsonLib.dumps(node.value)}
+        return {"source": "static", "value_json": JsonLib.dumps(node.value)}
     if isinstance(node, ApplyFromContext):
         return {"source": "context", "key": node.key}
     if isinstance(node, ApplyFromSecret):

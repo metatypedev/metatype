@@ -81,7 +81,7 @@ export type ArtifactMeta = z.infer<typeof artifactMetaSchema>;
 
 export interface ArtifactPersistence extends AsyncDisposable {
   dirs: Dirs;
-  save(stream: ReadableStream): Promise<string>;
+  save(stream: ReadableStream, size: number): Promise<string>;
   delete(hash: string): Promise<void>;
   has(hash: string): Promise<boolean>;
   /** Fetch the artifact to local file system and returns the path */

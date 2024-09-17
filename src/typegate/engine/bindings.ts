@@ -18,7 +18,8 @@ import type {
 } from "./runtime.js";
 
 export function get_version() {
-  return Meta.version();
+  return "0.4.10"
+  // return Meta.version();
 }
 
 export function init_native() {

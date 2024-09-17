@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 // FIXME: we can't use the import map in ghjk so we must
-// rely on ghjk.ts
+// rely on a deps.ts
 
 export { file } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/mod.ts";
 export * from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/mod.ts";

@@ -23,9 +23,9 @@ FROM denoland/deno:${DENO_VERSION} AS deno-bin
 #
 FROM base AS builder
 
-ENV DENO_DIR /deno-dir/
-ENV DENO_INSTALL /root/.deno
-ENV PATH "${DENO_INSTALL}/bin:${PATH}"
+ENV DENO_DIR=/deno-dir/
+ENV DENO_INSTALL=/root/.deno
+ENV PATH="${DENO_INSTALL}/bin:${PATH}"
 
 COPY --from=deno-bin /usr/bin/deno /bin/deno
 
@@ -113,8 +113,8 @@ SHELL ["/busybox/sh", "-c"]
 
 ARG TARGETARCH
 
-ENV NO_COLOR true
-ENV DENO_DIR /deno-dir/
+ENV NO_COLOR=true
+ENV DENO_DIR=/deno-dir/
 
 WORKDIR /app
 
@@ -124,14 +124,13 @@ COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 
 COPY --from=builder /app/typegate-bin /bin/typegate
 # the typegate ecma sources
-COPY --from=builder /app/deno.jsonc ./
+COPY --from=builder /app/deno.jsonc /app/import_map.json ./
 COPY --from=builder /app/src/typegate/engine/*.js /app/src/typegate/engine/*.ts ./src/typegate/engine/
 COPY --from=builder /app/src/typegate/src ./src/typegate/src/
 COPY --from=builder /app/src/typegate/deno.jsonc ./src/typegate/
 COPY --from=builder /app/src/typegraph/deno/deno.json ./src/typegraph/deno/
 COPY --from=builder /app/tests/deno.jsonc ./tests/
 COPY --from=builder /app/examples/deno.jsonc ./examples/
-COPY --from=builder /app/tools/deno.jsonc ./tools/
 COPY tools/LICENSE-Elastic-2.0.md LICENSE.md
 
 # writeable

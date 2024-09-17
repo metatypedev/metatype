@@ -6,9 +6,9 @@ import { projectDir } from "@local/tools/utils.ts";
 import { $ } from "@local/tools/deps.ts";
 import { PUBLISHED_VERSION, PYTHON_VERSION } from "@local/tools/consts.ts";
 import { download } from "download";
-import { Untar } from "@std/archive";
+import { Untar } from "@std/archive/untar";
 import { copy } from "@std/io/copy";
-import { readerFromStreamReader } from "@std/io";
+import { readerFromStreamReader } from "@std/io/reader-from-stream-reader";
 import { encodeBase64 } from "@std/encoding/base64";
 import { Lines } from "test-utils/process.ts";
 import { newTempDir } from "test-utils/dir.ts";
@@ -244,8 +244,8 @@ Meta.test(
           "typegate",
           `--main-url`,
           import.meta.resolve("../../../src/typegate/src/main.ts"),
-          `--deno-config-url`,
-          import.meta.resolve("../../../src/typegate/deno.jsonc"),
+          `--import-map-url`,
+          import.meta.resolve("../../../import_map.json"),
         ],
         env: {
           ...Deno.env.toObject(),

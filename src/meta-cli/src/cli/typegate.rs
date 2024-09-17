@@ -11,9 +11,9 @@ pub struct Typegate {
     /// The url to the `main.ts` module of typegate deno
     #[clap(long)]
     pub main_url: Option<String>,
-    /// The url to the `deno.jsonc` manifest for typegate
+    /// The url to the `import_map.jsonc` manifest for metatype
     #[clap(long)]
-    pub deno_config_url: Option<String>,
+    pub import_map_url: Option<String>,
 }
 
 #[async_trait]
@@ -49,9 +49,9 @@ fn run_typegate(cmd: Typegate) -> Result<()> {
     let main_url = cmd.main_url.unwrap_or_else(|| {
         BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/src/typegate/src/main.ts"
     });
-    let deno_config_url = cmd.deno_config_url.unwrap_or_else(|| {
-        BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/src//typegate/deno.jsonc"
-    });
+    let import_map_url = cmd
+        .import_map_url
+        .unwrap_or_else(|| BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/import_map.json");
 
     runtime
         .block_on(typegate_engine::launch_typegate_deno(
@@ -60,7 +60,7 @@ fn run_typegate(cmd: Typegate) -> Result<()> {
             //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
             // )?,
             typegate_engine::resolve_url(&main_url)?,
-            Some(deno_config_url),
+            Some(import_map_url),
         ))
         .map_err(anyhow_to_eyre!())?;
     Ok(())

@@ -6,6 +6,7 @@ use common::typegraph::runtimes::prisma::MigrationOptions;
 use common::typegraph::runtimes::{KnownRuntime::Prisma, TGRuntime};
 use common::typegraph::Typegraph;
 
+use crate::errors::Result;
 use crate::utils::archive::ArchiveExt;
 use crate::utils::fs::FsContext;
 use crate::utils::postprocess::PostProcessor;
@@ -23,14 +24,14 @@ impl PrismaProcessor {
 }
 
 impl PostProcessor for PrismaProcessor {
-    fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
+    fn postprocess(self, tg: &mut Typegraph) -> Result<()> {
         self.embed_prisma_migrations(tg)?;
         Ok(())
     }
 }
 
 impl PrismaProcessor {
-    pub fn embed_prisma_migrations(&self, tg: &mut Typegraph) -> Result<(), String> {
+    pub fn embed_prisma_migrations(&self, tg: &mut Typegraph) -> Result<()> {
         let base_migration_path: PathBuf = self.config.migrations_dir.clone().into();
         let fs_ctx = FsContext::new(base_migration_path.clone());
 

@@ -6,7 +6,7 @@ import { getLogger } from "../../log.ts";
 // deno-lint-ignore no-external-import
 import { createHash } from "node:crypto";
 import type { TypegateCryptoKeys } from "../../crypto.ts";
-import { S3 } from "aws-sdk/client-s3";
+import { S3, S3Client } from "aws-sdk/client-s3";
 import type {
   ArtifactPersistence,
   RefCounter,
@@ -20,6 +20,7 @@ import { exists } from "@std/fs/exists";
 import { dirname } from "@std/path";
 import { chunk } from "@std/collections/chunk";
 import { ArtifactError } from "./mod.ts";
+import { Upload } from "aws-sdk/lib-storage";
 
 const logger = getLogger(import.meta);
 
@@ -52,13 +53,14 @@ class SharedArtifactPersistence implements ArtifactPersistence {
   ): Promise<SharedArtifactPersistence> {
     const localShadow = await LocalArtifactPersistence.init(baseDir);
     const s3 = new S3(syncConfig.s3);
-    return new SharedArtifactPersistence(localShadow, s3, syncConfig.s3Bucket);
+    return new SharedArtifactPersistence(localShadow, s3, syncConfig.s3Bucket, syncConfig);
   }
 
   constructor(
     private localShadow: LocalArtifactPersistence,
     private s3: S3,
     private s3Bucket: string,
+    private syncConfig: SyncConfig
   ) {}
 
   get dirs() {
@@ -70,51 +72,45 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     this.s3.destroy();
   }
 
-  async save(stream: ReadableStream<any>): Promise<string> {
+  async save(stream: ReadableStream<any>, size: number): Promise<string> {
     const hasher = createHash("sha256");
 
-    // TODO compatibility with Node.js streams?
-    // const stream2 = stream.pipeThrough(new HashTransformStream(hasher));
-    //
-    // const tempKey = resolveS3Key(
-    //   `tmp/${Math.random().toString(36).substring(2)}`,
-    // );
-    //
-    // const _ = await this.s3.putObject({
-    //   Bucket: this.s3Bucket,
-    //   Body: stream2,
-    //   Key: tempKey,
-    // });
-    // const hash = hasher.digest("hex");
-    //
-    // await this.s3.copyObject({
-    //   Bucket: this.s3Bucket,
-    //   CopySource: tempKey,
-    //   Key: resolveS3Key(hash),
-    // });
-    //
-    // await this.s3.deleteObject({
-    //   Bucket: this.s3Bucket,
-    //   Key: tempKey,
-    // });
-    //
-    // return hash;
+    const stream2 = stream.pipeThrough(new HashTransformStream(hasher));
+    
+    // temporary key is needed as we won't be able to get the hash sum of the file,
+    // which we use as the key of the object,
+    // before going through whole stream.
+    // so we create a temporary key to store the file/object and then copy the object after we have computed the hash. 
+    const tempKey = resolveS3Key(this.s3Bucket, 
+      `tmp/${Math.random().toString(36).substring(2)}`,
+    );
 
-    const tmpFile = await Deno.makeTempFile({ dir: this.dirs.temp });
-    const file = await Deno.open(tmpFile, { write: true, truncate: true });
-    await stream
-      .pipeThrough(new HashTransformStream(hasher))
-      .pipeTo(file.writable);
-
+    const upload = new Upload({
+      client: new S3Client(this.syncConfig.s3),
+      params: {
+        Bucket: this.s3Bucket,
+        Key: tempKey,
+        Body: stream2,
+        ContentLength: size,
+      },
+    });
+  
+    const _ = await upload.done();
+    
     const hash = hasher.digest("hex");
-    const body = await Deno.readFile(tmpFile);
     logger.info(`persisting artifact to S3: ${hash}`);
-    const _ = await this.s3.putObject({
+    
+    await this.s3.copyObject({
       Bucket: this.s3Bucket,
-      Body: body,
+      CopySource: `${this.s3Bucket}/${tempKey}`,
       Key: resolveS3Key(this.s3Bucket, hash),
     });
-
+    
+    await this.s3.deleteObject({
+      Bucket: this.s3Bucket,
+      Key: tempKey,
+    });
+    
     return hash;
   }
 

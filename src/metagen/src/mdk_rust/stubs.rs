@@ -153,6 +153,7 @@ mod test {
                 path: "/".into(),
                 typegraph_name: Some(tg_name.clone()),
                 typegraph_path: None,
+                template_dir: None,
             },
             stubbed_runtimes: Some(vec!["wasm".into()]),
             crate_name: None,
@@ -160,10 +161,23 @@ mod test {
             skip_cargo_toml: None,
         })?;
         let out = generator.generate(
-            [(
-                Generator::INPUT_TG.to_owned(),
-                GeneratorInputResolved::TypegraphFromTypegate { raw: tg },
-            )]
+            [
+                (
+                    Generator::INPUT_TG.to_owned(),
+                    GeneratorInputResolved::TypegraphFromTypegate { raw: tg },
+                ),
+                (
+                    "template_dir".to_owned(),
+                    GeneratorInputResolved::MdkTemplate {
+                        template: MdkTemplate {
+                            entries: mdk_rust::DEFAULT_TEMPLATE
+                                .iter()
+                                .map(|(file, content)| (*file, (*content).into()))
+                                .collect(),
+                        },
+                    },
+                ),
+            ]
             .into_iter()
             .collect(),
         )?;
