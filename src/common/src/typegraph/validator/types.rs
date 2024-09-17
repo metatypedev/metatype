@@ -24,6 +24,13 @@ impl ErrorCollector {
     fn push(&mut self, message: impl Into<String>) {
         self.errors.push(message.into());
     }
+
+    fn push_nested(&mut self, title: impl Display, nested: Self) {
+        self.errors.push(format!(" - {title}"));
+        for error in nested.errors {
+            self.errors.push(format!(" - - {error}"));
+        }
+    }
 }
 
 pub trait EnsureSubtypeOf<T = Self> {
@@ -316,52 +323,151 @@ impl EnsureSubtypeOf for ListTypeData {
     }
 }
 
-impl EnsureSubtypeOf for UnionTypeData {
-    fn ensure_subtype_of(&self, sup: &Self, typegraph: &Typegraph, errors: &mut ErrorCollector) {
-        GenericUnionVariants(&self.any_of).ensure_subtype_of(
-            &GenericUnionVariants(&sup.any_of),
-            typegraph,
-            errors,
-        );
+struct AnyOf<'a>(&'a [u32]);
+struct OneOf<'a>(&'a [u32]);
+struct AllOf<'a>(&'a [u32]);
+
+impl<'a, 'b> EnsureSubtypeOf<AnyOf<'a>> for ExtendedTypeNode<'b> {
+    fn ensure_subtype_of(
+        &self,
+        sup: &AnyOf<'a>,
+        typegraph: &Typegraph,
+        errors: &mut ErrorCollector,
+    ) {
+        let collectors: Vec<ErrorCollector> = vec![];
+        for idx in sup.0 {
+            let sup_type = ExtendedTypeNode::new(typegraph, *idx);
+            let mut errors = ErrorCollector::default();
+            self.ensure_subtype_of(&sup_type, typegraph, &mut errors);
+            if errors.errors.is_empty() {
+                return;
+            }
+        }
+        errors.push("Expected at least one variant to be a supertype, got none");
+        for (idx, nested) in collectors.into_iter().enumerate() {
+            errors.push_nested(format!("Variant {}", idx), nested);
+        }
     }
 }
 
-impl EnsureSubtypeOf for EitherTypeData {
-    fn ensure_subtype_of(&self, sup: &Self, typegraph: &Typegraph, errors: &mut ErrorCollector) {
-        GenericUnionVariants(&self.one_of).ensure_subtype_of(
-            &GenericUnionVariants(&sup.one_of),
-            typegraph,
-            errors,
-        );
-    }
-}
+impl<'a, 'b> EnsureSubtypeOf<OneOf<'a>> for ExtendedTypeNode<'b> {
+    fn ensure_subtype_of(
+        &self,
+        sup: &OneOf<'a>,
+        typegraph: &Typegraph,
+        errors: &mut ErrorCollector,
+    ) {
+        let collectors = sup
+            .0
+            .iter()
+            .map(|idx| {
+                let sup_type = ExtendedTypeNode::new(typegraph, *idx);
+                let mut errors = ErrorCollector::default();
+                self.ensure_subtype_of(&sup_type, typegraph, &mut errors);
+                errors
+            })
+            .collect::<Vec<_>>();
 
-struct GenericUnionVariants<'a>(&'a [u32]);
-impl<'a> EnsureSubtypeOf for GenericUnionVariants<'a> {
-    fn ensure_subtype_of(&self, sup: &Self, typegraph: &Typegraph, errors: &mut ErrorCollector) {
-        // any variant is a subtype of a variant in the supertype
-        for sub_idx in self.0 {
-            let sub_type = ExtendedTypeNode::new(typegraph, *sub_idx);
-            let mut found = false;
-            for sup_idx in sup.0 {
-                let sup_type = ExtendedTypeNode::new(typegraph, *sup_idx);
-
-                let mut error_collector = ErrorCollector::default();
-                sub_type.ensure_subtype_of(&sup_type, typegraph, &mut error_collector);
-                if error_collector.errors.is_empty() {
-                    found = true;
-                    break;
+        let match_count = collectors.iter().filter(|c| c.errors.is_empty()).count();
+        match match_count {
+            0 => {
+                errors.push("Expected a single variant to be a supertype, got none");
+                for (idx, nested) in collectors.into_iter().enumerate() {
+                    errors.push_nested(format!("Variant {}", idx), nested);
                 }
             }
-            if !found {
-                errors.push("Union type does not match the supertype");
+            1 => {
+                // nothing to do
+            }
+            _ => {
+                errors.push(format!(
+                    "Expected a single variant to be a supertype, got more: variants {}",
+                    collectors
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, c)| c.errors.is_empty())
+                        .map(|(i, _)| i.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                ));
             }
         }
     }
 }
 
-impl<'a> EnsureSubtypeOf for ExtendedTypeNode<'a> {
-    fn ensure_subtype_of(&self, sup: &Self, tg: &Typegraph, errors: &mut ErrorCollector) {
+impl<'b, S> EnsureSubtypeOf<S> for AllOf<'b>
+where
+    for<'a> ExtendedTypeNode<'a>: EnsureSubtypeOf<S>,
+{
+    fn ensure_subtype_of(&self, sup: &S, typegraph: &Typegraph, errors: &mut ErrorCollector) {
+        let mut count = 0;
+        let collectors = self
+            .0
+            .iter()
+            .enumerate()
+            .filter_map(|(i, type_idx)| {
+                let mut errors = ErrorCollector::default();
+                let sub_type = ExtendedTypeNode::new(typegraph, *type_idx);
+                sub_type.ensure_subtype_of(sup, typegraph, &mut errors);
+                if errors.errors.is_empty() {
+                    None
+                } else {
+                    count += 1;
+                    Some((i, errors))
+                }
+            })
+            .collect::<Vec<_>>();
+
+        if count > 0 {
+            errors.push("Expected all variants to be a subtype");
+            for (idx, nested) in collectors {
+                errors.push_nested(format!("Variant {} is not a subtype", idx), nested);
+            }
+        }
+    }
+}
+
+impl EnsureSubtypeOf for UnionTypeData {
+    fn ensure_subtype_of(&self, sup: &Self, typegraph: &Typegraph, errors: &mut ErrorCollector) {
+        AllOf(&self.any_of).ensure_subtype_of(&AnyOf(&sup.any_of), typegraph, errors);
+    }
+}
+
+impl EnsureSubtypeOf for EitherTypeData {
+    fn ensure_subtype_of(&self, sup: &Self, typegraph: &Typegraph, errors: &mut ErrorCollector) {
+        AllOf(&self.one_of).ensure_subtype_of(&OneOf(&sup.one_of), typegraph, errors);
+    }
+}
+
+impl EnsureSubtypeOf<UnionTypeData> for EitherTypeData {
+    fn ensure_subtype_of(
+        &self,
+        sup: &UnionTypeData,
+        typegraph: &Typegraph,
+        errors: &mut ErrorCollector,
+    ) {
+        AllOf(&self.one_of).ensure_subtype_of(&AnyOf(&sup.any_of), typegraph, errors);
+    }
+}
+
+impl EnsureSubtypeOf<EitherTypeData> for UnionTypeData {
+    fn ensure_subtype_of(
+        &self,
+        sup: &EitherTypeData,
+        typegraph: &Typegraph,
+        errors: &mut ErrorCollector,
+    ) {
+        AllOf(&self.any_of).ensure_subtype_of(&OneOf(&sup.one_of), typegraph, errors);
+    }
+}
+
+impl<'a, 'b> EnsureSubtypeOf<ExtendedTypeNode<'b>> for ExtendedTypeNode<'a> {
+    fn ensure_subtype_of(
+        &self,
+        sup: &ExtendedTypeNode<'b>,
+        tg: &Typegraph,
+        errors: &mut ErrorCollector,
+    ) {
         let sub_idx = self.0;
         let sup_idx = sup.0;
         if sub_idx != sup_idx {
@@ -376,6 +482,9 @@ impl<'a> EnsureSubtypeOf for ExtendedTypeNode<'a> {
                 }
                 (_, TypeNode::Optional { data: sup, .. }) => {
                     self.ensure_subtype_of(&ExtendedTypeNode::new(tg, sup.item), tg, errors);
+                }
+                (TypeNode::Optional { .. }, _) => {
+                    errors.push("Optional type cannot be a subtype of a non-optional type");
                 }
                 (TypeNode::Boolean { .. }, TypeNode::Boolean { .. }) => { /* nothing to check */ }
                 (TypeNode::Integer { data: sub, .. }, TypeNode::Integer { data: sup, .. }) => {
@@ -399,37 +508,17 @@ impl<'a> EnsureSubtypeOf for ExtendedTypeNode<'a> {
                 (TypeNode::List { data: sub, .. }, TypeNode::List { data: sup, .. }) => {
                     sub.ensure_subtype_of(sup, tg, errors)
                 }
-                (TypeNode::Union { data: sub, .. }, TypeNode::Union { data: sup, .. }) => {
-                    sub.ensure_subtype_of(sup, tg, errors)
+                (TypeNode::Union { data: sub, .. }, _) => {
+                    AllOf(&sub.any_of).ensure_subtype_of(sup, tg, errors);
                 }
-                (TypeNode::Either { data: sub, .. }, TypeNode::Union { data: sup, .. }) => {
-                    GenericUnionVariants(&sub.one_of).ensure_subtype_of(
-                        &GenericUnionVariants(&sup.any_of),
-                        tg,
-                        errors,
-                    )
-                }
-                (TypeNode::Union { data: sub, .. }, TypeNode::Either { data: sup, .. }) => {
-                    GenericUnionVariants(&sub.any_of).ensure_subtype_of(
-                        &GenericUnionVariants(&sup.one_of),
-                        tg,
-                        errors,
-                    )
-                }
-                (TypeNode::Either { data: sub, .. }, TypeNode::Either { data: sup, .. }) => {
-                    sub.ensure_subtype_of(sup, tg, errors)
+                (TypeNode::Either { data: sub, .. }, _) => {
+                    AllOf(&sub.one_of).ensure_subtype_of(sup, tg, errors);
                 }
                 (_, TypeNode::Union { data: sup, .. }) => {
-                    let sub = UnionTypeData {
-                        any_of: vec![sub_idx],
-                    };
-                    sub.ensure_subtype_of(sup, tg, errors);
+                    self.ensure_subtype_of(&AnyOf(&sup.any_of), tg, errors);
                 }
                 (_, TypeNode::Either { data: sup, .. }) => {
-                    let sub = EitherTypeData {
-                        one_of: vec![sub_idx],
-                    };
-                    sub.ensure_subtype_of(sup, tg, errors);
+                    self.ensure_subtype_of(&OneOf(&sup.one_of), tg, errors);
                 }
                 (_, TypeNode::Function { .. }) => {
                     errors.push("Function types are not supported for supertype");

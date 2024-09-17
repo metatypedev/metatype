@@ -19,7 +19,7 @@ snapshot[`type comparison errors 1`] = `
 - at type-comparison:/number_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: 'multiple_of' is not a multiple of the 'multiple_of' of the supertype (12 % 12.1 != 0)
 - at type-comparison:/string_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum_length' is required on the subtype if it is defined on the supertype
 - at type-comparison:/string_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum_length' cannot be lower on the subtype: 12 < 13
-- at type-comparison:/optional_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Type mismatch: optional to integer
+- at type-comparison:/optional_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Optional type cannot be a subtype of a non-optional type
 - at type-comparison:/optional_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
 - at type-comparison:/list_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Type mismatch: list to integer
 - at type-comparison:/list_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
@@ -28,6 +28,18 @@ snapshot[`type comparison errors 1`] = `
 - at type-comparison:/struct_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: property field is not allowed: it is not defined in the supertype
 - at type-comparison:/struct_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: property field1 is required: it is not optional in the supertype
 - at type-comparison:/struct_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: property field2 is required: it is not optional in the supertype
+- at type-comparison:/union_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Expected all variants to be a subtype
+- at type-comparison:/union_fail_1_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 1 is not a subtype
+- at type-comparison:/union_fail_1_test_type/[out]/injected/[in]/field: from_parent injection:  - - Expected at least one variant to be a supertype, got none
+- at type-comparison:/union_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: Expected all variants to be a subtype
+- at type-comparison:/union_fail_2_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 0 is not a subtype
+- at type-comparison:/union_fail_2_test_type/[out]/injected/[in]/field: from_parent injection:  - - Expected a single variant to be a supertype, got more: variants 0, 1
+- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: Expected a single variant to be a supertype, got none
+- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 0
+- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - - Type mismatch: float to integer
+- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 1
+- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - - Type mismatch: float to string
+- at type-comparison:/union_fail_4_test_type/[out]/injected/[in]/field: from_parent injection: Expected at least one variant to be a supertype, got none
 - Typegraph type-comparison failed validation
 "
 `;

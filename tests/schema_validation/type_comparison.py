@@ -153,4 +153,32 @@ def type_comparison(g: Graph):
         t.struct({"field": t.integer(), "field2": t.integer()}),
     )
 
+    case("union_ok_1", t.union([t.integer()]), t.union([t.integer(), t.float()]))
+    case("union_ok_2", t.union([t.integer(min=12)]), t.union([t.integer(), t.float()]))
+    case(
+        "union_ok_3",
+        t.union([t.boolean(), t.integer()]),
+        t.union([t.integer(), t.boolean()]),
+    )
+    case(
+        "union_ok_4",
+        t.either([t.boolean(), t.integer()]),
+        t.union([t.integer(), t.boolean()]),
+    )
+    case(
+        "union_ok_5",
+        t.union([t.boolean(), t.integer()]),
+        t.either([t.integer(), t.boolean()]),
+    )
+    case("union_ok_6", t.union([t.integer()]), t.integer())
+    case("union_ok_7", t.union([t.integer()]), t.float())
+    case("union_ok_8", t.integer(), t.union([t.integer(), t.string()]))
+    case("union_fail_1", t.union([t.integer(), t.float()]), t.union([t.integer()]))
+    case(
+        "union_fail_2",
+        t.union([t.integer(), t.float()]),
+        t.either([t.integer(), t.float()]),
+    )
+    case("union_fail_3", t.float(), t.either([t.integer(), t.string()]))
+    case("union_fail_4", t.integer(), t.union([t.integer(min=12), t.string()]))
     g.expose(Policy.public(), **cases)
