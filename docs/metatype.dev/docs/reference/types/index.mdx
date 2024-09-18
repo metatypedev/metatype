@@ -107,9 +107,43 @@ t.integer({ min: 12 });
 
 </SDKTabs>
 
+### Enumerations
+
+`t.integer()`, `t.float()`, `t.string()`, `t.struct(...)` can have a list of enumerated values.
+In this case the only valid values for the type are the ones that are listed in the enumeration.
+
+**Examples:**
+
+<SDKTabs>
+<TabItem value="python">
+```python
+t.integer().enum([1, 2, 3])
+t.float().enum([1.2, 3.6, 12.4])
+t.string().enum(["hello", "halo", "salut"])
+t.struct({ "a": t.string(), "b": t.integer() })
+    .enum([{ "a": "one", "b": 1 }, { "a": "two", "b": 2 }])
+```
+</TabItem>
+
+<TabItem value="typescript">
+```typescript
+t.integer().enum([1, 2, 3])
+t.float().enum([1.2, 3.6, 12.4])
+t.string().enum(["hello", "halo", "salut"])
+t.struct({ a: t.string(), b: t.integer() })
+    .enum([{ a: "one", b: 1 }, { a: "two", b: 2 }])
+```
+</TabItem>
+
+</SDKTabs>
+
+<br/>
+`t.enum(array)` is an alias to `t.string().enum(array)`.
+    
+
 ### Names and type references
 
-Each type has a unique name. If none is setImmediate, a random name will be generated during typegraph serialization.
+Each type has a unique name. If none is set, a random name will be generated during typegraph serialization.
 
 ### Injection
 
