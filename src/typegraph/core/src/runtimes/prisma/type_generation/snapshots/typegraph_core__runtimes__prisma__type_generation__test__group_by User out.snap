@@ -1,13 +1,13 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list '_User_GroupByResult' #205
+root: list 'UserGroup' #205
 └─ item: struct #204
-   ├─ [_avg]: struct '_User_SelectNumbers__1' #198
+   ├─ [_avg]: struct 'UserNumberFieldsF' #198
    │  └─ [id]: optional #197
    │     └─ item: float #196
-   ├─ [_count]: struct '_User_AggrCount' #195
+   ├─ [_count]: struct 'UserCountAggregate' #195
    │  ├─ [_all]: optional #194
    │  │  └─ item: integer #193
    │  ├─ [id]: optional #194
@@ -16,17 +16,16 @@ root: list '_User_GroupByResult' #205
    │  │  └─ item: integer #193
    │  └─ [posts]: optional #194
    │     └─ item: integer #193
-   ├─ [_max]: struct '_User_SelectNumbers_' #203
+   ├─ [_max]: struct 'UserNumberFields' #203
    │  └─ [id]: optional #202
    │     └─ item: integer #201
-   ├─ [_min]: struct '_User_SelectNumbers_' #203
+   ├─ [_min]: struct 'UserNumberFields' #203
    │  └─ [id]: optional #202
    │     └─ item: integer #201
-   ├─ [_sum]: struct '_User_SelectNumbers_' #203
+   ├─ [_sum]: struct 'UserNumberFields' #203
    │  └─ [id]: optional #202
    │     └─ item: integer #201
    ├─ [id]: integer #119
    ├─ [name]: string #120
    └─ [posts]: list '_122_Post[]' #122
       └─ item: &Post #121
-

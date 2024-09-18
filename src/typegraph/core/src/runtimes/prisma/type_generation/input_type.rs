@@ -214,12 +214,13 @@ impl TypeGen for InputType {
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {
-            format!("_excluding_{}", self.skip_rel.join("And"))
+            // TODO what is the casing of `skip_rel`?
+            format!("Without{}", self.skip_rel.join("And"))
         };
         let op = match self.operation {
             Operation::Create => "Create",
             Operation::Update => "Update",
         };
-        format!("_{model_name}_{op}Input{suffix}")
+        format!("{model_name}{op}Input{suffix}")
     }
 }

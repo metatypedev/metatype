@@ -97,7 +97,7 @@ impl TypeGen for WithNestedCount {
         let suffix = if self.skip.is_empty() {
             "".to_string()
         } else {
-            format!("_excluding_{}", self.skip.join("_"))
+            format!("Without{}", self.skip.join("And"))
         };
         format!("{model_name}WithNestedCount{suffix}")
     }

@@ -1,22 +1,22 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct #46
-└─ [where]: optional '_45_QueryRecordWhereUniqueInput?' #45
-   └─ item: struct 'QueryRecordWhereUniqueInput' #44
-      ├─ [AND]: optional '_42__41_QueryRecordWhereUniqueInput[]?' #42
-      │  └─ item: list '_41_QueryRecordWhereUniqueInput[]' #41
-      │     └─ item: &QueryRecordWhereUniqueInput #40
-      ├─ [NOT]: optional '_43_QueryRecordWhereUniqueInput?' #43
-      │  └─ item: &QueryRecordWhereUniqueInput #40
-      ├─ [OR]: optional '_42__41_QueryRecordWhereUniqueInput[]?' #42
-      │  └─ item: list '_41_QueryRecordWhereUniqueInput[]' #41
-      │     └─ item: &QueryRecordWhereUniqueInput #40
-      ├─ [age]: optional '_37__integer_filter_c?' #37
-      │  └─ item: optional '_integer_filter_c' #36
+└─ [where]: optional '_45_RecordQueryWhereUniqueInput?' #45
+   └─ item: struct 'RecordQueryWhereUniqueInput' #44
+      ├─ [AND]: optional '_42__41_RecordQueryWhereUniqueInput[]?' #42
+      │  └─ item: list '_41_RecordQueryWhereUniqueInput[]' #41
+      │     └─ item: &RecordQueryWhereUniqueInput #40
+      ├─ [NOT]: optional '_43_RecordQueryWhereUniqueInput?' #43
+      │  └─ item: &RecordQueryWhereUniqueInput #40
+      ├─ [OR]: optional '_42__41_RecordQueryWhereUniqueInput[]?' #42
+      │  └─ item: list '_41_RecordQueryWhereUniqueInput[]' #41
+      │     └─ item: &RecordQueryWhereUniqueInput #40
+      ├─ [age]: optional '_37__PrismaIntegerFilterX?' #37
+      │  └─ item: optional '_PrismaIntegerFilterX' #36
       │     └─ item: union #35
-      │        ├─ variant_0: either '_integer_filter' #33
+      │        ├─ variant_0: either '_PrismaIntegerFilter' #33
       │        │  ├─ variant_0: integer #25
       │        │  ├─ variant_1: struct #28
       │        │  │  └─ [equals]: integer #25
@@ -38,7 +38,7 @@ root: struct #46
       │        │     └─ [notIn]: list #27
       │        │        └─ item: integer #25
       │        └─ variant_1: struct #34
-      │           └─ [not]: either '_integer_filter' #33
+      │           └─ [not]: either '_PrismaIntegerFilter' #33
       │              ├─ variant_0: integer #25
       │              ├─ variant_1: struct #28
       │              │  └─ [equals]: integer #25
@@ -59,10 +59,10 @@ root: struct #46
       │              └─ variant_5: struct #32
       │                 └─ [notIn]: list #27
       │                    └─ item: integer #25
-      ├─ [created_at]: optional '_38__string_filter_c?' #38
-      │  └─ item: optional '_string_filter_c' #22
+      ├─ [created_at]: optional '_38__PrismaStringFilterX?' #38
+      │  └─ item: optional '_PrismaStringFilterX' #22
       │     └─ item: union #21
-      │        ├─ variant_0: union '_string_filter' #19
+      │        ├─ variant_0: union '_PrismaStringFilter' #19
       │        │  ├─ variant_0: string #7
       │        │  ├─ variant_1: struct #10
       │        │  │  └─ [equals]: string #7
@@ -86,7 +86,7 @@ root: struct #46
       │        │     └─ [startsWith]: optional #8
       │        │        └─ item: string #7
       │        └─ variant_1: struct #20
-      │           └─ [not]: union '_string_filter' #19
+      │           └─ [not]: union '_PrismaStringFilter' #19
       │              ├─ variant_0: string #7
       │              ├─ variant_1: struct #10
       │              │  └─ [equals]: string #7
@@ -109,10 +109,10 @@ root: struct #46
       │                 │  └─ item: string #7
       │                 └─ [startsWith]: optional #8
       │                    └─ item: string #7
-      ├─ [id]: optional '_23__string_filter_c?' #23
-      │  └─ item: optional '_string_filter_c' #22
+      ├─ [id]: optional '_23__PrismaStringFilterX?' #23
+      │  └─ item: optional '_PrismaStringFilterX' #22
       │     └─ item: union #21
-      │        ├─ variant_0: union '_string_filter' #19
+      │        ├─ variant_0: union '_PrismaStringFilter' #19
       │        │  ├─ variant_0: string #7
       │        │  ├─ variant_1: struct #10
       │        │  │  └─ [equals]: string #7
@@ -136,7 +136,7 @@ root: struct #46
       │        │     └─ [startsWith]: optional #8
       │        │        └─ item: string #7
       │        └─ variant_1: struct #20
-      │           └─ [not]: union '_string_filter' #19
+      │           └─ [not]: union '_PrismaStringFilter' #19
       │              ├─ variant_0: string #7
       │              ├─ variant_1: struct #10
       │              │  └─ [equals]: string #7
@@ -159,10 +159,10 @@ root: struct #46
       │                 │  └─ item: string #7
       │                 └─ [startsWith]: optional #8
       │                    └─ item: string #7
-      └─ [name]: optional '_24__string_filter_c?' #24
-         └─ item: optional '_string_filter_c' #22
+      └─ [name]: optional '_24__PrismaStringFilterX?' #24
+         └─ item: optional '_PrismaStringFilterX' #22
             └─ item: union #21
-               ├─ variant_0: union '_string_filter' #19
+               ├─ variant_0: union '_PrismaStringFilter' #19
                │  ├─ variant_0: string #7
                │  ├─ variant_1: struct #10
                │  │  └─ [equals]: string #7
@@ -186,7 +186,7 @@ root: struct #46
                │     └─ [startsWith]: optional #8
                │        └─ item: string #7
                └─ variant_1: struct #20
-                  └─ [not]: union '_string_filter' #19
+                  └─ [not]: union '_PrismaStringFilter' #19
                      ├─ variant_0: string #7
                      ├─ variant_1: struct #10
                      │  └─ [equals]: string #7
@@ -209,4 +209,3 @@ root: struct #46
                         │  └─ item: string #7
                         └─ [startsWith]: optional #8
                            └─ item: string #7
-

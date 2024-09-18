@@ -80,8 +80,8 @@ impl TypeGen for OutType {
         let suffix = if self.skip_rel.is_empty() {
             String::new()
         } else {
-            format!("_excluding_{}", self.skip_rel.join("_"))
+            format!("Without{}", self.skip_rel.join("And"))
         };
-        format!("_{model_name}OutputType{suffix}")
+        format!("{model_name}Output{suffix}")
     }
 }

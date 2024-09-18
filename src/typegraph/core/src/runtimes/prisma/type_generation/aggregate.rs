@@ -43,7 +43,7 @@ impl TypeGen for CountOutput {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("_{}_AggrCount", model_name)
+        format!("{}CountAggregate", model_name)
     }
 }
 
@@ -93,7 +93,10 @@ impl TypeGen for NumberAggregateOutput {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        let suffix = if self.avg { "_avg" } else { "" };
-        format!("_{model_name}_NumberAgg{suffix}")
+        if self.avg {
+            format!("{}AvgAggregate", model_name)
+        } else {
+            format!("{}NumberAggregate", model_name)
+        }
     }
 }

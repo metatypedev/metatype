@@ -1,14 +1,14 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/where_.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/where_.rs
 expression: "tree::print(context.generate(&Where::new(post))?)"
 ---
 root: struct 'PostWhere' #80
-├── [author]: optional '_79_UserWhere__skip_48_PostWhere?' #79
-│   └── item: struct 'UserWhere__skip_48_PostWhere' #78
-│       ├── [id]: optional '_67__integer_filter_c?' #67
-│       │   └── item: optional '_integer_filter_c' #36
+├── [author]: optional '_79_UserWhereWithoutPostWhere?' #79
+│   └── item: struct 'UserWhereWithoutPostWhere' #78
+│       ├── [id]: optional '_67__PrismaIntegerFilterX?' #67
+│       │   └── item: optional '_PrismaIntegerFilterX' #36
 │       │       └── item: union #35
-│       │           ├── variant_0: either '_integer_filter' #33
+│       │           ├── variant_0: either '_PrismaIntegerFilter' #33
 │       │           │   ├── variant_0: integer #25
 │       │           │   ├── variant_1: struct #28
 │       │           │   │   └── [equals]: integer #25
@@ -30,7 +30,7 @@ root: struct 'PostWhere' #80
 │       │           │       └── [notIn]: list #27
 │       │           │           └── item: integer #25
 │       │           └── variant_1: struct #34
-│       │               └── [not]: either '_integer_filter' #33
+│       │               └── [not]: either '_PrismaIntegerFilter' #33
 │       │                   ├── variant_0: integer #25
 │       │                   ├── variant_1: struct #28
 │       │                   │   └── [equals]: integer #25
@@ -51,10 +51,10 @@ root: struct 'PostWhere' #80
 │       │                   └── variant_5: struct #32
 │       │                       └── [notIn]: list #27
 │       │                           └── item: integer #25
-│       ├── [name]: optional '_68__string_filter_c?' #68
-│       │   └── item: optional '_string_filter_c' #22
+│       ├── [name]: optional '_68__PrismaStringFilterX?' #68
+│       │   └── item: optional '_PrismaStringFilterX' #22
 │       │       └── item: union #21
-│       │           ├── variant_0: union '_string_filter' #19
+│       │           ├── variant_0: union '_PrismaStringFilter' #19
 │       │           │   ├── variant_0: string #7
 │       │           │   ├── variant_1: struct #10
 │       │           │   │   └── [equals]: string #7
@@ -78,7 +78,7 @@ root: struct 'PostWhere' #80
 │       │           │       └── [startsWith]: optional #8
 │       │           │           └── item: string #7
 │       │           └── variant_1: struct #20
-│       │               └── [not]: union '_string_filter' #19
+│       │               └── [not]: union '_PrismaStringFilter' #19
 │       │                   ├── variant_0: string #7
 │       │                   ├── variant_1: struct #10
 │       │                   │   └── [equals]: string #7
@@ -112,10 +112,10 @@ root: struct 'PostWhere' #80
 │               └── variant_2: struct #75
 │                   └── [none]: optional '_74_PostWhere?' #74
 │                       └── item: &PostWhere #69
-├── [id]: optional '_65__integer_filter_c?' #65
-│   └── item: optional '_integer_filter_c' #36
+├── [id]: optional '_65__PrismaIntegerFilterX?' #65
+│   └── item: optional '_PrismaIntegerFilterX' #36
 │       └── item: union #35
-│           ├── variant_0: either '_integer_filter' #33
+│           ├── variant_0: either '_PrismaIntegerFilter' #33
 │           │   ├── variant_0: integer #25
 │           │   ├── variant_1: struct #28
 │           │   │   └── [equals]: integer #25
@@ -137,7 +137,7 @@ root: struct 'PostWhere' #80
 │           │       └── [notIn]: list #27
 │           │           └── item: integer #25
 │           └── variant_1: struct #34
-│               └── [not]: either '_integer_filter' #33
+│               └── [not]: either '_PrismaIntegerFilter' #33
 │                   ├── variant_0: integer #25
 │                   ├── variant_1: struct #28
 │                   │   └── [equals]: integer #25
@@ -158,10 +158,10 @@ root: struct 'PostWhere' #80
 │                   └── variant_5: struct #32
 │                       └── [notIn]: list #27
 │                           └── item: integer #25
-└── [title]: optional '_66__string_filter_c?' #66
-    └── item: optional '_string_filter_c' #22
+└── [title]: optional '_66__PrismaStringFilterX?' #66
+    └── item: optional '_PrismaStringFilterX' #22
         └── item: union #21
-            ├── variant_0: union '_string_filter' #19
+            ├── variant_0: union '_PrismaStringFilter' #19
             │   ├── variant_0: string #7
             │   ├── variant_1: struct #10
             │   │   └── [equals]: string #7
@@ -185,7 +185,7 @@ root: struct 'PostWhere' #80
             │       └── [startsWith]: optional #8
             │           └── item: string #7
             └── variant_1: struct #20
-                └── [not]: union '_string_filter' #19
+                └── [not]: union '_PrismaStringFilter' #19
                     ├── variant_0: string #7
                     ├── variant_1: struct #10
                     │   └── [equals]: string #7
@@ -208,4 +208,3 @@ root: struct 'PostWhere' #80
                         │   └── item: string #7
                         └── [startsWith]: optional #8
                             └── item: string #7
-

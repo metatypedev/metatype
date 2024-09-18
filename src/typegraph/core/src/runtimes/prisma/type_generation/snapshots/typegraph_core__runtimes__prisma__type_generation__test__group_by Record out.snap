@@ -1,13 +1,13 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list '_Record_GroupByResult' #118
+root: list 'RecordGroup' #118
 └─ item: struct #117
-   ├─ [_avg]: struct '_Record_SelectNumbers__1' #111
+   ├─ [_avg]: struct 'RecordNumberFieldsF' #111
    │  └─ [age]: optional #110
    │     └─ item: float #109
-   ├─ [_count]: struct '_Record_AggrCount' #108
+   ├─ [_count]: struct 'RecordCountAggregate' #108
    │  ├─ [_all]: optional #107
    │  │  └─ item: integer #106
    │  ├─ [age]: optional #107
@@ -18,13 +18,13 @@ root: list '_Record_GroupByResult' #118
    │  │  └─ item: integer #106
    │  └─ [name]: optional #107
    │     └─ item: integer #106
-   ├─ [_max]: struct '_Record_SelectNumbers_' #116
+   ├─ [_max]: struct 'RecordNumberFields' #116
    │  └─ [age]: optional #115
    │     └─ item: integer #114
-   ├─ [_min]: struct '_Record_SelectNumbers_' #116
+   ├─ [_min]: struct 'RecordNumberFields' #116
    │  └─ [age]: optional #115
    │     └─ item: integer #114
-   ├─ [_sum]: struct '_Record_SelectNumbers_' #116
+   ├─ [_sum]: struct 'RecordNumberFields' #116
    │  └─ [age]: optional #115
    │     └─ item: integer #114
    ├─ [age]: optional #5
@@ -32,4 +32,3 @@ root: list '_Record_GroupByResult' #118
    ├─ [created_at]: string #1
    ├─ [id]: string #2
    └─ [name]: string #3
-

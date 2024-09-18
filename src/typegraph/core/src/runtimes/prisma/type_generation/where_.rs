@@ -115,19 +115,19 @@ impl TypeGen for Where {
         let model_name = self.model_id.name().unwrap().unwrap();
 
         let suffix1 = if self.aggregates {
-            "__agg".to_string()
+            "WithAggregates".to_string()
         } else {
             "".to_string()
         };
 
         let suffix2 = if !self.skip_models.is_empty() {
             format!(
-                "__skip_{}",
+                "Without{}",
                 self.skip_models
                     .iter()
-                    .map(|(id, name)| { format!("{}_{}", id.0, name) })
+                    .map(|(_, name)| name.as_str())
                     .collect::<Vec<_>>()
-                    .join("__")
+                    .join("And")
             )
         } else {
             "".to_string()

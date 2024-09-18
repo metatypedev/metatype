@@ -1,12 +1,12 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/where_.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/where_.rs
 expression: "tree::print(where_type)"
 ---
 root: struct 'RecordWhere' #39
-├── [age]: optional '_37__integer_filter_c?' #37
-│   └── item: optional '_integer_filter_c' #36
+├── [age]: optional '_37__PrismaIntegerFilterX?' #37
+│   └── item: optional '_PrismaIntegerFilterX' #36
 │       └── item: union #35
-│           ├── variant_0: either '_integer_filter' #33
+│           ├── variant_0: either '_PrismaIntegerFilter' #33
 │           │   ├── variant_0: integer #25
 │           │   ├── variant_1: struct #28
 │           │   │   └── [equals]: integer #25
@@ -28,7 +28,7 @@ root: struct 'RecordWhere' #39
 │           │       └── [notIn]: list #27
 │           │           └── item: integer #25
 │           └── variant_1: struct #34
-│               └── [not]: either '_integer_filter' #33
+│               └── [not]: either '_PrismaIntegerFilter' #33
 │                   ├── variant_0: integer #25
 │                   ├── variant_1: struct #28
 │                   │   └── [equals]: integer #25
@@ -49,10 +49,10 @@ root: struct 'RecordWhere' #39
 │                   └── variant_5: struct #32
 │                       └── [notIn]: list #27
 │                           └── item: integer #25
-├── [created_at]: optional '_38__string_filter_c?' #38
-│   └── item: optional '_string_filter_c' #22
+├── [created_at]: optional '_38__PrismaStringFilterX?' #38
+│   └── item: optional '_PrismaStringFilterX' #22
 │       └── item: union #21
-│           ├── variant_0: union '_string_filter' #19
+│           ├── variant_0: union '_PrismaStringFilter' #19
 │           │   ├── variant_0: string #7
 │           │   ├── variant_1: struct #10
 │           │   │   └── [equals]: string #7
@@ -76,7 +76,7 @@ root: struct 'RecordWhere' #39
 │           │       └── [startsWith]: optional #8
 │           │           └── item: string #7
 │           └── variant_1: struct #20
-│               └── [not]: union '_string_filter' #19
+│               └── [not]: union '_PrismaStringFilter' #19
 │                   ├── variant_0: string #7
 │                   ├── variant_1: struct #10
 │                   │   └── [equals]: string #7
@@ -99,10 +99,10 @@ root: struct 'RecordWhere' #39
 │                       │   └── item: string #7
 │                       └── [startsWith]: optional #8
 │                           └── item: string #7
-├── [id]: optional '_23__string_filter_c?' #23
-│   └── item: optional '_string_filter_c' #22
+├── [id]: optional '_23__PrismaStringFilterX?' #23
+│   └── item: optional '_PrismaStringFilterX' #22
 │       └── item: union #21
-│           ├── variant_0: union '_string_filter' #19
+│           ├── variant_0: union '_PrismaStringFilter' #19
 │           │   ├── variant_0: string #7
 │           │   ├── variant_1: struct #10
 │           │   │   └── [equals]: string #7
@@ -126,7 +126,7 @@ root: struct 'RecordWhere' #39
 │           │       └── [startsWith]: optional #8
 │           │           └── item: string #7
 │           └── variant_1: struct #20
-│               └── [not]: union '_string_filter' #19
+│               └── [not]: union '_PrismaStringFilter' #19
 │                   ├── variant_0: string #7
 │                   ├── variant_1: struct #10
 │                   │   └── [equals]: string #7
@@ -149,10 +149,10 @@ root: struct 'RecordWhere' #39
 │                       │   └── item: string #7
 │                       └── [startsWith]: optional #8
 │                           └── item: string #7
-└── [name]: optional '_24__string_filter_c?' #24
-    └── item: optional '_string_filter_c' #22
+└── [name]: optional '_24__PrismaStringFilterX?' #24
+    └── item: optional '_PrismaStringFilterX' #22
         └── item: union #21
-            ├── variant_0: union '_string_filter' #19
+            ├── variant_0: union '_PrismaStringFilter' #19
             │   ├── variant_0: string #7
             │   ├── variant_1: struct #10
             │   │   └── [equals]: string #7
@@ -176,7 +176,7 @@ root: struct 'RecordWhere' #39
             │       └── [startsWith]: optional #8
             │           └── item: string #7
             └── variant_1: struct #20
-                └── [not]: union '_string_filter' #19
+                └── [not]: union '_PrismaStringFilter' #19
                     ├── variant_0: string #7
                     ├── variant_1: struct #10
                     │   └── [equals]: string #7
@@ -199,4 +199,3 @@ root: struct 'RecordWhere' #39
                         │   └── item: string #7
                         └── [startsWith]: optional #8
                             └── item: string #7
-
