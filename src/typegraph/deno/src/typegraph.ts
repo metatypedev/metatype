@@ -167,8 +167,6 @@ export async function typegraph(
   const simpleFile = file.replace(/:[0-9]+$/, "").replace(/^file:\/\//, "");
   const path = fromFileUrl(`file://${simpleFile}`);
 
-  console.log({ path });
-
   const defaultCorsFields = {
     allowCredentials: true,
     allowHeaders: [],
