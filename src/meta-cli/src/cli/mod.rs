@@ -19,6 +19,7 @@ pub(crate) mod dev;
 pub(crate) mod doctor;
 pub(crate) mod gen;
 pub(crate) mod list;
+pub(crate) mod mdk_template;
 pub(crate) mod new;
 pub(crate) mod serialize;
 pub(crate) mod typegate;
@@ -87,6 +88,8 @@ pub(crate) enum Commands {
     Doctor(doctor::Doctor),
     /// Create a new Metatype project
     New(new::New),
+    /// Dump the default mdk template
+    MdkTemplate(mdk_template::CreateMdkTemplate),
     /// Access a minimal deno CLI
     Typegate(typegate::Typegate),
 }

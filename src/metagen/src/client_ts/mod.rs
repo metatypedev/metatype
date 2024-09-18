@@ -83,6 +83,7 @@ impl crate::Plugin for Generator {
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            _ => bail!("unexpected input type"),
         };
         let mut out = HashMap::new();
         out.insert(
@@ -326,6 +327,7 @@ fn e2e() -> anyhow::Result<()> {
                             typegraph_path: None,
                             // NOTE: root will map to the test's tempdir
                             path: "./".into(),
+                            template_dir: None,
                         },
                     })?,
                 }]

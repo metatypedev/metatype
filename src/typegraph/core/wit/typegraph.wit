@@ -656,8 +656,8 @@ interface utils {
         overwrite: bool,
     }
 
-    metagen-exec: func(config: mdk-config) -> result<list<mdk-output>, string>;
-    metagen-write-files: func(items: list<mdk-output>, typegraph-dir: string) -> result<_, string>;
+    metagen-exec: func(config: mdk-config) -> result<list<mdk-output>, error>;
+    metagen-write-files: func(items: list<mdk-output>, typegraph-dir: string) -> result<_, error>;
 }
 
 interface host {

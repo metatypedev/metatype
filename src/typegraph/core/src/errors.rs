@@ -17,6 +17,22 @@ impl From<Vec<String>> for TgError {
     }
 }
 
+impl From<anyhow::Error> for TgError {
+    fn from(e: anyhow::Error) -> Self {
+        Self {
+            stack: vec![e.to_string()],
+        }
+    }
+}
+
+impl TgError {
+    pub fn from_std(e: impl std::error::Error) -> Self {
+        Self {
+            stack: vec![e.to_string()],
+        }
+    }
+}
+
 impl PartialEq for TgError {
     fn eq(&self, other: &Self) -> bool {
         self.stack == other.stack
