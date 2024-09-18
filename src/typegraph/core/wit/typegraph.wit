@@ -534,6 +534,20 @@ interface runtimes {
     }
 
     kv-operation: func(base: base-materializer, data: kv-materializer) -> result<materializer-id, error>;
+
+    // Grpc
+    record grpc-runtime-data {
+        proto-file: string,
+        endpoint: string,
+    }
+
+    register-grpc-runtime: func(data: grpc-runtime-data) -> result<runtime-id, error>;
+
+    record grpc-data {
+        method: string,
+    }
+
+    call-grpc-method: func(runtime: runtime-id, data: grpc-data) -> result<func-params, error>;
 }
 
 interface aws {

@@ -1,0 +1,14 @@
+{
+  "service": "Calculator",
+  "method": "IsPrime",
+  "input": {
+    "equals": {
+      "number": 17
+    }
+  },
+  "output": {
+    "data": {
+      "isPrime": true
+    }
+  }
+}

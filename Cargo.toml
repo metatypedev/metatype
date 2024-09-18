@@ -8,7 +8,7 @@ members = [
   "src/mt_deno",
   "src/typegate/engine",
   "src/typegate/standalone",
-  "src/typegraph/core", 
+  "src/typegraph/core",
   "src/xtask",
 ]
 
@@ -19,7 +19,7 @@ exclude = [
   "src/pyrt_wit_wire",
 ]
 
-[workspace.package] 
+[workspace.package]
 version = "0.4.11-rc.0"
 edition = "2021"
 
@@ -53,7 +53,7 @@ shadow-rs = "0.28.0"
 # encoding
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
-serde_yaml = "0.9.33" # FIXME: deprecated, be on the lookout for alternatives
+serde_yaml = "0.9.33"                                  # FIXME: deprecated, be on the lookout for alternatives
 serde_with = "3.8.1"
 flate2 = "1.0.30"
 tar = "0.4"
@@ -66,19 +66,19 @@ sha2 = "0.10.8"
 seahash = "4.1.0"
 
 # patterns
-anyhow = "1.0.86" # FIXME: replace anyhow with eyre
+anyhow = "1.0.86"            # FIXME: replace anyhow with eyre
 color-eyre = "0.6.3"
-eyre = "0.6.12" # NOTE: keep in sync with verison used by color-eyre
+eyre = "0.6.12"              # NOTE: keep in sync with verison used by color-eyre
 thiserror = "1.0.61"
 indoc = "2.0.5"
 unindent = "0.2.3"
 itertools = "0.13.0"
-lazy_static = "1.4.0" # FIXME: replace with Lazy Cell
+lazy_static = "1.4.0"        # FIXME: replace with Lazy Cell
 crossbeam-channel = "0.5.13"
 enum_dispatch = "0.3.13"
 tap = "1.0.1"
 derive_more = "0.99.17"
-cached = "0.51.3" # FIXME: replace usage with a Lazy Cell + dashmap
+cached = "0.51.3"            # FIXME: replace usage with a Lazy Cell + dashmap
 garde = "0.18"
 paste = "1.0.15"
 
@@ -112,7 +112,7 @@ indexmap = { version = "2.2.6", features = ["serde"] }
 semver = "1.0.23"
 dashmap = "5.5.3"
 connection-string = "0.2.0"
-chrono =  "0.4.38"
+chrono = "0.4.38"
 tera = { version = "1.20", default-features = false }
 ordered-float = "4.2.0"
 graphql-parser = "0.4.0"
@@ -129,10 +129,14 @@ deno_core = { version = "=0.306.0" }
 
 # logging
 env_logger = "=0.11.0"
-log = "0.4.20" # FIXME: replace with tracing
+log = "0.4.20"         # FIXME: replace with tracing
 tracing = "0.1"
 # tracing core helper
-tracing-subscriber = { version = "0.3.18", features = ["env-filter", "parking_lot", "tracing-log"] }
+tracing-subscriber = { version = "0.3.18", features = [
+  "env-filter",
+  "parking_lot",
+  "tracing-log",
+] }
 # backtrace for async frames
 tracing-error = "0.2"
 # `unwrap` that also logs
@@ -163,6 +167,13 @@ query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag =
 schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
 schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.6.0" }
+
+# grpc
+tonic = "0.12.1"
+bytes = "1.7.1"
+protobuf = "3.5.1"
+protobuf-json-mapping = "3.5.1"
+proto-parser = { git = "https://github.com/metatypedev/proto-parser", branch = "main" }
 
 # test
 assert_cmd = "2.0.14"

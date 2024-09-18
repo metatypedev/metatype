@@ -19,12 +19,12 @@ def create(idempotent: bool = False):
     return EffectCreate(idempotent)
 
 
-def update(idempotent: bool = False):
-    return EffectUpdate(idempotent)
-
-
 def delete(idempotent: bool = True):
     return EffectDelete(idempotent)
+
+
+def update(idempotent: bool = False):
+    return EffectUpdate(idempotent)
 
 
 # For injections

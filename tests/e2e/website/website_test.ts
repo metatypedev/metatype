@@ -29,6 +29,7 @@ const list = [
   "func",
   "graphql-server",
   "graphql",
+  "grpc",
   "http-runtime",
   "iam-provider",
   "index",
