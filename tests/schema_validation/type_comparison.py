@@ -181,4 +181,13 @@ def type_comparison(g: Graph):
     )
     case("union_fail_3", t.float(), t.either([t.integer(), t.string()]))
     case("union_fail_4", t.integer(), t.union([t.integer(min=12), t.string()]))
+
+    case("enum_ok_1", t.enum(["a", "b", "c"]), t.enum(["a", "b", "c"]))
+    case("enum_ok_2", t.enum(["a", "b"]), t.enum(["a", "b", "c"]))
+    case("enum_ok_3", t.integer(enum=[1, 2, 3]), t.float(enum=[1.0, 2.0, 3.0]))
+    # TODO make this valid
+    # case("enum_ok_4", t.float().enum([1.0, 2.0]), t.integer().enum([1, 2]))
+    case("enum_fail_1", t.enum(["a", "b", "c"]), t.enum(["a", "b"]))
+    case("enum_fail_2", t.string(), t.enum(["a", "b"]))
+
     g.expose(Policy.public(), **cases)

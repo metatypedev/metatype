@@ -461,6 +461,61 @@ impl EnsureSubtypeOf<EitherTypeData> for UnionTypeData {
     }
 }
 
+struct Enum<'a>(Option<&'a [String]>);
+
+impl<'a, 'b> EnsureSubtypeOf<Enum<'a>> for Enum<'b> {
+    fn ensure_subtype_of(&self, sup: &Enum<'a>, _tg: &Typegraph, errors: &mut ErrorCollector) {
+        let sub = self.0.unwrap_or(&[]);
+        let sup = sup.0.unwrap_or(&[]);
+        if sub.is_empty() && !sup.is_empty() {
+            errors.push("Expected the subtype to be an enum");
+            return;
+        }
+        let sup = sup
+            .iter()
+            .map(|s| serde_json::to_value(s).unwrap())
+            .collect::<Vec<_>>();
+        let not_found = sub
+            .iter()
+            .map(|s| serde_json::to_value(s).unwrap())
+            .enumerate()
+            .filter(|(_, sup_v)| sup.iter().all(|v| !value_equals(v, sup_v)))
+            .collect::<Vec<_>>();
+        if !not_found.is_empty() {
+            errors.push_nested("Expected all enum values to be defined on the supertype", {
+                let mut nested = ErrorCollector::default();
+                for (idx, sup_v) in not_found {
+                    nested.push(format!(
+                        "Value {} (#{}) is not defined on the supertype",
+                        sup_v, idx
+                    ));
+                }
+                nested
+            });
+        }
+    }
+}
+
+// TODO move to different module
+fn value_equals(left: &serde_json::Value, right: &serde_json::Value) -> bool {
+    match (left, right) {
+        (serde_json::Value::String(left), serde_json::Value::String(right)) => left == right,
+        (serde_json::Value::Number(left), serde_json::Value::Number(right)) => left == right,
+        (serde_json::Value::Bool(left), serde_json::Value::Bool(right)) => left == right,
+        (serde_json::Value::Array(left), serde_json::Value::Array(right)) => left
+            .iter()
+            .zip(right.iter())
+            .all(|(l, r)| value_equals(l, r)),
+        (serde_json::Value::Object(left), serde_json::Value::Object(right)) => {
+            left.len() == right.len()
+                && left
+                    .iter()
+                    .all(|(k, v)| right.get(k).map_or(false, |r| value_equals(v, r)))
+        }
+        _ => false,
+    }
+}
+
 impl<'a, 'b> EnsureSubtypeOf<ExtendedTypeNode<'b>> for ExtendedTypeNode<'a> {
     fn ensure_subtype_of(
         &self,
@@ -487,23 +542,93 @@ impl<'a, 'b> EnsureSubtypeOf<ExtendedTypeNode<'b>> for ExtendedTypeNode<'a> {
                     errors.push("Optional type cannot be a subtype of a non-optional type");
                 }
                 (TypeNode::Boolean { .. }, TypeNode::Boolean { .. }) => { /* nothing to check */ }
-                (TypeNode::Integer { data: sub, .. }, TypeNode::Integer { data: sup, .. }) => {
-                    sub.ensure_subtype_of(sup, tg, errors)
+                (
+                    TypeNode::Integer {
+                        data: sub,
+                        base: sub_base,
+                    },
+                    TypeNode::Integer {
+                        data: sup,
+                        base: sup_base,
+                    },
+                ) => {
+                    sub.ensure_subtype_of(sup, tg, errors);
+                    Enum(sub_base.enumeration.as_deref()).ensure_subtype_of(
+                        &Enum(sup_base.enumeration.as_deref()),
+                        tg,
+                        errors,
+                    );
                 }
-                (TypeNode::Float { data: sub, .. }, TypeNode::Float { data: sup, .. }) => {
-                    sub.ensure_subtype_of(sup, tg, errors)
+                (
+                    TypeNode::Float {
+                        data: sub,
+                        base: sub_base,
+                    },
+                    TypeNode::Float {
+                        data: sup,
+                        base: sup_base,
+                    },
+                ) => {
+                    sub.ensure_subtype_of(sup, tg, errors);
+                    Enum(sub_base.enumeration.as_deref()).ensure_subtype_of(
+                        &Enum(sup_base.enumeration.as_deref()),
+                        tg,
+                        errors,
+                    );
                 }
-                (TypeNode::Integer { data: sub, .. }, TypeNode::Float { data: sup, .. }) => {
-                    sub.ensure_subtype_of(sup, tg, errors)
+                (
+                    TypeNode::Integer {
+                        data: sub,
+                        base: sub_base,
+                    },
+                    TypeNode::Float {
+                        data: sup,
+                        base: sup_base,
+                    },
+                ) => {
+                    sub.ensure_subtype_of(sup, tg, errors);
+                    Enum(sub_base.enumeration.as_deref()).ensure_subtype_of(
+                        &Enum(sup_base.enumeration.as_deref()),
+                        tg,
+                        errors,
+                    );
                 }
-                (TypeNode::String { data: sub, .. }, TypeNode::String { data: sup, .. }) => {
-                    sub.ensure_subtype_of(sup, tg, errors)
+                (
+                    TypeNode::String {
+                        data: sub,
+                        base: sub_base,
+                    },
+                    TypeNode::String {
+                        data: sup,
+                        base: sup_base,
+                    },
+                ) => {
+                    sub.ensure_subtype_of(sup, tg, errors);
+                    Enum(sub_base.enumeration.as_deref()).ensure_subtype_of(
+                        &Enum(sup_base.enumeration.as_deref()),
+                        tg,
+                        errors,
+                    );
                 }
                 (TypeNode::File { data: sub, .. }, TypeNode::File { data: sup, .. }) => {
                     sub.ensure_subtype_of(sup, tg, errors)
                 }
-                (TypeNode::Object { data: sub, .. }, TypeNode::Object { data: sup, .. }) => {
-                    sub.ensure_subtype_of(sup, tg, errors)
+                (
+                    TypeNode::Object {
+                        data: sub,
+                        base: sub_base,
+                    },
+                    TypeNode::Object {
+                        data: sup,
+                        base: sup_base,
+                    },
+                ) => {
+                    sub.ensure_subtype_of(sup, tg, errors);
+                    Enum(sub_base.enumeration.as_deref()).ensure_subtype_of(
+                        &Enum(sup_base.enumeration.as_deref()),
+                        tg,
+                        errors,
+                    );
                 }
                 (TypeNode::List { data: sub, .. }, TypeNode::List { data: sup, .. }) => {
                     sub.ensure_subtype_of(sup, tg, errors)

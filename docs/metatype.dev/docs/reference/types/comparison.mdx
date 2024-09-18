@@ -33,25 +33,27 @@ If `A` is a subtype of `B`, then `A` and `B` are either both scalar types or bot
 
     - [Type constraints](/docs/reference/types) defined on `B` are all defined on `A` and satisfy:
 
-    | Type | Type Constraint | Condition |
-    | ---- | --------------- | --------- |
-    | `t.integer()`, `t.float()` | `min` | `A.min >= B.min` |
-    | `t.integer()`, `t.float()` | `x_min` | `A.x_min >= B.x_min` |
-    | `t.integer()`, `t.float()` | `max` | `A.max <= B.max` |
-    | `t.integer()`, `t.float()` | `x_max` | `A.x_max <= B.x_max` |
-    | `t.integer()`, `t.float()` | `multiple_of` | `A.multiple_of` is a multiple of `B.multiple_of` |
-    | `t.string()` | `min` | `A.min >= B.min` |
-    | `t.string()` | `max` | `A.max <= B.max` |
-    | `t.string()` | `pattern` | `A.pattern == B.pattern`[^pat] |
-    | `t.string()` | `format` | `A.format == B.format` |
-    | `t.file()` | `min` | `A.min >= B.min` |
-    | `t.file()` | `max` | `A.max <= B.max` |
-    | `t.file()` | `allow` | `A.allow` is a subset of `B.allow` |
+        | Type | Type Constraint | Condition |
+        | ---- | --------------- | --------- |
+        | `t.integer()`, `t.float()` | `min` | `A.min >= B.min` |
+        | `t.integer()`, `t.float()` | `x_min` | `A.x_min >= B.x_min` |
+        | `t.integer()`, `t.float()` | `max` | `A.max <= B.max` |
+        | `t.integer()`, `t.float()` | `x_max` | `A.x_max <= B.x_max` |
+        | `t.integer()`, `t.float()` | `multiple_of` | `A.multiple_of` is a multiple of `B.multiple_of` |
+        | `t.string()` | `min` | `A.min >= B.min` |
+        | `t.string()` | `max` | `A.max <= B.max` |
+        | `t.string()` | `pattern` | `A.pattern == B.pattern`[^pat] |
+        | `t.string()` | `format` | `A.format == B.format` |
+        | `t.file()` | `min` | `A.min >= B.min` |
+        | `t.file()` | `max` | `A.max <= B.max` |
+        | `t.file()` | `allow` | `A.allow` is a subset of `B.allow` |
 
-    [^pat]: The patterns are required to be exactly the same
-    because we currently do not have any other comparison semantic for regular expressions.
+        [^pat]: The patterns are required to be exactly the same
+        because we currently do not have any other comparison semantic for regular expressions.
 
-    Note that type constraints defined on `A` are not required to be defined on `B`.
+        Note that type constraints defined on `A` are not required to be defined on `B`.
+
+    - If `B` is an enum, then `A` is an enum and all enumeration values defined for `A` are defined for `B`.
 
 ### Optionals
 
