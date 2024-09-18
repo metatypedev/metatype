@@ -1,6 +1,6 @@
 # skip:start
-from typegraph.graph.params import Cors
 from typegraph import Graph, Policy, typegraph
+from typegraph.graph.params import Cors
 
 # skip:end
 # highlight-next-line
@@ -14,7 +14,7 @@ from typegraph.runtimes.grpc import GrpcRuntime
 )
 def grpc(g: Graph):
     endpoint = "tcp://localhost:4770"
-    proto_file = "typegraphs/proto/helloworld.proto"
+    proto_file = "proto/helloworld.proto"
 
     # highlight-next-line
     grpc_runtime = GrpcRuntime(proto_file, endpoint)

@@ -537,7 +537,7 @@ interface runtimes {
 
     // Grpc
     record grpc-runtime-data {
-        proto-file-content: string,
+        proto-file: string,
         endpoint: string,
     }
 

@@ -7,11 +7,8 @@ import { Runtime } from "./mod.ts";
 
 export class GrpcRuntime extends Runtime {
   constructor(protoFile: string, endpoint: string) {
-    const protoFileContent = new TextDecoder().decode(
-      Deno.readFileSync(protoFile),
-    );
     const id = runtimes.registerGrpcRuntime({
-      protoFileContent,
+      protoFile,
       endpoint,
     });
     super(id);

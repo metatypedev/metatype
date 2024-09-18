@@ -51,7 +51,7 @@ class Typegraph:
     ):
         self.name = name
         self.dynamic = dynamic
-        self.path = str(Path(inspect.stack()[2].filename).resolve().parent)
+        self.path = str(Path(inspect.stack()[2].filename).resolve())
 
         self.rate = rate
 

@@ -8,7 +8,7 @@ from typegraph.runtimes.grpc import GrpcRuntime
 @typegraph()
 def helloworld(g: Graph):
     endpoint = "tcp://localhost:4770"
-    proto_file = "runtimes/grpc/proto/helloworld.proto"
+    proto_file = "proto/helloworld.proto"
 
     grpc_runtime = GrpcRuntime(proto_file, endpoint)
 

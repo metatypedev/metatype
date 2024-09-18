@@ -6,7 +6,7 @@ import { GrpcRuntime } from "@typegraph/sdk/runtimes/grpc.ts";
 
 export const tg = await typegraph("helloworld", (g) => {
   const endpoint = "tcp://localhost:4770";
-  const proto_file = "runtimes/grpc/proto/helloworld.proto";
+  const proto_file = "proto/helloworld.proto";
 
   const grpc_runtime = new GrpcRuntime(proto_file, endpoint);
 

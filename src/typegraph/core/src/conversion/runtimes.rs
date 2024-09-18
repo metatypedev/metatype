@@ -507,7 +507,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
         }
         Runtime::Kv(d) => Ok(TGRuntime::Known(Rt::Kv(KvRuntimeData { url: d.url.clone() })).into()),
         Runtime::Grpc(d) => Ok(TGRuntime::Known(Rt::Grpc(GrpcRuntimeData {
-            proto_file_content: d.proto_file_content.clone(),
+            proto_file_content: d.proto_file.clone(),
             endpoint: d.endpoint.clone(),
         }))
         .into()),

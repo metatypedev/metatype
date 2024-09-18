@@ -15,6 +15,7 @@ pub mod typegraph;
 pub mod wasm;
 
 use std::cell::RefCell;
+use std::path::Path;
 use std::rc::Rc;
 
 use crate::conversion::runtimes::MaterializerConverter;
@@ -24,6 +25,8 @@ use crate::runtimes::prisma::migration::{
 };
 use crate::runtimes::typegraph::TypegraphOperation;
 use crate::t::TypeBuilder;
+use crate::typegraph::current_typegraph_dir;
+use crate::utils::fs::FsContext;
 use crate::validation::types::validate_value;
 use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
@@ -709,6 +712,10 @@ impl crate::wit::runtimes::Guest for crate::Lib {
     }
 
     fn register_grpc_runtime(data: GrpcRuntimeData) -> Result<RuntimeId, wit::Error> {
+        let fs_ctx = FsContext::new(current_typegraph_dir()?);
+        let proto_file = fs_ctx.read_text_file(Path::new(&data.proto_file))?;
+        let data = GrpcRuntimeData { proto_file, ..data };
+
         Ok(Store::register_runtime(Runtime::Grpc(data.into())))
     }
 

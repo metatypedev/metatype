@@ -165,7 +165,9 @@ export async function typegraph(
   }
   // node/deno compat tick until MET-236 is landed
   const simpleFile = file.replace(/:[0-9]+$/, "").replace(/^file:\/\//, "");
-  const path = dirname(fromFileUrl(`file://${simpleFile}`));
+  const path = fromFileUrl(`file://${simpleFile}`);
+
+  console.log({ path });
 
   const defaultCorsFields = {
     allowCredentials: true,
