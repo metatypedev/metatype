@@ -8,7 +8,7 @@ from typegraph.gen.exports.core import (
     SerializeParams,
     PrismaMigrationConfig,
 )
-from typegraph.gen.exports.utils import MdkConfig, MdkOutput
+from typegraph.gen.exports.utils import FdkConfig, FdkOutput
 from typegraph.gen.types import Err
 from typegraph.graph.shared_types import TypegraphOutput
 from typegraph.utils import freeze_tg_output
@@ -23,11 +23,11 @@ class Metagen:
         self.gen_config = gen_config
         self.workspace_path = workspace_path
 
-    def _get_mdk_config(
+    def _get_fdk_config(
         self,
         tg_output: TypegraphOutput,
         target_name: str,
-    ) -> MdkConfig:
+    ) -> FdkConfig:
         serialize_params = SerializeParams(
             typegraph_path=self.workspace_path + "/tg.py",
             prefix=None,
@@ -44,7 +44,7 @@ class Metagen:
         )
 
         frozen_out = freeze_tg_output(serialize_params, tg_output)
-        return MdkConfig(
+        return FdkConfig(
             tg_json=frozen_out.serialize(serialize_params).tgJson,
             config_json=json.dumps(self.gen_config),
             workspace_path=self.workspace_path,
@@ -56,8 +56,8 @@ class Metagen:
         tg_output: TypegraphOutput,
         target_name: str,
         overwrite: Union[bool, None] = None,
-    ) -> List[MdkOutput]:
-        mdk_config = self._get_mdk_config(tg_output, target_name)
+    ) -> List[FdkOutput]:
+        mdk_config = self._get_fdk_config(tg_output, target_name)
         res = wit_utils.metagen_exec(store, mdk_config)
         if isinstance(res, Err):
             raise Exception(res.value)
