@@ -313,7 +313,7 @@ impl TypeNode {
         match self {
             Optional { .. } => "optional",
             Boolean { .. } => "boolean",
-            Float { .. } => "number",
+            Float { .. } => "float",
             Integer { .. } => "integer",
             String { .. } => "string",
             File { .. } => "file",
