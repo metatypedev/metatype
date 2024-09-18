@@ -30,7 +30,7 @@ def metagen_sdk(g: Graph):
             idv3,
             idv3,
             module="./metagen/ts/remix.ts",
-            deps=["./metagen/ts/mdk.ts"],
+            deps=["./metagen/ts/fdk.ts"],
             name="remix_track",
         ).rename("remix_track"),
     )
@@ -45,7 +45,7 @@ if __name__ == "__main__" and False:
             "targets": {
                 "main": [
                     {
-                        "generator": "mdk_typescript",
+                        "generator": "fdk_typescript",
                         "typegraph_path": __file__,
                         "path": "funcs/",
                     },

@@ -168,14 +168,14 @@ typegraphs:
 metagen:
   targets:
     metagen_deno:
-      - generator: mdk_typescript
+      - generator: fdk_typescript
         path: ./typegraphs/metagen/ts/
         typegraph_path: ./typegraphs/metagen-deno.ts
     metagen_py:
-      - generator: mdk_python
+      - generator: fdk_python
         path: ./typegraphs/metagen/py/
         typegraph_path: ./typegraphs/metagen-py.ts
     metagen_rs:
-      - generator: mdk_rust
+      - generator: fdk_rust
         path: ./typegraphs/metagen/rs/
         typegraph_path: ./typegraphs/metagen-rs.ts

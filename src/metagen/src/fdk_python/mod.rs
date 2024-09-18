@@ -28,15 +28,15 @@ pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[
 ];
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
-pub struct MdkPythonGenConfig {
+pub struct FdkPythonGenConfig {
     #[serde(flatten)]
     #[garde(dive)]
-    pub base: crate::config::MdkGeneratorConfigBase,
+    pub base: crate::config::FdkGeneratorConfigBase,
 }
 
-impl MdkPythonGenConfig {
+impl FdkPythonGenConfig {
     pub fn from_json(json: serde_json::Value, workspace_path: &Path) -> anyhow::Result<Self> {
-        let mut config: mdk_python::MdkPythonGenConfig = serde_json::from_value(json)?;
+        let mut config: FdkPythonGenConfig = serde_json::from_value(json)?;
         config.base.path = workspace_path.join(config.base.path);
         config.base.typegraph_path = config
             .base
@@ -48,25 +48,25 @@ impl MdkPythonGenConfig {
 }
 
 pub struct Generator {
-    config: MdkPythonGenConfig,
+    config: FdkPythonGenConfig,
 }
 
 impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
 
-    pub fn new(config: MdkPythonGenConfig) -> anyhow::Result<Self> {
+    pub fn new(config: FdkPythonGenConfig) -> anyhow::Result<Self> {
         use garde::Validate;
         config
             .validate(&())
-            .context("validating MDK_PYTHON config")?;
+            .context("validating FDK_PYTHON config")?;
         Ok(Self { config })
     }
 }
 
-impl TryFrom<MdkTemplate> for tera::Tera {
+impl TryFrom<FdkTemplate> for tera::Tera {
     type Error = anyhow::Error;
 
-    fn try_from(template: MdkTemplate) -> Result<Self, Self::Error> {
+    fn try_from(template: FdkTemplate) -> Result<Self, Self::Error> {
         let mut tera = Self::default();
         for (file_name, content) in template.entries {
             tera.add_raw_template(file_name, &content)?;
@@ -95,7 +95,7 @@ impl crate::Plugin for Generator {
         .into_iter()
         .chain(std::iter::once((
             "template_dir".to_string(),
-            GeneratorInputOrder::LoadMdkTemplate {
+            GeneratorInputOrder::LoadFdkTemplate {
                 default: DEFAULT_TEMPLATE,
                 override_path: self.config.base.template_dir.clone(),
             },
@@ -118,7 +118,7 @@ impl crate::Plugin for Generator {
         };
 
         let template: tera::Tera = match inputs.remove("template_dir").unwrap() {
-            GeneratorInputResolved::MdkTemplate { template } => template.try_into()?,
+            GeneratorInputResolved::FdkTemplate { template } => template.try_into()?,
             _ => unreachable!(),
         };
 
