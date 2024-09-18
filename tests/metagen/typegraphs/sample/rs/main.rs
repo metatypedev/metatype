@@ -1,6 +1,9 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+#![deny(clippy::all)]
 
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
+#[rustfmt::skip]
 pub mod client;
 use client::*;
 
