@@ -23,6 +23,8 @@ impl<T: TypeConversion> TypeConversion for Rc<T> {
     }
 }
 
+pub const USER_NAMED_MARKER: &str = "____TG_USER_NAMED_TYPE____";
+
 pub struct BaseBuilderInit<'a, 'b> {
     pub ctx: &'a mut TypegraphContext,
     pub base_name: &'static str,
@@ -44,15 +46,20 @@ pub struct BaseBuilder<'a> {
     enumeration: Option<Vec<String>>,
     injection: Option<Injection>,
     as_id: bool,
+    user_named: bool,
 }
 
 impl<'a, 'b> BaseBuilderInit<'a, 'b> {
     pub fn init_builder(self) -> Result<BaseBuilder<'a>> {
         let policies = self.ctx.register_policy_chain(self.policies)?;
 
-        let name = self
-            .name
-            .unwrap_or_else(|| format!("{}_{}", self.base_name, self.type_id.0));
+        let (name, user_named) = match self.name {
+            Some(name) => (name, true),
+            None => (
+                format!("{}_{}_placeholder", self.base_name, self.type_id.0),
+                false,
+            ),
+        };
 
         let runtime_config = self.runtime_config.map(|c| {
             c.iter()
@@ -70,6 +77,8 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
             enumeration: None,
             injection: None,
             as_id: false,
+
+            user_named,
         })
     }
 }
@@ -82,8 +91,12 @@ impl<'a> BaseBuilder<'a> {
                 .collect::<IndexMap<_, _>>()
         });
 
+        let mut config = config.unwrap_or_default();
+        if self.user_named {
+            config.insert(USER_NAMED_MARKER.to_string(), serde_json::Value::Bool(true));
+        }
         Ok(TypeNodeBase {
-            config: config.unwrap_or_default(),
+            config,
             description: None,
             enumeration: self.enumeration,
             injection: self.injection,

@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use substantial_rt::SubstantialProcessor;
 
 pub mod deno_rt;
+pub mod naming;
 pub mod prisma_rt;
 pub mod python_rt;
 pub mod substantial_rt;

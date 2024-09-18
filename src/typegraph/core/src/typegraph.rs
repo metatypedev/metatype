@@ -3,9 +3,10 @@
 
 use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
-use crate::conversion::types::TypeConversion;
+use crate::conversion::types::{TypeConversion, USER_NAMED_MARKER};
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
+use crate::utils::postprocess::naming::NamingProcessor;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
@@ -13,7 +14,7 @@ use crate::{
     errors::{self, Result},
     global_store::Store,
 };
-use common::typegraph::runtimes::TGRuntime;
+use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
 use common::typegraph::{
     Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
     TypeNode, TypeNodeBase, Typegraph,
@@ -120,7 +121,12 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
 
     ctx.types.push(Some(TypeNode::Object {
         base: TypeNodeBase {
-            config: Default::default(),
+            config: [
+                // root type is named after typegraph
+                (USER_NAMED_MARKER.to_string(), serde_json::Value::Bool(true)),
+            ]
+            .into_iter()
+            .collect(),
             description: None,
             enumeration: None,
             injection: None,
@@ -182,7 +188,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
 
 pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> {
     #[cfg(test)]
-    eprintln!("Serializing typegraph typegraph...");
+    eprintln!("Serializing typegraph...");
 
     let mut ctx = TG.with(|tg| {
         tg.borrow_mut()
@@ -227,7 +233,11 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> 
     tg.meta.prefix.clone_from(&params.prefix);
 
     let pretty = params.pretty;
+
+    // dedup_types(&mut tg);
+
     TypegraphPostProcessor::new(params).postprocess(&mut tg)?;
+    NamingProcessor {}.postprocess(&mut tg)?;
 
     let artifacts = tg
         .meta
@@ -311,7 +321,9 @@ pub fn expose(
                 }
                 ensure_valid_export(key.clone(), type_id)?;
 
-                let type_idx = ctx.register_type(type_id.try_into()?, None)?;
+                // this resolves the type_id to a type_def from theh Store
+                let type_def = type_id.try_into()?;
+                let type_idx = ctx.register_type(type_def, None)?;
                 root_data.properties.insert(key.clone(), type_idx.into());
                 root_data.required.push(key);
                 Ok(())
@@ -488,5 +500,119 @@ impl TypegraphContext {
 
     pub fn find_policy_index_by_store_id(&self, id: u32) -> Option<u32> {
         self.mapping.policies.get(&id).copied()
+    }
+}
+
+#[allow(unused)]
+fn dedup_types(tg: &mut Typegraph) {
+    // the scalars to be kept
+    let mut base_scalars = HashMap::new();
+    // the duplicate scalars to be discarded
+    let mut replaced_scalars = HashMap::new();
+
+    for (id, node) in tg.types.iter_mut().enumerate() {
+        match node {
+            TypeNode::Boolean { .. }
+            | TypeNode::Float { .. }
+            | TypeNode::Integer { .. }
+            | TypeNode::String { .. }
+            | TypeNode::File { .. } => {
+                use sha2::Digest;
+
+                // we hash the canonical json of the type node
+                let mut hash = sha2::Sha256::new();
+                // swap the title out during hashing to aviod generated
+                // names from affecting it
+                let mut old_title = String::new();
+                std::mem::swap(&mut old_title, &mut node.base_mut().title);
+                json_canon::to_writer(&mut hash, node).expect("error serializing typenode json");
+                std::mem::swap(&mut old_title, &mut node.base_mut().title);
+                let hash = hash.finalize();
+
+                if let Some(&replacement_id) = base_scalars.get(&hash) {
+                    replaced_scalars.insert(id as u32, replacement_id);
+                } else {
+                    base_scalars.insert(hash, id as u32);
+                }
+            }
+            _ => {
+                // TODO: dedup on composites with support for cycles
+            }
+        }
+    }
+
+    let mut replacement_list = (0..tg.types.len() as u32).collect::<Vec<_>>();
+
+    for (from, to) in replaced_scalars {
+        tg.types.remove(from as usize);
+        for value in replacement_list.iter_mut().skip(from as usize - 1) {
+            *value -= 1;
+        }
+        replacement_list[from as usize] = replacement_list[to as usize];
+    }
+
+    // replace indices in the types
+    replace_type_ids(tg, &replacement_list);
+}
+
+fn replace_type_ids(tg: &mut Typegraph, replacement_list: &[u32]) {
+    for node in &mut tg.types {
+        match node {
+            TypeNode::Optional { data, .. } => {
+                data.item = replacement_list[data.item as usize];
+            }
+            TypeNode::List { data, .. } => {
+                data.items = replacement_list[data.items as usize];
+            }
+            TypeNode::Object { data, .. } => {
+                for prop_id in data.properties.values_mut() {
+                    *prop_id = replacement_list[*prop_id as usize];
+                }
+            }
+            TypeNode::Function { data, .. } => {
+                data.input = replacement_list[data.input as usize];
+                data.output = replacement_list[data.output as usize];
+            }
+            TypeNode::Union { data, .. } => {
+                for variant in &mut data.any_of {
+                    *variant = replacement_list[*variant as usize];
+                }
+            }
+            TypeNode::Either { data, .. } => {
+                for variant in &mut data.one_of {
+                    *variant = replacement_list[*variant as usize];
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // replace indices in runtimes
+    for rt in &mut tg.runtimes {
+        match rt {
+            TGRuntime::Known(rt) => {
+                if let KnownRuntime::Prisma(prisma) = rt {
+                    for model in &mut prisma.models {
+                        model.type_idx = replacement_list[model.type_idx as usize];
+                        for prop in &mut model.props {
+                            use common::typegraph::runtimes::prisma::Property;
+                            match prop {
+                                Property::Scalar(prop) => {
+                                    prop.type_idx = replacement_list[prop.type_idx as usize];
+                                }
+                                Property::Relationship(prop) => {
+                                    prop.type_idx = replacement_list[prop.type_idx as usize];
+                                }
+                            }
+                        }
+                    }
+                    for rl in &mut prisma.relationships {
+                        rl.left.type_idx = replacement_list[rl.left.type_idx as usize];
+                        rl.right.type_idx = replacement_list[rl.right.type_idx as usize];
+                    }
+                }
+            }
+            TGRuntime::Unknown(_) => {}
+        }
     }
 }
