@@ -1702,10 +1702,10 @@ _No Migrations Needed_
 </details>
 <details >
 <summary>
-(mdk) Mdk python (<a href="https://github.com/metatypedev/metatype/pull/707">#707</a>)
+(Fdk) Fdk python (<a href="https://github.com/metatypedev/metatype/pull/707">#707</a>)
 </summary>
 
-Mdk for python runtime
+Fdk for python runtime
 
 #### Migration notes
 
