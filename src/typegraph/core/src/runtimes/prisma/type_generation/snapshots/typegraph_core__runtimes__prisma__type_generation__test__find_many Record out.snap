@@ -1,12 +1,11 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list '_73_RecordWithNestedCount[]' #73
+root: list #73
 └─ item: struct 'RecordWithNestedCount' #72
    ├─ [age]: optional #5
    │  └─ item: integer #4
    ├─ [created_at]: string #71
    ├─ [id]: string #2
    └─ [name]: string #3
-

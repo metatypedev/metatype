@@ -1,8 +1,8 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list '_171_PostWithNestedCount[]' #171
+root: list #171
 └─ item: struct 'PostWithNestedCount' #170
    ├─ [author]: struct #169
    │  ├─ [id]: integer #74
@@ -17,4 +17,3 @@ root: list '_171_PostWithNestedCount[]' #171
    │        └─ [title]: string #80
    ├─ [id]: integer #79
    └─ [title]: string #80
-

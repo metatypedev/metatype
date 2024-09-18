@@ -1,11 +1,11 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct '_Record_QueryInput_group_by' #105
 ├─ [by]: list '_Record_GroupingFields' #73
 │  └─ item: string #72 enum{ '"id"', '"name"', '"age"', '"created_at"' }
-├─ [cursor]: optional '_71__Record_Cursor?' #71
+├─ [cursor]: optional #71
 │  └─ item: union '_Record_Cursor' #70
 │     ├─ variant_0: struct #66
 │     │  └─ [id]: string #2
@@ -15,10 +15,10 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  └─ [age]: integer #4
 │     └─ variant_3: struct #69
 │        └─ [created_at]: string #1
-├─ [having]: optional '_104__Record_Having?' #104
+├─ [having]: optional #104
 │  └─ item: union '_Record_Having' #103
 │     ├─ variant_0: struct 'RecordWhere__agg' #96
-│     │  ├─ [age]: optional '_94__integer_filter_with_aggregates_c?' #94
+│     │  ├─ [age]: optional #94
 │     │  │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │  │     └─ item: union #92
 │     │  │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -286,7 +286,7 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │                    └─ variant_5: struct #32
 │     │  │                       └─ [notIn]: list #27
 │     │  │                          └─ item: integer #25
-│     │  ├─ [created_at]: optional '_95__string_filter_c?' #95
+│     │  ├─ [created_at]: optional #95
 │     │  │  └─ item: optional '_string_filter_c' #22
 │     │  │     └─ item: union #21
 │     │  │        ├─ variant_0: union '_string_filter' #19
@@ -336,7 +336,7 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │                 │  └─ item: string #7
 │     │  │                 └─ [startsWith]: optional #8
 │     │  │                    └─ item: string #7
-│     │  ├─ [id]: optional '_74__string_filter_c?' #74
+│     │  ├─ [id]: optional #74
 │     │  │  └─ item: optional '_string_filter_c' #22
 │     │  │     └─ item: union #21
 │     │  │        ├─ variant_0: union '_string_filter' #19
@@ -386,7 +386,7 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │                 │  └─ item: string #7
 │     │  │                 └─ [startsWith]: optional #8
 │     │  │                    └─ item: string #7
-│     │  └─ [name]: optional '_75__string_filter_c?' #75
+│     │  └─ [name]: optional #75
 │     │     └─ item: optional '_string_filter_c' #22
 │     │        └─ item: union #21
 │     │           ├─ variant_0: union '_string_filter' #19
@@ -437,14 +437,14 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │                    └─ [startsWith]: optional #8
 │     │                       └─ item: string #7
 │     ├─ variant_1: struct #99
-│     │  └─ [AND]: list '_98__Record_Having[]' #98
+│     │  └─ [AND]: list #98
 │     │     └─ item: &_Record_Having #97
 │     ├─ variant_2: struct #101
-│     │  └─ [OR]: list '_100__Record_Having[]' #100
+│     │  └─ [OR]: list #100
 │     │     └─ item: &_Record_Having #97
 │     └─ variant_3: struct #102
 │        └─ [NOT]: &_Record_Having #97
-├─ [orderBy]: optional '_61__Record_OrderBy_with_aggregates?' #61
+├─ [orderBy]: optional #61
 │  └─ item: list '_Record_OrderBy_with_aggregates' #60
 │     └─ item: struct #59
 │        ├─ [_avg]: optional #57
@@ -523,21 +523,21 @@ root: struct '_Record_QueryInput_group_by' #105
 │              ├─ variant_0: struct #48
 │              │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │              └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-├─ [skip]: optional '_65__Skip?' #65
+├─ [skip]: optional #65
 │  └─ item: integer '_Skip' #64
-├─ [take]: optional '_63__Take?' #63
+├─ [take]: optional #63
 │  └─ item: integer '_Take' #62
-└─ [where]: optional '_45_QueryRecordWhereInput?' #45
+└─ [where]: optional #45
    └─ item: struct 'QueryRecordWhereInput' #44
-      ├─ [AND]: optional '_42__41_QueryRecordWhereInput[]?' #42
-      │  └─ item: list '_41_QueryRecordWhereInput[]' #41
+      ├─ [AND]: optional #42
+      │  └─ item: list #41
       │     └─ item: &QueryRecordWhereInput #40
-      ├─ [NOT]: optional '_43_QueryRecordWhereInput?' #43
+      ├─ [NOT]: optional #43
       │  └─ item: &QueryRecordWhereInput #40
-      ├─ [OR]: optional '_42__41_QueryRecordWhereInput[]?' #42
-      │  └─ item: list '_41_QueryRecordWhereInput[]' #41
+      ├─ [OR]: optional #42
+      │  └─ item: list #41
       │     └─ item: &QueryRecordWhereInput #40
-      ├─ [age]: optional '_37__integer_filter_c?' #37
+      ├─ [age]: optional #37
       │  └─ item: optional '_integer_filter_c' #36
       │     └─ item: union #35
       │        ├─ variant_0: either '_integer_filter' #33
@@ -583,7 +583,7 @@ root: struct '_Record_QueryInput_group_by' #105
       │              └─ variant_5: struct #32
       │                 └─ [notIn]: list #27
       │                    └─ item: integer #25
-      ├─ [created_at]: optional '_38__string_filter_c?' #38
+      ├─ [created_at]: optional #38
       │  └─ item: optional '_string_filter_c' #22
       │     └─ item: union #21
       │        ├─ variant_0: union '_string_filter' #19
@@ -633,7 +633,7 @@ root: struct '_Record_QueryInput_group_by' #105
       │                 │  └─ item: string #7
       │                 └─ [startsWith]: optional #8
       │                    └─ item: string #7
-      ├─ [id]: optional '_23__string_filter_c?' #23
+      ├─ [id]: optional #23
       │  └─ item: optional '_string_filter_c' #22
       │     └─ item: union #21
       │        ├─ variant_0: union '_string_filter' #19
@@ -683,7 +683,7 @@ root: struct '_Record_QueryInput_group_by' #105
       │                 │  └─ item: string #7
       │                 └─ [startsWith]: optional #8
       │                    └─ item: string #7
-      └─ [name]: optional '_24__string_filter_c?' #24
+      └─ [name]: optional #24
          └─ item: optional '_string_filter_c' #22
             └─ item: union #21
                ├─ variant_0: union '_string_filter' #19
@@ -733,4 +733,3 @@ root: struct '_Record_QueryInput_group_by' #105
                         │  └─ item: string #7
                         └─ [startsWith]: optional #8
                            └─ item: string #7
-

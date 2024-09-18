@@ -1,5 +1,5 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct #80
@@ -14,7 +14,7 @@ root: struct #80
          │     │  ├─ [id]: optional #19
          │     │  │  └─ item: integer #15
          │     │  └─ [title]: string #16
-         │     └─ variant_1: list '_21__Post_CreateInput_excluding___rel_Post_User_1[]' #21
+         │     └─ variant_1: list #21
          │        └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #20
          │           ├─ [id]: optional #19
          │           │  └─ item: integer #15
@@ -22,9 +22,9 @@ root: struct #80
          ├─ variant_1: struct #71
          │  └─ [connect]: union #68
          │     ├─ variant_0: struct 'PostWhere' #66
-         │     │  ├─ [author]: optional '_65_UserWhere__skip_18_PostWhere?' #65
+         │     │  ├─ [author]: optional #65
          │     │  │  └─ item: struct 'UserWhere__skip_18_PostWhere' #64
-         │     │  │     ├─ [id]: optional '_53__integer_filter_c?' #53
+         │     │  │     ├─ [id]: optional #53
          │     │  │     │  └─ item: optional '_integer_filter_c' #34
          │     │  │     │     └─ item: union #33
          │     │  │     │        ├─ variant_0: either '_integer_filter' #31
@@ -70,7 +70,7 @@ root: struct #80
          │     │  │     │              └─ variant_5: struct #30
          │     │  │     │                 └─ [notIn]: list #25
          │     │  │     │                    └─ item: integer #23
-         │     │  │     ├─ [name]: optional '_54__string_filter_c?' #54
+         │     │  │     ├─ [name]: optional #54
          │     │  │     │  └─ item: optional '_string_filter_c' #51
          │     │  │     │     └─ item: union #50
          │     │  │     │        ├─ variant_0: union '_string_filter' #48
@@ -123,15 +123,15 @@ root: struct #80
          │     │  │     └─ [posts]: optional #63
          │     │  │        └─ item: union #62
          │     │  │           ├─ variant_0: struct #57
-         │     │  │           │  └─ [every]: optional '_56_PostWhere?' #56
+         │     │  │           │  └─ [every]: optional #56
          │     │  │           │     └─ item: &PostWhere #55
          │     │  │           ├─ variant_1: struct #59
-         │     │  │           │  └─ [some]: optional '_58_PostWhere?' #58
+         │     │  │           │  └─ [some]: optional #58
          │     │  │           │     └─ item: &PostWhere #55
          │     │  │           └─ variant_2: struct #61
-         │     │  │              └─ [none]: optional '_60_PostWhere?' #60
+         │     │  │              └─ [none]: optional #60
          │     │  │                 └─ item: &PostWhere #55
-         │     │  ├─ [id]: optional '_35__integer_filter_c?' #35
+         │     │  ├─ [id]: optional #35
          │     │  │  └─ item: optional '_integer_filter_c' #34
          │     │  │     └─ item: union #33
          │     │  │        ├─ variant_0: either '_integer_filter' #31
@@ -177,7 +177,7 @@ root: struct #80
          │     │  │              └─ variant_5: struct #30
          │     │  │                 └─ [notIn]: list #25
          │     │  │                    └─ item: integer #23
-         │     │  └─ [title]: optional '_52__string_filter_c?' #52
+         │     │  └─ [title]: optional #52
          │     │     └─ item: optional '_string_filter_c' #51
          │     │        └─ item: union #50
          │     │           ├─ variant_0: union '_string_filter' #48
@@ -227,11 +227,11 @@ root: struct #80
          │     │                    │  └─ item: string #36
          │     │                    └─ [startsWith]: optional #37
          │     │                       └─ item: string #36
-         │     └─ variant_1: list '_67_PostWhere[]' #67
+         │     └─ variant_1: list #67
          │        └─ item: struct 'PostWhere' #66
-         │           ├─ [author]: optional '_65_UserWhere__skip_18_PostWhere?' #65
+         │           ├─ [author]: optional #65
          │           │  └─ item: struct 'UserWhere__skip_18_PostWhere' #64
-         │           │     ├─ [id]: optional '_53__integer_filter_c?' #53
+         │           │     ├─ [id]: optional #53
          │           │     │  └─ item: optional '_integer_filter_c' #34
          │           │     │     └─ item: union #33
          │           │     │        ├─ variant_0: either '_integer_filter' #31
@@ -277,7 +277,7 @@ root: struct #80
          │           │     │              └─ variant_5: struct #30
          │           │     │                 └─ [notIn]: list #25
          │           │     │                    └─ item: integer #23
-         │           │     ├─ [name]: optional '_54__string_filter_c?' #54
+         │           │     ├─ [name]: optional #54
          │           │     │  └─ item: optional '_string_filter_c' #51
          │           │     │     └─ item: union #50
          │           │     │        ├─ variant_0: union '_string_filter' #48
@@ -330,15 +330,15 @@ root: struct #80
          │           │     └─ [posts]: optional #63
          │           │        └─ item: union #62
          │           │           ├─ variant_0: struct #57
-         │           │           │  └─ [every]: optional '_56_PostWhere?' #56
+         │           │           │  └─ [every]: optional #56
          │           │           │     └─ item: &PostWhere #55
          │           │           ├─ variant_1: struct #59
-         │           │           │  └─ [some]: optional '_58_PostWhere?' #58
+         │           │           │  └─ [some]: optional #58
          │           │           │     └─ item: &PostWhere #55
          │           │           └─ variant_2: struct #61
-         │           │              └─ [none]: optional '_60_PostWhere?' #60
+         │           │              └─ [none]: optional #60
          │           │                 └─ item: &PostWhere #55
-         │           ├─ [id]: optional '_35__integer_filter_c?' #35
+         │           ├─ [id]: optional #35
          │           │  └─ item: optional '_integer_filter_c' #34
          │           │     └─ item: union #33
          │           │        ├─ variant_0: either '_integer_filter' #31
@@ -384,7 +384,7 @@ root: struct #80
          │           │              └─ variant_5: struct #30
          │           │                 └─ [notIn]: list #25
          │           │                    └─ item: integer #23
-         │           └─ [title]: optional '_52__string_filter_c?' #52
+         │           └─ [title]: optional #52
          │              └─ item: optional '_string_filter_c' #51
          │                 └─ item: union #50
          │                    ├─ variant_0: union '_string_filter' #48
@@ -441,16 +441,16 @@ root: struct #80
          │     │  │  ├─ [id]: optional #19
          │     │  │  │  └─ item: integer #15
          │     │  │  └─ [title]: string #16
-         │     │  └─ variant_1: list '_21__Post_CreateInput_excluding___rel_Post_User_1[]' #21
+         │     │  └─ variant_1: list #21
          │     │     └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #20
          │     │        ├─ [id]: optional #19
          │     │        │  └─ item: integer #15
          │     │        └─ [title]: string #16
          │     └─ [where]: union #68
          │        ├─ variant_0: struct 'PostWhere' #66
-         │        │  ├─ [author]: optional '_65_UserWhere__skip_18_PostWhere?' #65
+         │        │  ├─ [author]: optional #65
          │        │  │  └─ item: struct 'UserWhere__skip_18_PostWhere' #64
-         │        │  │     ├─ [id]: optional '_53__integer_filter_c?' #53
+         │        │  │     ├─ [id]: optional #53
          │        │  │     │  └─ item: optional '_integer_filter_c' #34
          │        │  │     │     └─ item: union #33
          │        │  │     │        ├─ variant_0: either '_integer_filter' #31
@@ -496,7 +496,7 @@ root: struct #80
          │        │  │     │              └─ variant_5: struct #30
          │        │  │     │                 └─ [notIn]: list #25
          │        │  │     │                    └─ item: integer #23
-         │        │  │     ├─ [name]: optional '_54__string_filter_c?' #54
+         │        │  │     ├─ [name]: optional #54
          │        │  │     │  └─ item: optional '_string_filter_c' #51
          │        │  │     │     └─ item: union #50
          │        │  │     │        ├─ variant_0: union '_string_filter' #48
@@ -549,15 +549,15 @@ root: struct #80
          │        │  │     └─ [posts]: optional #63
          │        │  │        └─ item: union #62
          │        │  │           ├─ variant_0: struct #57
-         │        │  │           │  └─ [every]: optional '_56_PostWhere?' #56
+         │        │  │           │  └─ [every]: optional #56
          │        │  │           │     └─ item: &PostWhere #55
          │        │  │           ├─ variant_1: struct #59
-         │        │  │           │  └─ [some]: optional '_58_PostWhere?' #58
+         │        │  │           │  └─ [some]: optional #58
          │        │  │           │     └─ item: &PostWhere #55
          │        │  │           └─ variant_2: struct #61
-         │        │  │              └─ [none]: optional '_60_PostWhere?' #60
+         │        │  │              └─ [none]: optional #60
          │        │  │                 └─ item: &PostWhere #55
-         │        │  ├─ [id]: optional '_35__integer_filter_c?' #35
+         │        │  ├─ [id]: optional #35
          │        │  │  └─ item: optional '_integer_filter_c' #34
          │        │  │     └─ item: union #33
          │        │  │        ├─ variant_0: either '_integer_filter' #31
@@ -603,7 +603,7 @@ root: struct #80
          │        │  │              └─ variant_5: struct #30
          │        │  │                 └─ [notIn]: list #25
          │        │  │                    └─ item: integer #23
-         │        │  └─ [title]: optional '_52__string_filter_c?' #52
+         │        │  └─ [title]: optional #52
          │        │     └─ item: optional '_string_filter_c' #51
          │        │        └─ item: union #50
          │        │           ├─ variant_0: union '_string_filter' #48
@@ -653,11 +653,11 @@ root: struct #80
          │        │                    │  └─ item: string #36
          │        │                    └─ [startsWith]: optional #37
          │        │                       └─ item: string #36
-         │        └─ variant_1: list '_67_PostWhere[]' #67
+         │        └─ variant_1: list #67
          │           └─ item: struct 'PostWhere' #66
-         │              ├─ [author]: optional '_65_UserWhere__skip_18_PostWhere?' #65
+         │              ├─ [author]: optional #65
          │              │  └─ item: struct 'UserWhere__skip_18_PostWhere' #64
-         │              │     ├─ [id]: optional '_53__integer_filter_c?' #53
+         │              │     ├─ [id]: optional #53
          │              │     │  └─ item: optional '_integer_filter_c' #34
          │              │     │     └─ item: union #33
          │              │     │        ├─ variant_0: either '_integer_filter' #31
@@ -703,7 +703,7 @@ root: struct #80
          │              │     │              └─ variant_5: struct #30
          │              │     │                 └─ [notIn]: list #25
          │              │     │                    └─ item: integer #23
-         │              │     ├─ [name]: optional '_54__string_filter_c?' #54
+         │              │     ├─ [name]: optional #54
          │              │     │  └─ item: optional '_string_filter_c' #51
          │              │     │     └─ item: union #50
          │              │     │        ├─ variant_0: union '_string_filter' #48
@@ -756,15 +756,15 @@ root: struct #80
          │              │     └─ [posts]: optional #63
          │              │        └─ item: union #62
          │              │           ├─ variant_0: struct #57
-         │              │           │  └─ [every]: optional '_56_PostWhere?' #56
+         │              │           │  └─ [every]: optional #56
          │              │           │     └─ item: &PostWhere #55
          │              │           ├─ variant_1: struct #59
-         │              │           │  └─ [some]: optional '_58_PostWhere?' #58
+         │              │           │  └─ [some]: optional #58
          │              │           │     └─ item: &PostWhere #55
          │              │           └─ variant_2: struct #61
-         │              │              └─ [none]: optional '_60_PostWhere?' #60
+         │              │              └─ [none]: optional #60
          │              │                 └─ item: &PostWhere #55
-         │              ├─ [id]: optional '_35__integer_filter_c?' #35
+         │              ├─ [id]: optional #35
          │              │  └─ item: optional '_integer_filter_c' #34
          │              │     └─ item: union #33
          │              │        ├─ variant_0: either '_integer_filter' #31
@@ -810,7 +810,7 @@ root: struct #80
          │              │              └─ variant_5: struct #30
          │              │                 └─ [notIn]: list #25
          │              │                    └─ item: integer #23
-         │              └─ [title]: optional '_52__string_filter_c?' #52
+         │              └─ [title]: optional #52
          │                 └─ item: optional '_string_filter_c' #51
          │                    └─ item: union #50
          │                       ├─ variant_0: union '_string_filter' #48
@@ -869,9 +869,8 @@ root: struct #80
                         │  ├─ [id]: optional #19
                         │  │  └─ item: integer #15
                         │  └─ [title]: string #16
-                        └─ variant_1: list '_21__Post_CreateInput_excluding___rel_Post_User_1[]' #21
+                        └─ variant_1: list #21
                            └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #20
                               ├─ [id]: optional #19
                               │  └─ item: integer #15
                               └─ [title]: string #16
-

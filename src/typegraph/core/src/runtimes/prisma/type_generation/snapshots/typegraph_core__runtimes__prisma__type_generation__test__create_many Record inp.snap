@@ -1,9 +1,9 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct #10
-└─ [data]: list '_9__Record_CreateInput[]' #9
+└─ [data]: list #9
    └─ item: struct '_Record_CreateInput' #8
       ├─ [age]: optional #5
       │  └─ item: integer #4
@@ -11,4 +11,3 @@ root: struct #10
       ├─ [id]: optional #7
       │  └─ item: string #2
       └─ [name]: string #3
-

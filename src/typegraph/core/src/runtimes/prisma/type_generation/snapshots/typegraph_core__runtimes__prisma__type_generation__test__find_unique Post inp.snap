@@ -1,21 +1,21 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct #111
-└─ [where]: optional '_110_QueryPostWhereUniqueInput?' #110
+└─ [where]: optional #110
    └─ item: struct 'QueryPostWhereUniqueInput' #109
-      ├─ [AND]: optional '_107__106_QueryPostWhereUniqueInput[]?' #107
-      │  └─ item: list '_106_QueryPostWhereUniqueInput[]' #106
+      ├─ [AND]: optional #107
+      │  └─ item: list #106
       │     └─ item: &QueryPostWhereUniqueInput #105
-      ├─ [NOT]: optional '_108_QueryPostWhereUniqueInput?' #108
+      ├─ [NOT]: optional #108
       │  └─ item: &QueryPostWhereUniqueInput #105
-      ├─ [OR]: optional '_107__106_QueryPostWhereUniqueInput[]?' #107
-      │  └─ item: list '_106_QueryPostWhereUniqueInput[]' #106
+      ├─ [OR]: optional #107
+      │  └─ item: list #106
       │     └─ item: &QueryPostWhereUniqueInput #105
-      ├─ [author]: optional '_103_UserWhere__skip_58_PostWhere?' #103
+      ├─ [author]: optional #103
       │  └─ item: struct 'UserWhere__skip_58_PostWhere' #102
-      │     ├─ [id]: optional '_91__integer_filter_c?' #91
+      │     ├─ [id]: optional #91
       │     │  └─ item: optional '_integer_filter_c' #36
       │     │     └─ item: union #35
       │     │        ├─ variant_0: either '_integer_filter' #33
@@ -61,7 +61,7 @@ root: struct #111
       │     │              └─ variant_5: struct #32
       │     │                 └─ [notIn]: list #27
       │     │                    └─ item: integer #25
-      │     ├─ [name]: optional '_92__string_filter_c?' #92
+      │     ├─ [name]: optional #92
       │     │  └─ item: optional '_string_filter_c' #22
       │     │     └─ item: union #21
       │     │        ├─ variant_0: union '_string_filter' #19
@@ -114,15 +114,15 @@ root: struct #111
       │     └─ [posts]: optional #101
       │        └─ item: union #100
       │           ├─ variant_0: struct #95
-      │           │  └─ [every]: optional '_94_PostWhere?' #94
+      │           │  └─ [every]: optional #94
       │           │     └─ item: &PostWhere #93
       │           ├─ variant_1: struct #97
-      │           │  └─ [some]: optional '_96_PostWhere?' #96
+      │           │  └─ [some]: optional #96
       │           │     └─ item: &PostWhere #93
       │           └─ variant_2: struct #99
-      │              └─ [none]: optional '_98_PostWhere?' #98
+      │              └─ [none]: optional #98
       │                 └─ item: &PostWhere #93
-      ├─ [id]: optional '_89__integer_filter_c?' #89
+      ├─ [id]: optional #89
       │  └─ item: optional '_integer_filter_c' #36
       │     └─ item: union #35
       │        ├─ variant_0: either '_integer_filter' #33
@@ -168,7 +168,7 @@ root: struct #111
       │              └─ variant_5: struct #32
       │                 └─ [notIn]: list #27
       │                    └─ item: integer #25
-      └─ [title]: optional '_90__string_filter_c?' #90
+      └─ [title]: optional #90
          └─ item: optional '_string_filter_c' #22
             └─ item: union #21
                ├─ variant_0: union '_string_filter' #19
@@ -218,4 +218,3 @@ root: struct #111
                         │  └─ item: string #7
                         └─ [startsWith]: optional #8
                            └─ item: string #7
-

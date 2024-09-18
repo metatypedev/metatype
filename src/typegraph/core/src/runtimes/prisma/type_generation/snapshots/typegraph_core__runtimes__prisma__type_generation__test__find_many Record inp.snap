@@ -1,9 +1,9 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct '_Record_QueryInput' #70
-├─ [cursor]: optional '_66__Record_Cursor?' #66
+├─ [cursor]: optional #66
 │  └─ item: union '_Record_Cursor' #65
 │     ├─ variant_0: struct #61
 │     │  └─ [id]: string #2
@@ -13,10 +13,10 @@ root: struct '_Record_QueryInput' #70
 │     │  └─ [age]: integer #4
 │     └─ variant_3: struct #64
 │        └─ [created_at]: string #1
-├─ [distinct]: optional '_69__KeysOf_Record?' #69
+├─ [distinct]: optional #69
 │  └─ item: list '_KeysOf_Record' #68
 │     └─ item: string #67 enum{ '"id"', '"name"', '"age"', '"created_at"' }
-├─ [orderBy]: optional '_56__Record_OrderBy?' #56
+├─ [orderBy]: optional #56
 │  └─ item: list '_Record_OrderBy' #55
 │     └─ item: struct #54
 │        ├─ [age]: optional '_Sort_nullable' #53
@@ -40,21 +40,21 @@ root: struct '_Record_QueryInput' #70
 │              ├─ variant_0: struct #48
 │              │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │              └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-├─ [skip]: optional '_60__Skip?' #60
+├─ [skip]: optional #60
 │  └─ item: integer '_Skip' #59
-├─ [take]: optional '_58__Take?' #58
+├─ [take]: optional #58
 │  └─ item: integer '_Take' #57
-└─ [where]: optional '_45_QueryRecordWhereInput?' #45
+└─ [where]: optional #45
    └─ item: struct 'QueryRecordWhereInput' #44
-      ├─ [AND]: optional '_42__41_QueryRecordWhereInput[]?' #42
-      │  └─ item: list '_41_QueryRecordWhereInput[]' #41
+      ├─ [AND]: optional #42
+      │  └─ item: list #41
       │     └─ item: &QueryRecordWhereInput #40
-      ├─ [NOT]: optional '_43_QueryRecordWhereInput?' #43
+      ├─ [NOT]: optional #43
       │  └─ item: &QueryRecordWhereInput #40
-      ├─ [OR]: optional '_42__41_QueryRecordWhereInput[]?' #42
-      │  └─ item: list '_41_QueryRecordWhereInput[]' #41
+      ├─ [OR]: optional #42
+      │  └─ item: list #41
       │     └─ item: &QueryRecordWhereInput #40
-      ├─ [age]: optional '_37__integer_filter_c?' #37
+      ├─ [age]: optional #37
       │  └─ item: optional '_integer_filter_c' #36
       │     └─ item: union #35
       │        ├─ variant_0: either '_integer_filter' #33
@@ -100,7 +100,7 @@ root: struct '_Record_QueryInput' #70
       │              └─ variant_5: struct #32
       │                 └─ [notIn]: list #27
       │                    └─ item: integer #25
-      ├─ [created_at]: optional '_38__string_filter_c?' #38
+      ├─ [created_at]: optional #38
       │  └─ item: optional '_string_filter_c' #22
       │     └─ item: union #21
       │        ├─ variant_0: union '_string_filter' #19
@@ -150,7 +150,7 @@ root: struct '_Record_QueryInput' #70
       │                 │  └─ item: string #7
       │                 └─ [startsWith]: optional #8
       │                    └─ item: string #7
-      ├─ [id]: optional '_23__string_filter_c?' #23
+      ├─ [id]: optional #23
       │  └─ item: optional '_string_filter_c' #22
       │     └─ item: union #21
       │        ├─ variant_0: union '_string_filter' #19
@@ -200,7 +200,7 @@ root: struct '_Record_QueryInput' #70
       │                 │  └─ item: string #7
       │                 └─ [startsWith]: optional #8
       │                    └─ item: string #7
-      └─ [name]: optional '_24__string_filter_c?' #24
+      └─ [name]: optional #24
          └─ item: optional '_string_filter_c' #22
             └─ item: union #21
                ├─ variant_0: union '_string_filter' #19
@@ -250,4 +250,3 @@ root: struct '_Record_QueryInput' #70
                         │  └─ item: string #7
                         └─ [startsWith]: optional #8
                            └─ item: string #7
-

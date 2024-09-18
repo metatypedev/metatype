@@ -1,9 +1,9 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/where_.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/where_.rs
 expression: "tree::print(where_type)"
 ---
 root: struct 'RecordWhere' #39
-├── [age]: optional '_37__integer_filter_c?' #37
+├── [age]: optional #37
 │   └── item: optional '_integer_filter_c' #36
 │       └── item: union #35
 │           ├── variant_0: either '_integer_filter' #33
@@ -49,7 +49,7 @@ root: struct 'RecordWhere' #39
 │                   └── variant_5: struct #32
 │                       └── [notIn]: list #27
 │                           └── item: integer #25
-├── [created_at]: optional '_38__string_filter_c?' #38
+├── [created_at]: optional #38
 │   └── item: optional '_string_filter_c' #22
 │       └── item: union #21
 │           ├── variant_0: union '_string_filter' #19
@@ -99,7 +99,7 @@ root: struct 'RecordWhere' #39
 │                       │   └── item: string #7
 │                       └── [startsWith]: optional #8
 │                           └── item: string #7
-├── [id]: optional '_23__string_filter_c?' #23
+├── [id]: optional #23
 │   └── item: optional '_string_filter_c' #22
 │       └── item: union #21
 │           ├── variant_0: union '_string_filter' #19
@@ -149,7 +149,7 @@ root: struct 'RecordWhere' #39
 │                       │   └── item: string #7
 │                       └── [startsWith]: optional #8
 │                           └── item: string #7
-└── [name]: optional '_24__string_filter_c?' #24
+└── [name]: optional #24
     └── item: optional '_string_filter_c' #22
         └── item: union #21
             ├── variant_0: union '_string_filter' #19
@@ -199,4 +199,3 @@ root: struct 'RecordWhere' #39
                         │   └── item: string #7
                         └── [startsWith]: optional #8
                             └── item: string #7
-

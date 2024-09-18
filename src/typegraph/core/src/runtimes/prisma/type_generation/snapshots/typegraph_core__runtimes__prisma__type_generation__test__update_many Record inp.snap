@@ -1,5 +1,5 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct #62
@@ -32,17 +32,17 @@ root: struct #62
 │        ├─ variant_0: string #3
 │        └─ variant_1: struct #10
 │           └─ [set]: string #3
-└─ [where]: optional '_61_QueryRecordWhereInput?' #61
+└─ [where]: optional #61
    └─ item: struct 'QueryRecordWhereInput' #60
-      ├─ [AND]: optional '_58__57_QueryRecordWhereInput[]?' #58
-      │  └─ item: list '_57_QueryRecordWhereInput[]' #57
+      ├─ [AND]: optional #58
+      │  └─ item: list #57
       │     └─ item: &QueryRecordWhereInput #56
-      ├─ [NOT]: optional '_59_QueryRecordWhereInput?' #59
+      ├─ [NOT]: optional #59
       │  └─ item: &QueryRecordWhereInput #56
-      ├─ [OR]: optional '_58__57_QueryRecordWhereInput[]?' #58
-      │  └─ item: list '_57_QueryRecordWhereInput[]' #57
+      ├─ [OR]: optional #58
+      │  └─ item: list #57
       │     └─ item: &QueryRecordWhereInput #56
-      ├─ [age]: optional '_53__integer_filter_c?' #53
+      ├─ [age]: optional #53
       │  └─ item: optional '_integer_filter_c' #52
       │     └─ item: union #51
       │        ├─ variant_0: either '_integer_filter' #49
@@ -88,7 +88,7 @@ root: struct #62
       │              └─ variant_5: struct #48
       │                 └─ [notIn]: list #43
       │                    └─ item: integer #41
-      ├─ [created_at]: optional '_54__string_filter_c?' #54
+      ├─ [created_at]: optional #54
       │  └─ item: optional '_string_filter_c' #38
       │     └─ item: union #37
       │        ├─ variant_0: union '_string_filter' #35
@@ -138,7 +138,7 @@ root: struct #62
       │                 │  └─ item: string #23
       │                 └─ [startsWith]: optional #24
       │                    └─ item: string #23
-      ├─ [id]: optional '_39__string_filter_c?' #39
+      ├─ [id]: optional #39
       │  └─ item: optional '_string_filter_c' #38
       │     └─ item: union #37
       │        ├─ variant_0: union '_string_filter' #35
@@ -188,7 +188,7 @@ root: struct #62
       │                 │  └─ item: string #23
       │                 └─ [startsWith]: optional #24
       │                    └─ item: string #23
-      └─ [name]: optional '_40__string_filter_c?' #40
+      └─ [name]: optional #40
          └─ item: optional '_string_filter_c' #38
             └─ item: union #37
                ├─ variant_0: union '_string_filter' #35
@@ -238,4 +238,3 @@ root: struct #62
                         │  └─ item: string #23
                         └─ [startsWith]: optional #24
                            └─ item: string #23
-

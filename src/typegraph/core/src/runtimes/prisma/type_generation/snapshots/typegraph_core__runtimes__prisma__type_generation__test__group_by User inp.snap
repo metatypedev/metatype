@@ -1,20 +1,20 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct '_User_QueryInput_group_by' #192
 ├─ [by]: list '_User_GroupingFields' #167
 │  └─ item: string #166 enum{ '"id"', '"name"' }
-├─ [cursor]: optional '_165__User_Cursor?' #165
+├─ [cursor]: optional #165
 │  └─ item: union '_User_Cursor' #164
 │     ├─ variant_0: struct #162
 │     │  └─ [id]: integer #119
 │     └─ variant_1: struct #163
 │        └─ [name]: string #120
-├─ [having]: optional '_191__User_Having?' #191
+├─ [having]: optional #191
 │  └─ item: union '_User_Having' #190
 │     ├─ variant_0: struct 'UserWhere__agg' #183
-│     │  ├─ [id]: optional '_168__integer_filter_with_aggregates_c?' #168
+│     │  ├─ [id]: optional #168
 │     │  │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │  │     └─ item: union #92
 │     │  │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -282,7 +282,7 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │                    └─ variant_5: struct #32
 │     │  │                       └─ [notIn]: list #27
 │     │  │                          └─ item: integer #25
-│     │  ├─ [name]: optional '_169__string_filter_c?' #169
+│     │  ├─ [name]: optional #169
 │     │  │  └─ item: optional '_string_filter_c' #22
 │     │  │     └─ item: union #21
 │     │  │        ├─ variant_0: union '_string_filter' #19
@@ -335,11 +335,11 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  └─ [posts]: optional #182
 │     │     └─ item: union #181
 │     │        ├─ variant_0: struct #176
-│     │        │  └─ [every]: optional '_175_PostWhere__agg__skip_123_UserWhere__agg?' #175
+│     │        │  └─ [every]: optional #175
 │     │        │     └─ item: struct 'PostWhere__agg__skip_123_UserWhere__agg' #174
-│     │        │        ├─ [author]: optional '_173_UserWhere__agg?' #173
+│     │        │        ├─ [author]: optional #173
 │     │        │        │  └─ item: &UserWhere__agg #172
-│     │        │        ├─ [id]: optional '_170__integer_filter_with_aggregates_c?' #170
+│     │        │        ├─ [id]: optional #170
 │     │        │        │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │        │        │     └─ item: union #92
 │     │        │        │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -607,7 +607,7 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │                    └─ variant_5: struct #32
 │     │        │        │                       └─ [notIn]: list #27
 │     │        │        │                          └─ item: integer #25
-│     │        │        └─ [title]: optional '_171__string_filter_c?' #171
+│     │        │        └─ [title]: optional #171
 │     │        │           └─ item: optional '_string_filter_c' #22
 │     │        │              └─ item: union #21
 │     │        │                 ├─ variant_0: union '_string_filter' #19
@@ -658,11 +658,11 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │                          └─ [startsWith]: optional #8
 │     │        │                             └─ item: string #7
 │     │        ├─ variant_1: struct #178
-│     │        │  └─ [some]: optional '_177_PostWhere__agg__skip_123_UserWhere__agg?' #177
+│     │        │  └─ [some]: optional #177
 │     │        │     └─ item: struct 'PostWhere__agg__skip_123_UserWhere__agg' #174
-│     │        │        ├─ [author]: optional '_173_UserWhere__agg?' #173
+│     │        │        ├─ [author]: optional #173
 │     │        │        │  └─ item: &UserWhere__agg #172
-│     │        │        ├─ [id]: optional '_170__integer_filter_with_aggregates_c?' #170
+│     │        │        ├─ [id]: optional #170
 │     │        │        │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │        │        │     └─ item: union #92
 │     │        │        │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -930,7 +930,7 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │                    └─ variant_5: struct #32
 │     │        │        │                       └─ [notIn]: list #27
 │     │        │        │                          └─ item: integer #25
-│     │        │        └─ [title]: optional '_171__string_filter_c?' #171
+│     │        │        └─ [title]: optional #171
 │     │        │           └─ item: optional '_string_filter_c' #22
 │     │        │              └─ item: union #21
 │     │        │                 ├─ variant_0: union '_string_filter' #19
@@ -981,11 +981,11 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │                          └─ [startsWith]: optional #8
 │     │        │                             └─ item: string #7
 │     │        └─ variant_2: struct #180
-│     │           └─ [none]: optional '_179_PostWhere__agg__skip_123_UserWhere__agg?' #179
+│     │           └─ [none]: optional #179
 │     │              └─ item: struct 'PostWhere__agg__skip_123_UserWhere__agg' #174
-│     │                 ├─ [author]: optional '_173_UserWhere__agg?' #173
+│     │                 ├─ [author]: optional #173
 │     │                 │  └─ item: &UserWhere__agg #172
-│     │                 ├─ [id]: optional '_170__integer_filter_with_aggregates_c?' #170
+│     │                 ├─ [id]: optional #170
 │     │                 │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │                 │     └─ item: union #92
 │     │                 │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -1253,7 +1253,7 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │                    └─ variant_5: struct #32
 │     │                 │                       └─ [notIn]: list #27
 │     │                 │                          └─ item: integer #25
-│     │                 └─ [title]: optional '_171__string_filter_c?' #171
+│     │                 └─ [title]: optional #171
 │     │                    └─ item: optional '_string_filter_c' #22
 │     │                       └─ item: union #21
 │     │                          ├─ variant_0: union '_string_filter' #19
@@ -1304,14 +1304,14 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                                   └─ [startsWith]: optional #8
 │     │                                      └─ item: string #7
 │     ├─ variant_1: struct #186
-│     │  └─ [AND]: list '_185__User_Having[]' #185
+│     │  └─ [AND]: list #185
 │     │     └─ item: &_User_Having #184
 │     ├─ variant_2: struct #188
-│     │  └─ [OR]: list '_187__User_Having[]' #187
+│     │  └─ [OR]: list #187
 │     │     └─ item: &_User_Having #184
 │     └─ variant_3: struct #189
 │        └─ [NOT]: &_User_Having #184
-├─ [orderBy]: optional '_159__User_OrderBy_with_aggregates?' #159
+├─ [orderBy]: optional #159
 │  └─ item: list '_User_OrderBy_with_aggregates' #158
 │     └─ item: struct #157
 │        ├─ [_avg]: optional #153
@@ -1396,21 +1396,21 @@ root: struct '_User_QueryInput_group_by' #192
 │                    ├─ variant_0: struct #48
 │                    │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │                    └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-├─ [skip]: optional '_161__Skip?' #161
+├─ [skip]: optional #161
 │  └─ item: integer '_Skip' #64
-├─ [take]: optional '_160__Take?' #160
+├─ [take]: optional #160
 │  └─ item: integer '_Take' #62
-└─ [where]: optional '_149_QueryUserWhereInput?' #149
+└─ [where]: optional #149
    └─ item: struct 'QueryUserWhereInput' #148
-      ├─ [AND]: optional '_146__145_QueryUserWhereInput[]?' #146
-      │  └─ item: list '_145_QueryUserWhereInput[]' #145
+      ├─ [AND]: optional #146
+      │  └─ item: list #145
       │     └─ item: &QueryUserWhereInput #144
-      ├─ [NOT]: optional '_147_QueryUserWhereInput?' #147
+      ├─ [NOT]: optional #147
       │  └─ item: &QueryUserWhereInput #144
-      ├─ [OR]: optional '_146__145_QueryUserWhereInput[]?' #146
-      │  └─ item: list '_145_QueryUserWhereInput[]' #145
+      ├─ [OR]: optional #146
+      │  └─ item: list #145
       │     └─ item: &QueryUserWhereInput #144
-      ├─ [id]: optional '_128__integer_filter_c?' #128
+      ├─ [id]: optional #128
       │  └─ item: optional '_integer_filter_c' #36
       │     └─ item: union #35
       │        ├─ variant_0: either '_integer_filter' #33
@@ -1456,7 +1456,7 @@ root: struct '_User_QueryInput_group_by' #192
       │              └─ variant_5: struct #32
       │                 └─ [notIn]: list #27
       │                    └─ item: integer #25
-      ├─ [name]: optional '_129__string_filter_c?' #129
+      ├─ [name]: optional #129
       │  └─ item: optional '_string_filter_c' #22
       │     └─ item: union #21
       │        ├─ variant_0: union '_string_filter' #19
@@ -1509,11 +1509,11 @@ root: struct '_User_QueryInput_group_by' #192
       └─ [posts]: optional #142
          └─ item: union #141
             ├─ variant_0: struct #136
-            │  └─ [every]: optional '_135_PostWhere__skip_123_UserWhere?' #135
+            │  └─ [every]: optional #135
             │     └─ item: struct 'PostWhere__skip_123_UserWhere' #134
-            │        ├─ [author]: optional '_133_UserWhere?' #133
+            │        ├─ [author]: optional #133
             │        │  └─ item: &UserWhere #132
-            │        ├─ [id]: optional '_130__integer_filter_c?' #130
+            │        ├─ [id]: optional #130
             │        │  └─ item: optional '_integer_filter_c' #36
             │        │     └─ item: union #35
             │        │        ├─ variant_0: either '_integer_filter' #33
@@ -1559,7 +1559,7 @@ root: struct '_User_QueryInput_group_by' #192
             │        │              └─ variant_5: struct #32
             │        │                 └─ [notIn]: list #27
             │        │                    └─ item: integer #25
-            │        └─ [title]: optional '_131__string_filter_c?' #131
+            │        └─ [title]: optional #131
             │           └─ item: optional '_string_filter_c' #22
             │              └─ item: union #21
             │                 ├─ variant_0: union '_string_filter' #19
@@ -1610,11 +1610,11 @@ root: struct '_User_QueryInput_group_by' #192
             │                          └─ [startsWith]: optional #8
             │                             └─ item: string #7
             ├─ variant_1: struct #138
-            │  └─ [some]: optional '_137_PostWhere__skip_123_UserWhere?' #137
+            │  └─ [some]: optional #137
             │     └─ item: struct 'PostWhere__skip_123_UserWhere' #134
-            │        ├─ [author]: optional '_133_UserWhere?' #133
+            │        ├─ [author]: optional #133
             │        │  └─ item: &UserWhere #132
-            │        ├─ [id]: optional '_130__integer_filter_c?' #130
+            │        ├─ [id]: optional #130
             │        │  └─ item: optional '_integer_filter_c' #36
             │        │     └─ item: union #35
             │        │        ├─ variant_0: either '_integer_filter' #33
@@ -1660,7 +1660,7 @@ root: struct '_User_QueryInput_group_by' #192
             │        │              └─ variant_5: struct #32
             │        │                 └─ [notIn]: list #27
             │        │                    └─ item: integer #25
-            │        └─ [title]: optional '_131__string_filter_c?' #131
+            │        └─ [title]: optional #131
             │           └─ item: optional '_string_filter_c' #22
             │              └─ item: union #21
             │                 ├─ variant_0: union '_string_filter' #19
@@ -1711,11 +1711,11 @@ root: struct '_User_QueryInput_group_by' #192
             │                          └─ [startsWith]: optional #8
             │                             └─ item: string #7
             └─ variant_2: struct #140
-               └─ [none]: optional '_139_PostWhere__skip_123_UserWhere?' #139
+               └─ [none]: optional #139
                   └─ item: struct 'PostWhere__skip_123_UserWhere' #134
-                     ├─ [author]: optional '_133_UserWhere?' #133
+                     ├─ [author]: optional #133
                      │  └─ item: &UserWhere #132
-                     ├─ [id]: optional '_130__integer_filter_c?' #130
+                     ├─ [id]: optional #130
                      │  └─ item: optional '_integer_filter_c' #36
                      │     └─ item: union #35
                      │        ├─ variant_0: either '_integer_filter' #33
@@ -1761,7 +1761,7 @@ root: struct '_User_QueryInput_group_by' #192
                      │              └─ variant_5: struct #32
                      │                 └─ [notIn]: list #27
                      │                    └─ item: integer #25
-                     └─ [title]: optional '_131__string_filter_c?' #131
+                     └─ [title]: optional #131
                         └─ item: optional '_string_filter_c' #22
                            └─ item: union #21
                               ├─ variant_0: union '_string_filter' #19
@@ -1811,4 +1811,3 @@ root: struct '_User_QueryInput_group_by' #192
                                        │  └─ item: string #7
                                        └─ [startsWith]: optional #8
                                           └─ item: string #7
-

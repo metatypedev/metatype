@@ -1,21 +1,21 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct '_Post_QueryInput' #164
-├─ [cursor]: optional '_160__Post_Cursor?' #160
+├─ [cursor]: optional #160
 │  └─ item: union '_Post_Cursor' #159
 │     ├─ variant_0: struct #157
 │     │  └─ [id]: integer #79
 │     └─ variant_1: struct #158
 │        └─ [title]: string #80
-├─ [distinct]: optional '_163__KeysOf_Post?' #163
+├─ [distinct]: optional #163
 │  └─ item: list '_KeysOf_Post' #162
 │     └─ item: string #161 enum{ '"id"', '"title"', '"author"' }
-├─ [orderBy]: optional '_154__Post_OrderBy?' #154
+├─ [orderBy]: optional #154
 │  └─ item: list '_Post_OrderBy' #153
 │     └─ item: struct #152
-│        ├─ [author]: optional '_151__User_OrderBy_excluding___rel_Post_User_1?' #151
+│        ├─ [author]: optional #151
 │        │  └─ item: list '_User_OrderBy_excluding___rel_Post_User_1' #150
 │        │     └─ item: struct #149
 │        │        ├─ [id]: optional '_Sort' #50
@@ -38,23 +38,23 @@ root: struct '_Post_QueryInput' #164
 │              ├─ variant_0: struct #48
 │              │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │              └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-├─ [skip]: optional '_156__Skip?' #156
+├─ [skip]: optional #156
 │  └─ item: integer '_Skip' #59
-├─ [take]: optional '_155__Take?' #155
+├─ [take]: optional #155
 │  └─ item: integer '_Take' #57
-└─ [where]: optional '_148_QueryPostWhereInput?' #148
+└─ [where]: optional #148
    └─ item: struct 'QueryPostWhereInput' #147
-      ├─ [AND]: optional '_145__144_QueryPostWhereInput[]?' #145
-      │  └─ item: list '_144_QueryPostWhereInput[]' #144
+      ├─ [AND]: optional #145
+      │  └─ item: list #144
       │     └─ item: &QueryPostWhereInput #143
-      ├─ [NOT]: optional '_146_QueryPostWhereInput?' #146
+      ├─ [NOT]: optional #146
       │  └─ item: &QueryPostWhereInput #143
-      ├─ [OR]: optional '_145__144_QueryPostWhereInput[]?' #145
-      │  └─ item: list '_144_QueryPostWhereInput[]' #144
+      ├─ [OR]: optional #145
+      │  └─ item: list #144
       │     └─ item: &QueryPostWhereInput #143
-      ├─ [author]: optional '_141_UserWhere__skip_82_PostWhere?' #141
+      ├─ [author]: optional #141
       │  └─ item: struct 'UserWhere__skip_82_PostWhere' #140
-      │     ├─ [id]: optional '_129__integer_filter_c?' #129
+      │     ├─ [id]: optional #129
       │     │  └─ item: optional '_integer_filter_c' #36
       │     │     └─ item: union #35
       │     │        ├─ variant_0: either '_integer_filter' #33
@@ -100,7 +100,7 @@ root: struct '_Post_QueryInput' #164
       │     │              └─ variant_5: struct #32
       │     │                 └─ [notIn]: list #27
       │     │                    └─ item: integer #25
-      │     ├─ [name]: optional '_130__string_filter_c?' #130
+      │     ├─ [name]: optional #130
       │     │  └─ item: optional '_string_filter_c' #22
       │     │     └─ item: union #21
       │     │        ├─ variant_0: union '_string_filter' #19
@@ -153,15 +153,15 @@ root: struct '_Post_QueryInput' #164
       │     └─ [posts]: optional #139
       │        └─ item: union #138
       │           ├─ variant_0: struct #133
-      │           │  └─ [every]: optional '_132_PostWhere?' #132
+      │           │  └─ [every]: optional #132
       │           │     └─ item: &PostWhere #131
       │           ├─ variant_1: struct #135
-      │           │  └─ [some]: optional '_134_PostWhere?' #134
+      │           │  └─ [some]: optional #134
       │           │     └─ item: &PostWhere #131
       │           └─ variant_2: struct #137
-      │              └─ [none]: optional '_136_PostWhere?' #136
+      │              └─ [none]: optional #136
       │                 └─ item: &PostWhere #131
-      ├─ [id]: optional '_127__integer_filter_c?' #127
+      ├─ [id]: optional #127
       │  └─ item: optional '_integer_filter_c' #36
       │     └─ item: union #35
       │        ├─ variant_0: either '_integer_filter' #33
@@ -207,7 +207,7 @@ root: struct '_Post_QueryInput' #164
       │              └─ variant_5: struct #32
       │                 └─ [notIn]: list #27
       │                    └─ item: integer #25
-      └─ [title]: optional '_128__string_filter_c?' #128
+      └─ [title]: optional #128
          └─ item: optional '_string_filter_c' #22
             └─ item: union #21
                ├─ variant_0: union '_string_filter' #19
@@ -257,4 +257,3 @@ root: struct '_Post_QueryInput' #164
                         │  └─ item: string #7
                         └─ [startsWith]: optional #8
                            └─ item: string #7
-

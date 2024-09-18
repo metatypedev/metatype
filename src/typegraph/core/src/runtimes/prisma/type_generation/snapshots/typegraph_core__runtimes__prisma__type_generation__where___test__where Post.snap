@@ -1,11 +1,11 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/where_.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/where_.rs
 expression: "tree::print(context.generate(&Where::new(post))?)"
 ---
 root: struct 'PostWhere' #80
-├── [author]: optional '_79_UserWhere__skip_48_PostWhere?' #79
+├── [author]: optional #79
 │   └── item: struct 'UserWhere__skip_48_PostWhere' #78
-│       ├── [id]: optional '_67__integer_filter_c?' #67
+│       ├── [id]: optional #67
 │       │   └── item: optional '_integer_filter_c' #36
 │       │       └── item: union #35
 │       │           ├── variant_0: either '_integer_filter' #33
@@ -51,7 +51,7 @@ root: struct 'PostWhere' #80
 │       │                   └── variant_5: struct #32
 │       │                       └── [notIn]: list #27
 │       │                           └── item: integer #25
-│       ├── [name]: optional '_68__string_filter_c?' #68
+│       ├── [name]: optional #68
 │       │   └── item: optional '_string_filter_c' #22
 │       │       └── item: union #21
 │       │           ├── variant_0: union '_string_filter' #19
@@ -104,15 +104,15 @@ root: struct 'PostWhere' #80
 │       └── [posts]: optional #77
 │           └── item: union #76
 │               ├── variant_0: struct #71
-│               │   └── [every]: optional '_70_PostWhere?' #70
+│               │   └── [every]: optional #70
 │               │       └── item: &PostWhere #69
 │               ├── variant_1: struct #73
-│               │   └── [some]: optional '_72_PostWhere?' #72
+│               │   └── [some]: optional #72
 │               │       └── item: &PostWhere #69
 │               └── variant_2: struct #75
-│                   └── [none]: optional '_74_PostWhere?' #74
+│                   └── [none]: optional #74
 │                       └── item: &PostWhere #69
-├── [id]: optional '_65__integer_filter_c?' #65
+├── [id]: optional #65
 │   └── item: optional '_integer_filter_c' #36
 │       └── item: union #35
 │           ├── variant_0: either '_integer_filter' #33
@@ -158,7 +158,7 @@ root: struct 'PostWhere' #80
 │                   └── variant_5: struct #32
 │                       └── [notIn]: list #27
 │                           └── item: integer #25
-└── [title]: optional '_66__string_filter_c?' #66
+└── [title]: optional #66
     └── item: optional '_string_filter_c' #22
         └── item: union #21
             ├── variant_0: union '_string_filter' #19
@@ -208,4 +208,3 @@ root: struct 'PostWhere' #80
                         │   └── item: string #7
                         └── [startsWith]: optional #8
                             └── item: string #7
-
