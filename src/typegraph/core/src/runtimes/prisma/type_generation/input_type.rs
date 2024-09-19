@@ -214,7 +214,6 @@ impl TypeGen for InputType {
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {
-            // TODO what is the casing of `skip_rel`?
             format!("Excluding{}", self.skip_rel.join("And"))
         };
         let op = match self.operation {

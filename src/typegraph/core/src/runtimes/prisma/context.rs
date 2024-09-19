@@ -126,7 +126,6 @@ impl PrismaContext {
 
     pub fn register_pair(&mut self, pair: CandidatePair) -> Result<bool> {
         if !self.is_registered(&pair)? {
-            // let id = self.next_id();
             let pair = pair.ordered()?;
 
             let rel_name = pair.rel_name()?;
@@ -222,12 +221,6 @@ impl PrismaContext {
             Ok(vec![])
         }
     }
-
-    // fn next_id(&self) -> usize {
-    //     let id = self.counter.get() + 1;
-    //     self.counter.set(id);
-    //     id
-    // }
 
     fn convert_scalar_prop(
         &self,

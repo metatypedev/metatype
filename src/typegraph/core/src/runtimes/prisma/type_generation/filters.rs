@@ -205,7 +205,6 @@ impl TypeGen for WithAggregateFilters {
     }
 
     fn name(&self) -> String {
-        // TODO model id??
         let name = self.model_id.name().unwrap().unwrap();
         format!("{name}WithAggregates")
     }
