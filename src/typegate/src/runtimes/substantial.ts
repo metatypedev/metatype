@@ -205,7 +205,9 @@ export class SubstantialRuntime extends Runtime {
       const completed = [];
       for (const runId of relatedRuns) {
         const run = await this.agent.retrieveEvents(runId);
-        const startedAt = run.operations[0]!.at;
+        const startedAt = run.operations[0]?.at;
+        if (!startedAt) continue;
+
         let endedAt, result: any;
 
         let hasStoppedAtLeastOnce = false;
@@ -237,8 +239,16 @@ export class SubstantialRuntime extends Runtime {
       }
 
       return {
-        ongoing: { count: ongoing.length, runs: ongoing },
-        completed: { count: completed.length, runs: completed },
+        ongoing: {
+          count: ongoing.length,
+          runs: ongoing.sort((a, b) =>
+            a.started_at.localeCompare(b.started_at)
+          ),
+        },
+        completed: {
+          count: completed.length,
+          runs: completed.sort((a, b) => a.ended_at.localeCompare(b.ended_at)),
+        },
       };
     };
   }
