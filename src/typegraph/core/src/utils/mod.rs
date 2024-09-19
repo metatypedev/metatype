@@ -22,7 +22,7 @@ use std::path::Path;
 
 mod archive;
 mod artifacts;
-mod fs;
+pub mod fs;
 pub mod metagen_utils;
 mod oauth2;
 mod pathlib;

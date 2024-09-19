@@ -4,6 +4,7 @@
 pub mod aws;
 pub mod deno;
 pub mod graphql;
+pub mod grpc;
 pub mod prisma;
 pub mod python;
 pub mod random;
@@ -14,6 +15,7 @@ pub mod typegraph;
 pub mod wasm;
 
 use std::cell::RefCell;
+use std::path::Path;
 use std::rc::Rc;
 
 use crate::conversion::runtimes::MaterializerConverter;
@@ -23,12 +25,14 @@ use crate::runtimes::prisma::migration::{
 };
 use crate::runtimes::typegraph::TypegraphOperation;
 use crate::t::TypeBuilder;
+use crate::typegraph::current_typegraph_dir;
+use crate::utils::fs::FsContext;
 use crate::validation::types::validate_value;
 use crate::wit::aws::S3RuntimeData;
 use crate::wit::core::{FuncParams, MaterializerId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
-    self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
-    KvMaterializer, KvRuntimeData, MaterializerHttpRequest, PrismaLinkData,
+    self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, GrpcData, GrpcRuntimeData,
+    HttpRuntimeData, KvMaterializer, KvRuntimeData, MaterializerHttpRequest, PrismaLinkData,
     PrismaMigrationOperation, PrismaRuntimeData, RandomRuntimeData, SubstantialRuntimeData,
     TemporalOperationData, TemporalRuntimeData, WasmRuntimeData,
 };
@@ -39,6 +43,7 @@ use substantial::{substantial_operation, SubstantialMaterializer};
 use self::aws::S3Materializer;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
+use self::grpc::{call_grpc_method, GrpcMaterializer};
 use self::prisma::context::PrismaContext;
 use self::prisma::get_prisma_context;
 use self::prisma::relationship::prisma_link;
@@ -70,6 +75,7 @@ pub enum Runtime {
     S3(Rc<S3RuntimeData>),
     Substantial(Rc<SubstantialRuntimeData>),
     Kv(Rc<KvRuntimeData>),
+    Grpc(Rc<GrpcRuntimeData>),
 }
 
 #[derive(Debug, Clone)]
@@ -191,6 +197,14 @@ impl Materializer {
             data: Rc::new(data).into(),
         }
     }
+
+    fn grpc(runtime_id: RuntimeId, data: GrpcMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: Rc::new(data).into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -210,6 +224,7 @@ pub enum MaterializerData {
     S3(Rc<S3Materializer>),
     Substantial(Rc<SubstantialMaterializer>),
     Kv(Rc<KvMaterializer>),
+    Grpc(Rc<GrpcMaterializer>),
 }
 
 macro_rules! prisma_op {
@@ -694,5 +709,17 @@ impl crate::wit::runtimes::Guest for crate::Lib {
     ) -> Result<MaterializerId, wit::Error> {
         let mat = Materializer::kv(base.runtime, data, base.effect);
         Ok(Store::register_materializer(mat))
+    }
+
+    fn register_grpc_runtime(data: GrpcRuntimeData) -> Result<RuntimeId, wit::Error> {
+        let fs_ctx = FsContext::new(current_typegraph_dir()?);
+        let proto_file = fs_ctx.read_text_file(Path::new(&data.proto_file))?;
+        let data = GrpcRuntimeData { proto_file, ..data };
+
+        Ok(Store::register_runtime(Runtime::Grpc(data.into())))
+    }
+
+    fn call_grpc_method(runtime: RuntimeId, data: GrpcData) -> Result<FuncParams, wit::Error> {
+        call_grpc_method(runtime, data)
     }
 }

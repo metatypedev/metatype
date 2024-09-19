@@ -12,6 +12,7 @@ use crate::wit::runtimes::{HttpMethod, KvMaterializer, MaterializerHttpRequest};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
+use common::typegraph::runtimes::grpc::GrpcRuntimeData;
 use common::typegraph::runtimes::http::HTTPRuntimeData;
 use common::typegraph::runtimes::kv::KvRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
@@ -505,5 +506,10 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
             .into())
         }
         Runtime::Kv(d) => Ok(TGRuntime::Known(Rt::Kv(KvRuntimeData { url: d.url.clone() })).into()),
+        Runtime::Grpc(d) => Ok(TGRuntime::Known(Rt::Grpc(GrpcRuntimeData {
+            proto_file_content: d.proto_file.clone(),
+            endpoint: d.endpoint.clone(),
+        }))
+        .into()),
     }
 }

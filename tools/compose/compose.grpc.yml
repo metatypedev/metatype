@@ -1,0 +1,15 @@
+services:
+  grpc-mock-server:
+    image: tkpd/gripmock
+    container_name: grpc-runtime
+    ports:
+      - "4770:4770"
+      - "4771:4771"
+    volumes:
+      - ./proto:/proto
+      - ./stub:/stub
+    command:
+      - --stub=/stub
+      - /proto/helloworld.proto
+      - /proto/maths.proto
+      - /proto/geography.proto

@@ -35,7 +35,7 @@ export class KvRuntime extends Runtime {
   }
 
   set() {
-    const mat = this.#operation("set", fx.update(false));
+    const mat = this.#operation("set", fx.update());
     return t.func(
       t.struct({ "key": t.string(), "value": t.string() }),
       t.string(),

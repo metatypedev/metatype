@@ -1,0 +1,14 @@
+{
+  "service": "Calculator",
+  "method": "Sum",
+  "input": {
+    "equals": {
+      "list": [1, 2, 3, 4, 5]
+    }
+  },
+  "output": {
+    "data": {
+      "total": 15
+    }
+  }
+}
