@@ -335,8 +335,8 @@ root: struct 'UserGroupByQueryInput' #192
 │     │  └─ [posts]: optional #182
 │     │     └─ item: union #181
 │     │        ├─ variant_0: struct #176
-│     │        │  └─ [every]: optional '_175_PostWhereWithAggregatesWithoutUserWhereWithAggregates?' #175
-│     │        │     └─ item: struct 'PostWhereWithAggregatesWithoutUserWhereWithAggregates' #174
+│     │        │  └─ [every]: optional '_175_PostWhereWithAggregatesExcludingUser?' #175
+│     │        │     └─ item: struct 'PostWhereWithAggregatesExcludingUser' #174
 │     │        │        ├─ [author]: optional '_173_UserWhereWithAggregates?' #173
 │     │        │        │  └─ item: &UserWhereWithAggregates #172
 │     │        │        ├─ [id]: optional '_170__PrismaIntegerFilterWithAggregatesX?' #170
@@ -658,8 +658,8 @@ root: struct 'UserGroupByQueryInput' #192
 │     │        │                          └─ [startsWith]: optional #8
 │     │        │                             └─ item: string #7
 │     │        ├─ variant_1: struct #178
-│     │        │  └─ [some]: optional '_177_PostWhereWithAggregatesWithoutUserWhereWithAggregates?' #177
-│     │        │     └─ item: struct 'PostWhereWithAggregatesWithoutUserWhereWithAggregates' #174
+│     │        │  └─ [some]: optional '_177_PostWhereWithAggregatesExcludingUser?' #177
+│     │        │     └─ item: struct 'PostWhereWithAggregatesExcludingUser' #174
 │     │        │        ├─ [author]: optional '_173_UserWhereWithAggregates?' #173
 │     │        │        │  └─ item: &UserWhereWithAggregates #172
 │     │        │        ├─ [id]: optional '_170__PrismaIntegerFilterWithAggregatesX?' #170
@@ -981,8 +981,8 @@ root: struct 'UserGroupByQueryInput' #192
 │     │        │                          └─ [startsWith]: optional #8
 │     │        │                             └─ item: string #7
 │     │        └─ variant_2: struct #180
-│     │           └─ [none]: optional '_179_PostWhereWithAggregatesWithoutUserWhereWithAggregates?' #179
-│     │              └─ item: struct 'PostWhereWithAggregatesWithoutUserWhereWithAggregates' #174
+│     │           └─ [none]: optional '_179_PostWhereWithAggregatesExcludingUser?' #179
+│     │              └─ item: struct 'PostWhereWithAggregatesExcludingUser' #174
 │     │                 ├─ [author]: optional '_173_UserWhereWithAggregates?' #173
 │     │                 │  └─ item: &UserWhereWithAggregates #172
 │     │                 ├─ [id]: optional '_170__PrismaIntegerFilterWithAggregatesX?' #170
@@ -1509,8 +1509,8 @@ root: struct 'UserGroupByQueryInput' #192
       └─ [posts]: optional #142
          └─ item: union #141
             ├─ variant_0: struct #136
-            │  └─ [every]: optional '_135_PostWhereWithoutUserWhere?' #135
-            │     └─ item: struct 'PostWhereWithoutUserWhere' #134
+            │  └─ [every]: optional '_135_PostWhereExcludingUser?' #135
+            │     └─ item: struct 'PostWhereExcludingUser' #134
             │        ├─ [author]: optional '_133_UserWhere?' #133
             │        │  └─ item: &UserWhere #132
             │        ├─ [id]: optional '_130__PrismaIntegerFilterX?' #130
@@ -1610,8 +1610,8 @@ root: struct 'UserGroupByQueryInput' #192
             │                          └─ [startsWith]: optional #8
             │                             └─ item: string #7
             ├─ variant_1: struct #138
-            │  └─ [some]: optional '_137_PostWhereWithoutUserWhere?' #137
-            │     └─ item: struct 'PostWhereWithoutUserWhere' #134
+            │  └─ [some]: optional '_137_PostWhereExcludingUser?' #137
+            │     └─ item: struct 'PostWhereExcludingUser' #134
             │        ├─ [author]: optional '_133_UserWhere?' #133
             │        │  └─ item: &UserWhere #132
             │        ├─ [id]: optional '_130__PrismaIntegerFilterX?' #130
@@ -1711,8 +1711,8 @@ root: struct 'UserGroupByQueryInput' #192
             │                          └─ [startsWith]: optional #8
             │                             └─ item: string #7
             └─ variant_2: struct #140
-               └─ [none]: optional '_139_PostWhereWithoutUserWhere?' #139
-                  └─ item: struct 'PostWhereWithoutUserWhere' #134
+               └─ [none]: optional '_139_PostWhereExcludingUser?' #139
+                  └─ item: struct 'PostWhereExcludingUser' #134
                      ├─ [author]: optional '_133_UserWhere?' #133
                      │  └─ item: &UserWhere #132
                      ├─ [id]: optional '_130__PrismaIntegerFilterX?' #130

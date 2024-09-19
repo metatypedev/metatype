@@ -6,7 +6,7 @@ root: optional '_23_UserOutput?' #23
 └─ item: struct 'UserOutput' #22
    ├─ [id]: integer #11
    ├─ [name]: string #12
-   └─ [posts]: list '_21_PostOutputWithout__rel_Post_User_1[]' #21
-      └─ item: struct 'PostOutputWithout__rel_Post_User_1' #20
+   └─ [posts]: list '_21_PostOutputExcludingRelPostUser[]' #21
+      └─ item: struct 'PostOutputExcludingRelPostUser' #20
          ├─ [id]: integer #16
          └─ [title]: string #17

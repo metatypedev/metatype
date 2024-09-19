@@ -174,22 +174,48 @@ impl PrismaContext {
 #[derive(Debug)]
 pub struct CandidatePair(pub Candidate, pub Candidate);
 
+#[derive(Debug, Clone)]
+pub enum RelationshipName {
+    User(String),
+    Generated(String),
+}
+
+impl std::fmt::Display for RelationshipName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use RelationshipName::*;
+        match self {
+            User(name) => write!(f, "{}", name),
+            Generated(name) => write!(f, "{}", name),
+        }
+    }
+}
+
+impl From<RelationshipName> for String {
+    fn from(name: RelationshipName) -> Self {
+        match name {
+            RelationshipName::User(name) => name,
+            RelationshipName::Generated(name) => name,
+        }
+    }
+}
+
 impl CandidatePair {
-    pub fn rel_name(&self, id: usize) -> Result<String> {
+    pub fn rel_name(&self) -> Result<RelationshipName> {
+        use RelationshipName::*;
         match (
             &self.0.property.relationship_attributes.name,
             &self.1.property.relationship_attributes.name,
         ) {
-            (None, None) => Ok(format!(
-                "__rel_{}_{}_{id}",
+            (None, None) => Ok(Generated(format!(
+                "Rel{}{}",
                 self.1.model.type_name(),
                 self.0.model.type_name()
-            )),
-            (Some(a), None) => Ok(a.clone()),
-            (None, Some(b)) => Ok(b.clone()),
+            ))),
+            (Some(a), None) => Ok(User(a.clone())),
+            (None, Some(b)) => Ok(User(b.clone())),
             (Some(a), Some(b)) => {
                 if a == b {
-                    Ok(a.clone())
+                    Ok(User(a.clone()))
                 } else {
                     // unreachable!
                     Err(format!("conflicting relationship names: {} and {}", a, b).into())

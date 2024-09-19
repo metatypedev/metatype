@@ -11,8 +11,8 @@ root: struct 'PostQueryWhereInput' #78
 ├── [OR]: optional '_76__75_PostQueryWhereInput[]?' #76
 │   └── item: list '_75_PostQueryWhereInput[]' #75
 │       └── item: &PostQueryWhereInput #74
-├── [author]: optional '_72_UserWhereWithoutPostWhere?' #72
-│   └── item: struct 'UserWhereWithoutPostWhere' #71
+├── [author]: optional '_72_UserWhereExcludingPost?' #72
+│   └── item: struct 'UserWhereExcludingPost' #71
 │       ├── [id]: optional '_60__PrismaIntegerFilterX?' #60
 │       │   └── item: optional '_PrismaIntegerFilterX' #20
 │       │       └── item: union #19

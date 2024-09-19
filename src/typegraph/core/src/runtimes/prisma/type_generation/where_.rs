@@ -121,11 +121,16 @@ impl TypeGen for Where {
         };
 
         let suffix2 = if !self.skip_models.is_empty() {
+            let nested_suffix = if self.aggregates {
+                "WhereWithAggregates"
+            } else {
+                "Where"
+            };
             format!(
-                "Without{}",
+                "Excluding{}",
                 self.skip_models
                     .iter()
-                    .map(|(_, name)| name.as_str())
+                    .map(|(_, name)| name.strip_suffix(nested_suffix).unwrap())
                     .collect::<Vec<_>>()
                     .join("And")
             )

@@ -4,7 +4,7 @@ expression: tp.print(out)
 ---
 root: optional '_26_PostOutput?' #26
 └─ item: struct 'PostOutput' #25
-   ├─ [author]: struct 'UserOutputWithout__rel_Post_User_1' #24
+   ├─ [author]: struct 'UserOutputExcludingRelPostUser' #24
    │  ├─ [id]: integer #11
    │  └─ [name]: string #12
    ├─ [id]: integer #16

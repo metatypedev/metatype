@@ -3,8 +3,8 @@ source: src/typegraph/core/src/runtimes/prisma/type_generation/where_.rs
 expression: "tree::print(context.generate(&Where::new(post))?)"
 ---
 root: struct 'PostWhere' #80
-├── [author]: optional '_79_UserWhereWithoutPostWhere?' #79
-│   └── item: struct 'UserWhereWithoutPostWhere' #78
+├── [author]: optional '_79_UserWhereExcludingPost?' #79
+│   └── item: struct 'UserWhereExcludingPost' #78
 │       ├── [id]: optional '_67__PrismaIntegerFilterX?' #67
 │       │   └── item: optional '_PrismaIntegerFilterX' #36
 │       │       └── item: union #35

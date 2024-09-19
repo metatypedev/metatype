@@ -9,7 +9,7 @@ root: optional '_88_UserWithNestedCount?' #88
    │     └─ item: integer #84
    ├─ [id]: integer #50
    ├─ [name]: string #51
-   └─ [posts]: list '_83_PostWithNestedCountWithout__rel_Post_User_1[]' #83
-      └─ item: struct 'PostWithNestedCountWithout__rel_Post_User_1' #82
+   └─ [posts]: list '_83_PostWithNestedCountExcludingRelPostUser[]' #83
+      └─ item: struct 'PostWithNestedCountExcludingRelPostUser' #82
          ├─ [id]: integer #55
          └─ [title]: string #56

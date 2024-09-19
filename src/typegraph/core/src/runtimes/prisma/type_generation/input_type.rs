@@ -215,7 +215,7 @@ impl TypeGen for InputType {
             "".to_string()
         } else {
             // TODO what is the casing of `skip_rel`?
-            format!("Without{}", self.skip_rel.join("And"))
+            format!("Excluding{}", self.skip_rel.join("And"))
         };
         let op = match self.operation {
             Operation::Create => "Create",

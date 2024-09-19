@@ -24,20 +24,20 @@ root: struct #153
 │     └─ item: union #128
 │        ├─ variant_0: struct #104
 │        │  └─ [create]: union #84
-│        │     ├─ variant_0: struct 'PostCreateInputWithout__rel_Post_User_1' #82
+│        │     ├─ variant_0: struct 'PostCreateInputExcludingRelPostUser' #82
 │        │     │  ├─ [id]: optional #81
 │        │     │  │  └─ item: integer #68
 │        │     │  └─ [title]: string #69
-│        │     └─ variant_1: list '_83_PostCreateInputWithout__rel_Post_User_1[]' #83
-│        │        └─ item: struct 'PostCreateInputWithout__rel_Post_User_1' #82
+│        │     └─ variant_1: list '_83_PostCreateInputExcludingRelPostUser[]' #83
+│        │        └─ item: struct 'PostCreateInputExcludingRelPostUser' #82
 │        │           ├─ [id]: optional #81
 │        │           │  └─ item: integer #68
 │        │           └─ [title]: string #69
 │        ├─ variant_1: struct #105
 │        │  └─ [connect]: union #102
 │        │     ├─ variant_0: struct 'PostWhere' #100
-│        │     │  ├─ [author]: optional '_99_UserWhereWithoutPostWhere?' #99
-│        │     │  │  └─ item: struct 'UserWhereWithoutPostWhere' #98
+│        │     │  ├─ [author]: optional '_99_UserWhereExcludingPost?' #99
+│        │     │  │  └─ item: struct 'UserWhereExcludingPost' #98
 │        │     │  │     ├─ [id]: optional '_87__PrismaIntegerFilterX?' #87
 │        │     │  │     │  └─ item: optional '_PrismaIntegerFilterX' #52
 │        │     │  │     │     └─ item: union #51
@@ -243,8 +243,8 @@ root: struct #153
 │        │     │                       └─ item: string #23
 │        │     └─ variant_1: list '_101_PostWhere[]' #101
 │        │        └─ item: struct 'PostWhere' #100
-│        │           ├─ [author]: optional '_99_UserWhereWithoutPostWhere?' #99
-│        │           │  └─ item: struct 'UserWhereWithoutPostWhere' #98
+│        │           ├─ [author]: optional '_99_UserWhereExcludingPost?' #99
+│        │           │  └─ item: struct 'UserWhereExcludingPost' #98
 │        │           │     ├─ [id]: optional '_87__PrismaIntegerFilterX?' #87
 │        │           │     │  └─ item: optional '_PrismaIntegerFilterX' #52
 │        │           │     │     └─ item: union #51
@@ -451,19 +451,19 @@ root: struct #153
 │        ├─ variant_2: struct #106
 │        │  └─ [connectOrCreate]: struct #103
 │        │     ├─ [create]: union #84
-│        │     │  ├─ variant_0: struct 'PostCreateInputWithout__rel_Post_User_1' #82
+│        │     │  ├─ variant_0: struct 'PostCreateInputExcludingRelPostUser' #82
 │        │     │  │  ├─ [id]: optional #81
 │        │     │  │  │  └─ item: integer #68
 │        │     │  │  └─ [title]: string #69
-│        │     │  └─ variant_1: list '_83_PostCreateInputWithout__rel_Post_User_1[]' #83
-│        │     │     └─ item: struct 'PostCreateInputWithout__rel_Post_User_1' #82
+│        │     │  └─ variant_1: list '_83_PostCreateInputExcludingRelPostUser[]' #83
+│        │     │     └─ item: struct 'PostCreateInputExcludingRelPostUser' #82
 │        │     │        ├─ [id]: optional #81
 │        │     │        │  └─ item: integer #68
 │        │     │        └─ [title]: string #69
 │        │     └─ [where]: union #102
 │        │        ├─ variant_0: struct 'PostWhere' #100
-│        │        │  ├─ [author]: optional '_99_UserWhereWithoutPostWhere?' #99
-│        │        │  │  └─ item: struct 'UserWhereWithoutPostWhere' #98
+│        │        │  ├─ [author]: optional '_99_UserWhereExcludingPost?' #99
+│        │        │  │  └─ item: struct 'UserWhereExcludingPost' #98
 │        │        │  │     ├─ [id]: optional '_87__PrismaIntegerFilterX?' #87
 │        │        │  │     │  └─ item: optional '_PrismaIntegerFilterX' #52
 │        │        │  │     │     └─ item: union #51
@@ -669,8 +669,8 @@ root: struct #153
 │        │        │                       └─ item: string #23
 │        │        └─ variant_1: list '_101_PostWhere[]' #101
 │        │           └─ item: struct 'PostWhere' #100
-│        │              ├─ [author]: optional '_99_UserWhereWithoutPostWhere?' #99
-│        │              │  └─ item: struct 'UserWhereWithoutPostWhere' #98
+│        │              ├─ [author]: optional '_99_UserWhereExcludingPost?' #99
+│        │              │  └─ item: struct 'UserWhereExcludingPost' #98
 │        │              │     ├─ [id]: optional '_87__PrismaIntegerFilterX?' #87
 │        │              │     │  └─ item: optional '_PrismaIntegerFilterX' #52
 │        │              │     │     └─ item: union #51
@@ -875,7 +875,7 @@ root: struct #153
 │        │                                └─ [startsWith]: optional #24
 │        │                                   └─ item: string #23
 │        ├─ variant_3: struct #117
-│        │  └─ [update]: struct 'PostUpdateInputWithout__rel_Post_User_1' #116
+│        │  └─ [update]: struct 'PostUpdateInputExcludingRelPostUser' #116
 │        │     ├─ [id]: optional #112
 │        │     │  └─ item: union #111
 │        │     │     ├─ variant_0: integer #68
@@ -894,7 +894,7 @@ root: struct #153
 │        │              └─ [set]: string #69
 │        ├─ variant_4: struct #120
 │        │  └─ [updateMany]: struct #119
-│        │     ├─ [data]: struct 'PostUpdateInputWithout__rel_Post_User_1' #116
+│        │     ├─ [data]: struct 'PostUpdateInputExcludingRelPostUser' #116
 │        │     │  ├─ [id]: optional #112
 │        │     │  │  └─ item: union #111
 │        │     │  │     ├─ variant_0: integer #68
@@ -914,8 +914,8 @@ root: struct #153
 │        │     └─ [where]: optional #118
 │        │        └─ item: union #102
 │        │           ├─ variant_0: struct 'PostWhere' #100
-│        │           │  ├─ [author]: optional '_99_UserWhereWithoutPostWhere?' #99
-│        │           │  │  └─ item: struct 'UserWhereWithoutPostWhere' #98
+│        │           │  ├─ [author]: optional '_99_UserWhereExcludingPost?' #99
+│        │           │  │  └─ item: struct 'UserWhereExcludingPost' #98
 │        │           │  │     ├─ [id]: optional '_87__PrismaIntegerFilterX?' #87
 │        │           │  │     │  └─ item: optional '_PrismaIntegerFilterX' #52
 │        │           │  │     │     └─ item: union #51
@@ -1121,8 +1121,8 @@ root: struct #153
 │        │           │                       └─ item: string #23
 │        │           └─ variant_1: list '_101_PostWhere[]' #101
 │        │              └─ item: struct 'PostWhere' #100
-│        │                 ├─ [author]: optional '_99_UserWhereWithoutPostWhere?' #99
-│        │                 │  └─ item: struct 'UserWhereWithoutPostWhere' #98
+│        │                 ├─ [author]: optional '_99_UserWhereExcludingPost?' #99
+│        │                 │  └─ item: struct 'UserWhereExcludingPost' #98
 │        │                 │     ├─ [id]: optional '_87__PrismaIntegerFilterX?' #87
 │        │                 │     │  └─ item: optional '_PrismaIntegerFilterX' #52
 │        │                 │     │     └─ item: union #51
@@ -1331,8 +1331,8 @@ root: struct #153
 │        │     └─ [where]: optional #121
 │        │        └─ item: union #102
 │        │           ├─ variant_0: struct 'PostWhere' #100
-│        │           │  ├─ [author]: optional '_99_UserWhereWithoutPostWhere?' #99
-│        │           │  │  └─ item: struct 'UserWhereWithoutPostWhere' #98
+│        │           │  ├─ [author]: optional '_99_UserWhereExcludingPost?' #99
+│        │           │  │  └─ item: struct 'UserWhereExcludingPost' #98
 │        │           │  │     ├─ [id]: optional '_87__PrismaIntegerFilterX?' #87
 │        │           │  │     │  └─ item: optional '_PrismaIntegerFilterX' #52
 │        │           │  │     │     └─ item: union #51
@@ -1538,8 +1538,8 @@ root: struct #153
 │        │           │                       └─ item: string #23
 │        │           └─ variant_1: list '_101_PostWhere[]' #101
 │        │              └─ item: struct 'PostWhere' #100
-│        │                 ├─ [author]: optional '_99_UserWhereWithoutPostWhere?' #99
-│        │                 │  └─ item: struct 'UserWhereWithoutPostWhere' #98
+│        │                 ├─ [author]: optional '_99_UserWhereExcludingPost?' #99
+│        │                 │  └─ item: struct 'UserWhereExcludingPost' #98
 │        │                 │     ├─ [id]: optional '_87__PrismaIntegerFilterX?' #87
 │        │                 │     │  └─ item: optional '_PrismaIntegerFilterX' #52
 │        │                 │     │     └─ item: union #51
@@ -1748,12 +1748,12 @@ root: struct #153
 │              └─ item: struct #125
 │                 └─ [data]: list #124
 │                    └─ item: union #84
-│                       ├─ variant_0: struct 'PostCreateInputWithout__rel_Post_User_1' #82
+│                       ├─ variant_0: struct 'PostCreateInputExcludingRelPostUser' #82
 │                       │  ├─ [id]: optional #81
 │                       │  │  └─ item: integer #68
 │                       │  └─ [title]: string #69
-│                       └─ variant_1: list '_83_PostCreateInputWithout__rel_Post_User_1[]' #83
-│                          └─ item: struct 'PostCreateInputWithout__rel_Post_User_1' #82
+│                       └─ variant_1: list '_83_PostCreateInputExcludingRelPostUser[]' #83
+│                          └─ item: struct 'PostCreateInputExcludingRelPostUser' #82
 │                             ├─ [id]: optional #81
 │                             │  └─ item: integer #68
 │                             └─ [title]: string #69
@@ -1866,8 +1866,8 @@ root: struct #153
       └─ [posts]: optional #145
          └─ item: union #144
             ├─ variant_0: struct #139
-            │  └─ [every]: optional '_138_PostWhereWithoutUserWhere?' #138
-            │     └─ item: struct 'PostWhereWithoutUserWhere' #137
+            │  └─ [every]: optional '_138_PostWhereExcludingUser?' #138
+            │     └─ item: struct 'PostWhereExcludingUser' #137
             │        ├─ [author]: optional '_136_UserWhere?' #136
             │        │  └─ item: &UserWhere #135
             │        ├─ [id]: optional '_133__PrismaIntegerFilterX?' #133
@@ -1967,8 +1967,8 @@ root: struct #153
             │                          └─ [startsWith]: optional #24
             │                             └─ item: string #23
             ├─ variant_1: struct #141
-            │  └─ [some]: optional '_140_PostWhereWithoutUserWhere?' #140
-            │     └─ item: struct 'PostWhereWithoutUserWhere' #137
+            │  └─ [some]: optional '_140_PostWhereExcludingUser?' #140
+            │     └─ item: struct 'PostWhereExcludingUser' #137
             │        ├─ [author]: optional '_136_UserWhere?' #136
             │        │  └─ item: &UserWhere #135
             │        ├─ [id]: optional '_133__PrismaIntegerFilterX?' #133
@@ -2068,8 +2068,8 @@ root: struct #153
             │                          └─ [startsWith]: optional #24
             │                             └─ item: string #23
             └─ variant_2: struct #143
-               └─ [none]: optional '_142_PostWhereWithoutUserWhere?' #142
-                  └─ item: struct 'PostWhereWithoutUserWhere' #137
+               └─ [none]: optional '_142_PostWhereExcludingUser?' #142
+                  └─ item: struct 'PostWhereExcludingUser' #137
                      ├─ [author]: optional '_136_UserWhere?' #136
                      │  └─ item: &UserWhere #135
                      ├─ [id]: optional '_133__PrismaIntegerFilterX?' #133

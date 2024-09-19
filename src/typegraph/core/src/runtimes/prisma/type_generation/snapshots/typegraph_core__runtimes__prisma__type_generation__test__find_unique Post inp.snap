@@ -13,8 +13,8 @@ root: struct #111
       ├─ [OR]: optional '_107__106_PostQueryWhereUniqueInput[]?' #107
       │  └─ item: list '_106_PostQueryWhereUniqueInput[]' #106
       │     └─ item: &PostQueryWhereUniqueInput #105
-      ├─ [author]: optional '_103_UserWhereWithoutPostWhere?' #103
-      │  └─ item: struct 'UserWhereWithoutPostWhere' #102
+      ├─ [author]: optional '_103_UserWhereExcludingPost?' #103
+      │  └─ item: struct 'UserWhereExcludingPost' #102
       │     ├─ [id]: optional '_91__PrismaIntegerFilterX?' #91
       │     │  └─ item: optional '_PrismaIntegerFilterX' #36
       │     │     └─ item: union #35

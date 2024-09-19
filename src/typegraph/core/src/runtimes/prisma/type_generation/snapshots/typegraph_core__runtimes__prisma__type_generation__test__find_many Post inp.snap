@@ -15,8 +15,8 @@ root: struct 'PostQueryInput' #164
 ├─ [orderBy]: optional '_154_PostOrderBy?' #154
 │  └─ item: list 'PostOrderBy' #153
 │     └─ item: struct #152
-│        ├─ [author]: optional '_151_UserOrderByWithout__rel_Post_User_1?' #151
-│        │  └─ item: list 'UserOrderByWithout__rel_Post_User_1' #150
+│        ├─ [author]: optional '_151_UserOrderByWithoutRelPostUser?' #151
+│        │  └─ item: list 'UserOrderByWithoutRelPostUser' #150
 │        │     └─ item: struct #149
 │        │        ├─ [id]: optional '_PrismaSort' #50
 │        │        │  └─ item: union #49
@@ -52,8 +52,8 @@ root: struct 'PostQueryInput' #164
       ├─ [OR]: optional '_145__144_PostQueryWhereInput[]?' #145
       │  └─ item: list '_144_PostQueryWhereInput[]' #144
       │     └─ item: &PostQueryWhereInput #143
-      ├─ [author]: optional '_141_UserWhereWithoutPostWhere?' #141
-      │  └─ item: struct 'UserWhereWithoutPostWhere' #140
+      ├─ [author]: optional '_141_UserWhereExcludingPost?' #141
+      │  └─ item: struct 'UserWhereExcludingPost' #140
       │     ├─ [id]: optional '_129__PrismaIntegerFilterX?' #129
       │     │  └─ item: optional '_PrismaIntegerFilterX' #36
       │     │     └─ item: union #35
