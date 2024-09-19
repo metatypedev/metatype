@@ -57,8 +57,8 @@ class Metagen:
         target_name: str,
         overwrite: Union[bool, None] = None,
     ) -> List[FdkOutput]:
-        mdk_config = self._get_fdk_config(tg_output, target_name)
-        res = wit_utils.metagen_exec(store, mdk_config)
+        fdk_config = self._get_fdk_config(tg_output, target_name)
+        res = wit_utils.metagen_exec(store, fdk_config)
         if isinstance(res, Err):
             raise Exception(res.value)
         for item in res.value:

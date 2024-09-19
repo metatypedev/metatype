@@ -522,6 +522,17 @@ class NodeDescs:
         return NodeMeta()
 
     @staticmethod
+    def Func26():
+        return NodeMeta(
+            sub_nodes=NodeDescs.scalar().sub_nodes,
+            arg_types={
+                "id": "String4",
+                "slug": "String1",
+                "title": "String1",
+            },
+        )
+
+    @staticmethod
     def Post():
         return NodeMeta(
             sub_nodes={
@@ -529,34 +540,6 @@ class NodeDescs:
                 "slug": NodeDescs.scalar,
                 "title": NodeDescs.scalar,
             },
-        )
-
-    @staticmethod
-    def User():
-        return NodeMeta(
-            sub_nodes={
-                "id": NodeDescs.scalar,
-                "email": NodeDescs.scalar,
-                "posts": NodeDescs.Post,
-            },
-        )
-
-    @staticmethod
-    def Func23():
-        return NodeMeta(
-            sub_nodes=NodeDescs.User().sub_nodes,
-        )
-
-    @staticmethod
-    def Func25():
-        return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
-        )
-
-    @staticmethod
-    def Func24():
-        return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
         )
 
     @staticmethod
@@ -575,14 +558,31 @@ class NodeDescs:
         )
 
     @staticmethod
-    def Func26():
+    def Func24():
+        return NodeMeta(
+            sub_nodes=NodeDescs.Post().sub_nodes,
+        )
+
+    @staticmethod
+    def Func25():
         return NodeMeta(
             sub_nodes=NodeDescs.scalar().sub_nodes,
-            arg_types={
-                "id": "String4",
-                "slug": "String1",
-                "title": "String1",
+        )
+
+    @staticmethod
+    def User():
+        return NodeMeta(
+            sub_nodes={
+                "id": NodeDescs.scalar,
+                "email": NodeDescs.scalar,
+                "posts": NodeDescs.Post,
             },
+        )
+
+    @staticmethod
+    def Func23():
+        return NodeMeta(
+            sub_nodes=NodeDescs.User().sub_nodes,
         )
 
 

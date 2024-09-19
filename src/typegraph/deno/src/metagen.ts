@@ -45,8 +45,8 @@ export class Metagen {
     targetName: string,
     overwrite?: false,
   ): Array<FdkOutput> {
-    const mdkConfig = this.getFdkConfig(tgOutput, targetName);
-    return wit_utils.metagenExec(mdkConfig).map((value: any) => ({
+    const fdkConfig = this.getFdkConfig(tgOutput, targetName);
+    return wit_utils.metagenExec(fdkConfig).map((value: any) => ({
       ...value,
       overwrite: overwrite ?? value.overwrite,
     })) as Array<FdkOutput>;

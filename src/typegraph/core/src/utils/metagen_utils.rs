@@ -27,14 +27,14 @@ impl InputResolverSync for RawTgResolver {
                 default,
                 override_path,
             } => Ok(GeneratorInputResolved::FdkTemplate {
-                template: self.load_mdk_template(default, override_path.as_deref())?,
+                template: self.load_fdk_template(default, override_path.as_deref())?,
             }),
         }
     }
 }
 
 impl RawTgResolver {
-    fn load_mdk_template(
+    fn load_fdk_template(
         &self,
         default: &[(&'static str, &'static str)],
         template_dir: Option<&std::path::Path>,

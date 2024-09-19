@@ -1508,7 +1508,7 @@ default settings.
 - Adds `/docs/guides/wasm-functions`
 - Adds a codegen section to `/docs/guides/external-functions`
 
-MDK-492.
+FDK-492.
 
 #### Migration notes
 
@@ -1743,11 +1743,12 @@ the codebase.
 </details>
 <details open>
 <summary>
-(mdk) `mdk_typescript` (<a href="https://github.com/metatypedev/metatype/pull/739">#739</a>)
-  - BREAKING: `mdk_typescript` (<a href="https://github.com/metatypedev/metatype/pull/739">#739</a>)
+(fdk) `fdk_typescript` (<a href="https://github.com/metatypedev/metatype/pull/739">#739</a>)
+  - BREAKING: `fdk
+_typescript` (<a href="https://github.com/metatypedev/metatype/pull/739">#739</a>)
 </summary>
 
-- Implements the `mdk_typescript` code generator for typescript type
+- Implements the `fdk_typescript` code generator for typescript type
 inference on Deno runtime external modules.
 - Ports the very simple generator already present in meta-cli.
 - Removes old codegen from cli and sdk.
@@ -1762,7 +1763,7 @@ to make it more uniform to handler.
 - (sdk) WasmRuntime `export` and `handler` method's now expect
 handler/func name under `name` instead of `func`.
 - (sdk) `codegen` flag has been removed from `ArtifactsConfig` object.
-- (cli) `gen mod/mdk` has been simplified to just `gen` as the previous
+- (cli) `gen mod/fdk` has been simplified to just `gen` as the previous
 mod option is no longer avail.
 
 ---
@@ -1774,7 +1775,7 @@ mod option is no longer avail.
 </details>
 <details >
 <summary>
-(mdk,gate) Hostcall (<a href="https://github.com/metatypedev/metatype/pull/706">#706</a>)
+(fdk,gate) Hostcall (<a href="https://github.com/metatypedev/metatype/pull/706">#706</a>)
 </summary>
 
 Introduces a mechanism for wasm materializers to access hostgate
@@ -2984,7 +2985,7 @@ for more details.
 </details>
 <details >
 <summary>
-(metagen) Metagen mdk rust (<a href="https://github.com/metatypedev/metatype/pull/624">#624</a>)
+(metagen) Metagen fdk rust (<a href="https://github.com/metatypedev/metatype/pull/624">#624</a>)
 </summary>
 
 Implements the general framework for metagen including a generator for
@@ -3037,8 +3038,8 @@ syntax support.
 
 #### Motivation and context
 
-The mdk codegen and typegraph mutually depends on each other (typegraph
-needs a concrete mdk.wasm for hashing, and for the mdk.wasm to be built,
+The fdk codegen and typegraph mutually depends on each other (typegraph
+needs a concrete fdk.wasm for hashing, and for the fdk.wasm to be built,
 it needs type generation based on the typegraph)
 Add a flag to enable processing a partial typegraph when using `meta
 gen` (partial == no artifact resolution).

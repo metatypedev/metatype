@@ -102,7 +102,7 @@ impl crate::Plugin for Generator {
         let crate_name = self.config.crate_name.clone().unwrap_or_else(|| {
             use heck::ToSnekCase;
             let tg_name = tg.name().unwrap_or_else(|_| "generated".to_string());
-            format!("{}_mdk", tg_name.to_snek_case())
+            format!("{}_fdk", tg_name.to_snek_case())
         });
         if !matches!(self.config.skip_cargo_toml, Some(true)) {
             out.insert(
@@ -314,7 +314,7 @@ fn render_data_types(
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;
     }
-    /* renderer.replace_renderer(Rc::new(mdk_rust::types::RustTypeRenderer {
+    /* renderer.replace_renderer(Rc::new(fdk_rust::types::RustTypeRenderer {
         derive_debug: true,
         derive_serde: true,
         all_fields_optional: true,

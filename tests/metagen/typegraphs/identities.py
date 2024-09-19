@@ -23,7 +23,7 @@ def identities(g: Graph):
             "int": t.integer(),
             "float": t.float(),
             "boolean": t.boolean(),
-            # TODO: file upload support for MDK?
+            # TODO: file upload support for fdk?
             # "file": t.file(),
         }
     ).rename("primitives")
@@ -151,28 +151,28 @@ def identities(g: Graph):
             primitives_args,
             primitives,
             module="./identities/ts/handlers.ts",
-            deps=["./identities/ts/mdk.ts"],
+            deps=["./identities/ts/fdk.ts"],
             name="primitives",
         ).rename("ts_primitives"),
         ts_composites=deno.import_(
             composites_args,
             composites,
             module="./identities/ts/handlers.ts",
-            deps=["./identities/ts/mdk.ts"],
+            deps=["./identities/ts/fdk.ts"],
             name="composites",
         ).rename("ts_composites"),
         ts_cycles=deno.import_(
             cycles1_args,
             cycles1,
             module="./identities/ts/handlers.ts",
-            deps=["./identities/ts/mdk.ts"],
+            deps=["./identities/ts/fdk.ts"],
             name="cycles",
         ).rename("ts_cycles"),
         ts_simple_cycles=deno.import_(
             simple_cycles_1_args,
             simple_cycles_1,
             module="./identities/ts/handlers.ts",
-            deps=["./identities/ts/mdk.ts"],
+            deps=["./identities/ts/fdk.ts"],
             name="simple_cycles",
         ).rename("ts_simple_cycles"),
         rs_primitives=wasm.handler(

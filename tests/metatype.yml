@@ -31,7 +31,7 @@ typegraphs:
 metagen:
   targets:
     wasm_wire:
-      - generator: mdk_rust
+      - generator: fdk_rust
         path: ./runtimes/wasm_wire/rust/
         typegraph_path: ./runtimes/wasm_wire/wasm_wire.ts
         stubbed_runtimes: ["wasm_wire"]
