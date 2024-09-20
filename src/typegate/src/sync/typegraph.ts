@@ -1,7 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { SecretManager, TypeGraph, type TypeGraphDS } from "../typegraph/mod.ts";
+import {
+  SecretManager,
+  TypeGraph,
+  type TypeGraphDS,
+} from "../typegraph/mod.ts";
 import {
   GetObjectCommand,
   PutObjectCommand,

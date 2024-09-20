@@ -29,7 +29,10 @@ ignore.workspace = true
 reqwest = { workspace = true, features = ["json"] }
 url = { workspace = true, features = ["serde"] }
 
+# grpc
+protobuf.workspace = true
+proto-parser.workspace = true
+
 # cli
 colored.workspace = true
-
 async-trait.workspace = true

@@ -53,16 +53,22 @@ common.workspace = true
 
 # runtimes
 deno_core.workspace = true
-wasmtime = { workspace = true,  features = ["component-model"] }
+wasmtime = { workspace = true, features = ["component-model"] }
 wasmtime-wasi.workspace = true
 
 # build
 shadow-rs.workspace = true
+
+# grpc
+tonic.workspace = true
+bytes.workspace = true
+protobuf.workspace = true
+protobuf-json-mapping.workspace = true
 
 [dev-dependencies]
 env_logger.workspace = true
 
 [build-dependencies]
 shadow-rs.workspace = true
-wasmtime = { workspace = true,  features = ["component-model"] }
+wasmtime = { workspace = true, features = ["component-model"] }
 zstd.workspace = true

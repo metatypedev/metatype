@@ -14,7 +14,7 @@ use crate::{
     errors::{self, Result},
     global_store::Store,
 };
-use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
+use common::typegraph::runtimes::TGRuntime;
 use common::typegraph::{
     Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
     TypeNode, TypeNodeBase, Typegraph,
@@ -24,6 +24,7 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hasher as _;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use crate::wit::core::{
@@ -48,6 +49,7 @@ struct RuntimeContexts {
 #[derive(Default)]
 pub struct TypegraphContext {
     name: String,
+    path: Option<Rc<Path>>,
     meta: TypeMeta,
     types: Vec<Option<TypeNode>>,
     runtimes: Vec<TGRuntime>,
@@ -97,6 +99,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
 
     let mut ctx = TypegraphContext {
         name: params.name.clone(),
+        path: Some(PathBuf::from(&params.path).into()),
         meta: TypeMeta {
             version: TYPEGRAPH_VERSION.to_string(),
             queries: Queries {
@@ -518,116 +521,12 @@ impl TypegraphContext {
     }
 }
 
-#[allow(unused)]
-fn dedup_types(tg: &mut Typegraph) {
-    // the scalars to be kept
-    let mut base_scalars = HashMap::new();
-    // the duplicate scalars to be discarded
-    let mut replaced_scalars = HashMap::new();
-
-    for (id, node) in tg.types.iter_mut().enumerate() {
-        match node {
-            TypeNode::Boolean { .. }
-            | TypeNode::Float { .. }
-            | TypeNode::Integer { .. }
-            | TypeNode::String { .. }
-            | TypeNode::File { .. } => {
-                use sha2::Digest;
-
-                // we hash the canonical json of the type node
-                let mut hash = sha2::Sha256::new();
-                // swap the title out during hashing to aviod generated
-                // names from affecting it
-                let mut old_title = String::new();
-                std::mem::swap(&mut old_title, &mut node.base_mut().title);
-                json_canon::to_writer(&mut hash, node).expect("error serializing typenode json");
-                std::mem::swap(&mut old_title, &mut node.base_mut().title);
-                let hash = hash.finalize();
-
-                if let Some(&replacement_id) = base_scalars.get(&hash) {
-                    replaced_scalars.insert(id as u32, replacement_id);
-                } else {
-                    base_scalars.insert(hash, id as u32);
-                }
-            }
-            _ => {
-                // TODO: dedup on composites with support for cycles
-            }
-        }
-    }
-
-    let mut replacement_list = (0..tg.types.len() as u32).collect::<Vec<_>>();
-
-    for (from, to) in replaced_scalars {
-        tg.types.remove(from as usize);
-        for value in replacement_list.iter_mut().skip(from as usize - 1) {
-            *value -= 1;
-        }
-        replacement_list[from as usize] = replacement_list[to as usize];
-    }
-
-    // replace indices in the types
-    replace_type_ids(tg, &replacement_list);
+pub fn current_typegraph_path() -> Result<Rc<Path>> {
+    with_tg(|tg| tg.path.clone().unwrap())
 }
 
-fn replace_type_ids(tg: &mut Typegraph, replacement_list: &[u32]) {
-    for node in &mut tg.types {
-        match node {
-            TypeNode::Optional { data, .. } => {
-                data.item = replacement_list[data.item as usize];
-            }
-            TypeNode::List { data, .. } => {
-                data.items = replacement_list[data.items as usize];
-            }
-            TypeNode::Object { data, .. } => {
-                for prop_id in data.properties.values_mut() {
-                    *prop_id = replacement_list[*prop_id as usize];
-                }
-            }
-            TypeNode::Function { data, .. } => {
-                data.input = replacement_list[data.input as usize];
-                data.output = replacement_list[data.output as usize];
-            }
-            TypeNode::Union { data, .. } => {
-                for variant in &mut data.any_of {
-                    *variant = replacement_list[*variant as usize];
-                }
-            }
-            TypeNode::Either { data, .. } => {
-                for variant in &mut data.one_of {
-                    *variant = replacement_list[*variant as usize];
-                }
-            }
-            _ => {}
-        }
-    }
-
-    // replace indices in runtimes
-    for rt in &mut tg.runtimes {
-        match rt {
-            TGRuntime::Known(rt) => {
-                if let KnownRuntime::Prisma(prisma) = rt {
-                    for model in &mut prisma.models {
-                        model.type_idx = replacement_list[model.type_idx as usize];
-                        for prop in &mut model.props {
-                            use common::typegraph::runtimes::prisma::Property;
-                            match prop {
-                                Property::Scalar(prop) => {
-                                    prop.type_idx = replacement_list[prop.type_idx as usize];
-                                }
-                                Property::Relationship(prop) => {
-                                    prop.type_idx = replacement_list[prop.type_idx as usize];
-                                }
-                            }
-                        }
-                    }
-                    for rl in &mut prisma.relationships {
-                        rl.left.type_idx = replacement_list[rl.left.type_idx as usize];
-                        rl.right.type_idx = replacement_list[rl.right.type_idx as usize];
-                    }
-                }
-            }
-            TGRuntime::Unknown(_) => {}
-        }
-    }
+pub fn current_typegraph_dir() -> Result<PathBuf> {
+    let tg_path = current_typegraph_path()?;
+    // TODO error handling
+    Ok(tg_path.parent().unwrap().to_owned())
 }

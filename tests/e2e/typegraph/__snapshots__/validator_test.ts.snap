@@ -16,9 +16,9 @@ snapshot[`typegraph validation 1`] = `
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEnums/[out]/a: Expected a string, got '12'
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEnums/[out]/b: Expected float got '"13"'
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/a: from_parent injection: Type mismatch: integer to string
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: minimum_length is not defined in the subtype
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: maximum_length is greater than the maximum_length of the supertype
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/c: from_parent injection: property b is not defined in the supertype
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: 'minimum_length' is required on the subtype if it is defined on the supertype
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: 'maximum_length' cannot be higher on the subtype: 20 > 16
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/c: from_parent injection: property b is not allowed: it is not defined in the supertype
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - Typegraph validator failed validation
 Error: 
    0: [91mfailed[0m

@@ -3,7 +3,7 @@
 
 use crate::interlude::*;
 use crate::{
-    runtimes::{prisma, temporal, wasm, wit_wire},
+    runtimes::{grpc, prisma, temporal, wasm, wit_wire},
     typegraph,
 };
 
@@ -40,6 +40,9 @@ deno_core::extension!(
         wit_wire::op_wit_wire_init,
         wit_wire::op_wit_wire_handle,
         wit_wire::op_wit_wire_destroy,
+        grpc::op_grpc_register,
+        grpc::op_grpc_unregister,
+        grpc::op_call_grpc_method
         // FIXME(yohe): this test broke and has proven difficult to fix
         // #[cfg(test)]
         // tests::op_obj_go_round,

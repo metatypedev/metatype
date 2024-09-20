@@ -22,7 +22,7 @@ await typegraph(
         name: t.string(),
         ideas: t.list(g.ref("idea")),
       },
-      { name: "bucket" }
+      { name: "bucket" },
     );
 
     const idea = t.struct(
@@ -33,7 +33,7 @@ await typegraph(
         votes: t.list(g.ref("vote")),
         bucket: g.ref("bucket"),
       },
-      { name: "idea" }
+      { name: "idea" },
     );
 
     const vote = t.struct(
@@ -44,7 +44,7 @@ await typegraph(
         desc: t.string().optional(),
         idea: g.ref("idea"),
       },
-      { name: "vote" }
+      { name: "vote" },
     );
 
     g.auth(Auth.basic(["andim"]));
@@ -53,7 +53,7 @@ await typegraph(
       "admins",
       `
         (_args, { context }) => !!context.username
-    `
+    `,
     );
 
     g.expose(
@@ -77,7 +77,7 @@ await typegraph(
             vote_id: t.uuid(),
             importance: t.enum_(["medium", "important", "critical"]),
           }),
-          effects.update()
+          effects.update(true),
         ),
         get_context: deno
           .identity(t.struct({ username: t.string().optional() }))
@@ -85,7 +85,7 @@ await typegraph(
             username: g.fromContext("username"),
           }),
       },
-      pub
+      pub,
     );
-  }
+  },
 );
