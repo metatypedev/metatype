@@ -7,15 +7,15 @@ use crate::interlude::*;
 use crate::*;
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
-pub struct MdkSubstantialGenConfig {
+pub struct FdkSubstantialGenConfig {
     #[serde(flatten)]
     #[garde(dive)]
-    pub base: crate::config::MdkGeneratorConfigBase,
+    pub base: crate::config::FdkGeneratorConfigBase,
 }
 
-impl MdkSubstantialGenConfig {
+impl FdkSubstantialGenConfig {
     pub fn from_json(json: serde_json::Value, workspace_path: &Path) -> anyhow::Result<Self> {
-        let mut config: MdkSubstantialGenConfig = serde_json::from_value(json)?;
+        let mut config: FdkSubstantialGenConfig = serde_json::from_value(json)?;
         config.base.path = workspace_path.join(config.base.path);
         config.base.typegraph_path = config
             .base
@@ -27,12 +27,12 @@ impl MdkSubstantialGenConfig {
 }
 
 pub struct Generator {
-    config: MdkSubstantialGenConfig,
+    config: FdkSubstantialGenConfig,
 }
 
 impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
-    pub fn new(config: MdkSubstantialGenConfig) -> Result<Self, garde::Report> {
+    pub fn new(config: FdkSubstantialGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
         config.validate(&())?;
         Ok(Self { config })

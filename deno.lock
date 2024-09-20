@@ -2208,6 +2208,7 @@
     "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/deno.ts": "c893dcf170b38547239d550080a856aca46a788de9922f282bbacf9b5841b5fe",
     "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/deno/deno.ts": "c540c9049261a302e0cefd510fcca6e51e5d527ac2d432a32060d98fa5202ad3",
     "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/deno/deno_messenger.ts": "81160c8a9c9817b46b52c4eee15cde880fb3f6b013c3b5110ee07a4c9c7f7a5e",
+    "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/deno/worker.ts": "64604d323ffd85f864c4a15419077e5131561de1680504041157a05f8ad9b5eb",
     "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/graphql.ts": "e7b1126e80c433a3fa851aff47239b2571ba4ee0b175b25bda6d85804e8b50bd",
     "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/http.ts": "f598a33aa3cafcf37a1f33d84c06bfd0ef5fd768f72837042c83ac6ae1d90762",
     "https://raw.githubusercontent.com/metatypedev/metatype/67c1d0fa3f16ec6459ef28aa750db508a1758271/src/typegate/src/runtimes/kv.ts": "ea5365bf5cb3a2c1a7a82482d4b5c1f9fb5e84ed331edce4187464a4ca4e5801",

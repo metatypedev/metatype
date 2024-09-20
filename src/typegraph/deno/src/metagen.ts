@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import {
-  MdkConfig,
-  MdkOutput,
+  FdkConfig,
+  FdkOutput,
   SerializeParams,
 } from "./gen/typegraph_core.d.ts";
 import { TypegraphOutput } from "./typegraph.ts";
@@ -13,7 +13,7 @@ import { freezeTgOutput } from "./utils/func_utils.ts";
 export class Metagen {
   constructor(private workspacePath: string, private genConfig: unknown) {}
 
-  private getMdkConfig(tgOutput: TypegraphOutput, targetName: string) {
+  private getFdkConfig(tgOutput: TypegraphOutput, targetName: string) {
     const serializeParams = {
       typegraphPath: `${this.workspacePath}/tg.ts`,
       prefix: undefined,
@@ -36,7 +36,7 @@ export class Metagen {
       tgJson: frozenOut.serialize(serializeParams).tgJson,
       targetName,
       workspacePath: this.workspacePath,
-    } as MdkConfig;
+    } as FdkConfig;
   }
 
   /** dry-run metagen */
@@ -44,12 +44,12 @@ export class Metagen {
     tgOutput: TypegraphOutput,
     targetName: string,
     overwrite?: false,
-  ): Array<MdkOutput> {
-    const mdkConfig = this.getMdkConfig(tgOutput, targetName);
-    return wit_utils.metagenExec(mdkConfig).map((value: any) => ({
+  ): Array<FdkOutput> {
+    const fdkConfig = this.getFdkConfig(tgOutput, targetName);
+    return wit_utils.metagenExec(fdkConfig).map((value: any) => ({
       ...value,
       overwrite: overwrite ?? value.overwrite,
-    })) as Array<MdkOutput>;
+    })) as Array<FdkOutput>;
   }
 
   /** run metagen */

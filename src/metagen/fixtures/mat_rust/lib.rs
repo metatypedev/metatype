@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 #[rustfmt::skip]
-mod mdk;
-use mdk::stubs::*;
-use mdk::types::*;
-use mdk::*;
+mod fdk;
+use fdk::stubs::*;
+use fdk::types::*;
+use fdk::*;
 
 init_mat! {
     hook: || MatBuilder::new().register_handler(FaasImpl::erased(FaasImpl))

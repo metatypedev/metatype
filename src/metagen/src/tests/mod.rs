@@ -23,20 +23,20 @@ impl InputResolver for TestCtx {
                 })
             }
             GeneratorInputOrder::TypegraphFromPath { .. } => unimplemented!(),
-            GeneratorInputOrder::LoadMdkTemplate {
+            GeneratorInputOrder::LoadFdkTemplate {
                 default,
                 override_path,
-            } => Ok(GeneratorInputResolved::MdkTemplate {
-                template: load_mdk_template(default, override_path.as_deref()).await?,
+            } => Ok(GeneratorInputResolved::FdkTemplate {
+                template: load_fdk_template(default, override_path.as_deref()).await?,
             }),
         }
     }
 }
 
-async fn load_mdk_template(
+async fn load_fdk_template(
     default: &[(&'static str, &'static str)],
     template_dir: Option<&std::path::Path>,
-) -> anyhow::Result<MdkTemplate> {
+) -> anyhow::Result<FdkTemplate> {
     let mut group = FutureGroup::new();
     for (file_name, content) in default.iter() {
         // TODO absolute path?
@@ -61,7 +61,7 @@ async fn load_mdk_template(
         let (file_name, content) = res?;
         entries.insert(file_name, content);
     }
-    Ok(MdkTemplate { entries })
+    Ok(FdkTemplate { entries })
 }
 
 pub struct BuildArgs {

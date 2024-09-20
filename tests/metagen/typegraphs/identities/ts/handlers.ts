@@ -10,7 +10,7 @@ import type {
   TsCyclesHandler,
   TsPrimitivesHandler,
   TsSimpleCyclesHandler,
-} from "./mdk.ts";
+} from "./fdk.ts";
 
 export const primitives: TsPrimitivesHandler = (inp, _ctx, _tg) => {
   const out: Primitives = {

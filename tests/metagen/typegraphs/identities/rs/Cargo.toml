@@ -1,4 +1,4 @@
-package.name = "metagen_identities_mdk"
+package.name = "metagen_identities_fdk"
 package.edition = "2021"
 package.version = "0.0.1"
 
