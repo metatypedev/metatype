@@ -656,9 +656,37 @@ const nodeMetas = {
       ],
     };
   },
+  RootGetPostsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+  RootScalarNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+  RootScalarArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "UserIdStringUuid",
+        slug: "PostSlugString",
+        title: "PostSlugString",
+      },
+    };
+  },
   RootCompositeNoArgsFn(): NodeMeta {
     return {
       ...nodeMetas.Post(),
+    };
+  },
+  RootCompositeArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "RootScalarNoArgsFnOutput",
+      },
     };
   },
   User(): NodeMeta {
@@ -673,34 +701,6 @@ const nodeMetas = {
   RootGetUserFn(): NodeMeta {
     return {
       ...nodeMetas.User(),
-    };
-  },
-  RootCompositeArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "RootScalarNoArgsFnOutput",
-      },
-    };
-  },
-  RootScalarArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "UserIdStringUuid",
-        slug: "PostSlugString",
-        title: "PostSlugString",
-      },
-    };
-  },
-  RootGetPostsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-  RootScalarNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
     };
   },
 };

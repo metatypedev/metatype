@@ -104,7 +104,7 @@ metagen:
   targets:
     # named targets to configure a bunch of generators together
     metagen_deno:
-      - generator: mdk_typescript # generator to use
+      - generator: fdk_typescript # generator to use
         # path to generate to
         path: ./metagen/ts/
         # point to the typegraph location
@@ -126,23 +126,23 @@ This results in the following files.
 ❯ lsd --tree metagen
  metagen
 └──  ts
-    └──  mdk.ts
+    └──  fdk.ts
 ```
 
-Within `mdk.ts` and the types and helpers, all the types from your typegraph should be there. Something like:
+Within `fdk.ts` and the types and helpers, all the types from your typegraph should be there. Something like:
 
 <details>
 
 <summary>Code generation sample. Collapsed for aesthetic reasons.</summary>
 
 <TGExample
-  typescript={require("!!code-loader!../../../../../examples/typegraphs/metagen/ts/mdk.ts")}
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/metagen/ts/fdk.ts")}
   disablePlayground
 />
 
 </details>
 
-Note, this also include typescript function types for specific typegraph functions. By default, the `mdk_typescript` generator will only include stub function types for those defined on the `DenoRuntime` but this is [configurable](/docs/reference/metagen#mdk_typescript).
+Note, this also include typescript function types for specific typegraph functions. By default, the `fdk_typescript` generator will only include stub function types for those defined on the `DenoRuntime` but this is [configurable](/docs/reference/metagen#fdk_typescript).
 
 We can then use these types in the following manner. Add the following snippet into `metagen/ts/remix.ts`.
 

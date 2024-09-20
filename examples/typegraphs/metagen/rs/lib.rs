@@ -1,5 +1,5 @@
-mod mdk;
-pub use mdk::*;
+mod fdk;
+pub use fdk::*;
 
 // the macro sets up all the glue
 init_mat! {

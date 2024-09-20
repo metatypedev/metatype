@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-mod mdk;
+mod fdk;
 use anyhow::Context;
-use mdk::*;
+use fdk::*;
 use serde_json::json;
 
 init_mat! {

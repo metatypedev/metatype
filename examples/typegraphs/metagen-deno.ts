@@ -27,12 +27,12 @@ await typegraph(
         remix: deno
           .import(idv3, idv3, {
             module: "./metagen/ts/remix.ts",
-            deps: ["./metagen/ts/mdk.ts"],
+            deps: ["./metagen/ts/fdk.ts"],
             name: "remix_track",
           })
           .rename("remix_track"), // explicit names help
       },
-      Policy.public()
+      Policy.public(),
     );
-  }
+  },
 );

@@ -532,6 +532,23 @@ class NodeDescs:
         )
 
     @staticmethod
+    def RootCompositeNoArgsFn():
+        return NodeMeta(
+            sub_nodes=NodeDescs.Post().sub_nodes,
+        )
+
+    @staticmethod
+    def RootScalarArgsFn():
+        return NodeMeta(
+            sub_nodes=NodeDescs.scalar().sub_nodes,
+            arg_types={
+                "id": "UserIdStringUuid",
+                "slug": "PostSlugString",
+                "title": "PostSlugString",
+            },
+        )
+
+    @staticmethod
     def RootCompositeArgsFn():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
@@ -568,33 +585,6 @@ class NodeDescs:
             sub_nodes=NodeDescs.User().sub_nodes,
         )
 
-    @staticmethod
-    def RootScalarArgsFn():
-        return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
-            arg_types={
-                "id": "UserIdStringUuid",
-                "slug": "PostSlugString",
-                "title": "PostSlugString",
-            },
-        )
-
-    @staticmethod
-    def RootCompositeNoArgsFn():
-        return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
-        )
-
-
-RootScalarNoArgsFnOutput = str
-
-RootCompositeArgsFnInput = typing.TypedDict(
-    "RootCompositeArgsFnInput",
-    {
-        "id": RootScalarNoArgsFnOutput,
-    },
-    total=False,
-)
 
 UserIdStringUuid = str
 
@@ -606,6 +596,16 @@ Post = typing.TypedDict(
         "id": UserIdStringUuid,
         "slug": PostSlugString,
         "title": PostSlugString,
+    },
+    total=False,
+)
+
+RootScalarNoArgsFnOutput = str
+
+RootCompositeArgsFnInput = typing.TypedDict(
+    "RootCompositeArgsFnInput",
+    {
+        "id": RootScalarNoArgsFnOutput,
     },
     total=False,
 )

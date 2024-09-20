@@ -39,14 +39,14 @@ Note that the `WasmRuntime` constructor mentions a non-existent wasm file on dis
 
 ## Metagen
 
-We can now tackle the boilerplate. Metagen bundles the [`mdk_rust`](/docs/reference/metagen#mdk_rust) generator which can generate all the glue code along with Rust types that correspond to our typegraph types. Let's configure a metagen target in our configuration file to get just that done.
+We can now tackle the boilerplate. Metagen bundles the [`fdk_rust`](/docs/reference/metagen#fdk_rust) generator which can generate all the glue code along with Rust types that correspond to our typegraph types. Let's configure a metagen target in our configuration file to get just that done.
 
 ```yaml
 metagen:
   targets:
     metagen_rs:
       # this is the generator we're interested in
-      - generator: mdk_rust
+      - generator: fdk_rust
         # the location where to put the generated files
         path: ./metagen/rs/
         # the path to our typegraph
@@ -66,10 +66,10 @@ This should give us the following files:
  rs
 ├──  Cargo.toml
 ├──  lib.rs
-└──  mdk.rs
+└──  fdk.rs
 ```
 
-By default, the `mdk_rust` generator outputs all the necessary files required to build our wasm file. This includes the `Cargo.toml` manifest for our Rust crate.
+By default, the `fdk_rust` generator outputs all the necessary files required to build our wasm file. This includes the `Cargo.toml` manifest for our Rust crate.
 
 <CodeBlock language="toml">
   {
@@ -78,9 +78,9 @@ By default, the `mdk_rust` generator outputs all the necessary files required to
   }
 </CodeBlock>
 
-`mdk_rust` will not overwrite a `Cargo.toml` file discovered at generation path so you can add other dependencies if need be.
+`fdk_rust` will not overwrite a `Cargo.toml` file discovered at generation path so you can add other dependencies if need be.
 
-The `mdk.rs` file contains all the glue code including the typegraph types.
+The `fdk.rs` file contains all the glue code including the typegraph types.
 
 <details>
   <summary>
@@ -89,7 +89,7 @@ The `mdk.rs` file contains all the glue code including the typegraph types.
   </summary>
   <CodeBlock language="rust">
     {
-      require("!!code-loader!../../../../../examples/typegraphs/metagen/rs/mdk.rs")
+      require("!!code-loader!../../../../../examples/typegraphs/metagen/rs/fdk.rs")
         .content
     }
   </CodeBlock>
@@ -119,7 +119,7 @@ meta gen metagen_rs
 
 # variablize common names
 TARGET=wasm32-wasi
-CRATE_NAME=metagen_rs_mdk
+CRATE_NAME=metagen_rs_fdk
 
 # build in release mode for smallest sizes
 cargo build -p $CRATE_NAME --target $TARGET --release

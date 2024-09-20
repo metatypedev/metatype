@@ -6822,7 +6822,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "metagen_mdk_rust_static"
+name = "metagen_fdk_rust_static"
 version = "0.0.1"
 dependencies = [
  "anyhow",
