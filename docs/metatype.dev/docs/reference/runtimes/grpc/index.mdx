@@ -31,9 +31,39 @@ This method creates a typegraph function for gRPC method calls. It accepts the f
 
 ## Example
 
+#### `proto/helloworld.proto`
+
+```proto
+syntax = "proto3";
+
+package helloworld;
+
+service Greeter {
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
+```
+
 <TGExample
   typegraph="grpc"
   typescript={require("!!code-loader!../../../../../../examples/typegraphs/grpc.ts")}
   python={require("!!code-loader!../../../../../../examples/typegraphs/grpc.py")}
   query={require("./grpc.graphql")}
 />
+
+Request Parameter
+
+    In the .proto file, the SayHello method takes a HelloRequest with a name field.
+    In the GraphQL query, the greet query takes an argument name: "Metatype", which corresponds directly to the name field in the HelloRequest.
+
+Response
+
+    The .proto file defines the response as HelloReply, containing a message field.
+    In the GraphQL query, the response requests the message field, which maps directly to the message field in the HelloReply
