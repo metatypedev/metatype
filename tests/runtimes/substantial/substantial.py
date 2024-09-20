@@ -1,3 +1,4 @@
+import os
 from typegraph import typegraph, t, Graph
 from typegraph.policy import Policy
 from typegraph.runtimes.substantial import SubstantialRuntime
@@ -8,7 +9,8 @@ from typegraph.runtimes.substantial import Backend
 def substantial(g: Graph):
     pub = Policy.public()
 
-    backend = Backend.fs()
+    backend = Backend.memory() if os.environ["SUB_TEST_MEMORY"] == "1" else Backend.fs()
+
     sub = SubstantialRuntime(backend)
 
     save_and_sleep = sub.deno(
@@ -26,13 +28,13 @@ def substantial(g: Graph):
     g.expose(
         pub,
         start=save_and_sleep.start(t.struct({"a": t.integer(), "b": t.integer()})),
-        resources=save_and_sleep.query_resources(),
+        workers=save_and_sleep.query_resources(),
         results=save_and_sleep.query_results(
             t.either([t.integer(), t.string()]).rename("ResultOrError")
         ),
         start_email=sub_email.start(t.struct({"to": t.email()})),
         send_confirmation=sub_email.send(t.boolean(), event_name="confirmation"),
-        ask_ongoing_emails=sub_email.query_resources(),
-        ask_email_results=sub_email.query_results(t.string()),
+        email_workers=sub_email.query_resources(),
+        email_results=sub_email.query_results(t.string()),
         abort_email_confirmation=sub_email.stop(),
     )

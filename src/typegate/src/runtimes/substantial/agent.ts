@@ -17,7 +17,7 @@ import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
 
 const logger = getLogger();
 
-const POLL_INTERVAL_SECONDS = 2;
+const POLL_INTERVAL_SECONDS = 1;
 const LEASE_LIFESPAN = 3;
 
 export interface WorkflowDescription {
@@ -99,7 +99,7 @@ export class Agent {
 
   stop() {
     this.workerManager.destroyAllWorkers();
-    if (this.pollIntervalHandle === undefined) {
+    if (this.pollIntervalHandle !== undefined) {
       clearInterval(this.pollIntervalHandle);
     }
   }
