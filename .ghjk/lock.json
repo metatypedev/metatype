@@ -791,6 +791,12 @@
           "portRef": "cpy_bs_ghrel@0.1.0",
           "releaseTag": "20240814",
           "specifiedVersion": true
+        },
+        "bciqe2vunrx2rwabjcajdlqk6imqpsmzwnmlbk6cd57rvbhtilmj4kmi": {
+          "version": "v25.1",
+          "buildDepConfigs": {},
+          "portRef": "protoc_ghrel@0.1.0",
+          "specifiedVersion": true
         }
       }
     },
@@ -815,7 +821,7 @@
             },
             "ghjkEnvProvInstSet____rust": {
               "installs": [
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty"
               ],
@@ -832,7 +838,7 @@
                 "bciqmvgsg7h3ohj3m7das4bznahgt6tyq7mamta3n2vorulqvml7mywq",
                 "bciqicdqw36v63cbrscwsgtu2htrmwmgtfoxexv4rx5d2y24vytxbuma",
                 "bciqe33uhsuaesrjk6luzxrbbimwg5ydt6x2lrieelwbr7aft4g2qwsy",
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
@@ -851,7 +857,7 @@
             "ghjkEnvProvInstSet___oci": {
               "installs": [
                 "bciqbx637744bfiyvprs77xdnvdt7uuwmtlntfjpwmkda672gklkbpmi",
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty",
                 "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
@@ -895,7 +901,7 @@
                 "bciqmvgsg7h3ohj3m7das4bznahgt6tyq7mamta3n2vorulqvml7mywq",
                 "bciqicdqw36v63cbrscwsgtu2htrmwmgtfoxexv4rx5d2y24vytxbuma",
                 "bciqe33uhsuaesrjk6luzxrbbimwg5ydt6x2lrieelwbr7aft4g2qwsy",
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
@@ -933,7 +939,7 @@
             },
             "ghjkEnvProvInstSet_______task_env_test-rust": {
               "installs": [
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty",
                 "bciqezep4ufkgwesldlm5etyfkgdsiickfudx7cosydcz6xtgeorn2hy",
@@ -947,7 +953,7 @@
             },
             "ghjkEnvProvInstSet_______task_env_dev-eg-tgraphs": {
               "installs": [
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty",
                 "bciqezep4ufkgwesldlm5etyfkgdsiickfudx7cosydcz6xtgeorn2hy",
@@ -961,7 +967,7 @@
             },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-core": {
               "installs": [
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty",
                 "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
@@ -973,7 +979,7 @@
             },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-py": {
               "installs": [
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty",
                 "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
@@ -988,7 +994,7 @@
             },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-ts": {
               "installs": [
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty",
                 "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
@@ -1003,7 +1009,7 @@
             },
             "ghjkEnvProvInstSet_______task_env_build-sys-tgraphs": {
               "installs": [
-                "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za",
+                "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqirg723pselb4g77l6ssuytptohd3rvin4ybnwncidus52tfpu6ty",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
@@ -2390,8 +2396,8 @@
         "cpy_bs_ghrel": "bciqfjhy4uuhkcogsnxxs5fv4ml7m5ykvfm4my45npfyoap2efbfsmby",
         "node_org": "bciqexpmyf75pimfmu3czcedptwynipi6pztai4ixm6kdj6wwlymesby"
       },
-      "bciqj5xfgcxzfw3tusoy4v53dcinxqxskfwe3lylcjevxl6mbroky5za": {
-        "version": "v24.1",
+      "bciqgrbpedi7vnhyt4hacohy3c3ew2ui4yjm4rgthzrbour6gqxv37dq": {
+        "version": "v25.1",
         "port": {
           "ty": "denoWorker@v1",
           "name": "protoc_ghrel",
