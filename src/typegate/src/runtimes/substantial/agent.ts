@@ -18,7 +18,7 @@ import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
 const logger = getLogger();
 
 const POLL_INTERVAL_SECONDS = 1;
-const LEASE_LIFESPAN = 3;
+const LEASE_LIFESPAN_SECONDS = 3;
 
 export interface WorkflowDescription {
   name: string;
@@ -126,7 +126,7 @@ export class Agent {
   async #tryAcquireNextRun() {
     const activeRunIds = await Meta.substantial.agentActiveLeases({
       backend: this.backend,
-      lease_seconds: LEASE_LIFESPAN,
+      lease_seconds: LEASE_LIFESPAN_SECONDS,
     });
 
     logger.info(`Active leases: ${activeRunIds.join(",  ")}`);
@@ -143,7 +143,7 @@ export class Agent {
 
     const acquired = await Meta.substantial.agentAcquireLease({
       backend: this.backend,
-      lease_seconds: LEASE_LIFESPAN,
+      lease_seconds: LEASE_LIFESPAN_SECONDS,
       run_id: next.run_id,
     });
 
@@ -317,7 +317,7 @@ export class Agent {
     logger.info(`Renew lease ${runId}`);
     await Meta.substantial.agentRenewLease({
       backend: this.backend,
-      lease_seconds: LEASE_LIFESPAN,
+      lease_seconds: LEASE_LIFESPAN_SECONDS,
       run_id: runId,
     });
   }
@@ -368,7 +368,7 @@ export class Agent {
     await Meta.substantial.agentRemoveLease({
       backend: this.backend,
       run_id: runId,
-      lease_seconds: LEASE_LIFESPAN,
+      lease_seconds: LEASE_LIFESPAN_SECONDS,
     });
   }
 

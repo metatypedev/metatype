@@ -124,6 +124,7 @@ pub fn substantial_operation(
             // Note: this is per typegate node basis
             // And If the downtime in between interrupts is not negligible this will output nothing
             // as there are no active workers running
+            // This feature might be handy for debugging (e.g. long running workers on the typegate it is queried upon)
             let out = t::struct_()
                 .prop("count", t::integer().build()?)
                 .prop("workflow", t::string().build()?)

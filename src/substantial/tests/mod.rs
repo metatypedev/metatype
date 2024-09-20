@@ -124,7 +124,7 @@ mod tests {
                 .unwrap();
             assert_eq!(metadata.len(), 1);
 
-            // lease acuire
+            // lease acquire
             let lease = backend.acquire_lease(run_id.clone(), 123).unwrap();
             assert!(lease, "lease acquired");
             let lease2 = backend.acquire_lease(run_id.clone(), 123).unwrap();

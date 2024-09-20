@@ -149,41 +149,32 @@ Meta.test(
     // let's wait for a bit to make sure interrupts are doing their jobs
     await sleep(5 * 1000);
 
-    await t.should(
-      `fire "confirmation" events for "${emails.join(", ")}"`,
-      async () => {
-        await gql`
-          mutation {
-            # will pass
-            one: send_confirmation(
-              run_id: $one_run_id
-              event: { payload: true }
-            )
-            # will throw
-            two: send_confirmation(
-              run_id: $two_run_id
-              event: { payload: false }
-            )
-            # will abort
-            three: abort_email_confirmation(run_id: $three_run_id)
-          }
-        `
-          .withVars({
-            one_run_id: runIds[0],
-            two_run_id: runIds[1],
-            three_run_id: runIds[2],
-          })
-          .expectData({
-            one: runIds[0],
-            two: runIds[1],
-            three: runIds[2],
-          })
-          .on(e);
-      }
-    );
+    await t.should(`fire events for "${emails.join(", ")}"`, async () => {
+      await gql`
+        mutation {
+          # will pass
+          one: send_confirmation(run_id: $one_run_id, event: { payload: true })
+          # will throw
+          two: send_confirmation(run_id: $two_run_id, event: { payload: false })
+          # will abort
+          three: abort_email_confirmation(run_id: $three_run_id)
+        }
+      `
+        .withVars({
+          one_run_id: runIds[0],
+          two_run_id: runIds[1],
+          three_run_id: runIds[2],
+        })
+        .expectData({
+          one: runIds[0],
+          two: runIds[1],
+          three: runIds[2],
+        })
+        .on(e);
+    });
 
     // This is arbitrary, if ops are leaking that means it should be increased
-    // Noticing the fired event may take a few seconds depending on `substantial_relaunch_ms`
+    // Noticing the fired event may take a few seconds depending on the interrupt relaunch time and poll interval
     // Once noticed the workflow will complete and the worker destroyed
     await sleep(10 * 1000);
 
@@ -211,13 +202,13 @@ Meta.test(
           assertEquals(
             body?.data?.email_results?.ongoing?.count,
             0,
-            "zero workflow currently running"
+            "0 workflow currently running"
           );
 
           assertEquals(
             body?.data?.email_results?.completed?.count,
             3,
-            "three workflow completed"
+            "3 workflows completed"
           );
 
           const localSorter = (a: any, b: any) =>
@@ -252,7 +243,7 @@ Meta.test(
           assertEquals(
             received.sort(localSorter),
             expected.sort(localSorter),
-            "complete only two workflows as one was aborted"
+            "'complete' two workflows as one was aborted"
           );
         })
         .on(e);
