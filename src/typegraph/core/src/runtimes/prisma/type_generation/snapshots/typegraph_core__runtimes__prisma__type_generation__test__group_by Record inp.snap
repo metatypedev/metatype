@@ -5,7 +5,7 @@ expression: tp.print(inp)
 root: struct '_Record_QueryInput_group_by' #105
 ├─ [by]: list '_Record_GroupingFields' #73
 │  └─ item: string #72 enum{ '"id"', '"name"', '"age"', '"created_at"' }
-├─ [cursor]: optional #71
+├─ [cursor]: optional 'optional_71' #71
 │  └─ item: union '_Record_Cursor' #70
 │     ├─ variant_0: struct #66
 │     │  └─ [id]: string #2
@@ -15,10 +15,10 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  └─ [age]: integer #4
 │     └─ variant_3: struct #69
 │        └─ [created_at]: string #1
-├─ [having]: optional #104
+├─ [having]: optional 'optional_104' #104
 │  └─ item: union '_Record_Having' #103
 │     ├─ variant_0: struct 'RecordWhere__agg' #96
-│     │  ├─ [age]: optional #94
+│     │  ├─ [age]: optional 'optional_94' #94
 │     │  │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │  │     └─ item: union #92
 │     │  │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -29,19 +29,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │        │  │  ├─ variant_2: struct #29
 │     │  │        │  │  │  └─ [not]: integer #25
 │     │  │        │  │  ├─ variant_3: struct #30
-│     │  │        │  │  │  ├─ [gt]: optional #26
+│     │  │        │  │  │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │  │  │  │  └─ item: integer #25
-│     │  │        │  │  │  ├─ [gte]: optional #26
+│     │  │        │  │  │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │  │  │  │  └─ item: integer #25
-│     │  │        │  │  │  ├─ [lt]: optional #26
+│     │  │        │  │  │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │  │  │  │  └─ item: integer #25
-│     │  │        │  │  │  └─ [lte]: optional #26
+│     │  │        │  │  │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │  │  │     └─ item: integer #25
 │     │  │        │  │  ├─ variant_4: struct #31
-│     │  │        │  │  │  └─ [in]: list #27
+│     │  │        │  │  │  └─ [in]: list 'list_27' #27
 │     │  │        │  │  │     └─ item: integer #25
 │     │  │        │  │  └─ variant_5: struct #32
-│     │  │        │  │     └─ [notIn]: list #27
+│     │  │        │  │     └─ [notIn]: list 'list_27' #27
 │     │  │        │  │        └─ item: integer #25
 │     │  │        │  ├─ variant_1: struct #85
 │     │  │        │  │  └─ [_count]: either '_integer_filter' #33
@@ -51,19 +51,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │        │  │     ├─ variant_2: struct #29
 │     │  │        │  │     │  └─ [not]: integer #25
 │     │  │        │  │     ├─ variant_3: struct #30
-│     │  │        │  │     │  ├─ [gt]: optional #26
+│     │  │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [gte]: optional #26
+│     │  │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [lt]: optional #26
+│     │  │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  └─ [lte]: optional #26
+│     │  │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     ├─ variant_4: struct #31
-│     │  │        │  │     │  └─ [in]: list #27
+│     │  │        │  │     │  └─ [in]: list 'list_27' #27
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     └─ variant_5: struct #32
-│     │  │        │  │        └─ [notIn]: list #27
+│     │  │        │  │        └─ [notIn]: list 'list_27' #27
 │     │  │        │  │           └─ item: integer #25
 │     │  │        │  ├─ variant_2: struct #86
 │     │  │        │  │  └─ [_sum]: either '_integer_filter' #33
@@ -73,19 +73,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │        │  │     ├─ variant_2: struct #29
 │     │  │        │  │     │  └─ [not]: integer #25
 │     │  │        │  │     ├─ variant_3: struct #30
-│     │  │        │  │     │  ├─ [gt]: optional #26
+│     │  │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [gte]: optional #26
+│     │  │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [lt]: optional #26
+│     │  │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  └─ [lte]: optional #26
+│     │  │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     ├─ variant_4: struct #31
-│     │  │        │  │     │  └─ [in]: list #27
+│     │  │        │  │     │  └─ [in]: list 'list_27' #27
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     └─ variant_5: struct #32
-│     │  │        │  │        └─ [notIn]: list #27
+│     │  │        │  │        └─ [notIn]: list 'list_27' #27
 │     │  │        │  │           └─ item: integer #25
 │     │  │        │  ├─ variant_3: struct #87
 │     │  │        │  │  └─ [_avg]: either '_float_filter' #84
@@ -95,19 +95,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │        │  │     ├─ variant_2: struct #80
 │     │  │        │  │     │  └─ [not]: float #76
 │     │  │        │  │     ├─ variant_3: struct #81
-│     │  │        │  │     │  ├─ [gt]: optional #77
+│     │  │        │  │     │  ├─ [gt]: optional 'optional_77' #77
 │     │  │        │  │     │  │  └─ item: float #76
-│     │  │        │  │     │  ├─ [gte]: optional #77
+│     │  │        │  │     │  ├─ [gte]: optional 'optional_77' #77
 │     │  │        │  │     │  │  └─ item: float #76
-│     │  │        │  │     │  ├─ [lt]: optional #77
+│     │  │        │  │     │  ├─ [lt]: optional 'optional_77' #77
 │     │  │        │  │     │  │  └─ item: float #76
-│     │  │        │  │     │  └─ [lte]: optional #77
+│     │  │        │  │     │  └─ [lte]: optional 'optional_77' #77
 │     │  │        │  │     │     └─ item: float #76
 │     │  │        │  │     ├─ variant_4: struct #82
-│     │  │        │  │     │  └─ [in]: list #78
+│     │  │        │  │     │  └─ [in]: list 'list_78' #78
 │     │  │        │  │     │     └─ item: float #76
 │     │  │        │  │     └─ variant_5: struct #83
-│     │  │        │  │        └─ [notIn]: list #78
+│     │  │        │  │        └─ [notIn]: list 'list_78' #78
 │     │  │        │  │           └─ item: float #76
 │     │  │        │  ├─ variant_4: struct #88
 │     │  │        │  │  └─ [_min]: either '_integer_filter' #33
@@ -117,19 +117,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │        │  │     ├─ variant_2: struct #29
 │     │  │        │  │     │  └─ [not]: integer #25
 │     │  │        │  │     ├─ variant_3: struct #30
-│     │  │        │  │     │  ├─ [gt]: optional #26
+│     │  │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [gte]: optional #26
+│     │  │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [lt]: optional #26
+│     │  │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  └─ [lte]: optional #26
+│     │  │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     ├─ variant_4: struct #31
-│     │  │        │  │     │  └─ [in]: list #27
+│     │  │        │  │     │  └─ [in]: list 'list_27' #27
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     └─ variant_5: struct #32
-│     │  │        │  │        └─ [notIn]: list #27
+│     │  │        │  │        └─ [notIn]: list 'list_27' #27
 │     │  │        │  │           └─ item: integer #25
 │     │  │        │  └─ variant_5: struct #89
 │     │  │        │     └─ [_max]: either '_integer_filter' #33
@@ -139,19 +139,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │        │        ├─ variant_2: struct #29
 │     │  │        │        │  └─ [not]: integer #25
 │     │  │        │        ├─ variant_3: struct #30
-│     │  │        │        │  ├─ [gt]: optional #26
+│     │  │        │        │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │        │  │  └─ item: integer #25
-│     │  │        │        │  ├─ [gte]: optional #26
+│     │  │        │        │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │        │  │  └─ item: integer #25
-│     │  │        │        │  ├─ [lt]: optional #26
+│     │  │        │        │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │        │  │  └─ item: integer #25
-│     │  │        │        │  └─ [lte]: optional #26
+│     │  │        │        │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │        │     └─ item: integer #25
 │     │  │        │        ├─ variant_4: struct #31
-│     │  │        │        │  └─ [in]: list #27
+│     │  │        │        │  └─ [in]: list 'list_27' #27
 │     │  │        │        │     └─ item: integer #25
 │     │  │        │        └─ variant_5: struct #32
-│     │  │        │           └─ [notIn]: list #27
+│     │  │        │           └─ [notIn]: list 'list_27' #27
 │     │  │        │              └─ item: integer #25
 │     │  │        └─ variant_1: struct #91
 │     │  │           └─ [not]: union '_integer_filter_with_aggregates' #90
@@ -162,19 +162,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │              │  ├─ variant_2: struct #29
 │     │  │              │  │  └─ [not]: integer #25
 │     │  │              │  ├─ variant_3: struct #30
-│     │  │              │  │  ├─ [gt]: optional #26
+│     │  │              │  │  ├─ [gt]: optional 'optional_26' #26
 │     │  │              │  │  │  └─ item: integer #25
-│     │  │              │  │  ├─ [gte]: optional #26
+│     │  │              │  │  ├─ [gte]: optional 'optional_26' #26
 │     │  │              │  │  │  └─ item: integer #25
-│     │  │              │  │  ├─ [lt]: optional #26
+│     │  │              │  │  ├─ [lt]: optional 'optional_26' #26
 │     │  │              │  │  │  └─ item: integer #25
-│     │  │              │  │  └─ [lte]: optional #26
+│     │  │              │  │  └─ [lte]: optional 'optional_26' #26
 │     │  │              │  │     └─ item: integer #25
 │     │  │              │  ├─ variant_4: struct #31
-│     │  │              │  │  └─ [in]: list #27
+│     │  │              │  │  └─ [in]: list 'list_27' #27
 │     │  │              │  │     └─ item: integer #25
 │     │  │              │  └─ variant_5: struct #32
-│     │  │              │     └─ [notIn]: list #27
+│     │  │              │     └─ [notIn]: list 'list_27' #27
 │     │  │              │        └─ item: integer #25
 │     │  │              ├─ variant_1: struct #85
 │     │  │              │  └─ [_count]: either '_integer_filter' #33
@@ -184,19 +184,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │              │     ├─ variant_2: struct #29
 │     │  │              │     │  └─ [not]: integer #25
 │     │  │              │     ├─ variant_3: struct #30
-│     │  │              │     │  ├─ [gt]: optional #26
+│     │  │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [gte]: optional #26
+│     │  │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [lt]: optional #26
+│     │  │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  └─ [lte]: optional #26
+│     │  │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     ├─ variant_4: struct #31
-│     │  │              │     │  └─ [in]: list #27
+│     │  │              │     │  └─ [in]: list 'list_27' #27
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     └─ variant_5: struct #32
-│     │  │              │        └─ [notIn]: list #27
+│     │  │              │        └─ [notIn]: list 'list_27' #27
 │     │  │              │           └─ item: integer #25
 │     │  │              ├─ variant_2: struct #86
 │     │  │              │  └─ [_sum]: either '_integer_filter' #33
@@ -206,19 +206,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │              │     ├─ variant_2: struct #29
 │     │  │              │     │  └─ [not]: integer #25
 │     │  │              │     ├─ variant_3: struct #30
-│     │  │              │     │  ├─ [gt]: optional #26
+│     │  │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [gte]: optional #26
+│     │  │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [lt]: optional #26
+│     │  │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  └─ [lte]: optional #26
+│     │  │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     ├─ variant_4: struct #31
-│     │  │              │     │  └─ [in]: list #27
+│     │  │              │     │  └─ [in]: list 'list_27' #27
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     └─ variant_5: struct #32
-│     │  │              │        └─ [notIn]: list #27
+│     │  │              │        └─ [notIn]: list 'list_27' #27
 │     │  │              │           └─ item: integer #25
 │     │  │              ├─ variant_3: struct #87
 │     │  │              │  └─ [_avg]: either '_float_filter' #84
@@ -228,19 +228,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │              │     ├─ variant_2: struct #80
 │     │  │              │     │  └─ [not]: float #76
 │     │  │              │     ├─ variant_3: struct #81
-│     │  │              │     │  ├─ [gt]: optional #77
+│     │  │              │     │  ├─ [gt]: optional 'optional_77' #77
 │     │  │              │     │  │  └─ item: float #76
-│     │  │              │     │  ├─ [gte]: optional #77
+│     │  │              │     │  ├─ [gte]: optional 'optional_77' #77
 │     │  │              │     │  │  └─ item: float #76
-│     │  │              │     │  ├─ [lt]: optional #77
+│     │  │              │     │  ├─ [lt]: optional 'optional_77' #77
 │     │  │              │     │  │  └─ item: float #76
-│     │  │              │     │  └─ [lte]: optional #77
+│     │  │              │     │  └─ [lte]: optional 'optional_77' #77
 │     │  │              │     │     └─ item: float #76
 │     │  │              │     ├─ variant_4: struct #82
-│     │  │              │     │  └─ [in]: list #78
+│     │  │              │     │  └─ [in]: list 'list_78' #78
 │     │  │              │     │     └─ item: float #76
 │     │  │              │     └─ variant_5: struct #83
-│     │  │              │        └─ [notIn]: list #78
+│     │  │              │        └─ [notIn]: list 'list_78' #78
 │     │  │              │           └─ item: float #76
 │     │  │              ├─ variant_4: struct #88
 │     │  │              │  └─ [_min]: either '_integer_filter' #33
@@ -250,19 +250,19 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │              │     ├─ variant_2: struct #29
 │     │  │              │     │  └─ [not]: integer #25
 │     │  │              │     ├─ variant_3: struct #30
-│     │  │              │     │  ├─ [gt]: optional #26
+│     │  │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [gte]: optional #26
+│     │  │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [lt]: optional #26
+│     │  │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  └─ [lte]: optional #26
+│     │  │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     ├─ variant_4: struct #31
-│     │  │              │     │  └─ [in]: list #27
+│     │  │              │     │  └─ [in]: list 'list_27' #27
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     └─ variant_5: struct #32
-│     │  │              │        └─ [notIn]: list #27
+│     │  │              │        └─ [notIn]: list 'list_27' #27
 │     │  │              │           └─ item: integer #25
 │     │  │              └─ variant_5: struct #89
 │     │  │                 └─ [_max]: either '_integer_filter' #33
@@ -272,21 +272,21 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │                    ├─ variant_2: struct #29
 │     │  │                    │  └─ [not]: integer #25
 │     │  │                    ├─ variant_3: struct #30
-│     │  │                    │  ├─ [gt]: optional #26
+│     │  │                    │  ├─ [gt]: optional 'optional_26' #26
 │     │  │                    │  │  └─ item: integer #25
-│     │  │                    │  ├─ [gte]: optional #26
+│     │  │                    │  ├─ [gte]: optional 'optional_26' #26
 │     │  │                    │  │  └─ item: integer #25
-│     │  │                    │  ├─ [lt]: optional #26
+│     │  │                    │  ├─ [lt]: optional 'optional_26' #26
 │     │  │                    │  │  └─ item: integer #25
-│     │  │                    │  └─ [lte]: optional #26
+│     │  │                    │  └─ [lte]: optional 'optional_26' #26
 │     │  │                    │     └─ item: integer #25
 │     │  │                    ├─ variant_4: struct #31
-│     │  │                    │  └─ [in]: list #27
+│     │  │                    │  └─ [in]: list 'list_27' #27
 │     │  │                    │     └─ item: integer #25
 │     │  │                    └─ variant_5: struct #32
-│     │  │                       └─ [notIn]: list #27
+│     │  │                       └─ [notIn]: list 'list_27' #27
 │     │  │                          └─ item: integer #25
-│     │  ├─ [created_at]: optional #95
+│     │  ├─ [created_at]: optional 'optional_95' #95
 │     │  │  └─ item: optional '_string_filter_c' #22
 │     │  │     └─ item: union #21
 │     │  │        ├─ variant_0: union '_string_filter' #19
@@ -296,21 +296,21 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │        │  ├─ variant_2: struct #11
 │     │  │        │  │  └─ [not]: string #7
 │     │  │        │  ├─ variant_3: struct #12
-│     │  │        │  │  └─ [in]: list #9
+│     │  │        │  │  └─ [in]: list 'list_9' #9
 │     │  │        │  │     └─ item: string #7
 │     │  │        │  ├─ variant_4: struct #13
-│     │  │        │  │  └─ [notIn]: list #9
+│     │  │        │  │  └─ [notIn]: list 'list_9' #9
 │     │  │        │  │     └─ item: string #7
 │     │  │        │  ├─ variant_5: struct #16
 │     │  │        │  │  ├─ [contains]: string #7
-│     │  │        │  │  └─ [mode]: optional #15
+│     │  │        │  │  └─ [mode]: optional 'optional_15' #15
 │     │  │        │  │     └─ item: string #14 enum{ '"insensitive"' }
 │     │  │        │  ├─ variant_6: struct #17
 │     │  │        │  │  └─ [search]: string #7
 │     │  │        │  └─ variant_7: struct #18
-│     │  │        │     ├─ [endsWith]: optional #8
+│     │  │        │     ├─ [endsWith]: optional 'optional_8' #8
 │     │  │        │     │  └─ item: string #7
-│     │  │        │     └─ [startsWith]: optional #8
+│     │  │        │     └─ [startsWith]: optional 'optional_8' #8
 │     │  │        │        └─ item: string #7
 │     │  │        └─ variant_1: struct #20
 │     │  │           └─ [not]: union '_string_filter' #19
@@ -320,23 +320,23 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │              ├─ variant_2: struct #11
 │     │  │              │  └─ [not]: string #7
 │     │  │              ├─ variant_3: struct #12
-│     │  │              │  └─ [in]: list #9
+│     │  │              │  └─ [in]: list 'list_9' #9
 │     │  │              │     └─ item: string #7
 │     │  │              ├─ variant_4: struct #13
-│     │  │              │  └─ [notIn]: list #9
+│     │  │              │  └─ [notIn]: list 'list_9' #9
 │     │  │              │     └─ item: string #7
 │     │  │              ├─ variant_5: struct #16
 │     │  │              │  ├─ [contains]: string #7
-│     │  │              │  └─ [mode]: optional #15
+│     │  │              │  └─ [mode]: optional 'optional_15' #15
 │     │  │              │     └─ item: string #14 enum{ '"insensitive"' }
 │     │  │              ├─ variant_6: struct #17
 │     │  │              │  └─ [search]: string #7
 │     │  │              └─ variant_7: struct #18
-│     │  │                 ├─ [endsWith]: optional #8
+│     │  │                 ├─ [endsWith]: optional 'optional_8' #8
 │     │  │                 │  └─ item: string #7
-│     │  │                 └─ [startsWith]: optional #8
+│     │  │                 └─ [startsWith]: optional 'optional_8' #8
 │     │  │                    └─ item: string #7
-│     │  ├─ [id]: optional #74
+│     │  ├─ [id]: optional 'optional_74' #74
 │     │  │  └─ item: optional '_string_filter_c' #22
 │     │  │     └─ item: union #21
 │     │  │        ├─ variant_0: union '_string_filter' #19
@@ -346,21 +346,21 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │        │  ├─ variant_2: struct #11
 │     │  │        │  │  └─ [not]: string #7
 │     │  │        │  ├─ variant_3: struct #12
-│     │  │        │  │  └─ [in]: list #9
+│     │  │        │  │  └─ [in]: list 'list_9' #9
 │     │  │        │  │     └─ item: string #7
 │     │  │        │  ├─ variant_4: struct #13
-│     │  │        │  │  └─ [notIn]: list #9
+│     │  │        │  │  └─ [notIn]: list 'list_9' #9
 │     │  │        │  │     └─ item: string #7
 │     │  │        │  ├─ variant_5: struct #16
 │     │  │        │  │  ├─ [contains]: string #7
-│     │  │        │  │  └─ [mode]: optional #15
+│     │  │        │  │  └─ [mode]: optional 'optional_15' #15
 │     │  │        │  │     └─ item: string #14 enum{ '"insensitive"' }
 │     │  │        │  ├─ variant_6: struct #17
 │     │  │        │  │  └─ [search]: string #7
 │     │  │        │  └─ variant_7: struct #18
-│     │  │        │     ├─ [endsWith]: optional #8
+│     │  │        │     ├─ [endsWith]: optional 'optional_8' #8
 │     │  │        │     │  └─ item: string #7
-│     │  │        │     └─ [startsWith]: optional #8
+│     │  │        │     └─ [startsWith]: optional 'optional_8' #8
 │     │  │        │        └─ item: string #7
 │     │  │        └─ variant_1: struct #20
 │     │  │           └─ [not]: union '_string_filter' #19
@@ -370,23 +370,23 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │  │              ├─ variant_2: struct #11
 │     │  │              │  └─ [not]: string #7
 │     │  │              ├─ variant_3: struct #12
-│     │  │              │  └─ [in]: list #9
+│     │  │              │  └─ [in]: list 'list_9' #9
 │     │  │              │     └─ item: string #7
 │     │  │              ├─ variant_4: struct #13
-│     │  │              │  └─ [notIn]: list #9
+│     │  │              │  └─ [notIn]: list 'list_9' #9
 │     │  │              │     └─ item: string #7
 │     │  │              ├─ variant_5: struct #16
 │     │  │              │  ├─ [contains]: string #7
-│     │  │              │  └─ [mode]: optional #15
+│     │  │              │  └─ [mode]: optional 'optional_15' #15
 │     │  │              │     └─ item: string #14 enum{ '"insensitive"' }
 │     │  │              ├─ variant_6: struct #17
 │     │  │              │  └─ [search]: string #7
 │     │  │              └─ variant_7: struct #18
-│     │  │                 ├─ [endsWith]: optional #8
+│     │  │                 ├─ [endsWith]: optional 'optional_8' #8
 │     │  │                 │  └─ item: string #7
-│     │  │                 └─ [startsWith]: optional #8
+│     │  │                 └─ [startsWith]: optional 'optional_8' #8
 │     │  │                    └─ item: string #7
-│     │  └─ [name]: optional #75
+│     │  └─ [name]: optional 'optional_75' #75
 │     │     └─ item: optional '_string_filter_c' #22
 │     │        └─ item: union #21
 │     │           ├─ variant_0: union '_string_filter' #19
@@ -396,21 +396,21 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │           │  ├─ variant_2: struct #11
 │     │           │  │  └─ [not]: string #7
 │     │           │  ├─ variant_3: struct #12
-│     │           │  │  └─ [in]: list #9
+│     │           │  │  └─ [in]: list 'list_9' #9
 │     │           │  │     └─ item: string #7
 │     │           │  ├─ variant_4: struct #13
-│     │           │  │  └─ [notIn]: list #9
+│     │           │  │  └─ [notIn]: list 'list_9' #9
 │     │           │  │     └─ item: string #7
 │     │           │  ├─ variant_5: struct #16
 │     │           │  │  ├─ [contains]: string #7
-│     │           │  │  └─ [mode]: optional #15
+│     │           │  │  └─ [mode]: optional 'optional_15' #15
 │     │           │  │     └─ item: string #14 enum{ '"insensitive"' }
 │     │           │  ├─ variant_6: struct #17
 │     │           │  │  └─ [search]: string #7
 │     │           │  └─ variant_7: struct #18
-│     │           │     ├─ [endsWith]: optional #8
+│     │           │     ├─ [endsWith]: optional 'optional_8' #8
 │     │           │     │  └─ item: string #7
-│     │           │     └─ [startsWith]: optional #8
+│     │           │     └─ [startsWith]: optional 'optional_8' #8
 │     │           │        └─ item: string #7
 │     │           └─ variant_1: struct #20
 │     │              └─ [not]: union '_string_filter' #19
@@ -420,34 +420,34 @@ root: struct '_Record_QueryInput_group_by' #105
 │     │                 ├─ variant_2: struct #11
 │     │                 │  └─ [not]: string #7
 │     │                 ├─ variant_3: struct #12
-│     │                 │  └─ [in]: list #9
+│     │                 │  └─ [in]: list 'list_9' #9
 │     │                 │     └─ item: string #7
 │     │                 ├─ variant_4: struct #13
-│     │                 │  └─ [notIn]: list #9
+│     │                 │  └─ [notIn]: list 'list_9' #9
 │     │                 │     └─ item: string #7
 │     │                 ├─ variant_5: struct #16
 │     │                 │  ├─ [contains]: string #7
-│     │                 │  └─ [mode]: optional #15
+│     │                 │  └─ [mode]: optional 'optional_15' #15
 │     │                 │     └─ item: string #14 enum{ '"insensitive"' }
 │     │                 ├─ variant_6: struct #17
 │     │                 │  └─ [search]: string #7
 │     │                 └─ variant_7: struct #18
-│     │                    ├─ [endsWith]: optional #8
+│     │                    ├─ [endsWith]: optional 'optional_8' #8
 │     │                    │  └─ item: string #7
-│     │                    └─ [startsWith]: optional #8
+│     │                    └─ [startsWith]: optional 'optional_8' #8
 │     │                       └─ item: string #7
 │     ├─ variant_1: struct #99
-│     │  └─ [AND]: list #98
+│     │  └─ [AND]: list 'list_98' #98
 │     │     └─ item: &_Record_Having #97
 │     ├─ variant_2: struct #101
-│     │  └─ [OR]: list #100
+│     │  └─ [OR]: list 'list_100' #100
 │     │     └─ item: &_Record_Having #97
 │     └─ variant_3: struct #102
 │        └─ [NOT]: &_Record_Having #97
-├─ [orderBy]: optional #61
+├─ [orderBy]: optional 'optional_61' #61
 │  └─ item: list '_Record_OrderBy_with_aggregates' #60
 │     └─ item: struct #59
-│        ├─ [_avg]: optional #57
+│        ├─ [_avg]: optional 'optional_57' #57
 │        │  └─ item: struct #56
 │        │     └─ [age]: optional '_Sort_nullable' #53
 │        │        └─ item: union #52
@@ -455,7 +455,7 @@ root: struct '_Record_QueryInput_group_by' #105
 │        │           │  ├─ [nulls]: string '_NullsOrder' #47 enum{ '"first"', '"last"' }
 │        │           │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [_count]: optional #55
+│        ├─ [_count]: optional 'optional_55' #55
 │        │  └─ item: struct #54
 │        │     ├─ [age]: optional '_Sort_nullable' #53
 │        │     │  └─ item: union #52
@@ -478,7 +478,7 @@ root: struct '_Record_QueryInput_group_by' #105
 │        │           ├─ variant_0: struct #48
 │        │           │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [_max]: optional #57
+│        ├─ [_max]: optional 'optional_57' #57
 │        │  └─ item: struct #56
 │        │     └─ [age]: optional '_Sort_nullable' #53
 │        │        └─ item: union #52
@@ -486,7 +486,7 @@ root: struct '_Record_QueryInput_group_by' #105
 │        │           │  ├─ [nulls]: string '_NullsOrder' #47 enum{ '"first"', '"last"' }
 │        │           │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [_min]: optional #57
+│        ├─ [_min]: optional 'optional_57' #57
 │        │  └─ item: struct #56
 │        │     └─ [age]: optional '_Sort_nullable' #53
 │        │        └─ item: union #52
@@ -494,7 +494,7 @@ root: struct '_Record_QueryInput_group_by' #105
 │        │           │  ├─ [nulls]: string '_NullsOrder' #47 enum{ '"first"', '"last"' }
 │        │           │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [_sum]: optional #57
+│        ├─ [_sum]: optional 'optional_57' #57
 │        │  └─ item: struct #56
 │        │     └─ [age]: optional '_Sort_nullable' #53
 │        │        └─ item: union #52
@@ -523,21 +523,21 @@ root: struct '_Record_QueryInput_group_by' #105
 │              ├─ variant_0: struct #48
 │              │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │              └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-├─ [skip]: optional #65
+├─ [skip]: optional 'optional_65' #65
 │  └─ item: integer '_Skip' #64
-├─ [take]: optional #63
+├─ [take]: optional 'optional_63' #63
 │  └─ item: integer '_Take' #62
-└─ [where]: optional #45
+└─ [where]: optional 'optional_45' #45
    └─ item: struct 'QueryRecordWhereInput' #44
-      ├─ [AND]: optional #42
-      │  └─ item: list #41
+      ├─ [AND]: optional 'optional_42' #42
+      │  └─ item: list 'list_41' #41
       │     └─ item: &QueryRecordWhereInput #40
-      ├─ [NOT]: optional #43
+      ├─ [NOT]: optional 'optional_43' #43
       │  └─ item: &QueryRecordWhereInput #40
-      ├─ [OR]: optional #42
-      │  └─ item: list #41
+      ├─ [OR]: optional 'optional_42' #42
+      │  └─ item: list 'list_41' #41
       │     └─ item: &QueryRecordWhereInput #40
-      ├─ [age]: optional #37
+      ├─ [age]: optional 'optional_37' #37
       │  └─ item: optional '_integer_filter_c' #36
       │     └─ item: union #35
       │        ├─ variant_0: either '_integer_filter' #33
@@ -547,19 +547,19 @@ root: struct '_Record_QueryInput_group_by' #105
       │        │  ├─ variant_2: struct #29
       │        │  │  └─ [not]: integer #25
       │        │  ├─ variant_3: struct #30
-      │        │  │  ├─ [gt]: optional #26
+      │        │  │  ├─ [gt]: optional 'optional_26' #26
       │        │  │  │  └─ item: integer #25
-      │        │  │  ├─ [gte]: optional #26
+      │        │  │  ├─ [gte]: optional 'optional_26' #26
       │        │  │  │  └─ item: integer #25
-      │        │  │  ├─ [lt]: optional #26
+      │        │  │  ├─ [lt]: optional 'optional_26' #26
       │        │  │  │  └─ item: integer #25
-      │        │  │  └─ [lte]: optional #26
+      │        │  │  └─ [lte]: optional 'optional_26' #26
       │        │  │     └─ item: integer #25
       │        │  ├─ variant_4: struct #31
-      │        │  │  └─ [in]: list #27
+      │        │  │  └─ [in]: list 'list_27' #27
       │        │  │     └─ item: integer #25
       │        │  └─ variant_5: struct #32
-      │        │     └─ [notIn]: list #27
+      │        │     └─ [notIn]: list 'list_27' #27
       │        │        └─ item: integer #25
       │        └─ variant_1: struct #34
       │           └─ [not]: either '_integer_filter' #33
@@ -569,21 +569,21 @@ root: struct '_Record_QueryInput_group_by' #105
       │              ├─ variant_2: struct #29
       │              │  └─ [not]: integer #25
       │              ├─ variant_3: struct #30
-      │              │  ├─ [gt]: optional #26
+      │              │  ├─ [gt]: optional 'optional_26' #26
       │              │  │  └─ item: integer #25
-      │              │  ├─ [gte]: optional #26
+      │              │  ├─ [gte]: optional 'optional_26' #26
       │              │  │  └─ item: integer #25
-      │              │  ├─ [lt]: optional #26
+      │              │  ├─ [lt]: optional 'optional_26' #26
       │              │  │  └─ item: integer #25
-      │              │  └─ [lte]: optional #26
+      │              │  └─ [lte]: optional 'optional_26' #26
       │              │     └─ item: integer #25
       │              ├─ variant_4: struct #31
-      │              │  └─ [in]: list #27
+      │              │  └─ [in]: list 'list_27' #27
       │              │     └─ item: integer #25
       │              └─ variant_5: struct #32
-      │                 └─ [notIn]: list #27
+      │                 └─ [notIn]: list 'list_27' #27
       │                    └─ item: integer #25
-      ├─ [created_at]: optional #38
+      ├─ [created_at]: optional 'optional_38' #38
       │  └─ item: optional '_string_filter_c' #22
       │     └─ item: union #21
       │        ├─ variant_0: union '_string_filter' #19
@@ -593,21 +593,21 @@ root: struct '_Record_QueryInput_group_by' #105
       │        │  ├─ variant_2: struct #11
       │        │  │  └─ [not]: string #7
       │        │  ├─ variant_3: struct #12
-      │        │  │  └─ [in]: list #9
+      │        │  │  └─ [in]: list 'list_9' #9
       │        │  │     └─ item: string #7
       │        │  ├─ variant_4: struct #13
-      │        │  │  └─ [notIn]: list #9
+      │        │  │  └─ [notIn]: list 'list_9' #9
       │        │  │     └─ item: string #7
       │        │  ├─ variant_5: struct #16
       │        │  │  ├─ [contains]: string #7
-      │        │  │  └─ [mode]: optional #15
+      │        │  │  └─ [mode]: optional 'optional_15' #15
       │        │  │     └─ item: string #14 enum{ '"insensitive"' }
       │        │  ├─ variant_6: struct #17
       │        │  │  └─ [search]: string #7
       │        │  └─ variant_7: struct #18
-      │        │     ├─ [endsWith]: optional #8
+      │        │     ├─ [endsWith]: optional 'optional_8' #8
       │        │     │  └─ item: string #7
-      │        │     └─ [startsWith]: optional #8
+      │        │     └─ [startsWith]: optional 'optional_8' #8
       │        │        └─ item: string #7
       │        └─ variant_1: struct #20
       │           └─ [not]: union '_string_filter' #19
@@ -617,23 +617,23 @@ root: struct '_Record_QueryInput_group_by' #105
       │              ├─ variant_2: struct #11
       │              │  └─ [not]: string #7
       │              ├─ variant_3: struct #12
-      │              │  └─ [in]: list #9
+      │              │  └─ [in]: list 'list_9' #9
       │              │     └─ item: string #7
       │              ├─ variant_4: struct #13
-      │              │  └─ [notIn]: list #9
+      │              │  └─ [notIn]: list 'list_9' #9
       │              │     └─ item: string #7
       │              ├─ variant_5: struct #16
       │              │  ├─ [contains]: string #7
-      │              │  └─ [mode]: optional #15
+      │              │  └─ [mode]: optional 'optional_15' #15
       │              │     └─ item: string #14 enum{ '"insensitive"' }
       │              ├─ variant_6: struct #17
       │              │  └─ [search]: string #7
       │              └─ variant_7: struct #18
-      │                 ├─ [endsWith]: optional #8
+      │                 ├─ [endsWith]: optional 'optional_8' #8
       │                 │  └─ item: string #7
-      │                 └─ [startsWith]: optional #8
+      │                 └─ [startsWith]: optional 'optional_8' #8
       │                    └─ item: string #7
-      ├─ [id]: optional #23
+      ├─ [id]: optional 'optional_23' #23
       │  └─ item: optional '_string_filter_c' #22
       │     └─ item: union #21
       │        ├─ variant_0: union '_string_filter' #19
@@ -643,21 +643,21 @@ root: struct '_Record_QueryInput_group_by' #105
       │        │  ├─ variant_2: struct #11
       │        │  │  └─ [not]: string #7
       │        │  ├─ variant_3: struct #12
-      │        │  │  └─ [in]: list #9
+      │        │  │  └─ [in]: list 'list_9' #9
       │        │  │     └─ item: string #7
       │        │  ├─ variant_4: struct #13
-      │        │  │  └─ [notIn]: list #9
+      │        │  │  └─ [notIn]: list 'list_9' #9
       │        │  │     └─ item: string #7
       │        │  ├─ variant_5: struct #16
       │        │  │  ├─ [contains]: string #7
-      │        │  │  └─ [mode]: optional #15
+      │        │  │  └─ [mode]: optional 'optional_15' #15
       │        │  │     └─ item: string #14 enum{ '"insensitive"' }
       │        │  ├─ variant_6: struct #17
       │        │  │  └─ [search]: string #7
       │        │  └─ variant_7: struct #18
-      │        │     ├─ [endsWith]: optional #8
+      │        │     ├─ [endsWith]: optional 'optional_8' #8
       │        │     │  └─ item: string #7
-      │        │     └─ [startsWith]: optional #8
+      │        │     └─ [startsWith]: optional 'optional_8' #8
       │        │        └─ item: string #7
       │        └─ variant_1: struct #20
       │           └─ [not]: union '_string_filter' #19
@@ -667,23 +667,23 @@ root: struct '_Record_QueryInput_group_by' #105
       │              ├─ variant_2: struct #11
       │              │  └─ [not]: string #7
       │              ├─ variant_3: struct #12
-      │              │  └─ [in]: list #9
+      │              │  └─ [in]: list 'list_9' #9
       │              │     └─ item: string #7
       │              ├─ variant_4: struct #13
-      │              │  └─ [notIn]: list #9
+      │              │  └─ [notIn]: list 'list_9' #9
       │              │     └─ item: string #7
       │              ├─ variant_5: struct #16
       │              │  ├─ [contains]: string #7
-      │              │  └─ [mode]: optional #15
+      │              │  └─ [mode]: optional 'optional_15' #15
       │              │     └─ item: string #14 enum{ '"insensitive"' }
       │              ├─ variant_6: struct #17
       │              │  └─ [search]: string #7
       │              └─ variant_7: struct #18
-      │                 ├─ [endsWith]: optional #8
+      │                 ├─ [endsWith]: optional 'optional_8' #8
       │                 │  └─ item: string #7
-      │                 └─ [startsWith]: optional #8
+      │                 └─ [startsWith]: optional 'optional_8' #8
       │                    └─ item: string #7
-      └─ [name]: optional #24
+      └─ [name]: optional 'optional_24' #24
          └─ item: optional '_string_filter_c' #22
             └─ item: union #21
                ├─ variant_0: union '_string_filter' #19
@@ -693,21 +693,21 @@ root: struct '_Record_QueryInput_group_by' #105
                │  ├─ variant_2: struct #11
                │  │  └─ [not]: string #7
                │  ├─ variant_3: struct #12
-               │  │  └─ [in]: list #9
+               │  │  └─ [in]: list 'list_9' #9
                │  │     └─ item: string #7
                │  ├─ variant_4: struct #13
-               │  │  └─ [notIn]: list #9
+               │  │  └─ [notIn]: list 'list_9' #9
                │  │     └─ item: string #7
                │  ├─ variant_5: struct #16
                │  │  ├─ [contains]: string #7
-               │  │  └─ [mode]: optional #15
+               │  │  └─ [mode]: optional 'optional_15' #15
                │  │     └─ item: string #14 enum{ '"insensitive"' }
                │  ├─ variant_6: struct #17
                │  │  └─ [search]: string #7
                │  └─ variant_7: struct #18
-               │     ├─ [endsWith]: optional #8
+               │     ├─ [endsWith]: optional 'optional_8' #8
                │     │  └─ item: string #7
-               │     └─ [startsWith]: optional #8
+               │     └─ [startsWith]: optional 'optional_8' #8
                │        └─ item: string #7
                └─ variant_1: struct #20
                   └─ [not]: union '_string_filter' #19
@@ -717,19 +717,19 @@ root: struct '_Record_QueryInput_group_by' #105
                      ├─ variant_2: struct #11
                      │  └─ [not]: string #7
                      ├─ variant_3: struct #12
-                     │  └─ [in]: list #9
+                     │  └─ [in]: list 'list_9' #9
                      │     └─ item: string #7
                      ├─ variant_4: struct #13
-                     │  └─ [notIn]: list #9
+                     │  └─ [notIn]: list 'list_9' #9
                      │     └─ item: string #7
                      ├─ variant_5: struct #16
                      │  ├─ [contains]: string #7
-                     │  └─ [mode]: optional #15
+                     │  └─ [mode]: optional 'optional_15' #15
                      │     └─ item: string #14 enum{ '"insensitive"' }
                      ├─ variant_6: struct #17
                      │  └─ [search]: string #7
                      └─ variant_7: struct #18
-                        ├─ [endsWith]: optional #8
+                        ├─ [endsWith]: optional 'optional_8' #8
                         │  └─ item: string #7
-                        └─ [startsWith]: optional #8
+                        └─ [startsWith]: optional 'optional_8' #8
                            └─ item: string #7

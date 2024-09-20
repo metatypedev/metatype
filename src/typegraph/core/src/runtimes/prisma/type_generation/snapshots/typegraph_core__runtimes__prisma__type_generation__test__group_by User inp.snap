@@ -5,16 +5,16 @@ expression: tp.print(inp)
 root: struct '_User_QueryInput_group_by' #192
 ├─ [by]: list '_User_GroupingFields' #167
 │  └─ item: string #166 enum{ '"id"', '"name"' }
-├─ [cursor]: optional #165
+├─ [cursor]: optional 'optional_165' #165
 │  └─ item: union '_User_Cursor' #164
 │     ├─ variant_0: struct #162
 │     │  └─ [id]: integer #119
 │     └─ variant_1: struct #163
 │        └─ [name]: string #120
-├─ [having]: optional #191
+├─ [having]: optional 'optional_191' #191
 │  └─ item: union '_User_Having' #190
 │     ├─ variant_0: struct 'UserWhere__agg' #183
-│     │  ├─ [id]: optional #168
+│     │  ├─ [id]: optional 'optional_168' #168
 │     │  │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │  │     └─ item: union #92
 │     │  │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -25,19 +25,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │        │  │  ├─ variant_2: struct #29
 │     │  │        │  │  │  └─ [not]: integer #25
 │     │  │        │  │  ├─ variant_3: struct #30
-│     │  │        │  │  │  ├─ [gt]: optional #26
+│     │  │        │  │  │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │  │  │  │  └─ item: integer #25
-│     │  │        │  │  │  ├─ [gte]: optional #26
+│     │  │        │  │  │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │  │  │  │  └─ item: integer #25
-│     │  │        │  │  │  ├─ [lt]: optional #26
+│     │  │        │  │  │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │  │  │  │  └─ item: integer #25
-│     │  │        │  │  │  └─ [lte]: optional #26
+│     │  │        │  │  │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │  │  │     └─ item: integer #25
 │     │  │        │  │  ├─ variant_4: struct #31
-│     │  │        │  │  │  └─ [in]: list #27
+│     │  │        │  │  │  └─ [in]: list 'list_27' #27
 │     │  │        │  │  │     └─ item: integer #25
 │     │  │        │  │  └─ variant_5: struct #32
-│     │  │        │  │     └─ [notIn]: list #27
+│     │  │        │  │     └─ [notIn]: list 'list_27' #27
 │     │  │        │  │        └─ item: integer #25
 │     │  │        │  ├─ variant_1: struct #85
 │     │  │        │  │  └─ [_count]: either '_integer_filter' #33
@@ -47,19 +47,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │        │  │     ├─ variant_2: struct #29
 │     │  │        │  │     │  └─ [not]: integer #25
 │     │  │        │  │     ├─ variant_3: struct #30
-│     │  │        │  │     │  ├─ [gt]: optional #26
+│     │  │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [gte]: optional #26
+│     │  │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [lt]: optional #26
+│     │  │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  └─ [lte]: optional #26
+│     │  │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     ├─ variant_4: struct #31
-│     │  │        │  │     │  └─ [in]: list #27
+│     │  │        │  │     │  └─ [in]: list 'list_27' #27
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     └─ variant_5: struct #32
-│     │  │        │  │        └─ [notIn]: list #27
+│     │  │        │  │        └─ [notIn]: list 'list_27' #27
 │     │  │        │  │           └─ item: integer #25
 │     │  │        │  ├─ variant_2: struct #86
 │     │  │        │  │  └─ [_sum]: either '_integer_filter' #33
@@ -69,19 +69,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │        │  │     ├─ variant_2: struct #29
 │     │  │        │  │     │  └─ [not]: integer #25
 │     │  │        │  │     ├─ variant_3: struct #30
-│     │  │        │  │     │  ├─ [gt]: optional #26
+│     │  │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [gte]: optional #26
+│     │  │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [lt]: optional #26
+│     │  │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  └─ [lte]: optional #26
+│     │  │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     ├─ variant_4: struct #31
-│     │  │        │  │     │  └─ [in]: list #27
+│     │  │        │  │     │  └─ [in]: list 'list_27' #27
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     └─ variant_5: struct #32
-│     │  │        │  │        └─ [notIn]: list #27
+│     │  │        │  │        └─ [notIn]: list 'list_27' #27
 │     │  │        │  │           └─ item: integer #25
 │     │  │        │  ├─ variant_3: struct #87
 │     │  │        │  │  └─ [_avg]: either '_float_filter' #84
@@ -91,19 +91,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │        │  │     ├─ variant_2: struct #80
 │     │  │        │  │     │  └─ [not]: float #76
 │     │  │        │  │     ├─ variant_3: struct #81
-│     │  │        │  │     │  ├─ [gt]: optional #77
+│     │  │        │  │     │  ├─ [gt]: optional 'optional_77' #77
 │     │  │        │  │     │  │  └─ item: float #76
-│     │  │        │  │     │  ├─ [gte]: optional #77
+│     │  │        │  │     │  ├─ [gte]: optional 'optional_77' #77
 │     │  │        │  │     │  │  └─ item: float #76
-│     │  │        │  │     │  ├─ [lt]: optional #77
+│     │  │        │  │     │  ├─ [lt]: optional 'optional_77' #77
 │     │  │        │  │     │  │  └─ item: float #76
-│     │  │        │  │     │  └─ [lte]: optional #77
+│     │  │        │  │     │  └─ [lte]: optional 'optional_77' #77
 │     │  │        │  │     │     └─ item: float #76
 │     │  │        │  │     ├─ variant_4: struct #82
-│     │  │        │  │     │  └─ [in]: list #78
+│     │  │        │  │     │  └─ [in]: list 'list_78' #78
 │     │  │        │  │     │     └─ item: float #76
 │     │  │        │  │     └─ variant_5: struct #83
-│     │  │        │  │        └─ [notIn]: list #78
+│     │  │        │  │        └─ [notIn]: list 'list_78' #78
 │     │  │        │  │           └─ item: float #76
 │     │  │        │  ├─ variant_4: struct #88
 │     │  │        │  │  └─ [_min]: either '_integer_filter' #33
@@ -113,19 +113,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │        │  │     ├─ variant_2: struct #29
 │     │  │        │  │     │  └─ [not]: integer #25
 │     │  │        │  │     ├─ variant_3: struct #30
-│     │  │        │  │     │  ├─ [gt]: optional #26
+│     │  │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [gte]: optional #26
+│     │  │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  ├─ [lt]: optional #26
+│     │  │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │  │     │  │  └─ item: integer #25
-│     │  │        │  │     │  └─ [lte]: optional #26
+│     │  │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     ├─ variant_4: struct #31
-│     │  │        │  │     │  └─ [in]: list #27
+│     │  │        │  │     │  └─ [in]: list 'list_27' #27
 │     │  │        │  │     │     └─ item: integer #25
 │     │  │        │  │     └─ variant_5: struct #32
-│     │  │        │  │        └─ [notIn]: list #27
+│     │  │        │  │        └─ [notIn]: list 'list_27' #27
 │     │  │        │  │           └─ item: integer #25
 │     │  │        │  └─ variant_5: struct #89
 │     │  │        │     └─ [_max]: either '_integer_filter' #33
@@ -135,19 +135,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │        │        ├─ variant_2: struct #29
 │     │  │        │        │  └─ [not]: integer #25
 │     │  │        │        ├─ variant_3: struct #30
-│     │  │        │        │  ├─ [gt]: optional #26
+│     │  │        │        │  ├─ [gt]: optional 'optional_26' #26
 │     │  │        │        │  │  └─ item: integer #25
-│     │  │        │        │  ├─ [gte]: optional #26
+│     │  │        │        │  ├─ [gte]: optional 'optional_26' #26
 │     │  │        │        │  │  └─ item: integer #25
-│     │  │        │        │  ├─ [lt]: optional #26
+│     │  │        │        │  ├─ [lt]: optional 'optional_26' #26
 │     │  │        │        │  │  └─ item: integer #25
-│     │  │        │        │  └─ [lte]: optional #26
+│     │  │        │        │  └─ [lte]: optional 'optional_26' #26
 │     │  │        │        │     └─ item: integer #25
 │     │  │        │        ├─ variant_4: struct #31
-│     │  │        │        │  └─ [in]: list #27
+│     │  │        │        │  └─ [in]: list 'list_27' #27
 │     │  │        │        │     └─ item: integer #25
 │     │  │        │        └─ variant_5: struct #32
-│     │  │        │           └─ [notIn]: list #27
+│     │  │        │           └─ [notIn]: list 'list_27' #27
 │     │  │        │              └─ item: integer #25
 │     │  │        └─ variant_1: struct #91
 │     │  │           └─ [not]: union '_integer_filter_with_aggregates' #90
@@ -158,19 +158,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │              │  ├─ variant_2: struct #29
 │     │  │              │  │  └─ [not]: integer #25
 │     │  │              │  ├─ variant_3: struct #30
-│     │  │              │  │  ├─ [gt]: optional #26
+│     │  │              │  │  ├─ [gt]: optional 'optional_26' #26
 │     │  │              │  │  │  └─ item: integer #25
-│     │  │              │  │  ├─ [gte]: optional #26
+│     │  │              │  │  ├─ [gte]: optional 'optional_26' #26
 │     │  │              │  │  │  └─ item: integer #25
-│     │  │              │  │  ├─ [lt]: optional #26
+│     │  │              │  │  ├─ [lt]: optional 'optional_26' #26
 │     │  │              │  │  │  └─ item: integer #25
-│     │  │              │  │  └─ [lte]: optional #26
+│     │  │              │  │  └─ [lte]: optional 'optional_26' #26
 │     │  │              │  │     └─ item: integer #25
 │     │  │              │  ├─ variant_4: struct #31
-│     │  │              │  │  └─ [in]: list #27
+│     │  │              │  │  └─ [in]: list 'list_27' #27
 │     │  │              │  │     └─ item: integer #25
 │     │  │              │  └─ variant_5: struct #32
-│     │  │              │     └─ [notIn]: list #27
+│     │  │              │     └─ [notIn]: list 'list_27' #27
 │     │  │              │        └─ item: integer #25
 │     │  │              ├─ variant_1: struct #85
 │     │  │              │  └─ [_count]: either '_integer_filter' #33
@@ -180,19 +180,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │              │     ├─ variant_2: struct #29
 │     │  │              │     │  └─ [not]: integer #25
 │     │  │              │     ├─ variant_3: struct #30
-│     │  │              │     │  ├─ [gt]: optional #26
+│     │  │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [gte]: optional #26
+│     │  │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [lt]: optional #26
+│     │  │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  └─ [lte]: optional #26
+│     │  │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     ├─ variant_4: struct #31
-│     │  │              │     │  └─ [in]: list #27
+│     │  │              │     │  └─ [in]: list 'list_27' #27
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     └─ variant_5: struct #32
-│     │  │              │        └─ [notIn]: list #27
+│     │  │              │        └─ [notIn]: list 'list_27' #27
 │     │  │              │           └─ item: integer #25
 │     │  │              ├─ variant_2: struct #86
 │     │  │              │  └─ [_sum]: either '_integer_filter' #33
@@ -202,19 +202,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │              │     ├─ variant_2: struct #29
 │     │  │              │     │  └─ [not]: integer #25
 │     │  │              │     ├─ variant_3: struct #30
-│     │  │              │     │  ├─ [gt]: optional #26
+│     │  │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [gte]: optional #26
+│     │  │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [lt]: optional #26
+│     │  │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  └─ [lte]: optional #26
+│     │  │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     ├─ variant_4: struct #31
-│     │  │              │     │  └─ [in]: list #27
+│     │  │              │     │  └─ [in]: list 'list_27' #27
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     └─ variant_5: struct #32
-│     │  │              │        └─ [notIn]: list #27
+│     │  │              │        └─ [notIn]: list 'list_27' #27
 │     │  │              │           └─ item: integer #25
 │     │  │              ├─ variant_3: struct #87
 │     │  │              │  └─ [_avg]: either '_float_filter' #84
@@ -224,19 +224,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │              │     ├─ variant_2: struct #80
 │     │  │              │     │  └─ [not]: float #76
 │     │  │              │     ├─ variant_3: struct #81
-│     │  │              │     │  ├─ [gt]: optional #77
+│     │  │              │     │  ├─ [gt]: optional 'optional_77' #77
 │     │  │              │     │  │  └─ item: float #76
-│     │  │              │     │  ├─ [gte]: optional #77
+│     │  │              │     │  ├─ [gte]: optional 'optional_77' #77
 │     │  │              │     │  │  └─ item: float #76
-│     │  │              │     │  ├─ [lt]: optional #77
+│     │  │              │     │  ├─ [lt]: optional 'optional_77' #77
 │     │  │              │     │  │  └─ item: float #76
-│     │  │              │     │  └─ [lte]: optional #77
+│     │  │              │     │  └─ [lte]: optional 'optional_77' #77
 │     │  │              │     │     └─ item: float #76
 │     │  │              │     ├─ variant_4: struct #82
-│     │  │              │     │  └─ [in]: list #78
+│     │  │              │     │  └─ [in]: list 'list_78' #78
 │     │  │              │     │     └─ item: float #76
 │     │  │              │     └─ variant_5: struct #83
-│     │  │              │        └─ [notIn]: list #78
+│     │  │              │        └─ [notIn]: list 'list_78' #78
 │     │  │              │           └─ item: float #76
 │     │  │              ├─ variant_4: struct #88
 │     │  │              │  └─ [_min]: either '_integer_filter' #33
@@ -246,19 +246,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │              │     ├─ variant_2: struct #29
 │     │  │              │     │  └─ [not]: integer #25
 │     │  │              │     ├─ variant_3: struct #30
-│     │  │              │     │  ├─ [gt]: optional #26
+│     │  │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [gte]: optional #26
+│     │  │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  ├─ [lt]: optional #26
+│     │  │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │  │              │     │  │  └─ item: integer #25
-│     │  │              │     │  └─ [lte]: optional #26
+│     │  │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     ├─ variant_4: struct #31
-│     │  │              │     │  └─ [in]: list #27
+│     │  │              │     │  └─ [in]: list 'list_27' #27
 │     │  │              │     │     └─ item: integer #25
 │     │  │              │     └─ variant_5: struct #32
-│     │  │              │        └─ [notIn]: list #27
+│     │  │              │        └─ [notIn]: list 'list_27' #27
 │     │  │              │           └─ item: integer #25
 │     │  │              └─ variant_5: struct #89
 │     │  │                 └─ [_max]: either '_integer_filter' #33
@@ -268,21 +268,21 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │                    ├─ variant_2: struct #29
 │     │  │                    │  └─ [not]: integer #25
 │     │  │                    ├─ variant_3: struct #30
-│     │  │                    │  ├─ [gt]: optional #26
+│     │  │                    │  ├─ [gt]: optional 'optional_26' #26
 │     │  │                    │  │  └─ item: integer #25
-│     │  │                    │  ├─ [gte]: optional #26
+│     │  │                    │  ├─ [gte]: optional 'optional_26' #26
 │     │  │                    │  │  └─ item: integer #25
-│     │  │                    │  ├─ [lt]: optional #26
+│     │  │                    │  ├─ [lt]: optional 'optional_26' #26
 │     │  │                    │  │  └─ item: integer #25
-│     │  │                    │  └─ [lte]: optional #26
+│     │  │                    │  └─ [lte]: optional 'optional_26' #26
 │     │  │                    │     └─ item: integer #25
 │     │  │                    ├─ variant_4: struct #31
-│     │  │                    │  └─ [in]: list #27
+│     │  │                    │  └─ [in]: list 'list_27' #27
 │     │  │                    │     └─ item: integer #25
 │     │  │                    └─ variant_5: struct #32
-│     │  │                       └─ [notIn]: list #27
+│     │  │                       └─ [notIn]: list 'list_27' #27
 │     │  │                          └─ item: integer #25
-│     │  ├─ [name]: optional #169
+│     │  ├─ [name]: optional 'optional_169' #169
 │     │  │  └─ item: optional '_string_filter_c' #22
 │     │  │     └─ item: union #21
 │     │  │        ├─ variant_0: union '_string_filter' #19
@@ -292,21 +292,21 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │        │  ├─ variant_2: struct #11
 │     │  │        │  │  └─ [not]: string #7
 │     │  │        │  ├─ variant_3: struct #12
-│     │  │        │  │  └─ [in]: list #9
+│     │  │        │  │  └─ [in]: list 'list_9' #9
 │     │  │        │  │     └─ item: string #7
 │     │  │        │  ├─ variant_4: struct #13
-│     │  │        │  │  └─ [notIn]: list #9
+│     │  │        │  │  └─ [notIn]: list 'list_9' #9
 │     │  │        │  │     └─ item: string #7
 │     │  │        │  ├─ variant_5: struct #16
 │     │  │        │  │  ├─ [contains]: string #7
-│     │  │        │  │  └─ [mode]: optional #15
+│     │  │        │  │  └─ [mode]: optional 'optional_15' #15
 │     │  │        │  │     └─ item: string #14 enum{ '"insensitive"' }
 │     │  │        │  ├─ variant_6: struct #17
 │     │  │        │  │  └─ [search]: string #7
 │     │  │        │  └─ variant_7: struct #18
-│     │  │        │     ├─ [endsWith]: optional #8
+│     │  │        │     ├─ [endsWith]: optional 'optional_8' #8
 │     │  │        │     │  └─ item: string #7
-│     │  │        │     └─ [startsWith]: optional #8
+│     │  │        │     └─ [startsWith]: optional 'optional_8' #8
 │     │  │        │        └─ item: string #7
 │     │  │        └─ variant_1: struct #20
 │     │  │           └─ [not]: union '_string_filter' #19
@@ -316,30 +316,30 @@ root: struct '_User_QueryInput_group_by' #192
 │     │  │              ├─ variant_2: struct #11
 │     │  │              │  └─ [not]: string #7
 │     │  │              ├─ variant_3: struct #12
-│     │  │              │  └─ [in]: list #9
+│     │  │              │  └─ [in]: list 'list_9' #9
 │     │  │              │     └─ item: string #7
 │     │  │              ├─ variant_4: struct #13
-│     │  │              │  └─ [notIn]: list #9
+│     │  │              │  └─ [notIn]: list 'list_9' #9
 │     │  │              │     └─ item: string #7
 │     │  │              ├─ variant_5: struct #16
 │     │  │              │  ├─ [contains]: string #7
-│     │  │              │  └─ [mode]: optional #15
+│     │  │              │  └─ [mode]: optional 'optional_15' #15
 │     │  │              │     └─ item: string #14 enum{ '"insensitive"' }
 │     │  │              ├─ variant_6: struct #17
 │     │  │              │  └─ [search]: string #7
 │     │  │              └─ variant_7: struct #18
-│     │  │                 ├─ [endsWith]: optional #8
+│     │  │                 ├─ [endsWith]: optional 'optional_8' #8
 │     │  │                 │  └─ item: string #7
-│     │  │                 └─ [startsWith]: optional #8
+│     │  │                 └─ [startsWith]: optional 'optional_8' #8
 │     │  │                    └─ item: string #7
-│     │  └─ [posts]: optional #182
+│     │  └─ [posts]: optional 'optional_182' #182
 │     │     └─ item: union #181
 │     │        ├─ variant_0: struct #176
-│     │        │  └─ [every]: optional #175
+│     │        │  └─ [every]: optional 'optional_175' #175
 │     │        │     └─ item: struct 'PostWhere__agg__skip_123_UserWhere__agg' #174
-│     │        │        ├─ [author]: optional #173
+│     │        │        ├─ [author]: optional 'optional_173' #173
 │     │        │        │  └─ item: &UserWhere__agg #172
-│     │        │        ├─ [id]: optional #170
+│     │        │        ├─ [id]: optional 'optional_170' #170
 │     │        │        │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │        │        │     └─ item: union #92
 │     │        │        │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -350,19 +350,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │  ├─ variant_2: struct #29
 │     │        │        │        │  │  │  └─ [not]: integer #25
 │     │        │        │        │  │  ├─ variant_3: struct #30
-│     │        │        │        │  │  │  ├─ [gt]: optional #26
+│     │        │        │        │  │  │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │  │  │  │  └─ item: integer #25
-│     │        │        │        │  │  │  ├─ [gte]: optional #26
+│     │        │        │        │  │  │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │  │  │  │  └─ item: integer #25
-│     │        │        │        │  │  │  ├─ [lt]: optional #26
+│     │        │        │        │  │  │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │  │  │  │  └─ item: integer #25
-│     │        │        │        │  │  │  └─ [lte]: optional #26
+│     │        │        │        │  │  │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │  │  │     └─ item: integer #25
 │     │        │        │        │  │  ├─ variant_4: struct #31
-│     │        │        │        │  │  │  └─ [in]: list #27
+│     │        │        │        │  │  │  └─ [in]: list 'list_27' #27
 │     │        │        │        │  │  │     └─ item: integer #25
 │     │        │        │        │  │  └─ variant_5: struct #32
-│     │        │        │        │  │     └─ [notIn]: list #27
+│     │        │        │        │  │     └─ [notIn]: list 'list_27' #27
 │     │        │        │        │  │        └─ item: integer #25
 │     │        │        │        │  ├─ variant_1: struct #85
 │     │        │        │        │  │  └─ [_count]: either '_integer_filter' #33
@@ -372,19 +372,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │     ├─ variant_2: struct #29
 │     │        │        │        │  │     │  └─ [not]: integer #25
 │     │        │        │        │  │     ├─ variant_3: struct #30
-│     │        │        │        │  │     │  ├─ [gt]: optional #26
+│     │        │        │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [gte]: optional #26
+│     │        │        │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [lt]: optional #26
+│     │        │        │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  └─ [lte]: optional #26
+│     │        │        │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     ├─ variant_4: struct #31
-│     │        │        │        │  │     │  └─ [in]: list #27
+│     │        │        │        │  │     │  └─ [in]: list 'list_27' #27
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     └─ variant_5: struct #32
-│     │        │        │        │  │        └─ [notIn]: list #27
+│     │        │        │        │  │        └─ [notIn]: list 'list_27' #27
 │     │        │        │        │  │           └─ item: integer #25
 │     │        │        │        │  ├─ variant_2: struct #86
 │     │        │        │        │  │  └─ [_sum]: either '_integer_filter' #33
@@ -394,19 +394,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │     ├─ variant_2: struct #29
 │     │        │        │        │  │     │  └─ [not]: integer #25
 │     │        │        │        │  │     ├─ variant_3: struct #30
-│     │        │        │        │  │     │  ├─ [gt]: optional #26
+│     │        │        │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [gte]: optional #26
+│     │        │        │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [lt]: optional #26
+│     │        │        │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  └─ [lte]: optional #26
+│     │        │        │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     ├─ variant_4: struct #31
-│     │        │        │        │  │     │  └─ [in]: list #27
+│     │        │        │        │  │     │  └─ [in]: list 'list_27' #27
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     └─ variant_5: struct #32
-│     │        │        │        │  │        └─ [notIn]: list #27
+│     │        │        │        │  │        └─ [notIn]: list 'list_27' #27
 │     │        │        │        │  │           └─ item: integer #25
 │     │        │        │        │  ├─ variant_3: struct #87
 │     │        │        │        │  │  └─ [_avg]: either '_float_filter' #84
@@ -416,19 +416,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │     ├─ variant_2: struct #80
 │     │        │        │        │  │     │  └─ [not]: float #76
 │     │        │        │        │  │     ├─ variant_3: struct #81
-│     │        │        │        │  │     │  ├─ [gt]: optional #77
+│     │        │        │        │  │     │  ├─ [gt]: optional 'optional_77' #77
 │     │        │        │        │  │     │  │  └─ item: float #76
-│     │        │        │        │  │     │  ├─ [gte]: optional #77
+│     │        │        │        │  │     │  ├─ [gte]: optional 'optional_77' #77
 │     │        │        │        │  │     │  │  └─ item: float #76
-│     │        │        │        │  │     │  ├─ [lt]: optional #77
+│     │        │        │        │  │     │  ├─ [lt]: optional 'optional_77' #77
 │     │        │        │        │  │     │  │  └─ item: float #76
-│     │        │        │        │  │     │  └─ [lte]: optional #77
+│     │        │        │        │  │     │  └─ [lte]: optional 'optional_77' #77
 │     │        │        │        │  │     │     └─ item: float #76
 │     │        │        │        │  │     ├─ variant_4: struct #82
-│     │        │        │        │  │     │  └─ [in]: list #78
+│     │        │        │        │  │     │  └─ [in]: list 'list_78' #78
 │     │        │        │        │  │     │     └─ item: float #76
 │     │        │        │        │  │     └─ variant_5: struct #83
-│     │        │        │        │  │        └─ [notIn]: list #78
+│     │        │        │        │  │        └─ [notIn]: list 'list_78' #78
 │     │        │        │        │  │           └─ item: float #76
 │     │        │        │        │  ├─ variant_4: struct #88
 │     │        │        │        │  │  └─ [_min]: either '_integer_filter' #33
@@ -438,19 +438,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │     ├─ variant_2: struct #29
 │     │        │        │        │  │     │  └─ [not]: integer #25
 │     │        │        │        │  │     ├─ variant_3: struct #30
-│     │        │        │        │  │     │  ├─ [gt]: optional #26
+│     │        │        │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [gte]: optional #26
+│     │        │        │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [lt]: optional #26
+│     │        │        │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  └─ [lte]: optional #26
+│     │        │        │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     ├─ variant_4: struct #31
-│     │        │        │        │  │     │  └─ [in]: list #27
+│     │        │        │        │  │     │  └─ [in]: list 'list_27' #27
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     └─ variant_5: struct #32
-│     │        │        │        │  │        └─ [notIn]: list #27
+│     │        │        │        │  │        └─ [notIn]: list 'list_27' #27
 │     │        │        │        │  │           └─ item: integer #25
 │     │        │        │        │  └─ variant_5: struct #89
 │     │        │        │        │     └─ [_max]: either '_integer_filter' #33
@@ -460,19 +460,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │        ├─ variant_2: struct #29
 │     │        │        │        │        │  └─ [not]: integer #25
 │     │        │        │        │        ├─ variant_3: struct #30
-│     │        │        │        │        │  ├─ [gt]: optional #26
+│     │        │        │        │        │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │        │  │  └─ item: integer #25
-│     │        │        │        │        │  ├─ [gte]: optional #26
+│     │        │        │        │        │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │        │  │  └─ item: integer #25
-│     │        │        │        │        │  ├─ [lt]: optional #26
+│     │        │        │        │        │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │        │  │  └─ item: integer #25
-│     │        │        │        │        │  └─ [lte]: optional #26
+│     │        │        │        │        │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │        │     └─ item: integer #25
 │     │        │        │        │        ├─ variant_4: struct #31
-│     │        │        │        │        │  └─ [in]: list #27
+│     │        │        │        │        │  └─ [in]: list 'list_27' #27
 │     │        │        │        │        │     └─ item: integer #25
 │     │        │        │        │        └─ variant_5: struct #32
-│     │        │        │        │           └─ [notIn]: list #27
+│     │        │        │        │           └─ [notIn]: list 'list_27' #27
 │     │        │        │        │              └─ item: integer #25
 │     │        │        │        └─ variant_1: struct #91
 │     │        │        │           └─ [not]: union '_integer_filter_with_aggregates' #90
@@ -483,19 +483,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │  ├─ variant_2: struct #29
 │     │        │        │              │  │  └─ [not]: integer #25
 │     │        │        │              │  ├─ variant_3: struct #30
-│     │        │        │              │  │  ├─ [gt]: optional #26
+│     │        │        │              │  │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │              │  │  │  └─ item: integer #25
-│     │        │        │              │  │  ├─ [gte]: optional #26
+│     │        │        │              │  │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │              │  │  │  └─ item: integer #25
-│     │        │        │              │  │  ├─ [lt]: optional #26
+│     │        │        │              │  │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │              │  │  │  └─ item: integer #25
-│     │        │        │              │  │  └─ [lte]: optional #26
+│     │        │        │              │  │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │              │  │     └─ item: integer #25
 │     │        │        │              │  ├─ variant_4: struct #31
-│     │        │        │              │  │  └─ [in]: list #27
+│     │        │        │              │  │  └─ [in]: list 'list_27' #27
 │     │        │        │              │  │     └─ item: integer #25
 │     │        │        │              │  └─ variant_5: struct #32
-│     │        │        │              │     └─ [notIn]: list #27
+│     │        │        │              │     └─ [notIn]: list 'list_27' #27
 │     │        │        │              │        └─ item: integer #25
 │     │        │        │              ├─ variant_1: struct #85
 │     │        │        │              │  └─ [_count]: either '_integer_filter' #33
@@ -505,19 +505,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │     ├─ variant_2: struct #29
 │     │        │        │              │     │  └─ [not]: integer #25
 │     │        │        │              │     ├─ variant_3: struct #30
-│     │        │        │              │     │  ├─ [gt]: optional #26
+│     │        │        │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [gte]: optional #26
+│     │        │        │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [lt]: optional #26
+│     │        │        │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  └─ [lte]: optional #26
+│     │        │        │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     ├─ variant_4: struct #31
-│     │        │        │              │     │  └─ [in]: list #27
+│     │        │        │              │     │  └─ [in]: list 'list_27' #27
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     └─ variant_5: struct #32
-│     │        │        │              │        └─ [notIn]: list #27
+│     │        │        │              │        └─ [notIn]: list 'list_27' #27
 │     │        │        │              │           └─ item: integer #25
 │     │        │        │              ├─ variant_2: struct #86
 │     │        │        │              │  └─ [_sum]: either '_integer_filter' #33
@@ -527,19 +527,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │     ├─ variant_2: struct #29
 │     │        │        │              │     │  └─ [not]: integer #25
 │     │        │        │              │     ├─ variant_3: struct #30
-│     │        │        │              │     │  ├─ [gt]: optional #26
+│     │        │        │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [gte]: optional #26
+│     │        │        │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [lt]: optional #26
+│     │        │        │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  └─ [lte]: optional #26
+│     │        │        │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     ├─ variant_4: struct #31
-│     │        │        │              │     │  └─ [in]: list #27
+│     │        │        │              │     │  └─ [in]: list 'list_27' #27
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     └─ variant_5: struct #32
-│     │        │        │              │        └─ [notIn]: list #27
+│     │        │        │              │        └─ [notIn]: list 'list_27' #27
 │     │        │        │              │           └─ item: integer #25
 │     │        │        │              ├─ variant_3: struct #87
 │     │        │        │              │  └─ [_avg]: either '_float_filter' #84
@@ -549,19 +549,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │     ├─ variant_2: struct #80
 │     │        │        │              │     │  └─ [not]: float #76
 │     │        │        │              │     ├─ variant_3: struct #81
-│     │        │        │              │     │  ├─ [gt]: optional #77
+│     │        │        │              │     │  ├─ [gt]: optional 'optional_77' #77
 │     │        │        │              │     │  │  └─ item: float #76
-│     │        │        │              │     │  ├─ [gte]: optional #77
+│     │        │        │              │     │  ├─ [gte]: optional 'optional_77' #77
 │     │        │        │              │     │  │  └─ item: float #76
-│     │        │        │              │     │  ├─ [lt]: optional #77
+│     │        │        │              │     │  ├─ [lt]: optional 'optional_77' #77
 │     │        │        │              │     │  │  └─ item: float #76
-│     │        │        │              │     │  └─ [lte]: optional #77
+│     │        │        │              │     │  └─ [lte]: optional 'optional_77' #77
 │     │        │        │              │     │     └─ item: float #76
 │     │        │        │              │     ├─ variant_4: struct #82
-│     │        │        │              │     │  └─ [in]: list #78
+│     │        │        │              │     │  └─ [in]: list 'list_78' #78
 │     │        │        │              │     │     └─ item: float #76
 │     │        │        │              │     └─ variant_5: struct #83
-│     │        │        │              │        └─ [notIn]: list #78
+│     │        │        │              │        └─ [notIn]: list 'list_78' #78
 │     │        │        │              │           └─ item: float #76
 │     │        │        │              ├─ variant_4: struct #88
 │     │        │        │              │  └─ [_min]: either '_integer_filter' #33
@@ -571,19 +571,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │     ├─ variant_2: struct #29
 │     │        │        │              │     │  └─ [not]: integer #25
 │     │        │        │              │     ├─ variant_3: struct #30
-│     │        │        │              │     │  ├─ [gt]: optional #26
+│     │        │        │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [gte]: optional #26
+│     │        │        │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [lt]: optional #26
+│     │        │        │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  └─ [lte]: optional #26
+│     │        │        │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     ├─ variant_4: struct #31
-│     │        │        │              │     │  └─ [in]: list #27
+│     │        │        │              │     │  └─ [in]: list 'list_27' #27
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     └─ variant_5: struct #32
-│     │        │        │              │        └─ [notIn]: list #27
+│     │        │        │              │        └─ [notIn]: list 'list_27' #27
 │     │        │        │              │           └─ item: integer #25
 │     │        │        │              └─ variant_5: struct #89
 │     │        │        │                 └─ [_max]: either '_integer_filter' #33
@@ -593,21 +593,21 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │                    ├─ variant_2: struct #29
 │     │        │        │                    │  └─ [not]: integer #25
 │     │        │        │                    ├─ variant_3: struct #30
-│     │        │        │                    │  ├─ [gt]: optional #26
+│     │        │        │                    │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │                    │  │  └─ item: integer #25
-│     │        │        │                    │  ├─ [gte]: optional #26
+│     │        │        │                    │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │                    │  │  └─ item: integer #25
-│     │        │        │                    │  ├─ [lt]: optional #26
+│     │        │        │                    │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │                    │  │  └─ item: integer #25
-│     │        │        │                    │  └─ [lte]: optional #26
+│     │        │        │                    │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │                    │     └─ item: integer #25
 │     │        │        │                    ├─ variant_4: struct #31
-│     │        │        │                    │  └─ [in]: list #27
+│     │        │        │                    │  └─ [in]: list 'list_27' #27
 │     │        │        │                    │     └─ item: integer #25
 │     │        │        │                    └─ variant_5: struct #32
-│     │        │        │                       └─ [notIn]: list #27
+│     │        │        │                       └─ [notIn]: list 'list_27' #27
 │     │        │        │                          └─ item: integer #25
-│     │        │        └─ [title]: optional #171
+│     │        │        └─ [title]: optional 'optional_171' #171
 │     │        │           └─ item: optional '_string_filter_c' #22
 │     │        │              └─ item: union #21
 │     │        │                 ├─ variant_0: union '_string_filter' #19
@@ -617,21 +617,21 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │                 │  ├─ variant_2: struct #11
 │     │        │                 │  │  └─ [not]: string #7
 │     │        │                 │  ├─ variant_3: struct #12
-│     │        │                 │  │  └─ [in]: list #9
+│     │        │                 │  │  └─ [in]: list 'list_9' #9
 │     │        │                 │  │     └─ item: string #7
 │     │        │                 │  ├─ variant_4: struct #13
-│     │        │                 │  │  └─ [notIn]: list #9
+│     │        │                 │  │  └─ [notIn]: list 'list_9' #9
 │     │        │                 │  │     └─ item: string #7
 │     │        │                 │  ├─ variant_5: struct #16
 │     │        │                 │  │  ├─ [contains]: string #7
-│     │        │                 │  │  └─ [mode]: optional #15
+│     │        │                 │  │  └─ [mode]: optional 'optional_15' #15
 │     │        │                 │  │     └─ item: string #14 enum{ '"insensitive"' }
 │     │        │                 │  ├─ variant_6: struct #17
 │     │        │                 │  │  └─ [search]: string #7
 │     │        │                 │  └─ variant_7: struct #18
-│     │        │                 │     ├─ [endsWith]: optional #8
+│     │        │                 │     ├─ [endsWith]: optional 'optional_8' #8
 │     │        │                 │     │  └─ item: string #7
-│     │        │                 │     └─ [startsWith]: optional #8
+│     │        │                 │     └─ [startsWith]: optional 'optional_8' #8
 │     │        │                 │        └─ item: string #7
 │     │        │                 └─ variant_1: struct #20
 │     │        │                    └─ [not]: union '_string_filter' #19
@@ -641,28 +641,28 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │                       ├─ variant_2: struct #11
 │     │        │                       │  └─ [not]: string #7
 │     │        │                       ├─ variant_3: struct #12
-│     │        │                       │  └─ [in]: list #9
+│     │        │                       │  └─ [in]: list 'list_9' #9
 │     │        │                       │     └─ item: string #7
 │     │        │                       ├─ variant_4: struct #13
-│     │        │                       │  └─ [notIn]: list #9
+│     │        │                       │  └─ [notIn]: list 'list_9' #9
 │     │        │                       │     └─ item: string #7
 │     │        │                       ├─ variant_5: struct #16
 │     │        │                       │  ├─ [contains]: string #7
-│     │        │                       │  └─ [mode]: optional #15
+│     │        │                       │  └─ [mode]: optional 'optional_15' #15
 │     │        │                       │     └─ item: string #14 enum{ '"insensitive"' }
 │     │        │                       ├─ variant_6: struct #17
 │     │        │                       │  └─ [search]: string #7
 │     │        │                       └─ variant_7: struct #18
-│     │        │                          ├─ [endsWith]: optional #8
+│     │        │                          ├─ [endsWith]: optional 'optional_8' #8
 │     │        │                          │  └─ item: string #7
-│     │        │                          └─ [startsWith]: optional #8
+│     │        │                          └─ [startsWith]: optional 'optional_8' #8
 │     │        │                             └─ item: string #7
 │     │        ├─ variant_1: struct #178
-│     │        │  └─ [some]: optional #177
+│     │        │  └─ [some]: optional 'optional_177' #177
 │     │        │     └─ item: struct 'PostWhere__agg__skip_123_UserWhere__agg' #174
-│     │        │        ├─ [author]: optional #173
+│     │        │        ├─ [author]: optional 'optional_173' #173
 │     │        │        │  └─ item: &UserWhere__agg #172
-│     │        │        ├─ [id]: optional #170
+│     │        │        ├─ [id]: optional 'optional_170' #170
 │     │        │        │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │        │        │     └─ item: union #92
 │     │        │        │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -673,19 +673,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │  ├─ variant_2: struct #29
 │     │        │        │        │  │  │  └─ [not]: integer #25
 │     │        │        │        │  │  ├─ variant_3: struct #30
-│     │        │        │        │  │  │  ├─ [gt]: optional #26
+│     │        │        │        │  │  │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │  │  │  │  └─ item: integer #25
-│     │        │        │        │  │  │  ├─ [gte]: optional #26
+│     │        │        │        │  │  │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │  │  │  │  └─ item: integer #25
-│     │        │        │        │  │  │  ├─ [lt]: optional #26
+│     │        │        │        │  │  │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │  │  │  │  └─ item: integer #25
-│     │        │        │        │  │  │  └─ [lte]: optional #26
+│     │        │        │        │  │  │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │  │  │     └─ item: integer #25
 │     │        │        │        │  │  ├─ variant_4: struct #31
-│     │        │        │        │  │  │  └─ [in]: list #27
+│     │        │        │        │  │  │  └─ [in]: list 'list_27' #27
 │     │        │        │        │  │  │     └─ item: integer #25
 │     │        │        │        │  │  └─ variant_5: struct #32
-│     │        │        │        │  │     └─ [notIn]: list #27
+│     │        │        │        │  │     └─ [notIn]: list 'list_27' #27
 │     │        │        │        │  │        └─ item: integer #25
 │     │        │        │        │  ├─ variant_1: struct #85
 │     │        │        │        │  │  └─ [_count]: either '_integer_filter' #33
@@ -695,19 +695,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │     ├─ variant_2: struct #29
 │     │        │        │        │  │     │  └─ [not]: integer #25
 │     │        │        │        │  │     ├─ variant_3: struct #30
-│     │        │        │        │  │     │  ├─ [gt]: optional #26
+│     │        │        │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [gte]: optional #26
+│     │        │        │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [lt]: optional #26
+│     │        │        │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  └─ [lte]: optional #26
+│     │        │        │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     ├─ variant_4: struct #31
-│     │        │        │        │  │     │  └─ [in]: list #27
+│     │        │        │        │  │     │  └─ [in]: list 'list_27' #27
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     └─ variant_5: struct #32
-│     │        │        │        │  │        └─ [notIn]: list #27
+│     │        │        │        │  │        └─ [notIn]: list 'list_27' #27
 │     │        │        │        │  │           └─ item: integer #25
 │     │        │        │        │  ├─ variant_2: struct #86
 │     │        │        │        │  │  └─ [_sum]: either '_integer_filter' #33
@@ -717,19 +717,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │     ├─ variant_2: struct #29
 │     │        │        │        │  │     │  └─ [not]: integer #25
 │     │        │        │        │  │     ├─ variant_3: struct #30
-│     │        │        │        │  │     │  ├─ [gt]: optional #26
+│     │        │        │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [gte]: optional #26
+│     │        │        │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [lt]: optional #26
+│     │        │        │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  └─ [lte]: optional #26
+│     │        │        │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     ├─ variant_4: struct #31
-│     │        │        │        │  │     │  └─ [in]: list #27
+│     │        │        │        │  │     │  └─ [in]: list 'list_27' #27
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     └─ variant_5: struct #32
-│     │        │        │        │  │        └─ [notIn]: list #27
+│     │        │        │        │  │        └─ [notIn]: list 'list_27' #27
 │     │        │        │        │  │           └─ item: integer #25
 │     │        │        │        │  ├─ variant_3: struct #87
 │     │        │        │        │  │  └─ [_avg]: either '_float_filter' #84
@@ -739,19 +739,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │     ├─ variant_2: struct #80
 │     │        │        │        │  │     │  └─ [not]: float #76
 │     │        │        │        │  │     ├─ variant_3: struct #81
-│     │        │        │        │  │     │  ├─ [gt]: optional #77
+│     │        │        │        │  │     │  ├─ [gt]: optional 'optional_77' #77
 │     │        │        │        │  │     │  │  └─ item: float #76
-│     │        │        │        │  │     │  ├─ [gte]: optional #77
+│     │        │        │        │  │     │  ├─ [gte]: optional 'optional_77' #77
 │     │        │        │        │  │     │  │  └─ item: float #76
-│     │        │        │        │  │     │  ├─ [lt]: optional #77
+│     │        │        │        │  │     │  ├─ [lt]: optional 'optional_77' #77
 │     │        │        │        │  │     │  │  └─ item: float #76
-│     │        │        │        │  │     │  └─ [lte]: optional #77
+│     │        │        │        │  │     │  └─ [lte]: optional 'optional_77' #77
 │     │        │        │        │  │     │     └─ item: float #76
 │     │        │        │        │  │     ├─ variant_4: struct #82
-│     │        │        │        │  │     │  └─ [in]: list #78
+│     │        │        │        │  │     │  └─ [in]: list 'list_78' #78
 │     │        │        │        │  │     │     └─ item: float #76
 │     │        │        │        │  │     └─ variant_5: struct #83
-│     │        │        │        │  │        └─ [notIn]: list #78
+│     │        │        │        │  │        └─ [notIn]: list 'list_78' #78
 │     │        │        │        │  │           └─ item: float #76
 │     │        │        │        │  ├─ variant_4: struct #88
 │     │        │        │        │  │  └─ [_min]: either '_integer_filter' #33
@@ -761,19 +761,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │  │     ├─ variant_2: struct #29
 │     │        │        │        │  │     │  └─ [not]: integer #25
 │     │        │        │        │  │     ├─ variant_3: struct #30
-│     │        │        │        │  │     │  ├─ [gt]: optional #26
+│     │        │        │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [gte]: optional #26
+│     │        │        │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  ├─ [lt]: optional #26
+│     │        │        │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │  │     │  │  └─ item: integer #25
-│     │        │        │        │  │     │  └─ [lte]: optional #26
+│     │        │        │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     ├─ variant_4: struct #31
-│     │        │        │        │  │     │  └─ [in]: list #27
+│     │        │        │        │  │     │  └─ [in]: list 'list_27' #27
 │     │        │        │        │  │     │     └─ item: integer #25
 │     │        │        │        │  │     └─ variant_5: struct #32
-│     │        │        │        │  │        └─ [notIn]: list #27
+│     │        │        │        │  │        └─ [notIn]: list 'list_27' #27
 │     │        │        │        │  │           └─ item: integer #25
 │     │        │        │        │  └─ variant_5: struct #89
 │     │        │        │        │     └─ [_max]: either '_integer_filter' #33
@@ -783,19 +783,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │        │        ├─ variant_2: struct #29
 │     │        │        │        │        │  └─ [not]: integer #25
 │     │        │        │        │        ├─ variant_3: struct #30
-│     │        │        │        │        │  ├─ [gt]: optional #26
+│     │        │        │        │        │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │        │        │  │  └─ item: integer #25
-│     │        │        │        │        │  ├─ [gte]: optional #26
+│     │        │        │        │        │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │        │        │  │  └─ item: integer #25
-│     │        │        │        │        │  ├─ [lt]: optional #26
+│     │        │        │        │        │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │        │        │  │  └─ item: integer #25
-│     │        │        │        │        │  └─ [lte]: optional #26
+│     │        │        │        │        │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │        │        │     └─ item: integer #25
 │     │        │        │        │        ├─ variant_4: struct #31
-│     │        │        │        │        │  └─ [in]: list #27
+│     │        │        │        │        │  └─ [in]: list 'list_27' #27
 │     │        │        │        │        │     └─ item: integer #25
 │     │        │        │        │        └─ variant_5: struct #32
-│     │        │        │        │           └─ [notIn]: list #27
+│     │        │        │        │           └─ [notIn]: list 'list_27' #27
 │     │        │        │        │              └─ item: integer #25
 │     │        │        │        └─ variant_1: struct #91
 │     │        │        │           └─ [not]: union '_integer_filter_with_aggregates' #90
@@ -806,19 +806,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │  ├─ variant_2: struct #29
 │     │        │        │              │  │  └─ [not]: integer #25
 │     │        │        │              │  ├─ variant_3: struct #30
-│     │        │        │              │  │  ├─ [gt]: optional #26
+│     │        │        │              │  │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │              │  │  │  └─ item: integer #25
-│     │        │        │              │  │  ├─ [gte]: optional #26
+│     │        │        │              │  │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │              │  │  │  └─ item: integer #25
-│     │        │        │              │  │  ├─ [lt]: optional #26
+│     │        │        │              │  │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │              │  │  │  └─ item: integer #25
-│     │        │        │              │  │  └─ [lte]: optional #26
+│     │        │        │              │  │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │              │  │     └─ item: integer #25
 │     │        │        │              │  ├─ variant_4: struct #31
-│     │        │        │              │  │  └─ [in]: list #27
+│     │        │        │              │  │  └─ [in]: list 'list_27' #27
 │     │        │        │              │  │     └─ item: integer #25
 │     │        │        │              │  └─ variant_5: struct #32
-│     │        │        │              │     └─ [notIn]: list #27
+│     │        │        │              │     └─ [notIn]: list 'list_27' #27
 │     │        │        │              │        └─ item: integer #25
 │     │        │        │              ├─ variant_1: struct #85
 │     │        │        │              │  └─ [_count]: either '_integer_filter' #33
@@ -828,19 +828,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │     ├─ variant_2: struct #29
 │     │        │        │              │     │  └─ [not]: integer #25
 │     │        │        │              │     ├─ variant_3: struct #30
-│     │        │        │              │     │  ├─ [gt]: optional #26
+│     │        │        │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [gte]: optional #26
+│     │        │        │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [lt]: optional #26
+│     │        │        │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  └─ [lte]: optional #26
+│     │        │        │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     ├─ variant_4: struct #31
-│     │        │        │              │     │  └─ [in]: list #27
+│     │        │        │              │     │  └─ [in]: list 'list_27' #27
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     └─ variant_5: struct #32
-│     │        │        │              │        └─ [notIn]: list #27
+│     │        │        │              │        └─ [notIn]: list 'list_27' #27
 │     │        │        │              │           └─ item: integer #25
 │     │        │        │              ├─ variant_2: struct #86
 │     │        │        │              │  └─ [_sum]: either '_integer_filter' #33
@@ -850,19 +850,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │     ├─ variant_2: struct #29
 │     │        │        │              │     │  └─ [not]: integer #25
 │     │        │        │              │     ├─ variant_3: struct #30
-│     │        │        │              │     │  ├─ [gt]: optional #26
+│     │        │        │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [gte]: optional #26
+│     │        │        │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [lt]: optional #26
+│     │        │        │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  └─ [lte]: optional #26
+│     │        │        │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     ├─ variant_4: struct #31
-│     │        │        │              │     │  └─ [in]: list #27
+│     │        │        │              │     │  └─ [in]: list 'list_27' #27
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     └─ variant_5: struct #32
-│     │        │        │              │        └─ [notIn]: list #27
+│     │        │        │              │        └─ [notIn]: list 'list_27' #27
 │     │        │        │              │           └─ item: integer #25
 │     │        │        │              ├─ variant_3: struct #87
 │     │        │        │              │  └─ [_avg]: either '_float_filter' #84
@@ -872,19 +872,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │     ├─ variant_2: struct #80
 │     │        │        │              │     │  └─ [not]: float #76
 │     │        │        │              │     ├─ variant_3: struct #81
-│     │        │        │              │     │  ├─ [gt]: optional #77
+│     │        │        │              │     │  ├─ [gt]: optional 'optional_77' #77
 │     │        │        │              │     │  │  └─ item: float #76
-│     │        │        │              │     │  ├─ [gte]: optional #77
+│     │        │        │              │     │  ├─ [gte]: optional 'optional_77' #77
 │     │        │        │              │     │  │  └─ item: float #76
-│     │        │        │              │     │  ├─ [lt]: optional #77
+│     │        │        │              │     │  ├─ [lt]: optional 'optional_77' #77
 │     │        │        │              │     │  │  └─ item: float #76
-│     │        │        │              │     │  └─ [lte]: optional #77
+│     │        │        │              │     │  └─ [lte]: optional 'optional_77' #77
 │     │        │        │              │     │     └─ item: float #76
 │     │        │        │              │     ├─ variant_4: struct #82
-│     │        │        │              │     │  └─ [in]: list #78
+│     │        │        │              │     │  └─ [in]: list 'list_78' #78
 │     │        │        │              │     │     └─ item: float #76
 │     │        │        │              │     └─ variant_5: struct #83
-│     │        │        │              │        └─ [notIn]: list #78
+│     │        │        │              │        └─ [notIn]: list 'list_78' #78
 │     │        │        │              │           └─ item: float #76
 │     │        │        │              ├─ variant_4: struct #88
 │     │        │        │              │  └─ [_min]: either '_integer_filter' #33
@@ -894,19 +894,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │              │     ├─ variant_2: struct #29
 │     │        │        │              │     │  └─ [not]: integer #25
 │     │        │        │              │     ├─ variant_3: struct #30
-│     │        │        │              │     │  ├─ [gt]: optional #26
+│     │        │        │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [gte]: optional #26
+│     │        │        │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  ├─ [lt]: optional #26
+│     │        │        │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │              │     │  │  └─ item: integer #25
-│     │        │        │              │     │  └─ [lte]: optional #26
+│     │        │        │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     ├─ variant_4: struct #31
-│     │        │        │              │     │  └─ [in]: list #27
+│     │        │        │              │     │  └─ [in]: list 'list_27' #27
 │     │        │        │              │     │     └─ item: integer #25
 │     │        │        │              │     └─ variant_5: struct #32
-│     │        │        │              │        └─ [notIn]: list #27
+│     │        │        │              │        └─ [notIn]: list 'list_27' #27
 │     │        │        │              │           └─ item: integer #25
 │     │        │        │              └─ variant_5: struct #89
 │     │        │        │                 └─ [_max]: either '_integer_filter' #33
@@ -916,21 +916,21 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │        │                    ├─ variant_2: struct #29
 │     │        │        │                    │  └─ [not]: integer #25
 │     │        │        │                    ├─ variant_3: struct #30
-│     │        │        │                    │  ├─ [gt]: optional #26
+│     │        │        │                    │  ├─ [gt]: optional 'optional_26' #26
 │     │        │        │                    │  │  └─ item: integer #25
-│     │        │        │                    │  ├─ [gte]: optional #26
+│     │        │        │                    │  ├─ [gte]: optional 'optional_26' #26
 │     │        │        │                    │  │  └─ item: integer #25
-│     │        │        │                    │  ├─ [lt]: optional #26
+│     │        │        │                    │  ├─ [lt]: optional 'optional_26' #26
 │     │        │        │                    │  │  └─ item: integer #25
-│     │        │        │                    │  └─ [lte]: optional #26
+│     │        │        │                    │  └─ [lte]: optional 'optional_26' #26
 │     │        │        │                    │     └─ item: integer #25
 │     │        │        │                    ├─ variant_4: struct #31
-│     │        │        │                    │  └─ [in]: list #27
+│     │        │        │                    │  └─ [in]: list 'list_27' #27
 │     │        │        │                    │     └─ item: integer #25
 │     │        │        │                    └─ variant_5: struct #32
-│     │        │        │                       └─ [notIn]: list #27
+│     │        │        │                       └─ [notIn]: list 'list_27' #27
 │     │        │        │                          └─ item: integer #25
-│     │        │        └─ [title]: optional #171
+│     │        │        └─ [title]: optional 'optional_171' #171
 │     │        │           └─ item: optional '_string_filter_c' #22
 │     │        │              └─ item: union #21
 │     │        │                 ├─ variant_0: union '_string_filter' #19
@@ -940,21 +940,21 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │                 │  ├─ variant_2: struct #11
 │     │        │                 │  │  └─ [not]: string #7
 │     │        │                 │  ├─ variant_3: struct #12
-│     │        │                 │  │  └─ [in]: list #9
+│     │        │                 │  │  └─ [in]: list 'list_9' #9
 │     │        │                 │  │     └─ item: string #7
 │     │        │                 │  ├─ variant_4: struct #13
-│     │        │                 │  │  └─ [notIn]: list #9
+│     │        │                 │  │  └─ [notIn]: list 'list_9' #9
 │     │        │                 │  │     └─ item: string #7
 │     │        │                 │  ├─ variant_5: struct #16
 │     │        │                 │  │  ├─ [contains]: string #7
-│     │        │                 │  │  └─ [mode]: optional #15
+│     │        │                 │  │  └─ [mode]: optional 'optional_15' #15
 │     │        │                 │  │     └─ item: string #14 enum{ '"insensitive"' }
 │     │        │                 │  ├─ variant_6: struct #17
 │     │        │                 │  │  └─ [search]: string #7
 │     │        │                 │  └─ variant_7: struct #18
-│     │        │                 │     ├─ [endsWith]: optional #8
+│     │        │                 │     ├─ [endsWith]: optional 'optional_8' #8
 │     │        │                 │     │  └─ item: string #7
-│     │        │                 │     └─ [startsWith]: optional #8
+│     │        │                 │     └─ [startsWith]: optional 'optional_8' #8
 │     │        │                 │        └─ item: string #7
 │     │        │                 └─ variant_1: struct #20
 │     │        │                    └─ [not]: union '_string_filter' #19
@@ -964,28 +964,28 @@ root: struct '_User_QueryInput_group_by' #192
 │     │        │                       ├─ variant_2: struct #11
 │     │        │                       │  └─ [not]: string #7
 │     │        │                       ├─ variant_3: struct #12
-│     │        │                       │  └─ [in]: list #9
+│     │        │                       │  └─ [in]: list 'list_9' #9
 │     │        │                       │     └─ item: string #7
 │     │        │                       ├─ variant_4: struct #13
-│     │        │                       │  └─ [notIn]: list #9
+│     │        │                       │  └─ [notIn]: list 'list_9' #9
 │     │        │                       │     └─ item: string #7
 │     │        │                       ├─ variant_5: struct #16
 │     │        │                       │  ├─ [contains]: string #7
-│     │        │                       │  └─ [mode]: optional #15
+│     │        │                       │  └─ [mode]: optional 'optional_15' #15
 │     │        │                       │     └─ item: string #14 enum{ '"insensitive"' }
 │     │        │                       ├─ variant_6: struct #17
 │     │        │                       │  └─ [search]: string #7
 │     │        │                       └─ variant_7: struct #18
-│     │        │                          ├─ [endsWith]: optional #8
+│     │        │                          ├─ [endsWith]: optional 'optional_8' #8
 │     │        │                          │  └─ item: string #7
-│     │        │                          └─ [startsWith]: optional #8
+│     │        │                          └─ [startsWith]: optional 'optional_8' #8
 │     │        │                             └─ item: string #7
 │     │        └─ variant_2: struct #180
-│     │           └─ [none]: optional #179
+│     │           └─ [none]: optional 'optional_179' #179
 │     │              └─ item: struct 'PostWhere__agg__skip_123_UserWhere__agg' #174
-│     │                 ├─ [author]: optional #173
+│     │                 ├─ [author]: optional 'optional_173' #173
 │     │                 │  └─ item: &UserWhere__agg #172
-│     │                 ├─ [id]: optional #170
+│     │                 ├─ [id]: optional 'optional_170' #170
 │     │                 │  └─ item: optional '_integer_filter_with_aggregates_c' #93
 │     │                 │     └─ item: union #92
 │     │                 │        ├─ variant_0: union '_integer_filter_with_aggregates' #90
@@ -996,19 +996,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │        │  │  ├─ variant_2: struct #29
 │     │                 │        │  │  │  └─ [not]: integer #25
 │     │                 │        │  │  ├─ variant_3: struct #30
-│     │                 │        │  │  │  ├─ [gt]: optional #26
+│     │                 │        │  │  │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │        │  │  │  │  └─ item: integer #25
-│     │                 │        │  │  │  ├─ [gte]: optional #26
+│     │                 │        │  │  │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │        │  │  │  │  └─ item: integer #25
-│     │                 │        │  │  │  ├─ [lt]: optional #26
+│     │                 │        │  │  │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │        │  │  │  │  └─ item: integer #25
-│     │                 │        │  │  │  └─ [lte]: optional #26
+│     │                 │        │  │  │  └─ [lte]: optional 'optional_26' #26
 │     │                 │        │  │  │     └─ item: integer #25
 │     │                 │        │  │  ├─ variant_4: struct #31
-│     │                 │        │  │  │  └─ [in]: list #27
+│     │                 │        │  │  │  └─ [in]: list 'list_27' #27
 │     │                 │        │  │  │     └─ item: integer #25
 │     │                 │        │  │  └─ variant_5: struct #32
-│     │                 │        │  │     └─ [notIn]: list #27
+│     │                 │        │  │     └─ [notIn]: list 'list_27' #27
 │     │                 │        │  │        └─ item: integer #25
 │     │                 │        │  ├─ variant_1: struct #85
 │     │                 │        │  │  └─ [_count]: either '_integer_filter' #33
@@ -1018,19 +1018,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │        │  │     ├─ variant_2: struct #29
 │     │                 │        │  │     │  └─ [not]: integer #25
 │     │                 │        │  │     ├─ variant_3: struct #30
-│     │                 │        │  │     │  ├─ [gt]: optional #26
+│     │                 │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │        │  │     │  │  └─ item: integer #25
-│     │                 │        │  │     │  ├─ [gte]: optional #26
+│     │                 │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │        │  │     │  │  └─ item: integer #25
-│     │                 │        │  │     │  ├─ [lt]: optional #26
+│     │                 │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │        │  │     │  │  └─ item: integer #25
-│     │                 │        │  │     │  └─ [lte]: optional #26
+│     │                 │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │                 │        │  │     │     └─ item: integer #25
 │     │                 │        │  │     ├─ variant_4: struct #31
-│     │                 │        │  │     │  └─ [in]: list #27
+│     │                 │        │  │     │  └─ [in]: list 'list_27' #27
 │     │                 │        │  │     │     └─ item: integer #25
 │     │                 │        │  │     └─ variant_5: struct #32
-│     │                 │        │  │        └─ [notIn]: list #27
+│     │                 │        │  │        └─ [notIn]: list 'list_27' #27
 │     │                 │        │  │           └─ item: integer #25
 │     │                 │        │  ├─ variant_2: struct #86
 │     │                 │        │  │  └─ [_sum]: either '_integer_filter' #33
@@ -1040,19 +1040,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │        │  │     ├─ variant_2: struct #29
 │     │                 │        │  │     │  └─ [not]: integer #25
 │     │                 │        │  │     ├─ variant_3: struct #30
-│     │                 │        │  │     │  ├─ [gt]: optional #26
+│     │                 │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │        │  │     │  │  └─ item: integer #25
-│     │                 │        │  │     │  ├─ [gte]: optional #26
+│     │                 │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │        │  │     │  │  └─ item: integer #25
-│     │                 │        │  │     │  ├─ [lt]: optional #26
+│     │                 │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │        │  │     │  │  └─ item: integer #25
-│     │                 │        │  │     │  └─ [lte]: optional #26
+│     │                 │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │                 │        │  │     │     └─ item: integer #25
 │     │                 │        │  │     ├─ variant_4: struct #31
-│     │                 │        │  │     │  └─ [in]: list #27
+│     │                 │        │  │     │  └─ [in]: list 'list_27' #27
 │     │                 │        │  │     │     └─ item: integer #25
 │     │                 │        │  │     └─ variant_5: struct #32
-│     │                 │        │  │        └─ [notIn]: list #27
+│     │                 │        │  │        └─ [notIn]: list 'list_27' #27
 │     │                 │        │  │           └─ item: integer #25
 │     │                 │        │  ├─ variant_3: struct #87
 │     │                 │        │  │  └─ [_avg]: either '_float_filter' #84
@@ -1062,19 +1062,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │        │  │     ├─ variant_2: struct #80
 │     │                 │        │  │     │  └─ [not]: float #76
 │     │                 │        │  │     ├─ variant_3: struct #81
-│     │                 │        │  │     │  ├─ [gt]: optional #77
+│     │                 │        │  │     │  ├─ [gt]: optional 'optional_77' #77
 │     │                 │        │  │     │  │  └─ item: float #76
-│     │                 │        │  │     │  ├─ [gte]: optional #77
+│     │                 │        │  │     │  ├─ [gte]: optional 'optional_77' #77
 │     │                 │        │  │     │  │  └─ item: float #76
-│     │                 │        │  │     │  ├─ [lt]: optional #77
+│     │                 │        │  │     │  ├─ [lt]: optional 'optional_77' #77
 │     │                 │        │  │     │  │  └─ item: float #76
-│     │                 │        │  │     │  └─ [lte]: optional #77
+│     │                 │        │  │     │  └─ [lte]: optional 'optional_77' #77
 │     │                 │        │  │     │     └─ item: float #76
 │     │                 │        │  │     ├─ variant_4: struct #82
-│     │                 │        │  │     │  └─ [in]: list #78
+│     │                 │        │  │     │  └─ [in]: list 'list_78' #78
 │     │                 │        │  │     │     └─ item: float #76
 │     │                 │        │  │     └─ variant_5: struct #83
-│     │                 │        │  │        └─ [notIn]: list #78
+│     │                 │        │  │        └─ [notIn]: list 'list_78' #78
 │     │                 │        │  │           └─ item: float #76
 │     │                 │        │  ├─ variant_4: struct #88
 │     │                 │        │  │  └─ [_min]: either '_integer_filter' #33
@@ -1084,19 +1084,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │        │  │     ├─ variant_2: struct #29
 │     │                 │        │  │     │  └─ [not]: integer #25
 │     │                 │        │  │     ├─ variant_3: struct #30
-│     │                 │        │  │     │  ├─ [gt]: optional #26
+│     │                 │        │  │     │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │        │  │     │  │  └─ item: integer #25
-│     │                 │        │  │     │  ├─ [gte]: optional #26
+│     │                 │        │  │     │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │        │  │     │  │  └─ item: integer #25
-│     │                 │        │  │     │  ├─ [lt]: optional #26
+│     │                 │        │  │     │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │        │  │     │  │  └─ item: integer #25
-│     │                 │        │  │     │  └─ [lte]: optional #26
+│     │                 │        │  │     │  └─ [lte]: optional 'optional_26' #26
 │     │                 │        │  │     │     └─ item: integer #25
 │     │                 │        │  │     ├─ variant_4: struct #31
-│     │                 │        │  │     │  └─ [in]: list #27
+│     │                 │        │  │     │  └─ [in]: list 'list_27' #27
 │     │                 │        │  │     │     └─ item: integer #25
 │     │                 │        │  │     └─ variant_5: struct #32
-│     │                 │        │  │        └─ [notIn]: list #27
+│     │                 │        │  │        └─ [notIn]: list 'list_27' #27
 │     │                 │        │  │           └─ item: integer #25
 │     │                 │        │  └─ variant_5: struct #89
 │     │                 │        │     └─ [_max]: either '_integer_filter' #33
@@ -1106,19 +1106,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │        │        ├─ variant_2: struct #29
 │     │                 │        │        │  └─ [not]: integer #25
 │     │                 │        │        ├─ variant_3: struct #30
-│     │                 │        │        │  ├─ [gt]: optional #26
+│     │                 │        │        │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │        │        │  │  └─ item: integer #25
-│     │                 │        │        │  ├─ [gte]: optional #26
+│     │                 │        │        │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │        │        │  │  └─ item: integer #25
-│     │                 │        │        │  ├─ [lt]: optional #26
+│     │                 │        │        │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │        │        │  │  └─ item: integer #25
-│     │                 │        │        │  └─ [lte]: optional #26
+│     │                 │        │        │  └─ [lte]: optional 'optional_26' #26
 │     │                 │        │        │     └─ item: integer #25
 │     │                 │        │        ├─ variant_4: struct #31
-│     │                 │        │        │  └─ [in]: list #27
+│     │                 │        │        │  └─ [in]: list 'list_27' #27
 │     │                 │        │        │     └─ item: integer #25
 │     │                 │        │        └─ variant_5: struct #32
-│     │                 │        │           └─ [notIn]: list #27
+│     │                 │        │           └─ [notIn]: list 'list_27' #27
 │     │                 │        │              └─ item: integer #25
 │     │                 │        └─ variant_1: struct #91
 │     │                 │           └─ [not]: union '_integer_filter_with_aggregates' #90
@@ -1129,19 +1129,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │              │  ├─ variant_2: struct #29
 │     │                 │              │  │  └─ [not]: integer #25
 │     │                 │              │  ├─ variant_3: struct #30
-│     │                 │              │  │  ├─ [gt]: optional #26
+│     │                 │              │  │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │              │  │  │  └─ item: integer #25
-│     │                 │              │  │  ├─ [gte]: optional #26
+│     │                 │              │  │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │              │  │  │  └─ item: integer #25
-│     │                 │              │  │  ├─ [lt]: optional #26
+│     │                 │              │  │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │              │  │  │  └─ item: integer #25
-│     │                 │              │  │  └─ [lte]: optional #26
+│     │                 │              │  │  └─ [lte]: optional 'optional_26' #26
 │     │                 │              │  │     └─ item: integer #25
 │     │                 │              │  ├─ variant_4: struct #31
-│     │                 │              │  │  └─ [in]: list #27
+│     │                 │              │  │  └─ [in]: list 'list_27' #27
 │     │                 │              │  │     └─ item: integer #25
 │     │                 │              │  └─ variant_5: struct #32
-│     │                 │              │     └─ [notIn]: list #27
+│     │                 │              │     └─ [notIn]: list 'list_27' #27
 │     │                 │              │        └─ item: integer #25
 │     │                 │              ├─ variant_1: struct #85
 │     │                 │              │  └─ [_count]: either '_integer_filter' #33
@@ -1151,19 +1151,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │              │     ├─ variant_2: struct #29
 │     │                 │              │     │  └─ [not]: integer #25
 │     │                 │              │     ├─ variant_3: struct #30
-│     │                 │              │     │  ├─ [gt]: optional #26
+│     │                 │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │              │     │  │  └─ item: integer #25
-│     │                 │              │     │  ├─ [gte]: optional #26
+│     │                 │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │              │     │  │  └─ item: integer #25
-│     │                 │              │     │  ├─ [lt]: optional #26
+│     │                 │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │              │     │  │  └─ item: integer #25
-│     │                 │              │     │  └─ [lte]: optional #26
+│     │                 │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │                 │              │     │     └─ item: integer #25
 │     │                 │              │     ├─ variant_4: struct #31
-│     │                 │              │     │  └─ [in]: list #27
+│     │                 │              │     │  └─ [in]: list 'list_27' #27
 │     │                 │              │     │     └─ item: integer #25
 │     │                 │              │     └─ variant_5: struct #32
-│     │                 │              │        └─ [notIn]: list #27
+│     │                 │              │        └─ [notIn]: list 'list_27' #27
 │     │                 │              │           └─ item: integer #25
 │     │                 │              ├─ variant_2: struct #86
 │     │                 │              │  └─ [_sum]: either '_integer_filter' #33
@@ -1173,19 +1173,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │              │     ├─ variant_2: struct #29
 │     │                 │              │     │  └─ [not]: integer #25
 │     │                 │              │     ├─ variant_3: struct #30
-│     │                 │              │     │  ├─ [gt]: optional #26
+│     │                 │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │              │     │  │  └─ item: integer #25
-│     │                 │              │     │  ├─ [gte]: optional #26
+│     │                 │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │              │     │  │  └─ item: integer #25
-│     │                 │              │     │  ├─ [lt]: optional #26
+│     │                 │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │              │     │  │  └─ item: integer #25
-│     │                 │              │     │  └─ [lte]: optional #26
+│     │                 │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │                 │              │     │     └─ item: integer #25
 │     │                 │              │     ├─ variant_4: struct #31
-│     │                 │              │     │  └─ [in]: list #27
+│     │                 │              │     │  └─ [in]: list 'list_27' #27
 │     │                 │              │     │     └─ item: integer #25
 │     │                 │              │     └─ variant_5: struct #32
-│     │                 │              │        └─ [notIn]: list #27
+│     │                 │              │        └─ [notIn]: list 'list_27' #27
 │     │                 │              │           └─ item: integer #25
 │     │                 │              ├─ variant_3: struct #87
 │     │                 │              │  └─ [_avg]: either '_float_filter' #84
@@ -1195,19 +1195,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │              │     ├─ variant_2: struct #80
 │     │                 │              │     │  └─ [not]: float #76
 │     │                 │              │     ├─ variant_3: struct #81
-│     │                 │              │     │  ├─ [gt]: optional #77
+│     │                 │              │     │  ├─ [gt]: optional 'optional_77' #77
 │     │                 │              │     │  │  └─ item: float #76
-│     │                 │              │     │  ├─ [gte]: optional #77
+│     │                 │              │     │  ├─ [gte]: optional 'optional_77' #77
 │     │                 │              │     │  │  └─ item: float #76
-│     │                 │              │     │  ├─ [lt]: optional #77
+│     │                 │              │     │  ├─ [lt]: optional 'optional_77' #77
 │     │                 │              │     │  │  └─ item: float #76
-│     │                 │              │     │  └─ [lte]: optional #77
+│     │                 │              │     │  └─ [lte]: optional 'optional_77' #77
 │     │                 │              │     │     └─ item: float #76
 │     │                 │              │     ├─ variant_4: struct #82
-│     │                 │              │     │  └─ [in]: list #78
+│     │                 │              │     │  └─ [in]: list 'list_78' #78
 │     │                 │              │     │     └─ item: float #76
 │     │                 │              │     └─ variant_5: struct #83
-│     │                 │              │        └─ [notIn]: list #78
+│     │                 │              │        └─ [notIn]: list 'list_78' #78
 │     │                 │              │           └─ item: float #76
 │     │                 │              ├─ variant_4: struct #88
 │     │                 │              │  └─ [_min]: either '_integer_filter' #33
@@ -1217,19 +1217,19 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │              │     ├─ variant_2: struct #29
 │     │                 │              │     │  └─ [not]: integer #25
 │     │                 │              │     ├─ variant_3: struct #30
-│     │                 │              │     │  ├─ [gt]: optional #26
+│     │                 │              │     │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │              │     │  │  └─ item: integer #25
-│     │                 │              │     │  ├─ [gte]: optional #26
+│     │                 │              │     │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │              │     │  │  └─ item: integer #25
-│     │                 │              │     │  ├─ [lt]: optional #26
+│     │                 │              │     │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │              │     │  │  └─ item: integer #25
-│     │                 │              │     │  └─ [lte]: optional #26
+│     │                 │              │     │  └─ [lte]: optional 'optional_26' #26
 │     │                 │              │     │     └─ item: integer #25
 │     │                 │              │     ├─ variant_4: struct #31
-│     │                 │              │     │  └─ [in]: list #27
+│     │                 │              │     │  └─ [in]: list 'list_27' #27
 │     │                 │              │     │     └─ item: integer #25
 │     │                 │              │     └─ variant_5: struct #32
-│     │                 │              │        └─ [notIn]: list #27
+│     │                 │              │        └─ [notIn]: list 'list_27' #27
 │     │                 │              │           └─ item: integer #25
 │     │                 │              └─ variant_5: struct #89
 │     │                 │                 └─ [_max]: either '_integer_filter' #33
@@ -1239,21 +1239,21 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                 │                    ├─ variant_2: struct #29
 │     │                 │                    │  └─ [not]: integer #25
 │     │                 │                    ├─ variant_3: struct #30
-│     │                 │                    │  ├─ [gt]: optional #26
+│     │                 │                    │  ├─ [gt]: optional 'optional_26' #26
 │     │                 │                    │  │  └─ item: integer #25
-│     │                 │                    │  ├─ [gte]: optional #26
+│     │                 │                    │  ├─ [gte]: optional 'optional_26' #26
 │     │                 │                    │  │  └─ item: integer #25
-│     │                 │                    │  ├─ [lt]: optional #26
+│     │                 │                    │  ├─ [lt]: optional 'optional_26' #26
 │     │                 │                    │  │  └─ item: integer #25
-│     │                 │                    │  └─ [lte]: optional #26
+│     │                 │                    │  └─ [lte]: optional 'optional_26' #26
 │     │                 │                    │     └─ item: integer #25
 │     │                 │                    ├─ variant_4: struct #31
-│     │                 │                    │  └─ [in]: list #27
+│     │                 │                    │  └─ [in]: list 'list_27' #27
 │     │                 │                    │     └─ item: integer #25
 │     │                 │                    └─ variant_5: struct #32
-│     │                 │                       └─ [notIn]: list #27
+│     │                 │                       └─ [notIn]: list 'list_27' #27
 │     │                 │                          └─ item: integer #25
-│     │                 └─ [title]: optional #171
+│     │                 └─ [title]: optional 'optional_171' #171
 │     │                    └─ item: optional '_string_filter_c' #22
 │     │                       └─ item: union #21
 │     │                          ├─ variant_0: union '_string_filter' #19
@@ -1263,21 +1263,21 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                          │  ├─ variant_2: struct #11
 │     │                          │  │  └─ [not]: string #7
 │     │                          │  ├─ variant_3: struct #12
-│     │                          │  │  └─ [in]: list #9
+│     │                          │  │  └─ [in]: list 'list_9' #9
 │     │                          │  │     └─ item: string #7
 │     │                          │  ├─ variant_4: struct #13
-│     │                          │  │  └─ [notIn]: list #9
+│     │                          │  │  └─ [notIn]: list 'list_9' #9
 │     │                          │  │     └─ item: string #7
 │     │                          │  ├─ variant_5: struct #16
 │     │                          │  │  ├─ [contains]: string #7
-│     │                          │  │  └─ [mode]: optional #15
+│     │                          │  │  └─ [mode]: optional 'optional_15' #15
 │     │                          │  │     └─ item: string #14 enum{ '"insensitive"' }
 │     │                          │  ├─ variant_6: struct #17
 │     │                          │  │  └─ [search]: string #7
 │     │                          │  └─ variant_7: struct #18
-│     │                          │     ├─ [endsWith]: optional #8
+│     │                          │     ├─ [endsWith]: optional 'optional_8' #8
 │     │                          │     │  └─ item: string #7
-│     │                          │     └─ [startsWith]: optional #8
+│     │                          │     └─ [startsWith]: optional 'optional_8' #8
 │     │                          │        └─ item: string #7
 │     │                          └─ variant_1: struct #20
 │     │                             └─ [not]: union '_string_filter' #19
@@ -1287,41 +1287,41 @@ root: struct '_User_QueryInput_group_by' #192
 │     │                                ├─ variant_2: struct #11
 │     │                                │  └─ [not]: string #7
 │     │                                ├─ variant_3: struct #12
-│     │                                │  └─ [in]: list #9
+│     │                                │  └─ [in]: list 'list_9' #9
 │     │                                │     └─ item: string #7
 │     │                                ├─ variant_4: struct #13
-│     │                                │  └─ [notIn]: list #9
+│     │                                │  └─ [notIn]: list 'list_9' #9
 │     │                                │     └─ item: string #7
 │     │                                ├─ variant_5: struct #16
 │     │                                │  ├─ [contains]: string #7
-│     │                                │  └─ [mode]: optional #15
+│     │                                │  └─ [mode]: optional 'optional_15' #15
 │     │                                │     └─ item: string #14 enum{ '"insensitive"' }
 │     │                                ├─ variant_6: struct #17
 │     │                                │  └─ [search]: string #7
 │     │                                └─ variant_7: struct #18
-│     │                                   ├─ [endsWith]: optional #8
+│     │                                   ├─ [endsWith]: optional 'optional_8' #8
 │     │                                   │  └─ item: string #7
-│     │                                   └─ [startsWith]: optional #8
+│     │                                   └─ [startsWith]: optional 'optional_8' #8
 │     │                                      └─ item: string #7
 │     ├─ variant_1: struct #186
-│     │  └─ [AND]: list #185
+│     │  └─ [AND]: list 'list_185' #185
 │     │     └─ item: &_User_Having #184
 │     ├─ variant_2: struct #188
-│     │  └─ [OR]: list #187
+│     │  └─ [OR]: list 'list_187' #187
 │     │     └─ item: &_User_Having #184
 │     └─ variant_3: struct #189
 │        └─ [NOT]: &_User_Having #184
-├─ [orderBy]: optional #159
+├─ [orderBy]: optional 'optional_159' #159
 │  └─ item: list '_User_OrderBy_with_aggregates' #158
 │     └─ item: struct #157
-│        ├─ [_avg]: optional #153
+│        ├─ [_avg]: optional 'optional_153' #153
 │        │  └─ item: struct #152
 │        │     └─ [id]: optional '_Sort' #50
 │        │        └─ item: union #49
 │        │           ├─ variant_0: struct #48
 │        │           │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [_count]: optional #151
+│        ├─ [_count]: optional 'optional_151' #151
 │        │  └─ item: struct #150
 │        │     ├─ [id]: optional '_Sort' #50
 │        │     │  └─ item: union #49
@@ -1338,21 +1338,21 @@ root: struct '_User_QueryInput_group_by' #192
 │        │           ├─ variant_0: struct #48
 │        │           │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [_max]: optional #153
+│        ├─ [_max]: optional 'optional_153' #153
 │        │  └─ item: struct #152
 │        │     └─ [id]: optional '_Sort' #50
 │        │        └─ item: union #49
 │        │           ├─ variant_0: struct #48
 │        │           │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [_min]: optional #153
+│        ├─ [_min]: optional 'optional_153' #153
 │        │  └─ item: struct #152
 │        │     └─ [id]: optional '_Sort' #50
 │        │        └─ item: union #49
 │        │           ├─ variant_0: struct #48
 │        │           │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │        │           └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [_sum]: optional #153
+│        ├─ [_sum]: optional 'optional_153' #153
 │        │  └─ item: struct #152
 │        │     └─ [id]: optional '_Sort' #50
 │        │        └─ item: union #49
@@ -1396,21 +1396,21 @@ root: struct '_User_QueryInput_group_by' #192
 │                    ├─ variant_0: struct #48
 │                    │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
 │                    └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-├─ [skip]: optional #161
+├─ [skip]: optional 'optional_161' #161
 │  └─ item: integer '_Skip' #64
-├─ [take]: optional #160
+├─ [take]: optional 'optional_160' #160
 │  └─ item: integer '_Take' #62
-└─ [where]: optional #149
+└─ [where]: optional 'optional_149' #149
    └─ item: struct 'QueryUserWhereInput' #148
-      ├─ [AND]: optional #146
-      │  └─ item: list #145
+      ├─ [AND]: optional 'optional_146' #146
+      │  └─ item: list 'list_145' #145
       │     └─ item: &QueryUserWhereInput #144
-      ├─ [NOT]: optional #147
+      ├─ [NOT]: optional 'optional_147' #147
       │  └─ item: &QueryUserWhereInput #144
-      ├─ [OR]: optional #146
-      │  └─ item: list #145
+      ├─ [OR]: optional 'optional_146' #146
+      │  └─ item: list 'list_145' #145
       │     └─ item: &QueryUserWhereInput #144
-      ├─ [id]: optional #128
+      ├─ [id]: optional 'optional_128' #128
       │  └─ item: optional '_integer_filter_c' #36
       │     └─ item: union #35
       │        ├─ variant_0: either '_integer_filter' #33
@@ -1420,19 +1420,19 @@ root: struct '_User_QueryInput_group_by' #192
       │        │  ├─ variant_2: struct #29
       │        │  │  └─ [not]: integer #25
       │        │  ├─ variant_3: struct #30
-      │        │  │  ├─ [gt]: optional #26
+      │        │  │  ├─ [gt]: optional 'optional_26' #26
       │        │  │  │  └─ item: integer #25
-      │        │  │  ├─ [gte]: optional #26
+      │        │  │  ├─ [gte]: optional 'optional_26' #26
       │        │  │  │  └─ item: integer #25
-      │        │  │  ├─ [lt]: optional #26
+      │        │  │  ├─ [lt]: optional 'optional_26' #26
       │        │  │  │  └─ item: integer #25
-      │        │  │  └─ [lte]: optional #26
+      │        │  │  └─ [lte]: optional 'optional_26' #26
       │        │  │     └─ item: integer #25
       │        │  ├─ variant_4: struct #31
-      │        │  │  └─ [in]: list #27
+      │        │  │  └─ [in]: list 'list_27' #27
       │        │  │     └─ item: integer #25
       │        │  └─ variant_5: struct #32
-      │        │     └─ [notIn]: list #27
+      │        │     └─ [notIn]: list 'list_27' #27
       │        │        └─ item: integer #25
       │        └─ variant_1: struct #34
       │           └─ [not]: either '_integer_filter' #33
@@ -1442,21 +1442,21 @@ root: struct '_User_QueryInput_group_by' #192
       │              ├─ variant_2: struct #29
       │              │  └─ [not]: integer #25
       │              ├─ variant_3: struct #30
-      │              │  ├─ [gt]: optional #26
+      │              │  ├─ [gt]: optional 'optional_26' #26
       │              │  │  └─ item: integer #25
-      │              │  ├─ [gte]: optional #26
+      │              │  ├─ [gte]: optional 'optional_26' #26
       │              │  │  └─ item: integer #25
-      │              │  ├─ [lt]: optional #26
+      │              │  ├─ [lt]: optional 'optional_26' #26
       │              │  │  └─ item: integer #25
-      │              │  └─ [lte]: optional #26
+      │              │  └─ [lte]: optional 'optional_26' #26
       │              │     └─ item: integer #25
       │              ├─ variant_4: struct #31
-      │              │  └─ [in]: list #27
+      │              │  └─ [in]: list 'list_27' #27
       │              │     └─ item: integer #25
       │              └─ variant_5: struct #32
-      │                 └─ [notIn]: list #27
+      │                 └─ [notIn]: list 'list_27' #27
       │                    └─ item: integer #25
-      ├─ [name]: optional #129
+      ├─ [name]: optional 'optional_129' #129
       │  └─ item: optional '_string_filter_c' #22
       │     └─ item: union #21
       │        ├─ variant_0: union '_string_filter' #19
@@ -1466,21 +1466,21 @@ root: struct '_User_QueryInput_group_by' #192
       │        │  ├─ variant_2: struct #11
       │        │  │  └─ [not]: string #7
       │        │  ├─ variant_3: struct #12
-      │        │  │  └─ [in]: list #9
+      │        │  │  └─ [in]: list 'list_9' #9
       │        │  │     └─ item: string #7
       │        │  ├─ variant_4: struct #13
-      │        │  │  └─ [notIn]: list #9
+      │        │  │  └─ [notIn]: list 'list_9' #9
       │        │  │     └─ item: string #7
       │        │  ├─ variant_5: struct #16
       │        │  │  ├─ [contains]: string #7
-      │        │  │  └─ [mode]: optional #15
+      │        │  │  └─ [mode]: optional 'optional_15' #15
       │        │  │     └─ item: string #14 enum{ '"insensitive"' }
       │        │  ├─ variant_6: struct #17
       │        │  │  └─ [search]: string #7
       │        │  └─ variant_7: struct #18
-      │        │     ├─ [endsWith]: optional #8
+      │        │     ├─ [endsWith]: optional 'optional_8' #8
       │        │     │  └─ item: string #7
-      │        │     └─ [startsWith]: optional #8
+      │        │     └─ [startsWith]: optional 'optional_8' #8
       │        │        └─ item: string #7
       │        └─ variant_1: struct #20
       │           └─ [not]: union '_string_filter' #19
@@ -1490,30 +1490,30 @@ root: struct '_User_QueryInput_group_by' #192
       │              ├─ variant_2: struct #11
       │              │  └─ [not]: string #7
       │              ├─ variant_3: struct #12
-      │              │  └─ [in]: list #9
+      │              │  └─ [in]: list 'list_9' #9
       │              │     └─ item: string #7
       │              ├─ variant_4: struct #13
-      │              │  └─ [notIn]: list #9
+      │              │  └─ [notIn]: list 'list_9' #9
       │              │     └─ item: string #7
       │              ├─ variant_5: struct #16
       │              │  ├─ [contains]: string #7
-      │              │  └─ [mode]: optional #15
+      │              │  └─ [mode]: optional 'optional_15' #15
       │              │     └─ item: string #14 enum{ '"insensitive"' }
       │              ├─ variant_6: struct #17
       │              │  └─ [search]: string #7
       │              └─ variant_7: struct #18
-      │                 ├─ [endsWith]: optional #8
+      │                 ├─ [endsWith]: optional 'optional_8' #8
       │                 │  └─ item: string #7
-      │                 └─ [startsWith]: optional #8
+      │                 └─ [startsWith]: optional 'optional_8' #8
       │                    └─ item: string #7
-      └─ [posts]: optional #142
+      └─ [posts]: optional 'optional_142' #142
          └─ item: union #141
             ├─ variant_0: struct #136
-            │  └─ [every]: optional #135
+            │  └─ [every]: optional 'optional_135' #135
             │     └─ item: struct 'PostWhere__skip_123_UserWhere' #134
-            │        ├─ [author]: optional #133
+            │        ├─ [author]: optional 'optional_133' #133
             │        │  └─ item: &UserWhere #132
-            │        ├─ [id]: optional #130
+            │        ├─ [id]: optional 'optional_130' #130
             │        │  └─ item: optional '_integer_filter_c' #36
             │        │     └─ item: union #35
             │        │        ├─ variant_0: either '_integer_filter' #33
@@ -1523,19 +1523,19 @@ root: struct '_User_QueryInput_group_by' #192
             │        │        │  ├─ variant_2: struct #29
             │        │        │  │  └─ [not]: integer #25
             │        │        │  ├─ variant_3: struct #30
-            │        │        │  │  ├─ [gt]: optional #26
+            │        │        │  │  ├─ [gt]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  ├─ [gte]: optional #26
+            │        │        │  │  ├─ [gte]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  ├─ [lt]: optional #26
+            │        │        │  │  ├─ [lt]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  └─ [lte]: optional #26
+            │        │        │  │  └─ [lte]: optional 'optional_26' #26
             │        │        │  │     └─ item: integer #25
             │        │        │  ├─ variant_4: struct #31
-            │        │        │  │  └─ [in]: list #27
+            │        │        │  │  └─ [in]: list 'list_27' #27
             │        │        │  │     └─ item: integer #25
             │        │        │  └─ variant_5: struct #32
-            │        │        │     └─ [notIn]: list #27
+            │        │        │     └─ [notIn]: list 'list_27' #27
             │        │        │        └─ item: integer #25
             │        │        └─ variant_1: struct #34
             │        │           └─ [not]: either '_integer_filter' #33
@@ -1545,21 +1545,21 @@ root: struct '_User_QueryInput_group_by' #192
             │        │              ├─ variant_2: struct #29
             │        │              │  └─ [not]: integer #25
             │        │              ├─ variant_3: struct #30
-            │        │              │  ├─ [gt]: optional #26
+            │        │              │  ├─ [gt]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  ├─ [gte]: optional #26
+            │        │              │  ├─ [gte]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  ├─ [lt]: optional #26
+            │        │              │  ├─ [lt]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  └─ [lte]: optional #26
+            │        │              │  └─ [lte]: optional 'optional_26' #26
             │        │              │     └─ item: integer #25
             │        │              ├─ variant_4: struct #31
-            │        │              │  └─ [in]: list #27
+            │        │              │  └─ [in]: list 'list_27' #27
             │        │              │     └─ item: integer #25
             │        │              └─ variant_5: struct #32
-            │        │                 └─ [notIn]: list #27
+            │        │                 └─ [notIn]: list 'list_27' #27
             │        │                    └─ item: integer #25
-            │        └─ [title]: optional #131
+            │        └─ [title]: optional 'optional_131' #131
             │           └─ item: optional '_string_filter_c' #22
             │              └─ item: union #21
             │                 ├─ variant_0: union '_string_filter' #19
@@ -1569,21 +1569,21 @@ root: struct '_User_QueryInput_group_by' #192
             │                 │  ├─ variant_2: struct #11
             │                 │  │  └─ [not]: string #7
             │                 │  ├─ variant_3: struct #12
-            │                 │  │  └─ [in]: list #9
+            │                 │  │  └─ [in]: list 'list_9' #9
             │                 │  │     └─ item: string #7
             │                 │  ├─ variant_4: struct #13
-            │                 │  │  └─ [notIn]: list #9
+            │                 │  │  └─ [notIn]: list 'list_9' #9
             │                 │  │     └─ item: string #7
             │                 │  ├─ variant_5: struct #16
             │                 │  │  ├─ [contains]: string #7
-            │                 │  │  └─ [mode]: optional #15
+            │                 │  │  └─ [mode]: optional 'optional_15' #15
             │                 │  │     └─ item: string #14 enum{ '"insensitive"' }
             │                 │  ├─ variant_6: struct #17
             │                 │  │  └─ [search]: string #7
             │                 │  └─ variant_7: struct #18
-            │                 │     ├─ [endsWith]: optional #8
+            │                 │     ├─ [endsWith]: optional 'optional_8' #8
             │                 │     │  └─ item: string #7
-            │                 │     └─ [startsWith]: optional #8
+            │                 │     └─ [startsWith]: optional 'optional_8' #8
             │                 │        └─ item: string #7
             │                 └─ variant_1: struct #20
             │                    └─ [not]: union '_string_filter' #19
@@ -1593,28 +1593,28 @@ root: struct '_User_QueryInput_group_by' #192
             │                       ├─ variant_2: struct #11
             │                       │  └─ [not]: string #7
             │                       ├─ variant_3: struct #12
-            │                       │  └─ [in]: list #9
+            │                       │  └─ [in]: list 'list_9' #9
             │                       │     └─ item: string #7
             │                       ├─ variant_4: struct #13
-            │                       │  └─ [notIn]: list #9
+            │                       │  └─ [notIn]: list 'list_9' #9
             │                       │     └─ item: string #7
             │                       ├─ variant_5: struct #16
             │                       │  ├─ [contains]: string #7
-            │                       │  └─ [mode]: optional #15
+            │                       │  └─ [mode]: optional 'optional_15' #15
             │                       │     └─ item: string #14 enum{ '"insensitive"' }
             │                       ├─ variant_6: struct #17
             │                       │  └─ [search]: string #7
             │                       └─ variant_7: struct #18
-            │                          ├─ [endsWith]: optional #8
+            │                          ├─ [endsWith]: optional 'optional_8' #8
             │                          │  └─ item: string #7
-            │                          └─ [startsWith]: optional #8
+            │                          └─ [startsWith]: optional 'optional_8' #8
             │                             └─ item: string #7
             ├─ variant_1: struct #138
-            │  └─ [some]: optional #137
+            │  └─ [some]: optional 'optional_137' #137
             │     └─ item: struct 'PostWhere__skip_123_UserWhere' #134
-            │        ├─ [author]: optional #133
+            │        ├─ [author]: optional 'optional_133' #133
             │        │  └─ item: &UserWhere #132
-            │        ├─ [id]: optional #130
+            │        ├─ [id]: optional 'optional_130' #130
             │        │  └─ item: optional '_integer_filter_c' #36
             │        │     └─ item: union #35
             │        │        ├─ variant_0: either '_integer_filter' #33
@@ -1624,19 +1624,19 @@ root: struct '_User_QueryInput_group_by' #192
             │        │        │  ├─ variant_2: struct #29
             │        │        │  │  └─ [not]: integer #25
             │        │        │  ├─ variant_3: struct #30
-            │        │        │  │  ├─ [gt]: optional #26
+            │        │        │  │  ├─ [gt]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  ├─ [gte]: optional #26
+            │        │        │  │  ├─ [gte]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  ├─ [lt]: optional #26
+            │        │        │  │  ├─ [lt]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  └─ [lte]: optional #26
+            │        │        │  │  └─ [lte]: optional 'optional_26' #26
             │        │        │  │     └─ item: integer #25
             │        │        │  ├─ variant_4: struct #31
-            │        │        │  │  └─ [in]: list #27
+            │        │        │  │  └─ [in]: list 'list_27' #27
             │        │        │  │     └─ item: integer #25
             │        │        │  └─ variant_5: struct #32
-            │        │        │     └─ [notIn]: list #27
+            │        │        │     └─ [notIn]: list 'list_27' #27
             │        │        │        └─ item: integer #25
             │        │        └─ variant_1: struct #34
             │        │           └─ [not]: either '_integer_filter' #33
@@ -1646,21 +1646,21 @@ root: struct '_User_QueryInput_group_by' #192
             │        │              ├─ variant_2: struct #29
             │        │              │  └─ [not]: integer #25
             │        │              ├─ variant_3: struct #30
-            │        │              │  ├─ [gt]: optional #26
+            │        │              │  ├─ [gt]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  ├─ [gte]: optional #26
+            │        │              │  ├─ [gte]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  ├─ [lt]: optional #26
+            │        │              │  ├─ [lt]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  └─ [lte]: optional #26
+            │        │              │  └─ [lte]: optional 'optional_26' #26
             │        │              │     └─ item: integer #25
             │        │              ├─ variant_4: struct #31
-            │        │              │  └─ [in]: list #27
+            │        │              │  └─ [in]: list 'list_27' #27
             │        │              │     └─ item: integer #25
             │        │              └─ variant_5: struct #32
-            │        │                 └─ [notIn]: list #27
+            │        │                 └─ [notIn]: list 'list_27' #27
             │        │                    └─ item: integer #25
-            │        └─ [title]: optional #131
+            │        └─ [title]: optional 'optional_131' #131
             │           └─ item: optional '_string_filter_c' #22
             │              └─ item: union #21
             │                 ├─ variant_0: union '_string_filter' #19
@@ -1670,21 +1670,21 @@ root: struct '_User_QueryInput_group_by' #192
             │                 │  ├─ variant_2: struct #11
             │                 │  │  └─ [not]: string #7
             │                 │  ├─ variant_3: struct #12
-            │                 │  │  └─ [in]: list #9
+            │                 │  │  └─ [in]: list 'list_9' #9
             │                 │  │     └─ item: string #7
             │                 │  ├─ variant_4: struct #13
-            │                 │  │  └─ [notIn]: list #9
+            │                 │  │  └─ [notIn]: list 'list_9' #9
             │                 │  │     └─ item: string #7
             │                 │  ├─ variant_5: struct #16
             │                 │  │  ├─ [contains]: string #7
-            │                 │  │  └─ [mode]: optional #15
+            │                 │  │  └─ [mode]: optional 'optional_15' #15
             │                 │  │     └─ item: string #14 enum{ '"insensitive"' }
             │                 │  ├─ variant_6: struct #17
             │                 │  │  └─ [search]: string #7
             │                 │  └─ variant_7: struct #18
-            │                 │     ├─ [endsWith]: optional #8
+            │                 │     ├─ [endsWith]: optional 'optional_8' #8
             │                 │     │  └─ item: string #7
-            │                 │     └─ [startsWith]: optional #8
+            │                 │     └─ [startsWith]: optional 'optional_8' #8
             │                 │        └─ item: string #7
             │                 └─ variant_1: struct #20
             │                    └─ [not]: union '_string_filter' #19
@@ -1694,28 +1694,28 @@ root: struct '_User_QueryInput_group_by' #192
             │                       ├─ variant_2: struct #11
             │                       │  └─ [not]: string #7
             │                       ├─ variant_3: struct #12
-            │                       │  └─ [in]: list #9
+            │                       │  └─ [in]: list 'list_9' #9
             │                       │     └─ item: string #7
             │                       ├─ variant_4: struct #13
-            │                       │  └─ [notIn]: list #9
+            │                       │  └─ [notIn]: list 'list_9' #9
             │                       │     └─ item: string #7
             │                       ├─ variant_5: struct #16
             │                       │  ├─ [contains]: string #7
-            │                       │  └─ [mode]: optional #15
+            │                       │  └─ [mode]: optional 'optional_15' #15
             │                       │     └─ item: string #14 enum{ '"insensitive"' }
             │                       ├─ variant_6: struct #17
             │                       │  └─ [search]: string #7
             │                       └─ variant_7: struct #18
-            │                          ├─ [endsWith]: optional #8
+            │                          ├─ [endsWith]: optional 'optional_8' #8
             │                          │  └─ item: string #7
-            │                          └─ [startsWith]: optional #8
+            │                          └─ [startsWith]: optional 'optional_8' #8
             │                             └─ item: string #7
             └─ variant_2: struct #140
-               └─ [none]: optional #139
+               └─ [none]: optional 'optional_139' #139
                   └─ item: struct 'PostWhere__skip_123_UserWhere' #134
-                     ├─ [author]: optional #133
+                     ├─ [author]: optional 'optional_133' #133
                      │  └─ item: &UserWhere #132
-                     ├─ [id]: optional #130
+                     ├─ [id]: optional 'optional_130' #130
                      │  └─ item: optional '_integer_filter_c' #36
                      │     └─ item: union #35
                      │        ├─ variant_0: either '_integer_filter' #33
@@ -1725,19 +1725,19 @@ root: struct '_User_QueryInput_group_by' #192
                      │        │  ├─ variant_2: struct #29
                      │        │  │  └─ [not]: integer #25
                      │        │  ├─ variant_3: struct #30
-                     │        │  │  ├─ [gt]: optional #26
+                     │        │  │  ├─ [gt]: optional 'optional_26' #26
                      │        │  │  │  └─ item: integer #25
-                     │        │  │  ├─ [gte]: optional #26
+                     │        │  │  ├─ [gte]: optional 'optional_26' #26
                      │        │  │  │  └─ item: integer #25
-                     │        │  │  ├─ [lt]: optional #26
+                     │        │  │  ├─ [lt]: optional 'optional_26' #26
                      │        │  │  │  └─ item: integer #25
-                     │        │  │  └─ [lte]: optional #26
+                     │        │  │  └─ [lte]: optional 'optional_26' #26
                      │        │  │     └─ item: integer #25
                      │        │  ├─ variant_4: struct #31
-                     │        │  │  └─ [in]: list #27
+                     │        │  │  └─ [in]: list 'list_27' #27
                      │        │  │     └─ item: integer #25
                      │        │  └─ variant_5: struct #32
-                     │        │     └─ [notIn]: list #27
+                     │        │     └─ [notIn]: list 'list_27' #27
                      │        │        └─ item: integer #25
                      │        └─ variant_1: struct #34
                      │           └─ [not]: either '_integer_filter' #33
@@ -1747,21 +1747,21 @@ root: struct '_User_QueryInput_group_by' #192
                      │              ├─ variant_2: struct #29
                      │              │  └─ [not]: integer #25
                      │              ├─ variant_3: struct #30
-                     │              │  ├─ [gt]: optional #26
+                     │              │  ├─ [gt]: optional 'optional_26' #26
                      │              │  │  └─ item: integer #25
-                     │              │  ├─ [gte]: optional #26
+                     │              │  ├─ [gte]: optional 'optional_26' #26
                      │              │  │  └─ item: integer #25
-                     │              │  ├─ [lt]: optional #26
+                     │              │  ├─ [lt]: optional 'optional_26' #26
                      │              │  │  └─ item: integer #25
-                     │              │  └─ [lte]: optional #26
+                     │              │  └─ [lte]: optional 'optional_26' #26
                      │              │     └─ item: integer #25
                      │              ├─ variant_4: struct #31
-                     │              │  └─ [in]: list #27
+                     │              │  └─ [in]: list 'list_27' #27
                      │              │     └─ item: integer #25
                      │              └─ variant_5: struct #32
-                     │                 └─ [notIn]: list #27
+                     │                 └─ [notIn]: list 'list_27' #27
                      │                    └─ item: integer #25
-                     └─ [title]: optional #131
+                     └─ [title]: optional 'optional_131' #131
                         └─ item: optional '_string_filter_c' #22
                            └─ item: union #21
                               ├─ variant_0: union '_string_filter' #19
@@ -1771,21 +1771,21 @@ root: struct '_User_QueryInput_group_by' #192
                               │  ├─ variant_2: struct #11
                               │  │  └─ [not]: string #7
                               │  ├─ variant_3: struct #12
-                              │  │  └─ [in]: list #9
+                              │  │  └─ [in]: list 'list_9' #9
                               │  │     └─ item: string #7
                               │  ├─ variant_4: struct #13
-                              │  │  └─ [notIn]: list #9
+                              │  │  └─ [notIn]: list 'list_9' #9
                               │  │     └─ item: string #7
                               │  ├─ variant_5: struct #16
                               │  │  ├─ [contains]: string #7
-                              │  │  └─ [mode]: optional #15
+                              │  │  └─ [mode]: optional 'optional_15' #15
                               │  │     └─ item: string #14 enum{ '"insensitive"' }
                               │  ├─ variant_6: struct #17
                               │  │  └─ [search]: string #7
                               │  └─ variant_7: struct #18
-                              │     ├─ [endsWith]: optional #8
+                              │     ├─ [endsWith]: optional 'optional_8' #8
                               │     │  └─ item: string #7
-                              │     └─ [startsWith]: optional #8
+                              │     └─ [startsWith]: optional 'optional_8' #8
                               │        └─ item: string #7
                               └─ variant_1: struct #20
                                  └─ [not]: union '_string_filter' #19
@@ -1795,19 +1795,19 @@ root: struct '_User_QueryInput_group_by' #192
                                     ├─ variant_2: struct #11
                                     │  └─ [not]: string #7
                                     ├─ variant_3: struct #12
-                                    │  └─ [in]: list #9
+                                    │  └─ [in]: list 'list_9' #9
                                     │     └─ item: string #7
                                     ├─ variant_4: struct #13
-                                    │  └─ [notIn]: list #9
+                                    │  └─ [notIn]: list 'list_9' #9
                                     │     └─ item: string #7
                                     ├─ variant_5: struct #16
                                     │  ├─ [contains]: string #7
-                                    │  └─ [mode]: optional #15
+                                    │  └─ [mode]: optional 'optional_15' #15
                                     │     └─ item: string #14 enum{ '"insensitive"' }
                                     ├─ variant_6: struct #17
                                     │  └─ [search]: string #7
                                     └─ variant_7: struct #18
-                                       ├─ [endsWith]: optional #8
+                                       ├─ [endsWith]: optional 'optional_8' #8
                                        │  └─ item: string #7
-                                       └─ [startsWith]: optional #8
+                                       └─ [startsWith]: optional 'optional_8' #8
                                           └─ item: string #7

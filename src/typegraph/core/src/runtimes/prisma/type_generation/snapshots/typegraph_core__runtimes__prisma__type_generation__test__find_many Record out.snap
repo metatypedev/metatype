@@ -2,9 +2,9 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list #73
+root: list 'list_73' #73
 └─ item: struct 'RecordWithNestedCount' #72
-   ├─ [age]: optional #5
+   ├─ [age]: optional 'optional_5' #5
    │  └─ item: integer #4
    ├─ [created_at]: string #71
    ├─ [id]: string #2

@@ -3,11 +3,11 @@ source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct #10
-└─ [data]: list #9
+└─ [data]: list 'list_9' #9
    └─ item: struct '_Record_CreateInput' #8
-      ├─ [age]: optional #5
+      ├─ [age]: optional 'optional_5' #5
       │  └─ item: integer #4
       ├─ [created_at]: string #1
-      ├─ [id]: optional #7
+      ├─ [id]: optional 'optional_7' #7
       │  └─ item: string #2
       └─ [name]: string #3

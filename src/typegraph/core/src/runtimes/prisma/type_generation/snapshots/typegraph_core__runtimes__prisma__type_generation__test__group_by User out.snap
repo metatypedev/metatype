@@ -5,27 +5,27 @@ expression: tp.print(out)
 root: list '_User_GroupByResult' #205
 └─ item: struct #204
    ├─ [_avg]: struct '_User_SelectNumbers__1' #198
-   │  └─ [id]: optional #197
+   │  └─ [id]: optional 'optional_197' #197
    │     └─ item: float #196
    ├─ [_count]: struct '_User_AggrCount' #195
-   │  ├─ [_all]: optional #194
+   │  ├─ [_all]: optional 'optional_194' #194
    │  │  └─ item: integer #193
-   │  ├─ [id]: optional #194
+   │  ├─ [id]: optional 'optional_194' #194
    │  │  └─ item: integer #193
-   │  ├─ [name]: optional #194
+   │  ├─ [name]: optional 'optional_194' #194
    │  │  └─ item: integer #193
-   │  └─ [posts]: optional #194
+   │  └─ [posts]: optional 'optional_194' #194
    │     └─ item: integer #193
    ├─ [_max]: struct '_User_SelectNumbers_' #203
-   │  └─ [id]: optional #202
+   │  └─ [id]: optional 'optional_202' #202
    │     └─ item: integer #201
    ├─ [_min]: struct '_User_SelectNumbers_' #203
-   │  └─ [id]: optional #202
+   │  └─ [id]: optional 'optional_202' #202
    │     └─ item: integer #201
    ├─ [_sum]: struct '_User_SelectNumbers_' #203
-   │  └─ [id]: optional #202
+   │  └─ [id]: optional 'optional_202' #202
    │     └─ item: integer #201
    ├─ [id]: integer #119
    ├─ [name]: string #120
-   └─ [posts]: list #122
+   └─ [posts]: list 'list_122' #122
       └─ item: &Post #121

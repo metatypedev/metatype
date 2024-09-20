@@ -184,12 +184,20 @@ impl Store {
             if let Some(name) = type_def.base().name.clone() {
                 Self::register_type_name(name, id.into(), true)?;
             } else {
-                let varaint = type_def.variant_name();
-                let placeholder_name = format!("{varaint}_{id}");
-                Self::register_type_name(&placeholder_name, id.into(), false)?;
-                let mut base = type_def.base().clone();
-                base.name = Some(placeholder_name);
-                type_def = type_def.with_base(id.into(), base);
+                // we only need to assign temporary non-user named
+                // types for lists and optionals. other refs
+                // will need explicit names by the user
+                match type_def {
+                    TypeDef::List(_) | TypeDef::Optional(_) => {
+                        let varaint = type_def.variant_name();
+                        let placeholder_name = format!("{varaint}_{id}");
+                        Self::register_type_name(&placeholder_name, id.into(), false)?;
+                        let mut base = type_def.base().clone();
+                        base.name = Some(placeholder_name);
+                        type_def = type_def.with_base(id.into(), base);
+                    }
+                    _ => {}
+                }
             }
         }
 
