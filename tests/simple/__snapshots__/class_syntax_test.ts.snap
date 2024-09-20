@@ -60,13 +60,13 @@ snapshot[`Class Syntax 1`] = `
             name: "likes",
           },
           {
-            name: "title",
-          },
-          {
             name: "content",
           },
           {
             name: "id",
+          },
+          {
+            name: "title",
           },
           {
             name: "comments",

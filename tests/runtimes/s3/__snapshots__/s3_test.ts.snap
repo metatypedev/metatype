@@ -13,9 +13,9 @@ snapshot[`s3 typegraphs 1`] = `
       "properties": {
         "listObjects": 1,
         "getDownloadUrl": 10,
-        "signTextUploadUrl": 13,
-        "upload": 15,
-        "uploadMany": 20
+        "signTextUploadUrl": 14,
+        "upload": 17,
+        "uploadMany": 21
       },
       "required": [
         "listObjects",
@@ -132,7 +132,7 @@ snapshot[`s3 typegraphs 1`] = `
       "config": {},
       "as_id": false,
       "input": 11,
-      "output": 12,
+      "output": 13,
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": false
@@ -145,9 +145,17 @@ snapshot[`s3 typegraphs 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "path": 4
+        "path": 12
       },
       "required": []
+    },
+    {
+      "type": "string",
+      "title": "root_getDownloadUrl_fn_input_path_string",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
     },
     {
       "type": "string",
@@ -167,8 +175,8 @@ snapshot[`s3 typegraphs 1`] = `
       ],
       "config": {},
       "as_id": false,
-      "input": 14,
-      "output": 12,
+      "input": 15,
+      "output": 13,
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
@@ -181,10 +189,18 @@ snapshot[`s3 typegraphs 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "length": 8,
-        "path": 4
+        "length": 16,
+        "path": 12
       },
       "required": []
+    },
+    {
+      "type": "integer",
+      "title": "root_signTextUploadUrl_fn_input_length_integer",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
     },
     {
       "type": "function",
@@ -195,8 +211,8 @@ snapshot[`s3 typegraphs 1`] = `
       ],
       "config": {},
       "as_id": false,
-      "input": 16,
-      "output": 19,
+      "input": 18,
+      "output": 20,
       "materializer": 4,
       "rate_weight": null,
       "rate_calls": false
@@ -209,8 +225,8 @@ snapshot[`s3 typegraphs 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "file": 17,
-        "path": 18
+        "file": 19,
+        "path": 3
       },
       "required": []
     },
@@ -224,16 +240,6 @@ snapshot[`s3 typegraphs 1`] = `
       "mimeTypes": [
         "text/plain"
       ]
-    },
-    {
-      "type": "optional",
-      "title": "root_upload_fn_input_path_root_listObjects_fn_input_path_string_optional",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 4,
-      "default_value": null
     },
     {
       "type": "boolean",
@@ -252,8 +258,8 @@ snapshot[`s3 typegraphs 1`] = `
       ],
       "config": {},
       "as_id": false,
-      "input": 21,
-      "output": 19,
+      "input": 22,
+      "output": 20,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": false
@@ -266,8 +272,8 @@ snapshot[`s3 typegraphs 1`] = `
       "config": {},
       "as_id": false,
       "properties": {
-        "prefix": 22,
-        "files": 23
+        "prefix": 23,
+        "files": 24
       },
       "required": []
     },
@@ -288,7 +294,7 @@ snapshot[`s3 typegraphs 1`] = `
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 24
+      "items": 25
     },
     {
       "type": "file",

@@ -532,18 +532,24 @@ class NodeDescs:
         )
 
     @staticmethod
+    def RootCompositeArgsFn():
+        return NodeMeta(
+            sub_nodes=NodeDescs.Post().sub_nodes,
+            arg_types={
+                "id": "RootScalarNoArgsFnOutput",
+            },
+        )
+
+    @staticmethod
     def RootGetPostsFn():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
         )
 
     @staticmethod
-    def RootCompositeArgsFn():
+    def RootScalarNoArgsFn():
         return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
-            arg_types={
-                "id": "RootScalarArgsFnOutput",
-            },
+            sub_nodes=NodeDescs.scalar().sub_nodes,
         )
 
     @staticmethod
@@ -560,12 +566,6 @@ class NodeDescs:
     def RootGetUserFn():
         return NodeMeta(
             sub_nodes=NodeDescs.User().sub_nodes,
-        )
-
-    @staticmethod
-    def RootScalarNoArgsFn():
-        return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
         )
 
     @staticmethod
@@ -586,12 +586,12 @@ class NodeDescs:
         )
 
 
-RootScalarArgsFnOutput = str
+RootScalarNoArgsFnOutput = str
 
 RootCompositeArgsFnInput = typing.TypedDict(
     "RootCompositeArgsFnInput",
     {
-        "id": RootScalarArgsFnOutput,
+        "id": RootScalarNoArgsFnOutput,
     },
     total=False,
 )
@@ -654,7 +654,7 @@ class QueryGraph(QueryGraphBase):
             {
                 "UserIdStringUuid": "ID!",
                 "PostSlugString": "String!",
-                "RootScalarArgsFnOutput": "String!",
+                "RootScalarNoArgsFnOutput": "String!",
             }
         )
 
@@ -670,7 +670,7 @@ class QueryGraph(QueryGraphBase):
         )[0]
         return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes)
 
-    def scalar_no_args(self) -> QueryNode[PostSlugString]:
+    def scalar_no_args(self) -> QueryNode[RootScalarNoArgsFnOutput]:
         node = selection_to_nodes(
             {"scalarNoArgs": True}, {"scalarNoArgs": NodeDescs.RootScalarNoArgsFn}, "$q"
         )[0]
@@ -678,7 +678,7 @@ class QueryGraph(QueryGraphBase):
 
     def scalar_args(
         self, args: typing.Union[Post, PlaceholderArgs]
-    ) -> MutationNode[RootScalarArgsFnOutput]:
+    ) -> MutationNode[RootScalarNoArgsFnOutput]:
         node = selection_to_nodes(
             {"scalarArgs": args}, {"scalarArgs": NodeDescs.RootScalarArgsFn}, "$q"
         )[0]

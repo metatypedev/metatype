@@ -87,16 +87,13 @@ export type Composites = {
 export type CompositesArgs = {
   data: Composites;
 };
-export type Cycles1Phantom1PrimitivesStrStringOptional = PrimitivesStrString | null | undefined;
-export type Branch33APhantom3aPrimitivesStrStringOptional = PrimitivesStrString | null | undefined;
 export type Branch33ATo1Cycles1Optional = Cycles1 | null | undefined;
 export type Branch33A = {
-  phantom3a?: Branch33APhantom3aPrimitivesStrStringOptional;
+  phantom3a?: CompositesOptPrimitivesStrStringOptional;
   to1?: Branch33ATo1Cycles1Optional;
 };
-export type Branch33BPhantom3bPrimitivesStrStringOptional = PrimitivesStrString | null | undefined;
 export type Branch33B = {
-  phantom3b?: Branch33BPhantom3bPrimitivesStrStringOptional;
+  phantom3b?: CompositesOptPrimitivesStrStringOptional;
   to2?: Cycles1To2Cycles2Optional;
 };
 export type Cycles3 =
@@ -109,29 +106,26 @@ export type Cycles1To2Cycles2Optional = Cycles2 | null | undefined;
 export type Cycles1List3Cycles3List = Array<Cycles3>;
 export type Cycles1List3Cycles1List3Cycles3ListOptional = Cycles1List3Cycles3List | null | undefined;
 export type Cycles1 = {
-  phantom1?: Cycles1Phantom1PrimitivesStrStringOptional;
+  phantom1?: CompositesOptPrimitivesStrStringOptional;
   to2?: Cycles1To2Cycles2Optional;
   list3?: Cycles1List3Cycles1List3Cycles3ListOptional;
 };
 export type Cycles1Args = {
   data: Cycles1;
 };
-export type SimpleCycles1Phantom1PrimitivesStrStringOptional = PrimitivesStrString | null | undefined;
-export type SimpleCycles2Phantom2PrimitivesStrStringOptional = PrimitivesStrString | null | undefined;
-export type SimpleCycles3Phantom3PrimitivesStrStringOptional = PrimitivesStrString | null | undefined;
 export type SimpleCycles3To1SimpleCycles1Optional = SimpleCycles1 | null | undefined;
 export type SimpleCycles3 = {
-  phantom3?: SimpleCycles3Phantom3PrimitivesStrStringOptional;
+  phantom3?: CompositesOptPrimitivesStrStringOptional;
   to1?: SimpleCycles3To1SimpleCycles1Optional;
 };
 export type SimpleCycles2To3SimpleCycles3Optional = SimpleCycles3 | null | undefined;
 export type SimpleCycles2 = {
-  phantom2?: SimpleCycles2Phantom2PrimitivesStrStringOptional;
+  phantom2?: CompositesOptPrimitivesStrStringOptional;
   to3?: SimpleCycles2To3SimpleCycles3Optional;
 };
 export type SimpleCycles1To2SimpleCycles2Optional = SimpleCycles2 | null | undefined;
 export type SimpleCycles1 = {
-  phantom1?: SimpleCycles1Phantom1PrimitivesStrStringOptional;
+  phantom1?: CompositesOptPrimitivesStrStringOptional;
   to2?: SimpleCycles1To2SimpleCycles2Optional;
 };
 export type SimpleCycles1Args = {

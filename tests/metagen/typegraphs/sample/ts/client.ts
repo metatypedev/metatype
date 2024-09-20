@@ -656,6 +656,11 @@ const nodeMetas = {
       ],
     };
   },
+  RootCompositeNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
   User(): NodeMeta {
     return {
       subNodes: [
@@ -670,6 +675,14 @@ const nodeMetas = {
       ...nodeMetas.User(),
     };
   },
+  RootCompositeArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "RootScalarNoArgsFnOutput",
+      },
+    };
+  },
   RootScalarArgsFn(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
@@ -680,22 +693,9 @@ const nodeMetas = {
       },
     };
   },
-  RootCompositeNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
   RootGetPostsFn(): NodeMeta {
     return {
       ...nodeMetas.Post(),
-    };
-  },
-  RootCompositeArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "RootScalarArgsFnOutput",
-      },
     };
   },
   RootScalarNoArgsFn(): NodeMeta {
@@ -704,16 +704,16 @@ const nodeMetas = {
     };
   },
 };
-export type RootScalarArgsFnOutput = string;
-export type RootCompositeArgsFnInput = {
-  id: RootScalarArgsFnOutput;
-};
 export type UserIdStringUuid = string;
 export type PostSlugString = string;
 export type Post = {
   id: UserIdStringUuid;
   slug: PostSlugString;
   title: PostSlugString;
+};
+export type RootScalarNoArgsFnOutput = string;
+export type RootCompositeArgsFnInput = {
+  id: RootScalarNoArgsFnOutput;
 };
 export type UserEmailStringEmail = string;
 export type UserPostsPostList = Array<Post>;
@@ -741,7 +741,7 @@ export class QueryGraph extends _QueryGraphBase {
     super({
       "UserIdStringUuid": "ID!",
       "PostSlugString": "String!",
-      "RootScalarArgsFnOutput": "String!",
+      "RootScalarNoArgsFnOutput": "String!",
     });
   }
     
@@ -767,7 +767,7 @@ export class QueryGraph extends _QueryGraphBase {
       [["scalarNoArgs", nodeMetas.RootScalarNoArgsFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<PostSlugString>;
+    return new QueryNode(inner) as QueryNode<RootScalarNoArgsFnOutput>;
   }
   scalarArgs(args: Post | PlaceholderArgs<Post>) {
     const inner = _selectionToNodeSet(
@@ -775,7 +775,7 @@ export class QueryGraph extends _QueryGraphBase {
       [["scalarArgs", nodeMetas.RootScalarArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<RootScalarArgsFnOutput>;
+    return new MutationNode(inner) as MutationNode<RootScalarNoArgsFnOutput>;
   }
   compositeNoArgs(select: PostSelections) {
     const inner = _selectionToNodeSet(

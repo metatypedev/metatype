@@ -13,9 +13,9 @@ snapshot[`Typegraph using temporal 1`] = `
         "as_id": false,
         "properties": {
           "start": 1,
-          "query": 6,
-          "signal": 8,
-          "describe": 12
+          "query": 7,
+          "signal": 9,
+          "describe": 13
         },
         "required": [
           "start",
@@ -78,9 +78,17 @@ snapshot[`Typegraph using temporal 1`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "some_field": 3
+          "some_field": 6
         },
         "required": []
+      },
+      {
+        "type": "string",
+        "title": "root_start_fn_input_args_struct_some_field_string",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
       },
       {
         "type": "function",
@@ -91,7 +99,7 @@ snapshot[`Typegraph using temporal 1`] = `
         ],
         "config": {},
         "as_id": false,
-        "input": 7,
+        "input": 8,
         "output": 3,
         "materializer": 2,
         "rate_weight": null,
@@ -120,8 +128,8 @@ snapshot[`Typegraph using temporal 1`] = `
         ],
         "config": {},
         "as_id": false,
-        "input": 9,
-        "output": 11,
+        "input": 10,
+        "output": 12,
         "materializer": 3,
         "rate_weight": null,
         "rate_calls": false
@@ -134,7 +142,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "workflow_id": 10,
+          "workflow_id": 11,
           "run_id": 3,
           "args": 4
         },
@@ -171,8 +179,8 @@ snapshot[`Typegraph using temporal 1`] = `
         ],
         "config": {},
         "as_id": false,
-        "input": 13,
-        "output": 14,
+        "input": 14,
+        "output": 15,
         "materializer": 4,
         "rate_weight": null,
         "rate_calls": false
@@ -198,9 +206,9 @@ snapshot[`Typegraph using temporal 1`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "start_time": 15,
-          "close_time": 17,
-          "state": 18
+          "start_time": 16,
+          "close_time": 16,
+          "state": 16
         },
         "required": []
       },
@@ -211,7 +219,7 @@ snapshot[`Typegraph using temporal 1`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "item": 16,
+        "item": 17,
         "default_value": null
       },
       {
@@ -221,26 +229,6 @@ snapshot[`Typegraph using temporal 1`] = `
         "policies": [],
         "config": {},
         "as_id": false
-      },
-      {
-        "type": "optional",
-        "title": "root_describe_fn_output_close_time_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "item": 16,
-        "default_value": null
-      },
-      {
-        "type": "optional",
-        "title": "root_describe_fn_output_state_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "item": 16,
-        "default_value": null
       }
     ],
     "materializers": [
@@ -360,8 +348,8 @@ snapshot[`Typegraph using temporal 2`] = `
         "properties": {
           "startKv": 1,
           "query": 6,
-          "signal": 10,
-          "describe": 15
+          "signal": 11,
+          "describe": 16
         },
         "required": [
           "startKv",
@@ -436,7 +424,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "config": {},
         "as_id": false,
         "input": 7,
-        "output": 9,
+        "output": 10,
         "materializer": 2,
         "rate_weight": null,
         "rate_calls": false
@@ -457,12 +445,20 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "root_query_fn_input_args_root_startKv_fn_input_workflow_id_string_list",
+        "title": "root_query_fn_input_args_root_query_fn_input_args_string_list",
         "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false,
-        "items": 3
+        "items": 9
+      },
+      {
+        "type": "string",
+        "title": "root_query_fn_input_args_string",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
       },
       {
         "type": "optional",
@@ -471,7 +467,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "item": 3,
+        "item": 9,
         "default_value": null
       },
       {
@@ -483,8 +479,8 @@ snapshot[`Typegraph using temporal 2`] = `
         ],
         "config": {},
         "as_id": false,
-        "input": 11,
-        "output": 14,
+        "input": 12,
+        "output": 15,
         "materializer": 3,
         "rate_weight": null,
         "rate_calls": false
@@ -499,7 +495,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "properties": {
           "workflow_id": 3,
           "run_id": 3,
-          "args": 12
+          "args": 13
         },
         "required": []
       },
@@ -510,7 +506,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "items": 13
+        "items": 14
       },
       {
         "type": "object",
@@ -520,8 +516,8 @@ snapshot[`Typegraph using temporal 2`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "key": 3,
-          "value": 3
+          "key": 9,
+          "value": 9
         },
         "required": []
       },
@@ -542,8 +538,8 @@ snapshot[`Typegraph using temporal 2`] = `
         ],
         "config": {},
         "as_id": false,
-        "input": 16,
-        "output": 17,
+        "input": 17,
+        "output": 18,
         "materializer": 4,
         "rate_weight": null,
         "rate_calls": false
@@ -569,9 +565,9 @@ snapshot[`Typegraph using temporal 2`] = `
         "config": {},
         "as_id": false,
         "properties": {
-          "start_time": 18,
-          "close_time": 20,
-          "state": 21
+          "start_time": 19,
+          "close_time": 19,
+          "state": 19
         },
         "required": []
       },
@@ -582,7 +578,7 @@ snapshot[`Typegraph using temporal 2`] = `
         "policies": [],
         "config": {},
         "as_id": false,
-        "item": 19,
+        "item": 20,
         "default_value": null
       },
       {
@@ -592,26 +588,6 @@ snapshot[`Typegraph using temporal 2`] = `
         "policies": [],
         "config": {},
         "as_id": false
-      },
-      {
-        "type": "optional",
-        "title": "root_describe_fn_output_close_time_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "item": 19,
-        "default_value": null
-      },
-      {
-        "type": "optional",
-        "title": "root_describe_fn_output_state_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
-        "policies": [],
-        "config": {},
-        "as_id": false,
-        "item": 19,
-        "default_value": null
       }
     ],
     "materializers": [

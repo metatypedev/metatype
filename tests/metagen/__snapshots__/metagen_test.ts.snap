@@ -83,11 +83,11 @@ class Struct:
 
 
 @dataclass
-class RootThreeFnInput(Struct):
+class RootOneFnInput(Struct):
     name: str
 
 
-FORWARD_REFS["RootThreeFnInput"] = RootThreeFnInput
+FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
 
 
 @dataclass
@@ -108,9 +108,9 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootThreeFnInput], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
     def exported_wrapper(raw_inp):
-        inp: RootThreeFnInput = Struct.new(RootThreeFnInput, raw_inp)
+        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -128,11 +128,11 @@ def typed_three(user_fn: Callable[[RootThreeFnInput], Student]):
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .other_types import RootThreeFnInput, Student, typed_three
+from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootThreeFnInput) -> Student:
+def three(inp: RootOneFnInput) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -582,21 +582,18 @@ pub mod types {
         pub name: RootOneFnInputNameString,
     }
     pub type StudentIdInteger = i64;
+    pub type StudentNameString = String;
     pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
         pub id: StudentIdInteger,
-        pub name: RootOneFnInputNameString,
+        pub name: StudentNameString,
         pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct TwoInput {
-        pub name: RootOneFnInputNameString,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootThreeFnInput {
-        pub name: RootOneFnInputNameString,
+        pub name: StudentNameString,
     }
 }
 pub mod stubs {
@@ -659,7 +656,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RootThreeFnInput, cx: Ctx) -> anyhow::Result<Student>;
+        fn handle(&self, input: RootOneFnInput, cx: Ctx) -> anyhow::Result<Student>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
@@ -712,24 +709,22 @@ export type RootOneFnInput = {
   name: RootOneFnInputNameString;
 };
 export type StudentIdInteger = number;
+export type StudentNameString = string;
 export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
   id: StudentIdInteger;
-  name: RootOneFnInputNameString;
+  name: StudentNameString;
   peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {
-  name: RootOneFnInputNameString;
-};
-export type RootThreeFnInput = {
-  name: RootOneFnInputNameString;
+  name: StudentNameString;
 };
 
 
 export type RootOneFnHandler = Handler<RootOneFnInput, RootOneFnOutput>;
 export type RootTwoFnHandler = Handler<TwoInput, RootOneFnInputNameString>;
-export type RootThreeFnHandler = Handler<RootThreeFnInput, Student>;
+export type RootThreeFnHandler = Handler<RootOneFnInput, Student>;
 ',
     overwrite: true,
     path: "./workspace/some/base/path/ts/mdk.ts",
@@ -884,11 +879,11 @@ class Struct:
 
 
 @dataclass
-class RootThreeFnInput(Struct):
+class RootOneFnInput(Struct):
     name: str
 
 
-FORWARD_REFS["RootThreeFnInput"] = RootThreeFnInput
+FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
 
 
 @dataclass
@@ -909,9 +904,9 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootThreeFnInput], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
     def exported_wrapper(raw_inp):
-        inp: RootThreeFnInput = Struct.new(RootThreeFnInput, raw_inp)
+        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -929,11 +924,11 @@ def typed_three(user_fn: Callable[[RootThreeFnInput], Student]):
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .other_types import RootThreeFnInput, Student, typed_three
+from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootThreeFnInput) -> Student:
+def three(inp: RootOneFnInput) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -1383,21 +1378,18 @@ pub mod types {
         pub name: RootOneFnInputNameString,
     }
     pub type StudentIdInteger = i64;
+    pub type StudentNameString = String;
     pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
         pub id: StudentIdInteger,
-        pub name: RootOneFnInputNameString,
+        pub name: StudentNameString,
         pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct TwoInput {
-        pub name: RootOneFnInputNameString,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootThreeFnInput {
-        pub name: RootOneFnInputNameString,
+        pub name: StudentNameString,
     }
 }
 pub mod stubs {
@@ -1460,7 +1452,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RootThreeFnInput, cx: Ctx) -> anyhow::Result<Student>;
+        fn handle(&self, input: RootOneFnInput, cx: Ctx) -> anyhow::Result<Student>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
@@ -1513,24 +1505,22 @@ export type RootOneFnInput = {
   name: RootOneFnInputNameString;
 };
 export type StudentIdInteger = number;
+export type StudentNameString = string;
 export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
   id: StudentIdInteger;
-  name: RootOneFnInputNameString;
+  name: StudentNameString;
   peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {
-  name: RootOneFnInputNameString;
-};
-export type RootThreeFnInput = {
-  name: RootOneFnInputNameString;
+  name: StudentNameString;
 };
 
 
 export type RootOneFnHandler = Handler<RootOneFnInput, RootOneFnOutput>;
 export type RootTwoFnHandler = Handler<TwoInput, RootOneFnInputNameString>;
-export type RootThreeFnHandler = Handler<RootThreeFnInput, Student>;
+export type RootThreeFnHandler = Handler<RootOneFnInput, Student>;
 ',
     overwrite: true,
     path: "./workspace/some/base/path/ts/mdk.ts",
@@ -1685,11 +1675,11 @@ class Struct:
 
 
 @dataclass
-class MyNamespaceRootThreeFnInput(Struct):
+class MyNamespaceRootOneFnInput(Struct):
     name: str
 
 
-FORWARD_REFS["RootThreeFnInput"] = RootThreeFnInput
+FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
 
 
 @dataclass
@@ -1710,9 +1700,9 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootThreeFnInput], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
     def exported_wrapper(raw_inp):
-        inp: RootThreeFnInput = Struct.new(RootThreeFnInput, raw_inp)
+        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -1730,11 +1720,11 @@ def typed_three(user_fn: Callable[[RootThreeFnInput], Student]):
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .other_types import RootThreeFnInput, Student, typed_three
+from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootThreeFnInput) -> Student:
+def three(inp: RootOneFnInput) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -1992,11 +1982,11 @@ class Struct:
 
 
 @dataclass
-class MyNamespaceRootThreeFnInput(Struct):
+class MyNamespaceRootOneFnInput(Struct):
     name: str
 
 
-FORWARD_REFS["RootThreeFnInput"] = RootThreeFnInput
+FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
 
 
 @dataclass
@@ -2017,9 +2007,9 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootThreeFnInput], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
     def exported_wrapper(raw_inp):
-        inp: RootThreeFnInput = Struct.new(RootThreeFnInput, raw_inp)
+        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -2037,11 +2027,11 @@ def typed_three(user_fn: Callable[[RootThreeFnInput], Student]):
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .other_types import RootThreeFnInput, Student, typed_three
+from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootThreeFnInput) -> Student:
+def three(inp: RootOneFnInput) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
