@@ -532,35 +532,18 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootCompositeArgsFn():
-        return NodeMeta(
-            sub_nodes=NodeDescs.Post().sub_nodes,
-            arg_types={
-                "id": "RootScalarNoArgsFnOutput",
-            },
-        )
-
-    @staticmethod
     def RootGetPostsFn():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
         )
 
     @staticmethod
-    def RootScalarArgsFn():
+    def RootCompositeArgsFn():
         return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
+            sub_nodes=NodeDescs.Post().sub_nodes,
             arg_types={
-                "id": "UserIdStringUuid",
-                "slug": "PostSlugString",
-                "title": "PostSlugString",
+                "id": "RootScalarArgsFnOutput",
             },
-        )
-
-    @staticmethod
-    def RootScalarNoArgsFn():
-        return NodeMeta(
-            sub_nodes=NodeDescs.scalar().sub_nodes,
         )
 
     @staticmethod
@@ -580,11 +563,38 @@ class NodeDescs:
         )
 
     @staticmethod
+    def RootScalarNoArgsFn():
+        return NodeMeta(
+            sub_nodes=NodeDescs.scalar().sub_nodes,
+        )
+
+    @staticmethod
+    def RootScalarArgsFn():
+        return NodeMeta(
+            sub_nodes=NodeDescs.scalar().sub_nodes,
+            arg_types={
+                "id": "UserIdStringUuid",
+                "slug": "PostSlugString",
+                "title": "PostSlugString",
+            },
+        )
+
+    @staticmethod
     def RootCompositeNoArgsFn():
         return NodeMeta(
             sub_nodes=NodeDescs.Post().sub_nodes,
         )
 
+
+RootScalarArgsFnOutput = str
+
+RootCompositeArgsFnInput = typing.TypedDict(
+    "RootCompositeArgsFnInput",
+    {
+        "id": RootScalarArgsFnOutput,
+    },
+    total=False,
+)
 
 UserIdStringUuid = str
 
@@ -596,16 +606,6 @@ Post = typing.TypedDict(
         "id": UserIdStringUuid,
         "slug": PostSlugString,
         "title": PostSlugString,
-    },
-    total=False,
-)
-
-RootScalarNoArgsFnOutput = str
-
-RootCompositeArgsFnInput = typing.TypedDict(
-    "RootCompositeArgsFnInput",
-    {
-        "id": RootScalarNoArgsFnOutput,
     },
     total=False,
 )
@@ -654,7 +654,7 @@ class QueryGraph(QueryGraphBase):
             {
                 "UserIdStringUuid": "ID!",
                 "PostSlugString": "String!",
-                "RootScalarNoArgsFnOutput": "String!",
+                "RootScalarArgsFnOutput": "String!",
             }
         )
 
@@ -670,7 +670,7 @@ class QueryGraph(QueryGraphBase):
         )[0]
         return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes)
 
-    def scalar_no_args(self) -> QueryNode[RootScalarNoArgsFnOutput]:
+    def scalar_no_args(self) -> QueryNode[PostSlugString]:
         node = selection_to_nodes(
             {"scalarNoArgs": True}, {"scalarNoArgs": NodeDescs.RootScalarNoArgsFn}, "$q"
         )[0]
@@ -678,7 +678,7 @@ class QueryGraph(QueryGraphBase):
 
     def scalar_args(
         self, args: typing.Union[Post, PlaceholderArgs]
-    ) -> MutationNode[RootScalarNoArgsFnOutput]:
+    ) -> MutationNode[RootScalarArgsFnOutput]:
         node = selection_to_nodes(
             {"scalarArgs": args}, {"scalarArgs": NodeDescs.RootScalarArgsFn}, "$q"
         )[0]

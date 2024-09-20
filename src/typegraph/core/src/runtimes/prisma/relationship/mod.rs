@@ -188,8 +188,7 @@ mod test {
             .propx("id", t::integer().as_id(true))?
             .propx(
                 "profile",
-                prisma_linkx(t::optionalx(t::ref_("Profile"))?.named("optional_Profile"))?
-                    .fkey(true),
+                prisma_linkx(t::optionalx(t::ref_("Profile"))?)?.fkey(true),
             )?
             .named("User")
             .build()?;

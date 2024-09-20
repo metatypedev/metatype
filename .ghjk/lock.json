@@ -1019,6 +1019,11 @@
         "id": "tasks",
         "config": {
           "tasks": {
+            "b": {
+              "ty": "denoFile@v1",
+              "key": "b",
+              "envKey": "bciqk7aif25pqtsyncbnbdapte4lixsodypfxvmkepsuey74vgr4zb5q"
+            },
             "version-bump": {
               "ty": "denoFile@v1",
               "key": "version-bump",
@@ -1230,6 +1235,7 @@
             }
           },
           "tasksNamed": [
+            "b",
             "version-bump",
             "version-print",
             "test-lsp",

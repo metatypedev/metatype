@@ -7,25 +7,25 @@ snapshot[`Rest queries in Deno 1`] = `
       ComplexType: {
         properties: {
           a: {
-            title: "integer_0",
+            title: "User_id_integer",
             type: "integer",
           },
           b: {
             properties: {
               c: {
-                title: "integer_0",
+                title: "User_id_integer",
                 type: "integer",
               },
             },
-            title: "object_6",
+            title: "ComplexType_b_struct",
             type: "object",
           },
           d: {
-            title: "string_7",
+            title: "ComplexType_d_string_email",
             type: "string",
           },
           e: {
-            title: "optional_12",
+            title: "ComplexType_e_either_list_optional",
             type: [
               "null",
               "array",
@@ -36,11 +36,73 @@ snapshot[`Rest queries in Deno 1`] = `
               "1",
               "2.5",
             ],
-            title: "float_13",
+            title: "ComplexType_f_float",
           },
         },
         title: "ComplexType",
         type: "object",
+      },
+      ComplexType_b_struct: {
+        properties: {
+          c: {
+            title: "User_id_integer",
+            type: "integer",
+          },
+        },
+        title: "ComplexType_b_struct",
+        type: "object",
+      },
+      ComplexType_d_string_email: {
+        title: "ComplexType_d_string_email",
+        type: "string",
+      },
+      ComplexType_e_either: {
+        oneOf: [
+          {
+            title: "ComplexType_e_either_t0_string",
+            type: "string",
+          },
+          {
+            title: "User_id_integer",
+            type: "integer",
+          },
+        ],
+        title: "ComplexType_e_either",
+      },
+      ComplexType_e_either_list: {
+        items: {
+          oneOf: [
+            {
+              title: "ComplexType_e_either_t0_string",
+              type: "string",
+            },
+            {
+              title: "User_id_integer",
+              type: "integer",
+            },
+          ],
+          title: "ComplexType_e_either",
+        },
+        title: "ComplexType_e_either_list",
+        type: "array",
+      },
+      ComplexType_e_either_list_optional: {
+        title: "ComplexType_e_either_list_optional",
+        type: [
+          "null",
+          "array",
+        ],
+      },
+      ComplexType_e_either_t0_string: {
+        title: "ComplexType_e_either_t0_string",
+        type: "string",
+      },
+      ComplexType_f_float: {
+        enum: [
+          "1",
+          "2.5",
+        ],
+        title: "ComplexType_f_float",
       },
       Error: {
         properties: {
@@ -79,7 +141,7 @@ snapshot[`Rest queries in Deno 1`] = `
           author: {
             properties: {
               id: {
-                title: "integer_0",
+                title: "User_id_integer",
                 type: "integer",
               },
             },
@@ -87,7 +149,7 @@ snapshot[`Rest queries in Deno 1`] = `
             type: "object",
           },
           id: {
-            title: "integer_0",
+            title: "User_id_integer",
             type: "integer",
           },
         },
@@ -97,82 +159,20 @@ snapshot[`Rest queries in Deno 1`] = `
       User: {
         properties: {
           id: {
-            title: "integer_0",
+            title: "User_id_integer",
             type: "integer",
           },
         },
         title: "User",
         type: "object",
       },
-      boolean_19: {
-        title: "boolean_19",
-        type: "boolean",
-      },
-      either_10: {
-        oneOf: [
-          {
-            title: "string_8",
-            type: "string",
-          },
-          {
-            title: "integer_0",
-            type: "integer",
-          },
-        ],
-        title: "either_10",
-      },
-      float_13: {
-        enum: [
-          "1",
-          "2.5",
-        ],
-        title: "float_13",
-      },
-      integer_0: {
-        title: "integer_0",
+      User_id_integer: {
+        title: "User_id_integer",
         type: "integer",
       },
-      list_11: {
-        items: {
-          oneOf: [
-            {
-              title: "string_8",
-              type: "string",
-            },
-            {
-              title: "integer_0",
-              type: "integer",
-            },
-          ],
-          title: "either_10",
-        },
-        title: "list_11",
-        type: "array",
-      },
-      object_6: {
-        properties: {
-          c: {
-            title: "integer_0",
-            type: "integer",
-          },
-        },
-        title: "object_6",
-        type: "object",
-      },
-      optional_12: {
-        title: "optional_12",
-        type: [
-          "null",
-          "array",
-        ],
-      },
-      string_7: {
-        title: "string_7",
-        type: "string",
-      },
-      string_8: {
-        title: "string_8",
-        type: "string",
+      root_readPost_fn_output: {
+        title: "root_readPost_fn_output",
+        type: "boolean",
       },
     },
   },
@@ -208,25 +208,25 @@ snapshot[`Rest queries in Deno 1`] = `
                     identity: {
                       properties: {
                         a: {
-                          title: "integer_0",
+                          title: "User_id_integer",
                           type: "integer",
                         },
                         b: {
                           properties: {
                             c: {
-                              title: "integer_0",
+                              title: "User_id_integer",
                               type: "integer",
                             },
                           },
-                          title: "object_6",
+                          title: "ComplexType_b_struct",
                           type: "object",
                         },
                         d: {
-                          title: "string_7",
+                          title: "ComplexType_d_string_email",
                           type: "string",
                         },
                         e: {
-                          title: "optional_12",
+                          title: "ComplexType_e_either_list_optional",
                           type: [
                             "null",
                             "array",
@@ -237,7 +237,7 @@ snapshot[`Rest queries in Deno 1`] = `
                             "1",
                             "2.5",
                           ],
-                          title: "float_13",
+                          title: "ComplexType_f_float",
                         },
                       },
                       title: "ComplexType",
@@ -308,7 +308,7 @@ snapshot[`Rest queries in Deno 1`] = `
                         author: {
                           properties: {
                             id: {
-                              title: "integer_0",
+                              title: "User_id_integer",
                               type: "integer",
                             },
                           },
@@ -316,7 +316,7 @@ snapshot[`Rest queries in Deno 1`] = `
                           type: "object",
                         },
                         id: {
-                          title: "integer_0",
+                          title: "User_id_integer",
                           type: "integer",
                         },
                       },
@@ -388,7 +388,7 @@ snapshot[`Rest queries in Deno 1`] = `
                         author: {
                           properties: {
                             id: {
-                              title: "integer_0",
+                              title: "User_id_integer",
                               type: "integer",
                             },
                           },
@@ -396,7 +396,7 @@ snapshot[`Rest queries in Deno 1`] = `
                           type: "object",
                         },
                         id: {
-                          title: "integer_0",
+                          title: "User_id_integer",
                           type: "integer",
                         },
                       },
@@ -469,7 +469,7 @@ snapshot[`Rest queries in Deno 1`] = `
                 schema: {
                   properties: {
                     readPost: {
-                      title: "boolean_19",
+                      title: "root_readPost_fn_output",
                       type: "boolean",
                     },
                   },
@@ -552,20 +552,20 @@ snapshot[`Rest schema generator 1`] = `
     "ComplexType" => {
       properties: {
         a: {
-          title: "integer_0",
+          title: "ComplexType_a_integer",
           type: "integer",
         },
         b: {
           properties: {
             c: {
-              title: "integer_0",
+              title: "ComplexType_a_integer",
               type: "integer",
             },
             d: {
               "\$ref": "#/components/schemas/ComplexType",
             },
           },
-          title: "object_3",
+          title: "ComplexType_b_struct",
           type: "object",
         },
         e: {
@@ -575,25 +575,42 @@ snapshot[`Rest schema generator 1`] = `
       title: "ComplexType",
       type: "object",
     },
+    "ComplexType_a_integer" => {
+      title: "ComplexType_a_integer",
+      type: "integer",
+    },
+    "ComplexType_b_struct" => {
+      properties: {
+        c: {
+          title: "ComplexType_a_integer",
+          type: "integer",
+        },
+        d: {
+          "\$ref": "#/components/schemas/ComplexType",
+        },
+      },
+      title: "ComplexType_b_struct",
+      type: "object",
+    },
     "Query" => {
       properties: {
         identity: {
           properties: {
             a: {
-              title: "integer_0",
+              title: "ComplexType_a_integer",
               type: "integer",
             },
             b: {
               properties: {
                 c: {
-                  title: "integer_0",
+                  title: "ComplexType_a_integer",
                   type: "integer",
                 },
                 d: {
                   "\$ref": "#/components/schemas/ComplexType",
                 },
               },
-              title: "object_3",
+              title: "ComplexType_b_struct",
               type: "object",
             },
             e: {
@@ -607,55 +624,6 @@ snapshot[`Rest schema generator 1`] = `
       title: "Query",
       type: "object",
     },
-    "integer_0" => {
-      title: "integer_0",
-      type: "integer",
-    },
-    "object_3" => {
-      properties: {
-        c: {
-          title: "integer_0",
-          type: "integer",
-        },
-        d: {
-          "\$ref": "#/components/schemas/ComplexType",
-        },
-      },
-      title: "object_3",
-      type: "object",
-    },
-    "object_6" => {
-      properties: {
-        input: {
-          properties: {
-            a: {
-              title: "integer_0",
-              type: "integer",
-            },
-            b: {
-              properties: {
-                c: {
-                  title: "integer_0",
-                  type: "integer",
-                },
-                d: {
-                  "\$ref": "#/components/schemas/ComplexType",
-                },
-              },
-              title: "object_3",
-              type: "object",
-            },
-            e: {
-              "\$ref": "#/components/schemas/ComplexType",
-            },
-          },
-          title: "ComplexType",
-          type: "object",
-        },
-      },
-      title: "object_6",
-      type: "object",
-    },
     "rest_schema" => {
       properties: {
         query: {
@@ -663,20 +631,20 @@ snapshot[`Rest schema generator 1`] = `
             identity: {
               properties: {
                 a: {
-                  title: "integer_0",
+                  title: "ComplexType_a_integer",
                   type: "integer",
                 },
                 b: {
                   properties: {
                     c: {
-                      title: "integer_0",
+                      title: "ComplexType_a_integer",
                       type: "integer",
                     },
                     d: {
                       "\$ref": "#/components/schemas/ComplexType",
                     },
                   },
-                  title: "object_3",
+                  title: "ComplexType_b_struct",
                   type: "object",
                 },
                 e: {
@@ -694,6 +662,38 @@ snapshot[`Rest schema generator 1`] = `
       title: "rest_schema",
       type: "object",
     },
+    "root_identity_fn_input" => {
+      properties: {
+        input: {
+          properties: {
+            a: {
+              title: "ComplexType_a_integer",
+              type: "integer",
+            },
+            b: {
+              properties: {
+                c: {
+                  title: "ComplexType_a_integer",
+                  type: "integer",
+                },
+                d: {
+                  "\$ref": "#/components/schemas/ComplexType",
+                },
+              },
+              title: "ComplexType_b_struct",
+              type: "object",
+            },
+            e: {
+              "\$ref": "#/components/schemas/ComplexType",
+            },
+          },
+          title: "ComplexType",
+          type: "object",
+        },
+      },
+      title: "root_identity_fn_input",
+      type: "object",
+    },
   },
   schema: Map(7) {
     0 => {
@@ -703,20 +703,20 @@ snapshot[`Rest schema generator 1`] = `
             identity: {
               properties: {
                 a: {
-                  title: "integer_0",
+                  title: "ComplexType_a_integer",
                   type: "integer",
                 },
                 b: {
                   properties: {
                     c: {
-                      title: "integer_0",
+                      title: "ComplexType_a_integer",
                       type: "integer",
                     },
                     d: {
                       "\$ref": "#/components/schemas/ComplexType",
                     },
                   },
-                  title: "object_3",
+                  title: "ComplexType_b_struct",
                   type: "object",
                 },
                 e: {
@@ -737,20 +737,20 @@ snapshot[`Rest schema generator 1`] = `
     1 => {
       properties: {
         a: {
-          title: "integer_0",
+          title: "ComplexType_a_integer",
           type: "integer",
         },
         b: {
           properties: {
             c: {
-              title: "integer_0",
+              title: "ComplexType_a_integer",
               type: "integer",
             },
             d: {
               "\$ref": "#/components/schemas/ComplexType",
             },
           },
-          title: "object_3",
+          title: "ComplexType_b_struct",
           type: "object",
         },
         e: {
@@ -765,20 +765,20 @@ snapshot[`Rest schema generator 1`] = `
         input: {
           properties: {
             a: {
-              title: "integer_0",
+              title: "ComplexType_a_integer",
               type: "integer",
             },
             b: {
               properties: {
                 c: {
-                  title: "integer_0",
+                  title: "ComplexType_a_integer",
                   type: "integer",
                 },
                 d: {
                   "\$ref": "#/components/schemas/ComplexType",
                 },
               },
-              title: "object_3",
+              title: "ComplexType_b_struct",
               type: "object",
             },
             e: {
@@ -789,26 +789,26 @@ snapshot[`Rest schema generator 1`] = `
           type: "object",
         },
       },
-      title: "object_6",
+      title: "root_identity_fn_input",
       type: "object",
     },
     3 => {
       properties: {
         a: {
-          title: "integer_0",
+          title: "ComplexType_a_integer",
           type: "integer",
         },
         b: {
           properties: {
             c: {
-              title: "integer_0",
+              title: "ComplexType_a_integer",
               type: "integer",
             },
             d: {
               "\$ref": "#/components/schemas/ComplexType",
             },
           },
-          title: "object_3",
+          title: "ComplexType_b_struct",
           type: "object",
         },
         e: {
@@ -819,20 +819,20 @@ snapshot[`Rest schema generator 1`] = `
       type: "object",
     },
     4 => {
-      title: "integer_0",
+      title: "ComplexType_a_integer",
       type: "integer",
     },
     5 => {
       properties: {
         c: {
-          title: "integer_0",
+          title: "ComplexType_a_integer",
           type: "integer",
         },
         d: {
           "\$ref": "#/components/schemas/ComplexType",
         },
       },
-      title: "object_3",
+      title: "ComplexType_b_struct",
       type: "object",
     },
     6 => {
@@ -840,20 +840,20 @@ snapshot[`Rest schema generator 1`] = `
         identity: {
           properties: {
             a: {
-              title: "integer_0",
+              title: "ComplexType_a_integer",
               type: "integer",
             },
             b: {
               properties: {
                 c: {
-                  title: "integer_0",
+                  title: "ComplexType_a_integer",
                   type: "integer",
                 },
                 d: {
                   "\$ref": "#/components/schemas/ComplexType",
                 },
               },
-              title: "object_3",
+              title: "ComplexType_b_struct",
               type: "object",
             },
             e: {

@@ -8,24 +8,20 @@ use common::typegraph::{
     StringFormat, TypeNode, Typegraph,
 };
 
-use crate::{conversion::types::USER_NAMED_MARKER, errors::TgError};
+use crate::errors::TgError;
 
-pub struct NamingProcessor {}
+pub struct NamingProcessor {
+    pub user_named: HashSet<u32>,
+}
 impl super::PostProcessor for NamingProcessor {
     fn postprocess(
         self,
         tg: &mut common::typegraph::Typegraph,
     ) -> Result<(), crate::errors::TgError> {
-        let mut user_named = HashSet::new();
-        for (id, node) in tg.types.iter_mut().enumerate() {
-            let base = node.base_mut();
-            if let Some(serde_json::Value::Bool(true)) = base.config.shift_remove(USER_NAMED_MARKER)
-            {
-                user_named.insert(id as u32);
-            }
-        }
-
-        let cx = VisitContext { tg, user_named };
+        let cx = VisitContext {
+            tg,
+            user_named: self.user_named,
+        };
         let mut acc = VisitCollector {
             named_types: Default::default(),
             path: vec![],
@@ -103,6 +99,11 @@ fn visit_type<'a: 'b, 'b>(
             ));
             let inner_name = visit_type(cx, acc, data.items)?;
             acc.path.pop();
+            /* if cx.user_named.contains(&data.items) {
+                gen_name(cx, acc, id, &format!("{inner_name}_list"))
+            } else {
+                format!("{inner_name}_list").into()
+            } */
             gen_name(cx, acc, id, &format!("{inner_name}_list"))
         }
         TypeNode::Object { data, .. } => {
@@ -237,7 +238,7 @@ fn gen_name<'a: 'b, 'b>(
                 Edge::FunctionOutput => format!("{last_name}_output"),
                 Edge::ObjectProp(key) => format!("{last_name}_{key}_{ty_name}"),
                 Edge::EitherVariant(idx) | Edge::UnionVariant(idx) => {
-                    format!("{last_name}_variant_{idx}")
+                    format!("{last_name}_t{idx}_{ty_name}")
                 }
             };
             break;

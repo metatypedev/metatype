@@ -1,7 +1,7 @@
 export const snapshot = {};
 
 snapshot[`typecheck 1`] = `
-"function validate_54_1(value, path, errors, context) {
+"function validate_51_1(value, path, errors, context) {
 if (typeof value !== \\"object\\") {
 errors.push([path, \`expected an object, got \${typeof value}\`]);
 }
@@ -19,9 +19,9 @@ errors.push([path, \`unexpected fields: \${[...keys].join(', ')}\`]);
 }
 }
 function validate_8_2(value, path, errors, context) {
-validate_24_3(value, path, errors, context)
+validate_23_3(value, path, errors, context)
 }
-function validate_24_3(value, path, errors, context) {
+function validate_23_3(value, path, errors, context) {
 if (!Array.isArray(value)) {
 errors.push([path, \`expected an array, got \${typeof value}\`]);
 }
@@ -32,11 +32,11 @@ errors.push([path, \`expected maximum items: 20, got \${value.length}\`]);
 else {
 for (let i = 0; i < value.length; ++i) {
 const item = value[i]
-validate_25_4(value[i], path + \`[\${i}]\`, errors, context)
+validate_24_4(value[i], path + \`[\${i}]\`, errors, context)
 }
 }
 }
-function validate_25_4(value, path, errors, context) {
+function validate_24_4(value, path, errors, context) {
 if (typeof value !== \\"object\\") {
 errors.push([path, \`expected an object, got \${typeof value}\`]);
 }
@@ -49,7 +49,7 @@ const keys = new Set(Object.keys(value))
 keys.delete(\\"id\\")
 validate_3(value[\\"id\\"], path + \\".id\\", errors, context)
 keys.delete(\\"title\\")
-validate_26(value[\\"title\\"], path + \\".title\\", errors, context)
+validate_25(value[\\"title\\"], path + \\".title\\", errors, context)
 keys.delete(\\"author\\")
 validate_2_5(value[\\"author\\"], path + \\".author\\", errors, context)
 if (keys.size > 0) {
@@ -72,7 +72,7 @@ errors.push([path, \\"string does not statisfy the required format 'uuid'\\"]);
 }
 }
 }
-function validate_26(value, path, errors, context) {
+function validate_25(value, path, errors, context) {
 if (typeof value !== \\"string\\") {
 errors.push([path, \`expected a string, got \${typeof value}\`]);
 }
@@ -122,7 +122,7 @@ errors.push([path, \\"string does not match to the pattern /^[a-z]+\$/\\"]);
 }
 }
 }
-return validate_54_1"
+return validate_51_1"
 `;
 
 snapshot[`typecheck 2`] = `

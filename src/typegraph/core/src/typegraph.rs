@@ -3,7 +3,7 @@
 
 use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
-use crate::conversion::types::{TypeConversion, USER_NAMED_MARKER};
+use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
 use crate::utils::postprocess::naming::NamingProcessor;
@@ -22,7 +22,7 @@ use common::typegraph::{
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::Hasher as _;
 use std::rc::Rc;
 
@@ -56,6 +56,7 @@ pub struct TypegraphContext {
     mapping: IdMapping,
     runtime_contexts: RuntimeContexts,
     saved_store_state: Option<SavedState>,
+    user_named_types: HashSet<u32>,
 }
 
 thread_local! {
@@ -121,12 +122,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
 
     ctx.types.push(Some(TypeNode::Object {
         base: TypeNodeBase {
-            config: [
-                // root type is named after typegraph
-                (USER_NAMED_MARKER.to_string(), serde_json::Value::Bool(true)),
-            ]
-            .into_iter()
-            .collect(),
+            config: [].into_iter().collect(),
             description: None,
             enumeration: None,
             injection: None,
@@ -237,7 +233,10 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> 
     // dedup_types(&mut tg);
 
     TypegraphPostProcessor::new(params).postprocess(&mut tg)?;
-    NamingProcessor {}.postprocess(&mut tg)?;
+    NamingProcessor {
+        user_named: ctx.user_named_types,
+    }
+    .postprocess(&mut tg)?;
 
     let artifacts = tg
         .meta
@@ -356,9 +355,21 @@ impl TypegraphContext {
 
     pub fn register_type(
         &mut self,
-        type_def: TypeDef,
+        mut type_def: TypeDef,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
+        // we remove the name before hashing if it's not
+        // user named
+        let user_named = if let Some(name) = type_def.name() {
+            if let Some(true) = Store::is_user_named(name) {
+                true
+            } else {
+                type_def = type_def.with_name(None);
+                false
+            }
+        } else {
+            false
+        };
         let hash = self.hash_type(type_def.clone(), runtime_id)?;
 
         match self.mapping.hash_to_type.entry(hash) {
@@ -377,6 +388,10 @@ impl TypegraphContext {
                 let type_node = type_def.convert(self, runtime_id)?;
 
                 self.types[idx] = Some(type_node);
+                if user_named {
+                    self.user_named_types.insert(idx as u32);
+                }
+
                 Ok((idx as u32).into())
             }
 

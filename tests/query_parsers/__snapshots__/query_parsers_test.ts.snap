@@ -7,8 +7,8 @@ snapshot[`GraphQL parser 1`] = `
     config: {},
     policies: [],
     properties: {
-      mutation: 19,
-      query: 18,
+      mutation: 18,
+      query: 17,
     },
     required: [
       "user",
@@ -45,7 +45,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_7",
+    title: "UserNamespace_find_fn",
     type: "function",
   },
   {
@@ -57,7 +57,7 @@ snapshot[`GraphQL parser 1`] = `
     },
     required: [],
     runtime: 1,
-    title: "object_5",
+    title: "UserNamespace_find_fn_input",
     type: "object",
   },
   {
@@ -86,7 +86,7 @@ snapshot[`GraphQL parser 1`] = `
     config: {},
     policies: [],
     runtime: 1,
-    title: "string_1",
+    title: "User_name_string",
     type: "string",
   },
   {
@@ -101,7 +101,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_9",
+    title: "UserNamespace_update_fn",
     type: "function",
   },
   {
@@ -110,7 +110,7 @@ snapshot[`GraphQL parser 1`] = `
     policies: [],
     properties: {
       picture: 9,
-      setPicture: 13,
+      setPicture: 12,
     },
     required: [],
     runtime: 0,
@@ -120,16 +120,16 @@ snapshot[`GraphQL parser 1`] = `
   {
     as_id: false,
     config: {},
-    input: 10,
+    input: 3,
     materializer: 3,
-    output: 11,
+    output: 10,
     policies: [
       0,
     ],
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_12",
+    title: "ProfileNamespace_picture_fn",
     type: "function",
   },
   {
@@ -138,19 +138,7 @@ snapshot[`GraphQL parser 1`] = `
     policies: [],
     properties: {
       id: 4,
-    },
-    required: [],
-    runtime: 1,
-    title: "object_10",
-    type: "object",
-  },
-  {
-    as_id: false,
-    config: {},
-    policies: [],
-    properties: {
-      id: 4,
-      url: 12,
+      url: 11,
     },
     required: [],
     runtime: 1,
@@ -163,22 +151,22 @@ snapshot[`GraphQL parser 1`] = `
     format: "uri",
     policies: [],
     runtime: 1,
-    title: "string_3",
+    title: "Picture_url_string_uri",
     type: "string",
   },
   {
     as_id: false,
     config: {},
-    input: 11,
+    input: 10,
     materializer: 4,
-    output: 11,
+    output: 10,
     policies: [
       0,
     ],
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_14",
+    title: "ProfileNamespace_setPicture_fn",
     type: "function",
   },
   {
@@ -206,7 +194,7 @@ snapshot[`GraphQL parser 1`] = `
       0,
     ],
     properties: {
-      setPicture: 13,
+      setPicture: 12,
     },
     required: [],
     runtime: 0,
@@ -221,7 +209,7 @@ snapshot[`GraphQL parser 1`] = `
     policies: [],
     properties: {
       find: 2,
-      profile: 14,
+      profile: 13,
     },
     required: [
       "user",
@@ -237,7 +225,7 @@ snapshot[`GraphQL parser 1`] = `
     },
     policies: [],
     properties: {
-      profile: 15,
+      profile: 14,
       update: 7,
     },
     required: [
@@ -254,7 +242,7 @@ snapshot[`GraphQL parser 1`] = `
     },
     policies: [],
     properties: {
-      user: 16,
+      user: 15,
     },
     required: [
       "user",
@@ -270,7 +258,7 @@ snapshot[`GraphQL parser 1`] = `
     },
     policies: [],
     properties: {
-      user: 17,
+      user: 16,
     },
     required: [
       "user",

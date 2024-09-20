@@ -15,8 +15,8 @@ snapshot[`Typegraph using kv 1`] = `
           "get": 1,
           "set": 4,
           "delete": 6,
-          "keys": 8,
-          "values": 12
+          "keys": 9,
+          "values": 13
         },
         "required": [
           "get",
@@ -28,7 +28,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "function",
-        "title": "func_25",
+        "title": "root_get_fn",
         "runtime": 1,
         "policies": [
           0
@@ -43,7 +43,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "object",
-        "title": "object_1",
+        "title": "root_get_fn_input",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -55,7 +55,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "string",
-        "title": "string_0",
+        "title": "root_get_fn_input_key_string",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -63,7 +63,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "function",
-        "title": "func_26",
+        "title": "root_set_fn",
         "runtime": 1,
         "policies": [
           0
@@ -78,7 +78,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "object",
-        "title": "object_6",
+        "title": "root_set_fn_input",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -91,22 +91,34 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "function",
-        "title": "func_27",
+        "title": "root_delete_fn",
         "runtime": 1,
         "policies": [
           0
         ],
         "config": {},
         "as_id": false,
-        "input": 2,
-        "output": 7,
+        "input": 7,
+        "output": 8,
         "materializer": 3,
         "rate_weight": null,
         "rate_calls": false
       },
       {
+        "type": "object",
+        "title": "root_delete_fn_input",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "key": 3
+        },
+        "required": []
+      },
+      {
         "type": "integer",
-        "title": "integer_11",
+        "title": "root_delete_fn_output",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -114,34 +126,34 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "function",
-        "title": "func_28",
+        "title": "root_keys_fn",
         "runtime": 1,
         "policies": [
           0
         ],
         "config": {},
         "as_id": false,
-        "input": 9,
-        "output": 11,
+        "input": 10,
+        "output": 12,
         "materializer": 4,
         "rate_weight": null,
         "rate_calls": false
       },
       {
         "type": "object",
-        "title": "object_15",
+        "title": "root_keys_fn_input",
         "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
-          "filter": 10
+          "filter": 11
         },
         "required": []
       },
       {
         "type": "optional",
-        "title": "optional_14",
+        "title": "root_keys_fn_input_filter_root_get_fn_input_key_string_optional",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -151,7 +163,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "list",
-        "title": "list_17",
+        "title": "root_keys_fn_output",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -160,18 +172,49 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "function",
-        "title": "func_29",
+        "title": "root_values_fn",
         "runtime": 1,
         "policies": [
           0
         ],
         "config": {},
         "as_id": false,
-        "input": 9,
-        "output": 11,
+        "input": 14,
+        "output": 16,
         "materializer": 5,
         "rate_weight": null,
         "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "root_values_fn_input",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "filter": 15
+        },
+        "required": []
+      },
+      {
+        "type": "optional",
+        "title": "root_values_fn_input_filter_root_get_fn_input_key_string_optional",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 3,
+        "default_value": null
+      },
+      {
+        "type": "list",
+        "title": "root_values_fn_output",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "items": 3
       }
     ],
     "materializers": [
@@ -293,8 +336,8 @@ snapshot[`Typegraph using kv 2`] = `
           "get": 1,
           "set": 4,
           "delete": 6,
-          "keys": 8,
-          "values": 12
+          "keys": 9,
+          "values": 13
         },
         "required": [
           "get",
@@ -306,7 +349,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "function",
-        "title": "func_25",
+        "title": "root_get_fn",
         "runtime": 1,
         "policies": [
           0
@@ -321,7 +364,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "object",
-        "title": "object_1",
+        "title": "root_get_fn_input",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -333,7 +376,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "string",
-        "title": "string_0",
+        "title": "root_get_fn_input_key_string",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -341,7 +384,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "function",
-        "title": "func_26",
+        "title": "root_set_fn",
         "runtime": 1,
         "policies": [
           0
@@ -356,7 +399,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "object",
-        "title": "object_6",
+        "title": "root_set_fn_input",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -369,22 +412,34 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "function",
-        "title": "func_27",
+        "title": "root_delete_fn",
         "runtime": 1,
         "policies": [
           0
         ],
         "config": {},
         "as_id": false,
-        "input": 2,
-        "output": 7,
+        "input": 7,
+        "output": 8,
         "materializer": 3,
         "rate_weight": null,
         "rate_calls": false
       },
       {
+        "type": "object",
+        "title": "root_delete_fn_input",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "key": 3
+        },
+        "required": []
+      },
+      {
         "type": "integer",
-        "title": "integer_11",
+        "title": "root_delete_fn_output",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -392,34 +447,34 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "function",
-        "title": "func_28",
+        "title": "root_keys_fn",
         "runtime": 1,
         "policies": [
           0
         ],
         "config": {},
         "as_id": false,
-        "input": 9,
-        "output": 11,
+        "input": 10,
+        "output": 12,
         "materializer": 4,
         "rate_weight": null,
         "rate_calls": false
       },
       {
         "type": "object",
-        "title": "object_15",
+        "title": "root_keys_fn_input",
         "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
-          "filter": 10
+          "filter": 11
         },
         "required": []
       },
       {
         "type": "optional",
-        "title": "optional_14",
+        "title": "root_keys_fn_input_filter_root_get_fn_input_key_string_optional",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -429,7 +484,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "list",
-        "title": "list_17",
+        "title": "root_keys_fn_output",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -438,18 +493,49 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "function",
-        "title": "func_29",
+        "title": "root_values_fn",
         "runtime": 1,
         "policies": [
           0
         ],
         "config": {},
         "as_id": false,
-        "input": 9,
-        "output": 11,
+        "input": 14,
+        "output": 16,
         "materializer": 5,
         "rate_weight": null,
         "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "root_values_fn_input",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "filter": 15
+        },
+        "required": []
+      },
+      {
+        "type": "optional",
+        "title": "root_values_fn_input_filter_root_get_fn_input_key_string_optional",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 3,
+        "default_value": null
+      },
+      {
+        "type": "list",
+        "title": "root_values_fn_output",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "items": 3
       }
     ],
     "materializers": [
