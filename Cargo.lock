@@ -12660,6 +12660,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "typegraph"
+version = "0.4.11-rc.0"
+dependencies = [
+ "wasmtime",
+]
+
+[[package]]
 name = "typegraph_core"
 version = "0.4.11-rc.0"
 dependencies = [

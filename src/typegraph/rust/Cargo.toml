@@ -1,0 +1,7 @@
+[package]
+name = "typegraph"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+wasmtime.workspace = true
