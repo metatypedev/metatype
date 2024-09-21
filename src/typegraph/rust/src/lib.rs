@@ -1,0 +1,2 @@
+#[allow(unused)]
+mod wasm;
