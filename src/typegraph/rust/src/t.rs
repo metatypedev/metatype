@@ -1,8 +1,11 @@
 use crate::{
     error::Result,
-    wasm::core::{
-        ParameterTransform, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId, TypeInteger,
-        TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
+    wasm::{
+        self,
+        core::{
+            ParameterTransform, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId, TypeInteger,
+            TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
+        },
     },
 };
 
@@ -11,6 +14,20 @@ pub trait TypeBuilder: Sized {
 
     fn optional(self) -> Result<OptionalBuilder> {
         optional(self)
+    }
+}
+
+pub trait BaseBuilder: Sized {
+    fn base_mut(&mut self) -> &mut TypeBase;
+
+    fn named(mut self, name: String) -> Self {
+        self.base_mut().name = Some(name);
+        self
+    }
+
+    fn as_id(mut self, value: bool) -> Self {
+        self.base_mut().as_id = value;
+        self
     }
 }
 
@@ -83,6 +100,18 @@ impl IntegerBuilder {
     }
 }
 
+impl TypeBuilder for IntegerBuilder {
+    fn build(self) -> Result<TypeId> {
+        wasm::with_core(|c, s| c.call_integerb(s, &self.data, &self.base))
+    }
+}
+
+impl BaseBuilder for IntegerBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
+}
+
 pub fn integer() -> IntegerBuilder {
     IntegerBuilder::default()
 }
@@ -139,6 +168,18 @@ impl FloatBuilder {
     }
 }
 
+impl TypeBuilder for FloatBuilder {
+    fn build(self) -> Result<TypeId> {
+        wasm::with_core(|c, s| c.call_floatb(s, &self.data, &self.base))
+    }
+}
+
+impl BaseBuilder for FloatBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
+}
+
 pub fn float() -> FloatBuilder {
     FloatBuilder::default()
 }
@@ -184,6 +225,18 @@ impl StringBuilder {
     }
 }
 
+impl TypeBuilder for StringBuilder {
+    fn build(self) -> Result<TypeId> {
+        wasm::with_core(|c, s| c.call_stringb(s, &self.data, &self.base))
+    }
+}
+
+impl BaseBuilder for StringBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
+}
+
 pub fn string() -> StringBuilder {
     StringBuilder::default()
 }
@@ -201,6 +254,18 @@ impl Default for TypeOptional {
 pub struct OptionalBuilder {
     base: TypeBase,
     data: TypeOptional,
+}
+
+impl TypeBuilder for OptionalBuilder {
+    fn build(self) -> Result<TypeId> {
+        wasm::with_core(|c, s| c.call_optionalb(s, &self.data, &self.base))
+    }
+}
+
+impl BaseBuilder for OptionalBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
 }
 
 pub fn optional(id: impl TypeBuilder) -> Result<OptionalBuilder> {
@@ -247,6 +312,18 @@ impl ListBuilder {
     }
 }
 
+impl TypeBuilder for ListBuilder {
+    fn build(self) -> Result<TypeId> {
+        wasm::with_core(|c, s| c.call_listb(s, self.data, &self.base))
+    }
+}
+
+impl BaseBuilder for ListBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
+}
+
 pub fn list(id: impl TypeBuilder) -> Result<ListBuilder> {
     Ok(ListBuilder {
         base: TypeBase::default(),
@@ -279,6 +356,18 @@ impl UnionBuilder {
     }
 }
 
+impl TypeBuilder for UnionBuilder {
+    fn build(self) -> Result<TypeId> {
+        wasm::with_core(|c, s| c.call_unionb(s, &self.data, &self.base))
+    }
+}
+
+impl BaseBuilder for UnionBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
+}
+
 pub fn union(variants: impl IntoIterator<Item = impl TypeBuilder>) -> Result<UnionBuilder> {
     Ok(UnionBuilder {
         data: TypeUnion {
@@ -304,6 +393,18 @@ impl Default for TypeEither {
 pub struct EitherBuilder {
     base: TypeBase,
     data: TypeEither,
+}
+
+impl TypeBuilder for EitherBuilder {
+    fn build(self) -> Result<TypeId> {
+        wasm::with_core(|c, s| c.call_eitherb(s, &self.data, &self.base))
+    }
+}
+
+impl BaseBuilder for EitherBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
 }
 
 pub fn either(variants: impl IntoIterator<Item = impl TypeBuilder>) -> Result<EitherBuilder> {
@@ -368,6 +469,18 @@ impl StructBuilder {
     }
 }
 
+impl TypeBuilder for StructBuilder {
+    fn build(self) -> Result<TypeId> {
+        wasm::with_core(|c, s| c.call_structb(s, &self.data, &self.base))
+    }
+}
+
+impl BaseBuilder for StructBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
+}
+
 pub fn r#struct() -> StructBuilder {
     StructBuilder::default()
 }
@@ -387,7 +500,6 @@ impl Default for TypeFunc {
 
 #[derive(Debug, Default)]
 pub struct FuncBuilder {
-    base: TypeBase,
     data: TypeFunc,
 }
 
@@ -405,6 +517,12 @@ impl FuncBuilder {
     pub fn transform(mut self, transform: ParameterTransform) -> Self {
         self.data.parameter_transform = Some(transform);
         self
+    }
+}
+
+impl TypeBuilder for FuncBuilder {
+    fn build(self) -> Result<TypeId> {
+        wasm::with_core(|c, s| c.call_funcb(s, &self.data))
     }
 }
 
