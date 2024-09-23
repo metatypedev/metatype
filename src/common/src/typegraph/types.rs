@@ -10,6 +10,10 @@ use std::hash::Hash;
 
 use super::{parameter_transform::FunctionParameterTransform, EffectType, PolicyIndices};
 
+// TODO: consider exploring interning
+pub type TypeName = String;
+pub type TypeId = u32;
+
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 pub struct SingleValue<T: Hash> {
     pub value: T,
@@ -68,8 +72,8 @@ pub struct TypeNodeBase {
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct OptionalTypeData {
-    pub item: u32,
+pub struct OptionalTypeData<Id = TypeId> {
+    pub item: Id,
     #[serialize_always]
     pub default_value: Option<serde_json::Value>,
 }
@@ -149,8 +153,8 @@ pub struct FileTypeData {
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ObjectTypeData {
-    pub properties: IndexMap<String, u32>,
+pub struct ObjectTypeData<Id = TypeId> {
+    pub properties: IndexMap<String, Id>,
     #[serde(default)]
     pub required: Vec<String>,
 }
@@ -158,8 +162,8 @@ pub struct ObjectTypeData {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ListTypeData {
-    pub items: u32,
+pub struct ListTypeData<Id = TypeId> {
+    pub items: Id,
     pub max_items: Option<u32>,
     pub min_items: Option<u32>,
     pub unique_items: Option<bool>,
@@ -167,11 +171,11 @@ pub struct ListTypeData {
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct FunctionTypeData {
-    pub input: u32,
+pub struct FunctionTypeData<Id = TypeId> {
+    pub input: Id,
     #[serde(rename = "parameterTransform")]
     pub parameter_transform: Option<FunctionParameterTransform>,
-    pub output: u32,
+    pub output: Id,
     pub materializer: u32,
     #[serialize_always]
     pub rate_weight: Option<u32>,
@@ -181,30 +185,30 @@ pub struct FunctionTypeData {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct UnionTypeData {
+pub struct UnionTypeData<Id = TypeId> {
     /// Array of indexes of the nodes that are used as subschemes in the
     /// anyOf field of JSON Schema.
-    pub any_of: Vec<u32>,
+    pub any_of: Vec<Id>,
 }
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct EitherTypeData {
+pub struct EitherTypeData<Id = TypeId> {
     /// Array of indexes of the nodes that are used as subschemes in the
     /// oneOf field of JSON Schema.
-    pub one_of: Vec<u32>,
+    pub one_of: Vec<Id>,
 }
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
-pub enum TypeNode {
+pub enum TypeNode<Id = TypeId> {
     Optional {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: OptionalTypeData,
+        data: OptionalTypeData<Id>,
     },
     Boolean {
         #[serde(flatten)]
@@ -238,32 +242,32 @@ pub enum TypeNode {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: ObjectTypeData,
+        data: ObjectTypeData<Id>,
     },
     List {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: ListTypeData,
+        data: ListTypeData<Id>,
     },
     Function {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: FunctionTypeData,
+        data: FunctionTypeData<Id>,
     },
     Union {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: UnionTypeData,
+        data: UnionTypeData<Id>,
     },
     #[serde(rename_all = "camelCase")]
     Either {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: EitherTypeData,
+        data: EitherTypeData<Id>,
     },
     Any {
         #[serde(flatten)]

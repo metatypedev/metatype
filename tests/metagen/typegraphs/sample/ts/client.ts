@@ -656,6 +656,39 @@ const nodeMetas = {
       ],
     };
   },
+  RootGetPostsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+  RootScalarNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+  RootScalarArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "UserIdStringUuid",
+        slug: "PostSlugString",
+        title: "PostSlugString",
+      },
+    };
+  },
+  RootCompositeNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+  RootCompositeArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "RootScalarNoArgsFnOutput",
+      },
+    };
+  },
   User(): NodeMeta {
     return {
       subNodes: [
@@ -665,60 +698,29 @@ const nodeMetas = {
       ],
     };
   },
-  Func23(): NodeMeta {
+  RootGetUserFn(): NodeMeta {
     return {
       ...nodeMetas.User(),
     };
   },
-  Func27(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-  Func25(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
-  Func28(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "String13",
-      },
-    };
-  },
-  Func26(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "String4",
-        slug: "String1",
-        title: "String1",
-      },
-    };
-  },
-  Func24(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
 };
-export type StringUuid4 = string;
+export type UserIdStringUuid = string;
+export type PostSlugString = string;
 export type Post = {
-  id: StringUuid4;
-  slug: string;
-  title: string;
+  id: UserIdStringUuid;
+  slug: PostSlugString;
+  title: PostSlugString;
 };
-export type Object21 = {
-  id: string;
+export type RootScalarNoArgsFnOutput = string;
+export type RootCompositeArgsFnInput = {
+  id: RootScalarNoArgsFnOutput;
 };
-export type StringEmail5 = string;
-export type Post7 = Array<Post>;
+export type UserEmailStringEmail = string;
+export type UserPostsPostList = Array<Post>;
 export type User = {
-  id: StringUuid4;
-  email: StringEmail5;
-  posts: Post7;
+  id: UserIdStringUuid;
+  email: UserEmailStringEmail;
+  posts: UserPostsPostList;
 };
 
 export type PostSelections = {
@@ -737,16 +739,16 @@ export type UserSelections = {
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
-      "String4": "ID!",
-      "String1": "String!",
-      "String13": "String!",
+      "UserIdStringUuid": "ID!",
+      "PostSlugString": "String!",
+      "RootScalarNoArgsFnOutput": "String!",
     });
   }
     
   getUser(select: UserSelections) {
     const inner = _selectionToNodeSet(
       { "getUser": select },
-      [["getUser", nodeMetas.Func23]],
+      [["getUser", nodeMetas.RootGetUserFn]],
       "$q",
     )[0];
     return new QueryNode(inner) as QueryNode<User>;
@@ -754,7 +756,7 @@ export class QueryGraph extends _QueryGraphBase {
   getPosts(select: PostSelections) {
     const inner = _selectionToNodeSet(
       { "getPosts": select },
-      [["getPosts", nodeMetas.Func24]],
+      [["getPosts", nodeMetas.RootGetPostsFn]],
       "$q",
     )[0];
     return new QueryNode(inner) as QueryNode<Post>;
@@ -762,31 +764,31 @@ export class QueryGraph extends _QueryGraphBase {
   scalarNoArgs() {
     const inner = _selectionToNodeSet(
       { "scalarNoArgs": true },
-      [["scalarNoArgs", nodeMetas.Func25]],
+      [["scalarNoArgs", nodeMetas.RootScalarNoArgsFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<string>;
+    return new QueryNode(inner) as QueryNode<RootScalarNoArgsFnOutput>;
   }
   scalarArgs(args: Post | PlaceholderArgs<Post>) {
     const inner = _selectionToNodeSet(
       { "scalarArgs": args },
-      [["scalarArgs", nodeMetas.Func26]],
+      [["scalarArgs", nodeMetas.RootScalarArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<string>;
+    return new MutationNode(inner) as MutationNode<RootScalarNoArgsFnOutput>;
   }
   compositeNoArgs(select: PostSelections) {
     const inner = _selectionToNodeSet(
       { "compositeNoArgs": select },
-      [["compositeNoArgs", nodeMetas.Func27]],
+      [["compositeNoArgs", nodeMetas.RootCompositeNoArgsFn]],
       "$q",
     )[0];
     return new MutationNode(inner) as MutationNode<Post>;
   }
-  compositeArgs(args: Object21 | PlaceholderArgs<Object21>, select: PostSelections) {
+  compositeArgs(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: PostSelections) {
     const inner = _selectionToNodeSet(
       { "compositeArgs": [args, select] },
-      [["compositeArgs", nodeMetas.Func28]],
+      [["compositeArgs", nodeMetas.RootCompositeArgsFn]],
       "$q",
     )[0];
     return new MutationNode(inner) as MutationNode<Post>;

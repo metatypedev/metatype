@@ -2152,34 +2152,6 @@ mod node_metas {
             ),
         }
     }
-    pub fn Func28() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "String13".into())].into()),
-            ..Post()
-        }
-    }
-    pub fn Func24() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn Func27() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn Func26() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("id".into(), "String4".into()),
-                    ("slug".into(), "String1".into()),
-                    ("title".into(), "String1".into()),
-                ]
-                .into(),
-            ),
-            ..scalar()
-        }
-    }
-    pub fn Func25() -> NodeMeta {
-        NodeMeta { ..scalar() }
-    }
     pub fn User() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2194,30 +2166,60 @@ mod node_metas {
             ),
         }
     }
-    pub fn Func23() -> NodeMeta {
+    pub fn RootGetUserFn() -> NodeMeta {
         NodeMeta { ..User() }
+    }
+    pub fn RootScalarNoArgsFn() -> NodeMeta {
+        NodeMeta { ..scalar() }
+    }
+    pub fn RootScalarArgsFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("id".into(), "UserIdStringUuid".into()),
+                    ("slug".into(), "PostSlugString".into()),
+                    ("title".into(), "PostSlugString".into()),
+                ]
+                .into(),
+            ),
+            ..scalar()
+        }
+    }
+    pub fn RootGetPostsFn() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn RootCompositeNoArgsFn() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn RootCompositeArgsFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
+            ..Post()
+        }
     }
 }
 use types::*;
 pub mod types {
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Object21Partial {
-        pub id: Option<String>,
-    }
-    pub type StringUuid4 = String;
+    pub type UserIdStringUuid = String;
+    pub type PostSlugString = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PostPartial {
-        pub id: Option<StringUuid4>,
-        pub slug: Option<String>,
-        pub title: Option<String>,
+        pub id: Option<UserIdStringUuid>,
+        pub slug: Option<PostSlugString>,
+        pub title: Option<PostSlugString>,
     }
-    pub type StringEmail5 = String;
-    pub type Post7 = Vec<PostPartial>;
+    pub type RootScalarNoArgsFnOutput = String;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootCompositeArgsFnInputPartial {
+        pub id: Option<RootScalarNoArgsFnOutput>,
+    }
+    pub type UserEmailStringEmail = String;
+    pub type UserPostsPostList = Vec<PostPartial>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct UserPartial {
-        pub id: Option<StringUuid4>,
-        pub email: Option<StringEmail5>,
-        pub posts: Option<Post7>,
+        pub id: Option<UserIdStringUuid>,
+        pub email: Option<UserEmailStringEmail>,
+        pub posts: Option<UserPostsPostList>,
     }
 }
 #[derive(Default, Debug)]
@@ -2241,9 +2243,9 @@ impl QueryGraph {
             addr,
             ty_to_gql_ty_map: std::sync::Arc::new(
                 [
-                    ("String4".into(), "ID!".into()),
-                    ("String1".into(), "String!".into()),
-                    ("String13".into(), "String!".into()),
+                    ("UserIdStringUuid".into(), "ID!".into()),
+                    ("PostSlugString".into(), "String!".into()),
+                    ("RootScalarNoArgsFnOutput".into(), "String!".into()),
                 ]
                 .into(),
             ),
@@ -2255,7 +2257,7 @@ impl QueryGraph {
     ) -> UnselectedNode<UserSelections, UserSelections<HasAlias>, QueryMarker, UserPartial> {
         UnselectedNode {
             root_name: "getUser".into(),
-            root_meta: node_metas::Func23,
+            root_meta: node_metas::RootGetUserFn,
             args: NodeArgsErased::None,
             _marker: PhantomData,
         }
@@ -2265,21 +2267,28 @@ impl QueryGraph {
     ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, QueryMarker, PostPartial> {
         UnselectedNode {
             root_name: "getPosts".into(),
-            root_meta: node_metas::Func24,
+            root_meta: node_metas::RootGetPostsFn,
             args: NodeArgsErased::None,
             _marker: PhantomData,
         }
     }
-    pub fn scalar_no_args(&self) -> QueryNode<String> {
+    pub fn scalar_no_args(&self) -> QueryNode<RootScalarNoArgsFnOutput> {
         let nodes = selection_to_node_set(
             SelectionErasedMap([("scalarNoArgs".into(), SelectionErased::Scalar)].into()),
-            &[("scalarNoArgs".into(), node_metas::Func25 as NodeMetaFn)].into(),
+            &[(
+                "scalarNoArgs".into(),
+                node_metas::RootScalarNoArgsFn as NodeMetaFn,
+            )]
+            .into(),
             "$q".into(),
         )
         .unwrap();
         QueryNode(nodes.into_iter().next().unwrap(), PhantomData)
     }
-    pub fn scalar_args(&self, args: impl Into<NodeArgs<PostPartial>>) -> MutationNode<String> {
+    pub fn scalar_args(
+        &self,
+        args: impl Into<NodeArgs<PostPartial>>,
+    ) -> MutationNode<RootScalarNoArgsFnOutput> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -2288,7 +2297,11 @@ impl QueryGraph {
                 )]
                 .into(),
             ),
-            &[("scalarArgs".into(), node_metas::Func26 as NodeMetaFn)].into(),
+            &[(
+                "scalarArgs".into(),
+                node_metas::RootScalarArgsFn as NodeMetaFn,
+            )]
+            .into(),
             "$q".into(),
         )
         .unwrap();
@@ -2299,18 +2312,18 @@ impl QueryGraph {
     ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial> {
         UnselectedNode {
             root_name: "compositeNoArgs".into(),
-            root_meta: node_metas::Func27,
+            root_meta: node_metas::RootCompositeNoArgsFn,
             args: NodeArgsErased::None,
             _marker: PhantomData,
         }
     }
     pub fn composite_args(
         &self,
-        args: impl Into<NodeArgs<Object21Partial>>,
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>,
     ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial> {
         UnselectedNode {
             root_name: "compositeArgs".into(),
-            root_meta: node_metas::Func28,
+            root_meta: node_metas::RootCompositeArgsFn,
             args: args.into().into(),
             _marker: PhantomData,
         }

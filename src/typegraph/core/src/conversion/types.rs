@@ -50,9 +50,10 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
     pub fn init_builder(self) -> Result<BaseBuilder<'a>> {
         let policies = self.ctx.register_policy_chain(self.policies)?;
 
-        let name = self
-            .name
-            .unwrap_or_else(|| format!("{}_{}", self.base_name, self.type_id.0));
+        let name = match self.name {
+            Some(name) => name,
+            None => format!("{}_{}_placeholder", self.base_name, self.type_id.0),
+        };
 
         let runtime_config = self.runtime_config.map(|c| {
             c.iter()

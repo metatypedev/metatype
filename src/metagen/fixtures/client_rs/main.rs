@@ -5,7 +5,6 @@
 
 #[rustfmt::skip]
 pub mod client;
-use client::types::*;
 use client::*;
 
 fn main() -> Result<(), BoxErr> {
@@ -15,30 +14,6 @@ fn main() -> Result<(), BoxErr> {
     let (res2, res3) = {
         // blocking reqwest uses tokio under the hood
         let gql_sync = api1.graphql_sync();
-        let prepared_m = gql_sync.prepare_mutation(|args| {
-            Ok((
-                api1.scalar_args(args.get("post", |val: PostPartial| val)),
-                api1.composite_no_args().select(all())?,
-                api1.composite_args(args.get("id", |id: String| Object21Partial { id: Some(id) }))
-                    .select(all())?,
-            ))
-        })?;
-
-        let prepared_clone = prepared_m.clone();
-        let res2 = prepared_clone.perform([
-            (
-                "post",
-                serde_json::json!(PostPartial {
-                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                    slug: Some("".into()),
-                    title: Some("".into()),
-                }),
-            ),
-            (
-                "id",
-                serde_json::json!("94be5420-8c4a-4e67-b4f4-e1b2b54832a2"),
-            ),
-        ])?;
         let res3 = gql_sync.query((
             api1.get_user().select_aliased(UserSelections {
                 posts: alias([
@@ -57,6 +32,32 @@ fn main() -> Result<(), BoxErr> {
             api1.get_posts().select(all())?,
             api1.scalar_no_args(),
         ))?;
+        let prepared_m = gql_sync.prepare_mutation(|args| {
+            Ok((
+                api1.scalar_args(args.get("post", |val: types::PostPartial| val)),
+                api1.composite_no_args().select(all())?,
+                api1.composite_args(args.get("id", |id: String| {
+                    types::RootCompositeArgsFnInputPartial { id: Some(id) }
+                }))
+                .select(all())?,
+            ))
+        })?;
+
+        let prepared_clone = prepared_m.clone();
+        let res2 = prepared_clone.perform([
+            (
+                "post",
+                serde_json::json!(types::PostPartial {
+                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                    slug: Some("".into()),
+                    title: Some("".into()),
+                }),
+            ),
+            (
+                "id",
+                serde_json::json!("94be5420-8c4a-4e67-b4f4-e1b2b54832a2"),
+            ),
+        ])?;
         (res2, res3)
     };
     tokio::runtime::Builder::new_multi_thread()
@@ -90,18 +91,50 @@ fn main() -> Result<(), BoxErr> {
 
             let res4 = gql
                 .mutation((
-                    api1.scalar_args(PostPartial {
+                    api1.scalar_args(types::PostPartial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                         slug: Some("".into()),
                         title: Some("".into()),
                     }),
                     api1.composite_no_args().select(all())?,
-                    api1.composite_args(Object21Partial {
+                    api1.composite_args(types::RootCompositeArgsFnInputPartial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     })
                     .select(all())?,
                 ))
                 .await?;
+
+            /* let res5 = gql
+            .query((
+                api1.scalar_union(types::Object28Partial {
+                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                }),
+                // allows ignoring some members
+                api1.composite_union(types::Object28Partial {
+                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                })
+                .select(Union9Selections {
+                    post: select(all()),
+                    ..default()
+                })?,
+                // returns empty if returned type wasn't selected
+                // in union member
+                api1.composite_union(types::Object28Partial {
+                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                })
+                .select(Union9Selections {
+                    user: select(all()),
+                    ..default()
+                })?,
+                api1.mixed_union(types::Object28Partial {
+                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                })
+                .select(Union15Selections {
+                    post: select(all()),
+                    user: select(all()),
+                })?,
+            ))
+            .await?; */
             println!(
                 "{}",
                 serde_json::to_string_pretty(&serde_json::json!([
@@ -129,7 +162,13 @@ fn main() -> Result<(), BoxErr> {
                         "scalarArgs": res4.0,
                         "compositeNoArgs": res4.1,
                         "compositeArgs": res4.2,
-                    }
+                    },
+                    /* {
+                        "scalarUnion": res5.0,
+                        "compositeUnion1": res5.1,
+                        "compositeUnion2": res5.2,
+                        "mixedUnion": res5.3
+                    } */
                 ]))?
             );
             Ok(())

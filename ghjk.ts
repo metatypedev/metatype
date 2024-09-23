@@ -30,7 +30,7 @@ env("main")
 
 env("_rust").install(
   // use rustup for the actual toolchain
-  ports.protoc({ version: "v24.4" }),
+  ports.protoc({ version: "v28.2" }),
   ports.cmake()[0],
 );
 
@@ -159,3 +159,11 @@ task("version-bump", async ($) => {
   });
   await $`ghjk x lock-sed`;
 });
+
+task("b", async ($) => {
+  await $`cargo b --target wasm32-unknown-unknown --package typegraph-ng`;
+  await $`wasm-tools component new "target/wasm32-unknown-unknown/debug/typegraph_ng.wasm"
+    -o ./target/ng.wasm
+   `;
+  // --adapt wasi_snapshot_preview1=./tmp/wasi_snapshot_preview1.reactor.wasm
+}, { inherit: "_wasm" });

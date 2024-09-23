@@ -219,77 +219,82 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    pub type String1 = String;
-    pub type StringUuid6 = String;
-    pub type StringEmail7 = String;
-    pub type StringEan8 = String;
-    pub type StringJson9 = String;
-    pub type StringUri10 = String;
-    pub type StringDate11 = String;
-    pub type StringDateTime12 = String;
+    pub type PrimitivesStrString = String;
+    pub type PrimitivesEnumStringEnum = String;
+    pub type PrimitivesUuidStringUuid = String;
+    pub type PrimitivesEmailStringEmail = String;
+    pub type PrimitivesEanStringEan = String;
+    pub type PrimitivesJsonStringJson = String;
+    pub type PrimitivesUriStringUri = String;
+    pub type PrimitivesDateStringDate = String;
+    pub type PrimitivesDatetimeStringDatetime = String;
+    pub type PrimitivesIntInteger = i64;
+    pub type PrimitivesFloatFloat = f64;
+    pub type PrimitivesBooleanBoolean = bool;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Primitives {
-        pub str: String,
+        pub str: PrimitivesStrString,
         #[serde(rename = "enum")]
-        pub r#enum: String1,
-        pub uuid: StringUuid6,
-        pub email: StringEmail7,
-        pub ean: StringEan8,
-        pub json: StringJson9,
-        pub uri: StringUri10,
-        pub date: StringDate11,
-        pub datetime: StringDateTime12,
-        pub int: i64,
-        pub float: f64,
-        pub boolean: bool,
+        pub r#enum: PrimitivesEnumStringEnum,
+        pub uuid: PrimitivesUuidStringUuid,
+        pub email: PrimitivesEmailStringEmail,
+        pub ean: PrimitivesEanStringEan,
+        pub json: PrimitivesJsonStringJson,
+        pub uri: PrimitivesUriStringUri,
+        pub date: PrimitivesDateStringDate,
+        pub datetime: PrimitivesDatetimeStringDatetime,
+        pub int: PrimitivesIntInteger,
+        pub float: PrimitivesFloatFloat,
+        pub boolean: PrimitivesBooleanBoolean,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PrimitivesArgs {
         pub data: Primitives,
     }
+    pub type CompositesOptPrimitivesStrStringOptional = Option<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Branch2 {
-        pub branch2: String,
+        pub branch2: PrimitivesStrString,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
-    pub enum Either19 {
+    pub enum CompositesEitherEither {
         Primitives(Primitives),
         Branch2(Branch2),
     }
-    pub type String20 = String;
-    pub type Branch4 = Vec<String20>;
+    pub type CompositesUnionUnionT0StringEnum = String;
+    pub type Branch4 = Vec<CompositesUnionUnionT0StringEnum>;
     pub type Branch4again = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
-    pub enum Union27 {
+    pub enum CompositesUnionUnion {
         Branch4(Branch4),
-        I64(i64),
-        String(String),
+        PrimitivesIntInteger(PrimitivesIntInteger),
+        PrimitivesStrString(PrimitivesStrString),
         Branch4again(Branch4again),
     }
+    pub type CompositesListPrimitivesStrStringList = Vec<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Composites {
-        pub opt: Option<String>,
-        pub either: Either19,
-        pub union: Union27,
-        pub list: Vec<String>,
+        pub opt: CompositesOptPrimitivesStrStringOptional,
+        pub either: CompositesEitherEither,
+        pub union: CompositesUnionUnion,
+        pub list: CompositesListPrimitivesStrStringList,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct CompositesArgs {
         pub data: Composites,
     }
-    pub type Cycles148 = Option<Cycles1>;
+    pub type Branch33ATo1Cycles1Optional = Option<Cycles1>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Branch33A {
-        pub phantom3a: Option<String>,
-        pub to1: Cycles148,
+        pub phantom3a: CompositesOptPrimitivesStrStringOptional,
+        pub to1: Branch33ATo1Cycles1Optional,
     }
-    pub type Cycles254 = Option<Cycles2>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Branch33B {
-        pub phantom3b: Option<String>,
-        pub to2: Cycles254,
+        pub phantom3b: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Cycles1To2Cycles2Optional,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
@@ -300,39 +305,39 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
     pub enum Cycles2 {
-        Cycles3(Box<Cycles3>),
+        Cycles3(Cycles3),
         Cycles1(Cycles1),
     }
-    pub type Cycles235 = Option<Cycles2>;
-    pub type Cycles337 = Vec<Cycles3>;
-    pub type Cycles33837 = Option<Cycles337>;
+    pub type Cycles1To2Cycles2Optional = Option<Box<Cycles2>>;
+    pub type Cycles1List3Cycles3List = Vec<Cycles3>;
+    pub type Cycles1List3Cycles1List3Cycles3ListOptional = Option<Cycles1List3Cycles3List>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Cycles1 {
-        pub phantom1: Option<String>,
-        pub to2: Box<Cycles235>,
-        pub list3: Cycles33837,
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Box<Cycles1To2Cycles2Optional>,
+        pub list3: Cycles1List3Cycles1List3Cycles3ListOptional,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Cycles1Args {
         pub data: Cycles1,
     }
-    pub type SimpleCycles174 = Option<SimpleCycles1>;
+    pub type SimpleCycles3To1SimpleCycles1Optional = Option<SimpleCycles1>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SimpleCycles3 {
-        pub phantom3: Option<String>,
-        pub to1: SimpleCycles174,
+        pub phantom3: CompositesOptPrimitivesStrStringOptional,
+        pub to1: SimpleCycles3To1SimpleCycles1Optional,
     }
-    pub type SimpleCycles368 = Option<SimpleCycles3>;
+    pub type SimpleCycles2To3SimpleCycles3Optional = Option<SimpleCycles3>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SimpleCycles2 {
-        pub phantom2: Option<String>,
-        pub to3: SimpleCycles368,
+        pub phantom2: CompositesOptPrimitivesStrStringOptional,
+        pub to3: SimpleCycles2To3SimpleCycles3Optional,
     }
-    pub type SimpleCycles262 = Option<SimpleCycles2>;
+    pub type SimpleCycles1To2SimpleCycles2Optional = Option<SimpleCycles2>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SimpleCycles1 {
-        pub phantom1: Option<String>,
-        pub to2: Box<SimpleCycles262>,
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Box<SimpleCycles1To2SimpleCycles2Optional>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SimpleCycles1Args {

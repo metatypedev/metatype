@@ -1,5 +1,5 @@
 ---
-source: typegraph/core/src/lib.rs
+source: src/typegraph/core/src/lib.rs
 expression: typegraph.0
 ---
 {
@@ -20,7 +20,7 @@ expression: typegraph.0
     },
     {
       "type": "function",
-      "title": "func_6",
+      "title": "root_one_fn",
       "runtime": 0,
       "policies": [],
       "config": {},
@@ -33,7 +33,7 @@ expression: typegraph.0
     },
     {
       "type": "object",
-      "title": "object_5",
+      "title": "root_one_fn_input",
       "runtime": 0,
       "policies": [],
       "config": {},
@@ -47,7 +47,7 @@ expression: typegraph.0
     },
     {
       "type": "integer",
-      "title": "integer_0",
+      "title": "root_one_fn_input_one_integer",
       "runtime": 0,
       "policies": [],
       "config": {},
@@ -55,7 +55,7 @@ expression: typegraph.0
     },
     {
       "type": "integer",
-      "title": "integer_1",
+      "title": "root_one_fn_input_two_integer",
       "runtime": 0,
       "policies": [],
       "config": {},
@@ -65,7 +65,7 @@ expression: typegraph.0
     },
     {
       "type": "optional",
-      "title": "optional_4",
+      "title": "root_one_fn_input_three_root_one_fn_input_three_root_one_fn_input_three_float_list_optional",
       "runtime": 0,
       "policies": [],
       "config": {},
@@ -75,7 +75,7 @@ expression: typegraph.0
     },
     {
       "type": "list",
-      "title": "list_3",
+      "title": "root_one_fn_input_three_root_one_fn_input_three_float_list",
       "runtime": 0,
       "policies": [],
       "config": {},
@@ -84,7 +84,7 @@ expression: typegraph.0
     },
     {
       "type": "float",
-      "title": "float_2",
+      "title": "root_one_fn_input_three_float",
       "runtime": 0,
       "policies": [],
       "config": {},
