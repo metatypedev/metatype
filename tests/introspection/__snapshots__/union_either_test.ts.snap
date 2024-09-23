@@ -117,7 +117,7 @@ snapshot[`Basic introspection 1`] = `
       {
         fields: null,
         kind: "UNION",
-        name: "union_8Out",
+        name: "Gunpla_ref_unionOut",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -156,7 +156,7 @@ snapshot[`Basic introspection 1`] = `
       {
         fields: null,
         kind: "SCALAR",
-        name: "union_8In",
+        name: "Gunpla_ref_unionIn",
         possibleTypes: null,
       },
     ],

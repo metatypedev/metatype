@@ -28,7 +28,8 @@ mod interlude {
 
 mod config;
 mod macros;
-mod shared;
+// used by the NamingPostProcessor
+pub mod shared;
 
 mod fdk_python;
 mod fdk_rust;

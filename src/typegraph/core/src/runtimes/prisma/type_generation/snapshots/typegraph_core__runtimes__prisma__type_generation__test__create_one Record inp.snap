@@ -4,9 +4,9 @@ expression: tp.print(inp)
 ---
 root: struct #9
 └─ [data]: struct 'Record_create_input' #8
-   ├─ [age]: optional #5
+   ├─ [age]: optional 'optional_5' #5
    │  └─ item: integer #4
    ├─ [created_at]: string #1
-   ├─ [id]: optional #7
+   ├─ [id]: optional 'optional_7' #7
    │  └─ item: string #2
    └─ [name]: string #3

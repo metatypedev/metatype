@@ -2,7 +2,7 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: optional '_10_Record_output?' #10
+root: optional 'optional_10' #10
 └─ item: struct 'Record_output' #9
    ├─ [age]: optional #7
    │  └─ item: integer #4

@@ -3,16 +3,16 @@ source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct 'User_query_input' #119
-├─ [cursor]: optional '_115_User_cursor?' #115
+├─ [cursor]: optional 'optional_115' #115
 │  └─ item: union 'User_cursor' #114
 │     ├─ variant_0: struct #112
 │     │  └─ [id]: integer #74
 │     └─ variant_1: struct #113
 │        └─ [name]: string #75
-├─ [distinct]: optional '_118_User_keys_union?' #118
+├─ [distinct]: optional 'optional_118' #118
 │  └─ item: list 'User_keys_union' #117
 │     └─ item: string #116 enum{ '"id"', '"name"', '"posts"' }
-├─ [orderBy]: optional '_109_User_order_by?' #109
+├─ [orderBy]: optional 'optional_109' #109
 │  └─ item: list 'User_order_by' #108
 │     └─ item: struct #107
 │        ├─ [id]: optional '_prisma_sort' #50
@@ -52,21 +52,21 @@ root: struct 'User_query_input' #119
 │                    ├─ variant_0: struct #48
 │                    │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
 │                    └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
-├─ [skip]: optional '_111__skip?' #111
+├─ [skip]: optional 'optional_111' #111
 │  └─ item: integer '_skip' #59
-├─ [take]: optional '_110__take?' #110
+├─ [take]: optional 'optional_110' #110
 │  └─ item: integer '_take' #57
-└─ [where]: optional '_104_User_query_where_input?' #104
+└─ [where]: optional 'optional_104' #104
    └─ item: struct 'User_query_where_input' #103
-      ├─ [AND]: optional '_101__100_User_query_where_input[]?' #101
-      │  └─ item: list '_100_User_query_where_input[]' #100
+      ├─ [AND]: optional 'optional_101' #101
+      │  └─ item: list 'list_100' #100
       │     └─ item: &User_query_where_input #99
-      ├─ [NOT]: optional '_102_User_query_where_input?' #102
+      ├─ [NOT]: optional 'optional_102' #102
       │  └─ item: &User_query_where_input #99
-      ├─ [OR]: optional '_101__100_User_query_where_input[]?' #101
-      │  └─ item: list '_100_User_query_where_input[]' #100
+      ├─ [OR]: optional 'optional_101' #101
+      │  └─ item: list 'list_100' #100
       │     └─ item: &User_query_where_input #99
-      ├─ [id]: optional '_83__prisma_integer_filter_ex?' #83
+      ├─ [id]: optional 'optional_83' #83
       │  └─ item: optional '_prisma_integer_filter_ex' #36
       │     └─ item: union #35
       │        ├─ variant_0: either '_prisma_integer_filter' #33
@@ -76,19 +76,19 @@ root: struct 'User_query_input' #119
       │        │  ├─ variant_2: struct #29
       │        │  │  └─ [not]: integer #25
       │        │  ├─ variant_3: struct #30
-      │        │  │  ├─ [gt]: optional #26
+      │        │  │  ├─ [gt]: optional 'optional_26' #26
       │        │  │  │  └─ item: integer #25
-      │        │  │  ├─ [gte]: optional #26
+      │        │  │  ├─ [gte]: optional 'optional_26' #26
       │        │  │  │  └─ item: integer #25
-      │        │  │  ├─ [lt]: optional #26
+      │        │  │  ├─ [lt]: optional 'optional_26' #26
       │        │  │  │  └─ item: integer #25
-      │        │  │  └─ [lte]: optional #26
+      │        │  │  └─ [lte]: optional 'optional_26' #26
       │        │  │     └─ item: integer #25
       │        │  ├─ variant_4: struct #31
-      │        │  │  └─ [in]: list #27
+      │        │  │  └─ [in]: list 'list_27' #27
       │        │  │     └─ item: integer #25
       │        │  └─ variant_5: struct #32
-      │        │     └─ [notIn]: list #27
+      │        │     └─ [notIn]: list 'list_27' #27
       │        │        └─ item: integer #25
       │        └─ variant_1: struct #34
       │           └─ [not]: either '_prisma_integer_filter' #33
@@ -98,21 +98,21 @@ root: struct 'User_query_input' #119
       │              ├─ variant_2: struct #29
       │              │  └─ [not]: integer #25
       │              ├─ variant_3: struct #30
-      │              │  ├─ [gt]: optional #26
+      │              │  ├─ [gt]: optional 'optional_26' #26
       │              │  │  └─ item: integer #25
-      │              │  ├─ [gte]: optional #26
+      │              │  ├─ [gte]: optional 'optional_26' #26
       │              │  │  └─ item: integer #25
-      │              │  ├─ [lt]: optional #26
+      │              │  ├─ [lt]: optional 'optional_26' #26
       │              │  │  └─ item: integer #25
-      │              │  └─ [lte]: optional #26
+      │              │  └─ [lte]: optional 'optional_26' #26
       │              │     └─ item: integer #25
       │              ├─ variant_4: struct #31
-      │              │  └─ [in]: list #27
+      │              │  └─ [in]: list 'list_27' #27
       │              │     └─ item: integer #25
       │              └─ variant_5: struct #32
-      │                 └─ [notIn]: list #27
+      │                 └─ [notIn]: list 'list_27' #27
       │                    └─ item: integer #25
-      ├─ [name]: optional '_84__prisma_string_filter_ex?' #84
+      ├─ [name]: optional 'optional_84' #84
       │  └─ item: optional '_prisma_string_filter_ex' #22
       │     └─ item: union #21
       │        ├─ variant_0: union '_prisma_string_filter' #19
@@ -122,21 +122,21 @@ root: struct 'User_query_input' #119
       │        │  ├─ variant_2: struct #11
       │        │  │  └─ [not]: string #7
       │        │  ├─ variant_3: struct #12
-      │        │  │  └─ [in]: list #9
+      │        │  │  └─ [in]: list 'list_9' #9
       │        │  │     └─ item: string #7
       │        │  ├─ variant_4: struct #13
-      │        │  │  └─ [notIn]: list #9
+      │        │  │  └─ [notIn]: list 'list_9' #9
       │        │  │     └─ item: string #7
       │        │  ├─ variant_5: struct #16
       │        │  │  ├─ [contains]: string #7
-      │        │  │  └─ [mode]: optional #15
+      │        │  │  └─ [mode]: optional 'optional_15' #15
       │        │  │     └─ item: string #14 enum{ '"insensitive"' }
       │        │  ├─ variant_6: struct #17
       │        │  │  └─ [search]: string #7
       │        │  └─ variant_7: struct #18
-      │        │     ├─ [endsWith]: optional #8
+      │        │     ├─ [endsWith]: optional 'optional_8' #8
       │        │     │  └─ item: string #7
-      │        │     └─ [startsWith]: optional #8
+      │        │     └─ [startsWith]: optional 'optional_8' #8
       │        │        └─ item: string #7
       │        └─ variant_1: struct #20
       │           └─ [not]: union '_prisma_string_filter' #19
@@ -146,30 +146,30 @@ root: struct 'User_query_input' #119
       │              ├─ variant_2: struct #11
       │              │  └─ [not]: string #7
       │              ├─ variant_3: struct #12
-      │              │  └─ [in]: list #9
+      │              │  └─ [in]: list 'list_9' #9
       │              │     └─ item: string #7
       │              ├─ variant_4: struct #13
-      │              │  └─ [notIn]: list #9
+      │              │  └─ [notIn]: list 'list_9' #9
       │              │     └─ item: string #7
       │              ├─ variant_5: struct #16
       │              │  ├─ [contains]: string #7
-      │              │  └─ [mode]: optional #15
+      │              │  └─ [mode]: optional 'optional_15' #15
       │              │     └─ item: string #14 enum{ '"insensitive"' }
       │              ├─ variant_6: struct #17
       │              │  └─ [search]: string #7
       │              └─ variant_7: struct #18
-      │                 ├─ [endsWith]: optional #8
+      │                 ├─ [endsWith]: optional 'optional_8' #8
       │                 │  └─ item: string #7
-      │                 └─ [startsWith]: optional #8
+      │                 └─ [startsWith]: optional 'optional_8' #8
       │                    └─ item: string #7
-      └─ [posts]: optional #97
+      └─ [posts]: optional 'optional_97' #97
          └─ item: union #96
             ├─ variant_0: struct #91
-            │  └─ [every]: optional '_90_Post_where_excluding_User?' #90
+            │  └─ [every]: optional 'optional_90' #90
             │     └─ item: struct 'Post_where_excluding_User' #89
-            │        ├─ [author]: optional '_88_User_where?' #88
+            │        ├─ [author]: optional 'optional_88' #88
             │        │  └─ item: &User_where #87
-            │        ├─ [id]: optional '_85__prisma_integer_filter_ex?' #85
+            │        ├─ [id]: optional 'optional_85' #85
             │        │  └─ item: optional '_prisma_integer_filter_ex' #36
             │        │     └─ item: union #35
             │        │        ├─ variant_0: either '_prisma_integer_filter' #33
@@ -179,19 +179,19 @@ root: struct 'User_query_input' #119
             │        │        │  ├─ variant_2: struct #29
             │        │        │  │  └─ [not]: integer #25
             │        │        │  ├─ variant_3: struct #30
-            │        │        │  │  ├─ [gt]: optional #26
+            │        │        │  │  ├─ [gt]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  ├─ [gte]: optional #26
+            │        │        │  │  ├─ [gte]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  ├─ [lt]: optional #26
+            │        │        │  │  ├─ [lt]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  └─ [lte]: optional #26
+            │        │        │  │  └─ [lte]: optional 'optional_26' #26
             │        │        │  │     └─ item: integer #25
             │        │        │  ├─ variant_4: struct #31
-            │        │        │  │  └─ [in]: list #27
+            │        │        │  │  └─ [in]: list 'list_27' #27
             │        │        │  │     └─ item: integer #25
             │        │        │  └─ variant_5: struct #32
-            │        │        │     └─ [notIn]: list #27
+            │        │        │     └─ [notIn]: list 'list_27' #27
             │        │        │        └─ item: integer #25
             │        │        └─ variant_1: struct #34
             │        │           └─ [not]: either '_prisma_integer_filter' #33
@@ -201,21 +201,21 @@ root: struct 'User_query_input' #119
             │        │              ├─ variant_2: struct #29
             │        │              │  └─ [not]: integer #25
             │        │              ├─ variant_3: struct #30
-            │        │              │  ├─ [gt]: optional #26
+            │        │              │  ├─ [gt]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  ├─ [gte]: optional #26
+            │        │              │  ├─ [gte]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  ├─ [lt]: optional #26
+            │        │              │  ├─ [lt]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  └─ [lte]: optional #26
+            │        │              │  └─ [lte]: optional 'optional_26' #26
             │        │              │     └─ item: integer #25
             │        │              ├─ variant_4: struct #31
-            │        │              │  └─ [in]: list #27
+            │        │              │  └─ [in]: list 'list_27' #27
             │        │              │     └─ item: integer #25
             │        │              └─ variant_5: struct #32
-            │        │                 └─ [notIn]: list #27
+            │        │                 └─ [notIn]: list 'list_27' #27
             │        │                    └─ item: integer #25
-            │        └─ [title]: optional '_86__prisma_string_filter_ex?' #86
+            │        └─ [title]: optional 'optional_86' #86
             │           └─ item: optional '_prisma_string_filter_ex' #22
             │              └─ item: union #21
             │                 ├─ variant_0: union '_prisma_string_filter' #19
@@ -225,21 +225,21 @@ root: struct 'User_query_input' #119
             │                 │  ├─ variant_2: struct #11
             │                 │  │  └─ [not]: string #7
             │                 │  ├─ variant_3: struct #12
-            │                 │  │  └─ [in]: list #9
+            │                 │  │  └─ [in]: list 'list_9' #9
             │                 │  │     └─ item: string #7
             │                 │  ├─ variant_4: struct #13
-            │                 │  │  └─ [notIn]: list #9
+            │                 │  │  └─ [notIn]: list 'list_9' #9
             │                 │  │     └─ item: string #7
             │                 │  ├─ variant_5: struct #16
             │                 │  │  ├─ [contains]: string #7
-            │                 │  │  └─ [mode]: optional #15
+            │                 │  │  └─ [mode]: optional 'optional_15' #15
             │                 │  │     └─ item: string #14 enum{ '"insensitive"' }
             │                 │  ├─ variant_6: struct #17
             │                 │  │  └─ [search]: string #7
             │                 │  └─ variant_7: struct #18
-            │                 │     ├─ [endsWith]: optional #8
+            │                 │     ├─ [endsWith]: optional 'optional_8' #8
             │                 │     │  └─ item: string #7
-            │                 │     └─ [startsWith]: optional #8
+            │                 │     └─ [startsWith]: optional 'optional_8' #8
             │                 │        └─ item: string #7
             │                 └─ variant_1: struct #20
             │                    └─ [not]: union '_prisma_string_filter' #19
@@ -249,28 +249,28 @@ root: struct 'User_query_input' #119
             │                       ├─ variant_2: struct #11
             │                       │  └─ [not]: string #7
             │                       ├─ variant_3: struct #12
-            │                       │  └─ [in]: list #9
+            │                       │  └─ [in]: list 'list_9' #9
             │                       │     └─ item: string #7
             │                       ├─ variant_4: struct #13
-            │                       │  └─ [notIn]: list #9
+            │                       │  └─ [notIn]: list 'list_9' #9
             │                       │     └─ item: string #7
             │                       ├─ variant_5: struct #16
             │                       │  ├─ [contains]: string #7
-            │                       │  └─ [mode]: optional #15
+            │                       │  └─ [mode]: optional 'optional_15' #15
             │                       │     └─ item: string #14 enum{ '"insensitive"' }
             │                       ├─ variant_6: struct #17
             │                       │  └─ [search]: string #7
             │                       └─ variant_7: struct #18
-            │                          ├─ [endsWith]: optional #8
+            │                          ├─ [endsWith]: optional 'optional_8' #8
             │                          │  └─ item: string #7
-            │                          └─ [startsWith]: optional #8
+            │                          └─ [startsWith]: optional 'optional_8' #8
             │                             └─ item: string #7
             ├─ variant_1: struct #93
-            │  └─ [some]: optional '_92_Post_where_excluding_User?' #92
+            │  └─ [some]: optional 'optional_92' #92
             │     └─ item: struct 'Post_where_excluding_User' #89
-            │        ├─ [author]: optional '_88_User_where?' #88
+            │        ├─ [author]: optional 'optional_88' #88
             │        │  └─ item: &User_where #87
-            │        ├─ [id]: optional '_85__prisma_integer_filter_ex?' #85
+            │        ├─ [id]: optional 'optional_85' #85
             │        │  └─ item: optional '_prisma_integer_filter_ex' #36
             │        │     └─ item: union #35
             │        │        ├─ variant_0: either '_prisma_integer_filter' #33
@@ -280,19 +280,19 @@ root: struct 'User_query_input' #119
             │        │        │  ├─ variant_2: struct #29
             │        │        │  │  └─ [not]: integer #25
             │        │        │  ├─ variant_3: struct #30
-            │        │        │  │  ├─ [gt]: optional #26
+            │        │        │  │  ├─ [gt]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  ├─ [gte]: optional #26
+            │        │        │  │  ├─ [gte]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  ├─ [lt]: optional #26
+            │        │        │  │  ├─ [lt]: optional 'optional_26' #26
             │        │        │  │  │  └─ item: integer #25
-            │        │        │  │  └─ [lte]: optional #26
+            │        │        │  │  └─ [lte]: optional 'optional_26' #26
             │        │        │  │     └─ item: integer #25
             │        │        │  ├─ variant_4: struct #31
-            │        │        │  │  └─ [in]: list #27
+            │        │        │  │  └─ [in]: list 'list_27' #27
             │        │        │  │     └─ item: integer #25
             │        │        │  └─ variant_5: struct #32
-            │        │        │     └─ [notIn]: list #27
+            │        │        │     └─ [notIn]: list 'list_27' #27
             │        │        │        └─ item: integer #25
             │        │        └─ variant_1: struct #34
             │        │           └─ [not]: either '_prisma_integer_filter' #33
@@ -302,21 +302,21 @@ root: struct 'User_query_input' #119
             │        │              ├─ variant_2: struct #29
             │        │              │  └─ [not]: integer #25
             │        │              ├─ variant_3: struct #30
-            │        │              │  ├─ [gt]: optional #26
+            │        │              │  ├─ [gt]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  ├─ [gte]: optional #26
+            │        │              │  ├─ [gte]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  ├─ [lt]: optional #26
+            │        │              │  ├─ [lt]: optional 'optional_26' #26
             │        │              │  │  └─ item: integer #25
-            │        │              │  └─ [lte]: optional #26
+            │        │              │  └─ [lte]: optional 'optional_26' #26
             │        │              │     └─ item: integer #25
             │        │              ├─ variant_4: struct #31
-            │        │              │  └─ [in]: list #27
+            │        │              │  └─ [in]: list 'list_27' #27
             │        │              │     └─ item: integer #25
             │        │              └─ variant_5: struct #32
-            │        │                 └─ [notIn]: list #27
+            │        │                 └─ [notIn]: list 'list_27' #27
             │        │                    └─ item: integer #25
-            │        └─ [title]: optional '_86__prisma_string_filter_ex?' #86
+            │        └─ [title]: optional 'optional_86' #86
             │           └─ item: optional '_prisma_string_filter_ex' #22
             │              └─ item: union #21
             │                 ├─ variant_0: union '_prisma_string_filter' #19
@@ -326,21 +326,21 @@ root: struct 'User_query_input' #119
             │                 │  ├─ variant_2: struct #11
             │                 │  │  └─ [not]: string #7
             │                 │  ├─ variant_3: struct #12
-            │                 │  │  └─ [in]: list #9
+            │                 │  │  └─ [in]: list 'list_9' #9
             │                 │  │     └─ item: string #7
             │                 │  ├─ variant_4: struct #13
-            │                 │  │  └─ [notIn]: list #9
+            │                 │  │  └─ [notIn]: list 'list_9' #9
             │                 │  │     └─ item: string #7
             │                 │  ├─ variant_5: struct #16
             │                 │  │  ├─ [contains]: string #7
-            │                 │  │  └─ [mode]: optional #15
+            │                 │  │  └─ [mode]: optional 'optional_15' #15
             │                 │  │     └─ item: string #14 enum{ '"insensitive"' }
             │                 │  ├─ variant_6: struct #17
             │                 │  │  └─ [search]: string #7
             │                 │  └─ variant_7: struct #18
-            │                 │     ├─ [endsWith]: optional #8
+            │                 │     ├─ [endsWith]: optional 'optional_8' #8
             │                 │     │  └─ item: string #7
-            │                 │     └─ [startsWith]: optional #8
+            │                 │     └─ [startsWith]: optional 'optional_8' #8
             │                 │        └─ item: string #7
             │                 └─ variant_1: struct #20
             │                    └─ [not]: union '_prisma_string_filter' #19
@@ -350,28 +350,28 @@ root: struct 'User_query_input' #119
             │                       ├─ variant_2: struct #11
             │                       │  └─ [not]: string #7
             │                       ├─ variant_3: struct #12
-            │                       │  └─ [in]: list #9
+            │                       │  └─ [in]: list 'list_9' #9
             │                       │     └─ item: string #7
             │                       ├─ variant_4: struct #13
-            │                       │  └─ [notIn]: list #9
+            │                       │  └─ [notIn]: list 'list_9' #9
             │                       │     └─ item: string #7
             │                       ├─ variant_5: struct #16
             │                       │  ├─ [contains]: string #7
-            │                       │  └─ [mode]: optional #15
+            │                       │  └─ [mode]: optional 'optional_15' #15
             │                       │     └─ item: string #14 enum{ '"insensitive"' }
             │                       ├─ variant_6: struct #17
             │                       │  └─ [search]: string #7
             │                       └─ variant_7: struct #18
-            │                          ├─ [endsWith]: optional #8
+            │                          ├─ [endsWith]: optional 'optional_8' #8
             │                          │  └─ item: string #7
-            │                          └─ [startsWith]: optional #8
+            │                          └─ [startsWith]: optional 'optional_8' #8
             │                             └─ item: string #7
             └─ variant_2: struct #95
-               └─ [none]: optional '_94_Post_where_excluding_User?' #94
+               └─ [none]: optional 'optional_94' #94
                   └─ item: struct 'Post_where_excluding_User' #89
-                     ├─ [author]: optional '_88_User_where?' #88
+                     ├─ [author]: optional 'optional_88' #88
                      │  └─ item: &User_where #87
-                     ├─ [id]: optional '_85__prisma_integer_filter_ex?' #85
+                     ├─ [id]: optional 'optional_85' #85
                      │  └─ item: optional '_prisma_integer_filter_ex' #36
                      │     └─ item: union #35
                      │        ├─ variant_0: either '_prisma_integer_filter' #33
@@ -381,19 +381,19 @@ root: struct 'User_query_input' #119
                      │        │  ├─ variant_2: struct #29
                      │        │  │  └─ [not]: integer #25
                      │        │  ├─ variant_3: struct #30
-                     │        │  │  ├─ [gt]: optional #26
+                     │        │  │  ├─ [gt]: optional 'optional_26' #26
                      │        │  │  │  └─ item: integer #25
-                     │        │  │  ├─ [gte]: optional #26
+                     │        │  │  ├─ [gte]: optional 'optional_26' #26
                      │        │  │  │  └─ item: integer #25
-                     │        │  │  ├─ [lt]: optional #26
+                     │        │  │  ├─ [lt]: optional 'optional_26' #26
                      │        │  │  │  └─ item: integer #25
-                     │        │  │  └─ [lte]: optional #26
+                     │        │  │  └─ [lte]: optional 'optional_26' #26
                      │        │  │     └─ item: integer #25
                      │        │  ├─ variant_4: struct #31
-                     │        │  │  └─ [in]: list #27
+                     │        │  │  └─ [in]: list 'list_27' #27
                      │        │  │     └─ item: integer #25
                      │        │  └─ variant_5: struct #32
-                     │        │     └─ [notIn]: list #27
+                     │        │     └─ [notIn]: list 'list_27' #27
                      │        │        └─ item: integer #25
                      │        └─ variant_1: struct #34
                      │           └─ [not]: either '_prisma_integer_filter' #33
@@ -403,21 +403,21 @@ root: struct 'User_query_input' #119
                      │              ├─ variant_2: struct #29
                      │              │  └─ [not]: integer #25
                      │              ├─ variant_3: struct #30
-                     │              │  ├─ [gt]: optional #26
+                     │              │  ├─ [gt]: optional 'optional_26' #26
                      │              │  │  └─ item: integer #25
-                     │              │  ├─ [gte]: optional #26
+                     │              │  ├─ [gte]: optional 'optional_26' #26
                      │              │  │  └─ item: integer #25
-                     │              │  ├─ [lt]: optional #26
+                     │              │  ├─ [lt]: optional 'optional_26' #26
                      │              │  │  └─ item: integer #25
-                     │              │  └─ [lte]: optional #26
+                     │              │  └─ [lte]: optional 'optional_26' #26
                      │              │     └─ item: integer #25
                      │              ├─ variant_4: struct #31
-                     │              │  └─ [in]: list #27
+                     │              │  └─ [in]: list 'list_27' #27
                      │              │     └─ item: integer #25
                      │              └─ variant_5: struct #32
-                     │                 └─ [notIn]: list #27
+                     │                 └─ [notIn]: list 'list_27' #27
                      │                    └─ item: integer #25
-                     └─ [title]: optional '_86__prisma_string_filter_ex?' #86
+                     └─ [title]: optional 'optional_86' #86
                         └─ item: optional '_prisma_string_filter_ex' #22
                            └─ item: union #21
                               ├─ variant_0: union '_prisma_string_filter' #19
@@ -427,21 +427,21 @@ root: struct 'User_query_input' #119
                               │  ├─ variant_2: struct #11
                               │  │  └─ [not]: string #7
                               │  ├─ variant_3: struct #12
-                              │  │  └─ [in]: list #9
+                              │  │  └─ [in]: list 'list_9' #9
                               │  │     └─ item: string #7
                               │  ├─ variant_4: struct #13
-                              │  │  └─ [notIn]: list #9
+                              │  │  └─ [notIn]: list 'list_9' #9
                               │  │     └─ item: string #7
                               │  ├─ variant_5: struct #16
                               │  │  ├─ [contains]: string #7
-                              │  │  └─ [mode]: optional #15
+                              │  │  └─ [mode]: optional 'optional_15' #15
                               │  │     └─ item: string #14 enum{ '"insensitive"' }
                               │  ├─ variant_6: struct #17
                               │  │  └─ [search]: string #7
                               │  └─ variant_7: struct #18
-                              │     ├─ [endsWith]: optional #8
+                              │     ├─ [endsWith]: optional 'optional_8' #8
                               │     │  └─ item: string #7
-                              │     └─ [startsWith]: optional #8
+                              │     └─ [startsWith]: optional 'optional_8' #8
                               │        └─ item: string #7
                               └─ variant_1: struct #20
                                  └─ [not]: union '_prisma_string_filter' #19
@@ -451,19 +451,19 @@ root: struct 'User_query_input' #119
                                     ├─ variant_2: struct #11
                                     │  └─ [not]: string #7
                                     ├─ variant_3: struct #12
-                                    │  └─ [in]: list #9
+                                    │  └─ [in]: list 'list_9' #9
                                     │     └─ item: string #7
                                     ├─ variant_4: struct #13
-                                    │  └─ [notIn]: list #9
+                                    │  └─ [notIn]: list 'list_9' #9
                                     │     └─ item: string #7
                                     ├─ variant_5: struct #16
                                     │  ├─ [contains]: string #7
-                                    │  └─ [mode]: optional #15
+                                    │  └─ [mode]: optional 'optional_15' #15
                                     │     └─ item: string #14 enum{ '"insensitive"' }
                                     ├─ variant_6: struct #17
                                     │  └─ [search]: string #7
                                     └─ variant_7: struct #18
-                                       ├─ [endsWith]: optional #8
+                                       ├─ [endsWith]: optional 'optional_8' #8
                                        │  └─ item: string #7
-                                       └─ [startsWith]: optional #8
+                                       └─ [startsWith]: optional 'optional_8' #8
                                           └─ item: string #7

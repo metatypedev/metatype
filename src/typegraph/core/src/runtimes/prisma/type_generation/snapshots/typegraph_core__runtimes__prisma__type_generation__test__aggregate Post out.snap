@@ -4,23 +4,23 @@ expression: tp.print(out)
 ---
 root: struct #51
 ├─ [_avg]: struct 'Post_avg_aggregate' #45
-│  └─ [id]: optional #44
+│  └─ [id]: optional 'optional_44' #44
 │     └─ item: float #43
 ├─ [_count]: struct 'Post_count_aggregate' #42
-│  ├─ [_all]: optional #41
+│  ├─ [_all]: optional 'optional_41' #41
 │  │  └─ item: integer #40
-│  ├─ [author]: optional #41
+│  ├─ [author]: optional 'optional_41' #41
 │  │  └─ item: integer #40
-│  ├─ [id]: optional #41
+│  ├─ [id]: optional 'optional_41' #41
 │  │  └─ item: integer #40
-│  └─ [title]: optional #41
+│  └─ [title]: optional 'optional_41' #41
 │     └─ item: integer #40
 ├─ [_max]: struct 'Post_number_aggregate' #50
-│  └─ [id]: optional #49
+│  └─ [id]: optional 'optional_49' #49
 │     └─ item: integer #48
 ├─ [_min]: struct 'Post_number_aggregate' #50
-│  └─ [id]: optional #49
+│  └─ [id]: optional 'optional_49' #49
 │     └─ item: integer #48
 └─ [_sum]: struct 'Post_number_aggregate' #50
-   └─ [id]: optional #49
+   └─ [id]: optional 'optional_49' #49
       └─ item: integer #48
