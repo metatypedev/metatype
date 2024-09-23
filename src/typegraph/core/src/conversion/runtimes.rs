@@ -8,7 +8,9 @@ use crate::runtimes::{
     Runtime, TemporalMaterializer, WasmMaterializer,
 };
 use crate::wit::core::{Artifact as WitArtifact, RuntimeId};
-use crate::wit::runtimes::{HttpMethod, KvMaterializer, MaterializerHttpRequest};
+use crate::wit::runtimes::{
+    HttpMethod, KvMaterializer, MaterializerHttpRequest, SubstantialBackend,
+};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
@@ -18,7 +20,7 @@ use common::typegraph::runtimes::kv::KvRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
-use common::typegraph::runtimes::substantial::SubstantialRuntimeData;
+use common::typegraph::runtimes::substantial::{self, RedisConfig, SubstantialRuntimeData};
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasm::WasmRuntimeData;
 use common::typegraph::runtimes::{
@@ -499,11 +501,18 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
         }))
         .into()),
         Runtime::Substantial(data) => {
-            Ok(TGRuntime::Known(Rt::Substantial(SubstantialRuntimeData {
-                endpoint: data.endpoint.clone(),
-                basic_auth_secret: data.basic_auth_secret.clone(),
-            }))
-            .into())
+            let backend = match &data.backend {
+                SubstantialBackend::Memory => substantial::SubstantialBackend::Memory,
+                SubstantialBackend::Fs => substantial::SubstantialBackend::Fs,
+                SubstantialBackend::Redis(redis) => {
+                    substantial::SubstantialBackend::Redis(RedisConfig {
+                        host: redis.host.clone(),
+                        port: redis.port,
+                    })
+                }
+            };
+
+            Ok(TGRuntime::Known(Rt::Substantial(SubstantialRuntimeData { backend })).into())
         }
         Runtime::Kv(d) => Ok(TGRuntime::Known(Rt::Kv(KvRuntimeData { url: d.url.clone() })).into()),
         Runtime::Grpc(d) => Ok(TGRuntime::Known(Rt::Grpc(GrpcRuntimeData {

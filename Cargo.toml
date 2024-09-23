@@ -10,6 +10,7 @@ members = [
   "src/typegate/standalone",
   "src/typegraph/core",
   "src/xtask",
+  "src/substantial"
 ]
 
 exclude = [
@@ -28,6 +29,7 @@ edition = "2021"
 # internal crates
 mt_deno = { path = "src/mt_deno/" }
 common = { path = "src/common/" }
+substantial = { path = "src/substantial/" }
 metagen = { path = "src/metagen/" }
 typegate_engine = { path = "src/typegate/engine" }
 
