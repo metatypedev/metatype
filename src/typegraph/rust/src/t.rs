@@ -3,8 +3,8 @@ use crate::{
     wasm::{
         self,
         core::{
-            ParameterTransform, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId, TypeInteger,
-            TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
+            FuncParams, ParameterTransform, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
+            TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
         },
     },
 };
@@ -540,4 +540,10 @@ where
         },
         ..Default::default()
     })
+}
+
+impl TypeBuilder for FuncParams {
+    fn build(self) -> Result<TypeId> {
+        func(self.inp, self.out, self.mat)?.build()
+    }
 }
