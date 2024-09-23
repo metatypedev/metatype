@@ -18,7 +18,7 @@ impl Default for HttpMethod {
 }
 
 #[derive(Debug, Default)]
-pub struct RequestBuilder {
+pub struct HttpRequestBuilder {
     runtime: RuntimeId,
     inp: TypeId,
     out: TypeId,
@@ -30,7 +30,7 @@ pub struct RequestBuilder {
     effect: Effect,
 }
 
-impl TypeBuilder for RequestBuilder {
+impl TypeBuilder for HttpRequestBuilder {
     fn build(self) -> Result<TypeId> {
         let base = BaseMaterializer {
             runtime: self.runtime,
@@ -54,7 +54,7 @@ impl TypeBuilder for RequestBuilder {
     }
 }
 
-impl RequestBuilder {
+impl HttpRequestBuilder {
     pub fn content_type(mut self, content: impl ToString) -> Self {
         self.content_type = Some(content.to_string());
         self
@@ -100,28 +100,28 @@ impl HttpRuntime {
         Ok(Self { id })
     }
 
-    pub fn get<T: TypeBuilder>(&self, inp: T, out: T) -> Result<RequestBuilder> {
+    pub fn get<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
         self.request(HttpMethod::Get, inp, out)
     }
 
-    pub fn post<T: TypeBuilder>(&self, inp: T, out: T) -> Result<RequestBuilder> {
+    pub fn post<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
         self.request(HttpMethod::Post, inp, out)
-            .map(|r| r.effect(Effect::Create(true)))
+            .map(|r| r.effect(Effect::Create(false)))
     }
 
-    pub fn put<T: TypeBuilder>(&self, inp: T, out: T) -> Result<RequestBuilder> {
+    pub fn put<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
         self.request(HttpMethod::Put, inp, out)
-            .map(|r| r.effect(Effect::Update(true)))
+            .map(|r| r.effect(Effect::Update(false)))
     }
 
-    pub fn patch<T: TypeBuilder>(&self, inp: T, out: T) -> Result<RequestBuilder> {
+    pub fn patch<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
         self.request(HttpMethod::Patch, inp, out)
-            .map(|r| r.effect(Effect::Update(true)))
+            .map(|r| r.effect(Effect::Update(false)))
     }
 
-    pub fn delete<T: TypeBuilder>(&self, inp: T, out: T) -> Result<RequestBuilder> {
+    pub fn delete<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
         self.request(HttpMethod::Delete, inp, out)
-            .map(|r| r.effect(Effect::Delete(true)))
+            .map(|r| r.effect(Effect::Delete(false)))
     }
 
     fn request<T: TypeBuilder>(
@@ -129,8 +129,8 @@ impl HttpRuntime {
         method: HttpMethod,
         inp: T,
         out: T,
-    ) -> Result<RequestBuilder> {
-        Ok(RequestBuilder {
+    ) -> Result<HttpRequestBuilder> {
+        Ok(HttpRequestBuilder {
             runtime: self.id,
             method,
             inp: inp.build()?,
