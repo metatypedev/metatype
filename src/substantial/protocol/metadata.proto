@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package substantial.protos.metadata;
+
+import "google/protobuf/timestamp.proto";
+
+message Info {
+  string message = 1;
+}
+message Error {
+  string message = 1;
+  string stack = 2;
+  string type = 3;
+}
+
+message Metadata {
+  google.protobuf.Timestamp at = 1;
+  oneof of {
+    Info info = 10;
+    Error error = 11;
+  }
+};
+
+message Records {
+  string run_id = 1;
+  repeated Metadata metadata = 2;
+}

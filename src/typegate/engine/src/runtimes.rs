@@ -3,6 +3,7 @@
 
 pub mod grpc;
 pub mod prisma;
+pub mod substantial;
 pub mod temporal;
 pub mod wasm;
 pub mod wit_wire;

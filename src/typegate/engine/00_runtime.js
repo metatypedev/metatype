@@ -56,4 +56,8 @@ globalThis.Meta = {
     unregister: getOp("op_grpc_unregister"),
     callGrpcMethod: getOp("op_call_grpc_method"),
   },
+  substantial: {
+    createOrGetRun: getOp("op_create_or_get_run"),
+    persistRun: getOp("op_persist_run"),
+  },
 };

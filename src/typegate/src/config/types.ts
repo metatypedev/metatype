@@ -20,21 +20,29 @@ const addMissingEnvVarIssue = (envVar: string, ctx: RefinementCtx) => {
   return z.NEVER;
 };
 
-const refineEnvVar = (envVar: string) => z.string().optional().transform((s: string | undefined, ctx) => {
-  if (s === undefined) {
-    return addMissingEnvVarIssue(envVar, ctx);
-  }
+const refineEnvVar = (envVar: string) =>
+  z
+    .string()
+    .optional()
+    .transform((s: string | undefined, ctx) => {
+      if (s === undefined) {
+        return addMissingEnvVarIssue(envVar, ctx);
+      }
 
-  return s;
-});
+      return s;
+    });
 
-const refineURLEnvVar = (envVar: string) => z.string().optional().transform((s: string | undefined, ctx) => {
-  if (s === undefined) {
-    return addMissingEnvVarIssue(envVar, ctx);
-  }
+const refineURLEnvVar = (envVar: string) =>
+  z
+    .string()
+    .optional()
+    .transform((s: string | undefined, ctx) => {
+      if (s === undefined) {
+        return addMissingEnvVarIssue(envVar, ctx);
+      }
 
-  return new URL(s);
-});
+      return new URL(s);
+    });
 
 export const globalConfigSchema = z.object({
   debug: zBooleanString,
@@ -85,6 +93,12 @@ export const typegateConfigBaseSchema = z.object({
    * Time in seconds in which a URL expires after being pushed to Redis
    */
   redis_url_queue_expire_sec: z.coerce.number().positive(),
+  substantial_relaunch_ms: z.coerce
+    .number()
+    .positive()
+    .min(1_000)
+    .max(60_000)
+    .default(2_000),
 });
 export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;
 

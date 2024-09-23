@@ -1,0 +1,231 @@
+# Python on WebAssembly: How?
+
+Metatype's different language runtimes are nice, but integrating one is an entire story. Let's discover how we managed to implement one for Python.
+
+## Why?
+
+You have probably heard of "Function as a Service" or FaaS. 
+In simple terms, FaaS are platforms that allow users to run code in response to events without the hassle of managing the underlying infrastructure. 
+Users submit their programs and the platform takes care of the rest including, usually, scaling, availability, and configuration.
+AWS Lambda is one such example and FaaS as a whole are a popular implementation of the serverless model.
+
+Metatype has this model at heart with applications composed of small functions that respond to events like http requests and authorization checks. 
+This is achieved through runtimes like the [`DenoRuntime`](/docs/reference/runtimes/deno) which implements a way to execute functions authored in Typescript using Web Workers as implemented by [Deno](https://docs.deno.com/runtime/manual/runtime/workers/) (not based on Deno Deploy). 
+
+:::note
+Metatype supports running multiple apps or typegraphs on a single deployed cluster but we're still in the kitchen on a hosted cloud solution. 
+Subscribe to the [blog](https://metatype.dev/blog/rss.xml) or the [Github](https://github.com/metatypedev/metatype) repository for updates.
+:::
+
+Implementing the `DenoRuntime` was a very straightforward affair as the Typegate (the engine at the heart of Metatype) is primarily written in Typescript and runs on a slightly modified version of the Deno runtime.
+What's more, JavaScript has single threaded and asynchronous semantics and the v8 engine that it commonly runs on is of very high-quality by all regards. 
+These qualities lend themselves very well to the requirements of running a serverless platform like security (good sandboxing) and performance (low start-up latencies).
+This fact is reflected in the dominance of JavaScript in the serverless market though it doesn't hurt that it's also the most popular language in use today.
+
+Another very popular language is Python; and its standard library can be quite resourceful for this type of use case.
+However, as we shall see, integrating the Python runtime isn't as simple as integrating Deno.
+
+## What are the requirements?
+
+There are a number of Python runtimes available but a set of extra factors limit what we can achieve.
+
+1. **Security**: functions should have limited access to the execution environment. Python doesn't have built-in features for sandboxing out of the box unlike Deno.
+2. **Speed**: functions should run fast and with low latency. We're interested in metrics like cold-start latency and overhead of any cross process/system communication.
+3. **User-friendliness**: functionalities provided in any of the languages supported by Metatype should, within reason, mirror each other and maintain a degree of uniformity. We support inline code snippets and external file references for `DenoRuntime` and this should be the case for Python as well.
+4. **Interoperability**: functions running in Python will need to have access to other parts of the app running on the Typegate like being able to invoke other functions.
+
+The Typegate is a TypeScript program with a bit of Rust sprinkled in. 
+It runs as a traditional POSIX process. 
+Think Linux containers. 
+This fact renders multi-processing, one of the readily apparent approaches, undesirable as it would require investing is robust worker process management and distribution schemes.
+It'd be great if we could keep everything inside the Typegate process.
+
+One solution that presents itself here is the [PyO3](https://pyo3.rs/) project which provide Rust bindings to different Python runtimes like CPython and PyPy.
+It'd not only allow us to run Python code in-process but it also provide an easy way to expose the functions written in Rust to Python and vice-versa. 
+A good solution for the bidirectional communication needed for our interoperability requirements.
+
+Unfortunately, PyO3 doesn't have any provisions for sandboxing which is critical for our use case.
+This is where WebAssembly enters into the picture. 
+WebAssembly or Wasm for short is a executable bytecode format that originates from the web world and is designed for applications that run inside web-browsers. 
+This use case shares most of our requirements and the Wasm world promises excellent sandboxing properties that should be perfect for our use case.
+We just have to find a way to run Python inside of it.
+
+## An aside on WASI 
+
+WebAssembly System Interface (WASI) is an additional spec for the bytecode format that formalizes how Wasm programs access their host environment.
+A lot like POSIX, this generally means OS capabilities such as file system access and networking but also, in it's latest iteration extends to any custom host defined functionality.
+
+Wasm + WASI fits very well to our use case. As opposed to mutli-processing, we can instantiate, manage, and expose resources programmatically with ease.
+And as luck would have it, some [community work](https://github.com/vmware-labs/webassembly-language-runtimes) has already been done at the time that led to wasm builds of CPython being available.
+
+Unfortunately, the WASI spec itself is a work in progress.
+When we started out, only the limited "[preview1](https://github.com/WebAssembly/WASI/blob/main/legacy/preview1/docs.md)" implementation was supported by most runtimes.
+`preview1` only focused on a standard set of host functionalities much like a `libc` implementation.
+Well enough but any custom functionality meant having to rely on simple C ABI alike functions for _intra_-process communication.
+In order to make this work easier, we elected to bring PyO3 back into the picture so that all the IPC stuff is written in Rust, the language with the most support in the Wasm ecosystem today.
+
+All in all, this would mean the python interpreter wrapped in a PyO3 based native API.
+An assembly that accepts user code as strings and then invokes them in response to events.
+All of this would be running inside a Wasm runtime, [WasmEdge](https://wasmedge.org/) in this case, which ticks of all of the sandboxing and security requirements.
+This approach is well described as the [Reactor pattern](https://wasmcloud.com/blog/webassembly-patterns-command-reactor-library#the-reactor-pattern), a common pattern used in Wasm land.
+
+<img src="/images/wasi_vfs_python_and_rust.svg" alt="FIRST SOLUTION" />
+
+### File system access
+
+Since the PyO3 project doesn't support [statically linking](https://github.com/PyO3/pyo3/issues/416) the Python runtime, we'll need to find a way dynamically link `libpython`.
+Thankfully, Wasm does support [dynamic linking](https://github.com/WebAssembly/design/blob/main/DynamicLinking.md) and wasm builds of [`libpython`](https://github.com/vmware-labs/webassembly-language-runtimes/tree/main/python) are available curtsy of the WebAssembly Language Runtimes project. 
+Bringing all of this together isn't as simple though as PyO3's tries to load `libpython` from certain _paths_, a concept that isn't exactly clearly defined in Wasm's post POSIX webtopia.
+
+Our first solution was to use [wasi-vfs](https://github.com/kateinoigakukun/wasi-vfs), a tool which allows you to embed a virtual file system, accessible through preview1 APIs, directly into your wasm binaries.
+This way, we could prepare a single wasm artifact that contains both the `libpython` build and the custom glue code.
+
+This approach turned out to be quite hacky though and after encountering several issues, we ultimately decided to go with **preopens**.
+Preopens are another virtual file-system solution where you map an actual file-system directory to a virtual directory visible to a running Wasm instance.
+This means we'll need to prepare the `libpython` Wasm file on disk before running the instance but it was an acceptable solution.
+We also use preopens to provide some of the user submitted code to our custom python runtime.
+
+The following rust snippet demonstrates the preopens looked like in use:
+
+```rust
+fn init_Python_vm() -> Result<Rt> {
+  let preopens = vec![
+    // User script will be uploaded at ./src/Python which is virtually seen as /app
+    // Each script has access only to /app
+    "/app:./src/Python:readonly".to_owned()
+  ];
+
+  // This follow the same idea as above, but for clarity's sake we decided to separate it
+  let pylib = PathBuf::from("./vendor/libpython/usr/local/lib");
+
+  // This is our wasm module reponsible for running Python scripts at runtime
+  // It assumes /app and libpython to be available in its world
+  let wasi_mod = PathBuf::from("./build/Python-wasi-reactor.wasm");
+
+  // Now we can instantiate the WASI module with all the configurations above
+  let rt = instantiate_custom_python_runtime(preopens, pylib, wasi_mod)?;
+  rt.run_func(None, "init_Python", params!())?;
+
+  // ..
+
+  Ok(rt)
+}
+```
+
+### WASI 0.2
+
+The solution described above worked well to an extent but the limitations of preview1 and all the wrangling with PyO3 resulted in complexity that we were always ready to get rid of.
+This was exactly what we did after the Bytecode Alliance finalized [WASI 0.2](https://bytecodealliance.org/articles/WASI-0.2) back in January 2024 and with it, a slew of new opportunuties.
+
+WASI 0.2 introduces a whole new concept of components, wasm modules that come with pre-specifed interfaces using the [Wit](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) format and based on a whole new [ABI](https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md) to boot.
+These new capabilities suggest that it should possible to replace our PyO3 based glue code with the WASI based layer. 
+Let's see how.
+
+We first used the new found WASI powers to implement support for Wasm based functions through the [`WasmRuntime`](/docs/reference/runtimes/wasm).
+This lead us to implement the [`wit_wire`](https://github.com/metatypedev/metatype/blob/2e692b9ae9e48b6e1a863130fc1bfbdd004cb631/src/wit/wit-wire.wit) protocol, a simple JSON based WIT interface that'd be used by any wasm component that intenteds to run on the `WasmRuntime`.
+Simple enough that it's reproduced down below in it's entirety.
+
+```wit
+package metatype:wit-wire;
+
+// what the host provides
+interface typegate-wire {
+  hostcall: func(op-name: string, json: string) -> result<string, string>;
+}
+
+// what's expected from the guest
+interface mat-wire {
+
+  // init function called when we first make the component
+  init: func(args: init-args) -> result<init-response, init-error>;
+  // general purpose event handler
+  handle: func(req: handle-req) -> result<json-str, handle-err>;
+
+  type json-str = string;
+
+  record init-args {
+    // the list of operations the application is expecting
+    // from this component
+    expected-ops: list<mat-info>
+    metatype-version: string,
+  }
+
+  record mat-info {
+    op-name: string,
+    mat-title: string,
+    mat-data-json: string,
+  }
+
+  record init-response {
+    ok: bool
+  }
+
+  variant init-error {
+    version-mismatch(string),
+    unexpected-mat(mat-info),
+    other(string)
+  }
+
+  record handle-req {
+    op-name: string,
+    in-json: json-str,
+  }
+
+  variant handle-err {
+    no-handler,
+    in-json-err(string),
+    handler-err(string),
+  }
+}
+
+// a world defines what interfaces get imported
+// and exported
+world wit-wire {
+  import typegate-wire;
+
+  export mat-wire;
+}
+
+```
+
+Squint your eyes tight enough and the `wit_wire` protocol as implemented wasn't far off from what the PyO3 based glue code was doing in the previous implementation.
+Specifically, register a list of operations that the Typegate is expecting from the module and execute them for incoming event.
+We just need to add support for the operation metadata to contain extra items.
+In the case of the [`PythonRuntime`](/docs/reference/runtimes/python), this would be the Python code itself.
+
+Now that we have the `wit_wire` implementation taking care of bidirectional communication, we have little reason to keep the PyO3 based glue code around.
+This glue was doing a bit more than acting as a boundary though.
+It was also responsible for setting up the operating environment for the Python code.
+For example, we'd need some kind of initialization to execute the user's Python snippets which are in free standing `lambda` form. 
+How does one create components out of Python anyways?
+
+[componentize-py](https://github.com/bytecodealliance/componentize-py) is a tool authored by the Bytecode Alliance that allows you to produce WASI components that are authored in Python.
+It has code generation suite that emits guest bindings in Python for any WIT specification you feed it.
+It then takes your Python code written against these bindings and embeds them in a Wasm build of the Python interpreter to produce a component that supports the specified Wit.
+
+Unsurprisingly, componentize-py relies on PyO3 and preopens itself in addition to [component-init](https://github.com/dicej/component-init), a solution to pre-intialize components up to a certain point for improved startup latencies.
+This pre-intialization means we won't need to provide the actual preopens for the resulting component, baking the `libpython` object code directly into it as PyO3 will have dynamically loaded the object code by that point.
+Ultimately, this allows us to write all of our glue code in Python itself.
+
+We still need a bit of Rust to support the `wit_wire` interface on the Typegate but this implementation is general across both the `PythonRuntime` and `WasmRuntime`.
+We'd also moved to the [Wasmtime](https://wasmtime.dev/), also by Bytecode Alliance, for our wasm workloads at this point and their Rust bindings are a pleasure to use.
+It's all smooth sailing from here.
+
+## Cloudy skies?
+
+A final stumbling block for this approach was the many seconds Wasmtime spends cooking all your CPU cores when it compiles the fat wasm module that contains the Python interpreter, Pyo3 bindings and more.
+This happens because Wasmtime does't ([yet](https://github.com/bytecodealliance/rfcs/blob/main/accepted/wasmtime-baseline-compilation.md)) implement any schemes for tiered compilation, all code being greeted by their optimizing compiler, Cranelift.
+And optimizations take time.
+Sure, you only pay this cost the first time you load the Python runtime module as Wasmtime has great support for caching including on-disk caching.
+But, 10+ second cold-starts, as measured on one developer's machine, are unacceptable in a system that primarily serves HTTP requests.
+What to do?
+
+Wasmtime has just the feature for this problem, [pre-compilation](https://docs.wasmtime.dev/cli-options.html#compile).
+Ahead-of-time compilation of wasm bytecode into a native instruction set.
+Such files are commonly given the `.cwasm` extesion, _c_ for compiled, and they are not a standalone executable but inteded to be run within Wasmtime's sandbox.
+This eliminates the compliation cost but the semantics of the source wasm bytecode and the runtime safe-guards means that this should be just as safe as JITting it (just-in-time compilation).
+We then statically embed this pre-compiled wasm artifact, after compressing it, in the Typegate binary removing the need for sidecar files while ensuring minimal cold-starts for our python workloads.
+To be concrete, this means _roughly_ around 200 ms of overhead for a cold function and 5 ms for a warm one.
+Good enough.
+
+This post describes the technical journey we took to arrive to the current implementation of the `PythonRuntime`. Hopefully, all details were clear enough and please direct any feedback, questions, and thoughts to the comments down below and our Github issues/discussion board.
