@@ -526,9 +526,10 @@ impl TypeBuilder for FuncBuilder {
     }
 }
 
-pub fn func<T>(inp: T, out: T, mat: u32) -> Result<FuncBuilder>
+pub fn func<I, O>(inp: I, out: O, mat: u32) -> Result<FuncBuilder>
 where
-    T: TypeBuilder,
+    I: TypeBuilder,
+    O: TypeBuilder,
 {
     Ok(FuncBuilder {
         data: TypeFunc {

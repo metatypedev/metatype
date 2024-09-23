@@ -1,4 +1,5 @@
 pub mod http;
+pub mod kv;
 
 use crate::wasm::runtimes::Effect;
 
