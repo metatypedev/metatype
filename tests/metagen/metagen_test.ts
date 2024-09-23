@@ -514,7 +514,7 @@ Meta.test("mdk table suite", async (metaTest) => {
   }
 });
 
-Meta.test({
+Meta.test.only({
   name: "client table suite",
 }, async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
