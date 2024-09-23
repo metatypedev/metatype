@@ -17,6 +17,7 @@ pub(crate) mod completion;
 pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;
+pub(crate) mod fdk_template;
 pub(crate) mod gen;
 pub(crate) mod list;
 pub(crate) mod new;
@@ -87,6 +88,8 @@ pub(crate) enum Commands {
     Doctor(doctor::Doctor),
     /// Create a new Metatype project
     New(new::New),
+    /// Dump the default fdk template
+    FdkTemplate(fdk_template::CreateFdkTemplate),
     /// Access a minimal deno CLI
     Typegate(typegate::Typegate),
 }

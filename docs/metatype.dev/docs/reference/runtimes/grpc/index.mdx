@@ -1,0 +1,39 @@
+import TGExample from "@site/src/components/TGExample";
+
+# gRPC Runtime
+
+## Overview
+
+The `GrpcRuntime` allows your Typegraphs to interact with external gRPC services. Similar to the HTTP runtime, this enables integrating gRPC services into your graph through a unified interface.
+
+Common use cases include:
+
+- Consuming a gRPC API within a Typegraph
+- Calling gRPC methods programmatically via a type-safe structure
+
+In a `GrpcRuntime`, several key parameters help define how the graph interacts with the service, such as the gRPC **endpoint**, the **protofile** that describes the service, and the **method** to be called.
+
+## Variables
+
+### `proto_file`
+
+The `proto_file` is the path to the `.proto` file that defines the gRPC service. This file contains the service definitions, including message types and method signatures, that the Typegraph will use to communicate with the gRPC server.
+
+### `endpoint`
+
+The `endpoint` is the address of the gRPC server that the Typegraph will communicate with. It uses the format `tcp://<host>:<port>`, and is specified to point to the correct server and port where the gRPC service is running.
+
+## Method
+
+### `call`
+
+This method creates a typegraph function for gRPC method calls. It accepts the full path to the gRPC method, usually in the form `/package_name.service_name/method_name`. The **package_name** refers to the package defined in the `.proto` file, and it must be included when calling the method. In the example below, `greet` will call the `SayHello` method of the `Greeter` service within the `helloworld` package, as defined in the `helloworld.proto` file.
+
+## Example
+
+<TGExample
+  typegraph="grpc"
+  typescript={require("!!code-loader!../../../../../../examples/typegraphs/grpc.ts")}
+  python={require("!!code-loader!../../../../../../examples/typegraphs/grpc.py")}
+  query={require("./grpc.graphql")}
+/>

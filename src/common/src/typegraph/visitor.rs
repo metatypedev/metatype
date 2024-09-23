@@ -6,11 +6,56 @@ use std::{collections::HashSet, fmt::Display};
 
 use super::{TypeNode, Typegraph};
 
+#[derive(Clone)]
+pub struct DefaultLayer;
+
+pub struct ChildNode<'a>(pub PathSegment<'a>, pub u32);
+
+pub trait VisitLayer<'a, V: TypeVisitor<'a>>: Clone + Sized + 'a {
+    fn visit(
+        &self,
+        traversal: &mut TypegraphTraversal<'a, V, Self>,
+        source: impl Iterator<Item = ChildNode<'a>>,
+        context: &'a V::Context,
+    ) -> Option<V::Return>;
+}
+
+impl<'a, V: TypeVisitor<'a>> VisitLayer<'a, V> for DefaultLayer {
+    fn visit(
+        &self,
+        traversal: &mut TypegraphTraversal<'a, V, Self>,
+        source: impl Iterator<Item = ChildNode<'a>>,
+        context: &'a V::Context,
+    ) -> Option<V::Return> {
+        for ChildNode(path_seg, idx) in source {
+            if let Some(res) = visit_child(traversal, path_seg, idx, context) {
+                return Some(res);
+            }
+        }
+        None
+    }
+}
+
+pub fn visit_child<'a, V: TypeVisitor<'a>, L: VisitLayer<'a, V>>(
+    traversal: &mut TypegraphTraversal<'a, V, L>,
+    path_seg: PathSegment<'a>,
+    idx: u32,
+    context: &'a V::Context,
+) -> Option<V::Return> {
+    traversal.visit_child(path_seg, idx, context)
+}
+
 impl Typegraph {
     /// Depth-first traversal over all the types
-    pub fn traverse_types<'a, V>(&'a self, visitor: V, context: &'a V::Context) -> Option<V::Return>
+    pub fn traverse_types<'a, V, L>(
+        &'a self,
+        visitor: V,
+        context: &'a V::Context,
+        layer: L,
+    ) -> Option<V::Return>
     where
-        V: TypeVisitor<'a> + Sized,
+        V: TypeVisitor<'a> + Sized + 'a,
+        L: VisitLayer<'a, V>,
     {
         let mut traversal = TypegraphTraversal {
             tg: self,
@@ -19,6 +64,7 @@ impl Typegraph {
             visited_input_types: HashSet::new(),
             visitor,
             as_input: false,
+            layer,
         };
         traversal
             .visit_type(0, context)
@@ -33,9 +79,10 @@ pub struct FunctionMetadata {
     pub parent_struct_idx: u32,
 }
 
-struct TypegraphTraversal<'a, V>
+pub struct TypegraphTraversal<'a, V, L = DefaultLayer>
 where
-    V: TypeVisitor<'a> + Sized,
+    V: TypeVisitor<'a> + Sized + 'a,
+    L: VisitLayer<'a, V>,
 {
     tg: &'a Typegraph,
     path: Vec<PathSegment<'a>>,
@@ -43,11 +90,13 @@ where
     visited_types: HashSet<u32>, // non input types
     visited_input_types: HashSet<u32>,
     visitor: V,
+    layer: L,
 }
 
-impl<'a, V> TypegraphTraversal<'a, V>
+impl<'a, V, L> TypegraphTraversal<'a, V, L>
 where
     V: TypeVisitor<'a> + Sized,
+    L: VisitLayer<'a, V>,
 {
     fn visit_type(&mut self, type_idx: u32, context: &'a V::Context) -> Option<V::Return> {
         let res = if self.as_input {
@@ -148,20 +197,18 @@ where
         props: &'a IndexMap<String, u32>,
         context: &'a V::Context,
     ) -> Option<V::Return> {
-        for (prop_name, prop_type) in props.iter() {
-            let res = self.visit_child(
-                PathSegment {
-                    from: type_idx,
-                    edge: Edge::ObjectProp(prop_name),
-                },
-                *prop_type,
-                context,
-            );
-            if let Some(res) = res {
-                return Some(res);
-            }
-        }
-        None
+        self.visit_children(
+            props.iter().map(|(name, idx)| {
+                (
+                    PathSegment {
+                        from: type_idx,
+                        edge: Edge::ObjectProp(name),
+                    },
+                    *idx,
+                )
+            }),
+            context,
+        )
     }
 
     fn visit_union(
@@ -254,6 +301,18 @@ where
         res
     }
 
+    fn visit_children(
+        &mut self,
+        children: impl Iterator<Item = (PathSegment<'a>, u32)>,
+        context: &'a V::Context,
+    ) -> Option<V::Return> {
+        self.layer.clone().visit(
+            self,
+            children.map(|(seg, idx)| ChildNode(seg, idx)),
+            context,
+        )
+    }
+
     fn visit_child(
         &mut self,
         segment: PathSegment<'a>,
@@ -267,7 +326,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PathSegment<'a> {
     #[allow(dead_code)]
     pub from: u32, // typeIdx
@@ -299,7 +358,7 @@ impl<'a> Display for Path<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Edge<'a> {
     ObjectProp(&'a str),
     ArrayItem,

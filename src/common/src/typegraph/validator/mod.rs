@@ -9,14 +9,14 @@ mod value;
 use crate::typegraph::{TypeNode, Typegraph};
 
 use super::visitor::{
-    CurrentNode, Edge, Path, PathSegment, TypeVisitor, TypeVisitorContext, VisitResult,
-    VisitorResult,
+    visit_child, ChildNode, CurrentNode, Edge, Path, PathSegment, TypeVisitor, TypeVisitorContext,
+    VisitLayer, VisitResult, VisitorResult,
 };
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
-    tg.traverse_types(validator, &context).unwrap()
+    tg.traverse_types(validator, &context, Layer).unwrap()
 }
 
 #[derive(Debug)]
@@ -33,6 +33,30 @@ pub struct ValidatorContext<'a> {
 #[derive(Debug, Default)]
 struct Validator {
     errors: Vec<ValidatorError>,
+}
+
+#[derive(Clone)]
+struct Layer;
+
+impl<'a> VisitLayer<'a, Validator> for Layer {
+    fn visit(
+        &self,
+        traversal: &mut super::visitor::TypegraphTraversal<'a, Validator, Self>,
+        source: impl Iterator<Item = ChildNode<'a>>,
+        context: &'a ValidatorContext<'a>,
+    ) -> Option<<Validator as TypeVisitor>::Return> {
+        let mut errors = vec![];
+        for ChildNode(path_seg, idx) in source {
+            if let Some(err) = visit_child(traversal, path_seg, idx, context) {
+                errors.extend(err);
+            }
+        }
+        if errors.is_empty() {
+            None
+        } else {
+            Some(errors)
+        }
+    }
 }
 
 impl Validator {

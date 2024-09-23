@@ -28,14 +28,14 @@ const tg = await typegraph(
         remix: deno
           .import(idv3, idv3, {
             module: "./metagen/ts/remix.ts",
-            deps: ["./metagen/ts/mdk.ts"],
+            deps: ["./metagen/ts/fdk.ts"],
             name: "remix_track",
           })
           .rename("remix_track"),
       },
-      Policy.public()
+      Policy.public(),
     );
-  }
+  },
 );
 
 if (false) {
@@ -48,13 +48,13 @@ if (false) {
       targets: {
         main: [
           {
-            generator: "mdk_typescript",
+            generator: "fdk_typescript",
             typegraph_path: myPath,
             path: "funcs/",
           },
         ],
       },
-    }
+    },
   );
   // dry_run doesn't write to disk
   metagen.dryRun(tg, "main");

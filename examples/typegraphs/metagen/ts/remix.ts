@@ -1,4 +1,4 @@
-import type { RemixTrackHandler, Ctx, Idv3 } from "./mdk.ts"
+import type { RemixTrackHandler, Ctx, Idv3 } from "./fdk.ts";
 
 // the name of the export must match the one referred int he typegraph
 export const remix_track: RemixTrackHandler = (inp, cx: Ctx) => {
@@ -7,7 +7,7 @@ export const remix_track: RemixTrackHandler = (inp, cx: Ctx) => {
     artist: `${inp.artist} + DJ Cloud`,
     releaseTime: new Date().toISOString(),
     // S3Runtime could be used to really provide this service
-    mp3Url: `${cx.meta.url}/get_mp3`
+    mp3Url: `${cx.meta.url}/get_mp3`,
   };
   return out;
-}
+};

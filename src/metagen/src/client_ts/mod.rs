@@ -12,7 +12,7 @@ use shared::get_gql_type;
 use crate::interlude::*;
 use crate::*;
 
-use crate::mdk_typescript::utils;
+use crate::fdk_typescript::utils;
 use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
@@ -23,7 +23,7 @@ use utils::normalize_type_title;
 pub struct ClienTsGenConfig {
     #[serde(flatten)]
     #[garde(dive)]
-    pub base: crate::config::MdkGeneratorConfigBase,
+    pub base: crate::config::FdkGeneratorConfigBase,
 }
 
 impl ClienTsGenConfig {
@@ -83,6 +83,7 @@ impl crate::Plugin for Generator {
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            _ => bail!("unexpected input type"),
         };
         let mut out = HashMap::new();
         out.insert(
@@ -229,7 +230,7 @@ fn render_data_types(
 ) -> anyhow::Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(mdk_typescript::types::TypescriptTypeRenderer {}),
+        Rc::new(fdk_typescript::types::TypescriptTypeRenderer {}),
     );
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;
@@ -321,11 +322,12 @@ fn e2e() -> anyhow::Result<()> {
                 [GeneratorConfig {
                     generator_name: "client_ts".to_string(),
                     other: serde_json::to_value(client_ts::ClienTsGenConfig {
-                        base: config::MdkGeneratorConfigBase {
+                        base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),
                             typegraph_path: None,
                             // NOTE: root will map to the test's tempdir
                             path: "./".into(),
+                            template_dir: None,
                         },
                     })?,
                 }]

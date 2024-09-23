@@ -534,6 +534,20 @@ interface runtimes {
     }
 
     kv-operation: func(base: base-materializer, data: kv-materializer) -> result<materializer-id, error>;
+
+    // Grpc
+    record grpc-runtime-data {
+        proto-file: string,
+        endpoint: string,
+    }
+
+    register-grpc-runtime: func(data: grpc-runtime-data) -> result<runtime-id, error>;
+
+    record grpc-data {
+        method: string,
+    }
+
+    call-grpc-method: func(runtime: runtime-id, data: grpc-data) -> result<func-params, error>;
 }
 
 interface aws {
@@ -629,21 +643,21 @@ interface utils {
 
     remove-injections: func(type-id: type-id) -> result<type-id, error>;
 
-    record mdk-config {
+    record fdk-config {
         workspace-path: string,
         target-name: string,
         config-json: string,
         tg-json: string,
     }
 
-    record mdk-output {
+    record fdk-output {
         path: string,
         content: string,
         overwrite: bool,
     }
 
-    metagen-exec: func(config: mdk-config) -> result<list<mdk-output>, string>;
-    metagen-write-files: func(items: list<mdk-output>, typegraph-dir: string) -> result<_, string>;
+    metagen-exec: func(config: fdk-config) -> result<list<fdk-output>, error>;
+    metagen-write-files: func(items: list<fdk-output>, typegraph-dir: string) -> result<_, error>;
 }
 
 interface host {

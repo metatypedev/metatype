@@ -23,6 +23,7 @@ use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::hash::Hasher as _;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use crate::wit::core::{
@@ -47,6 +48,7 @@ struct RuntimeContexts {
 #[derive(Default)]
 pub struct TypegraphContext {
     name: String,
+    path: Option<Rc<Path>>,
     meta: TypeMeta,
     types: Vec<Option<TypeNode>>,
     runtimes: Vec<TGRuntime>,
@@ -95,6 +97,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
 
     let mut ctx = TypegraphContext {
         name: params.name.clone(),
+        path: Some(PathBuf::from(&params.path).into()),
         meta: TypeMeta {
             version: TYPEGRAPH_VERSION.to_string(),
             queries: Queries {
@@ -489,4 +492,14 @@ impl TypegraphContext {
     pub fn find_policy_index_by_store_id(&self, id: u32) -> Option<u32> {
         self.mapping.policies.get(&id).copied()
     }
+}
+
+pub fn current_typegraph_path() -> Result<Rc<Path>> {
+    with_tg(|tg| tg.path.clone().unwrap())
+}
+
+pub fn current_typegraph_dir() -> Result<PathBuf> {
+    let tg_path = current_typegraph_path()?;
+    // TODO error handling
+    Ok(tg_path.parent().unwrap().to_owned())
 }

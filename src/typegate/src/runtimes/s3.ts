@@ -4,7 +4,6 @@
 import { Runtime } from "./Runtime.ts";
 import type { ComputeStage } from "../engine/query_engine.ts";
 import type { RuntimeInitParams } from "../types.ts";
-// import { iterParentStages, JSONValue } from "../utils.ts";
 import {
   GetObjectCommand,
   type GetObjectCommandInput,

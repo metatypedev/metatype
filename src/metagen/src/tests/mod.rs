@@ -1,10 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::borrow::Cow;
+
 use crate::{interlude::*, *};
 
 mod fixtures;
 pub use fixtures::*;
+use futures_lite::StreamExt as _;
 
 #[derive(Clone)]
 struct TestCtx {
@@ -20,8 +23,45 @@ impl InputResolver for TestCtx {
                 })
             }
             GeneratorInputOrder::TypegraphFromPath { .. } => unimplemented!(),
+            GeneratorInputOrder::LoadFdkTemplate {
+                default,
+                override_path,
+            } => Ok(GeneratorInputResolved::FdkTemplate {
+                template: load_fdk_template(default, override_path.as_deref()).await?,
+            }),
         }
     }
+}
+
+async fn load_fdk_template(
+    default: &[(&'static str, &'static str)],
+    template_dir: Option<&std::path::Path>,
+) -> anyhow::Result<FdkTemplate> {
+    let mut group = FutureGroup::new();
+    for (file_name, content) in default.iter() {
+        // TODO absolute path?
+        let override_path: Option<PathBuf> = template_dir.map(Into::into);
+        group.insert(Box::pin(async move {
+            let content = if let Some(override_path) = override_path {
+                let path = override_path.join(file_name);
+                if tokio::fs::try_exists(&path).await? {
+                    Cow::Owned(tokio::fs::read_to_string(path).await?)
+                } else {
+                    Cow::Borrowed(*content)
+                }
+            } else {
+                Cow::Borrowed(*content)
+            };
+            anyhow::Ok((*file_name, content))
+        }));
+    }
+
+    let mut entries = HashMap::new();
+    while let Some(res) = group.next().await {
+        let (file_name, content) = res?;
+        entries.insert(file_name, content);
+    }
+    Ok(FdkTemplate { entries })
 }
 
 pub struct BuildArgs {

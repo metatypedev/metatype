@@ -25,7 +25,7 @@ use utils::normalize_type_title;
 pub struct ClienPyGenConfig {
     #[serde(flatten)]
     #[garde(dive)]
-    pub base: crate::config::MdkGeneratorConfigBase,
+    pub base: crate::config::FdkGeneratorConfigBase,
 }
 
 impl ClienPyGenConfig {
@@ -85,6 +85,7 @@ impl crate::Plugin for Generator {
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            _ => bail!("unexpected input type"),
         };
         let mut out = HashMap::new();
         out.insert(
@@ -314,11 +315,12 @@ fn e2e() -> anyhow::Result<()> {
                 [GeneratorConfig {
                     generator_name: "client_py".to_string(),
                     other: serde_json::to_value(client_py::ClienPyGenConfig {
-                        base: config::MdkGeneratorConfigBase {
+                        base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),
                             typegraph_path: None,
                             // NOTE: root will map to the test's tempdir
                             path: "./".into(),
+                            template_dir: None,
                         },
                     })?,
                 }]

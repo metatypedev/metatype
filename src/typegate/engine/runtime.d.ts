@@ -13,9 +13,7 @@ type MetaNS = {
   wasmtimeWit: (inp: WasmInput) => string;
 
   prisma: {
-    registerEngine: (
-      inp: PrismaRegisterEngineInp,
-    ) => Promise<void>;
+    registerEngine: (inp: PrismaRegisterEngineInp) => Promise<void>;
     unregisterEngine: (engine_name: string) => Promise<void>;
     query: (inp: PrismaQueryInp) => Promise<string>;
     diff: (
@@ -32,15 +30,9 @@ type MetaNS = {
   temporal: {
     clientRegister: (inp: TemporalRegisterInput) => Promise<void>;
     clientUnregister: (client_id: string) => void;
-    workflowStart: (
-      inp: TemporalWorkflowStartInput,
-    ) => Promise<string>;
-    workflowSignal: (
-      inp: TemporalWorkflowSignalInput,
-    ) => Promise<void>;
-    workflowQuery: (
-      inp: TemporalWorkflowQueryInput,
-    ) => Promise<Array<string>>;
+    workflowStart: (inp: TemporalWorkflowStartInput) => Promise<string>;
+    workflowSignal: (inp: TemporalWorkflowSignalInput) => Promise<void>;
+    workflowQuery: (inp: TemporalWorkflowQueryInput) => Promise<Array<string>>;
     workflowDescribe: (
       inp: TemporalWorkflowDescribeInput,
     ) => Promise<TemporalWorkflowDescribeOutput>;
@@ -53,13 +45,17 @@ type MetaNS = {
       args: WitWireInitArgs,
       cb: (op_name: string, json: string) => Promise<string>,
     ) => Promise<WitWireInitResponse>;
-    destroy: (
-      instanceId: string,
-    ) => Promise<void>;
+    destroy: (instanceId: string) => Promise<void>;
     handle: (
       instanceId: string,
       args: WitWireReq,
     ) => Promise<WitWireHandleResponse>;
+  };
+
+  grpc: {
+    register: (inp: GrpcRegisterInput) => Promise<void>;
+    unregister: (client_id: string) => Promise<void>;
+    callGrpcMethod: (inp: CallGrpcMethodInput) => Promise<string>;
   };
 };
 
@@ -259,3 +255,15 @@ export type WitWireHandleResponse =
   | {
     HandlerErr: string;
   };
+
+export type GrpcRegisterInput = {
+  proto_file_content: string;
+  endpoint: string;
+  client_id: string;
+};
+
+export type CallGrpcMethodInput = {
+  method: string;
+  payload: string;
+  client_id: string;
+};

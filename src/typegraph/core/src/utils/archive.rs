@@ -2,16 +2,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::fs::FsContext;
+use crate::errors::Result;
 use common::archive::{archive_entries_from_bytes, encode_bytes_to_base_64};
 use std::{collections::BTreeMap, path::Path};
 
 pub trait ArchiveExt {
-    fn compress_and_encode(&self, path: impl AsRef<Path>) -> Result<String, String>;
-    // fn unpack_base64(&self, tarb64: &str, dest: &Path) -> Result<(), String>;
+    fn compress_and_encode(&self, path: impl AsRef<Path>) -> Result<String>;
+    // fn unpack_base64(&self, tarb64: &str, dest: &Path) -> Result<()>;
 }
 
 impl FsContext {
-    fn load_tg_ignore(&self, file: &Path) -> Result<Vec<String>, String> {
+    fn load_tg_ignore(&self, file: &Path) -> Result<Vec<String>> {
         if self.exists(file)? {
             let content = self.read_text_file(file)?;
 
@@ -33,7 +34,7 @@ impl FsContext {
 }
 
 impl ArchiveExt for FsContext {
-    fn compress_and_encode(&self, path: impl AsRef<Path>) -> Result<String, String> {
+    fn compress_and_encode(&self, path: impl AsRef<Path>) -> Result<String> {
         let path = path.as_ref();
         crate::logger::debug!("compress_and_encode: {path:?}");
         let ignore = {
@@ -54,7 +55,7 @@ impl ArchiveExt for FsContext {
             .collect::<Result<BTreeMap<_, _>, _>>()?;
 
         let bytes = archive_entries_from_bytes(entries).map_err(|e| e.to_string())?;
-        encode_bytes_to_base_64(bytes).map_err(|e| e.to_string())
+        Ok(encode_bytes_to_base_64(bytes)?)
     }
 
     /* fn unpack_base64(&self, tarb64: &str, dest: &Path) -> Result<(), String> {
