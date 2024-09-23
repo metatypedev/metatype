@@ -31,28 +31,28 @@ thread_local! {
 
 pub fn with_core<F, T>(f: F) -> T
 where
-    F: Fn(&core::Guest, &mut Store<State>) -> wasmtime::Result<T>,
+    F: FnOnce(&core::Guest, &mut Store<State>) -> wasmtime::Result<T>,
 {
     TYPEGRAPH.with(|t| STORE.with_borrow_mut(|s| f(t.metatype_typegraph_core(), s).unwrap()))
 }
 
 pub fn with_runtimes<F, T>(f: F) -> T
 where
-    F: Fn(&runtimes::Guest, &mut Store<State>) -> wasmtime::Result<T>,
+    F: FnOnce(&runtimes::Guest, &mut Store<State>) -> wasmtime::Result<T>,
 {
     TYPEGRAPH.with(|t| STORE.with_borrow_mut(|s| f(t.metatype_typegraph_runtimes(), s).unwrap()))
 }
 
 pub fn with_aws<F, T>(f: F) -> T
 where
-    F: Fn(&aws::Guest, &mut Store<State>) -> wasmtime::Result<T>,
+    F: FnOnce(&aws::Guest, &mut Store<State>) -> wasmtime::Result<T>,
 {
     TYPEGRAPH.with(|t| STORE.with_borrow_mut(|s| f(t.metatype_typegraph_aws(), s).unwrap()))
 }
 
 pub fn with_utils<F, T>(f: F) -> T
 where
-    F: Fn(&utils::Guest, &mut Store<State>) -> wasmtime::Result<T>,
+    F: FnOnce(&utils::Guest, &mut Store<State>) -> wasmtime::Result<T>,
 {
     TYPEGRAPH.with(|t| STORE.with_borrow_mut(|s| f(t.metatype_typegraph_utils(), s).unwrap()))
 }
