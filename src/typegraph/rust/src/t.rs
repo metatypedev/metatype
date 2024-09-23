@@ -25,8 +25,8 @@ pub trait BaseBuilder: Sized {
         self
     }
 
-    fn as_id(mut self, value: bool) -> Self {
-        self.base_mut().as_id = value;
+    fn as_id(mut self) -> Self {
+        self.base_mut().as_id = true;
         self
     }
 }
@@ -214,13 +214,13 @@ impl StringBuilder {
         self
     }
 
-    pub fn format(&mut self, format: impl Into<String>) -> &mut Self {
+    pub fn format(mut self, format: impl Into<String>) -> Self {
         self.data.format = Some(format.into());
         self
     }
 
-    pub fn enumerate(&mut self, values: impl IntoIterator<Item = String>) -> &mut Self {
-        self.data.enumeration = Some(values.into_iter().collect());
+    pub fn enumerate(mut self, values: impl IntoIterator<Item = impl ToString>) -> Self {
+        self.data.enumeration = Some(values.into_iter().map(|v| v.to_string()).collect());
         self
     }
 }
