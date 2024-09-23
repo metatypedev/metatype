@@ -9,7 +9,7 @@ ADAPTOR="../../../../.metatype/wasi_snapshot_preview1.reactor.wasm"
 [ -f "$ADAPTOR" ] || ghjk x install-wasi-adapter
 
 TARGET=wasm32-wasi
-CRATE_NAME=metagen_rs_mdk
+CRATE_NAME=metagen_rs_fdk
 cargo build -p $CRATE_NAME --target $TARGET # --release
 # wasm-opt --enable-bulk-memory -Oz ./target/$TARGET/release/rust.wasm -o ./target/rust-component.wasm.opt
 wasm-tools component new \

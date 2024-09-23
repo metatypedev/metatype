@@ -107,10 +107,10 @@ struct MetagenCtx {
     dir: PathBuf,
 }
 
-async fn load_mdk_template(
+async fn load_fdk_template(
     default: &[(&'static str, &'static str)],
     template_dir: Option<&std::path::Path>,
-) -> anyhow::Result<MdkTemplate> {
+) -> anyhow::Result<FdkTemplate> {
     let mut group = FutureGroup::new();
     for (file_name, content) in default.iter() {
         // TODO absolute path?
@@ -135,7 +135,7 @@ async fn load_mdk_template(
         let (file_name, content) = res?;
         entries.insert(file_name, content);
     }
-    Ok(MdkTemplate { entries })
+    Ok(FdkTemplate { entries })
 }
 
 impl InputResolver for MetagenCtx {
@@ -161,12 +161,12 @@ impl InputResolver for MetagenCtx {
                 let raw = load_tg_at(config, path, name.as_deref()).await?;
                 GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
-            GeneratorInputOrder::LoadMdkTemplate {
+            GeneratorInputOrder::LoadFdkTemplate {
                 default,
                 override_path,
             } => {
-                let template = load_mdk_template(default, override_path.as_deref()).await?;
-                GeneratorInputResolved::MdkTemplate { template }
+                let template = load_fdk_template(default, override_path.as_deref()).await?;
+                GeneratorInputResolved::FdkTemplate { template }
             }
         })
     }

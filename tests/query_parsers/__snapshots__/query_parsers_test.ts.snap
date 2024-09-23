@@ -45,7 +45,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_7",
+    title: "UserNamespace_find_fn",
     type: "function",
   },
   {
@@ -57,7 +57,7 @@ snapshot[`GraphQL parser 1`] = `
     },
     required: [],
     runtime: 1,
-    title: "object_5",
+    title: "UserNamespace_find_fn_input",
     type: "object",
   },
   {
@@ -86,7 +86,7 @@ snapshot[`GraphQL parser 1`] = `
     config: {},
     policies: [],
     runtime: 1,
-    title: "string_1",
+    title: "User_name_string",
     type: "string",
   },
   {
@@ -101,7 +101,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_9",
+    title: "UserNamespace_update_fn",
     type: "function",
   },
   {
@@ -129,7 +129,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_12",
+    title: "ProfileNamespace_picture_fn",
     type: "function",
   },
   {
@@ -141,7 +141,7 @@ snapshot[`GraphQL parser 1`] = `
     },
     required: [],
     runtime: 1,
-    title: "object_10",
+    title: "ProfileNamespace_picture_fn_input",
     type: "object",
   },
   {
@@ -163,7 +163,7 @@ snapshot[`GraphQL parser 1`] = `
     format: "uri",
     policies: [],
     runtime: 1,
-    title: "string_3",
+    title: "Picture_url_string_uri",
     type: "string",
   },
   {
@@ -178,7 +178,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "func_14",
+    title: "ProfileNamespace_setPicture_fn",
     type: "function",
   },
   {

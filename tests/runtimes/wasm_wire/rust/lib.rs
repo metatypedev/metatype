@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-mod mdk;
+mod fdk;
 use anyhow::Context;
-use mdk::*;
+use fdk::*;
 use serde_json::json;
 
 init_mat! {
@@ -44,20 +44,24 @@ impl stubs::Range for MyMat {
 }
 
 impl stubs::RecordCreation for MyMat {
-    fn handle(&self, _input: types::Object35, _cx: Ctx) -> anyhow::Result<types::Entity36> {
+    fn handle(
+        &self,
+        _input: types::RecordCreationInput,
+        _cx: Ctx,
+    ) -> anyhow::Result<types::RecordCreationOutput> {
         Ok(vec![
             types::Entity {
                 name: "Entity A".into(),
                 age: None,
                 profile: types::Profile {
-                    category: types::Object9 {
+                    category: types::ProfileCategoryStruct {
                         tag: "a".into(),
                         value: None,
                     },
                     level: "bronze".into(),
                     metadatas: vec![vec![
-                        types::Either12::String("strength".into()),
-                        types::Either12::F64(3.14),
+                        types::ProfileMetadatasEither::EntityNameString("strength".into()),
+                        types::ProfileMetadatasEither::AddArgsAFloat(3.14),
                     ]],
                     attributes: vec!["defend".into()],
                 },
@@ -66,7 +70,7 @@ impl stubs::RecordCreation for MyMat {
                 name: "Entity B".into(),
                 age: Some(11),
                 profile: types::Profile {
-                    category: types::Object9 {
+                    category: types::ProfileCategoryStruct {
                         tag: "b".into(),
                         value: Some("bbb".into()),
                     },
@@ -80,7 +84,11 @@ impl stubs::RecordCreation for MyMat {
 }
 
 impl stubs::HundredRandom for MyMat {
-    fn handle(&self, _input: types::Object35, cx: Ctx) -> anyhow::Result<types::Entity45> {
+    fn handle(
+        &self,
+        _input: types::RecordCreationInput,
+        cx: Ctx,
+    ) -> anyhow::Result<types::RecordCreationOutput> {
         let mut out = vec![];
         for _ in 0..100 {
             let res: serde_json::Value = cx.gql(

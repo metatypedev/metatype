@@ -23,22 +23,22 @@ impl InputResolverSync for RawTgResolver {
                 })
             }
             GeneratorInputOrder::TypegraphFromPath { .. } => unimplemented!(),
-            GeneratorInputOrder::LoadMdkTemplate {
+            GeneratorInputOrder::LoadFdkTemplate {
                 default,
                 override_path,
-            } => Ok(GeneratorInputResolved::MdkTemplate {
-                template: self.load_mdk_template(default, override_path.as_deref())?,
+            } => Ok(GeneratorInputResolved::FdkTemplate {
+                template: self.load_fdk_template(default, override_path.as_deref())?,
             }),
         }
     }
 }
 
 impl RawTgResolver {
-    fn load_mdk_template(
+    fn load_fdk_template(
         &self,
         default: &[(&'static str, &'static str)],
         template_dir: Option<&std::path::Path>,
-    ) -> Result<metagen::MdkTemplate> {
+    ) -> Result<metagen::FdkTemplate> {
         let mut entries = HashMap::new();
         for (file_name, default_content) in default.iter() {
             let content = if let Some(override_path) = template_dir {
@@ -53,6 +53,6 @@ impl RawTgResolver {
             };
             entries.insert(*file_name, content);
         }
-        Ok(metagen::MdkTemplate { entries })
+        Ok(metagen::FdkTemplate { entries })
     }
 }

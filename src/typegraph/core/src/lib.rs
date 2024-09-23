@@ -167,11 +167,11 @@ impl wit::core::Guest for Lib {
         }
         Ok(Store::register_type_def(
             |id| {
-                // TODO why??
+                /* // TODO why??
                 let base = TypeBase {
                     name: Some(format!("_{}_file", id.0)),
                     ..base
-                };
+                }; */
                 TypeDef::File(
                     File {
                         id,
@@ -193,19 +193,8 @@ impl wit::core::Guest for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        let inner_name = match base.name {
-            Some(_) => None,
-            None => TypeId(data.of).name()?,
-        };
         Ok(Store::register_type_def(
             |id| {
-                let base = match inner_name {
-                    Some(n) => TypeBase {
-                        name: Some(format!("_{}_{}[]", id.0, n)),
-                        ..base
-                    },
-                    None => base,
-                };
                 TypeDef::List(
                     List {
                         id,
@@ -222,19 +211,19 @@ impl wit::core::Guest for Lib {
     }
 
     fn optionalb(data: TypeOptional, base: TypeBase) -> Result<CoreTypeId> {
-        let inner_name = match base.name {
+        /* let inner_name = match base.name {
             Some(_) => None,
             None => TypeId(data.of).name()?,
-        };
+        }; */
         Ok(Store::register_type_def(
             |id| {
-                let base = match inner_name {
+                /* let base = match inner_name {
                     Some(n) => TypeBase {
                         name: Some(format!("_{}_{}?", id.0, n)),
                         ..base
                     },
                     None => base,
-                };
+                }; */
                 TypeDef::Optional(
                     Optional {
                         id,

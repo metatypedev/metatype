@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.9-rc1";
+        static MT_VERSION: &str = "0.4.11-rc.0";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -219,57 +219,27 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
+    pub type Idv3TitleString = String;
+    pub type Idv3ReleaseTimeStringDatetime = String;
+    pub type Idv3Mp3UrlStringUri = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct AddArgs {
-        pub a: f64,
-        pub b: f64,
+    pub struct Idv3 {
+        pub title: Idv3TitleString,
+        pub artist: Idv3TitleString,
+        #[serde(rename = "releaseTime")]
+        pub release_time: Idv3ReleaseTimeStringDatetime,
+        #[serde(rename = "mp3Url")]
+        pub mp3_url: Idv3Mp3UrlStringUri,
     }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RangeArgs {
-        pub a: Option<i64>,
-        pub b: i64,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Object35 {
-    }
-    pub type String3 = String;
-    pub type String4 = String;
-    pub type String6 = String;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Object9 {
-        pub tag: String6,
-        pub value: Option<String>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum Either12 {
-        String(String),
-        F64(f64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Profile {
-        pub level: String3,
-        pub attributes: Vec<String4>,
-        pub category: Object9,
-        pub metadatas: Vec<Vec<Either12>>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Entity {
-        pub name: String,
-        pub age: Option<i64>,
-        pub profile: Profile,
-    }
-    pub type Entity36 = Vec<Entity>;
-    pub type Entity45 = Vec<Entity>;
 }
 pub mod stubs {
     use super::*;
-    pub trait Add: Sized + 'static {
+    pub trait RemixTrack: Sized + 'static {
         fn erased(self) -> ErasedHandler {
             ErasedHandler {
-                mat_id: "add".into(),
-                mat_title: "add".into(),
-                mat_trait: "Add".into(),
+                mat_id: "remix_track".into(),
+                mat_title: "remix_track".into(),
+                mat_trait: "RemixTrack".into(),
                 handler_fn: Box::new(move |req, cx| {
                     let req = serde_json::from_str(req)
                         .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
@@ -282,95 +252,11 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: AddArgs, cx: Ctx) -> anyhow::Result<i64>;
-    }
-    pub trait Range: Sized + 'static {
-        fn erased(self) -> ErasedHandler {
-            ErasedHandler {
-                mat_id: "range".into(),
-                mat_title: "range".into(),
-                mat_trait: "Range".into(),
-                handler_fn: Box::new(move |req, cx| {
-                    let req = serde_json::from_str(req)
-                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
-                    let res = self
-                        .handle(req, cx)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
-                    serde_json::to_string(&res)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
-                }),
-            }
-        }
-
-        fn handle(&self, input: RangeArgs, cx: Ctx) -> anyhow::Result<Vec<i64>>;
-    }
-    pub trait RecordCreation: Sized + 'static {
-        fn erased(self) -> ErasedHandler {
-            ErasedHandler {
-                mat_id: "record-creation".into(),
-                mat_title: "record-creation".into(),
-                mat_trait: "RecordCreation".into(),
-                handler_fn: Box::new(move |req, cx| {
-                    let req = serde_json::from_str(req)
-                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
-                    let res = self
-                        .handle(req, cx)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
-                    serde_json::to_string(&res)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
-                }),
-            }
-        }
-
-        fn handle(&self, input: Object35, cx: Ctx) -> anyhow::Result<Entity36>;
-    }
-    pub trait Identity: Sized + 'static {
-        fn erased(self) -> ErasedHandler {
-            ErasedHandler {
-                mat_id: "identity".into(),
-                mat_title: "identity".into(),
-                mat_trait: "Identity".into(),
-                handler_fn: Box::new(move |req, cx| {
-                    let req = serde_json::from_str(req)
-                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
-                    let res = self
-                        .handle(req, cx)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
-                    serde_json::to_string(&res)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
-                }),
-            }
-        }
-
-        fn handle(&self, input: Entity, cx: Ctx) -> anyhow::Result<Entity>;
-    }
-    pub trait HundredRandom: Sized + 'static {
-        fn erased(self) -> ErasedHandler {
-            ErasedHandler {
-                mat_id: "hundred-random".into(),
-                mat_title: "hundred-random".into(),
-                mat_trait: "HundredRandom".into(),
-                handler_fn: Box::new(move |req, cx| {
-                    let req = serde_json::from_str(req)
-                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
-                    let res = self
-                        .handle(req, cx)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
-                    serde_json::to_string(&res)
-                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
-                }),
-            }
-        }
-
-        fn handle(&self, input: Object35, cx: Ctx) -> anyhow::Result<Entity45>;
+        fn handle(&self, input: Idv3, cx: Ctx) -> anyhow::Result<Idv3>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
-            "add" => "Add",
-            "hundred-random" => "HundredRandom",
-            "identity" => "Identity",
-            "range" => "Range",
-            "record-creation" => "RecordCreation",
+            "remix_track" => "RemixTrack",
             _ => panic!("unrecognized op_name: {op_name}"),
         }
     }

@@ -7,12 +7,12 @@ typegates:
 metagen:
   targets:
     main:
-      - generator: mdk_rust
+      - generator: fdk_rust
         path: ./rs/
         typegraph_path: ../identities.py
-      - generator: mdk_python
+      - generator: fdk_python
         path: ./py/
         typegraph_path: ../identities.py
-      - generator: mdk_typescript
+      - generator: fdk_typescript
         path: ./ts/
         typegraph_path: ../identities.py

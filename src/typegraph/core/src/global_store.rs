@@ -40,7 +40,9 @@ pub struct SavedState {
 #[derive(Default)]
 pub struct Store {
     pub types: Vec<Type>,
-    pub type_by_names: IndexMap<String, TypeId>,
+    // the bool indicates weather the name was from
+    // user or generated placeholder (false)
+    pub type_by_names: IndexMap<String, (TypeId, bool)>,
 
     pub runtimes: Vec<Runtime>,
     pub materializers: Vec<Materializer>,
@@ -151,7 +153,7 @@ impl Store {
     }
 
     pub fn get_type_by_name(name: &str) -> Option<TypeId> {
-        with_store(|s| s.type_by_names.get(name).copied())
+        with_store(|s| s.type_by_names.get(name).map(|id| id.0))
     }
 
     pub fn register_type_ref(name: String, attributes: Vec<(String, String)>) -> Result<TypeId> {
@@ -172,11 +174,30 @@ impl Store {
     ) -> Result<TypeId> {
         // this works since the store is thread local
         let id = with_store(|s| s.types.len()) as u32;
-        let type_def = build(id.into());
+        let mut type_def = build(id.into());
 
+        // very hacky solution where we keep track of
+        // explicitly named types in user_named_types
+        // we generate names for everything else to
+        // allow the ref system to work
         if name_registration.0 {
             if let Some(name) = type_def.base().name.clone() {
-                Self::register_type_name(name, id.into())?;
+                Self::register_type_name(name, id.into(), true)?;
+            } else {
+                // we only need to assign temporary non-user named
+                // types for lists and optionals. other refs
+                // will need explicit names by the user
+                match type_def {
+                    TypeDef::List(_) | TypeDef::Optional(_) => {
+                        let varaint = type_def.variant_name();
+                        let placeholder_name = format!("{varaint}_{id}");
+                        Self::register_type_name(&placeholder_name, id.into(), false)?;
+                        let mut base = type_def.base().clone();
+                        base.name = Some(placeholder_name);
+                        type_def = type_def.with_base(id.into(), base);
+                    }
+                    _ => {}
+                }
             }
         }
 
@@ -187,14 +208,21 @@ impl Store {
         Ok(id.into())
     }
 
-    pub fn register_type_name(name: impl Into<String>, id: TypeId) -> Result<()> {
+    pub fn register_type_name(name: impl Into<String>, id: TypeId, user_named: bool) -> Result<()> {
         let name = name.into();
         with_store_mut(move |s| -> Result<()> {
             if s.type_by_names.contains_key(&name) {
                 return Err(format!("type with name {:?} already exists", name).into());
             }
-            s.type_by_names.insert(name, id);
+            s.type_by_names.insert(name, (id, user_named));
             Ok(())
+        })
+    }
+
+    pub fn is_user_named(name: &str) -> Option<bool> {
+        with_store(|s| {
+            let (_id, user_named) = s.type_by_names.get(name)?;
+            Some(*user_named)
         })
     }
 
@@ -211,7 +239,7 @@ impl Store {
             if s.type_by_names.contains_key(&name) {
                 return Err(format!("type with name {:?} already exists", name).into());
             }
-            s.type_by_names.insert(name, id);
+            s.type_by_names.insert(name, (id, true));
             Ok(())
         })
     }

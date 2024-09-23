@@ -99,7 +99,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "union_17Out",
+        name: "A1_a_unionOut",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -118,7 +118,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "union_14Out",
+        name: "A2_a_unionOut",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -177,7 +177,7 @@ snapshot[`Union type 2`] = `
           },
           {
             kind: "UNION",
-            name: "union_35Out",
+            name: "MultilevelUnion_t2_unionOut",
           },
         ],
       },
@@ -193,7 +193,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "union_35Out",
+        name: "MultilevelUnion_t2_unionOut",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -205,7 +205,7 @@ snapshot[`Union type 2`] = `
           },
           {
             kind: "UNION",
-            name: "either_34Out",
+            name: "MultilevelUnion_t2_union_t2_eitherOut",
           },
         ],
       },
@@ -221,7 +221,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "either_34Out",
+        name: "MultilevelUnion_t2_union_t2_eitherOut",
         possibleTypes: [
           {
             kind: "OBJECT",
@@ -265,7 +265,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "union_17In",
+        name: "A1_a_unionIn",
         possibleTypes: null,
       },
       {
@@ -275,7 +275,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "union_14In",
+        name: "A2_a_unionIn",
         possibleTypes: null,
       },
       {
@@ -315,7 +315,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "union_35In",
+        name: "MultilevelUnion_t2_unionIn",
         possibleTypes: null,
       },
       {
@@ -330,7 +330,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "either_34In",
+        name: "MultilevelUnion_t2_union_t2_eitherIn",
         possibleTypes: null,
       },
       {

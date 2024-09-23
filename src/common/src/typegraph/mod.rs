@@ -189,4 +189,15 @@ impl Typegraph {
             _ => bail!("typegraph is invalid: root node is not object"),
         }
     }
+    /*
+    pub fn idx_of(&self, id: &str) -> Option<u32> {
+        self.name_map.get(id).map(|&idx| idx)
+    }
+
+    pub fn get(&self, id: &str) -> Option<&TypeNode> {
+        let Some(&idx) = self.name_map.get(id) else {
+            return None;
+        };
+        Some(&self.types[idx as usize])
+    } */
 }

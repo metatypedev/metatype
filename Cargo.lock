@@ -1143,9 +1143,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "bytes"
-version = "1.7.1"
+version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8318a53db07bb3f8dca91a600466bdb3f2eaadeedfdbcf02e1accbad9271ba50"
+checksum = "428d9aa8fbc0670b7b8d6030a7fadd0f86151cae55e4dbbece15f3780a3dfaf3"
 
 [[package]]
 name = "bzip2"
@@ -6822,7 +6822,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "metagen_mdk_rust_static"
+name = "metagen_fdk_rust_static"
 version = "0.0.1"
 dependencies = [
  "anyhow",
@@ -8783,7 +8783,7 @@ dependencies = [
 [[package]]
 name = "proto-parser"
 version = "0.1.0"
-source = "git+https://github.com/metatypedev/proto-parser?branch=main#aa47da5a8eb16f07d28f7aeece77953401cce3a2"
+source = "git+https://github.com/metatypedev/proto-parser?branch=main#091c87f819dfeda5785becf8c5ca64b7d8e1469d"
 dependencies = [
  "anyhow",
  "indexmap 2.4.0",

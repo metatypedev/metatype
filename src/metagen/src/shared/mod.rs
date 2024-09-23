@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-//! This module contains common logic for mdk generation
+//! This module contains common logic for fdk generation
 //! imlementations
 
 pub mod client;
@@ -12,7 +12,7 @@ use common::typegraph::{runtimes::TGRuntime, Materializer};
 use crate::interlude::*;
 
 #[derive(Debug, Clone)]
-pub struct MdkTemplate {
+pub struct FdkTemplate {
     pub entries: HashMap<&'static str, std::borrow::Cow<'static, str>>,
 }
 

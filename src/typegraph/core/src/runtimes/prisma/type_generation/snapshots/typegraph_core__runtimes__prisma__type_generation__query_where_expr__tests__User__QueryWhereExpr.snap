@@ -1,17 +1,17 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/query_where_expr.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/query_where_expr.rs
 expression: "tree::print(user_where_expr)"
 ---
 root: struct 'QueryUserWhereInput' #57
-├── [AND]: optional '_55__54_QueryUserWhereInput[]?' #55
-│   └── item: list '_54_QueryUserWhereInput[]' #54
+├── [AND]: optional 'optional_55' #55
+│   └── item: list 'list_54' #54
 │       └── item: &QueryUserWhereInput #53
-├── [NOT]: optional '_56_QueryUserWhereInput?' #56
+├── [NOT]: optional 'optional_56' #56
 │   └── item: &QueryUserWhereInput #53
-├── [OR]: optional '_55__54_QueryUserWhereInput[]?' #55
-│   └── item: list '_54_QueryUserWhereInput[]' #54
+├── [OR]: optional 'optional_55' #55
+│   └── item: list 'list_54' #54
 │       └── item: &QueryUserWhereInput #53
-├── [id]: optional '_21__integer_filter_c?' #21
+├── [id]: optional 'optional_21' #21
 │   └── item: optional '_integer_filter_c' #20
 │       └── item: union #19
 │           ├── variant_0: either '_integer_filter' #17
@@ -21,19 +21,19 @@ root: struct 'QueryUserWhereInput' #57
 │           │   ├── variant_2: struct #13
 │           │   │   └── [not]: integer #9
 │           │   ├── variant_3: struct #14
-│           │   │   ├── [gt]: optional #10
+│           │   │   ├── [gt]: optional 'optional_10' #10
 │           │   │   │   └── item: integer #9
-│           │   │   ├── [gte]: optional #10
+│           │   │   ├── [gte]: optional 'optional_10' #10
 │           │   │   │   └── item: integer #9
-│           │   │   ├── [lt]: optional #10
+│           │   │   ├── [lt]: optional 'optional_10' #10
 │           │   │   │   └── item: integer #9
-│           │   │   └── [lte]: optional #10
+│           │   │   └── [lte]: optional 'optional_10' #10
 │           │   │       └── item: integer #9
 │           │   ├── variant_4: struct #15
-│           │   │   └── [in]: list #11
+│           │   │   └── [in]: list 'list_11' #11
 │           │   │       └── item: integer #9
 │           │   └── variant_5: struct #16
-│           │       └── [notIn]: list #11
+│           │       └── [notIn]: list 'list_11' #11
 │           │           └── item: integer #9
 │           └── variant_1: struct #18
 │               └── [not]: either '_integer_filter' #17
@@ -43,21 +43,21 @@ root: struct 'QueryUserWhereInput' #57
 │                   ├── variant_2: struct #13
 │                   │   └── [not]: integer #9
 │                   ├── variant_3: struct #14
-│                   │   ├── [gt]: optional #10
+│                   │   ├── [gt]: optional 'optional_10' #10
 │                   │   │   └── item: integer #9
-│                   │   ├── [gte]: optional #10
+│                   │   ├── [gte]: optional 'optional_10' #10
 │                   │   │   └── item: integer #9
-│                   │   ├── [lt]: optional #10
+│                   │   ├── [lt]: optional 'optional_10' #10
 │                   │   │   └── item: integer #9
-│                   │   └── [lte]: optional #10
+│                   │   └── [lte]: optional 'optional_10' #10
 │                   │       └── item: integer #9
 │                   ├── variant_4: struct #15
-│                   │   └── [in]: list #11
+│                   │   └── [in]: list 'list_11' #11
 │                   │       └── item: integer #9
 │                   └── variant_5: struct #16
-│                       └── [notIn]: list #11
+│                       └── [notIn]: list 'list_11' #11
 │                           └── item: integer #9
-├── [name]: optional '_38__string_filter_c?' #38
+├── [name]: optional 'optional_38' #38
 │   └── item: optional '_string_filter_c' #37
 │       └── item: union #36
 │           ├── variant_0: union '_string_filter' #34
@@ -67,21 +67,21 @@ root: struct 'QueryUserWhereInput' #57
 │           │   ├── variant_2: struct #26
 │           │   │   └── [not]: string #22
 │           │   ├── variant_3: struct #27
-│           │   │   └── [in]: list #24
+│           │   │   └── [in]: list 'list_24' #24
 │           │   │       └── item: string #22
 │           │   ├── variant_4: struct #28
-│           │   │   └── [notIn]: list #24
+│           │   │   └── [notIn]: list 'list_24' #24
 │           │   │       └── item: string #22
 │           │   ├── variant_5: struct #31
 │           │   │   ├── [contains]: string #22
-│           │   │   └── [mode]: optional #30
+│           │   │   └── [mode]: optional 'optional_30' #30
 │           │   │       └── item: string #29 enum{ '"insensitive"' }
 │           │   ├── variant_6: struct #32
 │           │   │   └── [search]: string #22
 │           │   └── variant_7: struct #33
-│           │       ├── [endsWith]: optional #23
+│           │       ├── [endsWith]: optional 'optional_23' #23
 │           │       │   └── item: string #22
-│           │       └── [startsWith]: optional #23
+│           │       └── [startsWith]: optional 'optional_23' #23
 │           │           └── item: string #22
 │           └── variant_1: struct #35
 │               └── [not]: union '_string_filter' #34
@@ -91,30 +91,30 @@ root: struct 'QueryUserWhereInput' #57
 │                   ├── variant_2: struct #26
 │                   │   └── [not]: string #22
 │                   ├── variant_3: struct #27
-│                   │   └── [in]: list #24
+│                   │   └── [in]: list 'list_24' #24
 │                   │       └── item: string #22
 │                   ├── variant_4: struct #28
-│                   │   └── [notIn]: list #24
+│                   │   └── [notIn]: list 'list_24' #24
 │                   │       └── item: string #22
 │                   ├── variant_5: struct #31
 │                   │   ├── [contains]: string #22
-│                   │   └── [mode]: optional #30
+│                   │   └── [mode]: optional 'optional_30' #30
 │                   │       └── item: string #29 enum{ '"insensitive"' }
 │                   ├── variant_6: struct #32
 │                   │   └── [search]: string #22
 │                   └── variant_7: struct #33
-│                       ├── [endsWith]: optional #23
+│                       ├── [endsWith]: optional 'optional_23' #23
 │                       │   └── item: string #22
-│                       └── [startsWith]: optional #23
+│                       └── [startsWith]: optional 'optional_23' #23
 │                           └── item: string #22
-└── [posts]: optional #51
+└── [posts]: optional 'optional_51' #51
     └── item: union #50
         ├── variant_0: struct #45
-        │   └── [every]: optional '_44_PostWhere__skip_4_UserWhere?' #44
+        │   └── [every]: optional 'optional_44' #44
         │       └── item: struct 'PostWhere__skip_4_UserWhere' #43
-        │           ├── [author]: optional '_42_UserWhere?' #42
+        │           ├── [author]: optional 'optional_42' #42
         │           │   └── item: &UserWhere #41
-        │           ├── [id]: optional '_39__integer_filter_c?' #39
+        │           ├── [id]: optional 'optional_39' #39
         │           │   └── item: optional '_integer_filter_c' #20
         │           │       └── item: union #19
         │           │           ├── variant_0: either '_integer_filter' #17
@@ -124,19 +124,19 @@ root: struct 'QueryUserWhereInput' #57
         │           │           │   ├── variant_2: struct #13
         │           │           │   │   └── [not]: integer #9
         │           │           │   ├── variant_3: struct #14
-        │           │           │   │   ├── [gt]: optional #10
+        │           │           │   │   ├── [gt]: optional 'optional_10' #10
         │           │           │   │   │   └── item: integer #9
-        │           │           │   │   ├── [gte]: optional #10
+        │           │           │   │   ├── [gte]: optional 'optional_10' #10
         │           │           │   │   │   └── item: integer #9
-        │           │           │   │   ├── [lt]: optional #10
+        │           │           │   │   ├── [lt]: optional 'optional_10' #10
         │           │           │   │   │   └── item: integer #9
-        │           │           │   │   └── [lte]: optional #10
+        │           │           │   │   └── [lte]: optional 'optional_10' #10
         │           │           │   │       └── item: integer #9
         │           │           │   ├── variant_4: struct #15
-        │           │           │   │   └── [in]: list #11
+        │           │           │   │   └── [in]: list 'list_11' #11
         │           │           │   │       └── item: integer #9
         │           │           │   └── variant_5: struct #16
-        │           │           │       └── [notIn]: list #11
+        │           │           │       └── [notIn]: list 'list_11' #11
         │           │           │           └── item: integer #9
         │           │           └── variant_1: struct #18
         │           │               └── [not]: either '_integer_filter' #17
@@ -146,21 +146,21 @@ root: struct 'QueryUserWhereInput' #57
         │           │                   ├── variant_2: struct #13
         │           │                   │   └── [not]: integer #9
         │           │                   ├── variant_3: struct #14
-        │           │                   │   ├── [gt]: optional #10
+        │           │                   │   ├── [gt]: optional 'optional_10' #10
         │           │                   │   │   └── item: integer #9
-        │           │                   │   ├── [gte]: optional #10
+        │           │                   │   ├── [gte]: optional 'optional_10' #10
         │           │                   │   │   └── item: integer #9
-        │           │                   │   ├── [lt]: optional #10
+        │           │                   │   ├── [lt]: optional 'optional_10' #10
         │           │                   │   │   └── item: integer #9
-        │           │                   │   └── [lte]: optional #10
+        │           │                   │   └── [lte]: optional 'optional_10' #10
         │           │                   │       └── item: integer #9
         │           │                   ├── variant_4: struct #15
-        │           │                   │   └── [in]: list #11
+        │           │                   │   └── [in]: list 'list_11' #11
         │           │                   │       └── item: integer #9
         │           │                   └── variant_5: struct #16
-        │           │                       └── [notIn]: list #11
+        │           │                       └── [notIn]: list 'list_11' #11
         │           │                           └── item: integer #9
-        │           └── [title]: optional '_40__string_filter_c?' #40
+        │           └── [title]: optional 'optional_40' #40
         │               └── item: optional '_string_filter_c' #37
         │                   └── item: union #36
         │                       ├── variant_0: union '_string_filter' #34
@@ -170,21 +170,21 @@ root: struct 'QueryUserWhereInput' #57
         │                       │   ├── variant_2: struct #26
         │                       │   │   └── [not]: string #22
         │                       │   ├── variant_3: struct #27
-        │                       │   │   └── [in]: list #24
+        │                       │   │   └── [in]: list 'list_24' #24
         │                       │   │       └── item: string #22
         │                       │   ├── variant_4: struct #28
-        │                       │   │   └── [notIn]: list #24
+        │                       │   │   └── [notIn]: list 'list_24' #24
         │                       │   │       └── item: string #22
         │                       │   ├── variant_5: struct #31
         │                       │   │   ├── [contains]: string #22
-        │                       │   │   └── [mode]: optional #30
+        │                       │   │   └── [mode]: optional 'optional_30' #30
         │                       │   │       └── item: string #29 enum{ '"insensitive"' }
         │                       │   ├── variant_6: struct #32
         │                       │   │   └── [search]: string #22
         │                       │   └── variant_7: struct #33
-        │                       │       ├── [endsWith]: optional #23
+        │                       │       ├── [endsWith]: optional 'optional_23' #23
         │                       │       │   └── item: string #22
-        │                       │       └── [startsWith]: optional #23
+        │                       │       └── [startsWith]: optional 'optional_23' #23
         │                       │           └── item: string #22
         │                       └── variant_1: struct #35
         │                           └── [not]: union '_string_filter' #34
@@ -194,28 +194,28 @@ root: struct 'QueryUserWhereInput' #57
         │                               ├── variant_2: struct #26
         │                               │   └── [not]: string #22
         │                               ├── variant_3: struct #27
-        │                               │   └── [in]: list #24
+        │                               │   └── [in]: list 'list_24' #24
         │                               │       └── item: string #22
         │                               ├── variant_4: struct #28
-        │                               │   └── [notIn]: list #24
+        │                               │   └── [notIn]: list 'list_24' #24
         │                               │       └── item: string #22
         │                               ├── variant_5: struct #31
         │                               │   ├── [contains]: string #22
-        │                               │   └── [mode]: optional #30
+        │                               │   └── [mode]: optional 'optional_30' #30
         │                               │       └── item: string #29 enum{ '"insensitive"' }
         │                               ├── variant_6: struct #32
         │                               │   └── [search]: string #22
         │                               └── variant_7: struct #33
-        │                                   ├── [endsWith]: optional #23
+        │                                   ├── [endsWith]: optional 'optional_23' #23
         │                                   │   └── item: string #22
-        │                                   └── [startsWith]: optional #23
+        │                                   └── [startsWith]: optional 'optional_23' #23
         │                                       └── item: string #22
         ├── variant_1: struct #47
-        │   └── [some]: optional '_46_PostWhere__skip_4_UserWhere?' #46
+        │   └── [some]: optional 'optional_46' #46
         │       └── item: struct 'PostWhere__skip_4_UserWhere' #43
-        │           ├── [author]: optional '_42_UserWhere?' #42
+        │           ├── [author]: optional 'optional_42' #42
         │           │   └── item: &UserWhere #41
-        │           ├── [id]: optional '_39__integer_filter_c?' #39
+        │           ├── [id]: optional 'optional_39' #39
         │           │   └── item: optional '_integer_filter_c' #20
         │           │       └── item: union #19
         │           │           ├── variant_0: either '_integer_filter' #17
@@ -225,19 +225,19 @@ root: struct 'QueryUserWhereInput' #57
         │           │           │   ├── variant_2: struct #13
         │           │           │   │   └── [not]: integer #9
         │           │           │   ├── variant_3: struct #14
-        │           │           │   │   ├── [gt]: optional #10
+        │           │           │   │   ├── [gt]: optional 'optional_10' #10
         │           │           │   │   │   └── item: integer #9
-        │           │           │   │   ├── [gte]: optional #10
+        │           │           │   │   ├── [gte]: optional 'optional_10' #10
         │           │           │   │   │   └── item: integer #9
-        │           │           │   │   ├── [lt]: optional #10
+        │           │           │   │   ├── [lt]: optional 'optional_10' #10
         │           │           │   │   │   └── item: integer #9
-        │           │           │   │   └── [lte]: optional #10
+        │           │           │   │   └── [lte]: optional 'optional_10' #10
         │           │           │   │       └── item: integer #9
         │           │           │   ├── variant_4: struct #15
-        │           │           │   │   └── [in]: list #11
+        │           │           │   │   └── [in]: list 'list_11' #11
         │           │           │   │       └── item: integer #9
         │           │           │   └── variant_5: struct #16
-        │           │           │       └── [notIn]: list #11
+        │           │           │       └── [notIn]: list 'list_11' #11
         │           │           │           └── item: integer #9
         │           │           └── variant_1: struct #18
         │           │               └── [not]: either '_integer_filter' #17
@@ -247,21 +247,21 @@ root: struct 'QueryUserWhereInput' #57
         │           │                   ├── variant_2: struct #13
         │           │                   │   └── [not]: integer #9
         │           │                   ├── variant_3: struct #14
-        │           │                   │   ├── [gt]: optional #10
+        │           │                   │   ├── [gt]: optional 'optional_10' #10
         │           │                   │   │   └── item: integer #9
-        │           │                   │   ├── [gte]: optional #10
+        │           │                   │   ├── [gte]: optional 'optional_10' #10
         │           │                   │   │   └── item: integer #9
-        │           │                   │   ├── [lt]: optional #10
+        │           │                   │   ├── [lt]: optional 'optional_10' #10
         │           │                   │   │   └── item: integer #9
-        │           │                   │   └── [lte]: optional #10
+        │           │                   │   └── [lte]: optional 'optional_10' #10
         │           │                   │       └── item: integer #9
         │           │                   ├── variant_4: struct #15
-        │           │                   │   └── [in]: list #11
+        │           │                   │   └── [in]: list 'list_11' #11
         │           │                   │       └── item: integer #9
         │           │                   └── variant_5: struct #16
-        │           │                       └── [notIn]: list #11
+        │           │                       └── [notIn]: list 'list_11' #11
         │           │                           └── item: integer #9
-        │           └── [title]: optional '_40__string_filter_c?' #40
+        │           └── [title]: optional 'optional_40' #40
         │               └── item: optional '_string_filter_c' #37
         │                   └── item: union #36
         │                       ├── variant_0: union '_string_filter' #34
@@ -271,21 +271,21 @@ root: struct 'QueryUserWhereInput' #57
         │                       │   ├── variant_2: struct #26
         │                       │   │   └── [not]: string #22
         │                       │   ├── variant_3: struct #27
-        │                       │   │   └── [in]: list #24
+        │                       │   │   └── [in]: list 'list_24' #24
         │                       │   │       └── item: string #22
         │                       │   ├── variant_4: struct #28
-        │                       │   │   └── [notIn]: list #24
+        │                       │   │   └── [notIn]: list 'list_24' #24
         │                       │   │       └── item: string #22
         │                       │   ├── variant_5: struct #31
         │                       │   │   ├── [contains]: string #22
-        │                       │   │   └── [mode]: optional #30
+        │                       │   │   └── [mode]: optional 'optional_30' #30
         │                       │   │       └── item: string #29 enum{ '"insensitive"' }
         │                       │   ├── variant_6: struct #32
         │                       │   │   └── [search]: string #22
         │                       │   └── variant_7: struct #33
-        │                       │       ├── [endsWith]: optional #23
+        │                       │       ├── [endsWith]: optional 'optional_23' #23
         │                       │       │   └── item: string #22
-        │                       │       └── [startsWith]: optional #23
+        │                       │       └── [startsWith]: optional 'optional_23' #23
         │                       │           └── item: string #22
         │                       └── variant_1: struct #35
         │                           └── [not]: union '_string_filter' #34
@@ -295,28 +295,28 @@ root: struct 'QueryUserWhereInput' #57
         │                               ├── variant_2: struct #26
         │                               │   └── [not]: string #22
         │                               ├── variant_3: struct #27
-        │                               │   └── [in]: list #24
+        │                               │   └── [in]: list 'list_24' #24
         │                               │       └── item: string #22
         │                               ├── variant_4: struct #28
-        │                               │   └── [notIn]: list #24
+        │                               │   └── [notIn]: list 'list_24' #24
         │                               │       └── item: string #22
         │                               ├── variant_5: struct #31
         │                               │   ├── [contains]: string #22
-        │                               │   └── [mode]: optional #30
+        │                               │   └── [mode]: optional 'optional_30' #30
         │                               │       └── item: string #29 enum{ '"insensitive"' }
         │                               ├── variant_6: struct #32
         │                               │   └── [search]: string #22
         │                               └── variant_7: struct #33
-        │                                   ├── [endsWith]: optional #23
+        │                                   ├── [endsWith]: optional 'optional_23' #23
         │                                   │   └── item: string #22
-        │                                   └── [startsWith]: optional #23
+        │                                   └── [startsWith]: optional 'optional_23' #23
         │                                       └── item: string #22
         └── variant_2: struct #49
-            └── [none]: optional '_48_PostWhere__skip_4_UserWhere?' #48
+            └── [none]: optional 'optional_48' #48
                 └── item: struct 'PostWhere__skip_4_UserWhere' #43
-                    ├── [author]: optional '_42_UserWhere?' #42
+                    ├── [author]: optional 'optional_42' #42
                     │   └── item: &UserWhere #41
-                    ├── [id]: optional '_39__integer_filter_c?' #39
+                    ├── [id]: optional 'optional_39' #39
                     │   └── item: optional '_integer_filter_c' #20
                     │       └── item: union #19
                     │           ├── variant_0: either '_integer_filter' #17
@@ -326,19 +326,19 @@ root: struct 'QueryUserWhereInput' #57
                     │           │   ├── variant_2: struct #13
                     │           │   │   └── [not]: integer #9
                     │           │   ├── variant_3: struct #14
-                    │           │   │   ├── [gt]: optional #10
+                    │           │   │   ├── [gt]: optional 'optional_10' #10
                     │           │   │   │   └── item: integer #9
-                    │           │   │   ├── [gte]: optional #10
+                    │           │   │   ├── [gte]: optional 'optional_10' #10
                     │           │   │   │   └── item: integer #9
-                    │           │   │   ├── [lt]: optional #10
+                    │           │   │   ├── [lt]: optional 'optional_10' #10
                     │           │   │   │   └── item: integer #9
-                    │           │   │   └── [lte]: optional #10
+                    │           │   │   └── [lte]: optional 'optional_10' #10
                     │           │   │       └── item: integer #9
                     │           │   ├── variant_4: struct #15
-                    │           │   │   └── [in]: list #11
+                    │           │   │   └── [in]: list 'list_11' #11
                     │           │   │       └── item: integer #9
                     │           │   └── variant_5: struct #16
-                    │           │       └── [notIn]: list #11
+                    │           │       └── [notIn]: list 'list_11' #11
                     │           │           └── item: integer #9
                     │           └── variant_1: struct #18
                     │               └── [not]: either '_integer_filter' #17
@@ -348,21 +348,21 @@ root: struct 'QueryUserWhereInput' #57
                     │                   ├── variant_2: struct #13
                     │                   │   └── [not]: integer #9
                     │                   ├── variant_3: struct #14
-                    │                   │   ├── [gt]: optional #10
+                    │                   │   ├── [gt]: optional 'optional_10' #10
                     │                   │   │   └── item: integer #9
-                    │                   │   ├── [gte]: optional #10
+                    │                   │   ├── [gte]: optional 'optional_10' #10
                     │                   │   │   └── item: integer #9
-                    │                   │   ├── [lt]: optional #10
+                    │                   │   ├── [lt]: optional 'optional_10' #10
                     │                   │   │   └── item: integer #9
-                    │                   │   └── [lte]: optional #10
+                    │                   │   └── [lte]: optional 'optional_10' #10
                     │                   │       └── item: integer #9
                     │                   ├── variant_4: struct #15
-                    │                   │   └── [in]: list #11
+                    │                   │   └── [in]: list 'list_11' #11
                     │                   │       └── item: integer #9
                     │                   └── variant_5: struct #16
-                    │                       └── [notIn]: list #11
+                    │                       └── [notIn]: list 'list_11' #11
                     │                           └── item: integer #9
-                    └── [title]: optional '_40__string_filter_c?' #40
+                    └── [title]: optional 'optional_40' #40
                         └── item: optional '_string_filter_c' #37
                             └── item: union #36
                                 ├── variant_0: union '_string_filter' #34
@@ -372,21 +372,21 @@ root: struct 'QueryUserWhereInput' #57
                                 │   ├── variant_2: struct #26
                                 │   │   └── [not]: string #22
                                 │   ├── variant_3: struct #27
-                                │   │   └── [in]: list #24
+                                │   │   └── [in]: list 'list_24' #24
                                 │   │       └── item: string #22
                                 │   ├── variant_4: struct #28
-                                │   │   └── [notIn]: list #24
+                                │   │   └── [notIn]: list 'list_24' #24
                                 │   │       └── item: string #22
                                 │   ├── variant_5: struct #31
                                 │   │   ├── [contains]: string #22
-                                │   │   └── [mode]: optional #30
+                                │   │   └── [mode]: optional 'optional_30' #30
                                 │   │       └── item: string #29 enum{ '"insensitive"' }
                                 │   ├── variant_6: struct #32
                                 │   │   └── [search]: string #22
                                 │   └── variant_7: struct #33
-                                │       ├── [endsWith]: optional #23
+                                │       ├── [endsWith]: optional 'optional_23' #23
                                 │       │   └── item: string #22
-                                │       └── [startsWith]: optional #23
+                                │       └── [startsWith]: optional 'optional_23' #23
                                 │           └── item: string #22
                                 └── variant_1: struct #35
                                     └── [not]: union '_string_filter' #34
@@ -396,20 +396,19 @@ root: struct 'QueryUserWhereInput' #57
                                         ├── variant_2: struct #26
                                         │   └── [not]: string #22
                                         ├── variant_3: struct #27
-                                        │   └── [in]: list #24
+                                        │   └── [in]: list 'list_24' #24
                                         │       └── item: string #22
                                         ├── variant_4: struct #28
-                                        │   └── [notIn]: list #24
+                                        │   └── [notIn]: list 'list_24' #24
                                         │       └── item: string #22
                                         ├── variant_5: struct #31
                                         │   ├── [contains]: string #22
-                                        │   └── [mode]: optional #30
+                                        │   └── [mode]: optional 'optional_30' #30
                                         │       └── item: string #29 enum{ '"insensitive"' }
                                         ├── variant_6: struct #32
                                         │   └── [search]: string #22
                                         └── variant_7: struct #33
-                                            ├── [endsWith]: optional #23
+                                            ├── [endsWith]: optional 'optional_23' #23
                                             │   └── item: string #22
-                                            └── [startsWith]: optional #23
+                                            └── [startsWith]: optional 'optional_23' #23
                                                 └── item: string #22
-

@@ -81,7 +81,7 @@ pub fn gen_op_to_mat_map(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{mdk_rust::*, tests::default_type_node_base};
+    use crate::{fdk_rust::*, tests::default_type_node_base};
     use common::typegraph::*;
 
     #[test]
@@ -148,8 +148,8 @@ mod test {
                 },
             ],
         });
-        let generator = Generator::new(MdkRustGenConfig {
-            base: crate::config::MdkGeneratorConfigBase {
+        let generator = Generator::new(FdkRustGenConfig {
+            base: crate::config::FdkGeneratorConfigBase {
                 path: "/".into(),
                 typegraph_name: Some(tg_name.clone()),
                 typegraph_path: None,
@@ -168,9 +168,9 @@ mod test {
                 ),
                 (
                     "template_dir".to_owned(),
-                    GeneratorInputResolved::MdkTemplate {
-                        template: MdkTemplate {
-                            entries: mdk_rust::DEFAULT_TEMPLATE
+                    GeneratorInputResolved::FdkTemplate {
+                        template: FdkTemplate {
+                            entries: fdk_rust::DEFAULT_TEMPLATE
                                 .iter()
                                 .map(|(file, content)| (*file, (*content).into()))
                                 .collect(),
@@ -184,7 +184,7 @@ mod test {
         let (_, buf) = out
             .0
             .iter()
-            .find(|(path, _)| path.file_name().unwrap() == "mdk.rs")
+            .find(|(path, _)| path.file_name().unwrap() == "fdk.rs")
             .unwrap();
         pretty_assertions::assert_eq!(
             r#"// gen-static-end

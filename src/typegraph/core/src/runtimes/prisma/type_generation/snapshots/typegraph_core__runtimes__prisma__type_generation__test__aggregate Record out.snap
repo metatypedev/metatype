@@ -1,29 +1,28 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
 root: struct #18
 ├─ [_avg]: struct '_Record_NumberAgg_avg' #12
-│  └─ [age]: optional #11
+│  └─ [age]: optional 'optional_11' #11
 │     └─ item: float #10
 ├─ [_count]: struct '_Record_AggrCount' #9
-│  ├─ [_all]: optional #8
+│  ├─ [_all]: optional 'optional_8' #8
 │  │  └─ item: integer #7
-│  ├─ [age]: optional #8
+│  ├─ [age]: optional 'optional_8' #8
 │  │  └─ item: integer #7
-│  ├─ [created_at]: optional #8
+│  ├─ [created_at]: optional 'optional_8' #8
 │  │  └─ item: integer #7
-│  ├─ [id]: optional #8
+│  ├─ [id]: optional 'optional_8' #8
 │  │  └─ item: integer #7
-│  └─ [name]: optional #8
+│  └─ [name]: optional 'optional_8' #8
 │     └─ item: integer #7
 ├─ [_max]: struct '_Record_NumberAgg' #17
-│  └─ [age]: optional #16
+│  └─ [age]: optional 'optional_16' #16
 │     └─ item: integer #15
 ├─ [_min]: struct '_Record_NumberAgg' #17
-│  └─ [age]: optional #16
+│  └─ [age]: optional 'optional_16' #16
 │     └─ item: integer #15
 └─ [_sum]: struct '_Record_NumberAgg' #17
-   └─ [age]: optional #16
+   └─ [age]: optional 'optional_16' #16
       └─ item: integer #15
-

@@ -20,7 +20,7 @@ snapshot[`Typegraph using grpc 1`] = `
       },
       {
         "type": "function",
-        "title": "func_7",
+        "title": "root_greet_fn",
         "runtime": 1,
         "policies": [
           0
@@ -35,7 +35,7 @@ snapshot[`Typegraph using grpc 1`] = `
       },
       {
         "type": "object",
-        "title": "object_2",
+        "title": "root_greet_fn_input",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -47,7 +47,7 @@ snapshot[`Typegraph using grpc 1`] = `
       },
       {
         "type": "optional",
-        "title": "optional_1",
+        "title": "root_greet_fn_input_name_root_greet_fn_input_name_string_optional",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -57,7 +57,7 @@ snapshot[`Typegraph using grpc 1`] = `
       },
       {
         "type": "string",
-        "title": "string_0",
+        "title": "root_greet_fn_input_name_string",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -65,7 +65,7 @@ snapshot[`Typegraph using grpc 1`] = `
       },
       {
         "type": "object",
-        "title": "object_5",
+        "title": "root_greet_fn_output",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -167,7 +167,7 @@ snapshot[`Typegraph using grpc 2`] = `
       },
       {
         "type": "function",
-        "title": "func_7",
+        "title": "root_greet_fn",
         "runtime": 1,
         "policies": [
           0
@@ -182,7 +182,7 @@ snapshot[`Typegraph using grpc 2`] = `
       },
       {
         "type": "object",
-        "title": "object_2",
+        "title": "root_greet_fn_input",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -194,7 +194,7 @@ snapshot[`Typegraph using grpc 2`] = `
       },
       {
         "type": "optional",
-        "title": "optional_1",
+        "title": "root_greet_fn_input_name_root_greet_fn_input_name_string_optional",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -204,7 +204,7 @@ snapshot[`Typegraph using grpc 2`] = `
       },
       {
         "type": "string",
-        "title": "string_0",
+        "title": "root_greet_fn_input_name_string",
         "runtime": 1,
         "policies": [],
         "config": {},
@@ -212,7 +212,7 @@ snapshot[`Typegraph using grpc 2`] = `
       },
       {
         "type": "object",
-        "title": "object_5",
+        "title": "root_greet_fn_output",
         "runtime": 1,
         "policies": [],
         "config": {},
