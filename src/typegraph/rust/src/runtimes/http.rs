@@ -17,68 +17,9 @@ impl Default for HttpMethod {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct HttpRequestBuilder {
-    runtime: RuntimeId,
-    inp: TypeId,
-    out: TypeId,
-    method: HttpMethod,
-    path: String,
-    content_type: Option<String>,
-    header_prefix: Option<String>,
-    query_fields: Option<Vec<String>>,
-    effect: Effect,
-}
-
-impl TypeBuilder for HttpRequestBuilder {
-    fn build(self) -> Result<TypeId> {
-        let base = BaseMaterializer {
-            runtime: self.runtime,
-            effect: self.effect,
-        };
-
-        let mat_options = MaterializerHttpRequest {
-            method: self.method,
-            path: self.path,
-            content_type: self.content_type,
-            header_prefix: self.header_prefix,
-            query_fields: self.query_fields,
-            rename_fields: None,
-            body_fields: None,
-            auth_token_field: None,
-        };
-
-        let mat_id = wasm::with_runtimes(|r, s| r.call_http_request(s, base, &mat_options))?;
-
-        t::func(self.inp.build()?, self.out.build()?, mat_id)?.build()
-    }
-}
-
-impl HttpRequestBuilder {
-    pub fn content_type(mut self, content: impl ToString) -> Self {
-        self.content_type = Some(content.to_string());
-        self
-    }
-
-    pub fn header_prefix(mut self, prefix: impl ToString) -> Self {
-        self.header_prefix = Some(prefix.to_string());
-        self
-    }
-
-    pub fn query_fields(mut self, fields: impl IntoIterator<Item = impl ToString>) -> Self {
-        self.header_prefix = Some(fields.into_iter().map(|f| f.to_string()).collect());
-        self
-    }
-
-    pub fn effect(mut self, effect: Effect) -> Self {
-        self.effect = effect;
-        self
-    }
-}
-
 #[derive(Debug)]
 pub struct HttpRuntime {
-    id: u32,
+    id: RuntimeId,
 }
 
 impl HttpRuntime {
@@ -98,61 +39,106 @@ impl HttpRuntime {
         Ok(Self { id })
     }
 
-    pub fn get<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    pub fn get<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
     where
         I: TypeBuilder,
         O: TypeBuilder,
     {
-        self.request(HttpMethod::Get, inp, out)
+        self.request(inp, out, HttpMethod::Get, Effect::Read, options)
     }
 
-    pub fn post<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    pub fn post<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
     where
         I: TypeBuilder,
         O: TypeBuilder,
     {
-        self.request(HttpMethod::Post, inp, out)
-            .map(|r| r.effect(Effect::Create(false)))
+        self.request(inp, out, HttpMethod::Post, Effect::Create(false), options)
     }
 
-    pub fn put<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    pub fn put<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
     where
         I: TypeBuilder,
         O: TypeBuilder,
     {
-        self.request(HttpMethod::Put, inp, out)
-            .map(|r| r.effect(Effect::Update(false)))
+        self.request(inp, out, HttpMethod::Put, Effect::Update(false), options)
     }
 
-    pub fn patch<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    pub fn patch<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
     where
         I: TypeBuilder,
         O: TypeBuilder,
     {
-        self.request(HttpMethod::Patch, inp, out)
-            .map(|r| r.effect(Effect::Update(false)))
+        self.request(inp, out, HttpMethod::Patch, Effect::Update(false), options)
     }
 
-    pub fn delete<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    pub fn delete<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
     where
         I: TypeBuilder,
         O: TypeBuilder,
     {
-        self.request(HttpMethod::Delete, inp, out)
-            .map(|r| r.effect(Effect::Delete(false)))
+        self.request(inp, out, HttpMethod::Delete, Effect::Delete(false), options)
     }
 
-    fn request<I, O>(&self, method: HttpMethod, inp: I, out: O) -> Result<HttpRequestBuilder>
+    fn request<I, O>(
+        &self,
+        inp: I,
+        out: O,
+        method: HttpMethod,
+        effect: Effect,
+        options: HttpRequestOption,
+    ) -> Result<TypeId>
     where
         I: TypeBuilder,
         O: TypeBuilder,
     {
-        Ok(HttpRequestBuilder {
+        let base = BaseMaterializer {
             runtime: self.id,
+            effect,
+        };
+
+        let mat = MaterializerHttpRequest {
             method,
-            inp: inp.build()?,
-            out: out.build()?,
-            ..Default::default()
-        })
+            path: options.path,
+            content_type: options.content_type,
+            header_prefix: options.header_prefix,
+            query_fields: options.query_fields,
+            rename_fields: None,
+            body_fields: None,
+            auth_token_field: None,
+        };
+
+        let mat = wasm::with_runtimes(|r, s| r.call_http_request(s, base, &mat))?;
+
+        t::func(inp, out, mat)?.build()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct HttpRequestOption {
+    path: String,
+    content_type: Option<String>,
+    header_prefix: Option<String>,
+    query_fields: Option<Vec<String>>,
+}
+
+impl HttpRequestOption {
+    pub fn path(mut self, path: &str) -> Self {
+        self.path = path.to_string();
+        self
+    }
+
+    pub fn content_type(mut self, content: impl ToString) -> Self {
+        self.content_type = Some(content.to_string());
+        self
+    }
+
+    pub fn header_prefix(mut self, prefix: impl ToString) -> Self {
+        self.header_prefix = Some(prefix.to_string());
+        self
+    }
+
+    pub fn query_fields(mut self, fields: impl IntoIterator<Item = impl ToString>) -> Self {
+        self.header_prefix = Some(fields.into_iter().map(|f| f.to_string()).collect());
+        self
     }
 }

@@ -24,22 +24,42 @@ impl WasmRuntimeReflected {
         Ok(Self { id })
     }
 
-    pub fn export<I, O>(&self, func_name: &str, inp: I, out: O, effect: Effect) -> Result<TypeId>
+    pub fn export<I, O>(&self, inp: I, out: O, options: WasmReflectedOption) -> Result<TypeId>
     where
         I: TypeBuilder,
         O: TypeBuilder,
     {
         let base = BaseMaterializer {
             runtime: self.id,
-            effect,
+            effect: options.effect,
         };
 
         let mat = MaterializerWasmReflectedFunc {
-            func_name: func_name.to_string(),
+            func_name: options.func_name,
         };
 
-        let mat_id = wasm::with_runtimes(|r, s| r.call_from_wasm_reflected_func(s, base, &mat))?;
+        let mat = wasm::with_runtimes(|r, s| r.call_from_wasm_reflected_func(s, base, &mat))?;
 
-        t::func(inp, out, mat_id)?.build()
+        t::func(inp, out, mat)?.build()
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct WasmReflectedOption {
+    pub func_name: String,
+    pub effect: Effect,
+}
+
+impl WasmReflectedOption {
+    pub fn new(func_name: &str) -> Self {
+        Self {
+            func_name: func_name.to_string(),
+            effect: Effect::Read,
+        }
+    }
+
+    pub fn effect(mut self, effect: Effect) -> Self {
+        self.effect = effect;
+        self
     }
 }
