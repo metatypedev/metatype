@@ -101,14 +101,14 @@ impl TypeGen for OrderBy {
             "".to_string()
         } else {
             // TODO what is the casing for `skip_rel`?
-            format!("Without{}", self.skip_rel.join("_"))
+            format!("_without{}", self.skip_rel.join("_"))
         };
         let suffix2 = if self.aggregates {
-            "WithAggregates"
+            "_with_aggregates"
         } else {
             ""
         };
-        format!("{}OrderBy{suffix}{suffix2}", name)
+        format!("{}_order_by{suffix}{suffix2}", name)
     }
 }
 
@@ -123,7 +123,7 @@ impl TypeGen for SortOrder {
     }
 
     fn name(&self) -> String {
-        "_PrismaSortOrder".to_string()
+        "_prisma_sort_order".to_string()
     }
 }
 
@@ -138,7 +138,7 @@ impl TypeGen for NullsOrder {
     }
 
     fn name(&self) -> String {
-        "_PrismaNullsOrder".to_string()
+        "_prisma_nulls_order".to_string()
     }
 }
 
@@ -162,8 +162,8 @@ impl TypeGen for Sort {
     }
 
     fn name(&self) -> String {
-        let nullable = if self.nullable { "Nullable" } else { "" };
-        format!("_PrismaSort{}", nullable)
+        let nullable = if self.nullable { "_nullable" } else { "" };
+        format!("_prisma_sort{}", nullable)
     }
 }
 
@@ -183,7 +183,7 @@ impl TypeGen for SortByAggregates {
     }
 
     fn name(&self) -> String {
-        "_PrismaSortByAggregates".to_string()
+        "_prisma_sort_by_aggregates".to_string()
     }
 }
 
@@ -255,6 +255,6 @@ impl TypeGen for AggregateSorting {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("{model_name}AggregateSorting")
+        format!("{model_name}_aggregate_sorting")
     }
 }

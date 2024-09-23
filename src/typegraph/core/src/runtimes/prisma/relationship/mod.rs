@@ -143,7 +143,7 @@ mod test {
 
         assert_eq!(ctx.relationships.len(), 1);
         let (name, rel) = ctx.relationships.iter().next().unwrap();
-        assert_eq!(name, "RelPostUser");
+        assert_eq!(name, "rel_Post_User");
         assert_eq!(rel.left.model_name, "User");
         assert_eq!(rel.right.model_name, "Post");
 
@@ -206,7 +206,7 @@ mod test {
         let relationships = ctx.relationships;
         assert_eq!(relationships.len(), 1);
         let (name, rel) = relationships.iter().next().unwrap();
-        assert_eq!(name, "RelUserProfile");
+        assert_eq!(name, "rel_User_Profile");
         assert_eq!(rel.left.model_name, "Profile");
         assert_eq!(rel.right.model_name, "User");
 
@@ -237,7 +237,7 @@ mod test {
 
         assert_eq!(ctx.relationships.len(), 1);
         let (name, rel) = ctx.relationships.iter().next().unwrap();
-        assert_eq!(name, "RelUserProfile");
+        assert_eq!(name, "rel_User_Profile");
         assert_eq!(rel.left.model_name, "Profile");
         assert_eq!(rel.right.model_name, "User");
 
@@ -259,7 +259,7 @@ mod test {
 
         assert_eq!(ctx.relationships.len(), 1);
         let (name, rel) = ctx.relationships.iter().next().unwrap();
-        assert_eq!(name, "RelNodeNode");
+        assert_eq!(name, "rel_Node_Node");
         assert_eq!(rel.left.model_name, "Node");
         assert_eq!(rel.right.model_name, "Node");
 

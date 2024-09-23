@@ -115,29 +115,29 @@ impl TypeGen for Where {
         let model_name = self.model_id.name().unwrap().unwrap();
 
         let suffix1 = if self.aggregates {
-            "WithAggregates".to_string()
+            "_with_aggregates".to_string()
         } else {
             "".to_string()
         };
 
         let suffix2 = if !self.skip_models.is_empty() {
             let nested_suffix = if self.aggregates {
-                "WhereWithAggregates"
+                "_where_with_aggregates"
             } else {
-                "Where"
+                "_where"
             };
             format!(
-                "Excluding{}",
+                "_excluding_{}",
                 self.skip_models
                     .iter()
-                    .map(|(_, name)| name.strip_suffix(nested_suffix).unwrap())
+                    .map(|(_, name)| name.strip_suffix(nested_suffix).unwrap_or(name.as_str()))
                     .collect::<Vec<_>>()
-                    .join("And")
+                    .join("_and_")
             )
         } else {
             "".to_string()
         };
-        format!("{model_name}Where{suffix1}{suffix2}")
+        format!("{model_name}_where{suffix1}{suffix2}")
     }
 }
 

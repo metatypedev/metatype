@@ -3,8 +3,8 @@ source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct #10
-└─ [data]: list '_9_RecordCreateInput[]' #9
-   └─ item: struct 'RecordCreateInput' #8
+└─ [data]: list '_9_Record_create_input[]' #9
+   └─ item: struct 'Record_create_input' #8
       ├─ [age]: optional #5
       │  └─ item: integer #4
       ├─ [created_at]: string #1

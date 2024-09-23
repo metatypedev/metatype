@@ -2,62 +2,62 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct 'PostQueryInput' #164
-├─ [cursor]: optional '_160__Post_Cursor?' #160
-│  └─ item: union '_Post_Cursor' #159
+root: struct 'Post_query_input' #164
+├─ [cursor]: optional '_160_Post_cursor?' #160
+│  └─ item: union 'Post_cursor' #159
 │     ├─ variant_0: struct #157
 │     │  └─ [id]: integer #79
 │     └─ variant_1: struct #158
 │        └─ [title]: string #80
-├─ [distinct]: optional '_163__KeysOf_Post?' #163
-│  └─ item: list '_KeysOf_Post' #162
+├─ [distinct]: optional '_163_Post_keys_union?' #163
+│  └─ item: list 'Post_keys_union' #162
 │     └─ item: string #161 enum{ '"id"', '"title"', '"author"' }
-├─ [orderBy]: optional '_154_PostOrderBy?' #154
-│  └─ item: list 'PostOrderBy' #153
+├─ [orderBy]: optional '_154_Post_order_by?' #154
+│  └─ item: list 'Post_order_by' #153
 │     └─ item: struct #152
-│        ├─ [author]: optional '_151_UserOrderByWithoutRelPostUser?' #151
-│        │  └─ item: list 'UserOrderByWithoutRelPostUser' #150
+│        ├─ [author]: optional '_151_User_order_by_withoutrel_Post_User?' #151
+│        │  └─ item: list 'User_order_by_withoutrel_Post_User' #150
 │        │     └─ item: struct #149
-│        │        ├─ [id]: optional '_PrismaSort' #50
+│        │        ├─ [id]: optional '_prisma_sort' #50
 │        │        │  └─ item: union #49
 │        │        │     ├─ variant_0: struct #48
-│        │        │     │  └─ [sort]: string '_PrismaSortOrder' #46 enum{ '"asc"', '"desc"' }
-│        │        │     └─ variant_1: string '_PrismaSortOrder' #46 enum{ '"asc"', '"desc"' }
-│        │        └─ [name]: optional '_PrismaSort' #50
+│        │        │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        │        │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        │        └─ [name]: optional '_prisma_sort' #50
 │        │           └─ item: union #49
 │        │              ├─ variant_0: struct #48
-│        │              │  └─ [sort]: string '_PrismaSortOrder' #46 enum{ '"asc"', '"desc"' }
-│        │              └─ variant_1: string '_PrismaSortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [id]: optional '_PrismaSort' #50
+│        │              │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        │              └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        ├─ [id]: optional '_prisma_sort' #50
 │        │  └─ item: union #49
 │        │     ├─ variant_0: struct #48
-│        │     │  └─ [sort]: string '_PrismaSortOrder' #46 enum{ '"asc"', '"desc"' }
-│        │     └─ variant_1: string '_PrismaSortOrder' #46 enum{ '"asc"', '"desc"' }
-│        └─ [title]: optional '_PrismaSort' #50
+│        │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        └─ [title]: optional '_prisma_sort' #50
 │           └─ item: union #49
 │              ├─ variant_0: struct #48
-│              │  └─ [sort]: string '_PrismaSortOrder' #46 enum{ '"asc"', '"desc"' }
-│              └─ variant_1: string '_PrismaSortOrder' #46 enum{ '"asc"', '"desc"' }
-├─ [skip]: optional '_156__Skip?' #156
-│  └─ item: integer '_Skip' #59
-├─ [take]: optional '_155__Take?' #155
-│  └─ item: integer '_Take' #57
-└─ [where]: optional '_148_PostQueryWhereInput?' #148
-   └─ item: struct 'PostQueryWhereInput' #147
-      ├─ [AND]: optional '_145__144_PostQueryWhereInput[]?' #145
-      │  └─ item: list '_144_PostQueryWhereInput[]' #144
-      │     └─ item: &PostQueryWhereInput #143
-      ├─ [NOT]: optional '_146_PostQueryWhereInput?' #146
-      │  └─ item: &PostQueryWhereInput #143
-      ├─ [OR]: optional '_145__144_PostQueryWhereInput[]?' #145
-      │  └─ item: list '_144_PostQueryWhereInput[]' #144
-      │     └─ item: &PostQueryWhereInput #143
-      ├─ [author]: optional '_141_UserWhereExcludingPost?' #141
-      │  └─ item: struct 'UserWhereExcludingPost' #140
-      │     ├─ [id]: optional '_129__PrismaIntegerFilterX?' #129
-      │     │  └─ item: optional '_PrismaIntegerFilterX' #36
+│              │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+├─ [skip]: optional '_156__skip?' #156
+│  └─ item: integer '_skip' #59
+├─ [take]: optional '_155__take?' #155
+│  └─ item: integer '_take' #57
+└─ [where]: optional '_148_Post_query_where_input?' #148
+   └─ item: struct 'Post_query_where_input' #147
+      ├─ [AND]: optional '_145__144_Post_query_where_input[]?' #145
+      │  └─ item: list '_144_Post_query_where_input[]' #144
+      │     └─ item: &Post_query_where_input #143
+      ├─ [NOT]: optional '_146_Post_query_where_input?' #146
+      │  └─ item: &Post_query_where_input #143
+      ├─ [OR]: optional '_145__144_Post_query_where_input[]?' #145
+      │  └─ item: list '_144_Post_query_where_input[]' #144
+      │     └─ item: &Post_query_where_input #143
+      ├─ [author]: optional '_141_User_where_excluding_Post?' #141
+      │  └─ item: struct 'User_where_excluding_Post' #140
+      │     ├─ [id]: optional '_129__prisma_integer_filter_ex?' #129
+      │     │  └─ item: optional '_prisma_integer_filter_ex' #36
       │     │     └─ item: union #35
-      │     │        ├─ variant_0: either '_PrismaIntegerFilter' #33
+      │     │        ├─ variant_0: either '_prisma_integer_filter' #33
       │     │        │  ├─ variant_0: integer #25
       │     │        │  ├─ variant_1: struct #28
       │     │        │  │  └─ [equals]: integer #25
@@ -79,7 +79,7 @@ root: struct 'PostQueryInput' #164
       │     │        │     └─ [notIn]: list #27
       │     │        │        └─ item: integer #25
       │     │        └─ variant_1: struct #34
-      │     │           └─ [not]: either '_PrismaIntegerFilter' #33
+      │     │           └─ [not]: either '_prisma_integer_filter' #33
       │     │              ├─ variant_0: integer #25
       │     │              ├─ variant_1: struct #28
       │     │              │  └─ [equals]: integer #25
@@ -100,10 +100,10 @@ root: struct 'PostQueryInput' #164
       │     │              └─ variant_5: struct #32
       │     │                 └─ [notIn]: list #27
       │     │                    └─ item: integer #25
-      │     ├─ [name]: optional '_130__PrismaStringFilterX?' #130
-      │     │  └─ item: optional '_PrismaStringFilterX' #22
+      │     ├─ [name]: optional '_130__prisma_string_filter_ex?' #130
+      │     │  └─ item: optional '_prisma_string_filter_ex' #22
       │     │     └─ item: union #21
-      │     │        ├─ variant_0: union '_PrismaStringFilter' #19
+      │     │        ├─ variant_0: union '_prisma_string_filter' #19
       │     │        │  ├─ variant_0: string #7
       │     │        │  ├─ variant_1: struct #10
       │     │        │  │  └─ [equals]: string #7
@@ -127,7 +127,7 @@ root: struct 'PostQueryInput' #164
       │     │        │     └─ [startsWith]: optional #8
       │     │        │        └─ item: string #7
       │     │        └─ variant_1: struct #20
-      │     │           └─ [not]: union '_PrismaStringFilter' #19
+      │     │           └─ [not]: union '_prisma_string_filter' #19
       │     │              ├─ variant_0: string #7
       │     │              ├─ variant_1: struct #10
       │     │              │  └─ [equals]: string #7
@@ -153,18 +153,18 @@ root: struct 'PostQueryInput' #164
       │     └─ [posts]: optional #139
       │        └─ item: union #138
       │           ├─ variant_0: struct #133
-      │           │  └─ [every]: optional '_132_PostWhere?' #132
-      │           │     └─ item: &PostWhere #131
+      │           │  └─ [every]: optional '_132_Post_where?' #132
+      │           │     └─ item: &Post_where #131
       │           ├─ variant_1: struct #135
-      │           │  └─ [some]: optional '_134_PostWhere?' #134
-      │           │     └─ item: &PostWhere #131
+      │           │  └─ [some]: optional '_134_Post_where?' #134
+      │           │     └─ item: &Post_where #131
       │           └─ variant_2: struct #137
-      │              └─ [none]: optional '_136_PostWhere?' #136
-      │                 └─ item: &PostWhere #131
-      ├─ [id]: optional '_127__PrismaIntegerFilterX?' #127
-      │  └─ item: optional '_PrismaIntegerFilterX' #36
+      │              └─ [none]: optional '_136_Post_where?' #136
+      │                 └─ item: &Post_where #131
+      ├─ [id]: optional '_127__prisma_integer_filter_ex?' #127
+      │  └─ item: optional '_prisma_integer_filter_ex' #36
       │     └─ item: union #35
-      │        ├─ variant_0: either '_PrismaIntegerFilter' #33
+      │        ├─ variant_0: either '_prisma_integer_filter' #33
       │        │  ├─ variant_0: integer #25
       │        │  ├─ variant_1: struct #28
       │        │  │  └─ [equals]: integer #25
@@ -186,7 +186,7 @@ root: struct 'PostQueryInput' #164
       │        │     └─ [notIn]: list #27
       │        │        └─ item: integer #25
       │        └─ variant_1: struct #34
-      │           └─ [not]: either '_PrismaIntegerFilter' #33
+      │           └─ [not]: either '_prisma_integer_filter' #33
       │              ├─ variant_0: integer #25
       │              ├─ variant_1: struct #28
       │              │  └─ [equals]: integer #25
@@ -207,10 +207,10 @@ root: struct 'PostQueryInput' #164
       │              └─ variant_5: struct #32
       │                 └─ [notIn]: list #27
       │                    └─ item: integer #25
-      └─ [title]: optional '_128__PrismaStringFilterX?' #128
-         └─ item: optional '_PrismaStringFilterX' #22
+      └─ [title]: optional '_128__prisma_string_filter_ex?' #128
+         └─ item: optional '_prisma_string_filter_ex' #22
             └─ item: union #21
-               ├─ variant_0: union '_PrismaStringFilter' #19
+               ├─ variant_0: union '_prisma_string_filter' #19
                │  ├─ variant_0: string #7
                │  ├─ variant_1: struct #10
                │  │  └─ [equals]: string #7
@@ -234,7 +234,7 @@ root: struct 'PostQueryInput' #164
                │     └─ [startsWith]: optional #8
                │        └─ item: string #7
                └─ variant_1: struct #20
-                  └─ [not]: union '_PrismaStringFilter' #19
+                  └─ [not]: union '_prisma_string_filter' #19
                      ├─ variant_0: string #7
                      ├─ variant_1: struct #10
                      │  └─ [equals]: string #7

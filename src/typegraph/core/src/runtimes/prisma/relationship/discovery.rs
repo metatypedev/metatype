@@ -207,7 +207,7 @@ impl CandidatePair {
             &self.1.property.relationship_attributes.name,
         ) {
             (None, None) => Ok(Generated(format!(
-                "Rel{}{}",
+                "rel_{}_{}",
                 self.1.model.type_name(),
                 self.0.model.type_name()
             ))),

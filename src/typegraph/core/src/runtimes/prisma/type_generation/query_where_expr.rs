@@ -60,9 +60,9 @@ impl TypeGen for QueryWhereExpr {
     }
 
     fn name(&self) -> String {
-        let unique = if self.unique { "Unique" } else { "" };
+        let unique = if self.unique { "_unique" } else { "" };
         format!(
-            "{}QueryWhere{unique}Input",
+            "{}_query_where{unique}_input",
             self.model_id.name().unwrap().unwrap()
         )
     }
