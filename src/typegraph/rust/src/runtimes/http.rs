@@ -82,54 +82,71 @@ pub struct HttpRuntime {
 }
 
 impl HttpRuntime {
-    pub fn new<S>(endpoint: S, cert_secret: Option<S>, basic_auth_secret: Option<S>) -> Result<Self>
-    where
-        S: ToString,
-    {
-        let id = wasm::with_runtimes(|r, s| {
-            r.call_register_http_runtime(
-                s,
-                &HttpRuntimeData {
-                    endpoint: endpoint.to_string(),
-                    cert_secret: cert_secret.as_ref().map(|v| v.to_string()),
-                    basic_auth_secret: basic_auth_secret.as_ref().map(|v| v.to_string()),
-                },
-            )
-        })?;
+    pub fn new(
+        endpoint: &str,
+        cert_secret: Option<&str>,
+        basic_auth_secret: Option<&str>,
+    ) -> Result<Self> {
+        let data = HttpRuntimeData {
+            endpoint: endpoint.to_string(),
+            cert_secret: cert_secret.as_ref().map(|v| v.to_string()),
+            basic_auth_secret: basic_auth_secret.as_ref().map(|v| v.to_string()),
+        };
+
+        let id = wasm::with_runtimes(|r, s| r.call_register_http_runtime(s, &data))?;
 
         Ok(Self { id })
     }
 
-    pub fn get<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
+    pub fn get<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    where
+        I: TypeBuilder,
+        O: TypeBuilder,
+    {
         self.request(HttpMethod::Get, inp, out)
     }
 
-    pub fn post<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
+    pub fn post<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    where
+        I: TypeBuilder,
+        O: TypeBuilder,
+    {
         self.request(HttpMethod::Post, inp, out)
             .map(|r| r.effect(Effect::Create(false)))
     }
 
-    pub fn put<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
+    pub fn put<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    where
+        I: TypeBuilder,
+        O: TypeBuilder,
+    {
         self.request(HttpMethod::Put, inp, out)
             .map(|r| r.effect(Effect::Update(false)))
     }
 
-    pub fn patch<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
+    pub fn patch<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    where
+        I: TypeBuilder,
+        O: TypeBuilder,
+    {
         self.request(HttpMethod::Patch, inp, out)
             .map(|r| r.effect(Effect::Update(false)))
     }
 
-    pub fn delete<T: TypeBuilder>(&self, inp: T, out: T) -> Result<HttpRequestBuilder> {
+    pub fn delete<I, O>(&self, inp: I, out: O) -> Result<HttpRequestBuilder>
+    where
+        I: TypeBuilder,
+        O: TypeBuilder,
+    {
         self.request(HttpMethod::Delete, inp, out)
             .map(|r| r.effect(Effect::Delete(false)))
     }
 
-    fn request<T: TypeBuilder>(
-        &self,
-        method: HttpMethod,
-        inp: T,
-        out: T,
-    ) -> Result<HttpRequestBuilder> {
+    fn request<I, O>(&self, method: HttpMethod, inp: I, out: O) -> Result<HttpRequestBuilder>
+    where
+        I: TypeBuilder,
+        O: TypeBuilder,
+    {
         Ok(HttpRequestBuilder {
             runtime: self.id,
             method,

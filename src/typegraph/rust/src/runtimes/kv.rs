@@ -2,7 +2,7 @@ use crate::{
     t::{self, TypeBuilder},
     wasm::{
         self,
-        core::{MaterializerId, TypeId},
+        core::{MaterializerId, RuntimeId, TypeId},
         runtimes::{BaseMaterializer, Effect, KvMaterializer, KvRuntimeData},
     },
     Result,
@@ -10,11 +10,11 @@ use crate::{
 
 #[derive(Debug)]
 pub struct KvRuntime {
-    id: TypeId,
+    id: RuntimeId,
 }
 
 impl KvRuntime {
-    pub fn new(url: impl ToString) -> Result<Self> {
+    pub fn new(url: &str) -> Result<Self> {
         let data = KvRuntimeData {
             url: url.to_string(),
         };
