@@ -792,12 +792,6 @@
           "releaseTag": "20240814",
           "specifiedVersion": true
         },
-        "bciqe2vunrx2rwabjcajdlqk6imqpsmzwnmlbk6cd57rvbhtilmj4kmi": {
-          "version": "v25.1",
-          "buildDepConfigs": {},
-          "portRef": "protoc_ghrel@0.1.0",
-          "specifiedVersion": true
-        },
         "bciqfoh6rcv3bhze6nzb3edufogn5usavol623q7hw6lfuq3du3fe3ry": {
           "version": "v28.2",
           "buildDepConfigs": {},
