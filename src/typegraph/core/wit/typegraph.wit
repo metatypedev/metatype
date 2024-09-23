@@ -643,21 +643,21 @@ interface utils {
 
     remove-injections: func(type-id: type-id) -> result<type-id, error>;
 
-    record mdk-config {
+    record fdk-config {
         workspace-path: string,
         target-name: string,
         config-json: string,
         tg-json: string,
     }
 
-    record mdk-output {
+    record fdk-output {
         path: string,
         content: string,
         overwrite: bool,
     }
 
-    metagen-exec: func(config: mdk-config) -> result<list<mdk-output>, error>;
-    metagen-write-files: func(items: list<mdk-output>, typegraph-dir: string) -> result<_, error>;
+    metagen-exec: func(config: fdk-config) -> result<list<fdk-output>, error>;
+    metagen-write-files: func(items: list<fdk-output>, typegraph-dir: string) -> result<_, error>;
 }
 
 interface host {

@@ -25,13 +25,13 @@ env("main")
     ...stdDeps(),
     installs.python_latest,
     installs.node,
-    installs.rust_stable,
+    installs.rust_stable
   );
 
 env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v25.1" }),
-  ports.cmake()[0],
+  ports.cmake()[0]
 );
 
 if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
@@ -46,7 +46,7 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
 env("_ecma").install(
   installs.node,
   ports.pnpm({ version: "v9.4.0" }),
-  ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
+  ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0]
 );
 
 env("_python").install(
@@ -58,7 +58,7 @@ env("_python").install(
   ports.pipi({
     packageName: "poetry",
     version: "1.8.3",
-  })[0],
+  })[0]
 );
 
 env("_wasm").install(
@@ -77,7 +77,7 @@ env("_wasm").install(
   ports.npmi({
     packageName: "@bytecodealliance/jco",
     version: "1.3.0",
-  })[0],
+  })[0]
 );
 
 env("oci").inherit(["_rust", "_wasm"]);
@@ -96,7 +96,7 @@ env("ci")
       crateName: "cross",
       version: "0.2.5",
       locked: true,
-    }),
+    })
   );
 
 env("dev")
@@ -105,7 +105,7 @@ env("dev")
     ports.act(),
     ports.cargobi({ crateName: "whiz", locked: true }),
     ports.cargobi({ crateName: "wit-deps-cli", locked: true }),
-    ports.cargobi({ crateName: "git-cliff", locked: true }),
+    ports.cargobi({ crateName: "git-cliff", locked: true })
   );
 
 task("version-print", () => console.log(METATYPE_VERSION), {
@@ -126,7 +126,7 @@ task("version-bump", async ($) => {
 
   if (!bumps.includes(bump)) {
     throw new Error(
-      `invalid argument "${bump}", valid are: ${bumps.join(", ")}`,
+      `invalid argument "${bump}", valid are: ${bumps.join(", ")}`
     );
   }
 
@@ -136,15 +136,15 @@ task("version-bump", async ($) => {
       bump as semver.ReleaseType,
       {
         prerelease: "rc",
-      },
-    ),
+      }
+    )
   );
 
   $.logStep(`Bumping ${METATYPE_VERSION} → ${newVersion}`);
   const lines = [[/^(export const METATYPE_VERSION = ").*(";)$/, newVersion]];
   if (bump === "prerelease") {
     $.logStep(
-      `Bumping published version ${PUBLISHED_VERSION} → ${METATYPE_VERSION}`,
+      `Bumping published version ${PUBLISHED_VERSION} → ${METATYPE_VERSION}`
     );
     lines.push([
       /^(export const PUBLISHED_VERSION = ").*(";)$/,

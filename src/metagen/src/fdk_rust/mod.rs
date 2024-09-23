@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-//! Generates typegraph types and mdk interface for rust.
+//! Generates typegraph types and fdk interface for rust.
 //! - dir/Cargo.toml
 //!  - Will not be replaced on second generation.
-//! - dir/mdk.rs
-//!  - Contains generated types and mdk interface.
+//! - dir/fdk.rs
+//!  - Contains generated types and fdk interface.
 //! - dir/lib.rs
 //!  - Some directions to get the user started.
 //!  - Will not be replaced on second generation.
@@ -21,13 +21,13 @@ use crate::*;
 use std::borrow::Cow;
 use std::fmt::Write;
 
-pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("mdk.rs", include_str!("static/mdk.rs"))];
+pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.rs", include_str!("static/fdk.rs"))];
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
-pub struct MdkRustGenConfig {
+pub struct FdkRustGenConfig {
     #[serde(flatten)]
     #[garde(dive)]
-    pub base: crate::config::MdkGeneratorConfigBase,
+    pub base: crate::config::FdkGeneratorConfigBase,
     /// Runtimes to generate stubbed materializer implementations for.
     #[garde(skip)]
     pub stubbed_runtimes: Option<Vec<String>>,
@@ -40,9 +40,9 @@ pub struct MdkRustGenConfig {
     pub skip_lib_rs: Option<bool>,
 }
 
-impl MdkRustGenConfig {
+impl FdkRustGenConfig {
     pub fn from_json(json: serde_json::Value, workspace_path: &Path) -> anyhow::Result<Self> {
-        let mut config: mdk_rust::MdkRustGenConfig = serde_json::from_value(json)?;
+        let mut config: FdkRustGenConfig = serde_json::from_value(json)?;
         config.base.path = workspace_path.join(config.base.path);
         config.base.typegraph_path = config
             .base
@@ -54,26 +54,26 @@ impl MdkRustGenConfig {
 }
 
 #[derive(Debug, Clone)]
-struct MdkRustTemplate {
+struct FdkRustTemplate {
     mod_rs: Cow<'static, str>,
 }
 
-impl From<MdkTemplate> for MdkRustTemplate {
-    fn from(template: MdkTemplate) -> Self {
+impl From<FdkTemplate> for FdkRustTemplate {
+    fn from(template: FdkTemplate) -> Self {
         let mut template = template.entries;
         Self {
-            mod_rs: template.remove("mdk.rs").unwrap(),
+            mod_rs: template.remove("fdk.rs").unwrap(),
         }
     }
 }
 
 pub struct Generator {
-    config: MdkRustGenConfig,
+    config: FdkRustGenConfig,
 }
 
 impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
-    pub fn new(config: MdkRustGenConfig) -> Result<Self, garde::Report> {
+    pub fn new(config: FdkRustGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
         config.validate(&())?;
         Ok(Self { config })
@@ -100,7 +100,7 @@ impl crate::Plugin for Generator {
         .into_iter()
         .chain(std::iter::once((
             "template_dir".to_string(),
-            GeneratorInputOrder::LoadMdkTemplate {
+            GeneratorInputOrder::LoadFdkTemplate {
                 default: DEFAULT_TEMPLATE,
                 override_path: self.config.base.template_dir.clone(),
             },
@@ -112,7 +112,7 @@ impl crate::Plugin for Generator {
         &self,
         mut inputs: HashMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
-        // TODO remove code duplication in mdk generators
+        // TODO remove code duplication in fdk generators
         let tg = match inputs
             .remove(Self::INPUT_TG)
             .context("missing generator input for typegraph")?
@@ -122,17 +122,17 @@ impl crate::Plugin for Generator {
             _ => bail!("unexpected generator input variant"),
         };
 
-        let template: MdkRustTemplate = match inputs
+        let template: FdkRustTemplate = match inputs
             .remove("template_dir")
             .context("missing generator input for template_dir")?
         {
-            GeneratorInputResolved::MdkTemplate { template } => template.into(),
+            GeneratorInputResolved::FdkTemplate { template } => template.into(),
             _ => bail!("unexpected generator input variant"),
         };
 
         let mut out = HashMap::new();
         out.insert(
-            self.config.base.path.join("mdk.rs"),
+            self.config.base.path.join("fdk.rs"),
             GeneratedFile {
                 contents: template.gen_mod_rs(&self.config, &tg)?,
                 overwrite: true,
@@ -141,7 +141,7 @@ impl crate::Plugin for Generator {
         let crate_name = self.config.crate_name.clone().unwrap_or_else(|| {
             use heck::ToSnekCase;
             let tg_name = tg.name().unwrap_or_else(|_| "generated".to_string());
-            format!("{}_mdk", tg_name.to_snek_case())
+            format!("{}_fdk", tg_name.to_snek_case())
         });
         if !matches!(self.config.skip_cargo_toml, Some(true)) {
             out.insert(
@@ -165,8 +165,8 @@ impl crate::Plugin for Generator {
     }
 }
 
-impl MdkRustTemplate {
-    fn gen_mod_rs(&self, config: &MdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<String> {
+impl FdkRustTemplate {
+    fn gen_mod_rs(&self, config: &FdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<String> {
         let mut mod_rs = GenDestBuf {
             buf: Default::default(),
         };
@@ -249,7 +249,7 @@ impl MdkRustTemplate {
         let mod_rs = self.mod_rs.clone().into_owned();
         let mod_rs = mod_rs.replace("__METATYPE_VERSION__", std::env!("CARGO_PKG_VERSION"));
 
-        let mdk_wit = include_str!("../../../wit/wit-wire.wit");
+        let fdk_wit = include_str!("../../../wit/wit-wire.wit");
         writeln!(dest, "// gen-static-start")?;
 
         let gen_start = "// gen-start\n";
@@ -264,7 +264,7 @@ impl MdkRustTemplate {
         writeln!(
             &mut dest.buf,
             r#"
-        inline: "{mdk_wit}""#
+        inline: "{fdk_wit}""#
         )?;
 
         let gen_end = "// gen-end\n";
@@ -283,7 +283,7 @@ impl MdkRustTemplate {
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let cargo_toml = include_str!("static/Cargo.toml");
     let mut cargo_toml = if let Some(crate_name) = crate_name {
-        const DEF_CRATE_NAME: &str = "metagen_mdk_rust_static";
+        const DEF_CRATE_NAME: &str = "metagen_fdk_rust_static";
         cargo_toml.replace(DEF_CRATE_NAME, crate_name)
     } else {
         cargo_toml.to_string()
@@ -300,14 +300,14 @@ opt-level = "z""#,
 
 pub fn gen_lib_rs() -> String {
     r#"
-mod mdk;
-pub use mdk::*;
+mod fdk;
+pub use fdk::*;
 
 /*
 init_mat! {
-    hook: || {
+    hook: || {FdkGeneratorConfigBase
         // initialize global stuff here if you need it
-        MatBuilder::new() 
+        MatBuilder::new()
             // register function handlers here
             .register_handler(stubs::MyFunc::erased(MyMat))
     }
@@ -315,7 +315,7 @@ init_mat! {
 
 struct MyMat;
 
-// FIXME: use actual types from your mdk here
+// FIXME: use actual types from your fdk here
 impl stubs::MyFunc for MyMat {
     fn handle(&self, input: types::MyFuncIn, _cx: Ctx) -> anyhow::Result<types::MyFuncOut> {
         unimplemented!()
@@ -336,13 +336,13 @@ fn e2e() -> anyhow::Result<()> {
             "default".to_string(),
             config::Target(
                 [GeneratorConfig {
-                    generator_name: "mdk_rust".to_string(),
-                    other: serde_json::to_value(mdk_rust::MdkRustGenConfig {
+                    generator_name: "fdk_rust".to_string(),
+                    other: serde_json::to_value(fdk_rust::FdkRustGenConfig {
                         skip_cargo_toml: None,
                         skip_lib_rs: Some(true),
                         stubbed_runtimes: Some(vec!["wasm_wire".into()]),
                         crate_name: None,
-                        base: config::MdkGeneratorConfigBase {
+                        base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),
                             typegraph_path: None,
                             // NOTE: root will map to the test's tempdir

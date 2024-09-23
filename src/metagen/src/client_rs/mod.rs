@@ -12,7 +12,7 @@ use shared::get_gql_type;
 use crate::interlude::*;
 use crate::*;
 
-use crate::mdk_rust::utils;
+use crate::fdk_rust::utils;
 use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
@@ -23,7 +23,7 @@ use utils::normalize_type_title;
 pub struct ClienRsGenConfig {
     #[serde(flatten)]
     #[garde(dive)]
-    pub base: crate::config::MdkGeneratorConfigBase,
+    pub base: crate::config::FdkGeneratorConfigBase,
     #[garde(length(min = 1))]
     crate_name: Option<String>,
     #[garde(skip)]
@@ -102,7 +102,7 @@ impl crate::Plugin for Generator {
         let crate_name = self.config.crate_name.clone().unwrap_or_else(|| {
             use heck::ToSnekCase;
             let tg_name = tg.name().unwrap_or_else(|_| "generated".to_string());
-            format!("{}_mdk", tg_name.to_snek_case())
+            format!("{}_fdk", tg_name.to_snek_case())
         });
         if !matches!(self.config.skip_cargo_toml, Some(true)) {
             out.insert(
@@ -220,7 +220,7 @@ impl QueryGraph {{
 
         let args_row = match &arg_ty {
             Some(arg_ty) => format!(
-                " 
+                "
         args: impl Into<NodeArgs<{arg_ty}>>"
             ),
             None => "".into(),
@@ -305,7 +305,7 @@ fn render_data_types(
 ) -> anyhow::Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(mdk_rust::types::RustTypeRenderer {
+        Rc::new(fdk_rust::types::RustTypeRenderer {
             derive_debug: true,
             derive_serde: true,
             all_fields_optional: true,
@@ -314,7 +314,7 @@ fn render_data_types(
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;
     }
-    /* renderer.replace_renderer(Rc::new(mdk_rust::types::RustTypeRenderer {
+    /* renderer.replace_renderer(Rc::new(fdk_rust::types::RustTypeRenderer {
         derive_debug: true,
         derive_serde: true,
         all_fields_optional: true,
@@ -459,7 +459,7 @@ fn e2e() -> anyhow::Result<()> {
                         skip_cargo_toml: None,
                         skip_lib_rs: Some(true),
                         crate_name: None,
-                        base: config::MdkGeneratorConfigBase {
+                        base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),
                             typegraph_path: None,
                             // NOTE: root will map to the test's tempdir
