@@ -62,7 +62,7 @@ impl Default for TypeInteger {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct IntegerBuilder {
     data: TypeInteger,
     base: TypeBase,
@@ -130,7 +130,7 @@ impl Default for TypeFloat {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct FloatBuilder {
     base: TypeBase,
     data: TypeFloat,
@@ -197,7 +197,7 @@ impl Default for TypeString {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct StringBuilder {
     base: TypeBase,
     data: TypeString,
@@ -250,7 +250,7 @@ impl Default for TypeOptional {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct OptionalBuilder {
     base: TypeBase,
     data: TypeOptional,
@@ -289,7 +289,7 @@ impl Default for TypeList {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ListBuilder {
     base: TypeBase,
     data: TypeList,
@@ -343,7 +343,7 @@ impl Default for TypeUnion {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct UnionBuilder {
     base: TypeBase,
     data: TypeUnion,
@@ -389,7 +389,7 @@ impl Default for TypeEither {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct EitherBuilder {
     base: TypeBase,
     data: TypeEither,
@@ -432,7 +432,7 @@ impl Default for TypeStruct {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct StructBuilder {
     base: TypeBase,
     data: TypeStruct,
@@ -498,7 +498,7 @@ impl Default for TypeFunc {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct FuncBuilder {
     data: TypeFunc,
 }
