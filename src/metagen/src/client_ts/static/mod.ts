@@ -134,6 +134,7 @@ export class QueryNode<Out> {
   #inner: SelectNode<Out>;
   constructor(
     inner: SelectNode<Out>,
+    _files: ObjectPath[],
   ) {
     this.#inner = inner;
   }
