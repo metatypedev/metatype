@@ -88,11 +88,19 @@ impl DenoRuntime {
 
     pub fn import_policy(
         &self,
-        name: &str, // TODO: make it optional
+        name: Option<&str>,
         module: &str,
         func_name: &str,
         secrets: impl IntoIterator<Item = impl ToString>,
     ) -> Result<Policy> {
+        let name = match name {
+            Some(value) => value.to_string(),
+            None => format!("__imp_{module}_{func_name}")
+                .chars()
+                .map(|ch| if ch.is_alphanumeric() { ch } else { '_' })
+                .collect(),
+        };
+
         let mat = MaterializerDenoImport {
             func_name: func_name.to_string(),
             module: module.to_string(),
@@ -102,7 +110,7 @@ impl DenoRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_import_deno_function(s, &mat, Effect::Read))?;
 
-        Policy::new(name, mat)
+        Policy::new(&name, mat)
     }
 
     // TODO
