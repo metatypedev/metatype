@@ -1,4 +1,5 @@
 pub mod deno;
+pub mod graphql;
 pub mod grpc;
 pub mod http;
 pub mod kv;
