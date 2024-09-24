@@ -3,13 +3,13 @@ source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
 root: optional 'optional_88' #88
-└─ item: struct 'UserWithNestedCount' #87
+└─ item: struct 'User_with_nested_count' #87
    ├─ [_count]: struct #86
-   │  └─ [posts]: optional '_Count' #85
+   │  └─ [posts]: optional '_count' #85
    │     └─ item: integer #84
    ├─ [id]: integer #50
    ├─ [name]: string #51
    └─ [posts]: list 'list_83' #83
-      └─ item: struct 'PostWithNestedCount_excluding___rel_Post_User_1' #82
+      └─ item: struct 'Post_with_nested_count_excluding_rel_Post_User' #82
          ├─ [id]: integer #55
          └─ [title]: string #56

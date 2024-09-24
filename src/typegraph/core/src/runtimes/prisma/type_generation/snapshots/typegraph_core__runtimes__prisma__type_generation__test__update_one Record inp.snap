@@ -3,7 +3,7 @@ source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
 root: struct #61
-├─ [data]: struct '_Record_UpdateInput' #22
+├─ [data]: struct 'Record_update_input' #22
 │  ├─ [age]: optional 'optional_18' #18
 │  │  └─ item: union #17
 │  │     ├─ variant_0: optional 'optional_5' #5
@@ -32,19 +32,19 @@ root: struct #61
 │        ├─ variant_0: string #3
 │        └─ variant_1: struct #10
 │           └─ [set]: string #3
-└─ [where]: struct 'QueryRecordWhereUniqueInput' #60
+└─ [where]: struct 'Record_query_where_unique_input' #60
    ├─ [AND]: optional 'optional_58' #58
    │  └─ item: list 'list_57' #57
-   │     └─ item: &QueryRecordWhereUniqueInput #56
+   │     └─ item: &Record_query_where_unique_input #56
    ├─ [NOT]: optional 'optional_59' #59
-   │  └─ item: &QueryRecordWhereUniqueInput #56
+   │  └─ item: &Record_query_where_unique_input #56
    ├─ [OR]: optional 'optional_58' #58
    │  └─ item: list 'list_57' #57
-   │     └─ item: &QueryRecordWhereUniqueInput #56
+   │     └─ item: &Record_query_where_unique_input #56
    ├─ [age]: optional 'optional_53' #53
-   │  └─ item: optional '_integer_filter_c' #52
+   │  └─ item: optional '_prisma_integer_filter_ex' #52
    │     └─ item: union #51
-   │        ├─ variant_0: either '_integer_filter' #49
+   │        ├─ variant_0: either '_prisma_integer_filter' #49
    │        │  ├─ variant_0: integer #41
    │        │  ├─ variant_1: struct #44
    │        │  │  └─ [equals]: integer #41
@@ -66,7 +66,7 @@ root: struct #61
    │        │     └─ [notIn]: list 'list_43' #43
    │        │        └─ item: integer #41
    │        └─ variant_1: struct #50
-   │           └─ [not]: either '_integer_filter' #49
+   │           └─ [not]: either '_prisma_integer_filter' #49
    │              ├─ variant_0: integer #41
    │              ├─ variant_1: struct #44
    │              │  └─ [equals]: integer #41
@@ -88,9 +88,9 @@ root: struct #61
    │                 └─ [notIn]: list 'list_43' #43
    │                    └─ item: integer #41
    ├─ [created_at]: optional 'optional_54' #54
-   │  └─ item: optional '_string_filter_c' #38
+   │  └─ item: optional '_prisma_string_filter_ex' #38
    │     └─ item: union #37
-   │        ├─ variant_0: union '_string_filter' #35
+   │        ├─ variant_0: union '_prisma_string_filter' #35
    │        │  ├─ variant_0: string #23
    │        │  ├─ variant_1: struct #26
    │        │  │  └─ [equals]: string #23
@@ -114,7 +114,7 @@ root: struct #61
    │        │     └─ [startsWith]: optional 'optional_24' #24
    │        │        └─ item: string #23
    │        └─ variant_1: struct #36
-   │           └─ [not]: union '_string_filter' #35
+   │           └─ [not]: union '_prisma_string_filter' #35
    │              ├─ variant_0: string #23
    │              ├─ variant_1: struct #26
    │              │  └─ [equals]: string #23
@@ -138,9 +138,9 @@ root: struct #61
    │                 └─ [startsWith]: optional 'optional_24' #24
    │                    └─ item: string #23
    ├─ [id]: optional 'optional_39' #39
-   │  └─ item: optional '_string_filter_c' #38
+   │  └─ item: optional '_prisma_string_filter_ex' #38
    │     └─ item: union #37
-   │        ├─ variant_0: union '_string_filter' #35
+   │        ├─ variant_0: union '_prisma_string_filter' #35
    │        │  ├─ variant_0: string #23
    │        │  ├─ variant_1: struct #26
    │        │  │  └─ [equals]: string #23
@@ -164,7 +164,7 @@ root: struct #61
    │        │     └─ [startsWith]: optional 'optional_24' #24
    │        │        └─ item: string #23
    │        └─ variant_1: struct #36
-   │           └─ [not]: union '_string_filter' #35
+   │           └─ [not]: union '_prisma_string_filter' #35
    │              ├─ variant_0: string #23
    │              ├─ variant_1: struct #26
    │              │  └─ [equals]: string #23
@@ -188,9 +188,9 @@ root: struct #61
    │                 └─ [startsWith]: optional 'optional_24' #24
    │                    └─ item: string #23
    └─ [name]: optional 'optional_40' #40
-      └─ item: optional '_string_filter_c' #38
+      └─ item: optional '_prisma_string_filter_ex' #38
          └─ item: union #37
-            ├─ variant_0: union '_string_filter' #35
+            ├─ variant_0: union '_prisma_string_filter' #35
             │  ├─ variant_0: string #23
             │  ├─ variant_1: struct #26
             │  │  └─ [equals]: string #23
@@ -214,7 +214,7 @@ root: struct #61
             │     └─ [startsWith]: optional 'optional_24' #24
             │        └─ item: string #23
             └─ variant_1: struct #36
-               └─ [not]: union '_string_filter' #35
+               └─ [not]: union '_prisma_string_filter' #35
                   ├─ variant_0: string #23
                   ├─ variant_1: struct #26
                   │  └─ [equals]: string #23

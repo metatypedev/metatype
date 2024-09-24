@@ -89,7 +89,7 @@ Meta.test("Typename in prisma runtime", async (t) => {
     `
       .expectData({
         createUser: {
-          __typename: "_userprismaOutputType",
+          __typename: "userprisma_output",
           id: 1,
         },
       })

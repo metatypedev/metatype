@@ -40,7 +40,7 @@ impl TypeGen for GroupingFields {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("_{}_GroupingFields", model_name)
+        format!("{}_group_by", model_name)
     }
 }
 
@@ -74,7 +74,7 @@ impl TypeGen for Having {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("_{}_Having", model_name)
+        format!("{}_having", model_name)
     }
 }
 
@@ -121,7 +121,7 @@ impl TypeGen for GroupByResult {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("_{}_GroupByResult", model_name)
+        format!("{}_group", model_name)
     }
 }
 
@@ -173,7 +173,7 @@ impl TypeGen for SelectNumbers {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        let suffix = if self.promote_to_float { "_1" } else { "" };
-        format!("_{model_name}_SelectNumbers_{suffix}")
+        let suffix = if self.promote_to_float { "_float" } else { "" };
+        format!("{model_name}_number_fields{suffix}")
     }
 }

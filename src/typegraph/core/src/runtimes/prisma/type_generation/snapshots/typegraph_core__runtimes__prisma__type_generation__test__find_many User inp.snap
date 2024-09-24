@@ -2,74 +2,74 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct '_User_QueryInput' #119
+root: struct 'User_query_input' #119
 ├─ [cursor]: optional 'optional_115' #115
-│  └─ item: union '_User_Cursor' #114
+│  └─ item: union 'User_cursor' #114
 │     ├─ variant_0: struct #112
 │     │  └─ [id]: integer #74
 │     └─ variant_1: struct #113
 │        └─ [name]: string #75
 ├─ [distinct]: optional 'optional_118' #118
-│  └─ item: list '_KeysOf_User' #117
+│  └─ item: list 'User_keys_union' #117
 │     └─ item: string #116 enum{ '"id"', '"name"', '"posts"' }
 ├─ [orderBy]: optional 'optional_109' #109
-│  └─ item: list '_User_OrderBy' #108
+│  └─ item: list 'User_order_by' #108
 │     └─ item: struct #107
-│        ├─ [id]: optional '_Sort' #50
+│        ├─ [id]: optional '_prisma_sort' #50
 │        │  └─ item: union #49
 │        │     ├─ variant_0: struct #48
-│        │     │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        │     └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [name]: optional '_Sort' #50
+│        │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        ├─ [name]: optional '_prisma_sort' #50
 │        │  └─ item: union #49
 │        │     ├─ variant_0: struct #48
-│        │     │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        │     └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        └─ [posts]: optional '_SortByAggregates' #106
+│        │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        └─ [posts]: optional '_prisma_sort_by_aggregates' #106
 │           └─ item: struct #105
-│              ├─ [_avg]: optional '_Sort' #50
+│              ├─ [_avg]: optional '_prisma_sort' #50
 │              │  └─ item: union #49
 │              │     ├─ variant_0: struct #48
-│              │     │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│              │     └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│              ├─ [_count]: optional '_Sort' #50
+│              │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              ├─ [_count]: optional '_prisma_sort' #50
 │              │  └─ item: union #49
 │              │     ├─ variant_0: struct #48
-│              │     │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│              │     └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│              ├─ [_max]: optional '_Sort' #50
+│              │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              ├─ [_max]: optional '_prisma_sort' #50
 │              │  └─ item: union #49
 │              │     ├─ variant_0: struct #48
-│              │     │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│              │     └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│              ├─ [_min]: optional '_Sort' #50
+│              │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              ├─ [_min]: optional '_prisma_sort' #50
 │              │  └─ item: union #49
 │              │     ├─ variant_0: struct #48
-│              │     │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│              │     └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│              └─ [_sum]: optional '_Sort' #50
+│              │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              └─ [_sum]: optional '_prisma_sort' #50
 │                 └─ item: union #49
 │                    ├─ variant_0: struct #48
-│                    │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│                    └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
+│                    │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│                    └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
 ├─ [skip]: optional 'optional_111' #111
-│  └─ item: integer '_Skip' #59
+│  └─ item: integer '_skip' #59
 ├─ [take]: optional 'optional_110' #110
-│  └─ item: integer '_Take' #57
+│  └─ item: integer '_take' #57
 └─ [where]: optional 'optional_104' #104
-   └─ item: struct 'QueryUserWhereInput' #103
+   └─ item: struct 'User_query_where_input' #103
       ├─ [AND]: optional 'optional_101' #101
       │  └─ item: list 'list_100' #100
-      │     └─ item: &QueryUserWhereInput #99
+      │     └─ item: &User_query_where_input #99
       ├─ [NOT]: optional 'optional_102' #102
-      │  └─ item: &QueryUserWhereInput #99
+      │  └─ item: &User_query_where_input #99
       ├─ [OR]: optional 'optional_101' #101
       │  └─ item: list 'list_100' #100
-      │     └─ item: &QueryUserWhereInput #99
+      │     └─ item: &User_query_where_input #99
       ├─ [id]: optional 'optional_83' #83
-      │  └─ item: optional '_integer_filter_c' #36
+      │  └─ item: optional '_prisma_integer_filter_ex' #36
       │     └─ item: union #35
-      │        ├─ variant_0: either '_integer_filter' #33
+      │        ├─ variant_0: either '_prisma_integer_filter' #33
       │        │  ├─ variant_0: integer #25
       │        │  ├─ variant_1: struct #28
       │        │  │  └─ [equals]: integer #25
@@ -91,7 +91,7 @@ root: struct '_User_QueryInput' #119
       │        │     └─ [notIn]: list 'list_27' #27
       │        │        └─ item: integer #25
       │        └─ variant_1: struct #34
-      │           └─ [not]: either '_integer_filter' #33
+      │           └─ [not]: either '_prisma_integer_filter' #33
       │              ├─ variant_0: integer #25
       │              ├─ variant_1: struct #28
       │              │  └─ [equals]: integer #25
@@ -113,9 +113,9 @@ root: struct '_User_QueryInput' #119
       │                 └─ [notIn]: list 'list_27' #27
       │                    └─ item: integer #25
       ├─ [name]: optional 'optional_84' #84
-      │  └─ item: optional '_string_filter_c' #22
+      │  └─ item: optional '_prisma_string_filter_ex' #22
       │     └─ item: union #21
-      │        ├─ variant_0: union '_string_filter' #19
+      │        ├─ variant_0: union '_prisma_string_filter' #19
       │        │  ├─ variant_0: string #7
       │        │  ├─ variant_1: struct #10
       │        │  │  └─ [equals]: string #7
@@ -139,7 +139,7 @@ root: struct '_User_QueryInput' #119
       │        │     └─ [startsWith]: optional 'optional_8' #8
       │        │        └─ item: string #7
       │        └─ variant_1: struct #20
-      │           └─ [not]: union '_string_filter' #19
+      │           └─ [not]: union '_prisma_string_filter' #19
       │              ├─ variant_0: string #7
       │              ├─ variant_1: struct #10
       │              │  └─ [equals]: string #7
@@ -166,13 +166,13 @@ root: struct '_User_QueryInput' #119
          └─ item: union #96
             ├─ variant_0: struct #91
             │  └─ [every]: optional 'optional_90' #90
-            │     └─ item: struct 'PostWhere__skip_78_UserWhere' #89
+            │     └─ item: struct 'Post_where_excluding_User' #89
             │        ├─ [author]: optional 'optional_88' #88
-            │        │  └─ item: &UserWhere #87
+            │        │  └─ item: &User_where #87
             │        ├─ [id]: optional 'optional_85' #85
-            │        │  └─ item: optional '_integer_filter_c' #36
+            │        │  └─ item: optional '_prisma_integer_filter_ex' #36
             │        │     └─ item: union #35
-            │        │        ├─ variant_0: either '_integer_filter' #33
+            │        │        ├─ variant_0: either '_prisma_integer_filter' #33
             │        │        │  ├─ variant_0: integer #25
             │        │        │  ├─ variant_1: struct #28
             │        │        │  │  └─ [equals]: integer #25
@@ -194,7 +194,7 @@ root: struct '_User_QueryInput' #119
             │        │        │     └─ [notIn]: list 'list_27' #27
             │        │        │        └─ item: integer #25
             │        │        └─ variant_1: struct #34
-            │        │           └─ [not]: either '_integer_filter' #33
+            │        │           └─ [not]: either '_prisma_integer_filter' #33
             │        │              ├─ variant_0: integer #25
             │        │              ├─ variant_1: struct #28
             │        │              │  └─ [equals]: integer #25
@@ -216,9 +216,9 @@ root: struct '_User_QueryInput' #119
             │        │                 └─ [notIn]: list 'list_27' #27
             │        │                    └─ item: integer #25
             │        └─ [title]: optional 'optional_86' #86
-            │           └─ item: optional '_string_filter_c' #22
+            │           └─ item: optional '_prisma_string_filter_ex' #22
             │              └─ item: union #21
-            │                 ├─ variant_0: union '_string_filter' #19
+            │                 ├─ variant_0: union '_prisma_string_filter' #19
             │                 │  ├─ variant_0: string #7
             │                 │  ├─ variant_1: struct #10
             │                 │  │  └─ [equals]: string #7
@@ -242,7 +242,7 @@ root: struct '_User_QueryInput' #119
             │                 │     └─ [startsWith]: optional 'optional_8' #8
             │                 │        └─ item: string #7
             │                 └─ variant_1: struct #20
-            │                    └─ [not]: union '_string_filter' #19
+            │                    └─ [not]: union '_prisma_string_filter' #19
             │                       ├─ variant_0: string #7
             │                       ├─ variant_1: struct #10
             │                       │  └─ [equals]: string #7
@@ -267,13 +267,13 @@ root: struct '_User_QueryInput' #119
             │                             └─ item: string #7
             ├─ variant_1: struct #93
             │  └─ [some]: optional 'optional_92' #92
-            │     └─ item: struct 'PostWhere__skip_78_UserWhere' #89
+            │     └─ item: struct 'Post_where_excluding_User' #89
             │        ├─ [author]: optional 'optional_88' #88
-            │        │  └─ item: &UserWhere #87
+            │        │  └─ item: &User_where #87
             │        ├─ [id]: optional 'optional_85' #85
-            │        │  └─ item: optional '_integer_filter_c' #36
+            │        │  └─ item: optional '_prisma_integer_filter_ex' #36
             │        │     └─ item: union #35
-            │        │        ├─ variant_0: either '_integer_filter' #33
+            │        │        ├─ variant_0: either '_prisma_integer_filter' #33
             │        │        │  ├─ variant_0: integer #25
             │        │        │  ├─ variant_1: struct #28
             │        │        │  │  └─ [equals]: integer #25
@@ -295,7 +295,7 @@ root: struct '_User_QueryInput' #119
             │        │        │     └─ [notIn]: list 'list_27' #27
             │        │        │        └─ item: integer #25
             │        │        └─ variant_1: struct #34
-            │        │           └─ [not]: either '_integer_filter' #33
+            │        │           └─ [not]: either '_prisma_integer_filter' #33
             │        │              ├─ variant_0: integer #25
             │        │              ├─ variant_1: struct #28
             │        │              │  └─ [equals]: integer #25
@@ -317,9 +317,9 @@ root: struct '_User_QueryInput' #119
             │        │                 └─ [notIn]: list 'list_27' #27
             │        │                    └─ item: integer #25
             │        └─ [title]: optional 'optional_86' #86
-            │           └─ item: optional '_string_filter_c' #22
+            │           └─ item: optional '_prisma_string_filter_ex' #22
             │              └─ item: union #21
-            │                 ├─ variant_0: union '_string_filter' #19
+            │                 ├─ variant_0: union '_prisma_string_filter' #19
             │                 │  ├─ variant_0: string #7
             │                 │  ├─ variant_1: struct #10
             │                 │  │  └─ [equals]: string #7
@@ -343,7 +343,7 @@ root: struct '_User_QueryInput' #119
             │                 │     └─ [startsWith]: optional 'optional_8' #8
             │                 │        └─ item: string #7
             │                 └─ variant_1: struct #20
-            │                    └─ [not]: union '_string_filter' #19
+            │                    └─ [not]: union '_prisma_string_filter' #19
             │                       ├─ variant_0: string #7
             │                       ├─ variant_1: struct #10
             │                       │  └─ [equals]: string #7
@@ -368,13 +368,13 @@ root: struct '_User_QueryInput' #119
             │                             └─ item: string #7
             └─ variant_2: struct #95
                └─ [none]: optional 'optional_94' #94
-                  └─ item: struct 'PostWhere__skip_78_UserWhere' #89
+                  └─ item: struct 'Post_where_excluding_User' #89
                      ├─ [author]: optional 'optional_88' #88
-                     │  └─ item: &UserWhere #87
+                     │  └─ item: &User_where #87
                      ├─ [id]: optional 'optional_85' #85
-                     │  └─ item: optional '_integer_filter_c' #36
+                     │  └─ item: optional '_prisma_integer_filter_ex' #36
                      │     └─ item: union #35
-                     │        ├─ variant_0: either '_integer_filter' #33
+                     │        ├─ variant_0: either '_prisma_integer_filter' #33
                      │        │  ├─ variant_0: integer #25
                      │        │  ├─ variant_1: struct #28
                      │        │  │  └─ [equals]: integer #25
@@ -396,7 +396,7 @@ root: struct '_User_QueryInput' #119
                      │        │     └─ [notIn]: list 'list_27' #27
                      │        │        └─ item: integer #25
                      │        └─ variant_1: struct #34
-                     │           └─ [not]: either '_integer_filter' #33
+                     │           └─ [not]: either '_prisma_integer_filter' #33
                      │              ├─ variant_0: integer #25
                      │              ├─ variant_1: struct #28
                      │              │  └─ [equals]: integer #25
@@ -418,9 +418,9 @@ root: struct '_User_QueryInput' #119
                      │                 └─ [notIn]: list 'list_27' #27
                      │                    └─ item: integer #25
                      └─ [title]: optional 'optional_86' #86
-                        └─ item: optional '_string_filter_c' #22
+                        └─ item: optional '_prisma_string_filter_ex' #22
                            └─ item: union #21
-                              ├─ variant_0: union '_string_filter' #19
+                              ├─ variant_0: union '_prisma_string_filter' #19
                               │  ├─ variant_0: string #7
                               │  ├─ variant_1: struct #10
                               │  │  └─ [equals]: string #7
@@ -444,7 +444,7 @@ root: struct '_User_QueryInput' #119
                               │     └─ [startsWith]: optional 'optional_8' #8
                               │        └─ item: string #7
                               └─ variant_1: struct #20
-                                 └─ [not]: union '_string_filter' #19
+                                 └─ [not]: union '_prisma_string_filter' #19
                                     ├─ variant_0: string #7
                                     ├─ variant_1: struct #10
                                     │  └─ [equals]: string #7

@@ -20,7 +20,7 @@ impl<T: TypeGen> TypeGen for CompleteFilter<T> {
     }
 
     fn name(&self) -> String {
-        format!("{}_c", self.0.name())
+        format!("{}_ex", self.0.name())
     }
 }
 
@@ -38,7 +38,7 @@ impl TypeGen for BooleanFilter {
     }
 
     fn name(&self) -> String {
-        "_boolean_filter".to_string()
+        "_prisma_boolean_filter".to_string()
     }
 }
 
@@ -110,8 +110,8 @@ impl TypeGen for NumberFilter {
             ""
         };
         match self.number_type {
-            NumberType::Integer => format!("_integer_filter{suffix}"),
-            NumberType::Float => format!("_float_filter{suffix}"),
+            NumberType::Integer => format!("_prisma_integer_filter{suffix}"),
+            NumberType::Float => format!("_prisma_float_filter{suffix}"),
         }
     }
 }
@@ -146,7 +146,7 @@ impl TypeGen for StringFilter {
     }
 
     fn name(&self) -> String {
-        "_string_filter".to_string()
+        "_prisma_string_filter".to_string()
     }
 }
 
@@ -174,7 +174,14 @@ impl TypeGen for ScalarListFilter {
     }
 
     fn name(&self) -> String {
-        format!("_list_filter_{}", self.0 .0)
+        // TODO unnamed??
+        let list_item_name = self
+            .0
+            .name()
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| format!("unnamed_list_item{}", self.0 .0));
+        format!("_prisma_list_filter{list_item_name}")
     }
 }
 
@@ -198,9 +205,8 @@ impl TypeGen for WithAggregateFilters {
     }
 
     fn name(&self) -> String {
-        // TODO model id??
         let name = self.model_id.name().unwrap().unwrap();
-        format!("{name}_with_aggregate_filters")
+        format!("{name}_with_aggregates")
     }
 }
 
@@ -228,7 +234,7 @@ impl TypeGen for CountFilter {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("_{model_name}_CountFilter")
+        format!("{model_name}_count_in")
     }
 }
 
@@ -267,7 +273,7 @@ impl TypeGen for AvgFilter {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("_{model_name}_AvgFilter")
+        format!("{model_name}_avg_in")
     }
 }
 
@@ -307,7 +313,7 @@ impl TypeGen for SumFilter {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("_{model_name}_SumFilter")
+        format!("{model_name}_sum_in")
     }
 }
 

@@ -74,7 +74,7 @@ impl TypeGen for QueryInputType {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        let suffix = if self.is_group_by { "_group_by" } else { "" };
-        format!("_{model_name}_QueryInput{suffix}")
+        let infix = if self.is_group_by { "_group_by" } else { "" };
+        format!("{model_name}{infix}_query_input")
     }
 }

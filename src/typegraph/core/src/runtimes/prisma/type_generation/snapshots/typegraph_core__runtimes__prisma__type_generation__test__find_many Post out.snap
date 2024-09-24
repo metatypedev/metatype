@@ -3,7 +3,7 @@ source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
 root: list 'list_171' #171
-└─ item: struct 'PostWithNestedCount' #170
+└─ item: struct 'Post_with_nested_count' #170
    ├─ [author]: struct #169
    │  ├─ [id]: integer #74
    │  ├─ [name]: string #75
