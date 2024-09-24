@@ -75,33 +75,42 @@ mod tests {
 
     #[test]
     fn test_basic_lease_state_consistency_logic() {
-        let backends: Vec<Box<dyn Backend>> = vec![
-            Box::new(MemoryBackend::default().unwrap()),
-            Box::new({
-                let root = PathBuf::from("tmp/test_two/substantial");
-                let backend = FsBackend::new(root.clone()).unwrap();
-                std::fs::remove_dir_all(root).ok();
-                backend
-            }),
-            Box::new({
-                let backend =
-                    RedisBackend::new("redis://:password@localhost:6380/0".to_owned()).unwrap();
-                backend
-                    .with_redis(|r| {
-                        let script = Script::new(r#"redis.call("FLUSHALL")"#);
-                        script.invoke::<()>(r)
-                    })
-                    .unwrap();
+        let backends: Vec<(&str, Box<dyn Backend>)> = vec![
+            ("memory", Box::new(MemoryBackend::default().unwrap())),
+            (
+                "fs",
+                Box::new({
+                    let root = PathBuf::from("tmp/test_two/substantial");
+                    let backend = FsBackend::new(root.clone()).unwrap();
+                    std::fs::remove_dir_all(root).ok();
+                    backend
+                }),
+            ),
+            (
+                "redis",
+                Box::new({
+                    let backend =
+                        RedisBackend::new("redis://:password@localhost:6380/0".to_owned()).unwrap();
+                    backend
+                        .with_redis(|r| {
+                            let script = Script::new(r#"redis.call("FLUSHALL")"#);
+                            script.invoke::<()>(r)
+                        })
+                        .unwrap();
 
-                backend
-            }),
+                    backend
+                }),
+            ),
         ];
 
-        for backend in backends {
+        for (label, backend) in backends {
+            println!("Testing backend {:?}", label);
+
             let run_id = "some_run_id".to_string();
             let schedule = Utc::now();
             let queue = "test".to_string();
 
+            // runs
             let orig_operation = Operation {
                 at: Utc::now(),
                 event: OperationEvent::Start {
@@ -116,6 +125,25 @@ mod tests {
                     Some(orig_operation.clone().try_into().unwrap()),
                 )
                 .unwrap();
+
+            let mut original_run = Run::new(run_id.clone());
+            original_run.operations.push(Operation {
+                at: DateTime::<Utc>::default().to_utc(),
+                event: substantial::converters::OperationEvent::Start {
+                    kwargs: serde_json::from_value(json!({
+                        "some": { "nested": { "json": 1234 } },
+                    }))
+                    .unwrap(),
+                },
+            });
+            original_run.persist_into(backend.as_ref()).unwrap();
+
+            let mut recovered_run = Run::new(run_id.clone());
+            recovered_run.recover_from(backend.as_ref()).unwrap();
+            assert_eq!(
+                into_comparable(&original_run),
+                into_comparable(&recovered_run),
+            );
 
             // link metadata
             backend
@@ -179,7 +207,7 @@ mod tests {
             sleep(Duration::from_secs(2));
 
             let active_after_exp = backend.active_leases(lifetime).unwrap();
-            backend.renew_lease(run_id, lifetime).unwrap();
+            backend.renew_lease(run_id.clone(), lifetime).unwrap();
             let active_after_renew = backend.active_leases(lifetime).unwrap();
 
             assert_eq!(active_before_exp.len(), 2);

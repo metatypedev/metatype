@@ -49,9 +49,10 @@ impl RedisBackend {
 
 impl super::BackendStore for RedisBackend {
     fn read_events(&self, run_id: String) -> Result<Option<Records>> {
+        // TODO: lua
         let key = self.key(&["runs", &run_id, "events"]);
         self.with_redis(|r| {
-            if r.exists(&key)? {
+            if !r.exists(&key)? {
                 return Ok(None);
             }
             let val: Vec<u8> = r.get(key)?;
@@ -60,6 +61,7 @@ impl super::BackendStore for RedisBackend {
     }
 
     fn write_events(&self, run_id: String, content: Records) -> Result<()> {
+        // TODO: lua
         let key = self.key(&["runs", &run_id, "events"]);
         self.with_redis(|r| {
             r.set(key, content.write_to_bytes()?)?;
@@ -118,6 +120,7 @@ impl super::BackendStore for RedisBackend {
         run_id: String,
         schedule: DateTime<Utc>,
     ) -> Result<Option<Event>> {
+        // TODO: lua
         let sched_key = self.key(&[&schedule.to_rfc3339(), &run_id]);
         self.with_redis(|r| {
             if !r.exists(&sched_key)? {
@@ -171,7 +174,6 @@ impl super::BackendAgent for RedisBackend {
             for schedule in schedules {
                 let run_ids: Vec<String> = r.zrange(&schedule, 0, -1)?;
                 for run_id in run_ids {
-                    println!("{excludes:?} vs {run_id:?}");
                     if !excludes.contains(&run_id) {
                         return Ok(Some(NextRun {
                             run_id,
@@ -210,7 +212,6 @@ impl super::BackendAgent for RedisBackend {
 
             while let (Some(sched_ref), Some(exp_time)) = (iter.next(), iter.next()) {
                 let exp_time = DateTime::parse_from_rfc3339(&exp_time)?.to_utc();
-                println!("{:?} and {:?}", sched_ref, exp_time);
                 if exp_time > Utc::now() {
                     let run_id = self
                         .parts(&sched_ref)?
