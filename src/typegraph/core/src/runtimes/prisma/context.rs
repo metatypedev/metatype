@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::{
-    cell::{Cell, OnceCell, Ref, RefCell, RefMut},
+    cell::{OnceCell, Ref, RefCell, RefMut},
     collections::HashMap,
     rc::{Rc, Weak},
 };
@@ -11,9 +11,12 @@ use crate::{typegraph::TypegraphContext, wit::runtimes as wit};
 use common::typegraph::runtimes::prisma as cm;
 use indexmap::{map::Entry, IndexMap, IndexSet};
 
-use super::model::{InjectionHandler, Property, RelationshipProperty, ScalarProperty};
 use super::relationship::discovery::CandidatePair;
 use super::relationship::RelationshipModel;
+use super::{
+    model::{InjectionHandler, Property, RelationshipProperty, ScalarProperty},
+    relationship::discovery::RelationshipName,
+};
 use crate::errors::Result;
 use crate::types::TypeId;
 
@@ -53,7 +56,6 @@ pub struct PrismaContext {
     pub relationships: IndexMap<String, Relationship>,
     pub typegen_cache: OnceCell<Weak<RefCell<HashMap<String, TypeId>>>>, // shared
     complete_registrations: IndexSet<TypeId>,
-    counter: Cell<usize>,
 }
 
 impl PrismaContext {
@@ -88,17 +90,49 @@ impl PrismaContext {
         }
     }
 
+    pub fn register_relationship(
+        &mut self,
+        name: RelationshipName,
+        relationship: Relationship,
+    ) -> Result<()> {
+        use indexmap::map::Entry as E;
+        use RelationshipName::*;
+        match name {
+            User(name) => match self.relationships.entry(name.clone()) {
+                E::Occupied(rel) => {
+                    let rel = rel.get();
+                    return Err(format!("relationship name '{}' already used between {} and {}, please provide another name",
+                        name, rel.left.model_name, rel.right.model_name).into());
+                }
+                E::Vacant(e) => {
+                    e.insert(relationship);
+                }
+            },
+
+            Generated(name) => match self.relationships.entry(name.clone()) {
+                E::Occupied(rel) => {
+                    let rel = rel.get();
+                    return Err(format!("relationship name '{}' already used between {} and {}, please provide a name",
+                                    name, rel.left.model_name, rel.right.model_name).into());
+                }
+                E::Vacant(e) => {
+                    e.insert(relationship);
+                }
+            },
+        }
+
+        Ok(())
+    }
+
     pub fn register_pair(&mut self, pair: CandidatePair) -> Result<bool> {
         if !self.is_registered(&pair)? {
-            println!("registering");
-            let id = self.next_id();
             let pair = pair.ordered()?;
 
-            let rel_name = pair.rel_name(id)?;
+            let rel_name = pair.rel_name()?;
             let CandidatePair(left, right) = pair;
 
             let relationship = Relationship {
-                name: rel_name.clone(),
+                name: rel_name.to_string(),
                 left: RelationshipModel {
                     model_type: left.model.type_id(),
                     model_name: left.model.type_name(),
@@ -115,20 +149,20 @@ impl PrismaContext {
                 },
             };
 
-            self.relationships.insert(rel_name.clone(), relationship);
+            self.register_relationship(rel_name.clone(), relationship)?;
 
             {
                 let mut left_model = left.model.borrow_mut();
                 left_model
                     .relationships
-                    .insert(right.field_name.clone(), rel_name.clone());
+                    .insert(right.field_name.clone(), rel_name.to_string());
             }
 
             {
                 let mut right_model = right.model.borrow_mut();
                 right_model
                     .relationships
-                    .insert(left.field_name.clone(), rel_name.clone());
+                    .insert(left.field_name.clone(), rel_name.into());
             }
 
             Ok(true)
@@ -186,12 +220,6 @@ impl PrismaContext {
         } else {
             Ok(vec![])
         }
-    }
-
-    fn next_id(&self) -> usize {
-        let id = self.counter.get() + 1;
-        self.counter.set(id);
-        id
     }
 
     fn convert_scalar_prop(

@@ -100,14 +100,15 @@ impl TypeGen for OrderBy {
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {
-            format!("_excluding_{}", self.skip_rel.join("_"))
+            // TODO what is the casing for `skip_rel`?
+            format!("_without{}", self.skip_rel.join("_"))
         };
         let suffix2 = if self.aggregates {
             "_with_aggregates"
         } else {
             ""
         };
-        format!("_{}_OrderBy{suffix}{suffix2}", name)
+        format!("{}_order_by{suffix}{suffix2}", name)
     }
 }
 
@@ -122,7 +123,7 @@ impl TypeGen for SortOrder {
     }
 
     fn name(&self) -> String {
-        "_SortOrder".to_string()
+        "_prisma_sort_order".to_string()
     }
 }
 
@@ -137,7 +138,7 @@ impl TypeGen for NullsOrder {
     }
 
     fn name(&self) -> String {
-        "_NullsOrder".to_string()
+        "_prisma_nulls_order".to_string()
     }
 }
 
@@ -162,7 +163,7 @@ impl TypeGen for Sort {
 
     fn name(&self) -> String {
         let nullable = if self.nullable { "_nullable" } else { "" };
-        format!("_Sort{}", nullable)
+        format!("_prisma_sort{}", nullable)
     }
 }
 
@@ -182,7 +183,7 @@ impl TypeGen for SortByAggregates {
     }
 
     fn name(&self) -> String {
-        "_SortByAggregates".to_string()
+        "_prisma_sort_by_aggregates".to_string()
     }
 }
 
@@ -254,6 +255,6 @@ impl TypeGen for AggregateSorting {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("_{model_name}_AggregateSorting")
+        format!("{model_name}_aggregate_sorting")
     }
 }

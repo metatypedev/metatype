@@ -50,6 +50,7 @@ tempfile.workspace = true
 # internal
 mt_deno.workspace = true
 common.workspace = true
+substantial.workspace = true
 
 # runtimes
 deno_core.workspace = true
@@ -58,6 +59,9 @@ wasmtime-wasi.workspace = true
 
 # build
 shadow-rs.workspace = true
+
+# others
+chrono.workspace = true
 
 # grpc
 tonic.workspace = true

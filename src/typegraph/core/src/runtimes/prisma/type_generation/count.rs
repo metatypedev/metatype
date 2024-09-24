@@ -18,6 +18,6 @@ impl TypeGen for Count {
     }
 
     fn name(&self) -> String {
-        "_Count".to_string()
+        "_count".to_string()
     }
 }

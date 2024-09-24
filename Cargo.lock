@@ -1143,9 +1143,9 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
 name = "bytes"
-version = "1.7.2"
+version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "428d9aa8fbc0670b7b8d6030a7fadd0f86151cae55e4dbbece15f3780a3dfaf3"
+checksum = "8318a53db07bb3f8dca91a600466bdb3f2eaadeedfdbcf02e1accbad9271ba50"
 
 [[package]]
 name = "bzip2"
@@ -8783,7 +8783,7 @@ dependencies = [
 [[package]]
 name = "proto-parser"
 version = "0.1.0"
-source = "git+https://github.com/metatypedev/proto-parser?branch=main#091c87f819dfeda5785becf8c5ca64b7d8e1469d"
+source = "git+https://github.com/metatypedev/proto-parser?branch=main#aa47da5a8eb16f07d28f7aeece77953401cce3a2"
 dependencies = [
  "anyhow",
  "indexmap 2.4.0",
@@ -11050,6 +11050,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "substantial"
+version = "0.4.11-rc.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "lazy_static 1.5.0",
+ "protobuf",
+ "serde 1.0.204",
+ "serde_json",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12622,6 +12636,7 @@ dependencies = [
  "anyhow",
  "base64 0.22.1",
  "bytes",
+ "chrono",
  "common",
  "connection-string",
  "convert_case 0.6.0",
@@ -12646,6 +12661,7 @@ dependencies = [
  "schema-core",
  "serde 1.0.204",
  "shadow-rs",
+ "substantial",
  "tap",
  "tempfile",
  "temporal-client",

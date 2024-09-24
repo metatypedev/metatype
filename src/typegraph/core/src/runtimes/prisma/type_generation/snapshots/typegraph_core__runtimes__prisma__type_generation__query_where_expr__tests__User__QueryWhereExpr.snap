@@ -2,19 +2,19 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/query_where_expr.rs
 expression: "tree::print(user_where_expr)"
 ---
-root: struct 'QueryUserWhereInput' #57
+root: struct 'User_query_where_input' #57
 ├── [AND]: optional 'optional_55' #55
 │   └── item: list 'list_54' #54
-│       └── item: &QueryUserWhereInput #53
+│       └── item: &User_query_where_input #53
 ├── [NOT]: optional 'optional_56' #56
-│   └── item: &QueryUserWhereInput #53
+│   └── item: &User_query_where_input #53
 ├── [OR]: optional 'optional_55' #55
 │   └── item: list 'list_54' #54
-│       └── item: &QueryUserWhereInput #53
+│       └── item: &User_query_where_input #53
 ├── [id]: optional 'optional_21' #21
-│   └── item: optional '_integer_filter_c' #20
+│   └── item: optional '_prisma_integer_filter_ex' #20
 │       └── item: union #19
-│           ├── variant_0: either '_integer_filter' #17
+│           ├── variant_0: either '_prisma_integer_filter' #17
 │           │   ├── variant_0: integer #9
 │           │   ├── variant_1: struct #12
 │           │   │   └── [equals]: integer #9
@@ -36,7 +36,7 @@ root: struct 'QueryUserWhereInput' #57
 │           │       └── [notIn]: list 'list_11' #11
 │           │           └── item: integer #9
 │           └── variant_1: struct #18
-│               └── [not]: either '_integer_filter' #17
+│               └── [not]: either '_prisma_integer_filter' #17
 │                   ├── variant_0: integer #9
 │                   ├── variant_1: struct #12
 │                   │   └── [equals]: integer #9
@@ -58,9 +58,9 @@ root: struct 'QueryUserWhereInput' #57
 │                       └── [notIn]: list 'list_11' #11
 │                           └── item: integer #9
 ├── [name]: optional 'optional_38' #38
-│   └── item: optional '_string_filter_c' #37
+│   └── item: optional '_prisma_string_filter_ex' #37
 │       └── item: union #36
-│           ├── variant_0: union '_string_filter' #34
+│           ├── variant_0: union '_prisma_string_filter' #34
 │           │   ├── variant_0: string #22
 │           │   ├── variant_1: struct #25
 │           │   │   └── [equals]: string #22
@@ -84,7 +84,7 @@ root: struct 'QueryUserWhereInput' #57
 │           │       └── [startsWith]: optional 'optional_23' #23
 │           │           └── item: string #22
 │           └── variant_1: struct #35
-│               └── [not]: union '_string_filter' #34
+│               └── [not]: union '_prisma_string_filter' #34
 │                   ├── variant_0: string #22
 │                   ├── variant_1: struct #25
 │                   │   └── [equals]: string #22
@@ -111,13 +111,13 @@ root: struct 'QueryUserWhereInput' #57
     └── item: union #50
         ├── variant_0: struct #45
         │   └── [every]: optional 'optional_44' #44
-        │       └── item: struct 'PostWhere__skip_4_UserWhere' #43
+        │       └── item: struct 'Post_where_excluding_User' #43
         │           ├── [author]: optional 'optional_42' #42
-        │           │   └── item: &UserWhere #41
+        │           │   └── item: &User_where #41
         │           ├── [id]: optional 'optional_39' #39
-        │           │   └── item: optional '_integer_filter_c' #20
+        │           │   └── item: optional '_prisma_integer_filter_ex' #20
         │           │       └── item: union #19
-        │           │           ├── variant_0: either '_integer_filter' #17
+        │           │           ├── variant_0: either '_prisma_integer_filter' #17
         │           │           │   ├── variant_0: integer #9
         │           │           │   ├── variant_1: struct #12
         │           │           │   │   └── [equals]: integer #9
@@ -139,7 +139,7 @@ root: struct 'QueryUserWhereInput' #57
         │           │           │       └── [notIn]: list 'list_11' #11
         │           │           │           └── item: integer #9
         │           │           └── variant_1: struct #18
-        │           │               └── [not]: either '_integer_filter' #17
+        │           │               └── [not]: either '_prisma_integer_filter' #17
         │           │                   ├── variant_0: integer #9
         │           │                   ├── variant_1: struct #12
         │           │                   │   └── [equals]: integer #9
@@ -161,9 +161,9 @@ root: struct 'QueryUserWhereInput' #57
         │           │                       └── [notIn]: list 'list_11' #11
         │           │                           └── item: integer #9
         │           └── [title]: optional 'optional_40' #40
-        │               └── item: optional '_string_filter_c' #37
+        │               └── item: optional '_prisma_string_filter_ex' #37
         │                   └── item: union #36
-        │                       ├── variant_0: union '_string_filter' #34
+        │                       ├── variant_0: union '_prisma_string_filter' #34
         │                       │   ├── variant_0: string #22
         │                       │   ├── variant_1: struct #25
         │                       │   │   └── [equals]: string #22
@@ -187,7 +187,7 @@ root: struct 'QueryUserWhereInput' #57
         │                       │       └── [startsWith]: optional 'optional_23' #23
         │                       │           └── item: string #22
         │                       └── variant_1: struct #35
-        │                           └── [not]: union '_string_filter' #34
+        │                           └── [not]: union '_prisma_string_filter' #34
         │                               ├── variant_0: string #22
         │                               ├── variant_1: struct #25
         │                               │   └── [equals]: string #22
@@ -212,13 +212,13 @@ root: struct 'QueryUserWhereInput' #57
         │                                       └── item: string #22
         ├── variant_1: struct #47
         │   └── [some]: optional 'optional_46' #46
-        │       └── item: struct 'PostWhere__skip_4_UserWhere' #43
+        │       └── item: struct 'Post_where_excluding_User' #43
         │           ├── [author]: optional 'optional_42' #42
-        │           │   └── item: &UserWhere #41
+        │           │   └── item: &User_where #41
         │           ├── [id]: optional 'optional_39' #39
-        │           │   └── item: optional '_integer_filter_c' #20
+        │           │   └── item: optional '_prisma_integer_filter_ex' #20
         │           │       └── item: union #19
-        │           │           ├── variant_0: either '_integer_filter' #17
+        │           │           ├── variant_0: either '_prisma_integer_filter' #17
         │           │           │   ├── variant_0: integer #9
         │           │           │   ├── variant_1: struct #12
         │           │           │   │   └── [equals]: integer #9
@@ -240,7 +240,7 @@ root: struct 'QueryUserWhereInput' #57
         │           │           │       └── [notIn]: list 'list_11' #11
         │           │           │           └── item: integer #9
         │           │           └── variant_1: struct #18
-        │           │               └── [not]: either '_integer_filter' #17
+        │           │               └── [not]: either '_prisma_integer_filter' #17
         │           │                   ├── variant_0: integer #9
         │           │                   ├── variant_1: struct #12
         │           │                   │   └── [equals]: integer #9
@@ -262,9 +262,9 @@ root: struct 'QueryUserWhereInput' #57
         │           │                       └── [notIn]: list 'list_11' #11
         │           │                           └── item: integer #9
         │           └── [title]: optional 'optional_40' #40
-        │               └── item: optional '_string_filter_c' #37
+        │               └── item: optional '_prisma_string_filter_ex' #37
         │                   └── item: union #36
-        │                       ├── variant_0: union '_string_filter' #34
+        │                       ├── variant_0: union '_prisma_string_filter' #34
         │                       │   ├── variant_0: string #22
         │                       │   ├── variant_1: struct #25
         │                       │   │   └── [equals]: string #22
@@ -288,7 +288,7 @@ root: struct 'QueryUserWhereInput' #57
         │                       │       └── [startsWith]: optional 'optional_23' #23
         │                       │           └── item: string #22
         │                       └── variant_1: struct #35
-        │                           └── [not]: union '_string_filter' #34
+        │                           └── [not]: union '_prisma_string_filter' #34
         │                               ├── variant_0: string #22
         │                               ├── variant_1: struct #25
         │                               │   └── [equals]: string #22
@@ -313,13 +313,13 @@ root: struct 'QueryUserWhereInput' #57
         │                                       └── item: string #22
         └── variant_2: struct #49
             └── [none]: optional 'optional_48' #48
-                └── item: struct 'PostWhere__skip_4_UserWhere' #43
+                └── item: struct 'Post_where_excluding_User' #43
                     ├── [author]: optional 'optional_42' #42
-                    │   └── item: &UserWhere #41
+                    │   └── item: &User_where #41
                     ├── [id]: optional 'optional_39' #39
-                    │   └── item: optional '_integer_filter_c' #20
+                    │   └── item: optional '_prisma_integer_filter_ex' #20
                     │       └── item: union #19
-                    │           ├── variant_0: either '_integer_filter' #17
+                    │           ├── variant_0: either '_prisma_integer_filter' #17
                     │           │   ├── variant_0: integer #9
                     │           │   ├── variant_1: struct #12
                     │           │   │   └── [equals]: integer #9
@@ -341,7 +341,7 @@ root: struct 'QueryUserWhereInput' #57
                     │           │       └── [notIn]: list 'list_11' #11
                     │           │           └── item: integer #9
                     │           └── variant_1: struct #18
-                    │               └── [not]: either '_integer_filter' #17
+                    │               └── [not]: either '_prisma_integer_filter' #17
                     │                   ├── variant_0: integer #9
                     │                   ├── variant_1: struct #12
                     │                   │   └── [equals]: integer #9
@@ -363,9 +363,9 @@ root: struct 'QueryUserWhereInput' #57
                     │                       └── [notIn]: list 'list_11' #11
                     │                           └── item: integer #9
                     └── [title]: optional 'optional_40' #40
-                        └── item: optional '_string_filter_c' #37
+                        └── item: optional '_prisma_string_filter_ex' #37
                             └── item: union #36
-                                ├── variant_0: union '_string_filter' #34
+                                ├── variant_0: union '_prisma_string_filter' #34
                                 │   ├── variant_0: string #22
                                 │   ├── variant_1: struct #25
                                 │   │   └── [equals]: string #22
@@ -389,7 +389,7 @@ root: struct 'QueryUserWhereInput' #57
                                 │       └── [startsWith]: optional 'optional_23' #23
                                 │           └── item: string #22
                                 └── variant_1: struct #35
-                                    └── [not]: union '_string_filter' #34
+                                    └── [not]: union '_prisma_string_filter' #34
                                         ├── variant_0: string #22
                                         ├── variant_1: struct #25
                                         │   └── [equals]: string #22

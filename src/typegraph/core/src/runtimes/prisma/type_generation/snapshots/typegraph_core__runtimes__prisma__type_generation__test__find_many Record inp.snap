@@ -2,9 +2,9 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct '_Record_QueryInput' #70
+root: struct 'Record_query_input' #70
 ├─ [cursor]: optional 'optional_66' #66
-│  └─ item: union '_Record_Cursor' #65
+│  └─ item: union 'Record_cursor' #65
 │     ├─ variant_0: struct #61
 │     │  └─ [id]: string #2
 │     ├─ variant_1: struct #62
@@ -14,50 +14,50 @@ root: struct '_Record_QueryInput' #70
 │     └─ variant_3: struct #64
 │        └─ [created_at]: string #1
 ├─ [distinct]: optional 'optional_69' #69
-│  └─ item: list '_KeysOf_Record' #68
+│  └─ item: list 'Record_keys_union' #68
 │     └─ item: string #67 enum{ '"id"', '"name"', '"age"', '"created_at"' }
 ├─ [orderBy]: optional 'optional_56' #56
-│  └─ item: list '_Record_OrderBy' #55
+│  └─ item: list 'Record_order_by' #55
 │     └─ item: struct #54
-│        ├─ [age]: optional '_Sort_nullable' #53
+│        ├─ [age]: optional '_prisma_sort_nullable' #53
 │        │  └─ item: union #52
 │        │     ├─ variant_0: struct #51
-│        │     │  ├─ [nulls]: string '_NullsOrder' #47 enum{ '"first"', '"last"' }
-│        │     │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        │     └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [created_at]: optional '_Sort' #50
+│        │     │  ├─ [nulls]: string '_prisma_nulls_order' #47 enum{ '"first"', '"last"' }
+│        │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        ├─ [created_at]: optional '_prisma_sort' #50
 │        │  └─ item: union #49
 │        │     ├─ variant_0: struct #48
-│        │     │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        │     └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        ├─ [id]: optional '_Sort' #50
+│        │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        ├─ [id]: optional '_prisma_sort' #50
 │        │  └─ item: union #49
 │        │     ├─ variant_0: struct #48
-│        │     │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        │     └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│        └─ [name]: optional '_Sort' #50
+│        │     │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│        └─ [name]: optional '_prisma_sort' #50
 │           └─ item: union #49
 │              ├─ variant_0: struct #48
-│              │  └─ [sort]: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
-│              └─ variant_1: string '_SortOrder' #46 enum{ '"asc"', '"desc"' }
+│              │  └─ [sort]: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
+│              └─ variant_1: string '_prisma_sort_order' #46 enum{ '"asc"', '"desc"' }
 ├─ [skip]: optional 'optional_60' #60
-│  └─ item: integer '_Skip' #59
+│  └─ item: integer '_skip' #59
 ├─ [take]: optional 'optional_58' #58
-│  └─ item: integer '_Take' #57
+│  └─ item: integer '_take' #57
 └─ [where]: optional 'optional_45' #45
-   └─ item: struct 'QueryRecordWhereInput' #44
+   └─ item: struct 'Record_query_where_input' #44
       ├─ [AND]: optional 'optional_42' #42
       │  └─ item: list 'list_41' #41
-      │     └─ item: &QueryRecordWhereInput #40
+      │     └─ item: &Record_query_where_input #40
       ├─ [NOT]: optional 'optional_43' #43
-      │  └─ item: &QueryRecordWhereInput #40
+      │  └─ item: &Record_query_where_input #40
       ├─ [OR]: optional 'optional_42' #42
       │  └─ item: list 'list_41' #41
-      │     └─ item: &QueryRecordWhereInput #40
+      │     └─ item: &Record_query_where_input #40
       ├─ [age]: optional 'optional_37' #37
-      │  └─ item: optional '_integer_filter_c' #36
+      │  └─ item: optional '_prisma_integer_filter_ex' #36
       │     └─ item: union #35
-      │        ├─ variant_0: either '_integer_filter' #33
+      │        ├─ variant_0: either '_prisma_integer_filter' #33
       │        │  ├─ variant_0: integer #25
       │        │  ├─ variant_1: struct #28
       │        │  │  └─ [equals]: integer #25
@@ -79,7 +79,7 @@ root: struct '_Record_QueryInput' #70
       │        │     └─ [notIn]: list 'list_27' #27
       │        │        └─ item: integer #25
       │        └─ variant_1: struct #34
-      │           └─ [not]: either '_integer_filter' #33
+      │           └─ [not]: either '_prisma_integer_filter' #33
       │              ├─ variant_0: integer #25
       │              ├─ variant_1: struct #28
       │              │  └─ [equals]: integer #25
@@ -101,9 +101,9 @@ root: struct '_Record_QueryInput' #70
       │                 └─ [notIn]: list 'list_27' #27
       │                    └─ item: integer #25
       ├─ [created_at]: optional 'optional_38' #38
-      │  └─ item: optional '_string_filter_c' #22
+      │  └─ item: optional '_prisma_string_filter_ex' #22
       │     └─ item: union #21
-      │        ├─ variant_0: union '_string_filter' #19
+      │        ├─ variant_0: union '_prisma_string_filter' #19
       │        │  ├─ variant_0: string #7
       │        │  ├─ variant_1: struct #10
       │        │  │  └─ [equals]: string #7
@@ -127,7 +127,7 @@ root: struct '_Record_QueryInput' #70
       │        │     └─ [startsWith]: optional 'optional_8' #8
       │        │        └─ item: string #7
       │        └─ variant_1: struct #20
-      │           └─ [not]: union '_string_filter' #19
+      │           └─ [not]: union '_prisma_string_filter' #19
       │              ├─ variant_0: string #7
       │              ├─ variant_1: struct #10
       │              │  └─ [equals]: string #7
@@ -151,9 +151,9 @@ root: struct '_Record_QueryInput' #70
       │                 └─ [startsWith]: optional 'optional_8' #8
       │                    └─ item: string #7
       ├─ [id]: optional 'optional_23' #23
-      │  └─ item: optional '_string_filter_c' #22
+      │  └─ item: optional '_prisma_string_filter_ex' #22
       │     └─ item: union #21
-      │        ├─ variant_0: union '_string_filter' #19
+      │        ├─ variant_0: union '_prisma_string_filter' #19
       │        │  ├─ variant_0: string #7
       │        │  ├─ variant_1: struct #10
       │        │  │  └─ [equals]: string #7
@@ -177,7 +177,7 @@ root: struct '_Record_QueryInput' #70
       │        │     └─ [startsWith]: optional 'optional_8' #8
       │        │        └─ item: string #7
       │        └─ variant_1: struct #20
-      │           └─ [not]: union '_string_filter' #19
+      │           └─ [not]: union '_prisma_string_filter' #19
       │              ├─ variant_0: string #7
       │              ├─ variant_1: struct #10
       │              │  └─ [equals]: string #7
@@ -201,9 +201,9 @@ root: struct '_Record_QueryInput' #70
       │                 └─ [startsWith]: optional 'optional_8' #8
       │                    └─ item: string #7
       └─ [name]: optional 'optional_24' #24
-         └─ item: optional '_string_filter_c' #22
+         └─ item: optional '_prisma_string_filter_ex' #22
             └─ item: union #21
-               ├─ variant_0: union '_string_filter' #19
+               ├─ variant_0: union '_prisma_string_filter' #19
                │  ├─ variant_0: string #7
                │  ├─ variant_1: struct #10
                │  │  └─ [equals]: string #7
@@ -227,7 +227,7 @@ root: struct '_Record_QueryInput' #70
                │     └─ [startsWith]: optional 'optional_8' #8
                │        └─ item: string #7
                └─ variant_1: struct #20
-                  └─ [not]: union '_string_filter' #19
+                  └─ [not]: union '_prisma_string_filter' #19
                      ├─ variant_0: string #7
                      ├─ variant_1: struct #10
                      │  └─ [equals]: string #7
