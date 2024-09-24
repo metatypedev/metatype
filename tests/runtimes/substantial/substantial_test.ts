@@ -9,7 +9,7 @@ Meta.test(
     name: "Substantial runtime and workflow execution lifecycle",
   },
   async (t) => {
-    Deno.env.set("SUB_TEST_MEMORY", "1");
+    Deno.env.set("SUB_BACKEND", "fs");
     const e = await t.engine("runtimes/substantial/substantial.py");
 
     let currentRunId: string | null = null;
@@ -110,8 +110,8 @@ Meta.test(
     name: "Events and concurrent runs",
   },
   async (t) => {
-    // Deno.env.set("SUB_TEST_MEMORY", "0");
-    Deno.env.set("SUB_TEST_MEMORY", "1");
+    // Deno.env.set("SUB_BACKEND", "redis");
+    Deno.env.set("SUB_BACKEND", "fs");
 
     const e = await t.engine("runtimes/substantial/substantial.py");
 

@@ -22,6 +22,8 @@ typegates:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=sample"
       migration-failure-test:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
+      substantial:
+        SUB_REDIS: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
 
 typegraphs:
   materializers:

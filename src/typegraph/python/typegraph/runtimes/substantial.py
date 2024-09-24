@@ -26,14 +26,14 @@ from typegraph.wit import runtimes, store
 
 
 class Backend:
-    def memory():
+    def dev_memory():
         return SubstantialBackendMemory()
 
-    def fs():
+    def dev_fs():
         return SubstantialBackendFs()
 
-    def redis(config: RedisBackend):
-        return SubstantialBackendRedis(value=config)
+    def redis(connection_string_secret: str):
+        return SubstantialBackendRedis(value=RedisBackend(connection_string_secret))
 
 
 class SubstantialRuntime(Runtime):

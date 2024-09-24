@@ -25,14 +25,14 @@ impl RedisBackend {
     }
 
     fn key(&self, parts: &[&str]) -> String {
-        format!("sub_{}", parts.join("_"))
+        format!("sub::{}", parts.join("::"))
     }
 
     fn parts(&self, key: &str) -> Result<Vec<String>> {
         let parts = key
-            .strip_prefix("sub_")
+            .strip_prefix("sub::")
             .with_context(|| format!("Invalid  key found: {:?}", key))?
-            .split("_")
+            .split("::")
             .map(|p| p.to_owned())
             .collect::<Vec<_>>();
         Ok(parts)
@@ -74,30 +74,8 @@ impl super::BackendStore for RedisBackend {
         schedule: DateTime<Utc>,
         content: Option<Event>,
     ) -> Result<()> {
-        let q_key = self.key(&["schedules", &queue]); // priority queue
-
         self.with_redis(|r| {
-            // Cleanups, this will 'fuse' schedules attributed to the same run_id into 'one'
-            // by closing the oldest and keeping the newest
-            let sched_refs: Vec<String> = r.zrange(&q_key, 0, -1)?;
-            for sched_ref in sched_refs {
-                let planned_keys: Vec<String> = r.zrange(&sched_ref, 0, -1)?;
-                for planned_key in planned_keys.iter() {
-                    let parts = self.parts(planned_key)?;
-                    let planned_id = parts.get(1).with_context(|| {
-                        format!("Retrieve planned run_id from {:?}", planned_key)
-                    })?;
-
-                    let planned_date = DateTime::parse_from_rfc3339(&sched_ref)?.to_utc();
-                    if planned_id.eq(&run_id) && planned_date <= schedule {
-                        let event =
-                            self.read_schedule(queue.clone(), run_id.clone(), planned_date)?;
-                        if event.is_none() {
-                            self.close_schedule(queue.clone(), run_id.clone(), planned_date)?
-                        }
-                    }
-                }
-            }
+            let q_key = self.key(&["schedules", &queue]); // priority queue
 
             // Now add the new schedule
             let sched_ref = schedule.to_rfc3339();
@@ -188,10 +166,12 @@ impl super::BackendAgent for RedisBackend {
     fn next_run(&self, queue: String, excludes: Vec<String>) -> Result<Option<NextRun>> {
         let q_key = self.key(&["schedules", &queue]); // priority queue
         self.with_redis(|r| {
+            // TODO: lua
             let schedules: Vec<String> = r.zrange(q_key, 0, -1)?;
             for schedule in schedules {
                 let run_ids: Vec<String> = r.zrange(&schedule, 0, -1)?;
                 for run_id in run_ids {
+                    println!("{excludes:?} vs {run_id:?}");
                     if !excludes.contains(&run_id) {
                         return Ok(Some(NextRun {
                             run_id,
@@ -208,25 +188,52 @@ impl super::BackendAgent for RedisBackend {
     fn active_leases(&self, _lease_seconds: u32) -> Result<Vec<String>> {
         self.with_redis(|r| {
             let all_leases_key = self.key(&["leases"]);
-            let prefixed_run_ids: Vec<String> = r.lrange(all_leases_key, 0, -1)?;
-            let mut ret = Vec::new();
+            let script = Script::new(
+                r#"
+                    local all_leases_key = KEYS[1];
+                    local lease_refs = redis.call("ZRANGE", all_leases_key, 0, -1)
+                    local results = {}
 
-            for prfx_id in prefixed_run_ids {
-                let run_id = self.parts(&prfx_id)?.last().cloned();
-                ret.push(run_id.with_context(|| "Fatal: no run id found")?);
+                    for i, lease_ref in ipairs(lease_refs) do
+                        local exp_time = redis.call("GET", lease_ref)
+                        table.insert(results, lease_ref)
+                        table.insert(results, exp_time)
+                    end
+
+                    return results
+                "#,
+            );
+
+            let lua_ret: Vec<String> = script.key(all_leases_key).invoke(r)?;
+            let mut iter = lua_ret.into_iter();
+            let mut active_lease_ids = Vec::new();
+
+            while let (Some(sched_ref), Some(exp_time)) = (iter.next(), iter.next()) {
+                let exp_time = DateTime::parse_from_rfc3339(&exp_time)?.to_utc();
+                println!("{:?} and {:?}", sched_ref, exp_time);
+                if exp_time > Utc::now() {
+                    let run_id = self
+                        .parts(&sched_ref)?
+                        .last()
+                        .cloned()
+                        .with_context(|| format!("Could not find run_id in p {}", sched_ref))?;
+
+                    active_lease_ids.push(run_id);
+                }
             }
 
-            Ok(ret)
+            Ok(active_lease_ids)
         })
     }
 
     fn acquire_lease(&self, run_id: String, lease_seconds: u32) -> Result<bool> {
         self.with_redis(|r| {
-            // TODO: check that is a part of the list "leases"
-            // let all_leases_key = self.key(&["leases"]);
+            let all_leases_key = self.key(&["leases"]);
             let lease_ref = self.key(&["lease", &run_id]);
 
-            // TODO: exist + get should be atomic
+            // TODO:
+            // 1. exist + get should be atomic
+            // 2. integrity check to ensure it is a part of the "leases" set
             let mut not_held = true;
             if r.exists(&lease_ref)? {
                 not_held = false;
@@ -240,7 +247,23 @@ impl super::BackendAgent for RedisBackend {
 
             if not_held {
                 let lease_exp = Utc::now() + Duration::seconds(lease_seconds as i64);
-                r.set(&lease_ref, lease_exp.to_rfc3339())?;
+                let lease_exp = lease_exp.to_rfc3339();
+                let script = Script::new(
+                    r#"
+                        local all_leases_key = KEYS[1]
+                        local lease_ref = KEYS[2]
+                        local lease_exp = ARGV[1]
+
+                        redis.call("ZADD", all_leases_key, 0, lease_ref)
+                        redis.call("SET", lease_ref, lease_exp)
+                    "#,
+                );
+                script
+                    .key(all_leases_key)
+                    .key(lease_ref)
+                    .arg(lease_exp)
+                    .invoke(r)?;
+
                 return Ok(true);
             }
 
@@ -248,8 +271,32 @@ impl super::BackendAgent for RedisBackend {
         })
     }
 
-    fn renew_lease(&self, _run_id: String, _lease_seconds: u32) -> Result<bool> {
-        todo!()
+    fn renew_lease(&self, run_id: String, lease_seconds: u32) -> Result<bool> {
+        self.with_redis(|r| {
+            let lease_ref = self.key(&["lease", &run_id]);
+            let new_lease_exp = (Utc::now() + Duration::seconds(lease_seconds as i64)).to_rfc3339();
+
+            let script = Script::new(
+                r#"
+                    local lease_ref = KEYS[1]
+                    local new_lease_exp = ARGV[1]
+
+                    if redis.call("EXISTS", lease_ref) == 1 then
+                        redis.call("SET", lease_ref, new_lease_exp)
+                        return 1
+                    else
+                        return 0
+                    end
+                "#,
+            );
+            let lua_ret: u8 = script.key(&lease_ref).arg(new_lease_exp).invoke(r)?;
+
+            if lua_ret == 0 {
+                bail!("lease not found: {}", lease_ref);
+            }
+
+            Ok(true)
+        })
     }
 
     fn remove_lease(&self, run_id: String, _lease_seconds: u32) -> Result<()> {
@@ -262,7 +309,7 @@ impl super::BackendAgent for RedisBackend {
                     local all_leases_key = KEYS[1]
                     local lease_ref = KEYS[2]
 
-                    redis.call("LREM", all_leases_key, 0, lease_ref)
+                    redis.call("ZREM", all_leases_key, lease_ref)
                     redis.call("DEL", lease_ref)
                 "#,
             );

@@ -3,9 +3,10 @@ mod tests {
     use std::{collections::HashMap, fmt::Debug, path::PathBuf, thread::sleep, time::Duration};
 
     use chrono::{DateTime, Utc};
+    use redis::Script;
     use serde_json::json;
     use substantial::{
-        backends::{fs::FsBackend, BackendAgent, BackendMetadataWriter},
+        backends::{fs::FsBackend, redis::RedisBackend, Backend},
         converters::{MetadataEvent, Operation, OperationEvent, Run},
     };
     use substantial::{
@@ -74,12 +75,24 @@ mod tests {
 
     #[test]
     fn test_basic_lease_state_consistency_logic() {
-        let root = PathBuf::from("tmp/test_two/substantial");
-        let backends = vec![
+        let backends: Vec<Box<dyn Backend>> = vec![
             Box::new(MemoryBackend::default().unwrap()),
             Box::new({
+                let root = PathBuf::from("tmp/test_two/substantial");
                 let backend = FsBackend::new(root.clone()).unwrap();
                 std::fs::remove_dir_all(root).ok();
+                backend
+            }),
+            Box::new({
+                let backend =
+                    RedisBackend::new("redis://:password@localhost:6380/0".to_owned()).unwrap();
+                backend
+                    .with_redis(|r| {
+                        let script = Script::new(r#"redis.call("FLUSHALL")"#);
+                        script.invoke::<()>(r)
+                    })
+                    .unwrap();
+
                 backend
             }),
         ];
