@@ -16,7 +16,7 @@ impl TypeGen for Take {
     }
 
     fn name(&self) -> String {
-        "_Take".to_string()
+        "_take".to_string()
     }
 }
 
@@ -28,7 +28,7 @@ impl TypeGen for Skip {
     }
 
     fn name(&self) -> String {
-        "_Skip".to_string()
+        "_skip".to_string()
     }
 }
 
@@ -54,7 +54,7 @@ impl TypeGen for Distinct {
 
     fn name(&self) -> String {
         let model_name = self.0.name().unwrap().unwrap();
-        format!("_KeysOf_{model_name}")
+        format!("{model_name}_keys_union")
     }
 }
 
@@ -91,6 +91,6 @@ impl TypeGen for Cursor {
 
     fn name(&self) -> String {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("_{}_Cursor", model_name)
+        format!("{}_cursor", model_name)
     }
 }

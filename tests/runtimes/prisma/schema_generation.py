@@ -424,7 +424,9 @@ def multiple_self_relationships(g: Graph):
         {
             "id": t.uuid(as_id=True, config={"auto": True}),
             "personal_hero": db.link(
-                g.ref("Person").optional(config={"unique": True}), field="hero_of"
+                g.ref("Person").optional(config={"unique": True}),
+                field="hero_of",
+                name="hero",
             ),
             "hero_of": g.ref("Person").optional(),
             "mother": g.ref("Person").optional(),

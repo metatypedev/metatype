@@ -3,10 +3,10 @@ source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
 root: struct #18
-├─ [_avg]: struct '_Record_NumberAgg_avg' #12
+├─ [_avg]: struct 'Record_avg_aggregate' #12
 │  └─ [age]: optional 'optional_11' #11
 │     └─ item: float #10
-├─ [_count]: struct '_Record_AggrCount' #9
+├─ [_count]: struct 'Record_count_aggregate' #9
 │  ├─ [_all]: optional 'optional_8' #8
 │  │  └─ item: integer #7
 │  ├─ [age]: optional 'optional_8' #8
@@ -17,12 +17,12 @@ root: struct #18
 │  │  └─ item: integer #7
 │  └─ [name]: optional 'optional_8' #8
 │     └─ item: integer #7
-├─ [_max]: struct '_Record_NumberAgg' #17
+├─ [_max]: struct 'Record_number_aggregate' #17
 │  └─ [age]: optional 'optional_16' #16
 │     └─ item: integer #15
-├─ [_min]: struct '_Record_NumberAgg' #17
+├─ [_min]: struct 'Record_number_aggregate' #17
 │  └─ [age]: optional 'optional_16' #16
 │     └─ item: integer #15
-└─ [_sum]: struct '_Record_NumberAgg' #17
+└─ [_sum]: struct 'Record_number_aggregate' #17
    └─ [age]: optional 'optional_16' #16
       └─ item: integer #15
