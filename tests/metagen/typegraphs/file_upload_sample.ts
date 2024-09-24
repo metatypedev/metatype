@@ -23,7 +23,7 @@ export const tg = await typegraph({
           bucket,
           t.file({ allow: ["text/plain"] }),
         ),
-        uploadMany: s3.uploadAll(bucket),
+        uploadMany: s3.uploadAll(bucket, t.file({ allow: ["text/plain"] })),
       },
       Policy.public(),
     );

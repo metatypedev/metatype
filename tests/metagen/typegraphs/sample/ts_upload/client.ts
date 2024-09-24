@@ -254,7 +254,12 @@ class FileExtractor {
   }
 
   #formatPath() {
-    return this.#currentPath.join("");
+    return this.#currentPath.map((seg) => {
+      if (seg.startsWith("[")) {
+        return `.${seg.slice(1, -1)}`;
+      }
+      return seg;
+    }).join("");
   }
 }
 
@@ -498,13 +503,11 @@ async function fetchGql(
   files?: Map<string, File>,
 ) {
   const multipart = (files?.size ?? 0) > 0;
-  console.error({ multipart, files, variables });
 
   let body: FormData | string = JSON.stringify({
     query: doc,
     variables,
   });
-  console.error({ body });
   if (multipart) {
     const data = new FormData();
     data.set("operations", body);
@@ -523,8 +526,6 @@ async function fetchGql(
   if (!multipart) {
     additionalHeaders["content-type"] = "application/json";
   }
-
-  console.error({ body });
 
   // console.log(doc, variables);
   const fetchImpl = options.fetch ?? fetch;
@@ -812,15 +813,6 @@ const nodeMetas = {
     return {};
   },
   
-  RootUploadManyFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        prefix: "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
-        files: "RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList",
-      },
-    };
-  },
   RootUploadFn(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
@@ -830,20 +822,29 @@ const nodeMetas = {
       },
     };
   },
+  RootUploadManyFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        prefix: "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
+        files: "RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList",
+      },
+    };
+  },
 };
+export type RootUploadFnInputFileFile = File;
 export type RootUploadFnInputPathString = string;
+export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
+export type RootUploadFnInput = {
+  file: RootUploadFnInputFileFile;
+  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
+};
 export type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
 export type RootUploadManyFnInputFilesFile = File;
 export type RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList = Array<RootUploadManyFnInputFilesFile>;
 export type RootUploadManyFnInput = {
   prefix?: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional;
   files: RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList;
-};
-export type RootUploadFnInputFileFile = File;
-export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
-export type RootUploadFnInput = {
-  file: RootUploadFnInputFileFile;
-  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
 };
 export type RootUploadFnOutput = boolean;
 

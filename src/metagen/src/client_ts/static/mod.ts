@@ -251,7 +251,12 @@ class FileExtractor {
   }
 
   #formatPath() {
-    return this.#currentPath.join("");
+    return this.#currentPath.map((seg) => {
+      if (seg.startsWith("[")) {
+        return `.${seg.slice(1, -1)}`;
+      }
+      return seg;
+    }).join("");
   }
 }
 
