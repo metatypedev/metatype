@@ -6,7 +6,7 @@ from .{{ mod_name }}_types import {{ imports }}
 
 {% for func in funcs %}
 @typed_{{ func.name }}
-def {{ func.name }}(inp: {{ func.input_name }}) -> {{ func.output_name }}:
+def {{ func.name }}(inp: {{ func.input_name }}, ctx: {{ func.input_name }}) -> {{ func.output_name }}:
     # TODO: write your logic here
     raise Exception("{{ func.name }} not implemented")
 {% endfor %}

@@ -3,6 +3,9 @@ import wit_wire.exports
 # NOTE: all imports must be toplevel as constrained by `componentize-py`
 # https://github.com/bytecodealliance/componentize-py/issues/23
 # from pyrt.imports.typegate_wire import hostcall
+
+from wit_wire.imports.typegate_wire import hostcall
+
 from wit_wire.exports.mat_wire import (
     InitArgs,
     InitResponse,
@@ -190,3 +193,10 @@ class FakeFileLoader(importlib.abc.FileLoader):
     def get_filename(self, name=None):
         assert name is not None and name == self.name
         return self.path
+
+
+class Ctx:
+    def gql(self, query: str, variables: str):
+        return hostcall(
+            "gql", json=json.dumps({"query": query, "variables": variables})
+        )
