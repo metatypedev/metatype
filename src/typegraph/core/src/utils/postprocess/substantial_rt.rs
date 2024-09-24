@@ -23,7 +23,7 @@ impl PostProcessor for SubstantialProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         let fs_ctx = FsContext::new(self.typegraph_dir.clone());
         let mut materializers = std::mem::take(&mut tg.materializers);
-        let has_workflow_def = &["start", "stop", "send", "ressources", "results"];
+        let has_workflow_def = &["start", "stop", "send", "resources", "results"];
         for mat in materializers.iter_mut() {
             if has_workflow_def.contains(&mat.name.as_str()) {
                 let mat_data = std::mem::take(&mut mat.data);

@@ -43,8 +43,20 @@ deno_core::extension!(
         grpc::op_grpc_register,
         grpc::op_grpc_unregister,
         grpc::op_call_grpc_method,
-        substantial::op_create_or_get_run,
-        substantial::op_persist_run,
+        substantial::op_sub_store_create_or_get_run,
+        substantial::op_sub_store_persist_run,
+        substantial::op_sub_store_add_schedule,
+        substantial::op_sub_store_close_schedule,
+        substantial::op_sub_store_read_schedule,
+        substantial::op_sub_agent_acquire_lease,
+        substantial::op_sub_agent_active_leases,
+        substantial::op_sub_agent_next_run,
+        substantial::op_sub_agent_remove_lease,
+        substantial::op_sub_agent_renew_lease,
+        substantial::op_sub_metadata_append,
+        substantial::op_sub_metadata_read_all,
+        substantial::op_sub_metadata_read_workflow_links,
+        substantial::op_sub_metadata_write_workflow_link,
 
         // FIXME(yohe): this test broke and has proven difficult to fix
         // #[cfg(test)]

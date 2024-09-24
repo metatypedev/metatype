@@ -65,13 +65,6 @@ export class Context {
     return this.run;
   }
 
-  start() {
-    this.#appendOp({
-      type: "Start",
-      kwargs: this.kwargs,
-    });
-  }
-
   appendEvent(event_name: string, payload: unknown) {
     this.#appendOp({
       type: "Send",
@@ -92,7 +85,7 @@ export class Context {
 
   async handle(
     eventName: string,
-    fn: (received: unknown) => unknown | Promise<unknown>,
+    fn: (received: unknown) => unknown | Promise<unknown>
   ) {
     for (const { event } of this.run.operations) {
       if (event.type == "Send" && event.event_name == eventName) {
@@ -111,14 +104,5 @@ export class Context {
     }
 
     return result;
-  }
-
-  stop(nativeRustResultType: "Ok" | "Err", result?: unknown) {
-    this.#appendOp({
-      type: "Stop",
-      result: {
-        [nativeRustResultType]: result,
-      },
-    });
   }
 }

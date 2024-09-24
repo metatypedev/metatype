@@ -114,10 +114,11 @@ indexmap = { version = "2.2.6", features = ["serde"] }
 semver = "1.0.23"
 dashmap = "5.5.3"
 connection-string = "0.2.0"
-chrono = "0.4.38"
+chrono =  { version = "0.4.38", features = ["serde"] }
 tera = { version = "1.20", default-features = false }
 ordered-float = "4.2.0"
 graphql-parser = "0.4.0"
+uuid = "1.10.0"
 
 # wasm
 wasmtime = "21.0.0"

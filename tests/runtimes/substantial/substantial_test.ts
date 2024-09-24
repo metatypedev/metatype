@@ -9,6 +9,7 @@ Meta.test(
     name: "Substantial runtime and workflow execution lifecycle",
   },
   async (t) => {
+    Deno.env.set("SUB_TEST_MEMORY", "1");
     const e = await t.engine("runtimes/substantial/substantial.py");
 
     let currentRunId: string | null = null;
@@ -28,61 +29,76 @@ Meta.test(
         .on(e);
     });
 
-    await t.should("list the ongoing runs", async () => {
+    // This is arbitrary
+    // Depends on the tick interval and the timing
+    await sleep(8 * 1000);
+
+    await t.should("have workflow marked as ongoing", async () => {
       await gql`
         query {
-          ressources {
-            workflow
-            count
-            running {
-              run_id
+          results {
+            ongoing {
+              count
+              runs {
+                run_id
+              }
+            }
+            completed {
+              count
             }
           }
         }
       `
         .expectData({
-          ressources: {
-            workflow: "saveAndSleepExample",
-            count: 1,
-            running: [{ run_id: currentRunId }],
+          results: {
+            ongoing: {
+              count: 1,
+              runs: [{ run_id: currentRunId }],
+            },
+            completed: { count: 0 },
           },
         })
         .on(e);
     });
 
-    // 2s + 2s + 5s = 9s, + some margins (a relaunch after interrupt takes 2s break by default)
-    await sleep(12 * 1000);
+    // ~ about 12 seconds since launch
+    await sleep(3 * 3000);
 
-    await t.should("complete execution", async () => {
+    await t.should("complete sleep workflow", async () => {
       await gql`
         query {
-          ressources {
-            workflow
-            count
-          }
           results {
-            run_id
-            result {
-              value
-              status
+            ongoing {
+              count
+            }
+            completed {
+              count
+              runs {
+                run_id
+                result {
+                  status
+                  value
+                }
+              }
             }
           }
         }
       `
         .expectData({
-          ressources: {
-            workflow: "saveAndSleepExample",
-            count: 0,
-          },
-          results: [
-            {
-              run_id: currentRunId,
-              result: {
-                value: 30,
-                status: "COMPLETED",
-              },
+          results: {
+            ongoing: {
+              count: 0,
             },
-          ],
+            completed: {
+              count: 1,
+              runs: [
+                {
+                  run_id: currentRunId,
+                  result: { status: "COMPLETED", value: 30 },
+                },
+              ],
+            },
+          },
         })
         .on(e);
     });
@@ -91,9 +107,12 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Substantial async events",
+    name: "Events and concurrent runs",
   },
   async (t) => {
+    // Deno.env.set("SUB_TEST_MEMORY", "0");
+    Deno.env.set("SUB_TEST_MEMORY", "1");
+
     const e = await t.engine("runtimes/substantial/substantial.py");
 
     const emails = [
@@ -102,7 +121,6 @@ Meta.test(
       "three@example.comn",
     ] as [string, string, string];
     const runIds = [] as Array<string>;
-
     await t.should("start email workflows concurrently", async () => {
       await gql`
         mutation {
@@ -123,7 +141,6 @@ Meta.test(
           assertExists(one, "one runId");
           assertExists(two, "two runId");
           assertExists(three, "three runId");
-
           runIds.push(...[one, two, three]);
         })
         .on(e);
@@ -132,93 +149,101 @@ Meta.test(
     // let's wait for a bit to make sure interrupts are doing their jobs
     await sleep(5 * 1000);
 
-    await t.should(
-      `fire "confirmation" events for "${emails.join(", ")}"`,
-      async () => {
-        await gql`
-          mutation {
-            # will pass
-            one: send_confirmation(
-              event_name: "confirmation"
-              run_id: $one_run_id
-              payload: true
-            )
-            # will throw
-            two: send_confirmation(
-              event_name: "confirmation"
-              run_id: $two_run_id
-              payload: false
-            )
-            # will abort
-            three: abort_email_confirmation(run_id: $three_run_id)
-          }
-        `
-          .withVars({
-            one_run_id: runIds[0],
-            two_run_id: runIds[1],
-            three_run_id: runIds[2],
-          })
-          .expectData({
-            one: runIds[0],
-            two: runIds[1],
-            three: runIds[2],
-          })
-          .on(e);
-      }
-    );
+    await t.should(`fire events for "${emails.join(", ")}"`, async () => {
+      await gql`
+        mutation {
+          # will pass
+          one: send_confirmation(run_id: $one_run_id, event: { payload: true })
+          # will throw
+          two: send_confirmation(run_id: $two_run_id, event: { payload: false })
+          # will abort
+          three: abort_email_confirmation(run_id: $three_run_id)
+        }
+      `
+        .withVars({
+          one_run_id: runIds[0],
+          two_run_id: runIds[1],
+          three_run_id: runIds[2],
+        })
+        .expectData({
+          one: runIds[0],
+          two: runIds[1],
+          three: runIds[2],
+        })
+        .on(e);
+    });
 
     // This is arbitrary, if ops are leaking that means it should be increased
-    // Noticing the fired event may take a few seconds depending on `substantial_relaunch_ms`
+    // Noticing the fired event may take a few seconds depending on the interrupt relaunch time and poll interval
     // Once noticed the workflow will complete and the worker destroyed
-    await sleep(5 * 1000);
+    await sleep(10 * 1000);
 
     await t.should("complete execution", async () => {
       await gql`
         query {
-          ask_ongoing_emails {
-            count
-          }
-          ask_email_results {
-            run_id
-            result {
-              value
-              status
+          email_results {
+            ongoing {
+              count
+            }
+            completed {
+              count
+              runs {
+                run_id
+                result {
+                  status
+                  value
+                }
+              }
             }
           }
         }
       `
         .expectBody((body) => {
           assertEquals(
-            body?.data?.ask_ongoing_emails?.count,
+            body?.data?.email_results?.ongoing?.count,
             0,
-            "zero workflow currently running"
+            "0 workflow currently running"
+          );
+
+          assertEquals(
+            body?.data?.email_results?.completed?.count,
+            3,
+            "3 workflows completed"
           );
 
           const localSorter = (a: any, b: any) =>
             a.run_id.localeCompare(b.run_id);
 
-          const received = body?.data?.ask_email_results ?? ([] as Array<any>);
+          const received =
+            body?.data?.email_results?.completed?.runs ?? ([] as Array<any>);
           const expected = [
             {
-              run_id: runIds[0],
               result: {
-                value: 'Email sent to one@example.com: "confirmed!"',
                 status: "COMPLETED",
+                value: 'Email sent to one@example.com: "confirmed!"',
               },
+              run_id: runIds[0],
             },
             {
-              run_id: runIds[1],
               result: {
-                value: "two@example.com has denied the subscription",
                 status: "COMPLETED_WITH_ERROR",
+                value: "two@example.com has denied the subscription",
               },
+              run_id: runIds[1],
+            },
+            {
+              result: {
+                status: "COMPLETED_WITH_ERROR",
+                value: "ABORTED",
+              },
+              run_id: runIds[2],
             },
           ];
 
           assertEquals(
             received.sort(localSorter),
             expected.sort(localSorter),
-            "complete only two workflows as one was aborted"
+            "'complete' two workflows as one was aborted"
           );
         })
         .on(e);

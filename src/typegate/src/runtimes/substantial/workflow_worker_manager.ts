@@ -46,7 +46,7 @@ export class WorkflowRecorder {
     name: WorkflowName,
     runId: RunId,
     worker: WorkerRecord,
-    startedAt: Date,
+    startedAt: Date
   ) {
     if (!this.workflowRuns.has(name)) {
       this.workflowRuns.set(name, new Set());
@@ -82,7 +82,7 @@ export class WorkflowRecorder {
       if (!record) {
         // TODO: throw?
         logger.error(
-          `invalid state: "${runId}" associated with "${name}" does not exist`,
+          `invalid state: "${runId}" associated with "${name}" does not exist`
         );
         return false;
       }
@@ -107,22 +107,9 @@ export class WorkflowRecorder {
  * - The completion of a workflow is run async, it is entirely up to the event listeners to act upon the results
  */
 export class WorkerManager {
-  private static instance: WorkerManager;
   private recorder: WorkflowRecorder = new WorkflowRecorder();
 
-  private constructor() {}
-
-  static nextId(name: string): RunId {
-    const uuid = crypto.randomUUID();
-    return `${name}_${uuid}`;
-  }
-
-  public static getInstance(): WorkerManager {
-    if (!WorkerManager.instance) {
-      WorkerManager.instance = new WorkerManager();
-    }
-    return WorkerManager.instance;
-  }
+  constructor() {}
 
   #createWorker(name: string, modulePath: string, runId: RunId) {
     const worker = new Worker(import.meta.resolve("./worker.ts"), {
@@ -136,7 +123,7 @@ export class WorkerManager {
         modulePath,
         worker,
       },
-      new Date(),
+      new Date()
     );
   }
 
@@ -147,16 +134,18 @@ export class WorkerManager {
   destroyAllWorkers() {
     this.recorder.destroyAllWorkers();
     logger.warn(
-      `Destroyed workers for ${
-        this.recorder
-          .getRegisteredWorkflowNames()
-          .map((w) => `"${w}"`)
-          .join(", ")
-      }`,
+      `Destroyed workers for ${this.recorder
+        .getRegisteredWorkflowNames()
+        .map((w) => `"${w}"`)
+        .join(", ")}`
     );
   }
 
-  getAllocatedRessources(name: WorkflowName) {
+  isOngoing(runId: RunId) {
+    return this.recorder.hasRun(runId);
+  }
+
+  getAllocatedResources(name: WorkflowName) {
     const runIds = this.recorder.workflowRuns.get(name) ?? new Set<string>();
     return {
       count: runIds.size,
@@ -175,7 +164,7 @@ export class WorkerManager {
     const rec = this.recorder.startedAtRecords.get(runId);
     if (!rec) {
       throw new Error(
-        `Invalid state: cannot find initial time for run "${runId}"`,
+        `Invalid state: cannot find initial time for run "${runId}"`
       );
     }
     return rec;
@@ -215,24 +204,16 @@ export class WorkerManager {
     runId: string,
     workflowModPath: string,
     storedRun: Run,
-    kwargs: Record<string, unknown>,
+    schedule: string,
+    kwargs: Record<string, unknown>
   ) {
-    const hasStopped = storedRun.operations.some(
-      ({ event }) => event.type == "Stop",
-    );
-
-    if (!hasStopped) {
-      this.#createWorker(name, workflowModPath, runId);
-      this.trigger("START", runId, {
-        modulePath: workflowModPath,
-        functionName: name,
-        run: storedRun,
-        kwargs,
-      });
-    } else {
-      logger.warn(
-        `Starting ${runId} aborted, since it has already been stopped.`,
-      );
-    }
+    this.#createWorker(name, workflowModPath, runId);
+    this.trigger("START", runId, {
+      modulePath: workflowModPath,
+      functionName: name,
+      run: storedRun,
+      kwargs,
+      schedule,
+    });
   }
 }

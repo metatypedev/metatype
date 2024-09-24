@@ -6,6 +6,7 @@ export type {
   Operation,
   OperationEvent,
   Run,
+  Backend,
 } from "../../../engine/runtime.js";
 
 export type AnyString = string & Record<string | number | symbol, never>;
@@ -42,6 +43,7 @@ export type WorkflowResult = {
   kind: ExecutionResultKind;
   result: unknown;
   exception?: Error;
+  schedule: string;
   run: Run;
 };
 

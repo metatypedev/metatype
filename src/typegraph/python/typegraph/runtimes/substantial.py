@@ -14,7 +14,7 @@ from typegraph.gen.exports.runtimes import (
     SubstantialOperationTypeSend,
     SubstantialOperationTypeStart,
     SubstantialOperationTypeStop,
-    SubstantialOperationTypeRessources,
+    SubstantialOperationTypeResources,
     SubstantialOperationTypeResults,
     SubstantialRuntimeData,
     Workflow,
@@ -29,7 +29,7 @@ class Backend:
     def memory():
         return SubstantialBackendMemory()
 
-    def fs(config: RedisBackend):
+    def fs():
         return SubstantialBackendFs()
 
     def redis(config: RedisBackend):
@@ -41,13 +41,6 @@ class SubstantialRuntime(Runtime):
         data = SubstantialRuntimeData(backend)
         super().__init__(runtimes.register_substantial_runtime(store, data))
         self.backend = backend
-
-    def _using_workflow(
-        self,
-        workflow: Workflow,
-    ):
-        self.workflow = workflow
-        return self
 
     def _generic_substantial_func(
         self,
@@ -67,46 +60,58 @@ class SubstantialRuntime(Runtime):
 
         return t.func.from_type_func(func_data.value)
 
-    def start(self, kwargs: "t.struct"):
-        operation = SubstantialOperationTypeStart(self.workflow)
-        return self._generic_substantial_func(operation, kwargs, None)
-
-    def stop(self):
-        operation = SubstantialOperationTypeStop(self.workflow)
-        return self._generic_substantial_func(operation, None, None)
-
-    def send(self, payload: "t.typedef"):
-        operation = SubstantialOperationTypeSend(self.workflow)
-        return self._generic_substantial_func(operation, payload, None)
-
-    def query_ressources(self):
-        operation = SubstantialOperationTypeRessources(self.workflow)
-        return self._generic_substantial_func(operation, None, None)
-
-    def query_results(self, output: "t.typedef"):
-        operation = SubstantialOperationTypeResults(self.workflow)
-        return self._generic_substantial_func(operation, None, output)
-
     def deno(
-        backend: SubstantialBackend,
+        self,
         *,
         file: str,
         name: str,
         deps: List[str] = [],
     ):
-        substantial = SubstantialRuntime(backend)
-        return substantial._using_workflow(
-            Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.DENO)
+        return WorkflowHandle(
+            self, Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.DENO)
         )
 
     def python(
-        backend: SubstantialBackend,
+        self,
         *,
         file: str,
         name: str,
         deps: List[str] = [],
     ):
-        substantial = SubstantialRuntime(backend)
-        return substantial._using_workflow(
-            Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.PYTHON)
+        return WorkflowHandle(
+            self, Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.PYTHON)
         )
+
+
+class WorkflowHandle:
+    def __init__(self, sub: SubstantialRuntime, workflow: Workflow):
+        self.sub = sub
+        self.workflow = workflow
+
+    def start(self, kwargs: "t.struct"):
+        operation = SubstantialOperationTypeStart(self.workflow)
+        return self.sub._generic_substantial_func(operation, kwargs, None)
+
+    def stop(self):
+        operation = SubstantialOperationTypeStop(self.workflow)
+        return self.sub._generic_substantial_func(operation, None, None)
+
+    def send(self, payload: "t.typedef", event_name=Union[str, None]):
+        operation = SubstantialOperationTypeSend(self.workflow)
+        event = t.struct(
+            {
+                "name": t.string()
+                if event_name is None
+                else t.string().set(event_name),
+                "payload": payload,
+            }
+        )
+        return self.sub._generic_substantial_func(operation, event, None)
+
+    def query_resources(self):
+        operation = SubstantialOperationTypeResources(self.workflow)
+        return self.sub._generic_substantial_func(operation, None, None)
+
+    def query_results(self, output: "t.typedef"):
+        operation = SubstantialOperationTypeResults(self.workflow)
+        return self.sub._generic_substantial_func(operation, None, output)

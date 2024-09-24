@@ -10,7 +10,7 @@ self.onmessage = async function (event) {
   const { type, data } = event.data as WorkerData;
   switch (type) {
     case "START": {
-      const { modulePath, functionName, run, kwargs } = data;
+      const { modulePath, functionName, run, schedule, kwargs } = data;
       const module = await import(modulePath);
       // TODO: for python use the same strategy but instead call from native
       const workflowFn = module[functionName];
@@ -22,42 +22,35 @@ self.onmessage = async function (event) {
       }
 
       runCtx = new Context(run, kwargs);
-      runCtx.start();
 
       workflowFn(runCtx)
         .then((wfResult: unknown) => {
-          runCtx?.stop("Ok", wfResult);
-
           self.postMessage(
             Ok(
-              Msg(
-                type,
-                {
-                  kind: "SUCCESS",
-                  result: wfResult,
-                  run: runCtx!.getRun(),
-                } satisfies WorkflowResult,
-              ),
-            ),
+              Msg(type, {
+                kind: "SUCCESS",
+                result: wfResult,
+                run: runCtx!.getRun(),
+                schedule,
+              } satisfies WorkflowResult)
+            )
           );
         })
         .catch((wfException: unknown) => {
           self.postMessage(
             Ok(
-              Msg(
-                type,
-                {
-                  kind: "FAIL",
-                  result: wfException instanceof Error
+              Msg(type, {
+                kind: "FAIL",
+                result:
+                  wfException instanceof Error
                     ? wfException.message
                     : JSON.stringify(wfException),
-                  exception: wfException instanceof Error
-                    ? wfException
-                    : undefined,
-                  run: runCtx!.getRun(),
-                } satisfies WorkflowResult,
-              ),
-            ),
+                exception:
+                  wfException instanceof Error ? wfException : undefined,
+                run: runCtx!.getRun(),
+                schedule,
+              } satisfies WorkflowResult)
+            )
           );
         });
       break;

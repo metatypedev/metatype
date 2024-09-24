@@ -518,7 +518,7 @@ interface runtimes {
         start(workflow),
         stop(workflow),
         send(workflow),
-        ressources(workflow),
+        resources(workflow),
         results(workflow),
     }
 

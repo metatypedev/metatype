@@ -23,7 +23,7 @@ pub enum SubstantialMaterializer {
     Start { workflow: WorkflowMatData },
     Stop { workflow: WorkflowMatData },
     Send { workflow: WorkflowMatData },
-    Ressources { workflow: WorkflowMatData },
+    Resources { workflow: WorkflowMatData },
     Results { workflow: WorkflowMatData },
 }
 
@@ -60,8 +60,8 @@ impl MaterializerConverter for SubstantialMaterializer {
             SubstantialMaterializer::Send { workflow } => {
                 ("send".to_string(), as_index_map(workflow))
             }
-            SubstantialMaterializer::Ressources { workflow } => {
-                ("ressources".to_string(), as_index_map(workflow))
+            SubstantialMaterializer::Resources { workflow } => {
+                ("resources".to_string(), as_index_map(workflow))
             }
             SubstantialMaterializer::Results { workflow } => {
                 ("results".to_string(), as_index_map(workflow))
@@ -107,8 +107,7 @@ pub fn substantial_operation(
         SubstantialOperationType::Send(workflow) => {
             let arg = data.func_arg.ok_or("query arg is undefined".to_string())?;
             inp.prop("run_id", t::string().build()?);
-            inp.prop("event_name", t::string().build()?);
-            inp.prop("payload", arg.into());
+            inp.prop("event", arg.into());
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::Send {
@@ -117,11 +116,15 @@ pub fn substantial_operation(
                 t::string().build()?,
             )
         }
-        SubstantialOperationType::Ressources(workflow) => {
+        SubstantialOperationType::Resources(workflow) => {
             let row = t::struct_()
                 .prop("run_id", t::string().build()?)
                 .prop("started_at", t::string().build()?)
                 .build()?;
+            // Note: this is per typegate node basis
+            // And If the downtime in between interrupts is not negligible this will output nothing
+            // as there are no active workers running
+            // This feature might be handy for debugging (e.g. long running workers on the typegate it is queried upon)
             let out = t::struct_()
                 .prop("count", t::integer().build()?)
                 .prop("workflow", t::string().build()?)
@@ -130,7 +133,7 @@ pub fn substantial_operation(
 
             (
                 WitEffect::Read,
-                SubstantialMaterializer::Ressources {
+                SubstantialMaterializer::Resources {
                     workflow: workflow.into(),
                 },
                 out,
@@ -141,23 +144,52 @@ pub fn substantial_operation(
                 .func_out
                 .ok_or("query output is undefined".to_string())?;
 
+            let count = t::integer().build()?;
+
             let result = t::struct_()
                 .prop("status", t::string().build()?)
                 .prop("value", t::optional(out.into()).build()?)
                 .build()?;
 
-            let row = t::struct_()
-                .prop("run_id", t::string().build()?)
-                .prop("started_at", t::string().build()?)
-                .prop("ended_at", t::string().build()?)
-                .prop("result", result)
-                .build()?;
+            let ongoing_runs = t::list(
+                t::struct_()
+                    .prop("run_id", t::string().build()?)
+                    .prop("started_at", t::string().build()?)
+                    .build()?,
+            )
+            .build()?;
+
+            let completed_runs = t::list(
+                t::struct_()
+                    .prop("run_id", t::string().build()?)
+                    .prop("started_at", t::string().build()?)
+                    .prop("ended_at", t::string().build()?)
+                    .prop("result", result)
+                    .build()?,
+            )
+            .build()?;
+
             (
                 WitEffect::Read,
                 SubstantialMaterializer::Results {
                     workflow: workflow.into(),
                 },
-                t::list(row).build()?,
+                t::struct_()
+                    .prop(
+                        "ongoing",
+                        t::struct_()
+                            .prop("count", count)
+                            .prop("runs", ongoing_runs)
+                            .build()?,
+                    )
+                    .prop(
+                        "completed",
+                        t::struct_()
+                            .prop("count", count)
+                            .prop("runs", completed_runs)
+                            .build()?,
+                    )
+                    .build()?,
             )
         }
     };

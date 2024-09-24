@@ -60,6 +60,9 @@ wasmtime-wasi.workspace = true
 # build
 shadow-rs.workspace = true
 
+# others
+chrono.workspace = true
+
 # grpc
 tonic.workspace = true
 bytes.workspace = true
