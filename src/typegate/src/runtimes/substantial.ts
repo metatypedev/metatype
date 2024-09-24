@@ -16,7 +16,7 @@ import { Agent, WorkflowDescription } from "./substantial/agent.ts";
 
 const logger = getLogger(import.meta);
 
-interface QueryWorkflowResult {
+interface QueryCompletedWorkflowResult {
   run_id: string;
   started_at: string;
   ended_at: string;
@@ -25,6 +25,11 @@ interface QueryWorkflowResult {
     value: unknown; // hinted by the user
   };
 }
+
+type QueryOngoingWorkflowResult = Omit<
+  QueryCompletedWorkflowResult,
+  "result" | "ended_at"
+>;
 
 @registerRuntime("substantial")
 export class SubstantialRuntime extends Runtime {
@@ -201,14 +206,14 @@ export class SubstantialRuntime extends Runtime {
   #resultsResover(workflowName: string): Resolver {
     return async () => {
       const relatedRuns = await this.agent.retrieveLinks(workflowName);
-      const ongoing = [];
-      const completed = [];
+      const ongoing = [] as Array<QueryOngoingWorkflowResult>;
+      const completed = [] as Array<QueryCompletedWorkflowResult>;
       for (const runId of relatedRuns) {
         const run = await this.agent.retrieveEvents(runId);
         const startedAt = run.operations[0]?.at;
         if (!startedAt) continue;
 
-        let endedAt, result: any;
+        let endedAt: string, result: any;
 
         let hasStoppedAtLeastOnce = false;
         for (const op of run.operations) {
@@ -229,12 +234,12 @@ export class SubstantialRuntime extends Runtime {
               status: kind == "Ok" ? "COMPLETED" : "COMPLETED_WITH_ERROR",
               value: result[kind],
             },
-          } satisfies QueryWorkflowResult);
+          });
         } else {
           ongoing.push({
             run_id: runId,
             started_at: startedAt,
-          } satisfies Omit<QueryWorkflowResult, "result" | "ended_at">);
+          });
         }
       }
 
