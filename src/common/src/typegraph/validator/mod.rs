@@ -16,7 +16,7 @@ use super::visitor::{
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
-    tg.traverse_types(validator, &context, Layer).unwrap()
+    tg.traverse_types(validator, &context, Layer, 0).unwrap()
 }
 
 #[derive(Debug)]

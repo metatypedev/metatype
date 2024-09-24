@@ -143,16 +143,115 @@ export class QueryNode<Out> {
   }
 }
 
+type ObjectPath = ("?" | "[]" | `.${string}`)[];
+type EffectiveObjectPath = ("" | `[${number}]` | `.${string}`)[];
+
 export class MutationNode<Out> {
   #inner: SelectNode<Out>;
+  #files: ObjectPath[];
   constructor(
     inner: SelectNode<Out>,
+    files: ObjectPath[],
   ) {
     this.#inner = inner;
+    this.#files = files;
   }
 
   inner() {
     return this.#inner;
+  }
+
+  files() {
+    return this.#files;
+  }
+}
+
+class FileExtractor {
+  #path: ObjectPath = [];
+  #currentPath: EffectiveObjectPath = [];
+  #files: Map<string, File> = new Map();
+
+  static extractFrom(object: unknown, paths: ObjectPath[]) {
+    const extractor = new FileExtractor();
+    if (!object || typeof object !== "object") {
+      throw new Error("expected object");
+    }
+    for (const path of paths) {
+      extractor.#currentPath = [];
+      extractor.#path = path;
+      extractor.#extractFromValue(object);
+    }
+    return extractor.#files;
+  }
+
+  #extractFromValue(value: unknown) {
+    const nextSegment = this.#path[this.#currentPath.length];
+    if (nextSegment === "?") {
+      if (value === null || value === undefined) {
+        return;
+      }
+      this.#currentPath.push("");
+      this.#extractFromValue(value);
+      this.#currentPath.pop();
+      return;
+    }
+
+    if (nextSegment === "[]") {
+      if (!Array.isArray(value)) {
+        throw new Error(`Expected array at ${this.#formatPath()}`);
+      }
+      for (let i = 0; i < value.length; i++) {
+        this.#currentPath.push(`[${i}]`);
+        this.#extractFromArray(value, i);
+        this.#currentPath.pop();
+      }
+      return;
+    }
+
+    if (nextSegment.startsWith(".")) {
+      if (typeof value !== "object" || value === null) {
+        throw new Error(`Expected non-null object at ${this.#formatPath()}`);
+      }
+      this.#currentPath.push(nextSegment);
+      this.#extractFromObject(
+        value as Record<string, unknown>,
+        nextSegment.slice(1),
+      );
+      this.#currentPath.pop();
+      return;
+    }
+  }
+
+  #extractFromObject(parent: Record<string, unknown>, key: string) {
+    const value = parent[key];
+    if (this.#currentPath.length == this.#path.length) {
+      if (value instanceof File) {
+        this.#files.set(this.#formatPath(), value);
+        parent[key] = null;
+        return;
+      }
+      throw new Error(`Expected File at ${this.#formatPath()}`);
+    }
+
+    this.#extractFromValue(value);
+  }
+
+  #extractFromArray(parent: unknown[], idx: number) {
+    const value = parent[idx];
+    if (this.#currentPath.length == this.#path.length) {
+      if (value instanceof File) {
+        this.#files.set(this.#formatPath(), value);
+        parent[idx] = null;
+        return;
+      }
+      throw new Error(`Expected File at ${this.#formatPath()}`);
+    }
+
+    this.#extractFromValue(value);
+  }
+
+  #formatPath() {
+    return this.#currentPath.join("");
   }
 }
 
@@ -295,14 +394,26 @@ export type GraphQlTransportOptions = Omit<RequestInit, "body"> & {
 
 class GqlBuilder {
   #variables = new Map<string, NodeArgValue>();
-  #files = new Map<string, File>();
+  #files: Map<string, File> = new Map();
 
   #convertQueryNodeGql(
     node: SelectNode,
+    files: ObjectPath[],
   ) {
     let out = node.nodeName == node.instanceName
       ? node.nodeName
       : `${node.instanceName}: ${node.nodeName}`;
+
+    const filesByInputKey = new Map<string, ObjectPath[]>();
+    for (const path of files) {
+      const inKey = path[0].slice(1);
+      const files = filesByInputKey.get(inKey);
+      if (files) {
+        files.push(path);
+      } else {
+        filesByInputKey.set(inKey, [path]);
+      }
+    }
 
     const args = node.args;
     if (args) {
@@ -310,6 +421,16 @@ class GqlBuilder {
         Object.entries(args)
           .map(([key, val]) => {
             const name = `in${this.#variables.size}`;
+            const files = filesByInputKey.get(key);
+            const object = { [key]: val.value };
+            if (files && files.length > 0) {
+              const extractedFiles = FileExtractor.extractFrom(object, files);
+              for (const [path, file] of extractedFiles.entries()) {
+                const pathInVariables = path.replace(/^\.[^\.\[]+/, `.${name}`);
+                this.#files.set(pathInVariables, file);
+              }
+            }
+            val.value = object[key]; // this might be null
             this.#variables.set(name, val);
             return `${key}: $${name}`;
           })
@@ -319,8 +440,9 @@ class GqlBuilder {
 
     const subNodes = node.subNodes;
     if (subNodes) {
+      // FIXME can't we have file inputs in subnodes?
       out = `${out} { ${
-        subNodes.map((node) => this.#convertQueryNodeGql(node)).join(" ")
+        subNodes.map((node) => this.#convertQueryNodeGql(node, [])).join(" ")
       } }`;
     }
     return out;
@@ -328,7 +450,7 @@ class GqlBuilder {
 
   static build(
     typeToGqlTypeMap: Record<string, string>,
-    query: Record<string, SelectNode>,
+    query: Record<string, [SelectNode, ObjectPath[]]>,
     ty: "query" | "mutation",
     name: string = "",
   ) {
@@ -336,9 +458,9 @@ class GqlBuilder {
 
     const rootNodes = Object
       .entries(query)
-      .map(([key, node]) => {
+      .map(([key, [node, files]]) => {
         const fixedNode = { ...node, instanceName: key };
-        return builder.#convertQueryNodeGql(fixedNode);
+        return builder.#convertQueryNodeGql(fixedNode, files);
       })
       .join("\n  ");
 
@@ -360,6 +482,7 @@ class GqlBuilder {
         [...builder.#variables.entries()]
           .map(([key, val]) => [key, val.value]),
       ),
+      files: builder.#files,
     };
   }
 }
@@ -369,7 +492,33 @@ async function fetchGql(
   doc: string,
   variables: Record<string, unknown>,
   options: GraphQlTransportOptions,
+  files?: Map<string, File>,
 ) {
+  const multipart = (files?.size ?? 0) > 0;
+
+  let body: FormData | string = JSON.stringify({
+    query: doc,
+    variables,
+  });
+  if (multipart) {
+    const data = new FormData();
+    data.set("operations", body);
+    const map: Record<string, string[]> = {};
+    for (const [i, [path, file]] of [...(files?.entries() ?? [])].entries()) {
+      const key = `${i}`;
+      // TODO single file on multiple paths
+      map[key] = ["variables" + path];
+      data.set(key, file);
+    }
+    data.set("map", JSON.stringify(map));
+    body = data;
+  }
+
+  const additionalHeaders: HeadersInit = {};
+  if (!multipart) {
+    additionalHeaders["content-type"] = "application/json";
+  }
+
   // console.log(doc, variables);
   const fetchImpl = options.fetch ?? fetch;
   const res = await fetchImpl(addr, {
@@ -377,13 +526,10 @@ async function fetchGql(
     method: "POST",
     headers: {
       accept: "application/json",
-      "content-type": "application/json",
+      ...additionalHeaders,
       ...options.headers ?? {},
     },
-    body: JSON.stringify({
-      query: doc,
-      variables,
-    }),
+    body,
   });
   if (!res.ok) {
     const body = await res.text().catch((err) => `error reading body: ${err}`);
@@ -426,11 +572,12 @@ export class GraphQLTransport {
     doc: string,
     variables: Record<string, unknown>,
     options?: GraphQlTransportOptions,
+    files?: Map<string, File>,
   ) {
     const res = await fetchGql(this.address, doc, variables, {
       ...this.options,
       ...options,
-    });
+    }, files);
     if ("errors" in res) {
       throw new (Error as ErrorPolyfill)("graphql errors on response", {
         cause: res.errors,
@@ -454,7 +601,7 @@ export class GraphQLTransport {
       Object.fromEntries(
         Object.entries(query).map((
           [key, val],
-        ) => [key, (val as QueryNode<unknown>).inner()]),
+        ) => [key, [(val as QueryNode<unknown>).inner(), []]]),
       ),
       "query",
       name,
@@ -472,17 +619,22 @@ export class GraphQLTransport {
       name?: string;
     } = {},
   ): Promise<QueryDocOut<Doc>> {
-    const { variables, doc } = GqlBuilder.build(
+    const { variables, doc, files } = GqlBuilder.build(
       this.typeToGqlTypeMap,
       Object.fromEntries(
         Object.entries(query).map((
           [key, val],
-        ) => [key, (val as MutationNode<unknown>).inner()]),
+        ) => {
+          const node = val as MutationNode<unknown>;
+          return [key, [node.inner(), node.files()]];
+        }),
       ),
       "mutation",
       name,
     );
-    return await this.#request(doc, variables, options) as QueryDocOut<Doc>;
+    return await this.#request(doc, variables, options, files) as QueryDocOut<
+      Doc
+    >;
   }
 
   /**
@@ -537,6 +689,7 @@ export class PreparedRequest<
 > {
   public doc: string;
   #mappings: Record<string, unknown>;
+  public files: Map<string, File>;
 
   constructor(
     private address: URL,
@@ -548,18 +701,22 @@ export class PreparedRequest<
   ) {
     const args = new PreparedArgs<T>();
     const dryRunNode = fun(args);
-    const { doc, variables } = GqlBuilder.build(
+    const { doc, variables, files } = GqlBuilder.build(
       typeToGqlTypeMap,
       Object.fromEntries(
         Object.entries(dryRunNode).map((
           [key, val],
-        ) => [key, (val as MutationNode<unknown>).inner()]),
+        ) => {
+          const node = val as MutationNode<unknown>;
+          return [key, [node.inner(), node.files()]];
+        }),
       ),
       ty,
       name,
     );
     this.doc = doc;
     this.#mappings = variables;
+    this.files = files;
   }
 
   resolveVariables(

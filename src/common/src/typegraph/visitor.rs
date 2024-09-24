@@ -52,6 +52,7 @@ impl Typegraph {
         visitor: V,
         context: &'a V::Context,
         layer: L,
+        root: u32,
     ) -> Option<V::Return>
     where
         V: TypeVisitor<'a> + Sized + 'a,
@@ -67,7 +68,7 @@ impl Typegraph {
             layer,
         };
         traversal
-            .visit_type(0, context)
+            .visit_type(root, context)
             .or_else(|| traversal.visitor.take_result())
     }
 }
@@ -370,6 +371,7 @@ pub enum Edge<'a> {
 }
 
 pub enum VisitResult<T> {
+    /// Continue the traversal. The boolean indicates whether to continue deeper.
     Continue(bool),
     Return(T),
 }

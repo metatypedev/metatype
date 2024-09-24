@@ -15,13 +15,15 @@ export const tg = await typegraph({
       pathStyleSecret: "S3_PATH_STYLE",
     });
 
+    const bucket = "metagen-test-bucket";
+
     g.expose(
       {
         upload: s3.upload(
-          "bucket",
+          bucket,
           t.file({ allow: ["text/plain"] }),
         ),
-        uploadMany: s3.uploadAll("bucket"),
+        uploadMany: s3.uploadAll(bucket),
       },
       Policy.public(),
     );
