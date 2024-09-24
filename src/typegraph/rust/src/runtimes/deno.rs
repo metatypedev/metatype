@@ -11,6 +11,8 @@ use crate::{
     Result,
 };
 
+pub use super::ModuleImportOption as DenoImportOption;
+
 #[derive(Debug)]
 pub struct DenoRuntime {
     _id: RuntimeId,
@@ -120,40 +122,6 @@ impl DenoFuncOption {
             code: code.to_string(),
             ..Default::default()
         }
-    }
-
-    pub fn secrets(mut self, secrets: impl IntoIterator<Item = impl ToString>) -> Self {
-        self.secrets = secrets.into_iter().map(|s| s.to_string()).collect();
-        self
-    }
-
-    pub fn effect(mut self, effect: Effect) -> Self {
-        self.effect = effect;
-        self
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct DenoImportOption {
-    pub func_name: String,
-    pub module: String,
-    pub deps: Vec<String>,
-    pub secrets: Vec<String>,
-    pub effect: Effect,
-}
-
-impl DenoImportOption {
-    pub fn new(module: &str, func_name: &str) -> Self {
-        Self {
-            module: module.to_string(),
-            func_name: func_name.to_string(),
-            ..Default::default()
-        }
-    }
-
-    pub fn deps(mut self, deps: impl IntoIterator<Item = impl ToString>) -> Self {
-        self.deps = deps.into_iter().map(|s| s.to_string()).collect();
-        self
     }
 
     pub fn secrets(mut self, secrets: impl IntoIterator<Item = impl ToString>) -> Self {

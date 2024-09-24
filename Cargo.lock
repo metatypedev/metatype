@@ -12663,6 +12663,7 @@ dependencies = [
 name = "typegraph"
 version = "0.4.11-rc.0"
 dependencies = [
+ "regex",
  "wasmtime",
 ]
 
