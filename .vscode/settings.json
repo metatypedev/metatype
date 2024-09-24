@@ -62,7 +62,7 @@
   ],
   "python.languageServer": "Pylance",
   "python.analysis.extraPaths": [
-    "typegraph/python"
+    "./src/typegraph/python"
   ],
   "prettier.proseWrap": "never"
 }

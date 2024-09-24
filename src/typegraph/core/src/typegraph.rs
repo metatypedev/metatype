@@ -6,6 +6,7 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
 use crate::types::{TypeDef, TypeDefExt, TypeId};
+use crate::utils::postprocess::naming::NamingProcessor;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
 use crate::Lib;
@@ -21,7 +22,7 @@ use common::typegraph::{
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::Hasher as _;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -57,6 +58,7 @@ pub struct TypegraphContext {
     mapping: IdMapping,
     runtime_contexts: RuntimeContexts,
     saved_store_state: Option<SavedState>,
+    user_named_types: HashSet<u32>,
 }
 
 thread_local! {
@@ -123,7 +125,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
 
     ctx.types.push(Some(TypeNode::Object {
         base: TypeNodeBase {
-            config: Default::default(),
+            config: [].into_iter().collect(),
             description: None,
             enumeration: None,
             injection: None,
@@ -185,7 +187,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
 
 pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> {
     #[cfg(test)]
-    eprintln!("Serializing typegraph typegraph...");
+    eprintln!("Serializing typegraph...");
 
     let mut ctx = TG.with(|tg| {
         tg.borrow_mut()
@@ -230,7 +232,14 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> 
     tg.meta.prefix.clone_from(&params.prefix);
 
     let pretty = params.pretty;
+
+    // dedup_types(&mut tg);
+
     TypegraphPostProcessor::new(params).postprocess(&mut tg)?;
+    NamingProcessor {
+        user_named: ctx.user_named_types,
+    }
+    .postprocess(&mut tg)?;
 
     let artifacts = tg
         .meta
@@ -314,7 +323,9 @@ pub fn expose(
                 }
                 ensure_valid_export(key.clone(), type_id)?;
 
-                let type_idx = ctx.register_type(type_id.try_into()?, None)?;
+                // this resolves the type_id to a type_def from theh Store
+                let type_def = type_id.try_into()?;
+                let type_idx = ctx.register_type(type_def, None)?;
                 root_data.properties.insert(key.clone(), type_idx.into());
                 root_data.required.push(key);
                 Ok(())
@@ -347,9 +358,21 @@ impl TypegraphContext {
 
     pub fn register_type(
         &mut self,
-        type_def: TypeDef,
+        mut type_def: TypeDef,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
+        // we remove the name before hashing if it's not
+        // user named
+        let user_named = if let Some(name) = type_def.name() {
+            if let Some(true) = Store::is_user_named(name) {
+                true
+            } else {
+                type_def = type_def.with_name(None);
+                false
+            }
+        } else {
+            false
+        };
         let hash = self.hash_type(type_def.clone(), runtime_id)?;
 
         match self.mapping.hash_to_type.entry(hash) {
@@ -368,6 +391,10 @@ impl TypegraphContext {
                 let type_node = type_def.convert(self, runtime_id)?;
 
                 self.types[idx] = Some(type_node);
+                if user_named {
+                    self.user_named_types.insert(idx as u32);
+                }
+
                 Ok((idx as u32).into())
             }
 

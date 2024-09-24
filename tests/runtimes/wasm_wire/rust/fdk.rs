@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.9-rc1";
+        static MT_VERSION: &str = "0.4.11-rc.0";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -219,48 +219,60 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
+    pub type AddArgsAFloat = f64;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct AddArgs {
-        pub a: f64,
-        pub b: f64,
+        pub a: AddArgsAFloat,
+        pub b: AddArgsAFloat,
     }
+    pub type AddOutput = i64;
+    pub type RangeArgsAAddOutputOptional = Option<AddOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RangeArgs {
-        pub a: Option<i64>,
-        pub b: i64,
+        pub a: RangeArgsAAddOutputOptional,
+        pub b: AddOutput,
     }
+    pub type RangeOutput = Vec<AddOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Object35 {
+    pub struct RecordCreationInput {
     }
-    pub type String3 = String;
-    pub type String4 = String;
-    pub type String6 = String;
+    pub type EntityNameString = String;
+    pub type EntityAgeAddOutputOptional = Option<AddOutput>;
+    pub type ProfileLevelStringEnum = String;
+    pub type ProfileAttributesStringEnum = String;
+    pub type ProfileAttributesProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
+    pub type ProfileCategoryStructTagStringEnum = String;
+    pub type ProfileCategoryStructValueEntityNameStringOptional = Option<EntityNameString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Object9 {
-        pub tag: String6,
-        pub value: Option<String>,
+    pub struct ProfileCategoryStruct {
+        pub tag: ProfileCategoryStructTagStringEnum,
+        pub value: ProfileCategoryStructValueEntityNameStringOptional,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
-    pub enum Either12 {
-        String(String),
-        F64(f64),
+    pub enum ProfileMetadatasEither {
+        EntityNameString(EntityNameString),
+        AddArgsAFloat(AddArgsAFloat),
     }
+    pub type ProfileMetadatasProfileMetadatasEitherList = Vec<ProfileMetadatasEither>;
+    pub type ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList = Vec<ProfileMetadatasProfileMetadatasEitherList>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Profile {
-        pub level: String3,
-        pub attributes: Vec<String4>,
-        pub category: Object9,
-        pub metadatas: Vec<Vec<Either12>>,
+        pub level: ProfileLevelStringEnum,
+        pub attributes: ProfileAttributesProfileAttributesStringEnumList,
+        pub category: ProfileCategoryStruct,
+        pub metadatas: ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Entity {
-        pub name: String,
-        pub age: Option<i64>,
+        pub name: EntityNameString,
+        pub age: EntityAgeAddOutputOptional,
         pub profile: Profile,
     }
-    pub type Entity36 = Vec<Entity>;
-    pub type Entity45 = Vec<Entity>;
+    pub type RecordCreationOutput = Vec<Entity>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootRandomFnInput {
+    }
 }
 pub mod stubs {
     use super::*;
@@ -282,7 +294,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: AddArgs, cx: Ctx) -> anyhow::Result<i64>;
+        fn handle(&self, input: AddArgs, cx: Ctx) -> anyhow::Result<AddOutput>;
     }
     pub trait Range: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -302,7 +314,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RangeArgs, cx: Ctx) -> anyhow::Result<Vec<i64>>;
+        fn handle(&self, input: RangeArgs, cx: Ctx) -> anyhow::Result<RangeOutput>;
     }
     pub trait RecordCreation: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -322,7 +334,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: Object35, cx: Ctx) -> anyhow::Result<Entity36>;
+        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<RecordCreationOutput>;
     }
     pub trait Identity: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -362,7 +374,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: Object35, cx: Ctx) -> anyhow::Result<Entity45>;
+        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<RecordCreationOutput>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {

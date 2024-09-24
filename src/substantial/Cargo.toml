@@ -1,0 +1,17 @@
+[package]
+name = "substantial"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+lazy_static.workspace = true
+uuid.workspace = true
+
+protobuf = "3.5.1"
+
+[dev-dependencies]
+tokio = { workspace = true, features =["full"] }

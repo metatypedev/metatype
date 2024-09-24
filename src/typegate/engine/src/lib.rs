@@ -92,6 +92,7 @@ impl OpDepInjector {
         );
         state.put(runtimes::prisma::Ctx::new(tmp_dir));
         state.put(runtimes::grpc::Ctx::default());
+        state.put(runtimes::substantial::Ctx::default());
     }
 }
 

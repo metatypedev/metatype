@@ -5,7 +5,7 @@ declare global {
   const Meta: MetaNS;
 }
 
-type MetaNS = {
+export type MetaNS = {
   version: () => string;
   typescriptFormatCode: (source: string) => string;
   typegraphValidate: (json: string) => string;
@@ -17,7 +17,7 @@ type MetaNS = {
     unregisterEngine: (engine_name: string) => Promise<void>;
     query: (inp: PrismaQueryInp) => Promise<string>;
     diff: (
-      inp: PrismaDiffInp,
+      inp: PrismaDiffInp
     ) => Promise<[string, ParsedDiff[]] | undefined | null>;
     apply: (inp: PrismaDevInp) => Promise<PrismaApplyOut>;
     deploy: (inp: PrismaDeployInp) => Promise<PrismaDeployOut>;
@@ -34,7 +34,7 @@ type MetaNS = {
     workflowSignal: (inp: TemporalWorkflowSignalInput) => Promise<void>;
     workflowQuery: (inp: TemporalWorkflowQueryInput) => Promise<Array<string>>;
     workflowDescribe: (
-      inp: TemporalWorkflowDescribeInput,
+      inp: TemporalWorkflowDescribeInput
     ) => Promise<TemporalWorkflowDescribeOutput>;
   };
 
@@ -43,12 +43,12 @@ type MetaNS = {
       componentPath: string,
       instanceId: string,
       args: WitWireInitArgs,
-      cb: (op_name: string, json: string) => Promise<string>,
+      cb: (op_name: string, json: string) => Promise<string>
     ) => Promise<WitWireInitResponse>;
     destroy: (instanceId: string) => Promise<void>;
     handle: (
       instanceId: string,
-      args: WitWireReq,
+      args: WitWireReq
     ) => Promise<WitWireHandleResponse>;
   };
 
@@ -56,6 +56,29 @@ type MetaNS = {
     register: (inp: GrpcRegisterInput) => Promise<void>;
     unregister: (client_id: string) => Promise<void>;
     callGrpcMethod: (inp: CallGrpcMethodInput) => Promise<string>;
+  };
+
+  substantial: {
+    storeCreateOrGetRun: (inp: CreateOrGetInput) => Promise<CreateOrGetOutput>;
+    storePersistRun: (inp: PersistRunInput) => Promise<string>;
+    storeAddSchedule: (inp: AddScheduleInput) => Promise<void>;
+    storeReadSchedule: (
+      inp: ReadOrCloseScheduleInput
+    ) => Promise<Operation | undefined>;
+    storeCloseSchedule: (inp: ReadOrCloseScheduleInput) => Promise<void>;
+    agentNextRun: (inp: NextRunInput) => Promise<NextRun | undefined>;
+    agentActiveLeases: (inp: ActiveLeaseInput) => Promise<Array<string>>;
+    agentAcquireLease: (inp: LeaseInput) => Promise<boolean>;
+    agentRenewLease: (inp: LeaseInput) => Promise<boolean>;
+    agentRemoveLease: (inp: LeaseInput) => Promise<void>;
+    metadataReadAll: (
+      inp: ReadAllMetadataInput
+    ) => Promise<Array<MetadataEvent>>;
+    metadataAppend: (inp: AppendMetadataInput) => Promise<void>;
+    metadataWriteWorkflowLink: (inp: WriteLinkInput) => Promise<void>;
+    metadataReadWorkflowLinks: (
+      inp: ReadWorkflowLinkInput
+    ) => Promise<Array<string>>;
   };
 };
 
@@ -87,16 +110,16 @@ interface PrismaDevInp {
 }
 type PrismaApplyOut =
   | {
-    ResetRequired: {
-      reset_reason: string;
-    };
-  }
+      ResetRequired: {
+        reset_reason: string;
+      };
+    }
   | {
-    Ok: {
-      applied_migrations: Array<string>;
-      reset_reason: string | undefined | null;
+      Ok: {
+        applied_migrations: Array<string>;
+        reset_reason: string | undefined | null;
+      };
     };
-  };
 interface PrismaDeployOut {
   migration_count: number;
   applied_migrations: Array<string>;
@@ -208,14 +231,14 @@ export type WitWireReq = {
 
 export type WitWireHandleError =
   | {
-    InstanceNotFound: string;
-  }
+      InstanceNotFound: string;
+    }
   | {
-    ModuleErr: string;
-  }
+      ModuleErr: string;
+    }
   | {
-    MatErr: string;
-  };
+      MatErr: string;
+    };
 
 export type WitWireMatInfo = {
   op_name: string;
@@ -232,29 +255,29 @@ export type WitWireInitArgs = {
 export type WitWireInitResponse = object;
 export type WitWireInitError =
   | {
-    VersionMismatch: string;
-  }
+      VersionMismatch: string;
+    }
   | {
-    UnexpectedMat: string;
-  }
+      UnexpectedMat: string;
+    }
   | {
-    ModuleErr: string;
-  }
+      ModuleErr: string;
+    }
   | {
-    Other: string;
-  };
+      Other: string;
+    };
 
 export type WitWireHandleResponse =
   | {
-    Ok: string;
-  }
+      Ok: string;
+    }
   | "NoHandler"
   | {
-    InJsonErr: string;
-  }
+      InJsonErr: string;
+    }
   | {
-    HandlerErr: string;
-  };
+      HandlerErr: string;
+    };
 
 export type GrpcRegisterInput = {
   proto_file_content: string;
@@ -267,3 +290,111 @@ export type CallGrpcMethodInput = {
   payload: string;
   client_id: string;
 };
+
+export type Backend =
+  | "Fs"
+  | "Memory"
+  | {
+      Redis: {
+        host: string;
+        port: number;
+      };
+    };
+
+export type OperationEvent =
+  | { type: "Sleep"; id: number; start: string; end: string }
+  | { type: "Save"; id: number; value: unknown }
+  | { type: "Send"; event_name: string; value: unknown }
+  | { type: "Stop"; result: unknown }
+  | { type: "Start"; kwargs: Record<string, unknown> }
+  | { type: "Compensate" };
+
+export type Operation = { at: string; event: OperationEvent };
+
+export interface Run {
+  run_id: string;
+  operations: Array<Operation>;
+}
+
+export interface CreateOrGetInput {
+  run_id: string;
+  backend: Backend;
+}
+
+export interface CreateOrGetOutput {
+  run: Run;
+}
+
+export interface PersistRunInput {
+  run: Run;
+  backend: Backend;
+}
+
+export interface AddScheduleInput {
+  backend: Backend;
+  run_id: string;
+  queue: string;
+  schedule: string;
+  operation?: Operation;
+}
+
+export interface ReadOrCloseScheduleInput {
+  backend: Backend;
+  run_id: string;
+  queue: string;
+  schedule: string;
+}
+
+export interface NextRunInput {
+  backend: Backend;
+  queue: string;
+  exclude: string[];
+}
+
+export interface ActiveLeaseInput {
+  backend: Backend;
+  lease_seconds: number;
+}
+
+export interface LeaseInput {
+  backend: Backend;
+  run_id: string;
+  lease_seconds: number;
+}
+
+export interface NextRun {
+  run_id: string;
+  schedule_date: string;
+}
+
+export interface WriteLinkInput {
+  backend: Backend;
+  workflow_name: string;
+  run_id: string;
+}
+
+export interface ReadAllMetadataInput {
+  backend: Backend;
+  run_id: string;
+}
+
+export interface AppendMetadataInput {
+  backend: Backend;
+  run_id: string;
+  schedule: string;
+  content: unknown;
+}
+
+export interface ReadWorkflowLinkInput {
+  backend: Backend;
+  workflow_name: string;
+}
+
+export type MetadataPayload =
+  | { type: "Info"; value: unknown }
+  | { type: "Error"; value: unknown };
+
+export interface MetadataEvent {
+  at: string;
+  metadata?: MetadataPayload;
+}

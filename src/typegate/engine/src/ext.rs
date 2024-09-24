@@ -3,7 +3,7 @@
 
 use crate::interlude::*;
 use crate::{
-    runtimes::{grpc, prisma, temporal, wasm, wit_wire},
+    runtimes::{grpc, prisma, substantial, temporal, wasm, wit_wire},
     typegraph,
 };
 
@@ -42,7 +42,22 @@ deno_core::extension!(
         wit_wire::op_wit_wire_destroy,
         grpc::op_grpc_register,
         grpc::op_grpc_unregister,
-        grpc::op_call_grpc_method
+        grpc::op_call_grpc_method,
+        substantial::op_sub_store_create_or_get_run,
+        substantial::op_sub_store_persist_run,
+        substantial::op_sub_store_add_schedule,
+        substantial::op_sub_store_close_schedule,
+        substantial::op_sub_store_read_schedule,
+        substantial::op_sub_agent_acquire_lease,
+        substantial::op_sub_agent_active_leases,
+        substantial::op_sub_agent_next_run,
+        substantial::op_sub_agent_remove_lease,
+        substantial::op_sub_agent_renew_lease,
+        substantial::op_sub_metadata_append,
+        substantial::op_sub_metadata_read_all,
+        substantial::op_sub_metadata_read_workflow_links,
+        substantial::op_sub_metadata_write_workflow_link,
+
         // FIXME(yohe): this test broke and has proven difficult to fix
         // #[cfg(test)]
         // tests::op_obj_go_round,
@@ -108,13 +123,16 @@ pub mod tests {
     #[tokio::test(flavor = "current_thread")]
     #[ignore]
     async fn test_obj_go_round() -> Result<()> {
-        let deno_factory = deno::factory::CliFactory::from_flags(Arc::new(deno::args::Flags {
-            unstable_config: deno::args::UnstableConfig {
-                legacy_flag_enabled: true,
+        let deno_factory = deno::factory::CliFactory::from_flags(
+            deno::args::Flags {
+                unstable_config: deno::args::UnstableConfig {
+                    legacy_flag_enabled: true,
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        }))
+            }
+            .into(),
+        )
         .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;

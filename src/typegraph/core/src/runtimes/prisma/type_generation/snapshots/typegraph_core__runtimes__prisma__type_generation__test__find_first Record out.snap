@@ -1,8 +1,8 @@
 ---
-source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: optional '_10__RecordOutputType?' #10
+root: optional 'optional_10' #10
 └─ item: struct '_RecordOutputType' #9
    ├─ [age]: optional #7
    │  └─ item: integer #4
