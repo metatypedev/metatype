@@ -124,7 +124,7 @@ fn render_client_ts(_config: &ClienTsGenConfig, tg: &Typegraph) -> anyhow::Resul
     };
     let name_mapper = Rc::new(name_mapper);
 
-    let node_metas = render_node_metas(dest, &manifest, name_mapper.clone())?;
+    let (node_metas, named_types) = render_node_metas(dest, &manifest, name_mapper.clone())?;
     let data_types = render_data_types(dest, &manifest, name_mapper.clone())?;
     let data_types = Rc::new(data_types);
     let selection_names =
@@ -138,6 +138,15 @@ export class QueryGraph extends _QueryGraphBase {{
     super({{"#
     )?;
     for (&id, ty_name) in name_mapper.memo.borrow().deref() {
+        let gql_ty = get_gql_type(&tg.types, id, false);
+        write!(
+            dest,
+            r#"
+      "{ty_name}": "{gql_ty}","#
+        )?;
+    }
+    for id in named_types {
+        let ty_name = &tg.types[id as usize].base().title;
         let gql_ty = get_gql_type(&tg.types, id, false);
         write!(
             dest,
@@ -270,10 +279,14 @@ fn render_node_metas(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
     name_mapper: Rc<NameMapper>,
-) -> Result<NameMemo> {
+) -> Result<(NameMemo, HashSet<u32>)> {
+    let named_types = Rc::new(std::sync::Mutex::new(HashSet::new()));
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(node_metas::TsNodeMetasRenderer { name_mapper }),
+        Rc::new(node_metas::TsNodeMetasRenderer {
+            name_mapper,
+            named_types: named_types.clone(),
+        }),
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;
@@ -290,7 +303,10 @@ const nodeMetas = {{
 }};
 "#
     )?;
-    Ok(memo)
+    Ok((
+        memo,
+        Rc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
+    ))
 }
 
 struct NameMapper {

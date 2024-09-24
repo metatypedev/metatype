@@ -82,4 +82,34 @@ const res4 = await gqlClient.mutation({
   }),
 });
 
-console.log(JSON.stringify([res1, res1a, res2, res3, res4]));
+const res5 = await gqlClient.query({
+  scalarUnion: api1.scalarUnion({
+    id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+  }),
+  compositeUnion1: api1.compositeUnion({
+    id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+  }, {
+    post: {
+      "_": "selectAll",
+    },
+  }),
+  compositeUnion2: api1.compositeUnion({
+    id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+  }, {
+    user: {
+      "_": "selectAll",
+    },
+  }),
+  mixedUnion: api1.mixedUnion({
+    id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+  }, {
+    post: {
+      "_": "selectAll",
+    },
+    user: {
+      "_": "selectAll",
+    },
+  }),
+});
+
+console.log(JSON.stringify([res1, res1a, res2, res3, res4, res5]));

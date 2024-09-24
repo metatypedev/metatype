@@ -19,6 +19,9 @@ fn to_json_value<T: Serialize>(val: T) -> serde_json::Value {
 /// - arguments are associated with their types
 /// - aliases get splatted into the node tree
 /// - light query validation takes place
+///
+/// I.e. the user's selection is joined with the description of the graph found
+/// in the static NodeMetas to fill in any blank spaces
 fn selection_to_node_set(
     selection: SelectionErasedMap,
     metas: &HashMap<CowStr, NodeMetaFn>,
@@ -38,7 +41,10 @@ fn selection_to_node_set(
             continue;
         };
 
+        // we can have multiple selection instances for a node
+        // if aliases are involved
         let node_instances = match node_selection {
+            // this noe was not selected
             SelectionErased::None => continue,
             SelectionErased::Scalar => vec![(node_name.clone(), NodeArgsErased::None, None)],
             SelectionErased::ScalarArgs(args) => {
@@ -66,104 +72,145 @@ fn selection_to_node_set(
 
         let meta = meta_fn();
         for (instance_name, args, select) in node_instances {
-            let args = if let Some(arg_types) = &meta.arg_types {
-                match args {
-                    NodeArgsErased::Inline(args) => {
-                        let instance_args = check_node_args(args, arg_types).map_err(|name| {
-                            SelectionError::UnexpectedArgs {
-                                name,
-                                path: format!("{parent_path}.{instance_name}"),
-                            }
-                        })?;
-                        Some(NodeArgsMerged::Inline(instance_args))
-                    }
-                    NodeArgsErased::Placeholder(ph) => Some(NodeArgsMerged::Placeholder {
-                        value: ph,
-                        // FIXME: this clone can be improved
-                        arg_types: arg_types.clone(),
-                    }),
-                    NodeArgsErased::None => {
-                        return Err(SelectionError::MissingArgs {
-                            path: format!("{parent_path}.{instance_name}"),
-                        })
-                    }
-                }
-            } else {
-                None
-            };
-            let sub_nodes = match (&meta.variants, &meta.sub_nodes) {
-                (Some(_), Some(_)) => unreachable!("union/either types can't have sub_nodes"),
-                (None, None) => SubNodes::None,
-                (variants, sub_nodes) => {
-                    let Some(select) = select else {
-                        return Err(SelectionError::MissingSubNodes {
-                            path: format!("{parent_path}.{instance_name}"),
-                        });
-                    };
-                    match select {
-                        CompositeSelection::Atomic(select) => {
-                            let Some(sub_nodes) = sub_nodes else {
-                                return Err(SelectionError::UnexpectedUnion {
-                                    path: format!("{parent_path}.{instance_name}"),
-                                });
-                            };
-                            SubNodes::Atomic(selection_to_node_set(
-                                select,
-                                sub_nodes,
-                                format!("{parent_path}.{instance_name}"),
-                            )?)
-                        }
-                        CompositeSelection::Union(variant_select) => {
-                            let Some(variants) = variants else {
-                                return Err(SelectionError::MissingUnion {
-                                    path: format!("{parent_path}.{instance_name}"),
-                                });
-                            };
-                            let mut out = HashMap::new();
-                            for (variant_ty, select) in variant_select {
-                                let Some(variant_meta) = variants.get(&variant_ty[..]) else {
-                                    return Err(SelectionError::UnexpectedVariant {
-                                        path: format!("{parent_path}.{instance_name}"),
-                                        varaint_ty: variant_ty.clone(),
-                                    });
-                                };
-                                let variant_meta = variant_meta();
-                                // this union member is a scalar
-                                let Some(sub_nodes) = variant_meta.sub_nodes else {
-                                    continue;
-                                };
-                                let nodes = selection_to_node_set(
-                                    select,
-                                    &sub_nodes,
-                                    format!("{parent_path}.{instance_name}"),
-                                )?;
-                                out.insert(variant_ty, nodes);
-                            }
-                            SubNodes::Union(out)
-                        }
-                    }
-                }
-            };
-
-            out.push(SelectNodeErased {
-                node_name: node_name.clone(),
+            out.push(selection_to_select_node(
                 instance_name,
+                node_name.clone(),
                 args,
-                sub_nodes,
-            })
+                select,
+                &parent_path,
+                &meta,
+            )?)
         }
     }
     Ok(out)
 }
 
+fn selection_to_select_node(
+    instance_name: CowStr,
+    node_name: CowStr,
+    args: NodeArgsErased,
+    select: Option<CompositeSelection>,
+    parent_path: &str,
+    meta: &NodeMeta,
+) -> Result<SelectNodeErased, SelectionError> {
+    let args = if let Some(arg_types) = &meta.arg_types {
+        match args {
+            NodeArgsErased::Inline(args) => {
+                let instance_args = check_node_args(args, arg_types).map_err(|name| {
+                    SelectionError::UnexpectedArgs {
+                        name,
+                        path: format!("{parent_path}.{instance_name}"),
+                    }
+                })?;
+                Some(NodeArgsMerged::Inline(instance_args))
+            }
+            NodeArgsErased::Placeholder(ph) => Some(NodeArgsMerged::Placeholder {
+                value: ph,
+                // FIXME: this clone can be improved
+                arg_types: arg_types.clone(),
+            }),
+            NodeArgsErased::None => {
+                return Err(SelectionError::MissingArgs {
+                    path: format!("{parent_path}.{instance_name}"),
+                })
+            }
+        }
+    } else {
+        None
+    };
+    let sub_nodes = match (&meta.variants, &meta.sub_nodes) {
+        (Some(_), Some(_)) => unreachable!("union/either node metas can't have sub_nodes"),
+        (None, None) => SubNodes::None,
+        (variants, sub_nodes) => {
+            let Some(select) = select else {
+                return Err(SelectionError::MissingSubNodes {
+                    path: format!("{parent_path}.{instance_name}"),
+                });
+            };
+            match select {
+                CompositeSelection::Atomic(select) => {
+                    let Some(sub_nodes) = sub_nodes else {
+                        return Err(SelectionError::UnexpectedUnion {
+                            path: format!("{parent_path}.{instance_name}"),
+                        });
+                    };
+                    SubNodes::Atomic(selection_to_node_set(
+                        select,
+                        sub_nodes,
+                        format!("{parent_path}.{instance_name}"),
+                    )?)
+                }
+                CompositeSelection::Union(mut variant_select) => {
+                    let Some(variants) = variants else {
+                        return Err(SelectionError::MissingUnion {
+                            path: format!("{parent_path}.{instance_name}"),
+                        });
+                    };
+                    let mut out = HashMap::new();
+                    for (variant_ty, variant_meta) in variants {
+                        let variant_meta = variant_meta();
+                        // this union member is a scalar
+                        let Some(sub_nodes) = variant_meta.sub_nodes else {
+                            continue;
+                        };
+                        let mut nodes = if let Some(select) = variant_select.remove(variant_ty) {
+                            selection_to_node_set(
+                                select,
+                                &sub_nodes,
+                                format!("{parent_path}.{instance_name}.variant({variant_ty})"),
+                            )?
+                        } else {
+                            vec![]
+                        };
+                        nodes.push(SelectNodeErased {
+                            node_name: "__typename".into(),
+                            instance_name: "__typename".into(),
+                            args: None,
+                            sub_nodes: SubNodes::None,
+                        });
+                        out.insert(variant_ty.clone(), nodes);
+                    }
+                    if !variant_select.is_empty() {
+                        return Err(SelectionError::UnexpectedVariants {
+                            path: format!("{parent_path}.{instance_name}"),
+                            varaint_tys: variant_select.into_keys().collect(),
+                        });
+                    }
+                    SubNodes::Union(out)
+                }
+            }
+        }
+    };
+    Ok(SelectNodeErased {
+        node_name,
+        instance_name,
+        args,
+        sub_nodes,
+    })
+}
+
 #[derive(Debug)]
 pub enum SelectionError {
-    MissingArgs { path: String },
-    MissingSubNodes { path: String },
-    MissingUnion { path: String },
-    UnexpectedArgs { path: String, name: String },
-    UnexpectedUnion { path: String },
-    UnexpectedVariant { path: String, varaint_ty: CowStr },
+    MissingArgs {
+        path: String,
+    },
+    MissingSubNodes {
+        path: String,
+    },
+    MissingUnion {
+        path: String,
+    },
+    UnexpectedArgs {
+        path: String,
+        name: String,
+    },
+    UnexpectedUnion {
+        path: String,
+    },
+    UnexpectedVariants {
+        path: String,
+        varaint_tys: Vec<CowStr>,
+    },
 }
 
 impl std::fmt::Display for SelectionError {
@@ -184,8 +231,14 @@ impl std::fmt::Display for SelectionError {
                 f,
                 "node at {path} is an atomic type but union selection provided"
             ),
-            SelectionError::UnexpectedVariant { path, varaint_ty } => {
-                write!(f, "node at {path} has no variant called '{varaint_ty}'")
+            SelectionError::UnexpectedVariants {
+                path,
+                varaint_tys: varaint_ty,
+            } => {
+                write!(
+                    f,
+                    "node at {path} has none of the variants called '{varaint_ty:?}'"
+                )
             }
         }
     }
@@ -1001,8 +1054,8 @@ macro_rules! impl_selection_traits {
 macro_rules! impl_union_selection_traits {
     ($ty:ident,$(($variant_ty:tt, $field:tt)),+) => {
         impl<ATy> From<$ty<ATy>> for CompositeSelection {
-            fn from(_value: $ty<ATy>) -> CompositeSelection {
-                /*CompositeSelection::Union(
+            fn from(value: $ty<ATy>) -> CompositeSelection {
+                CompositeSelection::Union(
                     [
                         $({
                             let selection =
@@ -1013,8 +1066,7 @@ macro_rules! impl_union_selection_traits {
                     .into_iter()
                     .filter_map(|val| val)
                     .collect(),
-                )*/
-                panic!("unions/either are wip")
+                )
             }
         }
     };

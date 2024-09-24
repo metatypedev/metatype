@@ -20,7 +20,7 @@ function _selectionToNodeSet(
       continue;
     }
 
-    const { argumentTypes, subNodes } = metaFn();
+    const { argumentTypes, subNodes, variants } = metaFn();
 
     const nodeInstances = nodeSelection instanceof Alias
       ? nodeSelection.aliases()
@@ -34,7 +34,7 @@ function _selectionToNodeSet(
       }
       if (instanceSelection instanceof Alias) {
         throw new Error(
-          `nested Alias discovored at ${parentPath}.${instanceName}`,
+          `nested Alias discovered at ${parentPath}.${instanceName}`,
         );
       }
       const node: SelectNode = { instanceName, nodeName };
@@ -70,7 +70,7 @@ function _selectionToNodeSet(
         }
       }
 
-      if (subNodes) {
+      if (subNodes || variants) {
         // sanity check selection object
         let subSelections = instanceSelection;
         if (argumentTypes) {
@@ -89,6 +89,11 @@ function _selectionToNodeSet(
               `but selection is typeof ${typeof subSelections}`,
           );
         }
+        if (subSelections == undefined) {
+          subSelections = {
+            _: selection._,
+          };
+        }
         if (typeof subSelections != "object") {
           throw new Error(
             `node at ${parentPath}.${nodeName} ` +
@@ -97,14 +102,53 @@ function _selectionToNodeSet(
           );
         }
 
-        node.subNodes = _selectionToNodeSet(
-          // assume it's a Selection. If it's an argument
-          // object, mismatch between the node desc should hopefully
-          // catch it
-          subSelections as Selection,
-          subNodes,
-          `${parentPath}.${instanceName}`,
-        );
+        if (subNodes) {
+          if (variants) {
+            throw new Error(
+              "unreachable: union/either NodeMetas can't have subnodes",
+            );
+          }
+          node.subNodes = _selectionToNodeSet(
+            // assume it's a Selection. If it's an argument
+            // object, mismatch between the node desc should hopefully
+            // catch it
+            subSelections as Selection,
+            subNodes,
+            `${parentPath}.${instanceName}`,
+          );
+        } else {
+          const unionSelections = {} as Record<string, SelectNode[]>;
+          const foundVariants = new Set([...Object.keys(subSelections)]);
+          for (const [variantTy, variant_meta_fn] of variants!) {
+            const variant_meta = variant_meta_fn();
+            // this union member is a scalar
+            if (!variant_meta.subNodes) {
+              continue;
+            }
+            foundVariants.delete(variantTy);
+            const variant_select = subSelections[variantTy];
+            const nodes = variant_select
+              ? _selectionToNodeSet(
+                variant_select as Selection,
+                variant_meta.subNodes,
+                `${parentPath}.${instanceName}.variant(${variantTy})`,
+              )
+              : [];
+            nodes.push({
+              nodeName: "__typename",
+              instanceName: "__typename",
+            });
+            unionSelections[variantTy] = nodes;
+          }
+          if (foundVariants.size > 0) {
+            throw new Error(
+              `node at ${parentPath}.${instanceName} ` +
+                "has none of the variants called " +
+                [...foundVariants.keys()],
+            );
+          }
+          node.subNodes = unionSelections;
+        }
       }
 
       out.push(node);
@@ -123,11 +167,13 @@ function _selectionToNodeSet(
 
 /* Query node types section */
 
+type SubNodes = undefined | SelectNode[] | Record<string, SelectNode[]>;
+
 type SelectNode<_Out = unknown> = {
   nodeName: string;
   instanceName: string;
   args?: NodeArgs;
-  subNodes?: SelectNode[];
+  subNodes?: SubNodes;
 };
 
 export class QueryNode<Out> {
@@ -167,6 +213,7 @@ type QueryDocOut<T> = T extends
 
 type NodeMeta = {
   subNodes?: [string, () => NodeMeta][];
+  variants?: [string, () => NodeMeta][];
   argumentTypes?: { [name: string]: string };
 };
 
@@ -294,6 +341,7 @@ export type GraphQlTransportOptions = Omit<RequestInit, "body"> & {
 };
 
 function convertQueryNodeGql(
+  typeToGqlTypeMap: Record<string, string>,
   node: SelectNode,
   variables: Map<string, NodeArgValue>,
 ) {
@@ -316,9 +364,31 @@ function convertQueryNodeGql(
 
   const subNodes = node.subNodes;
   if (subNodes) {
-    out = `${out} { ${
-      subNodes.map((node) => convertQueryNodeGql(node, variables)).join(" ")
-    } }`;
+    if (Array.isArray(subNodes)) {
+      out = `${out} { ${
+        subNodes.map((node) =>
+          convertQueryNodeGql(typeToGqlTypeMap, node, variables)
+        ).join(" ")
+      } }`;
+    } else {
+      out = `${out} { ${
+        Object.entries(subNodes).map(([variantTy, subNodes]) => {
+          let gqlTy = typeToGqlTypeMap[variantTy];
+          if (!gqlTy) {
+            throw new Error(
+              `unreachable: no graphql type found for variant ${variantTy}`,
+            );
+          }
+          gqlTy = gqlTy.replace(/[!]+$/, "");
+
+          return `... on ${gqlTy} {${
+            subNodes.map((node) =>
+              convertQueryNodeGql(typeToGqlTypeMap, node, variables)
+            ).join(" ")
+          }}`;
+        }).join(" ")
+      } }`;
+    }
   }
   return out;
 }
@@ -327,6 +397,7 @@ function buildGql(
   typeToGqlTypeMap: Record<string, string>,
   query: Record<string, SelectNode>,
   ty: "query" | "mutation",
+  // deno-lint-ignore no-inferrable-types
   name: string = "",
 ) {
   const variables = new Map<string, NodeArgValue>();
@@ -335,12 +406,12 @@ function buildGql(
     .entries(query)
     .map(([key, node]) => {
       const fixedNode = { ...node, instanceName: key };
-      return convertQueryNodeGql(fixedNode, variables);
+      return convertQueryNodeGql(typeToGqlTypeMap, fixedNode, variables);
     })
     .join("\n  ");
 
   let argsRow = [...variables.entries()]
-    .map(([key, val]) => `$${key}: ${typeToGqlTypeMap[val.typeName]}`)
+    .map(([key, val]) => `$${key}: ${typeToGqlTypeMap[val.typeName]} `)
     .join(", ");
   if (argsRow.length > 0) {
     // graphql doesn't like empty parentheses so we only
@@ -350,7 +421,7 @@ function buildGql(
 
   const doc = `${ty} ${name}${argsRow} {
   ${rootNodes}
-}`;
+      } `;
   return {
     doc,
     variables: Object.fromEntries(
@@ -382,9 +453,9 @@ async function fetchGql(
     }),
   });
   if (!res.ok) {
-    const body = await res.text().catch((err) => `error reading body: ${err}`);
+    const body = await res.text().catch((err) => `error reading body: ${err} `);
     throw new (Error as ErrorPolyfill)(
-      `graphql request to ${addr} failed with status ${res.status}: ${body}`,
+      `graphql request to ${addr} failed with status ${res.status}: ${body} `,
       {
         cause: {
           response: res,
@@ -399,7 +470,7 @@ async function fetchGql(
       {
         cause: {
           response: res,
-          body: await res.text().catch((err) => `error reading body: ${err}`),
+          body: await res.text().catch((err) => `error reading body: ${err} `),
         },
       },
     );

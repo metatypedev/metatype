@@ -8,7 +8,7 @@ import http.client as http_c
 
 def selection_to_nodes(
     selection: "SelectionErased",
-    metas: typing.Dict[str, typing.Callable[[], "NodeMeta"]],
+    metas: typing.Dict[str, "NodeMetaFn"],
     parent_path: str,
 ) -> typing.List["SelectNode[typing.Any]"]:
     out = []
@@ -45,7 +45,7 @@ def selection_to_nodes(
                 continue
             if isinstance(instance_selection, Alias):
                 raise Exception(
-                    f"nested Alias node discovored at {parent_path}.{instance_name}"
+                    f"nested Alias node discovered at {parent_path}.{instance_name}"
                 )
 
             instance_args: typing.Optional[NodeArgs] = None
@@ -74,8 +74,8 @@ def selection_to_nodes(
                         )
                     instance_args[key] = NodeArgValue(ty_name, val)
 
-            sub_nodes: typing.Optional[typing.List[SelectNode]] = None
-            if meta.sub_nodes is not None:
+            sub_nodes: SubNodes = None
+            if meta.sub_nodes is not None or meta.variants is not None:
                 sub_selections = instance_selection
 
                 # if node requires both selection and arg, it must be
@@ -89,12 +89,17 @@ def selection_to_nodes(
                         )
                     sub_selections = sub_selections[1]
 
+                # we got a tuple selection when this shouldn't be the case
                 elif isinstance(sub_selections, tuple):
                     raise Exception(
                         f"node at {parent_path}.{instance_name} "
                         + "is a composite that takes no arguments "
                         + f"but selection is typeof {type(instance_selection)}",
                     )
+
+                # flags are recursive for any subnode that's not specified
+                if sub_selections is None:
+                    sub_selections = {"_": flags}
 
                 # selection types are always TypedDicts as well
                 if not isinstance(sub_selections, dict):
@@ -103,11 +108,58 @@ def selection_to_nodes(
                         + "is a no argument composite but first element of "
                         + f"selection is typeof {type(instance_selection)}",
                     )
-                sub_nodes = selection_to_nodes(
-                    typing.cast("SelectionErased", sub_selections),
-                    meta.sub_nodes,
-                    f"{parent_path}.{instance_name}",
-                )
+
+                if meta.sub_nodes is not None:
+                    if meta.variants is not None:
+                        raise Exception(
+                            "unreachable: union/either NodeMetas can't have subnodes"
+                        )
+                    sub_nodes = selection_to_nodes(
+                        typing.cast("SelectionErased", sub_selections),
+                        meta.sub_nodes,
+                        f"{parent_path}.{instance_name}",
+                    )
+                else:
+                    assert meta.variants is not None
+                    union_selections: typing.Dict[str, typing.List[SelectNode]] = {}
+                    for variant_ty, variant_meta in meta.variants.items():
+                        variant_meta = variant_meta()
+
+                        # this union member is a scalar
+                        if variant_meta.sub_nodes is None:
+                            continue
+
+                        variant_select = sub_selections.pop(variant_ty, None)
+                        nodes = (
+                            selection_to_nodes(
+                                typing.cast("SelectionErased", variant_select),
+                                variant_meta.sub_nodes,
+                                f"{parent_path}.{instance_name}.variant({variant_ty})",
+                            )
+                            if variant_select is not None
+                            else []
+                        )
+
+                        # we select __typename for each variant
+                        # even if the user is not interested in the variant
+                        nodes.append(
+                            SelectNode(
+                                node_name="__typename",
+                                instance_name="__typename",
+                                args=None,
+                                sub_nodes=None,
+                            )
+                        )
+
+                        union_selections[variant_ty] = nodes
+
+                    if len(sub_selections) > 0:
+                        raise Exception(
+                            f"node at {parent_path}.{instance_name} "
+                            + "has none of the variants called "
+                            + str(sub_selections.keys()),
+                        )
+                    sub_nodes = union_selections
 
             node = SelectNode(node_name, instance_name, instance_args, sub_nodes)
             out.append(node)
@@ -137,12 +189,21 @@ SelectionT = typing.TypeVar("SelectionT")
 #
 
 
+SubNodes = typing.Union[
+    None,
+    # atomic composite
+    typing.List["SelectNode"],
+    # union/either selection
+    typing.Dict[str, typing.List["SelectNode"]],
+]
+
+
 @dc.dataclass
 class SelectNode(typing.Generic[Out]):
     node_name: str
     instance_name: str
     args: typing.Optional["NodeArgs"]
-    sub_nodes: typing.Optional[typing.List["SelectNode"]]
+    sub_nodes: SubNodes
 
 
 @dc.dataclass
@@ -155,9 +216,13 @@ class MutationNode(SelectNode[Out]):
     pass
 
 
+NodeMetaFn = typing.Callable[[], "NodeMeta"]
+
+
 @dc.dataclass
 class NodeMeta:
-    sub_nodes: typing.Optional[typing.Dict[str, typing.Callable[[], "NodeMeta"]]] = None
+    sub_nodes: typing.Optional[typing.Dict[str, NodeMetaFn]] = None
+    variants: typing.Optional[typing.Dict[str, NodeMetaFn]] = None
     arg_types: typing.Optional[typing.Dict[str, str]] = None
 
 
@@ -275,6 +340,7 @@ class GraphQLResponse:
 
 
 def convert_query_node_gql(
+    ty_to_gql_ty_map: typing.Dict[str, str],
     node: SelectNode,
     variables: typing.Dict[str, NodeArgValue],
 ):
@@ -292,10 +358,32 @@ def convert_query_node_gql(
         if len(arg_row):
             out += f"({arg_row[:-2]})"
 
-    if node.sub_nodes is not None:
+    # if it's a dict, it'll be a union selection
+    if isinstance(node.sub_nodes, dict):
+        sub_node_list = ""
+        for variant_ty, sub_nodes in node.sub_nodes.items():
+            # fetch the gql variant name so we can do
+            # type assertions
+            gql_ty = ty_to_gql_ty_map[variant_ty]
+            if gql_ty is None:
+                raise Exception(
+                    f"unreachable: no graphql type found for variant {variant_ty}"
+                )
+            gql_ty = gql_ty.strip("!")
+
+            sub_node_list += f"... on {gql_ty} {{ "
+            for node in sub_nodes:
+                sub_node_list += (
+                    f"{convert_query_node_gql(ty_to_gql_ty_map, node, variables)} "
+                )
+            sub_node_list += "}"
+        out += f" {{ {sub_node_list}}}"
+    elif isinstance(node.sub_nodes, list):
         sub_node_list = ""
         for node in node.sub_nodes:
-            sub_node_list += f"{convert_query_node_gql(node, variables)} "
+            sub_node_list += (
+                f"{convert_query_node_gql(ty_to_gql_ty_map, node, variables)} "
+            )
         out += f" {{ {sub_node_list}}}"
     return out
 
@@ -321,7 +409,7 @@ class GraphQLTransportBase:
         root_nodes = ""
         for key, node in query.items():
             fixed_node = SelectNode(node.node_name, key, node.args, node.sub_nodes)
-            root_nodes += f"  {convert_query_node_gql(fixed_node, variables)}\n"
+            root_nodes += f"  {convert_query_node_gql(self.ty_to_gql_ty_map, fixed_node, variables)}\n"
         args_row = ""
         for key, val in variables.items():
             args_row += f"${key}: {self.ty_to_gql_ty_map[val.type_name]}, "
@@ -330,7 +418,9 @@ class GraphQLTransportBase:
             args_row = f"({args_row[:-2]})"
 
         doc = f"{ty} {name}{args_row} {{\n{root_nodes}}}"
-        return (doc, {key: val.value for key, val in variables.items()})
+        variables = {key: val.value for key, val in variables.items()}
+        # print(doc, variables)
+        return (doc, variables)
 
     def build_req(
         self,
@@ -411,8 +501,6 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         doc, variables = self.build_gql(
             {key: val for key, val in inp.items()}, "query", name
         )
-        # print(doc,variables)
-        # return {}
         return self.fetch(doc, variables, opts)
 
     def mutation(
