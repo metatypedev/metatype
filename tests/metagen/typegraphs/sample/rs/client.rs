@@ -4,6 +4,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::rc::Rc;
 use std::{collections::HashMap, marker::PhantomData};
 
 use reqwest::Url;
@@ -153,6 +154,7 @@ fn selection_to_node_set(
                 instance_name,
                 args,
                 sub_nodes,
+                files: meta.input_files.clone(),
             })
         }
     }
@@ -196,6 +198,26 @@ impl std::fmt::Display for SelectionError {
 impl std::error::Error for SelectionError {}
 
 //
+// --- --- Input files --- --- //
+//
+
+enum ObjectPathSegment {
+    Optional,
+    List,
+    Prop(String),
+}
+
+struct ObjectPath(Vec<ObjectPathSegment>);
+
+enum EffectiveObjectPathSegment {
+    Optional,
+    ListItem(usize),
+    Prop(String),
+}
+
+struct EffectiveObjectPath(Vec<EffectiveObjectPathSegment>);
+
+//
 // --- --- Graph node types  --- --- //
 //
 
@@ -207,6 +229,7 @@ struct NodeMeta {
     sub_nodes: Option<HashMap<CowStr, NodeMetaFn>>,
     arg_types: Option<HashMap<CowStr, CowStr>>,
     variants: Option<HashMap<CowStr, NodeMetaFn>>,
+    input_files: Option<Rc<[ObjectPath]>>,
 }
 
 enum SubNodes {
@@ -221,6 +244,7 @@ pub struct SelectNodeErased {
     instance_name: CowStr,
     args: Option<NodeArgsMerged>,
     sub_nodes: SubNodes,
+    files: Option<Rc<[ObjectPath]>>,
 }
 
 /// Wrappers around [`SelectNodeErased`] that only holds query nodes
@@ -1208,140 +1232,146 @@ pub mod graphql {
     // PlaceholderValue, fieldName -> gql_var_name
     type FoundPlaceholders = Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>;
 
-    fn select_node_to_gql(
-        ty_to_gql_ty_map: &TyToGqlTyMap,
-        dest: &mut impl std::fmt::Write,
-        node: SelectNodeErased,
-        variable_types: &mut HashMap<CowStr, CowStr>,
-        variables_object: &mut JsonObject,
-        placeholders: &mut FoundPlaceholders,
-    ) -> std::fmt::Result {
-        if node.instance_name != node.node_name {
-            write!(dest, "{}: {}", node.instance_name, node.node_name)?;
-        } else {
-            write!(dest, "{}", node.node_name)?;
-        }
-        if let Some(args) = node.args {
-            match args {
-                NodeArgsMerged::Inline(args) => {
-                    if !args.is_empty() {
-                        write!(dest, "(")?;
-                        for (key, val) in args {
-                            let name = format!("in{}", variable_types.len());
-                            write!(dest, "{key}: ${name}, ")?;
-                            variables_object.insert(name.clone(), val.value);
-                            variable_types.insert(name.into(), val.type_name);
-                        }
-                        write!(dest, ")")?;
-                    }
-                }
-                NodeArgsMerged::Placeholder { value, arg_types } => {
-                    if !arg_types.is_empty() {
-                        write!(dest, "(")?;
-                        let mut map = HashMap::new();
-                        for (key, type_name) in arg_types {
-                            let name = format!("in{}", variable_types.len());
-                            write!(dest, "{key}: ${name}, ")?;
-                            variable_types.insert(name.clone().into(), type_name);
-                            map.insert(key, name.into());
-                        }
-                        write!(dest, ")")?;
-                        placeholders.push((value, map));
-                    }
-                }
-            }
-        }
-        match node.sub_nodes {
-            SubNodes::None => {}
-            SubNodes::Atomic(sub_nodes) => {
-                write!(dest, "{{ ")?;
-                for node in sub_nodes {
-                    select_node_to_gql(
-                        ty_to_gql_ty_map,
-                        dest,
-                        node,
-                        variable_types,
-                        variables_object,
-                        placeholders,
-                    )?;
-                    write!(dest, " ")?;
-                }
-                write!(dest, " }}")?;
-            }
-            SubNodes::Union(variants) => {
-                write!(dest, "{{ ")?;
-                for (ty, sub_nodes) in variants {
-                    let gql_ty = ty_to_gql_ty_map
-                        .get(&ty[..])
-                        .expect("impossible: no GraphQL type equivalent found for variant type");
-                    let gql_ty = match gql_ty.strip_suffix('!') {
-                        Some(val) => val,
-                        None => &gql_ty[..],
-                    };
-                    write!(dest, " ... on {gql_ty} {{ ")?;
-                    for node in sub_nodes {
-                        select_node_to_gql(
-                            ty_to_gql_ty_map,
-                            dest,
-                            node,
-                            variable_types,
-                            variables_object,
-                            placeholders,
-                        )?;
-                        write!(dest, " ")?;
-                    }
-                    write!(dest, " }}")?;
-                }
-                write!(dest, " }}")?;
-            }
-        }
-        Ok(())
+    struct GqlRequest {
+        doc: String,
+        variables: JsonObject,
+        placeholders: FoundPlaceholders,
+        files: HashMap<CowStr, Vec<u8>>,
     }
 
-    fn build_gql_doc(
-        ty_to_gql_ty_map: &TyToGqlTyMap,
-        nodes: Vec<SelectNodeErased>,
-        ty: &'static str,
-        name: Option<CowStr>,
-    ) -> Result<(String, JsonObject, FoundPlaceholders), GraphQLRequestError> {
-        use std::fmt::Write;
-        let mut variables_types = HashMap::new();
-        let mut variables_values = serde_json::Map::new();
-        let mut root_nodes = String::new();
-        let mut placeholders = vec![];
-        for (idx, node) in nodes.into_iter().enumerate() {
-            let node = SelectNodeErased {
-                instance_name: format!("node{idx}").into(),
-                ..node
-            };
-            write!(&mut root_nodes, "  ").expect("error building to string");
-            select_node_to_gql(
+    struct GqlRequestBuilder<'a> {
+        ty_to_gql_ty_map: &'a TyToGqlTyMap,
+        variable_values: JsonObject,
+        variable_types: HashMap<CowStr, CowStr>,
+        doc: String,
+        placeholders: Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>,
+        files: HashMap<CowStr, Vec<u8>>,
+    }
+
+    impl<'a> GqlRequestBuilder<'a> {
+        fn new(ty_to_gql_ty_map: &'a TyToGqlTyMap) -> Self {
+            Self {
                 ty_to_gql_ty_map,
-                &mut root_nodes,
-                node,
-                &mut variables_types,
-                &mut variables_values,
-                &mut placeholders,
-            )
-            .expect("error building to string");
-            writeln!(&mut root_nodes).expect("error building to string");
-        }
-        let mut args_row = String::new();
-        if !variables_types.is_empty() {
-            write!(&mut args_row, "(").expect("error building to string");
-            for (key, ty) in &variables_types {
-                let gql_ty = ty_to_gql_ty_map.get(&ty[..]).ok_or_else(|| {
-                    GraphQLRequestError::InvalidQuery {
-                        error: Box::from(format!("unknown typegraph type found: {}", ty)),
-                    }
-                })?;
-                write!(&mut args_row, "${key}: {gql_ty}, ").expect("error building to string");
+                variable_values: serde_json::Map::new(),
+                variable_types: HashMap::new(),
+                doc: String::new(),
+                placeholders: Vec::new(),
+                files: HashMap::new(),
             }
-            write!(&mut args_row, ")").expect("error building to string");
         }
-        let name = name.unwrap_or_else(|| "".into());
-        let doc = format!("{ty} {name}{args_row} {{\n{root_nodes}}}");
-        Ok((doc, variables_values, placeholders))
+    }
+
+    impl<'a> GqlRequestBuilder<'a> {
+        fn select_node_to_gql(&mut self, node: SelectNodeErased) -> std::fmt::Result {
+            use std::fmt::Write;
+            if node.instance_name != node.node_name {
+                write!(&mut self.doc, "{}: {}", node.instance_name, node.node_name)?;
+            } else {
+                write!(&mut self.doc, "{}", node.node_name)?;
+            }
+            if let Some(args) = node.args {
+                match args {
+                    NodeArgsMerged::Inline(args) => {
+                        if !args.is_empty() {
+                            write!(&mut self.doc, "(")?;
+                            for (key, val) in args {
+                                let name = format!("in{}", self.variable_types.len());
+                                write!(&mut self.doc, "{key}: ${name}, ")?;
+                                self.variable_values.insert(name.clone(), val.value);
+                                self.variable_types.insert(name.into(), val.type_name);
+                            }
+                            write!(&mut self.doc, ")")?;
+                        }
+                    }
+                    NodeArgsMerged::Placeholder { value, arg_types } => {
+                        if !arg_types.is_empty() {
+                            write!(&mut self.doc, "(")?;
+                            let mut map = HashMap::new();
+                            for (key, type_name) in arg_types {
+                                let name = format!("in{}", self.variable_types.len());
+                                write!(&mut self.doc, "{key}: ${name}, ")?;
+                                self.variable_types.insert(name.clone().into(), type_name);
+                                map.insert(key, name.into());
+                            }
+                            write!(&mut self.doc, ")")?;
+                            self.placeholders.push((value, map));
+                        }
+                    }
+                }
+            }
+            match node.sub_nodes {
+                SubNodes::None => {}
+                SubNodes::Atomic(sub_nodes) => {
+                    write!(&mut self.doc, "{{ ")?;
+                    for node in sub_nodes {
+                        self.select_node_to_gql(node)?;
+                        write!(&mut self.doc, " ")?;
+                    }
+                    write!(&mut self.doc, " }}")?;
+                }
+                SubNodes::Union(variants) => {
+                    write!(&mut self.doc, "{{ ")?;
+                    for (ty, sub_nodes) in variants {
+                        let gql_ty = self.ty_to_gql_ty_map.get(&ty[..]).expect(
+                            "impossible: no GraphQL type equivalent found for variant type",
+                        );
+                        let gql_ty = match gql_ty.strip_suffix('!') {
+                            Some(val) => val,
+                            None => &gql_ty[..],
+                        };
+                        write!(&mut self.doc, " ... on {gql_ty} {{ ")?;
+                        for node in sub_nodes {
+                            self.select_node_to_gql(node)?;
+                            write!(&mut self.doc, " ")?;
+                        }
+                        write!(&mut self.doc, " }}")?;
+                    }
+                    write!(&mut self.doc, " }}")?;
+                }
+            }
+            Ok(())
+        }
+
+        fn build(
+            mut self,
+            nodes: Vec<SelectNodeErased>,
+            ty: &'static str,
+            name: Option<CowStr>,
+        ) -> Result<GqlRequest, GraphQLRequestError> {
+            use std::fmt::Write;
+            for (idx, node) in nodes.into_iter().enumerate() {
+                let node = SelectNodeErased {
+                    instance_name: format!("node{idx}").into(),
+                    ..node
+                };
+                write!(&mut self.doc, "  ").expect("error building to string");
+                self.select_node_to_gql(node)
+                    .expect("error building to string");
+                writeln!(&mut self.doc).expect("error building to string");
+            }
+            let mut args_row = String::new();
+            if !self.variable_types.is_empty() {
+                write!(&mut args_row, "(").expect("error building to string");
+                for (key, ty) in &self.variable_types {
+                    let gql_ty = self.ty_to_gql_ty_map.get(&ty[..]).ok_or_else(|| {
+                        GraphQLRequestError::InvalidQuery {
+                            error: Box::from(format!("unknown typegraph type found: {}", ty)),
+                        }
+                    })?;
+                    write!(&mut args_row, "${key}: {gql_ty}, ").expect("error building to string");
+                }
+                write!(&mut args_row, ")").expect("error building to string");
+            }
+            let name = name.unwrap_or_else(|| "".into());
+            let doc = format!("{ty} {name}{args_row} {{\n{doc}}}", doc = self.doc);
+
+            Ok(GqlRequest {
+                doc,
+                variables: self.variable_values,
+                placeholders: self.placeholders,
+                files: self.files,
+            })
+        }
     }
 
     struct GraphQLRequest {
@@ -1545,8 +1575,12 @@ pub mod graphql {
             ty: &'static str,
         ) -> Result<Vec<serde_json::Value>, GraphQLRequestError> {
             let nodes_len = nodes.len();
-            let (doc, variables, placeholders) =
-                build_gql_doc(&self.ty_to_gql_ty_map, nodes, ty, None)?;
+            let GqlRequest {
+                doc,
+                variables,
+                placeholders,
+                files,
+            } = GqlRequestBuilder::new(&self.ty_to_gql_ty_map).build(nodes, ty, None)?;
             if !placeholders.is_empty() {
                 panic!("placeholders found in non-prepared query")
             }
@@ -1685,8 +1719,12 @@ pub mod graphql {
             ty: &'static str,
         ) -> Result<Vec<serde_json::Value>, GraphQLRequestError> {
             let nodes_len = nodes.len();
-            let (doc, variables, placeholders) =
-                build_gql_doc(&self.ty_to_gql_ty_map, nodes, ty, None)?;
+            let GqlRequest {
+                doc,
+                variables,
+                placeholders,
+                files,
+            } = GqlRequestBuilder::new(&self.ty_to_gql_ty_map).build(nodes, ty, None)?;
             if !placeholders.is_empty() {
                 panic!("placeholders found in non-prepared query")
             }
@@ -1873,7 +1911,13 @@ pub mod graphql {
             let nodes = fun(&mut PreparedArgs).map_err(PrepareRequestError::FunctionError)?;
             let nodes = nodes.to_select_doc();
             let nodes_len = nodes.len();
-            let (doc, variables, placeholders) = build_gql_doc(ty_to_gql_ty_map, nodes, ty, None)
+            let GqlRequest {
+                doc,
+                variables,
+                placeholders,
+                files,
+            } = GqlRequestBuilder::new(ty_to_gql_ty_map)
+                .build(nodes, ty, None)
                 .map_err(PrepareRequestError::BuildError)?;
             Ok(Self {
                 doc,
@@ -1965,7 +2009,13 @@ pub mod graphql {
             let nodes = fun(&mut PreparedArgs).map_err(PrepareRequestError::FunctionError)?;
             let nodes = nodes.to_select_doc();
             let nodes_len = nodes.len();
-            let (doc, variables, placeholders) = build_gql_doc(ty_to_gql_ty_map, nodes, ty, None)
+            let GqlRequest {
+                doc,
+                variables,
+                placeholders,
+                files,
+            } = GqlRequestBuilder::new(ty_to_gql_ty_map)
+                .build(nodes, ty, None)
                 .map_err(PrepareRequestError::BuildError)?;
             let placeholders = std::sync::Arc::new(placeholders);
             Ok(Self {
@@ -2136,6 +2186,7 @@ mod node_metas {
             arg_types: None,
             sub_nodes: None,
             variants: None,
+            input_files: None,
         }
     }
     pub fn Post() -> NodeMeta {
@@ -2150,6 +2201,19 @@ mod node_metas {
                 ]
                 .into(),
             ),
+            input_files: None,
+        }
+    }
+    pub fn RootCompositeNoArgsFn() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn RootGetPostsFn() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn RootCompositeArgsFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
+            ..Post()
         }
     }
     pub fn User() -> NodeMeta {
@@ -2164,6 +2228,7 @@ mod node_metas {
                 ]
                 .into(),
             ),
+            input_files: None,
         }
     }
     pub fn RootGetUserFn() -> NodeMeta {
@@ -2183,18 +2248,6 @@ mod node_metas {
                 .into(),
             ),
             ..scalar()
-        }
-    }
-    pub fn RootGetPostsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn RootCompositeNoArgsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn RootCompositeArgsFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
-            ..Post()
         }
     }
 }

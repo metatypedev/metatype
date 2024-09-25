@@ -390,6 +390,7 @@ mod node_metas {{
             arg_types: None,
             sub_nodes: None,
             variants: None,
+            input_files: None,
         }}
     }}"#
     )?;

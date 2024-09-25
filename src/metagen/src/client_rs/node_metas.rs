@@ -43,6 +43,7 @@ pub fn {ty_name}() -> NodeMeta {{
             r#"
             ].into()
         ),
+        input_files: None,
     }}
 }}"#
         )?;
@@ -77,6 +78,7 @@ pub fn {ty_name}() -> NodeMeta {{
             r#"
             ].into()
         ),
+        input_files: None,
     }}
 }}"#
         )?;
