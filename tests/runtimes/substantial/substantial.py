@@ -14,21 +14,20 @@ def substantial(g: Graph):
         if os.environ["SUB_BACKEND"] == "fs":
             backend = Backend.dev_fs()
         elif os.environ["SUB_BACKEND"] == "redis":
-            # backend = Backend.redis("SUBSTANTIAL_REDIS")
-            backend = Backend.redis("redis://:password@localhost:6380/0")
+            backend = Backend.redis("SUB_REDIS")
 
     sub = SubstantialRuntime(backend)
 
     save_and_sleep = sub.deno(
         file="workflow.ts",
         name="saveAndSleepExample",
-        deps=["common_types.ts"],
+        deps=["imports/common_types.ts"],
     )
 
     sub_email = sub.deno(
         file="workflow.ts",
         name="eventsAndExceptionExample",
-        deps=["common_types.ts"],
+        deps=["imports/common_types.ts"],
     )
 
     g.expose(

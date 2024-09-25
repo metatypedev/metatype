@@ -203,8 +203,9 @@ impl super::BackendAgent for RedisBackend {
         self.with_redis(|r| {
             let q_key = self.key(&["schedules", &queue]); // priority queue
 
-            // FIXME: refactor this out, otherwise redis will complain for ARGV if used in any 'indirect' form or manner
-            // such as within a function: "Attempt to modify a readonly table script"
+            // FIXME: refactor this out, one blocker being that
+            // redis will complain if ARGV is used in any 'indirect' form or manner
+            // such as within a function (even local): "Attempt to modify a readonly table script"
             let script = Script::new(
                 r#"
                     local q_key = KEYS[1]
@@ -277,11 +278,10 @@ impl super::BackendAgent for RedisBackend {
             while let (Some(sched_ref), Some(exp_time)) = (iter.next(), iter.next()) {
                 let exp_time = DateTime::parse_from_rfc3339(&exp_time)?.to_utc();
                 if exp_time > Utc::now() {
-                    let run_id = self
-                        .parts(&sched_ref)?
-                        .last()
-                        .cloned()
-                        .with_context(|| format!("Could not find run_id in p {}", sched_ref))?;
+                    let run_id =
+                        self.parts(&sched_ref)?.last().cloned().with_context(|| {
+                            format!("Could not parse run_id from {:?}", sched_ref)
+                        })?;
 
                     active_lease_ids.push(run_id);
                 }
@@ -303,7 +303,7 @@ impl super::BackendAgent for RedisBackend {
                 local lease_ref = KEYS[2]
                 if redis.call("EXISTS", lease_ref) == 1 then
                     if redis.call("ZRANK", all_leases_key, lease_ref) == nil then
-                        error("Invalid state: integrity failure, lease ref " .. lease_ref .. " is not a part of " .. all_leases_key)
+                        error("Invalid state: integrity failure, lease ref " .. lease_ref .. " is not an element of " .. all_leases_key)
                     end
                     return redis.call("GET", lease_ref)                    
                 else
@@ -369,7 +369,7 @@ impl super::BackendAgent for RedisBackend {
             let lua_ret: u8 = script.key(&lease_ref).arg(new_lease_exp).invoke(r)?;
 
             if lua_ret == 0 {
-                bail!("lease not found: {}", lease_ref);
+                bail!("lease not found: {:?}", lease_ref);
             }
 
             Ok(true)

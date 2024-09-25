@@ -11,6 +11,7 @@ pub struct RedisConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase", tag = "type")]
 pub enum SubstantialBackend {
     Fs,
     Memory,

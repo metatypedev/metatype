@@ -292,13 +292,11 @@ export type CallGrpcMethodInput = {
 };
 
 export type Backend =
-  | "Fs"
-  | "Memory"
+  | { type: "fs" }
+  | { type: "memory" }
   | {
-      Redis: {
-        host: string;
-        port: number;
-      };
+      type: "redis";
+      connection_string: string;
     };
 
 export type OperationEvent =

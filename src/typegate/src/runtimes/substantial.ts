@@ -74,6 +74,11 @@ export class SubstantialRuntime extends Runtime {
 
     const tgName = TypeGraph.formatName(tg);
     const backend = (args as any)!.backend as Backend;
+    if (backend.type == "redis") {
+      backend.connection_string = secretManager.secretOrFail(
+        backend.connection_string
+      );
+    }
 
     const queue = "default";
     const delayMs = typegate.config.base.substantial_relaunch_ms;

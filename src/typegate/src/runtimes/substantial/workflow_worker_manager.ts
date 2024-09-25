@@ -80,9 +80,8 @@ export class WorkflowRecorder {
     const record = this.workers.get(runId);
     if (this.workflowRuns.has(name)) {
       if (!record) {
-        // TODO: throw?
-        logger.error(
-          `invalid state: "${runId}" associated with "${name}" does not exist`
+        logger.warn(
+          `"${runId}" associated with "${name}" does not exist or has been already destroyed`
         );
         return false;
       }
