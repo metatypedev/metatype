@@ -5,6 +5,7 @@
 //! imlementations
 
 pub mod client;
+pub mod files;
 pub mod types;
 
 use common::typegraph::{runtimes::TGRuntime, Materializer};

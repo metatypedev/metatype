@@ -648,19 +648,15 @@ Meta.test({
 }, async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
 
-  assertEquals(
-    (
-      await Meta.cli(
-        {
-          env: {
-            // RUST_BACKTRACE: "1",
-          },
-        },
-        ...`-C ${scriptsPath} gen`.split(" "),
-      )
-    ).code,
-    0,
+  const res = await Meta.cli(
+    {
+      env: {
+        // RUST_BACKTRACE: "1",
+      },
+    },
+    ...`-C ${scriptsPath} gen`.split(" "),
   );
+  assertEquals(res.code, 0);
 
   const expectedSchemaU1 = zod.object({
     upload: zod.boolean(),

@@ -23,7 +23,7 @@ function _selectionToNodeSet(
       continue;
     }
 
-    const { argumentTypes, subNodes } = metaFn();
+    const { argumentTypes, subNodes, inFiles: files } = metaFn();
 
     const nodeInstances = nodeSelection instanceof Alias
       ? nodeSelection.aliases()
@@ -40,7 +40,7 @@ function _selectionToNodeSet(
           `nested Alias discovored at ${parentPath}.${instanceName}`,
         );
       }
-      const node: SelectNode = { instanceName, nodeName };
+      const node: SelectNode = { instanceName, nodeName, files };
 
       if (argumentTypes) {
         // make sure the arg is of the expected form
@@ -131,12 +131,14 @@ type SelectNode<_Out = unknown> = {
   instanceName: string;
   args?: NodeArgs;
   subNodes?: SelectNode[];
+  files?: ObjectPath[];
 };
 
 export class QueryNode<Out> {
   #inner: SelectNode<Out>;
   constructor(
     inner: SelectNode<Out>,
+    _files: ObjectPath[],
   ) {
     this.#inner = inner;
   }
@@ -151,21 +153,12 @@ type EffectiveObjectPath = ("" | `[${number}]` | `.${string}`)[];
 
 export class MutationNode<Out> {
   #inner: SelectNode<Out>;
-  #files: ObjectPath[];
-  constructor(
-    inner: SelectNode<Out>,
-    files: ObjectPath[],
-  ) {
+  constructor(inner: SelectNode<Out>) {
     this.#inner = inner;
-    this.#files = files;
   }
 
   inner() {
     return this.#inner;
-  }
-
-  files() {
-    return this.#files;
   }
 }
 
@@ -275,6 +268,7 @@ type QueryDocOut<T> = T extends
 type NodeMeta = {
   subNodes?: [string, () => NodeMeta][];
   argumentTypes?: { [name: string]: string };
+  inFiles: ObjectPath[];
 };
 
 /* Selection types section */
@@ -404,20 +398,18 @@ class GqlBuilder {
   #variables = new Map<string, NodeArgValue>();
   #files: Map<string, File> = new Map();
 
-  #convertQueryNodeGql(
-    node: SelectNode,
-    files: ObjectPath[],
-  ) {
+  #convertQueryNodeGql(node: SelectNode) {
     let out = node.nodeName == node.instanceName
       ? node.nodeName
       : `${node.instanceName}: ${node.nodeName}`;
 
+    const files = node.files;
     const filesByInputKey = new Map<string, ObjectPath[]>();
-    for (const path of files) {
+    for (const path of files ?? []) {
       const inKey = path[0].slice(1);
-      const files = filesByInputKey.get(inKey);
-      if (files) {
-        files.push(path);
+      const mapValue = filesByInputKey.get(inKey);
+      if (mapValue) {
+        mapValue.push(path);
       } else {
         filesByInputKey.set(inKey, [path]);
       }
@@ -429,7 +421,6 @@ class GqlBuilder {
         Object.entries(args)
           .map(([key, val]) => {
             const name = `in${this.#variables.size}`;
-            const files = filesByInputKey.get(key);
             const object = { [key]: val.value };
             if (files && files.length > 0) {
               const extractedFiles = FileExtractor.extractFrom(object, files);
@@ -448,9 +439,8 @@ class GqlBuilder {
 
     const subNodes = node.subNodes;
     if (subNodes) {
-      // FIXME can't we have file inputs in subnodes?
       out = `${out} { ${
-        subNodes.map((node) => this.#convertQueryNodeGql(node, [])).join(" ")
+        subNodes.map((node) => this.#convertQueryNodeGql(node)).join(" ")
       } }`;
     }
     return out;
@@ -458,7 +448,7 @@ class GqlBuilder {
 
   static build(
     typeToGqlTypeMap: Record<string, string>,
-    query: Record<string, [SelectNode, ObjectPath[]]>,
+    query: Record<string, SelectNode>,
     ty: "query" | "mutation",
     name: string = "",
   ) {
@@ -466,9 +456,9 @@ class GqlBuilder {
 
     const rootNodes = Object
       .entries(query)
-      .map(([key, [node, files]]) => {
+      .map(([key, node]) => {
         const fixedNode = { ...node, instanceName: key };
-        return builder.#convertQueryNodeGql(fixedNode, files);
+        return builder.#convertQueryNodeGql(fixedNode);
       })
       .join("\n  ");
 
@@ -632,10 +622,7 @@ export class GraphQLTransport {
       Object.fromEntries(
         Object.entries(query).map((
           [key, val],
-        ) => {
-          const node = val as MutationNode<unknown>;
-          return [key, [node.inner(), node.files()]];
-        }),
+        ) => [key, (val as MutationNode<unknown>).inner()]),
       ),
       "mutation",
       name,
@@ -820,6 +807,7 @@ const nodeMetas = {
         file: "RootUploadFnInputFileFile",
         path: "RootUploadFnInputPathRootUploadFnInputPathStringOptional",
       },
+      inFiles: [[".file"]],
     };
   },
   RootUploadManyFn(): NodeMeta {
@@ -829,22 +817,23 @@ const nodeMetas = {
         prefix: "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
         files: "RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList",
       },
+      inFiles: [[".files","[]"]],
     };
   },
 };
-export type RootUploadFnInputFileFile = File;
 export type RootUploadFnInputPathString = string;
-export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
-export type RootUploadFnInput = {
-  file: RootUploadFnInputFileFile;
-  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
-};
 export type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
 export type RootUploadManyFnInputFilesFile = File;
 export type RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList = Array<RootUploadManyFnInputFilesFile>;
 export type RootUploadManyFnInput = {
   prefix?: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional;
   files: RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList;
+};
+export type RootUploadFnInputFileFile = File;
+export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
+export type RootUploadFnInput = {
+  file: RootUploadFnInputFileFile;
+  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
 };
 export type RootUploadFnOutput = boolean;
 
@@ -865,7 +854,7 @@ export class QueryGraph extends _QueryGraphBase {
       [["upload", nodeMetas.RootUploadFn]],
       "$q",
     )[0];
-    return new MutationNode(inner, [[".file"]]) as MutationNode<RootUploadFnOutput>;
+    return new MutationNode(inner) as MutationNode<RootUploadFnOutput>;
   }
   uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>) {
     const inner = _selectionToNodeSet(
@@ -873,6 +862,6 @@ export class QueryGraph extends _QueryGraphBase {
       [["uploadMany", nodeMetas.RootUploadManyFn]],
       "$q",
     )[0];
-    return new MutationNode(inner, [[".files","[]"]]) as MutationNode<RootUploadFnOutput>;
+    return new MutationNode(inner) as MutationNode<RootUploadFnOutput>;
   }
 }

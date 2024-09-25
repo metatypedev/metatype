@@ -3,14 +3,9 @@
 
 use crate::interlude::*;
 
+use super::files::{get_path_to_files, ObjectPath};
 use super::types::*;
-use common::typegraph::{
-    visitor::{
-        CurrentNode, DefaultLayer, Edge, PathSegment, TypeVisitor, TypeVisitorContext, VisitResult,
-        VisitorResult,
-    },
-    EffectType, ListTypeData, OptionalTypeData,
-};
+use common::typegraph::{EffectType, ListTypeData, OptionalTypeData};
 
 pub struct RenderManifest {
     pub return_types: HashSet<u32>,
@@ -18,6 +13,7 @@ pub struct RenderManifest {
     pub node_metas: HashSet<u32>,
     pub selections: HashSet<u32>,
     pub root_fns: Vec<RootFn>,
+    pub files: Rc<HashMap<u32, Vec<ObjectPath>>>,
 }
 
 pub struct RootFn {
@@ -27,7 +23,6 @@ pub struct RootFn {
     pub out_id: u32,
     pub effect: EffectType,
     pub select_ty: Option<u32>,
-    pub in_files: Vec<ObjectPath>,
 }
 
 /// Collect upfront all the items we need to render
@@ -73,7 +68,6 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
             } else {
                 None
             },
-            in_files: get_path_to_files(tg, data.input)?,
         });
     }
 
@@ -94,6 +88,7 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
         return_types,
         node_metas,
         arg_types,
+        files: get_path_to_files(tg, 0)?.into(),
     })
 }
 
@@ -173,114 +168,4 @@ pub fn selection_for_field(
         }
         TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
     })
-}
-
-/// Access path into a nested value in an object, more or less like JsonPath
-#[derive(Debug)]
-pub struct ObjectPath(pub Vec<ObjectPathSegment>);
-
-#[derive(Debug)]
-pub enum ObjectPathSegment {
-    Optional,
-    List,
-    Field(String),
-}
-
-impl std::fmt::Display for ObjectPathSegment {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ObjectPathSegment::Optional => write!(f, "?"),
-            ObjectPathSegment::List => write!(f, "[]"),
-            ObjectPathSegment::Field(key) => write!(f, ".{}", key),
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a PathSegment<'a>> for ObjectPathSegment {
-    type Error = anyhow::Error;
-
-    fn try_from(seg: &'a PathSegment<'a>) -> anyhow::Result<Self> {
-        match seg.edge {
-            Edge::ObjectProp(key) => Ok(Self::Field(key.to_string())),
-            Edge::ArrayItem => Ok(Self::List),
-            Edge::OptionalItem => Ok(Self::Optional),
-            Edge::FunctionInput => bail!("unexpected path segment for file input"),
-            Edge::FunctionOutput => bail!("unexpected path segment for file input"),
-            Edge::UnionVariant(_) | Edge::EitherVariant(_) => {
-                bail!("file input is not supported for polymorphic types (union/either)")
-            }
-        }
-    }
-}
-
-impl<'a> TryFrom<&'a [PathSegment<'a>]> for ObjectPath {
-    type Error = anyhow::Error;
-
-    fn try_from(path: &'a [PathSegment<'a>]) -> anyhow::Result<Self> {
-        Ok(Self(
-            path.iter()
-                .map(ObjectPathSegment::try_from)
-                .collect::<Result<_, _>>()?,
-        ))
-    }
-}
-
-struct Output(anyhow::Result<Vec<ObjectPath>>);
-
-#[derive(Debug, Clone)]
-struct FileCollectorContext<'a> {
-    typegraph: &'a Typegraph,
-}
-
-#[derive(Debug, Default)]
-struct FileCollector {
-    files: Vec<ObjectPath>,
-}
-
-impl<'a> TypeVisitorContext for FileCollectorContext<'a> {
-    fn get_typegraph(&self) -> &Typegraph {
-        self.typegraph
-    }
-}
-
-impl VisitorResult for Output {
-    fn from_error(_path: String, _msg: String) -> Self {
-        Output(Err(anyhow::anyhow!("error"))) // TODO format error
-    }
-}
-
-impl<'a> TypeVisitor<'a> for FileCollector {
-    type Return = Output;
-    type Context = FileCollectorContext<'a>;
-
-    fn visit(
-        &mut self,
-        current_node: CurrentNode<'_>,
-        _cx: &Self::Context,
-    ) -> VisitResult<Self::Return> {
-        match current_node.type_node {
-            TypeNode::File { .. } => {
-                let path = match current_node.path.try_into() {
-                    Ok(path) => path,
-                    Err(e) => return VisitResult::Return(Output(Err(e))),
-                };
-                self.files.push(path);
-                VisitResult::Continue(false)
-            }
-            _ => VisitResult::Continue(true),
-        }
-    }
-
-    fn take_result(&mut self) -> Option<Self::Return> {
-        Some(Output(Ok(std::mem::take(&mut self.files))))
-    }
-}
-
-fn get_path_to_files(tg: &Typegraph, root: u32) -> Result<Vec<ObjectPath>> {
-    let cx = FileCollectorContext { typegraph: tg };
-    Ok(tg
-        .traverse_types(FileCollector::default(), &cx, DefaultLayer, root)
-        .map(|x| x.0)
-        .transpose()?
-        .unwrap_or_else(Default::default))
 }

@@ -191,13 +191,6 @@ export class QueryGraph extends _QueryGraphBase {{
             EffectType::Update | EffectType::Delete | EffectType::Create => "MutationNode",
         };
 
-        let in_files = fun
-            .in_files
-            .iter()
-            .map(|path| path.0.iter().map(ToString::to_string).collect::<Vec<_>>())
-            .collect::<Vec<_>>();
-        let in_files = serde_json::to_string(&in_files)?;
-
         write!(
             dest,
             r#"
@@ -207,7 +200,7 @@ export class QueryGraph extends _QueryGraphBase {{
       [["{node_name}", nodeMetas.{meta_method}]],
       "$q",
     )[0];
-    return new {node_type}(inner, {in_files}) as {node_type}<{out_ty_name}>;
+    return new {node_type}(inner) as {node_type}<{out_ty_name}>;
   }}"#
         )?;
     }
@@ -280,7 +273,10 @@ fn render_node_metas(
 ) -> Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(node_metas::TsNodeMetasRenderer { name_mapper }),
+        Rc::new(node_metas::TsNodeMetasRenderer {
+            name_mapper,
+            input_files: manifest.files.clone(),
+        }),
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;
