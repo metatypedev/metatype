@@ -20,7 +20,7 @@ function _selectionToNodeSet(
       continue;
     }
 
-    const { argumentTypes, subNodes } = metaFn();
+    const { argumentTypes, subNodes, inFiles: files } = metaFn();
 
     const nodeInstances = nodeSelection instanceof Alias
       ? nodeSelection.aliases()
@@ -37,7 +37,7 @@ function _selectionToNodeSet(
           `nested Alias discovored at ${parentPath}.${instanceName}`,
         );
       }
-      const node: SelectNode = { instanceName, nodeName };
+      const node: SelectNode = { instanceName, nodeName, files };
 
       if (argumentTypes) {
         // make sure the arg is of the expected form
@@ -128,14 +128,12 @@ type SelectNode<_Out = unknown> = {
   instanceName: string;
   args?: NodeArgs;
   subNodes?: SelectNode[];
+  files?: ObjectPath[];
 };
 
 export class QueryNode<Out> {
   #inner: SelectNode<Out>;
-  constructor(
-    inner: SelectNode<Out>,
-    _files: ObjectPath[],
-  ) {
+  constructor(inner: SelectNode<Out>) {
     this.#inner = inner;
   }
 
@@ -149,21 +147,12 @@ type EffectiveObjectPath = ("" | `[${number}]` | `.${string}`)[];
 
 export class MutationNode<Out> {
   #inner: SelectNode<Out>;
-  #files: ObjectPath[];
-  constructor(
-    inner: SelectNode<Out>,
-    files: ObjectPath[],
-  ) {
+  constructor(inner: SelectNode<Out>) {
     this.#inner = inner;
-    this.#files = files;
   }
 
   inner() {
     return this.#inner;
-  }
-
-  files() {
-    return this.#files;
   }
 }
 
@@ -273,6 +262,7 @@ type QueryDocOut<T> = T extends
 type NodeMeta = {
   subNodes?: [string, () => NodeMeta][];
   argumentTypes?: { [name: string]: string };
+  inFiles?: ObjectPath[];
 };
 
 /* Selection types section */
@@ -402,20 +392,18 @@ class GqlBuilder {
   #variables = new Map<string, NodeArgValue>();
   #files: Map<string, File> = new Map();
 
-  #convertQueryNodeGql(
-    node: SelectNode,
-    files: ObjectPath[],
-  ) {
+  #convertQueryNodeGql(node: SelectNode) {
     let out = node.nodeName == node.instanceName
       ? node.nodeName
       : `${node.instanceName}: ${node.nodeName}`;
 
+    const files = node.files;
     const filesByInputKey = new Map<string, ObjectPath[]>();
-    for (const path of files) {
+    for (const path of files ?? []) {
       const inKey = path[0].slice(1);
-      const files = filesByInputKey.get(inKey);
-      if (files) {
-        files.push(path);
+      const mapValue = filesByInputKey.get(inKey);
+      if (mapValue) {
+        mapValue.push(path);
       } else {
         filesByInputKey.set(inKey, [path]);
       }
@@ -427,7 +415,6 @@ class GqlBuilder {
         Object.entries(args)
           .map(([key, val]) => {
             const name = `in${this.#variables.size}`;
-            const files = filesByInputKey.get(key);
             const object = { [key]: val.value };
             if (files && files.length > 0) {
               const extractedFiles = FileExtractor.extractFrom(object, files);
@@ -446,9 +433,8 @@ class GqlBuilder {
 
     const subNodes = node.subNodes;
     if (subNodes) {
-      // FIXME can't we have file inputs in subnodes?
       out = `${out} { ${
-        subNodes.map((node) => this.#convertQueryNodeGql(node, [])).join(" ")
+        subNodes.map((node) => this.#convertQueryNodeGql(node)).join(" ")
       } }`;
     }
     return out;
@@ -456,7 +442,7 @@ class GqlBuilder {
 
   static build(
     typeToGqlTypeMap: Record<string, string>,
-    query: Record<string, [SelectNode, ObjectPath[]]>,
+    query: Record<string, SelectNode>,
     ty: "query" | "mutation",
     name: string = "",
   ) {
@@ -464,9 +450,9 @@ class GqlBuilder {
 
     const rootNodes = Object
       .entries(query)
-      .map(([key, [node, files]]) => {
+      .map(([key, node]) => {
         const fixedNode = { ...node, instanceName: key };
-        return builder.#convertQueryNodeGql(fixedNode, files);
+        return builder.#convertQueryNodeGql(fixedNode);
       })
       .join("\n  ");
 
@@ -500,13 +486,13 @@ async function fetchGql(
   options: GraphQlTransportOptions,
   files?: Map<string, File>,
 ) {
-  const multipart = (files?.size ?? 0) > 0;
-
   let body: FormData | string = JSON.stringify({
     query: doc,
     variables,
   });
-  if (multipart) {
+  const additionalHeaders: HeadersInit = {};
+
+  if (files && files.size > 0) {
     const data = new FormData();
     data.set("operations", body);
     const map: Record<string, string[]> = {};
@@ -518,10 +504,7 @@ async function fetchGql(
     }
     data.set("map", JSON.stringify(map));
     body = data;
-  }
-
-  const additionalHeaders: HeadersInit = {};
-  if (!multipart) {
+  } else {
     additionalHeaders["content-type"] = "application/json";
   }
 
@@ -607,7 +590,7 @@ export class GraphQLTransport {
       Object.fromEntries(
         Object.entries(query).map((
           [key, val],
-        ) => [key, [(val as QueryNode<unknown>).inner(), []]]),
+        ) => [key, (val as QueryNode<unknown>).inner()]),
       ),
       "query",
       name,
@@ -630,10 +613,7 @@ export class GraphQLTransport {
       Object.fromEntries(
         Object.entries(query).map((
           [key, val],
-        ) => {
-          const node = val as MutationNode<unknown>;
-          return [key, [node.inner(), node.files()]];
-        }),
+        ) => [key, (val as MutationNode<unknown>).inner()]),
       ),
       "mutation",
       name,
@@ -714,7 +694,7 @@ export class PreparedRequest<
           [key, val],
         ) => {
           const node = val as MutationNode<unknown>;
-          return [key, [node.inner(), node.files()]];
+          return [key, node.inner()];
         }),
       ),
       ty,
