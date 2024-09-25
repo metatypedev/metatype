@@ -3,6 +3,7 @@
 
 use crate::interlude::*;
 
+use super::files::{get_path_to_files, ObjectPath};
 use super::types::*;
 use common::typegraph::{EffectType, ListTypeData, OptionalTypeData};
 
@@ -12,6 +13,7 @@ pub struct RenderManifest {
     pub node_metas: HashSet<u32>,
     pub selections: HashSet<u32>,
     pub root_fns: Vec<RootFn>,
+    pub files: Rc<HashMap<u32, Vec<ObjectPath>>>,
 }
 
 pub struct RootFn {
@@ -86,6 +88,7 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
         return_types,
         node_metas,
         arg_types,
+        files: get_path_to_files(tg, 0)?.into(),
     })
 }
 

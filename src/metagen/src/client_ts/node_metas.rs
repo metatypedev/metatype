@@ -6,10 +6,14 @@ use std::fmt::Write;
 use common::typegraph::*;
 
 use super::utils::normalize_type_title;
-use crate::{interlude::*, shared::types::*};
+use crate::{
+    interlude::*,
+    shared::{files::ObjectPath, types::*},
+};
 
 pub struct TsNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
+    pub input_files: Rc<HashMap<u32, Vec<ObjectPath>>>,
 }
 
 impl TsNodeMetasRenderer {
@@ -50,6 +54,7 @@ impl TsNodeMetasRenderer {
         ty_name: &str,
         return_node: &str,
         argument_fields: Option<IndexMap<String, Rc<str>>>,
+        input_files: Option<String>,
     ) -> std::fmt::Result {
         write!(
             dest,
@@ -77,6 +82,13 @@ impl TsNodeMetasRenderer {
                 dest,
                 r#"
       }},"#
+            )?;
+        }
+        if let Some(input_files) = input_files {
+            write!(
+                dest,
+                r#"
+      inFiles: {input_files},"#
             )?;
         }
         write!(
@@ -132,7 +144,11 @@ impl RenderType for TsNodeMetasRenderer {
                 };
                 let node_name = &base.title;
                 let ty_name = normalize_type_title(node_name).to_pascal_case();
-                self.render_for_func(renderer, &ty_name, &return_ty_name, props)?;
+                let input_files = self.input_files.get(&cursor.id).map(|files| {
+                    files.iter().map(|path| path.0.iter().map(ToString::to_string).collect::<Vec<_>>()).collect::<Vec<_>>()
+                }).unwrap_or_default();
+                let input_files = (!input_files.is_empty()).then(|| serde_json::to_string(&input_files)).transpose()?;
+                self.render_for_func(renderer, &ty_name, &return_ty_name, props, input_files)?;
                 ty_name
             }
             TypeNode::Object { data, base } => {

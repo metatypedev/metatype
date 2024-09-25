@@ -4,11 +4,11 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { execute, gql, Meta } from "../../utils/mod.ts";
 import {
-  CreateBucketCommand,
   DeleteObjectsCommand,
   ListObjectsCommand,
   S3Client,
 } from "aws-sdk/client-s3";
+import { createBucket } from "test-utils/s3.ts";
 
 const HOST = "http://localhost:9000";
 const REGION = "local";
@@ -28,10 +28,7 @@ async function initBucket() {
   });
 
   try {
-    const command = new CreateBucketCommand({
-      Bucket: "bucket",
-    });
-    await client.send(command);
+    await createBucket(client, "bucket");
   } catch (_e) {
     // bucket already exists
     const listCommand = new ListObjectsCommand({ Bucket: "bucket" });
@@ -46,6 +43,8 @@ async function initBucket() {
       });
       await client.send(deleteCommand);
     }
+
+    await createBucket(client, "bucket");
   }
 }
 

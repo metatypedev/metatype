@@ -273,7 +273,10 @@ fn render_node_metas(
 ) -> Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(node_metas::TsNodeMetasRenderer { name_mapper }),
+        Rc::new(node_metas::TsNodeMetasRenderer {
+            name_mapper,
+            input_files: manifest.files.clone(),
+        }),
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;
