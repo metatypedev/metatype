@@ -20,19 +20,21 @@ impl RedisBackend {
     pub fn new(con_str: String) -> Result<Self> {
         let client = redis::Client::open(con_str)?;
         Ok(Self {
+            // TODO: use a connection pool, this can get noticibly slow even locally
+            // There is r2d2-redis but it's very outdated as of now
             _con: Mutex::new(client.get_connection()?),
         })
     }
 
     fn key(&self, parts: &[&str]) -> String {
-        format!("sub::{}", parts.join("::"))
+        format!("substantial:{}", parts.join("/"))
     }
 
     fn parts(&self, key: &str) -> Result<Vec<String>> {
         let parts = key
-            .strip_prefix("sub::")
-            .with_context(|| format!("Invalid  key found: {:?}", key))?
-            .split("::")
+            .strip_prefix("substantial:")
+            .with_context(|| format!("Invalid key {:?}: required prefix not present", key))?
+            .split("/")
             .map(|p| p.to_owned())
             .collect::<Vec<_>>();
         Ok(parts)
@@ -49,21 +51,30 @@ impl RedisBackend {
 
 impl super::BackendStore for RedisBackend {
     fn read_events(&self, run_id: String) -> Result<Option<Records>> {
-        // TODO: lua
-        let key = self.key(&["runs", &run_id, "events"]);
         self.with_redis(|r| {
-            if !r.exists(&key)? {
-                return Ok(None);
-            }
-            let val: Vec<u8> = r.get(key)?;
-            Ok(Some(Records::parse_from_bytes(&val)?))
+            let event_key = self.key(&["runs", &run_id, "events"]);
+            let script = Script::new(
+                r#"
+                local event_key = KEYS[1]
+                if redis.call("EXISTS", event_key) == 1 then
+                    return redis.call("GET", event_key)
+                else
+                    return nil
+                end
+            "#,
+            );
+
+            let lua_ret: Option<Vec<u8>> = script.key(event_key).invoke(r)?;
+
+            lua_ret.map_or(Ok(None), |raw_rec| {
+                Ok(Some(Records::parse_from_bytes(&raw_rec)?))
+            })
         })
     }
 
     fn write_events(&self, run_id: String, content: Records) -> Result<()> {
-        // TODO: lua
-        let key = self.key(&["runs", &run_id, "events"]);
         self.with_redis(|r| {
+            let key = self.key(&["runs", &run_id, "events"]);
             r.set(key, content.write_to_bytes()?)?;
             Ok(())
         })
@@ -79,10 +90,11 @@ impl super::BackendStore for RedisBackend {
         self.with_redis(|r| {
             let q_key = self.key(&["schedules", &queue]); // priority queue
 
-            // Now add the new schedule
-            let sched_ref = schedule.to_rfc3339();
+            let non_prefixed_sched_ref = schedule.to_rfc3339();
             let sched_score = 1.0 / (schedule.timestamp() as f64);
-            let sched_key = self.key(&[&sched_ref, &run_id]);
+            let sched_key = self.key(&[&non_prefixed_sched_ref, &run_id]);
+            let sched_ref = self.key(&[&non_prefixed_sched_ref]);
+
             let script = Script::new(
                 r#"
                 local q_key = KEYS[1]
@@ -120,26 +132,37 @@ impl super::BackendStore for RedisBackend {
         run_id: String,
         schedule: DateTime<Utc>,
     ) -> Result<Option<Event>> {
-        // TODO: lua
-        let sched_key = self.key(&[&schedule.to_rfc3339(), &run_id]);
         self.with_redis(|r| {
-            if !r.exists(&sched_key)? {
-                bail!("schedule not found: {}", sched_key)
-            }
+            let sched_key = self.key(&[&schedule.to_rfc3339(), &run_id]);
+            let script = Script::new(
+                r#"
+                local sched_key = KEYS[1]
+                if redis.call("EXISTS", sched_key) == 1 then
+                    return redis.call("GET", sched_key)
+                else
+                    return nil
+                end
+            "#,
+            );
 
-            let value: Vec<u8> = r.get(&sched_key)?;
-            match value.is_empty() {
-                true => Ok(None),
-                false => Ok(Some(Event::parse_from_bytes(&value)?)),
+            let lua_ret: Option<Vec<u8>> = script.key(&sched_key).invoke(r)?;
+            if let Some(event_raw) = lua_ret {
+                match event_raw.is_empty() {
+                    true => Ok(None),
+                    false => Ok(Some(Event::parse_from_bytes(&event_raw)?)),
+                }
+            } else {
+                bail!("schedule not found: {:?}", sched_key)
             }
         })
     }
 
     fn close_schedule(&self, queue: String, run_id: String, schedule: DateTime<Utc>) -> Result<()> {
         self.with_redis(|r| {
-            let q_key = self.key(&["schedules", &queue]);
-            let sched_ref = schedule.to_rfc3339();
-            let sched_key = self.key(&[&sched_ref, &run_id]);
+            let q_key: String = self.key(&["schedules", &queue]);
+            let non_prefixed_sched_ref = schedule.to_rfc3339();
+            let sched_key = self.key(&[&non_prefixed_sched_ref, &run_id]);
+            let sched_ref = self.key(&[&non_prefixed_sched_ref]);
 
             let script = Script::new(
                 r#"
@@ -167,20 +190,58 @@ impl super::BackendStore for RedisBackend {
 
 impl super::BackendAgent for RedisBackend {
     fn next_run(&self, queue: String, excludes: Vec<String>) -> Result<Option<NextRun>> {
-        let q_key = self.key(&["schedules", &queue]); // priority queue
         self.with_redis(|r| {
-            // TODO: lua
-            let schedules: Vec<String> = r.zrange(q_key, 0, -1)?;
-            for schedule in schedules {
-                let run_ids: Vec<String> = r.zrange(&schedule, 0, -1)?;
-                for run_id in run_ids {
-                    if !excludes.contains(&run_id) {
-                        return Ok(Some(NextRun {
-                            run_id,
-                            schedule_date: DateTime::parse_from_rfc3339(&schedule)?.to_utc(),
-                        }));
-                    }
-                }
+            let q_key = self.key(&["schedules", &queue]); // priority queue
+            let script = Script::new(
+                r#"
+                    local q_key = KEYS[1]
+                    local excludes = ARGV
+                    -- error("ARGV: " .. table.concat(excludes, ", "))
+
+                    function IsExcluded(str)
+                        for _, value in ipairs(excludes) do
+                            if value == str then
+                                return true
+                            end
+                        end
+                        return false
+                    end
+
+                    local schedule_keys = redis.call("ZRANGE", q_key, 0, -1)
+                    for _, schedule_key in ipairs(schedule_keys) do
+                        local run_ids = redis.call("ZRANGE", schedule_key, 0, -1)
+                        for _, run_id in ipairs(run_ids) do
+                            local is_excluded = false
+                            for _, value in ipairs(excludes) do
+                                if value == run_id then
+                                    is_excluded = true
+                                    break
+                                end
+                            end
+
+                            if not is_excluded then
+                                return {run_id, schedule_key}
+                            end
+                        end
+                    end
+
+                    return nil
+                "#,
+            );
+
+            let lua_ret: Option<(String, String)> = script.key(q_key).arg(excludes).invoke(r)?;
+
+            if let Some((run_id, schedule_key)) = lua_ret {
+                let schedule = self
+                    .parts(&schedule_key)?
+                    .last()
+                    .cloned()
+                    .with_context(|| format!("Invalid key {:?}", schedule_key))?;
+
+                return Ok(Some(NextRun {
+                    run_id,
+                    schedule_date: DateTime::parse_from_rfc3339(&schedule)?.to_utc(),
+                }));
             }
 
             Ok(None)
@@ -192,7 +253,7 @@ impl super::BackendAgent for RedisBackend {
             let all_leases_key = self.key(&["leases"]);
             let script = Script::new(
                 r#"
-                    local all_leases_key = KEYS[1];
+                    local all_leases_key = KEYS[1]
                     local lease_refs = redis.call("ZRANGE", all_leases_key, 0, -1)
                     local results = {}
 

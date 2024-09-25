@@ -259,7 +259,7 @@ jobs:
           WASM_OPT=1 ghjk x build-tgraph-ts
 
           # start the docker containers
-          ghjk x dev-compose base prisma grpc
+          ghjk x dev-compose base prisma grpc subredis
 
           WASM_OPT=1 ghjk x build-tgraph
 
