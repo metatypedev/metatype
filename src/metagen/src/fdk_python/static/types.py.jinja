@@ -2,7 +2,9 @@ from types import NoneType
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
-from pyrt_wit_wire.main import Ctx
+class Ctx:
+    def gql(self, query: str, variables: str):
+        pass
 
 FORWARD_REFS = {}
 
@@ -98,8 +100,7 @@ def __repr(value: Any):
 def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}], {{ func.output_name }}]):
     def exported_wrapper(raw_inp):
         inp: {{ func.input_name }} = Struct.new({{ func.input_name }}, raw_inp)
-        ctx: {{ func.input_name}} = Ctx()
-        out: {{ func.output_name }} = user_fn(inp, ctx)
+        out: {{ func.output_name }} = user_fn(inp, Ctx())
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
