@@ -89,8 +89,12 @@ mod tests {
             (
                 "redis",
                 Box::new({
-                    let backend =
-                        RedisBackend::new("redis://:password@localhost:6380/0".to_owned()).unwrap();
+                    let prefix = "rust_test";
+                    let backend = RedisBackend::new(
+                        "redis://:password@localhost:6380/0".to_owned(),
+                        Some(prefix.to_owned()),
+                    )
+                    .unwrap();
                     backend
                         .with_redis(|r| {
                             let script = Script::new(r#"redis.call("FLUSHALL")"#);

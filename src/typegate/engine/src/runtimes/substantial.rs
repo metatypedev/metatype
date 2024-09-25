@@ -33,9 +33,10 @@ fn init_backend(kind: &SubstantialBackend) -> Result<Rc<dyn Backend>> {
             Ok(Rc::new(FsBackend::new(root).unwrap()))
         }
         SubstantialBackend::Memory => Ok(Rc::new(MemoryBackend::default().unwrap())),
-        SubstantialBackend::Redis(cfg) => {
-            Ok(Rc::new(RedisBackend::new(cfg.connection_string.clone())?))
-        }
+        SubstantialBackend::Redis(cfg) => Ok(Rc::new(RedisBackend::new(
+            cfg.connection_string.clone(),
+            Some("typegate".to_owned()),
+        )?)),
     }
 }
 

@@ -12,28 +12,38 @@ use redis::{Commands, Script};
 
 pub struct RedisBackend {
     _con: Mutex<redis::Connection>,
+    base_prefix: String,
 }
 
 impl Backend for RedisBackend {}
 
 impl RedisBackend {
-    pub fn new(con_str: String) -> Result<Self> {
+    pub fn new(con_str: String, prefix: Option<String>) -> Result<Self> {
         let client = redis::Client::open(con_str)?;
         Ok(Self {
             // TODO: use a connection pool, this can get noticibly slow even locally
             // There is r2d2-redis but it's very outdated as of now
             _con: Mutex::new(client.get_connection()?),
+            base_prefix: format!(
+                "{}:substantial:",
+                prefix.unwrap_or_else(|| "default".to_owned())
+            ),
         })
     }
 
     fn key(&self, parts: &[&str]) -> String {
-        format!("substantial:{}", parts.join("/"))
+        format!("{}{}", self.base_prefix, parts.join("/"))
     }
 
     fn parts(&self, key: &str) -> Result<Vec<String>> {
         let parts = key
-            .strip_prefix("substantial:")
-            .with_context(|| format!("Invalid key {:?}: required prefix not present", key))?
+            .strip_prefix(&self.base_prefix)
+            .with_context(|| {
+                format!(
+                    "Invalid key {:?}: required prefix {:?} not present",
+                    key, self.base_prefix
+                )
+            })?
             .split("/")
             .map(|p| p.to_owned())
             .collect::<Vec<_>>();
@@ -192,28 +202,21 @@ impl super::BackendAgent for RedisBackend {
     fn next_run(&self, queue: String, excludes: Vec<String>) -> Result<Option<NextRun>> {
         self.with_redis(|r| {
             let q_key = self.key(&["schedules", &queue]); // priority queue
+
+            // FIXME: refactor this out, otherwise redis will complain for ARGV if used in any 'indirect' form or manner
+            // such as within a function: "Attempt to modify a readonly table script"
             let script = Script::new(
                 r#"
                     local q_key = KEYS[1]
                     local excludes = ARGV
-                    -- error("ARGV: " .. table.concat(excludes, ", "))
-
-                    function IsExcluded(str)
-                        for _, value in ipairs(excludes) do
-                            if value == str then
-                                return true
-                            end
-                        end
-                        return false
-                    end
-
                     local schedule_keys = redis.call("ZRANGE", q_key, 0, -1)
+
                     for _, schedule_key in ipairs(schedule_keys) do
                         local run_ids = redis.call("ZRANGE", schedule_key, 0, -1)
                         for _, run_id in ipairs(run_ids) do
                             local is_excluded = false
-                            for _, value in ipairs(excludes) do
-                                if value == run_id then
+                            for k = 1, #excludes do
+                                if run_id == excludes[k] then
                                     is_excluded = true
                                     break
                                 end
@@ -293,15 +296,27 @@ impl super::BackendAgent for RedisBackend {
             let all_leases_key = self.key(&["leases"]);
             let lease_ref = self.key(&["lease", &run_id]);
 
-            // TODO:
-            // 1. exist + get should be atomic
-            // 2. integrity check to ensure it is a part of the "leases" set
             let mut not_held = true;
-            if r.exists(&lease_ref)? {
-                not_held = false;
-                let value: String = r.get(&lease_ref)?;
-                let exp_time = DateTime::parse_from_rfc3339(&value)?.to_utc();
+            let script = Script::new(
+                r#"
+                local all_leases_key = KEYS[1]
+                local lease_ref = KEYS[2]
+                if redis.call("EXISTS", lease_ref) == 1 then
+                    if redis.call("ZRANK", all_leases_key, lease_ref) == nil then
+                        error("Invalid state: integrity failure, lease ref " .. lease_ref .. " is not a part of " .. all_leases_key)
+                    end
+                    return redis.call("GET", lease_ref)                    
+                else
+                    return nil
+                end
+            "#,
+            );
 
+            let lua_ret: Option<String> = script.key(&all_leases_key).key(&lease_ref).invoke(r)?;
+
+            if let Some(exp_time_str) = lua_ret {
+                not_held = false;
+                let exp_time = DateTime::parse_from_rfc3339(&exp_time_str)?.to_utc();
                 if exp_time < Utc::now() {
                     not_held = true;
                 }
