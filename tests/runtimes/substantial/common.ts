@@ -174,7 +174,7 @@ export function concurrentWorkflowTestTemplate(
       const emails = [
         "one@example.com",
         "two@example.com",
-        "three@example.comn",
+        "three@example.com",
       ] as [string, string, string];
       const runIds = [] as Array<string>;
       await t.should(
@@ -313,7 +313,7 @@ export function concurrentWorkflowTestTemplate(
             assertEquals(
               received.sort(localSorter),
               expected.sort(localSorter),
-              "'complete' two workflows as one was aborted"
+              "All three workflows have completed, including the aborted one"
             );
           })
           .on(e);
