@@ -18,7 +18,7 @@ def remote_sub(var: Var, ctx: Any) -> int:
         query="""
         query ($first: Float!, $second: Float!) {
              sub(first: $first, second: $second) 
-        }"
+        }
         """,
         variables=json.dumps(var),
     )
