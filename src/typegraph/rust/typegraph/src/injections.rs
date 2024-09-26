@@ -1,5 +1,11 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
 use serde::Serialize;
 use serde_json::Value;
+
+// TODO: - replace with commmon::typegraph types?
+//       - per effect injections & expose types
 
 #[derive(Debug, Serialize)]
 pub struct Injection {
@@ -31,7 +37,7 @@ where
     let injection = Injection {
         source,
         data: InjectionValue {
-            value: data.map(|d| d.into().to_string()),
+            value: data.map(|d| d.into().to_string()), // ASK: Why does it need to be stringified?
         },
     };
 

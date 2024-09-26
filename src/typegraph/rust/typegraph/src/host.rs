@@ -1,9 +1,13 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
 use std::{env, fs, io};
 
 use crate::wasm::metatype::typegraph::host::Host;
 
 pub struct State;
 
+// FIXME: Replace with wasi2
 impl Host for State {
     fn print(&mut self, s: String) {
         println!("{s}");
