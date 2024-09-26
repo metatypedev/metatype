@@ -8,10 +8,10 @@ use wasmtime::{
 use crate::host::State;
 
 const WASM_BINARY: &[u8] =
-    include_bytes!("../../../../target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm");
+    include_bytes!("../../../../../target/wasm/wasm32-unknown-unknown/release/typegraph_core.wasm");
 
 bindgen!({
-    path: "../core/wit/",
+    path: "../../core/wit/",
     world: "typegraph",
 });
 

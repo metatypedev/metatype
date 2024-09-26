@@ -9,7 +9,8 @@ members = [
   "src/typegate/engine",
   "src/typegate/standalone",
   "src/typegraph/core",
-  "src/typegraph/rust",
+  "src/typegraph/rust/typegraph",
+  "src/typegraph/rust/typegraph_macro",
   "src/xtask",
 ]
 
