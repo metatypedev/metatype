@@ -3,10 +3,49 @@ use crate::{
     wasm::{
         self,
         core::RuntimeId,
-        runtimes::{BaseMaterializer, Effect, MaterializerWasmReflectedFunc, WasmRuntimeData},
+        runtimes::{
+            BaseMaterializer, Effect, MaterializerWasmReflectedFunc, MaterializerWasmWireHandler,
+            WasmRuntimeData,
+        },
     },
     Result,
 };
+
+#[derive(Debug)]
+pub struct WasmRuntimeWire {
+    id: RuntimeId,
+}
+
+impl WasmRuntimeWire {
+    pub fn new(artifact_path: &str) -> Result<Self> {
+        let data = WasmRuntimeData {
+            wasm_artifact: artifact_path.to_string(),
+        };
+
+        let id = wasm::with_runtimes(|r, s| r.call_register_wasm_wire_runtime(s, &data))?;
+
+        Ok(Self { id })
+    }
+
+    pub fn handler<I, O>(&self, inp: I, out: O, options: WasmModuleOption) -> Result<TypeDef>
+    where
+        I: TypeBuilder,
+        O: TypeBuilder,
+    {
+        let base = BaseMaterializer {
+            runtime: self.id,
+            effect: options.effect,
+        };
+
+        let mat = MaterializerWasmWireHandler {
+            func_name: options.func_name,
+        };
+
+        let mat = wasm::with_runtimes(|r, s| r.call_from_wasm_wire_handler(s, base, &mat))?;
+
+        t::func(inp, out, mat)?.build()
+    }
+}
 
 #[derive(Debug)]
 pub struct WasmRuntimeReflected {
@@ -24,7 +63,7 @@ impl WasmRuntimeReflected {
         Ok(Self { id })
     }
 
-    pub fn export<I, O>(&self, inp: I, out: O, options: WasmReflectedOption) -> Result<TypeDef>
+    pub fn export<I, O>(&self, inp: I, out: O, options: WasmModuleOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -45,12 +84,12 @@ impl WasmRuntimeReflected {
 }
 
 #[derive(Debug, Default)]
-pub struct WasmReflectedOption {
+pub struct WasmModuleOption {
     pub func_name: String,
     pub effect: Effect,
 }
 
-impl WasmReflectedOption {
+impl WasmModuleOption {
     pub fn new(func_name: &str) -> Self {
         Self {
             func_name: func_name.to_string(),
