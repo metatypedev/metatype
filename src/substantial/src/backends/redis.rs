@@ -44,7 +44,7 @@ impl RedisBackend {
 
         if !invalid_chunks.is_empty() {
             bail!(
-                "Fatal: keys parts {:?} cannot contain seperator {:?}",
+                "Fatal: parts {:?} cannot contain seperator {:?}",
                 invalid_chunks,
                 self.separator
             )
@@ -470,7 +470,7 @@ impl BackendMetadataWriter for RedisBackend {
                     local content = ARGV[1]
 
                     redis.call("LPUSH", log_key, sched_key)
-                    redis.call("ZREM", sched_key, content)
+                    redis.call("SET", sched_key, content)
                 "#,
             );
 

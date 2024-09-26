@@ -24,10 +24,15 @@ export function redisCleanup(url: string) {
 
 export function basicTestTemplate(
   backendName: BackendName,
-  delays: {
-    awaitSleepCompleteSec: number;
+  {
+    delays,
+    secrets,
+  }: {
+    delays: {
+      awaitSleepCompleteSec: number;
+    };
+    secrets?: Record<string, string>;
   },
-  secrets?: Record<string, string>,
   cleanup?: MetaTestCleanupFn
 ) {
   Meta.test(
@@ -143,10 +148,15 @@ export function basicTestTemplate(
 
 export function concurrentWorkflowTestTemplate(
   backendName: BackendName,
-  delays: {
-    awaitEmailCompleteSec: number;
+  {
+    delays,
+    secrets,
+  }: {
+    delays: {
+      awaitEmailCompleteSec: number;
+    };
+    secrets?: Record<string, string>;
   },
-  secrets?: Record<string, string>,
   cleanup?: MetaTestCleanupFn
 ) {
   Meta.test(
@@ -196,7 +206,7 @@ export function concurrentWorkflowTestTemplate(
       );
 
       // let's wait for a bit to make sure interrupts are doing their jobs
-      await sleep(10 * 1000);
+      await sleep(5 * 1000);
 
       await t.should(
         `fire events for ${emails.join(", ")} (${backendName})`,

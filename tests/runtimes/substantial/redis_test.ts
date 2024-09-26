@@ -10,16 +10,18 @@ import {
 
 basicTestTemplate(
   "redis",
-  { awaitSleepCompleteSec: 10 },
   {
-    SUB_REDIS,
+    delays: { awaitSleepCompleteSec: 8 },
+    secrets: { SUB_REDIS },
   },
   redisCleanup(SUB_REDIS)
 );
 
 concurrentWorkflowTestTemplate(
   "redis",
-  { awaitEmailCompleteSec: 20 }, // 2/3 will complete at <15s
-  { SUB_REDIS },
+  {
+    delays: { awaitEmailCompleteSec: 18 },
+    secrets: { SUB_REDIS },
+  },
   redisCleanup(SUB_REDIS)
 );

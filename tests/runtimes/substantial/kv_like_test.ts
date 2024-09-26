@@ -4,13 +4,13 @@
 import { basicTestTemplate, concurrentWorkflowTestTemplate } from "./common.ts";
 
 basicTestTemplate("memory", {
-  awaitSleepCompleteSec: 10,
+  delays: { awaitSleepCompleteSec: 7 },
 });
 
 basicTestTemplate("fs", {
-  awaitSleepCompleteSec: 10,
+  delays: { awaitSleepCompleteSec: 7 },
 });
 
 concurrentWorkflowTestTemplate("fs", {
-  awaitEmailCompleteSec: 10,
+  delays: { awaitEmailCompleteSec: 10 },
 });
