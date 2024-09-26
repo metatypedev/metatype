@@ -2,6 +2,12 @@ from types import NoneType
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+
+class Ctx:
+    def gql(self, query: str, variables: str):
+        pass
+
+
 FORWARD_REFS = {}
 
 
@@ -209,10 +215,10 @@ def __repr(value: Any):
     return value
 
 
-def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
+def typed_primitives(user_fn: Callable[[PrimitivesArgs, Ctx], Primitives]):
     def exported_wrapper(raw_inp):
         inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
-        out: Primitives = user_fn(inp)
+        out: Primitives = user_fn(inp, Ctx())
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -220,10 +226,10 @@ def typed_primitives(user_fn: Callable[[PrimitivesArgs], Primitives]):
     return exported_wrapper
 
 
-def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
+def typed_composites(user_fn: Callable[[CompositesArgs, Ctx], Composites]):
     def exported_wrapper(raw_inp):
         inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
-        out: Composites = user_fn(inp)
+        out: Composites = user_fn(inp, Ctx())
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -231,10 +237,10 @@ def typed_composites(user_fn: Callable[[CompositesArgs], Composites]):
     return exported_wrapper
 
 
-def typed_cycles(user_fn: Callable[[Cycles1Args], Cycles1]):
+def typed_cycles(user_fn: Callable[[Cycles1Args, Ctx], Cycles1]):
     def exported_wrapper(raw_inp):
         inp: Cycles1Args = Struct.new(Cycles1Args, raw_inp)
-        out: Cycles1 = user_fn(inp)
+        out: Cycles1 = user_fn(inp, Ctx())
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -242,10 +248,10 @@ def typed_cycles(user_fn: Callable[[Cycles1Args], Cycles1]):
     return exported_wrapper
 
 
-def typed_simple_cycles(user_fn: Callable[[SimpleCycles1Args], SimpleCycles1]):
+def typed_simple_cycles(user_fn: Callable[[SimpleCycles1Args, Ctx], SimpleCycles1]):
     def exported_wrapper(raw_inp):
         inp: SimpleCycles1Args = Struct.new(SimpleCycles1Args, raw_inp)
-        out: SimpleCycles1 = user_fn(inp)
+        out: SimpleCycles1 = user_fn(inp, Ctx())
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)

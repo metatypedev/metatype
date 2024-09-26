@@ -610,6 +610,12 @@ class NodeDescs:
         return NodeMeta()
 
     @staticmethod
+    def RootScalarNoArgsFn():
+        return NodeMeta(
+            sub_nodes=NodeDescs.scalar().sub_nodes,
+        )
+
+    @staticmethod
     def Post():
         return NodeMeta(
             sub_nodes={

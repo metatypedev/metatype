@@ -56,6 +56,9 @@ export class WitWireMessenger {
 
   async handle(opName: string, args: ResolverArgs) {
     const { _, ...inJson } = args;
+
+    console.log({ inJson });
+
     let res;
     try {
       res = await Meta.wit_wire.handle(this.id, {

@@ -36,6 +36,13 @@ import traceback
 handlers = {}
 
 
+class Ctx:
+    def gql(self, query: str, variables: str):
+        return hostcall(
+            "gql", json=json.dumps({"query": query, "variables": variables})
+        )
+
+
 class MatWire(wit_wire.exports.MatWire):
     def init(self, args: InitArgs):
         for op in args.expected_ops:
@@ -67,12 +74,12 @@ class MatWire(wit_wire.exports.MatWire):
 
 
 class ErasedHandler:
-    def __init__(self, handler_fn: Callable[[Any], Any]) -> None:
+    def __init__(self, handler_fn: Callable[[Any, Ctx], Any]) -> None:
         self.handler_fn = handler_fn
 
     def handle(self, req: HandleReq):
         in_parsed = json.loads(req.in_json)
-        out = self.handler_fn(in_parsed)
+        out = self.handler_fn(in_parsed, Ctx())
         return json.dumps(out)
 
 
@@ -82,7 +89,7 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
         module = types.ModuleType(op.op_name)
         exec(data_parsed["source"], module.__dict__)
         fn = module.__dict__[data_parsed["func_name"]]
-        return ErasedHandler(handler_fn=lambda inp: fn(inp))
+        return ErasedHandler(handler_fn=lambda inp, ctx: fn(inp, ctx))
     elif data_parsed["ty"] == "import_function":
         prefix = data_parsed["func_name"]
 
@@ -104,7 +111,7 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
         return ErasedHandler(handler_fn=getattr(module, data_parsed["func_name"]))
     elif data_parsed["ty"] == "lambda":
         fn = eval(data_parsed["source"])
-        return ErasedHandler(handler_fn=lambda inp: fn(inp))
+        return ErasedHandler(handler_fn=lambda inp, ctx: fn(inp, ctx))
     else:
         raise Err(InitError_UnexpectedMat(op))
 
@@ -193,10 +200,3 @@ class FakeFileLoader(importlib.abc.FileLoader):
     def get_filename(self, name=None):
         assert name is not None and name == self.name
         return self.path
-
-
-class Ctx:
-    def gql(self, query: str, variables: str):
-        return hostcall(
-            "gql", json=json.dumps({"query": query, "variables": variables})
-        )

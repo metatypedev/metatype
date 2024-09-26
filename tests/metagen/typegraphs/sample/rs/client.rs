@@ -2296,6 +2296,11 @@ mod node_metas {
 }
 use types::*;
 pub mod types {
+    pub type RootScalarNoArgsFnOutput = String;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootCompositeArgsFnInputPartial {
+        pub id: Option<RootScalarNoArgsFnOutput>,
+    }
     pub type UserIdStringUuid = String;
     pub type PostSlugString = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -2303,11 +2308,6 @@ pub mod types {
         pub id: Option<UserIdStringUuid>,
         pub slug: Option<PostSlugString>,
         pub title: Option<PostSlugString>,
-    }
-    pub type RootScalarNoArgsFnOutput = String;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootCompositeArgsFnInputPartial {
-        pub id: Option<RootScalarNoArgsFnOutput>,
     }
     pub type UserEmailStringEmail = String;
     pub type UserPostsPostList = Vec<PostPartial>;

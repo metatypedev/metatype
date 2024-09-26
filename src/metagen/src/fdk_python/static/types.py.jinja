@@ -97,7 +97,7 @@ def __repr(value: Any):
 
 
 {%for func in funcs %}
-def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}], {{ func.output_name }}]):
+def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}, Ctx], {{ func.output_name }}]):
     def exported_wrapper(raw_inp):
         inp: {{ func.input_name }} = Struct.new({{ func.input_name }}, raw_inp)
         out: {{ func.output_name }} = user_fn(inp, Ctx())
