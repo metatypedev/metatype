@@ -15,7 +15,7 @@ mod tests {
     };
 
     #[test]
-    fn test_write_and_read_events_raw_fs() {
+    fn test_basic_write_and_read_events_raw_fs() {
         let root = PathBuf::from("tmp/test/substantial");
         let backend = FsBackend::new(root.clone()).unwrap();
         let run_id = "test_run".to_string();
@@ -33,7 +33,7 @@ mod tests {
     }
 
     #[test]
-    fn test_run_persist() {
+    fn test_basic_run_persist() {
         let mem_backend = MemoryBackend::default().unwrap();
 
         let root = PathBuf::from("tmp/test_one/substantial");
@@ -74,7 +74,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_lease_state_consistency_logic() {
+    fn test_state_consistency_logic() {
         let backends: Vec<(&str, Box<dyn Backend>)> = vec![
             ("memory", Box::new(MemoryBackend::default().unwrap())),
             (

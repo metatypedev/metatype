@@ -1,9 +1,12 @@
 use std::sync::Mutex;
 
 use super::{Backend, BackendMetadataWriter, NextRun};
-use crate::protocol::{
-    events::{Event, Records},
-    metadata::Metadata,
+use crate::{
+    converters::{MetadataEvent, MetadataPayload},
+    protocol::{
+        events::{Event, Records},
+        metadata::Metadata,
+    },
 };
 use anyhow::{bail, Context, Ok, Result};
 use chrono::{DateTime, Duration, Utc};
@@ -13,6 +16,7 @@ use redis::{Commands, Script};
 pub struct RedisBackend {
     _con: Mutex<redis::Connection>,
     base_prefix: String,
+    separator: String,
 }
 
 impl Backend for RedisBackend {}
@@ -24,6 +28,7 @@ impl RedisBackend {
             // TODO: use a connection pool, this can get noticibly slow even locally
             // There is r2d2-redis but it's very outdated as of now
             _con: Mutex::new(client.get_connection()?),
+            separator: ":/".to_owned(),
             base_prefix: format!(
                 "{}:substantial:",
                 prefix.unwrap_or_else(|| "default".to_owned())
@@ -31,8 +36,25 @@ impl RedisBackend {
         })
     }
 
-    fn key(&self, parts: &[&str]) -> String {
-        format!("{}{}", self.base_prefix, parts.join("/"))
+    fn key(&self, parts: &[&str]) -> Result<String> {
+        let invalid_chunks = parts
+            .iter()
+            .filter(|part| part.contains(&self.separator))
+            .collect::<Vec<_>>();
+
+        if !invalid_chunks.is_empty() {
+            bail!(
+                "Fatal: keys parts {:?} cannot contain seperator {:?}",
+                invalid_chunks,
+                self.separator
+            )
+        }
+
+        Ok(format!(
+            "{}{}",
+            self.base_prefix,
+            parts.join(&self.separator)
+        ))
     }
 
     fn parts(&self, key: &str) -> Result<Vec<String>> {
@@ -44,7 +66,7 @@ impl RedisBackend {
                     key, self.base_prefix
                 )
             })?
-            .split("/")
+            .split(&self.separator)
             .map(|p| p.to_owned())
             .collect::<Vec<_>>();
         Ok(parts)
@@ -62,7 +84,7 @@ impl RedisBackend {
 impl super::BackendStore for RedisBackend {
     fn read_events(&self, run_id: String) -> Result<Option<Records>> {
         self.with_redis(|r| {
-            let event_key = self.key(&["runs", &run_id, "events"]);
+            let event_key = self.key(&["runs", &run_id, "events"])?;
             let script = Script::new(
                 r#"
                 local event_key = KEYS[1]
@@ -84,7 +106,7 @@ impl super::BackendStore for RedisBackend {
 
     fn write_events(&self, run_id: String, content: Records) -> Result<()> {
         self.with_redis(|r| {
-            let key = self.key(&["runs", &run_id, "events"]);
+            let key = self.key(&["runs", &run_id, "events"])?;
             r.set(key, content.write_to_bytes()?)?;
             Ok(())
         })
@@ -98,12 +120,12 @@ impl super::BackendStore for RedisBackend {
         content: Option<Event>,
     ) -> Result<()> {
         self.with_redis(|r| {
-            let q_key = self.key(&["schedules", &queue]); // priority queue
+            let q_key = self.key(&["schedules", &queue])?; // priority queue
 
             let non_prefixed_sched_ref = schedule.to_rfc3339();
             let sched_score = 1.0 / (schedule.timestamp() as f64);
-            let sched_key = self.key(&[&non_prefixed_sched_ref, &run_id]);
-            let sched_ref = self.key(&[&non_prefixed_sched_ref]);
+            let sched_key = self.key(&[&non_prefixed_sched_ref, &run_id])?;
+            let sched_ref = self.key(&[&non_prefixed_sched_ref])?;
 
             let script = Script::new(
                 r#"
@@ -143,7 +165,7 @@ impl super::BackendStore for RedisBackend {
         schedule: DateTime<Utc>,
     ) -> Result<Option<Event>> {
         self.with_redis(|r| {
-            let sched_key = self.key(&[&schedule.to_rfc3339(), &run_id]);
+            let sched_key = self.key(&[&schedule.to_rfc3339(), &run_id])?;
             let script = Script::new(
                 r#"
                 local sched_key = KEYS[1]
@@ -169,10 +191,10 @@ impl super::BackendStore for RedisBackend {
 
     fn close_schedule(&self, queue: String, run_id: String, schedule: DateTime<Utc>) -> Result<()> {
         self.with_redis(|r| {
-            let q_key: String = self.key(&["schedules", &queue]);
+            let q_key: String = self.key(&["schedules", &queue])?;
             let non_prefixed_sched_ref = schedule.to_rfc3339();
-            let sched_key = self.key(&[&non_prefixed_sched_ref, &run_id]);
-            let sched_ref = self.key(&[&non_prefixed_sched_ref]);
+            let sched_key = self.key(&[&non_prefixed_sched_ref, &run_id])?;
+            let sched_ref = self.key(&[&non_prefixed_sched_ref])?;
 
             let script = Script::new(
                 r#"
@@ -201,7 +223,7 @@ impl super::BackendStore for RedisBackend {
 impl super::BackendAgent for RedisBackend {
     fn next_run(&self, queue: String, excludes: Vec<String>) -> Result<Option<NextRun>> {
         self.with_redis(|r| {
-            let q_key = self.key(&["schedules", &queue]); // priority queue
+            let q_key = self.key(&["schedules", &queue])?; // priority queue
 
             // FIXME: refactor this out, one blocker being that
             // redis will complain if ARGV is used in any 'indirect' form or manner
@@ -254,13 +276,13 @@ impl super::BackendAgent for RedisBackend {
 
     fn active_leases(&self, _lease_seconds: u32) -> Result<Vec<String>> {
         self.with_redis(|r| {
-            let all_leases_key = self.key(&["leases"]);
+            let all_leases_key = self.key(&["leases"])?;
             let script = Script::new(
                 r#"
                     local all_leases_key = KEYS[1]
+
                     local lease_refs = redis.call("ZRANGE", all_leases_key, 0, -1)
                     local results = {}
-
                     for i, lease_ref in ipairs(lease_refs) do
                         local exp_time = redis.call("GET", lease_ref)
                         table.insert(results, lease_ref)
@@ -293,8 +315,8 @@ impl super::BackendAgent for RedisBackend {
 
     fn acquire_lease(&self, run_id: String, lease_seconds: u32) -> Result<bool> {
         self.with_redis(|r| {
-            let all_leases_key = self.key(&["leases"]);
-            let lease_ref = self.key(&["lease", &run_id]);
+            let all_leases_key = self.key(&["leases"])?;
+            let lease_ref = self.key(&["lease", &run_id])?;
 
             let mut not_held = true;
             let script = Script::new(
@@ -350,7 +372,7 @@ impl super::BackendAgent for RedisBackend {
 
     fn renew_lease(&self, run_id: String, lease_seconds: u32) -> Result<bool> {
         self.with_redis(|r| {
-            let lease_ref = self.key(&["lease", &run_id]);
+            let lease_ref = self.key(&["lease", &run_id])?;
             let new_lease_exp = (Utc::now() + Duration::seconds(lease_seconds as i64)).to_rfc3339();
 
             let script = Script::new(
@@ -378,8 +400,8 @@ impl super::BackendAgent for RedisBackend {
 
     fn remove_lease(&self, run_id: String, _lease_seconds: u32) -> Result<()> {
         self.with_redis(|r| {
-            let all_leases_key = self.key(&["leases"]);
-            let lease_ref = self.key(&["lease", &run_id]);
+            let all_leases_key = self.key(&["leases"])?;
+            let lease_ref = self.key(&["lease", &run_id])?;
 
             let script = Script::new(
                 r#"
@@ -399,17 +421,36 @@ impl super::BackendAgent for RedisBackend {
 
 impl BackendMetadataWriter for RedisBackend {
     fn read_all_metadata(&self, run_id: String) -> Result<Vec<Metadata>> {
-        let base_key = self.key(&["runs", &run_id, "logs"]);
-        let mut ret = Vec::new();
+        self.with_redis(|r| {
+            let log_key = self.key(&["runs", &run_id, "logs"])?;
 
-        let schedules: Vec<String> = self.with_redis(|r| r.lrange(base_key, 0, -1))?;
+            let script = Script::new(
+                r#"
+                    local log_key = KEYS[1]
+                    local run_id = ARGV[1]
+    
+                    local sched_keys = redis.call("LRANGE", log_key, 0, -1)
+                    local logs = {}
+                    for _, sched_key in ipairs(sched_keys) do
+                        if string.find(sched_key, run_id) ~= nil then
+                            local content = redis.call("GET", sched_key)
+                            table.insert(logs, content)
+                        end
+                    end
 
-        for schedule in schedules {
-            let log: Vec<u8> = self.with_redis(|r| r.get(self.key(&[&run_id, &schedule])))?;
-            ret.push(Metadata::parse_from_bytes(&log)?);
-        }
+                    return logs
+                "#,
+            );
 
-        Ok(ret)
+            let raw_logs: Vec<Vec<u8>> = script.key(log_key).arg(run_id).invoke(r)?;
+
+            let mut ret = Vec::new();
+            for raw_log in raw_logs.iter() {
+                ret.push(Metadata::parse_from_bytes(raw_log)?);
+            }
+
+            Ok(ret)
+        })
     }
 
     fn append_metadata(
@@ -419,28 +460,41 @@ impl BackendMetadataWriter for RedisBackend {
         content: String,
     ) -> Result<()> {
         self.with_redis(|r| {
-            let base_key = self.key(&["runs", &run_id, "logs"]); // queue
-            let sched_key = self.key(&[&run_id, &schedule.to_rfc3339()]);
+            let log_key = self.key(&["runs", &run_id, "logs"])?; // queue
+            let sched_key = self.key(&[&run_id, &schedule.to_rfc3339()])?;
 
             let script = Script::new(
                 r#"
-                    local base_key = KEYS[1]
+                    local log_key = KEYS[1]
                     local sched_key = KEYS[2]
                     local content = ARGV[1]
 
-                    redis.call("LPUSH", base_key, sched_key)
+                    redis.call("LPUSH", log_key, sched_key)
                     redis.call("ZREM", sched_key, content)
                 "#,
             );
 
-            script.key(base_key).key(sched_key).arg(content).invoke(r)?;
+            let content = MetadataEvent {
+                at: Utc::now(),
+                metadata: Some(MetadataPayload::Info(
+                    serde_json::to_value(content).unwrap(),
+                )),
+            };
+
+            let metadata = TryInto::<Metadata>::try_into(content)?;
+
+            script
+                .key(log_key)
+                .key(sched_key)
+                .arg(metadata.write_to_bytes()?)
+                .invoke(r)?;
             Ok(())
         })
     }
 
     fn write_workflow_link(&self, workflow_name: String, run_id: String) -> Result<()> {
         self.with_redis(|r| {
-            let links_key = self.key(&["links", &workflow_name]);
+            let links_key = self.key(&["links", &workflow_name])?;
             r.zadd(links_key, run_id, 0)?;
             Ok(())
         })
@@ -448,7 +502,7 @@ impl BackendMetadataWriter for RedisBackend {
 
     fn read_workflow_links(&self, workflow_name: String) -> Result<Vec<String>> {
         self.with_redis(|r| {
-            let links_key = self.key(&["links", &workflow_name]);
+            let links_key = self.key(&["links", &workflow_name])?;
             let run_ids: Vec<String> = r.zrange(links_key, 0, -1)?;
             Ok(run_ids)
         })
