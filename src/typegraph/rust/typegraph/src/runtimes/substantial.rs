@@ -1,11 +1,9 @@
 use crate::{
-    t::TypeBuilder,
+    t::{TypeBuilder, TypeDef},
     wasm::{
         self,
-        core::{RuntimeId, TypeId},
-        runtimes::{
-            SubstantialOperationData, SubstantialOperationType, SubstantialRuntimeData, Workflow,
-        },
+        core::RuntimeId,
+        runtimes::{SubstantialOperationData, SubstantialOperationType, SubstantialRuntimeData},
     },
     Result,
 };
@@ -31,25 +29,20 @@ impl SubstantialRuntime {
         })
     }
 
-    pub fn start(&self) -> Result<TypeId> {
-        todo!()
-    }
-
-    pub fn stop(&self) -> Result<TypeId> {
-        todo!()
-    }
-
-    pub fn send<T: TypeBuilder>(&self, payload: T) -> Result<TypeId> {
-        todo!()
-    }
+    // TODO
+    // pub fn start(&self) -> Result<TypeDef> {}
+    //
+    // pub fn stop(&self) -> Result<TypeDef> {}
+    //
+    // pub fn send<T: TypeBuilder>(&self, payload: T) -> Result<TypeDef> {}
 
     fn operation<T: TypeBuilder>(
         &self,
         kind: SubstantialOperationType,
         arg: Option<T>,
-    ) -> Result<TypeId> {
+    ) -> Result<TypeDef> {
         let func_arg = match arg {
-            Some(arg) => Some(arg.build()?),
+            Some(arg) => Some(arg.into_id()?),
             None => None,
         };
 

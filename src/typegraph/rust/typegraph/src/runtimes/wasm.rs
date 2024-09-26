@@ -1,8 +1,8 @@
 use crate::{
-    t::{self, TypeBuilder},
+    t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
-        core::{RuntimeId, TypeId},
+        core::RuntimeId,
         runtimes::{BaseMaterializer, Effect, MaterializerWasmReflectedFunc, WasmRuntimeData},
     },
     Result,
@@ -24,7 +24,7 @@ impl WasmRuntimeReflected {
         Ok(Self { id })
     }
 
-    pub fn export<I, O>(&self, inp: I, out: O, options: WasmReflectedOption) -> Result<TypeId>
+    pub fn export<I, O>(&self, inp: I, out: O, options: WasmReflectedOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,

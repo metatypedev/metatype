@@ -1,8 +1,8 @@
 use crate::{
-    t::TypeBuilder,
+    t::{TypeBuilder, TypeDef},
     wasm::{
         self,
-        core::{RuntimeId, TypeId},
+        core::RuntimeId,
         runtimes::{GrpcData, GrpcRuntimeData},
     },
     Result,
@@ -25,7 +25,7 @@ impl GrpcRuntime {
         Ok(Self { id })
     }
 
-    pub fn call(&self, method: &str) -> Result<TypeId> {
+    pub fn call(&self, method: &str) -> Result<TypeDef> {
         let data = GrpcData {
             method: method.to_string(),
         };

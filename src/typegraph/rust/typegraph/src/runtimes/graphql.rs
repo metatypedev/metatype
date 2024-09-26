@@ -1,8 +1,8 @@
 use crate::{
-    t::{self, TypeBuilder},
+    t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
-        core::{RuntimeId, TypeId},
+        core::RuntimeId,
         runtimes::{BaseMaterializer, Effect, GraphqlRuntimeData, MaterializerGraphqlQuery},
     },
     Result,
@@ -29,7 +29,7 @@ impl GraphqlRuntime {
         inp: I,
         out: O,
         path: Option<impl IntoIterator<Item = impl ToString>>,
-    ) -> Result<TypeId>
+    ) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -53,7 +53,7 @@ impl GraphqlRuntime {
         inp: I,
         out: O,
         path: Option<impl IntoIterator<Item = impl ToString>>,
-    ) -> Result<TypeId>
+    ) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,

@@ -1,16 +1,87 @@
+use serde_json::Value;
+
 use crate::{
     error::Result,
+    injections::{serialize_injection, InjectionSource},
     wasm::{
         self,
         core::{
-            FuncParams, ParameterTransform, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
-            TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
+            FuncParams, ParameterTransform, PolicySpec, TypeBase, TypeEither, TypeFloat, TypeFunc,
+            TypeId, TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
         },
     },
 };
 
+#[derive(Debug, Clone)]
+pub struct TypeDef {
+    id: TypeId,
+    // base: TypeBase,
+    // data: TypeData,
+}
+
+impl TypeDef {
+    pub fn repr(&self) -> Result<String> {
+        wasm::with_core(|c, s| c.call_get_type_repr(s, self.id))
+    }
+
+    pub fn rename(mut self, name: &str) -> Result<Self> {
+        self.id = wasm::with_core(|c, s| c.call_rename_type(s, self.id, name))?;
+        Ok(self)
+    }
+
+    pub fn with_policy(mut self, policy: &[PolicySpec]) -> Result<Self> {
+        self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, policy))?;
+        Ok(self)
+    }
+
+    pub fn set<I>(self, value: I) -> Result<Self>
+    where
+        I: Into<Value>,
+    {
+        self.with_injection(serialize_injection(InjectionSource::Static, Some(value)))
+    }
+
+    pub fn inject(self, value: &str) -> Result<Self> {
+        self.with_injection(serialize_injection(InjectionSource::Dynamic, Some(value)))
+    }
+
+    // TODO
+    // pub fn from_parent(self, value: &str) -> Result<Self> {}
+
+    pub fn from_context(self, value: &str) -> Result<Self> {
+        self.with_injection(serialize_injection(InjectionSource::Context, Some(value)))
+    }
+
+    pub fn from_secret(self, value: &str) -> Result<Self> {
+        self.with_injection(serialize_injection(InjectionSource::Secret, Some(value)))
+    }
+
+    pub fn from_random(self) -> Result<Self> {
+        self.with_injection(serialize_injection(InjectionSource::Random, None::<String>))
+    }
+
+    fn with_injection(mut self, injection: String) -> Result<Self> {
+        self.id = wasm::with_core(|c, s| c.call_with_injection(s, self.id, &injection))?;
+        Ok(self)
+    }
+
+    // TODO per-effect injections
+}
+
 pub trait TypeBuilder: Sized {
-    fn build(self) -> Result<TypeId>;
+    fn build(self) -> Result<TypeDef>;
+
+    fn rename(self, name: &str) -> Result<TypeDef> {
+        self.build()?.rename(name)
+    }
+
+    fn with_policy(self, policy: &[PolicySpec]) -> Result<TypeDef> {
+        self.build()?.with_policy(policy)
+    }
+
+    fn into_id(self) -> Result<TypeId> {
+        self.build().map(|ty| ty.id)
+    }
 
     fn optional(self) -> Result<OptionalBuilder> {
         optional(self)
@@ -32,7 +103,13 @@ pub trait BaseBuilder: Sized {
 }
 
 impl TypeBuilder for TypeId {
-    fn build(self) -> Result<TypeId> {
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef { id: self })
+    }
+}
+
+impl TypeBuilder for TypeDef {
+    fn build(self) -> Result<TypeDef> {
         Ok(self)
     }
 }
@@ -101,8 +178,10 @@ impl IntegerBuilder {
 }
 
 impl TypeBuilder for IntegerBuilder {
-    fn build(self) -> Result<TypeId> {
-        wasm::with_core(|c, s| c.call_integerb(s, &self.data, &self.base))
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_integerb(s, &self.data, &self.base))?,
+        })
     }
 }
 
@@ -169,8 +248,10 @@ impl FloatBuilder {
 }
 
 impl TypeBuilder for FloatBuilder {
-    fn build(self) -> Result<TypeId> {
-        wasm::with_core(|c, s| c.call_floatb(s, &self.data, &self.base))
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_floatb(s, &self.data, &self.base))?,
+        })
     }
 }
 
@@ -226,8 +307,10 @@ impl StringBuilder {
 }
 
 impl TypeBuilder for StringBuilder {
-    fn build(self) -> Result<TypeId> {
-        wasm::with_core(|c, s| c.call_stringb(s, &self.data, &self.base))
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_stringb(s, &self.data, &self.base))?,
+        })
     }
 }
 
@@ -257,8 +340,10 @@ pub struct OptionalBuilder {
 }
 
 impl TypeBuilder for OptionalBuilder {
-    fn build(self) -> Result<TypeId> {
-        wasm::with_core(|c, s| c.call_optionalb(s, &self.data, &self.base))
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_optionalb(s, &self.data, &self.base))?,
+        })
     }
 }
 
@@ -268,11 +353,11 @@ impl BaseBuilder for OptionalBuilder {
     }
 }
 
-pub fn optional(id: impl TypeBuilder) -> Result<OptionalBuilder> {
+pub fn optional(ty: impl TypeBuilder) -> Result<OptionalBuilder> {
     Ok(OptionalBuilder {
         base: TypeBase::default(),
         data: TypeOptional {
-            of: id.build()?,
+            of: ty.into_id()?,
             default_item: None,
         },
     })
@@ -313,8 +398,10 @@ impl ListBuilder {
 }
 
 impl TypeBuilder for ListBuilder {
-    fn build(self) -> Result<TypeId> {
-        wasm::with_core(|c, s| c.call_listb(s, self.data, &self.base))
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_listb(s, self.data, &self.base))?,
+        })
     }
 }
 
@@ -324,11 +411,11 @@ impl BaseBuilder for ListBuilder {
     }
 }
 
-pub fn list(id: impl TypeBuilder) -> Result<ListBuilder> {
+pub fn list(ty: impl TypeBuilder) -> Result<ListBuilder> {
     Ok(ListBuilder {
         base: TypeBase::default(),
         data: TypeList {
-            of: id.build()?,
+            of: ty.into_id()?,
             ..Default::default()
         },
     })
@@ -350,15 +437,17 @@ pub struct UnionBuilder {
 }
 
 impl UnionBuilder {
-    pub fn add(mut self, id: impl TypeBuilder) -> Result<Self> {
-        self.data.variants.push(id.build()?);
+    pub fn add(mut self, ty: impl TypeBuilder) -> Result<Self> {
+        self.data.variants.push(ty.into_id()?);
         Ok(self)
     }
 }
 
 impl TypeBuilder for UnionBuilder {
-    fn build(self) -> Result<TypeId> {
-        wasm::with_core(|c, s| c.call_unionb(s, &self.data, &self.base))
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_unionb(s, &self.data, &self.base))?,
+        })
     }
 }
 
@@ -373,7 +462,7 @@ pub fn union(variants: impl IntoIterator<Item = impl TypeBuilder>) -> Result<Uni
         data: TypeUnion {
             variants: variants
                 .into_iter()
-                .map(|id| id.build())
+                .map(|ty| ty.into_id())
                 .collect::<Result<_>>()?,
         },
         ..Default::default()
@@ -396,8 +485,10 @@ pub struct EitherBuilder {
 }
 
 impl TypeBuilder for EitherBuilder {
-    fn build(self) -> Result<TypeId> {
-        wasm::with_core(|c, s| c.call_eitherb(s, &self.data, &self.base))
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_eitherb(s, &self.data, &self.base))?,
+        })
     }
 }
 
@@ -412,7 +503,7 @@ pub fn either(variants: impl IntoIterator<Item = impl TypeBuilder>) -> Result<Ei
         data: TypeEither {
             variants: variants
                 .into_iter()
-                .map(|id| id.build())
+                .map(|ty| ty.into_id())
                 .collect::<Result<_>>()?,
         },
         ..Default::default()
@@ -439,8 +530,8 @@ pub struct StructBuilder {
 }
 
 impl StructBuilder {
-    pub fn prop(mut self, name: impl ToString, id: impl TypeBuilder) -> Result<Self> {
-        self.data.props.push((name.to_string(), id.build()?));
+    pub fn prop(mut self, name: impl ToString, ty: impl TypeBuilder) -> Result<Self> {
+        self.data.props.push((name.to_string(), ty.into_id()?));
         Ok(self)
     }
 
@@ -452,7 +543,7 @@ impl StructBuilder {
         self.data.props.extend(
             values
                 .into_iter()
-                .map(|(name, id)| id.build().map(|id| (name.to_string(), id)))
+                .map(|(name, ty)| ty.into_id().map(|id| (name.to_string(), id)))
                 .collect::<Result<Vec<_>>>()?,
         );
         Ok(self)
@@ -470,8 +561,10 @@ impl StructBuilder {
 }
 
 impl TypeBuilder for StructBuilder {
-    fn build(self) -> Result<TypeId> {
-        wasm::with_core(|c, s| c.call_structb(s, &self.data, &self.base))
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_structb(s, &self.data, &self.base))?,
+        })
     }
 }
 
@@ -521,8 +614,10 @@ impl FuncBuilder {
 }
 
 impl TypeBuilder for FuncBuilder {
-    fn build(self) -> Result<TypeId> {
-        wasm::with_core(|c, s| c.call_funcb(s, &self.data))
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_funcb(s, &self.data))?,
+        })
     }
 }
 
@@ -533,8 +628,8 @@ where
 {
     Ok(FuncBuilder {
         data: TypeFunc {
-            inp: inp.build()?,
-            out: out.build()?,
+            inp: inp.into_id()?,
+            out: out.into_id()?,
             mat,
             ..Default::default()
         },
@@ -543,7 +638,7 @@ where
 }
 
 impl TypeBuilder for FuncParams {
-    fn build(self) -> Result<TypeId> {
+    fn build(self) -> Result<TypeDef> {
         func(self.inp, self.out, self.mat)?.build()
     }
 }

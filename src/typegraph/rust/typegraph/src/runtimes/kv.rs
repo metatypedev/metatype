@@ -1,8 +1,8 @@
 use crate::{
-    t::{self, TypeBuilder},
+    t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
-        core::{MaterializerId, RuntimeId, TypeId},
+        core::{MaterializerId, RuntimeId},
         runtimes::{BaseMaterializer, Effect, KvMaterializer, KvRuntimeData},
     },
     Result,
@@ -24,7 +24,7 @@ impl KvRuntime {
         Ok(Self { id })
     }
 
-    pub fn set(&self) -> Result<TypeId> {
+    pub fn set(&self) -> Result<TypeDef> {
         let inp = t::r#struct()
             .prop("key", t::string())?
             .prop("value", t::string())?;
@@ -34,7 +34,7 @@ impl KvRuntime {
         t::func(inp, out, mat)?.build()
     }
 
-    pub fn get(&self) -> Result<TypeId> {
+    pub fn get(&self) -> Result<TypeDef> {
         let inp = t::r#struct().prop("key", t::string())?;
         let out = t::string();
         let mat = self.operation(KvMaterializer::Get, Effect::Read)?;
@@ -42,7 +42,7 @@ impl KvRuntime {
         t::func(inp, out, mat)?.build()
     }
 
-    pub fn delete(&self) -> Result<TypeId> {
+    pub fn delete(&self) -> Result<TypeDef> {
         let inp = t::r#struct().prop("key", t::string())?;
         let out = t::integer();
         let mat = self.operation(KvMaterializer::Delete, Effect::Delete(false))?;
@@ -50,7 +50,7 @@ impl KvRuntime {
         t::func(inp, out, mat)?.build()
     }
 
-    pub fn keys(&self) -> Result<TypeId> {
+    pub fn keys(&self) -> Result<TypeDef> {
         let inp = t::r#struct().prop("filter", t::string().optional()?)?;
         let out = t::list(t::string())?;
         let mat = self.operation(KvMaterializer::Keys, Effect::Read)?;
@@ -58,7 +58,7 @@ impl KvRuntime {
         t::func(inp, out, mat)?.build()
     }
 
-    pub fn values(&self) -> Result<TypeId> {
+    pub fn values(&self) -> Result<TypeDef> {
         let inp = t::r#struct().prop("filter", t::string().optional()?)?;
         let out = t::list(t::string())?;
         let mat = self.operation(KvMaterializer::Values, Effect::Read)?;

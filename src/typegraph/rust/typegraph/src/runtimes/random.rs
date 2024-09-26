@@ -1,8 +1,8 @@
 use crate::{
-    t::{self, TypeBuilder},
+    t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
-        core::{RuntimeId, TypeId},
+        core::RuntimeId,
         runtimes::{BaseMaterializer, Effect, MaterializerRandom, RandomRuntimeData},
     },
     Result,
@@ -25,7 +25,7 @@ impl RandomRuntime {
         Ok(RandomRuntime { id })
     }
 
-    pub fn gen<T: TypeBuilder>(&self, out: T) -> Result<TypeId> {
+    pub fn gen<T: TypeBuilder>(&self, out: T) -> Result<TypeDef> {
         let base = BaseMaterializer {
             runtime: self.id,
             effect: Effect::Read,

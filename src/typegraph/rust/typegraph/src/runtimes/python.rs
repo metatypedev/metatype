@@ -1,10 +1,10 @@
 use regex::Regex;
 
 use crate::{
-    t::{self, TypeBuilder},
+    t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
-        core::{RuntimeId, TypeId},
+        core::RuntimeId,
         runtimes::{
             BaseMaterializer, Effect, MaterializerPythonDef, MaterializerPythonImport,
             MaterializerPythonLambda, MaterializerPythonModule,
@@ -27,7 +27,7 @@ impl PythonRuntime {
         Ok(Self { id })
     }
 
-    pub fn from_lambda<I, O>(&self, inp: I, out: O, code: &str) -> Result<TypeId>
+    pub fn from_lambda<I, O>(&self, inp: I, out: O, code: &str) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -47,7 +47,7 @@ impl PythonRuntime {
         t::func(inp, out, mat)?.build()
     }
 
-    pub fn from_def<I, O>(&self, inp: I, out: O, code: &str) -> Result<TypeId>
+    pub fn from_def<I, O>(&self, inp: I, out: O, code: &str) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -74,7 +74,7 @@ impl PythonRuntime {
         t::func(inp, out, mat)?.build()
     }
 
-    pub fn import<I, O>(&self, inp: I, out: O, options: PythonImportOption) -> Result<TypeId>
+    pub fn import<I, O>(&self, inp: I, out: O, options: PythonImportOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,

@@ -1,8 +1,7 @@
 use crate::{
-    t::{self, TypeBuilder},
+    t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
-        core::TypeId,
         runtimes::{
             BaseMaterializer, Effect, HttpMethod, HttpRuntimeData, MaterializerHttpRequest,
             RuntimeId,
@@ -39,7 +38,7 @@ impl HttpRuntime {
         Ok(Self { id })
     }
 
-    pub fn get<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
+    pub fn get<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -47,7 +46,7 @@ impl HttpRuntime {
         self.request(inp, out, HttpMethod::Get, Effect::Read, options)
     }
 
-    pub fn post<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
+    pub fn post<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -55,7 +54,7 @@ impl HttpRuntime {
         self.request(inp, out, HttpMethod::Post, Effect::Create(false), options)
     }
 
-    pub fn put<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
+    pub fn put<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -63,7 +62,7 @@ impl HttpRuntime {
         self.request(inp, out, HttpMethod::Put, Effect::Update(false), options)
     }
 
-    pub fn patch<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
+    pub fn patch<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -71,7 +70,7 @@ impl HttpRuntime {
         self.request(inp, out, HttpMethod::Patch, Effect::Update(false), options)
     }
 
-    pub fn delete<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeId>
+    pub fn delete<I, O>(&self, inp: I, out: O, options: HttpRequestOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -86,7 +85,7 @@ impl HttpRuntime {
         method: HttpMethod,
         effect: Effect,
         options: HttpRequestOption,
-    ) -> Result<TypeId>
+    ) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,

@@ -1,9 +1,9 @@
 use crate::{
     policy::Policy,
-    t::{self, TypeBuilder},
+    t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
-        core::{RuntimeId, TypeId},
+        core::RuntimeId,
         runtimes::{
             Effect, MaterializerDenoFunc, MaterializerDenoImport, MaterializerDenoPredefined,
         },
@@ -25,7 +25,7 @@ impl DenoRuntime {
         })
     }
 
-    pub fn func<I, O>(&self, inp: I, out: O, options: DenoFuncOption) -> Result<TypeId>
+    pub fn func<I, O>(&self, inp: I, out: O, options: DenoFuncOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -40,7 +40,7 @@ impl DenoRuntime {
         t::func(inp, out, mat)?.build()
     }
 
-    pub fn import<I, O>(&self, inp: I, out: O, options: DenoImportOption) -> Result<TypeId>
+    pub fn import<I, O>(&self, inp: I, out: O, options: DenoImportOption) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -57,7 +57,7 @@ impl DenoRuntime {
         t::func(inp, out, mat)?.build()
     }
 
-    pub fn identity<I>(&self, inp: I) -> Result<TypeId>
+    pub fn identity<I>(&self, inp: I) -> Result<TypeDef>
     where
         I: TypeBuilder + Clone,
     {
