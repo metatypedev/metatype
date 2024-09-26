@@ -565,16 +565,23 @@ Meta.test({
     expectedSchemaM,
     expectedSchemaQ,
     expectedSchemaM,
-    /* zod.object({
+    zod.object({
       scalarUnion: zod.string(),
       compositeUnion1: postSchema,
-      compositeUnion2: zod.undefined(),
+      compositeUnion2: zod.object({}),
       mixedUnion: zod.string(),
-    }), */
+    }),
   ]);
   const cases = [
     {
       skip: false,
+      name: "client_rs",
+      command: $`cargo run`.cwd(
+        join(scriptsPath, "rs"),
+      ),
+      expected: expectedSchema,
+    },
+    {
       name: "client_ts",
       // NOTE: dax replaces commands to deno with
       // commands to xtask so we go through bah
@@ -590,13 +597,6 @@ Meta.test({
       ),
       expected: expectedSchema,
     },
-    {
-      name: "client_rs",
-      command: $`cargo run`.cwd(
-        join(scriptsPath, "rs"),
-      ),
-      expected: expectedSchema,
-    },
   ];
 
   await using _engine = await metaTest.engine(
@@ -607,6 +607,8 @@ Meta.test({
       continue;
     }
     await metaTest.should(name, async () => {
+      // const res = await command
+      //   .env({ "TG_PORT": metaTest.port.toString() });
       const res = await command
         .env({ "TG_PORT": metaTest.port.toString() }).text();
       expected.parse(JSON.parse(res));

@@ -107,4 +107,35 @@ res4 = gql_client.mutation(
     }
 )
 
-print(json.dumps([res1, res1a, res2, res3, res4]))
+res5 = gql_client.query(
+    {
+        "scalarUnion": qg.scalar_union(
+            {
+                "id": "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+            }
+        ),
+        "compositeUnion1": qg.composite_union(
+            {
+                "id": "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+            },
+            {"post": {"_": SelectionFlags(select_all=True)}},
+        ),
+        "compositeUnion2": qg.composite_union(
+            {
+                "id": "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+            },
+            {"user": {"_": SelectionFlags(select_all=True)}},
+        ),
+        "mixedUnion": qg.mixed_union(
+            {
+                "id": "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+            },
+            {
+                "post": {"_": SelectionFlags(select_all=True)},
+                "user": {"_": SelectionFlags(select_all=True)},
+            },
+        ),
+    }
+)
+
+print(json.dumps([res1, res1a, res2, res3, res4, res5]))

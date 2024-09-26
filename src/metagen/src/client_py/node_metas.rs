@@ -10,6 +10,7 @@ use crate::{interlude::*, shared::types::*};
 
 pub struct PyNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
+    pub named_types: Rc<std::sync::Mutex<HashSet<u32>>>,
 }
 
 impl PyNodeMetasRenderer {
@@ -57,8 +58,10 @@ impl PyNodeMetasRenderer {
             r#"
     @staticmethod
     def {ty_name}():
+        return_node = NodeDescs.{return_node}()
         return NodeMeta(
-            sub_nodes=NodeDescs.{return_node}().sub_nodes,"#
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,"#
         )?;
         if let Some(fields) = argument_fields {
             write!(
@@ -89,6 +92,37 @@ impl PyNodeMetasRenderer {
         )?;
         Ok(())
     }
+
+    fn render_for_union(
+        &self,
+        dest: &mut TypeRenderer,
+        ty_name: &str,
+        variants: IndexMap<String, Rc<str>>,
+    ) -> std::fmt::Result {
+        write!(
+            dest,
+            r#"
+    @staticmethod
+    def {ty_name}():
+        return NodeMeta(
+            variants={{"#
+        )?;
+        for (key, node_ref) in variants {
+            write!(
+                dest,
+                r#"
+                "{key}": NodeDescs.{node_ref},"#
+            )?;
+        }
+        write!(
+            dest,
+            r#"
+            }},
+        )
+"#
+        )?;
+        Ok(())
+    }
 }
 
 impl RenderType for PyNodeMetasRenderer {
@@ -114,10 +148,14 @@ impl RenderType for PyNodeMetasRenderer {
             | TypeNode::List {
                 data: ListTypeData { items: item, .. },
                 ..
-            } => renderer.render_subgraph(*item, cursor)?.0.unwrap().to_string(),
+            } => renderer
+                .render_subgraph(*item, cursor)?
+                .0
+                .unwrap()
+                .to_string(),
             TypeNode::Function { data, base } => {
                 let (return_ty_name, _cyclic) = renderer.render_subgraph(data.output, cursor)?;
-                let return_ty_name = return_ty_name.unwrap() ;
+                let return_ty_name = return_ty_name.unwrap();
                 let props = match renderer.nodes[data.input as usize].deref() {
                     TypeNode::Object { data, .. } if !data.properties.is_empty() => {
                         let props = data
@@ -154,16 +192,43 @@ impl RenderType for PyNodeMetasRenderer {
                 ty_name
             }
             TypeNode::Either {
-                ..
-                // data: EitherTypeData { one_of: variants },
-                // base,
+                data: EitherTypeData { one_of: variants },
+                base,
             }
             | TypeNode::Union {
-                ..
-                // data: UnionTypeData { any_of: variants },
-                // base,
+                data: UnionTypeData { any_of: variants },
+                base,
             } => {
-                todo!("unions are wip")
+                let mut named_set = vec![];
+                let variants = variants
+                    .iter()
+                    .filter_map(|&inner| {
+                        if !renderer.is_composite(inner) {
+                            return None;
+                        }
+                        named_set.push(inner);
+                        let (ty_name, _cyclic) = match renderer.render_subgraph(inner, cursor) {
+                            Ok(val) => val,
+                            Err(err) => return Some(Err(err)),
+                        };
+                        let ty_name = ty_name.unwrap();
+                        Some(eyre::Ok((
+                            renderer.nodes[inner as usize].deref().base().title.clone(),
+                            ty_name,
+                        )))
+                    })
+                    .collect::<Result<IndexMap<_, _>, _>>()?;
+                if !variants.is_empty() {
+                    {
+                        let mut named_types = self.named_types.lock().unwrap();
+                        named_types.extend(named_set)
+                    }
+                    let ty_name = normalize_type_title(&base.title);
+                    self.render_for_union(renderer, &ty_name, variants)?;
+                    ty_name
+                } else {
+                    "scalar".into()
+                }
             }
         };
         Ok(name)
