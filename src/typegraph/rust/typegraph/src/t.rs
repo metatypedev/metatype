@@ -71,6 +71,10 @@ impl TypeDef {
 pub trait TypeBuilder: Sized {
     fn build(self) -> Result<TypeDef>;
 
+    fn into_id(self) -> Result<TypeId> {
+        self.build().map(|ty| ty.id)
+    }
+
     fn rename(self, name: &str) -> Result<TypeDef> {
         self.build()?.rename(name)
     }
@@ -79,8 +83,32 @@ pub trait TypeBuilder: Sized {
         self.build()?.with_policy(policy)
     }
 
-    fn into_id(self) -> Result<TypeId> {
-        self.build().map(|ty| ty.id)
+    fn set<I>(self, value: I) -> Result<TypeDef>
+    where
+        I: Into<Value>,
+    {
+        self.build()?
+            .with_injection(serialize_injection(InjectionSource::Static, Some(value)))
+    }
+
+    fn inject(self, value: &str) -> Result<TypeDef> {
+        self.build()?
+            .with_injection(serialize_injection(InjectionSource::Dynamic, Some(value)))
+    }
+
+    fn from_context(self, value: &str) -> Result<TypeDef> {
+        self.build()?
+            .with_injection(serialize_injection(InjectionSource::Context, Some(value)))
+    }
+
+    fn from_secret(self, value: &str) -> Result<TypeDef> {
+        self.build()?
+            .with_injection(serialize_injection(InjectionSource::Secret, Some(value)))
+    }
+
+    fn from_random(self) -> Result<TypeDef> {
+        self.build()?
+            .with_injection(serialize_injection(InjectionSource::Random, None::<String>))
     }
 
     fn optional(self) -> Result<OptionalBuilder> {
@@ -111,6 +139,12 @@ impl TypeBuilder for TypeId {
 impl TypeBuilder for TypeDef {
     fn build(self) -> Result<TypeDef> {
         Ok(self)
+    }
+}
+
+impl TypeBuilder for Result<TypeDef> {
+    fn build(self) -> Result<TypeDef> {
+        self.and_then(|ty| ty.build())
     }
 }
 

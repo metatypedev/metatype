@@ -10,11 +10,10 @@ pub struct Injection {
 #[derive(Debug, Serialize)]
 pub struct InjectionValue {
     #[serde(skip_serializing_if = "Option::is_none")]
-    value: Option<Value>,
+    value: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
-#[serde(untagged)]
 #[serde(rename_all = "lowercase")]
 pub enum InjectionSource {
     Dynamic,
@@ -32,7 +31,7 @@ where
     let injection = Injection {
         source,
         data: InjectionValue {
-            value: data.map(|d| d.into()),
+            value: data.map(|d| d.into().to_string()),
         },
     };
 
