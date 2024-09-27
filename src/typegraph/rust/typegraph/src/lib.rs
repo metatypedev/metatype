@@ -4,6 +4,7 @@
 mod error;
 mod host;
 mod injections;
+mod typegraph;
 
 pub mod policy;
 pub mod runtimes;
@@ -12,3 +13,4 @@ pub mod t;
 pub mod wasm; // FIXME
 
 pub use error::{Error, Result};
+pub use typegraph::{Typegraph, TypegraphBuilder};

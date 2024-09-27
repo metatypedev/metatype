@@ -162,6 +162,29 @@ impl Default for TypeBase {
     }
 }
 
+#[derive(Debug, Default, Clone)]
+pub struct BooleanBuilder {
+    base: TypeBase,
+}
+
+impl TypeBuilder for BooleanBuilder {
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_booleanb(s, &self.base))?,
+        })
+    }
+}
+
+impl BaseBuilder for BooleanBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
+}
+
+pub fn boolean() -> BooleanBuilder {
+    BooleanBuilder::default()
+}
+
 #[allow(clippy::derivable_impls)]
 impl Default for TypeInteger {
     fn default() -> Self {

@@ -4,14 +4,18 @@
 use crate::{
     wasm::{
         self,
-        core::{ContextCheck, MaterializerId, Policy as CorePolicy, PolicyId},
+        core::{ContextCheck, MaterializerId, Policy as CorePolicy, PolicyId, PolicySpec},
     },
     Result,
 };
 
+pub trait AsPolicySpec {
+    fn as_policy_spec(&self) -> PolicySpec;
+}
+
 #[derive(Debug)]
 pub struct Policy {
-    _id: PolicyId,
+    id: PolicyId,
     name: String,
 }
 
@@ -23,19 +27,19 @@ impl Policy {
     pub fn public() -> Result<Self> {
         let (id, name) = wasm::with_core(|c, s| c.call_get_public_policy(s))?;
 
-        Ok(Self { _id: id, name })
+        Ok(Self { id, name })
     }
 
     pub fn internal() -> Result<Self> {
         let (id, name) = wasm::with_core(|c, s| c.call_get_internal_policy(s))?;
 
-        Ok(Self { _id: id, name })
+        Ok(Self { id, name })
     }
 
     pub fn context(key: &str, check: ContextCheck) -> Result<Self> {
         let (id, name) = wasm::with_core(|c, s| c.call_register_context_policy(s, key, &check))?;
 
-        Ok(Self { _id: id, name })
+        Ok(Self { id, name })
     }
 
     pub fn new(name: &str, materializer: MaterializerId) -> Result<Self> {
@@ -47,11 +51,17 @@ impl Policy {
         let id = wasm::with_core(|c, s| c.call_register_policy(s, &data))?;
 
         Ok(Self {
-            _id: id,
+            id,
             name: name.to_string(),
         })
     }
 
     // TODO
     // pub fn on() {}
+}
+
+impl AsPolicySpec for Policy {
+    fn as_policy_spec(&self) -> PolicySpec {
+        PolicySpec::Simple(self.id)
+    }
 }
