@@ -10,8 +10,8 @@ use crate::{
     wasm::{
         self,
         core::{
-            FuncParams, ParameterTransform, PolicySpec, TypeBase, TypeEither, TypeFloat, TypeFunc,
-            TypeId, TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
+            FuncParams, ParameterTransform, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
+            TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
         },
     },
 };
@@ -130,8 +130,8 @@ pub trait TypeBuilder: Sized {
 pub trait BaseBuilder: Sized {
     fn base_mut(&mut self) -> &mut TypeBase;
 
-    fn named(mut self, name: String) -> Self {
-        self.base_mut().name = Some(name);
+    fn named(mut self, name: &str) -> Self {
+        self.base_mut().name = name.to_string().into();
         self
     }
 
@@ -701,7 +701,6 @@ where
             mat,
             ..Default::default()
         },
-        ..Default::default()
     })
 }
 
