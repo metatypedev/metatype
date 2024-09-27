@@ -3,7 +3,6 @@
     {
       "type": "object",
       "title": "typegate/prisma_migration",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -24,8 +23,7 @@
     },
     {
       "type": "function",
-      "title": "func_10",
-      "runtime": 1,
+      "title": "root_diff_fn",
       "policies": [
         0
       ],
@@ -39,8 +37,7 @@
     },
     {
       "type": "object",
-      "title": "object_4",
-      "runtime": 1,
+      "title": "root_diff_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -53,16 +50,14 @@
     },
     {
       "type": "string",
-      "title": "string_0",
-      "runtime": 1,
+      "title": "root_diff_fn_input_typegraph_string",
       "policies": [],
       "config": {},
       "as_id": false
     },
     {
       "type": "optional",
-      "title": "optional_2",
-      "runtime": 1,
+      "title": "root_diff_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -71,16 +66,14 @@
     },
     {
       "type": "boolean",
-      "title": "boolean_3",
-      "runtime": 1,
+      "title": "root_diff_fn_input_script_boolean",
       "policies": [],
       "config": {},
       "as_id": false
     },
     {
       "type": "object",
-      "title": "object_8",
-      "runtime": 1,
+      "title": "root_diff_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -92,8 +85,7 @@
     },
     {
       "type": "function",
-      "title": "func_23",
-      "runtime": 1,
+      "title": "root_apply_fn",
       "policies": [
         0
       ],
@@ -107,8 +99,7 @@
     },
     {
       "type": "object",
-      "title": "object_17",
-      "runtime": 1,
+      "title": "root_apply_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -122,8 +113,7 @@
     },
     {
       "type": "object",
-      "title": "object_21",
-      "runtime": 1,
+      "title": "root_apply_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -135,8 +125,7 @@
     },
     {
       "type": "list",
-      "title": "list_20",
-      "runtime": 1,
+      "title": "root_apply_fn_output_appliedMigrations_root_diff_fn_input_typegraph_string_list",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -144,8 +133,7 @@
     },
     {
       "type": "function",
-      "title": "func_40",
-      "runtime": 1,
+      "title": "root_create_fn",
       "policies": [
         0
       ],
@@ -159,8 +147,7 @@
     },
     {
       "type": "object",
-      "title": "object_31",
-      "runtime": 1,
+      "title": "root_create_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -175,8 +162,7 @@
     },
     {
       "type": "object",
-      "title": "object_38",
-      "runtime": 1,
+      "title": "root_create_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -190,8 +176,7 @@
     },
     {
       "type": "function",
-      "title": "func_51",
-      "runtime": 1,
+      "title": "root_deploy_fn",
       "policies": [
         0
       ],
@@ -205,8 +190,7 @@
     },
     {
       "type": "object",
-      "title": "object_45",
-      "runtime": 1,
+      "title": "root_deploy_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -219,8 +203,7 @@
     },
     {
       "type": "object",
-      "title": "object_49",
-      "runtime": 1,
+      "title": "root_deploy_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -232,16 +215,14 @@
     },
     {
       "type": "integer",
-      "title": "integer_46",
-      "runtime": 1,
+      "title": "root_deploy_fn_output_migrationCount_integer",
       "policies": [],
       "config": {},
       "as_id": false
     },
     {
       "type": "function",
-      "title": "func_58",
-      "runtime": 1,
+      "title": "root_reset_fn",
       "policies": [
         0
       ],
@@ -255,8 +236,7 @@
     },
     {
       "type": "object",
-      "title": "object_55",
-      "runtime": 1,
+      "title": "root_reset_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,

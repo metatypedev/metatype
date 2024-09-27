@@ -18,14 +18,13 @@ use crate::{
 };
 
 impl TypeConversion for Union {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
         Ok(TypeNode::Union {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "union",
                 type_id: self.id,
                 name: self.base.name.clone(),
-                runtime_idx: runtime_id.unwrap(),
                 policies: &self.extended_base.policies,
                 runtime_config: self.base.runtime_config.as_deref(),
             }
@@ -38,9 +37,7 @@ impl TypeConversion for Union {
                     .variants
                     .iter()
                     .map(|vid| -> Result<_> {
-                        Ok(ctx
-                            .register_type(TypeId(*vid).try_into()?, runtime_id)?
-                            .into())
+                        Ok(ctx.register_type(TypeId(*vid).try_into()?)?.into())
                     })
                     .collect::<Result<Vec<_>>>()?,
             },
@@ -65,12 +62,11 @@ impl Hashable for TypeUnion {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         "union".hash(hasher);
         for (index, type_id) in self.variants.iter().enumerate() {
             index.hash(hasher);
-            TypeId(*type_id).hash_child_type(hasher, tg, runtime_id)?;
+            TypeId(*type_id).hash_child_type(hasher, tg)?;
         }
         Ok(())
     }

@@ -6,16 +6,15 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "graphql",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
         "user": 1,
-        "users": 7,
-        "createUser": 11,
-        "create_message": 14,
-        "messages": 27
+        "users": 6,
+        "createUser": 10,
+        "create_message": 13,
+        "messages": 25
       },
       "required": [
         "user",
@@ -28,7 +27,6 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "function",
       "title": "root_user_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
@@ -43,7 +41,6 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "root_user_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -55,7 +52,6 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "string",
       "title": "root_user_fn_input_id_string",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": true
@@ -63,28 +59,18 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "User",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 5,
-        "name": 6
+        "id": 3,
+        "name": 5
       },
       "required": []
     },
     {
       "type": "string",
-      "title": "User_id_string",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": true
-    },
-    {
-      "type": "string",
       "title": "User_name_string",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false
@@ -92,14 +78,13 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "function",
       "title": "root_users_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "as_id": false,
-      "input": 8,
-      "output": 9,
+      "input": 7,
+      "output": 8,
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": false
@@ -107,7 +92,6 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "root_users_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -117,19 +101,17 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "root_users_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "data": 10
+        "data": 9
       },
       "required": []
     },
     {
       "type": "list",
       "title": "root_users_fn_output_data_User_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -138,13 +120,12 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "function",
       "title": "root_createUser_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "as_id": false,
-      "input": 12,
+      "input": 11,
       "output": 4,
       "materializer": 3,
       "rate_weight": null,
@@ -153,40 +134,37 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "root_createUser_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "input": 13
+        "input": 12
       },
       "required": []
     },
     {
       "type": "object",
       "title": "CreateUserInput",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 6,
-        "username": 6,
-        "email": 6
+        "name": 5,
+        "username": 5,
+        "email": 5
       },
       "required": []
     },
     {
       "type": "function",
       "title": "root_create_message_fn",
-      "runtime": 2,
       "policies": [
         0
       ],
       "config": {},
       "as_id": false,
-      "input": 23,
-      "output": 26,
+      "input": 21,
+      "output": 24,
       "materializer": 4,
       "rate_weight": null,
       "rate_calls": false
@@ -194,22 +172,20 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "message",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 16,
-        "title": 17,
-        "user_id": 18,
-        "user": 19
+        "id": 15,
+        "title": 5,
+        "user_id": 16,
+        "user": 17
       },
       "required": []
     },
     {
       "type": "integer",
       "title": "message_create_input_id_integer",
-      "runtime": 2,
       "policies": [],
       "config": {
         "auto": true
@@ -218,16 +194,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "string",
-      "title": "message_create_input_title_string",
-      "runtime": 2,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
-      "type": "string",
       "title": "uid",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false
@@ -235,12 +202,11 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "function",
       "title": "message_output_user_fn",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
-      "input": 20,
-      "output": 22,
+      "input": 18,
+      "output": 20,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": false
@@ -248,24 +214,22 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "message_output_user_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 21
+        "id": 19
       },
       "required": []
     },
     {
       "type": "string",
       "title": "message_output_user_fn_input_id_string",
-      "runtime": 1,
       "policies": [],
       "injection": {
         "source": "parent",
         "data": {
-          "value": 18
+          "value": 16
         }
       },
       "config": {},
@@ -274,7 +238,6 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "optional",
       "title": "message_output_user_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -284,65 +247,60 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "root_create_message_fn_input",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "data": 24
+        "data": 22
       },
       "required": []
     },
     {
       "type": "object",
       "title": "message_create_input",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 25,
-        "title": 17,
-        "user_id": 18
+        "id": 23,
+        "title": 5,
+        "user_id": 16
       },
       "required": []
     },
     {
       "type": "optional",
       "title": "message_create_input_id_message_create_input_id_integer_optional",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 16,
+      "item": 15,
       "default_value": null
     },
     {
       "type": "object",
       "title": "message_output",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 16,
-        "title": 17,
-        "user_id": 18,
-        "user": 19
+        "id": 15,
+        "title": 5,
+        "user_id": 16,
+        "user": 17
       },
       "required": []
     },
     {
       "type": "function",
       "title": "root_messages_fn",
-      "runtime": 2,
       "policies": [
         0
       ],
       "config": {},
       "as_id": false,
-      "input": 28,
-      "output": 81,
+      "input": 26,
+      "output": 79,
       "materializer": 6,
       "rate_weight": null,
       "rate_calls": false
@@ -350,24 +308,47 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "message_query_input",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "where": 29,
-        "orderBy": 62,
-        "take": 69,
-        "skip": 71,
-        "cursor": 73,
-        "distinct": 78
+        "where": 27,
+        "orderBy": 60,
+        "take": 67,
+        "skip": 69,
+        "cursor": 71,
+        "distinct": 76
       },
       "required": []
     },
     {
       "type": "optional",
       "title": "message_query_input_where_message_query_where_input_optional",
-      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 28,
+      "default_value": null
+    },
+    {
+      "type": "object",
+      "title": "message_query_where_input",
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 29,
+        "title": 42,
+        "user_id": 42,
+        "AND": 58,
+        "OR": 58,
+        "NOT": 27
+      },
+      "required": []
+    },
+    {
+      "type": "optional",
+      "title": "message_query_where_input_id__prisma_integer_filter_ex_optional",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -375,74 +356,43 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
       "default_value": null
     },
     {
-      "type": "object",
-      "title": "message_query_where_input",
-      "runtime": 2,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {
-        "id": 31,
-        "title": 44,
-        "user_id": 44,
-        "AND": 60,
-        "OR": 60,
-        "NOT": 29
-      },
-      "required": []
-    },
-    {
-      "type": "optional",
-      "title": "message_query_where_input_id__prisma_integer_filter_ex_optional",
-      "runtime": 2,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 32,
-      "default_value": null
-    },
-    {
       "type": "optional",
       "title": "_prisma_integer_filter_ex",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 33,
+      "item": 31,
       "default_value": null
     },
     {
       "type": "union",
       "title": "message_query_where_input_id_union",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "anyOf": [
-        34,
-        43
+        32,
+        41
       ]
     },
     {
       "type": "either",
       "title": "_prisma_integer_filter",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "oneOf": [
+        33,
+        34,
         35,
         36,
-        37,
         38,
-        40,
-        42
+        40
       ]
     },
     {
       "type": "integer",
       "title": "_prisma_integer_filter_t0_integer",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false
@@ -450,231 +400,211 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "_prisma_integer_filter_t1_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "equals": 35
+        "equals": 33
       },
       "required": []
     },
     {
       "type": "object",
       "title": "_prisma_integer_filter_t2_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "not": 35
+        "not": 33
       },
       "required": []
     },
     {
       "type": "object",
       "title": "_prisma_integer_filter_t3_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "lt": 39,
-        "gt": 39,
-        "lte": 39,
-        "gte": 39
+        "lt": 37,
+        "gt": 37,
+        "lte": 37,
+        "gte": 37
       },
       "required": []
     },
     {
       "type": "optional",
       "title": "_prisma_integer_filter_t3_struct_lt__prisma_integer_filter_t0_integer_optional",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 35,
+      "item": 33,
       "default_value": null
     },
     {
       "type": "object",
       "title": "_prisma_integer_filter_t4_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "in": 41
+        "in": 39
       },
       "required": []
     },
     {
       "type": "list",
       "title": "_prisma_integer_filter_t4_struct_in__prisma_integer_filter_t0_integer_list",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 35
+      "items": 33
     },
     {
       "type": "object",
       "title": "_prisma_integer_filter_t5_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "notIn": 41
+        "notIn": 39
       },
       "required": []
     },
     {
       "type": "object",
       "title": "message_query_where_input_id_union_t1_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "not": 34
+        "not": 32
       },
       "required": []
     },
     {
       "type": "optional",
       "title": "message_query_where_input_title__prisma_string_filter_ex_optional",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 45,
+      "item": 43,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "_prisma_string_filter_ex",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 46,
+      "item": 44,
       "default_value": null
     },
     {
       "type": "union",
       "title": "message_query_where_input_title_union",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "anyOf": [
-        47,
-        59
+        45,
+        57
       ]
     },
     {
       "type": "union",
       "title": "_prisma_string_filter",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "anyOf": [
-        17,
+        5,
+        46,
+        47,
         48,
-        49,
         50,
-        52,
-        53,
-        56,
-        57
+        51,
+        54,
+        55
       ]
     },
     {
       "type": "object",
       "title": "_prisma_string_filter_t1_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "equals": 17
+        "equals": 5
       },
       "required": []
     },
     {
       "type": "object",
       "title": "_prisma_string_filter_t2_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "not": 17
+        "not": 5
       },
       "required": []
     },
     {
       "type": "object",
       "title": "_prisma_string_filter_t3_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "in": 51
+        "in": 49
       },
       "required": []
     },
     {
       "type": "list",
-      "title": "_prisma_string_filter_t3_struct_in_message_create_input_title_string_list",
-      "runtime": 2,
+      "title": "_prisma_string_filter_t3_struct_in_User_name_string_list",
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 17
+      "items": 5
     },
     {
       "type": "object",
       "title": "_prisma_string_filter_t4_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "notIn": 51
+        "notIn": 49
       },
       "required": []
     },
     {
       "type": "object",
       "title": "_prisma_string_filter_t5_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "contains": 17,
-        "mode": 54
+        "contains": 5,
+        "mode": 52
       },
       "required": []
     },
     {
       "type": "optional",
       "title": "_prisma_string_filter_t5_struct_mode__prisma_string_filter_t5_struct_mode_string_enum_optional",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 55,
+      "item": 53,
       "default_value": null
     },
     {
       "type": "string",
       "title": "_prisma_string_filter_t5_struct_mode_string_enum",
-      "runtime": 2,
       "policies": [],
       "enum": [
         "\\\\"insensitive\\\\""
@@ -685,54 +615,66 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "object",
       "title": "_prisma_string_filter_t6_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "search": 17
+        "search": 5
       },
       "required": []
     },
     {
       "type": "object",
       "title": "_prisma_string_filter_t7_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "startsWith": 58,
-        "endsWith": 58
+        "startsWith": 56,
+        "endsWith": 56
       },
       "required": []
     },
     {
       "type": "optional",
-      "title": "_prisma_string_filter_t7_struct_startsWith_message_create_input_title_string_optional",
-      "runtime": 2,
+      "title": "_prisma_string_filter_t7_struct_startsWith_User_name_string_optional",
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 17,
+      "item": 5,
       "default_value": null
     },
     {
       "type": "object",
       "title": "message_query_where_input_title_union_t1_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "not": 47
+        "not": 45
       },
       "required": []
     },
     {
       "type": "optional",
       "title": "message_query_where_input_AND_message_query_where_input_AND_message_query_where_input_list_optional",
-      "runtime": 2,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "item": 59,
+      "default_value": null
+    },
+    {
+      "type": "list",
+      "title": "message_query_where_input_AND_message_query_where_input_list",
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "items": 28
+    },
+    {
+      "type": "optional",
+      "title": "message_query_input_orderBy_message_order_by_optional",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -741,84 +683,59 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "list",
-      "title": "message_query_where_input_AND_message_query_where_input_list",
-      "runtime": 2,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "items": 30
-    },
-    {
-      "type": "optional",
-      "title": "message_query_input_orderBy_message_order_by_optional",
-      "runtime": 2,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 63,
-      "default_value": null
-    },
-    {
-      "type": "list",
       "title": "message_order_by",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 64
+      "items": 62
     },
     {
       "type": "object",
       "title": "message_query_input_orderBy_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 65,
-        "title": 65,
-        "user_id": 65
+        "id": 63,
+        "title": 63,
+        "user_id": 63
       },
       "required": []
     },
     {
       "type": "optional",
       "title": "_prisma_sort",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 66,
+      "item": 64,
       "default_value": null
     },
     {
       "type": "union",
       "title": "message_query_input_orderBy_struct_id_union",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "anyOf": [
-        67,
-        68
+        65,
+        66
       ]
     },
     {
       "type": "object",
       "title": "message_query_input_orderBy_struct_id_union_t0_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "sort": 68
+        "sort": 66
       },
       "required": []
     },
     {
       "type": "string",
       "title": "_prisma_sort_order",
-      "runtime": 2,
       "policies": [],
       "enum": [
         "\\\\"asc\\\\"",
@@ -830,17 +747,15 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "optional",
       "title": "message_query_input_take__take_optional",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 70,
+      "item": 68,
       "default_value": null
     },
     {
       "type": "integer",
       "title": "_take",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -849,17 +764,15 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "optional",
       "title": "message_query_input_skip__skip_optional",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 72,
+      "item": 70,
       "default_value": null
     },
     {
       "type": "integer",
       "title": "_skip",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -868,85 +781,77 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "optional",
       "title": "message_query_input_cursor_message_cursor_optional",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 74,
+      "item": 72,
       "default_value": null
     },
     {
       "type": "union",
       "title": "message_cursor",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "anyOf": [
-        75,
-        76,
-        77
+        73,
+        74,
+        75
       ]
     },
     {
       "type": "object",
       "title": "message_cursor_t0_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 16
+        "id": 15
       },
       "required": []
     },
     {
       "type": "object",
       "title": "message_cursor_t1_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "title": 17
+        "title": 5
       },
       "required": []
     },
     {
       "type": "object",
       "title": "message_cursor_t2_struct",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "user_id": 18
+        "user_id": 16
       },
       "required": []
     },
     {
       "type": "optional",
       "title": "message_query_input_distinct_message_keys_union_optional",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 79,
+      "item": 77,
       "default_value": null
     },
     {
       "type": "list",
       "title": "message_keys_union",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 80
+      "items": 78
     },
     {
       "type": "string",
       "title": "message_query_input_distinct_string_enum",
-      "runtime": 2,
       "policies": [],
       "enum": [
         "\\\\"id\\\\"",
@@ -959,24 +864,22 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     {
       "type": "list",
       "title": "root_messages_fn_output",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 82
+      "items": 80
     },
     {
       "type": "object",
       "title": "message_with_nested_count",
-      "runtime": 2,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "id": 16,
-        "title": 17,
-        "user_id": 18,
-        "user": 19
+        "id": 15,
+        "title": 5,
+        "user_id": 16,
+        "user": 17
       },
       "required": []
     }
@@ -1083,7 +986,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
         "connection_string_secret": "POSTGRES",
         "models": [
           {
-            "typeIdx": 15,
+            "typeIdx": 14,
             "typeName": "message",
             "props": [
               {
@@ -1093,7 +996,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
                   "type": "Int"
                 },
                 "cardinality": "one",
-                "typeIdx": 16,
+                "typeIdx": 15,
                 "injection": null,
                 "unique": false,
                 "auto": true,
@@ -1107,7 +1010,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
                   "format": "Plain"
                 },
                 "cardinality": "one",
-                "typeIdx": 17,
+                "typeIdx": 5,
                 "injection": null,
                 "unique": false,
                 "auto": false,
@@ -1121,7 +1024,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
                   "format": "Plain"
                 },
                 "cardinality": "one",
-                "typeIdx": 18,
+                "typeIdx": 16,
                 "injection": null,
                 "unique": false,
                 "auto": false,

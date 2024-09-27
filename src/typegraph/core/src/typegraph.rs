@@ -121,7 +121,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     };
 
     // register the deno runtime
-    let default_runtime_idx = ctx.register_runtime(Store::get_deno_runtime())?;
+    let _default_runtime_idx = ctx.register_runtime(Store::get_deno_runtime())?;
 
     ctx.types.push(Some(TypeNode::Object {
         base: TypeNodeBase {
@@ -130,7 +130,6 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             enumeration: None,
             injection: None,
             policies: Default::default(),
-            runtime: default_runtime_idx,
             title: params.name,
             as_id: false,
         },
@@ -166,8 +165,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
                                     })
                                 })? as u32;
 
-                            let type_idx =
-                                ctx.register_type(TypeId(func_store_idx).try_into()?, None)?;
+                            let type_idx = ctx.register_type(TypeId(func_store_idx).try_into()?)?;
 
                             let mut auth_processed = auth.clone();
                             auth_processed
@@ -325,7 +323,7 @@ pub fn expose(
 
                 // this resolves the type_id to a type_def from theh Store
                 let type_def = type_id.try_into()?;
-                let type_idx = ctx.register_type(type_def, None)?;
+                let type_idx = ctx.register_type(type_def)?;
                 root_data.properties.insert(key.clone(), type_idx.into());
                 root_data.required.push(key);
                 Ok(())
@@ -343,24 +341,20 @@ pub fn set_seed(seed: Option<u32>) -> Result<()> {
 }
 
 impl TypegraphContext {
-    pub fn hash_type(&mut self, type_def: TypeDef, runtime_id: Option<u32>) -> Result<u64> {
+    pub fn hash_type(&mut self, type_def: TypeDef) -> Result<u64> {
         let type_id = type_def.id().into();
         if let Some(hash) = self.mapping.types_to_hash.get(&type_id) {
             Ok(*hash)
         } else {
             let mut hasher = Hasher::new();
-            type_def.hash_type(&mut hasher, self, runtime_id)?;
+            type_def.hash_type(&mut hasher, self)?;
             let hash = hasher.finish();
             self.mapping.types_to_hash.insert(type_id, hash);
             Ok(hash)
         }
     }
 
-    pub fn register_type(
-        &mut self,
-        mut type_def: TypeDef,
-        runtime_id: Option<u32>,
-    ) -> Result<TypeId, TgError> {
+    pub fn register_type(&mut self, mut type_def: TypeDef) -> Result<TypeId, TgError> {
         // we remove the name before hashing if it's not
         // user named
         let user_named = if let Some(name) = type_def.name() {
@@ -373,7 +367,7 @@ impl TypegraphContext {
         } else {
             false
         };
-        let hash = self.hash_type(type_def.clone(), runtime_id)?;
+        let hash = self.hash_type(type_def.clone())?;
 
         match self.mapping.hash_to_type.entry(hash) {
             Entry::Vacant(e) => {
@@ -388,7 +382,7 @@ impl TypegraphContext {
 
                 // let tpe = id.as_type()?;
 
-                let type_node = type_def.convert(self, runtime_id)?;
+                let type_node = type_def.convert(self)?;
 
                 self.types[idx] = Some(type_node);
                 if user_named {
@@ -402,24 +396,19 @@ impl TypegraphContext {
         }
     }
 
-    pub fn register_materializer(
-        &mut self,
-        id: u32,
-    ) -> Result<(MaterializerId, RuntimeId), TgError> {
+    pub fn register_materializer(&mut self, id: u32) -> Result<MaterializerId, TgError> {
         match self.mapping.materializers.entry(id) {
             Entry::Vacant(e) => {
                 let idx = self.materializers.len();
                 e.insert(idx as u32);
                 self.materializers.push(None);
                 let converted = convert_materializer(self, Store::get_materializer(id)?)?;
-                let runtime_id = converted.runtime;
                 self.materializers[idx] = Some(converted);
-                Ok((idx as MaterializerId, runtime_id as RuntimeId))
+                Ok(idx as MaterializerId)
             }
             Entry::Occupied(e) => {
                 let mat_idx = *e.get();
-                let mat = self.materializers[mat_idx as usize].as_ref().unwrap();
-                Ok((mat_idx, mat.runtime))
+                Ok(mat_idx)
             }
         }
     }
@@ -484,7 +473,7 @@ impl TypegraphContext {
                     // we allocate first a slot in the array, as the lazy conversion might register
                     // other runtimes
                     self.runtimes.push(TGRuntime::Unknown(Default::default()));
-                    let rt = lazy(id, idx as u32, self)?;
+                    let rt = lazy(id, self)?;
                     self.runtimes[idx] = rt;
                 }
             };

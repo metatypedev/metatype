@@ -237,7 +237,6 @@ pub mod types {
     pub struct RecordCreationInput {
     }
     pub type EntityNameString = String;
-    pub type EntityAgeAddOutputOptional = Option<AddOutput>;
     pub type ProfileLevelStringEnum = String;
     pub type ProfileAttributesStringEnum = String;
     pub type ProfileAttributesProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
@@ -266,13 +265,10 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Entity {
         pub name: EntityNameString,
-        pub age: EntityAgeAddOutputOptional,
+        pub age: RangeArgsAAddOutputOptional,
         pub profile: Profile,
     }
     pub type RecordCreationOutput = Vec<Entity>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootRandomFnInput {
-    }
 }
 pub mod stubs {
     use super::*;

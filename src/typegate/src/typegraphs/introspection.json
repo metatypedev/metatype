@@ -3,13 +3,12 @@
     {
       "type": "object",
       "title": "introspection",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
         "__type": 1,
-        "__schema": 31
+        "__schema": 30
       },
       "required": [
         "__type",
@@ -18,8 +17,7 @@
     },
     {
       "type": "function",
-      "title": "func_80",
-      "runtime": 1,
+      "title": "root___type_fn",
       "policies": [
         0
       ],
@@ -33,8 +31,7 @@
     },
     {
       "type": "object",
-      "title": "object_77",
-      "runtime": 1,
+      "title": "root___type_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -45,16 +42,14 @@
     },
     {
       "type": "string",
-      "title": "string_76",
-      "runtime": 1,
+      "title": "root___type_fn_input_name_string",
       "policies": [],
       "config": {},
       "as_id": false
     },
     {
       "type": "optional",
-      "title": "_78_type?",
-      "runtime": 1,
+      "title": "root___type_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -64,7 +59,6 @@
     {
       "type": "object",
       "title": "type",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -73,19 +67,18 @@
         "name": 7,
         "description": 7,
         "specifiedByURL": 7,
-        "fields": 9,
+        "fields": 8,
         "interfaces": 19,
         "possibleTypes": 21,
-        "enumValues": 23,
+        "enumValues": 22,
         "inputFields": 27,
-        "ofType": 30
+        "ofType": 4
       },
       "required": []
     },
     {
       "type": "string",
       "title": "type_kind",
-      "runtime": 1,
       "policies": [],
       "enum": [
         "\"SCALAR\"",
@@ -102,118 +95,111 @@
     },
     {
       "type": "optional",
-      "title": "optional_32",
-      "runtime": 1,
+      "title": "type_name_root___type_fn_input_name_string_optional",
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 8,
+      "item": 3,
       "default_value": null
     },
     {
-      "type": "string",
-      "title": "string_31",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
       "type": "function",
-      "title": "func_42",
-      "runtime": 1,
+      "title": "type_fields_fn",
       "policies": [],
       "config": {},
       "as_id": false,
-      "input": 10,
-      "output": 13,
+      "input": 9,
+      "output": 12,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_39",
-      "runtime": 1,
+      "title": "type_fields_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "includeDeprecated": 11
+        "includeDeprecated": 10
       },
       "required": []
     },
     {
       "type": "optional",
-      "title": "optional_38",
-      "runtime": 1,
+      "title": "type_fields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 12,
+      "item": 11,
       "default_value": null
     },
     {
       "type": "boolean",
-      "title": "boolean_37",
-      "runtime": 1,
+      "title": "type_fields_fn_input_includeDeprecated_boolean",
       "policies": [],
       "config": {},
       "as_id": false
     },
     {
       "type": "optional",
-      "title": "_41__40_field[]?",
-      "runtime": 1,
+      "title": "type_fields_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 14,
+      "item": 13,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "_40_field[]",
-      "runtime": 1,
+      "title": "type_fields_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 15
+      "items": 14
     },
     {
       "type": "object",
       "title": "field",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 8,
+        "name": 3,
         "description": 7,
-        "args": 16,
+        "args": 15,
         "type": 5,
-        "isDeprecated": 12,
+        "isDeprecated": 11,
         "deprecationReason": 7
       },
       "required": []
     },
     {
       "type": "function",
-      "title": "func_24",
-      "runtime": 1,
+      "title": "field_args_fn",
       "policies": [],
       "config": {},
       "as_id": false,
-      "input": 10,
+      "input": 16,
       "output": 17,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
     },
     {
+      "type": "object",
+      "title": "field_args_fn_input",
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "includeDeprecated": 10
+      },
+      "required": []
+    },
+    {
       "type": "list",
-      "title": "_23_input_value[]",
-      "runtime": 1,
+      "title": "field_args_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -222,24 +208,22 @@
     {
       "type": "object",
       "title": "input_value",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 8,
+        "name": 3,
         "description": 7,
         "type": 5,
         "defaultValue": 7,
-        "isDeprecated": 12,
+        "isDeprecated": 11,
         "deprecationReason": 7
       },
       "required": []
     },
     {
       "type": "optional",
-      "title": "_45__44_type[]?",
-      "runtime": 1,
+      "title": "type_interfaces_type_interfaces_type_list_optional",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -248,8 +232,7 @@
     },
     {
       "type": "list",
-      "title": "_44_type[]",
-      "runtime": 1,
+      "title": "type_interfaces_type_list",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -257,40 +240,39 @@
     },
     {
       "type": "optional",
-      "title": "_48__47_type[]?",
-      "runtime": 1,
+      "title": "type_possibleTypes_type_interfaces_type_list_optional",
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 22,
+      "item": 20,
       "default_value": null
     },
     {
-      "type": "list",
-      "title": "_47_type[]",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "items": 5
-    },
-    {
       "type": "function",
-      "title": "func_54",
-      "runtime": 1,
+      "title": "type_enumValues_fn",
       "policies": [],
       "config": {},
       "as_id": false,
-      "input": 10,
+      "input": 23,
       "output": 24,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
     },
     {
+      "type": "object",
+      "title": "type_enumValues_fn_input",
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "includeDeprecated": 10
+      },
+      "required": []
+    },
+    {
       "type": "optional",
-      "title": "_53__52_enum_value[]?",
-      "runtime": 1,
+      "title": "type_enumValues_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -299,8 +281,7 @@
     },
     {
       "type": "list",
-      "title": "_52_enum_value[]",
-      "runtime": 1,
+      "title": "type_enumValues_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -309,79 +290,66 @@
     {
       "type": "object",
       "title": "enum_value",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 8,
+        "name": 3,
         "description": 7,
-        "isDeprecated": 12,
+        "isDeprecated": 11,
         "deprecationReason": 7
       },
       "required": []
     },
     {
       "type": "function",
-      "title": "func_60",
-      "runtime": 1,
+      "title": "type_inputFields_fn",
       "policies": [],
       "config": {},
       "as_id": false,
-      "input": 10,
-      "output": 28,
+      "input": 28,
+      "output": 29,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
     },
     {
-      "type": "optional",
-      "title": "_59__58_input_value[]?",
-      "runtime": 1,
+      "type": "object",
+      "title": "type_inputFields_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 29,
-      "default_value": null
-    },
-    {
-      "type": "list",
-      "title": "_58_input_value[]",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "items": 18
+      "properties": {
+        "includeDeprecated": 10
+      },
+      "required": []
     },
     {
       "type": "optional",
-      "title": "_62_type?",
-      "runtime": 1,
+      "title": "type_inputFields_fn_output",
       "policies": [],
       "config": {},
       "as_id": false,
-      "item": 5,
+      "item": 17,
       "default_value": null
     },
     {
       "type": "function",
-      "title": "func_90",
-      "runtime": 1,
+      "title": "root___schema_fn",
       "policies": [
         0
       ],
       "config": {},
       "as_id": false,
-      "input": 32,
-      "output": 33,
+      "input": 31,
+      "output": 32,
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_88",
-      "runtime": 1,
+      "title": "root___schema_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,
@@ -391,87 +359,53 @@
     {
       "type": "object",
       "title": "schema",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
         "description": 7,
-        "types": 34,
+        "types": 20,
         "queryType": 5,
-        "mutationType": 35,
-        "subscriptionType": 36,
-        "directives": 37
+        "mutationType": 4,
+        "subscriptionType": 4,
+        "directives": 33
       },
       "required": []
     },
     {
       "type": "list",
-      "title": "_83_type[]",
-      "runtime": 1,
+      "title": "schema_directives_directive_list",
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 5
-    },
-    {
-      "type": "optional",
-      "title": "_84_type?",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 5,
-      "default_value": null
-    },
-    {
-      "type": "optional",
-      "title": "_85_type?",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "item": 5,
-      "default_value": null
-    },
-    {
-      "type": "list",
-      "title": "_86_directive[]",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "items": 38
+      "items": 34
     },
     {
       "type": "object",
       "title": "directive",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "as_id": false,
       "properties": {
-        "name": 8,
+        "name": 3,
         "description": 7,
-        "isRepeatable": 12,
-        "locations": 39,
-        "args": 41
+        "isRepeatable": 11,
+        "locations": 35,
+        "args": 37
       },
       "required": []
     },
     {
       "type": "list",
-      "title": "_69_directive_location[]",
-      "runtime": 1,
+      "title": "directive_locations_directive_location_list",
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 40
+      "items": 36
     },
     {
       "type": "string",
       "title": "directive_location",
-      "runtime": 1,
       "policies": [],
       "enum": [
         "\"QUERY\"",
@@ -499,25 +433,26 @@
     },
     {
       "type": "function",
-      "title": "func_74",
-      "runtime": 1,
+      "title": "directive_args_fn",
       "policies": [],
       "config": {},
       "as_id": false,
-      "input": 10,
-      "output": 42,
+      "input": 38,
+      "output": 17,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
     },
     {
-      "type": "list",
-      "title": "_73_input_value[]",
-      "runtime": 1,
+      "type": "object",
+      "title": "directive_args_fn_input",
       "policies": [],
       "config": {},
       "as_id": false,
-      "items": 18
+      "properties": {
+        "includeDeprecated": 10
+      },
+      "required": []
     }
   ],
   "materializers": [

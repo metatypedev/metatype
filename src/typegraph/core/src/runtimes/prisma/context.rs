@@ -227,13 +227,12 @@ impl PrismaContext {
         ctx: &mut TypegraphContext,
         key: &str,
         prop: &ScalarProperty,
-        runtime_idx: u32,
     ) -> Result<cm::ScalarProperty> {
         Ok(cm::ScalarProperty {
             key: key.to_string(),
             cardinality: prop.quantifier.into(),
             type_idx: ctx
-                .register_type(prop.wrapper_type_id.resolve_ref()?.1, Some(runtime_idx))?
+                .register_type(prop.wrapper_type_id.resolve_ref()?.1)?
                 .into(),
             prop_type: prop.prop_type.clone(),
             injection: prop.injection.as_ref().map(|inj| cm::ManagedInjection {
@@ -258,7 +257,6 @@ impl PrismaContext {
         key: &str,
         prop: &RelationshipProperty,
         rel_name: String,
-        runtime_idx: u32,
     ) -> Result<cm::RelationshipProperty> {
         let model = self.model(prop.model_id)?;
         let model = model.borrow();
@@ -267,7 +265,7 @@ impl PrismaContext {
             key: key.to_string(),
             cardinality: prop.quantifier.into(),
             type_idx: ctx
-                .register_type(prop.wrapper_type_id.resolve_ref()?.1, Some(runtime_idx))?
+                .register_type(prop.wrapper_type_id.resolve_ref()?.1)?
                 .into(),
             model_name: model.type_name.clone(),
             unique: prop.unique,
@@ -290,12 +288,9 @@ impl PrismaContext {
         ctx: &mut TypegraphContext,
         model: &Model,
         type_id: TypeId,
-        runtime_idx: u32,
     ) -> Result<cm::Model> {
         Ok(cm::Model {
-            type_idx: ctx
-                .register_type(type_id.resolve_ref()?.1, Some(runtime_idx))?
-                .into(),
+            type_idx: ctx.register_type(type_id.resolve_ref()?.1)?.into(),
             type_name: model.type_name.clone(),
             props: model
                 .props
@@ -303,7 +298,7 @@ impl PrismaContext {
                 .map(|(key, prop): (&String, &Property)| -> Result<_> {
                     Ok(match prop {
                         Property::Scalar(prop) => Some(cm::Property::Scalar(
-                            self.convert_scalar_prop(ctx, key, prop, runtime_idx)?,
+                            self.convert_scalar_prop(ctx, key, prop)?,
                         )),
 
                         Property::Model(prop) => {
@@ -313,13 +308,9 @@ impl PrismaContext {
                                 model.relationships.get(key).unwrap().clone()
                             };
 
-                            Some(cm::Property::Relationship(self.convert_relationship_prop(
-                                ctx,
-                                key,
-                                prop,
-                                rel_name,
-                                runtime_idx,
-                            )?))
+                            Some(cm::Property::Relationship(
+                                self.convert_relationship_prop(ctx, key, prop, rel_name)?,
+                            ))
                         }
 
                         Property::Unmanaged(_) => {
@@ -338,7 +329,6 @@ impl PrismaContext {
     pub fn convert(
         &self,
         ctx: &mut TypegraphContext,
-        runtime_idx: u32,
         data: Rc<wit::PrismaRuntimeData>,
     ) -> Result<cm::PrismaRuntimeData> {
         Ok(cm::PrismaRuntimeData {
@@ -349,7 +339,7 @@ impl PrismaContext {
                 .iter()
                 .map(|(type_id, model)| -> Result<_> {
                     let model = model.borrow();
-                    self.convert_model(ctx, &model, *type_id, runtime_idx)
+                    self.convert_model(ctx, &model, *type_id)
                 })
                 .collect::<Result<Vec<_>>>()?,
 
@@ -357,10 +347,8 @@ impl PrismaContext {
                 self.relationships
                     .iter()
                     .map(|(_, rel)| {
-                        let left =
-                            self.convert_relationship_model(ctx, rel.left.clone(), runtime_idx)?;
-                        let right =
-                            self.convert_relationship_model(ctx, rel.right.clone(), runtime_idx)?;
+                        let left = self.convert_relationship_model(ctx, rel.left.clone())?;
+                        let right = self.convert_relationship_model(ctx, rel.right.clone())?;
                         Ok(cm::Relationship {
                             name: rel.name.clone(),
                             left,
@@ -377,12 +365,9 @@ impl PrismaContext {
         &self,
         ctx: &mut TypegraphContext,
         model: RelationshipModel,
-        runtime_idx: u32,
     ) -> Result<cm::RelationshipModel> {
         Ok(cm::RelationshipModel {
-            type_idx: ctx
-                .register_type(model.model_type.resolve_ref()?.1, Some(runtime_idx))?
-                .into(),
+            type_idx: ctx.register_type(model.model_type.resolve_ref()?.1)?.into(),
             field: model.field.clone(),
             cardinality: model.cardinality.into(),
         })

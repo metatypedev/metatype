@@ -126,12 +126,7 @@ pub trait TypeDefExt {
     fn base(&self) -> &TypeBase;
     fn x_base(&self) -> &ExtendedTypeBase;
     fn data(&self) -> &dyn TypeDefData;
-    fn hash_type(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()>;
+    fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()>;
     // fn to_string(&self) -> String;
 
     fn name(&self) -> Option<&str> {
@@ -169,13 +164,8 @@ impl<T: TypeDefExt> TypeDefExt for Rc<T> {
         (**self).data()
     }
 
-    fn hash_type(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
-        (**self).hash_type(hasher, tg, runtime_id)
+    fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()> {
+        (**self).hash_type(hasher, tg)
     }
 
     fn variant_name(&self) -> &'static str {
@@ -248,27 +238,16 @@ where
         format!("{}({})", self.data.variant_name(), params.join(", "))
     }
 
-    fn hash_type(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
-        self.base.hash(hasher, tg, runtime_id)?;
-        self.data.hash(hasher, tg, runtime_id)?;
-        self.extended_base.hash(hasher, tg, runtime_id)?;
-        runtime_id.hash(hasher);
+    fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()> {
+        self.base.hash(hasher, tg)?;
+        self.data.hash(hasher, tg)?;
+        self.extended_base.hash(hasher, tg)?;
         Ok(())
     }
 }
 
 impl Hashable for TypeBase {
-    fn hash(
-        &self,
-        hasher: &mut Hasher,
-        _tg: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
-    ) -> Result<()> {
+    fn hash(&self, hasher: &mut Hasher, _tg: &mut TypegraphContext) -> Result<()> {
         self.name.hash(hasher);
         self.runtime_config.hash(hasher);
         self.as_id.hash(hasher);
@@ -278,19 +257,14 @@ impl Hashable for TypeBase {
 }
 
 impl Hashable for ExtendedTypeBase {
-    fn hash(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
+    fn hash(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()> {
         "injection".hash(hasher);
         if let Some(injection) = &self.injection {
             injection.hash(hasher);
         }
         "policies".hash(hasher);
         for policy in &self.policies {
-            policy.hash(hasher, tg, runtime_id)?;
+            policy.hash(hasher, tg)?;
         }
 
         Ok(())

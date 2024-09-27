@@ -14,9 +14,8 @@ use common::typegraph::parameter_transform as cm;
 pub fn convert_tree(
     ctx: &mut TypegraphContext,
     root_fields: &ParameterTransformNode,
-    runtime_id: u32,
 ) -> Result<cm::ParameterTransformNode> {
-    let res = convert_node(ctx, root_fields, runtime_id)?;
+    let res = convert_node(ctx, root_fields)?;
     if !matches!(
         res.data,
         cm::ParameterTransformNodeData::Parent(cm::ParameterTransformParentNode::Object { .. })
@@ -29,35 +28,26 @@ pub fn convert_tree(
 fn convert_node(
     ctx: &mut TypegraphContext,
     node: &ParameterTransformNode,
-    runtime_id: u32,
 ) -> Result<cm::ParameterTransformNode> {
-    let type_idx = ctx
-        .register_type(TypeId(node.type_id).resolve_ref()?.1, Some(runtime_id))?
-        .0;
+    let type_idx = ctx.register_type(TypeId(node.type_id).resolve_ref()?.1)?.0;
     match &node.data {
         ParameterTransformNodeData::Leaf(leaf_node) => {
-            convert_leaf_node(ctx, leaf_node, runtime_id).map(|leaf_node| {
-                cm::ParameterTransformNode {
-                    type_idx,
-                    data: cm::ParameterTransformNodeData::Leaf(leaf_node),
-                }
+            convert_leaf_node(ctx, leaf_node).map(|leaf_node| cm::ParameterTransformNode {
+                type_idx,
+                data: cm::ParameterTransformNodeData::Leaf(leaf_node),
             })
         }
-        ParameterTransformNodeData::Parent(parent_node) => {
-            convert_parent_node(ctx, parent_node, runtime_id).map(|parent_node| {
-                cm::ParameterTransformNode {
-                    type_idx,
-                    data: cm::ParameterTransformNodeData::Parent(parent_node),
-                }
-            })
-        }
+        ParameterTransformNodeData::Parent(parent_node) => convert_parent_node(ctx, parent_node)
+            .map(|parent_node| cm::ParameterTransformNode {
+                type_idx,
+                data: cm::ParameterTransformNodeData::Parent(parent_node),
+            }),
     }
 }
 
 fn convert_leaf_node(
     ctx: &mut TypegraphContext,
     node: &ParameterTransformLeafNode,
-    runtime_id: u32,
 ) -> Result<cm::ParameterTransformLeafNode> {
     match node {
         ParameterTransformLeafNode::Arg { name } => {
@@ -77,7 +67,7 @@ fn convert_leaf_node(
         ParameterTransformLeafNode::Parent { type_name } => {
             let type_ref = t::ref_(type_name).build()?;
             let (_, type_def) = type_ref.resolve_ref()?;
-            let parent_idx = ctx.register_type(type_def, Some(runtime_id))?.0;
+            let parent_idx = ctx.register_type(type_def)?.0;
             Ok(cm::ParameterTransformLeafNode::Parent { parent_idx })
         }
     }
@@ -86,26 +76,22 @@ fn convert_leaf_node(
 fn convert_parent_node(
     ctx: &mut TypegraphContext,
     node: &ParameterTransformParentNode,
-    runtime_id: u32,
 ) -> Result<cm::ParameterTransformParentNode> {
     match node {
-        ParameterTransformParentNode::Object { fields } => {
-            convert_object_node(ctx, fields, runtime_id)
-        }
-        ParameterTransformParentNode::Array { items } => convert_array_node(ctx, items, runtime_id),
+        ParameterTransformParentNode::Object { fields } => convert_object_node(ctx, fields),
+        ParameterTransformParentNode::Array { items } => convert_array_node(ctx, items),
     }
 }
 
 fn convert_object_node(
     ctx: &mut TypegraphContext,
     fields: &HashMap<String, ParameterTransformNode>,
-    runtime_id: u32,
 ) -> Result<cm::ParameterTransformParentNode> {
     Ok(cm::ParameterTransformParentNode::Object {
         fields: fields
             .iter()
             .try_fold(HashMap::new(), |mut acc, (key, node)| {
-                acc.insert(key.clone(), convert_node(ctx, node, runtime_id)?);
+                acc.insert(key.clone(), convert_node(ctx, node)?);
                 Ok::<_, TgError>(acc)
             })?,
     })
@@ -114,12 +100,11 @@ fn convert_object_node(
 fn convert_array_node(
     ctx: &mut TypegraphContext,
     items: &[ParameterTransformNode],
-    runtime_id: u32,
 ) -> Result<cm::ParameterTransformParentNode> {
     Ok(cm::ParameterTransformParentNode::Array {
         items: items
             .iter()
-            .map(|e| convert_node(ctx, e, runtime_id))
+            .map(|e| convert_node(ctx, e))
             .collect::<Result<Vec<_>>>()?,
     })
 }
