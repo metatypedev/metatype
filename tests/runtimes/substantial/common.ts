@@ -67,9 +67,8 @@ export function basicTestTemplate(
         }
       );
 
-      // This is arbitrary
-      // Depends on the tick interval, the timing, and other overheads
-      await sleep(delays.awaitSleepCompleteSec * 1000);
+      // Let interrupts to do their jobs for a bit
+      await sleep(8 * 1000);
 
       await t.should(
         `have workflow marked as ongoing (${backendName})`,
@@ -102,7 +101,7 @@ export function basicTestTemplate(
         }
       );
 
-      await sleep(3 * 3000);
+      await sleep(delays.awaitSleepCompleteSec * 1000);
 
       await t.should(`complete sleep workflow (${backendName})`, async () => {
         await gql`

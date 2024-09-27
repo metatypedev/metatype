@@ -30,9 +30,9 @@ fn init_backend(kind: &SubstantialBackend) -> Result<Rc<dyn Backend>> {
                 .expect("invalid TMP_DIR");
             let root = tmp_dir.join("substantial").join("fs_backend");
 
-            Ok(Rc::new(FsBackend::new(root).unwrap()))
+            Ok(Rc::new(FsBackend::new(root).get()))
         }
-        SubstantialBackend::Memory => Ok(Rc::new(MemoryBackend::default().unwrap())),
+        SubstantialBackend::Memory => Ok(Rc::new(MemoryBackend::default().get())),
         SubstantialBackend::Redis(cfg) => Ok(Rc::new(RedisBackend::new(
             cfg.connection_string.clone(),
             Some("typegate".to_owned()),

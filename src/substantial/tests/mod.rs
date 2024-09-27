@@ -17,7 +17,7 @@ mod tests {
     #[test]
     fn test_basic_write_and_read_events_raw_fs() {
         let root = PathBuf::from("tmp/test/substantial");
-        let backend = FsBackend::new(root.clone()).unwrap();
+        let backend = FsBackend::new(root.clone()).get();
         let run_id = "test_run".to_string();
 
         let records = Records::new();
@@ -34,10 +34,10 @@ mod tests {
 
     #[test]
     fn test_basic_run_persist() {
-        let mem_backend = MemoryBackend::default().unwrap();
+        let mem_backend = MemoryBackend::default().get();
 
         let root = PathBuf::from("tmp/test_one/substantial");
-        let fs_backend = FsBackend::new(root.clone()).unwrap();
+        let fs_backend = FsBackend::new(root.clone()).get();
         std::fs::remove_dir_all(root).ok();
 
         let run_id = "some_run_id".to_string();
@@ -76,12 +76,12 @@ mod tests {
     #[test]
     fn test_state_consistency_logic() {
         let backends: Vec<(&str, Box<dyn Backend>)> = vec![
-            ("memory", Box::new(MemoryBackend::default().unwrap())),
+            ("memory", Box::new(MemoryBackend::default().get())),
             (
                 "fs",
                 Box::new({
                     let root = PathBuf::from("tmp/test_two/substantial");
-                    let backend = FsBackend::new(root.clone()).unwrap();
+                    let backend = FsBackend::new(root.clone()).get();
                     std::fs::remove_dir_all(root).ok();
                     backend
                 }),

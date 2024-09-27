@@ -64,7 +64,7 @@ impl Default for MemoryBackend {
 }
 
 impl MemoryBackend {
-    pub fn unwrap(self) -> KeyValueBackend {
+    pub fn get(self) -> KeyValueBackend {
         self.0
     }
 }
