@@ -24,7 +24,6 @@ interface TypeInfo {
   as_id: boolean;
   title: string;
   type: string;
-  runtime: string;
   /** list of json string */
   enum: string[] | null;
   /** json string */
@@ -562,7 +561,6 @@ function walkPath(
     title: node.title,
     type: node.type,
     enum: node.enum ?? null,
-    runtime: tg.runtime(node.runtime).name,
     config: node.config ? JSON.stringify(node.config) : null,
     default: defaultValue ? JSON.stringify(defaultValue) : null,
     format: format ?? null,

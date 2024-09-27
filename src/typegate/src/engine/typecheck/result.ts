@@ -106,7 +106,6 @@ export class ResultValidationCompiler {
         cg.generateStringValidator({
           type: "string",
           title: "__TypeName",
-          runtime: -1,
           policies: [],
           as_id: false,
         });

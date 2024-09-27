@@ -392,7 +392,10 @@ export class Planner {
       );
     }
 
-    const runtime = this.tg.runtimeReferences[schema.runtime];
+    const runtime = (schema.type === Type.FUNCTION)
+      ? this.tg
+        .runtimeReferences[(this.tg.materializer(schema.materializer)).runtime]
+      : node.parentStage!.props.runtime;
 
     const stage = this.createComputeStage(node, {
       dependencies: node.parentStage ? [node.parentStage.id()] : [],

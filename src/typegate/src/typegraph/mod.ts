@@ -43,7 +43,14 @@ import randomizeRecursively from "../runtimes/random.ts";
 import type { Typegate } from "../typegate/mod.ts";
 import { TypeUtils } from "./utils.ts";
 
-export type { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
+export type {
+  Cors,
+  Rate,
+  TypeGraphDS,
+  TypeMaterializer,
+  TypePolicy,
+  TypeRuntime,
+};
 
 export type RuntimeResolver = Record<string, Runtime>;
 
@@ -89,7 +96,6 @@ export class TypeGraph implements AsyncDisposable {
     title: "string",
     type: "string",
     policies: [],
-    runtime: -1,
     as_id: false,
   };
 
