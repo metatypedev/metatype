@@ -78,7 +78,7 @@ impl Action for Doctor {
         }
         println!();
 
-        let config = Config::load_or_find(args.config.clone(), dir);
+        let config = Config::load_or_find(args.config.as_deref(), dir);
 
         ui::title("Project", w);
         match config {
