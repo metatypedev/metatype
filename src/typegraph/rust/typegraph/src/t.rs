@@ -6,6 +6,7 @@ use serde_json::Value;
 use crate::{
     error::Result,
     injections::{serialize_injection, InjectionSource},
+    policy::AsPolicySpec,
     wasm::{
         self,
         core::{
@@ -32,8 +33,12 @@ impl TypeDef {
         Ok(self)
     }
 
-    pub fn with_policy(mut self, policy: &[PolicySpec]) -> Result<Self> {
-        self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, policy))?;
+    pub fn with_policy<P>(mut self, policy: &P) -> Result<Self>
+    where
+        P: AsPolicySpec,
+    {
+        let policy = [policy.as_policy_spec()];
+        self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, &policy))?;
         Ok(self)
     }
 
@@ -82,7 +87,10 @@ pub trait TypeBuilder: Sized {
         self.build()?.rename(name)
     }
 
-    fn with_policy(self, policy: &[PolicySpec]) -> Result<TypeDef> {
+    fn with_policy<P>(self, policy: &P) -> Result<TypeDef>
+    where
+        P: AsPolicySpec,
+    {
         self.build()?.with_policy(policy)
     }
 

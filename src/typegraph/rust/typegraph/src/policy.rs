@@ -65,3 +65,42 @@ impl AsPolicySpec for Policy {
         PolicySpec::Simple(self.id)
     }
 }
+
+pub use crate::wasm::core::PolicyPerEffect;
+
+impl PolicyPerEffect {
+    pub fn new() -> Self {
+        Self {
+            read: None,
+            create: None,
+            update: None,
+            delete: None,
+        }
+    }
+
+    pub fn read(mut self, policy: &Policy) -> Self {
+        self.read = Some(policy.id);
+        self
+    }
+
+    pub fn create(mut self, policy: &Policy) -> Self {
+        self.create = Some(policy.id);
+        self
+    }
+
+    pub fn update(mut self, policy: &Policy) -> Self {
+        self.update = Some(policy.id);
+        self
+    }
+
+    pub fn delete(mut self, policy: &Policy) -> Self {
+        self.delete = Some(policy.id);
+        self
+    }
+}
+
+impl AsPolicySpec for PolicyPerEffect {
+    fn as_policy_spec(&self) -> PolicySpec {
+        PolicySpec::PerEffect(self.clone())
+    }
+}

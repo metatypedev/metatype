@@ -153,16 +153,21 @@ pub struct Typegraph {
 }
 
 impl Typegraph {
-    pub fn expose(
+    pub fn expose<P>(
         &self,
         exports: impl IntoIterator<Item = (impl ToString, impl TypeBuilder)>,
-        default_policy: Option<impl AsPolicySpec>,
-    ) -> Result<()> {
+        default_policy: Option<&P>,
+    ) -> Result<()>
+    where
+        P: AsPolicySpec,
+    {
         let exports = exports
             .into_iter()
             .map(|(name, ty)| ty.into_id().map(|id| (name.to_string(), id)))
             .collect::<Result<Vec<_>>>()?;
+
         let policy = default_policy.map(|p| p.as_policy_spec());
+
         wasm::with_core(|c, s| c.call_expose(s, &exports, policy.as_slice().into()))
     }
 }
