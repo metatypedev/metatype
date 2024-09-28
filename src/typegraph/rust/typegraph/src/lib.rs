@@ -6,6 +6,7 @@ mod host;
 mod injections;
 mod typegraph;
 
+pub mod auth;
 pub mod policy;
 pub mod runtimes;
 pub mod t;

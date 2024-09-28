@@ -147,6 +147,12 @@ impl TypeBuilder for TypeId {
     }
 }
 
+impl TypeBuilder for &str {
+    fn build(self) -> Result<TypeDef> {
+        r#ref(self).build()
+    }
+}
+
 impl TypeBuilder for TypeDef {
     fn build(self) -> Result<TypeDef> {
         Ok(self)
@@ -390,6 +396,34 @@ impl BaseBuilder for StringBuilder {
 
 pub fn string() -> StringBuilder {
     StringBuilder::default()
+}
+
+pub fn uuid() -> StringBuilder {
+    string().as_id().format("uuid")
+}
+
+pub fn email() -> StringBuilder {
+    string().format("email")
+}
+
+pub fn uri() -> StringBuilder {
+    string().format("uri")
+}
+
+pub fn ean() -> StringBuilder {
+    string().format("ean")
+}
+
+pub fn date() -> StringBuilder {
+    string().format("date")
+}
+
+pub fn datetime() -> StringBuilder {
+    string().format("datetime")
+}
+
+pub fn json() -> StringBuilder {
+    string().format("json")
 }
 
 impl Default for TypeOptional {
@@ -707,5 +741,33 @@ where
 impl TypeBuilder for FuncParams {
     fn build(self) -> Result<TypeDef> {
         func(self.inp, self.out, self.mat)?.build()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RefBuilder {
+    name: String,
+    attributes: Vec<(String, String)>,
+}
+
+impl RefBuilder {
+    pub fn set(mut self, attr: &str, value: &str) -> Self {
+        self.attributes.push((attr.to_string(), value.to_string()));
+        self
+    }
+}
+
+impl TypeBuilder for RefBuilder {
+    fn build(self) -> Result<TypeDef> {
+        Ok(TypeDef {
+            id: wasm::with_core(|c, s| c.call_refb(s, &self.name, &self.attributes))?,
+        })
+    }
+}
+
+pub fn r#ref(name: &str) -> RefBuilder {
+    RefBuilder {
+        name: name.to_string(),
+        attributes: vec![],
     }
 }
