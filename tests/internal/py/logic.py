@@ -1,25 +1,24 @@
-from typing import Any
-from dataclasses import dataclass
-import json
+from .logic_types import (
+    RootSumFnInput,
+    TypeRootSumFnInputFirstFloat,
+    typed_remote_sub,
+    typed_sub,
+)
 
 
-def sub(first: int, second: int) -> int:
-    return first - second
-
-
-@dataclass
-class Var:
-    first: int
-    second: int
-
-
-def remote_sub(var: Var, ctx: Any) -> int:
-    data: Any = ctx.gql(
+@typed_remote_sub
+def remote_sub(inp: RootSumFnInput, ctx) -> TypeRootSumFnInputFirstFloat:
+    data = ctx.gql(
         query="""
-        query ($first: Float!, $second: Float!) {
+        query q($first: Float!, $second: Float!) {
              sub(first: $first, second: $second) 
         }
         """,
-        variables=json.dumps(var),
+        variables=inp,
     )
-    return data.sub
+    return data
+
+
+@typed_sub
+def sub(inp: RootSumFnInput, ctx) -> TypeRootSumFnInputFirstFloat:
+    return inp.first - inp.second

@@ -57,8 +57,6 @@ export class WitWireMessenger {
   async handle(opName: string, args: ResolverArgs) {
     const { _, ...inJson } = args;
 
-    console.log({ inJson });
-
     let res;
     try {
       res = await Meta.wit_wire.handle(this.id, {
@@ -181,7 +179,7 @@ async function gql(cx: HostCallCtx, args: object) {
       zod.record(zod.string(), zod.unknown()),
     ]),
   });
-  console.log({ args });
+
   const parseRes = argsValidator.safeParse(args);
   if (!parseRes.success) {
     throw new Error("error validating gql args", {
@@ -216,12 +214,14 @@ async function gql(cx: HostCallCtx, args: object) {
       variables: variables,
     }),
   });
+
   //TODO: make `handle` more friendly to internal requests
   const res = await cx.typegate.handle(request, {
     port: 0,
     hostname: "internal",
     transport: "tcp",
   });
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`gql fetch on ${cx.typegraphUrl} failed: ${text}`, {

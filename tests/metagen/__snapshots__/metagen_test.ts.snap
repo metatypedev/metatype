@@ -7,9 +7,11 @@ snapshot[`Metagen within sdk 1`] = `
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+from pyrt_wit_wire.main import Ctx
+
 class Ctx:
     def gql(self, query: str, variables: str):
-        pass
+        return "Mande"
 
 FORWARD_REFS = {}
 
@@ -112,7 +114,7 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
     def exported_wrapper(raw_inp):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp, Ctx())
@@ -149,9 +151,11 @@ def three(inp: RootOneFnInput, ctx: RootOneFnInput) -> Student:
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+from pyrt_wit_wire.main import Ctx
+
 class Ctx:
     def gql(self, query: str, variables: str):
-        pass
+        return "Mande"
 
 FORWARD_REFS = {}
 
@@ -264,7 +268,7 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, Ctx())
@@ -275,7 +279,7 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
     def exported_wrapper(raw_inp):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
         out: TypeRootOneFnInputNameString = user_fn(inp, Ctx())
@@ -811,9 +815,11 @@ snapshot[`Metagen within sdk 2`] = `
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+from pyrt_wit_wire.main import Ctx
+
 class Ctx:
     def gql(self, query: str, variables: str):
-        pass
+        return "Mande"
 
 FORWARD_REFS = {}
 
@@ -916,7 +922,7 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
     def exported_wrapper(raw_inp):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp, Ctx())
@@ -953,9 +959,11 @@ def three(inp: RootOneFnInput, ctx: RootOneFnInput) -> Student:
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+from pyrt_wit_wire.main import Ctx
+
 class Ctx:
     def gql(self, query: str, variables: str):
-        pass
+        return "Mande"
 
 FORWARD_REFS = {}
 
@@ -1068,7 +1076,7 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, Ctx())
@@ -1079,7 +1087,7 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
     def exported_wrapper(raw_inp):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
         out: TypeRootOneFnInputNameString = user_fn(inp, Ctx())
@@ -1615,9 +1623,11 @@ snapshot[`Metagen within sdk with custom template 1`] = `
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+from pyrt_wit_wire.main import Ctx
+
 class Ctx:
     def gql(self, query: str, variables: str):
-        pass
+        return "Mande"
 
 FORWARD_REFS = {}
 
@@ -1720,7 +1730,7 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
     def exported_wrapper(raw_inp):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp, Ctx())
@@ -1757,9 +1767,11 @@ def three(inp: RootOneFnInput, ctx: RootOneFnInput) -> Student:
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+from pyrt_wit_wire.main import Ctx
+
 class Ctx:
     def gql(self, query: str, variables: str):
-        pass
+        return "Mande"
 
 FORWARD_REFS = {}
 
@@ -1872,7 +1884,7 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, Ctx())
@@ -1883,7 +1895,7 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
     def exported_wrapper(raw_inp):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
         out: TypeRootOneFnInputNameString = user_fn(inp, Ctx())
@@ -1930,9 +1942,11 @@ snapshot[`Metagen within sdk with custom template 2`] = `
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+from pyrt_wit_wire.main import Ctx
+
 class Ctx:
     def gql(self, query: str, variables: str):
-        pass
+        return "Mande"
 
 FORWARD_REFS = {}
 
@@ -2035,7 +2049,7 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
     def exported_wrapper(raw_inp):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp, Ctx())
@@ -2072,9 +2086,11 @@ def three(inp: RootOneFnInput, ctx: RootOneFnInput) -> Student:
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+from pyrt_wit_wire.main import Ctx
+
 class Ctx:
     def gql(self, query: str, variables: str):
-        pass
+        return "Mande"
 
 FORWARD_REFS = {}
 
@@ -2187,7 +2203,7 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, Ctx())
@@ -2198,7 +2214,7 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
     def exported_wrapper(raw_inp):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
         out: TypeRootOneFnInputNameString = user_fn(inp, Ctx())

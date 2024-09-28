@@ -5,7 +5,7 @@ from dataclasses import dataclass, asdict, fields
 
 class Ctx:
     def gql(self, query: str, variables: str):
-        pass
+        return -1.1
 
 
 FORWARD_REFS = {}

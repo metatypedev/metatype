@@ -2,6 +2,26 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, Meta } from "../utils/mod.ts";
+import { join } from "@std/path/join";
+import { assertEquals } from "@std/assert";
+
+Meta.test("fdk table suite", async (_t) => {
+  const scriptsPath = join(import.meta.dirname!, ".");
+
+  assertEquals(
+    (
+      await Meta.cli(
+        {
+          env: {
+            // RUST_BACKTRACE: "1",
+          },
+        },
+        ...`-C ${scriptsPath} gen`.split(" "),
+      )
+    ).code,
+    0,
+  );
+});
 
 Meta.test(
   {
@@ -29,7 +49,7 @@ Meta.test(
         }
       `
         .expectData({
-          remoteSum: -1.1,
+          remoteSub: -1.1,
         })
         .on(e, `http://localhost:${t.port}`);
     });

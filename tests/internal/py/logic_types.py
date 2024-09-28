@@ -2,11 +2,14 @@ from types import NoneType
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
+
 class Ctx:
     def gql(self, query: str, variables: str):
         return -1.1
 
+
 FORWARD_REFS = {}
+
 
 class Struct:
     def repr(self):
@@ -81,30 +84,43 @@ class Struct:
             return val
 
 
-{% for class in classes -%}
-{{ class.def }}
-FORWARD_REFS["{{ class.hint }}"] = {{ class.hint }}
+@dataclass
+class RootSumFnInput(Struct):
+    first: float
+    second: float
 
 
-{% endfor -%}
-{% for def in types -%}
-{{ def }}
-{% endfor %}
+FORWARD_REFS["RootSumFnInput"] = RootSumFnInput
+
+
+TypeRootSumFnInputFirstFloat = float
+
+
 def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value
 
 
-{%for func in funcs %}
-def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}, Ctx], {{ func.output_name }}]):
+def typed_sub(user_fn: Callable[[RootSumFnInput, Ctx], TypeRootSumFnInputFirstFloat]):
     def exported_wrapper(raw_inp):
-        inp: {{ func.input_name }} = Struct.new({{ func.input_name }}, raw_inp)
-        out: {{ func.output_name }} = user_fn(inp, Ctx())
+        inp: RootSumFnInput = Struct.new(RootSumFnInput, raw_inp)
+        out: TypeRootSumFnInputFirstFloat = user_fn(inp, Ctx())
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
 
     return exported_wrapper
 
-{% endfor %}
+
+def typed_remote_sub(
+    user_fn: Callable[[RootSumFnInput, Ctx], TypeRootSumFnInputFirstFloat],
+):
+    def exported_wrapper(raw_inp):
+        inp: RootSumFnInput = Struct.new(RootSumFnInput, raw_inp)
+        out: TypeRootSumFnInputFirstFloat = user_fn(inp, Ctx())
+        if isinstance(out, list):
+            return [__repr(v) for v in out]
+        return __repr(out)
+
+    return exported_wrapper

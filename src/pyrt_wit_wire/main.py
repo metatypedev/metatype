@@ -74,12 +74,12 @@ class MatWire(wit_wire.exports.MatWire):
 
 
 class ErasedHandler:
-    def __init__(self, handler_fn: Callable[[Any, Ctx], Any]) -> None:
+    def __init__(self, handler_fn: Callable[[Any], Any]) -> None:
         self.handler_fn = handler_fn
 
     def handle(self, req: HandleReq):
         in_parsed = json.loads(req.in_json)
-        out = self.handler_fn(in_parsed, Ctx())
+        out = self.handler_fn(in_parsed)
         return json.dumps(out)
 
 
@@ -89,7 +89,7 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
         module = types.ModuleType(op.op_name)
         exec(data_parsed["source"], module.__dict__)
         fn = module.__dict__[data_parsed["func_name"]]
-        return ErasedHandler(handler_fn=lambda inp, ctx: fn(inp, ctx))
+        return ErasedHandler(handler_fn=lambda inp: fn(inp))
     elif data_parsed["ty"] == "import_function":
         prefix = data_parsed["func_name"]
 
@@ -111,7 +111,7 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
         return ErasedHandler(handler_fn=getattr(module, data_parsed["func_name"]))
     elif data_parsed["ty"] == "lambda":
         fn = eval(data_parsed["source"])
-        return ErasedHandler(handler_fn=lambda inp, ctx: fn(inp, ctx))
+        return ErasedHandler(handler_fn=lambda inp: fn(inp))
     else:
         raise Err(InitError_UnexpectedMat(op))
 
