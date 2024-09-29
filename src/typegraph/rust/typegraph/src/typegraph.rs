@@ -1,6 +1,7 @@
 use crate::{
+    auth::AddAuth,
     policy::AsPolicySpec,
-    t::TypeBuilder,
+    t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
         core::{Cors, Rate, TypegraphInitParams},
@@ -169,5 +170,17 @@ impl Typegraph {
         let policy = default_policy.map(|p| p.as_policy_spec());
 
         wasm::with_core(|c, s| c.call_expose(s, &exports, policy.as_slice().into()))
+    }
+
+    pub fn rest(graphql: &str) -> Result<u32> {
+        wasm::with_utils(|u, s| u.call_add_graphql_endpoint(s, graphql))
+    }
+
+    pub fn auth<A: AddAuth>(&self, auth: A) -> Result<u32> {
+        auth.add()
+    }
+
+    pub fn gen_ref(&self, name: &str) -> Result<TypeDef> {
+        t::r#ref(name).build()
     }
 }

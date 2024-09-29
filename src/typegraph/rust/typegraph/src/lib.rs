@@ -5,6 +5,7 @@ mod error;
 mod host;
 mod injections;
 mod typegraph;
+mod utils;
 
 pub mod auth;
 pub mod policy;
