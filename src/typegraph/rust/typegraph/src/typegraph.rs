@@ -138,7 +138,7 @@ impl TypegraphBuilder {
         self
     }
 
-    pub fn build(self) -> Result<Typegraph> {
+    pub fn init(self) -> Result<Typegraph> {
         wasm::with_core(|c, s| c.call_init_typegraph(s, &self.params))?;
 
         Ok(Typegraph {

@@ -19,11 +19,9 @@ use crate::{
     },
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct TypeDef {
     id: TypeId,
-    // base: TypeBase,
-    // data: TypeData,
 }
 
 impl TypeDef {
@@ -145,8 +143,16 @@ pub trait BaseBuilder: Sized {
         self
     }
 
-    fn as_id(mut self) -> Self {
+    fn id(mut self) -> Self {
         self.base_mut().as_id = true;
+        self
+    }
+
+    fn config<S: Serialize>(mut self, key: &str, value: S) -> Self {
+        self.base_mut()
+            .runtime_config
+            .get_or_insert_with(Vec::new)
+            .push((key.to_owned(), json_stringify(&value)));
         self
     }
 }
@@ -409,7 +415,7 @@ pub fn string() -> StringBuilder {
 }
 
 pub fn uuid() -> StringBuilder {
-    string().as_id().format("uuid")
+    string().id().format("uuid")
 }
 
 pub fn email() -> StringBuilder {
