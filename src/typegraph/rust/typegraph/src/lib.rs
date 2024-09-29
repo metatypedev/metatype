@@ -9,6 +9,7 @@ mod utils;
 
 pub mod auth;
 pub mod policy;
+pub mod providers;
 pub mod runtimes;
 pub mod t;
 

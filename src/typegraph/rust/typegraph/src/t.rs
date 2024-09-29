@@ -1,12 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+use serde::Serialize;
 use serde_json::Value;
 
 use crate::{
     error::Result,
     injections::{serialize_injection, InjectionSource},
     policy::AsPolicyChain,
+    utils::json_stringify,
     wasm::{
         self,
         core::{
@@ -124,6 +126,10 @@ pub trait TypeBuilder: Sized {
     fn optional(self) -> Result<OptionalBuilder> {
         optional(self)
     }
+
+    fn optional_or<S: Serialize>(self, value: S) -> Result<OptionalBuilder> {
+        optional(self).map(|o| o.default_item(value))
+    }
 }
 
 pub trait BaseBuilder: Sized {
@@ -158,7 +164,7 @@ impl TypeBuilder for TypeDef {
     }
 }
 
-impl TypeBuilder for Result<TypeDef> {
+impl<T: TypeBuilder> TypeBuilder for Result<T> {
     fn build(self) -> Result<TypeDef> {
         self.and_then(|ty| ty.build())
     }
@@ -438,6 +444,13 @@ impl Default for TypeOptional {
 pub struct OptionalBuilder {
     base: TypeBase,
     data: TypeOptional,
+}
+
+impl OptionalBuilder {
+    pub fn default_item<S: Serialize>(mut self, value: S) -> Self {
+        self.data.default_item = json_stringify(&value).into();
+        self
+    }
 }
 
 impl TypeBuilder for OptionalBuilder {
