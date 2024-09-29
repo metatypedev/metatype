@@ -12,8 +12,9 @@ use crate::{
     wasm::{
         self,
         core::{
-            FuncParams, ParameterTransform, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
-            TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
+            FuncParams, MaterializerId, ParameterTransform, TypeBase, TypeEither, TypeFloat,
+            TypeFunc, TypeId, TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct,
+            TypeUnion,
         },
     },
 };
@@ -26,6 +27,10 @@ pub struct TypeDef {
 }
 
 impl TypeDef {
+    pub fn id(&self) -> TypeId {
+        self.id
+    }
+
     pub fn repr(&self) -> Result<String> {
         wasm::with_core(|c, s| c.call_get_type_repr(s, self.id))
     }
@@ -39,7 +44,7 @@ impl TypeDef {
     where
         P: AsPolicyChain,
     {
-        self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, &policy.as_spec()))?;
+        self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, &policy.as_chain()))?;
         Ok(self)
     }
 
@@ -721,7 +726,7 @@ impl TypeBuilder for FuncBuilder {
     }
 }
 
-pub fn func<I, O>(inp: I, out: O, mat: u32) -> Result<FuncBuilder>
+pub fn func<I, O>(inp: I, out: O, mat: MaterializerId) -> Result<FuncBuilder>
 where
     I: TypeBuilder,
     O: TypeBuilder,
@@ -734,6 +739,14 @@ where
             ..Default::default()
         },
     })
+}
+
+pub fn funcb<I, O>(inp: I, out: O, mat: MaterializerId) -> Result<TypeDef>
+where
+    I: TypeBuilder,
+    O: TypeBuilder,
+{
+    func(inp, out, mat).build()
 }
 
 impl TypeBuilder for FuncParams {

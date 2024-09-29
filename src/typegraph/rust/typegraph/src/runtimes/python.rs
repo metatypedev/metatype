@@ -47,7 +47,7 @@ impl PythonRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_from_python_lambda(s, base, &mat))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn from_def<I, O>(&self, inp: I, out: O, code: &str) -> Result<TypeDef>
@@ -74,7 +74,7 @@ impl PythonRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_from_python_def(s, base, &mat))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn import<I, O>(&self, inp: I, out: O, options: PythonImportOption) -> Result<TypeDef>
@@ -103,7 +103,7 @@ impl PythonRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_from_python_import(s, base, &mat))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     // TODO

@@ -16,15 +16,17 @@ pub use crate::wasm::runtimes::TemporalRuntimeData;
 #[derive(Debug)]
 pub struct TemporalRuntime {
     id: RuntimeId,
-    #[allow(unused)]
-    options: TemporalRuntimeData,
+    _options: TemporalRuntimeData,
 }
 
 impl TemporalRuntime {
     pub fn new(options: TemporalRuntimeData) -> Result<Self> {
         let id = wasm::with_runtimes(|r, s| r.call_register_temporal_runtime(s, &options))?;
 
-        Ok(Self { id, options })
+        Ok(Self {
+            id,
+            _options: options,
+        })
     }
 
     pub fn start_workflow<T: TypeBuilder>(&self, workflow_type: &str, arg: T) -> Result<TypeDef> {

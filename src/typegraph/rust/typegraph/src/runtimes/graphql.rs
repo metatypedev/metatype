@@ -48,7 +48,7 @@ impl GraphqlRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_graphql_query(s, base, &mat))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn mutation<I, O>(
@@ -72,6 +72,6 @@ impl GraphqlRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_graphql_mutation(s, base, &mat))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 }

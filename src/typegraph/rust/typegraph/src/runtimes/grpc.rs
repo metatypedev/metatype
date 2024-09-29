@@ -33,6 +33,6 @@ impl GrpcRuntime {
             method: method.to_string(),
         };
 
-        wasm::with_runtimes(|r, s| r.call_call_grpc_method(s, self.id, &data))?.build()
+        wasm::with_runtimes(|r, s| r.call_call_grpc_method(s, self.id, &data)).build()
     }
 }

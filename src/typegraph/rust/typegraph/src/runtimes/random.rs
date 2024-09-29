@@ -36,6 +36,6 @@ impl RandomRuntime {
         let mat = MaterializerRandom { runtime: self.id };
         let mat_id = wasm::with_runtimes(|r, s| r.call_create_random_mat(s, base, mat))?;
 
-        t::func(t::r#struct(), out, mat_id)?.build()
+        t::funcb(t::r#struct(), out, mat_id)
     }
 }

@@ -46,7 +46,7 @@ impl WasmRuntimeWire {
 
         let mat = wasm::with_runtimes(|r, s| r.call_from_wasm_wire_handler(s, base, &mat))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 }
 
@@ -82,7 +82,7 @@ impl WasmRuntimeReflected {
 
         let mat = wasm::with_runtimes(|r, s| r.call_from_wasm_reflected_func(s, base, &mat))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 }
 

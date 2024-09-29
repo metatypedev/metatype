@@ -54,7 +54,6 @@ impl SubstantialRuntime {
             operation: kind,
         };
 
-        wasm::with_runtimes(|r, s| r.call_generate_substantial_operation(s, self.id, &data))?
-            .build()
+        wasm::with_runtimes(|r, s| r.call_generate_substantial_operation(s, self.id, &data)).build()
     }
 }

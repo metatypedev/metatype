@@ -40,7 +40,7 @@ impl DenoRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_register_deno_func(s, &mat, options.effect))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn import<I, O>(&self, inp: I, out: O, options: DenoImportOption) -> Result<TypeDef>
@@ -57,20 +57,18 @@ impl DenoRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_import_deno_function(s, &mat, options.effect))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
-    pub fn identity<I>(&self, inp: I) -> Result<TypeDef>
-    where
-        I: TypeBuilder + Clone,
-    {
+    pub fn identity<I: TypeBuilder>(&self, inp: I) -> Result<TypeDef> {
         let mat = MaterializerDenoPredefined {
             name: "identity".to_string(),
         };
 
         let mat = wasm::with_runtimes(|r, s| r.call_get_predefined_deno_func(s, &mat))?;
+        let inp = inp.build()?;
 
-        t::func(inp.clone(), inp, mat)?.build()
+        t::funcb(inp.id(), inp.id(), mat)
     }
 
     pub fn policy(
@@ -86,7 +84,7 @@ impl DenoRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_register_deno_func(s, &mat, Effect::Read))?;
 
-        Policy::new(name, mat)
+        Policy::create(name, mat)
     }
 
     pub fn import_policy(
@@ -113,7 +111,7 @@ impl DenoRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_import_deno_function(s, &mat, Effect::Read))?;
 
-        Policy::new(&name, mat)
+        Policy::create(&name, mat)
     }
 
     // TODO

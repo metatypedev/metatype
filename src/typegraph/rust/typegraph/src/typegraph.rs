@@ -142,15 +142,14 @@ impl TypegraphBuilder {
         wasm::with_core(|c, s| c.call_init_typegraph(s, &self.params))?;
 
         Ok(Typegraph {
-            params: self.params,
+            _params: self.params,
         })
     }
 }
 
 #[derive(Debug)]
 pub struct Typegraph {
-    #[allow(unused)]
-    params: TypegraphInitParams,
+    _params: TypegraphInitParams,
 }
 
 impl Typegraph {
@@ -161,7 +160,7 @@ impl Typegraph {
         default_policy: impl AsPolicyChain,
     ) -> Result<()> {
         let exports = [(name.to_string(), export.into_id()?)];
-        let policy = default_policy.as_spec();
+        let policy = default_policy.as_chain();
 
         wasm::with_core(|c, s| c.call_expose(s, &exports, Some(&policy)))
     }
@@ -176,7 +175,7 @@ impl Typegraph {
             .map(|(name, ty)| ty.into_id().map(|id| (name.to_string(), id)))
             .collect::<Result<Vec<_>>>()?;
 
-        let policy = default_policy.as_spec();
+        let policy = default_policy.as_chain();
 
         wasm::with_core(|c, s| c.call_expose(s, &exports, Some(&policy)))
     }

@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub trait AsPolicyChain {
-    fn as_spec(&self) -> Vec<PolicySpec>;
+    fn as_chain(&self) -> Vec<PolicySpec>;
 }
 
 impl<I, P> AsPolicyChain for I
@@ -18,8 +18,11 @@ where
     I: IntoIterator<Item = P> + Clone,
     P: AsPolicyChain,
 {
-    fn as_spec(&self) -> Vec<PolicySpec> {
-        self.clone().into_iter().flat_map(|p| p.as_spec()).collect()
+    fn as_chain(&self) -> Vec<PolicySpec> {
+        self.clone()
+            .into_iter()
+            .flat_map(|p| p.as_chain())
+            .collect()
     }
 }
 
@@ -30,7 +33,7 @@ pub enum Policy {
 }
 
 impl AsPolicyChain for Policy {
-    fn as_spec(&self) -> Vec<PolicySpec> {
+    fn as_chain(&self) -> Vec<PolicySpec> {
         match self {
             Policy::Simple(policy) => vec![PolicySpec::Simple(policy.id)],
             Policy::PerEffect(policy) => vec![PolicySpec::PerEffect(policy.clone())],
@@ -39,8 +42,8 @@ impl AsPolicyChain for Policy {
 }
 
 impl AsPolicyChain for &Policy {
-    fn as_spec(&self) -> Vec<PolicySpec> {
-        (*self).as_spec()
+    fn as_chain(&self) -> Vec<PolicySpec> {
+        (*self).as_chain()
     }
 }
 
@@ -63,7 +66,7 @@ impl Policy {
         Ok(Self::Simple(PolicySimple { id, name }))
     }
 
-    pub fn new(name: &str, materializer: MaterializerId) -> Result<Self> {
+    pub fn create(name: &str, materializer: MaterializerId) -> Result<Self> {
         let data = CorePolicy {
             name: name.to_string(),
             materializer,

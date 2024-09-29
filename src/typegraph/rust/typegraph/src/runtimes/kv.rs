@@ -30,43 +30,43 @@ impl KvRuntime {
     pub fn set(&self) -> Result<TypeDef> {
         let inp = t::r#struct()
             .prop("key", t::string())?
-            .prop("value", t::string())?;
+            .prop("value", t::string());
         let out = t::string();
         let mat = self.operation(KvMaterializer::Set, Effect::Update(false))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn get(&self) -> Result<TypeDef> {
-        let inp = t::r#struct().prop("key", t::string())?;
+        let inp = t::r#struct().prop("key", t::string());
         let out = t::string();
         let mat = self.operation(KvMaterializer::Get, Effect::Read)?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn delete(&self) -> Result<TypeDef> {
-        let inp = t::r#struct().prop("key", t::string())?;
+        let inp = t::r#struct().prop("key", t::string());
         let out = t::integer();
         let mat = self.operation(KvMaterializer::Delete, Effect::Delete(false))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn keys(&self) -> Result<TypeDef> {
-        let inp = t::r#struct().prop("filter", t::string().optional()?)?;
-        let out = t::list(t::string())?;
+        let inp = t::r#struct().prop("filter", t::string().optional());
+        let out = t::list(t::string());
         let mat = self.operation(KvMaterializer::Keys, Effect::Read)?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn values(&self) -> Result<TypeDef> {
-        let inp = t::r#struct().prop("filter", t::string().optional()?)?;
-        let out = t::list(t::string())?;
+        let inp = t::r#struct().prop("filter", t::string().optional());
+        let out = t::list(t::string());
         let mat = self.operation(KvMaterializer::Values, Effect::Read)?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     fn operation(&self, kind: KvMaterializer, effect: Effect) -> Result<MaterializerId> {

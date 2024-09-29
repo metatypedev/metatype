@@ -12,33 +12,35 @@ pub use wasm::aws::{S3PresignGetParams, S3PresignPutParams, S3RuntimeData};
 #[derive(Debug)]
 pub struct S3Runtime {
     id: RuntimeId,
-    #[allow(unused)]
-    options: S3RuntimeData,
+    _options: S3RuntimeData,
 }
 
 impl S3Runtime {
     pub fn new(options: S3RuntimeData) -> Result<Self> {
         let id = wasm::with_aws(|a, s| a.call_register_s3_runtime(s, &options))?;
 
-        Ok(Self { id, options })
+        Ok(Self {
+            id,
+            _options: options,
+        })
     }
 
     pub fn presign_get(&self, params: S3PresignGetParams) -> Result<TypeDef> {
         let mat = wasm::with_aws(|a, s| a.call_s3_presign_get(s, self.id, &params))?;
-        let inp = t::r#struct().prop("path", t::string())?;
+        let inp = t::r#struct().prop("path", t::string());
         let out = t::uri();
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn presign_put(&self, params: S3PresignPutParams) -> Result<TypeDef> {
         let mat = wasm::with_aws(|a, s| a.call_s3_presign_put(s, self.id, &params))?;
         let inp = t::r#struct()
             .prop("length", t::integer())?
-            .prop("path", t::string())?;
+            .prop("path", t::string());
         let out = t::uri();
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn list(&self, bucket: &str) -> Result<TypeDef> {
@@ -51,7 +53,7 @@ impl S3Runtime {
             .prop("keys", t::list(key))?
             .prop("prefix", t::list(t::string()));
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn upload(&self, bucket: &str, file_type: impl TypeBuilder) -> Result<TypeDef> {
@@ -61,7 +63,7 @@ impl S3Runtime {
             .prop("path", t::string().optional());
         let out = t::boolean();
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 
     pub fn upload_all(&self, bucket: &str, file_type: impl TypeBuilder) -> Result<TypeDef> {
@@ -71,6 +73,6 @@ impl S3Runtime {
             .prop("files", t::list(file_type));
         let out = t::boolean();
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 }

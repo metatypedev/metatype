@@ -111,7 +111,7 @@ impl HttpRuntime {
 
         let mat = wasm::with_runtimes(|r, s| r.call_http_request(s, base, &mat))?;
 
-        t::func(inp, out, mat)?.build()
+        t::funcb(inp, out, mat)
     }
 }
 
