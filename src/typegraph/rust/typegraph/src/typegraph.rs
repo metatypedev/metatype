@@ -161,7 +161,7 @@ impl Typegraph {
         default_policy: impl AsPolicyChain,
     ) -> Result<()> {
         let exports = [(name.to_string(), export.into_id()?)];
-        let policy = default_policy.as_chain().into_iter().collect::<Vec<_>>();
+        let policy = default_policy.as_spec();
 
         wasm::with_core(|c, s| c.call_expose(s, &exports, Some(&policy)))
     }
@@ -176,7 +176,7 @@ impl Typegraph {
             .map(|(name, ty)| ty.into_id().map(|id| (name.to_string(), id)))
             .collect::<Result<Vec<_>>>()?;
 
-        let policy = default_policy.as_chain().into_iter().collect::<Vec<_>>();
+        let policy = default_policy.as_spec();
 
         wasm::with_core(|c, s| c.call_expose(s, &exports, Some(&policy)))
     }

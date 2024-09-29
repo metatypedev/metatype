@@ -10,53 +10,57 @@ use crate::{
 };
 
 pub trait AsPolicyChain {
-    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec>;
+    fn as_spec(&self) -> Vec<PolicySpec>;
+}
 
-    fn chain(&self, other: &impl AsPolicyChain) -> impl IntoIterator<Item = PolicySpec> {
-        self.as_chain().into_iter().chain(other.as_chain())
+impl<I, P> AsPolicyChain for I
+where
+    I: IntoIterator<Item = P> + Clone,
+    P: AsPolicyChain,
+{
+    fn as_spec(&self) -> Vec<PolicySpec> {
+        self.clone().into_iter().flat_map(|p| p.as_spec()).collect()
     }
 }
 
-impl<T: AsPolicyChain> AsPolicyChain for &T {
-    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec> {
-        (*self).as_chain()
+#[derive(Debug, Clone)]
+pub enum Policy {
+    Simple(PolicySimple),
+    PerEffect(PolicyPerEffect),
+}
+
+impl AsPolicyChain for Policy {
+    fn as_spec(&self) -> Vec<PolicySpec> {
+        match self {
+            Policy::Simple(policy) => vec![PolicySpec::Simple(policy.id)],
+            Policy::PerEffect(policy) => vec![PolicySpec::PerEffect(policy.clone())],
+        }
     }
 }
 
-impl<const N: usize> AsPolicyChain for [&Policy; N] {
-    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec> {
-        self.into_iter()
-            .flat_map(|p| p.as_chain().into_iter().collect::<Vec<_>>())
+impl AsPolicyChain for &Policy {
+    fn as_spec(&self) -> Vec<PolicySpec> {
+        (*self).as_spec()
     }
-}
-
-#[derive(Debug)]
-pub struct Policy {
-    id: PolicyId,
-    name: String,
 }
 
 impl Policy {
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
     pub fn public() -> Result<Self> {
         let (id, name) = wasm::with_core(|c, s| c.call_get_public_policy(s))?;
 
-        Ok(Self { id, name })
+        Ok(Self::Simple(PolicySimple { id, name }))
     }
 
     pub fn internal() -> Result<Self> {
         let (id, name) = wasm::with_core(|c, s| c.call_get_internal_policy(s))?;
 
-        Ok(Self { id, name })
+        Ok(Self::Simple(PolicySimple { id, name }))
     }
 
     pub fn context(key: &str, check: ContextCheck) -> Result<Self> {
         let (id, name) = wasm::with_core(|c, s| c.call_register_context_policy(s, key, &check))?;
 
-        Ok(Self { id, name })
+        Ok(Self::Simple(PolicySimple { id, name }))
     }
 
     pub fn new(name: &str, materializer: MaterializerId) -> Result<Self> {
@@ -67,23 +71,33 @@ impl Policy {
 
         let id = wasm::with_core(|c, s| c.call_register_policy(s, &data))?;
 
-        Ok(Self {
+        Ok(Self::Simple(PolicySimple {
             id,
             name: name.to_string(),
-        })
+        }))
     }
 
     // TODO
     // pub fn on() {}
 
-    pub fn per_effect() -> PolicyPerEffect {
-        PolicyPerEffect::default()
+    pub fn per_effect(value: PolicyPerEffect) -> Self {
+        Self::PerEffect(value)
     }
 }
 
-impl AsPolicyChain for Policy {
-    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec> {
-        [PolicySpec::Simple(self.id)]
+#[derive(Debug, Clone)]
+pub struct PolicySimple {
+    id: PolicyId,
+    name: String,
+}
+
+impl PolicySimple {
+    pub fn id(&self) -> PolicyId {
+        self.id
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
     }
 }
 
@@ -106,28 +120,38 @@ impl PolicyPerEffect {
     }
 
     pub fn read(mut self, policy: &Policy) -> Self {
-        self.read = Some(policy.id);
-        self
-    }
+        match policy {
+            Policy::Simple(policy) => self.read = Some(policy.id),
+            Policy::PerEffect(policy) => self.read = policy.read,
+        }
 
-    pub fn create(mut self, policy: &Policy) -> Self {
-        self.create = Some(policy.id);
         self
     }
 
     pub fn update(mut self, policy: &Policy) -> Self {
-        self.update = Some(policy.id);
+        match policy {
+            Policy::Simple(policy) => self.update = Some(policy.id),
+            Policy::PerEffect(policy) => self.update = policy.update,
+        }
+
+        self
+    }
+
+    pub fn create(mut self, policy: &Policy) -> Self {
+        match policy {
+            Policy::Simple(policy) => self.create = Some(policy.id),
+            Policy::PerEffect(policy) => self.create = policy.create,
+        }
+
         self
     }
 
     pub fn delete(mut self, policy: &Policy) -> Self {
-        self.delete = Some(policy.id);
-        self
-    }
-}
+        match policy {
+            Policy::Simple(policy) => self.delete = Some(policy.id),
+            Policy::PerEffect(policy) => self.delete = policy.delete,
+        }
 
-impl AsPolicyChain for PolicyPerEffect {
-    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec> {
-        [PolicySpec::PerEffect(self.clone())]
+        self
     }
 }

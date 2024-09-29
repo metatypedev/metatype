@@ -37,8 +37,7 @@ impl TypeDef {
     where
         P: AsPolicyChain,
     {
-        let policy = policy.as_chain().into_iter().collect::<Vec<_>>();
-        self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, &policy))?;
+        self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, &policy.as_spec()))?;
         Ok(self)
     }
 
