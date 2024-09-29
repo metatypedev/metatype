@@ -9,8 +9,25 @@ use crate::{
     Result,
 };
 
-pub trait AsPolicySpec {
-    fn as_policy_spec(&self) -> PolicySpec;
+pub trait AsPolicyChain {
+    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec>;
+
+    fn chain(&self, other: &impl AsPolicyChain) -> impl IntoIterator<Item = PolicySpec> {
+        self.as_chain().into_iter().chain(other.as_chain())
+    }
+}
+
+impl<T: AsPolicyChain> AsPolicyChain for &T {
+    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec> {
+        (*self).as_chain()
+    }
+}
+
+impl<const N: usize> AsPolicyChain for [&Policy; N] {
+    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec> {
+        self.into_iter()
+            .flat_map(|p| p.as_chain().into_iter().collect::<Vec<_>>())
+    }
 }
 
 #[derive(Debug)]
@@ -58,15 +75,25 @@ impl Policy {
 
     // TODO
     // pub fn on() {}
+
+    pub fn per_effect() -> PolicyPerEffect {
+        PolicyPerEffect::default()
+    }
 }
 
-impl AsPolicySpec for Policy {
-    fn as_policy_spec(&self) -> PolicySpec {
-        PolicySpec::Simple(self.id)
+impl AsPolicyChain for Policy {
+    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec> {
+        [PolicySpec::Simple(self.id)]
     }
 }
 
 pub use crate::wasm::core::PolicyPerEffect;
+
+impl Default for PolicyPerEffect {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl PolicyPerEffect {
     pub fn new() -> Self {
@@ -99,8 +126,8 @@ impl PolicyPerEffect {
     }
 }
 
-impl AsPolicySpec for PolicyPerEffect {
-    fn as_policy_spec(&self) -> PolicySpec {
-        PolicySpec::PerEffect(self.clone())
+impl AsPolicyChain for PolicyPerEffect {
+    fn as_chain(&self) -> impl IntoIterator<Item = PolicySpec> {
+        [PolicySpec::PerEffect(self.clone())]
     }
 }

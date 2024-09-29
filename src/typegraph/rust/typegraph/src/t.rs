@@ -6,7 +6,7 @@ use serde_json::Value;
 use crate::{
     error::Result,
     injections::{serialize_injection, InjectionSource},
-    policy::AsPolicySpec,
+    policy::AsPolicyChain,
     wasm::{
         self,
         core::{
@@ -35,9 +35,9 @@ impl TypeDef {
 
     pub fn with_policy<P>(mut self, policy: &P) -> Result<Self>
     where
-        P: AsPolicySpec,
+        P: AsPolicyChain,
     {
-        let policy = [policy.as_policy_spec()];
+        let policy = policy.as_chain().into_iter().collect::<Vec<_>>();
         self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, &policy))?;
         Ok(self)
     }
@@ -89,7 +89,7 @@ pub trait TypeBuilder: Sized {
 
     fn with_policy<P>(self, policy: &P) -> Result<TypeDef>
     where
-        P: AsPolicySpec,
+        P: AsPolicyChain,
     {
         self.build()?.with_policy(policy)
     }
@@ -634,20 +634,6 @@ pub struct StructBuilder {
 impl StructBuilder {
     pub fn prop(mut self, name: impl ToString, ty: impl TypeBuilder) -> Result<Self> {
         self.data.props.push((name.to_string(), ty.into_id()?));
-        Ok(self)
-    }
-
-    pub fn props<S, T>(mut self, values: impl IntoIterator<Item = (S, T)>) -> Result<Self>
-    where
-        S: ToString,
-        T: TypeBuilder,
-    {
-        self.data.props.extend(
-            values
-                .into_iter()
-                .map(|(name, ty)| ty.into_id().map(|id| (name.to_string(), id)))
-                .collect::<Result<Vec<_>>>()?,
-        );
         Ok(self)
     }
 

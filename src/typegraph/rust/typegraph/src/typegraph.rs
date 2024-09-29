@@ -1,6 +1,6 @@
 use crate::{
     auth::AddAuth,
-    policy::AsPolicySpec,
+    policy::AsPolicyChain,
     t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
@@ -154,22 +154,31 @@ pub struct Typegraph {
 }
 
 impl Typegraph {
-    pub fn expose<P>(
+    pub fn expose(
+        &self,
+        name: &str,
+        export: impl TypeBuilder,
+        default_policy: impl AsPolicyChain,
+    ) -> Result<()> {
+        let exports = [(name.to_string(), export.into_id()?)];
+        let policy = default_policy.as_chain().into_iter().collect::<Vec<_>>();
+
+        wasm::with_core(|c, s| c.call_expose(s, &exports, Some(&policy)))
+    }
+
+    pub fn expose_iter(
         &self,
         exports: impl IntoIterator<Item = (impl ToString, impl TypeBuilder)>,
-        default_policy: Option<&P>,
-    ) -> Result<()>
-    where
-        P: AsPolicySpec,
-    {
+        default_policy: impl AsPolicyChain,
+    ) -> Result<()> {
         let exports = exports
             .into_iter()
             .map(|(name, ty)| ty.into_id().map(|id| (name.to_string(), id)))
             .collect::<Result<Vec<_>>>()?;
 
-        let policy = default_policy.map(|p| p.as_policy_spec());
+        let policy = default_policy.as_chain().into_iter().collect::<Vec<_>>();
 
-        wasm::with_core(|c, s| c.call_expose(s, &exports, policy.as_slice().into()))
+        wasm::with_core(|c, s| c.call_expose(s, &exports, Some(&policy)))
     }
 
     pub fn rest(graphql: &str) -> Result<u32> {
