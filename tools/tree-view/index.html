@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+  :root {
+    --header-height: 3rem;
+
+    --selected-header-bg: #d1e7e8;
+    --selected-subtree-bg: #e3f2f3;
+    --parent-selected-header-bg: #fff0d0;
+    --parent-selected-subtree-bg: #ffffe0;
+
+    --hover-highlight-bg: #f0f0f0;
+    --hover-highlight-header-bg: #d8d8d8;
+    --parent-hover-highlight-header-bg: #e3e3e3;
+    --parent-hover-highlight-bg: #f0f0f0;
+
+    --border-color: #ccc;
+  }
+  body>header {
+    height: var(--header-height);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    z-index: 100;
+    border-bottom: 1px solid var(--border-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  body>header>label {
+    margin: 0 1em;
+  }
+  #tree {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: clamp(0px, 360px, 40vw);
+    bottom: 0;
+    padding: 0;
+    padding-left: 0.5rem;
+    margin: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #fafafa;
+    box-sizing: border-box;
+  }
+  #details {
+    position: fixed;
+    top: var(--header-height);
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    width: clamp(0px, 360px, 40vw);
+    overflow-y: auto;
+    box-sizing: border-box;
+    border-left: 1px solid var(--border-color);
+    font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace';
+    font-size: 12px;
+  }
+  #details>header {
+    font-weight: bold;
+    color: blue;
+    background-color: #f0f0ff;
+    padding: 0.2rem 0.5rem;
+  }
+  #details>pre {
+    padding: 0;
+    margin: 0;
+  }
+  #tree * {
+    font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace';
+    font-size: 12px;
+    cursor: default;
+  }
+  .subtree>header {
+    padding: 0.2rem 0;
+    margin-left: -1rem;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .subtree>header::before {
+    content: '─';
+    display: inline-block;
+    width: 1em;
+    color: var(--border-color);
+  }
+  .subtree>header>span {
+    margin-right: 0.5em;
+  }
+  .subtree .subtree {
+    margin-left: 0.8rem;
+    border-left: 1px solid #ccc;
+    padding-left: 1rem;
+  }
+  .subtree.hover-highlight>header {
+    background-color: var(--hover-highlight-header-bg);
+  }
+  .subtree.hover-highlight {
+    background-color: var(--hover-highlight-bg);
+  }
+  .subtree.parent-hover-highlight {
+    background-color: var(--parent-hover-highlight-bg);
+  }
+  .subtree.parent-hover-highlight>header {
+    background-color: var(--parent-hover-highlight-header-bg);
+    position: sticky;
+    top: var(--header-height);
+    top: 0;
+    z-index: 1;
+  }
+  .subtree.selected>header {
+    background-color: var(--selected-header-bg);
+  }
+  .subtree.selected {
+    background-color: var(--selected-subtree-bg);
+  }
+  .subtree.parent-selected {
+    background-color: var(--parent-selected-subtree-bg);
+  }
+  .subtree.parent-selected>header {
+    background-color: var(--parent-selected-header-bg);
+    position: sticky;
+    top: var(--header-height);
+    top: 0;
+    z-index: 10;
+  }
+  .idx {
+    color: #666;
+  }
+  .tag {
+    color: #a40;
+  }
+  .type {
+    color: #08a;
+  }
+  .title {
+    font-weight: bold;
+    color: #333;
+  }
+  input, select {
+    font-size: 1rem;
+    padding: 0.2rem 0.5em;
+    border: 2px solid #ccc;
+    background-color: #fff;
+    outline: none;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  input:focus, select:focus {
+    border-color: #08a;
+  }
+  button {
+    font-size: 1rem;
+    padding: 0.2rem 0.5em;
+    background-color: #08a;
+    border: 2px solid #08a;
+    color: #fff;
+    cursor: pointer;
+    outline: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  </style>
+</head>
+
+<body>
+  <header>
+    <label>
+      Select typegraph
+      <select id="select-tg">
+      </select>
+    </label>
+    <label>
+      Tree depth
+      <input type="number" id="depth" value="6" />
+    </label>
+    <label>
+      Tree root
+      <input id="root" readonly value="0" />
+    </label>
+    <button id="reset">Reset root</button>
+  </header>
+  <main>
+    <section id="tree"></section>
+    <section id="details">
+      <header id="selected-path"></header>
+      <pre id="selected-data"></pre>
+    </section>
+  </main>
+</body>
+
+<script type="module">
+  const $tree = document.getElementById('tree');
+  const $nodePath = document.getElementById('selected-path');
+  const $nodeData = document.getElementById('selected-data');
+
+  const $select = document.getElementById('select-tg');
+  const $depth = document.getElementById('depth');
+  const $root = document.getElementById('root');
+  const $reset = document.getElementById('reset');
+
+  // TODO read from query params
+  $depth.value = 6;
+  $depth.min = 2;
+  $root.value = '<root>';
+
+  let selectedNodeLock = false;
+  let selectedNode = null;
+  let highlightedNode = null;
+
+  class Typegraph {
+    constructor(tg) {
+      this.tg = tg;
+    }
+
+    selectNode(node) {
+      if (selectedNode) {
+        selectedNode.element.classList.remove('selected');
+        selectedNode.element.parentElement?.classList.remove('parent-selected');
+      }
+      selectedNode = node;
+      selectedNode.element.classList.add('selected');
+      selectedNode.element.parentElement?.classList.add('parent-selected');
+      $nodeData.innerHTML = hljs.highlight(JSON.stringify(this.tg.types[node.idx], null, 2), { language: 'json' }).value;
+      $nodePath.textContent = node.path;
+    }
+
+    highlightNode(node) {
+      if (highlightedNode) {
+        highlightedNode.classList.remove('hover-highlight');
+        highlightedNode.parentElement?.classList.remove('parent-hover-highlight');
+      }
+      highlightedNode = node;
+      if (node) {
+        highlightedNode.classList.add('hover-highlight');
+        highlightedNode.parentElement?.classList.add('parent-hover-highlight');
+      }
+    }
+
+    renderSubtreeHeader($subtree, { idx, tag, type, title, path }) {
+      const $header = document.createElement('header');
+      $header.title = path;
+
+      const $idx = document.createElement('span');
+      $idx.classList.add('idx');
+      $idx.textContent = `#${idx}`;
+
+      const $tag = document.createElement('span');
+      $tag.classList.add('tag');
+      $tag.textContent = tag;
+
+      const $type = document.createElement('span');
+      $type.classList.add('type');
+      $type.textContent = type;
+
+      const $title = document.createElement('span');
+      $title.classList.add('title');
+      $title.textContent = title;
+
+      $header.appendChild($idx);
+      $header.appendChild($tag);
+      $header.appendChild($type);
+      $header.appendChild($title);
+
+      $header.addEventListener("mouseenter", () => {
+        if (!selectedNodeLock) {
+          this.selectNode({ idx, element: $subtree, path });
+        } else {
+          this.highlightNode($subtree);
+        }
+      });
+      $header.addEventListener("mouseleave", () => {
+        if (highlightedNode === $subtree) {
+          this.highlightNode(null);
+        }
+      });
+      $header.addEventListener("click", () => {
+        if (selectedNodeLock && selectedNode.element === $subtree) {
+          selectedNodeLock = false;
+        } else {
+          selectedNodeLock = true;
+          this.selectNode({ idx, element: $subtree, path });
+        }
+      });
+      $header.addEventListener("dblclick", () => {
+        $root.value = path;
+        updateTree(this.tg, +$depth.value, { idx, path });
+        // history .pushState
+      });
+
+      $subtree.appendChild($header);
+    }
+
+    renderChildren($el, parentNode, depth, path) {
+      if (depth <= 0) {
+        return;
+      }
+      for (const child of this.getChildren(parentNode)) {
+        const childNode = this.tg.types[child.idx];
+        const $child = document.createElement('div');
+        $child.classList.add('subtree');
+        this.renderSubtreeHeader($child, {
+          idx: child.idx,
+          tag: child.edge,
+          type: childNode.type,
+          title: childNode.title,
+          path: path + child.edge,
+        });
+        this.renderChildren($child, childNode, depth - 1, path + child.edge);
+        $el.appendChild($child);
+      }
+    }
+
+    getChildren(node) {
+      switch (node.type) {
+        case 'object': {
+          return Object.entries(node.properties).map(([key, idx]) => ({ edge: `.${key}`, idx }));
+        }
+        case 'list': {
+          return [{ edge: '[*]', idx: node.items }];
+        }
+        case 'optional': {
+          return [{ edge: '?', idx: node.item }];
+        }
+        case 'function': {
+          return [{ edge: 'in', idx: node.input }, { edge: 'out', idx: node.output }];
+        }
+        default:
+          return []
+      }
+    }
+  }
+
+  $select.addEventListener('change', async () => {
+    updateTree(tgs[$select.value], +$depth.value);
+  });
+  $depth.addEventListener('change', () => {
+    updateTree(tgs[$select.value], +$depth.value);
+  });
+
+  $reset.addEventListener('click', () => {
+    $root.value = 0;
+    updateTree(tgs[$select.value], +$depth.value);
+  });
+
+  // handle escape key
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      selectedNodeLock = false;
+    }
+  });
+
+  function updateTree(tg, depth, root = { idx: 0, path: '<root>' }){
+    selectedNodeLock = false;
+    selectedNode = null;
+    highlightedNode = null;
+
+    $tree.innerHTML = '';
+    if (tg == null) {
+      return;
+    }
+    const typegraph = new Typegraph(tg);
+
+    const rootNode = tg.types[root.idx];
+    const $root = document.createElement('div');
+    $root.classList.add('subtree');
+    typegraph.renderSubtreeHeader($root, { idx: root.idx, tag: root.path, type: rootNode.type, title: rootNode.title, path: root.path });
+    typegraph.renderChildren($root, rootNode, depth, root.path);
+    $tree.appendChild($root);
+  }
+
+  const tgs = await fetch('./tg.json').then(res => res.json());
+  for (const [index, tg] of tgs.entries()) {
+    const option = document.createElement('option');
+    option.value = index;
+    option.textContent = tg.types[0].title;
+    $select.appendChild(option);
+  }
+  if (tgs.length > 0) {
+    updateTree(tgs[0], +$depth.value);
+  }
+</script>
+</html>
