@@ -110,7 +110,7 @@ impl PrismaRuntime {
         .build()
     }
 
-    pub fn link<T: TypeBuilder>(model: T) -> Result<PrismaLinkBuilder> {
+    pub fn link<T: TypeBuilder>(&self, model: T) -> Result<PrismaLinkBuilder> {
         Ok(PrismaLinkBuilder {
             target: model.into_id()?,
             ..Default::default()

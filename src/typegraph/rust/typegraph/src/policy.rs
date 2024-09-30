@@ -9,19 +9,18 @@ use crate::{
     Result,
 };
 
-pub trait AsPolicyChain {
-    fn as_chain(&self) -> Vec<PolicySpec>;
+pub trait ToPolicyChain {
+    fn to_chain(&self) -> Vec<PolicySpec>;
 }
 
-impl<I, P> AsPolicyChain for I
+impl<I> ToPolicyChain for I
 where
-    I: IntoIterator<Item = P> + Clone,
-    P: AsPolicyChain,
+    I: IntoIterator<Item = Policy> + Clone,
 {
-    fn as_chain(&self) -> Vec<PolicySpec> {
+    fn to_chain(&self) -> Vec<PolicySpec> {
         self.clone()
             .into_iter()
-            .flat_map(|p| p.as_chain())
+            .flat_map(|p| p.to_chain())
             .collect()
     }
 }
@@ -32,8 +31,8 @@ pub enum Policy {
     PerEffect(PolicyPerEffect),
 }
 
-impl AsPolicyChain for Policy {
-    fn as_chain(&self) -> Vec<PolicySpec> {
+impl ToPolicyChain for Policy {
+    fn to_chain(&self) -> Vec<PolicySpec> {
         match self {
             Policy::Simple(policy) => vec![PolicySpec::Simple(policy.id)],
             Policy::PerEffect(policy) => vec![PolicySpec::PerEffect(policy.clone())],
@@ -41,9 +40,9 @@ impl AsPolicyChain for Policy {
     }
 }
 
-impl AsPolicyChain for &Policy {
-    fn as_chain(&self) -> Vec<PolicySpec> {
-        (*self).as_chain()
+impl ToPolicyChain for &Policy {
+    fn to_chain(&self) -> Vec<PolicySpec> {
+        (*self).to_chain()
     }
 }
 

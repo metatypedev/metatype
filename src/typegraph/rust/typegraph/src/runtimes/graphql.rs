@@ -27,12 +27,7 @@ impl GraphqlRuntime {
         Ok(Self { id })
     }
 
-    pub fn query<I, O>(
-        &self,
-        inp: I,
-        out: O,
-        path: Option<impl IntoIterator<Item = impl ToString>>,
-    ) -> Result<TypeDef>
+    pub fn query<I, O>(&self, inp: I, out: O, path: Option<&[&str]>) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,
@@ -51,12 +46,7 @@ impl GraphqlRuntime {
         t::funcb(inp, out, mat)
     }
 
-    pub fn mutation<I, O>(
-        &self,
-        inp: I,
-        out: O,
-        path: Option<impl IntoIterator<Item = impl ToString>>,
-    ) -> Result<TypeDef>
+    pub fn mutation<I, O>(&self, inp: I, out: O, path: Option<&[&str]>) -> Result<TypeDef>
     where
         I: TypeBuilder,
         O: TypeBuilder,

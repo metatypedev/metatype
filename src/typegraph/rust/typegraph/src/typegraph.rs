@@ -1,6 +1,8 @@
+use std::{fs, panic::Location};
+
 use crate::{
     auth::AddAuth,
-    policy::AsPolicyChain,
+    policy::ToPolicyChain,
     t::{self, TypeBuilder, TypeDef},
     wasm::{
         self,
@@ -9,11 +11,12 @@ use crate::{
     Result,
 };
 
+#[allow(clippy::derivable_impls)]
 impl Default for TypegraphInitParams {
     fn default() -> Self {
         Self {
             name: String::default(),
-            path: file!().to_string(), // FIXME: correctly implement this
+            path: String::default(),
             dynamic: None,
             prefix: None,
             cors: Cors::default(),
@@ -54,10 +57,17 @@ pub struct TypegraphBuilder {
 }
 
 impl TypegraphBuilder {
+    #[track_caller]
     pub fn new(name: &str) -> Self {
+        let caller = Location::caller().file();
+        let file_path = fs::canonicalize(caller).expect("Failed to get the typegraph file path");
+        let file_path = file_path.to_str().expect("Path contains invalid character");
+        let path = format!("file://{file_path}");
+
         Self {
             params: TypegraphInitParams {
                 name: name.to_string(),
+                path,
                 ..Default::default()
             },
         }
@@ -157,10 +167,10 @@ impl Typegraph {
         &self,
         name: &str,
         export: impl TypeBuilder,
-        default_policy: impl AsPolicyChain,
+        default_policy: impl ToPolicyChain,
     ) -> Result<()> {
         let exports = [(name.to_string(), export.into_id()?)];
-        let policy = default_policy.as_chain();
+        let policy = default_policy.to_chain();
 
         wasm::with_core(|c, s| c.call_expose(s, &exports, Some(&policy)))
     }
@@ -168,14 +178,14 @@ impl Typegraph {
     pub fn expose_iter(
         &self,
         exports: impl IntoIterator<Item = (impl ToString, impl TypeBuilder)>,
-        default_policy: impl AsPolicyChain,
+        default_policy: impl ToPolicyChain,
     ) -> Result<()> {
         let exports = exports
             .into_iter()
             .map(|(name, ty)| ty.into_id().map(|id| (name.to_string(), id)))
             .collect::<Result<Vec<_>>>()?;
 
-        let policy = default_policy.as_chain();
+        let policy = default_policy.to_chain();
 
         wasm::with_core(|c, s| c.call_expose(s, &exports, Some(&policy)))
     }

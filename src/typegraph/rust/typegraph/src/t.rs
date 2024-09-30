@@ -7,7 +7,7 @@ use serde_json::Value;
 use crate::{
     error::Result,
     injections::{serialize_injection, InjectionSource},
-    policy::AsPolicyChain,
+    policy::ToPolicyChain,
     utils::json_stringify,
     wasm::{
         self,
@@ -40,9 +40,9 @@ impl TypeDef {
 
     pub fn with_policy<P>(mut self, policy: &P) -> Result<Self>
     where
-        P: AsPolicyChain,
+        P: ToPolicyChain,
     {
-        self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, &policy.as_chain()))?;
+        self.id = wasm::with_core(|c, s| c.call_with_policy(s, self.id, &policy.to_chain()))?;
         Ok(self)
     }
 
@@ -93,7 +93,7 @@ pub trait TypeBuilder: Sized {
 
     fn with_policy<P>(self, policy: &P) -> Result<TypeDef>
     where
-        P: AsPolicyChain,
+        P: ToPolicyChain,
     {
         self.build()?.with_policy(policy)
     }
@@ -414,6 +414,10 @@ pub fn string() -> StringBuilder {
     StringBuilder::default()
 }
 
+pub fn r#enum(variants: impl IntoIterator<Item = impl ToString>) -> StringBuilder {
+    StringBuilder::default().enumerate(variants)
+}
+
 pub fn uuid() -> StringBuilder {
     string().id().format("uuid")
 }
@@ -582,17 +586,26 @@ impl BaseBuilder for UnionBuilder {
     }
 }
 
-pub fn union(variants: impl IntoIterator<Item = impl TypeBuilder>) -> Result<UnionBuilder> {
-    Ok(UnionBuilder {
-        data: TypeUnion {
-            variants: variants
-                .into_iter()
-                .map(|ty| ty.into_id())
-                .collect::<Result<_>>()?,
-        },
-        ..Default::default()
-    })
+pub fn union() -> UnionBuilder {
+    UnionBuilder::default()
 }
+
+#[macro_export]
+macro_rules! unionb {
+    { $($variant: expr),+ } => {{
+        let builder = || -> $crate::Result<$crate::t::TypeDef> {
+            use $crate::t::TypeBuilder;
+            let mut u = $crate::t::union();
+            $(
+                u = u.add($variant)?;
+            )+
+            u.build()
+        };
+        builder()
+    }};
+}
+
+pub use unionb;
 
 #[allow(clippy::derivable_impls)]
 impl Default for TypeEither {
@@ -609,6 +622,13 @@ pub struct EitherBuilder {
     data: TypeEither,
 }
 
+impl EitherBuilder {
+    pub fn add(mut self, ty: impl TypeBuilder) -> Result<Self> {
+        self.data.variants.push(ty.into_id()?);
+        Ok(self)
+    }
+}
+
 impl TypeBuilder for EitherBuilder {
     fn build(self) -> Result<TypeDef> {
         Ok(TypeDef {
@@ -623,17 +643,26 @@ impl BaseBuilder for EitherBuilder {
     }
 }
 
-pub fn either(variants: impl IntoIterator<Item = impl TypeBuilder>) -> Result<EitherBuilder> {
-    Ok(EitherBuilder {
-        data: TypeEither {
-            variants: variants
-                .into_iter()
-                .map(|ty| ty.into_id())
-                .collect::<Result<_>>()?,
-        },
-        ..Default::default()
-    })
+pub fn either() -> EitherBuilder {
+    EitherBuilder::default()
 }
+
+#[macro_export]
+macro_rules! eitherb {
+    { $($variant: expr),+ } => {{
+        let builder = || -> $crate::Result<$crate::t::TypeDef> {
+            use $crate::t::TypeBuilder;
+            let mut e = $crate::t::either();
+            $(
+                e = e.add($variant)?;
+            )+
+            e.build()
+        };
+        builder()
+    }};
+}
+
+pub use eitherb;
 
 #[allow(clippy::derivable_impls)]
 impl Default for TypeStruct {
@@ -688,6 +717,35 @@ impl BaseBuilder for StructBuilder {
 pub fn r#struct() -> StructBuilder {
     StructBuilder::default()
 }
+
+#[macro_export]
+macro_rules! structb {
+    ( $name:expr, { $($prop_name:expr => $prop_type:expr),+ $(,)? }) => {{
+        let builder = || -> $crate::Result<$crate::t::TypeDef> {
+            use $crate::t::{BaseBuilder, TypeBuilder};
+            let mut s = $crate::t::r#struct().named($name);
+            $(
+                s = s.prop($prop_name, $prop_type)?;
+            )+
+            s.build()
+        };
+        builder()
+    }};
+
+    { $($prop_name:expr => $prop_type:expr),+ $(,)? } => {{
+        let builder = || -> $crate::Result<$crate::t::TypeDef> {
+            use $crate::t::TypeBuilder;
+            let mut s = $crate::t::r#struct();
+            $(
+                s = s.prop($prop_name, $prop_type)?;
+            )+
+            s.build()
+        };
+        builder()
+    }};
+}
+
+pub use structb;
 
 impl Default for TypeFunc {
     fn default() -> Self {

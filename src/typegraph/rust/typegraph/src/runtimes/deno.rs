@@ -22,10 +22,10 @@ pub struct DenoRuntime {
 }
 
 impl DenoRuntime {
-    pub fn new() -> Result<Self> {
-        Ok(Self {
+    pub fn get() -> Self {
+        Self {
             _id: wasm::with_runtimes(|r, s| r.call_get_deno_runtime(s)),
-        })
+        }
     }
 
     pub fn func<I, O>(&self, inp: I, out: O, options: DenoFuncOption) -> Result<TypeDef>
