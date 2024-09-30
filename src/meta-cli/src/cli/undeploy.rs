@@ -27,7 +27,7 @@ impl Action for Undeploy {
     async fn run(&self, args: super::ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
         let config_path = args.config.clone();
-        let config = Config::load_or_find(config_path, &dir)?;
+        let config = Config::load_or_find(config_path.as_deref(), &dir)?;
         let node_config = config.node(&self.node, &self.target);
         let node = node_config.build(&dir).await?;
 

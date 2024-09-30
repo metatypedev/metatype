@@ -54,7 +54,11 @@ impl Action for Serialize {
         let dir = args.dir()?;
         let config_path = args.config.clone();
 
-        let config = Config::load_or_find(config_path, &dir)?;
+        let config =
+            Config::load_or_find(config_path.as_deref(), &dir).or_else(|e| match config_path {
+                Some(_) => Err(e),
+                None => Ok(Config::default_in(&dir)),
+            })?;
 
         let config = Arc::new(config);
 

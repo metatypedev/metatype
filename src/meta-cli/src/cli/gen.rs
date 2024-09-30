@@ -39,7 +39,7 @@ impl Action for Gen {
     #[tracing::instrument]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
-        let config = Config::load_or_find(args.config, &dir)?;
+        let config = Config::load_or_find(args.config.as_deref(), &dir)?;
         let config = Arc::new(config);
 
         let Some(mgen_conf) = &config.metagen else {

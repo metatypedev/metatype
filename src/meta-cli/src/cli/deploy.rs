@@ -109,7 +109,7 @@ impl Deploy {
         let dir: Arc<Path> = args.dir()?.into();
 
         let config_path = args.config.clone();
-        let config = Arc::new(Config::load_or_find(config_path, &dir)?);
+        let config = Arc::new(Config::load_or_find(config_path.as_deref(), &dir)?);
 
         let options = deploy.options.clone();
 
