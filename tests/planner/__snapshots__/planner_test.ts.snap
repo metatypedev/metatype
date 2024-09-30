@@ -107,7 +107,6 @@ snapshot[`planner 2`] = `
       ],
       rate_calls: false,
       rate_weight: null,
-      runtime: 0,
       title: "root_one_fn",
       type: "function",
     },
@@ -180,10 +179,10 @@ snapshot[`planner 3`] = `
   "one  one  one  object  root_one_fn_output  false",
   "one.union1  union1  one/union1  union  Union1  false",
   "one.union2  union2  one/union2  union  Union2  false",
-  "one.union2\$A.a  a  one/union2\$A/a  integer  A_a_integer  false",
+  "one.union2\$A.a  a  one/union2\$A/a  integer  Union1_t0_integer  false",
   "one.union2\$B.b  b  one/union2\$B/b  either  B_b_either  false",
-  "one.union2\$B.b\$C1.c  c  one/union2\$B/b\$C1/c  integer  A_a_integer  false",
-  "one.union2\$B.b\$C2.c  c  one/union2\$B/b\$C2/c  string  C2_c_string  false",
+  "one.union2\$B.b\$C1.c  c  one/union2\$B/b\$C1/c  integer  Union1_t0_integer  false",
+  "one.union2\$B.b\$C2.c  c  one/union2\$B/b\$C2/c  string  root_one_fn_output_nested_struct_first_string  false",
 ]
 `;
 
@@ -191,10 +190,10 @@ snapshot[`planner 4`] = `
 [
   "one  one  one  object  root_one_fn_output  false",
   "one.union2  union2  one/union2  union  Union2  true",
-  "one.union2\$A.a  a  one/union2\$A/a  integer  A_a_integer  false",
+  "one.union2\$A.a  a  one/union2\$A/a  integer  Union1_t0_integer  false",
   "one.union2\$B.b  b  one/union2\$B/b  either  B_b_either  false",
-  "one.union2\$B.b\$C1.c  c  one/union2\$B/b\$C1/c  integer  A_a_integer  false",
-  "one.union2\$B.b\$C2.c  c  one/union2\$B/b\$C2/c  string  C2_c_string  false",
+  "one.union2\$B.b\$C1.c  c  one/union2\$B/b\$C1/c  integer  Union1_t0_integer  false",
+  "one.union2\$B.b\$C2.c  c  one/union2\$B/b\$C2/c  string  root_one_fn_output_nested_struct_first_string  false",
   "one.from_union2  from_union2  one/from_union2  integer  Union1_t0_integer  false",
   "one.union1  union1  one/union1  union  Union1  true",
   "one.from_union1  from_union1  one/from_union1  integer  Union1_t0_integer  false",
@@ -279,9 +278,9 @@ snapshot[`planner: dependencies in union/either 1`] = `
   "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  RegisteredUser_id_string_uuid  false",
   "three.user\$RegisteredUser.email  email  three/user\$RegisteredUser/email  string  RegisteredUserEmail  false",
   "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  RegisteredUser_profile_fn_output  false",
-  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  RegisteredUser_profile_fn_output_email_string_email  false",
-  "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  C2_c_string  false",
-  "three.user\$RegisteredUser.profile.profilePic  profilePic  three/user\$RegisteredUser/profile/profilePic  string  C2_c_string  false",
+  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  root_one_fn_output_email_string_email  false",
+  "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  root_one_fn_output_nested_struct_first_string  false",
+  "three.user\$RegisteredUser.profile.profilePic  profilePic  three/user\$RegisteredUser/profile/profilePic  string  root_one_fn_output_nested_struct_first_string  false",
   "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  RegisteredUser_id_string_uuid  false",
 ]
 `;
@@ -294,8 +293,8 @@ snapshot[`planner: dependencies in union/either 2`] = `
   "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  RegisteredUser_id_string_uuid  false",
   "three.user\$RegisteredUser.email  email  three/user\$RegisteredUser/email  string  RegisteredUserEmail  true",
   "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  RegisteredUser_profile_fn_output  false",
-  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  RegisteredUser_profile_fn_output_email_string_email  false",
-  "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  C2_c_string  false",
+  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  root_one_fn_output_email_string_email  false",
+  "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  root_one_fn_output_nested_struct_first_string  false",
   "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  RegisteredUser_id_string_uuid  false",
 ]
 `;

@@ -7,7 +7,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "object",
         "title": "test-complex-types",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -21,7 +20,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "function",
         "title": "root_test_fn",
-        "runtime": 0,
         "policies": [
           0
         ],
@@ -36,7 +34,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "object",
         "title": "ComplexType",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -56,7 +53,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "string",
         "title": "ComplexType_a_string_string",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -64,7 +60,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "float",
         "title": "ComplexType_a_float_float",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -74,7 +69,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "string",
         "title": "ComplexType_an_enum_string_enum",
-        "runtime": 0,
         "policies": [],
         "enum": [
           "\\\\"one\\\\"",
@@ -86,7 +80,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "integer",
         "title": "ComplexType_an_integer_enum_integer_enum",
-        "runtime": 0,
         "policies": [],
         "enum": [
           "1",
@@ -100,7 +93,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "float",
         "title": "ComplexType_a_float_enum_float",
-        "runtime": 0,
         "policies": [],
         "enum": [
           "1.5",
@@ -112,7 +104,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "object",
         "title": "ComplexType_a_struct_struct",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -124,7 +115,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "float",
         "title": "ComplexType_a_struct_struct_value_float",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -132,7 +122,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "optional",
         "title": "ComplexType_nested_ComplexType_nested_ComplexType_nested_either_list_optional",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -142,7 +131,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "list",
         "title": "ComplexType_nested_ComplexType_nested_either_list",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -151,7 +139,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "either",
         "title": "ComplexType_nested_either",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -163,7 +150,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "integer",
         "title": "ComplexType_nested_either_t1_integer",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -171,7 +157,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "object",
         "title": "SomeType",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -184,7 +169,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "list",
         "title": "Two",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -194,7 +178,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "optional",
         "title": "SomeType_two_SomeType_optional",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -204,7 +187,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "string",
         "title": "ComplexType_an_email_string_email",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -213,7 +195,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "boolean",
         "title": "root_test_fn_output",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -324,7 +305,6 @@ snapshot[`typegraphs creation 2`] = `
       {
         "type": "object",
         "title": "test-multiple-runtimes",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -340,7 +320,6 @@ snapshot[`typegraphs creation 2`] = `
       {
         "type": "function",
         "title": "root_add_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
@@ -355,7 +334,6 @@ snapshot[`typegraphs creation 2`] = `
       {
         "type": "object",
         "title": "root_add_fn_input",
-        "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -368,7 +346,6 @@ snapshot[`typegraphs creation 2`] = `
       {
         "type": "float",
         "title": "root_add_fn_input_first_float",
-        "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false
@@ -376,7 +353,6 @@ snapshot[`typegraphs creation 2`] = `
       {
         "type": "function",
         "title": "root_multiply_fn",
-        "runtime": 0,
         "policies": [
           0
         ],
@@ -479,14 +455,13 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "object",
         "title": "test-types",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
           "one": 1,
           "two": 6,
-          "three": 10
+          "three": 9
         },
         "required": [
           "one",
@@ -497,7 +472,6 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "function",
         "title": "root_one_fn",
-        "runtime": 0,
         "policies": [
           0
         ],
@@ -512,7 +486,6 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "object",
         "title": "root_one_fn_input",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -525,7 +498,6 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "integer",
         "title": "root_one_fn_input_a_integer",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -533,7 +505,6 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "integer",
         "title": "root_one_fn_input_b_integer",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -542,7 +513,6 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "integer",
         "title": "root_one_fn_output",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -552,14 +522,13 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "function",
         "title": "root_two_fn",
-        "runtime": 0,
         "policies": [
           1
         ],
         "config": {},
         "as_id": false,
         "input": 7,
-        "output": 9,
+        "output": 8,
         "materializer": 2,
         "rate_weight": null,
         "rate_calls": false
@@ -567,33 +536,23 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "object",
         "title": "User",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
-          "id": 8,
-          "post": 9
+          "id": 3,
+          "post": 8
         },
         "required": []
       },
       {
-        "type": "integer",
-        "title": "User_id_integer",
-        "runtime": 0,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
         "type": "object",
         "title": "Post",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
-          "id": 8,
+          "id": 3,
           "author": 7
         },
         "required": []
@@ -601,7 +560,6 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "function",
         "title": "root_three_fn",
-        "runtime": 0,
         "policies": [
           2
         ],
@@ -760,7 +718,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "object",
         "title": "test-complex-types",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -774,7 +731,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "function",
         "title": "root_test_fn",
-        "runtime": 0,
         "policies": [
           0
         ],
@@ -789,7 +745,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "object",
         "title": "ComplexType",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -809,7 +764,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "string",
         "title": "ComplexType_a_string_string",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -817,7 +771,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "float",
         "title": "ComplexType_a_float_float",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -827,7 +780,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "string",
         "title": "ComplexType_an_enum_string_enum",
-        "runtime": 0,
         "policies": [],
         "enum": [
           "\\\\"one\\\\"",
@@ -839,7 +791,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "integer",
         "title": "ComplexType_an_integer_enum_integer_enum",
-        "runtime": 0,
         "policies": [],
         "enum": [
           "1",
@@ -853,7 +804,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "float",
         "title": "ComplexType_a_float_enum_float",
-        "runtime": 0,
         "policies": [],
         "enum": [
           "1.5",
@@ -865,7 +815,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "object",
         "title": "ComplexType_a_struct_struct",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -877,7 +826,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "float",
         "title": "ComplexType_a_struct_struct_value_float",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -885,7 +833,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "optional",
         "title": "ComplexType_nested_ComplexType_nested_ComplexType_nested_either_list_optional",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -895,7 +842,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "list",
         "title": "ComplexType_nested_ComplexType_nested_either_list",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -904,7 +850,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "either",
         "title": "ComplexType_nested_either",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -916,7 +861,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "integer",
         "title": "ComplexType_nested_either_t1_integer",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -924,7 +868,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "object",
         "title": "SomeType",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -937,7 +880,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "list",
         "title": "Two",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -947,7 +889,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "optional",
         "title": "SomeType_two_SomeType_optional",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -957,7 +898,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "string",
         "title": "ComplexType_an_email_string_email",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -966,7 +906,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "boolean",
         "title": "root_test_fn_output",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -1077,7 +1016,6 @@ snapshot[`typegraphs creation 5`] = `
       {
         "type": "object",
         "title": "test-multiple-runtimes",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -1093,7 +1031,6 @@ snapshot[`typegraphs creation 5`] = `
       {
         "type": "function",
         "title": "root_add_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
@@ -1108,7 +1045,6 @@ snapshot[`typegraphs creation 5`] = `
       {
         "type": "object",
         "title": "root_add_fn_input",
-        "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -1121,7 +1057,6 @@ snapshot[`typegraphs creation 5`] = `
       {
         "type": "float",
         "title": "root_add_fn_input_first_float",
-        "runtime": 1,
         "policies": [],
         "config": {},
         "as_id": false
@@ -1129,7 +1064,6 @@ snapshot[`typegraphs creation 5`] = `
       {
         "type": "function",
         "title": "root_multiply_fn",
-        "runtime": 0,
         "policies": [
           0
         ],
@@ -1232,14 +1166,13 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "object",
         "title": "test-types",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
           "one": 1,
           "two": 6,
-          "three": 10
+          "three": 9
         },
         "required": [
           "one",
@@ -1250,7 +1183,6 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "function",
         "title": "root_one_fn",
-        "runtime": 0,
         "policies": [
           0
         ],
@@ -1265,7 +1197,6 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "object",
         "title": "root_one_fn_input",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -1278,7 +1209,6 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "integer",
         "title": "root_one_fn_input_a_integer",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false
@@ -1286,7 +1216,6 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "integer",
         "title": "root_one_fn_input_b_integer",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -1295,7 +1224,6 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "integer",
         "title": "root_one_fn_output",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
@@ -1305,14 +1233,13 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "function",
         "title": "root_two_fn",
-        "runtime": 0,
         "policies": [
           1
         ],
         "config": {},
         "as_id": false,
         "input": 7,
-        "output": 9,
+        "output": 8,
         "materializer": 2,
         "rate_weight": null,
         "rate_calls": false
@@ -1320,33 +1247,23 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "object",
         "title": "User",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
-          "id": 8,
-          "post": 9
+          "id": 3,
+          "post": 8
         },
         "required": []
       },
       {
-        "type": "integer",
-        "title": "User_id_integer",
-        "runtime": 0,
-        "policies": [],
-        "config": {},
-        "as_id": false
-      },
-      {
         "type": "object",
         "title": "Post",
-        "runtime": 0,
         "policies": [],
         "config": {},
         "as_id": false,
         "properties": {
-          "id": 8,
+          "id": 3,
           "author": 7
         },
         "required": []
@@ -1354,7 +1271,6 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "function",
         "title": "root_three_fn",
-        "runtime": 0,
         "policies": [
           2
         ],
