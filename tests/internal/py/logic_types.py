@@ -4,6 +4,7 @@ from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
+
 class Struct:
     def repr(self):
         return asdict(self)
@@ -77,30 +78,32 @@ class Struct:
             return val
 
 
-{% for class in classes -%}
-{{ class.def }}
-FORWARD_REFS["{{ class.hint }}"] = {{ class.hint }}
+@dataclass
+class RootSumFnInput(Struct):
+    first: float
+    second: float
 
 
-{% endfor -%}
-{% for def in types -%}
-{{ def }}
-{% endfor %}
+FORWARD_REFS["RootSumFnInput"] = RootSumFnInput
+
+
+TypeRootSumFnInputFirstFloat = float
+
+
 def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value
 
 
-{%for func in funcs %}
-def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}, Any], {{ func.output_name }}]):
+def typed_remote_sum(
+    user_fn: Callable[[RootSumFnInput, Any], TypeRootSumFnInputFirstFloat],
+):
     def exported_wrapper(raw_inp, ctx):
-        inp: {{ func.input_name }} = Struct.new({{ func.input_name }}, raw_inp)
-        out: {{ func.output_name }} = user_fn(inp, ctx)
+        inp: RootSumFnInput = Struct.new(RootSumFnInput, raw_inp)
+        out: TypeRootSumFnInputFirstFloat = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
 
     return exported_wrapper
-
-{% endfor %}

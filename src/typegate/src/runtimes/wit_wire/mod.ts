@@ -56,6 +56,7 @@ export class WitWireMessenger {
 
   async handle(opName: string, args: ResolverArgs) {
     const { _, ...inJson } = args;
+
     let res;
     try {
       res = await Meta.wit_wire.handle(this.id, {
@@ -173,8 +174,12 @@ async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
 async function gql(cx: HostCallCtx, args: object) {
   const argsValidator = zod.object({
     query: zod.string(),
-    variables: zod.record(zod.string(), zod.unknown()),
+    variables: zod.union([
+      zod.string(),
+      zod.record(zod.string(), zod.unknown()),
+    ]),
   });
+
   const parseRes = argsValidator.safeParse(args);
   if (!parseRes.success) {
     throw new Error("error validating gql args", {
@@ -184,6 +189,19 @@ async function gql(cx: HostCallCtx, args: object) {
     });
   }
   const parsed = parseRes.data;
+
+  // Convert variables to an object if it's a string
+  let variables = parsed.variables;
+  if (typeof variables === "string") {
+    try {
+      variables = JSON.parse(variables);
+    } catch (error) {
+      throw new Error("Failed to parse variables string as JSON", {
+        cause: error,
+      });
+    }
+  }
+
   const request = new Request(cx.typegraphUrl, {
     method: "POST",
     headers: {
@@ -193,15 +211,17 @@ async function gql(cx: HostCallCtx, args: object) {
     },
     body: JSON.stringify({
       query: parsed.query,
-      variables: parsed.variables,
+      variables: variables,
     }),
   });
+
   //TODO: make `handle` more friendly to internal requests
   const res = await cx.typegate.handle(request, {
     port: 0,
     hostname: "internal",
     transport: "tcp",
   });
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`gql fetch on ${cx.typegraphUrl} failed: ${text}`, {
