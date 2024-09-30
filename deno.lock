@@ -2344,5 +2344,19 @@
     "https://raw.githubusercontent.com/metatypedev/metatype/db616a6ae26eb6fe04e356a777c11185613d97ad/typegate/src/utils/hash.ts": "2f4ce3f1736df720def3b0fc89ac9e6e29afa0a33d7a988e15cb1d1bebcf026c",
     "https://raw.githubusercontent.com/metatypedev/metatype/db616a6ae26eb6fe04e356a777c11185613d97ad/typegate/tests/utils/memory_register.ts": "de21f1494e4e378fc43280e04ea5b59aa791d417c655d47824769cde4fc63b19",
     "https://raw.githubusercontent.com/metatypedev/metatype/db616a6ae26eb6fe04e356a777c11185613d97ad/typegate/tests/utils/no_limiter.ts": "730246db1c73b5ca77e01e1838194f3870f4024cbf29a850674564b20425a7f0"
+  },
+  "workspace": {
+    "members": {
+      "tests": {
+        "dependencies": [
+          "jsr:@std/async@^1.0.3",
+          "jsr:@std/streams@^1.0.2",
+          "jsr:@std/testing@^1.0.1",
+          "jsr:@std/yaml@^1.0.4",
+          "npm:json-schema-faker@0.5.3",
+          "npm:pg@8.12.0"
+        ]
+      }
+    }
   }
 }
