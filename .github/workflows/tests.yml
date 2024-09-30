@@ -259,7 +259,7 @@ jobs:
           WASM_OPT=1 ghjk x build-tgraph-ts
 
           # start the docker containers
-          ghjk x dev-compose base prisma grpc
+          ghjk x dev-compose base prisma grpc subredis
 
           WASM_OPT=1 ghjk x build-tgraph
 
@@ -279,6 +279,7 @@ jobs:
             tests/runtimes/wasm_wire/*.ts \
             tests/runtimes/wasm_reflected/*.ts \
             tests/runtimes/python/*.ts \
+            tests/runtimes/substantial/common.ts \
             tests/e2e/self_deploy/self_deploy.ts \
             tests/metagen/typegraphs/metagen.ts \
             src/typegraph/deno/src/*.ts \

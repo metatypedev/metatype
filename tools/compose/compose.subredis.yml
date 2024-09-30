@@ -1,0 +1,8 @@
+services:
+  subredis:
+    image: bitnami/redis:7.0
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    environment:
+      REDIS_PASSWORD: password

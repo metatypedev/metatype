@@ -93,13 +93,12 @@ export const typegateConfigBaseSchema = z.object({
    * Time in seconds in which a URL expires after being pushed to Redis
    */
   redis_url_queue_expire_sec: z.coerce.number().positive(),
-  substantial_relaunch_ms: z.coerce
-    .number()
-    .positive()
-    .min(1_000)
-    .max(60_000)
-    .default(2_000),
+  /** Rate at which new schedules are read */
+  substantial_poll_interval_sec: z.coerce.number().positive().min(0.5).max(60),
+  /** Lease duration associated to a run_id */
+  substantial_lease_lifespan_sec: z.coerce.number().positive().min(1),
 });
+
 export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;
 
 // These config entries are only accessible on a Typegate instance.

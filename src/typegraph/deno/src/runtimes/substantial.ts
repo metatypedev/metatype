@@ -1,11 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Materializer, Runtime } from "../runtimes/mod.ts";
+import { type Materializer, Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../wit.ts";
-import { Func, Typedef } from "../types.ts";
-import {
-  RedisBackend,
+import { Func, type Typedef } from "../types.ts";
+import type {
   SubstantialBackend,
   SubstantialOperationData,
   SubstantialOperationType,
@@ -14,16 +13,21 @@ import {
 import { t } from "../index.ts";
 
 export class Backend {
-  static memory(): SubstantialBackend {
+  static devMemory(): SubstantialBackend {
     return { tag: "memory" };
   }
 
-  static fs(): SubstantialBackend {
+  static devFs(): SubstantialBackend {
     return { tag: "fs" };
   }
 
-  static redis(config: RedisBackend): SubstantialBackend {
-    return { tag: "redis", val: config };
+  static redis(connectionStringSecret: string): SubstantialBackend {
+    return {
+      tag: "redis",
+      val: {
+        connectionStringSecret,
+      },
+    };
   }
 }
 

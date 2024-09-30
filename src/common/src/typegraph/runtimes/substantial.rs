@@ -7,11 +7,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RedisConfig {
-    pub host: String,
-    pub port: u16,
+    pub connection_string: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase", tag = "type")]
 pub enum SubstantialBackend {
     Fs,
     Memory,

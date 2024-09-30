@@ -488,8 +488,7 @@ interface runtimes {
 
     // substantial
     record redis-backend {
-        host: string,
-        port: u16,
+        connection-string-secret: string,
     }
 
     variant substantial-backend {
