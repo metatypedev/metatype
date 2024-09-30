@@ -269,12 +269,12 @@ impl Config {
 
     /// Load config file:
     /// if the config_path is None, search the config file recursively on parent directories.
-    pub fn load_or_find<P: AsRef<Path>>(
-        config_path: Option<PathBuf>,
-        search_start_dir: P,
+    pub fn load_or_find(
+        config_path: Option<&Path>,
+        search_start_dir: impl AsRef<Path>,
     ) -> Result<Config> {
         if let Some(path) = config_path {
-            Config::from_file(&path).with_context(|| format!("config file not found at {path:?}"))
+            Config::from_file(path).with_context(|| format!("config file not found at {path:?}"))
         } else {
             Ok(Config::find(search_start_dir)?
                 .ok_or_else(|| ferr!("could not find config file"))?)
@@ -334,6 +334,7 @@ impl Config {
     pub fn dir(&self) -> Result<&Path> {
         self.path
             .as_deref()
+            .or(Some(self.base_dir.as_path()))
             .ok_or_else(|| ferr!("config path required"))?
             .parent()
             .ok_or_else(|| ferr!("config path has no parent"))
@@ -351,7 +352,7 @@ mod tests {
     fn load_missing_config_file() -> Result<()> {
         let project_root = get_project_root()?;
         let path = project_root.join("path/to/metatype.yml");
-        let load_res = Config::load_or_find(Some(path), project_root);
+        let load_res = Config::load_or_find(Some(&path), project_root);
         assert_err_contains(load_res, "config file not found at");
         Ok(())
     }

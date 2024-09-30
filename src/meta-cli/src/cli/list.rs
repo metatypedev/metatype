@@ -34,7 +34,7 @@ impl Action for List {
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
         let config_path = args.config.clone();
-        let config = Arc::new(Config::load_or_find(config_path, &dir)?);
+        let config = Arc::new(Config::load_or_find(config_path.as_deref(), &dir)?);
 
         let mut node_config = config.node(&self.node, &self.target);
         if self.target == "dev" {
