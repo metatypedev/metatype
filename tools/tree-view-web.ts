@@ -15,7 +15,13 @@ import { join, parseArgs } from "./deps.ts";
 const dirname = import.meta.dirname ?? new URL(".", import.meta.url).pathname;
 const indexHtml = join(dirname, "tree-view/index.html");
 
-const args = parseArgs(Deno.args, {});
+const args = parseArgs(Deno.args, {
+  string: ["port"],
+});
+
+const argsPort = parseInt(args.port ?? "");
+const envPort = parseInt(Deno.env.get("PORT") ?? "");
+const port = isNaN(argsPort) ? (isNaN(envPort) ? 0 : envPort) : argsPort;
 
 const files = args._ as string[];
 if (files.length === 0) {
@@ -57,7 +63,7 @@ if (tgs.length === 0) {
 }
 
 Deno.serve({
-  port: 0,
+  port,
   onListen({ port, hostname }) {
     console.log(
       `server running at http://${hostname ?? "localhost"}:${port}`,
