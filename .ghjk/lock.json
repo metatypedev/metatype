@@ -1080,6 +1080,11 @@
               "desc": "Check for unused cargo depenencies",
               "envKey": "bciqe5ao7vzfelgdas65p7frjodat2yz6mz7jk2yup2ulv5ycd44afyi"
             },
+            "install-protobuf-rust": {
+              "ty": "denoFile@v1",
+              "key": "install-protobuf-rust",
+              "envKey": "bciqfoerhfsehob65bmr7v5eka43ml4zbbt3aeot7zz5ijlb4oy2lucq"
+            },
             "install-wasi-adapter": {
               "ty": "denoFile@v1",
               "key": "install-wasi-adapter",
@@ -1116,6 +1121,13 @@
               "key": "fetch-deno",
               "desc": "Cache remote deno modules.",
               "envKey": "bciqclszw6iggx6sevxab56z3k7gh5hne7jzx24clywryxz24qjo5gji"
+            },
+            "dev-sub-gen": {
+              "ty": "denoFile@v1",
+              "key": "dev-sub-gen",
+              "workingDir": "src/substantial",
+              "desc": "Regenerate substantial types",
+              "envKey": "bciqfoerhfsehob65bmr7v5eka43ml4zbbt3aeot7zz5ijlb4oy2lucq"
             },
             "dev-website": {
               "ty": "denoFile@v1",
@@ -1251,6 +1263,7 @@
             "lock-sed",
             "lint-deno",
             "lint-udeps",
+            "install-protobuf-rust",
             "install-wasi-adapter",
             "install-lsp",
             "install-website",
@@ -1258,6 +1271,7 @@
             "install-py",
             "install-sys",
             "fetch-deno",
+            "dev-sub-gen",
             "dev-website",
             "dev-gate6",
             "dev-gate5",

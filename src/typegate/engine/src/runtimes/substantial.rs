@@ -10,7 +10,7 @@ use common::typegraph::runtimes::substantial::SubstantialBackend;
 use dashmap::DashMap;
 use deno_core::OpState;
 use substantial::{
-    backends::{fs::FsBackend, memory::MemoryBackend, Backend, NextRun},
+    backends::{fs::FsBackend, memory::MemoryBackend, redis::RedisBackend, Backend, NextRun},
     converters::{MetadataEvent, Operation, Run},
 };
 
@@ -22,7 +22,7 @@ pub struct Ctx {
     pub backends: Arc<DashMap<String, Rc<dyn Backend>>>,
 }
 
-fn init_backend(kind: &SubstantialBackend) -> Rc<dyn Backend> {
+fn init_backend(kind: &SubstantialBackend) -> Result<Rc<dyn Backend>> {
     match kind {
         SubstantialBackend::Fs => {
             let tmp_dir = std::env::var("TMP_DIR")
@@ -30,10 +30,13 @@ fn init_backend(kind: &SubstantialBackend) -> Rc<dyn Backend> {
                 .expect("invalid TMP_DIR");
             let root = tmp_dir.join("substantial").join("fs_backend");
 
-            Rc::new(FsBackend::new(root).unwrap())
+            Ok(Rc::new(FsBackend::new(root).get()))
         }
-        SubstantialBackend::Memory => Rc::new(MemoryBackend::default().unwrap()),
-        SubstantialBackend::Redis(_) => todo!(),
+        SubstantialBackend::Memory => Ok(Rc::new(MemoryBackend::default().get())),
+        SubstantialBackend::Redis(cfg) => Ok(Rc::new(RedisBackend::new(
+            cfg.connection_string.clone(),
+            Some("typegate".to_owned()),
+        )?)),
     }
 }
 
@@ -63,7 +66,7 @@ pub async fn op_sub_store_create_or_get_run(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     let mut run = Run::new(input.run_id);
     run.recover_from(backend.as_ref())?;
@@ -91,7 +94,7 @@ pub async fn op_sub_store_persist_run(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     input.run.persist_into(backend.as_ref())?;
 
@@ -120,7 +123,7 @@ pub async fn op_sub_store_add_schedule(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.add_schedule(
         input.queue.clone(),
@@ -152,7 +155,7 @@ pub async fn op_sub_store_read_schedule(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     match backend.read_schedule(input.queue.clone(), input.run_id.clone(), input.schedule) {
         Ok(opt_event) => opt_event.map(|event| event.try_into()).transpose(),
@@ -174,7 +177,7 @@ pub async fn op_sub_store_close_schedule(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.close_schedule(input.queue.clone(), input.run_id.clone(), input.schedule)
 }
@@ -200,7 +203,7 @@ pub async fn op_sub_agent_next_run(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.next_run(input.queue.clone(), input.exclude)
 }
@@ -225,7 +228,7 @@ pub async fn op_sub_agent_active_leases(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.active_leases(input.lease_seconds)
 }
@@ -250,7 +253,7 @@ pub async fn op_sub_agent_acquire_lease(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.acquire_lease(input.run_id.clone(), input.lease_seconds)
 }
@@ -268,7 +271,7 @@ pub async fn op_sub_agent_renew_lease(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.renew_lease(input.run_id.clone(), input.lease_seconds)
 }
@@ -286,7 +289,7 @@ pub async fn op_sub_agent_remove_lease(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.remove_lease(input.run_id.clone(), input.lease_seconds)
 }
@@ -311,7 +314,7 @@ pub async fn op_sub_metadata_read_all(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     let metadatas = backend.read_all_metadata(input.run_id)?;
     metadatas
@@ -341,7 +344,7 @@ pub async fn op_sub_metadata_append(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.append_metadata(
         input.run_id.clone(),
@@ -370,7 +373,7 @@ pub async fn op_sub_metadata_write_workflow_link(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.write_workflow_link(input.workflow_name.clone(), input.run_id)
 }
@@ -395,7 +398,7 @@ pub async fn op_sub_metadata_read_workflow_links(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_insert_with(|| init_backend(&input.backend));
+        .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.read_workflow_links(input.workflow_name)
 }

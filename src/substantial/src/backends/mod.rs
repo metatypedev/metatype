@@ -11,6 +11,7 @@ use anyhow::Result;
 pub mod fs;
 pub mod key_value;
 pub mod memory;
+pub mod redis;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NextRun {
