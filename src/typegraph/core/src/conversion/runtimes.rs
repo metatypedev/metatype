@@ -501,8 +501,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 SubstantialBackend::Fs => substantial::SubstantialBackend::Fs,
                 SubstantialBackend::Redis(redis) => {
                     substantial::SubstantialBackend::Redis(RedisConfig {
-                        host: redis.host.clone(),
-                        port: redis.port,
+                        connection_string: redis.connection_string_secret.clone(),
                     })
                 }
             };

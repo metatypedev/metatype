@@ -9,20 +9,25 @@ from typegraph.runtimes.substantial import Backend
 def substantial(g: Graph):
     pub = Policy.public()
 
-    backend = Backend.memory() if os.environ["SUB_TEST_MEMORY"] == "1" else Backend.fs()
+    backend = Backend.dev_memory()
+    if "SUB_BACKEND" in os.environ:
+        if os.environ["SUB_BACKEND"] == "fs":
+            backend = Backend.dev_fs()
+        elif os.environ["SUB_BACKEND"] == "redis":
+            backend = Backend.redis("SUB_REDIS")
 
     sub = SubstantialRuntime(backend)
 
     save_and_sleep = sub.deno(
         file="workflow.ts",
         name="saveAndSleepExample",
-        deps=["common_types.ts"],
+        deps=["imports/common_types.ts"],
     )
 
     sub_email = sub.deno(
         file="workflow.ts",
         name="eventsAndExceptionExample",
-        deps=["common_types.ts"],
+        deps=["imports/common_types.ts"],
     )
 
     g.expose(

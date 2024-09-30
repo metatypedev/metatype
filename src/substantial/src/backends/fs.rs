@@ -112,7 +112,7 @@ impl FsBackend {
         })
     }
 
-    pub fn unwrap(self) -> KeyValueBackend {
+    pub fn get(self) -> KeyValueBackend {
         self.0
     }
 }

@@ -2,7 +2,7 @@ import {
   Context,
   queryThatTakesAWhile,
   sendSubscriptionEmail,
-} from "./common_types.ts";
+} from "./imports/common_types.ts";
 
 export async function eventsAndExceptionExample(ctx: Context) {
   const { to } = ctx.kwargs;

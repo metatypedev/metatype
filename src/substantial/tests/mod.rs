@@ -3,9 +3,10 @@ mod tests {
     use std::{collections::HashMap, fmt::Debug, path::PathBuf, thread::sleep, time::Duration};
 
     use chrono::{DateTime, Utc};
+    use redis::Script;
     use serde_json::json;
     use substantial::{
-        backends::{fs::FsBackend, BackendAgent, BackendMetadataWriter},
+        backends::{fs::FsBackend, redis::RedisBackend, Backend},
         converters::{MetadataEvent, Operation, OperationEvent, Run},
     };
     use substantial::{
@@ -14,9 +15,9 @@ mod tests {
     };
 
     #[test]
-    fn test_write_and_read_events_raw_fs() {
+    fn test_basic_write_and_read_events_raw_fs() {
         let root = PathBuf::from("tmp/test/substantial");
-        let backend = FsBackend::new(root.clone()).unwrap();
+        let backend = FsBackend::new(root.clone()).get();
         let run_id = "test_run".to_string();
 
         let records = Records::new();
@@ -32,11 +33,11 @@ mod tests {
     }
 
     #[test]
-    fn test_run_persist() {
-        let mem_backend = MemoryBackend::default().unwrap();
+    fn test_basic_run_persist() {
+        let mem_backend = MemoryBackend::default().get();
 
         let root = PathBuf::from("tmp/test_one/substantial");
-        let fs_backend = FsBackend::new(root.clone()).unwrap();
+        let fs_backend = FsBackend::new(root.clone()).get();
         std::fs::remove_dir_all(root).ok();
 
         let run_id = "some_run_id".to_string();
@@ -73,22 +74,47 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_lease_state_consistency_logic() {
-        let root = PathBuf::from("tmp/test_two/substantial");
-        let backends = vec![
-            Box::new(MemoryBackend::default().unwrap()),
-            Box::new({
-                let backend = FsBackend::new(root.clone()).unwrap();
-                std::fs::remove_dir_all(root).ok();
-                backend
-            }),
+    fn test_state_consistency_logic() {
+        let backends: Vec<(&str, Box<dyn Backend>)> = vec![
+            ("memory", Box::new(MemoryBackend::default().get())),
+            (
+                "fs",
+                Box::new({
+                    let root = PathBuf::from("tmp/test_two/substantial");
+                    let backend = FsBackend::new(root.clone()).get();
+                    std::fs::remove_dir_all(root).ok();
+                    backend
+                }),
+            ),
+            (
+                "redis",
+                Box::new({
+                    let prefix = "rust_test";
+                    let backend = RedisBackend::new(
+                        "redis://:password@localhost:6380/0".to_owned(),
+                        Some(prefix.to_owned()),
+                    )
+                    .unwrap();
+                    backend
+                        .with_redis(|r| {
+                            let script = Script::new(r#"redis.call("FLUSHALL")"#);
+                            script.invoke::<()>(r)
+                        })
+                        .unwrap();
+
+                    backend
+                }),
+            ),
         ];
 
-        for backend in backends {
+        for (label, backend) in backends {
+            println!("Testing backend {:?}", label);
+
             let run_id = "some_run_id".to_string();
             let schedule = Utc::now();
             let queue = "test".to_string();
 
+            // runs
             let orig_operation = Operation {
                 at: Utc::now(),
                 event: OperationEvent::Start {
@@ -103,6 +129,25 @@ mod tests {
                     Some(orig_operation.clone().try_into().unwrap()),
                 )
                 .unwrap();
+
+            let mut original_run = Run::new(run_id.clone());
+            original_run.operations.push(Operation {
+                at: DateTime::<Utc>::default().to_utc(),
+                event: substantial::converters::OperationEvent::Start {
+                    kwargs: serde_json::from_value(json!({
+                        "some": { "nested": { "json": 1234 } },
+                    }))
+                    .unwrap(),
+                },
+            });
+            original_run.persist_into(backend.as_ref()).unwrap();
+
+            let mut recovered_run = Run::new(run_id.clone());
+            recovered_run.recover_from(backend.as_ref()).unwrap();
+            assert_eq!(
+                into_comparable(&original_run),
+                into_comparable(&recovered_run),
+            );
 
             // link metadata
             backend
@@ -166,7 +211,7 @@ mod tests {
             sleep(Duration::from_secs(2));
 
             let active_after_exp = backend.active_leases(lifetime).unwrap();
-            backend.renew_lease(run_id, lifetime).unwrap();
+            backend.renew_lease(run_id.clone(), lifetime).unwrap();
             let active_after_renew = backend.active_leases(lifetime).unwrap();
 
             assert_eq!(active_before_exp.len(), 2);

@@ -17,9 +17,6 @@ import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
 
 const logger = getLogger();
 
-const POLL_INTERVAL_SECONDS = 1;
-const LEASE_LIFESPAN_SECONDS = 3;
-
 export interface WorkflowDescription {
   name: string;
   path: string;
@@ -31,6 +28,11 @@ export interface StagedUserEvent {
   operation: Operation;
 }
 
+export interface AgentConfig {
+  poll_interval_sec: number;
+  lease_lifespan_sec: number;
+}
+
 export class Agent {
   workerManager = new WorkerManager();
   workflows: Array<WorkflowDescription> = [];
@@ -39,7 +41,7 @@ export class Agent {
   constructor(
     private backend: Backend,
     private queue: string,
-    private workflowRelaunchDelayMs: number
+    private config: AgentConfig
   ) {}
 
   async schedule(input: AddScheduleInput) {
@@ -94,7 +96,7 @@ export class Agent {
       } catch (err) {
         logger.error(err);
       }
-    }, 1000 * POLL_INTERVAL_SECONDS);
+    }, 1000 * this.config.poll_interval_sec);
   }
 
   stop() {
@@ -110,7 +112,7 @@ export class Agent {
 
     for (const workflow of this.workflows) {
       if (next && Agent.parseWorkflowName(next.run_id) == workflow.name) {
-        logger.warn(`Run workflow ${JSON.stringify(next)}`);
+        // logger.warn(`Run workflow ${JSON.stringify(next)}`);
 
         await this.log(next.run_id, next.schedule_date, {
           message: "Replay workflow",
@@ -126,7 +128,7 @@ export class Agent {
   async #tryAcquireNextRun() {
     const activeRunIds = await Meta.substantial.agentActiveLeases({
       backend: this.backend,
-      lease_seconds: LEASE_LIFESPAN_SECONDS,
+      lease_seconds: this.config.lease_lifespan_sec,
     });
 
     logger.info(`Active leases: ${activeRunIds.join(",  ")}`);
@@ -143,7 +145,7 @@ export class Agent {
 
     const acquired = await Meta.substantial.agentAcquireLease({
       backend: this.backend,
-      lease_seconds: LEASE_LIFESPAN_SECONDS,
+      lease_seconds: this.config.lease_lifespan_sec,
       run_id: next.run_id,
     });
 
@@ -278,7 +280,6 @@ export class Agent {
     runId: string,
     { result, schedule, run }: WorkflowResult
   ) {
-    await sleep(this.workflowRelaunchDelayMs);
     this.workerManager.destroyWorker(workflowName, runId); // !
 
     logger.warn(`Interrupt "${workflowName}": ${result}"`);
@@ -317,7 +318,7 @@ export class Agent {
     logger.info(`Renew lease ${runId}`);
     await Meta.substantial.agentRenewLease({
       backend: this.backend,
-      lease_seconds: LEASE_LIFESPAN_SECONDS,
+      lease_seconds: this.config.lease_lifespan_sec,
       run_id: runId,
     });
   }
@@ -368,7 +369,7 @@ export class Agent {
     await Meta.substantial.agentRemoveLease({
       backend: this.backend,
       run_id: runId,
-      lease_seconds: LEASE_LIFESPAN_SECONDS,
+      lease_seconds: this.config.lease_lifespan_sec,
     });
   }
 
