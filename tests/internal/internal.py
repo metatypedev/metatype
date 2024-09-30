@@ -21,17 +21,14 @@ def internal(g: Graph):
         sum=deno.import_(inp, out, module="ts/logic.ts", name="sum").with_policy(
             internal
         ),
-        remoteSum=deno.import_(
+        remoteSumDeno=deno.import_(
             inp, out, module="ts/logic.ts", name="remoteSum"
         ).with_policy(public),
-        sub=python.import_(
-            inp, out, module="py/logic.py", name="sub", deps=["./py/logic_types.py"]
-        ).with_policy(internal),
-        remoteSub=python.import_(
+        remoteSumPy=python.import_(
             inp,
             out,
             module="py/logic.py",
-            name="remote_sub",
+            name="remote_sum",
             deps=["./py/logic_types.py"],
         ).with_policy(public),
     )

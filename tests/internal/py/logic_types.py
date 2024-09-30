@@ -2,12 +2,6 @@ from types import NoneType
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
-
-class Ctx:
-    def gql(self, query: str, variables: str):
-        return -1.1
-
-
 FORWARD_REFS = {}
 
 
@@ -102,23 +96,12 @@ def __repr(value: Any):
     return value
 
 
-def typed_sub(user_fn: Callable[[RootSumFnInput, Ctx], TypeRootSumFnInputFirstFloat]):
-    def exported_wrapper(raw_inp):
-        inp: RootSumFnInput = Struct.new(RootSumFnInput, raw_inp)
-        out: TypeRootSumFnInputFirstFloat = user_fn(inp, Ctx())
-        if isinstance(out, list):
-            return [__repr(v) for v in out]
-        return __repr(out)
-
-    return exported_wrapper
-
-
-def typed_remote_sub(
-    user_fn: Callable[[RootSumFnInput, Ctx], TypeRootSumFnInputFirstFloat],
+def typed_remote_sum(
+    user_fn: Callable[[RootSumFnInput, Any], TypeRootSumFnInputFirstFloat],
 ):
-    def exported_wrapper(raw_inp):
+    def exported_wrapper(raw_inp, ctx):
         inp: RootSumFnInput = Struct.new(RootSumFnInput, raw_inp)
-        out: TypeRootSumFnInputFirstFloat = user_fn(inp, Ctx())
+        out: TypeRootSumFnInputFirstFloat = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)

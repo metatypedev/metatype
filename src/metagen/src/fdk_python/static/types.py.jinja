@@ -2,10 +2,6 @@ from types import NoneType
 from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
-class Ctx:
-    def gql(self, query: str, variables: str):
-        return -1.1
-
 FORWARD_REFS = {}
 
 class Struct:
@@ -97,10 +93,10 @@ def __repr(value: Any):
 
 
 {%for func in funcs %}
-def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}, Ctx], {{ func.output_name }}]):
-    def exported_wrapper(raw_inp):
+def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}, Any], {{ func.output_name }}]):
+    def exported_wrapper(raw_inp, ctx):
         inp: {{ func.input_name }} = Struct.new({{ func.input_name }}, raw_inp)
-        out: {{ func.output_name }} = user_fn(inp, Ctx())
+        out: {{ func.output_name }} = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)

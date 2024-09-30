@@ -1,34 +1,32 @@
+import importlib
+import importlib.abc
+import importlib.machinery
+import importlib.util
+import json
+import os
+import sys
+import traceback
+import types
+from typing import Any, Callable, Dict
+
 import wit_wire.exports
+from wit_wire.exports.mat_wire import (
+    Err,
+    HandleErr_HandlerErr,
+    HandleErr_InJsonErr,
+    HandleErr_NoHandler,
+    HandleReq,
+    InitArgs,
+    InitError_Other,
+    InitError_UnexpectedMat,
+    InitResponse,
+    MatInfo,
+)
 
 # NOTE: all imports must be toplevel as constrained by `componentize-py`
 # https://github.com/bytecodealliance/componentize-py/issues/23
 # from pyrt.imports.typegate_wire import hostcall
-
 from wit_wire.imports.typegate_wire import hostcall
-
-from wit_wire.exports.mat_wire import (
-    InitArgs,
-    InitResponse,
-    InitError_UnexpectedMat,
-    InitError_Other,
-    MatInfo,
-    HandleReq,
-    HandleErr_NoHandler,
-    HandleErr_InJsonErr,
-    HandleErr_HandlerErr,
-    Err,
-)
-
-import json
-import types
-from typing import Callable, Any, Dict
-import importlib
-import importlib.util
-import importlib.abc
-import importlib.machinery
-import os
-import sys
-import traceback
 
 # the `MatWire` class is instantiated for each
 # external call. We have to put any persisted
@@ -37,10 +35,11 @@ handlers = {}
 
 
 class Ctx:
-    def gql(self, query: str, variables: str):
-        return hostcall(
-            "gql", json=json.dumps({"query": query, "variables": variables})
+    def gql(self, query: str, variables: str) -> Any:
+        data = json.loads(
+            hostcall("gql", json=json.dumps({"query": query, "variables": variables}))
         )
+        return data["data"]
 
 
 class MatWire(wit_wire.exports.MatWire):
@@ -74,12 +73,12 @@ class MatWire(wit_wire.exports.MatWire):
 
 
 class ErasedHandler:
-    def __init__(self, handler_fn: Callable[[Any], Any]) -> None:
+    def __init__(self, handler_fn: Callable[[Any, Ctx], Any]) -> None:
         self.handler_fn = handler_fn
 
     def handle(self, req: HandleReq):
         in_parsed = json.loads(req.in_json)
-        out = self.handler_fn(in_parsed)
+        out = self.handler_fn(in_parsed, Ctx())
         return json.dumps(out)
 
 
@@ -89,7 +88,7 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
         module = types.ModuleType(op.op_name)
         exec(data_parsed["source"], module.__dict__)
         fn = module.__dict__[data_parsed["func_name"]]
-        return ErasedHandler(handler_fn=lambda inp: fn(inp))
+        return ErasedHandler(handler_fn=lambda inp, ctx: fn(inp, ctx))
     elif data_parsed["ty"] == "import_function":
         prefix = data_parsed["func_name"]
 
@@ -111,7 +110,7 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
         return ErasedHandler(handler_fn=getattr(module, data_parsed["func_name"]))
     elif data_parsed["ty"] == "lambda":
         fn = eval(data_parsed["source"])
-        return ErasedHandler(handler_fn=lambda inp: fn(inp))
+        return ErasedHandler(handler_fn=lambda inp, ctx: fn(inp, ctx))
     else:
         raise Err(InitError_UnexpectedMat(op))
 
