@@ -8,6 +8,7 @@ use crate::conversion::types::TypeConversion;
 use crate::errors::Result;
 use crate::global_store::{NameRegistration, Store};
 use crate::typegraph::TypegraphContext;
+use crate::utils::clear_name;
 use crate::wit::core::{
     PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList,
     TypeOptional, TypeString, TypeStruct, TypeUnion,
@@ -49,10 +50,7 @@ where
     Rc<NonRefType<T>>: Into<TypeDef>,
 {
     pub fn type_with_data(&self, data: T) -> Result<TypeId> {
-        let base = TypeBase {
-            name: None, // different name -- since it is now a different type
-            ..self.base.clone()
-        };
+        let base = clear_name(&self.base); // different name -- since it is now a different type
         Store::register_type_def(
             |type_id| {
                 Rc::new(Self {
@@ -219,7 +217,7 @@ where
     fn with_x_base(&self, id: TypeId, base: ExtendedTypeBase) -> TypeDef {
         Rc::new(Self {
             id,
-            base: self.base.clone(),
+            base: clear_name(&self.base),
             extended_base: base,
             data: self.data.clone(),
         })
