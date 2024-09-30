@@ -27,7 +27,7 @@ impl S3Runtime {
 
     pub fn presign_get(&self, params: S3PresignGetParams) -> Result<TypeDef> {
         let mat = wasm::with_aws(|a, s| a.call_s3_presign_get(s, self.id, &params))?;
-        let inp = t::r#struct().prop("path", t::string());
+        let inp = t::structb! { "path" => t::string() };
         let out = t::uri();
 
         t::funcb(inp, out, mat)
@@ -35,9 +35,10 @@ impl S3Runtime {
 
     pub fn presign_put(&self, params: S3PresignPutParams) -> Result<TypeDef> {
         let mat = wasm::with_aws(|a, s| a.call_s3_presign_put(s, self.id, &params))?;
-        let inp = t::r#struct()
-            .prop("length", t::integer())?
-            .prop("path", t::string());
+        let inp = t::structb! {
+            "length" => t::integer(),
+            "path" => t::string(),
+        };
         let out = t::uri();
 
         t::funcb(inp, out, mat)
@@ -45,22 +46,26 @@ impl S3Runtime {
 
     pub fn list(&self, bucket: &str) -> Result<TypeDef> {
         let mat = wasm::with_aws(|a, s| a.call_s3_list(s, self.id, bucket))?;
-        let inp = t::r#struct().prop("path", t::string().optional());
-        let key = t::r#struct()
-            .prop("key", t::string())?
-            .prop("size", t::integer());
-        let out = t::r#struct()
-            .prop("keys", t::list(key))?
-            .prop("prefix", t::list(t::string()));
+        let inp = t::structb! {
+            "path" => t::string().optional(),
+        };
+        let out = t::structb! {
+            "keys" => t::list(t::structb! {
+                "key" => t::string(),
+                "size" => t::integer(),
+            }),
+            "prefix" => t::list(t::string()),
+        };
 
         t::funcb(inp, out, mat)
     }
 
     pub fn upload(&self, bucket: &str, file_type: impl TypeBuilder) -> Result<TypeDef> {
         let mat = wasm::with_aws(|a, s| a.call_s3_upload(s, self.id, bucket))?;
-        let inp = t::r#struct()
-            .prop("file", file_type)?
-            .prop("path", t::string().optional());
+        let inp = t::structb! {
+            "file" => file_type,
+            "path" => t::string().optional(),
+        };
         let out = t::boolean();
 
         t::funcb(inp, out, mat)
@@ -68,9 +73,10 @@ impl S3Runtime {
 
     pub fn upload_all(&self, bucket: &str, file_type: impl TypeBuilder) -> Result<TypeDef> {
         let mat = wasm::with_aws(|a, s| a.call_s3_upload_all(s, self.id, bucket))?;
-        let inp = t::r#struct()
-            .prop("prefix", t::string().optional_or(""))?
-            .prop("files", t::list(file_type));
+        let inp = t::structb! {
+            "prefix" => t::string().optional_or(""),
+            "files" => t::list(file_type),
+        };
         let out = t::boolean();
 
         t::funcb(inp, out, mat)

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 use crate::{
-    t::{self, TypeBuilder, TypeDef},
+    t::{self, TypeDef},
     wasm::{
         self,
         core::{MaterializerId, RuntimeId},
@@ -28,9 +28,10 @@ impl KvRuntime {
     }
 
     pub fn set(&self) -> Result<TypeDef> {
-        let inp = t::r#struct()
-            .prop("key", t::string())?
-            .prop("value", t::string());
+        let inp = t::structb! {
+            "key" => t::string(),
+            "value" => t::string(),
+        };
         let out = t::string();
         let mat = self.operation(KvMaterializer::Set, Effect::Update(false))?;
 
@@ -38,7 +39,7 @@ impl KvRuntime {
     }
 
     pub fn get(&self) -> Result<TypeDef> {
-        let inp = t::r#struct().prop("key", t::string());
+        let inp = t::structb! { "key" => t::string() };
         let out = t::string();
         let mat = self.operation(KvMaterializer::Get, Effect::Read)?;
 
@@ -46,7 +47,7 @@ impl KvRuntime {
     }
 
     pub fn delete(&self) -> Result<TypeDef> {
-        let inp = t::r#struct().prop("key", t::string());
+        let inp = t::structb! { "key" => t::string() };
         let out = t::integer();
         let mat = self.operation(KvMaterializer::Delete, Effect::Delete(false))?;
 
@@ -54,7 +55,7 @@ impl KvRuntime {
     }
 
     pub fn keys(&self) -> Result<TypeDef> {
-        let inp = t::r#struct().prop("filter", t::string().optional());
+        let inp = t::structb! { "filter" => t::string().optional() };
         let out = t::list(t::string());
         let mat = self.operation(KvMaterializer::Keys, Effect::Read)?;
 
@@ -62,7 +63,7 @@ impl KvRuntime {
     }
 
     pub fn values(&self) -> Result<TypeDef> {
-        let inp = t::r#struct().prop("filter", t::string().optional());
+        let inp = t::structb! { "filter" => t::string().optional() };
         let out = t::list(t::string());
         let mat = self.operation(KvMaterializer::Values, Effect::Read)?;
 
