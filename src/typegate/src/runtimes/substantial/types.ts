@@ -55,6 +55,8 @@ export type WorkflowResult = {
 
 export type InterruptType =
   | "SLEEP"
+  | "SAVE_TIMEOUT"
+  | "SAVE_RETRY"
   | "WAIT_RECEIVE_EVENT"
   | "WAIT_HANDLE_EVENT"
   | "WAIT_ENSURE_VALUE";
@@ -62,8 +64,9 @@ export type InterruptType =
 export class Interrupt extends Error {
   private static readonly PREFIX = "SUBSTANTIAL_INTERRUPT_";
 
-  private constructor(type: string) {
+  private constructor(type: string, cause?: unknown) {
     super(Interrupt.PREFIX + type);
+    this.cause = cause;
   }
 
   static getTypeOf(err: unknown): InterruptType | null {
@@ -73,7 +76,7 @@ export class Interrupt extends Error {
     return null;
   }
 
-  static Variant(kind: InterruptType) {
-    return new Interrupt(kind);
+  static Variant(kind: InterruptType, cause?: unknown) {
+    return new Interrupt(kind, cause);
   }
 }

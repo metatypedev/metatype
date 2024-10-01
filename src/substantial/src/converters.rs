@@ -26,6 +26,13 @@ pub enum RunResult {
     Err(serde_json::Value),
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type")]
+pub enum SavedValue {
+    Retry { wait_until: DateTime<Utc> },
+    Resolved { payload: serde_json::Value },
+}
+
 /// Bridge between protobuf types to Typescript
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type")]
@@ -37,7 +44,8 @@ pub enum OperationEvent {
     },
     Save {
         id: u32,
-        value: serde_json::Value,
+        value: SavedValue,
+        counter: i32,
     },
     Send {
         event_name: String,
@@ -162,7 +170,11 @@ impl TryFrom<Event> for Operation {
                     let value = serde_json::from_str(&raw_value)?;
                     return Ok(Operation {
                         at,
-                        event: OperationEvent::Save { id: save.id, value },
+                        event: OperationEvent::Save {
+                            id: save.id,
+                            value,
+                            counter: save.counter,
+                        },
                     });
                 }
                 Of::Send(send) => {
@@ -249,10 +261,11 @@ impl TryFrom<Operation> for Event {
                     ..Default::default()
                 })
             }
-            OperationEvent::Save { id, value } => {
+            OperationEvent::Save { id, value, counter } => {
                 let save = Save {
                     id,
                     value: serde_json::to_string(&value)?,
+                    counter,
                     ..Default::default()
                 };
 

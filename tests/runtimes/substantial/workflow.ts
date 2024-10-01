@@ -29,3 +29,24 @@ export async function saveAndSleepExample(ctx: Context) {
   ctx.sleep(5000);
   return newA + newB;
 }
+
+export async function retryExample(ctx: Context) {
+  const { fail } = ctx.kwargs;
+  const ret = await ctx.save(
+    () => {
+      if (fail) {
+        throw new Error(`Failed successfully`);
+      }
+      return "All good";
+    },
+    {
+      retry: {
+        initBackoff: 1,
+        maxBackoff: 5,
+        maxRetries: 4,
+      },
+    }
+  );
+
+  return ret;
+}
