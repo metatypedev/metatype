@@ -305,9 +305,9 @@ export type OperationEvent =
       type: "Save";
       id: number;
       value:
-        | { type: "Retry"; wait_until: string }
-        | { type: "Resolved"; payload: unknown };
-      counter: number;
+        | { type: "Retry"; wait_until: string; counter: number }
+        | { type: "Resolved"; payload: unknown }
+        | { type: "Failed"; err: unknown };
     }
   | { type: "Send"; event_name: string; value: unknown }
   | { type: "Stop"; result: unknown }

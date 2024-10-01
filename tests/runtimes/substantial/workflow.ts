@@ -41,9 +41,10 @@ export async function retryExample(ctx: Context) {
     },
     {
       retry: {
+        strategy: "linear",
         initBackoff: 1,
         maxBackoff: 5,
-        maxRetries: 4,
+        maxRetries: 5,
       },
     }
   );

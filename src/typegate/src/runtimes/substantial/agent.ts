@@ -5,7 +5,6 @@ import {
   Run,
 } from "../../../engine/runtime.js";
 import { getLogger } from "../../log.ts";
-import { sleep } from "../../utils.ts";
 import {
   Interrupt,
   Operation,
@@ -247,6 +246,8 @@ export class Agent {
         case "START": {
           const ret = answer.data as WorkflowResult;
           switch (Interrupt.getTypeOf(ret.exception)) {
+            case "SAVE_RETRY":
+            case "SAVE_TIMEOUT":
             case "SLEEP":
             case "WAIT_ENSURE_VALUE":
             case "WAIT_HANDLE_EVENT":
@@ -345,7 +346,7 @@ export class Agent {
       event: {
         type: "Stop",
         result: {
-          [rustResult]: result,
+          [rustResult]: result ?? null,
         } as unknown,
       },
     });

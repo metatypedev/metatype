@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     backends::Backend,
     protocol::{
-        events::{Event, Records},
+        events::{Event, Records, SaveFailed, SaveResolved, SaveRetry},
         metadata::{metadata::Of, Error, Info, Metadata},
     },
 };
@@ -29,8 +29,16 @@ pub enum RunResult {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type")]
 pub enum SavedValue {
-    Retry { wait_until: DateTime<Utc> },
-    Resolved { payload: serde_json::Value },
+    Retry {
+        counter: i32,
+        wait_until: DateTime<Utc>,
+    },
+    Resolved {
+        payload: serde_json::Value,
+    },
+    Failed {
+        err: serde_json::Value,
+    },
 }
 
 /// Bridge between protobuf types to Typescript
@@ -45,7 +53,6 @@ pub enum OperationEvent {
     Save {
         id: u32,
         value: SavedValue,
-        counter: i32,
     },
     Send {
         event_name: String,
@@ -124,6 +131,7 @@ impl TryFrom<Event> for Operation {
     type Error = anyhow::Error;
     fn try_from(event: Event) -> Result<Self> {
         use crate::protocol::events::event::Of;
+        use crate::protocol::events::save::Of::{Failed, Resolved, Retry};
         use crate::protocol::events::stop;
 
         let at = to_datetime_utc(event.at.get_or_default())?;
@@ -137,7 +145,7 @@ impl TryFrom<Event> for Operation {
                         .into_iter()
                         .map(|(k, v)| {
                             let v = serde_json::from_str(v.string_value())
-                                .with_context(|| format!("Get value from kwargs {k:?}"))?;
+                                .with_context(|| format!("Get value from kwargs {:?}", k))?;
                             Ok((k, v))
                         })
                         .collect::<Result<_>>()?;
@@ -166,14 +174,27 @@ impl TryFrom<Event> for Operation {
                     });
                 }
                 Of::Save(save) => {
-                    let raw_value = save.clone().value;
-                    let value = serde_json::from_str(&raw_value)?;
+                    let value = save
+                        .clone()
+                        .of
+                        .with_context(|| format!("variant is empty {:?}", save))?;
+
                     return Ok(Operation {
                         at,
                         event: OperationEvent::Save {
                             id: save.id,
-                            value,
-                            counter: save.counter,
+                            value: match value {
+                                Resolved(resolved) => SavedValue::Resolved {
+                                    payload: serde_json::from_str(&resolved.json_result)?,
+                                },
+                                Retry(retry) => SavedValue::Retry {
+                                    counter: retry.counter,
+                                    wait_until: to_datetime_utc(&retry.wait_until)?,
+                                },
+                                Failed(failed) => SavedValue::Failed {
+                                    err: serde_json::from_str(&failed.err)?,
+                                },
+                            },
                         },
                     });
                 }
@@ -203,7 +224,7 @@ impl TryFrom<Event> for Operation {
             }
         }
 
-        bail!("cannot convert from event {event:?}")
+        bail!("cannot convert from event {:?}", event)
     }
 }
 
@@ -211,6 +232,7 @@ impl TryFrom<Operation> for Event {
     type Error = anyhow::Error;
     fn try_from(operation: Operation) -> Result<Event> {
         use crate::protocol::events::event::Of;
+        use crate::protocol::events::save::Of::{Failed, Resolved, Retry};
         use crate::protocol::events::{stop, Event, Save, Send, Sleep, Start, Stop};
 
         let at = to_timestamp(&operation.at);
@@ -261,11 +283,28 @@ impl TryFrom<Operation> for Event {
                     ..Default::default()
                 })
             }
-            OperationEvent::Save { id, value, counter } => {
+            OperationEvent::Save { id, value } => {
                 let save = Save {
                     id,
-                    value: serde_json::to_string(&value)?,
-                    counter,
+                    of: Some(match value {
+                        SavedValue::Resolved { payload } => Resolved(SaveResolved {
+                            json_result: serde_json::to_string(&payload)?,
+                            ..Default::default()
+                        }),
+                        SavedValue::Retry {
+                            counter,
+                            wait_until,
+                        } => Retry(SaveRetry {
+                            wait_until: MessageField::some(to_timestamp(&wait_until)),
+                            counter,
+                            ..Default::default()
+                        }),
+                        SavedValue::Failed { err } => Failed(SaveFailed {
+                            err: serde_json::to_string(&err)?,
+                            ..Default::default()
+                        }),
+                    }),
+
                     ..Default::default()
                 };
 
@@ -373,6 +412,7 @@ fn to_timestamp(datetime: &DateTime<Utc>) -> Timestamp {
     let mut timestamp = Timestamp::new();
     timestamp.seconds = datetime.timestamp();
     timestamp.nanos = datetime.timestamp_subsec_nanos() as i32;
+
     timestamp
 }
 
@@ -380,5 +420,6 @@ fn to_datetime_utc(time: &Timestamp) -> Result<DateTime<Utc>> {
     if let Some(converted) = DateTime::from_timestamp(time.seconds, time.nanos as u32) {
         return Ok(converted);
     }
-    bail!("Cannot convert timestamp: {time:?}");
+
+    bail!("Cannot convert timestamp: {:?}", time);
 }

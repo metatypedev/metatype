@@ -11097,7 +11097,6 @@ dependencies = [
  "redis",
  "serde 1.0.204",
  "serde_json",
- "tokio",
  "uuid",
 ]
 

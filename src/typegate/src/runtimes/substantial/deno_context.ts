@@ -23,37 +23,19 @@ export class Context {
 
   async save<T>(fn: () => T | Promise<T>, option?: SaveOption) {
     const id = this.#nextId();
+
     let currRetryCount = 1;
     for (const { event } of this.run.operations) {
       if (event.type == "Save" && id == event.id) {
-        if (event.counter == -1) {
-          if (event.value.type != "Resolved") {
-            // integrity check
-            throw new Error(
-              `Invalid state: value is resolved (-1) but it has the wrong type ${JSON.stringify(
-                event.value
-              )}`
-            );
-          }
-
+        if (event.value.type == "Resolved") {
           return event.value.payload;
-        } else {
-          if (event.value.type != "Retry") {
-            // integrity check
-            throw new Error(
-              `Invalid state: value is NOT resolved but it has the wrong type ${JSON.stringify(
-                event.value
-              )}`
-            );
-          }
-
+        } else if (event.value.type == "Retry") {
           const delay = new Date(event.value.wait_until);
-          if (delay.getTime() < new Date().getTime()) {
+          if (delay.getTime() > new Date().getTime()) {
             // Too soon!
             throw Interrupt.Variant("SAVE_RETRY");
           } else {
-            // we can proceed to the next retry
-            currRetryCount = event.counter;
+            currRetryCount = event.value.counter;
           }
         }
       }
@@ -77,10 +59,8 @@ export class Context {
           type: "Resolved",
           payload: result,
         },
-        counter: -1,
       });
 
-      console.log("got result");
       return result;
     } catch (err) {
       if (
@@ -95,22 +75,33 @@ export class Context {
         );
 
         const retriesLeft = Math.max(retry.maxRetries - currRetryCount, 0);
-        const delaySec = strategy.linear(retriesLeft);
+        const delaySec = strategy.eval(retry.strategy ?? "linear", retriesLeft);
 
         this.#appendOp({
           type: "Save",
           id,
           value: {
-            // TODO: normalize as an actual proto variant
             type: "Retry",
             wait_until: new Date(
               new Date().getTime() + 1000 * delaySec
             ).toJSON(),
+            counter: currRetryCount,
           },
-          counter: currRetryCount,
         });
 
         throw Interrupt.Variant("SAVE_RETRY");
+      } else {
+        this.#appendOp({
+          type: "Save",
+          id,
+          value: {
+            type: "Failed",
+            err: {
+              retries: currRetryCount,
+              message: err?.message ?? `${err}`,
+            },
+          },
+        });
       }
 
       throw err;
@@ -187,10 +178,17 @@ export class Context {
   }
 }
 
-// All in milliseconds
+// TODO: move all of these into substantial lib once Meta can be used in a worker working
+// #[serde(....)]
+// pub enum RetryStrategy { Linear {...}, Exp { ... }}
+// impl RetryStrategy { pub fn eval(&self, retries_left: i8) { .. }}
+
+type StrategyAlgorithm = "linear";
+
 interface SaveOption {
   timeout?: number;
   retry?: {
+    strategy?: "linear"; // TODO: add more
     initBackoff: number;
     maxBackoff: number;
     maxRetries: number;
@@ -236,7 +234,17 @@ class RetryStrategy {
     }
   }
 
-  linear(retriesLeft: number): number {
+  eval(strategy: StrategyAlgorithm, retriesLeft: number) {
+    switch (strategy) {
+      case "linear":
+        return this.#linear(retriesLeft);
+      // TODO: add more
+      default:
+        throw new Error(`Unknown strategy "${strategy}" provided`);
+    }
+  }
+
+  #linear(retriesLeft: number): number {
     if (retriesLeft <= 0) {
       throw new Error("retries left <= 0");
     }

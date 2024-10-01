@@ -13,6 +13,3 @@ uuid.workspace = true
 
 protobuf = "3.5.1"
 redis = "0.25.4"
-
-[dev-dependencies]
-tokio = { workspace = true, features =["full"] }

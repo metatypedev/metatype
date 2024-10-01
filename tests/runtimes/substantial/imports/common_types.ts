@@ -14,6 +14,7 @@ export interface Context {
 export interface SaveOption {
   timeout?: number;
   retry?: {
+    strategy?: "linear";
     initBackoff: number;
     maxBackoff: number;
     maxRetries: number;
