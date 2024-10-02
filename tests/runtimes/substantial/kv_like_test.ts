@@ -21,6 +21,6 @@ concurrentWorkflowTestTemplate("fs", {
 
 retrySaveTestTemplate("fs", {
   delays: {
-    awaitComplete: 12,
+    awaitCompleteAll: 15,
   },
 });

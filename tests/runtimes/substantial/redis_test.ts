@@ -31,7 +31,7 @@ retrySaveTestTemplate(
   "redis",
   {
     delays: {
-      awaitComplete: 12,
+      awaitCompleteAll: 18,
     },
     secrets: { SUB_REDIS },
   },

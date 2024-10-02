@@ -41,13 +41,13 @@ export class Context {
       }
     }
 
-    // current call +1
+    // current call already counts
     currRetryCount += 1;
 
     try {
       let result: any;
-      if (option?.timeout && option.timeout > 0) {
-        result = await Promise.race([fn(), failAfter(option.timeout)]);
+      if (option?.timeoutMs && option.timeoutMs > 0) {
+        result = await Promise.race([fn(), failAfter(option.timeoutMs)]);
       } else {
         result = await Promise.resolve(fn());
       }
@@ -70,21 +70,20 @@ export class Context {
         const { retry } = option;
         const strategy = new RetryStrategy(
           retry.maxRetries,
-          retry.minBackoff,
-          retry.maxBackoff
+          retry.minBackoffMs,
+          retry.maxBackoffMs
         );
 
         const retriesLeft = Math.max(retry.maxRetries - currRetryCount, 0);
-        const delaySec = strategy.eval(retry.strategy ?? "linear", retriesLeft);
+        const delayMs = strategy.eval(retry.strategy ?? "linear", retriesLeft);
+        const waitUntilAsMs = new Date().getTime() + delayMs;
 
         this.#appendOp({
           type: "Save",
           id,
           value: {
             type: "Retry",
-            wait_until: new Date(
-              new Date().getTime() + 1000 * delaySec
-            ).toJSON(),
+            wait_until: new Date(waitUntilAsMs).toJSON(),
             counter: currRetryCount,
           },
         });
@@ -189,51 +188,55 @@ export class Context {
 type Strategy = "linear";
 
 interface SaveOption {
-  timeout?: number;
+  timeoutMs?: number;
   retry?: {
     strategy?: Strategy; // TODO: add more
-    minBackoff: number;
-    maxBackoff: number;
+    minBackoffMs: number;
+    maxBackoffMs: number;
     maxRetries: number;
   };
 }
 
-async function failAfter(ms: number): Promise<never> {
-  await new Promise((resolve) => {
-    setTimeout(resolve, ms);
+function failAfter(ms: number): Promise<never> {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(Error("Save timed out"));
+    }, ms);
   });
-
-  throw Interrupt.Variant("SAVE_TIMEOUT");
 }
 
 class RetryStrategy {
-  minBackoff?: number;
-  maxBackoff?: number;
+  minBackoffMs?: number;
+  maxBackoffMs?: number;
   maxRetries: number;
 
-  constructor(maxRetries: number, minBackoff?: number, maxBackoff?: number) {
+  constructor(
+    maxRetries: number,
+    minBackoffMs?: number,
+    maxBackoffMs?: number
+  ) {
     this.maxRetries = maxRetries;
-    this.minBackoff = minBackoff;
-    this.maxBackoff = maxBackoff;
+    this.minBackoffMs = minBackoffMs;
+    this.maxBackoffMs = maxBackoffMs;
 
     if (this.maxRetries < 1) {
       throw new Error("maxRetries < 1");
     }
 
-    const low = this.minBackoff;
-    const high = this.maxBackoff;
+    const low = this.minBackoffMs;
+    const high = this.maxBackoffMs;
 
     if (low && high) {
       if (low >= high) {
-        throw new Error("minBackoff >= maxBackoff");
+        throw new Error("minBackoffMs >= maxBackoffMs");
       }
       if (low < 0) {
-        throw new Error("minBackoff < 0");
+        throw new Error("minBackoffMs < 0");
       }
     } else if (low && high == undefined) {
-      this.maxBackoff = low + 10;
+      this.maxBackoffMs = low + 10;
     } else if (low == undefined && high) {
-      this.minBackoff = Math.max(0, high - 10);
+      this.minBackoffMs = Math.max(0, high - 10);
     }
   }
 
@@ -252,7 +255,7 @@ class RetryStrategy {
       throw new Error("retries left <= 0");
     }
 
-    const dt = (this.maxBackoff ?? 0) - (this.minBackoff ?? 0);
+    const dt = (this.maxBackoffMs ?? 0) - (this.minBackoffMs ?? 0);
     return Math.floor(((this.maxRetries - retriesLeft) * dt) / this.maxRetries);
   }
 }

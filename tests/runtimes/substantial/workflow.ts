@@ -2,6 +2,7 @@ import {
   Context,
   queryThatTakesAWhile,
   sendSubscriptionEmail,
+  sleep,
 } from "./imports/common_types.ts";
 
 export async function eventsAndExceptionExample(ctx: Context) {
@@ -15,7 +16,7 @@ export async function eventsAndExceptionExample(ctx: Context) {
     throw new Error(`${to} has denied the subscription`);
   }
 
-  return `${messageDialog}: "confirmed!"`;
+  return `${messageDialog}: confirmed!`;
 }
 
 export async function saveAndSleepExample(ctx: Context) {
@@ -31,23 +32,43 @@ export async function saveAndSleepExample(ctx: Context) {
 }
 
 export async function retryExample(ctx: Context) {
-  const { fail } = ctx.kwargs;
-  const ret = await ctx.save(
+  const { fail, timeout } = ctx.kwargs;
+  const retryRet = await ctx.save(
     () => {
       if (fail) {
         throw new Error(`Failed successfully`);
       }
-      return "All good";
+
+      return "No fail";
     },
     {
       retry: {
         strategy: "linear",
-        minBackoff: 1,
-        maxBackoff: 5,
+        minBackoffMs: 1000,
+        maxBackoffMs: 5000,
         maxRetries: 4,
       },
     }
   );
 
-  return ret;
+  const timeoutRet = await ctx.save(
+    async () => {
+      if (timeout) {
+        await sleep(500);
+      }
+
+      return "No timeout";
+    },
+    {
+      timeoutMs: 200,
+      retry: {
+        strategy: "linear",
+        minBackoffMs: 1000,
+        maxBackoffMs: 3000,
+        maxRetries: 5,
+      },
+    }
+  );
+
+  return [timeoutRet, retryRet].join(", ");
 }

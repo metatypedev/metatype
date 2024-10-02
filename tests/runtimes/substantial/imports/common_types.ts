@@ -1,5 +1,6 @@
+// TODO: include this as part of the metagen generated code
+
 export interface Context {
-  // TODO: metagen including this
   kwargs: any;
   sleep: (ms: number) => void;
   save<T>(fn: () => T | Promise<T>, option?: SaveOption): Promise<T>;
@@ -12,11 +13,11 @@ export interface Context {
 }
 
 export interface SaveOption {
-  timeout?: number;
+  timeoutMs?: number;
   retry?: {
     strategy?: "linear";
-    minBackoff: number;
-    maxBackoff: number;
+    minBackoffMs: number;
+    maxBackoffMs: number;
     maxRetries: number;
   };
 }

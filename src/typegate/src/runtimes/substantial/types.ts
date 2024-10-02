@@ -55,7 +55,6 @@ export type WorkflowResult = {
 
 export type InterruptType =
   | "SLEEP"
-  | "SAVE_TIMEOUT"
   | "SAVE_RETRY"
   | "WAIT_RECEIVE_EVENT"
   | "WAIT_HANDLE_EVENT"

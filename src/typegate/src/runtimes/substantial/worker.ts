@@ -11,7 +11,10 @@ self.onmessage = async function (event) {
   switch (type) {
     case "START": {
       const { modulePath, functionName, run, schedule, kwargs } = data;
+      // FIXME: handle case when script is missing and notify WorkerManager so it cleans up
+      // its registry.
       const module = await import(modulePath);
+
       // TODO: for python use the same strategy but instead call from native
       const workflowFn = module[functionName];
 

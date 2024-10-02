@@ -51,7 +51,9 @@ def substantial(g: Graph):
         email_results=email.query_results(t.string()),
         abort_email_confirmation=email.stop(),
         # retry
-        start_retry=retry.start(t.struct({"fail": t.boolean()})),
+        start_retry=retry.start(
+            t.struct({"fail": t.boolean(), "timeout": t.boolean()})
+        ),
         retry_workers=retry.query_resources(),
         retry_results=retry.query_results(t.string()),
         abort_retry=retry.stop(),
