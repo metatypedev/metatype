@@ -15,7 +15,7 @@ export interface SaveOption {
   timeout?: number;
   retry?: {
     strategy?: "linear";
-    initBackoff: number;
+    minBackoff: number;
     maxBackoff: number;
     maxRetries: number;
   };

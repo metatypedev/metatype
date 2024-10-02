@@ -70,7 +70,7 @@ export class Context {
         const { retry } = option;
         const strategy = new RetryStrategy(
           retry.maxRetries,
-          retry.initBackoff,
+          retry.minBackoff,
           retry.maxBackoff
         );
 
@@ -178,18 +178,21 @@ export class Context {
   }
 }
 
-// TODO: move all of these into substantial lib once Meta can be used in a worker working
+// TODO: move all of these into substantial lib once Meta can be used inside workers
+// ```rust
 // #[serde(....)]
 // pub enum RetryStrategy { Linear {...}, Exp { ... }}
 // impl RetryStrategy { pub fn eval(&self, retries_left: i8) { .. }}
+//
+// ```
 
-type StrategyAlgorithm = "linear";
+type Strategy = "linear";
 
 interface SaveOption {
   timeout?: number;
   retry?: {
-    strategy?: "linear"; // TODO: add more
-    initBackoff: number;
+    strategy?: Strategy; // TODO: add more
+    minBackoff: number;
     maxBackoff: number;
     maxRetries: number;
   };
@@ -204,37 +207,37 @@ async function failAfter(ms: number): Promise<never> {
 }
 
 class RetryStrategy {
-  initBackoff?: number;
+  minBackoff?: number;
   maxBackoff?: number;
   maxRetries: number;
 
-  constructor(maxRetries: number, initBackoff?: number, maxBackoff?: number) {
+  constructor(maxRetries: number, minBackoff?: number, maxBackoff?: number) {
     this.maxRetries = maxRetries;
-    this.initBackoff = initBackoff;
+    this.minBackoff = minBackoff;
     this.maxBackoff = maxBackoff;
 
     if (this.maxRetries < 1) {
       throw new Error("maxRetries < 1");
     }
 
-    const low = this.initBackoff;
+    const low = this.minBackoff;
     const high = this.maxBackoff;
 
     if (low && high) {
       if (low >= high) {
-        throw new Error("initBackoff >= maxBackoff");
+        throw new Error("minBackoff >= maxBackoff");
       }
       if (low < 0) {
-        throw new Error("initBackoff < 0");
+        throw new Error("minBackoff < 0");
       }
     } else if (low && high == undefined) {
       this.maxBackoff = low + 10;
     } else if (low == undefined && high) {
-      this.initBackoff = Math.max(0, high - 10);
+      this.minBackoff = Math.max(0, high - 10);
     }
   }
 
-  eval(strategy: StrategyAlgorithm, retriesLeft: number) {
+  eval(strategy: Strategy, retriesLeft: number) {
     switch (strategy) {
       case "linear":
         return this.#linear(retriesLeft);
@@ -249,7 +252,7 @@ class RetryStrategy {
       throw new Error("retries left <= 0");
     }
 
-    const dt = (this.maxBackoff ?? 0) - (this.initBackoff ?? 0);
+    const dt = (this.maxBackoff ?? 0) - (this.minBackoff ?? 0);
     return Math.floor(((this.maxRetries - retriesLeft) * dt) / this.maxRetries);
   }
 }

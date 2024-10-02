@@ -320,3 +320,148 @@ export function concurrentWorkflowTestTemplate(
     }
   );
 }
+
+export function retrySaveTestTemplate(
+  backendName: BackendName,
+  {
+    delays,
+    secrets,
+  }: {
+    delays: {
+      awaitComplete: number;
+    };
+    secrets?: Record<string, string>;
+  },
+  cleanup?: MetaTestCleanupFn
+) {
+  Meta.test(
+    {
+      name: `Events and concurrent runs (${backendName})`,
+    },
+    async (t) => {
+      Deno.env.set("SUB_BACKEND", backendName);
+      cleanup && t.addCleanup(cleanup);
+
+      const e = await t.engine("runtimes/substantial/substantial.py", {
+        secrets,
+      });
+
+      let resolvedId: string, retryId: string, retryAbortMeId: string;
+      await t.should(
+        `start retry workflows concurrently (${backendName})`,
+        async () => {
+          await gql`
+            mutation {
+              resolved: start_retry(kwargs: { fail: false })
+              retry: start_retry(kwargs: { fail: true })
+              retry_abort_me: start_retry(kwargs: { fail: true })
+            }
+          `
+            .expectBody((body) => {
+              resolvedId = body.data?.resolved! as string;
+              retryId = body.data?.retry! as string;
+              retryAbortMeId = body.data?.retry_abort_me! as string;
+              assertExists(resolvedId, "resolve runId");
+              assertExists(retryId, "retry runId");
+              assertExists(retryAbortMeId, "retry_abort_me runId");
+            })
+            .on(e);
+        }
+      );
+
+      await sleep(1000);
+
+      await t.should(
+        `abort workflow that attempts to retry (${backendName})`,
+        async () => {
+          await gql`
+            mutation {
+              abort_retry(run_id: $run_id)
+            }
+          `
+            .withVars({
+              run_id: retryAbortMeId,
+            })
+            .expectData({
+              abort_retry: retryAbortMeId,
+            })
+            .on(e);
+        }
+      );
+
+      // Waiting for the retry to finish
+      await sleep(delays.awaitComplete * 1000);
+
+      await t.should(`complete execution (${backendName})`, async () => {
+        await gql`
+          query {
+            retry_results {
+              ongoing {
+                count
+              }
+              completed {
+                count
+                runs {
+                  run_id
+                  result {
+                    status
+                    value
+                  }
+                }
+              }
+            }
+          }
+        `
+          .expectBody((body) => {
+            assertEquals(
+              body?.data?.retry_results?.ongoing?.count,
+              0,
+              "0 workflow currently running"
+            );
+
+            assertEquals(
+              body?.data?.retry_results?.completed?.count,
+              3,
+              "3 workflows completed"
+            );
+
+            const localSorter = (a: any, b: any) =>
+              a.run_id.localeCompare(b.run_id);
+
+            const received =
+              body?.data?.retry_results?.completed?.runs ?? ([] as Array<any>);
+            const expected = [
+              {
+                result: {
+                  status: "COMPLETED",
+                  value: "All good",
+                },
+                run_id: resolvedId,
+              },
+              {
+                result: {
+                  status: "COMPLETED_WITH_ERROR",
+                  value: "Failed successfully",
+                },
+                run_id: retryId,
+              },
+              {
+                result: {
+                  status: "COMPLETED_WITH_ERROR",
+                  value: "ABORTED",
+                },
+                run_id: retryAbortMeId,
+              },
+            ];
+
+            assertEquals(
+              received.sort(localSorter),
+              expected.sort(localSorter),
+              "All three workflows have completed, including the aborted one"
+            );
+          })
+          .on(e);
+      });
+    }
+  );
+}
