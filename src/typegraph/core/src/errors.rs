@@ -143,6 +143,6 @@ pub fn duplicate_policy_name(name: &str) -> TgError {
     format!("duplicate policy name '{name}'").into()
 }
 
-pub fn nested_type_ref(name: &str, nested: &str) -> TgError {
-    format!("nested type reference is not allowed: -> '{name}' -> '{nested}'").into()
-}
+// pub fn nested_type_ref(name: &str, nested: &str) -> TgError {
+//     format!("nested type reference is not allowed: -> '{name}' -> '{nested}'").into()
+// }

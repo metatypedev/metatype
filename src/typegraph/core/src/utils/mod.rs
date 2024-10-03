@@ -12,9 +12,9 @@ use serde_json::json;
 
 use self::oauth2::std::{named_provider, Oauth2Builder};
 use crate::errors::Result;
-use crate::global_store::{get_sdk_version, NameRegistration, Store};
-use crate::types::subgraph::Subgraph;
-use crate::types::{TypeDefExt, TypeId};
+use crate::global_store::{get_sdk_version, Store};
+// use crate::types::subgraph::Subgraph;
+use crate::types::TypeId;
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
 use crate::wit::utils::{Auth as WitAuth, FdkConfig, FdkOutput, QueryDeployParams};
 use crate::Lib;
@@ -261,7 +261,8 @@ impl crate::wit::utils::Guest for crate::Lib {
     }
 
     fn remove_injections(id: CoreTypeId) -> Result<CoreTypeId> {
-        remove_injections_recursive(id.into()).map(|id| id.into())
+        // remove_injections_recursive(id.into()).map(|id| id.into())
+        Ok(id)
     }
 
     fn metagen_exec(config: FdkConfig) -> Result<Vec<FdkOutput>> {
@@ -303,26 +304,26 @@ impl crate::wit::utils::Guest for crate::Lib {
     }
 }
 
-pub fn remove_injection(type_id: TypeId) -> Result<TypeId> {
-    let (_, type_def) = type_id.resolve_ref()?;
+// pub fn remove_injection(type_id: TypeId) -> Result<TypeId> {
+//     let (_, type_def) = type_id.resolve_ref()?;
+//
+//     let x_base = type_def.x_base();
+//     if x_base.injection.is_none() {
+//         return Ok(type_id);
+//     }
+//
+//     let mut x_base = x_base.clone();
+//     x_base.injection = None;
+//
+//     Store::register_type_def(
+//         move |id| type_def.with_x_base(id, x_base),
+//         NameRegistration(false),
+//     )
+// }
 
-    let x_base = type_def.x_base();
-    if x_base.injection.is_none() {
-        return Ok(type_id);
-    }
-
-    let mut x_base = x_base.clone();
-    x_base.injection = None;
-
-    Store::register_type_def(
-        move |id| type_def.with_x_base(id, x_base),
-        NameRegistration(false),
-    )
-}
-
-pub fn remove_injections_recursive(type_id: TypeId) -> Result<TypeId> {
-    Subgraph::new(type_id).map(remove_injection)
-}
+// pub fn remove_injections_recursive(type_id: TypeId) -> Result<TypeId> {
+//     Subgraph::new(type_id).map(remove_injection)
+// }
 
 pub fn clear_name(base: &TypeBase) -> TypeBase {
     TypeBase {

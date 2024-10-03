@@ -3,9 +3,8 @@
 
 use super::TypeDefExt;
 use super::{type_ref::RefData, Type, TypeDef};
+use crate::errors::Result;
 use crate::errors::TgError;
-use crate::errors::{self, Result};
-use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::TypeId as CoreTypeId;
 use std::fmt::Debug;
@@ -66,13 +65,13 @@ impl TypeId {
 
     // resolves to the ref id if a Ref
     // resolves to self if a Def
-    pub fn resolve_ref_id(&self) -> Result<TypeId> {
-        match self.as_type()? {
-            Type::Ref(type_ref) => Ok(Store::get_type_by_name(&type_ref.name)
-                .ok_or_else(|| errors::unregistered_type_name(&type_ref.name))?),
-            Type::Def(_) => Ok(TypeId(self.0)),
-        }
-    }
+    // pub fn resolve_ref_id(&self) -> Result<TypeId> {
+    //     match self.as_type()? {
+    //         Type::Ref(type_ref) => Ok(Store::get_type_by_name(&type_ref.name)
+    //             .ok_or_else(|| errors::unregistered_type_name(&type_ref.name))?),
+    //         Type::Def(_) => Ok(TypeId(self.0)),
+    //     }
+    // }
 
     pub fn as_type_def(&self) -> Result<Option<TypeDef>> {
         match self.as_type()? {

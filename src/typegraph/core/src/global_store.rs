@@ -42,7 +42,7 @@ pub struct Store {
     pub types: Vec<Type>,
     // the bool indicates weather the name was from
     // user or generated placeholder (false)
-    pub type_by_names: IndexMap<String, (TypeId, bool)>,
+    pub type_by_names: IndexMap<String, (TypeDef, bool)>,
 
     pub runtimes: Vec<Runtime>,
     pub materializers: Vec<Materializer>,
@@ -61,8 +61,7 @@ pub struct Store {
     auths: Vec<common::typegraph::Auth>,
 
     random_seed: Option<u32>,
-
-    latest_alias_no: u32,
+    // latest_alias_no: u32,
 }
 
 impl Store {
@@ -152,8 +151,8 @@ impl Store {
         })
     }
 
-    pub fn get_type_by_name(name: &str) -> Option<TypeId> {
-        with_store(|s| s.type_by_names.get(name).map(|id| id.0))
+    pub fn get_type_by_name(name: &str) -> Option<TypeDef> {
+        with_store(|s| s.type_by_names.get(name).map(|id| id.0.clone()))
     }
 
     pub fn register_type_ref(name: String, attributes: Vec<(String, String)>) -> Result<TypeId> {
@@ -182,16 +181,16 @@ impl Store {
         // allow the ref system to work
         if name_registration.0 {
             if let Some(name) = type_def.base().name.clone() {
-                Self::register_type_name(name, id.into(), true)?;
+                Self::register_type_name(name, type_def.clone(), true)?;
             } else {
                 // we only need to assign temporary non-user named
                 // types for lists and optionals. other refs
                 // will need explicit names by the user
                 match type_def {
                     TypeDef::List(_) | TypeDef::Optional(_) => {
-                        let varaint = type_def.variant_name();
-                        let placeholder_name = format!("{varaint}_{id}");
-                        Self::register_type_name(&placeholder_name, id.into(), false)?;
+                        let variant = type_def.variant_name();
+                        let placeholder_name = format!("{variant}_{id}");
+                        Self::register_type_name(&placeholder_name, type_def.clone(), false)?;
                         let mut base = type_def.base().clone();
                         base.name = Some(placeholder_name);
                         type_def = type_def.with_base(id.into(), base);
@@ -208,13 +207,17 @@ impl Store {
         Ok(id.into())
     }
 
-    pub fn register_type_name(name: impl Into<String>, id: TypeId, user_named: bool) -> Result<()> {
+    pub fn register_type_name(
+        name: impl Into<String>,
+        type_def: TypeDef,
+        user_named: bool,
+    ) -> Result<()> {
         let name = name.into();
         with_store_mut(move |s| -> Result<()> {
             if s.type_by_names.contains_key(&name) {
                 return Err(format!("type with name {:?} already exists", name).into());
             }
-            s.type_by_names.insert(name, (id, user_named));
+            s.type_by_names.insert(name, (type_def, user_named));
             Ok(())
         })
     }
@@ -226,23 +229,23 @@ impl Store {
         })
     }
 
-    pub fn generate_alias() -> String {
-        with_store_mut(|s| {
-            s.latest_alias_no += 1;
-            format!("__alias_{}", s.latest_alias_no)
-        })
-    }
-
-    pub fn register_alias(name: impl Into<String>, id: TypeId) -> Result<()> {
-        let name = name.into();
-        with_store_mut(|s| {
-            if s.type_by_names.contains_key(&name) {
-                return Err(format!("type with name {:?} already exists", name).into());
-            }
-            s.type_by_names.insert(name, (id, true));
-            Ok(())
-        })
-    }
+    // pub fn generate_alias() -> String {
+    //     with_store_mut(|s| {
+    //         s.latest_alias_no += 1;
+    //         format!("__alias_{}", s.latest_alias_no)
+    //     })
+    // }
+    //
+    // pub fn register_alias(name: impl Into<String>, type_def: TypeDef) -> Result<()> {
+    //     let name = name.into();
+    //     with_store_mut(|s| {
+    //         if s.type_by_names.contains_key(&name) {
+    //             return Err(format!("type with name {:?} already exists", name).into());
+    //         }
+    //         s.type_by_names.insert(name, (type_def, true));
+    //         Ok(())
+    //     })
+    // }
 
     pub fn get_random_seed() -> Option<u32> {
         with_store(|store| store.random_seed)

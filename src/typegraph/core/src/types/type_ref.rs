@@ -3,9 +3,9 @@
 
 use std::{collections::HashMap, rc::Rc};
 
-use crate::errors::{self, ErrorContext, Result};
+use crate::errors::{self, Result};
 use crate::global_store::Store;
-use crate::types::{Type, TypeDef, TypeId};
+use crate::types::{TypeDef, TypeId};
 
 #[derive(Clone, Debug)]
 pub struct TypeRef {
@@ -23,24 +23,23 @@ impl TypeRef {
         }
     }
 
-    pub fn resolve(&self) -> Result<Option<TypeDef>> {
-        match Store::get_type_by_name(&self.name) {
-            Some(type_id) => {
-                let typ = type_id.as_type().context("resolving ref")?;
-                match typ {
-                    Type::Ref(r) => Err(errors::nested_type_ref(&self.name, &r.name)),
-                    Type::Def(d) => Ok(Some(d)),
-                }
-            }
-            None => Ok(None),
-        }
+    pub fn resolve(&self) -> Option<TypeDef> {
+        Store::get_type_by_name(&self.name)
+        // match Store::get_type_by_name(&self.name) {
+        //     Some(type_id) => {
+        //         let typ = type_id.as_type().context("resolving ref")?;
+        //         match typ {
+        //             Type::Ref(r) => Err(errors::nested_type_ref(&self.name, &r.name)),
+        //             Type::Def(d) => Ok(Some(d)),
+        //         }
+        //     }
+        //     None => Ok(None),
+        // }
     }
 
     pub fn try_resolve(&self) -> Result<TypeDef> {
-        match self.resolve()? {
-            Some(t) => Ok(t),
-            None => Err(errors::unregistered_type_name(&self.name)),
-        }
+        self.resolve()
+            .ok_or_else(|| errors::unregistered_type_name(&self.name))
     }
 
     pub fn resolve_ref(&self) -> Result<(RefData, TypeDef)> {
