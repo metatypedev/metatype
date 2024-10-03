@@ -2178,6 +2178,7 @@ impl QueryGraph {
 // --- --- Typegraph types --- --- //
 //
 
+
 #[allow(non_snake_case)]
 mod node_metas {
     use super::*;
@@ -2188,7 +2189,7 @@ mod node_metas {
             variants: None,
             input_files: None,
         }
-    }
+    }    
     pub fn Post() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2198,22 +2199,9 @@ mod node_metas {
                     ("id".into(), scalar as NodeMetaFn),
                     ("slug".into(), scalar as NodeMetaFn),
                     ("title".into(), scalar as NodeMetaFn),
-                ]
-                .into(),
+                ].into()
             ),
             input_files: None,
-        }
-    }
-    pub fn RootCompositeNoArgsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn RootGetPostsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn RootCompositeArgsFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
-            ..Post()
         }
     }
     pub fn User() -> NodeMeta {
@@ -2225,17 +2213,20 @@ mod node_metas {
                     ("id".into(), scalar as NodeMetaFn),
                     ("email".into(), scalar as NodeMetaFn),
                     ("posts".into(), Post as NodeMetaFn),
-                ]
-                .into(),
+                ].into()
             ),
             input_files: None,
         }
     }
     pub fn RootGetUserFn() -> NodeMeta {
-        NodeMeta { ..User() }
+        NodeMeta {
+            ..User()
+        }
     }
-    pub fn RootScalarNoArgsFn() -> NodeMeta {
-        NodeMeta { ..scalar() }
+    pub fn RootGetPostsFn() -> NodeMeta {
+        NodeMeta {
+            ..Post()
+        }
     }
     pub fn RootScalarArgsFn() -> NodeMeta {
         NodeMeta {
@@ -2244,12 +2235,32 @@ mod node_metas {
                     ("id".into(), "UserIdStringUuid".into()),
                     ("slug".into(), "PostSlugString".into()),
                     ("title".into(), "PostSlugString".into()),
-                ]
-                .into(),
+                ].into()
             ),
             ..scalar()
         }
     }
+    pub fn RootCompositeArgsFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("id".into(), "RootScalarNoArgsFnOutput".into()),
+                ].into()
+            ),
+            ..Post()
+        }
+    }
+    pub fn RootScalarNoArgsFn() -> NodeMeta {
+        NodeMeta {
+            ..scalar()
+        }
+    }
+    pub fn RootCompositeNoArgsFn() -> NodeMeta {
+        NodeMeta {
+            ..Post()
+        }
+    }
+
 }
 use types::*;
 pub mod types {
@@ -2291,23 +2302,23 @@ pub struct UserSelections<ATy = NoAlias> {
 impl_selection_traits!(UserSelections, id, email, posts);
 
 impl QueryGraph {
+
     pub fn new(addr: Url) -> Self {
         Self {
             addr,
-            ty_to_gql_ty_map: std::sync::Arc::new(
-                [
-                    ("UserIdStringUuid".into(), "ID!".into()),
-                    ("PostSlugString".into(), "String!".into()),
-                    ("RootScalarNoArgsFnOutput".into(), "String!".into()),
-                ]
-                .into(),
-            ),
+            ty_to_gql_ty_map: std::sync::Arc::new([
+            
+                ("UserIdStringUuid".into(), "ID!".into()),
+                ("PostSlugString".into(), "String!".into()),
+                ("RootScalarNoArgsFnOutput".into(), "String!".into()),
+        ].into()),
         }
     }
-
+    
     pub fn get_user(
         &self,
-    ) -> UnselectedNode<UserSelections, UserSelections<HasAlias>, QueryMarker, UserPartial> {
+    ) -> UnselectedNode<UserSelections, UserSelections<HasAlias>, QueryMarker, UserPartial>
+    {
         UnselectedNode {
             root_name: "getUser".into(),
             root_meta: node_metas::RootGetUserFn,
@@ -2317,7 +2328,8 @@ impl QueryGraph {
     }
     pub fn get_posts(
         &self,
-    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, QueryMarker, PostPartial> {
+    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, QueryMarker, PostPartial>
+    {
         UnselectedNode {
             root_name: "getPosts".into(),
             root_meta: node_metas::RootGetPostsFn,
@@ -2325,14 +2337,21 @@ impl QueryGraph {
             _marker: PhantomData,
         }
     }
-    pub fn scalar_no_args(&self) -> QueryNode<RootScalarNoArgsFnOutput> {
+    pub fn scalar_no_args(
+        &self,
+    ) -> QueryNode<RootScalarNoArgsFnOutput>
+    {
         let nodes = selection_to_node_set(
-            SelectionErasedMap([("scalarNoArgs".into(), SelectionErased::Scalar)].into()),
-            &[(
-                "scalarNoArgs".into(),
-                node_metas::RootScalarNoArgsFn as NodeMetaFn,
-            )]
-            .into(),
+            SelectionErasedMap(
+                [(
+                    "scalarNoArgs".into(),
+                    SelectionErased::Scalar,
+                )]
+                .into(),
+            ),
+            &[
+                ("scalarNoArgs".into(), node_metas::RootScalarNoArgsFn as NodeMetaFn),
+            ].into(),
             "$q".into(),
         )
         .unwrap();
@@ -2340,8 +2359,9 @@ impl QueryGraph {
     }
     pub fn scalar_args(
         &self,
-        args: impl Into<NodeArgs<PostPartial>>,
-    ) -> MutationNode<RootScalarNoArgsFnOutput> {
+        args: impl Into<NodeArgs<PostPartial>>
+    ) -> MutationNode<RootScalarNoArgsFnOutput>
+    {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -2350,11 +2370,9 @@ impl QueryGraph {
                 )]
                 .into(),
             ),
-            &[(
-                "scalarArgs".into(),
-                node_metas::RootScalarArgsFn as NodeMetaFn,
-            )]
-            .into(),
+            &[
+                ("scalarArgs".into(), node_metas::RootScalarArgsFn as NodeMetaFn),
+            ].into(),
             "$q".into(),
         )
         .unwrap();
@@ -2362,7 +2380,8 @@ impl QueryGraph {
     }
     pub fn composite_no_args(
         &self,
-    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial> {
+    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial>
+    {
         UnselectedNode {
             root_name: "compositeNoArgs".into(),
             root_meta: node_metas::RootCompositeNoArgsFn,
@@ -2372,8 +2391,9 @@ impl QueryGraph {
     }
     pub fn composite_args(
         &self,
-        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>,
-    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial> {
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
+    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial>
+    {
         UnselectedNode {
             root_name: "compositeArgs".into(),
             root_meta: node_metas::RootCompositeArgsFn,
@@ -2382,3 +2402,4 @@ impl QueryGraph {
         }
     }
 }
+

@@ -373,6 +373,7 @@ fn render_node_metas(
         Rc::new(node_metas::RsNodeMetasRenderer {
             name_mapper,
             named_types: named_types.clone(),
+            input_files: manifest.files.clone(),
         }),
     );
     for &id in &manifest.node_metas {

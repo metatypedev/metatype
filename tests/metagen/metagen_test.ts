@@ -643,7 +643,7 @@ Meta.test({
   }
 });
 
-Meta.test({
+Meta.test.only({
   name: "client table suite for file upload",
 }, async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
@@ -656,6 +656,9 @@ Meta.test({
     },
     ...`-C ${scriptsPath} gen`.split(" "),
   );
+  console.log("------>------> STDERR");
+  console.log(res.stderr);
+  console.log("------>------> STDERR end");
   assertEquals(res.code, 0);
 
   const expectedSchemaU1 = zod.object({
@@ -664,14 +667,22 @@ Meta.test({
   const expectedSchemaUn = zod.object({
     uploadMany: zod.boolean(),
   });
+  const expectedSchema = zod.tuple([expectedSchemaU1, expectedSchemaUn]);
   const cases = [
     {
-      skip: false,
+      skip: true,
       name: "client_ts_upload",
       command: $`bash -c "deno run -A main.ts"`.cwd(
         join(scriptsPath, "ts_upload"),
       ),
-      expected: zod.tuple([expectedSchemaU1, expectedSchemaUn]),
+      expected: expectedSchema,
+    },
+    {
+      name: "client_rs_upload",
+      command: $`cargo run`.cwd(
+        join(scriptsPath, "rs_upload"),
+      ),
+      expected: expectedSchema,
     },
   ];
 

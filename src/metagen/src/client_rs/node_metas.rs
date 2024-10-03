@@ -6,11 +6,15 @@ use std::fmt::Write;
 use common::typegraph::*;
 
 use super::utils::normalize_type_title;
-use crate::{interlude::*, shared::types::*};
+use crate::{
+    interlude::*,
+    shared::{files::ObjectPath, types::*},
+};
 
 pub struct RsNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
     pub named_types: Rc<std::sync::Mutex<HashSet<u32>>>,
+    pub input_files: Rc<HashMap<u32, Vec<ObjectPath>>>,
 }
 
 impl RsNodeMetasRenderer {
@@ -91,7 +95,9 @@ pub fn {ty_name}() -> NodeMeta {{
         ty_name: &str,
         return_node: &str,
         argument_fields: Option<IndexMap<String, Rc<str>>>,
+        input_files: Option<String>,
     ) -> std::fmt::Result {
+        eprintln!("function={ty_name}; input_files: {:#?}", input_files);
         write!(
             dest,
             r#"
@@ -119,6 +125,13 @@ pub fn {ty_name}() -> NodeMeta {{
                 r#"
             ].into()
         ),"#
+            )?;
+        }
+        if let Some(input_files) = input_files {
+            write!(
+                dest,
+                r#"
+        input_files: Some(input_file_list(&{input_files})),"#
             )?;
         }
         write!(
@@ -179,7 +192,29 @@ impl RenderType for RsNodeMetasRenderer {
                 };
                 let node_name = &base.title;
                 let ty_name = normalize_type_title(node_name).to_pascal_case();
-                self.render_for_func(renderer, &ty_name, &return_ty_name, props)?;
+                let input_files = self
+                    .input_files
+                    .get(&cursor.id)
+                    .map(|files| {
+                        files
+                            .iter()
+                            .map(|path| {
+                                path.0
+                                    .iter()
+                                    .map(ToString::to_string)
+                                    .map(|s| serde_json::to_string(&s).unwrap())
+                                    .collect::<Vec<_>>()
+                            })
+                            .map(|path| format!("&[{}]", path.join(", ")))
+                            .collect::<Vec<_>>()
+                    })
+                    .map(|files| (!files.is_empty()).then(|| format!("[{}]", files.join(", "))))
+                    .unwrap_or_default();
+                // TODO
+                // let input_files = (!input_files.is_empty())
+                //     .then(|| serde_json::to_string(&input_files))
+                //     .transpose()?;
+                self.render_for_func(renderer, &ty_name, &return_ty_name, props, input_files)?;
                 ty_name
             }
             TypeNode::Object { data, base } => {
