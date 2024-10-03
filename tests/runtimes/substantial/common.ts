@@ -289,7 +289,7 @@ export function concurrentWorkflowTestTemplate(
               {
                 result: {
                   status: "COMPLETED",
-                  value: 'Email sent to one@example.com: "confirmed!"',
+                  value: "Email sent to one@example.com: confirmed!",
                 },
                 run_id: runIds[0],
               },
@@ -320,3 +320,177 @@ export function concurrentWorkflowTestTemplate(
     }
   );
 }
+
+export function retrySaveTestTemplate(
+  backendName: BackendName,
+  {
+    delays,
+    secrets,
+  }: {
+    delays: {
+      awaitCompleteAll: number;
+    };
+    secrets?: Record<string, string>;
+  },
+  cleanup?: MetaTestCleanupFn
+) {
+  Meta.test(
+    {
+      name: `Retry logic (${backendName})`,
+    },
+    async (t) => {
+      Deno.env.set("SUB_BACKEND", backendName);
+      cleanup && t.addCleanup(cleanup);
+
+      const e = await t.engine("runtimes/substantial/substantial.py", {
+        secrets,
+      });
+
+      let resolvedId: string,
+        retryId: string,
+        timeoutId: string,
+        retryAbortMeId: string;
+      await t.should(
+        `start retry workflows concurrently (${backendName})`,
+        async () => {
+          await gql`
+            mutation {
+              resolved: start_retry(kwargs: { fail: false, timeout: false })
+              timeout: start_retry(kwargs: { fail: false, timeout: true })
+              retry: start_retry(kwargs: { fail: true, timeout: false })
+              retry_abort_me: start_retry(
+                kwargs: { fail: true, timeout: false }
+              )
+            }
+          `
+            .expectBody((body) => {
+              resolvedId = body.data?.resolved! as string;
+              retryId = body.data?.retry! as string;
+              timeoutId = body.data?.timeout! as string;
+              retryAbortMeId = body.data?.retry_abort_me! as string;
+
+              assertExists(resolvedId, "resolve runId");
+              assertExists(retryId, "retry runId");
+              assertExists(timeoutId, "timeou runId");
+              assertExists(retryAbortMeId, "retry_abort_me runId");
+            })
+            .on(e);
+        }
+      );
+
+      await sleep(1000);
+
+      await t.should(
+        `abort workflow that attempts to retry (${backendName})`,
+        async () => {
+          await gql`
+            mutation {
+              abort_retry(run_id: $run_id)
+            }
+          `
+            .withVars({
+              run_id: retryAbortMeId,
+            })
+            .expectData({
+              abort_retry: retryAbortMeId,
+            })
+            .on(e);
+        }
+      );
+
+      // Waiting for the retry to finish
+      await sleep(delays.awaitCompleteAll * 1000);
+
+      await t.should(
+        `complete execution of all retries (${backendName})`,
+        async () => {
+          await gql`
+            query {
+              retry_results {
+                ongoing {
+                  count
+                  runs {
+                    run_id
+                  }
+                }
+                completed {
+                  count
+                  runs {
+                    run_id
+                    result {
+                      status
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          `
+            .expectBody((body) => {
+              assertEquals(
+                body?.data?.retry_results?.ongoing?.count,
+                0,
+                "0 workflow currently running"
+              );
+
+              assertEquals(
+                body?.data?.retry_results?.completed?.count,
+                4,
+                "4 workflows completed"
+              );
+
+              const localSorter = (a: any, b: any) =>
+                a.run_id.localeCompare(b.run_id);
+
+              const received =
+                body?.data?.retry_results?.completed?.runs ??
+                ([] as Array<any>);
+              const expected = [
+                {
+                  result: {
+                    status: "COMPLETED",
+                    value: "No timeout, No fail",
+                  },
+                  run_id: resolvedId,
+                },
+                {
+                  result: {
+                    status: "COMPLETED_WITH_ERROR",
+                    value: "Failed successfully",
+                  },
+                  run_id: retryId,
+                },
+                {
+                  result: {
+                    status: "COMPLETED_WITH_ERROR",
+                    value: "ABORTED",
+                  },
+                  run_id: retryAbortMeId,
+                },
+                {
+                  result: {
+                    status: "COMPLETED_WITH_ERROR",
+                    value: "Save timed out",
+                  },
+                  run_id: timeoutId,
+                },
+              ];
+
+              assertEquals(
+                received.sort(localSorter),
+                expected.sort(localSorter),
+                "All workflows have completed"
+              );
+            })
+            .on(e);
+        }
+      );
+    }
+  );
+}
+
+// TODO:
+// mock a very basic http server in another process that counts the number of request made by a workflow
+// This will allow..
+// - Emulating/keeping track of 'natural' retries, timeout
+// - Checking if a resolved save makes new requests after interrupts

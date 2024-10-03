@@ -301,7 +301,14 @@ export type Backend =
 
 export type OperationEvent =
   | { type: "Sleep"; id: number; start: string; end: string }
-  | { type: "Save"; id: number; value: unknown }
+  | {
+      type: "Save";
+      id: number;
+      value:
+        | { type: "Retry"; wait_until: string; counter: number }
+        | { type: "Resolved"; payload: unknown }
+        | { type: "Failed"; err: unknown };
+    }
   | { type: "Send"; event_name: string; value: unknown }
   | { type: "Stop"; result: unknown }
   | { type: "Start"; kwargs: Record<string, unknown> }

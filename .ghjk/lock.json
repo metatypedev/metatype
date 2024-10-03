@@ -1083,6 +1083,7 @@
             "install-protobuf-rust": {
               "ty": "denoFile@v1",
               "key": "install-protobuf-rust",
+              "desc": "Enable rust codegen for protoc",
               "envKey": "bciqfoerhfsehob65bmr7v5eka43ml4zbbt3aeot7zz5ijlb4oy2lucq"
             },
             "install-wasi-adapter": {

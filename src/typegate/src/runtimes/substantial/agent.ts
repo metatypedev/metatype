@@ -45,7 +45,19 @@ export class Agent {
   ) {}
 
   async schedule(input: AddScheduleInput) {
+    // FIXME:
+    // This function is triggered by the user (start, event, stop)
+    // Using async rust in here can be tricky, one issue for example is that
+    // concurrent calls fail silently without panics or even exceptions on the Redis Backend
+    // mutation {
+    //   one: start(..) # calls schedule(..)
+    //    ..
+    //   tenth: start(..) # calls schedule(..)
+    // }
+
     await Meta.substantial.storeAddSchedule(input);
+    // This delay is completely unrelated to the rust side and solves the issue
+    await sleep(100);
   }
 
   async log(runId: string, schedule: string, content: unknown) {
@@ -247,6 +259,7 @@ export class Agent {
         case "START": {
           const ret = answer.data as WorkflowResult;
           switch (Interrupt.getTypeOf(ret.exception)) {
+            case "SAVE_RETRY":
             case "SLEEP":
             case "WAIT_ENSURE_VALUE":
             case "WAIT_HANDLE_EVENT":
@@ -345,7 +358,7 @@ export class Agent {
       event: {
         type: "Stop",
         result: {
-          [rustResult]: result,
+          [rustResult]: result ?? null,
         } as unknown,
       },
     });
@@ -358,6 +371,8 @@ export class Agent {
       backend: this.backend,
       run,
     });
+
+    // console.log("Persisted", run);
 
     await Meta.substantial.storeCloseSchedule({
       backend: this.backend,
@@ -405,6 +420,7 @@ function checkIfRunHasStopped(run: Run) {
           `"${run.run_id}" has potentially corrupted logs, another run occured yet previous has not stopped`
         );
       }
+
       life += 1;
       hasStopped = false;
     } else if (op.event.type == "Stop") {
@@ -419,6 +435,7 @@ function checkIfRunHasStopped(run: Run) {
           `"${run.run_id}" has potentitally corrupted logs, attempted stopping already closed run, or run with a missing Start`
         );
       }
+
       life -= 1;
       hasStopped = true;
     }
