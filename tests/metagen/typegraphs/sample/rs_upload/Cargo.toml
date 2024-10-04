@@ -10,6 +10,7 @@ mime_guess = "2.0"
 futures = "0.3"
 tokio-util = { version = "0.7", features = ["compat", "io"] }
 derive_more = { version = "1.0", features = ["debug"] }
+lazy_static = "1.5"
 
 # The options after here are configured for crates intended to be
 # wasm artifacts. Remove them if your usage is different

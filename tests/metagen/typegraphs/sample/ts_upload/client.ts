@@ -815,19 +815,19 @@ const nodeMetas = {
     };
   },
 };
+export type RootUploadFnInputFileFile = File;
 export type RootUploadFnInputPathString = string;
+export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
+export type RootUploadFnInput = {
+  file: RootUploadFnInputFileFile;
+  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
+};
 export type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
 export type RootUploadManyFnInputFilesFile = File;
 export type RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList = Array<RootUploadManyFnInputFilesFile>;
 export type RootUploadManyFnInput = {
   prefix?: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional;
   files: RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList;
-};
-export type RootUploadFnInputFileFile = File;
-export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
-export type RootUploadFnInput = {
-  file: RootUploadFnInputFileFile;
-  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
 };
 export type RootUploadFnOutput = boolean;
 
@@ -859,4 +859,3 @@ export class QueryGraph extends _QueryGraphBase {
     return new MutationNode(inner) as MutationNode<RootUploadFnOutput>;
   }
 }
-

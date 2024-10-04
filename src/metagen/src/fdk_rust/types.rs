@@ -149,10 +149,10 @@ impl RenderType for RustTypeRenderer {
 
             TypeNode::File { base, .. } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "super::File")?;
+                self.render_alias(renderer, &ty_name, "super::FileId")?;
                 ty_name
             }
-            TypeNode::File { .. } => "super::File".into(),
+            TypeNode::File { .. } => "super::FileId".into(),
 
             TypeNode::Any { base, .. } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
@@ -473,7 +473,7 @@ pub type MyStrMaybe = Option<MyStr>;
 pub type MyInt = i64;
 pub type MyFloat = f64;
 pub type MyBool = bool;
-pub type MyFile = File;
+pub type MyFile = FileId;
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct MyObj {
     #[serde(rename = "myString")]

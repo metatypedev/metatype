@@ -8,7 +8,7 @@ fn main() -> Result<(), BoxErr> {
     let gql_sync = api1.graphql_sync();
 
     let res3 = gql_sync.mutation((api1.upload(types::RootUploadFnInputPartial {
-        file: Some("hello".as_bytes().to_vec().into()),
+        file: Some(File::from("hello".as_bytes().to_vec()).try_into()?),
         path: None,
     }),))?;
     println!(

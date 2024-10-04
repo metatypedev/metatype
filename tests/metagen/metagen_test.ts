@@ -701,7 +701,7 @@ Meta.test.only({
     }
     await metaTest.should(name, async () => {
       const res = await command
-        .env({ "TG_PORT": metaTest.port.toString() }).text();
+        .env({ "TG_PORT": metaTest.port.toString() }).stderr("inherit").text();
       expected.parse(JSON.parse(res));
     });
   }

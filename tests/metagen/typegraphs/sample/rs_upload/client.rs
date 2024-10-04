@@ -201,12 +201,23 @@ impl std::error::Error for SelectionError {}
 // --- --- Input files --- --- //
 //
 
+#[derive(Debug)]
 enum ObjectPathSegment {
     Optional,
     List,
-    Prop(String),
+    Prop(String), // CowStr??
 }
 
+impl ObjectPathSegment {
+    fn as_prop(&self) -> Option<&str> {
+        match self {
+            ObjectPathSegment::Prop(prop) => Some(prop),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug)]
 struct ObjectPath(Vec<ObjectPathSegment>);
 
 fn input_file_list(files: &'static [&'static [&'static str]]) -> Rc<[ObjectPath]> {
@@ -233,44 +244,45 @@ fn input_file_list(files: &'static [&'static [&'static str]]) -> Rc<[ObjectPath]
     files.into()
 }
 
+#[derive(Debug)]
 enum EffectiveObjectPathSegment {
     Optional,
     ListItem(usize),
     Prop(String),
 }
 
+#[derive(Default, Debug)]
 struct EffectiveObjectPath(Vec<EffectiveObjectPathSegment>);
 
-#[derive(derive_more::Debug)]
+lazy_static::lazy_static! {
+    static ref LATEST_FILE_ID: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    static ref FILE_STORE: std::sync::Mutex<HashMap<FileId, File>> = Default::default();
+}
+
 enum FileData {
     Path(std::path::PathBuf),
     Bytes(Vec<u8>),
-    Reader(#[debug(skip)] Box<dyn std::io::Read + Send + 'static>),
+    Reader(Box<dyn std::io::Read + Send + 'static>),
     Async(reqwest::Body),
 }
 
-#[derive(Debug)]
 pub struct File {
     data: FileData,
     file_name: Option<String>,
     mime_type: Option<String>,
 }
 
-impl serde::Serialize for File {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::ser::Serializer,
-    {
-        Err(serde::ser::Error::custom("`File` can't be serialized"))
-    }
-}
+#[derive(Debug, Serialize, Deserialize, Hash, PartialEq, Eq, Clone, Copy)]
+pub struct FileId(usize);
 
-impl<'de> serde::Deserialize<'de> for File {
-    fn deserialize<D>(_: D) -> Result<File, D::Error>
-    where
-        D: serde::de::Deserializer<'de>,
-    {
-        Err(serde::de::Error::custom("`File` can't be deserialized"))
+impl TryFrom<File> for FileId {
+    type Error = BoxErr;
+
+    fn try_from(file: File) -> Result<Self, Self::Error> {
+        let file_id = LATEST_FILE_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let mut guard = FILE_STORE.lock().map_err(|_| "file store lock poisoned")?;
+        guard.insert(FileId(file_id), file);
+        Ok(FileId(file_id))
     }
 }
 
@@ -1416,11 +1428,101 @@ pub mod graphql {
     // PlaceholderValue, fieldName -> gql_var_name
     type FoundPlaceholders = Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>;
 
+    #[derive(Debug)]
+    struct FileExtractor<'a> {
+        path: &'a ObjectPath,
+        current_path: EffectiveObjectPath,
+        output: HashMap<String, FileId>,
+    }
+
+    impl<'a> FileExtractor<'a> {
+        fn extract_all_from(
+            value: &mut serde_json::Value,
+            paths: impl Iterator<Item = &'a ObjectPath>,
+        ) -> Result<HashMap<String, FileId>, BoxErr> {
+            let mut output = HashMap::new();
+            eprintln!("--- extract_all_from value={:?}", value);
+            for path in paths {
+                eprintln!("   --- path={:?}", path);
+                let mut extractor = Self {
+                    path,
+                    current_path: EffectiveObjectPath::default(),
+                    output: std::mem::take(&mut output),
+                };
+                extractor.extract_from_value(value)?;
+                output = extractor.output;
+            }
+            Ok(output)
+        }
+
+        fn extract_from_value(&mut self, value: &mut serde_json::Value) -> Result<(), BoxErr> {
+            eprintln!(
+                "--- extract_from_value value={:?}; extractor={:?}",
+                value, self
+            );
+            let cursor = self.current_path.0.len();
+            if cursor == self.path.0.len() {
+                // let file_id: FileId =
+                //     serde_json::from_value(std::mem::replace(value, serde_json::Value::Null))?;
+                let file_id: FileId = serde_json::from_value(value.take())?;
+                self.output.insert(self.format_path(), file_id);
+                return Ok(());
+            }
+            let next_segment = self.path.0.get(cursor).unwrap();
+            use EffectiveObjectPathSegment as ESeg;
+            use ObjectPathSegment as Seg;
+            match next_segment {
+                Seg::Optional => {
+                    if !value.is_null() {
+                        self.current_path.0.push(ESeg::Optional);
+                        self.extract_from_value(value)?;
+                        self.current_path.0.pop();
+                    }
+                }
+                Seg::List => {
+                    let items = value
+                        .as_array_mut()
+                        .ok_or_else(|| format!("expected array at {:?}", self.format_path()))?;
+                    for (idx, item) in items.iter_mut().enumerate() {
+                        self.current_path.0.push(ESeg::ListItem(idx));
+                        self.extract_from_value(item)?;
+                        self.current_path.0.pop();
+                    }
+                }
+                Seg::Prop(key) => {
+                    let value = value
+                        .as_object_mut()
+                        .ok_or_else(|| format!("expected object at {:?}", self.format_path()))?;
+                    let value = value.get_mut(&key[..]).ok_or_else(|| {
+                        format!("expected key: {} at {:?}", key, self.format_path())
+                    })?;
+                    self.current_path.0.push(ESeg::Prop(key.clone()));
+                    self.extract_from_value(value)?;
+                    self.current_path.0.pop();
+                }
+            }
+            Ok(())
+        }
+
+        fn format_path(&self) -> String {
+            let mut res = String::new();
+            use EffectiveObjectPathSegment as ESeg;
+            for seg in &self.current_path.0 {
+                match seg {
+                    ESeg::Optional => {}
+                    ESeg::ListItem(idx) => res.push_str(&format!(".{}", idx)),
+                    ESeg::Prop(key) => res.push_str(&format!(".{}", key)),
+                }
+            }
+            res
+        }
+    }
+
     struct GqlRequest {
         doc: String,
         variables: JsonObject,
         placeholders: FoundPlaceholders,
-        files: HashMap<CowStr, Vec<u8>>,
+        files: HashMap<CowStr, FileId>,
     }
 
     struct GqlRequestBuilder<'a> {
@@ -1429,7 +1531,7 @@ pub mod graphql {
         variable_types: HashMap<CowStr, CowStr>,
         doc: String,
         placeholders: Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>,
-        files: HashMap<CowStr, Vec<u8>>,
+        files: HashMap<CowStr, FileId>,
     }
 
     impl<'a> GqlRequestBuilder<'a> {
@@ -1453,6 +1555,7 @@ pub mod graphql {
             } else {
                 write!(&mut self.doc, "{}", node.node_name)?;
             }
+
             if let Some(args) = node.args {
                 match args {
                     NodeArgsMerged::Inline(args) => {
@@ -1460,8 +1563,43 @@ pub mod graphql {
                             write!(&mut self.doc, "(")?;
                             for (key, val) in args {
                                 let name = format!("in{}", self.variable_types.len());
+
+                                let mut map = serde_json::Map::new();
+                                map.insert(key.clone().into(), val.value.clone());
+                                let mut object = serde_json::Value::Object(map);
+
+                                if let Some(files) = node.files.as_ref() {
+                                    let extracted_files = FileExtractor::extract_all_from(
+                                        &mut object,
+                                        files.iter().filter(|f| match f.0.get(0) {
+                                            Some(ObjectPathSegment::Prop(k)) => {
+                                                k.as_str() == key.as_ref()
+                                            }
+                                            _ => false,
+                                        }),
+                                    )
+                                    .unwrap();
+                                    // .map_err(|_| {
+                                    //     // TODO
+                                    //     std::fmt::Error::default()
+                                    // })?;
+
+                                    for (path, file) in extracted_files {
+                                        let (_, path_tail) = path.split_once('.').unwrap();
+                                        self.files
+                                            .insert(format!("{name}.{path_tail}").into(), file);
+                                    }
+                                }
+
                                 write!(&mut self.doc, "{key}: ${name}, ")?;
-                                self.variable_values.insert(name.clone(), val.value);
+                                self.variable_values.insert(
+                                    name.clone(),
+                                    object
+                                        .as_object_mut()
+                                        .unwrap()
+                                        .remove(key.as_ref())
+                                        .unwrap(),
+                                );
                                 self.variable_types.insert(name.into(), val.type_name);
                             }
                             write!(&mut self.doc, ")")?;
@@ -2362,7 +2500,6 @@ impl QueryGraph {
 // --- --- Typegraph types --- --- //
 //
 
-
 #[allow(non_snake_case)]
 mod node_metas {
     use super::*;
@@ -2373,14 +2510,18 @@ mod node_metas {
             variants: None,
             input_files: None,
         }
-    }    
+    }
     pub fn RootUploadFn() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
                     ("file".into(), "RootUploadFnInputFileFile".into()),
-                    ("path".into(), "RootUploadFnInputPathRootUploadFnInputPathStringOptional".into()),
-                ].into()
+                    (
+                        "path".into(),
+                        "RootUploadFnInputPathRootUploadFnInputPathStringOptional".into(),
+                    ),
+                ]
+                .into(),
             ),
             input_files: Some(input_file_list(&[&[".file"]])),
             ..scalar()
@@ -2390,29 +2531,38 @@ mod node_metas {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("prefix".into(), "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional".into()),
-                    ("files".into(), "RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList".into()),
-                ].into()
+                    (
+                        "prefix".into(),
+                        "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional".into(),
+                    ),
+                    (
+                        "files".into(),
+                        "RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList".into(),
+                    ),
+                ]
+                .into(),
             ),
             input_files: Some(input_file_list(&[&[".files", "[]"]])),
             ..scalar()
         }
     }
-
 }
 use types::*;
 pub mod types {
     pub type RootUploadFnInputPathString = String;
-    pub type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = Option<RootUploadFnInputPathString>;
-    pub type RootUploadManyFnInputFilesFile = super::File;
-    pub type RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList = Vec<RootUploadManyFnInputFilesFile>;
+    pub type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional =
+        Option<RootUploadFnInputPathString>;
+    pub type RootUploadManyFnInputFilesFile = super::FileId;
+    pub type RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList =
+        Vec<RootUploadManyFnInputFilesFile>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadManyFnInputPartial {
         pub prefix: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
         pub files: Option<RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList>,
     }
-    pub type RootUploadFnInputFileFile = super::File;
-    pub type RootUploadFnInputPathRootUploadFnInputPathStringOptional = Option<RootUploadFnInputPathString>;
+    pub type RootUploadFnInputFileFile = super::FileId;
+    pub type RootUploadFnInputPathRootUploadFnInputPathStringOptional =
+        Option<RootUploadFnInputPathString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadFnInputPartial {
         pub file: Option<RootUploadFnInputFileFile>,
@@ -2422,25 +2572,37 @@ pub mod types {
 }
 
 impl QueryGraph {
-
     pub fn new(addr: Url) -> Self {
         Self {
             addr,
-            ty_to_gql_ty_map: std::sync::Arc::new([
-            
-                ("RootUploadFnInputFileFile".into(), "root_upload_fn_input_file_file!".into()),
-                ("RootUploadFnInputPathRootUploadFnInputPathStringOptional".into(), "String".into()),
-                ("RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional".into(), "String".into()),
-                ("RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList".into(), "[root_uploadMany_fn_input_files_file]!".into()),
-        ].into()),
+            ty_to_gql_ty_map: std::sync::Arc::new(
+                [
+                    (
+                        "RootUploadFnInputFileFile".into(),
+                        "root_upload_fn_input_file_file!".into(),
+                    ),
+                    (
+                        "RootUploadFnInputPathRootUploadFnInputPathStringOptional".into(),
+                        "String".into(),
+                    ),
+                    (
+                        "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional".into(),
+                        "String".into(),
+                    ),
+                    (
+                        "RootUploadManyFnInputFilesRootUploadManyFnInputFilesFileList".into(),
+                        "[root_uploadMany_fn_input_files_file]!".into(),
+                    ),
+                ]
+                .into(),
+            ),
         }
     }
-    
+
     pub fn upload(
         &self,
-        args: impl Into<NodeArgs<RootUploadFnInputPartial>>
-    ) -> MutationNode<RootUploadFnOutput>
-    {
+        args: impl Into<NodeArgs<RootUploadFnInputPartial>>,
+    ) -> MutationNode<RootUploadFnOutput> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -2449,9 +2611,7 @@ impl QueryGraph {
                 )]
                 .into(),
             ),
-            &[
-                ("upload".into(), node_metas::RootUploadFn as NodeMetaFn),
-            ].into(),
+            &[("upload".into(), node_metas::RootUploadFn as NodeMetaFn)].into(),
             "$q".into(),
         )
         .unwrap();
@@ -2459,9 +2619,8 @@ impl QueryGraph {
     }
     pub fn upload_many(
         &self,
-        args: impl Into<NodeArgs<RootUploadManyFnInputPartial>>
-    ) -> MutationNode<RootUploadFnOutput>
-    {
+        args: impl Into<NodeArgs<RootUploadManyFnInputPartial>>,
+    ) -> MutationNode<RootUploadFnOutput> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -2470,13 +2629,14 @@ impl QueryGraph {
                 )]
                 .into(),
             ),
-            &[
-                ("uploadMany".into(), node_metas::RootUploadManyFn as NodeMetaFn),
-            ].into(),
+            &[(
+                "uploadMany".into(),
+                node_metas::RootUploadManyFn as NodeMetaFn,
+            )]
+            .into(),
             "$q".into(),
         )
         .unwrap();
         MutationNode(nodes.into_iter().next().unwrap(), PhantomData)
     }
 }
-
