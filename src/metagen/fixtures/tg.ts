@@ -30,7 +30,7 @@ typegraph({
       {
         my_faas: wasm.handler(obj, obj, { name: "my_faas" }).rename("my_faas"),
       },
-      Policy.public()
+      Policy.public(),
     );
   },
 });

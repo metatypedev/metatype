@@ -727,22 +727,17 @@ const nodeMetas = {
       ],
     };
   },
+  RootCompositeNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
   RootCompositeArgsFn(): NodeMeta {
     return {
       ...nodeMetas.Post(),
       argumentTypes: {
         id: "RootScalarNoArgsFnOutput",
       },
-    };
-  },
-  RootScalarNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
-  RootCompositeNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
     };
   },
   RootScalarUnionFn(): NodeMeta {
@@ -765,27 +760,6 @@ const nodeMetas = {
         ["email", nodeMetas.scalar],
         ["posts", nodeMetas.Post],
       ],
-    };
-  },
-  RootMixedUnionFnOutput(): NodeMeta {
-    return {
-      variants: [
-        ["post", nodeMetas.Post],
-        ["user", nodeMetas.User],
-      ],
-    };
-  },
-  RootMixedUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.RootMixedUnionFnOutput(),
-      argumentTypes: {
-        id: "RootScalarNoArgsFnOutput",
-      },
-    };
-  },
-  RootGetUserFn(): NodeMeta {
-    return {
-      ...nodeMetas.User(),
     };
   },
   RootCompositeUnionFnOutput(): NodeMeta {
@@ -814,6 +788,32 @@ const nodeMetas = {
       },
     };
   },
+  RootGetUserFn(): NodeMeta {
+    return {
+      ...nodeMetas.User(),
+    };
+  },
+  RootScalarNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+  RootMixedUnionFnOutput(): NodeMeta {
+    return {
+      variants: [
+        ["post", nodeMetas.Post],
+        ["user", nodeMetas.User],
+      ],
+    };
+  },
+  RootMixedUnionFn(): NodeMeta {
+    return {
+      ...nodeMetas.RootMixedUnionFnOutput(),
+      argumentTypes: {
+        id: "RootScalarNoArgsFnOutput",
+      },
+    };
+  },
 };
 export type UserIdStringUuid = string;
 export type PostSlugString = string;
@@ -826,6 +826,10 @@ export type RootScalarNoArgsFnOutput = string;
 export type RootCompositeArgsFnInput = {
   id: RootScalarNoArgsFnOutput;
 };
+export type RootScalarUnionFnOutputT1Integer = number;
+export type RootScalarUnionFnOutput =
+  | (RootScalarNoArgsFnOutput)
+  | (RootScalarUnionFnOutputT1Integer);
 export type UserEmailStringEmail = string;
 export type UserPostsPostList = Array<Post>;
 export type User = {
@@ -836,13 +840,9 @@ export type User = {
 export type RootCompositeUnionFnOutput =
   | (Post)
   | (User);
-export type RootScalarUnionFnOutputT1Integer = number;
 export type RootMixedUnionFnOutput =
   | (Post)
   | (User)
-  | (RootScalarNoArgsFnOutput)
-  | (RootScalarUnionFnOutputT1Integer);
-export type RootScalarUnionFnOutput =
   | (RootScalarNoArgsFnOutput)
   | (RootScalarUnionFnOutputT1Integer);
 

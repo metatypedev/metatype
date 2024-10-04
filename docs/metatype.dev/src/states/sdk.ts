@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { useAtom, atom } from "jotai";
+import { atom, useAtom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { atomWithLocation } from "jotai-location";
 import { useCallback, useEffect } from "react";
 
-export type SDK = "typescript" | "python";
+export type SDK = "typescript" | "python" | "rust";
 const defaultValue = "typescript" as SDK;
 const key = "sdk";
 
@@ -15,8 +15,8 @@ const locationAtom = atomWithLocation();
 const sdkQueryAtom = atom(
   (get) => get(locationAtom).searchParams?.get(key) as SDK | null,
   (get, set, value: SDK) => {
-    const searchParams =
-      get(locationAtom).searchParams ?? new URLSearchParams();
+    const searchParams = get(locationAtom).searchParams ??
+      new URLSearchParams();
     searchParams.set(key, value);
     set(locationAtom, (prev) => ({
       ...prev,

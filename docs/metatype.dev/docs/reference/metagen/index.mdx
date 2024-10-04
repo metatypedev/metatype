@@ -1,4 +1,4 @@
----
+/typegrap/typegraphh---
 sidebar_position: 50
 ---
 
@@ -90,19 +90,21 @@ This generator supports:
 - [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) based `GraphQlTransport` implementation
   - Requires Node.js version `v17.5.0` and [up](https://nodejs.org/dist/latest-v18.x/docs/api/globals.html#fetch).
   - Requires using `--experimental-fetch` flag if on Node.js version below v18.0.0
-- Sync and async queries
+  - Provides async queries
+- Prepared requests and aliases
 
-TODO: example usage
+Refer to the [client reference](/docs/reference/typegraph/client/) for usage guidelines and examples.
 
 ### `client_py`
 
 This generator supports:
 
 - Types and query builders based on your typegraph
-- [`gql`](https://github.com/graphql-python/gql) based `GraphQlTransport` implementation
-- Sync and async queries
+- `urlib` based `GraphQlTransport` implementation.
+  - Provides sync and async queries
+- Prepared requests and aliases
 
-TODO: example usage
+Refer to the [client reference](/docs/reference/typegraph/client/) for usage guidelines and examples.
 
 ### `client_rs`
 
@@ -110,9 +112,10 @@ This generator supports:
 
 - Types and query builders based on your typegraph
 - [`reqwest`](https://lib.rs/crates/reqwest) based `GraphQlTransport` implementation
-- Sync and async queries
+  - Provides sync and async queries
+- Prepared requests and aliases
 
-TODO: example usage
+Refer to the [client reference](/docs/reference/typegraph/client/) for usage guidelines and examples.
 
 ### `fdk_typescript`
 

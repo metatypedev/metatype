@@ -8,150 +8,213 @@ import TGExample from "@site/src/components/TGExample";
 
 :::warning Beta
 
-The following feature is not yet stable.
+The following feature isn't yet stable.
 
 :::
 
 The typegraph client provides a code-first alternative for querying typegraphs. 
-It contains types generated from your typegraph definition to ensure type saftey.
-The client code-generators are provided as part of the [meatgen](/docs/reference/metagen) suite under the names:
+It contains types generated from typegraph definitions to ensure type safety.
+The [metagen](/docs/reference/metagen) suite provides the client code-generators under the following names:
 
-- `client_ts`: client code-generator for Typescript for use in browsers and other runtimes
+- `client_ts`: client code-generator for Typescript for use in browsers and other Javascript runtimes
 - `client_py`: client code-generator for Python
 - `client_rs`: client code-generator for Rust.
 
-The `mdk` genenrators also include the client suite for use in custom functions.
+<!--
+The `fdk` genenrators also include the client suite for use in custom functions.
+-->
 Refer to the metagen documentation on how to access the generators.
 
-## Transports
+## Guide
 
-The requests themselves are sent to the typegate using different transport implementations for different usecases.
+Even though there are minor differences across language implementations, the generated clients adhere to a common design that contains the following elements.
+
+
+### `QueryGraph`
+
+The root type generated for the client, it includes:
+
+- Query builders for all the root functions
+- Transport constructors for all the transports exposed by the typegraph
+
+<!-- TODO: rust support for TGExample -->
+
+<TGExample
+  python={{
+    content: `
+from client import QueryGraph
+
+qg = new QueryGraph();`
+  }}
+  typescript={{
+    content: `import { QueryGraph } from "./client.ts" ;
+
+const qg = new QueryGraph();`
+  }}
+  rust={{
+    content: `use client::*;
+
+let api1 = QueryGraph::new(format!("http://localhost:7890/sample").parse()?);`
+  }}
+  disablePlayground
+/>
+
+### Transports
+
+Different transport implementations are used to send the requests to the typegate for different use cases.
+The `QueryGraph` will sport methods to construct transports supported by the typegraph (see examples below).
 Not all transports have the same feature sets.
 
-### `GraphQLTransport`
+#### `GraphQLTransport`
 
 This transport converts to equivalent GraphQL query strings that get sent over http.
 It includes the following features for all implementations:
 
-- Sync and async queries and mutations
+- Sync or async queries and mutations
 - Multiple queries or mutations in one request
 
-### `HostcallTransport`
+#### `HostcallTransport`
 
 This transport uses host functions exposed by the typegate for use with custom functions.
 
 - Sync queries and mutations
 - Multiple queries or mutations in one request
 
-## API
-
-Even though there are minor differences across language implementations, the generated clients adhere to a common design that contains the following elements.
-
-### `QueryGraph`
-
-The root type generated for your client, it includes:
-
-- Query builders for all your root functions
-- Transport constructors for all the transports exposed by the typegraph
-
-<!-- TODO: rust support for TGExample -->
-
-<TGExample
-  python={{content: `qg = new QueryGraph();`}}
-  typescript={{content: `const qg = new QueryGraph();`}}
-  disablePlayground
-/>
-
 ### Requests
 
 Requests consist of two parts:
-- Describe the operations using methods on `QueryGraph`
-  - Methods are typesafe according to each typegraph root function
-- Transport methods that take the query description and perform request on typegate
-  - Mutations and queries have separate accessors
+- Describe the operations using methods on `QueryGraph`.
+  - Methods are typesafe according to each typegraph root functions.
+- Transport methods that take the query description and perform request to the typegate.
+  - Mutations and queries use separate methods and types.
   - Some transports like the `GraphQLTransport` support multiple operations in one request
   
 <TGExample
-  python={{content: `
-qg = QueryGraph()
-gql_client = qg.graphql(address="http://localhost:7890")
+  python={{
+    content: `qg = QueryGraph()
+gql_client = qg.graphql_sync("http://localhost:7890/sample")
 
 # describe the query
+# there's a different method available for mutations
 out = gql_client.query(
     {
         "user": qg.get_user(
+            # the function takes arguments
             UserArgs(id="1234"),
-            UserSelectParams(
+            UserSelections(
                 # choose which fields get included
                 id=True,
                 email=True,
             ),
         ),
         # add a second query in the request
-        "posts": qg.get_post(
-            PostArgs(filter="today"), 
-            PostSelectParams(
-              slug=True, 
-              title=True,
-            )
-        ),
+        # this one doesn't take arguments so only
+        # selections are provided
+        "posts": qg.get_posts({
+            # both arguments and selections are TypedDicts
+            # allowing use of dicts instead of the classes
+            "slug": True,
+            "title": True,
+         }),
     }
 )
-user = out["user"];
-posts = out["posts"]
-`}}
-  typescript={{content: `
-const api1 = new QueryGraph();
-const gqlClient = new api1.graphql({ address: "http://localhost:7890" });
 
-const { user, posts } = await gqlClient.query({
+user = out["user"];
+posts = out["posts"]`
+  }}
+  typescript={{
+    content: `const api1 = new QueryGraph();
+const gqlClient = api1.graphql("http://localhost:7890/sample");
+
+// describe the query
+// there's a different method available for mutations
+const out = await gqlClient.query({
   user: api1.getUser(
-    // arguments to get user
+    // the function takes arguments
     { id: "1234" }, 
-    // select which fields get included
     {
+      // choose which fields get included
       id: true,
       email: true,
-    }
-  ),
-  // add a second query to the request
+    }),
+  // add a second query in the request
+  // this one doesn't take arguments so only
+  // selections are provided
   posts: api1.getPosts(
-    { filter: "today" }, 
     { title: true, slug: true }
   ),
 });
-  `}}
+const user = out.user;
+const posts = out.posts;`
+  }}
+  rust={{
+    content: `let api1 = QueryGraph::new("http://localhost:7890/sample".parse()?);
+let gql_sync = api1.graphql_sync();
+
+// describe the query
+// there's a different method available for mutations
+let out = gql_sync.query((
+    // the function takes arguments
+    api1.get_user(UserArgs { id: "1234".into() })
+      .select(UserSelections {
+          // choose which fields get included
+          // in rust, selection functions are 
+          // used instead of booleans. 
+          id: get(),
+          slug: get(),
+      }),
+    // add a second query in the request
+    // note: rust uses tuples for multi-requests
+    // this one doesn't take arguments
+    api1.get_posts()
+      .select(PostSelections {
+            id: get(),
+            slug: get(),
+            title: get(),
+        }),
+)).unwrap();
+
+let (user, posts) = out;`
+}}
   disablePlayground
 />
 
 ### Nested arguments
 
-Some fields are themselves composite types that have fields that need to be selected.
-Some fields also require arguments to be passed.
+Some fields are themselves composite types that have fields that also require selection.
+And functions are used to resolve certain fields which require arguments.
+
   
 <TGExample
-  python={{content: `
+  python={{
+  content: `
 out = gql_client.query(
     {
         "user": qg.get_user(
             UserArgs(id="1234"),
-            UserSelectParams(
+            UserSelections(
+                id=True,
+                email=True,
                 # the posts field takes an argument
+                # and is also a composite
+                # selection and arguments are combined
+                # with tuples in such cases
                 posts=(
                   PostArgs(filter="top"), 
-                  # and is also a composite
-                  # so we must select fields
-                  PostSelectParams(
+                  PostSelections(
                     slug=True, 
                     title=True
                   )
                 ),
+                # this nested composite doesn't
+                # take arguments so no tuple
+                comments=CommentSelections(
+                  body=True
+                )
             ),
         ),
     }
 )
-user = out["user"];
-posts = out["posts"]
 `}}
   typescript={{content: `
 const { user } = await gqlClient.query({
@@ -159,26 +222,59 @@ const { user } = await gqlClient.query({
     { id: "1234" }, 
     {
       // posts field takes an argument
+      // and is also a composite
+      // selection and arguments are combined
+      // with array tuples in such cases
       posts: [
         { filter: "top" }, 
-        // and is also a composite type
-        // so we need to select fields
         { title: true, slug: true }
       ],
+      // this nested composite doesn't
+      // take arguments so no tuple
+      // required
+      comments: { body: true }
     }
   ),
 });
   `}}
+  rust={{
+  content: `let user = gql_sync.query(
+    api1.get_user(UserArgs { id: "1234".into() })
+      .select(UserSelections {
+          id: get(),
+          slug: get(),
+          // posts nested field takes an argument
+          // and is also a composite type
+          // requiring the arg_select select function
+          posts: arg_select(
+              PostArgs { filter: "top".into() },
+              PostSelections {
+                id: get(),
+                slug: get(),
+                title: get(),
+              }
+          ),
+          // this nested composite doesn't
+          // take arguments so the select function
+          // is used instead
+          comments: select(CommentSelections {
+            body: get()
+          }),
+      }),
+).unwrap();
+`
+  }}
   disablePlayground
 />
 
 ### Selecting fields
 
-When selecting fields on an object, we use bool to indicate interest.
-By default, null or unspecified fields will not be included.
-And if the field itself is an struct, or if it takes an argument, values must be provided to be included.
+Booleans indicate interest when selecting fields on an object.
+By default a field isn't included if it's null, or unspecified.
+Selections can include selection flags to flip the default so that all unspecified fields get included.
+This won't apply if the field requires an argument explicitly requiring them for inclusion.
 
-When selecting fields, we can flip the default so that all unspecified fields get included:
+Note that these patterns are different in the `client_rs` implementations as demonstrated below:
   
 <TGExample
   python={{content: `
@@ -186,92 +282,477 @@ out = gql_client.query(
     {
         "user": qg.get_user(
             UserArgs(id="1234"),
-            # use the all static method to flip the
-            # semantics for unspecified fields
-            UserSelectParams.all(
-                _all=True,
-                # we can exclude fields explicitly
+            UserSelections(
+                # seletion flags are set on the underscore
+                # field. The select_all flg flips the
+                # semantics for unspecified fields
+                _=SelectionFlags(select_all=True),
+                # False excludes fields explicitly
                 id=False,
                 # the posts field takes an argument
-                # so it still must be provided
+                # so the select_all flag doesn't apply
+                # it still must be provided
                 # if intending to include it
                 posts=(
                   PostArgs(filter="top"), 
-                  PostSelectParams.all()
+                  # TypedDict form
+                  {"_": SelectionFlags(select_all=True)},
                 ),
+                # comments is a nested composite but
+                # doesn't take args so select_all flag applies
+                # comments=CommentSelections(
+                #  body=True
+                # )
             ),
         ),
     }
 )
 `}}
   typescript={{content: `
+const { user } = await gqlClient.query({
+  user: api1.getUser(
+    { id: "1234" }, 
+    {
+      // posts field takes an argument
+      // and is also a composite
+      // selection and arguments are combined
+      // with array tuples in such cases
+      posts: [
+        { filter: "top" }, 
+        { title: true, slug: true }
+      ],
+      // this nested composite doesn't
+      // take arguments so no tuple
+      // required
+    }
+  ),
+});
 const { user  } = await gqlClient.query({
   user: api1.getUser(
     { id: "1234" }, 
-    // select which fields get included
     {
-      // setting the value of \`_\` will filp the semantic
-      // of unspecified fields
+      // seletion flags are set on the underscore
+      // field. The selectAll flg flips the
+      // semantics for unspecified fields
       _:  "selectAll",
-      // we can exclude fields explicitly 
+      // false excludes fields explicitly 
       id: false,
-      // post field takes a parameter
-      // so it must be specified still
+      // post field takes an argument
+      // so the selectAll flag doesn't apply
+      // it still must be provided
       // if intending to include it
       posts: [
         { filter: "top" }, 
         { _: "selectAll" }
       ],
+      // comments is a nested composite but
+      // doesnt't take args so selectAll flag applies
+      // comments: { body: true }
     }
   ),
 });
   `}}
+  rust={{
+  content: `let user = gql_sync.query(
+    api1.get_user(UserArgs { id: "1234".into() })
+      .select(UserSelections {
+          // skip excludes fields explicitly 
+          id: skip(),
+
+          // post field takes an argument
+          // so the all() down below still
+          // won't include it
+          // it must be provided explicitly
+          // if intending to include it
+          posts: arg_select(
+              PostArgs { filter: "top".into() },
+              // we use all top 
+              all()
+          ),
+
+          // comments is a nested composite but
+          // doesnt't take args so the all() down
+          // below includes it
+          // comments: select(CommentSelections::all())
+
+          // filling the missing fields with the results
+          // of all() using the struct update syntax
+          // ensures they're all get()
+          // use default() to get a selection that is full
+          // of skip()
+          ..all()
+      }),
+).unwrap();
+`
+  }}
   disablePlayground
 />
 
-Note that this only applies to scalar fields and those that require arguments or are structs must still be explicitly inculded.
+Note that this only applies to scalar fields and those that require arguments or are structs must still be explicitly included.
 
 ### Preparing requests
 
-Some transports like the `GraphQLTransport` allow us to prepare requests before hand to minimize overhead having to bulid the GraphQL query each time.
+Some transports like the `GraphQLTransport` allows one to prepare requests before hand and reuse them.
+This isn't immediately useful but will be critical when persisted queries are available in Metatype.
 
 <TGExample
   python={{content: `
 prepared = gql_client.prepare_query(
-    # we specify the type of args explicitly
-    str,
+    # the args object will contain placholder value of the arguments
+    # the lambda will then return a request description as
+    # usual
     lambda args: {
         "user": qg.get_user(
-            UserArgs(id="1234"),
-            UserSelectParams(
-                id=True,
-                email=True,
-                posts=(PostArgs(filter="top"), PostSelectParams(slug=True, title=True)),
-            ),
-        ),
-        "posts": qg.get_post(
-            PostArgs(filter="today"), PostSelectParams(slug=True, title=True)
+            # use only values from args for arguments
+            # no branching should be done
+            { "id": args.get("userId") },
+            {
+                "id": True,
+                "email": True,
+                "posts": (
+                  { "filter": args.get("postFilter") }, 
+                  { "_": SelectionFlags(select_all=True) },
+                ),
+            },
         ),
     },
 )
 
 # execute the actual query
-out = prepared.do("arg")
-out2 = prepared.do("arg2")
+# the input here must contain every key
+# used from the lambda arg above
+out = prepared.perform({
+  "userId": "1234",
+  "postFilter": "top",
+})
+out2 = prepared.perform({
+  "userId": "5678",
+  "postFilter": "hot",
+})
 `}}
   typescript={{content: `
-const prepared = gqlClient
-  // we specify the type of args to make it type safe
-  .prepareQuery((args: { filter: string }) => ({
-    posts: api1.getPosts({ filter: args.filter }, { _: "selectAll" }),
-  }));
+const prepared = gqlClient.prepareQuery(
+  // the args object will contain placholder value of the arguments
+  // the closure will then return a request description as
+  // usual
+  (
+    // types can be provided as hints
+    args: PreparedArgs<{
+      userId: string;
+      postFilter: string;
+    }>,
+  ) => ({
 
-// when it comes time to query, we can pass \`args\` from above
-// according to the specified type
-const { posts } = await prepared.do({ filter: "hey" });
-const { posts: posts2 } = await prepared.do({ filter: "hey" });
+    user: api1.getUser(
+      // use only values from args for arguments
+      // no branching should be done
+      { id: args.userId }, 
+      {
+        id: true,
+        email: true,
+        posts: [
+          { filter: args.postFilter }, 
+          { title: true, slug: true }
+        ],
+      }),
+
+  })
+);
+
+// execute the actual query
+// the input here must contain every key
+// used from the closure arg above
+const { posts } = await prepared.perform({ 
+  userId: "1234" 
+  postFilter: "top" 
+});
+const { posts: posts2 } = await prepared.perform({ 
+  userId: "5678" 
+  postFilter: "hot" 
+});
   `}}
+  rust={{
+  content: `
+let prepared_m = gql_sync.prepare_mutation(
+  // the args object will contain placholder value of the arguments
+  // the closure will then return a request description as
+  // usual
+  |args| {
+      (
+          // for each placholder value, we provide a closure that returns
+          // argument structs according to the value
+          // this closure will be used for each use of the prepared
+          // request
+          api1.scalar_args(args.get("userId", |id: String| UserArgs { id })),
+            .select(UserSelections {
+                id: get(),
+                slug: get(),
+                posts: arg_select(
+                    // the placholder closures can take any parameter
+                    // that implements serde::DeserializeOwned
+                    // the closure here does no transformation
+                    args.get("postFilter", |val: PostArgs| val)
+                    PostSelections {
+                      id: get(),
+                      slug: get(),
+                      title: get(),
+                    }
+                ),
+            }),
+      )
+  }
+);
+
+// execute the actual query
+// the input here must contain every key
+// used from the closure arg above
+let user1 = prepared_clone.perform([
+    (
+        "userId",
+        // perform takes an Into<HashMap> parameter, 
+        // requiring use of json values to 
+        // allow heterogeneous values in a single map
+        serde_json::json!("1234"),
+    ),
+    (
+        "postFilter",
+        serde_json::json!(PostArgs{
+          filter: "hot".into(),
+        }),
+    ),
+])?;
+let user1 = prepared_clone.perform([
+    (
+        "userId",
+        serde_json::json!("1234"),
+    ),
+    (
+        "postFilter",
+        // we can provide PostArgs in json form alternatively
+        // but this is less typesafe
+        serde_json::json!({
+          "filter": "top"
+        }),
+    ),
+])?;
+
+  `
+  }}
   disablePlayground
 />
 
-## TODO: unions and either
+:::warning Caution
+
+Note that in all three implementations, the closures are only invoked once and it's critical that there are no branching logic present in them.
+
+:::
+
+### Aliases
+
+Aliasing allows the querying of a node multiple times under different names.
+This is very similar to the [GraphQL aliases](https://graphql.org/learn/queries/#aliases) and uses them under the hood when using the GraphQLTransport.
+Note that not all `Runtimes` support aliasing so make sure your target does before using this feature.
+
+<TGExample
+  python={{content: `
+out = gql_client.query(
+    {
+        "user": qg.get_user(
+            UserSelections(
+                _=SelectionFlags(select_all=True),
+                # all selections accept Aliases in their stead
+                # including scalars
+                posts=Alias(
+                    # posts is a composie with arguments so the 
+                    # tuple form is expected
+                    post1=(
+                      PostArgs(filter="top"), 
+                      PostSelections(
+                          id=True,
+                          slug=True,
+                          title=True,
+                      ),
+                    )
+                    # a second aliasing
+                    post2=(
+                      PostArgs(filter="hot"), 
+                      PostSelections(
+                          _=SelectionFlags(select_all=True),
+                          id=False,
+                      ),
+                    )
+                ),
+            ),
+        ),
+    }
+)
+# note that when using aliases, the TypedDict are no longer
+# valid
+posts1 = out["user"]["post1"];
+posts2 = out["user"].["post2"];
+`}}
+  typescript={{content: `
+const { user } = await gqlClient.query({
+  user: api1.getUser({
+    _: "selectAll",
+    // all selections accept alias() in their stead
+    // including scalars
+    posts: alias({
+      // posts is a composie with arguments so the 
+      // tuple form is expected
+      post1: [
+        { filter: "top" }, 
+        { _: "selectAll" }
+      ],
+      // a second aliasing
+      post2: [
+        { filter: "top" }, 
+        { _: "selectAll" }
+      ],
+    }),
+  }),
+});
+
+// when using aliases, the original types
+// provided are no longer accurate
+const posts1 = user.post1
+const posts2 = user.post1
+  `}}
+  rust={{
+  content: `
+// user here is a serde_json::Value type
+// since we opted into aliases by using
+// select_aliased
+let (user,) = gql_sync.query((
+  api1.get_user()
+    // alias() selections are only available under root select_aliased
+    // selections. Even if the alias() is nested deep, the root
+    // must be select_aliased
+    .select_aliased(UserSelections {
+      // all selections accept alias() in their stead
+      // including scalars
+      posts: alias([
+          (
+              "post1",
+              // posts is a composie with arguments so the 
+              // arg_select form is expected
+              posts: arg_select(
+                  PostArgs { filter: "top".into() },
+                  PostSelections {
+                    ..all()
+                  }
+              ),
+          ),
+          // a second aliasing
+          ("post2", arg_select(PostArgs { filter: "hot".into() }, all())),
+      ]),
+      ..all()
+  }),
+))?;
+// aliases force use of json to bypass the generated types
+let posts1 = user["post1"];
+let posts2 = user["post2"];
+  `
+  }}
+  disablePlayground
+/>
+
+### Unions
+
+Union and either types that have composite variants require special forms when querying them.
+The generated selection types will have fields for selecting composite variants.
+If the value from the API wasn't of a selected variant, an empty object will be returned.
+Scalar variants are always selected.
+
+<TGExample
+  python={{content: `
+res5 = gql_client.query(
+    {
+        # this case is only interested in post values
+        "postOnly": qg.composite_union(
+            {
+                "userId": "1234"
+            },
+            {
+              "post": {"_": SelectionFlags(select_all=True)}
+            },
+        ),
+        "userOnly": qg.composite_union(
+            {
+                "userId": "1234"
+            },
+            {
+              "user": { "_": SelectionFlags(select_all=True) }
+            },
+        ),
+        "both": qg.composite_union(
+            {
+                "userId": "1234"
+            },
+            {
+                # add selections for both variants to ensure
+                # that a value is present no matter the type
+                "post": {"_": SelectionFlags(select_all=True)},
+                "user": {"_": SelectionFlags(select_all=True)},
+            },
+        ),
+    }
+)
+`}}
+  typescript={{content: `
+const out = await gqlClient.query({
+  // this case is only interested in post values
+  postOnly: api1.compositeUnion(
+    { id: "1234" }, 
+    {
+      post: { "_": "selectAll" },
+    }
+  ),
+  userOnly: api1.compositeUnion(
+    { id: "1234" }, 
+    {
+      user: { "_": "selectAll" },
+    }
+  ),
+  both: api1.compositeUnion(
+    { id: "1234" }, 
+    {
+      // add selections for both variants to ensure
+      // that a value is present no matter the type
+      user: { "_": "selectAll" },
+      post: { "_": "selectAll" },
+    }
+  ),
+});
+  `}}
+  rust={{
+  content: `
+let out = gql
+  .query((
+      // this case is only interested in post values
+      api1
+        .composite_union(MyArgs { id: "1234".into(), })
+        .select(UnionSelections {
+            post: select(all()),
+            ..default()
+        }),
+      api1
+        .composite_union(MyArgs { id: "1234".into(), })
+        .select(UnionSelections {
+            user: select(all()),
+            ..default()
+        }),
+      api1
+        .composite_union(MyArgs { id: "1234".into(), })
+        .select(UnionSelections {
+            // add selections for both variants to ensure
+            // that a value is present no matter the type
+            post: select(all()),
+            user: select(all()),
+        }),
+  ))
+  .await?;
+`
+  }}
+  disablePlayground
+/>
