@@ -197,7 +197,6 @@ export class WorkerManager {
     logger.info(`trigger ${type} for ${runId}`);
   }
 
-  /** Just as the name indicates, this will also decide to actually run it or not depending on the `storedRun` value  */
   triggerStart(
     name: string,
     runId: string,
