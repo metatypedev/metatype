@@ -91,7 +91,7 @@ pub mod tree {
 
     use ptree::{print_config::StyleWhen, IndentChars, PrintConfig, Style, TreeItem};
 
-    use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
+    use crate::types::{RefTarget, Type, TypeDef, TypeDefExt, TypeId};
 
     pub struct PrintOptions {
         no_indent_lines: bool,
@@ -162,12 +162,12 @@ pub mod tree {
 
         fn write_self<W: Write>(&self, f: &mut W, _style: &Style) -> std::io::Result<()> {
             let ty = self.type_id.as_type().unwrap();
-            let (name, title) = match &ty {
-                Type::Ref(p) => (format!("&{}", p.name), None),
-                Type::Def(def) => (
+            let (name, title) = match ty.to_ref_target() {
+                RefTarget::Direct(def) => (
                     def.data().variant_name().to_owned(),
                     def.base().name.clone(),
                 ),
+                RefTarget::Indirect(name) => (format!("&{}", name), None),
             };
 
             let enum_variants: Option<Vec<String>> =

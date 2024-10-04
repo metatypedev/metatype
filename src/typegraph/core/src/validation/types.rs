@@ -156,7 +156,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
 }
 
 pub(super) mod utils {
-    use crate::types::TypeId;
+    use crate::types::{RefTarget, TypeId};
 
     use super::*;
 
@@ -175,7 +175,15 @@ pub(super) mod utils {
                 // -> right must be a proxy for the types to be equal
                 Err(_) => match (left.as_type()?, right.as_type()?) {
                     (Type::Ref(left_proxy), Type::Ref(right_proxy)) => {
-                        Ok(left_proxy.name == right_proxy.name)
+                        match (&left_proxy.target, &right_proxy.target) {
+                            (RefTarget::Indirect(left_name), RefTarget::Indirect(right_name)) => {
+                                Ok(left_name == right_name)
+                            }
+                            (RefTarget::Direct(left_def), RefTarget::Direct(right_def)) => {
+                                Ok(left_def.id() == right_def.id())
+                            }
+                            _ => Ok(false),
+                        }
                     }
                     _ => Ok(false),
                 },

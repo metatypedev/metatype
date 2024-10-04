@@ -6,7 +6,7 @@ use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
 use crate::types::type_ref::TypeRef;
-use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
+use crate::types::{Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
@@ -155,16 +155,17 @@ impl Store {
         with_store(|s| s.type_by_names.get(name).map(|id| id.0.clone()))
     }
 
-    pub fn register_type_ref(name: String, attributes: Vec<(String, String)>) -> Result<TypeId> {
+    pub fn register_type_ref(builder: TypeRefBuilder) -> Result<TypeRef> {
         let id = with_store(|s| s.types.len()) as u32;
-        let type_ref = TypeRef::new(id.into(), name, attributes);
+        let type_ref = builder.with_id(id.into());
+        let res = type_ref.clone();
 
         with_store_mut(move |s| -> Result<()> {
             s.types.push(Type::Ref(type_ref));
             Ok(())
         })?;
 
-        Ok(id.into())
+        Ok(res)
     }
 
     pub fn register_type_def(

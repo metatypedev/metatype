@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::TypeDefExt;
 use super::{type_ref::RefData, Type, TypeDef};
+use super::{RefTarget, TypeDefExt};
 use crate::errors::Result;
 use crate::errors::TgError;
 use crate::typegraph::TypegraphContext;
@@ -86,15 +86,26 @@ impl TypeId {
         tg: &mut TypegraphContext,
         runtime_id: Option<u32>,
     ) -> Result<()> {
-        match self.as_type()? {
-            Type::Ref(type_ref) => type_ref.name.hash(state),
-            Type::Def(type_def) => {
+        let typ = self.as_type()?;
+        match typ.to_ref_target() {
+            RefTarget::Direct(type_def) => {
                 if let Some(name) = type_def.base().name.as_deref() {
-                    name.hash(state)
+                    "named".hash(state);
+                    name.hash(state);
                 } else {
                     tg.hash_type(type_def, runtime_id)?.hash(state)
                 }
             }
+            RefTarget::Indirect(name) => {
+                "named".hash(state);
+                name.hash(state);
+            }
+        }
+        if let Type::Ref(type_ref) = typ {
+            "attributes".hash(state);
+            let mut sorted_attributes = type_ref.attributes.iter().collect::<Vec<_>>();
+            sorted_attributes.sort_by_key(|(k, _)| k.to_string());
+            sorted_attributes.hash(state);
         }
 
         Ok(())

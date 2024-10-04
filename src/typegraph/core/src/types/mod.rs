@@ -31,7 +31,10 @@ impl From<TypeDef> for Type {
 impl Type {
     fn name(&self) -> Option<&str> {
         match self {
-            Type::Ref(typ) => Some(typ.name.as_str()),
+            Type::Ref(typ) => match &typ.target {
+                RefTarget::Direct(type_def) => type_def.name(),
+                RefTarget::Indirect(name) => Some(name),
+            },
             Type::Def(typ) => typ.name(),
         }
     }
@@ -40,6 +43,13 @@ impl Type {
         match self {
             Type::Ref(typ) => typ.repr(),
             Type::Def(typ) => typ.repr(),
+        }
+    }
+
+    pub fn to_ref_target(&self) -> RefTarget {
+        match self {
+            Type::Ref(type_ref) => type_ref.target.clone(),
+            Type::Def(type_def) => RefTarget::Direct(type_def.clone()),
         }
     }
 }

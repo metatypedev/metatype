@@ -27,7 +27,7 @@ use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
 use types::{
     Boolean, Either, File, Float, Func, Integer, List, Optional, StringT, Struct, TypeBoolean,
-    TypeDef, TypeDefExt, TypeId, Union,
+    TypeDef, TypeDefExt, TypeId, TypeRef, Union,
 };
 
 use utils::clear_name;
@@ -59,7 +59,7 @@ impl wit::core::Guest for Lib {
     }
 
     fn refb(name: String, attributes: Vec<(String, String)>) -> Result<CoreTypeId> {
-        Ok(Store::register_type_ref(name, attributes)?.into())
+        Ok(TypeRef::indirect(name, attributes)?.id.0)
     }
 
     fn integerb(data: TypeInteger, base: TypeBase) -> Result<CoreTypeId> {
