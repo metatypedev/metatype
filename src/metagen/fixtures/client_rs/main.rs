@@ -7,11 +7,6 @@
 pub mod client;
 use client::*;
 
-
-#[rustfmt::skip]
-pub mod client;
-use client::*;
-
 fn main() -> Result<(), BoxErr> {
     let port = std::env::var("TG_PORT")?;
     let api1 = QueryGraph::new(format!("http://localhost:{port}/sample").parse()?);
@@ -109,37 +104,6 @@ fn main() -> Result<(), BoxErr> {
                 ))
                 .await?;
 
-            let res5 = gql
-                .query((
-                    api1.scalar_union(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                    }),
-                    // allows ignoring some members
-                    api1.composite_union(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                    })
-                    .select(RootCompositeUnionFnOutputSelections {
-                        post: select(all()),
-                        ..default()
-                    }),
-                    // returns empty if returned type wasn't selected
-                    // in union member
-                    api1.composite_union(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                    })
-                    .select(RootCompositeUnionFnOutputSelections {
-                        user: select(all()),
-                        ..default()
-                    }),
-                    api1.mixed_union(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                    })
-                    .select(RootMixedUnionFnOutputSelections {
-                        post: select(all()),
-                        user: select(all()),
-                    }),
-                ))
-                .await?;
             println!(
                 "{}",
                 serde_json::to_string_pretty(&serde_json::json!([
@@ -168,12 +132,6 @@ fn main() -> Result<(), BoxErr> {
                         "compositeNoArgs": res4.1,
                         "compositeArgs": res4.2,
                     },
-                    {
-                        "scalarUnion": res5.0,
-                        "compositeUnion1": res5.1,
-                        "compositeUnion2": res5.2,
-                        "mixedUnion": res5.3
-                    }
                 ]))?
             );
             Ok(())
