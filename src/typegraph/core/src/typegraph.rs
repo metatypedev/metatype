@@ -5,7 +5,7 @@ use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
-use crate::types::{TypeDef, TypeDefExt, TypeId};
+use crate::types::{ResolveRef as _, TypeDef, TypeDefExt, TypeId};
 use crate::utils::postprocess::naming::NamingProcessor;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
@@ -268,7 +268,7 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> 
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
-    match type_id.resolve_ref()?.1 {
+    match type_id.resolve_ref()?.0 {
         TypeDef::Struct(inner) => {
             // namespace
             for (prop_name, prop_type_id) in inner.iter_props() {
@@ -289,7 +289,7 @@ pub fn expose(
     let fields = fields
         .into_iter()
         .map(|(key, type_id)| -> Result<_> {
-            let concrete_type = type_id.resolve_ref()?.1;
+            let concrete_type = type_id.resolve_ref()?.0;
             let policy_chain = &concrete_type.x_base().policies;
             let has_policy = !policy_chain.is_empty();
 
@@ -498,7 +498,7 @@ impl TypegraphContext {
     }
 
     pub fn get_correct_id(&self, id: TypeId) -> Result<u32> {
-        let id = id.resolve_ref()?.1.id();
+        let id = id.resolve_ref()?.0.id();
         self.find_type_index_by_store_id(id)
             .ok_or(format!("unable to find type for store id {}", u32::from(id)).into())
     }

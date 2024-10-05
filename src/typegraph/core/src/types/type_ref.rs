@@ -3,23 +3,75 @@
 
 use std::{collections::HashMap, rc::Rc};
 
-use crate::errors::{self, Result};
+use crate::errors::Result;
 use crate::global_store::Store;
 use crate::types::{TypeDef, TypeDefExt as _, TypeId};
 
 use super::Type;
+
+mod resolve_ref;
+
+pub use resolve_ref::ResolveRef;
 
 #[derive(Clone, Debug)]
 pub enum RefTarget {
     Direct(TypeDef),
     Indirect(String),
 }
-impl RefTarget {
-    fn as_indirect(&self) -> Option<&str> {
-        match self {
-            RefTarget::Indirect(name) => Some(name),
-            _ => None,
+// impl RefTarget {
+//     fn as_indirect(&self) -> Option<&str> {
+//         match self {
+//             RefTarget::Indirect(name) => Some(name),
+//             _ => None,
+//         }
+//     }
+// }
+
+// TODO: merge rules?
+#[derive(Clone, Debug, Default)]
+pub struct RefAttrs(pub Option<Rc<RefAttrsInner>>);
+
+pub type RefAttrsInner = HashMap<String, String>;
+
+impl From<HashMap<String, String>> for RefAttrs {
+    fn from(attrs: HashMap<String, String>) -> Self {
+        if attrs.is_empty() {
+            RefAttrs::default()
+        } else {
+            Self(Some(Rc::new(attrs)))
         }
+    }
+}
+
+impl RefAttrs {
+    pub fn iter(&self) -> impl Iterator<Item = (&'_ String, &'_ String)> {
+        self.0.iter().flat_map(|it| it.iter())
+    }
+}
+
+impl RefAttrs {
+    pub fn merge(&self, other: impl Iterator<Item = (String, String)>) -> Self {
+        if other.size_hint().0 == 0 {
+            return self.clone();
+        }
+        let mut attrs = self.0.clone().map(|it| (*it).clone()).unwrap_or_default();
+        for (k, v) in other {
+            attrs.insert(k, v);
+        }
+        attrs.into()
+    }
+
+    pub fn with_target(&self, target: RefTarget) -> TypeRefBuilder {
+        TypeRefBuilder {
+            target,
+            attributes: self.clone(),
+        }
+    }
+}
+
+impl From<Vec<(String, String)>> for RefAttrs {
+    fn from(attrs: Vec<(String, String)>) -> Self {
+        attrs.into_iter().collect::<HashMap<_, _>>().into()
     }
 }
 
@@ -27,12 +79,12 @@ impl RefTarget {
 pub struct TypeRef {
     pub id: TypeId,
     pub target: RefTarget,
-    pub attributes: Rc<HashMap<String, String>>,
+    pub attributes: RefAttrs,
 }
 
 pub struct TypeRefBuilder {
     target: RefTarget,
-    attributes: HashMap<String, String>,
+    attributes: RefAttrs,
 }
 
 impl TypeRefBuilder {
@@ -40,76 +92,30 @@ impl TypeRefBuilder {
         TypeRef {
             id,
             target: self.target,
-            attributes: self.attributes.into(),
+            attributes: self.attributes,
         }
     }
 }
 
 impl TypeRef {
-    fn builder(target: RefTarget, attributes: HashMap<String, String>) -> TypeRefBuilder {
-        TypeRefBuilder { target, attributes }
-    }
-
-    // TODO merge rules?
-    fn merge_attributes(
-        bottom: Rc<HashMap<String, String>>,
-        top: impl Iterator<Item = (String, String)>,
-    ) -> HashMap<String, String> {
-        let mut bottom = (*bottom).clone();
-        for (k, v) in top {
-            bottom.insert(k, v);
-        }
-        bottom
-    }
-
     pub fn new(target: TypeId, attributes: Vec<(String, String)>) -> Result<TypeRef> {
         match target.as_type()? {
             Type::Ref(type_ref) => {
-                let attributes =
-                    Self::merge_attributes(Rc::clone(&type_ref.attributes), attributes.into_iter());
-                let builder = Self::builder(type_ref.target, attributes);
-                Store::register_type_ref(builder)
+                let attributes = type_ref.attributes.merge(attributes.into_iter());
+                Store::register_type_ref(attributes.with_target(type_ref.target))
             }
-            Type::Def(type_def) => {
-                let builder = Self::builder(
-                    RefTarget::Direct(type_def),
-                    attributes.into_iter().collect(),
-                );
-                Store::register_type_ref(builder)
-            }
+            Type::Def(type_def) => Store::register_type_ref(
+                RefAttrs::from(attributes).with_target(RefTarget::Direct(type_def)),
+            ),
         }
     }
 
     pub fn direct(target: TypeDef, attributes: Vec<(String, String)>) -> Result<Self> {
-        let builder = Self::builder(RefTarget::Direct(target), attributes.into_iter().collect());
-        Store::register_type_ref(builder)
+        Store::register_type_ref(RefAttrs::from(attributes).with_target(RefTarget::Direct(target)))
     }
 
     pub fn indirect(name: String, attributes: Vec<(String, String)>) -> Result<Self> {
-        let builder = Self::builder(RefTarget::Indirect(name), attributes.into_iter().collect());
-        Store::register_type_ref(builder)
-    }
-
-    pub fn resolve(&self) -> Option<TypeDef> {
-        match &self.target {
-            RefTarget::Direct(type_def) => Some(type_def.clone()),
-            RefTarget::Indirect(name) => Store::get_type_by_name(name),
-        }
-    }
-
-    pub fn try_resolve(&self) -> Result<TypeDef> {
-        self.resolve()
-            .ok_or_else(|| errors::unregistered_type_name(self.target.as_indirect().unwrap()))
-    }
-
-    pub fn resolve_ref(&self) -> Result<(RefData, TypeDef)> {
-        let ref_data = RefData {
-            id: self.id,
-            attributes: self.attributes.clone(),
-        };
-
-        let type_def = self.try_resolve()?;
-        Ok((ref_data, type_def))
+        Store::register_type_ref(RefAttrs::from(attributes).with_target(RefTarget::Indirect(name)))
     }
 
     pub fn repr(&self) -> String {
@@ -128,10 +134,4 @@ impl TypeRef {
             }
         }
     }
-}
-
-#[derive(Debug)]
-pub struct RefData {
-    pub id: TypeId,
-    pub attributes: Rc<HashMap<String, String>>,
 }

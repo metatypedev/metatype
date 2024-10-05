@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::types::TypeId;
+use crate::types::{ResolveRef as _, TypeId};
 
 #[enum_dispatch]
 pub trait TypeConversion {
@@ -105,7 +105,7 @@ impl<'a> BaseBuilder<'a> {
     fn convert_injection(&mut self, mut injection: Injection) -> Result<Injection> {
         if let Injection::Parent(data) = &mut injection {
             for type_id in data.values_mut().into_iter() {
-                let type_def = TypeId(*type_id).resolve_ref()?.1;
+                let type_def = TypeId(*type_id).resolve_ref()?.0;
                 *type_id = self
                     .ctx
                     .register_type(type_def, Some(self.runtime_idx))?

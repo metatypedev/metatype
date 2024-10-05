@@ -16,7 +16,7 @@ use common::typegraph::{Injection, TypeNode};
 use enum_dispatch::enum_dispatch;
 use std::hash::Hash as _;
 
-use super::TypeId;
+use super::{ResolveRef as _, TypeId};
 
 #[derive(Default, Debug, Clone)]
 pub struct ExtendedTypeBase {
@@ -113,8 +113,8 @@ pub enum TypeDef {
 impl TypeDef {
     pub fn resolve_quantifier(&self) -> Result<TypeDef> {
         match self {
-            TypeDef::List(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.1),
-            TypeDef::Optional(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.1),
+            TypeDef::List(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.0),
+            TypeDef::Optional(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.0),
             _ => Ok(self.clone()),
         }
     }

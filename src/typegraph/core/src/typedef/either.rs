@@ -13,7 +13,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Either, TypeDefData, TypeId},
+    types::{Either, ResolveRef as _, TypeDefData, TypeId},
     wit::core::TypeEither,
 };
 
@@ -41,7 +41,7 @@ impl TypeConversion for Either {
                     .variants
                     .iter()
                     .map(|&vid| -> Result<_> {
-                        let (_, type_def) = TypeId(vid).resolve_ref()?;
+                        let type_def = TypeId(vid).resolve_ref()?.0;
                         Ok(ctx.register_type(type_def, runtime_id)?.into())
                     })
                     .collect::<Result<Vec<_>>>()?,

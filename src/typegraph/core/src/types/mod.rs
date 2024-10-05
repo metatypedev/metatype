@@ -46,6 +46,7 @@ impl Type {
         }
     }
 
+    /// wrap Type::Def in RefTarget, get target from Type::Ref
     pub fn to_ref_target(&self) -> RefTarget {
         match self {
             Type::Ref(type_ref) => type_ref.target.clone(),

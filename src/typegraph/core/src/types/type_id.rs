@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{type_ref::RefData, Type, TypeDef};
-use super::{RefTarget, TypeDefExt};
+use super::{RefTarget, ResolveRef as _, TypeDefExt};
+use super::{Type, TypeDef};
 use crate::errors::Result;
 use crate::errors::TgError;
 use crate::typegraph::TypegraphContext;
@@ -53,26 +53,6 @@ impl TypeId {
         Ok(typ.repr())
     }
 
-    pub fn resolve_ref(&self) -> Result<(Option<RefData>, TypeDef)> {
-        match self.as_type()? {
-            Type::Ref(type_ref) => {
-                let (ref_data, type_def) = type_ref.resolve_ref()?;
-                Ok((Some(ref_data), type_def))
-            }
-            Type::Def(type_def) => Ok((None, type_def)),
-        }
-    }
-
-    // resolves to the ref id if a Ref
-    // resolves to self if a Def
-    // pub fn resolve_ref_id(&self) -> Result<TypeId> {
-    //     match self.as_type()? {
-    //         Type::Ref(type_ref) => Ok(Store::get_type_by_name(&type_ref.name)
-    //             .ok_or_else(|| errors::unregistered_type_name(&type_ref.name))?),
-    //         Type::Def(_) => Ok(TypeId(self.0)),
-    //     }
-    // }
-
     pub fn as_type_def(&self) -> Result<Option<TypeDef>> {
         match self.as_type()? {
             Type::Ref(_) => Ok(None),
@@ -116,6 +96,6 @@ impl TryFrom<TypeId> for TypeDef {
     type Error = TgError;
 
     fn try_from(type_id: TypeId) -> std::result::Result<Self, Self::Error> {
-        Ok(type_id.resolve_ref()?.1)
+        Ok(type_id.resolve_ref()?.0)
     }
 }

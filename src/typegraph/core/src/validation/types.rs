@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::global_store::Store;
-use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
+use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId};
 use crate::wit::core::TypeFunc;
 use crate::{errors, Result};
 
 impl TypeFunc {
     pub fn validate(&self) -> Result<()> {
-        if let Ok((_, inp_type)) = TypeId(self.inp).resolve_ref() {
+        if let Ok((inp_type, _)) = TypeId(self.inp).resolve_ref() {
             let TypeDef::Struct(_) = inp_type else {
                 return Err(errors::invalid_input_type(&inp_type.id().repr()?));
             };
@@ -165,9 +165,9 @@ pub(super) mod utils {
             Ok(true)
         } else {
             match left.resolve_ref() {
-                Ok((_, left_type)) => Ok(right
+                Ok((left_type, _)) => Ok(right
                     .resolve_ref()
-                    .map_or(left_type.id() == right, |(_, right_type)| {
+                    .map_or(left_type.id() == right, |(right_type, _)| {
                         left_type.id() == right_type.id()
                     })),
 

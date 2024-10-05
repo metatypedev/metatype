@@ -7,7 +7,7 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use crate::{typegraph::TypegraphContext, wit::runtimes as wit};
+use crate::{typegraph::TypegraphContext, types::ResolveRef as _, wit::runtimes as wit};
 use common::typegraph::runtimes::prisma as cm;
 use indexmap::{map::Entry, IndexMap, IndexSet};
 
@@ -233,7 +233,7 @@ impl PrismaContext {
             key: key.to_string(),
             cardinality: prop.quantifier.into(),
             type_idx: ctx
-                .register_type(prop.wrapper_type_id.resolve_ref()?.1, Some(runtime_idx))?
+                .register_type(prop.wrapper_type_id.resolve_ref()?.0, Some(runtime_idx))?
                 .into(),
             prop_type: prop.prop_type.clone(),
             injection: prop.injection.as_ref().map(|inj| cm::ManagedInjection {
@@ -267,7 +267,7 @@ impl PrismaContext {
             key: key.to_string(),
             cardinality: prop.quantifier.into(),
             type_idx: ctx
-                .register_type(prop.wrapper_type_id.resolve_ref()?.1, Some(runtime_idx))?
+                .register_type(prop.wrapper_type_id.resolve_ref()?.0, Some(runtime_idx))?
                 .into(),
             model_name: model.type_name.clone(),
             unique: prop.unique,
@@ -294,7 +294,7 @@ impl PrismaContext {
     ) -> Result<cm::Model> {
         Ok(cm::Model {
             type_idx: ctx
-                .register_type(type_id.resolve_ref()?.1, Some(runtime_idx))?
+                .register_type(type_id.resolve_ref()?.0, Some(runtime_idx))?
                 .into(),
             type_name: model.type_name.clone(),
             props: model
@@ -381,7 +381,7 @@ impl PrismaContext {
     ) -> Result<cm::RelationshipModel> {
         Ok(cm::RelationshipModel {
             type_idx: ctx
-                .register_type(model.model_type.resolve_ref()?.1, Some(runtime_idx))?
+                .register_type(model.model_type.resolve_ref()?.0, Some(runtime_idx))?
                 .into(),
             field: model.field.clone(),
             cardinality: model.cardinality.into(),

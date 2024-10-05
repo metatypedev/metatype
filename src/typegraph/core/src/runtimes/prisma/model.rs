@@ -9,8 +9,7 @@ use std::hash::Hash;
 use crate::errors::Result;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::type_utils::RuntimeConfig;
-use crate::types::type_ref::RefData;
-use crate::types::{TypeDef, TypeDefExt};
+use crate::types::{RefAttrs, ResolveRef as _, TypeDef, TypeDefExt};
 use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
@@ -90,12 +89,10 @@ pub struct RelationshipAttributes {
 }
 
 impl RelationshipAttributes {
-    pub fn new(ref_data: Option<&RefData>) -> Result<Self> {
-        let Some(ref_data) = ref_data else {
+    pub fn new(attrs: &RefAttrs) -> Result<Self> {
+        let Some(attrs) = &attrs.0 else {
             return Ok(Self::default());
         };
-
-        let attrs = &ref_data.attributes;
 
         Ok(Self {
             name: attrs.get("rel_name").cloned(),
@@ -126,7 +123,7 @@ pub struct RelationshipProperty {
 
 impl Property {
     fn new(wrapper_type_id: TypeId) -> Result<Self> {
-        let (ref_data, type_def) = wrapper_type_id.resolve_ref()?;
+        let (type_def, ref_data) = wrapper_type_id.resolve_ref()?;
         let runtime_config = RuntimeConfig::new(type_def.base().runtime_config.as_ref());
         let unique = if matches!(type_def, TypeDef::Struct(_)) {
             // the unique config is used to specify struct-level unique constraints on structs
@@ -146,10 +143,10 @@ impl Property {
 
         let (inner_type_def, card) = match &type_def {
             TypeDef::Optional(ref inner) => (
-                TypeId(inner.data.of).resolve_ref()?.1,
+                TypeId(inner.data.of).resolve_ref()?.0,
                 Cardinality::Optional,
             ),
-            TypeDef::List(inner) => (TypeId(inner.data.of).resolve_ref()?.1, Cardinality::Many),
+            TypeDef::List(inner) => (TypeId(inner.data.of).resolve_ref()?.0, Cardinality::Many),
             _ => (type_def.clone(), Cardinality::One),
         };
 
@@ -183,7 +180,7 @@ impl Property {
                         wrapper_type_id,
                         model_id: inner_type_def.id(),
                         quantifier: card,
-                        relationship_attributes: RelationshipAttributes::new(ref_data.as_ref())?,
+                        relationship_attributes: RelationshipAttributes::new(&ref_data)?,
                         unique,
                     }))
                 }

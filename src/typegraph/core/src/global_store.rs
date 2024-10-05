@@ -6,7 +6,7 @@ use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
 use crate::types::type_ref::TypeRef;
-use crate::types::{Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
+use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
@@ -257,7 +257,7 @@ impl Store {
     }
 
     pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
-        let (_, supertype) = supertype_id.resolve_ref()?;
+        let supertype = supertype_id.resolve_ref()?.0;
         let supertype = &supertype;
         let filter_and_reduce = |variants: Vec<u32>| match path.len() {
             0 => Ok((Type::Def(supertype.clone()), supertype_id)), // terminal node
@@ -267,7 +267,7 @@ impl Store {
                 let chunk = path.first().unwrap();
                 for (i, variant) in variants.iter().enumerate() {
                     let variant: TypeId = variant.into();
-                    let (_, type_def) = variant.resolve_ref()?;
+                    let type_def = variant.resolve_ref()?.0;
                     match type_def {
                         TypeDef::Struct(t) => {
                             for (prop_name, prop_id) in t.iter_props() {
@@ -339,7 +339,7 @@ impl Store {
 
         let mut curr_path = vec![];
         for (pos, chunk) in path.iter().enumerate() {
-            let (_, type_def) = ret.1.resolve_ref()?;
+            let type_def = ret.1.resolve_ref()?.0;
             let type_def = type_def.resolve_quantifier()?;
             match &type_def {
                 TypeDef::Struct(t) => {
@@ -545,9 +545,10 @@ macro_rules! as_variant {
     ($variant:ident) => {
         paste::paste! {
             pub fn [<as_ $variant:lower>](&self) -> Result<Rc<crate::types::[<$variant>]>> {
+                use crate::types::type_ref::ResolveRef;
                 match self.as_type()? {
                     Type::Def(TypeDef::$variant(inner)) => Ok(inner),
-                    Type::Ref(type_ref) => type_ref.try_resolve()?.id().[<as_ $variant:lower>](),
+                    Type::Ref(type_ref) => type_ref.resolve_ref()?.0.id().[<as_ $variant:lower>](),
                     _ => Err(errors::invalid_type(stringify!($variant), &self.repr()?)),
                 }
             }

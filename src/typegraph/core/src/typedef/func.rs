@@ -13,7 +13,7 @@ use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::{self, Result, TgError};
 use crate::params::apply::ParameterTransformNode;
 use crate::typegraph::TypegraphContext;
-use crate::types::{Func, TypeDef, TypeDefData, TypeId};
+use crate::types::{Func, ResolveRef as _, TypeDef, TypeDefData, TypeId};
 use crate::wit::core::TypeFunc;
 
 impl TypeConversion for Func {
@@ -22,14 +22,14 @@ impl TypeConversion for Func {
 
         let input = {
             let inp_id = TypeId(self.data.inp);
-            match TypeId(self.data.inp).resolve_ref()?.1 {
+            match TypeId(self.data.inp).resolve_ref()?.0 {
                 TypeDef::Struct(_) => Ok(ctx.register_type(inp_id.try_into()?, Some(runtime_id))?),
                 _ => Err(errors::invalid_input_type(&inp_id.repr()?)),
             }
         }?
         .into();
 
-        let out_type = TypeId(self.data.out).resolve_ref()?.1;
+        let out_type = TypeId(self.data.out).resolve_ref()?.0;
         let output = ctx.register_type(out_type, Some(runtime_id))?.into();
 
         let parameter_transform = self
@@ -45,7 +45,7 @@ impl TypeConversion for Func {
 
                 let transform_root = convert_tree(ctx, &transform_root, runtime_id)?;
                 Ok(FunctionParameterTransform {
-                    resolver_input: match resolver_input.resolve_ref()?.1 {
+                    resolver_input: match resolver_input.resolve_ref()?.0 {
                         TypeDef::Struct(_) => {
                             ctx.register_type(resolver_input.try_into()?, Some(runtime_id))?
                         }

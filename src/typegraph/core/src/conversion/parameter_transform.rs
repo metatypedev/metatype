@@ -7,6 +7,7 @@ use crate::errors::Result;
 use crate::errors::TgError;
 use crate::t;
 use crate::t::TypeBuilder;
+use crate::types::ResolveRef as _;
 use crate::types::TypeId;
 use crate::{params::apply::*, typegraph::TypegraphContext};
 use common::typegraph::parameter_transform as cm;
@@ -32,7 +33,7 @@ fn convert_node(
     runtime_id: u32,
 ) -> Result<cm::ParameterTransformNode> {
     let type_idx = ctx
-        .register_type(TypeId(node.type_id).resolve_ref()?.1, Some(runtime_id))?
+        .register_type(TypeId(node.type_id).resolve_ref()?.0, Some(runtime_id))?
         .0;
     match &node.data {
         ParameterTransformNodeData::Leaf(leaf_node) => {
@@ -76,7 +77,7 @@ fn convert_leaf_node(
         }
         ParameterTransformLeafNode::Parent { type_name } => {
             let type_ref = t::ref_(type_name).build()?;
-            let (_, type_def) = type_ref.resolve_ref()?;
+            let (type_def, _) = type_ref.resolve_ref()?;
             let parent_idx = ctx.register_type(type_def, Some(runtime_id))?.0;
             Ok(cm::ParameterTransformLeafNode::Parent { parent_idx })
         }
