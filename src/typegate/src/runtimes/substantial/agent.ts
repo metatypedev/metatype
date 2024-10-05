@@ -45,19 +45,7 @@ export class Agent {
   ) {}
 
   async schedule(input: AddScheduleInput) {
-    // FIXME:
-    // This function is triggered by the user (start, event, stop)
-    // Using async rust in here can be tricky, one issue for example is that
-    // concurrent calls fail silently without panics or even exceptions on the Redis Backend
-    // mutation {
-    //   one: start(..) # calls schedule(..)
-    //    ..
-    //   tenth: start(..) # calls schedule(..)
-    // }
-
     await Meta.substantial.storeAddSchedule(input);
-    // This delay is completely unrelated to the rust side and solves the issue
-    await sleep(100);
   }
 
   async log(runId: string, schedule: string, content: unknown) {
