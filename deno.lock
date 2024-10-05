@@ -6,9 +6,8 @@
       "jsr:@david/which@^0.4.1": "jsr:@david/which@0.4.1",
       "jsr:@std/archive@^0.225.0": "jsr:@std/archive@0.225.1",
       "jsr:@std/assert@^0.221.0": "jsr:@std/assert@0.221.0",
-      "jsr:@std/assert@^1.0.2": "jsr:@std/assert@1.0.3",
-      "jsr:@std/assert@^1.0.3": "jsr:@std/assert@1.0.3",
-      "jsr:@std/async@^1.0.3": "jsr:@std/async@1.0.3",
+      "jsr:@std/assert@^1.0.2": "jsr:@std/assert@1.0.4",
+      "jsr:@std/assert@^1.0.4": "jsr:@std/assert@1.0.4",
       "jsr:@std/bytes@^0.221.0": "jsr:@std/bytes@0.221.0",
       "jsr:@std/bytes@^1.0.2": "jsr:@std/bytes@1.0.2",
       "jsr:@std/bytes@^1.0.2-rc.3": "jsr:@std/bytes@1.0.2",
@@ -25,10 +24,11 @@
       "jsr:@std/fs@0.221.0": "jsr:@std/fs@0.221.0",
       "jsr:@std/fs@^1.0.0-rc.5": "jsr:@std/fs@1.0.1",
       "jsr:@std/fs@^1.0.1": "jsr:@std/fs@1.0.2",
-      "jsr:@std/fs@^1.0.2": "jsr:@std/fs@1.0.2",
+      "jsr:@std/fs@^1.0.2": "jsr:@std/fs@1.0.3",
+      "jsr:@std/fs@^1.0.3": "jsr:@std/fs@1.0.3",
       "jsr:@std/http@^1.0.3": "jsr:@std/http@1.0.4",
       "jsr:@std/internal@^1.0.1": "jsr:@std/internal@1.0.1",
-      "jsr:@std/internal@^1.0.2": "jsr:@std/internal@1.0.2",
+      "jsr:@std/internal@^1.0.3": "jsr:@std/internal@1.0.3",
       "jsr:@std/io@0.221.0": "jsr:@std/io@0.221.0",
       "jsr:@std/io@^0.221.0": "jsr:@std/io@0.221.0",
       "jsr:@std/io@^0.224.3": "jsr:@std/io@0.224.5",
@@ -38,23 +38,22 @@
       "jsr:@std/log@^0.224.5": "jsr:@std/log@0.224.6",
       "jsr:@std/path@0.221.0": "jsr:@std/path@0.221.0",
       "jsr:@std/path@^0.221.0": "jsr:@std/path@0.221.0",
-      "jsr:@std/path@^1.0.2": "jsr:@std/path@1.0.3",
-      "jsr:@std/path@^1.0.3": "jsr:@std/path@1.0.3",
+      "jsr:@std/path@^1.0.2": "jsr:@std/path@1.0.4",
+      "jsr:@std/path@^1.0.3": "jsr:@std/path@1.0.4",
+      "jsr:@std/path@^1.0.4": "jsr:@std/path@1.0.4",
       "jsr:@std/semver@^1.0.1": "jsr:@std/semver@1.0.2",
       "jsr:@std/streams@0.221.0": "jsr:@std/streams@0.221.0",
-      "jsr:@std/streams@1": "jsr:@std/streams@1.0.3",
-      "jsr:@std/streams@^1.0.2": "jsr:@std/streams@1.0.3",
-      "jsr:@std/testing@^1.0.1": "jsr:@std/testing@1.0.1",
+      "jsr:@std/streams@1": "jsr:@std/streams@1.0.4",
+      "jsr:@std/testing@^1.0.1": "jsr:@std/testing@1.0.2",
       "jsr:@std/url@^0.225.0": "jsr:@std/url@0.225.0",
       "jsr:@std/uuid@^1.0.1": "jsr:@std/uuid@1.0.2",
-      "jsr:@std/yaml@^1.0.4": "jsr:@std/yaml@1.0.4",
+      "jsr:@std/yaml@^1.0.4": "jsr:@std/yaml@1.0.5",
       "jsr:@typegraph/sdk@0.4.10-rc1": "jsr:@typegraph/sdk@0.4.10-rc1",
       "npm:@noble/hashes@1.4.0": "npm:@noble/hashes@1.4.0",
       "npm:@sentry/node@7.70.0": "npm:@sentry/node@7.70.0",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:chance@1.1.11": "npm:chance@1.1.11",
       "npm:graphql@16.8.1": "npm:graphql@16.8.1",
-      "npm:json-schema-faker@0.5.3": "npm:json-schema-faker@0.5.3",
       "npm:lodash@4.17.21": "npm:lodash@4.17.21",
       "npm:mathjs@11.11.1": "npm:mathjs@11.11.1",
       "npm:multiformats@13.1.0": "npm:multiformats@13.1.0",
@@ -99,14 +98,11 @@
           "jsr:@std/internal@^1.0.1"
         ]
       },
-      "@std/assert@1.0.3": {
-        "integrity": "b0d03ce1ced880df67132eea140623010d415848df66f6aa5df76507ca7c26d8",
+      "@std/assert@1.0.4": {
+        "integrity": "d4c767ea578e5bc09c15b6e503376003e5b2d1f4c0cdf08524a92101ff4d7b96",
         "dependencies": [
-          "jsr:@std/internal@^1.0.2"
+          "jsr:@std/internal@^1.0.3"
         ]
-      },
-      "@std/async@1.0.3": {
-        "integrity": "6ed64678db43451683c6c176a21426a2ccd21ba0269ebb2c36133ede3f165792"
       },
       "@std/bytes@0.221.0": {
         "integrity": "64a047011cf833890a4a2ab7293ac55a1b4f5a050624ebc6a0159c357de91966"
@@ -163,6 +159,12 @@
           "jsr:@std/path@^1.0.3"
         ]
       },
+      "@std/fs@1.0.3": {
+        "integrity": "3cb839b1360b0a42d8b367c3093bfe4071798e6694fa44cf1963e04a8edba4fe",
+        "dependencies": [
+          "jsr:@std/path@^1.0.4"
+        ]
+      },
       "@std/http@1.0.3": {
         "integrity": "bff3770c4df4711567de1711fe988d28db9535be0c9b0f1d2de8d0fb97e8b44c",
         "dependencies": [
@@ -181,8 +183,8 @@
       "@std/internal@1.0.1": {
         "integrity": "6f8c7544d06a11dd256c8d6ba54b11ed870aac6c5aeafff499892662c57673e6"
       },
-      "@std/internal@1.0.2": {
-        "integrity": "f4cabe2021352e8bfc24e6569700df87bf070914fc38d4b23eddd20108ac4495"
+      "@std/internal@1.0.3": {
+        "integrity": "208e9b94a3d5649bd880e9ca38b885ab7651ab5b5303a56ed25de4755fb7b11e"
       },
       "@std/io@0.221.0": {
         "integrity": "faf7f8700d46ab527fa05cc6167f4b97701a06c413024431c6b4d207caa010da",
@@ -226,6 +228,9 @@
       "@std/path@1.0.3": {
         "integrity": "cd89d014ce7eb3742f2147b990f6753ee51d95276bfc211bc50c860c1bc7df6f"
       },
+      "@std/path@1.0.4": {
+        "integrity": "48dd5d8389bcfcd619338a01bdf862cb7799933390146a54ae59356a0acc7105"
+      },
       "@std/semver@1.0.1": {
         "integrity": "f0c9b41b70e27e8cdfe9252b486c55a727d66ead72625e0fa1aae75f45ca15e1"
       },
@@ -244,19 +249,19 @@
           "jsr:@std/bytes@^1.0.2-rc.3"
         ]
       },
-      "@std/streams@1.0.3": {
-        "integrity": "d62e645ab981cee2c3d03040eb03cf387fc6bceef6d4564f3ed485a43741a81f",
+      "@std/streams@1.0.4": {
+        "integrity": "a1a5b01c74ca1d2dcaacfe1d4bbb91392e765946d82a3471bd95539adc6da83a",
         "dependencies": [
           "jsr:@std/bytes@^1.0.2"
         ]
       },
-      "@std/testing@1.0.1": {
-        "integrity": "9c25841137ee818933e1722091bb9ed5fdc251c35e84c97979a52196bdb6c5c3",
+      "@std/testing@1.0.2": {
+        "integrity": "9e8a7f4e26c219addabe7942d09c3450fa0a74e9662341961bc0ef502274dec3",
         "dependencies": [
-          "jsr:@std/assert@^1.0.3",
-          "jsr:@std/fs@^1.0.2",
-          "jsr:@std/internal@^1.0.2",
-          "jsr:@std/path@^1.0.3"
+          "jsr:@std/assert@^1.0.4",
+          "jsr:@std/fs@^1.0.3",
+          "jsr:@std/internal@^1.0.3",
+          "jsr:@std/path@^1.0.4"
         ]
       },
       "@std/url@0.225.0": {
@@ -279,8 +284,8 @@
           "jsr:@std/crypto@^1.0.3"
         ]
       },
-      "@std/yaml@1.0.4": {
-        "integrity": "f1e38fa5e110ff8550e938715e52c33347676dd00a1db858e092dd21a9df9941"
+      "@std/yaml@1.0.5": {
+        "integrity": "71ba3d334305ee2149391931508b2c293a8490f94a337eef3a09cade1a2a2742"
       },
       "@typegraph/sdk@0.4.10-rc1": {
         "integrity": "e9cbe5d456e6caa022e06a2d907cc64d3722220d01d22bb402a790052e069178"
@@ -348,16 +353,6 @@
           "debug": "debug@4.3.6"
         }
       },
-      "argparse@1.0.10": {
-        "integrity": "sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==",
-        "dependencies": {
-          "sprintf-js": "sprintf-js@1.0.3"
-        }
-      },
-      "call-me-maybe@1.0.2": {
-        "integrity": "sha512-HpX65o1Hnr9HH25ojC1YGs7HCQLq0GCOibSaWER0eNpgJ/Z1MZv2mTc7+xh6WOPxbRVcmgbv4hGU+uSQ/2xFZQ==",
-        "dependencies": {}
-      },
       "chance@1.1.11": {
         "integrity": "sha512-kqTg3WWywappJPqtgrdvbA380VoXO2eu9VCV895JgbyHsaErXdyHK9LOZ911OvAk6L0obK7kDk9CGs8+oBawVA==",
         "dependencies": {}
@@ -384,14 +379,6 @@
         "integrity": "sha512-nV5aVWW1K0wEiUIEdZ4erkGGH8mDxGyxSeqPzRNtWP7ataw+/olFObw7hujFWlVjNsaDFw5VZ5NzVSIqRgfTiw==",
         "dependencies": {}
       },
-      "esprima@4.0.1": {
-        "integrity": "sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==",
-        "dependencies": {}
-      },
-      "format-util@1.0.5": {
-        "integrity": "sha512-varLbTj0e0yVyRpqQhuWV+8hlePAgaoFRhNFj50BNjEIrw1/DphHSObtqwskVCPWNgzwPoQrZAbfa/SBiicNeg==",
-        "dependencies": {}
-      },
       "fraction.js@4.3.4": {
         "integrity": "sha512-pwiTgt0Q7t+GHZA4yaLjObx4vXmmdcS0iSJ19o8d/goUGgItX9UZWKWNnLHehxviD8wU2IWRsnR8cD5+yOJP2Q==",
         "dependencies": {}
@@ -409,32 +396,6 @@
       },
       "javascript-natural-sort@0.7.1": {
         "integrity": "sha512-nO6jcEfZWQXDhOiBtG2KvKyEptz7RVbpGP4vTD2hLBdmNQSsCiicO2Ioinv6UI4y9ukqnBpy+XZ9H6uLNgJTlw==",
-        "dependencies": {}
-      },
-      "js-yaml@3.14.1": {
-        "integrity": "sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==",
-        "dependencies": {
-          "argparse": "argparse@1.0.10",
-          "esprima": "esprima@4.0.1"
-        }
-      },
-      "json-schema-faker@0.5.3": {
-        "integrity": "sha512-BeIrR0+YSrTbAR9dOMnjbFl1MvHyXnq+Wpdw1FpWZDHWKLzK229hZ5huyPcmzFUfVq1ODwf40WdGVoE266UBUg==",
-        "dependencies": {
-          "json-schema-ref-parser": "json-schema-ref-parser@6.1.0",
-          "jsonpath-plus": "jsonpath-plus@7.2.0"
-        }
-      },
-      "json-schema-ref-parser@6.1.0": {
-        "integrity": "sha512-pXe9H1m6IgIpXmE5JSb8epilNTGsmTb2iPohAXpOdhqGFbQjNeHHsZxU+C8w6T81GZxSPFLeUoqDJmzxx5IGuw==",
-        "dependencies": {
-          "call-me-maybe": "call-me-maybe@1.0.2",
-          "js-yaml": "js-yaml@3.14.1",
-          "ono": "ono@4.0.11"
-        }
-      },
-      "jsonpath-plus@7.2.0": {
-        "integrity": "sha512-zBfiUPM5nD0YZSBT/o/fbCUlCcepMIdP0CJZxM1+KgA4f2T206f6VAg9e7mX35+KlMaIc5qXW34f3BnwJ3w+RA==",
         "dependencies": {}
       },
       "lodash@4.17.21": {
@@ -466,12 +427,6 @@
       "multiformats@13.1.0": {
         "integrity": "sha512-HzdtdBwxsIkzpeXzhQ5mAhhuxcHbjEHH+JQoxt7hG/2HGFjjwyolLo7hbaexcnhoEuV4e0TNJ8kkpMjiEYY4VQ==",
         "dependencies": {}
-      },
-      "ono@4.0.11": {
-        "integrity": "sha512-jQ31cORBFE6td25deYeD80wxKBMj+zBmHTrVxnc6CKhx8gho6ipmWM5zj/oeoqioZ99yqBls9Z/9Nss7J26G2g==",
-        "dependencies": {
-          "format-util": "format-util@1.0.5"
-        }
       },
       "pg-cloudflare@1.1.1": {
         "integrity": "sha512-xWPagP/4B6BgFO+EKz3JONXv3YDgvkbVrGw2mTo3D6tVDQRh1e7cqVGvyR3BE+eQgAvx1XhW/iEASj4/jCWl3Q==",
@@ -550,10 +505,6 @@
       },
       "split2@4.2.0": {
         "integrity": "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==",
-        "dependencies": {}
-      },
-      "sprintf-js@1.0.3": {
-        "integrity": "sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==",
         "dependencies": {}
       },
       "tiny-emitter@2.1.0": {

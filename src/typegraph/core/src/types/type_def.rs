@@ -74,7 +74,6 @@ impl Default for TypeBase {
         Self {
             name: None,
             runtime_config: None,
-            as_id: false,
         }
     }
 }
@@ -271,7 +270,6 @@ impl Hashable for TypeBase {
     ) -> Result<()> {
         self.name.hash(hasher);
         self.runtime_config.hash(hasher);
-        self.as_id.hash(hasher);
 
         Ok(())
     }

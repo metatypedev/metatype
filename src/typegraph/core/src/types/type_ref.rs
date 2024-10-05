@@ -9,8 +9,10 @@ use crate::types::{TypeDef, TypeDefExt as _, TypeId};
 
 use super::Type;
 
+mod as_id;
 mod resolve_ref;
 
+pub use as_id::{AsId, IdKind};
 pub use resolve_ref::ResolveRef;
 
 #[derive(Clone, Debug)]
@@ -46,6 +48,13 @@ impl From<HashMap<String, String>> for RefAttrs {
 impl RefAttrs {
     pub fn iter(&self) -> impl Iterator<Item = (&'_ String, &'_ String)> {
         self.0.iter().flat_map(|it| it.iter())
+    }
+
+    pub fn get(&self, key: &str) -> Option<&str> {
+        self.0
+            .as_ref()
+            .and_then(|it| it.get(key))
+            .map(|it| it.as_str())
     }
 }
 
@@ -98,14 +107,18 @@ impl TypeRefBuilder {
 }
 
 impl TypeRef {
-    pub fn new(target: TypeId, attributes: Vec<(String, String)>) -> Result<TypeRef> {
-        match target.as_type()? {
+    pub fn new(
+        target: Type,
+        attributes: impl IntoIterator<Item = (String, String)>,
+    ) -> Result<TypeRef> {
+        match target {
             Type::Ref(type_ref) => {
                 let attributes = type_ref.attributes.merge(attributes.into_iter());
                 Store::register_type_ref(attributes.with_target(type_ref.target))
             }
             Type::Def(type_def) => Store::register_type_ref(
-                RefAttrs::from(attributes).with_target(RefTarget::Direct(type_def)),
+                RefAttrs::from(attributes.into_iter().collect::<HashMap<_, _>>())
+                    .with_target(RefTarget::Direct(type_def)),
             ),
         }
     }
@@ -133,5 +146,9 @@ impl TypeRef {
                 format!("ref(#{} , target_name: '{}'{attrs})", self.id.0, name)
             }
         }
+    }
+
+    pub fn attrs(&self) -> &RefAttrsInner {
+        self.attributes.0.as_ref().unwrap()
     }
 }

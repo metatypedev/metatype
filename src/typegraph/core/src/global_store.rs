@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::errors::{self, Result};
+use crate::errors::{self, Result, TgError};
 use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
@@ -554,6 +554,14 @@ macro_rules! as_variant {
             }
         }
     };
+}
+
+impl TryFrom<TypeId> for Type {
+    type Error = TgError;
+
+    fn try_from(type_id: TypeId) -> Result<Self> {
+        type_id.as_type()
+    }
 }
 
 impl TypeId {

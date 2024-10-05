@@ -41,7 +41,6 @@ impl TypeConversion for StringT {
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
             .inject(self.extended_base.injection.clone())?
-            .id(self.base.as_id)
             .build()?,
             data: StringTypeData {
                 min_length: self.data.min,

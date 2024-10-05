@@ -43,7 +43,6 @@ pub struct BaseBuilder<'a> {
     // optional features
     enumeration: Option<Vec<String>>,
     injection: Option<Injection>,
-    as_id: bool,
 }
 
 impl<'a, 'b> BaseBuilderInit<'a, 'b> {
@@ -70,7 +69,6 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
 
             enumeration: None,
             injection: None,
-            as_id: false,
         })
     }
 }
@@ -91,7 +89,6 @@ impl<'a> BaseBuilder<'a> {
             policies: self.policies,
             runtime: self.runtime_idx,
             title: self.name,
-            as_id: self.as_id,
         })
     }
 
@@ -119,10 +116,5 @@ impl<'a> BaseBuilder<'a> {
     pub fn inject(mut self, injection: Option<Box<Injection>>) -> Result<Self> {
         self.injection = injection.map(|i| self.convert_injection(*i)).transpose()?;
         Ok(self)
-    }
-
-    pub fn id(mut self, b: bool) -> Self {
-        self.as_id = b;
-        self
     }
 }

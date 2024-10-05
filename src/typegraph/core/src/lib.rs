@@ -25,6 +25,7 @@ use indoc::formatdoc;
 use params::apply;
 use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
+use types::type_ref::AsId;
 use types::{
     Boolean, Either, File, Float, Func, Integer, List, Optional, StringT, Struct, TypeBoolean,
     TypeDef, TypeDefExt, TypeId, TypeRef, Union,
@@ -157,6 +158,10 @@ impl wit::core::Guest for Lib {
             NameRegistration(true),
         )?
         .into())
+    }
+
+    fn as_id(type_id: CoreTypeId, composite: bool) -> Result<CoreTypeId> {
+        TypeId(type_id).as_type()?.as_id(composite).map(|t| t.id.0)
     }
 
     fn fileb(data: TypeFile, base: TypeBase) -> Result<CoreTypeId> {

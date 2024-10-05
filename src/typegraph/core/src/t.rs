@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
+use crate::errors::TgError;
 use crate::global_store::{NameRegistration, Store};
-use crate::types::{ExtendedTypeBase, TypeDefExt, TypeId};
+use crate::types::{ExtendedTypeBase, TypeDefExt, TypeId, TypeRef};
 use crate::wit::core::{
     Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
     TypeString, TypeStruct, TypeUnion,
@@ -14,6 +15,12 @@ pub trait TypeBuilder {
 
     fn optional(&self) -> Result<OptionalBuilder> {
         Ok(optional(self.build()?))
+    }
+
+    #[cfg(test)]
+    fn as_id(&self) -> Result<TypeRef> {
+        use crate::types::type_ref::AsId;
+        self.build()?.as_id(false)
     }
 }
 
@@ -32,6 +39,21 @@ impl TypeBuilder for TypeId {
     }
 }
 
+impl TypeBuilder for TypeRef {
+    fn build(&self) -> Result<TypeId> {
+        Ok(self.id)
+    }
+}
+
+impl<T> TypeBuilder for Result<T>
+where
+    T: TypeBuilder,
+{
+    fn build(&self) -> Result<TypeId, TgError> {
+        self.as_ref().map_err(|e| e.clone())?.build()
+    }
+}
+
 #[allow(unused)]
 pub trait ConcreteTypeBuilder: TypeBuilder {
     fn base_mut(&mut self) -> &mut TypeBase;
@@ -39,11 +61,6 @@ pub trait ConcreteTypeBuilder: TypeBuilder {
 
     fn named(&mut self, name: impl Into<String>) -> &mut Self {
         self.base_mut().name = Some(name.into());
-        self
-    }
-
-    fn as_id(&mut self, as_id: bool) -> &mut Self {
-        self.base_mut().as_id = as_id;
         self
     }
 

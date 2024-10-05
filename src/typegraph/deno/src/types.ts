@@ -53,12 +53,13 @@ export type SimplifiedBase<T> =
   & { config?: Record<string, unknown> }
   & Omit<
     T,
-    "runtimeConfig" | "asId"
+    "runtimeConfig"
   >;
 
 export type AsId = {
-  asId?: true;
+  asId?: AsIdField;
 };
+type AsIdField = boolean | "simple" | "composite";
 
 export type SimplifiedNumericData<T> =
   & { enumeration?: number[] }
@@ -240,14 +241,13 @@ export function integer(
   };
   const completeBase = {
     ...base,
-    asId: base.asId ?? false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
-  return new Integer(
-    core.integerb(completeData, completeBase),
-    completeData,
-    completeBase,
-  );
+  let id = core.integerb(completeData, completeBase);
+  if (base.asId) {
+    id = core.asId(id, base.asId === "composite");
+  }
+  return new Integer(id, completeData, completeBase);
 }
 
 class Float extends Typedef implements Readonly<TypeFloat> {
@@ -316,10 +316,13 @@ export function string(
 ): StringT {
   const completeBase = {
     ...base,
-    asId: base.asId ?? false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
-  return new StringT(core.stringb(data, completeBase), data, completeBase);
+  let id = core.stringb(data, completeBase);
+  if (base.asId) {
+    id = core.asId(id, base.asId === "composite");
+  }
+  return new StringT(id, data, completeBase);
 }
 
 /** uuid type */
@@ -401,7 +404,6 @@ export function file(
 ): File {
   const completeBase = {
     ...base,
-    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new File(core.fileb(data, completeBase), data, completeBase);
@@ -434,7 +436,6 @@ export function list(
   } as TypeList;
   const completeBase = {
     ...base,
-    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new List(
@@ -468,7 +469,6 @@ export function optional(
   } as TypeOptional;
   const completeBase = {
     ...base,
-    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Optional(
@@ -497,7 +497,6 @@ export function union(
   };
   const completeBase = {
     ...base,
-    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Union(core.unionb(data, completeBase), data, completeBase);
@@ -522,7 +521,6 @@ export function either(
   };
   const completeBase = {
     ...base,
-    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Either(core.eitherb(data, completeBase), data, completeBase);
@@ -543,7 +541,6 @@ export function struct<P extends { [key: string]: Typedef }>(
 ): Struct<P> {
   const completeBase = {
     ...base,
-    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Struct(

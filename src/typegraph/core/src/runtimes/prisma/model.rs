@@ -13,7 +13,7 @@ use crate::types::{RefAttrs, ResolveRef as _, TypeDef, TypeDefExt};
 use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
-use super::constraints::{find_id_fields, get_struct_level_unique_constraints};
+use super::constraints::get_struct_level_unique_constraints;
 
 #[derive(Debug)]
 pub struct Model {
@@ -43,7 +43,18 @@ impl TryFrom<TypeId> for Model {
 
         let config = RuntimeConfig::new(typ.base().runtime_config.as_ref());
 
-        let id_fields = find_id_fields(&type_name, &props, &config)?;
+        let id_fields = typ.data.find_id_fields()?;
+        let id_fields = match id_fields.len() {
+            0 => {
+                let id_fields = config.get("id")?;
+                match id_fields {
+                    Some(id_fields) => id_fields,
+                    None => return Err(errors::id_field_not_found(&type_name)),
+                }
+            }
+            _ => id_fields,
+        };
+
         let unique_constraints = get_struct_level_unique_constraints(&type_name, &config)?;
 
         Ok(Self {
@@ -332,7 +343,7 @@ mod test {
     #[test]
     fn test_injection() -> Result<()> {
         let type1 = t::struct_()
-            .propx("one", t::string().as_id(true))?
+            .propx("one", t::string().as_id()?)?
             .propx("two", t::string().set_value("Hello".to_string()))?
             .named("A")
             .build()?;

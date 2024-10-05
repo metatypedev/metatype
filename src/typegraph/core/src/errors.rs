@@ -1,9 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::convert::Infallible;
+
 pub use crate::wit::core::Error as TgError;
 
 pub type Result<T, E = TgError> = std::result::Result<T, E>;
+
+impl From<Infallible> for TgError {
+    fn from(_: Infallible) -> Self {
+        unreachable!()
+    }
+}
 
 impl From<String> for TgError {
     fn from(s: String) -> Self {

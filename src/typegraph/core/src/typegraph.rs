@@ -132,10 +132,10 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             policies: Default::default(),
             runtime: default_runtime_idx,
             title: params.name,
-            as_id: false,
         },
         data: ObjectTypeData {
             properties: IndexMap::new(),
+            id: vec![],
             required: vec![],
         },
     }));

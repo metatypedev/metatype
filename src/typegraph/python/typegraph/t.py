@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json as JsonLib
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, Literal
 import copy
 
 from typing_extensions import Self
@@ -173,6 +173,9 @@ class _TypeWrapper(typedef):
         return getattr(self.base, name)
 
 
+AsId = Union[bool, Literal["simple", "composite"]]
+
+
 class integer(typedef):
     min: Optional[int] = None
     max: Optional[int] = None
@@ -180,7 +183,7 @@ class integer(typedef):
     exclusive_maximum: Optional[int] = None
     multiple_of: Optional[int] = None
     enumeration: Optional[List[int]] = None
-    as_id: bool
+    as_id: AsId
 
     def __init__(
         self,
@@ -193,7 +196,7 @@ class integer(typedef):
         enum: Optional[List[int]] = None,
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
-        as_id: bool = False,
+        as_id: AsId = False,
     ):
         data = TypeInteger(
             min=min,
@@ -204,14 +207,17 @@ class integer(typedef):
             enumeration=enum,
         )
         runtime_config = serialize_config(config)
-        # raise Exception(runtime_config)
         res = core.integerb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, as_id=as_id),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
+        if as_id:
+            res = core.as_id(store, res.value, as_id == "composite")
+            if isinstance(res, Err):
+                raise Exception(res.value)
         super().__init__(res.value)
         self.min = min
         self.max = max
@@ -255,7 +261,7 @@ class float(typedef):
         res = core.floatb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, as_id=False),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -274,9 +280,7 @@ class boolean(typedef):
         self, *, name: Optional[str] = None, config: Optional[ConfigSpec] = None
     ):
         runtime_config = serialize_config(config)
-        res = core.booleanb(
-            store, TypeBase(name=name, runtime_config=runtime_config, as_id=False)
-        )
+        res = core.booleanb(store, TypeBase(name=name, runtime_config=runtime_config))
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -289,7 +293,7 @@ class string(typedef):
     pattern: Optional[str] = None
     format: Optional[str] = None
     enumeration: Optional[List[str]] = None
-    as_id: bool
+    as_id: AsId = None
 
     def __init__(
         self,
@@ -301,7 +305,7 @@ class string(typedef):
         enum: Optional[List[str]] = None,
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
-        as_id: bool = False,
+        as_id: AsId = None,
     ):
         enum_variants = None
         if enum is not None:
@@ -315,10 +319,14 @@ class string(typedef):
         res = core.stringb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, as_id=as_id),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
+        if as_id:
+            res = core.as_id(store, res.value, as_id == "composite")
+            if isinstance(res, Err):
+                raise Exception(res.value)
         super().__init__(res.value)
         self.min = min
         self.max = max
@@ -401,7 +409,7 @@ class file(typedef):
         res = core.fileb(
             store,
             data,
-            TypeBase(name=None, runtime_config=runtime_config, as_id=False),
+            TypeBase(name=None, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -438,7 +446,7 @@ class list(typedef):
         res = core.listb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, as_id=False),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -470,7 +478,7 @@ class optional(typedef):
         res = core.optionalb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, as_id=False),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -495,7 +503,7 @@ class union(typedef):
         res = core.unionb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, as_id=False),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -519,7 +527,7 @@ class either(typedef):
         res = core.eitherb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, as_id=False),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -598,7 +606,7 @@ class struct(typedef):
         res = core.structb(
             store,
             data,
-            base=TypeBase(name=name, runtime_config=runtime_config, as_id=False),
+            base=TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)

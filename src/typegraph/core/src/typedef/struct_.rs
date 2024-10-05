@@ -15,7 +15,7 @@ use crate::{
     errors,
     global_store::Store,
     typegraph::TypegraphContext,
-    types::{Struct, TypeDefData, TypeId},
+    types::{IdKind, Struct, Type, TypeDefData, TypeId},
     wit::core::TypeStruct,
 };
 
@@ -27,6 +27,43 @@ impl TypeStruct {
             .map(|(_, v)| *v)
             .next()
             .map(|id| id.into())
+    }
+
+    pub fn find_id_fields(&self) -> Result<Vec<String>> {
+        let mut res = Vec::new();
+        let mut kind = None;
+        for (name, type_id) in &self.props {
+            if let Type::Ref(type_ref) = TypeId(*type_id).as_type()? {
+                match kind {
+                    None => match type_ref.id_kind()? {
+                        Some(IdKind::Simple) => {
+                            res.push(name.clone());
+                            kind = Some(IdKind::Simple);
+                        }
+                        Some(IdKind::Composite) => {
+                            res.push(name.clone());
+                            kind = Some(IdKind::Composite);
+                        }
+                        None => {}
+                    },
+                    Some(IdKind::Simple) => {
+                        if type_ref.id_kind()?.is_some() {
+                            return Err("Multiple id fields found".into());
+                        }
+                    }
+                    Some(IdKind::Composite) => match type_ref.id_kind()? {
+                        Some(IdKind::Simple) => {
+                            return Err("Inconsistent id fields".into());
+                        }
+                        Some(IdKind::Composite) => {
+                            res.push(name.clone());
+                        }
+                        None => {}
+                    },
+                }
+            }
+        }
+        Ok(res)
     }
 }
 
@@ -61,6 +98,7 @@ impl TypeConversion for Struct {
                         ))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
+                id: self.data.find_id_fields()?,
                 required: Vec::new(),
             },
         })
