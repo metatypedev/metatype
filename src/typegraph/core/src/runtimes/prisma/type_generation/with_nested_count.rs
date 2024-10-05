@@ -65,7 +65,6 @@ impl TypeGen for WithNestedCount {
                         }
 
                         Cardinality::One => {
-                            // builder.prop(key, remove_injections_recursive(prop.model_id)?);
                             builder.prop(key, prop.model_id);
                         }
                     }
@@ -73,7 +72,6 @@ impl TypeGen for WithNestedCount {
 
                 Property::Scalar(prop) => {
                     let type_id = prop.wrapper_type_id.resolve_ref()?.0.id();
-                    // builder.prop(key, remove_injection(type_id)?);
                     builder.prop(key, type_id);
                 }
 

@@ -654,8 +654,6 @@ interface utils {
     gql-deploy-query: func(params: query-deploy-params) -> result<string, error>;
     gql-remove-query: func(tg-name: list<string>) -> result<string, error>;
 
-    remove-injections: func(type-id: type-id) -> result<type-id, error>;
-
     record fdk-config {
         workspace-path: string,
         target-name: string,

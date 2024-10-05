@@ -20,14 +20,6 @@ pub enum RefTarget {
     Direct(TypeDef),
     Indirect(String),
 }
-// impl RefTarget {
-//     fn as_indirect(&self) -> Option<&str> {
-//         match self {
-//             RefTarget::Indirect(name) => Some(name),
-//             _ => None,
-//         }
-//     }
-// }
 
 // TODO: merge rules?
 #[derive(Clone, Debug, Default)]

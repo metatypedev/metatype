@@ -13,7 +13,6 @@ use serde_json::json;
 use self::oauth2::std::{named_provider, Oauth2Builder};
 use crate::errors::Result;
 use crate::global_store::{get_sdk_version, Store};
-// use crate::types::subgraph::Subgraph;
 use crate::types::TypeId;
 use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
 use crate::wit::utils::{Auth as WitAuth, FdkConfig, FdkOutput, QueryDeployParams};
@@ -260,11 +259,6 @@ impl crate::wit::utils::Guest for crate::Lib {
         Ok(req_body.to_string())
     }
 
-    fn remove_injections(id: CoreTypeId) -> Result<CoreTypeId> {
-        // remove_injections_recursive(id.into()).map(|id| id.into())
-        Ok(id)
-    }
-
     fn metagen_exec(config: FdkConfig) -> Result<Vec<FdkOutput>> {
         let gen_config: metagen::Config = serde_json::from_str(&config.config_json)
             .map_err(|e| format!("Load metagen config: {}", e))?;
@@ -303,27 +297,6 @@ impl crate::wit::utils::Guest for crate::Lib {
         Ok(())
     }
 }
-
-// pub fn remove_injection(type_id: TypeId) -> Result<TypeId> {
-//     let (_, type_def) = type_id.resolve_ref()?;
-//
-//     let x_base = type_def.x_base();
-//     if x_base.injection.is_none() {
-//         return Ok(type_id);
-//     }
-//
-//     let mut x_base = x_base.clone();
-//     x_base.injection = None;
-//
-//     Store::register_type_def(
-//         move |id| type_def.with_x_base(id, x_base),
-//         NameRegistration(false),
-//     )
-// }
-
-// pub fn remove_injections_recursive(type_id: TypeId) -> Result<TypeId> {
-//     Subgraph::new(type_id).map(remove_injection)
-// }
 
 pub fn clear_name(base: &TypeBase) -> TypeBase {
     TypeBase {

@@ -150,7 +150,3 @@ pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {
 pub fn duplicate_policy_name(name: &str) -> TgError {
     format!("duplicate policy name '{name}'").into()
 }
-
-// pub fn nested_type_ref(name: &str, nested: &str) -> TgError {
-//     format!("nested type reference is not allowed: -> '{name}' -> '{nested}'").into()
-// }
