@@ -147,16 +147,399 @@ impl ::protobuf::reflect::ProtobufValue for Start {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:substantial.protos.events.SaveResolved)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SaveResolved {
+    // message fields
+    // @@protoc_insertion_point(field:substantial.protos.events.SaveResolved.json_result)
+    pub json_result: ::std::string::String,
+    // special fields
+    // @@protoc_insertion_point(special_field:substantial.protos.events.SaveResolved.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SaveResolved {
+    fn default() -> &'a SaveResolved {
+        <SaveResolved as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SaveResolved {
+    pub fn new() -> SaveResolved {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "json_result",
+            |m: &SaveResolved| { &m.json_result },
+            |m: &mut SaveResolved| { &mut m.json_result },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SaveResolved>(
+            "SaveResolved",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SaveResolved {
+    const NAME: &'static str = "SaveResolved";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.json_result = is.read_string()?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if !self.json_result.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.json_result);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if !self.json_result.is_empty() {
+            os.write_string(1, &self.json_result)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SaveResolved {
+        SaveResolved::new()
+    }
+
+    fn clear(&mut self) {
+        self.json_result.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SaveResolved {
+        static instance: SaveResolved = SaveResolved {
+            json_result: ::std::string::String::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SaveResolved {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SaveResolved").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SaveResolved {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SaveResolved {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:substantial.protos.events.SaveRetry)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SaveRetry {
+    // message fields
+    // @@protoc_insertion_point(field:substantial.protos.events.SaveRetry.wait_until)
+    pub wait_until: ::protobuf::MessageField<::protobuf::well_known_types::timestamp::Timestamp>,
+    // @@protoc_insertion_point(field:substantial.protos.events.SaveRetry.counter)
+    pub counter: i32,
+    // special fields
+    // @@protoc_insertion_point(special_field:substantial.protos.events.SaveRetry.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SaveRetry {
+    fn default() -> &'a SaveRetry {
+        <SaveRetry as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SaveRetry {
+    pub fn new() -> SaveRetry {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, ::protobuf::well_known_types::timestamp::Timestamp>(
+            "wait_until",
+            |m: &SaveRetry| { &m.wait_until },
+            |m: &mut SaveRetry| { &mut m.wait_until },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "counter",
+            |m: &SaveRetry| { &m.counter },
+            |m: &mut SaveRetry| { &mut m.counter },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SaveRetry>(
+            "SaveRetry",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SaveRetry {
+    const NAME: &'static str = "SaveRetry";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.wait_until)?;
+                },
+                16 => {
+                    self.counter = is.read_int32()?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.wait_until.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        if self.counter != 0 {
+            my_size += ::protobuf::rt::int32_size(2, self.counter);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.wait_until.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        if self.counter != 0 {
+            os.write_int32(2, self.counter)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SaveRetry {
+        SaveRetry::new()
+    }
+
+    fn clear(&mut self) {
+        self.wait_until.clear();
+        self.counter = 0;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SaveRetry {
+        static instance: SaveRetry = SaveRetry {
+            wait_until: ::protobuf::MessageField::none(),
+            counter: 0,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SaveRetry {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SaveRetry").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SaveRetry {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SaveRetry {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:substantial.protos.events.SaveFailed)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct SaveFailed {
+    // message fields
+    // @@protoc_insertion_point(field:substantial.protos.events.SaveFailed.err)
+    pub err: ::std::string::String,
+    // special fields
+    // @@protoc_insertion_point(special_field:substantial.protos.events.SaveFailed.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a SaveFailed {
+    fn default() -> &'a SaveFailed {
+        <SaveFailed as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl SaveFailed {
+    pub fn new() -> SaveFailed {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
+            "err",
+            |m: &SaveFailed| { &m.err },
+            |m: &mut SaveFailed| { &mut m.err },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SaveFailed>(
+            "SaveFailed",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for SaveFailed {
+    const NAME: &'static str = "SaveFailed";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.err = is.read_string()?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if !self.err.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.err);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if !self.err.is_empty() {
+            os.write_string(1, &self.err)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> SaveFailed {
+        SaveFailed::new()
+    }
+
+    fn clear(&mut self) {
+        self.err.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static SaveFailed {
+        static instance: SaveFailed = SaveFailed {
+            err: ::std::string::String::new(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for SaveFailed {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SaveFailed").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for SaveFailed {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for SaveFailed {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 // @@protoc_insertion_point(message:substantial.protos.events.Save)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct Save {
     // message fields
     // @@protoc_insertion_point(field:substantial.protos.events.Save.id)
     pub id: u32,
-    // @@protoc_insertion_point(field:substantial.protos.events.Save.value)
-    pub value: ::std::string::String,
-    // @@protoc_insertion_point(field:substantial.protos.events.Save.counter)
-    pub counter: i32,
+    // message oneof groups
+    pub of: ::std::option::Option<save::Of>,
     // special fields
     // @@protoc_insertion_point(special_field:substantial.protos.events.Save.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -173,24 +556,183 @@ impl Save {
         ::std::default::Default::default()
     }
 
+    // .substantial.protos.events.SaveResolved resolved = 10;
+
+    pub fn resolved(&self) -> &SaveResolved {
+        match self.of {
+            ::std::option::Option::Some(save::Of::Resolved(ref v)) => v,
+            _ => <SaveResolved as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_resolved(&mut self) {
+        self.of = ::std::option::Option::None;
+    }
+
+    pub fn has_resolved(&self) -> bool {
+        match self.of {
+            ::std::option::Option::Some(save::Of::Resolved(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_resolved(&mut self, v: SaveResolved) {
+        self.of = ::std::option::Option::Some(save::Of::Resolved(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_resolved(&mut self) -> &mut SaveResolved {
+        if let ::std::option::Option::Some(save::Of::Resolved(_)) = self.of {
+        } else {
+            self.of = ::std::option::Option::Some(save::Of::Resolved(SaveResolved::new()));
+        }
+        match self.of {
+            ::std::option::Option::Some(save::Of::Resolved(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_resolved(&mut self) -> SaveResolved {
+        if self.has_resolved() {
+            match self.of.take() {
+                ::std::option::Option::Some(save::Of::Resolved(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            SaveResolved::new()
+        }
+    }
+
+    // .substantial.protos.events.SaveRetry retry = 11;
+
+    pub fn retry(&self) -> &SaveRetry {
+        match self.of {
+            ::std::option::Option::Some(save::Of::Retry(ref v)) => v,
+            _ => <SaveRetry as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_retry(&mut self) {
+        self.of = ::std::option::Option::None;
+    }
+
+    pub fn has_retry(&self) -> bool {
+        match self.of {
+            ::std::option::Option::Some(save::Of::Retry(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_retry(&mut self, v: SaveRetry) {
+        self.of = ::std::option::Option::Some(save::Of::Retry(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_retry(&mut self) -> &mut SaveRetry {
+        if let ::std::option::Option::Some(save::Of::Retry(_)) = self.of {
+        } else {
+            self.of = ::std::option::Option::Some(save::Of::Retry(SaveRetry::new()));
+        }
+        match self.of {
+            ::std::option::Option::Some(save::Of::Retry(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_retry(&mut self) -> SaveRetry {
+        if self.has_retry() {
+            match self.of.take() {
+                ::std::option::Option::Some(save::Of::Retry(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            SaveRetry::new()
+        }
+    }
+
+    // .substantial.protos.events.SaveFailed failed = 12;
+
+    pub fn failed(&self) -> &SaveFailed {
+        match self.of {
+            ::std::option::Option::Some(save::Of::Failed(ref v)) => v,
+            _ => <SaveFailed as ::protobuf::Message>::default_instance(),
+        }
+    }
+
+    pub fn clear_failed(&mut self) {
+        self.of = ::std::option::Option::None;
+    }
+
+    pub fn has_failed(&self) -> bool {
+        match self.of {
+            ::std::option::Option::Some(save::Of::Failed(..)) => true,
+            _ => false,
+        }
+    }
+
+    // Param is passed by value, moved
+    pub fn set_failed(&mut self, v: SaveFailed) {
+        self.of = ::std::option::Option::Some(save::Of::Failed(v))
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_failed(&mut self) -> &mut SaveFailed {
+        if let ::std::option::Option::Some(save::Of::Failed(_)) = self.of {
+        } else {
+            self.of = ::std::option::Option::Some(save::Of::Failed(SaveFailed::new()));
+        }
+        match self.of {
+            ::std::option::Option::Some(save::Of::Failed(ref mut v)) => v,
+            _ => panic!(),
+        }
+    }
+
+    // Take field
+    pub fn take_failed(&mut self) -> SaveFailed {
+        if self.has_failed() {
+            match self.of.take() {
+                ::std::option::Option::Some(save::Of::Failed(v)) => v,
+                _ => panic!(),
+            }
+        } else {
+            SaveFailed::new()
+        }
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
-        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut oneofs = ::std::vec::Vec::with_capacity(1);
         fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
             "id",
             |m: &Save| { &m.id },
             |m: &mut Save| { &mut m.id },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
-            "value",
-            |m: &Save| { &m.value },
-            |m: &mut Save| { &mut m.value },
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, SaveResolved>(
+            "resolved",
+            Save::has_resolved,
+            Save::resolved,
+            Save::mut_resolved,
+            Save::set_resolved,
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_simpler_field_accessor::<_, _>(
-            "counter",
-            |m: &Save| { &m.counter },
-            |m: &mut Save| { &mut m.counter },
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, SaveRetry>(
+            "retry",
+            Save::has_retry,
+            Save::retry,
+            Save::mut_retry,
+            Save::set_retry,
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_oneof_message_has_get_mut_set_accessor::<_, SaveFailed>(
+            "failed",
+            Save::has_failed,
+            Save::failed,
+            Save::mut_failed,
+            Save::set_failed,
+        ));
+        oneofs.push(save::Of::generated_oneof_descriptor_data());
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Save>(
             "Save",
             fields,
@@ -212,11 +754,14 @@ impl ::protobuf::Message for Save {
                 8 => {
                     self.id = is.read_uint32()?;
                 },
-                18 => {
-                    self.value = is.read_string()?;
+                82 => {
+                    self.of = ::std::option::Option::Some(save::Of::Resolved(is.read_message()?));
                 },
-                24 => {
-                    self.counter = is.read_int32()?;
+                90 => {
+                    self.of = ::std::option::Option::Some(save::Of::Retry(is.read_message()?));
+                },
+                98 => {
+                    self.of = ::std::option::Option::Some(save::Of::Failed(is.read_message()?));
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -233,11 +778,21 @@ impl ::protobuf::Message for Save {
         if self.id != 0 {
             my_size += ::protobuf::rt::uint32_size(1, self.id);
         }
-        if !self.value.is_empty() {
-            my_size += ::protobuf::rt::string_size(2, &self.value);
-        }
-        if self.counter != 0 {
-            my_size += ::protobuf::rt::int32_size(3, self.counter);
+        if let ::std::option::Option::Some(ref v) = self.of {
+            match v {
+                &save::Of::Resolved(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
+                &save::Of::Retry(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
+                &save::Of::Failed(ref v) => {
+                    let len = v.compute_size();
+                    my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+                },
+            };
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -248,11 +803,18 @@ impl ::protobuf::Message for Save {
         if self.id != 0 {
             os.write_uint32(1, self.id)?;
         }
-        if !self.value.is_empty() {
-            os.write_string(2, &self.value)?;
-        }
-        if self.counter != 0 {
-            os.write_int32(3, self.counter)?;
+        if let ::std::option::Option::Some(ref v) = self.of {
+            match v {
+                &save::Of::Resolved(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(10, v, os)?;
+                },
+                &save::Of::Retry(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(11, v, os)?;
+                },
+                &save::Of::Failed(ref v) => {
+                    ::protobuf::rt::write_message_field_with_cached_size(12, v, os)?;
+                },
+            };
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -272,16 +834,16 @@ impl ::protobuf::Message for Save {
 
     fn clear(&mut self) {
         self.id = 0;
-        self.value.clear();
-        self.counter = 0;
+        self.of = ::std::option::Option::None;
+        self.of = ::std::option::Option::None;
+        self.of = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static Save {
         static instance: Save = Save {
             id: 0,
-            value: ::std::string::String::new(),
-            counter: 0,
+            of: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -303,6 +865,38 @@ impl ::std::fmt::Display for Save {
 
 impl ::protobuf::reflect::ProtobufValue for Save {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `Save`
+pub mod save {
+
+    #[derive(Clone,PartialEq,Debug)]
+    #[non_exhaustive]
+    // @@protoc_insertion_point(oneof:substantial.protos.events.Save.of)
+    pub enum Of {
+        // @@protoc_insertion_point(oneof_field:substantial.protos.events.Save.resolved)
+        Resolved(super::SaveResolved),
+        // @@protoc_insertion_point(oneof_field:substantial.protos.events.Save.retry)
+        Retry(super::SaveRetry),
+        // @@protoc_insertion_point(oneof_field:substantial.protos.events.Save.failed)
+        Failed(super::SaveFailed),
+    }
+
+    impl ::protobuf::Oneof for Of {
+    }
+
+    impl ::protobuf::OneofFull for Of {
+        fn descriptor() -> ::protobuf::reflect::OneofDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::OneofDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| <super::Save as ::protobuf::MessageFull>::descriptor().oneof_by_name("of").unwrap()).clone()
+        }
+    }
+
+    impl Of {
+        pub(in super) fn generated_oneof_descriptor_data() -> ::protobuf::reflect::GeneratedOneofDescriptorData {
+            ::protobuf::reflect::GeneratedOneofDescriptorData::new::<Of>("of")
+        }
+    }
 }
 
 // @@protoc_insertion_point(message:substantial.protos.events.Sleep)
@@ -1531,89 +2125,113 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15protocol/events.proto\x12\x19substantial.protos.events\x1a\x1cgoog\
     le/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"8\n\x05\
     Start\x12/\n\x06kwargs\x18\x01\x20\x01(\x0b2\x17.google.protobuf.StructR\
-    \x06kwargs\"F\n\x04Save\x12\x0e\n\x02id\x18\x01\x20\x01(\rR\x02id\x12\
-    \x14\n\x05value\x18\x02\x20\x01(\tR\x05value\x12\x18\n\x07counter\x18\
-    \x03\x20\x01(\x05R\x07counter\"w\n\x05Sleep\x12\x0e\n\x02id\x18\x01\x20\
-    \x01(\rR\x02id\x120\n\x05start\x18\x02\x20\x01(\x0b2\x1a.google.protobuf\
-    .TimestampR\x05start\x12,\n\x03end\x18\x03\x20\x01(\x0b2\x1a.google.prot\
-    obuf.TimestampR\x03end\"0\n\x04Send\x12\x12\n\x04name\x18\x01\x20\x01(\t\
-    R\x04name\x12\x14\n\x05value\x18\x02\x20\x01(\tR\x05value\"6\n\x04Stop\
-    \x12\x10\n\x02ok\x18\x01\x20\x01(\tH\0R\x02ok\x12\x12\n\x03err\x18\x02\
-    \x20\x01(\tH\0R\x03errB\x08\n\x06result\"\xd2\x02\n\x05Event\x12*\n\x02a\
-    t\x18\x01\x20\x01(\x0b2\x1a.google.protobuf.TimestampR\x02at\x128\n\x05s\
-    tart\x18\n\x20\x01(\x0b2\x20.substantial.protos.events.StartH\0R\x05star\
-    t\x125\n\x04save\x18\x0b\x20\x01(\x0b2\x1f.substantial.protos.events.Sav\
-    eH\0R\x04save\x128\n\x05sleep\x18\x0c\x20\x01(\x0b2\x20.substantial.prot\
-    os.events.SleepH\0R\x05sleep\x125\n\x04send\x18\r\x20\x01(\x0b2\x1f.subs\
-    tantial.protos.events.SendH\0R\x04send\x125\n\x04stop\x18\x0e\x20\x01(\
-    \x0b2\x1f.substantial.protos.events.StopH\0R\x04stopB\x04\n\x02of\"Z\n\
-    \x07Records\x12\x15\n\x06run_id\x18\x01\x20\x01(\tR\x05runId\x128\n\x06e\
-    vents\x18\x02\x20\x03(\x0b2\x20.substantial.protos.events.EventR\x06even\
-    tsJ\xb5\n\n\x06\x12\x04\0\01\x01\n\x08\n\x01\x0c\x12\x03\0\0\x12\n\x08\n\
+    \x06kwargs\"/\n\x0cSaveResolved\x12\x1f\n\x0bjson_result\x18\x01\x20\x01\
+    (\tR\njsonResult\"`\n\tSaveRetry\x129\n\nwait_until\x18\x01\x20\x01(\x0b\
+    2\x1a.google.protobuf.TimestampR\twaitUntil\x12\x18\n\x07counter\x18\x02\
+    \x20\x01(\x05R\x07counter\"\x1e\n\nSaveFailed\x12\x10\n\x03err\x18\x01\
+    \x20\x01(\tR\x03err\"\xe2\x01\n\x04Save\x12\x0e\n\x02id\x18\x01\x20\x01(\
+    \rR\x02id\x12E\n\x08resolved\x18\n\x20\x01(\x0b2'.substantial.protos.eve\
+    nts.SaveResolvedH\0R\x08resolved\x12<\n\x05retry\x18\x0b\x20\x01(\x0b2$.\
+    substantial.protos.events.SaveRetryH\0R\x05retry\x12?\n\x06failed\x18\
+    \x0c\x20\x01(\x0b2%.substantial.protos.events.SaveFailedH\0R\x06failedB\
+    \x04\n\x02of\"w\n\x05Sleep\x12\x0e\n\x02id\x18\x01\x20\x01(\rR\x02id\x12\
+    0\n\x05start\x18\x02\x20\x01(\x0b2\x1a.google.protobuf.TimestampR\x05sta\
+    rt\x12,\n\x03end\x18\x03\x20\x01(\x0b2\x1a.google.protobuf.TimestampR\
+    \x03end\"0\n\x04Send\x12\x12\n\x04name\x18\x01\x20\x01(\tR\x04name\x12\
+    \x14\n\x05value\x18\x02\x20\x01(\tR\x05value\"6\n\x04Stop\x12\x10\n\x02o\
+    k\x18\x01\x20\x01(\tH\0R\x02ok\x12\x12\n\x03err\x18\x02\x20\x01(\tH\0R\
+    \x03errB\x08\n\x06result\"\xd2\x02\n\x05Event\x12*\n\x02at\x18\x01\x20\
+    \x01(\x0b2\x1a.google.protobuf.TimestampR\x02at\x128\n\x05start\x18\n\
+    \x20\x01(\x0b2\x20.substantial.protos.events.StartH\0R\x05start\x125\n\
+    \x04save\x18\x0b\x20\x01(\x0b2\x1f.substantial.protos.events.SaveH\0R\
+    \x04save\x128\n\x05sleep\x18\x0c\x20\x01(\x0b2\x20.substantial.protos.ev\
+    ents.SleepH\0R\x05sleep\x125\n\x04send\x18\r\x20\x01(\x0b2\x1f.substanti\
+    al.protos.events.SendH\0R\x04send\x125\n\x04stop\x18\x0e\x20\x01(\x0b2\
+    \x1f.substantial.protos.events.StopH\0R\x04stopB\x04\n\x02of\"Z\n\x07Rec\
+    ords\x12\x15\n\x06run_id\x18\x01\x20\x01(\tR\x05runId\x128\n\x06events\
+    \x18\x02\x20\x03(\x0b2\x20.substantial.protos.events.EventR\x06eventsJ\
+    \xac\r\n\x06\x12\x04\0\0A\x01\n\x08\n\x01\x0c\x12\x03\0\0\x12\n\x08\n\
     \x01\x02\x12\x03\x02\0\"\n\t\n\x02\x03\0\x12\x03\x04\0&\n\t\n\x02\x03\
     \x01\x12\x03\x05\0)\n\n\n\x02\x04\0\x12\x04\x07\0\t\x01\n\n\n\x03\x04\0\
     \x01\x12\x03\x07\x08\r\n\x0b\n\x04\x04\0\x02\0\x12\x03\x08\x02$\n\x0c\n\
     \x05\x04\0\x02\0\x06\x12\x03\x08\x02\x18\n\x0c\n\x05\x04\0\x02\0\x01\x12\
     \x03\x08\x19\x1f\n\x0c\n\x05\x04\0\x02\0\x03\x12\x03\x08\"#\n\n\n\x02\
-    \x04\x01\x12\x04\x0b\0\x0f\x01\n\n\n\x03\x04\x01\x01\x12\x03\x0b\x08\x0c\
-    \n\x0b\n\x04\x04\x01\x02\0\x12\x03\x0c\x02\x10\n\x0c\n\x05\x04\x01\x02\0\
-    \x05\x12\x03\x0c\x02\x08\n\x0c\n\x05\x04\x01\x02\0\x01\x12\x03\x0c\t\x0b\
-    \n\x0c\n\x05\x04\x01\x02\0\x03\x12\x03\x0c\x0e\x0f\n\x0b\n\x04\x04\x01\
-    \x02\x01\x12\x03\r\x02\x13\n\x0c\n\x05\x04\x01\x02\x01\x05\x12\x03\r\x02\
-    \x08\n\x0c\n\x05\x04\x01\x02\x01\x01\x12\x03\r\t\x0e\n\x0c\n\x05\x04\x01\
-    \x02\x01\x03\x12\x03\r\x11\x12\n\x0b\n\x04\x04\x01\x02\x02\x12\x03\x0e\
-    \x02\x14\n\x0c\n\x05\x04\x01\x02\x02\x05\x12\x03\x0e\x02\x07\n\x0c\n\x05\
-    \x04\x01\x02\x02\x01\x12\x03\x0e\x08\x0f\n\x0c\n\x05\x04\x01\x02\x02\x03\
-    \x12\x03\x0e\x12\x13\n\n\n\x02\x04\x02\x12\x04\x11\0\x15\x01\n\n\n\x03\
-    \x04\x02\x01\x12\x03\x11\x08\r\n\x0b\n\x04\x04\x02\x02\0\x12\x03\x12\x02\
-    \x10\n\x0c\n\x05\x04\x02\x02\0\x05\x12\x03\x12\x02\x08\n\x0c\n\x05\x04\
-    \x02\x02\0\x01\x12\x03\x12\t\x0b\n\x0c\n\x05\x04\x02\x02\0\x03\x12\x03\
-    \x12\x0e\x0f\n\x0b\n\x04\x04\x02\x02\x01\x12\x03\x13\x02&\n\x0c\n\x05\
-    \x04\x02\x02\x01\x06\x12\x03\x13\x02\x1b\n\x0c\n\x05\x04\x02\x02\x01\x01\
-    \x12\x03\x13\x1c!\n\x0c\n\x05\x04\x02\x02\x01\x03\x12\x03\x13$%\n\x0b\n\
-    \x04\x04\x02\x02\x02\x12\x03\x14\x02$\n\x0c\n\x05\x04\x02\x02\x02\x06\
-    \x12\x03\x14\x02\x1b\n\x0c\n\x05\x04\x02\x02\x02\x01\x12\x03\x14\x1c\x1f\
-    \n\x0c\n\x05\x04\x02\x02\x02\x03\x12\x03\x14\"#\n\n\n\x02\x04\x03\x12\
-    \x04\x17\0\x1a\x01\n\n\n\x03\x04\x03\x01\x12\x03\x17\x08\x0c\n\x0b\n\x04\
-    \x04\x03\x02\0\x12\x03\x18\x02\x12\n\x0c\n\x05\x04\x03\x02\0\x05\x12\x03\
-    \x18\x02\x08\n\x0c\n\x05\x04\x03\x02\0\x01\x12\x03\x18\t\r\n\x0c\n\x05\
-    \x04\x03\x02\0\x03\x12\x03\x18\x10\x11\n\x0b\n\x04\x04\x03\x02\x01\x12\
-    \x03\x19\x02\x13\n\x0c\n\x05\x04\x03\x02\x01\x05\x12\x03\x19\x02\x08\n\
-    \x0c\n\x05\x04\x03\x02\x01\x01\x12\x03\x19\t\x0e\n\x0c\n\x05\x04\x03\x02\
-    \x01\x03\x12\x03\x19\x11\x12\n\n\n\x02\x04\x04\x12\x04\x1c\0!\x01\n\n\n\
-    \x03\x04\x04\x01\x12\x03\x1c\x08\x0c\n\x0c\n\x04\x04\x04\x08\0\x12\x04\
-    \x1d\x02\x20\x03\n\x0c\n\x05\x04\x04\x08\0\x01\x12\x03\x1d\x08\x0e\n\x0b\
-    \n\x04\x04\x04\x02\0\x12\x03\x1e\x04\x12\n\x0c\n\x05\x04\x04\x02\0\x05\
-    \x12\x03\x1e\x04\n\n\x0c\n\x05\x04\x04\x02\0\x01\x12\x03\x1e\x0b\r\n\x0c\
-    \n\x05\x04\x04\x02\0\x03\x12\x03\x1e\x10\x11\n\x0b\n\x04\x04\x04\x02\x01\
-    \x12\x03\x1f\x04\x13\n\x0c\n\x05\x04\x04\x02\x01\x05\x12\x03\x1f\x04\n\n\
-    \x0c\n\x05\x04\x04\x02\x01\x01\x12\x03\x1f\x0b\x0e\n\x0c\n\x05\x04\x04\
-    \x02\x01\x03\x12\x03\x1f\x11\x12\n\n\n\x02\x04\x05\x12\x04#\0,\x01\n\n\n\
-    \x03\x04\x05\x01\x12\x03#\x08\r\n\x0b\n\x04\x04\x05\x02\0\x12\x03$\x02#\
-    \n\x0c\n\x05\x04\x05\x02\0\x06\x12\x03$\x02\x1b\n\x0c\n\x05\x04\x05\x02\
-    \0\x01\x12\x03$\x1c\x1e\n\x0c\n\x05\x04\x05\x02\0\x03\x12\x03$!\"\n\x0c\
-    \n\x04\x04\x05\x08\0\x12\x04%\x02+\x03\n\x0c\n\x05\x04\x05\x08\0\x01\x12\
-    \x03%\x08\n\n\x0b\n\x04\x04\x05\x02\x01\x12\x03&\x04\x15\n\x0c\n\x05\x04\
-    \x05\x02\x01\x06\x12\x03&\x04\t\n\x0c\n\x05\x04\x05\x02\x01\x01\x12\x03&\
-    \n\x0f\n\x0c\n\x05\x04\x05\x02\x01\x03\x12\x03&\x12\x14\n\x0b\n\x04\x04\
-    \x05\x02\x02\x12\x03'\x04\x13\n\x0c\n\x05\x04\x05\x02\x02\x06\x12\x03'\
-    \x04\x08\n\x0c\n\x05\x04\x05\x02\x02\x01\x12\x03'\t\r\n\x0c\n\x05\x04\
-    \x05\x02\x02\x03\x12\x03'\x10\x12\n\x0b\n\x04\x04\x05\x02\x03\x12\x03(\
-    \x04\x15\n\x0c\n\x05\x04\x05\x02\x03\x06\x12\x03(\x04\t\n\x0c\n\x05\x04\
-    \x05\x02\x03\x01\x12\x03(\n\x0f\n\x0c\n\x05\x04\x05\x02\x03\x03\x12\x03(\
-    \x12\x14\n\x0b\n\x04\x04\x05\x02\x04\x12\x03)\x04\x13\n\x0c\n\x05\x04\
-    \x05\x02\x04\x06\x12\x03)\x04\x08\n\x0c\n\x05\x04\x05\x02\x04\x01\x12\
-    \x03)\t\r\n\x0c\n\x05\x04\x05\x02\x04\x03\x12\x03)\x10\x12\n\x0b\n\x04\
-    \x04\x05\x02\x05\x12\x03*\x04\x13\n\x0c\n\x05\x04\x05\x02\x05\x06\x12\
-    \x03*\x04\x08\n\x0c\n\x05\x04\x05\x02\x05\x01\x12\x03*\t\r\n\x0c\n\x05\
-    \x04\x05\x02\x05\x03\x12\x03*\x10\x12\n\n\n\x02\x04\x06\x12\x04.\01\x01\
-    \n\n\n\x03\x04\x06\x01\x12\x03.\x08\x0f\n\x0b\n\x04\x04\x06\x02\0\x12\
-    \x03/\x02\x14\n\x0c\n\x05\x04\x06\x02\0\x05\x12\x03/\x02\x08\n\x0c\n\x05\
-    \x04\x06\x02\0\x01\x12\x03/\t\x0f\n\x0c\n\x05\x04\x06\x02\0\x03\x12\x03/\
-    \x12\x13\n\x0b\n\x04\x04\x06\x02\x01\x12\x030\x02\x1c\n\x0c\n\x05\x04\
-    \x06\x02\x01\x04\x12\x030\x02\n\n\x0c\n\x05\x04\x06\x02\x01\x06\x12\x030\
-    \x0b\x10\n\x0c\n\x05\x04\x06\x02\x01\x01\x12\x030\x11\x17\n\x0c\n\x05\
-    \x04\x06\x02\x01\x03\x12\x030\x1a\x1bb\x06proto3\
+    \x04\x01\x12\x04\x0b\0\r\x01\n\n\n\x03\x04\x01\x01\x12\x03\x0b\x08\x14\n\
+    \x0b\n\x04\x04\x01\x02\0\x12\x03\x0c\x02\x19\n\x0c\n\x05\x04\x01\x02\0\
+    \x05\x12\x03\x0c\x02\x08\n\x0c\n\x05\x04\x01\x02\0\x01\x12\x03\x0c\t\x14\
+    \n\x0c\n\x05\x04\x01\x02\0\x03\x12\x03\x0c\x17\x18\n\n\n\x02\x04\x02\x12\
+    \x04\x0f\0\x12\x01\n\n\n\x03\x04\x02\x01\x12\x03\x0f\x08\x11\n\x0b\n\x04\
+    \x04\x02\x02\0\x12\x03\x10\x02+\n\x0c\n\x05\x04\x02\x02\0\x06\x12\x03\
+    \x10\x02\x1b\n\x0c\n\x05\x04\x02\x02\0\x01\x12\x03\x10\x1c&\n\x0c\n\x05\
+    \x04\x02\x02\0\x03\x12\x03\x10)*\n\x0b\n\x04\x04\x02\x02\x01\x12\x03\x11\
+    \x02\x14\n\x0c\n\x05\x04\x02\x02\x01\x05\x12\x03\x11\x02\x07\n\x0c\n\x05\
+    \x04\x02\x02\x01\x01\x12\x03\x11\x08\x0f\n\x0c\n\x05\x04\x02\x02\x01\x03\
+    \x12\x03\x11\x12\x13\n\n\n\x02\x04\x03\x12\x04\x14\0\x16\x01\n\n\n\x03\
+    \x04\x03\x01\x12\x03\x14\x08\x12\n\x0b\n\x04\x04\x03\x02\0\x12\x03\x15\
+    \x02\x11\n\x0c\n\x05\x04\x03\x02\0\x05\x12\x03\x15\x02\x08\n\x0c\n\x05\
+    \x04\x03\x02\0\x01\x12\x03\x15\t\x0c\n\x0c\n\x05\x04\x03\x02\0\x03\x12\
+    \x03\x15\x0f\x10\n\n\n\x02\x04\x04\x12\x04\x18\0\x1f\x01\n\n\n\x03\x04\
+    \x04\x01\x12\x03\x18\x08\x0c\n\x0b\n\x04\x04\x04\x02\0\x12\x03\x19\x02\
+    \x10\n\x0c\n\x05\x04\x04\x02\0\x05\x12\x03\x19\x02\x08\n\x0c\n\x05\x04\
+    \x04\x02\0\x01\x12\x03\x19\t\x0b\n\x0c\n\x05\x04\x04\x02\0\x03\x12\x03\
+    \x19\x0e\x0f\n\x0c\n\x04\x04\x04\x08\0\x12\x04\x1a\x02\x1e\x03\n\x0c\n\
+    \x05\x04\x04\x08\0\x01\x12\x03\x1a\x08\n\n\x0b\n\x04\x04\x04\x02\x01\x12\
+    \x03\x1b\x04\x1f\n\x0c\n\x05\x04\x04\x02\x01\x06\x12\x03\x1b\x04\x10\n\
+    \x0c\n\x05\x04\x04\x02\x01\x01\x12\x03\x1b\x11\x19\n\x0c\n\x05\x04\x04\
+    \x02\x01\x03\x12\x03\x1b\x1c\x1e\n\x0b\n\x04\x04\x04\x02\x02\x12\x03\x1c\
+    \x04\x19\n\x0c\n\x05\x04\x04\x02\x02\x06\x12\x03\x1c\x04\r\n\x0c\n\x05\
+    \x04\x04\x02\x02\x01\x12\x03\x1c\x0e\x13\n\x0c\n\x05\x04\x04\x02\x02\x03\
+    \x12\x03\x1c\x16\x18\n\x0b\n\x04\x04\x04\x02\x03\x12\x03\x1d\x04\x1b\n\
+    \x0c\n\x05\x04\x04\x02\x03\x06\x12\x03\x1d\x04\x0e\n\x0c\n\x05\x04\x04\
+    \x02\x03\x01\x12\x03\x1d\x0f\x15\n\x0c\n\x05\x04\x04\x02\x03\x03\x12\x03\
+    \x1d\x18\x1a\n\n\n\x02\x04\x05\x12\x04!\0%\x01\n\n\n\x03\x04\x05\x01\x12\
+    \x03!\x08\r\n\x0b\n\x04\x04\x05\x02\0\x12\x03\"\x02\x10\n\x0c\n\x05\x04\
+    \x05\x02\0\x05\x12\x03\"\x02\x08\n\x0c\n\x05\x04\x05\x02\0\x01\x12\x03\"\
+    \t\x0b\n\x0c\n\x05\x04\x05\x02\0\x03\x12\x03\"\x0e\x0f\n\x0b\n\x04\x04\
+    \x05\x02\x01\x12\x03#\x02&\n\x0c\n\x05\x04\x05\x02\x01\x06\x12\x03#\x02\
+    \x1b\n\x0c\n\x05\x04\x05\x02\x01\x01\x12\x03#\x1c!\n\x0c\n\x05\x04\x05\
+    \x02\x01\x03\x12\x03#$%\n\x0b\n\x04\x04\x05\x02\x02\x12\x03$\x02$\n\x0c\
+    \n\x05\x04\x05\x02\x02\x06\x12\x03$\x02\x1b\n\x0c\n\x05\x04\x05\x02\x02\
+    \x01\x12\x03$\x1c\x1f\n\x0c\n\x05\x04\x05\x02\x02\x03\x12\x03$\"#\n\n\n\
+    \x02\x04\x06\x12\x04'\0*\x01\n\n\n\x03\x04\x06\x01\x12\x03'\x08\x0c\n\
+    \x0b\n\x04\x04\x06\x02\0\x12\x03(\x02\x12\n\x0c\n\x05\x04\x06\x02\0\x05\
+    \x12\x03(\x02\x08\n\x0c\n\x05\x04\x06\x02\0\x01\x12\x03(\t\r\n\x0c\n\x05\
+    \x04\x06\x02\0\x03\x12\x03(\x10\x11\n\x0b\n\x04\x04\x06\x02\x01\x12\x03)\
+    \x02\x13\n\x0c\n\x05\x04\x06\x02\x01\x05\x12\x03)\x02\x08\n\x0c\n\x05\
+    \x04\x06\x02\x01\x01\x12\x03)\t\x0e\n\x0c\n\x05\x04\x06\x02\x01\x03\x12\
+    \x03)\x11\x12\n\n\n\x02\x04\x07\x12\x04,\01\x01\n\n\n\x03\x04\x07\x01\
+    \x12\x03,\x08\x0c\n\x0c\n\x04\x04\x07\x08\0\x12\x04-\x020\x03\n\x0c\n\
+    \x05\x04\x07\x08\0\x01\x12\x03-\x08\x0e\n\x0b\n\x04\x04\x07\x02\0\x12\
+    \x03.\x04\x12\n\x0c\n\x05\x04\x07\x02\0\x05\x12\x03.\x04\n\n\x0c\n\x05\
+    \x04\x07\x02\0\x01\x12\x03.\x0b\r\n\x0c\n\x05\x04\x07\x02\0\x03\x12\x03.\
+    \x10\x11\n\x0b\n\x04\x04\x07\x02\x01\x12\x03/\x04\x13\n\x0c\n\x05\x04\
+    \x07\x02\x01\x05\x12\x03/\x04\n\n\x0c\n\x05\x04\x07\x02\x01\x01\x12\x03/\
+    \x0b\x0e\n\x0c\n\x05\x04\x07\x02\x01\x03\x12\x03/\x11\x12\n\n\n\x02\x04\
+    \x08\x12\x043\0<\x01\n\n\n\x03\x04\x08\x01\x12\x033\x08\r\n\x0b\n\x04\
+    \x04\x08\x02\0\x12\x034\x02#\n\x0c\n\x05\x04\x08\x02\0\x06\x12\x034\x02\
+    \x1b\n\x0c\n\x05\x04\x08\x02\0\x01\x12\x034\x1c\x1e\n\x0c\n\x05\x04\x08\
+    \x02\0\x03\x12\x034!\"\n\x0c\n\x04\x04\x08\x08\0\x12\x045\x02;\x03\n\x0c\
+    \n\x05\x04\x08\x08\0\x01\x12\x035\x08\n\n\x0b\n\x04\x04\x08\x02\x01\x12\
+    \x036\x04\x15\n\x0c\n\x05\x04\x08\x02\x01\x06\x12\x036\x04\t\n\x0c\n\x05\
+    \x04\x08\x02\x01\x01\x12\x036\n\x0f\n\x0c\n\x05\x04\x08\x02\x01\x03\x12\
+    \x036\x12\x14\n\x0b\n\x04\x04\x08\x02\x02\x12\x037\x04\x13\n\x0c\n\x05\
+    \x04\x08\x02\x02\x06\x12\x037\x04\x08\n\x0c\n\x05\x04\x08\x02\x02\x01\
+    \x12\x037\t\r\n\x0c\n\x05\x04\x08\x02\x02\x03\x12\x037\x10\x12\n\x0b\n\
+    \x04\x04\x08\x02\x03\x12\x038\x04\x15\n\x0c\n\x05\x04\x08\x02\x03\x06\
+    \x12\x038\x04\t\n\x0c\n\x05\x04\x08\x02\x03\x01\x12\x038\n\x0f\n\x0c\n\
+    \x05\x04\x08\x02\x03\x03\x12\x038\x12\x14\n\x0b\n\x04\x04\x08\x02\x04\
+    \x12\x039\x04\x13\n\x0c\n\x05\x04\x08\x02\x04\x06\x12\x039\x04\x08\n\x0c\
+    \n\x05\x04\x08\x02\x04\x01\x12\x039\t\r\n\x0c\n\x05\x04\x08\x02\x04\x03\
+    \x12\x039\x10\x12\n\x0b\n\x04\x04\x08\x02\x05\x12\x03:\x04\x13\n\x0c\n\
+    \x05\x04\x08\x02\x05\x06\x12\x03:\x04\x08\n\x0c\n\x05\x04\x08\x02\x05\
+    \x01\x12\x03:\t\r\n\x0c\n\x05\x04\x08\x02\x05\x03\x12\x03:\x10\x12\n\n\n\
+    \x02\x04\t\x12\x04>\0A\x01\n\n\n\x03\x04\t\x01\x12\x03>\x08\x0f\n\x0b\n\
+    \x04\x04\t\x02\0\x12\x03?\x02\x14\n\x0c\n\x05\x04\t\x02\0\x05\x12\x03?\
+    \x02\x08\n\x0c\n\x05\x04\t\x02\0\x01\x12\x03?\t\x0f\n\x0c\n\x05\x04\t\
+    \x02\0\x03\x12\x03?\x12\x13\n\x0b\n\x04\x04\t\x02\x01\x12\x03@\x02\x1c\n\
+    \x0c\n\x05\x04\t\x02\x01\x04\x12\x03@\x02\n\n\x0c\n\x05\x04\t\x02\x01\
+    \x06\x12\x03@\x0b\x10\n\x0c\n\x05\x04\t\x02\x01\x01\x12\x03@\x11\x17\n\
+    \x0c\n\x05\x04\t\x02\x01\x03\x12\x03@\x1a\x1bb\x06proto3\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1633,8 +2251,11 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             let mut deps = ::std::vec::Vec::with_capacity(2);
             deps.push(::protobuf::well_known_types::struct_::file_descriptor().clone());
             deps.push(::protobuf::well_known_types::timestamp::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(7);
+            let mut messages = ::std::vec::Vec::with_capacity(10);
             messages.push(Start::generated_message_descriptor_data());
+            messages.push(SaveResolved::generated_message_descriptor_data());
+            messages.push(SaveRetry::generated_message_descriptor_data());
+            messages.push(SaveFailed::generated_message_descriptor_data());
             messages.push(Save::generated_message_descriptor_data());
             messages.push(Sleep::generated_message_descriptor_data());
             messages.push(Send::generated_message_descriptor_data());

@@ -6,6 +6,7 @@ import {
   basicTestTemplate,
   concurrentWorkflowTestTemplate,
   redisCleanup,
+  retrySaveTestTemplate,
 } from "./common.ts";
 
 basicTestTemplate(
@@ -23,5 +24,17 @@ concurrentWorkflowTestTemplate(
     delays: { awaitEmailCompleteSec: 18 },
     secrets: { SUB_REDIS },
   },
+  redisCleanup(SUB_REDIS)
+);
+
+retrySaveTestTemplate(
+  "redis",
+  {
+    delays: {
+      awaitCompleteAll: 18,
+    },
+    secrets: { SUB_REDIS },
+  },
+
   redisCleanup(SUB_REDIS)
 );

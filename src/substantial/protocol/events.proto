@@ -9,10 +9,26 @@ message Start {
   google.protobuf.Struct kwargs = 1;
 }
 
+message SaveResolved {
+  string json_result = 1;
+}
+
+message SaveRetry {
+  google.protobuf.Timestamp wait_until = 1;
+  int32 counter = 2;
+}
+
+message SaveFailed {
+  string err = 1;
+}
+
 message Save {
   uint32 id = 1;
-  string value = 2;
-  int32 counter = 3;
+  oneof of {
+    SaveResolved resolved = 10;
+    SaveRetry retry = 11;
+    SaveFailed failed = 12;
+  }
 }
 
 message Sleep {

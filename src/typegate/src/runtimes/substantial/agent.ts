@@ -247,6 +247,7 @@ export class Agent {
         case "START": {
           const ret = answer.data as WorkflowResult;
           switch (Interrupt.getTypeOf(ret.exception)) {
+            case "SAVE_RETRY":
             case "SLEEP":
             case "WAIT_ENSURE_VALUE":
             case "WAIT_HANDLE_EVENT":
@@ -345,7 +346,7 @@ export class Agent {
       event: {
         type: "Stop",
         result: {
-          [rustResult]: result,
+          [rustResult]: result ?? null,
         } as unknown,
       },
     });
@@ -358,6 +359,8 @@ export class Agent {
       backend: this.backend,
       run,
     });
+
+    // console.log("Persisted", run);
 
     await Meta.substantial.storeCloseSchedule({
       backend: this.backend,
@@ -405,6 +408,7 @@ function checkIfRunHasStopped(run: Run) {
           `"${run.run_id}" has potentially corrupted logs, another run occured yet previous has not stopped`
         );
       }
+
       life += 1;
       hasStopped = false;
     } else if (op.event.type == "Stop") {
@@ -419,6 +423,7 @@ function checkIfRunHasStopped(run: Run) {
           `"${run.run_id}" has potentitally corrupted logs, attempted stopping already closed run, or run with a missing Start`
         );
       }
+
       life -= 1;
       hasStopped = true;
     }
