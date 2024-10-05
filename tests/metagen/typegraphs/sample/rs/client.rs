@@ -2190,6 +2190,9 @@ mod node_metas {
             variants: None,
         }
     }
+    pub fn RootScalarNoArgsFn() -> NodeMeta {
+        NodeMeta { ..scalar() }
+    }
     pub fn Post() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2204,6 +2207,24 @@ mod node_metas {
             ),
         }
     }
+    pub fn RootGetPostsFn() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn RootCompositeNoArgsFn() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn RootScalarUnionFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
+            ..scalar()
+        }
+    }
+    pub fn RootCompositeArgsFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
+            ..Post()
+        }
+    }
     pub fn User() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2216,6 +2237,28 @@ mod node_metas {
                 ]
                 .into(),
             ),
+        }
+    }
+    pub fn RootGetUserFn() -> NodeMeta {
+        NodeMeta { ..User() }
+    }
+    pub fn RootCompositeUnionFnOutput() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: Some(
+                [
+                    ("post".into(), Post as NodeMetaFn),
+                    ("user".into(), User as NodeMetaFn),
+                ]
+                .into(),
+            ),
+        }
+    }
+    pub fn RootCompositeUnionFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
+            ..RootCompositeUnionFnOutput()
         }
     }
     pub fn RootMixedUnionFnOutput() -> NodeMeta {
@@ -2250,49 +2293,6 @@ mod node_metas {
             ..scalar()
         }
     }
-    pub fn RootCompositeArgsFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
-            ..Post()
-        }
-    }
-    pub fn RootScalarNoArgsFn() -> NodeMeta {
-        NodeMeta { ..scalar() }
-    }
-    pub fn RootGetUserFn() -> NodeMeta {
-        NodeMeta { ..User() }
-    }
-    pub fn RootGetPostsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
-    pub fn RootCompositeUnionFnOutput() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            sub_nodes: None,
-            variants: Some(
-                [
-                    ("post".into(), Post as NodeMetaFn),
-                    ("user".into(), User as NodeMetaFn),
-                ]
-                .into(),
-            ),
-        }
-    }
-    pub fn RootCompositeUnionFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
-            ..RootCompositeUnionFnOutput()
-        }
-    }
-    pub fn RootScalarUnionFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
-            ..scalar()
-        }
-    }
-    pub fn RootCompositeNoArgsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
 }
 use types::*;
 pub mod types {
@@ -2317,24 +2317,24 @@ pub mod types {
         pub email: Option<UserEmailStringEmail>,
         pub posts: Option<UserPostsPostList>,
     }
-    pub type RootScalarUnionFnOutputT1Integer = i64;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum RootScalarUnionFnOutput {
-        RootScalarNoArgsFnOutput(RootScalarNoArgsFnOutput),
-        RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
-    }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
     pub enum RootCompositeUnionFnOutput {
         PostPartial(PostPartial),
         UserPartial(UserPartial),
     }
+    pub type RootScalarUnionFnOutputT1Integer = i64;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
     pub enum RootMixedUnionFnOutput {
         PostPartial(PostPartial),
         UserPartial(UserPartial),
+        RootScalarNoArgsFnOutput(RootScalarNoArgsFnOutput),
+        RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum RootScalarUnionFnOutput {
         RootScalarNoArgsFnOutput(RootScalarNoArgsFnOutput),
         RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
     }

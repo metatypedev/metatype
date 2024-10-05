@@ -108,10 +108,10 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
-    def exported_wrapper(raw_inp):
+def typed_three(user_fn: Callable[[RootOneFnInput, Any], Student]):
+    def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
-        out: Student = user_fn(inp)
+        out: Student = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -132,7 +132,7 @@ from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput) -> Student:
+def three(inp: RootOneFnInput, ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -256,10 +256,10 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
-    def exported_wrapper(raw_inp):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
+    def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
-        out: TypeRootOneFnOutput = user_fn(inp)
+        out: TypeRootOneFnOutput = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -267,10 +267,10 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeRootOneFnInputNameString]):
-    def exported_wrapper(raw_inp):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Any], TypeRootOneFnInputNameString]):
+    def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeRootOneFnInputNameString = user_fn(inp)
+        out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -291,12 +291,12 @@ from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameStri
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput) -> TypeRootOneFnOutput:
+def fnOne(inp: RootOneFnInput, ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx) -> TypeRootOneFnInputNameString:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
@@ -904,10 +904,10 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
-    def exported_wrapper(raw_inp):
+def typed_three(user_fn: Callable[[RootOneFnInput, Any], Student]):
+    def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
-        out: Student = user_fn(inp)
+        out: Student = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -928,7 +928,7 @@ from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput) -> Student:
+def three(inp: RootOneFnInput, ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -1052,10 +1052,10 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
-    def exported_wrapper(raw_inp):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
+    def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
-        out: TypeRootOneFnOutput = user_fn(inp)
+        out: TypeRootOneFnOutput = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -1063,10 +1063,10 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeRootOneFnInputNameString]):
-    def exported_wrapper(raw_inp):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Any], TypeRootOneFnInputNameString]):
+    def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeRootOneFnInputNameString = user_fn(inp)
+        out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -1087,12 +1087,12 @@ from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameStri
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput) -> TypeRootOneFnOutput:
+def fnOne(inp: RootOneFnInput, ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx) -> TypeRootOneFnInputNameString:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
@@ -1700,10 +1700,10 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
-    def exported_wrapper(raw_inp):
+def typed_three(user_fn: Callable[[RootOneFnInput, Any], Student]):
+    def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
-        out: Student = user_fn(inp)
+        out: Student = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -1724,7 +1724,7 @@ from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput) -> Student:
+def three(inp: RootOneFnInput, ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -1848,10 +1848,10 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
-    def exported_wrapper(raw_inp):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
+    def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
-        out: TypeRootOneFnOutput = user_fn(inp)
+        out: TypeRootOneFnOutput = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -1859,10 +1859,10 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeRootOneFnInputNameString]):
-    def exported_wrapper(raw_inp):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Any], TypeRootOneFnInputNameString]):
+    def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeRootOneFnInputNameString = user_fn(inp)
+        out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -1883,12 +1883,12 @@ from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameStri
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput) -> TypeRootOneFnOutput:
+def fnOne(inp: RootOneFnInput, ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx) -> TypeRootOneFnInputNameString:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
@@ -2007,10 +2007,10 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput], Student]):
-    def exported_wrapper(raw_inp):
+def typed_three(user_fn: Callable[[RootOneFnInput, Any], Student]):
+    def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
-        out: Student = user_fn(inp)
+        out: Student = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -2031,7 +2031,7 @@ from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput) -> Student:
+def three(inp: RootOneFnInput, ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -2155,10 +2155,10 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
-    def exported_wrapper(raw_inp):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
+    def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
-        out: TypeRootOneFnOutput = user_fn(inp)
+        out: TypeRootOneFnOutput = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -2166,10 +2166,10 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput], TypeRootOneFnInputNameString]):
-    def exported_wrapper(raw_inp):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Any], TypeRootOneFnInputNameString]):
+    def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeRootOneFnInputNameString = user_fn(inp)
+        out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -2190,12 +2190,12 @@ from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameStri
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput) -> TypeRootOneFnOutput:
+def fnOne(inp: RootOneFnInput, ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx) -> TypeRootOneFnInputNameString:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
