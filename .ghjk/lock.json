@@ -1025,10 +1025,11 @@
         "id": "tasks",
         "config": {
           "tasks": {
-            "b": {
+            "clean-rust": {
               "ty": "denoFile@v1",
-              "key": "b",
-              "envKey": "bciqk7aif25pqtsyncbnbdapte4lixsodypfxvmkepsuey74vgr4zb5q"
+              "key": "clean-rust",
+              "desc": "Clean cache of all cargo workspaces in repo.",
+              "envKey": "bciqjls65kmsyg36rd3onuorvgqh3xyw7i54yb2civyowpmovnnpbeza"
             },
             "version-bump": {
               "ty": "denoFile@v1",
@@ -1254,7 +1255,7 @@
             }
           },
           "tasksNamed": [
-            "b",
+            "clean-rust",
             "version-bump",
             "version-print",
             "test-lsp",
