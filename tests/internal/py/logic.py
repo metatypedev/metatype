@@ -1,19 +1,19 @@
-from .logic_types import (
-    RootSumFnInput,
-    TypeRootSumFnInputFirstFloat,
-    typed_remote_sum,
-)
+# Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+# SPDX-License-Identifier: Elastic-2.0
 
 
-@typed_remote_sum
-def remote_sum(inp: RootSumFnInput, ctx) -> TypeRootSumFnInputFirstFloat:
+def remote_sum(inp: dict, ctx) -> float:
     data = ctx.gql(
         query="""
         query q($first: Float!, $second: Float!) {
-             sum(first: $first, second: $second) 
+             sumPy(first: $first, second: $second) 
         }
         """,
-        variables=inp.__dict__,
+        variables=inp,
     )
-    sum = data["sum"]
+    sum = data["sumPy"]
     return sum
+
+
+def sum(inp: dict) -> float:
+    return inp["first"] + inp["second"]

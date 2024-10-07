@@ -12,23 +12,26 @@ def internal(g: Graph):
     internal = Policy.internal()
 
     deno = DenoRuntime()
+    py = PythonRuntime()
     python = PythonRuntime()
 
     inp = t.struct({"first": t.float(), "second": t.float()})
     out = t.float()
 
     g.expose(
-        sum=deno.import_(inp, out, module="ts/logic.ts", name="sum").with_policy(
+        sumDeno=deno.import_(inp, out, module="ts/logic.ts", name="sum").with_policy(
             internal
         ),
         remoteSumDeno=deno.import_(
             inp, out, module="ts/logic.ts", name="remoteSum"
         ).with_policy(public),
+        sumPy=py.import_(inp, out, module="py/logic.py", name="sum").with_policy(
+            internal
+        ),
         remoteSumPy=python.import_(
             inp,
             out,
             module="py/logic.py",
             name="remote_sum",
-            deps=["./py/logic_types.py"],
         ).with_policy(public),
     )

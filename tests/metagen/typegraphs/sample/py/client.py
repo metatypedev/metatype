@@ -638,7 +638,7 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootCompositeUnionFnOutput():
+    def RootMixedUnionFnOutput():
         return NodeMeta(
             variants={
                 "post": NodeDescs.Post,
@@ -647,8 +647,8 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootCompositeUnionFn():
-        return_node = NodeDescs.RootCompositeUnionFnOutput()
+    def RootMixedUnionFn():
+        return_node = NodeDescs.RootMixedUnionFnOutput()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
@@ -679,19 +679,14 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootCompositeNoArgsFn():
+    def RootCompositeArgsFn():
         return_node = NodeDescs.Post()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
-        )
-
-    @staticmethod
-    def RootGetPostsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
+            arg_types={
+                "id": "RootScalarNoArgsFnOutput",
+            },
         )
 
     @staticmethod
@@ -706,7 +701,7 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootMixedUnionFnOutput():
+    def RootCompositeUnionFnOutput():
         return NodeMeta(
             variants={
                 "post": NodeDescs.Post,
@@ -715,8 +710,8 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootMixedUnionFn():
-        return_node = NodeDescs.RootMixedUnionFnOutput()
+    def RootCompositeUnionFn():
+        return_node = NodeDescs.RootCompositeUnionFnOutput()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
@@ -726,14 +721,19 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootCompositeArgsFn():
+    def RootGetPostsFn():
         return_node = NodeDescs.Post()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
-            arg_types={
-                "id": "RootScalarNoArgsFnOutput",
-            },
+        )
+
+    @staticmethod
+    def RootCompositeNoArgsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
         )
 
 
@@ -785,15 +785,15 @@ RootMixedUnionFnOutput = typing.Union[
 ]
 
 
-RootScalarUnionFnOutput = typing.Union[
-    RootScalarNoArgsFnOutput,
-    RootScalarUnionFnOutputT1Integer,
-]
-
-
 RootCompositeUnionFnOutput = typing.Union[
     Post,
     User,
+]
+
+
+RootScalarUnionFnOutput = typing.Union[
+    RootScalarNoArgsFnOutput,
+    RootScalarUnionFnOutputT1Integer,
 ]
 
 

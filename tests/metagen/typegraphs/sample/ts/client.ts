@@ -732,6 +732,24 @@ const nodeMetas = {
       ...nodeMetas.Post(),
     };
   },
+  RootCompositeArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "RootScalarNoArgsFnOutput",
+      },
+    };
+  },
+  RootScalarNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+  RootCompositeNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
   User(): NodeMeta {
     return {
       subNodes: [
@@ -757,36 +775,11 @@ const nodeMetas = {
       },
     };
   },
-  RootGetUserFn(): NodeMeta {
-    return {
-      ...nodeMetas.User(),
-    };
-  },
   RootScalarUnionFn(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
         id: "RootScalarNoArgsFnOutput",
-      },
-    };
-  },
-  RootScalarNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
-  RootCompositeNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-  RootScalarArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "UserIdStringUuid",
-        slug: "PostSlugString",
-        title: "PostSlugString",
       },
     };
   },
@@ -806,12 +799,19 @@ const nodeMetas = {
       },
     };
   },
-  RootCompositeArgsFn(): NodeMeta {
+  RootScalarArgsFn(): NodeMeta {
     return {
-      ...nodeMetas.Post(),
+      ...nodeMetas.scalar(),
       argumentTypes: {
-        id: "RootScalarNoArgsFnOutput",
+        id: "UserIdStringUuid",
+        slug: "PostSlugString",
+        title: "PostSlugString",
       },
+    };
+  },
+  RootGetUserFn(): NodeMeta {
+    return {
+      ...nodeMetas.User(),
     };
   },
 };
@@ -833,6 +833,9 @@ export type User = {
   email: UserEmailStringEmail;
   posts: UserPostsPostList;
 };
+export type RootCompositeUnionFnOutput =
+  | (Post)
+  | (User);
 export type RootScalarUnionFnOutputT1Integer = number;
 export type RootScalarUnionFnOutput =
   | (RootScalarNoArgsFnOutput)
@@ -842,9 +845,6 @@ export type RootMixedUnionFnOutput =
   | (User)
   | (RootScalarNoArgsFnOutput)
   | (RootScalarUnionFnOutputT1Integer);
-export type RootCompositeUnionFnOutput =
-  | (Post)
-  | (User);
 
 export type PostSelections = {
   _?: SelectionFlags;
