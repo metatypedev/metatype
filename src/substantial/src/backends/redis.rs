@@ -125,7 +125,7 @@ impl super::BackendStore for RedisBackend {
             let non_prefixed_sched_ref = schedule.to_rfc3339();
             let sched_score = 1.0 / (schedule.timestamp() as f64);
             let sched_key = self.key(&[&non_prefixed_sched_ref, &run_id])?;
-            let sched_ref = self.key(&[&non_prefixed_sched_ref])?;
+            let sched_ref = self.key(&["ref_", &run_id, &non_prefixed_sched_ref])?;
 
             let script = Script::new(
                 r#"
@@ -194,7 +194,7 @@ impl super::BackendStore for RedisBackend {
             let q_key: String = self.key(&["schedules", &queue])?;
             let non_prefixed_sched_ref = schedule.to_rfc3339();
             let sched_key = self.key(&[&non_prefixed_sched_ref, &run_id])?;
-            let sched_ref = self.key(&[&non_prefixed_sched_ref])?;
+            let sched_ref = self.key(&["ref_", &run_id, &non_prefixed_sched_ref])?;
 
             let script = Script::new(
                 r#"
@@ -232,10 +232,10 @@ impl super::BackendAgent for RedisBackend {
                 r#"
                     local q_key = KEYS[1]
                     local excludes = ARGV
-                    local schedule_keys = redis.call("ZRANGE", q_key, 0, -1)
+                    local schedule_refs = redis.call("ZRANGE", q_key, 0, -1)
 
-                    for _, schedule_key in ipairs(schedule_keys) do
-                        local run_ids = redis.call("ZRANGE", schedule_key, 0, -1)
+                    for _, schedule_ref in ipairs(schedule_refs) do
+                        local run_ids = redis.call("ZRANGE", schedule_ref, 0, -1)
                         for _, run_id in ipairs(run_ids) do
                             local is_excluded = false
                             for k = 1, #excludes do
@@ -246,7 +246,7 @@ impl super::BackendAgent for RedisBackend {
                             end
 
                             if not is_excluded then
-                                return {run_id, schedule_key}
+                                return {run_id, schedule_ref}
                             end
                         end
                     end
@@ -257,16 +257,19 @@ impl super::BackendAgent for RedisBackend {
 
             let lua_ret: Option<(String, String)> = script.key(q_key).arg(excludes).invoke(r)?;
 
-            if let Some((run_id, schedule_key)) = lua_ret {
+            if let Some((run_id, schedule_ref)) = lua_ret {
                 let schedule = self
-                    .parts(&schedule_key)?
+                    .parts(&schedule_ref)?
                     .last()
                     .cloned()
-                    .with_context(|| format!("Invalid key {:?}", schedule_key))?;
+                    .with_context(|| format!("Invalid key {:?}", schedule_ref))?;
+                println!("{:?}", schedule_ref);
 
                 return Ok(Some(NextRun {
                     run_id,
-                    schedule_date: DateTime::parse_from_rfc3339(&schedule)?.to_utc(),
+                    schedule_date: DateTime::parse_from_rfc3339(&schedule)
+                        .with_context(|| format!("Parsing {:?}", schedule))?
+                        .to_utc(),
                 }));
             }
 
