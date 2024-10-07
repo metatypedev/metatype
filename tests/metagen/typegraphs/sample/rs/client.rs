@@ -324,7 +324,7 @@ impl<SelT, SelAliased, QTy, Out> UnselectedNode<SelT, SelAliased, QTy, Out>
 where
     SelT: Into<CompositeSelection>,
 {
-    fn select_erased(self, select: SelT) -> Result<SelectNodeErased, SelectionError> {
+    fn select_erased(self, select: SelT) -> SelectNodeErased {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -338,8 +338,9 @@ where
             ),
             &[(self.root_name, self.root_meta)].into(),
             "$q".into(),
-        )?;
-        Ok(nodes.into_iter().next().unwrap())
+        )
+        .unwrap();
+        nodes.into_iter().next().unwrap()
     }
 }
 
@@ -347,7 +348,7 @@ impl<SelT, SelAliased, QTy, Out> UnselectedNode<SelT, SelAliased, QTy, Out>
 where
     SelAliased: Into<CompositeSelection>,
 {
-    fn select_aliased_erased(self, select: SelAliased) -> Result<SelectNodeErased, SelectionError> {
+    fn select_aliased_erased(self, select: SelAliased) -> SelectNodeErased {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -361,8 +362,9 @@ where
             ),
             &[(self.root_name, self.root_meta)].into(),
             "$q".into(),
-        )?;
-        Ok(nodes.into_iter().next().unwrap())
+        )
+        .unwrap();
+        nodes.into_iter().next().unwrap()
     }
 }
 
@@ -372,41 +374,32 @@ impl<SelT, SelAliased, Out> UnselectedNode<SelT, SelAliased, QueryMarker, Out>
 where
     SelT: Into<CompositeSelection>,
 {
-    pub fn select(self, select: SelT) -> Result<QueryNode<Out>, SelectionError> {
-        Ok(QueryNode(self.select_erased(select)?, PhantomData))
+    pub fn select(self, select: SelT) -> QueryNode<Out> {
+        QueryNode(self.select_erased(select), PhantomData)
     }
 }
 impl<SelT, SelAliased, Out> UnselectedNode<SelT, SelAliased, QueryMarker, Out>
 where
     SelAliased: Into<CompositeSelection>,
 {
-    pub fn select_aliased(
-        self,
-        select: SelAliased,
-    ) -> Result<QueryNode<serde_json::Value>, SelectionError> {
-        Ok(QueryNode(self.select_aliased_erased(select)?, PhantomData))
+    pub fn select_aliased(self, select: SelAliased) -> QueryNode<serde_json::Value> {
+        QueryNode(self.select_aliased_erased(select), PhantomData)
     }
 }
 impl<SelT, SelAliased, Out> UnselectedNode<SelT, SelAliased, MutationMarker, Out>
 where
     SelT: Into<CompositeSelection>,
 {
-    pub fn select(self, select: SelT) -> Result<MutationNode<Out>, SelectionError> {
-        Ok(MutationNode(self.select_erased(select)?, PhantomData))
+    pub fn select(self, select: SelT) -> MutationNode<Out> {
+        MutationNode(self.select_erased(select), PhantomData)
     }
 }
 impl<SelT, SelAliased, Out> UnselectedNode<SelT, SelAliased, MutationMarker, Out>
 where
     SelAliased: Into<CompositeSelection>,
 {
-    pub fn select_aliased(
-        self,
-        select: SelAliased,
-    ) -> Result<MutationNode<serde_json::Value>, SelectionError> {
-        Ok(MutationNode(
-            self.select_aliased_erased(select)?,
-            PhantomData,
-        ))
+    pub fn select_aliased(self, select: SelAliased) -> MutationNode<serde_json::Value> {
+        MutationNode(self.select_aliased_erased(select), PhantomData)
     }
 }
 
@@ -1680,14 +1673,14 @@ pub mod graphql {
         }
         pub fn prepare_query<Doc: ToSelectDoc + ToQueryDoc>(
             &self,
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
         ) -> Result<PreparedRequestReqwestSync<Doc>, PrepareRequestError> {
             self.prepare_query_with_opts(fun, Default::default())
         }
 
         pub fn prepare_query_with_opts<Doc: ToSelectDoc + ToQueryDoc>(
             &self,
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
             opts: GraphQlTransportOptions,
         ) -> Result<PreparedRequestReqwestSync<Doc>, PrepareRequestError> {
             PreparedRequestReqwestSync::new(
@@ -1701,14 +1694,14 @@ pub mod graphql {
 
         pub fn prepare_mutation<Doc: ToSelectDoc + ToMutationDoc>(
             &self,
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
         ) -> Result<PreparedRequestReqwestSync<Doc>, PrepareRequestError> {
             self.prepare_mutation_with_opts(fun, Default::default())
         }
 
         pub fn prepare_mutation_with_opts<Doc: ToSelectDoc + ToMutationDoc>(
             &self,
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
             opts: GraphQlTransportOptions,
         ) -> Result<PreparedRequestReqwestSync<Doc>, PrepareRequestError> {
             PreparedRequestReqwestSync::new(
@@ -1820,14 +1813,14 @@ pub mod graphql {
         }
         pub fn prepare_query<Doc: ToSelectDoc + ToQueryDoc>(
             &self,
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
         ) -> Result<PreparedRequestReqwest<Doc>, PrepareRequestError> {
             self.prepare_query_with_opts(fun, Default::default())
         }
 
         pub fn prepare_query_with_opts<Doc: ToSelectDoc + ToQueryDoc>(
             &self,
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
             opts: GraphQlTransportOptions,
         ) -> Result<PreparedRequestReqwest<Doc>, PrepareRequestError> {
             PreparedRequestReqwest::new(
@@ -1841,14 +1834,14 @@ pub mod graphql {
 
         pub fn prepare_mutation<Doc: ToSelectDoc + ToMutationDoc>(
             &self,
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
         ) -> Result<PreparedRequestReqwest<Doc>, PrepareRequestError> {
             self.prepare_mutation_with_opts(fun, Default::default())
         }
 
         pub fn prepare_mutation_with_opts<Doc: ToSelectDoc + ToMutationDoc>(
             &self,
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
             opts: GraphQlTransportOptions,
         ) -> Result<PreparedRequestReqwest<Doc>, PrepareRequestError> {
             PreparedRequestReqwest::new(
@@ -1896,7 +1889,7 @@ pub mod graphql {
         addr: Url,
         client: reqwest::Client,
         nodes_len: usize,
-        doc: String,
+        pub doc: String,
         variables: JsonObject,
         opts: GraphQlTransportOptions,
         placeholders: Arc<FoundPlaceholders>,
@@ -1907,7 +1900,7 @@ pub mod graphql {
         addr: Url,
         client: reqwest::blocking::Client,
         nodes_len: usize,
-        doc: String,
+        pub doc: String,
         variables: JsonObject,
         opts: GraphQlTransportOptions,
         placeholders: Arc<FoundPlaceholders>,
@@ -1916,13 +1909,13 @@ pub mod graphql {
 
     impl<Doc: ToSelectDoc> PreparedRequestReqwestSync<Doc> {
         fn new(
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
             addr: Url,
             opts: GraphQlTransportOptions,
             ty: &'static str,
             ty_to_gql_ty_map: &TyToGqlTyMap,
         ) -> Result<Self, PrepareRequestError> {
-            let nodes = fun(&mut PreparedArgs).map_err(PrepareRequestError::FunctionError)?;
+            let nodes = fun(&mut PreparedArgs);
             let nodes = nodes.to_select_doc();
             let nodes_len = nodes.len();
             let (doc, variables, placeholders) = build_gql_doc(ty_to_gql_ty_map, nodes, ty, None)
@@ -2008,13 +2001,13 @@ pub mod graphql {
 
     impl<Doc: ToSelectDoc> PreparedRequestReqwest<Doc> {
         fn new(
-            fun: impl FnOnce(&mut PreparedArgs) -> Result<Doc, BoxErr>,
+            fun: impl FnOnce(&mut PreparedArgs) -> Doc,
             addr: Url,
             opts: GraphQlTransportOptions,
             ty: &'static str,
             ty_to_gql_ty_map: &TyToGqlTyMap,
         ) -> Result<Self, PrepareRequestError> {
-            let nodes = fun(&mut PreparedArgs).map_err(PrepareRequestError::FunctionError)?;
+            let nodes = fun(&mut PreparedArgs);
             let nodes = nodes.to_select_doc();
             let nodes_len = nodes.len();
             let (doc, variables, placeholders) = build_gql_doc(ty_to_gql_ty_map, nodes, ty, None)
@@ -2132,7 +2125,6 @@ pub mod graphql {
 
     #[derive(Debug)]
     pub enum PrepareRequestError {
-        FunctionError(BoxErr),
         BuildError(GraphQLRequestError),
         PlaceholderError(BoxErr),
         RequestError(GraphQLRequestError),
@@ -2142,9 +2134,9 @@ pub mod graphql {
     impl std::fmt::Display for PrepareRequestError {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match self {
-                PrepareRequestError::FunctionError(err) => {
+                /* PrepareRequestError::FunctionError(err) => {
                     write!(f, "error calling doc builder closure: {err}")
-                }
+                } */
                 PrepareRequestError::BuildError(err) => write!(f, "error building request: {err}"),
                 PrepareRequestError::PlaceholderError(err) => {
                     write!(f, "error resolving placeholder values: {err}")
@@ -2218,6 +2210,15 @@ mod node_metas {
             ),
         }
     }
+    pub fn RootGetUserFn() -> NodeMeta {
+        NodeMeta { ..User() }
+    }
+    pub fn RootCompositeArgsFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
+            ..Post()
+        }
+    }
     pub fn RootMixedUnionFnOutput() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2237,6 +2238,15 @@ mod node_metas {
             ..RootMixedUnionFnOutput()
         }
     }
+    pub fn RootGetPostsFn() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn RootScalarNoArgsFn() -> NodeMeta {
+        NodeMeta { ..scalar() }
+    }
+    pub fn RootCompositeNoArgsFn() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
     pub fn RootScalarArgsFn() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
@@ -2250,20 +2260,11 @@ mod node_metas {
             ..scalar()
         }
     }
-    pub fn RootCompositeArgsFn() -> NodeMeta {
+    pub fn RootScalarUnionFn() -> NodeMeta {
         NodeMeta {
             arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
-            ..Post()
+            ..scalar()
         }
-    }
-    pub fn RootScalarNoArgsFn() -> NodeMeta {
-        NodeMeta { ..scalar() }
-    }
-    pub fn RootGetUserFn() -> NodeMeta {
-        NodeMeta { ..User() }
-    }
-    pub fn RootGetPostsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
     }
     pub fn RootCompositeUnionFnOutput() -> NodeMeta {
         NodeMeta {
@@ -2283,15 +2284,6 @@ mod node_metas {
             arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
             ..RootCompositeUnionFnOutput()
         }
-    }
-    pub fn RootScalarUnionFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarNoArgsFnOutput".into())].into()),
-            ..scalar()
-        }
-    }
-    pub fn RootCompositeNoArgsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
     }
 }
 use types::*;
@@ -2320,6 +2312,14 @@ pub mod types {
     pub type RootScalarUnionFnOutputT1Integer = i64;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
+    pub enum RootMixedUnionFnOutput {
+        PostPartial(PostPartial),
+        UserPartial(UserPartial),
+        RootScalarNoArgsFnOutput(RootScalarNoArgsFnOutput),
+        RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
     pub enum RootScalarUnionFnOutput {
         RootScalarNoArgsFnOutput(RootScalarNoArgsFnOutput),
         RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
@@ -2329,14 +2329,6 @@ pub mod types {
     pub enum RootCompositeUnionFnOutput {
         PostPartial(PostPartial),
         UserPartial(UserPartial),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum RootMixedUnionFnOutput {
-        PostPartial(PostPartial),
-        UserPartial(UserPartial),
-        RootScalarNoArgsFnOutput(RootScalarNoArgsFnOutput),
-        RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
     }
 }
 #[derive(Default, Debug)]

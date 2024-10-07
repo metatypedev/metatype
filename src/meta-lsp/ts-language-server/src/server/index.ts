@@ -46,7 +46,7 @@ export class LspServer {
     this.connection.onDidChangeConfiguration(
       this.#onDidChangeConfiguration.bind(this),
     );
-    this.connection.onDidChangeWatchedFiles(() => { });
+    this.connection.onDidChangeWatchedFiles(() => {});
     // TODO
     this.connection.onCompletion(() => []);
     this.connection.onCompletionResolve((item) => item);

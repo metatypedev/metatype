@@ -12,10 +12,13 @@ let client: LanguageClient;
 
 export function activate(context: ExtensionContext) {
   const serverDir = context.asAbsolutePath(join("ts-language-server"));
-  const serverModule = context.asAbsolutePath(join("ts-language-server", "out", "server.js"));
+  const serverModule = context.asAbsolutePath(
+    join("ts-language-server", "out", "server.js"),
+  );
   const serverOptions: ServerOptions = {
     run: {
-      module: serverModule, transport: TransportKind.ipc,
+      module: serverModule,
+      transport: TransportKind.ipc,
     },
     debug: {
       command: "pnpm",
