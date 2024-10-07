@@ -12,12 +12,17 @@ use crate::{
     },
     errors::Result,
     typegraph::TypegraphContext,
-    types::{List, TypeDefData, TypeId},
+    types::{List, RefAttrs, TypeDefData, TypeId},
     wit::core::TypeList,
 };
 
 impl TypeConversion for List {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: RefAttrs,
+    ) -> Result<TypeNode> {
         Ok(TypeNode::List {
             base: BaseBuilderInit {
                 ctx,
@@ -29,7 +34,7 @@ impl TypeConversion for List {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(self.extended_base.injection.clone())?
+            .inject(ref_attrs.get_injection()?)?
             .build()?,
             data: ListTypeData {
                 items: ctx

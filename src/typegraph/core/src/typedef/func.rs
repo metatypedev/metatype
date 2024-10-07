@@ -13,11 +13,16 @@ use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::{self, Result, TgError};
 use crate::params::apply::ParameterTransformNode;
 use crate::typegraph::TypegraphContext;
-use crate::types::{Func, ResolveRef as _, TypeDef, TypeDefData, TypeId};
+use crate::types::{Func, RefAttrs, ResolveRef as _, TypeDef, TypeDefData, TypeId};
 use crate::wit::core::TypeFunc;
 
 impl TypeConversion for Func {
-    fn convert(&self, ctx: &mut TypegraphContext, _runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        _runtime_id: Option<u32>,
+        _ref_attrs: RefAttrs,
+    ) -> Result<TypeNode> {
         let (mat_id, runtime_id) = ctx.register_materializer(self.data.mat)?;
 
         let input = {
@@ -29,8 +34,9 @@ impl TypeConversion for Func {
         }?
         .into();
 
-        let out_type = TypeId(self.data.out).resolve_ref()?.0;
-        let output = ctx.register_type(out_type, Some(runtime_id))?.into();
+        let output = ctx
+            .register_type(TypeId(self.data.out), Some(runtime_id))?
+            .into();
 
         let parameter_transform = self
             .data

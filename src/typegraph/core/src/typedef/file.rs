@@ -9,7 +9,7 @@ use crate::conversion::hash::Hashable;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::types::{File, TypeDefData};
+use crate::types::{File, RefAttrs, TypeDefData};
 use crate::wit::core::TypeFile;
 
 impl TypeDefData for TypeFile {
@@ -50,7 +50,12 @@ impl Hashable for TypeFile {
 }
 
 impl TypeConversion for File {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        _ref_attrs: RefAttrs,
+    ) -> Result<TypeNode> {
         Ok(TypeNode::File {
             // TODO should `as_id` be supported?
             base: BaseBuilderInit {

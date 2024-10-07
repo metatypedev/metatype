@@ -9,17 +9,27 @@ use std::rc::Rc;
 
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::types::{ResolveRef as _, TypeId};
+use crate::types::{RefAttrs, TypeId};
 
 #[enum_dispatch]
 pub trait TypeConversion {
     /// takes already converted runtime id
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode>;
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: RefAttrs,
+    ) -> Result<TypeNode>;
 }
 
 impl<T: TypeConversion> TypeConversion for Rc<T> {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        (**self).convert(ctx, runtime_id)
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: RefAttrs,
+    ) -> Result<TypeNode> {
+        (**self).convert(ctx, runtime_id, ref_attrs)
     }
 }
 
@@ -98,23 +108,8 @@ impl<'a> BaseBuilder<'a> {
         self
     }
 
-    // TODO use a wit generated injection type; the this will be a in-place mutation
-    fn convert_injection(&mut self, mut injection: Injection) -> Result<Injection> {
-        if let Injection::Parent(data) = &mut injection {
-            for type_id in data.values_mut().into_iter() {
-                let type_def = TypeId(*type_id).resolve_ref()?.0;
-                *type_id = self
-                    .ctx
-                    .register_type(type_def, Some(self.runtime_idx))?
-                    .into();
-            }
-        }
-
-        Ok(injection)
-    }
-
-    pub fn inject(mut self, injection: Option<Box<Injection>>) -> Result<Self> {
-        self.injection = injection.map(|i| self.convert_injection(*i)).transpose()?;
+    pub fn inject(mut self, injection: Option<Injection>) -> Result<Self> {
+        self.injection = injection;
         Ok(self)
     }
 }

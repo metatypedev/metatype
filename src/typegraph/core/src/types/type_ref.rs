@@ -1,19 +1,23 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
 use std::{collections::HashMap, rc::Rc};
 
 use crate::errors::Result;
 use crate::global_store::Store;
+use crate::typegraph::TypegraphContext;
 use crate::types::{TypeDef, TypeDefExt as _, TypeId};
 
 use super::Type;
 
 mod as_id;
 mod resolve_ref;
+mod with_injection;
 
 pub use as_id::{AsId, IdKind};
 pub use resolve_ref::ResolveRef;
+pub use with_injection::WithInjection;
 
 #[derive(Clone, Debug)]
 pub enum RefTarget {
@@ -142,5 +146,31 @@ impl TypeRef {
 
     pub fn attrs(&self) -> &RefAttrsInner {
         self.attributes.0.as_ref().unwrap()
+    }
+
+    pub fn hash_type(
+        &self,
+        hasher: &mut crate::conversion::hash::Hasher,
+        tg: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+    ) -> Result<()> {
+        "ref".hash(hasher);
+        let mut attributes = self.attributes.iter().collect::<Vec<_>>();
+        attributes.sort_by(|(k1, _), (k2, _)| k1.cmp(k2));
+        for (k, v) in attributes.into_iter() {
+            k.hash(hasher);
+            v.hash(hasher);
+        }
+        match &self.target {
+            RefTarget::Direct(target) => {
+                target.hash_type(hasher, tg, runtime_id)?;
+            }
+            RefTarget::Indirect(ref name) => {
+                "named".hash(hasher);
+                name.hash(hasher);
+                runtime_id.hash(hasher);
+            }
+        }
+        Ok(())
     }
 }

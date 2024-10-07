@@ -5,7 +5,7 @@ use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
-use crate::types::{ResolveRef as _, TypeDef, TypeDefExt, TypeId};
+use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId};
 use crate::utils::postprocess::naming::NamingProcessor;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
@@ -343,24 +343,32 @@ pub fn set_seed(seed: Option<u32>) -> Result<()> {
 }
 
 impl TypegraphContext {
-    pub fn hash_type(&mut self, type_def: TypeDef, runtime_id: Option<u32>) -> Result<u64> {
-        let type_id = type_def.id().into();
-        if let Some(hash) = self.mapping.types_to_hash.get(&type_id) {
+    pub fn hash_type(&mut self, type_id: TypeId, runtime_id: Option<u32>) -> Result<u64> {
+        // let type_id = type_def.id().into();
+        if let Some(hash) = self.mapping.types_to_hash.get(&type_id.into()) {
             Ok(*hash)
         } else {
             let mut hasher = Hasher::new();
-            type_def.hash_type(&mut hasher, self, runtime_id)?;
+            match type_id.as_type()? {
+                Type::Def(type_def) => {
+                    type_def.hash_type(&mut hasher, self, runtime_id)?;
+                }
+                Type::Ref(type_ref) => {
+                    type_ref.hash_type(&mut hasher, self, runtime_id)?;
+                }
+            }
             let hash = hasher.finish();
-            self.mapping.types_to_hash.insert(type_id, hash);
+            self.mapping.types_to_hash.insert(type_id.into(), hash);
             Ok(hash)
         }
     }
 
     pub fn register_type(
         &mut self,
-        mut type_def: TypeDef,
+        type_id: TypeId,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
+        let (mut type_def, ref_attrs) = type_id.resolve_ref()?;
         // we remove the name before hashing if it's not
         // user named
         let user_named = if let Some(name) = type_def.name() {
@@ -373,7 +381,7 @@ impl TypegraphContext {
         } else {
             false
         };
-        let hash = self.hash_type(type_def.clone(), runtime_id)?;
+        let hash = self.hash_type(type_id, runtime_id)?;
 
         match self.mapping.hash_to_type.entry(hash) {
             Entry::Vacant(e) => {
@@ -388,7 +396,7 @@ impl TypegraphContext {
 
                 // let tpe = id.as_type()?;
 
-                let type_node = type_def.convert(self, runtime_id)?;
+                let type_node = type_def.convert(self, runtime_id, ref_attrs)?;
 
                 self.types[idx] = Some(type_node);
                 if user_named {

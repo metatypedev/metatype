@@ -6,6 +6,6 @@ root: list 'list_73' #73
 └─ item: struct 'Record_with_nested_count' #72
    ├─ [age]: optional 'optional_6' #6
    │  └─ item: integer #5
-   ├─ [created_at]: string #1
+   ├─ [created_at]: string #0
    ├─ [id]: string #2
    └─ [name]: string #4

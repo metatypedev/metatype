@@ -174,11 +174,9 @@ impl Property {
             })
         };
 
-        match type_def
-            .x_base()
-            .injection
+        match ref_data
+            .get_injection()?
             .as_ref()
-            .map(|i| i.as_ref())
             .map(Injection::try_from)
             .transpose()
         {

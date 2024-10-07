@@ -12,7 +12,7 @@ root: struct 'Record_query_input' #71
 │     ├─ variant_2: struct #64
 │     │  └─ [age]: integer #5
 │     └─ variant_3: struct #65
-│        └─ [created_at]: string #1
+│        └─ [created_at]: string #0
 ├─ [distinct]: optional 'optional_70' #70
 │  └─ item: list 'Record_keys_union' #69
 │     └─ item: string #68 enum{ '"id"', '"name"', '"age"', '"created_at"' }

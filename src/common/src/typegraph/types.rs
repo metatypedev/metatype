@@ -21,7 +21,7 @@ pub struct SingleValue<T: Hash> {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(untagged)]
-pub enum InjectionData<T: Hash> {
+pub enum InjectionData<T: Hash = String> {
     SingleValue(SingleValue<T>),
     ValueByEffect(BTreeMap<EffectType, T>),
 }
@@ -45,12 +45,12 @@ impl<T: Hash> InjectionData<T> {
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(tag = "source", content = "data", rename_all = "lowercase")]
 pub enum Injection {
-    Static(InjectionData<String>),
-    Context(InjectionData<String>),
-    Secret(InjectionData<String>),
-    Parent(InjectionData<u32>),
-    Dynamic(InjectionData<String>),
-    Random(InjectionData<String>),
+    Static(InjectionData),
+    Context(InjectionData),
+    Secret(InjectionData),
+    Parent(InjectionData),
+    Dynamic(InjectionData),
+    Random(InjectionData),
 }
 
 #[skip_serializing_none]

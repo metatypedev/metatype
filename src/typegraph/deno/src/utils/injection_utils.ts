@@ -57,10 +57,7 @@ export function serializeStaticInjection(value: InjectionValue<unknown>) {
 }
 
 export function serializeFromParentInjection(value: InjectionValue<string>) {
-  let correctValue: any = null;
-  if (typeof value === "string") {
-    correctValue = genRef(value)._id;
-  } else {
+  if (typeof value !== "string") {
     const isObject = typeof value === "object" && !Array.isArray(value) &&
       value !== null;
     if (!isObject) {
@@ -77,23 +74,11 @@ export function serializeFromParentInjection(value: InjectionValue<string>) {
     if (!isPerEffect) {
       throw new Error("object keys should be of type EffectType");
     }
-
-    correctValue = {};
-    for (const symbol of symbols) {
-      const v = (value as any)?.[symbol];
-      if (v === undefined) continue;
-      if (typeof v !== "string") {
-        throw new Error(
-          `value for field ${symbol.toString()} must be a string`,
-        );
-      }
-      correctValue[symbol] = genRef(v)._id;
-    }
   }
 
   return serializeInjection(
     "parent",
-    correctValue,
+    value,
     (x: unknown) => x as number,
   );
 }

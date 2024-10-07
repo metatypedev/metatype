@@ -15,7 +15,7 @@ use crate::{
     errors,
     global_store::Store,
     typegraph::TypegraphContext,
-    types::{IdKind, Struct, Type, TypeDefData, TypeId},
+    types::{IdKind, RefAttrs, Struct, Type, TypeDefData, TypeId},
     wit::core::TypeStruct,
 };
 
@@ -68,7 +68,12 @@ impl TypeStruct {
 }
 
 impl TypeConversion for Struct {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: RefAttrs,
+    ) -> Result<TypeNode> {
         let runtime_id = match runtime_id {
             Some(runtime_id) => runtime_id,
             None => ctx.register_runtime(Store::get_deno_runtime())?,
@@ -85,7 +90,7 @@ impl TypeConversion for Struct {
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(self.extended_base.injection.clone())?
+            .inject(ref_attrs.get_injection()?)?
             .build()?,
             data: ObjectTypeData {
                 properties: self

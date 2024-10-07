@@ -203,7 +203,6 @@ class Boolean extends Typedef {
 export function boolean(base: SimplifiedBase<TypeBase> = {}): Boolean {
   const completeBase = {
     ...base,
-    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Boolean(core.booleanb(completeBase), completeBase);
@@ -282,7 +281,6 @@ export function float(
   };
   const completeBase = {
     ...base,
-    asId: false,
     runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Float(

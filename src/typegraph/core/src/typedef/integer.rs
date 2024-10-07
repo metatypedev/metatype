@@ -13,12 +13,17 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Integer, TypeDefData},
+    types::{Integer, RefAttrs, TypeDefData},
     wit::core::TypeInteger,
 };
 
 impl TypeConversion for Integer {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: RefAttrs,
+    ) -> Result<TypeNode> {
         Ok(TypeNode::Integer {
             base: BaseBuilderInit {
                 ctx,
@@ -31,7 +36,7 @@ impl TypeConversion for Integer {
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(self.extended_base.injection.clone())?
+            .inject(ref_attrs.get_injection()?)?
             .build()?,
             data: IntegerTypeData {
                 minimum: self.data.min,

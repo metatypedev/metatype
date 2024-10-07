@@ -1,14 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{RefTarget, ResolveRef as _, TypeDefExt};
+use super::{ResolveRef as _, TypeDefExt};
 use super::{Type, TypeDef};
 use crate::errors::Result;
 use crate::errors::TgError;
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::TypeId as CoreTypeId;
 use std::fmt::Debug;
-use std::hash::Hash as _;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TypeId(pub CoreTypeId);
@@ -67,27 +66,14 @@ impl TypeId {
         runtime_id: Option<u32>,
     ) -> Result<()> {
         let typ = self.as_type()?;
-        match typ.to_ref_target() {
-            RefTarget::Direct(type_def) => {
-                if let Some(name) = type_def.base().name.as_deref() {
-                    "named".hash(state);
-                    name.hash(state);
-                } else {
-                    tg.hash_type(type_def, runtime_id)?.hash(state)
-                }
+        match typ {
+            Type::Ref(type_ref) => {
+                type_ref.hash_type(state, tg, runtime_id)?;
             }
-            RefTarget::Indirect(name) => {
-                "named".hash(state);
-                name.hash(state);
+            Type::Def(type_def) => {
+                type_def.hash_type(state, tg, runtime_id)?;
             }
         }
-        if let Type::Ref(type_ref) = typ {
-            "attributes".hash(state);
-            let mut sorted_attributes = type_ref.attributes.iter().collect::<Vec<_>>();
-            sorted_attributes.sort_by_key(|(k, _)| k.to_string());
-            sorted_attributes.hash(state);
-        }
-
         Ok(())
     }
 }

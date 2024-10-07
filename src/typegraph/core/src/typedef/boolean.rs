@@ -11,12 +11,17 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Boolean, TypeBoolean, TypeDefData},
+    types::{Boolean, RefAttrs, TypeBoolean, TypeDefData},
 };
 use std::hash::Hash;
 
 impl TypeConversion for Boolean {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: RefAttrs,
+    ) -> Result<TypeNode> {
         Ok(TypeNode::Boolean {
             base: BaseBuilderInit {
                 ctx,
@@ -28,7 +33,7 @@ impl TypeConversion for Boolean {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(self.extended_base.injection.clone())?
+            .inject(ref_attrs.get_injection()?)?
             .build()?,
         })
     }

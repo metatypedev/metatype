@@ -5,7 +5,6 @@ import json
 from typing import Callable, Dict, Union
 
 from typegraph.effects import EffectType
-from typegraph.graph.typegraph import gen_ref
 
 
 def serialize_injection(
@@ -43,10 +42,7 @@ def serialize_generic_injection(source: str, value: Union[any, Dict[EffectType, 
 
 
 def serialize_parent_injection(value: Union[str, Dict[EffectType, str]]):
-    correct_value = None
-    if isinstance(value, str):
-        correct_value = gen_ref(value).id
-    else:
+    if not isinstance(value, str):
         if not isinstance(value, dict):
             raise Exception("type not supported")
 
@@ -56,15 +52,7 @@ def serialize_parent_injection(value: Union[str, Dict[EffectType, str]]):
         if not is_per_effect:
             raise Exception("object keys should be of type EffectType")
 
-        correct_value = {}
-        for k, v in value.items():
-            if not isinstance(v, str):
-                raise Exception(f"value for field {k.name} must be a string")
-            correct_value[k] = gen_ref(v).id
-
-    assert correct_value is not None
-
-    return serialize_injection("parent", value=correct_value, value_mapper=lambda x: x)
+    return serialize_injection("parent", value=value, value_mapper=lambda x: x)
 
 
 class InheritDef:

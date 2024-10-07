@@ -21,7 +21,6 @@ const logger = getLogger(import.meta);
 
 interface TypeInfo {
   optional: boolean;
-  as_id: boolean;
   title: string;
   type: string;
   runtime: string;
@@ -558,7 +557,6 @@ function walkPath(
 
   return {
     optional: isOptional,
-    as_id: node.as_id,
     title: node.title,
     type: node.type,
     enum: node.enum ?? null,

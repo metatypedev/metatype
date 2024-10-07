@@ -9,6 +9,8 @@ use crate::wit::core::{
     Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
     TypeString, TypeStruct, TypeUnion,
 };
+#[cfg(test)]
+use common::typegraph::{Injection, InjectionData, SingleValue};
 
 pub trait TypeBuilder {
     fn build(&self) -> Result<TypeId>;
@@ -21,6 +23,19 @@ pub trait TypeBuilder {
     fn as_id(&self) -> Result<TypeRef> {
         use crate::types::type_ref::AsId;
         self.build()?.as_id(false)
+    }
+
+    #[cfg(test)]
+    fn inject(&self, injection: Injection) -> Result<TypeRef> {
+        use crate::types::type_ref::WithInjection;
+        self.build()?.with_injection(injection)
+    }
+
+    #[cfg(test)]
+    fn set_value<V: serde::ser::Serialize>(&mut self, val: V) -> Result<TypeRef> {
+        self.inject(Injection::Static(InjectionData::SingleValue(SingleValue {
+            value: serde_json::to_string(&val).unwrap(),
+        })))
     }
 }
 
@@ -61,19 +76,6 @@ pub trait ConcreteTypeBuilder: TypeBuilder {
 
     fn named(&mut self, name: impl Into<String>) -> &mut Self {
         self.base_mut().name = Some(name.into());
-        self
-    }
-
-    fn inject(&mut self, injection: Injection) -> &mut Self {
-        self.xbase_mut().injection = Some(Box::new(injection));
-        self
-    }
-
-    fn set_value<V: serde::ser::Serialize>(&mut self, val: V) -> &mut Self {
-        self.inject(Injection::Static(InjectionData::SingleValue(SingleValue {
-            value: serde_json::to_string(&val).unwrap(),
-        })));
-        eprintln!("set injection: {:?}", self.xbase_mut().injection);
         self
     }
 
@@ -354,7 +356,6 @@ macro_rules! unionx {
         crate::t::unionx![$($ty),*]
     };
 }
-use common::typegraph::{Injection, InjectionData, SingleValue};
 pub(crate) use unionx;
 
 #[derive(Default)]

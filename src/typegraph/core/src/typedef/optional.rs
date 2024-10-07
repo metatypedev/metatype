@@ -13,12 +13,17 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Optional, TypeDefData, TypeId},
+    types::{Optional, RefAttrs, TypeDefData, TypeId},
     wit::core::TypeOptional,
 };
 
 impl TypeConversion for Optional {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: RefAttrs,
+    ) -> Result<TypeNode> {
         let default_value = match self.data.default_item.clone() {
             Some(value) => {
                 let ret = serde_json::from_str(&value).map_err(|s| s.to_string())?;
@@ -38,7 +43,7 @@ impl TypeConversion for Optional {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(self.extended_base.injection.clone())?
+            .inject(ref_attrs.get_injection()?)?
             .build()?,
             data: OptionalTypeData {
                 item: ctx

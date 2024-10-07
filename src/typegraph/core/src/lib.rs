@@ -19,6 +19,7 @@ mod test_utils;
 
 use std::collections::HashSet;
 
+use common::typegraph::Injection;
 use errors::{Result, TgError};
 use global_store::{NameRegistration, Store};
 use indoc::formatdoc;
@@ -28,7 +29,7 @@ use runtimes::{DenoMaterializer, Materializer};
 use types::type_ref::AsId;
 use types::{
     Boolean, Either, File, Float, Func, Integer, List, Optional, StringT, Struct, TypeBoolean,
-    TypeDef, TypeDefExt, TypeId, TypeRef, Union,
+    TypeDef, TypeDefExt, TypeId, TypeRef, Union, WithInjection as _,
 };
 
 use utils::clear_name;
@@ -371,26 +372,10 @@ impl wit::core::Guest for Lib {
     }
 
     fn with_injection(type_id: CoreTypeId, injection: String) -> Result<CoreTypeId> {
-        // TODO try to resolve proxy?
-        let type_def = TypeId(type_id).as_type_def()?;
-        let Some(type_def) = type_def else {
-            return Err(errors::TgError::from("cannot add injection to ref type"));
-        };
-
-        let mut x_base = type_def.x_base().clone();
-        if x_base.injection.is_some() {
-            return Err(errors::TgError::from(
-                "injection already exists for this type",
-            ));
-        }
-        x_base.injection = Some(
-            serde_json::from_str(&injection).map_err(|e| errors::TgError::from(e.to_string()))?,
-        );
-        Ok(Store::register_type_def(
-            move |id| type_def.with_x_base(id, x_base.clone()),
-            NameRegistration(false),
-        )?
-        .into())
+        // validation
+        let injection: Injection =
+            serde_json::from_str(&injection).map_err(|e| errors::TgError::from(e.to_string()))?;
+        Ok(TypeId(type_id).with_injection(injection)?.id.into())
     }
 
     fn with_policy(type_id: CoreTypeId, policy_chain: Vec<PolicySpec>) -> Result<CoreTypeId> {
