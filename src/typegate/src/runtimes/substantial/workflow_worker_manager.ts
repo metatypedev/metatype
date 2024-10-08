@@ -112,6 +112,7 @@ export class WorkerManager {
 
   #createWorker(name: string, modulePath: string, runId: RunId) {
     const worker = new Worker(import.meta.resolve("./worker.ts"), {
+      name: runId,
       type: "module",
     });
 

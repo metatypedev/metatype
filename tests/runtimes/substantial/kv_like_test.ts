@@ -11,16 +11,26 @@ basicTestTemplate("memory", {
   delays: { awaitSleepCompleteSec: 7 },
 });
 
+concurrentWorkflowTestTemplate("memory", {
+  delays: { awaitEmailCompleteSec: 8 },
+});
+
+retrySaveTestTemplate("memory", {
+  delays: {
+    awaitCompleteAll: 10,
+  },
+});
+
 basicTestTemplate("fs", {
   delays: { awaitSleepCompleteSec: 7 },
 });
 
 concurrentWorkflowTestTemplate("fs", {
-  delays: { awaitEmailCompleteSec: 10 },
+  delays: { awaitEmailCompleteSec: 8 },
 });
 
 retrySaveTestTemplate("fs", {
   delays: {
-    awaitCompleteAll: 15,
+    awaitCompleteAll: 10,
   },
 });

@@ -12,6 +12,7 @@ import {
   Result,
   WorkerData,
   WorkflowResult,
+  pushBackOp,
 } from "./types.ts";
 import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
 
@@ -108,20 +109,59 @@ export class Agent {
 
   async #nextIteration() {
     logger.warn("POLL");
-    const next = await this.#tryAcquireNextRun();
 
+    const acquireMaxForThisAgent = Infinity;
+    const replayReq = [] as Array<NextRun>;
+    const runIdSeen = new Set<string>();
+
+    while (replayReq.length <= acquireMaxForThisAgent) {
+      // Note: in multiple agents/typegate scenario, a single node may acquire all runs for itself within a tick span
+      // Add a delay here or size limit to replayReq list
+      const next = await this.#tryAcquireNextRun();
+      if (next === undefined) {
+        break;
+      } else {
+        if (!runIdSeen.has(next.run_id)) {
+          replayReq.push(next);
+          // we cannot start more than 1 worker associated to a runId
+          runIdSeen.add(next.run_id);
+        }
+      }
+    }
+
+    const errors = [];
     for (const workflow of this.workflows) {
-      if (next && Agent.parseWorkflowName(next.run_id) == workflow.name) {
+      const replayRequests = replayReq.filter(
+        ({ run_id }) => Agent.parseWorkflowName(run_id) == workflow.name
+      );
+
+      while (true) {
         // logger.warn(`Run workflow ${JSON.stringify(next)}`);
+        const next = replayRequests.shift();
+        if (!next) {
+          break;
+        }
 
         await this.log(next.run_id, next.schedule_date, {
           message: "Replay workflow",
           next,
         });
 
-        await this.#replay(next, workflow);
-        return;
+        try {
+          await this.#replay(next, workflow);
+        } catch (err) {
+          logger.error(
+            `Replay failed for ${workflow.name} => ${JSON.stringify(next)}`
+          );
+          errors.push({ err, next });
+        }
       }
+    }
+
+    if (errors.length > 0) {
+      throw Error("Replaying runs", {
+        cause: errors,
+      });
     }
   }
 
@@ -190,7 +230,7 @@ export class Agent {
     }
 
     if (newEventOp) {
-      run.operations.push(newEventOp);
+      pushBackOp(run, newEventOp);
     }
 
     if (run.operations.length == 0) {
@@ -340,8 +380,10 @@ export class Agent {
 
     logger.info(`Append Stop ${runId}`);
     const rustResult = kind == "FAIL" ? "Err" : "Ok";
-    run.operations.push({
-      // Note: run is a one-time value, thus can be mutated
+
+    // Note: run is a one-time value, thus can be mutated
+
+    pushBackOp(run, {
       at: new Date().toJSON(),
       event: {
         type: "Stop",
@@ -392,7 +434,7 @@ export class Agent {
   }
 }
 
-function checkIfRunHasStopped(run: Run) {
+export function checkIfRunHasStopped(run: Run) {
   let life = 0;
   let hasStopped = false;
   for (const op of run.operations) {

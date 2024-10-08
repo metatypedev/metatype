@@ -371,7 +371,7 @@ export function retrySaveTestTemplate(
 
               assertExists(resolvedId, "resolve runId");
               assertExists(retryId, "retry runId");
-              assertExists(timeoutId, "timeou runId");
+              assertExists(timeoutId, "timeout runId");
               assertExists(retryAbortMeId, "retry_abort_me runId");
             })
             .on(e);

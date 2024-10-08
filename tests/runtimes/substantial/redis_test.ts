@@ -21,7 +21,7 @@ basicTestTemplate(
 concurrentWorkflowTestTemplate(
   "redis",
   {
-    delays: { awaitEmailCompleteSec: 18 },
+    delays: { awaitEmailCompleteSec: 12 },
     secrets: { SUB_REDIS },
   },
   redisCleanup(SUB_REDIS)
@@ -31,7 +31,7 @@ retrySaveTestTemplate(
   "redis",
   {
     delays: {
-      awaitCompleteAll: 18,
+      awaitCompleteAll: 12,
     },
     secrets: { SUB_REDIS },
   },
