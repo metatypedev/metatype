@@ -263,7 +263,6 @@ impl super::BackendAgent for RedisBackend {
                     .last()
                     .cloned()
                     .with_context(|| format!("Invalid key {:?}", schedule_ref))?;
-                println!("{:?}", schedule_ref);
 
                 return Ok(Some(NextRun {
                     run_id,
