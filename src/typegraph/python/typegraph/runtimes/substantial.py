@@ -17,7 +17,7 @@ from typegraph.gen.exports.runtimes import (
     SubstantialOperationTypeResources,
     SubstantialOperationTypeResults,
     SubstantialRuntimeData,
-    Workflow,
+    WorkflowFileDescription,
     WorkflowKind,
 )
 from typegraph.gen.types import Err
@@ -37,8 +37,12 @@ class Backend:
 
 
 class SubstantialRuntime(Runtime):
-    def __init__(self, backend: SubstantialBackend):
-        data = SubstantialRuntimeData(backend)
+    def __init__(
+        self,
+        backend: SubstantialBackend,
+        file_descriptions: List[WorkflowFileDescription],
+    ):
+        data = SubstantialRuntimeData(backend, file_descriptions)
         super().__init__(runtimes.register_substantial_runtime(store, data))
         self.backend = backend
 
@@ -60,44 +64,16 @@ class SubstantialRuntime(Runtime):
 
         return t.func.from_type_func(func_data.value)
 
-    def deno(
-        self,
-        *,
-        file: str,
-        name: str,
-        deps: List[str] = [],
-    ):
-        return WorkflowHandle(
-            self, Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.DENO)
-        )
-
-    def python(
-        self,
-        *,
-        file: str,
-        name: str,
-        deps: List[str] = [],
-    ):
-        return WorkflowHandle(
-            self, Workflow(name=name, file=file, deps=deps, kind=WorkflowKind.PYTHON)
-        )
-
-
-class WorkflowHandle:
-    def __init__(self, sub: SubstantialRuntime, workflow: Workflow):
-        self.sub = sub
-        self.workflow = workflow
-
     def start(self, kwargs: "t.struct"):
-        operation = SubstantialOperationTypeStart(self.workflow)
-        return self.sub._generic_substantial_func(operation, kwargs, None)
+        operation = SubstantialOperationTypeStart()
+        return self._generic_substantial_func(operation, kwargs, None)
 
     def stop(self):
-        operation = SubstantialOperationTypeStop(self.workflow)
-        return self.sub._generic_substantial_func(operation, None, None)
+        operation = SubstantialOperationTypeStop()
+        return self._generic_substantial_func(operation, None, None)
 
     def send(self, payload: "t.typedef", event_name=Union[str, None]):
-        operation = SubstantialOperationTypeSend(self.workflow)
+        operation = SubstantialOperationTypeSend()
         event = t.struct(
             {
                 "name": t.string()
@@ -106,12 +82,35 @@ class WorkflowHandle:
                 "payload": payload,
             }
         )
-        return self.sub._generic_substantial_func(operation, event, None)
+        return self._generic_substantial_func(operation, event, None)
 
     def query_resources(self):
-        operation = SubstantialOperationTypeResources(self.workflow)
-        return self.sub._generic_substantial_func(operation, None, None)
+        operation = SubstantialOperationTypeResources()
+        return self._generic_substantial_func(operation, None, None)
 
     def query_results(self, output: "t.typedef"):
-        operation = SubstantialOperationTypeResults(self.workflow)
-        return self.sub._generic_substantial_func(operation, None, output)
+        operation = SubstantialOperationTypeResults()
+        return self._generic_substantial_func(operation, None, output)
+
+
+class WorkflowFile:
+    def __init__(self, file: str, kind: WorkflowKind, deps: List[str] = []):
+        self.file = file
+        self.kind = kind
+        self.deps = deps
+        self.workflows: List[str] = []
+
+    def deno(*, file: str, deps: List[str] = []):
+        return WorkflowFile(file, WorkflowKind.DENO, deps)
+
+    def python(*, file: str, deps: List[str] = []):
+        return WorkflowFile(file, WorkflowKind.PYTHON, deps)
+
+    def import_(self, names: List[str]):
+        self.workflows += names
+        return self
+
+    def build(self):
+        return WorkflowFileDescription(
+            workflows=self.workflows, deps=self.deps, file=self.file, kind=self.kind
+        )

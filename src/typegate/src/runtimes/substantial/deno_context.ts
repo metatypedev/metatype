@@ -160,7 +160,7 @@ export class Context {
     for (const { event } of this.run.operations) {
       if (event.type == "Send" && event.event_name == eventName) {
         const payload = event.value;
-        return await fn(payload);
+        return await this.save(async () => await fn(payload));
       }
     }
 
@@ -174,6 +174,33 @@ export class Context {
     }
 
     return result;
+  }
+
+  childWorkflow<O>(workflow: Workflow<O>, kwargs: unknown) {
+    return new ChildWorkflowHandle(workflow.name, kwargs);
+  }
+}
+
+export type Workflow<O> = (ctx: Context) => Promise<O>;
+
+export class ChildWorkflowHandle<O> {
+  constructor(private name: string, private kwargs: unknown) {}
+
+  result<O>(): Promise<O> {
+    throw new Error("TODO: RESULT");
+  }
+
+  start(): Promise<void> {
+    // gql { start {} }
+    throw new Error("TODO: START CHILD");
+  }
+
+  stop(): Promise<void> {
+    throw new Error("TODO: STOP CHILD");
+  }
+
+  hasStopped(): Promise<boolean> {
+    throw new Error("TODO: HAS STOPPED");
   }
 }
 

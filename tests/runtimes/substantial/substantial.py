@@ -1,7 +1,7 @@
 import os
 from typegraph import typegraph, t, Graph
 from typegraph.policy import Policy
-from typegraph.runtimes.substantial import SubstantialRuntime
+from typegraph.runtimes.substantial import SubstantialRuntime, WorkflowFile
 from typegraph.runtimes.substantial import Backend
 
 
@@ -16,45 +16,33 @@ def substantial(g: Graph):
         elif os.environ["SUB_BACKEND"] == "redis":
             backend = Backend.redis("SUB_REDIS")
 
-    sub = SubstantialRuntime(backend)
-
-    save_and_sleep = sub.deno(
-        file="workflow.ts",
-        name="saveAndSleepExample",
-        deps=["imports/common_types.ts"],
+    file = (
+        WorkflowFile.deno(file="workflow.ts", deps=["imports/common_types.ts"])
+        .import_(["saveAndSleepExample", "eventsAndExceptionExample", "retryExample"])
+        .build()
     )
 
-    email = sub.deno(
-        file="workflow.ts",
-        name="eventsAndExceptionExample",
-        deps=["imports/common_types.ts"],
-    )
-
-    retry = sub.deno(
-        file="workflow.ts",
-        name="retryExample",
-        deps=["imports/common_types.ts"],
-    )
+    sub = SubstantialRuntime(backend, [file])
 
     g.expose(
         pub,
-        # sleep
-        start=save_and_sleep.start(t.struct({"a": t.integer(), "b": t.integer()})),
-        workers=save_and_sleep.query_resources(),
-        results=save_and_sleep.query_results(
+        # common
+        stop=sub.stop(),
+        results=sub.query_results(
             t.either([t.integer(), t.string()]).rename("ResultOrError")
         ),
-        # email
-        start_email=email.start(t.struct({"to": t.email()})),
-        send_confirmation=email.send(t.boolean(), event_name="confirmation"),
-        email_workers=email.query_resources(),
-        email_results=email.query_results(t.string()),
-        abort_email_confirmation=email.stop(),
-        # retry
-        start_retry=retry.start(
-            t.struct({"fail": t.boolean(), "timeout": t.boolean()})
+        workers=sub.query_resources(),
+        # sleep
+        start_sleep=sub.start(t.struct({"a": t.integer(), "b": t.integer()})).reduce(
+            {"name": "saveAndSleepExample"}
         ),
-        retry_workers=retry.query_resources(),
-        retry_results=retry.query_results(t.string()),
-        abort_retry=retry.stop(),
+        # email
+        start_email=sub.start(t.struct({"to": t.string()})).reduce(
+            {"name": "eventsAndExceptionExample"}
+        ),
+        send_confirmation=sub.send(t.boolean(), event_name="confirmation"),
+        # retry
+        start_retry=sub.start(
+            t.struct({"fail": t.boolean(), "timeout": t.boolean()})
+        ).reduce({"name": "retryExample"}),
     )

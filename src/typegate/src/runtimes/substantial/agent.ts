@@ -7,7 +7,6 @@ import {
 import { getLogger } from "../../log.ts";
 import {
   Interrupt,
-  Operation,
   Result,
   WorkerData,
   WorkflowResult,
@@ -21,11 +20,6 @@ export interface WorkflowDescription {
   name: string;
   path: string;
   kind: "DENO" | "PYTHON";
-}
-
-export interface StagedUserEvent {
-  runId: string;
-  operation: Operation;
 }
 
 export interface AgentConfig {
@@ -145,7 +139,9 @@ export class Agent {
             });
           } catch (err) {
             logger.error(
-              `Replay failed for ${workflow.name} => ${JSON.stringify(next)}`
+              `Replay or metadata write failed for ${
+                workflow.name
+              } => ${JSON.stringify(next)}`
             );
             errors.push({ err, next });
           }

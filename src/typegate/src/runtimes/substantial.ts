@@ -9,10 +9,11 @@ import { registerRuntime } from "./mod.ts";
 import { getLogger, Logger } from "../log.ts";
 import * as ast from "graphql/ast";
 import { path } from "compress/deps.ts";
-import { Artifact, Materializer } from "../typegraph/types.ts";
+import { Artifact } from "../typegraph/types.ts";
 import { Typegate } from "../typegate/mod.ts";
 import { Backend } from "../../engine/runtime.js";
 import { Agent, WorkflowDescription } from "./substantial/agent.ts";
+import { closestWord } from "../utils.ts";
 
 const logger = getLogger(import.meta);
 
@@ -31,6 +32,18 @@ type QueryOngoingWorkflowResult = Omit<
   "result" | "ended_at"
 >;
 
+interface WorkflowFileDescription {
+  imports: string[];
+  kind: "deno" | "python";
+  file: string;
+  deps: string[];
+}
+
+interface SubstantialRuntimeArgs {
+  backend: Backend;
+  workflows: Array<WorkflowFileDescription>;
+}
+
 @registerRuntime("substantial")
 export class SubstantialRuntime extends Runtime {
   private logger: Logger;
@@ -39,6 +52,7 @@ export class SubstantialRuntime extends Runtime {
 
   private agent: Agent;
   private queue: string;
+  private knownWorkflows: Set<string> = new Set<string>();
 
   private constructor(
     typegraphName: string,
@@ -56,6 +70,7 @@ export class SubstantialRuntime extends Runtime {
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     logger.info("initializing SubstantialRuntime");
     logger.debug(`init params: ${JSON.stringify(params)}`);
+
     const {
       typegraph: tg,
       args,
@@ -64,8 +79,9 @@ export class SubstantialRuntime extends Runtime {
       typegate,
     } = params;
 
-    const secrets: Record<string, string> = {};
+    const runtimeArgs = args as SubstantialRuntimeArgs;
 
+    const secrets: Record<string, string> = {};
     for (const m of materializers) {
       for (const secretName of (m.data.secrets as []) ?? []) {
         secrets[secretName] = secretManager.secretOrFail(secretName);
@@ -73,7 +89,7 @@ export class SubstantialRuntime extends Runtime {
     }
 
     const tgName = TypeGraph.formatName(tg);
-    const backend = (args as any)!.backend as Backend;
+    const backend = runtimeArgs.backend;
     if (backend.type == "redis") {
       backend.connection_string = secretManager.secretOrFail(
         backend.connection_string
@@ -92,7 +108,7 @@ export class SubstantialRuntime extends Runtime {
     const wfDescriptions = await getWorkflowDescriptions(
       tgName,
       tg.meta.artifacts,
-      materializers,
+      runtimeArgs.workflows,
       typegate
     );
 
@@ -102,7 +118,7 @@ export class SubstantialRuntime extends Runtime {
     const instance = new SubstantialRuntime(tgName, backend, queue, agent);
     await instance.#prepareWorkflowFiles(
       tg.meta.artifacts,
-      materializers,
+      runtimeArgs.workflows,
       typegate
     );
 
@@ -163,31 +179,33 @@ export class SubstantialRuntime extends Runtime {
 
   #delegate(mat: TypeMaterializer): Resolver {
     const matName = mat.name;
-    const data = mat?.data ?? {};
-    const workflowName = data.name as string;
 
     switch (matName) {
       case "start":
-        return this.#startResolver(workflowName);
+        return this.#startResolver();
       case "stop":
         return this.#stopResolver();
       case "send":
         return this.#sendResolver();
       case "resources":
-        return () => {
+        return ({ name: workflowName }) => {
+          this.#checkWorkflowExistsOrThrow(workflowName);
+
           const res =
             this.agent.workerManager.getAllocatedResources(workflowName);
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
-        return this.#resultsResover(workflowName);
+        return this.#resultsResover();
       default:
         return () => null;
     }
   }
 
-  #startResolver(workflowName: string): Resolver {
-    return async ({ kwargs }) => {
+  #startResolver(): Resolver {
+    return async ({ name: workflowName, kwargs }) => {
+      this.#checkWorkflowExistsOrThrow(workflowName);
+
       const runId = Agent.nextId(workflowName);
       const schedule = new Date().toJSON();
 
@@ -212,8 +230,10 @@ export class SubstantialRuntime extends Runtime {
     };
   }
 
-  #resultsResover(workflowName: string): Resolver {
-    return async () => {
+  #resultsResover(): Resolver {
+    return async ({ name: workflowName }) => {
+      this.#checkWorkflowExistsOrThrow(workflowName);
+
       const relatedRuns = await this.agent.retrieveLinks(workflowName);
       const ongoing = [] as Array<QueryOngoingWorkflowResult>;
       const completed = [] as Array<QueryCompletedWorkflowResult>;
@@ -315,13 +335,13 @@ export class SubstantialRuntime extends Runtime {
 
   async #prepareWorkflowFiles(
     artifacts: Record<string, Artifact>,
-    materializers: Materializer[],
+    fileDescriptions: Array<WorkflowFileDescription>,
     typegate: Typegate
   ) {
     const descriptions = await getWorkflowDescriptions(
       this.typegraphName,
       artifacts,
-      materializers,
+      fileDescriptions,
       typegate
     );
 
@@ -329,41 +349,56 @@ export class SubstantialRuntime extends Runtime {
       this.workflowFiles.set(wf.name, wf.path);
     }
   }
+
+  #checkWorkflowExistsOrThrow(name: string) {
+    if (!this.workflowFiles.has(name)) {
+      const known = Array.from(this.workflowFiles.keys());
+      const closest = closestWord(name, known);
+      if (closest) {
+        throw new Error(
+          `workflow "${name}" does not exist, did you mean "${closest}"?`
+        );
+      }
+
+      throw new Error(
+        `workflow "${name}" does not exist, available workflows are ${known
+          .map((name) => `"${name}"`)
+          .join(", ")}`
+      );
+    }
+  }
 }
 
 async function getWorkflowDescriptions(
   typegraphName: string,
   artifacts: Record<string, Artifact>,
-  materializers: Materializer[],
+  descriptions: Array<WorkflowFileDescription>,
   typegate: Typegate
 ) {
   const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
+  logger.info(`Resolved runtime artifacts at ${basePath}`);
 
   const workflowDescriptions = [] as Array<WorkflowDescription>;
   const seen = new Set<string>();
-  for (const mat of materializers) {
-    if (!["start", "stop", "send", "resources", "results"].includes(mat.name)) {
-      continue;
-    }
 
-    const workflowName = mat.data.name as string;
-    if (!seen.has(workflowName)) {
-      const entryModulePath = await getWorkflowEntryPointPath(
-        typegraphName,
-        artifacts,
-        mat.data,
-        typegate
-      );
+  for (const description of descriptions) {
+    for (const workflowName of description.imports) {
+      if (!seen.has(workflowName)) {
+        const entryModulePath = await getWorkflowEntryPointPath(
+          typegraphName,
+          artifacts,
+          description,
+          typegate
+        );
 
-      logger.info(`Resolved runtime artifacts at ${basePath}`);
+        workflowDescriptions.push({
+          name: workflowName,
+          kind: description.kind.toUpperCase() as "DENO" | "PYTHON",
+          path: entryModulePath,
+        });
 
-      workflowDescriptions.push({
-        name: workflowName,
-        kind: (mat.data.kind as string).toUpperCase() as "DENO" | "PYTHON",
-        path: entryModulePath,
-      });
-
-      seen.add(workflowName);
+        seen.add(workflowName);
+      }
     }
   }
 
@@ -373,11 +408,11 @@ async function getWorkflowDescriptions(
 async function getWorkflowEntryPointPath(
   typegraphName: string,
   artifacts: Record<string, Artifact>,
-  matData: Record<string, unknown>,
+  description: WorkflowFileDescription,
   typegate: Typegate
 ) {
-  const entryPoint = artifacts[matData.file as string];
-  const deps = (matData.deps as string[]).map((dep) => artifacts[dep]);
+  const entryPoint = artifacts[description.file as string];
+  const deps = (description.deps as string[]).map((dep) => artifacts[dep]);
   const moduleMeta = {
     typegraphName,
     relativePath: entryPoint.path,
