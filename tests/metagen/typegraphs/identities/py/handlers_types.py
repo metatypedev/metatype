@@ -5,6 +5,11 @@ from dataclasses import dataclass, asdict, fields
 FORWARD_REFS = {}
 
 
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
+
+
 class Struct:
     def repr(self):
         return asdict(self)
@@ -209,7 +214,7 @@ def __repr(value: Any):
     return value
 
 
-def typed_primitives(user_fn: Callable[[PrimitivesArgs, Any], Primitives]):
+def typed_primitives(user_fn: Callable[[PrimitivesArgs, Ctx], Primitives]):
     def exported_wrapper(raw_inp, ctx):
         inp: PrimitivesArgs = Struct.new(PrimitivesArgs, raw_inp)
         out: Primitives = user_fn(inp, ctx)
@@ -220,7 +225,7 @@ def typed_primitives(user_fn: Callable[[PrimitivesArgs, Any], Primitives]):
     return exported_wrapper
 
 
-def typed_composites(user_fn: Callable[[CompositesArgs, Any], Composites]):
+def typed_composites(user_fn: Callable[[CompositesArgs, Ctx], Composites]):
     def exported_wrapper(raw_inp, ctx):
         inp: CompositesArgs = Struct.new(CompositesArgs, raw_inp)
         out: Composites = user_fn(inp, ctx)
@@ -231,7 +236,7 @@ def typed_composites(user_fn: Callable[[CompositesArgs, Any], Composites]):
     return exported_wrapper
 
 
-def typed_cycles(user_fn: Callable[[Cycles1Args, Any], Cycles1]):
+def typed_cycles(user_fn: Callable[[Cycles1Args, Ctx], Cycles1]):
     def exported_wrapper(raw_inp, ctx):
         inp: Cycles1Args = Struct.new(Cycles1Args, raw_inp)
         out: Cycles1 = user_fn(inp, ctx)
@@ -242,7 +247,7 @@ def typed_cycles(user_fn: Callable[[Cycles1Args, Any], Cycles1]):
     return exported_wrapper
 
 
-def typed_simple_cycles(user_fn: Callable[[SimpleCycles1Args, Any], SimpleCycles1]):
+def typed_simple_cycles(user_fn: Callable[[SimpleCycles1Args, Ctx], SimpleCycles1]):
     def exported_wrapper(raw_inp, ctx):
         inp: SimpleCycles1Args = Struct.new(SimpleCycles1Args, raw_inp)
         out: SimpleCycles1 = user_fn(inp, ctx)

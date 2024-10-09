@@ -718,6 +718,16 @@ const nodeMetas = {
     return {};
   },
   
+  RootScalarArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "UserIdStringUuid",
+        slug: "PostSlugString",
+        title: "PostSlugString",
+      },
+    };
+  },
   Post(): NodeMeta {
     return {
       subNodes: [
@@ -727,29 +737,6 @@ const nodeMetas = {
       ],
     };
   },
-  RootGetPostsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-  RootCompositeArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "RootScalarNoArgsFnOutput",
-      },
-    };
-  },
-  RootScalarNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
-  RootCompositeNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
   User(): NodeMeta {
     return {
       subNodes: [
@@ -757,30 +744,6 @@ const nodeMetas = {
         ["email", nodeMetas.scalar],
         ["posts", nodeMetas.Post],
       ],
-    };
-  },
-  RootCompositeUnionFnOutput(): NodeMeta {
-    return {
-      variants: [
-        ["post", nodeMetas.Post],
-        ["user", nodeMetas.User],
-      ],
-    };
-  },
-  RootCompositeUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.RootCompositeUnionFnOutput(),
-      argumentTypes: {
-        id: "RootScalarNoArgsFnOutput",
-      },
-    };
-  },
-  RootScalarUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "RootScalarNoArgsFnOutput",
-      },
     };
   },
   RootMixedUnionFnOutput(): NodeMeta {
@@ -799,19 +762,56 @@ const nodeMetas = {
       },
     };
   },
-  RootScalarArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "UserIdStringUuid",
-        slug: "PostSlugString",
-        title: "PostSlugString",
-      },
-    };
-  },
   RootGetUserFn(): NodeMeta {
     return {
       ...nodeMetas.User(),
+    };
+  },
+  RootScalarUnionFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "RootScalarNoArgsFnOutput",
+      },
+    };
+  },
+  RootCompositeArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "RootScalarNoArgsFnOutput",
+      },
+    };
+  },
+  RootGetPostsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+  RootCompositeNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+  RootScalarNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+  RootCompositeUnionFnOutput(): NodeMeta {
+    return {
+      variants: [
+        ["post", nodeMetas.Post],
+        ["user", nodeMetas.User],
+      ],
+    };
+  },
+  RootCompositeUnionFn(): NodeMeta {
+    return {
+      ...nodeMetas.RootCompositeUnionFnOutput(),
+      argumentTypes: {
+        id: "RootScalarNoArgsFnOutput",
+      },
     };
   },
 };
@@ -833,9 +833,6 @@ export type User = {
   email: UserEmailStringEmail;
   posts: UserPostsPostList;
 };
-export type RootCompositeUnionFnOutput =
-  | (Post)
-  | (User);
 export type RootScalarUnionFnOutputT1Integer = number;
 export type RootScalarUnionFnOutput =
   | (RootScalarNoArgsFnOutput)
@@ -845,6 +842,9 @@ export type RootMixedUnionFnOutput =
   | (User)
   | (RootScalarNoArgsFnOutput)
   | (RootScalarUnionFnOutputT1Integer);
+export type RootCompositeUnionFnOutput =
+  | (Post)
+  | (User);
 
 export type PostSelections = {
   _?: SelectionFlags;
@@ -858,12 +858,12 @@ export type UserSelections = {
   email?: ScalarSelectNoArgs;
   posts?: CompositeSelectNoArgs<PostSelections>;
 };
-export type RootCompositeUnionFnOutputSelections = {
+export type RootMixedUnionFnOutputSelections = {
   _?: SelectionFlags;
   "post"?: CompositeSelectNoArgs<PostSelections>;
   "user"?: CompositeSelectNoArgs<UserSelections>;
 };
-export type RootMixedUnionFnOutputSelections = {
+export type RootCompositeUnionFnOutputSelections = {
   _?: SelectionFlags;
   "post"?: CompositeSelectNoArgs<PostSelections>;
   "user"?: CompositeSelectNoArgs<UserSelections>;

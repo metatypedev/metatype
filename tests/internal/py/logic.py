@@ -1,19 +1,18 @@
 # Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 # SPDX-License-Identifier: Elastic-2.0
 
+from .logic_types import Ctx
+import json
 
-def remote_sum(inp: dict, ctx) -> float:
+
+def remote_sum(inp: dict, ctx: Ctx) -> float:
     data = ctx.gql(
         query="""
         query q($first: Float!, $second: Float!) {
-             sumPy(first: $first, second: $second) 
+             sum(first: $first, second: $second) 
         }
         """,
-        variables=inp,
+        variables=json.dumps(inp),
     )
-    sum = data["sumPy"]
+    sum = data["sum"]
     return sum
-
-
-def sum(inp: dict) -> float:
-    return inp["first"] + inp["second"]
