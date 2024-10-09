@@ -53,11 +53,11 @@ export function basicTestTemplate(
         async () => {
           await gql`
             mutation {
-              start(kwargs: { a: 10, b: 20 })
+              start_sleep(kwargs: { a: 10, b: 20 })
             }
           `
             .expectBody((body) => {
-              currentRunId = body.data?.start! as string;
+              currentRunId = body.data?.start_sleep! as string;
               assertExists(
                 currentRunId,
                 "Run id was not returned when workflow was started"
@@ -75,7 +75,7 @@ export function basicTestTemplate(
         async () => {
           await gql`
             query {
-              results {
+              results(name: "saveAndSleepExample") {
                 ongoing {
                   count
                   runs {
@@ -106,7 +106,7 @@ export function basicTestTemplate(
       await t.should(`complete sleep workflow (${backendName})`, async () => {
         await gql`
           query {
-            results {
+            results(name: "saveAndSleepExample") {
               ongoing {
                 count
               }
@@ -223,7 +223,7 @@ export function concurrentWorkflowTestTemplate(
                 event: { payload: false }
               )
               # will abort
-              three: abort_email_confirmation(run_id: $three_run_id)
+              three: stop(run_id: $three_run_id)
             }
           `
             .withVars({
@@ -250,7 +250,7 @@ export function concurrentWorkflowTestTemplate(
       await t.should(`complete execution (${backendName})`, async () => {
         await gql`
           query {
-            email_results {
+            results(name: "eventsAndExceptionExample") {
               ongoing {
                 count
               }
@@ -269,13 +269,13 @@ export function concurrentWorkflowTestTemplate(
         `
           .expectBody((body) => {
             assertEquals(
-              body?.data?.email_results?.ongoing?.count,
+              body?.data?.results?.ongoing?.count,
               0,
               "0 workflow currently running"
             );
 
             assertEquals(
-              body?.data?.email_results?.completed?.count,
+              body?.data?.results?.completed?.count,
               3,
               "3 workflows completed"
             );
@@ -284,7 +284,7 @@ export function concurrentWorkflowTestTemplate(
               a.run_id.localeCompare(b.run_id);
 
             const received =
-              body?.data?.email_results?.completed?.runs ?? ([] as Array<any>);
+              body?.data?.results?.completed?.runs ?? ([] as Array<any>);
             const expected = [
               {
                 result: {
@@ -385,7 +385,7 @@ export function retrySaveTestTemplate(
         async () => {
           await gql`
             mutation {
-              abort_retry(run_id: $run_id)
+              abort_retry: stop(run_id: $run_id)
             }
           `
             .withVars({
@@ -406,7 +406,7 @@ export function retrySaveTestTemplate(
         async () => {
           await gql`
             query {
-              retry_results {
+              results(name: "retryExample") {
                 ongoing {
                   count
                   runs {
@@ -428,13 +428,13 @@ export function retrySaveTestTemplate(
           `
             .expectBody((body) => {
               assertEquals(
-                body?.data?.retry_results?.ongoing?.count,
+                body?.data?.results?.ongoing?.count,
                 0,
                 "0 workflow currently running"
               );
 
               assertEquals(
-                body?.data?.retry_results?.completed?.count,
+                body?.data?.results?.completed?.count,
                 4,
                 "4 workflows completed"
               );
@@ -443,8 +443,7 @@ export function retrySaveTestTemplate(
                 a.run_id.localeCompare(b.run_id);
 
               const received =
-                body?.data?.retry_results?.completed?.runs ??
-                ([] as Array<any>);
+                body?.data?.results?.completed?.runs ?? ([] as Array<any>);
               const expected = [
                 {
                   result: {

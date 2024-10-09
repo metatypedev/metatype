@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { envSharedWithWorkers } from "../../config/shared.ts";
 import { getLogger } from "../../log.ts";
 import {
   Err,
@@ -114,6 +115,21 @@ export class WorkerManager {
     const worker = new Worker(import.meta.resolve("./worker.ts"), {
       name: runId,
       type: "module",
+      deno: {
+        permissions: {
+          // overrideable default permissions
+          hrtime: false,
+          net: true,
+          // on request permissions
+          read: "inherit", // default read permission
+          sys: "inherit",
+          // non-overridable permissions (security between typegraphs)
+          run: false,
+          write: false,
+          ffi: false,
+          env: envSharedWithWorkers,
+        },
+      },
     });
 
     this.recorder.addWorker(

@@ -498,28 +498,30 @@ interface runtimes {
         redis(redis-backend)
     }
 
-    record substantial-runtime-data {
-        backend: substantial-backend
-    }
 
     enum workflow-kind {
         python,
         deno
     }
 
-    record workflow {
-        name: string,
+    record workflow-file-description {
+        workflows: list<string>,
         file: string,
         deps: list<string>,
         kind: workflow-kind
     }
 
+    record substantial-runtime-data {
+        backend: substantial-backend,
+        file-descriptions: list<workflow-file-description>  
+    }
+
     variant substantial-operation-type {
-        start(workflow),
-        stop(workflow),
-        send(workflow),
-        resources(workflow),
-        results(workflow),
+        start,
+        stop,
+        send,
+        resources,
+        results,
     }
 
     record substantial-operation-data {
