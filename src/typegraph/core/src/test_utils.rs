@@ -53,14 +53,14 @@ pub mod models {
         let user = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("name", t::string())?
-            .propx("posts", t::listx(t::ref_("Post"))?)?
+            .propx("posts", t::listx(t::ref_("Post", Default::default()))?)?
             .named("User")
             .build()?;
 
         let post = t::struct_()
             .propx("id", t::integer().config("auto", "true").as_id())?
             .propx("title", t::string())?
-            .propx("author", t::ref_("User"))?
+            .propx("author", t::ref_("User", Default::default()))?
             .named("Post")
             .build()?;
 

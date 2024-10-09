@@ -14,6 +14,7 @@ use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
 use super::constraints::get_struct_level_unique_constraints;
+use super::relationship::PrismaRefData;
 
 #[derive(Debug)]
 pub struct Model {
@@ -99,20 +100,22 @@ pub struct RelationshipAttributes {
     pub fkey: Option<bool>,
 }
 
+impl From<PrismaRefData> for RelationshipAttributes {
+    fn from(data: PrismaRefData) -> Self {
+        Self {
+            name: data.rel_name,
+            target_field: data.target_field,
+            fkey: data.fkey,
+        }
+    }
+}
+
 impl RelationshipAttributes {
     pub fn new(attrs: &RefAttrs) -> Result<Self> {
-        let Some(attrs) = &attrs.0 else {
-            return Ok(Self::default());
-        };
-
-        Ok(Self {
-            name: attrs.get("rel_name").cloned(),
-            target_field: attrs.get("target_field").cloned(),
-            fkey: attrs
-                .get("fkey")
-                .map(|v| serde_json::from_str(v).map_err(|e| e.to_string()))
-                .transpose()?,
-        })
+        let attrs = attrs.runtime.get("prisma");
+        let ref_data: Option<PrismaRefData> = attrs
+            .map(|attrs| serde_json::from_value(serde_json::to_value(attrs).unwrap()).unwrap());
+        Ok(ref_data.map(|it| it.into()).unwrap_or_default())
     }
 }
 
@@ -175,7 +178,7 @@ impl Property {
         };
 
         match ref_data
-            .get_injection()?
+            .injection
             .as_ref()
             .map(Injection::try_from)
             .transpose()

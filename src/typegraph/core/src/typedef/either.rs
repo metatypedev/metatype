@@ -22,7 +22,7 @@ impl TypeConversion for Either {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        ref_attrs: RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         Ok(TypeNode::Either {
             // TODO do we need to support injection??
@@ -38,7 +38,7 @@ impl TypeConversion for Either {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(ref_attrs.get_injection()?)?
+            .inject(ref_attrs.injection.as_ref())?
             .build()?,
             data: EitherTypeData {
                 one_of: self

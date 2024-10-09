@@ -54,7 +54,7 @@ impl TypeConversion for File {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        _ref_attrs: RefAttrs,
+        _ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         Ok(TypeNode::File {
             // TODO should `as_id` be supported?

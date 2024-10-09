@@ -22,7 +22,7 @@ impl TypeConversion for Optional {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        ref_attrs: RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         let default_value = match self.data.default_item.clone() {
             Some(value) => {
@@ -43,7 +43,7 @@ impl TypeConversion for Optional {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(ref_attrs.get_injection()?)?
+            .inject(ref_attrs.injection.as_ref())?
             .build()?,
             data: OptionalTypeData {
                 item: ctx.register_type(TypeId(self.data.of), runtime_id)?.into(),

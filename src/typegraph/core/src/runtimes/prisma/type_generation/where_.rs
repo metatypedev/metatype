@@ -62,7 +62,7 @@ impl TypeGen for Where {
             match prop {
                 Property::Model(prop) => {
                     let inner = match self.skip_models.get(&prop.model_id) {
-                        Some(name) => t::ref_(name.clone()).build()?,
+                        Some(name) => t::ref_(name.clone(), Default::default()).build()?,
                         None => context.generate(&self.nested(&name, prop.model_id))?,
                     };
                     match prop.quantifier {

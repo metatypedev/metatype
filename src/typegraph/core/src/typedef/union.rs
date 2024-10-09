@@ -22,7 +22,7 @@ impl TypeConversion for Union {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        ref_attrs: RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         Ok(TypeNode::Union {
             base: BaseBuilderInit {
@@ -35,7 +35,7 @@ impl TypeConversion for Union {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(ref_attrs.get_injection()?)?
+            .inject(ref_attrs.injection.as_ref())?
             .build()?,
             data: UnionTypeData {
                 any_of: self

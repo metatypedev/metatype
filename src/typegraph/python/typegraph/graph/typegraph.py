@@ -260,7 +260,7 @@ def typegraph(
 
 
 def gen_ref(name: str) -> "t.typedef":
-    res = core.refb(store, name, [])
+    res = core.refb(store, name, None)
     if isinstance(res, Err):
         raise ErrorStack(res.value)
     from typegraph.t import typedef

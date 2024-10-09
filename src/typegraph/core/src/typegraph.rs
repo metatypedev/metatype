@@ -393,7 +393,7 @@ impl TypegraphContext {
 
                 // let tpe = id.as_type()?;
 
-                let type_node = type_def.convert(self, runtime_id, ref_attrs)?;
+                let type_node = type_def.convert(self, runtime_id, &ref_attrs)?;
 
                 self.types[idx] = Some(type_node);
                 if user_named {

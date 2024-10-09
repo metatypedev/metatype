@@ -22,7 +22,7 @@ impl TypeConversion for StringT {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        ref_attrs: RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         let format: Option<StringFormat> = match self.data.format.clone() {
             Some(format) => {
@@ -45,7 +45,7 @@ impl TypeConversion for StringT {
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(ref_attrs.get_injection()?)?
+            .inject(ref_attrs.injection.as_ref())?
             .build()?,
             data: StringTypeData {
                 min_length: self.data.min,

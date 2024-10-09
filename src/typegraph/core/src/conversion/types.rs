@@ -1,15 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::errors::Result;
+use crate::typegraph::TypegraphContext;
+use crate::types::{RefAttrs, TypeId};
 use crate::wit::core::PolicySpec;
 use common::typegraph::{Injection, PolicyIndices, TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 use std::rc::Rc;
-
-use crate::errors::Result;
-use crate::typegraph::TypegraphContext;
-use crate::types::{RefAttrs, TypeId};
 
 #[enum_dispatch]
 pub trait TypeConversion {
@@ -18,7 +17,7 @@ pub trait TypeConversion {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        ref_attrs: RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode>;
 }
 
@@ -27,7 +26,7 @@ impl<T: TypeConversion> TypeConversion for Rc<T> {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        ref_attrs: RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         (**self).convert(ctx, runtime_id, ref_attrs)
     }
@@ -106,8 +105,8 @@ impl BaseBuilder {
         self
     }
 
-    pub fn inject(mut self, injection: Option<Injection>) -> Result<Self> {
-        self.injection = injection;
+    pub fn inject(mut self, injection: Option<&Injection>) -> Result<Self> {
+        self.injection = injection.cloned();
         Ok(self)
     }
 }

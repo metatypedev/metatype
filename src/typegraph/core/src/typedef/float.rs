@@ -23,7 +23,7 @@ impl TypeConversion for Float {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        ref_attrs: RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         Ok(TypeNode::Float {
             base: BaseBuilderInit {
@@ -37,7 +37,7 @@ impl TypeConversion for Float {
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(ref_attrs.get_injection()?)?
+            .inject(ref_attrs.injection.as_ref())?
             .build()?,
             data: FloatTypeData {
                 minimum: self.data.min,

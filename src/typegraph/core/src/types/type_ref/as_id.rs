@@ -1,4 +1,6 @@
-use super::{ResolveRef as _, TypeRef};
+use serde::{Deserialize, Serialize};
+
+use super::{RefAttrs, ResolveRef as _, TypeRef};
 use crate::errors::Result;
 use crate::types::{Type, TypeDef, TypeDefExt};
 
@@ -16,31 +18,27 @@ where
     fn as_id(self, composite: bool) -> Result<TypeRef> {
         TypeRef::new(
             self.try_into()?,
-            [(
-                "as_id".to_owned(),
-                (if composite { "n" } else { "1" }).to_owned(),
-            )],
+            RefAttrs::default().as_id(if composite {
+                IdKind::Composite
+            } else {
+                IdKind::Simple
+            }),
         )
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum IdKind {
+    #[serde(rename = "1")]
     Simple,
+    #[serde(rename = "n")]
     Composite,
 }
 
 impl TypeRef {
     pub fn id_kind(&self) -> Result<Option<IdKind>> {
         let (type_def, attrs) = self.resolve_ref()?;
-        let as_id = attrs.get("as_id");
-        let as_id = match as_id {
-            Some("1") => Some(IdKind::Simple),
-            Some("n") => Some(IdKind::Composite),
-            Some(_) => return Err("Invalid value for 'as_id' attribute".into()),
-            None => None,
-        };
-        if let Some(as_id) = as_id {
+        if let Some(as_id) = attrs.as_id {
             match type_def {
                 TypeDef::Integer(_) | TypeDef::String(_) => Ok(Some(as_id)),
                 TypeDef::Boolean(_) => {

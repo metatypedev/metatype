@@ -21,7 +21,7 @@ impl TypeConversion for Func {
         &self,
         ctx: &mut TypegraphContext,
         _runtime_id: Option<u32>,
-        _ref_attrs: RefAttrs,
+        _ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         let (mat_id, runtime_id) = ctx.register_materializer(self.data.mat)?;
 

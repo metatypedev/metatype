@@ -73,7 +73,7 @@ fn convert_leaf_node(
             Ok(cm::ParameterTransformLeafNode::Context { key: key.clone() })
         }
         ParameterTransformLeafNode::Parent { type_name } => {
-            let type_ref = t::ref_(type_name).build()?;
+            let type_ref = t::ref_(type_name, Default::default()).build()?;
             let parent_idx = ctx.register_type(type_ref, Some(runtime_id))?.0;
             Ok(cm::ParameterTransformLeafNode::Parent { parent_idx })
         }

@@ -72,7 +72,7 @@ impl TypeConversion for Struct {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        ref_attrs: RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         let runtime_id = match runtime_id {
             Some(runtime_id) => runtime_id,
@@ -90,7 +90,7 @@ impl TypeConversion for Struct {
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(ref_attrs.get_injection()?)?
+            .inject(ref_attrs.injection.as_ref())?
             .build()?,
             data: ObjectTypeData {
                 properties: self

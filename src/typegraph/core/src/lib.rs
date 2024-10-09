@@ -60,8 +60,19 @@ impl wit::core::Guest for Lib {
         typegraph::serialize(res_config)
     }
 
-    fn refb(name: String, attributes: Vec<(String, String)>) -> Result<CoreTypeId> {
-        Ok(TypeRef::indirect(name, attributes)?.id.0)
+    fn refb(name: String, attrs: Option<String>) -> Result<CoreTypeId> {
+        Ok(TypeRef::indirect(
+            name,
+            attrs
+                .map(|attrs| {
+                    serde_json::from_str(&attrs)
+                        .map_err(|e| format!("Could not parse ref attributes: {e:?}"))
+                })
+                .transpose()?
+                .unwrap_or_default(),
+        )?
+        .id
+        .0)
     }
 
     fn integerb(data: TypeInteger, base: TypeBase) -> Result<CoreTypeId> {

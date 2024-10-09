@@ -1,23 +1,20 @@
-// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-// SPDX-License-Identifier: MPL-2.0
-
 use std::hash::Hash as _;
 use std::{collections::HashMap, rc::Rc};
 
+use super::Type;
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::types::{TypeDef, TypeDefExt as _, TypeId};
-
-use super::Type;
+pub use as_id::{AsId, IdKind};
+use common::typegraph::Injection;
+pub use resolve_ref::ResolveRef;
+use serde::{Deserialize, Serialize};
+pub use with_injection::WithInjection;
 
 mod as_id;
 mod resolve_ref;
 mod with_injection;
-
-pub use as_id::{AsId, IdKind};
-pub use resolve_ref::ResolveRef;
-pub use with_injection::WithInjection;
 
 #[derive(Clone, Debug)]
 pub enum RefTarget {
@@ -25,58 +22,121 @@ pub enum RefTarget {
     Indirect(String),
 }
 
-// TODO: merge rules?
-#[derive(Clone, Debug, Default)]
-pub struct RefAttrs(pub Option<Rc<RefAttrsInner>>);
+type JsonValue = serde_json::Value;
 
-pub type RefAttrsInner = HashMap<String, String>;
-
-impl From<HashMap<String, String>> for RefAttrs {
-    fn from(attrs: HashMap<String, String>) -> Self {
-        if attrs.is_empty() {
-            RefAttrs::default()
-        } else {
-            Self(Some(Rc::new(attrs)))
-        }
-    }
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct RefAttrs {
+    pub as_id: Option<IdKind>,
+    pub injection: Option<Injection>,
+    pub runtime: HashMap<String, HashMap<String, JsonValue>>,
 }
 
-impl RefAttrs {
-    pub fn iter(&self) -> impl Iterator<Item = (&'_ String, &'_ String)> {
-        self.0.iter().flat_map(|it| it.iter())
-    }
-
-    pub fn get(&self, key: &str) -> Option<&str> {
-        self.0
-            .as_ref()
-            .and_then(|it| it.get(key))
-            .map(|it| it.as_str())
-    }
+thread_local! {
+    static DEFAULT_ATTRS: Rc<RefAttrs> = Rc::new(RefAttrs::default());
 }
 
+// impl From<HashMap<String, String>> for RefAttrs {
+//     fn from(attrs: HashMap<String, String>) -> Self {
+//         if attrs.is_empty() {
+//             RefAttrs::default()
+//         } else {
+//             Self(Some(Rc::new(attrs)))
+//         }
+//     }
+// }
+
 impl RefAttrs {
-    pub fn merge(&self, other: impl Iterator<Item = (String, String)>) -> Self {
-        if other.size_hint().0 == 0 {
-            return self.clone();
-        }
-        let mut attrs = self.0.clone().map(|it| (*it).clone()).unwrap_or_default();
-        for (k, v) in other {
-            attrs.insert(k, v);
-        }
-        attrs.into()
+    pub fn default_rc() -> Rc<Self> {
+        DEFAULT_ATTRS.with(|it| it.clone())
     }
 
-    pub fn with_target(&self, target: RefTarget) -> TypeRefBuilder {
+    #[allow(clippy::wrong_self_convention)]
+    pub fn as_id(mut self, id: IdKind) -> Self {
+        self.as_id = Some(id);
+        self
+    }
+
+    pub fn with_injection(mut self, injection: Injection) -> Self {
+        self.injection = Some(injection);
+        self
+    }
+
+    pub fn runtime(mut self, key: impl Into<String>, value: HashMap<String, JsonValue>) -> Self {
+        self.runtime.insert(key.into(), value);
+        self
+    }
+
+    pub fn merge(mut self, other: RefAttrs) -> Self {
+        if let Some(id) = other.as_id {
+            self.as_id = Some(id);
+        }
+        if let Some(injection) = other.injection {
+            self.injection = Some(injection);
+        }
+        for (k, v) in other.runtime {
+            let runtime_attrs = self.runtime.entry(k).or_default();
+            for (k, v) in v {
+                runtime_attrs.insert(k, v);
+            }
+        }
+        self
+    }
+
+    pub fn with_target(self, target: Type) -> TypeRefBuilder {
+        match target {
+            Type::Def(type_def) => TypeRefBuilder {
+                target: RefTarget::Direct(type_def),
+                attributes: self,
+            },
+            Type::Ref(type_ref) => {
+                let TypeRef {
+                    id: _,
+                    target,
+                    attributes,
+                } = type_ref;
+                TypeRefBuilder {
+                    target,
+                    attributes: attributes
+                        .map(|it| RefAttrs::clone(&it))
+                        .unwrap_or_default()
+                        .merge(self),
+                }
+            }
+        }
+    }
+
+    pub fn direct(self, target: TypeDef) -> TypeRefBuilder {
         TypeRefBuilder {
-            target,
-            attributes: self.clone(),
+            target: RefTarget::Direct(target),
+            attributes: self,
         }
+    }
+
+    pub fn indirect(self, name: String) -> TypeRefBuilder {
+        TypeRefBuilder {
+            target: RefTarget::Indirect(name),
+            attributes: self,
+        }
+    }
+
+    pub fn wrap(self) -> Option<Rc<Self>> {
+        Some(Rc::new(self))
     }
 }
 
-impl From<Vec<(String, String)>> for RefAttrs {
-    fn from(attrs: Vec<(String, String)>) -> Self {
-        attrs.into_iter().collect::<HashMap<_, _>>().into()
+impl TypeRef {
+    pub fn as_id(&self) -> Option<IdKind> {
+        self.attributes.as_ref().and_then(|it| it.as_id)
+    }
+
+    pub fn runtime_attrs(&self, runtime_key: &str) -> Option<&HashMap<String, JsonValue>> {
+        self.attributes
+            .as_ref()
+            .and_then(|it| it.runtime.get(runtime_key))
+    }
+
+    pub fn runtime_attr(&self, runtime_key: &str, key: &str) -> Option<&serde_json::Value> {
+        self.runtime_attrs(runtime_key).and_then(|it| it.get(key))
     }
 }
 
@@ -84,7 +144,7 @@ impl From<Vec<(String, String)>> for RefAttrs {
 pub struct TypeRef {
     pub id: TypeId,
     pub target: RefTarget,
-    pub attributes: RefAttrs,
+    pub attributes: Option<Rc<RefAttrs>>,
 }
 
 pub struct TypeRefBuilder {
@@ -97,43 +157,40 @@ impl TypeRefBuilder {
         TypeRef {
             id,
             target: self.target,
-            attributes: self.attributes,
+            attributes: self.attributes.wrap(),
         }
     }
 }
 
 impl TypeRef {
-    pub fn new(
-        target: Type,
-        attributes: impl IntoIterator<Item = (String, String)>,
-    ) -> Result<TypeRef> {
-        match target {
-            Type::Ref(type_ref) => {
-                let attributes = type_ref.attributes.merge(attributes.into_iter());
-                Store::register_type_ref(attributes.with_target(type_ref.target))
-            }
-            Type::Def(type_def) => Store::register_type_ref(
-                RefAttrs::from(attributes.into_iter().collect::<HashMap<_, _>>())
-                    .with_target(RefTarget::Direct(type_def)),
-            ),
-        }
+    pub fn new(target: Type, attributes: RefAttrs) -> Result<TypeRef> {
+        Store::register_type_ref(attributes.with_target(target))
     }
 
-    pub fn direct(target: TypeDef, attributes: Vec<(String, String)>) -> Result<Self> {
-        Store::register_type_ref(RefAttrs::from(attributes).with_target(RefTarget::Direct(target)))
+    pub fn direct(target: TypeDef, attributes: RefAttrs) -> Result<Self> {
+        Store::register_type_ref(attributes.direct(target))
     }
 
-    pub fn indirect(name: String, attributes: Vec<(String, String)>) -> Result<Self> {
-        Store::register_type_ref(RefAttrs::from(attributes).with_target(RefTarget::Indirect(name)))
+    pub fn indirect(name: String, attributes: RefAttrs) -> Result<Self> {
+        Store::register_type_ref(attributes.indirect(name))
     }
 
     pub fn repr(&self) -> String {
-        let attrs = self
-            .attributes
-            .iter()
-            .map(|(k, v)| format!(", [{}] => '{}'", k, v))
-            .collect::<Vec<_>>()
-            .join("");
+        let mut attrs = vec![];
+        if let Some(as_id) = self.as_id() {
+            attrs.push(format!("[as_id]: {:?}", as_id));
+        }
+        if let Some(injection) = self.get_injection() {
+            attrs.push(format!("[injection]: {:?}", injection));
+        }
+
+        attrs.extend(
+            self.attributes
+                .iter()
+                .flat_map(|a| a.runtime.iter())
+                .map(|(k, v)| format!(", [rt/{}] => '{:?}'", k, v)),
+        );
+        let attrs = attrs.join("");
         match &self.target {
             RefTarget::Direct(type_def) => {
                 format!("ref(#{}{attrs}) to {}", self.id.0, type_def.repr())
@@ -144,9 +201,9 @@ impl TypeRef {
         }
     }
 
-    pub fn attrs(&self) -> &RefAttrsInner {
-        self.attributes.0.as_ref().unwrap()
-    }
+    // pub fn attrs(&self) -> &RefAttrs {
+    //     self.attributes.0.as_ref().unwrap()
+    // }
 
     pub fn hash_type(
         &self,
@@ -155,12 +212,13 @@ impl TypeRef {
         runtime_id: Option<u32>,
     ) -> Result<()> {
         "ref".hash(hasher);
-        let mut attributes = self.attributes.iter().collect::<Vec<_>>();
-        attributes.sort_by(|(k1, _), (k2, _)| k1.cmp(k2));
-        for (k, v) in attributes.into_iter() {
-            k.hash(hasher);
-            v.hash(hasher);
-        }
+        self.as_id().hash(hasher);
+        self.get_injection().hash(hasher);
+        let runtime_attrs = self
+            .attributes
+            .as_ref()
+            .map(|it| serde_json::to_string(&it.runtime).unwrap());
+        runtime_attrs.hash(hasher);
         match &self.target {
             RefTarget::Direct(target) => {
                 target.hash_type(hasher, tg, runtime_id)?;

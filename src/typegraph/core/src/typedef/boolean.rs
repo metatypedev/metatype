@@ -20,7 +20,7 @@ impl TypeConversion for Boolean {
         &self,
         ctx: &mut TypegraphContext,
         runtime_id: Option<u32>,
-        ref_attrs: RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         Ok(TypeNode::Boolean {
             base: BaseBuilderInit {
@@ -33,7 +33,7 @@ impl TypeConversion for Boolean {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(ref_attrs.get_injection()?)?
+            .inject(ref_attrs.injection.as_ref())?
             .build()?,
         })
     }

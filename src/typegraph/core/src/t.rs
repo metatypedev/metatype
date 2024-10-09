@@ -4,6 +4,7 @@
 use crate::errors::Result;
 use crate::errors::TgError;
 use crate::global_store::{NameRegistration, Store};
+use crate::types::RefAttrs;
 use crate::types::{ExtendedTypeBase, TypeDefExt, TypeId, TypeRef};
 use crate::wit::core::{
     Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
@@ -498,21 +499,13 @@ pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
 
 pub struct RefBuilder {
     name: String,
-    attributes: Vec<(String, String)>,
+    attributes: RefAttrs,
 }
 
-impl RefBuilder {
-    /// Adds extra data entry in the proxy
-    pub fn set(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
-        self.attributes.push((key.into(), value.into()));
-        self
-    }
-}
-
-pub fn ref_(name: impl Into<String>) -> RefBuilder {
+pub fn ref_(name: impl Into<String>, attrs: RefAttrs) -> RefBuilder {
     RefBuilder {
         name: name.into(),
-        attributes: Vec::new(),
+        attributes: attrs,
     }
 }
 
@@ -592,6 +585,10 @@ impl_type_builder!(FuncBuilder, funcb, true);
 
 impl TypeBuilder for RefBuilder {
     fn build(&self) -> Result<TypeId> {
-        Ok(crate::Lib::refb(self.name.clone(), self.attributes.clone())?.into())
+        Ok(crate::Lib::refb(
+            self.name.clone(),
+            Some(serde_json::to_string(&self.attributes).unwrap()),
+        )?
+        .into())
     }
 }
