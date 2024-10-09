@@ -10,6 +10,8 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 use log::{error, trace};
 use regex::Regex;
+use schema_core::json_rpc::types::SchemasContainer;
+use schema_core::json_rpc::types::SchemasWithConfigDir;
 use schema_core::json_rpc::types::{
     ApplyMigrationsInput, CreateMigrationInput, DevAction, DevDiagnosticInput, DevDiagnosticOutput,
     DiffParams, DiffTarget, EvaluateDataLossInput, ListMigrationDirectoriesInput, SchemaContainer,
@@ -48,7 +50,12 @@ pub async fn loss(
     let api = schema_core::schema_api(Some(datasource.clone()), None)?;
     let data_loss = EvaluateDataLossInput {
         migrations_directory_path: migration_folder.to_string(),
-        prisma_schema: schema.to_string(),
+        schema: SchemasContainer {
+            files: vec![SchemaContainer {
+                content: schema,
+                path: "generated.prisma".into(),
+            }],
+        },
     };
 
     let loss = match api.evaluate_data_loss(data_loss).await {
@@ -118,8 +125,13 @@ impl MigrationContext {
             .await
     }
 
-    fn schema(&self) -> String {
-        format!("{}{}", self.builder.datasource, self.builder.datamodel)
+    fn schema(&self) -> SchemasContainer {
+        SchemasContainer {
+            files: vec![SchemaContainer {
+                content: format!("{}{}", self.builder.datasource, self.builder.datamodel),
+                path: "generated.prisma".into(),
+            }],
+        }
     }
 }
 
@@ -185,7 +197,7 @@ impl MigrationContext {
                 draft: !apply,
                 migration_name: name.to_case(Case::Snake),
                 migrations_directory_path: self.migrations_dir.to_string(),
-                prisma_schema: self.schema(),
+                schema: self.schema(),
             })
             .await
             .format_error()?;
@@ -246,13 +258,20 @@ pub async fn diff(
 
     let params = DiffParams {
         exit_code: None,
-        from: DiffTarget::SchemaDatasource(SchemaContainer {
-            schema: source_file.path().display().to_string(),
+        from: DiffTarget::SchemaDatasource(SchemasWithConfigDir {
+            config_dir: super::engine::CONFIG_DIR.into(),
+            files: vec![SchemaContainer {
+                content: source_file.path().display().to_string(),
+                path: "generated_from.prisma".into(),
+            }],
         }),
         script,
         shadow_database_url: None,
-        to: DiffTarget::SchemaDatamodel(SchemaContainer {
-            schema: model_file.path().display().to_string(),
+        to: DiffTarget::SchemaDatamodel(SchemasContainer {
+            files: vec![SchemaContainer {
+                content: model_file.path().display().to_string(),
+                path: "generated_to.prisma".into(),
+            }],
         }),
     };
 

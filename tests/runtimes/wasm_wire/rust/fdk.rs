@@ -226,18 +226,18 @@ pub mod types {
         pub b: AddArgsAFloat,
     }
     pub type AddOutput = i64;
-    pub type RangeArgsAAddOutputOptional = Option<AddOutput>;
+    pub type RangeArgsAInteger = i64;
+    pub type RangeArgsARangeArgsAIntegerOptional = Option<RangeArgsAInteger>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RangeArgs {
-        pub a: RangeArgsAAddOutputOptional,
-        pub b: AddOutput,
+        pub a: RangeArgsARangeArgsAIntegerOptional,
+        pub b: RangeArgsAInteger,
     }
-    pub type RangeOutput = Vec<AddOutput>;
+    pub type RangeOutput = Vec<RangeArgsAInteger>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RecordCreationInput {
     }
     pub type EntityNameString = String;
-    pub type EntityAgeAddOutputOptional = Option<AddOutput>;
     pub type ProfileLevelStringEnum = String;
     pub type ProfileAttributesStringEnum = String;
     pub type ProfileAttributesProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
@@ -266,13 +266,10 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Entity {
         pub name: EntityNameString,
-        pub age: EntityAgeAddOutputOptional,
+        pub age: RangeArgsARangeArgsAIntegerOptional,
         pub profile: Profile,
     }
     pub type RecordCreationOutput = Vec<Entity>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootRandomFnInput {
-    }
 }
 pub mod stubs {
     use super::*;

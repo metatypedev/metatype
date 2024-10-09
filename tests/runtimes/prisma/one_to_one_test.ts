@@ -73,7 +73,7 @@ Meta.test("required 1-1 relationships", async (t) => {
           }
         }
       `
-          .expectErrorContains("Foreign key constraint failed")
+          .expectErrorContains("Foreign key constraint violated")
           .on(e);
       },
     );
