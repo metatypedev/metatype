@@ -43,8 +43,7 @@ pub struct BaseBuilderInit<'a, 'b> {
     pub runtime_config: Option<&'b [(String, String)]>,
 }
 
-pub struct BaseBuilder<'a> {
-    ctx: &'a mut TypegraphContext,
+pub struct BaseBuilder {
     name: String,
     runtime_idx: u32,
     policies: Vec<PolicyIndices>,
@@ -56,7 +55,7 @@ pub struct BaseBuilder<'a> {
 }
 
 impl<'a, 'b> BaseBuilderInit<'a, 'b> {
-    pub fn init_builder(self) -> Result<BaseBuilder<'a>> {
+    pub fn init_builder(self) -> Result<BaseBuilder> {
         let policies = self.ctx.register_policy_chain(self.policies)?;
 
         let name = match self.name {
@@ -71,7 +70,6 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
         });
 
         Ok(BaseBuilder {
-            ctx: self.ctx,
             name,
             runtime_idx: self.runtime_idx,
             policies,
@@ -83,7 +81,7 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
     }
 }
 
-impl<'a> BaseBuilder<'a> {
+impl BaseBuilder {
     pub fn build(self) -> Result<TypeNodeBase> {
         let config = self.runtime_config.map(|c| {
             c.iter()

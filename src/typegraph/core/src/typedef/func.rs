@@ -28,7 +28,7 @@ impl TypeConversion for Func {
         let input = {
             let inp_id = TypeId(self.data.inp);
             match TypeId(self.data.inp).resolve_ref()?.0 {
-                TypeDef::Struct(_) => Ok(ctx.register_type(inp_id.try_into()?, Some(runtime_id))?),
+                TypeDef::Struct(_) => Ok(ctx.register_type(inp_id, Some(runtime_id))?),
                 _ => Err(errors::invalid_input_type(&inp_id.repr()?)),
             }
         }?
@@ -53,7 +53,7 @@ impl TypeConversion for Func {
                 Ok(FunctionParameterTransform {
                     resolver_input: match resolver_input.resolve_ref()?.0 {
                         TypeDef::Struct(_) => {
-                            ctx.register_type(resolver_input.try_into()?, Some(runtime_id))?
+                            ctx.register_type(resolver_input, Some(runtime_id))?
                         }
                         _ => return Err(errors::invalid_input_type(&resolver_input.repr()?)),
                     }

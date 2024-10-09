@@ -11,7 +11,7 @@ def injection(g: Graph):
 
     req = t.struct(
         {
-            "a": t.integer(name="A"),
+            "a": t.integer(),
             "raw_int": t.integer().set(1),
             "raw_str": t.string().set("2"),
             "secret": t.integer().from_secret("TEST_VAR"),
@@ -44,13 +44,13 @@ def injection(g: Graph):
     )
     res2 = t.struct({"operation": operation})
 
-    copy = t.struct({"a2": t.integer().from_parent("A")})
+    copy = t.struct({"a2": t.integer().from_parent("a")})
 
     user = t.struct(
         {
-            "id": t.integer(name="UserId"),
+            "id": t.integer(),
             "name": t.string(),
-            "email": t.email(name="UserEmail"),
+            "email": t.email(),
         },
         name="User",
     )
@@ -78,7 +78,7 @@ def injection(g: Graph):
             {
                 "parent": deno.identity(copy),
                 "graphql": gql.query(
-                    t.struct({"id": t.integer().from_parent("A")}),
+                    t.struct({"id": t.integer().from_parent("a")}),
                     user,
                     path=("user",),
                 ),
@@ -94,12 +94,12 @@ def injection(g: Graph):
             user.extend(
                 {
                     "from_parent": deno.identity(t.struct({"email": t.email()})).reduce(
-                        {"email": g.inherit().from_parent("UserEmail")}
+                        {"email": g.inherit().from_parent("email")}
                     ),
                     "messagesSent": find_messages.reduce(
                         {
                             "where": {
-                                "senderId": g.inherit().from_parent("UserId"),
+                                "senderId": g.inherit().from_parent("id"),
                             }
                         }
                     ),

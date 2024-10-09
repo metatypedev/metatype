@@ -166,8 +166,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
                                     })
                                 })? as u32;
 
-                            let type_idx =
-                                ctx.register_type(TypeId(func_store_idx).try_into()?, None)?;
+                            let type_idx = ctx.register_type(TypeId(func_store_idx), None)?;
 
                             let mut auth_processed = auth.clone();
                             auth_processed
@@ -323,9 +322,7 @@ pub fn expose(
                 }
                 ensure_valid_export(key.clone(), type_id)?;
 
-                // this resolves the type_id to a type_def from theh Store
-                let type_def = type_id.try_into()?;
-                let type_idx = ctx.register_type(type_def, None)?;
+                let type_idx = ctx.register_type(type_id, None)?;
                 root_data.properties.insert(key.clone(), type_idx.into());
                 root_data.required.push(key);
                 Ok(())

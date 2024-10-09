@@ -43,9 +43,7 @@ impl TypeConversion for Union {
                     .variants
                     .iter()
                     .map(|vid| -> Result<_> {
-                        Ok(ctx
-                            .register_type(TypeId(*vid).try_into()?, runtime_id)?
-                            .into())
+                        Ok(ctx.register_type(TypeId(*vid), runtime_id)?.into())
                     })
                     .collect::<Result<Vec<_>>>()?,
             },

@@ -98,8 +98,7 @@ impl TypeConversion for Struct {
                     .map(|(name, type_id)| -> Result<(String, u32)> {
                         Ok((
                             name.to_string(),
-                            ctx.register_type(type_id.try_into()?, Some(runtime_id))?
-                                .into(),
+                            ctx.register_type(type_id, Some(runtime_id))?.into(),
                         ))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,

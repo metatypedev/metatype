@@ -46,9 +46,7 @@ impl TypeConversion for Optional {
             .inject(ref_attrs.get_injection()?)?
             .build()?,
             data: OptionalTypeData {
-                item: ctx
-                    .register_type(TypeId(self.data.of).try_into()?, runtime_id)?
-                    .into(),
+                item: ctx.register_type(TypeId(self.data.of), runtime_id)?.into(),
                 default_value,
             },
         })

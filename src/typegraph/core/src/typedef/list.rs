@@ -37,9 +37,7 @@ impl TypeConversion for List {
             .inject(ref_attrs.get_injection()?)?
             .build()?,
             data: ListTypeData {
-                items: ctx
-                    .register_type(TypeId(self.data.of).try_into()?, runtime_id)?
-                    .into(),
+                items: ctx.register_type(TypeId(self.data.of), runtime_id)?.into(),
                 max_items: self.data.max,
                 min_items: self.data.min,
                 unique_items: self.data.unique_items,

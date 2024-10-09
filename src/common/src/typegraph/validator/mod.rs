@@ -9,8 +9,8 @@ mod value;
 use crate::typegraph::{TypeNode, Typegraph};
 
 use super::visitor::{
-    visit_child, ChildNode, CurrentNode, Edge, Path, PathSegment, TypeVisitor, TypeVisitorContext,
-    VisitLayer, VisitResult, VisitorResult,
+    visit_child, ChildNode, CurrentNode, ParentFn, Path, PathSegment, TypeVisitor,
+    TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
 };
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
@@ -91,14 +91,6 @@ impl<'a> TypeVisitor<'a> for Validator {
     ) -> VisitResult<Self::Return> {
         let type_node = current_node.type_node;
 
-        let last_seg = current_node.path.last();
-        if let Some(last_seg) = last_seg {
-            if let Edge::FunctionInput = last_seg.edge {
-                self.visit_input_type(current_node, context);
-                return VisitResult::Continue(false);
-            }
-        }
-
         if let TypeNode::Function { .. } = type_node {
             // validate materializer??
             // TODO deno static
@@ -134,6 +126,7 @@ impl<'a> TypeVisitor<'a> for Validator {
         &mut self,
         current_node: CurrentNode<'_>,
         context: &Self::Context,
+        _parent_fn: ParentFn,
     ) -> VisitResult<Self::Return> {
         self.visit_input_type_impl(current_node, context)
     }
