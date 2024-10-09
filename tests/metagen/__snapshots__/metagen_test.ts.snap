@@ -9,6 +9,11 @@ from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
+
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
+
 class Struct:
     def repr(self):
         return asdict(self)
@@ -108,7 +113,7 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput, Any], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
     def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp, ctx)
@@ -132,7 +137,7 @@ from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput, ctx) -> Student:
+def three(inp: RootOneFnInput, ctx: Ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -146,6 +151,11 @@ from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
+
+
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
 
 class Struct:
     def repr(self):
@@ -256,7 +266,7 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, ctx)
@@ -267,7 +277,7 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput, Any], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
     def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
         out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
@@ -291,12 +301,12 @@ from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameStri
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput, ctx) -> TypeRootOneFnOutput:
+def fnOne(inp: RootOneFnInput, ctx: Ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput, ctx) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeRootOneFnInputNameString:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
@@ -805,6 +815,11 @@ from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
+
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
+
 class Struct:
     def repr(self):
         return asdict(self)
@@ -904,7 +919,7 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput, Any], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
     def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp, ctx)
@@ -928,7 +943,7 @@ from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput, ctx) -> Student:
+def three(inp: RootOneFnInput, ctx: Ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -942,6 +957,11 @@ from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
+
+
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
 
 class Struct:
     def repr(self):
@@ -1052,7 +1072,7 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, ctx)
@@ -1063,7 +1083,7 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput, Any], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
     def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
         out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
@@ -1087,12 +1107,12 @@ from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameStri
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput, ctx) -> TypeRootOneFnOutput:
+def fnOne(inp: RootOneFnInput, ctx: Ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput, ctx) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeRootOneFnInputNameString:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
@@ -1601,6 +1621,11 @@ from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
+
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
+
 class Struct:
     def repr(self):
         return asdict(self)
@@ -1700,7 +1725,7 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput, Any], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
     def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp, ctx)
@@ -1724,7 +1749,7 @@ from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput, ctx) -> Student:
+def three(inp: RootOneFnInput, ctx: Ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -1738,6 +1763,11 @@ from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
+
+
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
 
 class Struct:
     def repr(self):
@@ -1848,7 +1878,7 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, ctx)
@@ -1859,7 +1889,7 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput, Any], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
     def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
         out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
@@ -1883,12 +1913,12 @@ from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameStri
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput, ctx) -> TypeRootOneFnOutput:
+def fnOne(inp: RootOneFnInput, ctx: Ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput, ctx) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeRootOneFnInputNameString:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
@@ -1908,6 +1938,11 @@ from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
+
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
+
 class Struct:
     def repr(self):
         return asdict(self)
@@ -2007,7 +2042,7 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput, Any], Student]):
+def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
     def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: Student = user_fn(inp, ctx)
@@ -2031,7 +2066,7 @@ from .other_types import RootOneFnInput, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput, ctx) -> Student:
+def three(inp: RootOneFnInput, ctx: Ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -2045,6 +2080,11 @@ from typing import Callable, List, Union, get_origin, ForwardRef, Any
 from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
+
+
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
 
 class Struct:
     def repr(self):
@@ -2155,7 +2195,7 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp, ctx):
         inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, ctx)
@@ -2166,7 +2206,7 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput, Any], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput, Any], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
     def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
         out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
@@ -2190,12 +2230,12 @@ from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameStri
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput, ctx) -> TypeRootOneFnOutput:
+def fnOne(inp: RootOneFnInput, ctx: Ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput, ctx) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeRootOneFnInputNameString:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
