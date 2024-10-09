@@ -13,7 +13,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Optional, RefAttrs, TypeDefData, TypeId},
+    types::{FindAttribute as _, Optional, RefAttrs, TypeDefData, TypeId},
     wit::core::TypeOptional,
 };
 
@@ -43,7 +43,7 @@ impl TypeConversion for Optional {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(ref_attrs.injection.as_ref())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: OptionalTypeData {
                 item: ctx.register_type(TypeId(self.data.of), runtime_id)?.into(),

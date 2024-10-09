@@ -14,7 +14,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Float, RefAttrs, TypeDefData},
+    types::{FindAttribute as _, Float, RefAttrs, TypeDefData},
     wit::core::TypeFloat,
 };
 
@@ -37,7 +37,7 @@ impl TypeConversion for Float {
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(ref_attrs.injection.as_ref())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: FloatTypeData {
                 minimum: self.data.min,

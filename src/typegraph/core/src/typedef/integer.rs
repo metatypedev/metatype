@@ -13,7 +13,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Integer, RefAttrs, TypeDefData},
+    types::{FindAttribute as _, Integer, RefAttrs, TypeDefData},
     wit::core::TypeInteger,
 };
 
@@ -36,7 +36,7 @@ impl TypeConversion for Integer {
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(ref_attrs.injection.as_ref())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: IntegerTypeData {
                 minimum: self.data.min,

@@ -15,7 +15,7 @@ use crate::{
     errors,
     global_store::Store,
     typegraph::TypegraphContext,
-    types::{IdKind, RefAttrs, Struct, Type, TypeDefData, TypeId},
+    types::{FindAttribute as _, IdKind, RefAttrs, Struct, Type, TypeDefData, TypeId},
     wit::core::TypeStruct,
 };
 
@@ -90,7 +90,7 @@ impl TypeConversion for Struct {
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(ref_attrs.injection.as_ref())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: ObjectTypeData {
                 properties: self

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::errors::Result;
 use crate::t;
 use crate::t::TypeBuilder;
-use crate::types::{RefAttrs, TypeId};
+use crate::types::{RefAttr, TypeId};
 
 pub mod discovery;
 
@@ -103,12 +103,14 @@ impl PrismaLink {
     }
 
     fn build_link(&self) -> Result<TypeId> {
-        let ref_attrs = RefAttrs::default().runtime(
-            "prisma",
-            serde_json::from_value(serde_json::to_value(PrismaRefData::from(self)).unwrap())
-                .unwrap(),
-        );
-        t::ref_(&self.type_name, ref_attrs).build()
+        t::ref_(
+            &self.type_name,
+            Some(RefAttr::runtime(
+                "prisma",
+                serde_json::to_value(PrismaRefData::from(self)).unwrap(),
+            )),
+        )
+        .build()
     }
 }
 

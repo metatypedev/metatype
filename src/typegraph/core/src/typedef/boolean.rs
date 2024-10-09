@@ -11,7 +11,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Boolean, RefAttrs, TypeBoolean, TypeDefData},
+    types::{Boolean, FindAttribute as _, RefAttrs, TypeBoolean, TypeDefData},
 };
 use std::hash::Hash;
 
@@ -33,7 +33,7 @@ impl TypeConversion for Boolean {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(ref_attrs.injection.as_ref())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
         })
     }

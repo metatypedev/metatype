@@ -5,6 +5,8 @@ pub mod type_def;
 pub mod type_id;
 pub mod type_ref;
 
+use std::borrow::Cow;
+
 pub use type_def::*;
 pub use type_id::*;
 pub use type_ref::*;
@@ -28,13 +30,15 @@ impl From<TypeDef> for Type {
 }
 
 impl Type {
-    fn name(&self) -> Option<&str> {
+    fn name(&self) -> Option<Cow<'_, str>> {
         match self {
-            Type::Ref(typ) => match &typ.target {
-                RefTarget::Direct(type_def) => type_def.name(),
-                RefTarget::Indirect(name) => Some(name),
+            Type::Ref(typ) => match typ.flatten().target {
+                FlatTypeRefTarget::Direct(type_def) => {
+                    type_def.name().map(ToString::to_string).map(Into::into)
+                }
+                FlatTypeRefTarget::Indirect(name) => Some(name.into()),
             },
-            Type::Def(typ) => typ.name(),
+            Type::Def(typ) => typ.name().map(Into::into),
         }
     }
 
@@ -42,14 +46,6 @@ impl Type {
         match self {
             Type::Ref(typ) => typ.repr(),
             Type::Def(typ) => typ.repr(),
-        }
-    }
-
-    /// wrap Type::Def in RefTarget, get target from Type::Ref
-    pub fn to_ref_target(&self) -> RefTarget {
-        match self {
-            Type::Ref(type_ref) => type_ref.target.clone(),
-            Type::Def(type_def) => RefTarget::Direct(type_def.clone()),
         }
     }
 }

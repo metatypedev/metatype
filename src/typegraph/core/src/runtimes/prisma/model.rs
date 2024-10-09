@@ -9,7 +9,7 @@ use std::hash::Hash;
 use crate::errors::Result;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::type_utils::RuntimeConfig;
-use crate::types::{RefAttrs, ResolveRef as _, TypeDef, TypeDefExt};
+use crate::types::{FindAttribute as _, RefAttrs, ResolveRef as _, TypeDef, TypeDefExt};
 use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
@@ -112,9 +112,9 @@ impl From<PrismaRefData> for RelationshipAttributes {
 
 impl RelationshipAttributes {
     pub fn new(attrs: &RefAttrs) -> Result<Self> {
-        let attrs = attrs.runtime.get("prisma");
-        let ref_data: Option<PrismaRefData> = attrs
-            .map(|attrs| serde_json::from_value(serde_json::to_value(attrs).unwrap()).unwrap());
+        let attrs = attrs.find_runtime_attr("prisma");
+        let ref_data: Option<PrismaRefData> =
+            attrs.map(|attr| serde_json::from_value(attr.clone()).unwrap());
         Ok(ref_data.map(|it| it.into()).unwrap_or_default())
     }
 }
@@ -178,8 +178,7 @@ impl Property {
         };
 
         match ref_data
-            .injection
-            .as_ref()
+            .find_injection()
             .map(Injection::try_from)
             .transpose()
         {

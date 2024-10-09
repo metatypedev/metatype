@@ -12,7 +12,7 @@ use crate::{
     },
     errors::Result,
     typegraph::TypegraphContext,
-    types::{List, RefAttrs, TypeDefData, TypeId},
+    types::{FindAttribute as _, List, RefAttrs, TypeDefData, TypeId},
     wit::core::TypeList,
 };
 
@@ -34,7 +34,7 @@ impl TypeConversion for List {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(ref_attrs.injection.as_ref())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: ListTypeData {
                 items: ctx.register_type(TypeId(self.data.of), runtime_id)?.into(),

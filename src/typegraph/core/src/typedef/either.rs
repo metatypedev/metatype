@@ -13,7 +13,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Either, RefAttrs, TypeDefData, TypeId},
+    types::{Either, FindAttribute as _, RefAttrs, TypeDefData, TypeId},
     wit::core::TypeEither,
 };
 
@@ -25,9 +25,6 @@ impl TypeConversion for Either {
         ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         Ok(TypeNode::Either {
-            // TODO do we need to support injection??
-            // TODO or emit an error if injection is set?
-            // idem for as_id, and enum
             base: BaseBuilderInit {
                 ctx,
                 base_name: "either",
@@ -38,7 +35,7 @@ impl TypeConversion for Either {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(ref_attrs.injection.as_ref())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: EitherTypeData {
                 one_of: self

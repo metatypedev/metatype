@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::errors::TgError;
 use crate::global_store::{NameRegistration, Store};
-use crate::types::RefAttrs;
+use crate::types::RefAttr;
 use crate::types::{ExtendedTypeBase, TypeDefExt, TypeId, TypeRef};
 use crate::wit::core::{
     Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
@@ -499,13 +499,13 @@ pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
 
 pub struct RefBuilder {
     name: String,
-    attributes: RefAttrs,
+    attribute: Option<RefAttr>,
 }
 
-pub fn ref_(name: impl Into<String>, attrs: RefAttrs) -> RefBuilder {
+pub fn ref_(name: impl Into<String>, attribute: Option<RefAttr>) -> RefBuilder {
     RefBuilder {
         name: name.into(),
-        attributes: attrs,
+        attribute,
     }
 }
 
@@ -587,7 +587,7 @@ impl TypeBuilder for RefBuilder {
     fn build(&self) -> Result<TypeId> {
         Ok(crate::Lib::refb(
             self.name.clone(),
-            Some(serde_json::to_string(&self.attributes).unwrap()),
+            Some(serde_json::to_string(&self.attribute).unwrap()),
         )?
         .into())
     }

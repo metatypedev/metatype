@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{RefAttrs, ResolveRef as _, TypeRef};
+use super::{FindAttribute as _, RefAttr, ResolveRef as _, TypeRef};
 use crate::errors::Result;
 use crate::types::{Type, TypeDef, TypeDefExt};
 
@@ -18,11 +18,12 @@ where
     fn as_id(self, composite: bool) -> Result<TypeRef> {
         TypeRef::new(
             self.try_into()?,
-            RefAttrs::default().as_id(if composite {
+            RefAttr::AsId(if composite {
                 IdKind::Composite
             } else {
                 IdKind::Simple
-            }),
+            })
+            .into(),
         )
     }
 }
@@ -38,7 +39,7 @@ pub enum IdKind {
 impl TypeRef {
     pub fn id_kind(&self) -> Result<Option<IdKind>> {
         let (type_def, attrs) = self.resolve_ref()?;
-        if let Some(as_id) = attrs.as_id {
+        if let Some(as_id) = attrs.find_id_kind() {
             match type_def {
                 TypeDef::Integer(_) | TypeDef::String(_) => Ok(Some(as_id)),
                 TypeDef::Boolean(_) => {

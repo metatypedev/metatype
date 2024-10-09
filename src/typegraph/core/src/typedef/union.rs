@@ -13,7 +13,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{RefAttrs, TypeDefData, TypeId, Union},
+    types::{FindAttribute as _, RefAttrs, TypeDefData, TypeId, Union},
     wit::core::TypeUnion,
 };
 
@@ -35,7 +35,7 @@ impl TypeConversion for Union {
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(ref_attrs.injection.as_ref())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: UnionTypeData {
                 any_of: self

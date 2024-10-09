@@ -175,7 +175,7 @@ pub(super) mod utils {
                 // -> right must be a proxy for the types to be equal
                 Err(_) => match (left.as_type()?, right.as_type()?) {
                     (Type::Ref(left_proxy), Type::Ref(right_proxy)) => {
-                        match (&left_proxy.target, &right_proxy.target) {
+                        match (left_proxy.target.as_ref(), right_proxy.target.as_ref()) {
                             (RefTarget::Indirect(left_name), RefTarget::Indirect(right_name)) => {
                                 Ok(left_name == right_name)
                             }

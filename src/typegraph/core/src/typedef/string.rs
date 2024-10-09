@@ -13,7 +13,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{RefAttrs, StringT, TypeDefData},
+    types::{FindAttribute as _, RefAttrs, StringT, TypeDefData},
     wit::core::TypeString,
 };
 
@@ -45,7 +45,7 @@ impl TypeConversion for StringT {
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(ref_attrs.injection.as_ref())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: StringTypeData {
                 min_length: self.data.min,
