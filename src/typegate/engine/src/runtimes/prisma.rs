@@ -33,7 +33,7 @@ impl Ctx {
 }
 
 fn reformat_datamodel(datamodel: &str) -> Option<String> {
-    prisma_models::psl::reformat(datamodel, 4)
+    psl::reformat(datamodel, 4)
 }
 
 // register engine

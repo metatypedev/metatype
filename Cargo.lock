@@ -107,9 +107,9 @@ dependencies = [
 
 [[package]]
 name = "aead-gcm-stream"
-version = "0.1.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a09ecb526d53de2842cc876ee5c9b51161ee60399edeca4cf74892a01b48177"
+checksum = "4947a169074c7e038fa43051d1c4e073f4488b0e4b0a30658f1e1a1b06449ce8"
 dependencies = [
  "aead",
  "aes",
@@ -594,6 +594,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "atoi"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f28d99ec8bfea296261ca1af174f24225171fea9664ba9003cbebee704810528"
+dependencies = [
+ "num-traits 0.2.19",
+]
+
+[[package]]
 name = "atomic-shim"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1075,21 +1084,6 @@ dependencies = [
  "memchr",
  "regex-automata 0.4.7",
  "serde 1.0.204",
-]
-
-[[package]]
-name = "builtin-psl-connectors"
-version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
-dependencies = [
- "connection-string",
- "either",
- "enumflags2",
- "indoc",
- "lsp-types 0.91.1",
- "once_cell",
- "psl-core",
- "regex",
 ]
 
 [[package]]
@@ -1612,7 +1606,7 @@ dependencies = [
  "reqwest 0.11.27",
  "serde 1.0.204",
  "serde_json",
- "serde_with 3.9.0",
+ "serde_with",
  "tar",
  "thiserror",
  "url",
@@ -1646,6 +1640,16 @@ dependencies = [
  "slug",
  "typed-arena",
  "unicode_categories",
+]
+
+[[package]]
+name = "concat-idents"
+version = "1.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f76990911f2267d837d9d0ad060aa63aaad170af40904b29461734c339030d4d"
+dependencies = [
+ "quote",
+ "syn 2.0.71",
 ]
 
 [[package]]
@@ -2017,6 +2021,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22ec99545bb0ed0ea7bb9b8e1e9122ea386ff8a48c0922e43f36d45ab09e0e80"
 
 [[package]]
+name = "crosstarget-utils"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "js-sys",
+ "pin-project",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
 name = "crunchy"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2142,16 +2158,6 @@ dependencies = [
 
 [[package]]
 name = "darling"
-version = "0.13.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a01d95850c592940db9b8194bc39f4bc0e89dee5c4265e4b1807c34a9aba453c"
-dependencies = [
- "darling_core 0.13.4",
- "darling_macro 0.13.4",
-]
-
-[[package]]
-name = "darling"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b750cb3417fd1b327431a470f388520309479ab0bf5e323505daf0290cd3850"
@@ -2168,20 +2174,6 @@ checksum = "6f63b86c8a8826a49b8c21f08a2d07338eec8d900540f8630dc76284be802989"
 dependencies = [
  "darling_core 0.20.10",
  "darling_macro 0.20.10",
-]
-
-[[package]]
-name = "darling_core"
-version = "0.13.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "859d65a907b6852c9361e3185c862aae7fafd2887876799fa55f5f99dc40d610"
-dependencies = [
- "fnv",
- "ident_case",
- "proc-macro2",
- "quote",
- "strsim 0.10.0",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -2210,17 +2202,6 @@ dependencies = [
  "quote",
  "strsim 0.11.1",
  "syn 2.0.71",
-]
-
-[[package]]
-name = "darling_macro"
-version = "0.13.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c972679f83bdf9c42bd905396b6c3588a843a17f0f16dfcfa3e2c5d57441835"
-dependencies = [
- "darling_core 0.13.4",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -2273,7 +2254,6 @@ checksum = "41b319d1b62ffbd002e057f36bebd1f42b9f97927c9577461d855f3513c4289f"
 [[package]]
 name = "datamodel-renderer"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "base64 0.13.1",
  "once_cell",
@@ -2299,8 +2279,8 @@ dependencies = [
 
 [[package]]
 name = "deno"
-version = "1.46.1"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "1.46.3"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "anstream",
  "async-trait",
@@ -2332,6 +2312,7 @@ dependencies = [
  "deno_semver",
  "deno_task_shell",
  "deno_terminal 0.2.0",
+ "deno_tower_lsp",
  "dissimilar",
  "dotenvy",
  "dprint-plugin-json",
@@ -2359,7 +2340,7 @@ dependencies = [
  "libsui",
  "libz-sys",
  "log",
- "lsp-types 0.94.1",
+ "lsp-types 0.97.0",
  "malva",
  "markup_fmt",
  "memmem",
@@ -2396,7 +2377,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-util 0.7.11",
- "tower-lsp",
+ "tracing",
  "twox-hash",
  "typed-arena",
  "uuid",
@@ -2407,6 +2388,17 @@ dependencies = [
  "zeromq",
  "zip 2.2.0",
  "zstd 0.12.4",
+]
+
+[[package]]
+name = "deno-tower-lsp-macros"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05d59a1cfd445fd86f63616127a434aabca000e03d963b01b03ce813520565b9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.71",
 ]
 
 [[package]]
@@ -2455,8 +2447,8 @@ dependencies = [
 
 [[package]]
 name = "deno_broadcast_channel"
-version = "0.160.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.162.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2466,8 +2458,8 @@ dependencies = [
 
 [[package]]
 name = "deno_cache"
-version = "0.98.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.100.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2497,8 +2489,8 @@ dependencies = [
 
 [[package]]
 name = "deno_canvas"
-version = "0.35.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.37.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
  "deno_webgpu",
@@ -2530,17 +2522,17 @@ dependencies = [
 
 [[package]]
 name = "deno_console"
-version = "0.166.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.168.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
 ]
 
 [[package]]
 name = "deno_core"
-version = "0.306.0"
+version = "0.307.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff7e5ec71a92ab026b997ac1315bdfb3eeac6cf89dd20f816c9c02baebccd066"
+checksum = "154b0902402807a043579102f949e6dd6f3a09d2d5049929fd710fc3192bf109"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2576,8 +2568,8 @@ checksum = "a13951ea98c0a4c372f162d669193b4c9d991512de9f2381dd161027f34b26b1"
 
 [[package]]
 name = "deno_cron"
-version = "0.46.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.48.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2589,8 +2581,8 @@ dependencies = [
 
 [[package]]
 name = "deno_crypto"
-version = "0.180.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.182.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -2623,9 +2615,9 @@ dependencies = [
 
 [[package]]
 name = "deno_doc"
-version = "0.146.0"
+version = "0.147.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48063b68a1646ef64811171b683eb2993e08260b33b2bd987649679945099370"
+checksum = "d876971414230c7837bb4dc3557be99265558e1f43d2b6092f90e8b5f45e1984"
 dependencies = [
  "ammonia",
  "anyhow",
@@ -2666,8 +2658,8 @@ dependencies = [
 
 [[package]]
 name = "deno_fetch"
-version = "0.190.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.192.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "base64 0.21.7",
  "bytes",
@@ -2698,8 +2690,8 @@ dependencies = [
 
 [[package]]
 name = "deno_ffi"
-version = "0.153.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.155.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
  "deno_permissions",
@@ -2716,8 +2708,8 @@ dependencies = [
 
 [[package]]
 name = "deno_fs"
-version = "0.76.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.78.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "async-trait",
  "base32",
@@ -2766,8 +2758,8 @@ dependencies = [
 
 [[package]]
 name = "deno_http"
-version = "0.164.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.166.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "async-compression",
  "async-trait",
@@ -2803,8 +2795,8 @@ dependencies = [
 
 [[package]]
 name = "deno_io"
-version = "0.76.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.78.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "async-trait",
  "deno_core",
@@ -2825,8 +2817,8 @@ dependencies = [
 
 [[package]]
 name = "deno_kv"
-version = "0.74.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.76.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2835,7 +2827,6 @@ dependencies = [
  "chrono",
  "deno_core",
  "deno_fetch",
- "deno_node",
  "deno_permissions",
  "deno_tls",
  "denokv_proto",
@@ -2896,8 +2887,8 @@ dependencies = [
 
 [[package]]
 name = "deno_napi"
-version = "0.97.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.99.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
  "deno_permissions",
@@ -2919,8 +2910,8 @@ dependencies = [
 
 [[package]]
 name = "deno_net"
-version = "0.158.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.160.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
  "deno_permissions",
@@ -2930,14 +2921,14 @@ dependencies = [
  "serde 1.0.204",
  "socket2 0.5.7",
  "tokio",
- "trust-dns-proto 0.23.2",
- "trust-dns-resolver 0.23.2",
+ "trust-dns-proto",
+ "trust-dns-resolver",
 ]
 
 [[package]]
 name = "deno_node"
-version = "0.103.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.105.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "aead-gcm-stream",
  "aes",
@@ -3044,9 +3035,9 @@ dependencies = [
 
 [[package]]
 name = "deno_ops"
-version = "0.182.0"
+version = "0.183.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "623fee81066617b7a706923bc6364cd4181d35e6438e69d30dc8dd9ec94936f7"
+checksum = "9114f9eb6419839f1ab9668f91c463238945bb974e1998629a703f72b4608daf"
 dependencies = [
  "proc-macro-rules",
  "proc-macro2",
@@ -3073,8 +3064,8 @@ dependencies = [
 
 [[package]]
 name = "deno_permissions"
-version = "0.26.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.28.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
  "deno_terminal 0.2.0",
@@ -3089,8 +3080,8 @@ dependencies = [
 
 [[package]]
 name = "deno_runtime"
-version = "0.175.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.177.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_ast",
  "deno_broadcast_channel",
@@ -3202,8 +3193,8 @@ dependencies = [
 
 [[package]]
 name = "deno_tls"
-version = "0.153.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.155.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
  "deno_native_certs",
@@ -3214,6 +3205,29 @@ dependencies = [
  "serde 1.0.204",
  "tokio",
  "webpki-roots 0.26.3",
+]
+
+[[package]]
+name = "deno_tower_lsp"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d7afb4d257c084fd889e8cf1ba3ad58db0002428c819cc7717815f996f97777a"
+dependencies = [
+ "async-trait",
+ "auto_impl",
+ "bytes",
+ "dashmap",
+ "deno-tower-lsp-macros",
+ "futures",
+ "httparse",
+ "lsp-types 0.97.0",
+ "memchr",
+ "serde 1.0.204",
+ "serde_json",
+ "tokio",
+ "tokio-util 0.7.11",
+ "tower",
+ "tracing",
 ]
 
 [[package]]
@@ -3228,8 +3242,8 @@ dependencies = [
 
 [[package]]
 name = "deno_url"
-version = "0.166.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.168.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
  "urlpattern",
@@ -3237,8 +3251,8 @@ dependencies = [
 
 [[package]]
 name = "deno_web"
-version = "0.197.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.199.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "async-trait",
  "base64-simd 0.8.0",
@@ -3255,8 +3269,8 @@ dependencies = [
 
 [[package]]
 name = "deno_webgpu"
-version = "0.133.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.135.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
  "raw-window-handle",
@@ -3268,16 +3282,16 @@ dependencies = [
 
 [[package]]
 name = "deno_webidl"
-version = "0.166.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.168.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
 ]
 
 [[package]]
 name = "deno_websocket"
-version = "0.171.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.173.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "bytes",
  "deno_core",
@@ -3298,8 +3312,8 @@ dependencies = [
 
 [[package]]
 name = "deno_webstorage"
-version = "0.161.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.163.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "deno_core",
  "deno_web",
@@ -3318,9 +3332,9 @@ dependencies = [
 
 [[package]]
 name = "denokv_proto"
-version = "0.8.1"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "114538d2cacd2b219f05faa753d80950f95416e47c77904c7452d5f41e157059"
+checksum = "25e4ca7a6388ad11c5b8d8ad2300dbd57cdd1ba20fe7feb25aa5da8ae0ea83fd"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3359,9 +3373,9 @@ dependencies = [
 
 [[package]]
 name = "denokv_sqlite"
-version = "0.8.1"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "188b792af19082cbfc7b666e71979775300482877d8b80601f4a5a86a80098a3"
+checksum = "6e32dcfde2d7b2ed3200e2cdc2f90a6aeee31c83a2dd89425356f509f1238759"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3535,7 +3549,6 @@ checksum = "339544cc9e2c4dc3fc7149fd630c5f22263a4fdf18a98afd0075784968b5cf00"
 [[package]]
 name = "diagnostics"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "colored",
  "indoc",
@@ -3720,12 +3733,12 @@ dependencies = [
 [[package]]
 name = "dmmf"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "bigdecimal",
- "indexmap 1.9.3",
- "prisma-models",
+ "indexmap 2.4.0",
+ "itertools 0.12.1",
  "psl",
+ "query-structure",
  "schema",
  "serde 1.0.204",
  "serde_json",
@@ -3806,9 +3819,9 @@ dependencies = [
 
 [[package]]
 name = "dprint-plugin-markdown"
-version = "0.17.6"
+version = "0.17.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ef42762177b1a74b52b98fe946cb88fa4a01f149b56208de72b43d2be0a54c6"
+checksum = "934a8e33f6f373b2fb66c288a468e3dae9a56a6c66bfecd5504fe566131afd3f"
 dependencies = [
  "anyhow",
  "dprint-core",
@@ -3974,6 +3987,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5e6043086bf7973472e0c7dff2142ea0b680d30e18d9cc40f267efbf222bd47"
 dependencies = [
  "base16ct",
+ "base64ct",
  "crypto-bigint",
  "digest 0.10.7",
  "ff",
@@ -3984,6 +3998,8 @@ dependencies = [
  "pkcs8",
  "rand_core 0.6.4",
  "sec1",
+ "serde_json",
+ "serdect",
  "subtle",
  "zeroize",
 ]
@@ -4093,18 +4109,6 @@ name = "entities"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5320ae4c3782150d900b79807611a59a99fc9a1d61d686faafc24b93fc8d7ca"
-
-[[package]]
-name = "enum-as-inner"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21cdad81446a7f7dc43f6a77409efeb9733d2fa65553efef6018ef257c959b73"
-dependencies = [
- "heck 0.4.1",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
 
 [[package]]
 name = "enum-as-inner"
@@ -4295,7 +4299,7 @@ dependencies = [
  "deno_npm",
  "deno_semver",
  "futures",
- "hashlink",
+ "hashlink 0.8.4",
  "indexmap 2.4.0",
  "serde 1.0.204",
  "serde_json",
@@ -4519,6 +4523,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
 dependencies = [
  "num-traits 0.2.19",
+]
+
+[[package]]
+name = "fluent-uri"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17c704e9dbe1ddd863da1e6ff3567795087b1eb201ce80d8fa81162e1516500d"
+dependencies = [
+ "bitflags 1.3.2",
+]
+
+[[package]]
+name = "flume"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "55ac459de2512911e4b674ce33cf20befaba382d05b62b008afc1c8b57cbf181"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "spin 0.9.8",
 ]
 
 [[package]]
@@ -4770,6 +4794,17 @@ dependencies = [
  "futures-core",
  "futures-task",
  "futures-util",
+]
+
+[[package]]
+name = "futures-intrusive"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d930c203dd0b6ff06e0201a4a2fe9149b43c684fd4420555b26d21b1a02956f"
+dependencies = [
+ "futures-core",
+ "lock_api",
+ "parking_lot 0.12.3",
 ]
 
 [[package]]
@@ -5316,6 +5351,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashlink"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ba4ff7128dee98c7dc9794b6a411377e1404dba1c97deb8d1a55297bd25d8af"
+dependencies = [
+ "hashbrown 0.14.5",
+]
+
+[[package]]
 name = "heck"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5368,6 +5412,51 @@ name = "hexf-parse"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
+
+[[package]]
+name = "hickory-proto"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07698b8420e2f0d6447a436ba999ec85d8fbf2a398bbd737b82cac4a2e96e512"
+dependencies = [
+ "async-trait",
+ "cfg-if",
+ "data-encoding",
+ "enum-as-inner",
+ "futures-channel",
+ "futures-io",
+ "futures-util",
+ "idna 0.4.0",
+ "ipnet",
+ "once_cell",
+ "rand 0.8.5",
+ "thiserror",
+ "tinyvec",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "hickory-resolver"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28757f23aa75c98f254cf0405e6d8c25b831b32921b050a66692427679b1f243"
+dependencies = [
+ "cfg-if",
+ "futures-util",
+ "hickory-proto",
+ "ipconfig",
+ "lru-cache",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "rand 0.8.5",
+ "resolv-conf",
+ "smallvec",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
 
 [[package]]
 name = "hkdf"
@@ -5699,17 +5788,6 @@ name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
-
-[[package]]
-name = "idna"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "418a0a6fab821475f634efe3ccc45c013f742efe03d853e8d3355d5cb850ecf8"
-dependencies = [
- "matches",
- "unicode-bidi",
- "unicode-normalization",
-]
 
 [[package]]
 name = "idna"
@@ -6083,7 +6161,6 @@ dependencies = [
 [[package]]
 name = "json-rpc-api-build"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "backtrace",
  "heck 0.3.3",
@@ -6422,9 +6499,9 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.26.0"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afc22eff61b133b115c6e8c74e818c628d6d5e7a502afea6f64dee076dd94326"
+checksum = "2e99fb7a497b1e3339bc746195567ed8d3e24945ecd636e3619d20b9de9e9149"
 dependencies = [
  "cc",
  "pkg-config",
@@ -6533,9 +6610,9 @@ dependencies = [
 
 [[package]]
 name = "lsp-types"
-version = "0.91.1"
+version = "0.95.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2368312c59425dd133cb9a327afee65be0a633a8ce471d248e2202a48f8f68ae"
+checksum = "8e34d33a8e9b006cd3fc4fe69a921affa097bae4bb65f76271f4644f9a334365"
 dependencies = [
  "bitflags 1.3.2",
  "serde 1.0.204",
@@ -6546,15 +6623,15 @@ dependencies = [
 
 [[package]]
 name = "lsp-types"
-version = "0.94.1"
+version = "0.97.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c66bfd44a06ae10647fe3f8214762e9369fd4248df1350924b4ef9e770a85ea1"
+checksum = "53353550a17c04ac46c585feb189c2db82154fc84b79c7a66c96c2c644f66071"
 dependencies = [
  "bitflags 1.3.2",
+ "fluent-uri",
  "serde 1.0.204",
  "serde_json",
  "serde_repr",
- "url",
 ]
 
 [[package]]
@@ -6650,12 +6727,6 @@ checksum = "8263075bb86c5a1b1427b5ae862e8889656f126e9f77c484496e8b47cf5c5558"
 dependencies = [
  "regex-automata 0.1.10",
 ]
-
-[[package]]
-name = "matches"
-version = "0.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2532096657941c2fea9c289d370a250971c689d4f143798ff67113ec042024a5"
 
 [[package]]
 name = "matchit"
@@ -6794,7 +6865,6 @@ dependencies = [
  "num_cpus",
  "once_cell",
  "pathdiff",
- "prisma-models",
  "process-wrap",
  "project-root",
  "rand 0.8.5",
@@ -7023,9 +7093,8 @@ checksum = "b52c1b33ff98142aecea13138bd399b68aa7ab5d9546c300988c345004001eea"
 
 [[package]]
 name = "mongodb"
-version = "2.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef206acb1b72389b49bc9985efe7eb1f8a9bb18e5680d262fac26c07f44025f1"
+version = "3.0.0"
+source = "git+https://github.com/prisma/mongo-rust-driver.git?branch=RUST-1994/happy-eyeballs#31e0356391a7871bec000ae35fe0edc35582449e"
 dependencies = [
  "async-trait",
  "base64 0.13.1",
@@ -7039,9 +7108,12 @@ dependencies = [
  "futures-io",
  "futures-util",
  "hex",
+ "hickory-proto",
+ "hickory-resolver",
  "hmac",
- "lazy_static 1.5.0",
  "md-5",
+ "mongodb-internal-macros",
+ "once_cell",
  "pbkdf2 0.11.0",
  "percent-encoding",
  "rand 0.8.5",
@@ -7050,19 +7122,17 @@ dependencies = [
  "rustls-pemfile 1.0.4",
  "serde 1.0.204",
  "serde_bytes",
- "serde_with 1.14.0",
+ "serde_with",
  "sha-1",
  "sha2 0.10.8",
- "socket2 0.4.10",
+ "socket2 0.5.7",
  "stringprep",
- "strsim 0.10.0",
+ "strsim 0.11.1",
  "take_mut",
  "thiserror",
  "tokio",
  "tokio-rustls 0.24.1",
  "tokio-util 0.7.11",
- "trust-dns-proto 0.21.2",
- "trust-dns-resolver 0.21.2",
  "typed-builder",
  "uuid",
  "webpki-roots 0.25.4",
@@ -7071,7 +7141,6 @@ dependencies = [
 [[package]]
 name = "mongodb-client"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "mongodb",
  "once_cell",
@@ -7080,9 +7149,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mongodb-internal-macros"
+version = "3.0.0"
+source = "git+https://github.com/prisma/mongo-rust-driver.git?branch=RUST-1994/happy-eyeballs#31e0356391a7871bec000ae35fe0edc35582449e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.71",
+]
+
+[[package]]
 name = "mongodb-query-connector"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -7090,17 +7168,18 @@ dependencies = [
  "bson",
  "chrono",
  "cuid",
+ "derive_more",
  "futures",
- "indexmap 1.9.3",
- "itertools 0.10.5",
+ "indexmap 2.4.0",
+ "itertools 0.12.1",
  "mongodb",
  "mongodb-client",
- "prisma-models",
  "prisma-value",
  "psl",
  "query-connector",
  "query-engine-metrics",
- "rand 0.7.3",
+ "query-structure",
+ "rand 0.8.5",
  "regex",
  "serde 1.0.204",
  "serde_json",
@@ -7115,8 +7194,8 @@ dependencies = [
 [[package]]
 name = "mongodb-schema-connector"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
+ "bson",
  "convert_case 0.6.0",
  "datamodel-renderer",
  "enumflags2",
@@ -7138,8 +7217,8 @@ dependencies = [
 [[package]]
 name = "mongodb-schema-describer"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
+ "bson",
  "futures",
  "mongodb",
  "serde 1.0.204",
@@ -7264,8 +7343,8 @@ dependencies = [
 
 [[package]]
 name = "napi_sym"
-version = "0.96.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.98.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "quote",
  "serde 1.0.204",
@@ -7375,8 +7454,8 @@ dependencies = [
 
 [[package]]
 name = "node_resolver"
-version = "0.5.0"
-source = "git+https://github.com/metatypedev/deno?branch=v1.46.1-embeddable#dfffb6e46dbed4075fd7b7b3b1528ec22d3bb216"
+version = "0.7.0"
+source = "git+https://github.com/metatypedev/deno?branch=v1.46.3-embeddable#36fe604eca8559edace8f06bbe6c90dc2242df6b"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -8028,12 +8107,11 @@ dependencies = [
 [[package]]
 name = "parser-database"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "diagnostics",
  "either",
  "enumflags2",
- "indexmap 1.9.3",
+ "indexmap 2.4.0",
  "rustc-hash",
  "schema-ast",
 ]
@@ -8417,7 +8495,7 @@ dependencies = [
 [[package]]
 name = "postgres-native-tls"
 version = "0.5.0"
-source = "git+https://github.com/prisma/rust-postgres?branch=pgbouncer-mode#a1a2dc6d9584deaf70a14293c428e7b6ca614d98"
+source = "git+https://github.com/prisma/rust-postgres?rev=54a490bc#54a490bc6afa315abb9867304fb67e8b12a8fbf3"
 dependencies = [
  "native-tls",
  "tokio",
@@ -8428,7 +8506,7 @@ dependencies = [
 [[package]]
 name = "postgres-protocol"
 version = "0.6.4"
-source = "git+https://github.com/prisma/rust-postgres?branch=pgbouncer-mode#a1a2dc6d9584deaf70a14293c428e7b6ca614d98"
+source = "git+https://github.com/prisma/rust-postgres?rev=54a490bc#54a490bc6afa315abb9867304fb67e8b12a8fbf3"
 dependencies = [
  "base64 0.13.1",
  "byteorder",
@@ -8445,7 +8523,7 @@ dependencies = [
 [[package]]
 name = "postgres-types"
 version = "0.2.4"
-source = "git+https://github.com/prisma/rust-postgres?branch=pgbouncer-mode#a1a2dc6d9584deaf70a14293c428e7b6ca614d98"
+source = "git+https://github.com/prisma/rust-postgres?rev=54a490bc#54a490bc6afa315abb9867304fb67e8b12a8fbf3"
 dependencies = [
  "bit-vec",
  "bytes",
@@ -8569,26 +8647,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "prisma-models"
-version = "0.0.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
-dependencies = [
- "bigdecimal",
- "chrono",
- "cuid",
- "getrandom 0.2.15",
- "itertools 0.10.5",
- "nanoid",
- "prisma-value",
- "psl",
- "thiserror",
- "uuid",
-]
-
-[[package]]
 name = "prisma-value"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "base64 0.13.1",
  "bigdecimal",
@@ -8845,24 +8905,25 @@ dependencies = [
 [[package]]
 name = "psl"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
- "builtin-psl-connectors",
  "psl-core",
 ]
 
 [[package]]
 name = "psl-core"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "bigdecimal",
+ "cfg-if",
  "chrono",
+ "connection-string",
  "diagnostics",
+ "either",
  "enumflags2",
+ "hex",
  "indoc",
- "itertools 0.10.5",
- "lsp-types 0.91.1",
+ "itertools 0.12.1",
+ "lsp-types 0.95.1",
  "once_cell",
  "parser-database",
  "prisma-value",
@@ -8932,7 +8993,6 @@ dependencies = [
 [[package]]
 name = "quaint"
 version = "0.2.0-alpha.13"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "async-trait",
  "base64 0.12.3",
@@ -8940,11 +9000,16 @@ dependencies = [
  "bit-vec",
  "byteorder",
  "bytes",
+ "cfg_aliases 0.2.1",
  "chrono",
+ "concat-idents",
  "connection-string",
+ "crosstarget-utils",
  "either",
  "futures",
+ "getrandom 0.2.15",
  "hex",
+ "itertools 0.12.1",
  "lru-cache",
  "metrics 0.18.1",
  "mobc",
@@ -8954,7 +9019,9 @@ dependencies = [
  "percent-encoding",
  "postgres-native-tls",
  "postgres-types",
+ "regex",
  "rusqlite",
+ "serde 1.0.204",
  "serde_json",
  "sqlformat",
  "thiserror",
@@ -8987,16 +9054,15 @@ dependencies = [
 [[package]]
 name = "query-connector"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
  "futures",
- "indexmap 1.9.3",
- "itertools 0.10.5",
- "prisma-models",
+ "indexmap 2.4.0",
+ "itertools 0.12.1",
  "prisma-value",
+ "query-structure",
  "serde 1.0.204",
  "serde_json",
  "thiserror",
@@ -9007,26 +9073,26 @@ dependencies = [
 [[package]]
 name = "query-core"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "async-trait",
  "bigdecimal",
  "chrono",
  "connection-string",
  "crossbeam-channel",
+ "crosstarget-utils",
  "cuid",
  "enumflags2",
  "futures",
- "indexmap 1.9.3",
- "itertools 0.10.5",
+ "indexmap 2.4.0",
+ "itertools 0.12.1",
  "lru 0.7.8",
  "once_cell",
  "opentelemetry 0.17.0",
  "petgraph 0.4.13",
- "prisma-models",
  "psl",
  "query-connector",
  "query-engine-metrics",
+ "query-structure",
  "schema",
  "serde 1.0.204",
  "serde_json",
@@ -9043,7 +9109,6 @@ dependencies = [
 [[package]]
 name = "query-engine-metrics"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "metrics 0.18.1",
  "metrics-exporter-prometheus",
@@ -9055,6 +9120,22 @@ dependencies = [
  "tracing",
  "tracing-futures",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "query-structure"
+version = "0.0.0"
+dependencies = [
+ "bigdecimal",
+ "chrono",
+ "cuid",
+ "getrandom 0.2.15",
+ "itertools 0.12.1",
+ "nanoid",
+ "prisma-value",
+ "psl",
+ "thiserror",
+ "uuid",
 ]
 
 [[package]]
@@ -9407,21 +9488,21 @@ dependencies = [
 [[package]]
 name = "request-handlers"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "bigdecimal",
+ "cfg_aliases 0.2.1",
  "connection-string",
  "dmmf",
  "futures",
  "graphql-parser 0.3.0",
- "indexmap 1.9.3",
- "itertools 0.10.5",
+ "indexmap 2.4.0",
+ "itertools 0.12.1",
  "mongodb-query-connector",
  "once_cell",
- "prisma-models",
  "psl",
  "quaint",
  "query-core",
+ "query-structure",
  "serde 1.0.204",
  "serde_json",
  "sql-query-connector",
@@ -9672,15 +9753,15 @@ dependencies = [
 
 [[package]]
 name = "rusqlite"
-version = "0.29.0"
+version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "549b9d036d571d42e6e85d1c1425e2ac83491075078ca9a15be021c56b1641f2"
+checksum = "7753b721174eb8ff87a9a0e799e2d7bc3749323e773db92e0984debb00019d6e"
 dependencies = [
  "bitflags 2.6.0",
  "chrono",
- "fallible-iterator 0.2.0",
+ "fallible-iterator 0.3.0",
  "fallible-streaming-iterator",
- "hashlink",
+ "hashlink 0.9.1",
  "libsqlite3-sys",
  "smallvec",
 ]
@@ -9750,12 +9831,12 @@ dependencies = [
 
 [[package]]
 name = "rustc_version_runtime"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d31b7153270ebf48bf91c65ae5b0c00e749c4cfad505f66530ac74950249582f"
+checksum = "2dd18cd2bae1820af0b6ad5e54f4a51d0f3fcc53b05f845675074efcc7af071d"
 dependencies = [
- "rustc_version 0.2.3",
- "semver 0.9.0",
+ "rustc_version 0.4.0",
+ "semver 1.0.23",
 ]
 
 [[package]]
@@ -10001,28 +10082,27 @@ dependencies = [
 [[package]]
 name = "schema"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "once_cell",
- "prisma-models",
  "psl",
+ "query-structure",
  "rustc-hash",
 ]
 
 [[package]]
 name = "schema-ast"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "diagnostics",
  "pest",
  "pest_derive",
+ "serde 1.0.204",
+ "serde_json",
 ]
 
 [[package]]
 name = "schema-connector"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "chrono",
  "enumflags2",
@@ -10039,7 +10119,6 @@ dependencies = [
 [[package]]
 name = "schema-core"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "async-trait",
  "chrono",
@@ -10110,6 +10189,7 @@ dependencies = [
  "der",
  "generic-array",
  "pkcs8",
+ "serdect",
  "subtle",
  "zeroize",
 ]
@@ -10417,25 +10497,15 @@ dependencies = [
 
 [[package]]
 name = "serde_v8"
-version = "0.215.0"
+version = "0.216.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41001c84d438ec3ad2d86413993cd72cb00b4d47aad010fc562bfdbb9aeff71d"
+checksum = "1733b8192f123beedd2fc7998efeaf2a0b8bfa35c01537f50b690e786db8024c"
 dependencies = [
  "num-bigint",
  "serde 1.0.204",
  "smallvec",
  "thiserror",
  "v8",
-]
-
-[[package]]
-name = "serde_with"
-version = "1.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "678b5a069e50bf00ecd22d0cd8ddf7c236f68581b03db652061ed5eb13a312ff"
-dependencies = [
- "serde 1.0.204",
- "serde_with_macros 1.5.2",
 ]
 
 [[package]]
@@ -10452,20 +10522,8 @@ dependencies = [
  "serde 1.0.204",
  "serde_derive",
  "serde_json",
- "serde_with_macros 3.9.0",
+ "serde_with_macros",
  "time",
-]
-
-[[package]]
-name = "serde_with_macros"
-version = "1.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e182d6ec6f05393cc0e5ed1bf81ad6db3a8feedf8ee515ecdd369809bcce8082"
-dependencies = [
- "darling 0.13.4",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -10491,6 +10549,16 @@ dependencies = [
  "ryu",
  "serde 1.0.204",
  "unsafe-libyaml",
+]
+
+[[package]]
+name = "serdect"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a84f14a19e9a014bb9f4512488d9829a68e04ecabffb0f9904cd1ace94598177"
+dependencies = [
+ "base16ct",
+ "serde 1.0.204",
 ]
 
 [[package]]
@@ -10825,6 +10893,9 @@ name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
+dependencies = [
+ "lock_api",
+]
 
 [[package]]
 name = "spirv"
@@ -10854,12 +10925,10 @@ checksum = "3b9b39299b249ad65f3b7e96443bad61c02ca5cd3589f46cb6d610a0fd6c0d6a"
 [[package]]
 name = "sql-ddl"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 
 [[package]]
 name = "sql-query-connector"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -10867,15 +10936,15 @@ dependencies = [
  "chrono",
  "cuid",
  "futures",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "once_cell",
  "opentelemetry 0.17.0",
- "prisma-models",
  "prisma-value",
  "psl",
  "quaint",
  "query-connector",
- "rand 0.7.3",
+ "query-structure",
+ "rand 0.8.5",
  "serde 1.0.204",
  "serde_json",
  "thiserror",
@@ -10890,13 +10959,13 @@ dependencies = [
 [[package]]
 name = "sql-schema-connector"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "chrono",
  "connection-string",
  "datamodel-renderer",
  "either",
  "enumflags2",
+ "indexmap 2.4.0",
  "indoc",
  "once_cell",
  "prisma-value",
@@ -10910,24 +10979,26 @@ dependencies = [
  "sql-schema-describer",
  "sqlformat",
  "sqlparser",
+ "sqlx-core",
+ "sqlx-sqlite",
  "tokio",
  "tracing",
  "tracing-futures",
  "url",
  "user-facing-errors",
  "uuid",
+ "versions",
 ]
 
 [[package]]
 name = "sql-schema-describer"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "async-trait",
  "bigdecimal",
  "either",
  "enumflags2",
- "indexmap 1.9.3",
+ "indexmap 2.4.0",
  "indoc",
  "once_cell",
  "prisma-value",
@@ -10957,6 +11028,61 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0366f270dbabb5cc2e4c88427dc4c08bba144f81e32fbd459a013f26a4d16aa0"
 dependencies = [
  "log",
+]
+
+[[package]]
+name = "sqlx-core"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4d8060b456358185f7d50c55d9b5066ad956956fddec42ee2e8567134a8936e"
+dependencies = [
+ "atoi",
+ "byteorder",
+ "bytes",
+ "crossbeam-queue",
+ "either",
+ "event-listener",
+ "futures-channel",
+ "futures-core",
+ "futures-intrusive",
+ "futures-io",
+ "futures-util",
+ "hashbrown 0.14.5",
+ "hashlink 0.9.1",
+ "hex",
+ "indexmap 2.4.0",
+ "log",
+ "memchr",
+ "once_cell",
+ "paste",
+ "percent-encoding",
+ "smallvec",
+ "sqlformat",
+ "thiserror",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "sqlx-sqlite"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5b2cf34a45953bfd3daaf3db0f7a7878ab9b7a6b91b422d24a7a9e4c857b680"
+dependencies = [
+ "atoi",
+ "flume",
+ "futures-channel",
+ "futures-core",
+ "futures-executor",
+ "futures-intrusive",
+ "futures-util",
+ "libsqlite3-sys",
+ "log",
+ "percent-encoding",
+ "serde_urlencoded",
+ "sqlx-core",
+ "tracing",
+ "url",
 ]
 
 [[package]]
@@ -12068,7 +12194,7 @@ dependencies = [
 [[package]]
 name = "tokio-postgres"
 version = "0.7.7"
-source = "git+https://github.com/prisma/rust-postgres?branch=pgbouncer-mode#a1a2dc6d9584deaf70a14293c428e7b6ca614d98"
+source = "git+https://github.com/prisma/rust-postgres?rev=54a490bc#54a490bc6afa315abb9867304fb67e8b12a8fbf3"
 dependencies = [
  "async-trait",
  "byteorder",
@@ -12354,40 +12480,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c20c8dbed6283a09604c3e69b4b7eeb54e298b8a600d4d5ecb5ad39de609f1d0"
 
 [[package]]
-name = "tower-lsp"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4ba052b54a6627628d9b3c34c176e7eda8359b7da9acd497b9f20998d118508"
-dependencies = [
- "async-trait",
- "auto_impl",
- "bytes",
- "dashmap",
- "futures",
- "httparse",
- "lsp-types 0.94.1",
- "memchr",
- "serde 1.0.204",
- "serde_json",
- "tokio",
- "tokio-util 0.7.11",
- "tower",
- "tower-lsp-macros",
- "tracing",
-]
-
-[[package]]
-name = "tower-lsp-macros"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84fd902d4e0b9a4b27f2f440108dc034e1758628a9b702f8ec61ad66355422fa"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.71",
-]
-
-[[package]]
 name = "tower-service"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12528,31 +12620,6 @@ dependencies = [
 
 [[package]]
 name = "trust-dns-proto"
-version = "0.21.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c31f240f59877c3d4bb3b3ea0ec5a6a0cff07323580ff8c7a605cd7d08b255d"
-dependencies = [
- "async-trait",
- "cfg-if",
- "data-encoding",
- "enum-as-inner 0.4.0",
- "futures-channel",
- "futures-io",
- "futures-util",
- "idna 0.2.3",
- "ipnet",
- "lazy_static 1.5.0",
- "log",
- "rand 0.8.5",
- "smallvec",
- "thiserror",
- "tinyvec",
- "tokio",
- "url",
-]
-
-[[package]]
-name = "trust-dns-proto"
 version = "0.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3119112651c157f4488931a01e586aa459736e9d6046d3bd9105ffb69352d374"
@@ -12560,7 +12627,7 @@ dependencies = [
  "async-trait",
  "cfg-if",
  "data-encoding",
- "enum-as-inner 0.6.0",
+ "enum-as-inner",
  "futures-channel",
  "futures-io",
  "futures-util",
@@ -12575,26 +12642,6 @@ dependencies = [
  "tokio",
  "tracing",
  "url",
-]
-
-[[package]]
-name = "trust-dns-resolver"
-version = "0.21.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4ba72c2ea84515690c9fcef4c6c660bb9df3036ed1051686de84605b74fd558"
-dependencies = [
- "cfg-if",
- "futures-util",
- "ipconfig",
- "lazy_static 1.5.0",
- "log",
- "lru-cache",
- "parking_lot 0.12.3",
- "resolv-conf",
- "smallvec",
- "thiserror",
- "tokio",
- "trust-dns-proto 0.21.2",
 ]
 
 [[package]]
@@ -12616,7 +12663,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
- "trust-dns-proto 0.23.2",
+ "trust-dns-proto",
 ]
 
 [[package]]
@@ -12685,7 +12732,6 @@ dependencies = [
  "log",
  "mt_deno",
  "once_cell",
- "prisma-models",
  "protobuf",
  "protobuf-json-mapping",
  "psl",
@@ -13047,7 +13093,6 @@ dependencies = [
 [[package]]
 name = "user-facing-error-macros"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -13057,11 +13102,10 @@ dependencies = [
 [[package]]
 name = "user-facing-errors"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.6.0#e95e739751f42d8ca026f6b910f5a2dc5adeaeee"
 dependencies = [
  "backtrace",
  "indoc",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "quaint",
  "serde 1.0.204",
  "serde_json",
@@ -13096,13 +13140,14 @@ dependencies = [
  "getrandom 0.2.15",
  "serde 1.0.204",
  "sha1_smol",
+ "wasm-bindgen",
 ]
 
 [[package]]
 name = "v8"
-version = "0.104.0"
+version = "0.105.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "834593934c4b3693706bcbd24d4e2accf02a318a62efd2a4e5e33b5452074882"
+checksum = "b3f1b18ae89236d39abfa7136ec712f1d2daab61cddeef00b61a804e8a9b2dee"
 dependencies = [
  "bindgen 0.69.4",
  "bitflags 2.6.0",
@@ -13159,6 +13204,16 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
+
+[[package]]
+name = "versions"
+version = "6.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f25d498b63d1fdb376b4250f39ab3a5ee8d103957346abacd911e2d8b612c139"
+dependencies = [
+ "itertools 0.13.0",
+ "nom 7.1.3",
+]
 
 [[package]]
 name = "void"

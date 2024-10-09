@@ -29,6 +29,7 @@ env("main")
   );
 
 env("_rust").install(
+
   // use rustup for the actual toolchain
   ports.protoc({ version: "v28.2" }),
   ports.cmake()[0],

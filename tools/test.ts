@@ -134,7 +134,7 @@ export async function testE2e(args: {
     CLICOLOR_FORCE: "1",
     // RUST_LOG: "trace",
     RUST_LOG:
-      "info,xtask=debug,meta=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
+      "info,xtask=debug,meta=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,typegate=debug",
     RUST_SPANTRACE: "1",
     // "RUST_BACKTRACE": "short",
     RUST_MIN_STACK: "8388608",

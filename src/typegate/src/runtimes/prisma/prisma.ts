@@ -303,23 +303,30 @@ export class PrismaRuntime extends Runtime {
         );
       } else {
         const resolver: Resolver = ({ _: { parent } }) => {
-          const resolver = parent[field.props.node];
-          const rawValue = typeof resolver === "function"
-            ? resolver()
-            : resolver;
           const matData = stage.props.materializer
             ?.data as unknown as PrismaOperationMatData;
 
           // if queryRaw is used, the result has a type tag
-          const ret = matData.operation === "queryRaw"
-            ? rawValue["prisma__value"]
-            : rawValue;
+
+          let ret;
+          if (matData.operation === "queryRaw") {
+            const columns = parent.columns as string[];
+            const rows = parent.rows as any[][];
+            const index = columns.indexOf(field.props.node);
+            // FIXME: this assumes return value is a single row
+            ret = rows[0][index];
+            // ret = rows.map((row) => row[index]);
+          } else {
+            const resolver = parent[field.props.node];
+            ret = typeof resolver === "function" ? resolver() : resolver;
+          }
+          logger.debug(Deno.inspect({ ret, parent, field: field.props.node }));
 
           // Prisma uses $type tag for formatted strings
           // eg. `createAt: { "$type": "DateTime", value: "2023-12-05T14:10:21.840Z" }`
           if (
-            !Array.isArray(ret) &&
             typeof ret === "object" &&
+            !Array.isArray(ret) &&
             ret !== null &&
             "$type" in ret // !
           ) {

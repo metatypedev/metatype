@@ -1,3 +1,5 @@
+name: Test Suite
+run-name: Test Suite for ${{ github.ref }}
 on:
   workflow_dispatch:
     inputs:
