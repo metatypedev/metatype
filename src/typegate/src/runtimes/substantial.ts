@@ -84,8 +84,9 @@ export class SubstantialRuntime extends Runtime {
 
     // Prepare the backend event poller
     const agent = new Agent(backend, queue, {
-      poll_interval_sec: typegate.config.base.substantial_poll_interval_sec,
-      lease_lifespan_sec: typegate.config.base.substantial_lease_lifespan_sec,
+      pollIntervalSec: typegate.config.base.substantial_poll_interval_sec,
+      leaseLifespanSec: typegate.config.base.substantial_lease_lifespan_sec,
+      maxAcquirePerTick: typegate.config.base.substantial_max_acquire_per_tick,
     });
 
     const wfDescriptions = await getWorkflowDescriptions(

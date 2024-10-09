@@ -4,7 +4,7 @@
 // FIXME: DO NOT IMPORT any file that refers to Meta, this will be instantiated in a Worker
 // import { sleep } from "../../utils.ts"; // will silently fail??
 
-import { Interrupt, OperationEvent, Run, pushBackOp } from "./types.ts";
+import { Interrupt, OperationEvent, Run, appendIfOngoing } from "./types.ts";
 
 export class Context {
   private id: number = 0;
@@ -18,7 +18,7 @@ export class Context {
   }
 
   #appendOp(op: OperationEvent) {
-    pushBackOp(this.run, { at: new Date().toJSON(), event: op });
+    appendIfOngoing(this.run, { at: new Date().toJSON(), event: op });
   }
 
   async save<T>(fn: () => T | Promise<T>, option?: SaveOption) {
