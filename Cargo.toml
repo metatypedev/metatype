@@ -122,7 +122,7 @@ graphql-parser = "0.4.0"
 uuid = "1.10.0"
 
 # wasm
-wasmtime = "21.0.0"
+wasmtime = "21.0.2"
 wasmtime-wasi = "21.0.0"
 wit-bindgen = "0.26.0"
 
