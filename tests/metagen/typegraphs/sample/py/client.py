@@ -620,41 +620,11 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootGetPostsFn():
+    def RootCompositeNoArgsFn():
         return_node = NodeDescs.Post()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
-        )
-
-    @staticmethod
-    def User():
-        return NodeMeta(
-            sub_nodes={
-                "id": NodeDescs.scalar,
-                "email": NodeDescs.scalar,
-                "posts": NodeDescs.Post,
-            },
-        )
-
-    @staticmethod
-    def RootCompositeUnionFnOutput():
-        return NodeMeta(
-            variants={
-                "post": NodeDescs.Post,
-                "user": NodeDescs.User,
-            },
-        )
-
-    @staticmethod
-    def RootCompositeUnionFn():
-        return_node = NodeDescs.RootCompositeUnionFnOutput()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "RootScalarNoArgsFnOutput",
-            },
         )
 
     @staticmethod
@@ -667,6 +637,27 @@ class NodeDescs:
                 "id": "UserIdStringUuid",
                 "slug": "PostSlugString",
                 "title": "PostSlugString",
+            },
+        )
+
+    @staticmethod
+    def RootCompositeArgsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "id": "RootScalarNoArgsFnOutput",
+            },
+        )
+
+    @staticmethod
+    def User():
+        return NodeMeta(
+            sub_nodes={
+                "id": NodeDescs.scalar,
+                "email": NodeDescs.scalar,
+                "posts": NodeDescs.Post,
             },
         )
 
@@ -691,6 +682,14 @@ class NodeDescs:
         )
 
     @staticmethod
+    def RootScalarNoArgsFn():
+        return_node = NodeDescs.scalar()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+        )
+
+    @staticmethod
     def RootScalarUnionFn():
         return_node = NodeDescs.scalar()
         return NodeMeta(
@@ -702,11 +701,23 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootScalarNoArgsFn():
-        return_node = NodeDescs.scalar()
+    def RootCompositeUnionFnOutput():
+        return NodeMeta(
+            variants={
+                "post": NodeDescs.Post,
+                "user": NodeDescs.User,
+            },
+        )
+
+    @staticmethod
+    def RootCompositeUnionFn():
+        return_node = NodeDescs.RootCompositeUnionFnOutput()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
+            arg_types={
+                "id": "RootScalarNoArgsFnOutput",
+            },
         )
 
     @staticmethod
@@ -718,34 +729,13 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootCompositeNoArgsFn():
+    def RootGetPostsFn():
         return_node = NodeDescs.Post()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
         )
 
-    @staticmethod
-    def RootCompositeArgsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "RootScalarNoArgsFnOutput",
-            },
-        )
-
-
-RootScalarNoArgsFnOutput = str
-
-RootCompositeArgsFnInput = typing.TypedDict(
-    "RootCompositeArgsFnInput",
-    {
-        "id": RootScalarNoArgsFnOutput,
-    },
-    total=False,
-)
 
 UserIdStringUuid = str
 
@@ -761,13 +751,15 @@ Post = typing.TypedDict(
     total=False,
 )
 
-RootScalarUnionFnOutputT1Integer = int
+RootScalarNoArgsFnOutput = str
 
-RootScalarUnionFnOutput = typing.Union[
-    RootScalarNoArgsFnOutput,
-    RootScalarUnionFnOutputT1Integer,
-]
-
+RootCompositeArgsFnInput = typing.TypedDict(
+    "RootCompositeArgsFnInput",
+    {
+        "id": RootScalarNoArgsFnOutput,
+    },
+    total=False,
+)
 
 UserEmailStringEmail = str
 
@@ -782,6 +774,14 @@ User = typing.TypedDict(
     },
     total=False,
 )
+
+RootScalarUnionFnOutputT1Integer = int
+
+RootScalarUnionFnOutput = typing.Union[
+    RootScalarNoArgsFnOutput,
+    RootScalarUnionFnOutputT1Integer,
+]
+
 
 RootCompositeUnionFnOutput = typing.Union[
     Post,
