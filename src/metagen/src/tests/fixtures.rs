@@ -98,7 +98,6 @@ pub fn default_type_node_base() -> TypeNodeBase {
         title: String::new(),
         as_id: false,
         config: Default::default(),
-        runtime: 0,
         policies: vec![],
         injection: None,
         description: None,

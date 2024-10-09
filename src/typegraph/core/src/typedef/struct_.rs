@@ -13,7 +13,6 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
-    global_store::Store,
     typegraph::TypegraphContext,
     types::{Struct, TypeDefData, TypeId},
     wit::core::TypeStruct,
@@ -31,18 +30,13 @@ impl TypeStruct {
 }
 
 impl TypeConversion for Struct {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        let runtime_id = match runtime_id {
-            Some(runtime_id) => runtime_id,
-            None => ctx.register_runtime(Store::get_deno_runtime())?,
-        };
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
         Ok(TypeNode::Object {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "object",
                 type_id: self.id,
                 name: self.base.name.clone(),
-                runtime_idx: runtime_id,
                 policies: &self.extended_base.policies,
                 runtime_config: self.base.runtime_config.as_deref(),
             }
@@ -56,8 +50,7 @@ impl TypeConversion for Struct {
                     .map(|(name, type_id)| -> Result<(String, u32)> {
                         Ok((
                             name.to_string(),
-                            ctx.register_type(type_id.try_into()?, Some(runtime_id))?
-                                .into(),
+                            ctx.register_type(type_id.try_into()?)?.into(),
                         ))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
@@ -90,12 +83,11 @@ impl Hashable for TypeStruct {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         "struct".hash(hasher);
         for (name, tpe_id) in &self.props {
             name.hash(hasher);
-            TypeId(*tpe_id).hash_child_type(hasher, tg, runtime_id)?;
+            TypeId(*tpe_id).hash_child_type(hasher, tg)?;
         }
         Ok(())
     }

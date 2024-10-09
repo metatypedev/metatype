@@ -554,18 +554,17 @@ pub mod types {
         pub name: RootOneFnInputNameString,
     }
     pub type StudentIdInteger = i64;
-    pub type StudentNameString = String;
     pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
         pub id: StudentIdInteger,
-        pub name: StudentNameString,
+        pub name: RootOneFnInputNameString,
         pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct TwoInput {
-        pub name: StudentNameString,
+        pub name: RootOneFnInputNameString,
     }
 }
 pub mod stubs {
@@ -709,16 +708,15 @@ export type RootOneFnInput = {
   name: RootOneFnInputNameString;
 };
 export type StudentIdInteger = number;
-export type StudentNameString = string;
 export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
   id: StudentIdInteger;
-  name: StudentNameString;
+  name: RootOneFnInputNameString;
   peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {
-  name: StudentNameString;
+  name: RootOneFnInputNameString;
 };
 
 
@@ -1350,18 +1348,17 @@ pub mod types {
         pub name: RootOneFnInputNameString,
     }
     pub type StudentIdInteger = i64;
-    pub type StudentNameString = String;
     pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
         pub id: StudentIdInteger,
-        pub name: StudentNameString,
+        pub name: RootOneFnInputNameString,
         pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct TwoInput {
-        pub name: StudentNameString,
+        pub name: RootOneFnInputNameString,
     }
 }
 pub mod stubs {
@@ -1505,16 +1502,15 @@ export type RootOneFnInput = {
   name: RootOneFnInputNameString;
 };
 export type StudentIdInteger = number;
-export type StudentNameString = string;
 export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
   id: StudentIdInteger;
-  name: StudentNameString;
+  name: RootOneFnInputNameString;
   peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {
-  name: StudentNameString;
+  name: RootOneFnInputNameString;
 };
 
 

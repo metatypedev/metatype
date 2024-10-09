@@ -497,7 +497,7 @@ impl wit::core::Guest for Lib {
                 let mut base = type_def.base().clone();
                 base.name = Some(new_name);
                 Ok(Store::register_type_def(
-                    move |id| type_def.with_base(id, base.clone()),
+                    move |id| type_def.with_base(id, base),
                     NameRegistration(true),
                 )?
                 .into())

@@ -7,7 +7,6 @@ expression: typegraph.0
     {
       "type": "object",
       "title": "test",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -21,7 +20,6 @@ expression: typegraph.0
     {
       "type": "function",
       "title": "root_one_fn",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -34,7 +32,6 @@ expression: typegraph.0
     {
       "type": "object",
       "title": "root_one_fn_input",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -48,7 +45,6 @@ expression: typegraph.0
     {
       "type": "integer",
       "title": "root_one_fn_input_one_integer",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false
@@ -56,7 +52,6 @@ expression: typegraph.0
     {
       "type": "integer",
       "title": "root_one_fn_input_two_integer",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -66,7 +61,6 @@ expression: typegraph.0
     {
       "type": "optional",
       "title": "root_one_fn_input_three_root_one_fn_input_three_root_one_fn_input_three_float_list_optional",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -76,7 +70,6 @@ expression: typegraph.0
     {
       "type": "list",
       "title": "root_one_fn_input_three_root_one_fn_input_three_float_list",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false,
@@ -85,7 +78,6 @@ expression: typegraph.0
     {
       "type": "float",
       "title": "root_one_fn_input_three_float",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "as_id": false

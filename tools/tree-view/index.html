@@ -329,7 +329,13 @@
           return [{ edge: '?', idx: node.item }];
         }
         case 'function': {
-          return [{ edge: 'in', idx: node.input }, { edge: 'out', idx: node.output }];
+          return [{ edge: '[$in]', idx: node.input }, { edge: '[$out]', idx: node.output }];
+        }
+        case 'union': {
+          return node.anyOf.map((idx, i) => ({ edge: `[$${i}]`, idx }));
+        }
+        case 'either': {
+          return node.oneOf.map((idx, i) => ({ edge: `[$${i}]`, idx }));
         }
         default:
           return []

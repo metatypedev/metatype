@@ -175,7 +175,6 @@ def typegate(g: Graph):
             "title": t.string(),
             "type": t.string(),
             "enum": t.list(t.json()).optional(),
-            "runtime": t.string(),
             "config": t.json().optional(),
             "default": t.json().optional(),
             "format": t.string().optional(),

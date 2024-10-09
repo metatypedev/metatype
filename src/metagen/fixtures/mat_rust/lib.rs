@@ -13,7 +13,7 @@ init_mat! {
 
 struct FaasImpl;
 
-impl MyFaas for FaasImpl {
+impl RootMyFaasFn for FaasImpl {
     fn handle(&self, input: MyObj, _cx: Ctx) -> anyhow::Result<MyObj> {
         Ok(input)
     }

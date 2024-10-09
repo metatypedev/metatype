@@ -85,7 +85,6 @@ impl TypeId {
         &self,
         state: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         match self.as_type()? {
             Type::Ref(type_ref) => type_ref.name.hash(state),
@@ -93,7 +92,7 @@ impl TypeId {
                 if let Some(name) = type_def.base().name.as_deref() {
                     name.hash(state)
                 } else {
-                    tg.hash_type(type_def, runtime_id)?.hash(state)
+                    tg.hash_type(type_def)?.hash(state)
                 }
             }
         }

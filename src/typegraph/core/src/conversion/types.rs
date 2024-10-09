@@ -14,12 +14,12 @@ use crate::types::TypeId;
 #[enum_dispatch]
 pub trait TypeConversion {
     /// takes already converted runtime id
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode>;
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode>;
 }
 
 impl<T: TypeConversion> TypeConversion for Rc<T> {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        (**self).convert(ctx, runtime_id)
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        (**self).convert(ctx)
     }
 }
 
@@ -28,7 +28,6 @@ pub struct BaseBuilderInit<'a, 'b> {
     pub base_name: &'static str,
     pub type_id: TypeId,
     pub name: Option<String>,
-    pub runtime_idx: u32,
     pub policies: &'b [PolicySpec],
     pub runtime_config: Option<&'b [(String, String)]>,
 }
@@ -36,7 +35,6 @@ pub struct BaseBuilderInit<'a, 'b> {
 pub struct BaseBuilder<'a> {
     ctx: &'a mut TypegraphContext,
     name: String,
-    runtime_idx: u32,
     policies: Vec<PolicyIndices>,
     runtime_config: Option<IndexMap<String, String>>,
 
@@ -64,7 +62,6 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
         Ok(BaseBuilder {
             ctx: self.ctx,
             name,
-            runtime_idx: self.runtime_idx,
             policies,
             runtime_config,
 
@@ -89,7 +86,6 @@ impl<'a> BaseBuilder<'a> {
             enumeration: self.enumeration,
             injection: self.injection,
             policies: self.policies,
-            runtime: self.runtime_idx,
             title: self.name,
             as_id: self.as_id,
         })
@@ -106,10 +102,7 @@ impl<'a> BaseBuilder<'a> {
         if let Injection::Parent(data) = &mut injection {
             for type_id in data.values_mut().into_iter() {
                 let type_def = TypeId(*type_id).resolve_ref()?.1;
-                *type_id = self
-                    .ctx
-                    .register_type(type_def, Some(self.runtime_idx))?
-                    .into();
+                *type_id = self.ctx.register_type(type_def)?.into();
             }
         }
 

@@ -40,7 +40,6 @@ Meta.test({
               title
               type
               enum
-              runtime
               config
               default
               format

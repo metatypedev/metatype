@@ -8,6 +8,7 @@ use crate::conversion::types::TypeConversion;
 use crate::errors::Result;
 use crate::global_store::{NameRegistration, Store};
 use crate::typegraph::TypegraphContext;
+use crate::utils::clear_name;
 use crate::wit::core::{
     PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList,
     TypeOptional, TypeString, TypeStruct, TypeUnion,
@@ -49,10 +50,7 @@ where
     Rc<NonRefType<T>>: Into<TypeDef>,
 {
     pub fn type_with_data(&self, data: T) -> Result<TypeId> {
-        let base = TypeBase {
-            name: None, // different name -- since it is now a different type
-            ..self.base.clone()
-        };
+        let base = clear_name(&self.base); // different name -- since it is now a different type
         Store::register_type_def(
             |type_id| {
                 Rc::new(Self {
@@ -126,12 +124,7 @@ pub trait TypeDefExt {
     fn base(&self) -> &TypeBase;
     fn x_base(&self) -> &ExtendedTypeBase;
     fn data(&self) -> &dyn TypeDefData;
-    fn hash_type(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()>;
+    fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()>;
     // fn to_string(&self) -> String;
 
     fn name(&self) -> Option<&str> {
@@ -169,13 +162,8 @@ impl<T: TypeDefExt> TypeDefExt for Rc<T> {
         (**self).data()
     }
 
-    fn hash_type(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
-        (**self).hash_type(hasher, tg, runtime_id)
+    fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()> {
+        (**self).hash_type(hasher, tg)
     }
 
     fn variant_name(&self) -> &'static str {
@@ -229,7 +217,7 @@ where
     fn with_x_base(&self, id: TypeId, base: ExtendedTypeBase) -> TypeDef {
         Rc::new(Self {
             id,
-            base: self.base.clone(),
+            base: clear_name(&self.base),
             extended_base: base,
             data: self.data.clone(),
         })
@@ -248,27 +236,16 @@ where
         format!("{}({})", self.data.variant_name(), params.join(", "))
     }
 
-    fn hash_type(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
-        self.base.hash(hasher, tg, runtime_id)?;
-        self.data.hash(hasher, tg, runtime_id)?;
-        self.extended_base.hash(hasher, tg, runtime_id)?;
-        runtime_id.hash(hasher);
+    fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()> {
+        self.base.hash(hasher, tg)?;
+        self.data.hash(hasher, tg)?;
+        self.extended_base.hash(hasher, tg)?;
         Ok(())
     }
 }
 
 impl Hashable for TypeBase {
-    fn hash(
-        &self,
-        hasher: &mut Hasher,
-        _tg: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
-    ) -> Result<()> {
+    fn hash(&self, hasher: &mut Hasher, _tg: &mut TypegraphContext) -> Result<()> {
         self.name.hash(hasher);
         self.runtime_config.hash(hasher);
         self.as_id.hash(hasher);
@@ -278,19 +255,14 @@ impl Hashable for TypeBase {
 }
 
 impl Hashable for ExtendedTypeBase {
-    fn hash(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
+    fn hash(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()> {
         "injection".hash(hasher);
         if let Some(injection) = &self.injection {
             injection.hash(hasher);
         }
         "policies".hash(hasher);
         for policy in &self.policies {
-            policy.hash(hasher, tg, runtime_id)?;
+            policy.hash(hasher, tg)?;
         }
 
         Ok(())
