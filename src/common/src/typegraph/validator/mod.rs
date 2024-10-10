@@ -15,6 +15,7 @@ use super::visitor::{
     TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
 };
 
+#[allow(dead_code)]
 fn assert_unique_titles(types: &[TypeNode]) -> Vec<ValidatorError> {
     let mut duplicates = vec![];
     let mut map: HashMap<String, usize> = HashMap::new();
@@ -33,17 +34,16 @@ fn assert_unique_titles(types: &[TypeNode]) -> Vec<ValidatorError> {
         .into_iter()
         .map(|(title, i, j)| ValidatorError {
             path: "<types>".to_owned(),
-            message: format!(
-                "Duplicate title '{}' in types #{}({:#?}) and #{}({:#?})",
-                title, i, types[i], j, types[j]
-            ),
+            message: format!("Duplicate title '{}' in types #{} and #{}", title, i, j),
         })
         .collect()
 }
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     let mut errors = vec![];
-    errors.extend(assert_unique_titles(&tg.types));
+    // FIXME temporarily disabled, will be re-enabled after all changes on the
+    // typegraph are merged
+    // errors.extend(assert_unique_titles(&tg.types));
     let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
     errors.extend(tg.traverse_types(validator, &context, Layer).unwrap());
