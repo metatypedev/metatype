@@ -2023,6 +2023,7 @@ checksum = "22ec99545bb0ed0ea7bb9b8e1e9122ea386ff8a48c0922e43f36d45ab09e0e80"
 [[package]]
 name = "crosstarget-utils"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "futures",
  "js-sys",
@@ -2254,6 +2255,7 @@ checksum = "41b319d1b62ffbd002e057f36bebd1f42b9f97927c9577461d855f3513c4289f"
 [[package]]
 name = "datamodel-renderer"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "base64 0.13.1",
  "once_cell",
@@ -3549,6 +3551,7 @@ checksum = "339544cc9e2c4dc3fc7149fd630c5f22263a4fdf18a98afd0075784968b5cf00"
 [[package]]
 name = "diagnostics"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "colored",
  "indoc",
@@ -3733,6 +3736,7 @@ dependencies = [
 [[package]]
 name = "dmmf"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "bigdecimal",
  "indexmap 2.4.0",
@@ -6161,6 +6165,7 @@ dependencies = [
 [[package]]
 name = "json-rpc-api-build"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "backtrace",
  "heck 0.3.3",
@@ -7141,6 +7146,7 @@ dependencies = [
 [[package]]
 name = "mongodb-client"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "mongodb",
  "once_cell",
@@ -7161,6 +7167,7 @@ dependencies = [
 [[package]]
 name = "mongodb-query-connector"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -7194,6 +7201,7 @@ dependencies = [
 [[package]]
 name = "mongodb-schema-connector"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "bson",
  "convert_case 0.6.0",
@@ -7217,6 +7225,7 @@ dependencies = [
 [[package]]
 name = "mongodb-schema-describer"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "bson",
  "futures",
@@ -8107,6 +8116,7 @@ dependencies = [
 [[package]]
 name = "parser-database"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "diagnostics",
  "either",
@@ -8649,6 +8659,7 @@ dependencies = [
 [[package]]
 name = "prisma-value"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "base64 0.13.1",
  "bigdecimal",
@@ -8905,6 +8916,7 @@ dependencies = [
 [[package]]
 name = "psl"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "psl-core",
 ]
@@ -8912,6 +8924,7 @@ dependencies = [
 [[package]]
 name = "psl-core"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "bigdecimal",
  "cfg-if",
@@ -8993,6 +9006,7 @@ dependencies = [
 [[package]]
 name = "quaint"
 version = "0.2.0-alpha.13"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "async-trait",
  "base64 0.12.3",
@@ -9054,6 +9068,7 @@ dependencies = [
 [[package]]
 name = "query-connector"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -9073,6 +9088,7 @@ dependencies = [
 [[package]]
 name = "query-core"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "async-trait",
  "bigdecimal",
@@ -9109,6 +9125,7 @@ dependencies = [
 [[package]]
 name = "query-engine-metrics"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "metrics 0.18.1",
  "metrics-exporter-prometheus",
@@ -9125,6 +9142,7 @@ dependencies = [
 [[package]]
 name = "query-structure"
 version = "0.0.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -9488,6 +9506,7 @@ dependencies = [
 [[package]]
 name = "request-handlers"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "bigdecimal",
  "cfg_aliases 0.2.1",
@@ -10082,6 +10101,7 @@ dependencies = [
 [[package]]
 name = "schema"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "once_cell",
  "psl",
@@ -10092,6 +10112,7 @@ dependencies = [
 [[package]]
 name = "schema-ast"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "diagnostics",
  "pest",
@@ -10103,6 +10124,7 @@ dependencies = [
 [[package]]
 name = "schema-connector"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "chrono",
  "enumflags2",
@@ -10119,6 +10141,7 @@ dependencies = [
 [[package]]
 name = "schema-core"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "async-trait",
  "chrono",
@@ -10925,10 +10948,12 @@ checksum = "3b9b39299b249ad65f3b7e96443bad61c02ca5cd3589f46cb6d610a0fd6c0d6a"
 [[package]]
 name = "sql-ddl"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 
 [[package]]
 name = "sql-query-connector"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -10959,6 +10984,7 @@ dependencies = [
 [[package]]
 name = "sql-schema-connector"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "chrono",
  "connection-string",
@@ -10993,6 +11019,7 @@ dependencies = [
 [[package]]
 name = "sql-schema-describer"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "async-trait",
  "bigdecimal",
@@ -13093,6 +13120,7 @@ dependencies = [
 [[package]]
 name = "user-facing-error-macros"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -13102,6 +13130,7 @@ dependencies = [
 [[package]]
 name = "user-facing-errors"
 version = "0.1.0"
+source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
  "backtrace",
  "indoc",

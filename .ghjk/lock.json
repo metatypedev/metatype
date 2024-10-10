@@ -1993,7 +1993,7 @@
                 }
               ]
             },
-            "bciqlx64mqgsltfuryg4hrkc3rigpmrcfoxweppuye2gsvfifmb4762i": {
+            "bciqmu7e4zkmqi5jkpfkusfptto7r2o7tpcshizg4coqqlkrju4hcqgy": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -2019,6 +2019,11 @@
                   "ty": "posix.envVar",
                   "key": "GIT_CLIFF_CONFIG",
                   "val": "tools/cliff.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "V8_FORCE_DEBUG",
+                  "val": "true"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -2068,7 +2073,7 @@
             "_ecma": "bciqclszw6iggx6sevxab56z3k7gh5hne7jzx24clywryxz24qjo5gji",
             "_rust": "bciqjls65kmsyg36rd3onuorvgqh3xyw7i54yb2civyowpmovnnpbeza",
             "ci": "bciqhtsq7g2mld3t64e7xolzrcbguzxihcrkftvuupv6af56prrgfpwy",
-            "dev": "bciqlx64mqgsltfuryg4hrkc3rigpmrcfoxweppuye2gsvfifmb4762i",
+            "dev": "bciqmu7e4zkmqi5jkpfkusfptto7r2o7tpcshizg4coqqlkrju4hcqgy",
             "oci": "bciqpib7odt7u3wlasgekric54e7rsunltc5wlqppjnt3jq2faq4hbqi"
           }
         }
