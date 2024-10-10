@@ -52,7 +52,6 @@ export class SubstantialRuntime extends Runtime {
 
   private agent: Agent;
   private queue: string;
-  private knownWorkflows: Set<string> = new Set<string>();
 
   private constructor(
     typegraphName: string,
@@ -182,11 +181,15 @@ export class SubstantialRuntime extends Runtime {
 
     switch (matName) {
       case "start":
-        return this.#startResolver();
+        return this.#startResolver(false);
+      case "start_raw":
+        return this.#startResolver(true);
       case "stop":
         return this.#stopResolver();
       case "send":
-        return this.#sendResolver();
+        return this.#sendResolver(false);
+      case "send_raw":
+        return this.#sendResolver(true);
       case "resources":
         return ({ name: workflowName }) => {
           this.#checkWorkflowExistsOrThrow(workflowName);
@@ -196,13 +199,15 @@ export class SubstantialRuntime extends Runtime {
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
-        return this.#resultsResover();
+        return this.#resultsResover(false);
+      case "results_raw":
+        return this.#resultsResover(true);
       default:
-        return () => null;
+        throw new Error(`Unimplemented operation ${mat.name}`);
     }
   }
 
-  #startResolver(): Resolver {
+  #startResolver(enableGenerics: boolean): Resolver {
     return async ({ name: workflowName, kwargs }) => {
       this.#checkWorkflowExistsOrThrow(workflowName);
 
@@ -218,7 +223,7 @@ export class SubstantialRuntime extends Runtime {
           at: schedule,
           event: {
             type: "Start",
-            kwargs,
+            kwargs: enableGenerics ? JSON.parse(kwargs) : kwargs,
           },
         },
       });
@@ -230,7 +235,7 @@ export class SubstantialRuntime extends Runtime {
     };
   }
 
-  #resultsResover(): Resolver {
+  #resultsResover(enableGenerics: boolean): Resolver {
     return async ({ name: workflowName }) => {
       this.#checkWorkflowExistsOrThrow(workflowName);
 
@@ -261,7 +266,9 @@ export class SubstantialRuntime extends Runtime {
             ended_at: endedAt!,
             result: {
               status: kind == "Ok" ? "COMPLETED" : "COMPLETED_WITH_ERROR",
-              value: result[kind],
+              value: enableGenerics
+                ? JSON.stringify(result[kind])
+                : result[kind],
             },
           });
         } else {
@@ -310,7 +317,7 @@ export class SubstantialRuntime extends Runtime {
     };
   }
 
-  #sendResolver(): Resolver {
+  #sendResolver(enableGenerics: boolean): Resolver {
     return async ({ run_id, event }) => {
       const schedule = new Date().toJSON();
 
@@ -324,7 +331,7 @@ export class SubstantialRuntime extends Runtime {
           event: {
             type: "Send",
             event_name: event.name,
-            value: event.payload,
+            value: enableGenerics ? JSON.parse(event.payload) : event.payload,
           },
         },
       });

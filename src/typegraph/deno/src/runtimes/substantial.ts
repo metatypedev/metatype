@@ -11,7 +11,6 @@ import type {
   WorkflowFileDescription,
   WorkflowKind,
 } from "../gen/typegraph_core.d.ts";
-import { t } from "../index.ts";
 
 export class Backend {
   static devMemory(): SubstantialBackend {
@@ -70,27 +69,31 @@ export class SubstantialRuntime extends Runtime {
     );
   }
 
+  rawStart(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "start-raw",
+    });
+  }
+
   stop(): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc({
       tag: "stop",
     });
   }
 
-  send(
-    payload: Typedef,
-    eventName?: string
-  ): Func<Typedef, Typedef, Materializer> {
-    const event = t.struct({
-      name: eventName ? t.string().set(eventName) : t.string(),
-      payload,
-    });
-
+  send(payload: Typedef): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc(
       {
         tag: "send",
       },
-      event
+      payload
     );
+  }
+
+  rawSend(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "send-raw",
+    });
   }
 
   queryResources(): Func<Typedef, Typedef, Materializer> {
@@ -107,6 +110,21 @@ export class SubstantialRuntime extends Runtime {
       undefined,
       output
     );
+  }
+
+  rawQueryResults(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "results-raw",
+    });
+  }
+
+  internals(): Record<string, Func<Typedef, Typedef, Materializer>> {
+    return {
+      _sub_internal_start: this.rawStart(),
+      _sub_internal_stop: this.stop(),
+      _sub_internal_send: this.rawSend(),
+      _sub_internal_results: this.rawQueryResults(),
+    };
   }
 }
 

@@ -518,10 +518,13 @@ interface runtimes {
 
     variant substantial-operation-type {
         start,
+        start-raw,
         stop,
         send,
+        send-raw,
         resources,
         results,
+        results-raw,
     }
 
     record substantial-operation-data {
