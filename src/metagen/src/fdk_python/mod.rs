@@ -56,9 +56,7 @@ impl Generator {
 
     pub fn new(config: FdkPythonGenConfig) -> anyhow::Result<Self> {
         use garde::Validate;
-        config
-            .validate(&())
-            .context("validating FDK_PYTHON config")?;
+        config.validate().context("validating FDK_PYTHON config")?;
         Ok(Self { config })
     }
 }

@@ -53,7 +53,7 @@ impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
     pub fn new(config: ClienRsGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
-        config.validate(&())?;
+        config.validate()?;
         Ok(Self { config })
     }
 }
