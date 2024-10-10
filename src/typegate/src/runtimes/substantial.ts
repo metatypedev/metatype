@@ -14,6 +14,7 @@ import { Typegate } from "../typegate/mod.ts";
 import { Backend } from "../../engine/runtime.js";
 import { Agent, WorkflowDescription } from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
+import { InternalAuth } from "../services/auth/protocols/internal.ts";
 
 const logger = getLogger(import.meta);
 
@@ -52,18 +53,21 @@ export class SubstantialRuntime extends Runtime {
 
   private agent: Agent;
   private queue: string;
+  private typegate: Typegate;
 
   private constructor(
     typegraphName: string,
     backend: Backend,
     queue: string,
-    agent: Agent
+    agent: Agent,
+    typegate: Typegate
   ) {
     super(typegraphName);
     this.logger = getLogger(`substantial:'${typegraphName}'`);
     this.backend = backend;
     this.queue = queue;
     this.agent = agent;
+    this.typegate = typegate;
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
@@ -114,7 +118,13 @@ export class SubstantialRuntime extends Runtime {
     agent.start(wfDescriptions);
 
     // Prepare the runtime
-    const instance = new SubstantialRuntime(tgName, backend, queue, agent);
+    const instance = new SubstantialRuntime(
+      tgName,
+      backend,
+      queue,
+      agent,
+      typegate
+    );
     await instance.#prepareWorkflowFiles(
       tg.meta.artifacts,
       runtimeArgs.workflows,
@@ -192,7 +202,7 @@ export class SubstantialRuntime extends Runtime {
         return this.#sendResolver(true);
       case "resources":
         return ({ name: workflowName }) => {
-          this.#checkWorkflowExistsOrThrow(workflowName);
+          this.#checkWorkflowExistOrThrow(workflowName);
 
           const res =
             this.agent.workerManager.getAllocatedResources(workflowName);
@@ -208,8 +218,16 @@ export class SubstantialRuntime extends Runtime {
   }
 
   #startResolver(enableGenerics: boolean): Resolver {
-    return async ({ name: workflowName, kwargs }) => {
-      this.#checkWorkflowExistsOrThrow(workflowName);
+    return async ({
+      _: {
+        context,
+        parent,
+        info: { url, headers },
+      },
+      name: workflowName,
+      kwargs,
+    }) => {
+      this.#checkWorkflowExistOrThrow(workflowName);
 
       const runId = Agent.nextId(workflowName);
       const schedule = new Date().toJSON();
@@ -228,16 +246,28 @@ export class SubstantialRuntime extends Runtime {
         },
       });
 
-      await this.agent.link(workflowName, runId);
+      // Note: required for configuring ctx.gql for this run
+      const token = await InternalAuth.emit(this.typegate.cryptoKeys);
+      this.agent.workerManager.internalParamRecorder.set(runId, {
+        parent,
+        context,
+        secrets: {}, // TODO: required?
+        effect: null,
+        meta: {
+          url: `${url.protocol}//${url.host}/${this.typegraphName}`,
+          token,
+        },
+        headers,
+      });
 
-      // TODO: return { workflow_name, run_id, schedule } instead
+      await this.agent.link(workflowName, runId);
       return runId;
     };
   }
 
   #resultsResover(enableGenerics: boolean): Resolver {
     return async ({ name: workflowName }) => {
-      this.#checkWorkflowExistsOrThrow(workflowName);
+      this.#checkWorkflowExistOrThrow(workflowName);
 
       const relatedRuns = await this.agent.retrieveLinks(workflowName);
       const ongoing = [] as Array<QueryOngoingWorkflowResult>;
@@ -357,7 +387,7 @@ export class SubstantialRuntime extends Runtime {
     }
   }
 
-  #checkWorkflowExistsOrThrow(name: string) {
+  #checkWorkflowExistOrThrow(name: string) {
     if (!this.workflowFiles.has(name)) {
       const known = Array.from(this.workflowFiles.keys());
       const closest = closestWord(name, known);

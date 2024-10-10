@@ -41,6 +41,9 @@ export function basicTestTemplate(
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
+      // FIXME: typegate.local not available through workers when using ctx.gql on tests?
+      Deno.env.set("TEST_OVERRIDE_GQL_ORIGIN", `http://localhost:${t.port}`);
+
       cleanup && t.addCleanup(cleanup);
 
       const e = await t.engine("runtimes/substantial/substantial.py", {
@@ -68,7 +71,7 @@ export function basicTestTemplate(
       );
 
       // Let interrupts to do their jobs for a bit
-      await sleep(8 * 1000);
+      await sleep(10 * 1000); // including remote_add cost (about 1.5s)
 
       await t.should(
         `have workflow marked as ongoing (${backendName})`,

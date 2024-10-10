@@ -10,7 +10,8 @@ self.onmessage = async function (event) {
   const { type, data } = event.data as WorkerData;
   switch (type) {
     case "START": {
-      const { modulePath, functionName, run, schedule, kwargs } = data;
+      const { modulePath, functionName, run, schedule, kwargs, internal } =
+        data;
       // FIXME: handle case when script is missing and notify WorkerManager so it cleans up
       // its registry.
       const module = await import(modulePath);
@@ -19,12 +20,12 @@ self.onmessage = async function (event) {
       const workflowFn = module[functionName];
 
       if (typeof workflowFn !== "function") {
-        self.postMessage(Err(`Function ${functionName} is not found`));
+        self.postMessage(Err(`Function "${functionName}" not found`));
         self.close();
         return;
       }
 
-      runCtx = new Context(run, kwargs);
+      runCtx = new Context(run, kwargs, internal);
 
       workflowFn(runCtx)
         .then((wfResult: unknown) => {
