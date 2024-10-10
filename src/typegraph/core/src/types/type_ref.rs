@@ -292,10 +292,6 @@ impl FlatTypeRef {
         tg: &mut TypegraphContext,
         runtime_id: Option<u32>,
     ) -> Result<()> {
-        "ref".hash(hasher);
-        for attr in self.attributes.iter().rev() {
-            attr.as_ref().hash(hasher);
-        }
         match &self.target {
             FlatTypeRefTarget::Direct(type_def) => {
                 type_def.hash_type(hasher, tg, runtime_id)?;
@@ -304,6 +300,12 @@ impl FlatTypeRef {
                 "named".hash(hasher);
                 name.hash(hasher);
                 runtime_id.hash(hasher);
+            }
+        }
+        if !self.attributes.is_empty() {
+            "ref".hash(hasher);
+            for attr in self.attributes.iter().rev() {
+                attr.as_ref().hash(hasher);
             }
         }
         Ok(())

@@ -6,6 +6,8 @@ mod input;
 mod types;
 mod value;
 
+use std::collections::{hash_map, HashMap};
+
 use crate::typegraph::{TypeNode, Typegraph};
 
 use super::visitor::{
@@ -13,10 +15,39 @@ use super::visitor::{
     TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
 };
 
+fn assert_unique_titles(types: &[TypeNode]) -> Vec<ValidatorError> {
+    let mut duplicates = vec![];
+    let mut map: HashMap<String, usize> = HashMap::new();
+    for (i, t) in types.iter().enumerate() {
+        let entry = map.entry(t.base().title.clone());
+        match entry {
+            hash_map::Entry::Occupied(o) => {
+                duplicates.push((t.base().title.clone(), *o.get(), i));
+            }
+            hash_map::Entry::Vacant(v) => {
+                v.insert(i);
+            }
+        }
+    }
+    duplicates
+        .into_iter()
+        .map(|(title, i, j)| ValidatorError {
+            path: "<types>".to_owned(),
+            message: format!(
+                "Duplicate title '{}' in types #{}({:#?}) and #{}({:#?})",
+                title, i, types[i], j, types[j]
+            ),
+        })
+        .collect()
+}
+
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
+    let mut errors = vec![];
+    errors.extend(assert_unique_titles(&tg.types));
     let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
-    tg.traverse_types(validator, &context, Layer).unwrap()
+    errors.extend(tg.traverse_types(validator, &context, Layer).unwrap());
+    errors
 }
 
 #[derive(Debug)]
