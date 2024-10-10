@@ -496,7 +496,7 @@ impl BackendMetadataWriter for RedisBackend {
 
     fn write_workflow_link(&self, workflow_name: String, run_id: String) -> Result<()> {
         self.with_redis(|r| {
-            let links_key = self.key(&["links", &workflow_name])?;
+            let links_key = self.key(&["links", "runs", &workflow_name])?;
             r.zadd(links_key, run_id, 0)?;
             Ok(())
         })
@@ -504,9 +504,71 @@ impl BackendMetadataWriter for RedisBackend {
 
     fn read_workflow_links(&self, workflow_name: String) -> Result<Vec<String>> {
         self.with_redis(|r| {
-            let links_key = self.key(&["links", &workflow_name])?;
+            let links_key = self.key(&["links", "runs", &workflow_name])?;
             let run_ids: Vec<String> = r.zrange(links_key, 0, -1)?;
             Ok(run_ids)
+        })
+    }
+
+    fn write_parent_child_link(&self, parent_run_id: String, child_run_id: String) -> Result<()> {
+        self.with_redis(|r| {
+            let links_key = self.key(&["links", "children", &parent_run_id])?;
+            r.zadd(links_key, child_run_id, 0)?;
+            Ok(())
+        })
+    }
+
+    fn read_children(&self, parent_run_id: String) -> Result<Vec<String>> {
+        self.with_redis(|r| {
+            let links_key = self.key(&["links", "children", &parent_run_id])?;
+            let run_ids: Vec<String> = r.zrange(links_key, 0, -1)?;
+            Ok(run_ids)
+        })
+    }
+
+    fn enumerate_all_children(&self, parent_run_id: String) -> Result<Vec<String>> {
+        self.with_redis(|r| {
+            let links_prefix = self.key(&["links", "children"])?;
+            let separator = self.separator.clone();
+
+            let script = Script::new(
+                r#"
+                    local parent_run_id = ARGV[1]
+                    local prefix = ARGV[2]
+                    local separator = ARGV[3]
+
+                    local stack = {parent_run_id}
+                    local visited = {}
+                    local result = {}
+
+                    while #stack > 0 do
+                        local run_id = table.remove(stack)
+
+                        if not visited[run_id] then
+                            visited[run_id] = true
+                            table.insert(result, run_id)
+
+                            local key = prefix .. separator .. run_id
+                            local children = redis.call("ZRANGE", key, 0, -1)
+                            for i = #children, 1, -1 do
+                                table.insert(stack, children[i])
+                            end
+                        end
+                    end
+
+                    return result
+                "#,
+            );
+
+            let mut result: Vec<String> = script
+                .arg(&parent_run_id)
+                .arg(links_prefix)
+                .arg(separator)
+                .invoke(r)?;
+
+            result.retain(|rid| rid != &parent_run_id);
+
+            Ok(result)
         })
     }
 }

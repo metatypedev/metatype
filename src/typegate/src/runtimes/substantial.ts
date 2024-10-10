@@ -212,6 +212,8 @@ export class SubstantialRuntime extends Runtime {
         return this.#resultsResover(false);
       case "results_raw":
         return this.#resultsResover(true);
+      case "internal_link_parent_child":
+        return this.#linkerResolver();
       default:
         throw new Error(`Unimplemented operation ${mat.name}`);
     }
@@ -367,6 +369,12 @@ export class SubstantialRuntime extends Runtime {
       });
 
       return run_id;
+    };
+  }
+
+  #linkerResolver(): Resolver {
+    return async ({ parent_run_id, child_run_id }) => {
+      throw new Error(`TODO: ${parent_run_id}, ${child_run_id}`);
     };
   }
 

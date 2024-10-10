@@ -524,6 +524,7 @@ interface runtimes {
         resources,
         results,
         results-raw,
+        internal-link-parent-child
     }
 
     record substantial-operation-data {
