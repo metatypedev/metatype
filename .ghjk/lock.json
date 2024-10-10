@@ -803,6 +803,62 @@
           "buildDepConfigs": {},
           "portRef": "deno_ghrel@0.1.0",
           "specifiedVersion": true
+        },
+        "bciqc4tel4mvul3drcx6kljgvy5avxnglgkhzdeo2ri5olbpcwukx4jy": {
+          "version": "3.6.0",
+          "buildDepConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.10.2",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
+            },
+            "rust_rustup": {
+              "version": "1.80.1",
+              "buildDepConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.1",
+                  "buildDepConfigs": {
+                    "git_aa": {
+                      "version": "2.46.0",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "protobuf-codegen",
+          "specifiedVersion": true
+        },
+        "bciqdxxrdxv7gdhguk43f7tqbzpamv3evrwffw2c6wujly5ijvanb24q": {
+          "version": "1.80.1",
+          "buildDepConfigs": {
+            "rustup_rustlang": {
+              "version": "1.27.1",
+              "buildDepConfigs": {
+                "git_aa": {
+                  "version": "2.46.0",
+                  "buildDepConfigs": {},
+                  "portRef": "git_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "rustup_rustlang@0.1.0",
+              "specifiedVersion": false
+            }
+          },
+          "portRef": "rust_rustup@0.1.0",
+          "profile": "minimal",
+          "specifiedVersion": true
         }
       }
     },
@@ -920,6 +976,13 @@
                 "bciqcnbruy2q6trpvia52n2yis4t27taoz4mxkeguqz5aif7ex6rp26y",
                 "bciqpu7gxs3zm7i4gwp3m3cfdxwz27ixvsykdnbxrl5m5mt3xbb3b4la",
                 "bciqjme7csfq43oenkrsakdhaha34hgy6vdwkfffki2ank3kf6mjcguq"
+              ],
+              "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
+            },
+            "ghjkEnvProvInstSet_______task_env_gen-subs-protoc": {
+              "installs": [
+                "bciqiknkxhuhpuszb7jrc3emzobashdb57urntqy4ce44wr65r3hxk2q",
+                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
@@ -1087,12 +1150,6 @@
               "desc": "Check for unused cargo depenencies",
               "envKey": "bciqe5ao7vzfelgdas65p7frjodat2yz6mz7jk2yup2ulv5ycd44afyi"
             },
-            "install-protobuf-rust": {
-              "ty": "denoFile@v1",
-              "key": "install-protobuf-rust",
-              "desc": "Enable rust codegen for protoc",
-              "envKey": "bciqfoerhfsehob65bmr7v5eka43ml4zbbt3aeot7zz5ijlb4oy2lucq"
-            },
             "install-wasi-adapter": {
               "ty": "denoFile@v1",
               "key": "install-wasi-adapter",
@@ -1124,18 +1181,31 @@
               "desc": "Print a command you can use to install system items",
               "envKey": "bciqfoerhfsehob65bmr7v5eka43ml4zbbt3aeot7zz5ijlb4oy2lucq"
             },
+            "gen-subs-protoc": {
+              "ty": "denoFile@v1",
+              "key": "gen-subs-protoc",
+              "workingDir": "src/substantial",
+              "desc": "Regenerate substantial types",
+              "envKey": "bciqlwvvzaw46ehy3kxvqpb2s4rv3j25krbk76onx44lm6udhzoa4d7i"
+            },
+            "gen-pyrt-bind": {
+              "ty": "denoFile@v1",
+              "key": "gen-pyrt-bind",
+              "envKey": "bciqk7aif25pqtsyncbnbdapte4lixsodypfxvmkepsuey74vgr4zb5q"
+            },
+            "build-pyrt": {
+              "ty": "denoFile@v1",
+              "key": "build-pyrt",
+              "dependsOn": [
+                "gen-pyrt-bind"
+              ],
+              "envKey": "bciqk7aif25pqtsyncbnbdapte4lixsodypfxvmkepsuey74vgr4zb5q"
+            },
             "fetch-deno": {
               "ty": "denoFile@v1",
               "key": "fetch-deno",
               "desc": "Cache remote deno modules.",
               "envKey": "bciqclszw6iggx6sevxab56z3k7gh5hne7jzx24clywryxz24qjo5gji"
-            },
-            "dev-sub-gen": {
-              "ty": "denoFile@v1",
-              "key": "dev-sub-gen",
-              "workingDir": "src/substantial",
-              "desc": "Regenerate substantial types",
-              "envKey": "bciqfoerhfsehob65bmr7v5eka43ml4zbbt3aeot7zz5ijlb4oy2lucq"
             },
             "dev-website": {
               "ty": "denoFile@v1",
@@ -1198,19 +1268,6 @@
               "desc": "Execute tools/*.ts scripts.",
               "envKey": "bciqfoerhfsehob65bmr7v5eka43ml4zbbt3aeot7zz5ijlb4oy2lucq"
             },
-            "gen-pyrt-bind": {
-              "ty": "denoFile@v1",
-              "key": "gen-pyrt-bind",
-              "envKey": "bciqk7aif25pqtsyncbnbdapte4lixsodypfxvmkepsuey74vgr4zb5q"
-            },
-            "build-pyrt": {
-              "ty": "denoFile@v1",
-              "key": "build-pyrt",
-              "dependsOn": [
-                "gen-pyrt-bind"
-              ],
-              "envKey": "bciqk7aif25pqtsyncbnbdapte4lixsodypfxvmkepsuey74vgr4zb5q"
-            },
             "build-tgraph-ts-jsr": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-ts-jsr",
@@ -1271,15 +1328,16 @@
             "lock-sed",
             "lint-deno",
             "lint-udeps",
-            "install-protobuf-rust",
             "install-wasi-adapter",
             "install-lsp",
             "install-website",
             "install-ts",
             "install-py",
             "install-sys",
+            "gen-subs-protoc",
+            "gen-pyrt-bind",
+            "build-pyrt",
             "fetch-deno",
-            "dev-sub-gen",
             "dev-website",
             "dev-gate6",
             "dev-gate5",
@@ -1290,8 +1348,6 @@
             "dev-eg-tgraphs",
             "dev-compose",
             "dev",
-            "gen-pyrt-bind",
-            "build-pyrt",
             "build-tgraph-ts-jsr",
             "build-tgraph-core",
             "build-tgraph-py",
@@ -1403,6 +1459,39 @@
                 {
                   "ty": "ghjk.ports.InstallSetRef",
                   "setId": "ghjkEnvProvInstSet_______task_env_lint-udeps"
+                }
+              ]
+            },
+            "bciqlwvvzaw46ehy3kxvqpb2s4rv3j25krbk76onx44lm6udhzoa4d7i": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "info,deno=warn,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_gen-subs-protoc"
                 }
               ]
             },
@@ -3090,6 +3179,44 @@
           "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/ports/npmi.ts"
         },
         "packageName": "@bytecodealliance/jco"
+      },
+      "bciqiknkxhuhpuszb7jrc3emzobashdb57urntqy4ce44wr65r3hxk2q": {
+        "version": "3.6.0",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "cargobi_cratesio",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "cargo_binstall_ghrel"
+            },
+            {
+              "name": "rust_rustup"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/ports/cargobi.ts"
+        },
+        "crateName": "protobuf-codegen"
       },
       "bciqezkigmtx5tweeflmn27yofgwybmgbat7g6jg4xmxamomsdpvenay": {
         "version": "nightly-2024-05-26",
