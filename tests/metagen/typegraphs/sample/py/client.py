@@ -620,7 +620,7 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootGetPostsFn():
+    def RootCompositeNoArgsFn():
         return_node = NodeDescs.Post()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
@@ -671,6 +671,36 @@ class NodeDescs:
         )
 
     @staticmethod
+    def RootCompositeArgsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "id": "RootScalarNoArgsFnOutput",
+            },
+        )
+
+    @staticmethod
+    def RootGetPostsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+        )
+
+    @staticmethod
+    def RootScalarUnionFn():
+        return_node = NodeDescs.scalar()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "id": "RootScalarNoArgsFnOutput",
+            },
+        )
+
+    @staticmethod
     def RootMixedUnionFnOutput():
         return NodeMeta(
             variants={
@@ -691,14 +721,11 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootScalarUnionFn():
-        return_node = NodeDescs.scalar()
+    def RootGetUserFn():
+        return_node = NodeDescs.User()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
-            arg_types={
-                "id": "RootScalarNoArgsFnOutput",
-            },
         )
 
     @staticmethod
@@ -709,43 +736,6 @@ class NodeDescs:
             variants=return_node.variants,
         )
 
-    @staticmethod
-    def RootGetUserFn():
-        return_node = NodeDescs.User()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
-    def RootCompositeNoArgsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
-    def RootCompositeArgsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "RootScalarNoArgsFnOutput",
-            },
-        )
-
-
-RootScalarNoArgsFnOutput = str
-
-RootCompositeArgsFnInput = typing.TypedDict(
-    "RootCompositeArgsFnInput",
-    {
-        "id": RootScalarNoArgsFnOutput,
-    },
-    total=False,
-)
 
 UserIdStringUuid = str
 
@@ -761,13 +751,15 @@ Post = typing.TypedDict(
     total=False,
 )
 
-RootScalarUnionFnOutputT1Integer = int
+RootScalarNoArgsFnOutput = str
 
-RootScalarUnionFnOutput = typing.Union[
-    RootScalarNoArgsFnOutput,
-    RootScalarUnionFnOutputT1Integer,
-]
-
+RootCompositeArgsFnInput = typing.TypedDict(
+    "RootCompositeArgsFnInput",
+    {
+        "id": RootScalarNoArgsFnOutput,
+    },
+    total=False,
+)
 
 UserEmailStringEmail = str
 
@@ -783,17 +775,25 @@ User = typing.TypedDict(
     total=False,
 )
 
-RootCompositeUnionFnOutput = typing.Union[
-    Post,
-    User,
-]
-
+RootScalarUnionFnOutputT1Integer = int
 
 RootMixedUnionFnOutput = typing.Union[
     Post,
     User,
     RootScalarNoArgsFnOutput,
     RootScalarUnionFnOutputT1Integer,
+]
+
+
+RootScalarUnionFnOutput = typing.Union[
+    RootScalarNoArgsFnOutput,
+    RootScalarUnionFnOutputT1Integer,
+]
+
+
+RootCompositeUnionFnOutput = typing.Union[
+    Post,
+    User,
 ]
 
 
@@ -819,8 +819,8 @@ UserSelections = typing.TypedDict(
     total=False,
 )
 
-RootCompositeUnionFnOutputSelections = typing.TypedDict(
-    "RootCompositeUnionFnOutputSelections",
+RootMixedUnionFnOutputSelections = typing.TypedDict(
+    "RootMixedUnionFnOutputSelections",
     {
         "_": SelectionFlags,
         "post": CompositeSelectNoArgs["PostSelections"],
@@ -829,8 +829,8 @@ RootCompositeUnionFnOutputSelections = typing.TypedDict(
     total=False,
 )
 
-RootMixedUnionFnOutputSelections = typing.TypedDict(
-    "RootMixedUnionFnOutputSelections",
+RootCompositeUnionFnOutputSelections = typing.TypedDict(
+    "RootCompositeUnionFnOutputSelections",
     {
         "_": SelectionFlags,
         "post": CompositeSelectNoArgs["PostSelections"],
