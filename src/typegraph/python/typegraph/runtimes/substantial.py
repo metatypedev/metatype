@@ -19,6 +19,7 @@ from typegraph.gen.exports.runtimes import (
     SubstantialOperationTypeResources,
     SubstantialOperationTypeResults,
     SubstantialOperationTypeResultsRaw,
+    SubstantialOperationTypeInternalLinkParentChild,
     SubstantialRuntimeData,
     WorkflowFileDescription,
     WorkflowKind,
@@ -99,12 +100,17 @@ class SubstantialRuntime(Runtime):
         operation = SubstantialOperationTypeResultsRaw()
         return self._generic_substantial_func(operation, None, None)
 
+    def _internal_link_parent_child(self):
+        operation = SubstantialOperationTypeInternalLinkParentChild()
+        return self._generic_substantial_func(operation, None, None)
+
     def internals(self):
         return {
             "_sub_internal_start": self.raw_start(),
             "_sub_internal_stop": self.stop(),
             "_sub_internal_send": self.raw_send(),
             "_sub_internal_results": self.raw_query_results(),
+            "_sub_internal_link_parent_child": self._internal_link_parent_child(),
         }
 
 

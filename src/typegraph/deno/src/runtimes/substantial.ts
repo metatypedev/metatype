@@ -118,12 +118,19 @@ export class SubstantialRuntime extends Runtime {
     });
   }
 
+  #internalLinkParentChild(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "internal-link-parent-child",
+    });
+  }
+
   internals(): Record<string, Func<Typedef, Typedef, Materializer>> {
     return {
       _sub_internal_start: this.rawStart(),
       _sub_internal_stop: this.stop(),
       _sub_internal_send: this.rawSend(),
       _sub_internal_results: this.rawQueryResults(),
+      _sub_internal_link_parent_child: this.#internalLinkParentChild(),
     };
   }
 }

@@ -149,13 +149,6 @@ mod tests {
                 into_comparable(&recovered_run),
             );
 
-            // link metadata
-            backend
-                .write_workflow_link("example".to_string(), run_id.clone())
-                .unwrap();
-            let linked = backend.read_workflow_links("example".to_string()).unwrap();
-            assert_eq!(linked.len(), 1);
-
             // log metadata
             backend
                 .append_metadata(run_id.clone(), Utc::now(), "1234".to_string())
@@ -220,7 +213,129 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_hard_link() {
+        let backends: Vec<(&str, Box<dyn Backend>)> = vec![
+            ("memory", Box::new(MemoryBackend::default().get())),
+            (
+                "fs",
+                Box::new({
+                    let root = PathBuf::from("tmp/test_three/substantial");
+                    let backend = FsBackend::new(root.clone()).get();
+                    std::fs::remove_dir_all(root).ok();
+                    backend
+                }),
+            ),
+            (
+                "redis",
+                Box::new({
+                    let prefix = "rust_test";
+                    let backend = RedisBackend::new(
+                        "redis://:password@localhost:6380/0".to_owned(),
+                        Some(prefix.to_owned()),
+                    )
+                    .unwrap();
+                    backend
+                        .with_redis(|r| {
+                            let script = Script::new(r#"redis.call("FLUSHALL")"#);
+                            script.invoke::<()>(r)
+                        })
+                        .unwrap();
+
+                    backend
+                }),
+            ),
+        ];
+
+        for (label, backend) in backends {
+            println!("Testing backend {:?}", label);
+
+            // link metadata
+            backend
+                .write_workflow_link("example".to_string(), "run_id_link_one".to_owned())
+                .unwrap();
+            backend
+                .write_workflow_link("example".to_string(), "run_id_link_two".to_owned())
+                .unwrap();
+
+            let linked = backend.read_workflow_links("example".to_string()).unwrap();
+            assert_eq!(linked.len(), 2);
+
+            // parent child metadata
+            let tree = json!({
+                "parent1": {
+                    "child_11": {
+                        "child_111": "child_1111",
+                        "child_112": "child_1121",
+                        "child_113": null,
+                    }
+                },
+                "parent2": null
+            });
+
+            link_children_rec(&tree, backend.as_ref()).unwrap();
+            assert_eq!(
+                backend.read_children("parent1".to_owned()).unwrap().len(),
+                1
+            );
+            assert_eq!(
+                backend.read_children("child_11".to_owned()).unwrap().len(),
+                3
+            );
+            assert_eq!(
+                backend.read_children("parent2".to_owned()).unwrap().len(),
+                0
+            );
+
+            // collect all children
+            let mut children = backend
+                .enumerate_all_children("parent1".to_owned())
+                .unwrap();
+            children.sort();
+
+            let mut expected = [
+                "child_11",
+                "child_112",
+                "child_1121",
+                "child_113",
+                "child_111",
+                "child_1111",
+            ]
+            .iter()
+            .map(|s| s.to_owned())
+            .collect::<Vec<_>>();
+            expected.sort();
+
+            assert_eq!(children, expected);
+        }
+    }
+
     fn into_comparable<T: Debug>(value: &T) -> String {
         format!("{value:?}")
+    }
+
+    fn link_children_rec(
+        json_obj: &serde_json::Value,
+        backend: &dyn Backend,
+    ) -> anyhow::Result<()> {
+        if let serde_json::Value::Object(map_obj) = json_obj {
+            for (parent_id, value) in map_obj {
+                match value {
+                    serde_json::Value::String(child_id) => {
+                        backend.write_parent_child_link(parent_id.clone(), child_id.clone())?;
+                    }
+                    serde_json::Value::Object(m) => {
+                        for direct_child in m.keys() {
+                            backend
+                                .write_parent_child_link(parent_id.clone(), direct_child.clone())?;
+                        }
+                        link_children_rec(value, backend)?;
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        Ok(())
     }
 }

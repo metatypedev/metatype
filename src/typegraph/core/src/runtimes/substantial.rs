@@ -24,6 +24,7 @@ pub enum SubstantialMaterializer {
     Resources,
     Results,
     ResultsRaw,
+    InternalLinkParentChild,
 }
 
 impl MaterializerConverter for SubstantialMaterializer {
@@ -44,6 +45,9 @@ impl MaterializerConverter for SubstantialMaterializer {
             SubstantialMaterializer::Resources => ("resources".to_string(), json!({})),
             SubstantialMaterializer::Results => ("results".to_string(), json!({})),
             SubstantialMaterializer::ResultsRaw => ("results_raw".to_string(), json!({})),
+            SubstantialMaterializer::InternalLinkParentChild => {
+                ("internal_link_parent_child".to_string(), json!({}))
+            }
         };
 
         Ok(Materializer {
@@ -180,6 +184,16 @@ pub fn substantial_operation(
                             .build()?,
                     )
                     .build()?,
+            )
+        }
+        SubstantialOperationType::InternalLinkParentChild => {
+            inp.prop("parent_run_id", t::string().build()?);
+            inp.prop("child_run_id", t::string().build()?);
+
+            (
+                WitEffect::Create(true),
+                SubstantialMaterializer::InternalLinkParentChild,
+                t::boolean().build()?,
             )
         }
     };
