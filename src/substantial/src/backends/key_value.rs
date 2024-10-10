@@ -266,13 +266,13 @@ impl BackendMetadataWriter for KeyValueBackend {
     }
 
     fn write_workflow_link(&self, workflow_name: String, run_id: String) -> Result<()> {
-        let key = format!("links/{}/{}", workflow_name, run_id);
+        let key = format!("links/runs/{}/{}", workflow_name, run_id);
         self.store.put(key.as_str(), Item::new(run_id.into_bytes()))
     }
 
     fn read_workflow_links(&self, workflow_name: String) -> Result<Vec<String>> {
         let mut ret = Vec::new();
-        let base_key = format!("links/{}/", workflow_name);
+        let base_key = format!("links/runs/{}/", workflow_name);
 
         for key in self.store.keys()? {
             let value = self.store.get(&key)?.unwrap();
@@ -282,6 +282,46 @@ impl BackendMetadataWriter for KeyValueBackend {
         }
 
         Ok(ret)
+    }
+
+    fn write_parent_child_link(&self, parent_run_id: String, child_run_id: String) -> Result<()> {
+        let key = format!("links/children/{}/{}", parent_run_id, child_run_id);
+        self.store
+            .put(key.as_str(), Item::new(child_run_id.into_bytes()))
+    }
+
+    fn read_children(&self, parent_run_id: String) -> Result<Vec<String>> {
+        let mut ret = Vec::new();
+        let base_key = format!("links/children/{}/", parent_run_id);
+
+        for key in self.store.keys()? {
+            let value = self.store.get(&key)?.unwrap();
+            if key.starts_with(&base_key) {
+                ret.push(String::from_utf8(value.data)?);
+            }
+        }
+
+        Ok(ret)
+    }
+
+    fn enumerate_all_children(&self, parent_run_id: String) -> Result<Vec<String>> {
+        let mut visited = Vec::new();
+        let mut stack = vec![parent_run_id.clone()];
+        let mut result = Vec::new();
+
+        while let Some(run_id) = stack.pop() {
+            if !visited.contains(&run_id) {
+                visited.push(run_id.clone());
+                result.push(run_id.clone());
+
+                let children = self.read_children(run_id)?;
+                stack.extend(children);
+            }
+        }
+
+        result.retain(|rid| rid != &parent_run_id);
+
+        Ok(result)
     }
 }
 

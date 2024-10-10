@@ -3,8 +3,7 @@
 
 use crate::utils::{artifacts::ArtifactsExt, fs::FsContext, postprocess::PostProcessor};
 use common::typegraph::{
-    runtimes::substantial::WorkflowMatData,
-    utils::{map_from_object, object_from_map},
+    runtimes::{self, TGRuntime},
     Typegraph,
 };
 use std::path::PathBuf;
@@ -22,31 +21,30 @@ impl SubstantialProcessor {
 impl PostProcessor for SubstantialProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         let fs_ctx = FsContext::new(self.typegraph_dir.clone());
-        let mut materializers = std::mem::take(&mut tg.materializers);
-        let has_workflow_def = &["start", "stop", "send", "resources", "results"];
-        for mat in materializers.iter_mut() {
-            if has_workflow_def.contains(&mat.name.as_str()) {
-                let mat_data = std::mem::take(&mut mat.data);
+        let runtimes = std::mem::take(&mut tg.runtimes);
 
-                let mut mat_data: WorkflowMatData =
-                    object_from_map(mat_data).map_err(|e| e.to_string())?;
+        for runtime in runtimes.iter() {
+            if let TGRuntime::Known(known_runtime) = runtime {
+                match known_runtime {
+                    runtimes::KnownRuntime::Substantial(data) => {
+                        for wf_description in &data.workflows {
+                            fs_ctx.register_artifact(wf_description.file.clone(), tg)?;
 
-                fs_ctx.register_artifact(mat_data.file.clone(), tg)?;
-
-                let deps = std::mem::take(&mut mat_data.deps);
-                for artifact in deps.into_iter() {
-                    let artifacts = fs_ctx.list_files(&[artifact.to_string_lossy().to_string()]);
-                    for artifact in artifacts.iter() {
-                        fs_ctx.register_artifact(artifact.clone(), tg)?;
+                            for artifact in &wf_description.deps {
+                                let artifacts: Vec<PathBuf> =
+                                    fs_ctx.list_files(&[artifact.to_string_lossy().to_string()]);
+                                for artifact in artifacts.iter() {
+                                    fs_ctx.register_artifact(artifact.clone(), tg)?;
+                                }
+                            }
+                        }
                     }
-                    mat_data.deps.extend(artifacts);
+                    _ => continue,
                 }
-
-                mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
             }
         }
 
-        tg.materializers = materializers;
+        tg.runtimes = runtimes;
         Ok(())
     }
 }

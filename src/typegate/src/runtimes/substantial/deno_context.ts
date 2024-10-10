@@ -4,11 +4,45 @@
 // FIXME: DO NOT IMPORT any file that refers to Meta, this will be instantiated in a Worker
 // import { sleep } from "../../utils.ts"; // will silently fail??
 
-import { Interrupt, OperationEvent, Run } from "./types.ts";
+import { make_internal } from "../../worker_utils.ts";
+import { TaskContext } from "../deno/shared_types.ts";
+import { Interrupt, OperationEvent, Run, appendIfOngoing } from "./types.ts";
+
+const isTest = Deno.env.get("DENO_TESTING") === "true";
+const testBaseUrl = Deno.env.get("TEST_OVERRIDE_GQL_ORIGIN");
+
+const additionalHeaders = isTest
+  ? { connection: "close" }
+  : { connection: "keep-alive" };
 
 export class Context {
   private id: number = 0;
-  constructor(private run: Run, private kwargs: Record<string, unknown>) {}
+  gql: (
+    query: readonly string[],
+    ...args: unknown[]
+  ) => {
+    run: (
+      variables: Record<string, unknown>
+    ) => Promise<Record<string, unknown>>;
+  };
+
+  constructor(
+    private run: Run,
+    private kwargs: Record<string, unknown>,
+    private internal: TaskContext
+  ) {
+    const tgLocal = new URL(internal.meta.url);
+    if (testBaseUrl) {
+      const newBase = new URL(testBaseUrl);
+      tgLocal.protocol = newBase.protocol;
+      tgLocal.hostname = newBase.hostname;
+      tgLocal.port = newBase.port;
+    }
+
+    const meta = { ...internal.meta, url: tgLocal.toString() };
+
+    this.gql = make_internal({ ...internal, meta }, additionalHeaders).gql;
+  }
 
   #nextId() {
     // IDEA: this scheme does not account the step provided
@@ -18,7 +52,7 @@ export class Context {
   }
 
   #appendOp(op: OperationEvent) {
-    this.run.operations.push({ at: new Date().toJSON(), event: op });
+    appendIfOngoing(this.run, { at: new Date().toJSON(), event: op });
   }
 
   async save<T>(fn: () => T | Promise<T>, option?: SaveOption) {
@@ -160,7 +194,7 @@ export class Context {
     for (const { event } of this.run.operations) {
       if (event.type == "Send" && event.event_name == eventName) {
         const payload = event.value;
-        return await fn(payload);
+        return await this.save(async () => await fn(payload));
       }
     }
 
@@ -174,6 +208,94 @@ export class Context {
     }
 
     return result;
+  }
+
+  childWorkflow<O>(workflow: Workflow<O>, kwargs: unknown) {
+    return new ChildWorkflowHandle(this, workflow.name, kwargs);
+  }
+}
+
+export type Workflow<O> = (ctx: Context) => Promise<O>;
+
+export class ChildWorkflowHandle<O> {
+  private runId?: string;
+  constructor(
+    private spawnerContext: Context,
+    private name: string,
+    private kwargs: unknown
+  ) {}
+
+  async start(): Promise<string> {
+    const data = await this.spawnerContext.gql/**/ `query {
+      _sub_internal_start(name: $name, kwargs: $kwargs)
+    }`.run({
+      name: this.name,
+      kwargs: JSON.stringify(this.kwargs),
+    });
+
+    console.log("START", data);
+
+    this.runId = data._sub_internal_start as string;
+    return this.runId!;
+  }
+
+  async result<O>(): Promise<O> {
+    const data = await this.spawnerContext.gql/**/ `query {
+      _sub_internal_results(name: $name) {
+        completed {
+          runs {
+            run_id
+            result {
+              value
+              status
+            }  
+          }
+        }
+      }
+    }`.run({
+      name: this.name,
+    });
+
+    console.log("RESULTS", data);
+    const runs = (data as any)?._sub_internal_results?.completed
+      ?.runs as Array<any>;
+
+    const current = runs.filter(({ run_id }) => run_id == this.runId).shift();
+    if (current) {
+      return JSON.parse(current.value) as O;
+    }
+
+    throw new Error(`Result for child workflow ${name} not yet resolved`);
+  }
+
+  async stop(): Promise<string> {
+    const data = await this.spawnerContext.gql/**/ `query {
+      _sub_internal_stop(run_id: $run_id)
+    }`.run({
+      name: this.name,
+    });
+
+    console.log("STOP", data);
+
+    return data._sub_internal_stop as string;
+  }
+
+  async hasStopped(): Promise<boolean> {
+    const data = await this.spawnerContext.gql/**/ `query {
+      _sub_internal_results(name: $name) {
+        ongoing {
+          runs { run_id }
+        }
+      }
+    }`.run({
+      name: this.name,
+    });
+
+    console.log("HAS STOPPED?", data);
+    const runs = (data as any)?._sub_internal_results?.ongoing
+      ?.runs as Array<any>;
+
+    return runs.some(({ run_id }) => run_id == this.runId);
   }
 }
 

@@ -20,7 +20,9 @@ use common::typegraph::runtimes::kv::KvRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::s3::S3RuntimeData;
-use common::typegraph::runtimes::substantial::{self, RedisConfig, SubstantialRuntimeData};
+use common::typegraph::runtimes::substantial::{
+    self, RedisConfig, SubstantialRuntimeData, WorkflowFileDescription,
+};
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasm::WasmRuntimeData;
 use common::typegraph::runtimes::{
@@ -32,6 +34,7 @@ use indexmap::IndexMap;
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::rc::Rc;
 use unindent::Unindent;
 
@@ -501,7 +504,7 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
         }))
         .into()),
         Runtime::Substantial(data) => {
-            let backend = match &data.backend {
+            let backend = match data.backend.clone() {
                 SubstantialBackend::Memory => substantial::SubstantialBackend::Memory,
                 SubstantialBackend::Fs => substantial::SubstantialBackend::Fs,
                 SubstantialBackend::Redis(redis) => {
@@ -511,7 +514,28 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                 }
             };
 
-            Ok(TGRuntime::Known(Rt::Substantial(SubstantialRuntimeData { backend })).into())
+            Ok(TGRuntime::Known(Rt::Substantial(SubstantialRuntimeData {
+                backend,
+                workflows: data
+                    .file_descriptions
+                    .clone()
+                    .into_iter()
+                    .map(|desc| WorkflowFileDescription {
+                        file: PathBuf::from(desc.file.clone()),
+                        kind: match desc.kind {
+                            crate::wit::runtimes::WorkflowKind::Python => {
+                                substantial::WorkflowKind::Python
+                            }
+                            crate::wit::runtimes::WorkflowKind::Deno => {
+                                substantial::WorkflowKind::Deno
+                            }
+                        },
+                        deps: desc.deps.clone().into_iter().map(PathBuf::from).collect(),
+                        imports: desc.workflows,
+                    })
+                    .collect(),
+            }))
+            .into())
         }
         Runtime::Kv(d) => Ok(TGRuntime::Known(Rt::Kv(KvRuntimeData { url: d.url.clone() })).into()),
         Runtime::Grpc(d) => Ok(TGRuntime::Known(Rt::Grpc(GrpcRuntimeData {

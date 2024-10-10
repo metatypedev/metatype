@@ -1,7 +1,26 @@
 // TODO: include this as part of the metagen generated code
 
+// TODO:
+export type Workflow<O> = (ctx: Context) => Promise<O>;
+
+export interface ChildWorkflowHandle<O> {
+  name: string;
+  result<O>(): Promise<O>;
+  stop: () => Promise<void>;
+  start: () => Promise<void>;
+  hasStopped: () => Promise<boolean>;
+}
+
 export interface Context {
   kwargs: any;
+  gql: (
+    query: readonly string[],
+    ...args: unknown[]
+  ) => {
+    run: (
+      variables: Record<string, unknown>
+    ) => Promise<Record<string, unknown>>;
+  };
   sleep: (ms: number) => void;
   save<T>(fn: () => T | Promise<T>, option?: SaveOption): Promise<T>;
   receive<O>(eventName: string): O;
@@ -9,7 +28,9 @@ export interface Context {
     eventName: string,
     fn: (received: I) => O | Promise<O>
   ): Promise<O>;
-  ensure(conditionFn: () => boolean | Promise<boolean>): Promise<boolean>;
+  ensure(conditionFn: () => boolean | Promise<boolean>): Promise<true>;
+  // TODO:
+  childWorkflow<O>(workflow: Workflow<O>, kwargs: any): ChildWorkflowHandle<O>;
 }
 
 export interface SaveOption {

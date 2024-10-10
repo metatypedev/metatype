@@ -63,6 +63,7 @@ export const defaultTypegateConfigBase = {
   redis_url_queue_expire_sec: 60 * 5, // 5 minutes
   substantial_poll_interval_sec: 1,
   substantial_lease_lifespan_sec: 2,
+  substantial_max_acquire_per_tick: 3,
 };
 
 const SYNC_PREFIX = "sync_";

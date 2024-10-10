@@ -5,13 +5,12 @@ import {
   Run,
 } from "../../../engine/runtime.js";
 import { getLogger } from "../../log.ts";
-import { sleep } from "../../utils.ts";
 import {
   Interrupt,
-  Operation,
   Result,
   WorkerData,
   WorkflowResult,
+  appendIfOngoing,
 } from "./types.ts";
 import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
 
@@ -23,14 +22,10 @@ export interface WorkflowDescription {
   kind: "DENO" | "PYTHON";
 }
 
-export interface StagedUserEvent {
-  runId: string;
-  operation: Operation;
-}
-
 export interface AgentConfig {
-  poll_interval_sec: number;
-  lease_lifespan_sec: number;
+  pollIntervalSec: number;
+  leaseLifespanSec: number;
+  maxAcquirePerTick: number;
 }
 
 export class Agent {
@@ -96,7 +91,7 @@ export class Agent {
       } catch (err) {
         logger.error(err);
       }
-    }, 1000 * this.config.poll_interval_sec);
+    }, 1000 * this.config.pollIntervalSec);
   }
 
   stop() {
@@ -108,27 +103,63 @@ export class Agent {
 
   async #nextIteration() {
     logger.warn("POLL");
-    const next = await this.#tryAcquireNextRun();
 
-    for (const workflow of this.workflows) {
-      if (next && Agent.parseWorkflowName(next.run_id) == workflow.name) {
-        // logger.warn(`Run workflow ${JSON.stringify(next)}`);
+    // Note: in multiple agents/typegate scenario, a single node may acquire all runs for itself within a tick span
+    // To account for that, keep this reasonable
+    const acquireMaxForThisAgent = this.config.maxAcquirePerTick;
+    const replayRequests = [] as Array<NextRun>;
+    const runIdSeen = new Set<string>();
 
-        await this.log(next.run_id, next.schedule_date, {
-          message: "Replay workflow",
-          next,
-        });
-
-        await this.#replay(next, workflow);
-        return;
+    while (replayRequests.length <= acquireMaxForThisAgent) {
+      const next = await this.#tryAcquireNextRun();
+      if (next && !runIdSeen.has(next.run_id)) {
+        replayRequests.push(next);
+        // we cannot start more than 1 worker associated to a runId
+        runIdSeen.add(next.run_id);
+      } else {
+        break;
       }
+    }
+
+    const errors = [];
+    for (const workflow of this.workflows) {
+      const requests = replayRequests.filter(
+        ({ run_id }) => Agent.parseWorkflowName(run_id) == workflow.name
+      );
+
+      while (requests.length > 0) {
+        // logger.warn(`Run workflow ${JSON.stringify(next)}`);
+        const next = requests.shift();
+        if (next) {
+          try {
+            await this.#replay(next, workflow);
+            await this.log(next.run_id, next.schedule_date, {
+              message: "Replaying workflow",
+              next,
+            });
+          } catch (err) {
+            logger.error(
+              `Replay or metadata write failed for ${
+                workflow.name
+              } => ${JSON.stringify(next)}`
+            );
+            errors.push({ err, next });
+          }
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      throw Error("Replaying runs", {
+        cause: errors,
+      });
     }
   }
 
   async #tryAcquireNextRun() {
     const activeRunIds = await Meta.substantial.agentActiveLeases({
       backend: this.backend,
-      lease_seconds: this.config.lease_lifespan_sec,
+      lease_seconds: this.config.leaseLifespanSec,
     });
 
     logger.info(`Active leases: ${activeRunIds.join(",  ")}`);
@@ -145,7 +176,7 @@ export class Agent {
 
     const acquired = await Meta.substantial.agentAcquireLease({
       backend: this.backend,
-      lease_seconds: this.config.lease_lifespan_sec,
+      lease_seconds: this.config.leaseLifespanSec,
       run_id: next.run_id,
     });
 
@@ -190,7 +221,7 @@ export class Agent {
     }
 
     if (newEventOp) {
-      run.operations.push(newEventOp);
+      appendIfOngoing(run, newEventOp);
     }
 
     if (run.operations.length == 0) {
@@ -246,7 +277,8 @@ export class Agent {
       switch (answer.type) {
         case "START": {
           const ret = answer.data as WorkflowResult;
-          switch (Interrupt.getTypeOf(ret.exception)) {
+          const interrupt = Interrupt.getTypeOf(ret.exception);
+          switch (interrupt) {
             case "SAVE_RETRY":
             case "SLEEP":
             case "WAIT_ENSURE_VALUE":
@@ -255,14 +287,17 @@ export class Agent {
               await this.#workflowHandleInterrupts(workflowName, runId, ret);
               break;
             }
-            default: {
+            case null: {
               await this.#workflowHandleGracefullCompletion(
                 startedAt,
                 workflowName,
                 runId,
                 ret
               );
+              break;
             }
+            default:
+              throw new Error(`Unknown interrupt "${interrupt}"`);
           }
           break;
         }
@@ -319,7 +354,7 @@ export class Agent {
     logger.info(`Renew lease ${runId}`);
     await Meta.substantial.agentRenewLease({
       backend: this.backend,
-      lease_seconds: this.config.lease_lifespan_sec,
+      lease_seconds: this.config.leaseLifespanSec,
       run_id: runId,
     });
   }
@@ -340,8 +375,10 @@ export class Agent {
 
     logger.info(`Append Stop ${runId}`);
     const rustResult = kind == "FAIL" ? "Err" : "Ok";
-    run.operations.push({
-      // Note: run is a one-time value, thus can be mutated
+
+    // Note: run is a one-time value, thus can be mutated
+
+    appendIfOngoing(run, {
       at: new Date().toJSON(),
       event: {
         type: "Stop",
@@ -372,7 +409,7 @@ export class Agent {
     await Meta.substantial.agentRemoveLease({
       backend: this.backend,
       run_id: runId,
-      lease_seconds: this.config.lease_lifespan_sec,
+      lease_seconds: this.config.leaseLifespanSec,
     });
   }
 

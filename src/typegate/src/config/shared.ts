@@ -10,8 +10,10 @@ if (!Deno.env.has("VERSION")) {
   Deno.env.set("VERSION", get_version());
 }
 
-export const envSharedWithWorkers = Object.keys(sharedConfigSchema.shape)
-  .map((k) => k.toUpperCase());
+export const envSharedWithWorkers = [
+  "TEST_OVERRIDE_GQL_ORIGIN",
+  ...Object.keys(sharedConfigSchema.shape).map((k) => k.toUpperCase()),
+];
 
 export const sharedConfig = await configOrExit(
   sharedConfigSchema,
@@ -22,7 +24,7 @@ export const sharedConfig = await configOrExit(
     Object.fromEntries(
       envSharedWithWorkers
         .map((k) => [k.toLocaleLowerCase(), Deno.env.get(k)])
-        .filter(([_, v]) => v !== undefined),
+        .filter(([_, v]) => v !== undefined)
     ),
-  ],
+  ]
 );
