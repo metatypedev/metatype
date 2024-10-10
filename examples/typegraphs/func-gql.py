@@ -49,9 +49,7 @@ def func_gql(g: Graph):
             ),
             t.struct(
                 {
-                    # rename here  is necessary to make
-                    # `fromParent` down below work
-                    "voteId": t.uuid().rename("Vote_id"),
+                    "voteId": t.uuid(),
                     # using `reduce` we improve the API allowing
                     # create calls to get the newly created object
                     # without having to send this data from the
@@ -59,7 +57,7 @@ def func_gql(g: Graph):
                     "vote": db.find_unique(vote).reduce(
                         {
                             "where": {
-                                "id": g.inherit().from_parent("Vote_id"),
+                                "id": g.inherit().from_parent("voteId"),
                             },
                         }
                     ),

@@ -679,11 +679,11 @@ class ArgumentCollector {
       }
 
       case "parent": {
-        const parentTypeIdx = selectInjection(injection.data, this.effect);
-        if (parentTypeIdx == null) {
+        const parentKey = selectInjection(injection.data, this.effect);
+        if (parentKey == null) {
           return null;
         }
-        return this.collectParentInjection(typ, parentTypeIdx);
+        return this.collectParentInjection(typ, parentKey);
       }
 
       case "dynamic": {
@@ -709,23 +709,20 @@ class ArgumentCollector {
   /** Collect the value of an injected parameter with 'parent' injection. */
   private collectParentInjection(
     typ: TypeNode,
-    ref: number,
+    key: string,
   ): ComputeArg {
-    const name = Object.keys(this.parentProps).find(
-      (name) => this.parentProps[name] === ref,
-    );
-    if (name == undefined) {
-      throw new Error(`injection '${typ.title}' not found in parent`);
+    if (!Object.hasOwn(this.parentProps, key)) {
+      throw new Error(`injection '${key}' not found in parent`);
     }
 
-    this.deps.parent.add(name);
+    this.deps.parent.add(key);
     visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
       this.addPoliciesFrom(node.idx);
       return true;
     });
 
     return ({ parent }) => {
-      const { [name]: value } = parent;
+      const { [key]: value } = parent;
       if (value == null) {
         if (typ.type === Type.OPTIONAL) {
           return typ.default_value;
@@ -734,7 +731,7 @@ class ArgumentCollector {
         const keys = Object.keys(parent).join(", ");
         const suggestions = `available fields from parent are: ${keys}`;
         throw new Error(
-          `non-optional injected argument ${name} is missing from parent: ${suggestions}`,
+          `non-optional injected argument ${key} is missing from parent: ${suggestions}`,
         );
       }
 

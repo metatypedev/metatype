@@ -34,7 +34,7 @@ class DenoRuntime(Runtime):
         from typegraph import t
 
         mat_id = runtimes.register_deno_static(
-            store, MaterializerDenoStatic(json.dumps(value)), out.id
+            store, MaterializerDenoStatic(json.dumps(value)), out._id
         )
 
         if isinstance(mat_id, Err):
@@ -122,11 +122,6 @@ class DenoRuntime(Runtime):
         )
         if isinstance(res, Err):
             raise Exception(res.value)
-
-        # out_res = wit_utils.remove_injections(store, inp.id)
-        # if isinstance(res, Err):
-        #     raise Exception(res.value)
-        # out = t.typedef(out_res.value)
 
         return t.func(
             inp,

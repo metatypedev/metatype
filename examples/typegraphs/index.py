@@ -37,7 +37,7 @@ def homepage(g: Graph):
     # a stargazer object from Github
     stargazer = t.struct(
         {
-            "login": t.string(name="login"),
+            "login": t.string(),
             # link with the feedback across runtimes
             "user": github.get(
                 "/users/{user}",

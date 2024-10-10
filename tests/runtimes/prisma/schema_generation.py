@@ -449,9 +449,9 @@ def injection(g: Graph):
         {
             "id": t.uuid(as_id=True, config=["auto"]),
             "email": t.email(config=["unique"]),
-            "date_of_birth": t.date().optional().rename("DOB"),
+            "date_of_birth": t.date().optional(),
             "age": deno.func(
-                t.struct({"dob": t.date().optional().from_parent("DOB")}),
+                t.struct({"dob": t.date().optional().from_parent("date_of_birth")}),
                 t.integer(min=0),
                 code="() => 0",
             ),

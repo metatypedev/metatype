@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 use indexmap::IndexMap;
-use std::{collections::HashSet, fmt::Display};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Display,
+};
 
 use super::{TypeNode, Typegraph};
 
@@ -60,10 +63,11 @@ impl Typegraph {
         let mut traversal = TypegraphTraversal {
             tg: self,
             path: vec![],
-            visited_types: HashSet::new(),
-            visited_input_types: HashSet::new(),
-            visitor,
+            visited_types: HashMap::new(),
+            visited_input_types: HashMap::new(),
             as_input: false,
+            visitor,
+            parent_fn: None,
             layer,
         };
         traversal
@@ -79,6 +83,12 @@ pub struct FunctionMetadata {
     pub parent_struct_idx: u32,
 }
 
+#[derive(Hash, PartialEq, Eq, Debug, Clone)]
+pub struct ParentFn {
+    pub struct_idx: u32,
+    pub fn_key: String,
+}
+
 pub struct TypegraphTraversal<'a, V, L = DefaultLayer>
 where
     V: TypeVisitor<'a> + Sized + 'a,
@@ -86,9 +96,10 @@ where
 {
     tg: &'a Typegraph,
     path: Vec<PathSegment<'a>>,
+    parent_fn: Option<ParentFn>,
     as_input: bool,
-    visited_types: HashSet<u32>, // non input types
-    visited_input_types: HashSet<u32>,
+    visited_types: HashMap<ParentFn, HashSet<u32>>, // non input types; per parent function
+    visited_input_types: HashMap<ParentFn, HashSet<u32>>, // input types; per parent function
     visitor: V,
     layer: L,
 }
@@ -100,10 +111,15 @@ where
 {
     fn visit_type(&mut self, type_idx: u32, context: &'a V::Context) -> Option<V::Return> {
         let res = if self.as_input {
-            if self.visited_input_types.contains(&type_idx) {
+            let parent_fn = self.parent_fn.clone().unwrap();
+            let visited = self
+                .visited_input_types
+                .entry(parent_fn.clone())
+                .or_default();
+            if visited.contains(&type_idx) {
                 return None;
             }
-            self.visited_input_types.insert(type_idx);
+            visited.insert(type_idx);
             let type_node = &context.get_typegraph().types[type_idx as usize];
             let node = CurrentNode {
                 type_idx,
@@ -111,12 +127,15 @@ where
                 path: &self.path,
             };
 
-            self.visitor.visit_input_type(node, context)
+            self.visitor.visit_input_type(node, context, parent_fn)
         } else {
-            if self.visited_types.contains(&type_idx) {
-                return None;
+            if let Some(parent_fn) = &self.parent_fn {
+                let visited = self.visited_types.entry(parent_fn.clone()).or_default();
+                if visited.contains(&type_idx) {
+                    return None;
+                }
+                visited.insert(type_idx);
             }
-            self.visited_types.insert(type_idx);
 
             let type_node = &context.get_typegraph().types[type_idx as usize];
             let node = CurrentNode {
@@ -274,6 +293,14 @@ where
             }
         }
 
+        let last_seg = self.path.last().unwrap();
+        let fn_key = match last_seg.edge {
+            Edge::ObjectProp(k) => k.to_string(),
+            _ => unreachable!(), // or error?
+        };
+        let struct_idx = last_seg.from;
+        let old_parent_fn =
+            std::mem::replace(&mut self.parent_fn, Some(ParentFn { struct_idx, fn_key }));
         self.as_input = true;
         let res = self.visit_child(
             PathSegment {
@@ -286,6 +313,7 @@ where
         self.as_input = false;
 
         if let Some(ret) = res {
+            self.parent_fn = old_parent_fn;
             return Some(ret);
         }
 
@@ -297,6 +325,7 @@ where
             output,
             context,
         );
+        self.parent_fn = old_parent_fn;
 
         res
     }
@@ -400,6 +429,7 @@ pub trait TypeVisitor<'a> {
         &mut self,
         current_node: CurrentNode<'_>,
         context: &Self::Context,
+        _parent_fn: ParentFn,
     ) -> VisitResult<Self::Return> {
         self.visit(current_node, context)
     }

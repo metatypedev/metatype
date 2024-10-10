@@ -13,31 +13,31 @@ typegraph(
 
     const bucket = t.struct(
       {
-        id: t.integer({}, { asId: true, config: { auto: true } }),
+        id: t.integer({}, { config: { auto: true } }).id(),
         name: t.string(),
         ideas: t.list(g.ref("idea")),
       },
-      { name: "bucket" }
+      { name: "bucket" },
     );
     const idea = t.struct(
       {
-        id: t.uuid({ asId: true, config: { auto: true } }),
+        id: t.uuid({ config: { auto: true } }).id(),
         name: t.string(),
         authorEmail: t.email(),
         votes: t.list(g.ref("vote")),
         bucket: g.ref("bucket"),
       },
-      { name: "idea" }
+      { name: "idea" },
     );
     const vote = t.struct(
       {
-        id: t.uuid({ asId: true, config: { auto: true } }),
+        id: t.uuid({ config: { auto: true } }).id(),
         authorEmail: t.email(),
         importance: t.enum_(["medium", "important", "critical"]).optional(),
         desc: t.string().optional(),
         idea: g.ref("idea"),
       },
-      { name: "vote" }
+      { name: "vote" },
     );
 
     g.expose(
@@ -48,7 +48,7 @@ typegraph(
         create_idea: db.create(idea),
         get_vote: db.create(vote),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

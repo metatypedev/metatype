@@ -4,8 +4,8 @@ expression: tp.print(out)
 ---
 root: list 'list_73' #73
 └─ item: struct 'Record_with_nested_count' #72
-   ├─ [age]: optional 'optional_5' #5
-   │  └─ item: integer #4
-   ├─ [created_at]: string #71
+   ├─ [age]: optional 'optional_6' #6
+   │  └─ item: integer #5
+   ├─ [created_at]: string #0
    ├─ [id]: string #2
-   └─ [name]: string #3
+   └─ [name]: string #4

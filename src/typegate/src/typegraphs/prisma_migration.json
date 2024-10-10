@@ -6,14 +6,14 @@
       "runtime": 0,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "diff": 1,
-        "apply": 7,
-        "create": 11,
-        "deploy": 14,
-        "reset": 18
+        "apply": 8,
+        "create": 12,
+        "deploy": 15,
+        "reset": 19
       },
+      "id": [],
       "required": [
         "diff",
         "apply",
@@ -24,246 +24,243 @@
     },
     {
       "type": "function",
-      "title": "func_10",
+      "title": "root_diff_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
       "input": 2,
-      "output": 6,
+      "output": 7,
       "materializer": 0,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_4",
+      "title": "root_diff_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "typegraph": 3,
         "runtime": 4,
-        "script": 5
+        "script": 6
       },
+      "id": [],
       "required": []
     },
     {
       "type": "string",
-      "title": "string_0",
+      "title": "root_diff_fn_input_typegraph_string",
       "runtime": 1,
       "policies": [],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "optional",
-      "title": "optional_2",
+      "title": "root_diff_fn_input_runtime_root_diff_fn_input_runtime_string_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "item": 3,
+      "item": 5,
       "default_value": null
     },
     {
-      "type": "boolean",
-      "title": "boolean_3",
+      "type": "string",
+      "title": "root_diff_fn_input_runtime_string",
       "runtime": 1,
       "policies": [],
-      "config": {},
-      "as_id": false
+      "config": {}
+    },
+    {
+      "type": "boolean",
+      "title": "root_diff_fn_input_script_boolean",
+      "runtime": 1,
+      "policies": [],
+      "config": {}
     },
     {
       "type": "object",
-      "title": "object_8",
+      "title": "root_diff_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "diff": 4,
         "runtimeName": 3
       },
+      "id": [],
       "required": []
     },
     {
       "type": "function",
-      "title": "func_23",
+      "title": "root_apply_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 8,
-      "output": 9,
+      "input": 9,
+      "output": 10,
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_17",
+      "title": "root_apply_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "typegraph": 3,
         "runtime": 4,
         "migrations": 4,
-        "resetDatabase": 5
+        "resetDatabase": 6
       },
+      "id": [],
       "required": []
     },
     {
       "type": "object",
-      "title": "object_21",
+      "title": "root_apply_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "databaseReset": 5,
-        "appliedMigrations": 10
+        "databaseReset": 6,
+        "appliedMigrations": 11
       },
+      "id": [],
       "required": []
     },
     {
       "type": "list",
-      "title": "list_20",
+      "title": "root_apply_fn_output_appliedMigrations_root_diff_fn_input_runtime_string_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 3
+      "items": 5
     },
     {
       "type": "function",
-      "title": "func_40",
+      "title": "root_create_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 12,
-      "output": 13,
+      "input": 13,
+      "output": 14,
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_31",
+      "title": "root_create_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "typegraph": 3,
         "runtime": 4,
         "name": 3,
-        "apply": 5,
+        "apply": 6,
         "migrations": 4
       },
+      "id": [],
       "required": []
     },
     {
       "type": "object",
-      "title": "object_38",
+      "title": "root_create_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "createdMigrationName": 3,
         "applyError": 4,
         "migrations": 4,
         "runtimeName": 3
       },
+      "id": [],
       "required": []
     },
     {
       "type": "function",
-      "title": "func_51",
+      "title": "root_deploy_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 15,
-      "output": 16,
+      "input": 16,
+      "output": 17,
       "materializer": 4,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_45",
+      "title": "root_deploy_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "typegraph": 3,
         "runtime": 4,
         "migrations": 3
       },
+      "id": [],
       "required": []
     },
     {
       "type": "object",
-      "title": "object_49",
+      "title": "root_deploy_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "migrationCount": 17,
-        "appliedMigrations": 10
+        "migrationCount": 18,
+        "appliedMigrations": 11
       },
+      "id": [],
       "required": []
     },
     {
       "type": "integer",
-      "title": "integer_46",
+      "title": "root_deploy_fn_output_migrationCount_integer",
       "runtime": 1,
       "policies": [],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "function",
-      "title": "func_58",
+      "title": "root_reset_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 19,
-      "output": 5,
+      "input": 20,
+      "output": 6,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_55",
+      "title": "root_reset_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "typegraph": 3,
         "runtime": 4
       },
+      "id": [],
       "required": []
     }
   ],

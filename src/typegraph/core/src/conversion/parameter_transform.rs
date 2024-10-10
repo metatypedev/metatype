@@ -31,9 +31,7 @@ fn convert_node(
     node: &ParameterTransformNode,
     runtime_id: u32,
 ) -> Result<cm::ParameterTransformNode> {
-    let type_idx = ctx
-        .register_type(TypeId(node.type_id).resolve_ref()?.1, Some(runtime_id))?
-        .0;
+    let type_idx = ctx.register_type(TypeId(node.type_id), Some(runtime_id))?.0;
     match &node.data {
         ParameterTransformNodeData::Leaf(leaf_node) => {
             convert_leaf_node(ctx, leaf_node, runtime_id).map(|leaf_node| {
@@ -75,9 +73,8 @@ fn convert_leaf_node(
             Ok(cm::ParameterTransformLeafNode::Context { key: key.clone() })
         }
         ParameterTransformLeafNode::Parent { type_name } => {
-            let type_ref = t::ref_(type_name).build()?;
-            let (_, type_def) = type_ref.resolve_ref()?;
-            let parent_idx = ctx.register_type(type_def, Some(runtime_id))?.0;
+            let type_ref = t::ref_(type_name, Default::default()).build()?;
+            let parent_idx = ctx.register_type(type_ref, Some(runtime_id))?.0;
             Ok(cm::ParameterTransformLeafNode::Parent { parent_idx })
         }
     }

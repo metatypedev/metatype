@@ -233,7 +233,7 @@ impl PrismaContext {
             key: key.to_string(),
             cardinality: prop.quantifier.into(),
             type_idx: ctx
-                .register_type(prop.wrapper_type_id.resolve_ref()?.1, Some(runtime_idx))?
+                .register_type(prop.wrapper_type_id, Some(runtime_idx))?
                 .into(),
             prop_type: prop.prop_type.clone(),
             injection: prop.injection.as_ref().map(|inj| cm::ManagedInjection {
@@ -267,7 +267,7 @@ impl PrismaContext {
             key: key.to_string(),
             cardinality: prop.quantifier.into(),
             type_idx: ctx
-                .register_type(prop.wrapper_type_id.resolve_ref()?.1, Some(runtime_idx))?
+                .register_type(prop.wrapper_type_id, Some(runtime_idx))?
                 .into(),
             model_name: model.type_name.clone(),
             unique: prop.unique,
@@ -293,9 +293,7 @@ impl PrismaContext {
         runtime_idx: u32,
     ) -> Result<cm::Model> {
         Ok(cm::Model {
-            type_idx: ctx
-                .register_type(type_id.resolve_ref()?.1, Some(runtime_idx))?
-                .into(),
+            type_idx: ctx.register_type(type_id, Some(runtime_idx))?.into(),
             type_name: model.type_name.clone(),
             props: model
                 .props
@@ -381,7 +379,7 @@ impl PrismaContext {
     ) -> Result<cm::RelationshipModel> {
         Ok(cm::RelationshipModel {
             type_idx: ctx
-                .register_type(model.model_type.resolve_ref()?.1, Some(runtime_idx))?
+                .register_type(model.model_type, Some(runtime_idx))?
                 .into(),
             field: model.field.clone(),
             cardinality: model.cardinality.into(),
@@ -423,7 +421,7 @@ mod test {
     #[test]
     fn test_relationship_registration() -> Result<()> {
         let mut ctx = PrismaContext::default();
-        let (user, post) = models::simple_relationship()?;
+        let (user, post) = models::simple_relationship().unwrap();
 
         ctx.manage(user)?;
 

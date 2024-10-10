@@ -480,14 +480,20 @@ export class Planner {
     deps.push(...collected.deps);
 
     const inputType = this.tg.type(inputIdx, Type.OBJECT);
+    const argumentTypes = mapValues(
+      inputType.properties,
+      (idx, key) =>
+        this.tg.getGraphQLType(
+          this.tg.type(idx),
+          false,
+          inputType.id.includes(key),
+        ),
+    );
 
     const stage = this.createComputeStage(node, {
       dependencies: deps,
       args: collected.compute,
-      argumentTypes: mapValues(
-        inputType.properties,
-        (idx) => this.tg.getGraphQLType(this.tg.type(idx)),
-      ),
+      argumentTypes,
       outType: outputType,
       effect,
       runtime,

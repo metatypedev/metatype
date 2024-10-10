@@ -1,9 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::convert::Infallible;
+
 pub use crate::wit::core::Error as TgError;
 
 pub type Result<T, E = TgError> = std::result::Result<T, E>;
+
+impl From<Infallible> for TgError {
+    fn from(_: Infallible) -> Self {
+        unreachable!()
+    }
+}
 
 impl From<String> for TgError {
     fn from(s: String) -> Self {
@@ -141,8 +149,4 @@ pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {
 
 pub fn duplicate_policy_name(name: &str) -> TgError {
     format!("duplicate policy name '{name}'").into()
-}
-
-pub fn nested_type_ref(name: &str, nested: &str) -> TgError {
-    format!("nested type reference is not allowed: -> '{name}' -> '{nested}'").into()
 }

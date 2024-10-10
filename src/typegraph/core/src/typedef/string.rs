@@ -13,12 +13,17 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{StringT, TypeDefData},
+    types::{FindAttribute as _, RefAttrs, StringT, TypeDefData},
     wit::core::TypeString,
 };
 
 impl TypeConversion for StringT {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: &RefAttrs,
+    ) -> Result<TypeNode> {
         let format: Option<StringFormat> = match self.data.format.clone() {
             Some(format) => {
                 let ret =
@@ -35,13 +40,12 @@ impl TypeConversion for StringT {
                 type_id: self.id,
                 name: self.base.name.clone(),
                 runtime_idx: runtime_id.unwrap(),
-                policies: &self.extended_base.policies,
+                policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(self.extended_base.injection.clone())?
-            .id(self.base.as_id)
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: StringTypeData {
                 min_length: self.data.min,

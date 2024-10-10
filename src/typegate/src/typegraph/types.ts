@@ -14,7 +14,6 @@ export type OptionalNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   item: number;
   default_value?: any;
 };
@@ -29,7 +28,6 @@ export type BooleanNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
 };
 export type FloatNode = {
   type: "float";
@@ -42,7 +40,6 @@ export type FloatNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   minimum?: number | null;
   maximum?: number | null;
   exclusiveMinimum?: number | null;
@@ -60,7 +57,6 @@ export type IntegerNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   minimum?: number | null;
   maximum?: number | null;
   exclusiveMinimum?: number | null;
@@ -78,7 +74,6 @@ export type StringNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   minLength?: number | null;
   maxLength?: number | null;
   pattern?: string | null;
@@ -95,7 +90,6 @@ export type FileNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   minSize?: number | null;
   maxSize?: number | null;
   mimeTypes?: string[] | null;
@@ -111,11 +105,11 @@ export type ObjectNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   properties: {
     [k: string]: number;
   };
   required?: string[];
+  id: string[];
 };
 export type ListNode = {
   type: "list";
@@ -128,7 +122,6 @@ export type ListNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   items: number;
   maxItems?: number | null;
   minItems?: number | null;
@@ -145,7 +138,6 @@ export type FunctionNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   input: number;
   parameterTransform?: FunctionParameterTransform | null;
   output: number;
@@ -164,7 +156,6 @@ export type UnionNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   anyOf: number[];
 };
 export type EitherNode = {
@@ -178,7 +169,6 @@ export type EitherNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
   oneOf: number[];
 };
 export type AnyNode = {
@@ -192,7 +182,6 @@ export type AnyNode = {
   config?: {
     [k: string]: unknown;
   };
-  as_id: boolean;
 };
 export type TypeNode =
   | OptionalNode
@@ -219,7 +208,7 @@ export type Injection = {
   data: InjectionDataFor_String;
 } | {
   source: "parent";
-  data: InjectionDataForUint32;
+  data: InjectionDataFor_String;
 } | {
   source: "dynamic";
   data: InjectionDataFor_String;
@@ -229,9 +218,6 @@ export type Injection = {
 };
 export type InjectionDataFor_String = SingleValueFor_String | {
   [k: string]: string;
-};
-export type InjectionDataForUint32 = SingleValueForUint32 | {
-  [k: string]: number;
 };
 export type StringFormat =
   | "uuid"

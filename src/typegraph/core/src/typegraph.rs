@@ -5,11 +5,12 @@ use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
-use crate::types::{TypeDef, TypeDefExt, TypeId};
+use crate::types::{
+    FindAttribute as _, PolicySpec, ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, WithPolicy,
+};
 use crate::utils::postprocess::naming::NamingProcessor;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
-use crate::Lib;
 use crate::{
     errors::{self, Result},
     global_store::Store,
@@ -28,8 +29,8 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Artifact as WitArtifact, Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec,
-    RuntimeId, SerializeParams, TypegraphInitParams,
+    Artifact as WitArtifact, Error as TgError, MaterializerId, PolicyId, RuntimeId,
+    SerializeParams, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -132,10 +133,10 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             policies: Default::default(),
             runtime: default_runtime_idx,
             title: params.name,
-            as_id: false,
         },
         data: ObjectTypeData {
             properties: IndexMap::new(),
+            id: vec![],
             required: vec![],
         },
     }));
@@ -166,8 +167,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
                                     })
                                 })? as u32;
 
-                            let type_idx =
-                                ctx.register_type(TypeId(func_store_idx).try_into()?, None)?;
+                            let type_idx = ctx.register_type(TypeId(func_store_idx), None)?;
 
                             let mut auth_processed = auth.clone();
                             auth_processed
@@ -268,7 +268,7 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> 
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
-    match type_id.resolve_ref()?.1 {
+    match type_id.resolve_ref()?.0 {
         TypeDef::Struct(inner) => {
             // namespace
             for (prop_name, prop_type_id) in inner.iter_props() {
@@ -284,20 +284,22 @@ fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
 
 pub fn expose(
     fields: Vec<(String, TypeId)>,
-    default_policy: Option<Vec<PolicySpec>>,
+    default_policy: Option<Vec<crate::wit::core::PolicySpec>>,
 ) -> Result<()> {
     let fields = fields
         .into_iter()
         .map(|(key, type_id)| -> Result<_> {
-            let concrete_type = type_id.resolve_ref()?.1;
-            let policy_chain = &concrete_type.x_base().policies;
+            let (_, attrs) = type_id.resolve_ref()?;
+            let policy_chain = attrs.find_policy().unwrap_or(&[]);
             let has_policy = !policy_chain.is_empty();
 
             // TODO how to set default policy on a namespace? Or will it inherit
             // the policies of the namespace?
             let type_id: TypeId = match (has_policy, default_policy.as_ref()) {
                 (false, Some(default_policy)) => {
-                    Lib::with_policy(type_id.into(), default_policy.to_vec())?.into()
+                    type_id
+                        .with_policy(default_policy.clone().into_iter().map(Into::into).collect())?
+                        .id
                 }
                 _ => type_id,
             };
@@ -323,9 +325,7 @@ pub fn expose(
                 }
                 ensure_valid_export(key.clone(), type_id)?;
 
-                // this resolves the type_id to a type_def from theh Store
-                let type_def = type_id.try_into()?;
-                let type_idx = ctx.register_type(type_def, None)?;
+                let type_idx = ctx.register_type(type_id, None)?;
                 root_data.properties.insert(key.clone(), type_idx.into());
                 root_data.required.push(key);
                 Ok(())
@@ -343,24 +343,32 @@ pub fn set_seed(seed: Option<u32>) -> Result<()> {
 }
 
 impl TypegraphContext {
-    pub fn hash_type(&mut self, type_def: TypeDef, runtime_id: Option<u32>) -> Result<u64> {
-        let type_id = type_def.id().into();
-        if let Some(hash) = self.mapping.types_to_hash.get(&type_id) {
+    pub fn hash_type(&mut self, type_id: TypeId, runtime_id: Option<u32>) -> Result<u64> {
+        // let type_id = type_def.id().into();
+        if let Some(hash) = self.mapping.types_to_hash.get(&type_id.into()) {
             Ok(*hash)
         } else {
             let mut hasher = Hasher::new();
-            type_def.hash_type(&mut hasher, self, runtime_id)?;
+            match type_id.as_type()? {
+                Type::Def(type_def) => {
+                    type_def.hash_type(&mut hasher, self, runtime_id)?;
+                }
+                Type::Ref(type_ref) => {
+                    type_ref.hash_type(&mut hasher, self, runtime_id)?;
+                }
+            }
             let hash = hasher.finish();
-            self.mapping.types_to_hash.insert(type_id, hash);
+            self.mapping.types_to_hash.insert(type_id.into(), hash);
             Ok(hash)
         }
     }
 
     pub fn register_type(
         &mut self,
-        mut type_def: TypeDef,
+        type_id: TypeId,
         runtime_id: Option<u32>,
     ) -> Result<TypeId, TgError> {
+        let (mut type_def, ref_attrs) = type_id.resolve_ref()?;
         // we remove the name before hashing if it's not
         // user named
         let user_named = if let Some(name) = type_def.name() {
@@ -373,7 +381,7 @@ impl TypegraphContext {
         } else {
             false
         };
-        let hash = self.hash_type(type_def.clone(), runtime_id)?;
+        let hash = self.hash_type(type_id, runtime_id)?;
 
         match self.mapping.hash_to_type.entry(hash) {
             Entry::Vacant(e) => {
@@ -388,7 +396,7 @@ impl TypegraphContext {
 
                 // let tpe = id.as_type()?;
 
-                let type_node = type_def.convert(self, runtime_id)?;
+                let type_node = type_def.convert(self, runtime_id, &ref_attrs)?;
 
                 self.types[idx] = Some(type_node);
                 if user_named {
@@ -429,28 +437,28 @@ impl TypegraphContext {
             .iter()
             .map(|p| -> Result<_> {
                 Ok(match p {
-                    PolicySpec::Simple(id) => PolicyIndices::Policy(self.register_policy(*id)?),
+                    PolicySpec::Simple(id) => PolicyIndices::Policy(self.register_policy(id.0)?),
                     PolicySpec::PerEffect(policies) => {
                         PolicyIndices::EffectPolicies(PolicyIndicesByEffect {
                             read: policies
                                 .read
                                 .as_ref()
-                                .map(|id| self.register_policy(*id))
+                                .map(|id| self.register_policy(id.0))
                                 .transpose()?,
                             create: policies
                                 .create
                                 .as_ref()
-                                .map(|id| self.register_policy(*id))
+                                .map(|id| self.register_policy(id.0))
                                 .transpose()?,
                             delete: policies
                                 .delete
                                 .as_ref()
-                                .map(|id| self.register_policy(*id))
+                                .map(|id| self.register_policy(id.0))
                                 .transpose()?,
                             update: policies
                                 .update
                                 .as_ref()
-                                .map(|id| self.register_policy(*id))
+                                .map(|id| self.register_policy(id.0))
                                 .transpose()?,
                         })
                     }
@@ -498,7 +506,7 @@ impl TypegraphContext {
     }
 
     pub fn get_correct_id(&self, id: TypeId) -> Result<u32> {
-        let id = id.resolve_ref()?.1.id();
+        let id = id.resolve_ref()?.0.id();
         self.find_type_index_by_store_id(id)
             .ok_or(format!("unable to find type for store id {}", u32::from(id)).into())
     }

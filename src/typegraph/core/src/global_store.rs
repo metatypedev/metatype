@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::errors::{self, Result};
+use crate::errors::{self, Result, TgError};
 use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
 use crate::types::type_ref::TypeRef;
-use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
+use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
@@ -42,7 +42,7 @@ pub struct Store {
     pub types: Vec<Type>,
     // the bool indicates weather the name was from
     // user or generated placeholder (false)
-    pub type_by_names: IndexMap<String, (TypeId, bool)>,
+    pub type_by_names: IndexMap<String, (TypeDef, bool)>,
 
     pub runtimes: Vec<Runtime>,
     pub materializers: Vec<Materializer>,
@@ -61,8 +61,6 @@ pub struct Store {
     auths: Vec<common::typegraph::Auth>,
 
     random_seed: Option<u32>,
-
-    latest_alias_no: u32,
 }
 
 impl Store {
@@ -152,20 +150,21 @@ impl Store {
         })
     }
 
-    pub fn get_type_by_name(name: &str) -> Option<TypeId> {
-        with_store(|s| s.type_by_names.get(name).map(|id| id.0))
+    pub fn get_type_by_name(name: &str) -> Option<TypeDef> {
+        with_store(|s| s.type_by_names.get(name).map(|id| id.0.clone()))
     }
 
-    pub fn register_type_ref(name: String, attributes: Vec<(String, String)>) -> Result<TypeId> {
+    pub fn register_type_ref(builder: TypeRefBuilder) -> Result<TypeRef> {
         let id = with_store(|s| s.types.len()) as u32;
-        let type_ref = TypeRef::new(id.into(), name, attributes);
+        let type_ref = builder.with_id(id.into());
+        let res = type_ref.clone();
 
         with_store_mut(move |s| -> Result<()> {
             s.types.push(Type::Ref(type_ref));
             Ok(())
         })?;
 
-        Ok(id.into())
+        Ok(res)
     }
 
     pub fn register_type_def(
@@ -182,16 +181,16 @@ impl Store {
         // allow the ref system to work
         if name_registration.0 {
             if let Some(name) = type_def.base().name.clone() {
-                Self::register_type_name(name, id.into(), true)?;
+                Self::register_type_name(name, type_def.clone(), true)?;
             } else {
                 // we only need to assign temporary non-user named
                 // types for lists and optionals. other refs
                 // will need explicit names by the user
                 match type_def {
                     TypeDef::List(_) | TypeDef::Optional(_) => {
-                        let varaint = type_def.variant_name();
-                        let placeholder_name = format!("{varaint}_{id}");
-                        Self::register_type_name(&placeholder_name, id.into(), false)?;
+                        let variant = type_def.variant_name();
+                        let placeholder_name = format!("{variant}_{id}");
+                        Self::register_type_name(&placeholder_name, type_def.clone(), false)?;
                         let mut base = type_def.base().clone();
                         base.name = Some(placeholder_name);
                         type_def = type_def.with_base(id.into(), base);
@@ -208,13 +207,17 @@ impl Store {
         Ok(id.into())
     }
 
-    pub fn register_type_name(name: impl Into<String>, id: TypeId, user_named: bool) -> Result<()> {
+    pub fn register_type_name(
+        name: impl Into<String>,
+        type_def: TypeDef,
+        user_named: bool,
+    ) -> Result<()> {
         let name = name.into();
         with_store_mut(move |s| -> Result<()> {
             if s.type_by_names.contains_key(&name) {
                 return Err(format!("type with name {:?} already exists", name).into());
             }
-            s.type_by_names.insert(name, (id, user_named));
+            s.type_by_names.insert(name, (type_def, user_named));
             Ok(())
         })
     }
@@ -223,24 +226,6 @@ impl Store {
         with_store(|s| {
             let (_id, user_named) = s.type_by_names.get(name)?;
             Some(*user_named)
-        })
-    }
-
-    pub fn generate_alias() -> String {
-        with_store_mut(|s| {
-            s.latest_alias_no += 1;
-            format!("__alias_{}", s.latest_alias_no)
-        })
-    }
-
-    pub fn register_alias(name: impl Into<String>, id: TypeId) -> Result<()> {
-        let name = name.into();
-        with_store_mut(|s| {
-            if s.type_by_names.contains_key(&name) {
-                return Err(format!("type with name {:?} already exists", name).into());
-            }
-            s.type_by_names.insert(name, (id, true));
-            Ok(())
         })
     }
 
@@ -253,7 +238,7 @@ impl Store {
     }
 
     pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
-        let (_, supertype) = supertype_id.resolve_ref()?;
+        let supertype = supertype_id.resolve_ref()?.0;
         let supertype = &supertype;
         let filter_and_reduce = |variants: Vec<u32>| match path.len() {
             0 => Ok((Type::Def(supertype.clone()), supertype_id)), // terminal node
@@ -263,7 +248,7 @@ impl Store {
                 let chunk = path.first().unwrap();
                 for (i, variant) in variants.iter().enumerate() {
                     let variant: TypeId = variant.into();
-                    let (_, type_def) = variant.resolve_ref()?;
+                    let type_def = variant.resolve_ref()?.0;
                     match type_def {
                         TypeDef::Struct(t) => {
                             for (prop_name, prop_id) in t.iter_props() {
@@ -335,7 +320,7 @@ impl Store {
 
         let mut curr_path = vec![];
         for (pos, chunk) in path.iter().enumerate() {
-            let (_, type_def) = ret.1.resolve_ref()?;
+            let type_def = ret.1.resolve_ref()?.0;
             let type_def = type_def.resolve_quantifier()?;
             match &type_def {
                 TypeDef::Struct(t) => {
@@ -541,14 +526,23 @@ macro_rules! as_variant {
     ($variant:ident) => {
         paste::paste! {
             pub fn [<as_ $variant:lower>](&self) -> Result<Rc<crate::types::[<$variant>]>> {
+                use crate::types::type_ref::ResolveRef;
                 match self.as_type()? {
                     Type::Def(TypeDef::$variant(inner)) => Ok(inner),
-                    Type::Ref(type_ref) => type_ref.try_resolve()?.id().[<as_ $variant:lower>](),
+                    Type::Ref(type_ref) => type_ref.resolve_ref()?.0.id().[<as_ $variant:lower>](),
                     _ => Err(errors::invalid_type(stringify!($variant), &self.repr()?)),
                 }
             }
         }
     };
+}
+
+impl TryFrom<TypeId> for Type {
+    type Error = TgError;
+
+    fn try_from(type_id: TypeId) -> Result<Self> {
+        type_id.as_type()
+    }
 }
 
 impl TypeId {

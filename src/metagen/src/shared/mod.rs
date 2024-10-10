@@ -90,12 +90,14 @@ pub fn get_gql_type(types: &[TypeNode], id: u32, optional: bool) -> String {
     let name = match &types[id as usize] {
         TypeNode::Optional { data, .. } => return get_gql_type(types, data.item, true),
         TypeNode::List { data, .. } => format!("[{}]", get_gql_type(types, data.items, true)),
-        TypeNode::String { base, .. } => {
-            if base.as_id {
-                "ID".into()
-            } else {
-                "String".into()
-            }
+        TypeNode::String { base: _, .. } => {
+            // TODO
+            // if base.as_id {
+            //     "ID".into()
+            // } else {
+            //     "String".into()
+            // }
+            "String".into()
         }
         TypeNode::Boolean { .. } => "Boolean".into(),
         TypeNode::Float { .. } => "Float".into(),

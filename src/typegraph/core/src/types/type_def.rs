@@ -3,32 +3,20 @@
 
 use std::rc::Rc;
 
+use super::{ResolveRef as _, TypeId};
 use crate::conversion::hash::{Hashable, Hasher};
 use crate::conversion::types::TypeConversion;
 use crate::errors::Result;
 use crate::global_store::{NameRegistration, Store};
 use crate::typegraph::TypegraphContext;
+use crate::types::RefAttrs;
 use crate::wit::core::{
-    PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList,
-    TypeOptional, TypeString, TypeStruct, TypeUnion,
+    TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
+    TypeString, TypeStruct, TypeUnion,
 };
-use common::typegraph::{Injection, TypeNode};
+use common::typegraph::TypeNode;
 use enum_dispatch::enum_dispatch;
 use std::hash::Hash as _;
-
-use super::TypeId;
-
-#[derive(Default, Debug, Clone)]
-pub struct ExtendedTypeBase {
-    pub injection: Option<Box<Injection>>,
-    pub policies: Vec<PolicySpec>,
-}
-
-impl ExtendedTypeBase {
-    pub fn is_empty(&self) -> bool {
-        self.injection.is_none() && self.policies.is_empty()
-    }
-}
 
 pub trait TypeDefData: Hashable {
     fn get_display_params_into(&self, params: &mut Vec<String>);
@@ -40,7 +28,6 @@ pub trait TypeDefData: Hashable {
 pub struct NonRefType<T: TypeDefData> {
     pub id: TypeId,
     pub base: TypeBase,
-    pub extended_base: ExtendedTypeBase,
     pub data: T,
 }
 
@@ -58,7 +45,6 @@ where
                 Rc::new(Self {
                     id: type_id,
                     base,
-                    extended_base: self.extended_base.clone(),
                     data,
                 })
                 .into()
@@ -74,7 +60,6 @@ impl Default for TypeBase {
         Self {
             name: None,
             runtime_config: None,
-            as_id: false,
         }
     }
 }
@@ -113,8 +98,8 @@ pub enum TypeDef {
 impl TypeDef {
     pub fn resolve_quantifier(&self) -> Result<TypeDef> {
         match self {
-            TypeDef::List(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.1),
-            TypeDef::Optional(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.1),
+            TypeDef::List(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.0),
+            TypeDef::Optional(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.0),
             _ => Ok(self.clone()),
         }
     }
@@ -124,7 +109,6 @@ impl TypeDef {
 pub trait TypeDefExt {
     fn id(&self) -> TypeId;
     fn base(&self) -> &TypeBase;
-    fn x_base(&self) -> &ExtendedTypeBase;
     fn data(&self) -> &dyn TypeDefData;
     fn hash_type(
         &self,
@@ -141,7 +125,6 @@ pub trait TypeDefExt {
     fn variant_name(&self) -> &'static str;
 
     fn with_base(&self, id: TypeId, base: TypeBase) -> TypeDef;
-    fn with_x_base(&self, id: TypeId, base: ExtendedTypeBase) -> TypeDef;
 
     fn with_name(&self, name: Option<String>) -> TypeDef {
         let mut base = self.base().clone();
@@ -159,10 +142,6 @@ impl<T: TypeDefExt> TypeDefExt for Rc<T> {
 
     fn base(&self) -> &TypeBase {
         (**self).base()
-    }
-
-    fn x_base(&self) -> &ExtendedTypeBase {
-        (**self).x_base()
     }
 
     fn data(&self) -> &dyn TypeDefData {
@@ -184,10 +163,6 @@ impl<T: TypeDefExt> TypeDefExt for Rc<T> {
 
     fn with_base(&self, id: TypeId, base: TypeBase) -> TypeDef {
         (**self).with_base(id, base)
-    }
-
-    fn with_x_base(&self, id: TypeId, base: ExtendedTypeBase) -> TypeDef {
-        (**self).with_x_base(id, base)
     }
 
     fn repr(&self) -> String {
@@ -212,25 +187,10 @@ where
         &self.base
     }
 
-    fn x_base(&self) -> &ExtendedTypeBase {
-        &self.extended_base
-    }
-
     fn with_base(&self, id: TypeId, base: TypeBase) -> TypeDef {
         Rc::new(Self {
             id,
             base,
-            extended_base: self.extended_base.clone(),
-            data: self.data.clone(),
-        })
-        .into()
-    }
-
-    fn with_x_base(&self, id: TypeId, base: ExtendedTypeBase) -> TypeDef {
-        Rc::new(Self {
-            id,
-            base: self.base.clone(),
-            extended_base: base,
             data: self.data.clone(),
         })
         .into()
@@ -241,7 +201,7 @@ where
     }
 
     fn repr(&self) -> String {
-        // TODO add base and x_base
+        // TODO add base
         let mut params = vec![];
         params.push(format!("#{}", self.id.0));
         self.data.get_display_params_into(&mut params);
@@ -254,10 +214,17 @@ where
         tg: &mut TypegraphContext,
         runtime_id: Option<u32>,
     ) -> Result<()> {
-        self.base.hash(hasher, tg, runtime_id)?;
-        self.data.hash(hasher, tg, runtime_id)?;
-        self.extended_base.hash(hasher, tg, runtime_id)?;
-        runtime_id.hash(hasher);
+        // unicity of name
+        if let Some(name) = &self.base.name {
+            "named".hash(hasher);
+            name.hash(hasher);
+            runtime_id.hash(hasher); // hum?? XD
+        } else {
+            "unnamed".hash(hasher);
+            self.base.hash(hasher, tg, runtime_id)?;
+            self.data.hash(hasher, tg, runtime_id)?;
+            runtime_id.hash(hasher);
+        }
         Ok(())
     }
 }
@@ -269,29 +236,8 @@ impl Hashable for TypeBase {
         _tg: &mut TypegraphContext,
         _runtime_id: Option<u32>,
     ) -> Result<()> {
-        self.name.hash(hasher);
+        // self.name.hash(hasher);  // see TypeDefExt::hash_type
         self.runtime_config.hash(hasher);
-        self.as_id.hash(hasher);
-
-        Ok(())
-    }
-}
-
-impl Hashable for ExtendedTypeBase {
-    fn hash(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
-        "injection".hash(hasher);
-        if let Some(injection) = &self.injection {
-            injection.hash(hasher);
-        }
-        "policies".hash(hasher);
-        for policy in &self.policies {
-            policy.hash(hasher, tg, runtime_id)?;
-        }
 
         Ok(())
     }

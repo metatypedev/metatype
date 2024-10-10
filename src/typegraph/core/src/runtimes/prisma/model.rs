@@ -9,12 +9,12 @@ use std::hash::Hash;
 use crate::errors::Result;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::type_utils::RuntimeConfig;
-use crate::types::type_ref::RefData;
-use crate::types::{TypeDef, TypeDefExt};
+use crate::types::{FindAttribute as _, RefAttrs, ResolveRef as _, TypeDef, TypeDefExt};
 use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 
-use super::constraints::{find_id_fields, get_struct_level_unique_constraints};
+use super::constraints::get_struct_level_unique_constraints;
+use super::relationship::PrismaRefData;
 
 #[derive(Debug)]
 pub struct Model {
@@ -44,7 +44,18 @@ impl TryFrom<TypeId> for Model {
 
         let config = RuntimeConfig::new(typ.base().runtime_config.as_ref());
 
-        let id_fields = find_id_fields(&type_name, &props, &config)?;
+        let id_fields = typ.data.find_id_fields()?;
+        let id_fields = match id_fields.len() {
+            0 => {
+                let id_fields = config.get("id")?;
+                match id_fields {
+                    Some(id_fields) => id_fields,
+                    None => return Err(errors::id_field_not_found(&type_name)),
+                }
+            }
+            _ => id_fields,
+        };
+
         let unique_constraints = get_struct_level_unique_constraints(&type_name, &config)?;
 
         Ok(Self {
@@ -89,22 +100,22 @@ pub struct RelationshipAttributes {
     pub fkey: Option<bool>,
 }
 
+impl From<PrismaRefData> for RelationshipAttributes {
+    fn from(data: PrismaRefData) -> Self {
+        Self {
+            name: data.rel_name,
+            target_field: data.target_field,
+            fkey: data.fkey,
+        }
+    }
+}
+
 impl RelationshipAttributes {
-    pub fn new(ref_data: Option<&RefData>) -> Result<Self> {
-        let Some(ref_data) = ref_data else {
-            return Ok(Self::default());
-        };
-
-        let attrs = &ref_data.attributes;
-
-        Ok(Self {
-            name: attrs.get("rel_name").cloned(),
-            target_field: attrs.get("target_field").cloned(),
-            fkey: attrs
-                .get("fkey")
-                .map(|v| serde_json::from_str(v).map_err(|e| e.to_string()))
-                .transpose()?,
-        })
+    pub fn new(attrs: &RefAttrs) -> Result<Self> {
+        let attrs = attrs.find_runtime_attr("prisma");
+        let ref_data: Option<PrismaRefData> =
+            attrs.map(|attr| serde_json::from_value(attr.clone()).unwrap());
+        Ok(ref_data.map(|it| it.into()).unwrap_or_default())
     }
 }
 
@@ -126,7 +137,7 @@ pub struct RelationshipProperty {
 
 impl Property {
     fn new(wrapper_type_id: TypeId) -> Result<Self> {
-        let (ref_data, type_def) = wrapper_type_id.resolve_ref()?;
+        let (type_def, ref_data) = wrapper_type_id.resolve_ref()?;
         let runtime_config = RuntimeConfig::new(type_def.base().runtime_config.as_ref());
         let unique = if matches!(type_def, TypeDef::Struct(_)) {
             // the unique config is used to specify struct-level unique constraints on structs
@@ -146,10 +157,10 @@ impl Property {
 
         let (inner_type_def, card) = match &type_def {
             TypeDef::Optional(ref inner) => (
-                TypeId(inner.data.of).resolve_ref()?.1,
+                TypeId(inner.data.of).resolve_ref()?.0,
                 Cardinality::Optional,
             ),
-            TypeDef::List(inner) => (TypeId(inner.data.of).resolve_ref()?.1, Cardinality::Many),
+            TypeDef::List(inner) => (TypeId(inner.data.of).resolve_ref()?.0, Cardinality::Many),
             _ => (type_def.clone(), Cardinality::One),
         };
 
@@ -166,11 +177,8 @@ impl Property {
             })
         };
 
-        match type_def
-            .x_base()
-            .injection
-            .as_ref()
-            .map(|i| i.as_ref())
+        match ref_data
+            .find_injection()
             .map(Injection::try_from)
             .transpose()
         {
@@ -183,7 +191,7 @@ impl Property {
                         wrapper_type_id,
                         model_id: inner_type_def.id(),
                         quantifier: card,
-                        relationship_attributes: RelationshipAttributes::new(ref_data.as_ref())?,
+                        relationship_attributes: RelationshipAttributes::new(&ref_data)?,
                         unique,
                     }))
                 }
@@ -335,7 +343,7 @@ mod test {
     #[test]
     fn test_injection() -> Result<()> {
         let type1 = t::struct_()
-            .propx("one", t::string().as_id(true))?
+            .propx("one", t::string().as_id()?)?
             .propx("two", t::string().set_value("Hello".to_string()))?
             .named("A")
             .build()?;

@@ -2,30 +2,30 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list 'User_group' #205
-└─ item: struct #204
-   ├─ [_avg]: struct 'User_number_fields_float' #198
-   │  └─ [id]: optional 'optional_197' #197
-   │     └─ item: float #196
-   ├─ [_count]: struct 'User_count_aggregate' #195
-   │  ├─ [_all]: optional 'optional_194' #194
-   │  │  └─ item: integer #193
-   │  ├─ [id]: optional 'optional_194' #194
-   │  │  └─ item: integer #193
-   │  ├─ [name]: optional 'optional_194' #194
-   │  │  └─ item: integer #193
-   │  └─ [posts]: optional 'optional_194' #194
-   │     └─ item: integer #193
-   ├─ [_max]: struct 'User_number_fields' #203
-   │  └─ [id]: optional 'optional_202' #202
-   │     └─ item: integer #201
-   ├─ [_min]: struct 'User_number_fields' #203
-   │  └─ [id]: optional 'optional_202' #202
-   │     └─ item: integer #201
-   ├─ [_sum]: struct 'User_number_fields' #203
-   │  └─ [id]: optional 'optional_202' #202
-   │     └─ item: integer #201
-   ├─ [id]: integer #119
-   ├─ [name]: string #120
-   └─ [posts]: list 'list_122' #122
-      └─ item: &Post #121
+root: list 'User_group' #208
+└─ item: struct #207
+   ├─ [_avg]: struct 'User_number_fields_float' #201
+   │  └─ [id]: optional 'optional_200' #200
+   │     └─ item: float #199
+   ├─ [_count]: struct 'User_count_aggregate' #198
+   │  ├─ [_all]: optional 'optional_197' #197
+   │  │  └─ item: integer #196
+   │  ├─ [id]: optional 'optional_197' #197
+   │  │  └─ item: integer #196
+   │  ├─ [name]: optional 'optional_197' #197
+   │  │  └─ item: integer #196
+   │  └─ [posts]: optional 'optional_197' #197
+   │     └─ item: integer #196
+   ├─ [_max]: struct 'User_number_fields' #206
+   │  └─ [id]: optional 'optional_205' #205
+   │     └─ item: integer #204
+   ├─ [_min]: struct 'User_number_fields' #206
+   │  └─ [id]: optional 'optional_205' #205
+   │     └─ item: integer #204
+   ├─ [_sum]: struct 'User_number_fields' #206
+   │  └─ [id]: optional 'optional_205' #205
+   │     └─ item: integer #204
+   ├─ [id]: integer #121
+   ├─ [name]: string #122
+   └─ [posts]: list 'list_124' #124
+      └─ item: &Post #123

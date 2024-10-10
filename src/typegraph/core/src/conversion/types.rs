@@ -1,25 +1,33 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::core::PolicySpec;
+use crate::errors::Result;
+use crate::typegraph::TypegraphContext;
+use crate::types::{PolicySpec, RefAttrs, TypeId};
 use common::typegraph::{Injection, PolicyIndices, TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 use std::rc::Rc;
 
-use crate::errors::Result;
-use crate::typegraph::TypegraphContext;
-use crate::types::TypeId;
-
 #[enum_dispatch]
 pub trait TypeConversion {
     /// takes already converted runtime id
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode>;
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: &RefAttrs,
+    ) -> Result<TypeNode>;
 }
 
 impl<T: TypeConversion> TypeConversion for Rc<T> {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
-        (**self).convert(ctx, runtime_id)
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: &RefAttrs,
+    ) -> Result<TypeNode> {
+        (**self).convert(ctx, runtime_id, ref_attrs)
     }
 }
 
@@ -33,8 +41,7 @@ pub struct BaseBuilderInit<'a, 'b> {
     pub runtime_config: Option<&'b [(String, String)]>,
 }
 
-pub struct BaseBuilder<'a> {
-    ctx: &'a mut TypegraphContext,
+pub struct BaseBuilder {
     name: String,
     runtime_idx: u32,
     policies: Vec<PolicyIndices>,
@@ -43,11 +50,10 @@ pub struct BaseBuilder<'a> {
     // optional features
     enumeration: Option<Vec<String>>,
     injection: Option<Injection>,
-    as_id: bool,
 }
 
 impl<'a, 'b> BaseBuilderInit<'a, 'b> {
-    pub fn init_builder(self) -> Result<BaseBuilder<'a>> {
+    pub fn init_builder(self) -> Result<BaseBuilder> {
         let policies = self.ctx.register_policy_chain(self.policies)?;
 
         let name = match self.name {
@@ -62,7 +68,6 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
         });
 
         Ok(BaseBuilder {
-            ctx: self.ctx,
             name,
             runtime_idx: self.runtime_idx,
             policies,
@@ -70,12 +75,11 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
 
             enumeration: None,
             injection: None,
-            as_id: false,
         })
     }
 }
 
-impl<'a> BaseBuilder<'a> {
+impl BaseBuilder {
     pub fn build(self) -> Result<TypeNodeBase> {
         let config = self.runtime_config.map(|c| {
             c.iter()
@@ -91,7 +95,6 @@ impl<'a> BaseBuilder<'a> {
             policies: self.policies,
             runtime: self.runtime_idx,
             title: self.name,
-            as_id: self.as_id,
         })
     }
 
@@ -101,28 +104,8 @@ impl<'a> BaseBuilder<'a> {
         self
     }
 
-    // TODO use a wit generated injection type; the this will be a in-place mutation
-    fn convert_injection(&mut self, mut injection: Injection) -> Result<Injection> {
-        if let Injection::Parent(data) = &mut injection {
-            for type_id in data.values_mut().into_iter() {
-                let type_def = TypeId(*type_id).resolve_ref()?.1;
-                *type_id = self
-                    .ctx
-                    .register_type(type_def, Some(self.runtime_idx))?
-                    .into();
-            }
-        }
-
-        Ok(injection)
-    }
-
-    pub fn inject(mut self, injection: Option<Box<Injection>>) -> Result<Self> {
-        self.injection = injection.map(|i| self.convert_injection(*i)).transpose()?;
+    pub fn inject(mut self, injection: Option<&Injection>) -> Result<Self> {
+        self.injection = injection.cloned();
         Ok(self)
-    }
-
-    pub fn id(mut self, b: bool) -> Self {
-        self.as_id = b;
-        self
     }
 }

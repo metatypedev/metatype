@@ -43,7 +43,14 @@ import randomizeRecursively from "../runtimes/random.ts";
 import type { Typegate } from "../typegate/mod.ts";
 import { TypeUtils } from "./utils.ts";
 
-export type { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
+export type {
+  Cors,
+  Rate,
+  TypeGraphDS,
+  TypeMaterializer,
+  TypePolicy,
+  TypeRuntime,
+};
 
 export type RuntimeResolver = Record<string, Runtime>;
 
@@ -90,7 +97,6 @@ export class TypeGraph implements AsyncDisposable {
     type: "string",
     policies: [],
     runtime: -1,
-    as_id: false,
   };
 
   root: TypeNode;
@@ -404,13 +410,17 @@ export class TypeGraph implements AsyncDisposable {
     return tpe;
   }
 
-  getGraphQLType(typeNode: TypeNode, optional = false): string {
+  getGraphQLType(
+    typeNode: TypeNode,
+    optional = false,
+    as_id = false,
+  ): string {
     if (typeNode.type === Type.OPTIONAL) {
       return this.getGraphQLType(this.type(typeNode.item), true);
     }
 
     if (!optional) {
-      return `${this.getGraphQLType(typeNode, true)}!`;
+      return `${this.getGraphQLType(typeNode, true, as_id)}!`;
     }
 
     if (typeNode.type === Type.LIST) {
@@ -418,7 +428,7 @@ export class TypeGraph implements AsyncDisposable {
     }
 
     if (typeNode.type === Type.STRING) {
-      if (typeNode.as_id) {
+      if (as_id) {
         return "ID";
       } else {
         return "String";

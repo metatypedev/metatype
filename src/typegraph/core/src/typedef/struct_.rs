@@ -15,7 +15,7 @@ use crate::{
     errors,
     global_store::Store,
     typegraph::TypegraphContext,
-    types::{Struct, TypeDefData, TypeId},
+    types::{FindAttribute as _, IdKind, RefAttrs, Struct, Type, TypeDefData, TypeId},
     wit::core::TypeStruct,
 };
 
@@ -28,10 +28,52 @@ impl TypeStruct {
             .next()
             .map(|id| id.into())
     }
+
+    pub fn find_id_fields(&self) -> Result<Vec<String>> {
+        let mut res = Vec::new();
+        let mut kind = None;
+        for (name, type_id) in &self.props {
+            if let Type::Ref(type_ref) = TypeId(*type_id).as_type()? {
+                match kind {
+                    None => match type_ref.id_kind()? {
+                        Some(IdKind::Simple) => {
+                            res.push(name.clone());
+                            kind = Some(IdKind::Simple);
+                        }
+                        Some(IdKind::Composite) => {
+                            res.push(name.clone());
+                            kind = Some(IdKind::Composite);
+                        }
+                        None => {}
+                    },
+                    Some(IdKind::Simple) => {
+                        if type_ref.id_kind()?.is_some() {
+                            return Err("Multiple id fields found".into());
+                        }
+                    }
+                    Some(IdKind::Composite) => match type_ref.id_kind()? {
+                        Some(IdKind::Simple) => {
+                            return Err("Inconsistent id fields".into());
+                        }
+                        Some(IdKind::Composite) => {
+                            res.push(name.clone());
+                        }
+                        None => {}
+                    },
+                }
+            }
+        }
+        Ok(res)
+    }
 }
 
 impl TypeConversion for Struct {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: &RefAttrs,
+    ) -> Result<TypeNode> {
         let runtime_id = match runtime_id {
             Some(runtime_id) => runtime_id,
             None => ctx.register_runtime(Store::get_deno_runtime())?,
@@ -43,12 +85,12 @@ impl TypeConversion for Struct {
                 type_id: self.id,
                 name: self.base.name.clone(),
                 runtime_idx: runtime_id,
-                policies: &self.extended_base.policies,
+                policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(self.extended_base.injection.clone())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: ObjectTypeData {
                 properties: self
@@ -56,11 +98,11 @@ impl TypeConversion for Struct {
                     .map(|(name, type_id)| -> Result<(String, u32)> {
                         Ok((
                             name.to_string(),
-                            ctx.register_type(type_id.try_into()?, Some(runtime_id))?
-                                .into(),
+                            ctx.register_type(type_id, Some(runtime_id))?.into(),
                         ))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
+                id: self.data.find_id_fields()?,
                 required: Vec::new(),
             },
         })

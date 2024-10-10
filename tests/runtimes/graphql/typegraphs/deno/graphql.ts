@@ -30,10 +30,10 @@ export const tg = await typegraph("graphql", (g) => {
     {
       id: t.integer({}, { asId: true, config: { auto: true } }),
       title: t.string(),
-      user_id: t.string({}, { name: "uid" }),
+      user_id: t.string(),
       user: graphql.query(
         t.struct({
-          id: t.string({}, { asId: true }).fromParent("uid"),
+          id: t.string({}, { asId: true }).fromParent("user_id"),
         }),
         t.optional(user),
       ),

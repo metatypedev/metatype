@@ -15,11 +15,11 @@ await typegraph(
     const pub = Policy.public();
 
     const stargazer = t.struct({
-      login: t.string({}, { name: "login" }),
+      login: t.string({}),
       user: github.get(
         t.struct({ user: t.string().fromParent("login") }),
         t.struct({ name: t.string().optional() }),
-        { path: "/users/{user}" }
+        { path: "/users/{user}" },
       ),
     });
 
@@ -30,5 +30,5 @@ await typegraph(
         })
         .withPolicy(pub),
     });
-  }
+  },
 );

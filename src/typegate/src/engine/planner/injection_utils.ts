@@ -4,21 +4,12 @@
 import type {
   EffectType,
   InjectionDataFor_String,
-  InjectionDataForUint32,
 } from "../../typegraph/types.ts";
 
 export function selectInjection(
-  data: InjectionDataForUint32,
-  effect: EffectType,
-): number | null;
-export function selectInjection(
   data: InjectionDataFor_String,
   effect: EffectType,
-): string | null;
-export function selectInjection(
-  data: InjectionDataFor_String | InjectionDataForUint32,
-  effect: EffectType,
-): number | string | null {
+): string | null {
   if ("value" in data) {
     return data.value;
   }

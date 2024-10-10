@@ -60,7 +60,7 @@ impl TypeGen for Having {
         let where_type = context.generate(&Where::new(self.model_id).with_aggregates())?;
 
         let name = self.name();
-        let self_ref = t::ref_(&name).build()?;
+        let self_ref = t::ref_(&name, Default::default()).build()?;
 
         t::unionx![
             where_type,
