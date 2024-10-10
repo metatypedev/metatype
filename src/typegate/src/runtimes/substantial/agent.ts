@@ -277,7 +277,8 @@ export class Agent {
       switch (answer.type) {
         case "START": {
           const ret = answer.data as WorkflowResult;
-          switch (Interrupt.getTypeOf(ret.exception)) {
+          const interrupt = Interrupt.getTypeOf(ret.exception);
+          switch (interrupt) {
             case "SAVE_RETRY":
             case "SLEEP":
             case "WAIT_ENSURE_VALUE":
@@ -286,14 +287,17 @@ export class Agent {
               await this.#workflowHandleInterrupts(workflowName, runId, ret);
               break;
             }
-            default: {
+            case null: {
               await this.#workflowHandleGracefullCompletion(
                 startedAt,
                 workflowName,
                 runId,
                 ret
               );
+              break;
             }
+            default:
+              throw new Error(`Unknown interrupt "${interrupt}"`);
           }
           break;
         }

@@ -3,6 +3,7 @@
 
 import { envSharedWithWorkers } from "../../config/shared.ts";
 import { getLogger } from "../../log.ts";
+import { TaskContext } from "../deno/shared_types.ts";
 import {
   Err,
   Msg,
@@ -108,6 +109,7 @@ export class WorkflowRecorder {
  */
 export class WorkerManager {
   private recorder: WorkflowRecorder = new WorkflowRecorder();
+  internalParamRecorder: Map<RunId, TaskContext> = new Map();
 
   constructor() {}
 
@@ -222,6 +224,13 @@ export class WorkerManager {
     schedule: string,
     kwargs: Record<string, unknown>
   ) {
+    const internal = this.internalParamRecorder.get(runId);
+    if (!internal) {
+      throw new Error(
+        `Invalid state: "${runId}" context internal was not set properly`
+      );
+    }
+
     this.#createWorker(name, workflowModPath, runId);
     this.trigger("START", runId, {
       modulePath: workflowModPath,
@@ -229,6 +238,7 @@ export class WorkerManager {
       run: storedRun,
       kwargs,
       schedule,
+      internal,
     });
   }
 }

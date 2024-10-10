@@ -13,6 +13,14 @@ export interface ChildWorkflowHandle<O> {
 
 export interface Context {
   kwargs: any;
+  gql: (
+    query: readonly string[],
+    ...args: unknown[]
+  ) => {
+    run: (
+      variables: Record<string, unknown>
+    ) => Promise<Record<string, unknown>>;
+  };
   sleep: (ms: number) => void;
   save<T>(fn: () => T | Promise<T>, option?: SaveOption): Promise<T>;
   receive<O>(eventName: string): O;

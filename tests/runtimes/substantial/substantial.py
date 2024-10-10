@@ -1,6 +1,7 @@
 import os
 from typegraph import typegraph, t, Graph
 from typegraph.policy import Policy
+from typegraph.runtimes.deno import DenoRuntime
 from typegraph.runtimes.substantial import SubstantialRuntime, WorkflowFile
 from typegraph.runtimes.substantial import Backend
 
@@ -23,9 +24,15 @@ def substantial(g: Graph):
     )
 
     sub = SubstantialRuntime(backend, [file])
+    deno = DenoRuntime()
 
     g.expose(
         pub,
+        remote_add=deno.func(
+            t.struct({"a": t.integer(), "b": t.integer()}),
+            t.integer(),
+            code="({a, b}) => a + b",
+        ),
         # common
         stop=sub.stop(),
         results=sub.query_results(
