@@ -34,7 +34,7 @@ class DenoRuntime(Runtime):
         from typegraph import t
 
         mat_id = runtimes.register_deno_static(
-            store, MaterializerDenoStatic(json.dumps(value)), out.id
+            store, MaterializerDenoStatic(json.dumps(value)), out._id
         )
 
         if isinstance(mat_id, Err):

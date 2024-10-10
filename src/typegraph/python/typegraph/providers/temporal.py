@@ -47,8 +47,8 @@ class TemporalRuntime(Runtime):
     ):
         data = TemporalOperationData(
             mat_arg=mat_arg,
-            func_arg=None if func_arg is None else func_arg.id,
-            func_out=None if func_out is None else func_out.id,
+            func_arg=None if func_arg is None else func_arg._id,
+            func_out=None if func_out is None else func_out._id,
             operation=operation,
         )
         func_data = runtimes.generate_temporal_operation(store, self.id, data)

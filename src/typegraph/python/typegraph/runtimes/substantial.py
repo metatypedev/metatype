@@ -49,8 +49,8 @@ class SubstantialRuntime(Runtime):
         func_out: Union[None, "t.typedef"] = None,
     ):
         data = SubstantialOperationData(
-            func_arg=None if func_arg is None else func_arg.id,
-            func_out=None if func_out is None else func_out.id,
+            func_arg=None if func_arg is None else func_arg._id,
+            func_out=None if func_out is None else func_out._id,
             operation=operation,
         )
         func_data = runtimes.generate_substantial_operation(store, self.id.value, data)

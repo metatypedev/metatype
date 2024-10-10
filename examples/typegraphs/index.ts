@@ -32,17 +32,17 @@ typegraph(
         email: t.email().withPolicy(publicWriteOnly),
         message: t.string({ min: 1, max: 2000 }, {}),
       },
-      { name: "feedback" }
+      { name: "feedback" },
     );
 
     // a stargazer object from Github
     const stargazer = t.struct({
-      login: t.string({}, { name: "login" }),
+      login: t.string({}),
       // link with the feedback across runtimes
       user: github.get(
         t.struct({ user: t.string().fromParent("login") }),
         t.struct({ name: t.string().optional() }),
-        { path: "/users/{user}" }
+        { path: "/users/{user}" },
       ),
     });
 
@@ -60,7 +60,7 @@ typegraph(
         send_feedback: db.create(feedback),
         list_feedback: db.findMany(feedback),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

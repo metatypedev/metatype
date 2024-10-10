@@ -55,54 +55,54 @@ og_list = list
 
 
 class typedef:
-    id: int
+    _id: int
     runtime_config: Optional[List[Tuple[str, str]]]
     injection: Optional[str]
     policy_chain: Optional[List[WitPolicySpec]]
     name: Optional[str]
 
     def __init__(self, id: int):
-        self.id = id
+        self._id = id
         self.runtime_config = None
         self.injection = None
         self.policy_chain = None
         self.name = None
 
     def __repr__(self):
-        res = core.get_type_repr(store, self.id)
+        res = core.get_type_repr(store, self._id)
         if isinstance(res, Err):
             raise Exception(res.value)
         return res.value
 
     def with_policy(self, *policies: Optional[PolicySpec]) -> Self:
         policy_chain = get_policy_chain(policies)
-        res = core.with_policy(store, self.id, policy_chain)
+        res = core.with_policy(store, self._id, policy_chain)
         if isinstance(res, Err):
             raise Exception(res.value)
 
         ret = copy.copy(self)
-        ret.id = res.value
+        ret._id = res.value
         ret.policy_chain = policy_chain
         return ret
 
     def rename(self, name: str) -> Self:
-        res = core.rename_type(store, self.id, name)
+        res = core.rename_type(store, self._id, name)
 
         if isinstance(res, Err):
             raise Exception(res.value)
 
         ret = copy.copy(self)
-        ret.id = res.value
+        ret._id = res.value
         ret.name = name
         return ret
 
     def _with_injection(self, injection: str) -> Self:
-        res = core.with_injection(store, self.id, injection)
+        res = core.with_injection(store, self._id, injection)
         if isinstance(res, Err):
             raise Exception(res.value)
 
         ret = copy.copy(self)
-        ret.id = res.value
+        ret._id = res.value
         ret.injection = injection
         return ret
 
@@ -154,7 +154,7 @@ class _TypeWithPolicy(typedef):
         return getattr(self.base, name)
 
 
-# self.id refer to the wrapper id
+# self._id refer to the wrapper id
 # self.* refer to the base id
 class _TypeWrapper(typedef):
     base: "typedef"
@@ -169,7 +169,7 @@ class _TypeWrapper(typedef):
 
     def __getattr__(self, name):
         if name == "id":
-            return self.id
+            return self._id
         return getattr(self.base, name)
 
 
@@ -227,6 +227,12 @@ class integer(typedef):
         self.enumeration = enum
         self.runtime_config = runtime_config
         self.as_id = as_id
+
+    def id(self, as_id: AsId = True) -> "typedef":  # "integer"
+        res = core.as_id(store, self._id, as_id == "composite")
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return typedef(res.value)
 
 
 class float(typedef):
@@ -336,6 +342,12 @@ class string(typedef):
         self.runtime_config = runtime_config
         self.as_id = as_id
 
+    def id(self, as_id: AsId = True) -> "typedef":  # "integer"
+        res = core.as_id(store, self._id, as_id == "composite")
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        return typedef(res.value)
+
 
 def uuid(
     *,
@@ -436,7 +448,7 @@ class list(typedef):
         config: Optional[ConfigSpec] = None,
     ):
         data = TypeList(
-            of=items.id,
+            of=items._id,
             min=min,
             max=max,
             unique_items=unique_items,
@@ -470,7 +482,7 @@ class optional(typedef):
         config: Optional[ConfigSpec] = None,
     ):
         data = TypeOptional(
-            of=item.id,
+            of=item._id,
             default_item=None if default_item is None else JsonLib.dumps(default_item),
         )
 
@@ -497,7 +509,7 @@ class union(typedef):
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
     ):
-        data = TypeUnion(variants=og_list(map(lambda v: v.id, variants)))
+        data = TypeUnion(variants=og_list(map(lambda v: v._id, variants)))
 
         runtime_config = serialize_config(config)
         res = core.unionb(
@@ -521,7 +533,7 @@ class either(typedef):
         name: Optional[str] = None,
         config: Optional[ConfigSpec] = None,
     ):
-        data = TypeEither(variants=og_list(map(lambda v: v.id, variants)))
+        data = TypeEither(variants=og_list(map(lambda v: v._id, variants)))
 
         runtime_config = serialize_config(config)
         res = core.eitherb(
@@ -595,7 +607,7 @@ class struct(typedef):
             props = props or {}
 
         data = TypeStruct(
-            props=og_list((name, tpe.id) for (name, tpe) in props.items()),
+            props=og_list((name, tpe._id) for (name, tpe) in props.items()),
             additional_props=additional_props,
             min=min,
             max=max,
@@ -669,8 +681,8 @@ class func(typedef):
         parameter_transform: Optional[ParameterTransform] = None,
     ):
         data = TypeFunc(
-            inp=inp.id,
-            out=out.id,
+            inp=inp._id,
+            out=out._id,
             parameter_transform=parameter_transform,
             mat=mat.id,
             rate_calls=rate_calls,
@@ -700,7 +712,7 @@ class func(typedef):
 
     def extend(self, props: Dict[str, typedef]):
         res = core.extend_struct(
-            store, self.out.id, og_list((k, v.id) for k, v in props.items())
+            store, self.out._id, og_list((k, v._id) for k, v in props.items())
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -718,7 +730,7 @@ class func(typedef):
 
     def reduce(self, value: Dict[str, Any]) -> "func":
         data = Reduce(paths=build_reduce_data(value, [], []))
-        reduced_id = wit_utils.gen_reduceb(store, self.inp.id, data=data)
+        reduced_id = wit_utils.gen_reduceb(store, self.inp._id, data=data)
 
         if isinstance(reduced_id, Err):
             raise Exception(reduced_id.value)
@@ -739,7 +751,7 @@ class func(typedef):
         assert serialized["type"] == "object"
         transform_tree = JsonLib.dumps(serialized["fields"])
 
-        transform_data = core.get_transform_data(store, self.inp.id, transform_tree)
+        transform_data = core.get_transform_data(store, self.inp._id, transform_tree)
         if isinstance(transform_data, Err):
             import sys
 

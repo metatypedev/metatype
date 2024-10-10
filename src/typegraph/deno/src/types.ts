@@ -225,6 +225,11 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
     this.multipleOf = data.multipleOf;
     this.enumeration = data.enumeration;
   }
+
+  id(asId: AsIdField = true): Typedef {
+    const id = core.asId(this._id, asId === "composite");
+    return new Typedef(id, { name: this.name });
+  }
 }
 
 /** integer type */
@@ -304,6 +309,11 @@ class StringT extends Typedef implements Readonly<TypeString> {
     this.pattern = data.pattern;
     this.format = data.format;
     this.enumeration = data.enumeration;
+  }
+
+  id(asId: AsIdField = true): Typedef {
+    const id = core.asId(this._id, asId === "composite");
+    return new Typedef(id, { name: this.name });
   }
 }
 
