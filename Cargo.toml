@@ -161,26 +161,26 @@ temporal-client = { git = "https://github.com/temporalio/sdk-core", rev = "7f975
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev = "7f9755b" }
 
 # prisma
-# query-core = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
-# query-connector = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
-# request-handlers = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
-# datamodel-renderer = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
-# user-facing-errors = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
-# query-engine-metrics = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
-# schema-core = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
-# psl = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
-# schema-connector = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
+query-core = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
+query-connector = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
+request-handlers = { git = "https://github.com/metatypedev/prisma-engines", features = ["all"], branch = "fix/version-compat" }
+datamodel-renderer = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
+user-facing-errors = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
+query-engine-metrics = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
+schema-core = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
+psl = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
+schema-connector = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
 
-query-core = { path = "../prisma-engines/query-engine/core" }
-query-connector = { path = "../prisma-engines/query-engine/connectors/query-connector" }
-request-handlers = { path = "../prisma-engines/query-engine/request-handlers", features = ["all"] }
-## prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.20.0" }
-datamodel-renderer = { path = "../prisma-engines/schema-engine/datamodel-renderer" }
-user-facing-errors = { path = "../prisma-engines/libs/user-facing-errors" }
-query-engine-metrics = { path = "../prisma-engines/query-engine/metrics" }
-schema-core = { path = "../prisma-engines/schema-engine/core" }
-psl = { path = "../prisma-engines/psl/psl" }
-schema-connector = { path = "../prisma-engines/schema-engine/connectors/schema-connector" }
+# query-core = { path = "../prisma-engines/query-engine/core" }
+# query-connector = { path = "../prisma-engines/query-engine/connectors/query-connector" }
+# request-handlers = { path = "../prisma-engines/query-engine/request-handlers", features = ["all"] }
+# ## prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.20.0" }
+# datamodel-renderer = { path = "../prisma-engines/schema-engine/datamodel-renderer" }
+# user-facing-errors = { path = "../prisma-engines/libs/user-facing-errors" }
+# query-engine-metrics = { path = "../prisma-engines/query-engine/metrics" }
+# schema-core = { path = "../prisma-engines/schema-engine/core" }
+# psl = { path = "../prisma-engines/psl/psl" }
+# schema-connector = { path = "../prisma-engines/schema-engine/connectors/schema-connector" }
 
 # grpc
 tonic = "0.12.1"
