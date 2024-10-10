@@ -421,7 +421,7 @@ mod test {
     #[test]
     fn test_relationship_registration() -> Result<()> {
         let mut ctx = PrismaContext::default();
-        let (user, post) = models::simple_relationship()?;
+        let (user, post) = models::simple_relationship().unwrap();
 
         ctx.manage(user)?;
 

@@ -13,7 +13,9 @@ use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::{self, Result, TgError};
 use crate::params::apply::ParameterTransformNode;
 use crate::typegraph::TypegraphContext;
-use crate::types::{Func, RefAttrs, ResolveRef as _, TypeDef, TypeDefData, TypeId};
+use crate::types::{
+    FindAttribute as _, Func, RefAttrs, ResolveRef as _, TypeDef, TypeDefData, TypeId,
+};
 use crate::wit::core::TypeFunc;
 
 impl TypeConversion for Func {
@@ -21,7 +23,7 @@ impl TypeConversion for Func {
         &self,
         ctx: &mut TypegraphContext,
         _runtime_id: Option<u32>,
-        _ref_attrs: &RefAttrs,
+        ref_attrs: &RefAttrs,
     ) -> Result<TypeNode> {
         let (mat_id, runtime_id) = ctx.register_materializer(self.data.mat)?;
 
@@ -69,7 +71,7 @@ impl TypeConversion for Func {
                 type_id: self.id,
                 name: self.base.name.clone(),
                 runtime_idx: runtime_id,
-                policies: &self.extended_base.policies,
+                policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?

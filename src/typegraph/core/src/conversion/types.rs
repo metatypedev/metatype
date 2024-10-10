@@ -3,8 +3,7 @@
 
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::types::{RefAttrs, TypeId};
-use crate::wit::core::PolicySpec;
+use crate::types::{PolicySpec, RefAttrs, TypeId};
 use common::typegraph::{Injection, PolicyIndices, TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;

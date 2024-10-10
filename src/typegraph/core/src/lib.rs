@@ -29,7 +29,7 @@ use runtimes::{DenoMaterializer, Materializer};
 use types::type_ref::AsId;
 use types::{
     Boolean, Either, File, Float, Func, Integer, List, Optional, StringT, Struct, TypeBoolean,
-    TypeDef, TypeDefExt, TypeId, TypeRef, Union, WithInjection as _,
+    TypeDef, TypeDefExt, TypeId, TypeRef, Union, WithInjection as _, WithPolicy as _,
 };
 
 use utils::clear_name;
@@ -67,8 +67,7 @@ impl wit::core::Guest for Lib {
                 serde_json::from_str(&attr)
                     .map_err(|e| format!("Could not parse ref attributes: {e:?}"))
             })
-            .transpose()?
-            .unwrap_or_default(),
+            .transpose()?,
         )?
         .id
         .0)
@@ -86,17 +85,7 @@ impl wit::core::Guest for Lib {
             }
         }
         Ok(Store::register_type_def(
-            |id| {
-                TypeDef::Integer(
-                    Integer {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
-            },
+            |id| TypeDef::Integer(Integer { id, base, data }.into()),
             NameRegistration(true),
         )?
         .into())
@@ -114,17 +103,7 @@ impl wit::core::Guest for Lib {
             }
         }
         Ok(Store::register_type_def(
-            |id| {
-                TypeDef::Float(
-                    Float {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
-            },
+            |id| TypeDef::Float(Float { id, base, data }.into()),
             NameRegistration(true),
         )?
         .into())
@@ -137,7 +116,6 @@ impl wit::core::Guest for Lib {
                     Boolean {
                         id,
                         base,
-                        extended_base: Default::default(),
                         data: TypeBoolean,
                     }
                     .into(),
@@ -155,17 +133,7 @@ impl wit::core::Guest for Lib {
             }
         }
         Ok(Store::register_type_def(
-            |id| {
-                TypeDef::String(
-                    StringT {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
-            },
+            |id| TypeDef::String(StringT { id, base, data }.into()),
             NameRegistration(true),
         )?
         .into())
@@ -188,15 +156,7 @@ impl wit::core::Guest for Lib {
                     name: Some(format!("_{}_file", id.0)),
                     ..base
                 }; */
-                TypeDef::File(
-                    File {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
+                TypeDef::File(File { id, base, data }.into())
             },
             NameRegistration(true),
         )?
@@ -210,17 +170,7 @@ impl wit::core::Guest for Lib {
             }
         }
         Ok(Store::register_type_def(
-            |id| {
-                TypeDef::List(
-                    List {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
-            },
+            |id| TypeDef::List(List { id, base, data }.into()),
             NameRegistration(true),
         )?
         .into())
@@ -240,15 +190,7 @@ impl wit::core::Guest for Lib {
                     },
                     None => base,
                 }; */
-                TypeDef::Optional(
-                    Optional {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
+                TypeDef::Optional(Optional { id, base, data }.into())
             },
             NameRegistration(true),
         )?
@@ -257,17 +199,7 @@ impl wit::core::Guest for Lib {
 
     fn unionb(data: TypeUnion, base: TypeBase) -> Result<CoreTypeId> {
         Ok(Store::register_type_def(
-            |id| {
-                TypeDef::Union(
-                    Union {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
-            },
+            |id| TypeDef::Union(Union { id, base, data }.into()),
             NameRegistration(true),
         )?
         .into())
@@ -275,17 +207,7 @@ impl wit::core::Guest for Lib {
 
     fn eitherb(data: TypeEither, base: TypeBase) -> Result<CoreTypeId> {
         Ok(Store::register_type_def(
-            |id| {
-                TypeDef::Either(
-                    Either {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
-            },
+            |id| TypeDef::Either(Either { id, base, data }.into()),
             NameRegistration(true),
         )?
         .into())
@@ -301,17 +223,7 @@ impl wit::core::Guest for Lib {
         }
 
         Ok(Store::register_type_def(
-            |id| {
-                TypeDef::Struct(
-                    Struct {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
-            },
+            |id| TypeDef::Struct(Struct { id, base, data }.into()),
             NameRegistration(true),
         )?
         .into())
@@ -331,7 +243,6 @@ impl wit::core::Guest for Lib {
                     Struct {
                         id,
                         base: clear_name(&type_def.base),
-                        extended_base: type_def.extended_base.clone(),
                         data: TypeStruct {
                             props,
                             ..type_def.data.clone()
@@ -353,17 +264,7 @@ impl wit::core::Guest for Lib {
 
         let base = TypeBase::default();
         Ok(Store::register_type_def(
-            |id| {
-                TypeDef::Func(
-                    Func {
-                        id,
-                        base,
-                        extended_base: Default::default(),
-                        data,
-                    }
-                    .into(),
-                )
-            },
+            |id| TypeDef::Func(Func { id, base, data }.into()),
             NameRegistration(true),
         )?
         .into())
@@ -389,24 +290,11 @@ impl wit::core::Guest for Lib {
     }
 
     fn with_policy(type_id: CoreTypeId, policy_chain: Vec<PolicySpec>) -> Result<CoreTypeId> {
-        let type_def = TypeId(type_id).as_type_def()?;
-
-        let Some(type_def) = type_def else {
-            return Err(errors::TgError::from("cannot add policy to ref type"));
-        };
-
-        let mut x_base = type_def.x_base().clone();
-
-        // TODO extend policy chain?? --> add_policy vs with_policy
-        if !x_base.policies.is_empty() {
-            return Err(errors::TgError::from("policy already exists for this type"));
-        }
-        x_base.policies = policy_chain;
-        Ok(Store::register_type_def(
-            move |id| type_def.with_x_base(id, x_base.clone()),
-            NameRegistration(false),
-        )?
-        .into())
+        let policy_chain = policy_chain
+            .into_iter()
+            .map(|p| p.into())
+            .collect::<Vec<_>>();
+        Ok(TypeId(type_id).with_policy(policy_chain)?.id.into())
     }
 
     fn register_policy(pol: Policy) -> Result<PolicyId> {

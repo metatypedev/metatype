@@ -5,11 +5,12 @@ use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::TypeConversion;
 use crate::global_store::SavedState;
-use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId};
+use crate::types::{
+    FindAttribute as _, PolicySpec, ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, WithPolicy,
+};
 use crate::utils::postprocess::naming::NamingProcessor;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
 use crate::validation::validate_name;
-use crate::Lib;
 use crate::{
     errors::{self, Result},
     global_store::Store,
@@ -28,8 +29,8 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use crate::wit::core::{
-    Artifact as WitArtifact, Error as TgError, Guest, MaterializerId, PolicyId, PolicySpec,
-    RuntimeId, SerializeParams, TypegraphInitParams,
+    Artifact as WitArtifact, Error as TgError, MaterializerId, PolicyId, RuntimeId,
+    SerializeParams, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -283,20 +284,22 @@ fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
 
 pub fn expose(
     fields: Vec<(String, TypeId)>,
-    default_policy: Option<Vec<PolicySpec>>,
+    default_policy: Option<Vec<crate::wit::core::PolicySpec>>,
 ) -> Result<()> {
     let fields = fields
         .into_iter()
         .map(|(key, type_id)| -> Result<_> {
-            let concrete_type = type_id.resolve_ref()?.0;
-            let policy_chain = &concrete_type.x_base().policies;
+            let (_, attrs) = type_id.resolve_ref()?;
+            let policy_chain = attrs.find_policy().unwrap_or(&[]);
             let has_policy = !policy_chain.is_empty();
 
             // TODO how to set default policy on a namespace? Or will it inherit
             // the policies of the namespace?
             let type_id: TypeId = match (has_policy, default_policy.as_ref()) {
                 (false, Some(default_policy)) => {
-                    Lib::with_policy(type_id.into(), default_policy.to_vec())?.into()
+                    type_id
+                        .with_policy(default_policy.clone().into_iter().map(Into::into).collect())?
+                        .id
                 }
                 _ => type_id,
             };
@@ -434,28 +437,28 @@ impl TypegraphContext {
             .iter()
             .map(|p| -> Result<_> {
                 Ok(match p {
-                    PolicySpec::Simple(id) => PolicyIndices::Policy(self.register_policy(*id)?),
+                    PolicySpec::Simple(id) => PolicyIndices::Policy(self.register_policy(id.0)?),
                     PolicySpec::PerEffect(policies) => {
                         PolicyIndices::EffectPolicies(PolicyIndicesByEffect {
                             read: policies
                                 .read
                                 .as_ref()
-                                .map(|id| self.register_policy(*id))
+                                .map(|id| self.register_policy(id.0))
                                 .transpose()?,
                             create: policies
                                 .create
                                 .as_ref()
-                                .map(|id| self.register_policy(*id))
+                                .map(|id| self.register_policy(id.0))
                                 .transpose()?,
                             delete: policies
                                 .delete
                                 .as_ref()
-                                .map(|id| self.register_policy(*id))
+                                .map(|id| self.register_policy(id.0))
                                 .transpose()?,
                             update: policies
                                 .update
                                 .as_ref()
-                                .map(|id| self.register_policy(*id))
+                                .map(|id| self.register_policy(id.0))
                                 .transpose()?,
                         })
                     }

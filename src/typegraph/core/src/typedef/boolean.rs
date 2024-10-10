@@ -29,7 +29,7 @@ impl TypeConversion for Boolean {
                 type_id: self.id,
                 name: self.base.name.clone(),
                 runtime_idx: runtime_id.unwrap(),
-                policies: &self.extended_base.policies,
+                policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?

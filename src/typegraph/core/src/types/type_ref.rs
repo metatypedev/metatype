@@ -8,13 +8,15 @@ use crate::typegraph::TypegraphContext;
 use crate::types::{TypeDef, TypeDefExt as _, TypeId};
 pub use as_id::{AsId, IdKind};
 use common::typegraph::Injection;
+pub use injection::WithInjection;
+pub use policy::{PolicySpec, WithPolicy};
 pub use resolve_ref::ResolveRef;
 use serde::{Deserialize, Serialize};
-pub use with_injection::WithInjection;
 
 mod as_id;
+mod injection;
+mod policy;
 mod resolve_ref;
-mod with_injection;
 
 #[derive(Clone, Debug)]
 pub enum RefTarget {
@@ -30,7 +32,8 @@ type JsonValue = serde_json::Value;
 pub enum RefAttr {
     AsId(IdKind),
     Injection(Injection),
-    Runtime { runtime: String, data: JsonValue },
+    Policy(Vec<PolicySpec>),
+    RuntimeConfig { runtime: String, data: JsonValue },
 }
 
 impl RefAttr {
@@ -43,7 +46,7 @@ impl RefAttr {
     }
 
     pub fn runtime(runtime: impl Into<String>, data: JsonValue) -> Self {
-        RefAttr::Runtime {
+        RefAttr::RuntimeConfig {
             runtime: runtime.into(),
             data,
         }
@@ -229,6 +232,10 @@ impl TypeRefBuilder {
             attribute: self.attribute.map(Rc::new),
         }
     }
+
+    pub fn build(self) -> Result<TypeRef> {
+        Store::register_type_ref(self)
+    }
 }
 
 impl TypeRef {
@@ -331,7 +338,10 @@ impl RefAttr {
             RefAttr::Injection(injection) => {
                 format!("injection: {}", serde_json::to_string(&injection).unwrap())
             }
-            RefAttr::Runtime { runtime, data } => {
+            RefAttr::Policy(policy) => {
+                format!("policy: {}", serde_json::to_string(&policy).unwrap())
+            }
+            RefAttr::RuntimeConfig { runtime, data } => {
                 format!("rt/{}: {}", runtime, serde_json::to_string(data).unwrap())
             }
         }
@@ -360,7 +370,7 @@ pub trait FindAttribute {
 
     fn find_runtime_attr(&self, runtime_key: &str) -> Option<&JsonValue> {
         self.find_attr(|attr| match attr {
-            RefAttr::Runtime { runtime, data } if runtime == runtime_key => Some(data),
+            RefAttr::RuntimeConfig { runtime, data } if runtime == runtime_key => Some(data),
             _ => None,
         })
     }
@@ -368,7 +378,14 @@ pub trait FindAttribute {
     #[allow(dead_code)]
     fn find_runtime_attrs(&self, runtime_key: &str) -> Vec<&JsonValue> {
         self.find_attrs(|attr| match attr {
-            RefAttr::Runtime { runtime, data } if runtime == runtime_key => Some(data),
+            RefAttr::RuntimeConfig { runtime, data } if runtime == runtime_key => Some(data),
+            _ => None,
+        })
+    }
+
+    fn find_policy(&self) -> Option<&[PolicySpec]> {
+        self.find_attr(|attr| match attr {
+            RefAttr::Policy(policy) => Some(policy.as_slice()),
             _ => None,
         })
     }

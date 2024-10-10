@@ -13,6 +13,8 @@ where
     crate::errors::TgError: From<<T as TryInto<Type>>::Error>,
 {
     fn with_injection(self, injection: Injection) -> Result<TypeRef> {
-        TypeRef::new(self.try_into()?, Some(RefAttr::Injection(injection)))
+        RefAttr::Injection(injection)
+            .with_target(self.try_into()?)
+            .build()
     }
 }
