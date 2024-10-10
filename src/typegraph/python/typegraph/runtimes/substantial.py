@@ -12,10 +12,13 @@ from typegraph.gen.exports.runtimes import (
     SubstantialOperationData,
     SubstantialOperationType,
     SubstantialOperationTypeSend,
+    SubstantialOperationTypeSendRaw,
     SubstantialOperationTypeStart,
+    SubstantialOperationTypeStartRaw,
     SubstantialOperationTypeStop,
     SubstantialOperationTypeResources,
     SubstantialOperationTypeResults,
+    SubstantialOperationTypeResultsRaw,
     SubstantialRuntimeData,
     WorkflowFileDescription,
     WorkflowKind,
@@ -68,21 +71,21 @@ class SubstantialRuntime(Runtime):
         operation = SubstantialOperationTypeStart()
         return self._generic_substantial_func(operation, kwargs, None)
 
+    def raw_start(self):
+        operation = SubstantialOperationTypeStartRaw()
+        return self._generic_substantial_func(operation, None, None)
+
     def stop(self):
         operation = SubstantialOperationTypeStop()
         return self._generic_substantial_func(operation, None, None)
 
-    def send(self, payload: "t.typedef", event_name=Union[str, None]):
+    def send(self, payload: "t.typedef"):
         operation = SubstantialOperationTypeSend()
-        event = t.struct(
-            {
-                "name": t.string()
-                if event_name is None
-                else t.string().set(event_name),
-                "payload": payload,
-            }
-        )
-        return self._generic_substantial_func(operation, event, None)
+        return self._generic_substantial_func(operation, payload, None)
+
+    def raw_send(self):
+        operation = SubstantialOperationTypeSendRaw()
+        return self._generic_substantial_func(operation, None, None)
 
     def query_resources(self):
         operation = SubstantialOperationTypeResources()
@@ -91,6 +94,18 @@ class SubstantialRuntime(Runtime):
     def query_results(self, output: "t.typedef"):
         operation = SubstantialOperationTypeResults()
         return self._generic_substantial_func(operation, None, output)
+
+    def raw_query_results(self):
+        operation = SubstantialOperationTypeResultsRaw()
+        return self._generic_substantial_func(operation, None, None)
+
+    def internals(self):
+        return {
+            "_sub_internal_start": self.raw_start(),
+            "_sub_internal_stop": self.stop(),
+            "_sub_internal_send": self.raw_send(),
+            "_sub_internal_results": self.raw_query_results(),
+        }
 
 
 class WorkflowFile:

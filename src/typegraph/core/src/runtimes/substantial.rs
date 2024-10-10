@@ -4,7 +4,7 @@
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
 use crate::global_store::Store;
-use crate::t::{self, TypeBuilder};
+use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::FuncParams;
 use crate::wit::{
@@ -17,10 +17,13 @@ use serde_json::json;
 #[derive(Debug)]
 pub enum SubstantialMaterializer {
     Start,
+    StartRaw,
     Stop,
     Send,
+    SendRaw,
     Resources,
     Results,
+    ResultsRaw,
 }
 
 impl MaterializerConverter for SubstantialMaterializer {
@@ -34,10 +37,13 @@ impl MaterializerConverter for SubstantialMaterializer {
 
         let (name, data) = match self {
             SubstantialMaterializer::Start => ("start".to_string(), json!({})),
+            SubstantialMaterializer::StartRaw => ("start_raw".to_string(), json!({})),
             SubstantialMaterializer::Stop => ("stop".to_string(), json!({})),
             SubstantialMaterializer::Send => ("send".to_string(), json!({})),
+            SubstantialMaterializer::SendRaw => ("send_raw".to_string(), json!({})),
             SubstantialMaterializer::Resources => ("resources".to_string(), json!({})),
             SubstantialMaterializer::Results => ("results".to_string(), json!({})),
+            SubstantialMaterializer::ResultsRaw => ("results_raw".to_string(), json!({})),
         };
 
         Ok(Materializer {
@@ -55,16 +61,20 @@ pub fn substantial_operation(
 ) -> Result<FuncParams> {
     let mut inp = t::struct_();
     let (effect, mat_data, out_ty) = match data.operation {
-        SubstantialOperationType::Start => {
-            let arg = data.func_arg.ok_or("query arg is undefined".to_string())?;
-            inp.prop("name", t::string().build()?);
-            inp.prop("kwargs", arg.into());
+        SubstantialOperationType::Start | SubstantialOperationType::StartRaw => {
+            let (mat, flag) = match data.operation {
+                SubstantialOperationType::Start => (SubstantialMaterializer::Start, true),
+                SubstantialOperationType::StartRaw => (SubstantialMaterializer::StartRaw, false),
+                _ => unreachable!(),
+            };
 
-            (
-                WitEffect::Create(false),
-                SubstantialMaterializer::Start,
-                t::string().build()?,
-            )
+            inp.prop("name", t::string().build()?);
+            inp.prop(
+                "kwargs",
+                use_arg_or_json_string(data.func_arg, flag)?.into(),
+            );
+
+            (WitEffect::Create(true), mat, t::string().build()?)
         }
         SubstantialOperationType::Stop => {
             inp.prop("run_id", t::string().build()?);
@@ -75,16 +85,25 @@ pub fn substantial_operation(
                 t::string().build()?,
             )
         }
-        SubstantialOperationType::Send => {
-            let arg = data.func_arg.ok_or("query arg is undefined".to_string())?;
-            inp.prop("run_id", t::string().build()?);
-            inp.prop("event", arg.into());
+        SubstantialOperationType::Send | SubstantialOperationType::SendRaw => {
+            let (mat, flag) = match data.operation {
+                SubstantialOperationType::Send => (SubstantialMaterializer::Send, true),
+                SubstantialOperationType::SendRaw => (SubstantialMaterializer::SendRaw, false),
+                _ => unreachable!(),
+            };
 
-            (
-                WitEffect::Create(false),
-                SubstantialMaterializer::Send,
-                t::string().build()?,
-            )
+            let event = t::struct_()
+                .prop("name", t::string().build()?)
+                .prop(
+                    "payload",
+                    use_arg_or_json_string(data.func_arg, flag)?.into(),
+                )
+                .build()?;
+
+            inp.prop("run_id", t::string().build()?);
+            inp.prop("event", event);
+
+            (WitEffect::Create(false), mat, t::string().build()?)
         }
         SubstantialOperationType::Resources => {
             inp.prop("name", t::string().build()?);
@@ -105,12 +124,17 @@ pub fn substantial_operation(
 
             (WitEffect::Read, SubstantialMaterializer::Resources, out)
         }
-        SubstantialOperationType::Results => {
-            inp.prop("name", t::string().build()?);
+        SubstantialOperationType::Results | SubstantialOperationType::ResultsRaw => {
+            let (mat, flag) = match data.operation {
+                SubstantialOperationType::Results => (SubstantialMaterializer::Results, true),
+                SubstantialOperationType::ResultsRaw => {
+                    (SubstantialMaterializer::ResultsRaw, false)
+                }
+                _ => unreachable!(),
+            };
 
-            let out = data
-                .func_out
-                .ok_or("query output is undefined".to_string())?;
+            inp.prop("name", t::string().build()?);
+            let out = use_arg_or_json_string(data.func_out, flag)?;
 
             let count = t::integer().build()?;
 
@@ -139,7 +163,7 @@ pub fn substantial_operation(
 
             (
                 WitEffect::Read,
-                SubstantialMaterializer::Results,
+                mat,
                 t::struct_()
                     .prop(
                         "ongoing",
@@ -167,4 +191,19 @@ pub fn substantial_operation(
         out: out_ty.into(),
         mat: mat_id,
     })
+}
+
+fn use_arg_or_json_string(arg: Option<u32>, flag: bool) -> Result<u32> {
+    if flag {
+        let arg = arg.ok_or("input or output shape is not defined on the typegraph".to_string())?;
+        return Ok(arg);
+    };
+
+    t::string()
+        .config(
+            "format",
+            serde_json::to_string("json").map_err(|e| e.to_string())?,
+        )
+        .build()
+        .map(|r| r.into())
 }

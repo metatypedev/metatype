@@ -40,9 +40,12 @@ def substantial(g: Graph):
         start_email=sub.start(t.struct({"to": t.string()})).reduce(
             {"name": "eventsAndExceptionExample"}
         ),
-        send_confirmation=sub.send(t.boolean(), event_name="confirmation"),
+        send_confirmation=sub.send(t.boolean()).reduce(
+            {"event": {"name": "confirmation", "payload": g.inherit()}}
+        ),
         # retry
         start_retry=sub.start(
             t.struct({"fail": t.boolean(), "timeout": t.boolean()})
         ).reduce({"name": "retryExample"}),
+        **sub.internals(),
     )
