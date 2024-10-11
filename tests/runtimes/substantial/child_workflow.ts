@@ -11,7 +11,7 @@ export async function bumpPackage(ctx: Context) {
   const newVersion = await ctx.save(() => version + 1);
   await ctx.save(() => apply(pkg, version, newVersion));
 
-  ctx.sleep(2000);
+  ctx.sleep(5000);
 
   return `Now using ${pkg} v${version}`;
 }
@@ -53,5 +53,5 @@ export async function bumpAll(ctx: Context) {
     return ret;
   });
 
-  return ret.join(", ");
+  return ret.sort((a, b) => a.localeCompare(b)).join(", ");
 }

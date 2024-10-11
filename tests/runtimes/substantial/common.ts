@@ -491,6 +491,127 @@ export function retrySaveTestTemplate(
   );
 }
 
+export function childWorkflowTestTemplate(
+  backendName: BackendName,
+  {
+    delays,
+    secrets,
+  }: {
+    delays: {
+      awaitCompleteSec: number;
+    };
+    secrets?: Record<string, string>;
+  },
+  cleanup?: MetaTestCleanupFn
+) {
+  Meta.test(
+    {
+      name: `Child workflows (${backendName})`,
+    },
+    async (t) => {
+      Deno.env.set("SUB_BACKEND", backendName);
+      // FIXME: typegate.local not available through workers when using ctx.gql on tests?
+      Deno.env.set("TEST_OVERRIDE_GQL_ORIGIN", `http://localhost:${t.port}`);
+
+      cleanup && t.addCleanup(cleanup);
+
+      const e = await t.engine(
+        "runtimes/substantial/substantial_child_workflow.py",
+        {
+          secrets,
+        }
+      );
+
+      const packageNames = ["metatype", "substantial", "typegraph"];
+
+      let currentRunId: string | null = null;
+      await gql`
+        mutation {
+          start(kwargs: { packages: $packages })
+        }
+      `
+        .withVars({
+          packages: packageNames,
+        })
+        .expectBody((body) => {
+          currentRunId = body.data?.start! as string;
+          assertExists(
+            currentRunId,
+            "Run id was not returned when workflow was started"
+          );
+        })
+        .on(e);
+
+      await sleep(delays.awaitCompleteSec * 1000);
+
+      await gql`
+        query {
+          children: results(name: "bumpPackage") {
+            ongoing {
+              count
+            }
+            completed {
+              count
+              runs {
+                result {
+                  status
+                  value
+                }
+              }
+            }
+          }
+          parent: results(name: "bumpAll") {
+            completed {
+              count
+              # runs {
+              #   run_id
+              #   result {
+              #     status
+              #     value # FIXME: maintained connection is cut on the test, making
+              #   }
+              # }
+            }
+          }
+        }
+      `
+        .expectBody((body) => {
+          const { children, parent } = body.data;
+
+          assertEquals(children?.ongoing?.count, 0, "ongoing children count");
+          assertEquals(
+            children.completed.count,
+            packageNames.length,
+            "completed children count"
+          );
+
+          assertEquals(
+            children.completed.count +
+              children?.ongoing?.count -
+              packageNames.length,
+            0,
+            "executed count not matching expectation"
+          );
+
+          assertEquals(parent.completed.count, 1, "parent count");
+
+          const output = ((children?.completed?.runs as Array<any>) ?? [])
+            .map((r) => r?.result?.value as string)
+            .sort((a, b) => a.localeCompare(b));
+
+          assertEquals(
+            output,
+            [
+              "Now using metatype v1",
+              "Now using substantial v1",
+              "Now using typegraph v1",
+            ].sort((a, b) => a.localeCompare(b))
+          );
+        })
+        .on(e);
+    }
+  );
+}
+
 // TODO:
 // mock a very basic http server in another process that counts the number of request made by a workflow
 // This will allow..

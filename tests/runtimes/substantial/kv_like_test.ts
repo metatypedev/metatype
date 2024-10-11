@@ -3,6 +3,7 @@
 
 import {
   basicTestTemplate,
+  // childWorkflowTestTemplate,
   concurrentWorkflowTestTemplate,
   retrySaveTestTemplate,
 } from "./common.ts";
@@ -34,3 +35,10 @@ retrySaveTestTemplate("fs", {
     awaitCompleteAll: 12,
   },
 });
+
+// FIXME: "error sending request from 127.0.0.1:39520 for http://localhost:38413/substantial-child-workflow (127.0.0.1:38413): client error (SendRequest): connection closed before message
+// childWorkflowTestTemplate("fs", {
+//   delays: {
+//     awaitCompleteSec: 10,
+//   },
+// });

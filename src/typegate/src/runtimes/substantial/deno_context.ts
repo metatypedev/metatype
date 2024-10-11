@@ -195,8 +195,7 @@ export class Context {
 
   // Note: This is designed to be used inside ctx.save(..)
   async startChildWorkflow<O>(workflow: Workflow<O>, kwargs: unknown) {
-    const handle = new ChildWorkflowHandle({
-      internal: this.internal,
+    const handle = new ChildWorkflowHandle(this, {
       name: workflow.name,
       kwargs,
     });
@@ -214,7 +213,7 @@ export class Context {
         "Cannot create handle from a definition that was not run"
       );
     }
-    return new ChildWorkflowHandle(handleDef);
+    return new ChildWorkflowHandle(this, handleDef);
   }
 }
 
@@ -223,17 +222,18 @@ export type Workflow<O> = (ctx: Context) => Promise<O>;
 interface SerializableWorkflowHandle {
   runId?: string;
 
-  internal: TaskContext;
   name: string;
   kwargs: unknown;
 }
 
 export class ChildWorkflowHandle {
-  constructor(public handleDef: SerializableWorkflowHandle) {}
+  constructor(
+    private ctx: Context,
+    public handleDef: SerializableWorkflowHandle
+  ) {}
 
   async start(): Promise<string> {
-    const gql = createGQLClient(this.handleDef.internal);
-    const { data } = await gql/**/ `
+    const { data } = await this.ctx.gql/**/ `
       mutation ($name: String!, $kwargs: String!) {
         _sub_internal_start(name: $name, kwargs: $kwargs)
       }
@@ -245,6 +245,15 @@ export class ChildWorkflowHandle {
     this.handleDef.runId = (data as any)._sub_internal_start as string;
     this.#checkRunId();
 
+    const { data: _ } = await this.ctx.gql/**/ `
+      mutation ($parent_run_id: String!, $child_run_id: String!) {
+        _sub_internal_link_parent_child(parent_run_id: $parent_run_id, child_run_id: $child_run_id)
+      }
+    `.run({
+      parent_run_id: this.ctx.getRun().run_id,
+      child_run_id: this.handleDef.runId!,
+    });
+
     return this.handleDef.runId!;
   }
 
@@ -252,8 +261,7 @@ export class ChildWorkflowHandle {
     this.#checkRunId();
     console.log("ENTER result");
 
-    const gql = createGQLClient(this.handleDef.internal);
-    const { data } = await gql/**/ `
+    const { data } = await this.ctx.gql/**/ `
       query ($name: String!) {
         _sub_internal_results(name: $name) {
           completed {
@@ -287,8 +295,7 @@ export class ChildWorkflowHandle {
   async stop(): Promise<string> {
     this.#checkRunId();
 
-    const gql = createGQLClient(this.handleDef.internal);
-    const { data } = await gql/**/ `
+    const { data } = await this.ctx.gql/**/ `
       mutation ($run_id: String!) {
         _sub_internal_stop(run_id: $run_id)
       }
@@ -302,8 +309,7 @@ export class ChildWorkflowHandle {
   async hasStopped(): Promise<boolean> {
     this.#checkRunId();
 
-    const gql = createGQLClient(this.handleDef.internal);
-    const { data } = await gql/**/ `
+    const { data } = await this.ctx.gql/**/ `
       query {
         _sub_internal_results(name: $name) {
           completed {
