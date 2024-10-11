@@ -21,25 +21,6 @@ impl TypeFunc {
     }
 }
 
-fn check_subtype(subtype_id: TypeId, supertype_id: TypeId) -> Result<bool> {
-    // TODO: May be it's right
-
-    // use crate::types::TypeDef::*;
-
-    // let subtype = TypeDef::try_from(subtype_id)?;
-    // let supertype = TypeDef::try_from(supertype_id)?;
-
-    // match (subtype, supertype) {
-    //     (Integer(_), Integer(_)) => Ok(true),
-    //     (Float(_), Float(_)) => Ok(true),
-    //     (Boolean(_), Boolean(_)) => Ok(true),
-    //     (TypeDef::String(_), TypeDef::String(_)) => Ok(true),
-    //     _ => todo!(),
-    // }
-
-    Ok(subtype_id == supertype_id)
-}
-
 pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) -> Result<()> {
     match TypeDef::try_from(type_id)? {
         TypeDef::Func(_) => Err("cannot validate function".into()),
@@ -106,25 +87,11 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
                 )
                 .into()),
                 1 => Ok(()),
-                _ => {
-                    for i in 0..matched_variants.len() {
-                        for j in (i + 1)..matched_variants.len() {
-                            if check_subtype(matched_variants[i], matched_variants[j])? {
-                                return Err(format!(
-                                    "value {} at {path:?} matches multiple variants of the either",
-                                    serde_json::to_string(&value).map_err(|e| e.to_string())?
-                                )
-                                .into());
-                            };
-                        }
-                    }
-
-                    Err(format!(
-                        "value {} at {path:?} matches multiple variants of the either",
-                        serde_json::to_string(&value).map_err(|e| e.to_string())?,
-                    )
-                    .into())
-                }
+                _ => Err(format!(
+                    "value {} at {path:?} matches multiple variants of the either",
+                    serde_json::to_string(&value).map_err(|e| e.to_string())?,
+                )
+                .into()),
             }
         }
 

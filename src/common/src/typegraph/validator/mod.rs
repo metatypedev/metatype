@@ -8,14 +8,35 @@ mod value;
 
 use crate::typegraph::{TypeNode, Typegraph};
 
-use super::visitor::{
-    visit_child, ChildNode, CurrentNode, Edge, Path, PathSegment, TypeVisitor, TypeVisitorContext,
-    VisitLayer, VisitResult, VisitorResult,
+use self::types::{EnsureSubtypeOf, ErrorCollector};
+
+use super::{
+    visitor::{
+        visit_child, ChildNode, CurrentNode, Edge, Path, PathSegment, TypeVisitor,
+        TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
+    },
+    EitherTypeData,
 };
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     let context = ValidatorContext { typegraph: tg };
-    let validator = Validator::default();
+    let mut validator = Validator::default();
+
+    let mut errors = ErrorCollector::default();
+
+    for ttype in tg.types.clone() {
+        if let TypeNode::Either { data, .. } = ttype {
+            let sup = EitherTypeData {
+                one_of: data.one_of.clone(),
+            };
+            data.ensure_subtype_of(&sup, tg, &mut errors);
+        }
+
+        for error in errors.errors.iter() {
+            validator.push_error(&[], error);
+        }
+    }
+
     tg.traverse_types(validator, &context, Layer).unwrap()
 }
 
