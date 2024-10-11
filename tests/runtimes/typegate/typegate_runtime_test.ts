@@ -26,7 +26,6 @@ Meta.test({
     await gql`
       fragment TermOutput on TypeInfo {
         optional
-        as_id
         title
         type
         enum

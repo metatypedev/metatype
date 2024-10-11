@@ -171,7 +171,6 @@ def typegate(g: Graph):
     shallow_type_info = t.struct(
         {
             "optional": t.boolean(),
-            "as_id": t.boolean(),
             "title": t.string(),
             "type": t.string(),
             "enum": t.list(t.json()).optional(),
@@ -235,6 +234,7 @@ def typegate(g: Graph):
                 t.struct(
                     {
                         "name": t.string(),
+                        "as_id": t.boolean(),
                         "type": shallow_type_info,
                     }
                 )
@@ -331,6 +331,7 @@ def typegate(g: Graph):
                     t.struct(
                         {
                             "name": t.string(),
+                            "as_id": t.boolean(),
                             "type": shallow_type_info,
                         }
                     )

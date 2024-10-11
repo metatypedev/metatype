@@ -293,12 +293,14 @@ export class TypeGateRuntime extends Runtime {
     return prismaRuntimes.map((rt) => {
       const rtData = rt.data as PrismaRT.DataFinal;
       return rtData.models.map((model) => {
+        const ids = model.idFields;
         return {
           name: model.typeName,
           runtime: rtData.name,
           fields: model.props.map((prop) => {
             return {
               name: prop.key,
+              as_id: ids.includes(prop.key),
               type: walkPath(tg, tg.type(prop.typeIdx), 0, []),
             };
           }),
@@ -367,6 +369,7 @@ export class TypeGateRuntime extends Runtime {
 
     const fields = modelData.props.map((prop) => ({
       name: prop.key,
+      as_id: modelData.idFields.includes(prop.key),
       type: walkPath(engine.tg, engine.tg.type(prop.typeIdx), 0, []),
     }));
 

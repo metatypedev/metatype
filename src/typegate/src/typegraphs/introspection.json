@@ -8,7 +8,7 @@
       "config": {},
       "properties": {
         "__type": 1,
-        "__schema": 32
+        "__schema": 45
       },
       "id": [],
       "required": [
@@ -67,14 +67,14 @@
       "properties": {
         "kind": 6,
         "name": 7,
-        "description": 7,
-        "specifiedByURL": 7,
-        "fields": 9,
-        "interfaces": 20,
-        "possibleTypes": 22,
-        "enumValues": 23,
-        "inputFields": 28,
-        "ofType": 31
+        "description": 8,
+        "specifiedByURL": 9,
+        "fields": 10,
+        "interfaces": 27,
+        "possibleTypes": 29,
+        "enumValues": 31,
+        "inputFields": 39,
+        "ofType": 44
       },
       "id": [],
       "required": []
@@ -98,19 +98,30 @@
     },
     {
       "type": "optional",
-      "title": "type_name_type_name_string_optional",
+      "title": "type_name_root___type_fn_input_name_string_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "item": 8,
+      "item": 3,
       "default_value": null
     },
     {
-      "type": "string",
-      "title": "type_name_string",
+      "type": "optional",
+      "title": "type_description_root___type_fn_input_name_string_optional",
       "runtime": 1,
       "policies": [],
-      "config": {}
+      "config": {},
+      "item": 3,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "type_specifiedByURL_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
     },
     {
       "type": "function",
@@ -118,8 +129,8 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "input": 10,
-      "output": 13,
+      "input": 11,
+      "output": 14,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -131,7 +142,7 @@
       "policies": [],
       "config": {},
       "properties": {
-        "includeDeprecated": 11
+        "includeDeprecated": 12
       },
       "id": [],
       "required": []
@@ -142,7 +153,7 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "item": 12,
+      "item": 13,
       "default_value": null
     },
     {
@@ -158,7 +169,7 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "item": 14,
+      "item": 15,
       "default_value": null
     },
     {
@@ -167,7 +178,7 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "items": 15
+      "items": 16
     },
     {
       "type": "object",
@@ -176,15 +187,24 @@
       "policies": [],
       "config": {},
       "properties": {
-        "name": 8,
-        "description": 7,
-        "args": 16,
+        "name": 3,
+        "description": 17,
+        "args": 18,
         "type": 5,
-        "isDeprecated": 12,
-        "deprecationReason": 7
+        "isDeprecated": 13,
+        "deprecationReason": 26
       },
       "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "field_description_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
     },
     {
       "type": "function",
@@ -192,8 +212,8 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "input": 17,
-      "output": 18,
+      "input": 19,
+      "output": 21,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -205,10 +225,19 @@
       "policies": [],
       "config": {},
       "properties": {
-        "includeDeprecated": 11
+        "includeDeprecated": 20
       },
       "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "field_args_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 13,
+      "default_value": null
     },
     {
       "type": "list",
@@ -216,7 +245,7 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "items": 19
+      "items": 22
     },
     {
       "type": "object",
@@ -225,15 +254,51 @@
       "policies": [],
       "config": {},
       "properties": {
-        "name": 8,
-        "description": 7,
+        "name": 3,
+        "description": 23,
         "type": 5,
-        "defaultValue": 7,
-        "isDeprecated": 12,
-        "deprecationReason": 7
+        "defaultValue": 24,
+        "isDeprecated": 13,
+        "deprecationReason": 25
       },
       "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "input_value_description_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "input_value_defaultValue_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "input_value_deprecationReason_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "field_deprecationReason_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
     },
     {
       "type": "optional",
@@ -241,7 +306,7 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "item": 21,
+      "item": 28,
       "default_value": null
     },
     {
@@ -254,12 +319,20 @@
     },
     {
       "type": "optional",
-      "title": "type_possibleTypes_type_interfaces_type_list_optional",
+      "title": "type_possibleTypes_type_possibleTypes_type_list_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "item": 21,
+      "item": 30,
       "default_value": null
+    },
+    {
+      "type": "list",
+      "title": "type_possibleTypes_type_list",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "items": 5
     },
     {
       "type": "function",
@@ -267,8 +340,8 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "input": 24,
-      "output": 25,
+      "input": 32,
+      "output": 34,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -280,10 +353,19 @@
       "policies": [],
       "config": {},
       "properties": {
-        "includeDeprecated": 11
+        "includeDeprecated": 33
       },
       "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "type_enumValues_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 13,
+      "default_value": null
     },
     {
       "type": "optional",
@@ -291,7 +373,7 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "item": 26,
+      "item": 35,
       "default_value": null
     },
     {
@@ -300,7 +382,7 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "items": 27
+      "items": 36
     },
     {
       "type": "object",
@@ -309,13 +391,31 @@
       "policies": [],
       "config": {},
       "properties": {
-        "name": 8,
-        "description": 7,
-        "isDeprecated": 12,
-        "deprecationReason": 7
+        "name": 3,
+        "description": 37,
+        "isDeprecated": 13,
+        "deprecationReason": 38
       },
       "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "enum_value_description_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "enum_value_deprecationReason_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
     },
     {
       "type": "function",
@@ -323,8 +423,8 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "input": 29,
-      "output": 30,
+      "input": 40,
+      "output": 42,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -336,10 +436,19 @@
       "policies": [],
       "config": {},
       "properties": {
-        "includeDeprecated": 11
+        "includeDeprecated": 41
       },
       "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "type_inputFields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 13,
+      "default_value": null
     },
     {
       "type": "optional",
@@ -347,8 +456,16 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "item": 18,
+      "item": 43,
       "default_value": null
+    },
+    {
+      "type": "list",
+      "title": "type_inputFields_fn_output",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "items": 22
     },
     {
       "type": "optional",
@@ -367,8 +484,8 @@
         0
       ],
       "config": {},
-      "input": 33,
-      "output": 34,
+      "input": 46,
+      "output": 47,
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
@@ -390,15 +507,24 @@
       "policies": [],
       "config": {},
       "properties": {
-        "description": 7,
-        "types": 35,
+        "description": 48,
+        "types": 49,
         "queryType": 5,
-        "mutationType": 4,
-        "subscriptionType": 4,
-        "directives": 36
+        "mutationType": 50,
+        "subscriptionType": 51,
+        "directives": 52
       },
       "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "schema_description_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
     },
     {
       "type": "list",
@@ -409,12 +535,30 @@
       "items": 5
     },
     {
+      "type": "optional",
+      "title": "schema_mutationType_type_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 5,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "schema_subscriptionType_type_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 5,
+      "default_value": null
+    },
+    {
       "type": "list",
       "title": "schema_directives_directive_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "items": 37
+      "items": 53
     },
     {
       "type": "object",
@@ -423,14 +567,23 @@
       "policies": [],
       "config": {},
       "properties": {
-        "name": 8,
-        "description": 7,
-        "isRepeatable": 12,
-        "locations": 38,
-        "args": 40
+        "name": 3,
+        "description": 54,
+        "isRepeatable": 13,
+        "locations": 55,
+        "args": 57
       },
       "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "directive_description_root___type_fn_input_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 3,
+      "default_value": null
     },
     {
       "type": "list",
@@ -438,7 +591,7 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "items": 39
+      "items": 56
     },
     {
       "type": "string",
@@ -474,8 +627,8 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "input": 41,
-      "output": 18,
+      "input": 58,
+      "output": 60,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -487,10 +640,27 @@
       "policies": [],
       "config": {},
       "properties": {
-        "includeDeprecated": 11
+        "includeDeprecated": 59
       },
       "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "directive_args_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 13,
+      "default_value": null
+    },
+    {
+      "type": "list",
+      "title": "directive_args_fn_output",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "items": 22
     }
   ],
   "materializers": [
