@@ -290,7 +290,7 @@ impl BackendMetadataWriter for KeyValueBackend {
             .put(key.as_str(), Item::new(child_run_id.into_bytes()))
     }
 
-    fn read_children(&self, parent_run_id: String) -> Result<Vec<String>> {
+    fn read_direct_children(&self, parent_run_id: String) -> Result<Vec<String>> {
         let mut ret = Vec::new();
         let base_key = format!("links/children/{}/", parent_run_id);
 
@@ -314,7 +314,7 @@ impl BackendMetadataWriter for KeyValueBackend {
                 visited.push(run_id.clone());
                 result.push(run_id.clone());
 
-                let children = self.read_children(run_id)?;
+                let children = self.read_direct_children(run_id)?;
                 stack.extend(children);
             }
         }

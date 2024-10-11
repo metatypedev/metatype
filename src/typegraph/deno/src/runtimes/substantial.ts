@@ -69,7 +69,7 @@ export class SubstantialRuntime extends Runtime {
     );
   }
 
-  rawStart(): Func<Typedef, Typedef, Materializer> {
+  startRaw(): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc({
       tag: "start-raw",
     });
@@ -90,7 +90,7 @@ export class SubstantialRuntime extends Runtime {
     );
   }
 
-  rawSend(): Func<Typedef, Typedef, Materializer> {
+  sendRaw(): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc({
       tag: "send-raw",
     });
@@ -112,7 +112,7 @@ export class SubstantialRuntime extends Runtime {
     );
   }
 
-  rawQueryResults(): Func<Typedef, Typedef, Materializer> {
+  queryResultsRaw(): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc({
       tag: "results-raw",
     });
@@ -126,10 +126,10 @@ export class SubstantialRuntime extends Runtime {
 
   internals(): Record<string, Func<Typedef, Typedef, Materializer>> {
     return {
-      _sub_internal_start: this.rawStart(),
+      _sub_internal_start: this.startRaw(),
       _sub_internal_stop: this.stop(),
-      _sub_internal_send: this.rawSend(),
-      _sub_internal_results: this.rawQueryResults(),
+      _sub_internal_send: this.sendRaw(),
+      _sub_internal_results: this.queryResultsRaw(),
       _sub_internal_link_parent_child: this.#internalLinkParentChild(),
     };
   }

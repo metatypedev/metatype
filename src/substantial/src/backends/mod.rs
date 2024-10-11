@@ -51,7 +51,7 @@ pub trait BackendMetadataWriter {
 
     fn write_parent_child_link(&self, parent_run_id: String, child_run_id: String) -> Result<()>;
 
-    fn read_children(&self, parent_run_id: String) -> Result<Vec<String>>;
+    fn read_direct_children(&self, parent_run_id: String) -> Result<Vec<String>>;
 
     fn enumerate_all_children(&self, parent_run_id: String) -> Result<Vec<String>>;
 

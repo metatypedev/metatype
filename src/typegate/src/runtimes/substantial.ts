@@ -329,23 +329,41 @@ export class SubstantialRuntime extends Runtime {
   #stopResolver(): Resolver {
     return async ({ run_id }) => {
       const schedule = new Date().toJSON();
-      await this.agent.schedule({
+
+      const children = await Meta.substantial.metadataEnumerateAllChildren({
         backend: this.backend,
-        queue: this.queue,
-        run_id,
-        schedule,
-        operation: {
-          at: new Date().toJSON(),
-          event: {
-            type: "Stop",
-            result: {
-              Err: "ABORTED",
-            },
-          },
-        },
+        parent_run_id: run_id,
       });
 
-      return run_id;
+      const stopQueue = [run_id, ...children] as Array<string>;
+      const willBeStopped = [];
+      while (true) {
+        // TODO: what if some fail? maybe collect all failing ones instead and put that on the error?
+        const currRunId = stopQueue.shift();
+        if (currRunId) {
+          await this.agent.schedule({
+            backend: this.backend,
+            queue: this.queue,
+            run_id,
+            schedule,
+            operation: {
+              at: new Date().toJSON(),
+              event: {
+                type: "Stop",
+                result: {
+                  Err: "ABORTED",
+                },
+              },
+            },
+          });
+
+          willBeStopped.push(currRunId);
+        } else {
+          break;
+        }
+      }
+
+      return willBeStopped;
     };
   }
 
@@ -374,7 +392,12 @@ export class SubstantialRuntime extends Runtime {
 
   #linkerResolver(): Resolver {
     return async ({ parent_run_id, child_run_id }) => {
-      throw new Error(`TODO: ${parent_run_id}, ${child_run_id}`);
+      await Meta.substantial.metadataWriteParentChildLink({
+        backend: this.backend,
+        parent_run_id,
+        child_run_id,
+      });
+      return true;
     };
   }
 

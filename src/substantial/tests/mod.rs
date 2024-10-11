@@ -89,7 +89,7 @@ mod tests {
             (
                 "redis",
                 Box::new({
-                    let prefix = "rust_test";
+                    let prefix = "rust_test_state";
                     let backend = RedisBackend::new(
                         "redis://:password@localhost:6380/0".to_owned(),
                         Some(prefix.to_owned()),
@@ -229,7 +229,7 @@ mod tests {
             (
                 "redis",
                 Box::new({
-                    let prefix = "rust_test";
+                    let prefix = "rust_test_link";
                     let backend = RedisBackend::new(
                         "redis://:password@localhost:6380/0".to_owned(),
                         Some(prefix.to_owned()),
@@ -275,15 +275,24 @@ mod tests {
 
             link_children_rec(&tree, backend.as_ref()).unwrap();
             assert_eq!(
-                backend.read_children("parent1".to_owned()).unwrap().len(),
+                backend
+                    .read_direct_children("parent1".to_owned())
+                    .unwrap()
+                    .len(),
                 1
             );
             assert_eq!(
-                backend.read_children("child_11".to_owned()).unwrap().len(),
+                backend
+                    .read_direct_children("child_11".to_owned())
+                    .unwrap()
+                    .len(),
                 3
             );
             assert_eq!(
-                backend.read_children("parent2".to_owned()).unwrap().len(),
+                backend
+                    .read_direct_children("parent2".to_owned())
+                    .unwrap()
+                    .len(),
                 0
             );
 

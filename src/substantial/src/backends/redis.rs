@@ -518,7 +518,7 @@ impl BackendMetadataWriter for RedisBackend {
         })
     }
 
-    fn read_children(&self, parent_run_id: String) -> Result<Vec<String>> {
+    fn read_direct_children(&self, parent_run_id: String) -> Result<Vec<String>> {
         self.with_redis(|r| {
             let links_key = self.key(&["links", "children", &parent_run_id])?;
             let run_ids: Vec<String> = r.zrange(links_key, 0, -1)?;

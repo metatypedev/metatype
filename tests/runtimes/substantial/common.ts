@@ -237,7 +237,7 @@ export function concurrentWorkflowTestTemplate(
             .expectData({
               one: runIds[0],
               two: runIds[1],
-              three: runIds[2],
+              three: [runIds[2]],
             })
             .on(e);
         }
@@ -395,7 +395,7 @@ export function retrySaveTestTemplate(
               run_id: retryAbortMeId,
             })
             .expectData({
-              abort_retry: retryAbortMeId,
+              abort_retry: [retryAbortMeId],
             })
             .on(e);
         }

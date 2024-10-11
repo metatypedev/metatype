@@ -1,4 +1,7 @@
-// Assume any line of code bellow in this file runs inside a Web Worker
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
+// WARNING: Assume any content or state in this file will run inside a Web Worker
 
 import { TaskContext } from "./runtimes/deno/shared_types.ts";
 

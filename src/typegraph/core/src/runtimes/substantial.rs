@@ -86,7 +86,7 @@ pub fn substantial_operation(
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::Stop,
-                t::string().build()?,
+                t::list(t::string().build()?).build()?,
             )
         }
         SubstantialOperationType::Send | SubstantialOperationType::SendRaw => {

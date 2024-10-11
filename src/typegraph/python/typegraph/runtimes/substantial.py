@@ -72,7 +72,7 @@ class SubstantialRuntime(Runtime):
         operation = SubstantialOperationTypeStart()
         return self._generic_substantial_func(operation, kwargs, None)
 
-    def raw_start(self):
+    def start_raw(self):
         operation = SubstantialOperationTypeStartRaw()
         return self._generic_substantial_func(operation, None, None)
 
@@ -84,7 +84,7 @@ class SubstantialRuntime(Runtime):
         operation = SubstantialOperationTypeSend()
         return self._generic_substantial_func(operation, payload, None)
 
-    def raw_send(self):
+    def send_raw(self):
         operation = SubstantialOperationTypeSendRaw()
         return self._generic_substantial_func(operation, None, None)
 
@@ -96,7 +96,7 @@ class SubstantialRuntime(Runtime):
         operation = SubstantialOperationTypeResults()
         return self._generic_substantial_func(operation, None, output)
 
-    def raw_query_results(self):
+    def query_results_raw(self):
         operation = SubstantialOperationTypeResultsRaw()
         return self._generic_substantial_func(operation, None, None)
 
@@ -106,10 +106,10 @@ class SubstantialRuntime(Runtime):
 
     def internals(self):
         return {
-            "_sub_internal_start": self.raw_start(),
+            "_sub_internal_start": self.start_raw(),
             "_sub_internal_stop": self.stop(),
-            "_sub_internal_send": self.raw_send(),
-            "_sub_internal_results": self.raw_query_results(),
+            "_sub_internal_send": self.send_raw(),
+            "_sub_internal_results": self.query_results_raw(),
             "_sub_internal_link_parent_child": self._internal_link_parent_child(),
         }
 
