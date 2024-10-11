@@ -1,10 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use serde::{Deserialize, Serialize};
+
 use crate::errors::Result;
 use crate::t;
 use crate::t::TypeBuilder;
-use crate::types::TypeId;
+use crate::types::{RefAttr, TypeId};
 
 pub mod discovery;
 
@@ -62,6 +64,23 @@ pub struct PrismaLink {
     unique: bool,
 }
 
+#[derive(Default, Debug, Serialize, Deserialize)]
+pub struct PrismaRefData {
+    pub rel_name: Option<String>,
+    pub fkey: Option<bool>,
+    pub target_field: Option<String>,
+}
+
+impl From<&PrismaLink> for PrismaRefData {
+    fn from(link: &PrismaLink) -> Self {
+        PrismaRefData {
+            rel_name: link.rel_name.clone(),
+            fkey: link.fkey,
+            target_field: link.target_field.clone(),
+        }
+    }
+}
+
 impl PrismaLink {
     pub fn name(mut self, n: impl Into<String>) -> Self {
         self.rel_name = Some(n.into());
@@ -84,18 +103,14 @@ impl PrismaLink {
     }
 
     fn build_link(&self) -> Result<TypeId> {
-        let mut type_ref = t::ref_(&self.type_name);
-        if let Some(rel_name) = self.rel_name.clone() {
-            type_ref.set("rel_name", rel_name);
-        }
-        if let Some(fkey) = self.fkey {
-            type_ref.set("fkey", format!("{fkey}"));
-        }
-        if let Some(target_field) = self.target_field.clone() {
-            type_ref.set("target_field", target_field);
-        }
-        let res = type_ref.build()?;
-        Ok(res)
+        t::ref_(
+            &self.type_name,
+            Some(RefAttr::runtime(
+                "prisma",
+                serde_json::to_value(PrismaRefData::from(self)).unwrap(),
+            )),
+        )
+        .build()
     }
 }
 
@@ -154,14 +169,14 @@ mod test {
     fn test_explicit_relationship_name() -> Result<()> {
         Store::reset();
         let user = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .propx("name", t::string())?
-            .propx("posts", t::listx(t::ref_("Post"))?)?
+            .propx("posts", t::listx(t::ref_("Post", Default::default()))?)?
             .named("User")
             .build()?;
 
         let post = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .propx("title", t::string())?
             .propx("author", prisma_linkn("User").name("PostAuthor"))?
             .named("Post")
@@ -185,17 +200,17 @@ mod test {
     fn test_fkey_attribute() -> Result<()> {
         Store::reset();
         let user = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .propx(
                 "profile",
-                prisma_linkx(t::optionalx(t::ref_("Profile"))?)?.fkey(true),
+                prisma_linkx(t::optionalx(t::ref_("Profile", Default::default()))?)?.fkey(true),
             )?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .propx("id", t::integer().as_id(true))?
-            .propx("user", t::optionalx(t::ref_("User"))?)?
+            .propx("id", t::integer().as_id())?
+            .propx("user", t::optionalx(t::ref_("User", Default::default()))?)?
             .named("Profile")
             .build()?;
 
@@ -217,17 +232,17 @@ mod test {
     fn test_unique_attribute() -> Result<()> {
         Store::reset();
         let user = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .propx(
                 "profile",
-                t::optionalx(t::ref_("Profile"))?.config("unique", "true"),
+                t::optionalx(t::ref_("Profile", Default::default()))?.config("unique", "true"),
             )?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .propx("id", t::integer().as_id(true))?
-            .propx("user", t::optionalx(t::ref_("User"))?)?
+            .propx("id", t::integer().as_id())?
+            .propx("user", t::optionalx(t::ref_("User", Default::default()))?)?
             .named("Profile")
             .build()?;
 
@@ -248,9 +263,9 @@ mod test {
     fn test_self_relationship() -> Result<()> {
         Store::reset();
         let node = t::struct_()
-            .propx("id", t::string().as_id(true))?
-            .propx("children", t::listx(t::ref_("Node"))?)?
-            .propx("parent", t::ref_("Node"))?
+            .propx("id", t::string().as_id())?
+            .propx("children", t::listx(t::ref_("Node", Default::default()))?)?
+            .propx("parent", t::ref_("Node", Default::default()))?
             .named("Node")
             .build()?;
 
@@ -270,14 +285,14 @@ mod test {
     fn test_ambiguous_side() -> Result<()> {
         Store::reset();
         let user = t::struct_()
-            .propx("id", t::integer().as_id(true))?
-            .propx("profile", t::ref_("Profile"))?
+            .propx("id", t::integer().as_id())?
+            .propx("profile", t::ref_("Profile", Default::default()))?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .propx("id", t::integer().as_id(true))?
-            .propx("user", t::ref_("User"))?
+            .propx("id", t::integer().as_id())?
+            .propx("user", t::ref_("User", Default::default()))?
             .named("Profile")
             .build()?;
 
@@ -295,14 +310,17 @@ mod test {
 
         Store::reset();
         let user = t::struct_()
-            .propx("id", t::integer().as_id(true))?
-            .propx("profile", t::optionalx(t::ref_("Profile"))?)?
+            .propx("id", t::integer().as_id())?
+            .propx(
+                "profile",
+                t::optionalx(t::ref_("Profile", Default::default()))?,
+            )?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .propx("id", t::integer().as_id(true))?
-            .propx("user", t::optionalx(t::ref_("User"))?)?
+            .propx("id", t::integer().as_id())?
+            .propx("user", t::optionalx(t::ref_("User", Default::default()))?)?
             .named("Profile")
             .build()?;
 
@@ -325,13 +343,13 @@ mod test {
     fn test_conflicting_attributes() -> Result<()> {
         Store::reset();
         let user = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .propx("profile", prisma_linkn("Profile").fkey(true))?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .propx("user", prisma_linkn("User").fkey(true))?
             .named("Profile")
             .build()?;
@@ -354,13 +372,13 @@ mod test {
 
         Store::reset();
         let user = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .propx("profile", prisma_linkn("Profile").fkey(false))?
             .named("User")
             .build()?;
 
         let profile = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .propx("user", prisma_linkn("User").fkey(false))?
             .named("Profile")
             .build()?;
@@ -388,13 +406,13 @@ mod test {
     fn test_missing_target() -> Result<()> {
         Store::reset();
         let user = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .propx("profile", prisma_linkn("Profile").fkey(true))?
             .named("User")
             .build()?;
 
         let _profile = t::struct_()
-            .propx("id", t::integer().as_id(true))?
+            .propx("id", t::integer().as_id())?
             .named("Profile")
             .build()?;
 

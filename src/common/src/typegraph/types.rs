@@ -21,7 +21,7 @@ pub struct SingleValue<T: Hash> {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(untagged)]
-pub enum InjectionData<T: Hash> {
+pub enum InjectionData<T: Hash = String> {
     SingleValue(SingleValue<T>),
     ValueByEffect(BTreeMap<EffectType, T>),
 }
@@ -45,12 +45,12 @@ impl<T: Hash> InjectionData<T> {
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(tag = "source", content = "data", rename_all = "lowercase")]
 pub enum Injection {
-    Static(InjectionData<String>),
-    Context(InjectionData<String>),
-    Secret(InjectionData<String>),
-    Parent(InjectionData<u32>),
-    Dynamic(InjectionData<String>),
-    Random(InjectionData<String>),
+    Static(InjectionData),
+    Context(InjectionData),
+    Secret(InjectionData),
+    Parent(InjectionData),
+    Dynamic(InjectionData),
+    Random(InjectionData),
 }
 
 #[skip_serializing_none]
@@ -67,7 +67,6 @@ pub struct TypeNodeBase {
     pub enumeration: Option<Vec<String>>, // JSON-serialized values
     #[serde(default)]
     pub config: IndexMap<String, serde_json::Value>,
-    pub as_id: bool,
 }
 
 #[skip_serializing_none]
@@ -155,6 +154,7 @@ pub struct FileTypeData {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ObjectTypeData<Id = TypeId> {
     pub properties: IndexMap<String, Id>,
+    pub id: Vec<String>,
     #[serde(default)]
     pub required: Vec<String>,
 }

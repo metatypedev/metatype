@@ -34,15 +34,15 @@ def planner(g: Graph):
                     "third": t.boolean().optional(),
                 }
             ),
-            "union1": union1.rename("Union1"),
-            "union2": union2.rename("Union2"),
+            "union1": union1,
+            "union2": union2,
             "from_union1": deno.func(
-                t.struct({"u1": union1.from_parent("Union1")}),
+                t.struct({"u1": union1.from_parent("union1")}),
                 t.integer(),
                 code=dummy_func,
             ),
             "from_union2": deno.func(
-                t.struct({"u2": union2.from_parent("Union2")}),
+                t.struct({"u2": union2.from_parent("union2")}),
                 t.integer(),
                 code=dummy_func,
             ),
@@ -52,9 +52,9 @@ def planner(g: Graph):
     registered_user = t.struct(
         {
             "id": t.uuid(as_id=True),
-            "email": t.email(name="RegisteredUserEmail"),
+            "email": t.email(),
             "profile": deno.func(
-                t.struct({"email": t.email().from_parent("RegisteredUserEmail")}),
+                t.struct({"email": t.email().from_parent("email")}),
                 t.struct(
                     {
                         "email": t.email(),
@@ -98,14 +98,14 @@ def planner(g: Graph):
             t.struct(
                 {
                     "id": t.integer(),
-                    "email": t.email(name="UserEmail"),
+                    "email": t.email(),
                     "profile": deno.func(
-                        t.struct({"email": t.email().from_parent("UserEmail")}),
+                        t.struct({"email": t.email().from_parent("email")}),
                         profile,
                         code=dummy_func,
-                    ).rename("UserProfile"),
+                    ),
                     "taggedPic": deno.func(
-                        t.struct({"profile": profile.from_parent("UserProfile")}),
+                        t.struct({"profile": profile.from_parent("profile")}),
                         t.string(),
                         code=dummy_func,
                     ),

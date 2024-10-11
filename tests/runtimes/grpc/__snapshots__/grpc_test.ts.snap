@@ -10,10 +10,10 @@ snapshot[`Typegraph using grpc 1`] = `
         "runtime": 0,
         "policies": [],
         "config": {},
-        "as_id": false,
         "properties": {
           "greet": 1
         },
+        "id": [],
         "required": [
           "greet"
         ]
@@ -26,7 +26,6 @@ snapshot[`Typegraph using grpc 1`] = `
           0
         ],
         "config": {},
-        "as_id": false,
         "input": 2,
         "output": 5,
         "materializer": 0,
@@ -39,10 +38,10 @@ snapshot[`Typegraph using grpc 1`] = `
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false,
         "properties": {
           "name": 3
         },
+        "id": [],
         "required": []
       },
       {
@@ -51,7 +50,6 @@ snapshot[`Typegraph using grpc 1`] = `
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false,
         "item": 4,
         "default_value": null
       },
@@ -60,8 +58,7 @@ snapshot[`Typegraph using grpc 1`] = `
         "title": "root_greet_fn_input_name_string",
         "runtime": 1,
         "policies": [],
-        "config": {},
-        "as_id": false
+        "config": {}
       },
       {
         "type": "object",
@@ -69,11 +66,20 @@ snapshot[`Typegraph using grpc 1`] = `
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false,
         "properties": {
-          "message": 3
+          "message": 6
         },
+        "id": [],
         "required": []
+      },
+      {
+        "type": "optional",
+        "title": "root_greet_fn_output_message_root_greet_fn_input_name_string_optional",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "item": 4,
+        "default_value": null
       }
     ],
     "materializers": [
@@ -157,10 +163,10 @@ snapshot[`Typegraph using grpc 2`] = `
         "runtime": 0,
         "policies": [],
         "config": {},
-        "as_id": false,
         "properties": {
           "greet": 1
         },
+        "id": [],
         "required": [
           "greet"
         ]
@@ -173,7 +179,6 @@ snapshot[`Typegraph using grpc 2`] = `
           0
         ],
         "config": {},
-        "as_id": false,
         "input": 2,
         "output": 5,
         "materializer": 0,
@@ -186,10 +191,10 @@ snapshot[`Typegraph using grpc 2`] = `
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false,
         "properties": {
           "name": 3
         },
+        "id": [],
         "required": []
       },
       {
@@ -198,7 +203,6 @@ snapshot[`Typegraph using grpc 2`] = `
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false,
         "item": 4,
         "default_value": null
       },
@@ -207,8 +211,7 @@ snapshot[`Typegraph using grpc 2`] = `
         "title": "root_greet_fn_input_name_string",
         "runtime": 1,
         "policies": [],
-        "config": {},
-        "as_id": false
+        "config": {}
       },
       {
         "type": "object",
@@ -216,11 +219,20 @@ snapshot[`Typegraph using grpc 2`] = `
         "runtime": 1,
         "policies": [],
         "config": {},
-        "as_id": false,
         "properties": {
-          "message": 3
+          "message": 6
         },
+        "id": [],
         "required": []
+      },
+      {
+        "type": "optional",
+        "title": "root_greet_fn_output_message_root_greet_fn_input_name_string_optional",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "item": 4,
+        "default_value": null
       }
     ],
     "materializers": [

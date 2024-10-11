@@ -6,10 +6,8 @@ import {
   typegraph_validate,
   validate_prisma_runtime_data,
 } from "native";
+import { assert, assertEquals } from "@std/assert";
 
-function assert<T>(val: T) {
-  if (!val) throw Error("assertion failed");
-}
 // deno-lint-ignore no-unused-vars
 function dbg<T>(val: T) {
   console.log("DBG: ", val);
@@ -17,13 +15,8 @@ function dbg<T>(val: T) {
 }
 
 Deno.test("version", () => {
-  assert(
-    typeof Meta.version() === "string",
-  );
-
-  assert(
-    typeof get_version() === "string",
-  );
+  assertEquals(typeof Meta.version(), "string");
+  assertEquals(typeof get_version(), "string");
 });
 
 Deno.test("validatePrismaRuntimeData", () => {
@@ -48,11 +41,11 @@ Deno.test("typegraphValidate", () => {
         "runtime": 0,
         "policies": [],
         "config": {},
-        "as_id": false,
         "properties": {
           "__type": 1,
           "__schema": 64,
         },
+        "id": [],
         "required": [
           "__type",
           "__schema",
@@ -66,7 +59,6 @@ Deno.test("typegraphValidate", () => {
           0,
         ],
         "config": {},
-        "as_id": false,
         "input": 2,
         "output": 4,
         "materializer": 0,
@@ -127,8 +119,9 @@ Deno.test("typegraphValidate", () => {
     },
   };
   const str = JSON.stringify(json);
-  assert(JSON.stringify(JSON.parse(Meta.typegraphValidate(str))) == str);
+  assertEquals(JSON.stringify(JSON.parse(Meta.typegraphValidate(str))), str);
 
   const out = typegraph_validate({ json: str });
-  assert("Valid" in out && JSON.stringify(JSON.parse(out.Valid.json)) == str);
+  assert("Valid" in out);
+  assertEquals(JSON.stringify(JSON.parse(out.Valid.json)), str);
 });

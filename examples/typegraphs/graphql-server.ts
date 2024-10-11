@@ -16,11 +16,11 @@ await typegraph(
     const github = new HttpRuntime("https://api.github.com");
 
     const stargazer = t.struct({
-      login: t.string().rename("login"),
+      login: t.string(),
       user: github.get(
         t.struct({ user: t.string().fromParent("login") }),
         t.struct({ name: t.string().optional() }),
-        { path: "/users/{user}" }
+        { path: "/users/{user}" },
       ),
     });
 
@@ -30,7 +30,7 @@ await typegraph(
           path: "/repos/metatypedev/metatype/stargazers?per_page=2",
         }),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

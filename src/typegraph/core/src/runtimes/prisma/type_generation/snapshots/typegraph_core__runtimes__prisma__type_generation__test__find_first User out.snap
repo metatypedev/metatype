@@ -2,11 +2,11 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: optional 'optional_23' #23
-└─ item: struct 'User_output' #22
+root: optional 'optional_24' #24
+└─ item: struct 'User_output' #23
    ├─ [id]: integer #11
    ├─ [name]: string #12
-   └─ [posts]: list 'list_21' #21
-      └─ item: struct 'Post_output_excluding_rel_Post_User' #20
-         ├─ [id]: integer #16
-         └─ [title]: string #17
+   └─ [posts]: list 'list_22' #22
+      └─ item: struct 'Post_output_excluding_rel_Post_User' #21
+         ├─ [id]: integer #17
+         └─ [title]: string #18

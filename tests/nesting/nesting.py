@@ -24,10 +24,10 @@ def nesting(g: Graph):
     _post = t.struct(
         {
             "id": t.integer(),
-            "authorId": t.integer(name="Post_authorId"),
+            "authorId": t.integer(),
             "author": remote.get(
                 "/users/{id}",
-                t.struct({"id": t.integer().from_parent("Post_authorId")}),
+                t.struct({"id": t.integer().from_parent("authorId")}),
                 t.optional(g.ref("User")),
             ),
             "title": t.string(),

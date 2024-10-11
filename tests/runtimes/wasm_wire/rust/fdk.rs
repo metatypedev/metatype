@@ -273,6 +273,7 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootRandomFnInput {
     }
+    pub type HundredRandomOutput = Vec<Entity>;
 }
 pub mod stubs {
     use super::*;
@@ -374,7 +375,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<RecordCreationOutput>;
+        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<HundredRandomOutput>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {

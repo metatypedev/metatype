@@ -18,7 +18,7 @@ export default {
       for (const { path } of typegraphs) {
         const target = path.toString().replace(/\.py$/, ".json");
         $.logStep("serializing", path);
-        return $`cargo run -p meta-cli -q --color always -- 
+        await $`cargo run -p meta-cli -q --color always -- 
         serialize -f ${path} -1 --pretty -o ${target}`;
       }
     },

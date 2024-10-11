@@ -22,7 +22,7 @@ await typegraph(
         authorEmail: t.email(),
         votes: t.list(g.ref("vote")),
       },
-      { name: "idea" }
+      { name: "idea" },
     );
     const vote = t.struct(
       {
@@ -30,7 +30,7 @@ await typegraph(
         authorEmail: t.email(),
         idea: g.ref("idea"),
       },
-      { name: "vote" }
+      { name: "vote" },
     );
 
     // Policy.internal means only custom functions
@@ -40,7 +40,7 @@ await typegraph(
         i_get_idea: db.findUnique(idea),
         i_create_vote: db.create(vote),
       },
-      Policy.internal()
+      Policy.internal(),
     );
 
     g.expose(
@@ -52,16 +52,14 @@ await typegraph(
             .rename("CreateVoteInput"),
           t
             .struct({
-              // rename here  is necessary to make
-              // `fromParent` down below work
-              voteId: t.uuid().rename("Vote_id"),
+              voteId: t.uuid(),
               // using `reduce` we improve the API allowing
               // create calls to get the newly created object
               // without having to send this data from the
               // custom funciton
               vote: db.findUnique(vote).reduce({
                 where: {
-                  id: g.inherit().fromParent("Vote_id"),
+                  id: g.inherit().fromParent("voteId"),
                 },
               }),
             })
@@ -70,11 +68,11 @@ await typegraph(
             module: "scripts/createVote.ts",
             name: "handle", // name the exported function to run
             effect: fx.create(),
-          }
+          },
         ),
       },
-      Policy.public()
+      Policy.public(),
     );
     // skip:start
-  }
+  },
 );
