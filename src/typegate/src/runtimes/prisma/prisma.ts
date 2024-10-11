@@ -173,6 +173,7 @@ export class PrismaRuntime extends Runtime {
       this.logger.debug(
         `queried prisma in ${(endTime - startTime).toFixed(2)}ms`,
       );
+
       if (path[0] == "queryRaw") {
         const rawRes = res[0];
         return rawRes.queryRaw.rows.map(
