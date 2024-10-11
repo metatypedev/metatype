@@ -41,10 +41,7 @@ pub mod models {
             .named("Record")
             .propx(
                 "id",
-                t::string()
-                    .as_id(true)
-                    .format("uuid")
-                    .config("auto", "true"),
+                t::string().format("uuid").config("auto", "true").as_id(),
             )?
             .propx("name", t::string())?
             .propx("age", t::optionalx(t::integer())?)?
@@ -54,19 +51,16 @@ pub mod models {
 
     pub fn simple_relationship() -> Result<(TypeId, TypeId)> {
         let user = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
+            .propx("id", t::integer().as_id())?
             .propx("name", t::string())?
-            .propx("posts", t::listx(t::ref_("Post"))?)?
+            .propx("posts", t::listx(t::ref_("Post", Default::default()))?)?
             .named("User")
             .build()?;
 
         let post = t::struct_()
-            .prop(
-                "id",
-                t::integer().as_id(true).config("auto", "true").build()?,
-            )
-            .prop("title", t::string().build()?)
-            .prop("author", t::ref_("User").build()?)
+            .propx("id", t::integer().config("auto", "true").as_id())?
+            .propx("title", t::string())?
+            .propx("author", t::ref_("User", Default::default()))?
             .named("Post")
             .build()?;
 
@@ -91,7 +85,7 @@ pub mod tree {
 
     use ptree::{print_config::StyleWhen, IndentChars, PrintConfig, Style, TreeItem};
 
-    use crate::types::{Type, TypeDef, TypeDefExt, TypeId};
+    use crate::types::{FlatTypeRefTarget, Type, TypeDef, TypeDefExt, TypeId};
 
     pub struct PrintOptions {
         no_indent_lines: bool,
@@ -162,12 +156,18 @@ pub mod tree {
 
         fn write_self<W: Write>(&self, f: &mut W, _style: &Style) -> std::io::Result<()> {
             let ty = self.type_id.as_type().unwrap();
-            let (name, title) = match &ty {
-                Type::Ref(p) => (format!("&{}", p.name), None),
-                Type::Def(def) => (
-                    def.data().variant_name().to_owned(),
-                    def.base().name.clone(),
+            let (name, title) = match ty {
+                Type::Def(type_def) => (
+                    type_def.data().variant_name().to_owned(),
+                    type_def.base().name.clone(),
                 ),
+                Type::Ref(type_ref) => match type_ref.flatten().target {
+                    FlatTypeRefTarget::Direct(def) => (
+                        def.data().variant_name().to_owned(),
+                        def.base().name.clone(),
+                    ),
+                    FlatTypeRefTarget::Indirect(name) => (format!("&{}", name), None),
+                },
             };
 
             let enum_variants: Option<Vec<String>> =

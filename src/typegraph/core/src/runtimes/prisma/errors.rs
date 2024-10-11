@@ -51,10 +51,6 @@ pub fn unnamed_model(repr: &str) -> Error {
     format!("Prisma model must have a name: {repr}").into()
 }
 
-pub fn multiple_id_fields(model: &str) -> Error {
-    format!("Multiple id fields are not yet supported: model {model}").into()
-}
-
 pub fn id_field_not_found(model: &str) -> Error {
     format!("Id field not found: model {model}").into()
 }

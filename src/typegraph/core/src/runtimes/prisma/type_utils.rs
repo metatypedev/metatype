@@ -6,6 +6,7 @@ use std::borrow::Cow;
 use crate::errors::Result;
 use crate::types::{TypeDef, TypeDefExt};
 
+#[derive(Debug)]
 pub struct RuntimeConfig<'a>(Cow<'a, [(String, String)]>);
 
 impl<'a> RuntimeConfig<'a> {

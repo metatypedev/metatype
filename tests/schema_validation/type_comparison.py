@@ -12,13 +12,13 @@ def type_comparison(g: Graph):
         cases[name] = deno.identity(
             t.struct(
                 {
-                    "parent_field": subtype.rename(name),
+                    "parent_field": subtype,
                 }
             )
         ).extend(
             {
                 "injected": deno.identity(t.struct({"field": supertype})).reduce(
-                    {"field": g.inherit().from_parent(name)}
+                    {"field": g.inherit().from_parent("parent_field")}
                 )
             }
         )

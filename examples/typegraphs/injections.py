@@ -24,11 +24,13 @@ def injection_example(g: Graph):
             ).rename("Input"),
             t.struct(
                 {
-                    "static_value": t.integer().rename("Static"),
+                    "static_value": t.integer(),
                     "context_value": t.uuid(),
                     "secret_value": t.string(),
                     "nested": deno.identity(
-                        t.struct({"parent_value": t.integer().from_parent("Static")}),
+                        t.struct(
+                            {"parent_value": t.integer().from_parent("static_value")}
+                        ),
                     ),
                     "dynamic_value": t.datetime(),
                 }

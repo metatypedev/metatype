@@ -7,9 +7,9 @@ snapshot[`typegate: find available operations 1`] = `
       {
         fields: [
           {
+            as_id: true,
             name: "id",
             type: {
-              as_id: true,
               config: '{"auto":true}',
               default: null,
               enum: null,
@@ -17,14 +17,14 @@ snapshot[`typegate: find available operations 1`] = `
               optional: false,
               policies: [],
               runtime: "prisma",
-              title: "record_with_nested_count_id_string_uuid",
+              title: "record_output_id_string_uuid",
               type: "string",
             },
           },
           {
+            as_id: false,
             name: "name",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -37,9 +37,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "age",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -52,9 +52,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "createdAt",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -64,7 +64,7 @@ snapshot[`typegate: find available operations 1`] = `
                 '{"create":"__public"}',
               ],
               runtime: "prisma",
-              title: "record_cursor_t3_struct_createdAt_string_datetime",
+              title: "record_create_input_createdAt_string_datetime",
               type: "string",
             },
           },
@@ -75,9 +75,9 @@ snapshot[`typegate: find available operations 1`] = `
       {
         fields: [
           {
+            as_id: true,
             name: "id",
             type: {
-              as_id: true,
               config: '{"auto":true}',
               default: null,
               enum: null,
@@ -85,14 +85,14 @@ snapshot[`typegate: find available operations 1`] = `
               optional: false,
               policies: [],
               runtime: "prisma",
-              title: "record_with_nested_count_id_string_uuid",
+              title: "record_output_id_string_uuid",
               type: "string",
             },
           },
           {
+            as_id: false,
             name: "name",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -105,9 +105,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "age",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -120,9 +120,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "createdAt",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -132,7 +132,7 @@ snapshot[`typegate: find available operations 1`] = `
                 '{"create":"__public"}',
               ],
               runtime: "prisma",
-              title: "record_cursor_t3_struct_createdAt_string_datetime",
+              title: "record_create_input_createdAt_string_datetime",
               type: "string",
             },
           },
@@ -143,9 +143,9 @@ snapshot[`typegate: find available operations 1`] = `
       {
         fields: [
           {
+            as_id: true,
             name: "id",
             type: {
-              as_id: true,
               config: '{"auto":true}',
               default: null,
               enum: null,
@@ -153,14 +153,14 @@ snapshot[`typegate: find available operations 1`] = `
               optional: false,
               policies: [],
               runtime: "prisma",
-              title: "users_create_input_id_integer",
+              title: "users_output_id_integer",
               type: "integer",
             },
           },
           {
+            as_id: false,
             name: "identities",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -168,14 +168,14 @@ snapshot[`typegate: find available operations 1`] = `
               optional: false,
               policies: [],
               runtime: "prisma",
-              title: "list_22_placeholder",
+              title: "users_identities_user_identity_list",
               type: "list",
             },
           },
           {
+            as_id: false,
             name: "email",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -188,9 +188,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "name",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -203,9 +203,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "messages",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -213,7 +213,7 @@ snapshot[`typegate: find available operations 1`] = `
               optional: false,
               policies: [],
               runtime: "prisma",
-              title: "list_26_placeholder",
+              title: "users_messages_messages_list",
               type: "list",
             },
           },
@@ -224,9 +224,9 @@ snapshot[`typegate: find available operations 1`] = `
       {
         fields: [
           {
+            as_id: true,
             name: "id",
             type: {
-              as_id: true,
               config: '{"auto":true}',
               default: null,
               enum: null,
@@ -234,14 +234,14 @@ snapshot[`typegate: find available operations 1`] = `
               optional: false,
               policies: [],
               runtime: "prisma",
-              title: "record_with_nested_count_id_string_uuid",
+              title: "record_output_id_string_uuid",
               type: "string",
             },
           },
           {
+            as_id: false,
             name: "provider",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: [
@@ -258,9 +258,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "identifier",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -273,9 +273,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "user",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -294,9 +294,9 @@ snapshot[`typegate: find available operations 1`] = `
       {
         fields: [
           {
+            as_id: true,
             name: "id",
             type: {
-              as_id: true,
               config: "{}",
               default: null,
               enum: null,
@@ -309,9 +309,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "time",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -324,9 +324,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "message",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,
@@ -339,9 +339,9 @@ snapshot[`typegate: find available operations 1`] = `
             },
           },
           {
+            as_id: false,
             name: "sender",
             type: {
-              as_id: false,
               config: "{}",
               default: null,
               enum: null,

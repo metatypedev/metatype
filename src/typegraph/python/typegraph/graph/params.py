@@ -120,7 +120,7 @@ class Auth:
                 ("access_url", json.dumps(access_url)),
                 ("scopes", json.dumps(scopes)),
                 ("profile_url", json.dumps(profile_url)),
-                ("profiler", json.dumps(None if profiler is None else profiler.id)),
+                ("profiler", json.dumps(None if profiler is None else profiler._id)),
             ],
         )
 
@@ -211,7 +211,7 @@ class RawAuth:
             )
         elif isinstance(profiler, CustomProfiler):
             res = wit_utils.oauth2_with_custom_profiler(
-                store, service, scopes, profiler.func.id
+                store, service, scopes, profiler.func._id
             )
         else:  # default profiler
             res = wit_utils.oauth2(store, service, scopes)

@@ -6,21 +6,21 @@
       "runtime": 0,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "typegraphs": 1,
         "typegraph": 7,
-        "addTypegraph": 13,
-        "removeTypegraphs": 23,
-        "argInfoByPath": 27,
-        "findAvailableOperations": 42,
-        "findPrismaModels": 50,
-        "execRawPrismaRead": 56,
+        "addTypegraph": 12,
+        "removeTypegraphs": 22,
+        "argInfoByPath": 26,
+        "findAvailableOperations": 41,
+        "findPrismaModels": 49,
+        "execRawPrismaRead": 55,
         "execRawPrismaCreate": 67,
         "execRawPrismaUpdate": 68,
         "execRawPrismaDelete": 69,
         "queryPrismaModel": 70
       },
+      "id": [],
       "required": [
         "typegraphs",
         "typegraph",
@@ -38,13 +38,12 @@
     },
     {
       "type": "function",
-      "title": "func_123",
+      "title": "root_typegraphs_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
       "input": 2,
       "output": 3,
       "materializer": 0,
@@ -53,21 +52,20 @@
     },
     {
       "type": "object",
-      "title": "object_87",
+      "title": "root_typegraphs_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {},
+      "id": [],
       "required": []
     },
     {
       "type": "list",
-      "title": "_88_Typegraph[]",
+      "title": "root_typegraphs_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "items": 4
     },
     {
@@ -76,180 +74,164 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "name": 5,
         "url": 6
       },
+      "id": [],
       "required": []
     },
     {
       "type": "string",
-      "title": "string_15",
+      "title": "Typegraph_name_string",
       "runtime": 1,
       "policies": [],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "string",
-      "title": "string_16",
+      "title": "Typegraph_url_string_uri",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "format": "uri"
     },
     {
       "type": "function",
-      "title": "func_124",
+      "title": "root_typegraph_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
       "input": 8,
-      "output": 10,
+      "output": 9,
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_91",
+      "title": "root_typegraph_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "name": 9
+        "name": 5
       },
+      "id": [],
       "required": []
     },
     {
-      "type": "string",
-      "title": "string_90",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
       "type": "optional",
-      "title": "optional_93",
+      "title": "root_typegraph_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "item": 11,
+      "item": 10,
       "default_value": null
     },
     {
       "type": "object",
-      "title": "object_92",
+      "title": "root_typegraph_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "name": 5,
         "url": 6,
-        "serialized": 12
+        "serialized": 11
       },
+      "id": [],
       "required": []
     },
     {
       "type": "function",
-      "title": "func_14",
+      "title": "root_typegraph_fn_output_serialized_fn",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "input": 2,
-      "output": 9,
+      "output": 5,
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "function",
-      "title": "func_125",
+      "title": "root_addTypegraph_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 14,
-      "output": 16,
+      "input": 13,
+      "output": 15,
       "materializer": 4,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_98",
+      "title": "root_addTypegraph_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "fromString": 15,
-        "secrets": 15,
-        "targetVersion": 9
+        "fromString": 14,
+        "secrets": 14,
+        "targetVersion": 5
       },
+      "id": [],
       "required": []
     },
     {
       "type": "string",
-      "title": "string_95",
+      "title": "root_addTypegraph_fn_input_fromString_string_json",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "format": "json"
     },
     {
       "type": "object",
-      "title": "object_110",
+      "title": "root_addTypegraph_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "name": 9,
-        "messages": 17,
-        "migrations": 20,
-        "failure": 22
+        "name": 5,
+        "messages": 16,
+        "migrations": 19,
+        "failure": 21
       },
+      "id": [],
       "required": []
     },
     {
       "type": "list",
-      "title": "list_103",
+      "title": "root_addTypegraph_fn_output_messages_root_addTypegraph_fn_output_messages_struct_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 18
+      "items": 17
     },
     {
       "type": "object",
-      "title": "object_102",
+      "title": "root_addTypegraph_fn_output_messages_struct",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "type": 19,
-        "text": 9
+        "type": 18,
+        "text": 5
       },
+      "id": [],
       "required": []
     },
     {
       "type": "string",
-      "title": "string_100",
+      "title": "root_addTypegraph_fn_output_messages_struct_type_string_enum",
       "runtime": 1,
       "policies": [],
       "enum": [
@@ -257,95 +239,88 @@
         "\"warning\"",
         "\"error\""
       ],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "list",
-      "title": "list_107",
+      "title": "root_addTypegraph_fn_output_migrations_root_addTypegraph_fn_output_migrations_struct_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 21
+      "items": 20
     },
     {
       "type": "object",
-      "title": "object_106",
+      "title": "root_addTypegraph_fn_output_migrations_struct",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "runtime": 9,
-        "migrations": 9
+        "runtime": 5,
+        "migrations": 5
       },
+      "id": [],
       "required": []
     },
     {
       "type": "optional",
-      "title": "optional_109",
+      "title": "root_addTypegraph_fn_output_failure_root_addTypegraph_fn_input_fromString_string_json_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "item": 15,
+      "item": 14,
       "default_value": null
     },
     {
       "type": "function",
-      "title": "func_126",
+      "title": "root_removeTypegraphs_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 24,
-      "output": 26,
+      "input": 23,
+      "output": 25,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_114",
+      "title": "root_removeTypegraphs_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "names": 25
+        "names": 24
       },
+      "id": [],
       "required": []
     },
     {
       "type": "list",
-      "title": "list_113",
+      "title": "root_removeTypegraphs_fn_input_names_Typegraph_name_string_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 9
+      "items": 5
     },
     {
       "type": "boolean",
-      "title": "boolean_115",
+      "title": "root_removeTypegraphs_fn_output",
       "runtime": 1,
       "policies": [],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "function",
-      "title": "func_127",
+      "title": "root_argInfoByPath_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 28,
+      "input": 27,
       "output": 30,
       "materializer": 6,
       "rate_weight": null,
@@ -353,35 +328,41 @@
     },
     {
       "type": "object",
-      "title": "object_24",
+      "title": "root_argInfoByPath_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "typegraph": 9,
-        "queryType": 9,
-        "fn": 9,
-        "argPaths": 29
+        "typegraph": 5,
+        "queryType": 5,
+        "fn": 5,
+        "argPaths": 28
       },
+      "id": [],
       "required": []
     },
     {
       "type": "list",
-      "title": "list_23",
+      "title": "root_argInfoByPath_fn_input_argPaths_root_argInfoByPath_fn_input_argPaths_Typegraph_name_string_list_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 25
+      "items": 29
     },
     {
       "type": "list",
-      "title": "_117_TypeInfo[]",
+      "title": "root_argInfoByPath_fn_input_argPaths_Typegraph_name_string_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
+      "items": 5
+    },
+    {
+      "type": "list",
+      "title": "root_argInfoByPath_fn_output",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
       "items": 31
     },
     {
@@ -390,154 +371,136 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "optional": 32,
-        "as_id": 32,
+        "optional": 25,
         "title": 5,
         "type": 5,
-        "enum": 33,
+        "enum": 32,
         "runtime": 5,
-        "config": 36,
-        "default": 36,
-        "format": 37,
-        "policies": 38,
-        "fields": 39
+        "config": 34,
+        "default": 35,
+        "format": 36,
+        "policies": 37,
+        "fields": 38
       },
+      "id": [],
       "required": []
     },
     {
-      "type": "boolean",
-      "title": "boolean_25",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false
-    },
-    {
       "type": "optional",
-      "title": "optional_31",
+      "title": "TypeInfo_enum_TypeInfo_enum_root_addTypegraph_fn_input_fromString_string_json_list_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "item": 34,
+      "item": 33,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "list_30",
+      "title": "TypeInfo_enum_root_addTypegraph_fn_input_fromString_string_json_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 35
-    },
-    {
-      "type": "string",
-      "title": "string_29",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "format": "json"
+      "items": 14
     },
     {
       "type": "optional",
-      "title": "optional_34",
+      "title": "TypeInfo_config_root_addTypegraph_fn_input_fromString_string_json_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "item": 35,
+      "item": 14,
       "default_value": null
     },
     {
       "type": "optional",
-      "title": "optional_38",
+      "title": "TypeInfo_default_root_addTypegraph_fn_input_fromString_string_json_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
+      "item": 14,
+      "default_value": null
+    },
+    {
+      "type": "optional",
+      "title": "TypeInfo_format_Typegraph_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
       "item": 5,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "list_40",
+      "title": "TypeInfo_policies_Typegraph_name_string_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "items": 5
     },
     {
       "type": "optional",
-      "title": "optional_45",
+      "title": "TypeInfo_fields_TypeInfo_fields_TypeInfo_fields_struct_list_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "item": 40,
+      "item": 39,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "list_44",
+      "title": "TypeInfo_fields_TypeInfo_fields_struct_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 41
+      "items": 40
     },
     {
       "type": "object",
-      "title": "object_43",
+      "title": "TypeInfo_fields_struct",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "subPath": 25,
+        "subPath": 29,
         "termNode": 31
       },
+      "id": [],
       "required": []
     },
     {
       "type": "function",
-      "title": "func_128",
+      "title": "root_findAvailableOperations_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 43,
-      "output": 44,
+      "input": 42,
+      "output": 43,
       "materializer": 7,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_56",
+      "title": "root_findAvailableOperations_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "typegraph": 9
+        "typegraph": 5
       },
+      "id": [],
       "required": []
     },
     {
       "type": "list",
-      "title": "_57_OperationInfo[]",
+      "title": "root_findAvailableOperations_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 45
+      "items": 44
     },
     {
       "type": "object",
@@ -545,83 +508,78 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "name": 5,
-        "type": 46,
-        "inputs": 47,
+        "type": 45,
+        "inputs": 46,
         "output": 31,
-        "outputItem": 49
+        "outputItem": 48
       },
+      "id": [],
       "required": []
     },
     {
       "type": "string",
-      "title": "string_51",
+      "title": "OperationInfo_type_string_enum",
       "runtime": 1,
       "policies": [],
       "enum": [
         "\"query\"",
         "\"mutation\""
       ],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "list",
-      "title": "list_52",
+      "title": "OperationInfo_inputs_OperationInfo_inputs_struct_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 48
+      "items": 47
     },
     {
       "type": "object",
-      "title": "object_49",
+      "title": "OperationInfo_inputs_struct",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "name": 5,
         "type": 31
       },
+      "id": [],
       "required": []
     },
     {
       "type": "optional",
-      "title": "_53_TypeInfo?",
+      "title": "OperationInfo_outputItem_TypeInfo_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "item": 31,
       "default_value": null
     },
     {
       "type": "function",
-      "title": "func_129",
+      "title": "root_findPrismaModels_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 43,
-      "output": 51,
+      "input": 42,
+      "output": 50,
       "materializer": 8,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "list",
-      "title": "_67_PrismaModelInfo[]",
+      "title": "root_findPrismaModels_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 52
+      "items": 51
     },
     {
       "type": "object",
@@ -629,34 +587,34 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "name": 5,
         "runtime": 5,
-        "fields": 53
+        "fields": 52
       },
+      "id": [],
       "required": []
     },
     {
       "type": "list",
-      "title": "list_63",
+      "title": "PrismaModelInfo_fields_PrismaModelInfo_fields_struct_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 54
+      "items": 53
     },
     {
       "type": "object",
-      "title": "object_62",
+      "title": "PrismaModelInfo_fields_struct",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "name": 5,
-        "type": 55
+        "as_id": 25,
+        "type": 54
       },
+      "id": [],
       "required": []
     },
     {
@@ -665,48 +623,46 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "optional": 32,
-        "as_id": 32,
+        "optional": 25,
         "title": 5,
         "type": 5,
-        "enum": 33,
+        "enum": 32,
         "runtime": 5,
-        "config": 36,
-        "default": 36,
-        "format": 37,
-        "policies": 38
+        "config": 34,
+        "default": 35,
+        "format": 36,
+        "policies": 37
       },
+      "id": [],
       "required": []
     },
     {
       "type": "function",
-      "title": "func_130",
+      "title": "root_execRawPrismaRead_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 57,
-      "output": 15,
+      "input": 56,
+      "output": 14,
       "materializer": 9,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "object",
-      "title": "object_71",
+      "title": "root_execRawPrismaRead_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "typegraph": 9,
-        "runtime": 9,
-        "query": 58
+        "typegraph": 5,
+        "runtime": 5,
+        "query": 57
       },
+      "id": [],
       "required": []
     },
     {
@@ -715,9 +671,8 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "oneOf": [
-        59,
+        58,
         61
       ]
     },
@@ -727,13 +682,22 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "modelName": 37,
+        "modelName": 59,
         "action": 60,
-        "query": 35
+        "query": 14
       },
+      "id": [],
       "required": []
+    },
+    {
+      "type": "optional",
+      "title": "PrismaSingleQuery_modelName_Typegraph_name_string_optional",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 5,
+      "default_value": null
     },
     {
       "type": "string",
@@ -760,8 +724,7 @@
         "\"findRaw\"",
         "\"aggregateRaw\""
       ],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "object",
@@ -769,57 +732,54 @@
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "batch": 62,
         "transaction": 63
       },
+      "id": [],
       "required": []
     },
     {
       "type": "list",
-      "title": "_5_PrismaSingleQuery[]",
+      "title": "PrismaBatchQuery_batch_PrismaSingleQuery_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 59
+      "items": 58
     },
     {
       "type": "optional",
-      "title": "optional_9",
+      "title": "PrismaBatchQuery_transaction_PrismaBatchQuery_transaction_struct_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "item": 64,
       "default_value": null
     },
     {
       "type": "object",
-      "title": "object_8",
+      "title": "PrismaBatchQuery_transaction_struct",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "isolationLevel": 65
       },
+      "id": [],
       "required": []
     },
     {
       "type": "optional",
-      "title": "optional_7",
+      "title": "PrismaBatchQuery_transaction_struct_isolationLevel_PrismaBatchQuery_transaction_struct_isolationLevel_string_enum_optional",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "item": 66,
       "default_value": null
     },
     {
       "type": "string",
-      "title": "string_6",
+      "title": "PrismaBatchQuery_transaction_struct_isolationLevel_string_enum",
       "runtime": 1,
       "policies": [],
       "enum": [
@@ -832,63 +792,58 @@
         "\"snapshot\"",
         "\"serializable\""
       ],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "function",
-      "title": "func_131",
+      "title": "root_execRawPrismaCreate_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 57,
-      "output": 15,
+      "input": 56,
+      "output": 14,
       "materializer": 10,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "function",
-      "title": "func_132",
+      "title": "root_execRawPrismaUpdate_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 57,
-      "output": 15,
+      "input": 56,
+      "output": 14,
       "materializer": 11,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "function",
-      "title": "func_133",
+      "title": "root_execRawPrismaDelete_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
-      "input": 57,
-      "output": 15,
+      "input": 56,
+      "output": 14,
       "materializer": 12,
       "rate_weight": null,
       "rate_calls": false
     },
     {
       "type": "function",
-      "title": "func_134",
+      "title": "root_queryPrismaModel_fn",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "as_id": false,
       "input": 71,
       "output": 73,
       "materializer": 13,
@@ -897,72 +852,56 @@
     },
     {
       "type": "object",
-      "title": "object_78",
+      "title": "root_queryPrismaModel_fn_input",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
-        "typegraph": 9,
-        "runtime": 9,
-        "model": 9,
+        "typegraph": 5,
+        "runtime": 5,
+        "model": 5,
         "offset": 72,
         "limit": 72
       },
+      "id": [],
       "required": []
     },
     {
       "type": "integer",
-      "title": "integer_76",
+      "title": "root_queryPrismaModel_fn_input_offset_integer",
       "runtime": 1,
       "policies": [],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "object",
-      "title": "object_85",
+      "title": "root_queryPrismaModel_fn_output",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "fields": 74,
         "rowCount": 72,
-        "data": 76
+        "data": 75
       },
+      "id": [],
       "required": []
     },
     {
       "type": "list",
-      "title": "list_81",
+      "title": "root_queryPrismaModel_fn_output_fields_PrismaModelInfo_fields_struct_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 75
-    },
-    {
-      "type": "object",
-      "title": "object_80",
-      "runtime": 1,
-      "policies": [],
-      "config": {},
-      "as_id": false,
-      "properties": {
-        "name": 9,
-        "type": 55
-      },
-      "required": []
+      "items": 53
     },
     {
       "type": "list",
-      "title": "list_84",
+      "title": "root_queryPrismaModel_fn_output_data_root_addTypegraph_fn_input_fromString_string_json_list",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "as_id": false,
-      "items": 15
+      "items": 14
     }
   ],
   "materializers": [

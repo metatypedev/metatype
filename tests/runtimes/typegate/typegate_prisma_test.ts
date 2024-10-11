@@ -34,9 +34,9 @@ Meta.test({
           runtime
           fields {
             name
+            as_id
             type {
               optional
-              as_id
               title
               type
               enum
@@ -192,9 +192,7 @@ Meta.test({
         ) {
           fields {
             name
-            type {
-              as_id
-            }
+            as_id
           }
           rowCount
           data
@@ -212,33 +210,23 @@ Meta.test({
           fields: [
             {
               name: "id",
-              type: {
-                as_id: true,
-              },
+              as_id: true,
             },
             {
               name: "identities",
-              type: {
-                as_id: false,
-              },
+              as_id: false,
             },
             {
               name: "email",
-              type: {
-                as_id: false,
-              },
+              as_id: false,
             },
             {
               name: "name",
-              type: {
-                as_id: false,
-              },
+              as_id: false,
             },
             {
               name: "messages",
-              type: {
-                as_id: false,
-              },
+              as_id: false,
             },
           ],
           rowCount: 1,

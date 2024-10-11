@@ -14,12 +14,14 @@ Injection is a mechanism to get the value of a parameter from other sources than
 
 ## Parent
 
-**Description:** Parent injection gets the value output of a sibling field in the parent struct. It adds a dependency to the sibling field, so make sure to prevent circular dependencies.
+**Description:** Parent injection gets the value output of a sibling field (_source_) in the parent struct. It adds a dependency to the sibling field, so make sure to prevent circular dependencies.
 Additionally, it requires that the source type is a [subtype of](/docs/reference/types/comparison) the target type.
 
-**Method:** `.from_parent(type_name)`
+Note: the parent struct is relative to the function in which the current type is an input.
 
-**Parameter:** The type name of the sibling field in the parent struct.
+**Method:** `.from_parent(key)`
+
+**Parameter:** The name (key) of the source field in the parent struct.
 
 ## Context
 

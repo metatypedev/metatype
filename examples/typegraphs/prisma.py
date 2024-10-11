@@ -15,7 +15,7 @@ def roadmap_py(g: Graph):
 
     bucket = t.struct(
         {
-            "id": t.integer(as_id=True, config={"auto": True}),
+            "id": t.integer(config={"auto": True}).id(),
             "name": t.string(),
             "ideas": t.list(g.ref("idea")),
         },
@@ -23,7 +23,7 @@ def roadmap_py(g: Graph):
     )
     idea = t.struct(
         {
-            "id": t.uuid(as_id=True, config={"auto": True}),
+            "id": t.uuid(config={"auto": True}).id(),
             "name": t.string(),
             "authorEmail": t.email(),
             "votes": t.list(g.ref("vote")),
@@ -33,7 +33,7 @@ def roadmap_py(g: Graph):
     )
     vote = t.struct(
         {
-            "id": t.uuid(as_id=True, config={"auto": True}),
+            "id": t.uuid(config={"auto": True}).id(),
             "authorEmail": t.email(),
             "importance": t.enum(["medium", "important", "critical"]).optional(),
             "desc": t.string().optional(),
