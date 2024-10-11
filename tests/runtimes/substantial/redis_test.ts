@@ -4,6 +4,7 @@
 import {
   SUB_REDIS,
   basicTestTemplate,
+  childWorkflowTestTemplate,
   concurrentWorkflowTestTemplate,
   redisCleanup,
   retrySaveTestTemplate,
@@ -36,5 +37,17 @@ retrySaveTestTemplate(
     secrets: { SUB_REDIS },
   },
 
+  redisCleanup(SUB_REDIS)
+);
+
+childWorkflowTestTemplate(
+  "redis",
+  {
+    delays: {
+      awaitCompleteSec: 15,
+    },
+
+    secrets: { SUB_REDIS },
+  },
   redisCleanup(SUB_REDIS)
 );

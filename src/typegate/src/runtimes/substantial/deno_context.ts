@@ -8,12 +8,10 @@ import { make_internal } from "../../worker_utils.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import { Interrupt, OperationEvent, Run, appendIfOngoing } from "./types.ts";
 
-const isTest = Deno.env.get("DENO_TESTING") === "true";
+// const isTest = Deno.env.get("DENO_TESTING") === "true";
 const testBaseUrl = Deno.env.get("TEST_OVERRIDE_GQL_ORIGIN");
 
-const additionalHeaders = isTest
-  ? { connection: "close" }
-  : { connection: "keep-alive" };
+const additionalHeaders = { connection: "keep-alive" };
 
 export class Context {
   private id: number = 0;
@@ -259,7 +257,6 @@ export class ChildWorkflowHandle {
 
   async result<O>(): Promise<O> {
     this.#checkRunId();
-    console.log("ENTER result");
 
     const { data } = await this.ctx.gql/**/ `
       query ($name: String!) {

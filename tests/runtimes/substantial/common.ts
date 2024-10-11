@@ -522,92 +522,85 @@ export function childWorkflowTestTemplate(
         }
       );
 
-      const packageNames = ["metatype", "substantial", "typegraph"];
+      const packages = [
+        { name: "metatype", version: 1 },
+        { name: "substantial", version: 2 },
+        { name: "typegraph", version: 3 },
+      ];
 
-      let currentRunId: string | null = null;
-      await gql`
-        mutation {
-          start(kwargs: { packages: $packages })
-        }
-      `
-        .withVars({
-          packages: packageNames,
-        })
-        .expectBody((body) => {
-          currentRunId = body.data?.start! as string;
-          assertExists(
-            currentRunId,
-            "Run id was not returned when workflow was started"
-          );
-        })
-        .on(e);
+      let parentRunId: string | null = null;
+      t.should(`start parent workflow`, async () => {
+        await gql`
+          mutation {
+            start(kwargs: { packages: $packages })
+          }
+        `
+          .withVars({ packages })
+          .expectBody((body) => {
+            parentRunId = body.data?.start! as string;
+            assertExists(
+              parentRunId,
+              "Run id was not returned when workflow was started"
+            );
+          })
+          .on(e);
+      });
 
       await sleep(delays.awaitCompleteSec * 1000);
 
-      await gql`
-        query {
-          children: results(name: "bumpPackage") {
-            ongoing {
-              count
+      t.should(`complete parent and all child workflows`, async () => {
+        await gql`
+          query {
+            children: results_raw(name: "bumpPackage") {
+              ongoing {
+                count
+              }
+              completed {
+                count
+              }
             }
-            completed {
-              count
-              runs {
-                result {
-                  status
-                  value
+            parent: results_raw(name: "bumpAll") {
+              completed {
+                runs {
+                  run_id
+                  result {
+                    status
+                    value
+                  }
                 }
               }
             }
           }
-          parent: results(name: "bumpAll") {
-            completed {
-              count
-              # runs {
-              #   run_id
-              #   result {
-              #     status
-              #     value # FIXME: maintained connection is cut on the test, making
-              #   }
-              # }
-            }
-          }
-        }
-      `
-        .expectBody((body) => {
-          const { children, parent } = body.data;
-
-          assertEquals(children?.ongoing?.count, 0, "ongoing children count");
-          assertEquals(
-            children.completed.count,
-            packageNames.length,
-            "completed children count"
-          );
-
-          assertEquals(
-            children.completed.count +
-              children?.ongoing?.count -
-              packageNames.length,
-            0,
-            "executed count not matching expectation"
-          );
-
-          assertEquals(parent.completed.count, 1, "parent count");
-
-          const output = ((children?.completed?.runs as Array<any>) ?? [])
-            .map((r) => r?.result?.value as string)
-            .sort((a, b) => a.localeCompare(b));
-
-          assertEquals(
-            output,
-            [
-              "Now using metatype v1",
-              "Now using substantial v1",
-              "Now using typegraph v1",
-            ].sort((a, b) => a.localeCompare(b))
-          );
-        })
-        .on(e);
+        `
+          .expectData({
+            children: {
+              ongoing: {
+                count: 0,
+              },
+              completed: {
+                count: packages.length,
+              },
+            },
+            parent: {
+              completed: {
+                runs: [
+                  {
+                    run_id: parentRunId,
+                    result: {
+                      status: "COMPLETED",
+                      value: JSON.stringify([
+                        "Bump metatype v1 => v2",
+                        "Bump substantial v2 => v3",
+                        "Bump typegraph v3 => v4",
+                      ]),
+                    },
+                  },
+                ],
+              },
+            },
+          })
+          .on(e);
+      });
     }
   );
 }

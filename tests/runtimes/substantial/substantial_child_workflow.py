@@ -24,13 +24,15 @@ def substantial_child_workflow(g: Graph):
 
     sub = SubstantialRuntime(backend, [file])
 
+    package = t.struct({"name": t.string(), "version": t.integer()}).rename("Package")
+
     g.expose(
         pub,
         # common
         stop=sub.stop(),
-        results=sub.query_results(t.string().rename("ResultOrError")),
+        results_raw=sub.query_results_raw(),  # bypass type hinting in favor of json string
         workers=sub.query_resources(),
-        start=sub.start(t.struct({"packages": t.list(t.string())})).reduce(
+        start=sub.start(t.struct({"packages": t.list(package)})).reduce(
             {"name": "bumpAll"}
         ),
         **sub.internals(),
