@@ -3,7 +3,13 @@
 // TODO:
 export type Workflow<O> = (ctx: Context) => Promise<O>;
 
-export interface ChildWorkflowHandle<O> {
+export interface SerializableWorkflowHandle {
+  runId?: string;
+  name: string;
+  kwargs: unknown;
+}
+
+export interface ChildWorkflowHandle {
   name: string;
   result<O>(): Promise<O>;
   stop: () => Promise<void>;
@@ -29,8 +35,14 @@ export interface Context {
     fn: (received: I) => O | Promise<O>
   ): Promise<O>;
   ensure(conditionFn: () => boolean | Promise<boolean>): Promise<true>;
-  // TODO:
-  childWorkflow<O>(workflow: Workflow<O>, kwargs: any): ChildWorkflowHandle<O>;
+
+  startChildWorkflow<O>(
+    workflow: Workflow<O>,
+    kwargs: unknown
+  ): Promise<SerializableWorkflowHandle>;
+  createWorkflowHandle(
+    handleDef: SerializableWorkflowHandle
+  ): ChildWorkflowHandle;
 }
 
 export interface SaveOption {

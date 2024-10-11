@@ -36,7 +36,7 @@ mod tests {
     fn test_basic_run_persist() {
         let mem_backend = MemoryBackend::default().get();
 
-        let root = PathBuf::from("tmp/test_one/substantial");
+        let root = PathBuf::from("tmp/test_basic/substantial");
         let fs_backend = FsBackend::new(root.clone()).get();
         std::fs::remove_dir_all(root).ok();
 
@@ -80,7 +80,7 @@ mod tests {
             (
                 "fs",
                 Box::new({
-                    let root = PathBuf::from("tmp/test_two/substantial");
+                    let root = PathBuf::from("tmp/rust_test_state/substantial");
                     let backend = FsBackend::new(root.clone()).get();
                     std::fs::remove_dir_all(root).ok();
                     backend

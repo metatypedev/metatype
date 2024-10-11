@@ -41,3 +41,11 @@ export function make_internal(
   };
   return { gql };
 }
+
+export function errorToString(err: unknown) {
+  if (err instanceof Error) {
+    return err.message;
+  } else {
+    return JSON.stringify(err);
+  }
+}

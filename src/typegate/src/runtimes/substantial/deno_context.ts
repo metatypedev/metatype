@@ -17,31 +17,14 @@ const additionalHeaders = isTest
 
 export class Context {
   private id: number = 0;
-  gql: (
-    query: readonly string[],
-    ...args: unknown[]
-  ) => {
-    run: (
-      variables: Record<string, unknown>
-    ) => Promise<Record<string, unknown>>;
-  };
+  gql: ReturnType<typeof createGQLClient>;
 
   constructor(
     private run: Run,
     private kwargs: Record<string, unknown>,
     private internal: TaskContext
   ) {
-    const tgLocal = new URL(internal.meta.url);
-    if (testBaseUrl) {
-      const newBase = new URL(testBaseUrl);
-      tgLocal.protocol = newBase.protocol;
-      tgLocal.hostname = newBase.hostname;
-      tgLocal.port = newBase.port;
-    }
-
-    const meta = { ...internal.meta, url: tgLocal.toString() };
-
-    this.gql = make_internal({ ...internal, meta }, additionalHeaders).gql;
+    this.gql = createGQLClient(internal);
   }
 
   #nextId() {
@@ -91,7 +74,7 @@ export class Context {
         id,
         value: {
           type: "Resolved",
-          payload: result,
+          payload: result ?? null,
         },
       });
 
@@ -210,92 +193,142 @@ export class Context {
     return result;
   }
 
-  childWorkflow<O>(workflow: Workflow<O>, kwargs: unknown) {
-    return new ChildWorkflowHandle(this, workflow.name, kwargs);
+  // Note: This is designed to be used inside ctx.save(..)
+  async startChildWorkflow<O>(workflow: Workflow<O>, kwargs: unknown) {
+    const handle = new ChildWorkflowHandle({
+      internal: this.internal,
+      name: workflow.name,
+      kwargs,
+    });
+    const runId = await handle.start();
+    return {
+      ...handle.handleDef,
+      runId,
+    };
+  }
+
+  // Note: This is designed to be used outside a ctx.save since function methods cannot be persisted
+  createWorkflowHandle(handleDef: SerializableWorkflowHandle) {
+    if (!handleDef.runId) {
+      throw new Error(
+        "Cannot create handle from a definition that was not run"
+      );
+    }
+    return new ChildWorkflowHandle(handleDef);
   }
 }
 
 export type Workflow<O> = (ctx: Context) => Promise<O>;
 
-export class ChildWorkflowHandle<O> {
-  private runId?: string;
-  constructor(
-    private spawnerContext: Context,
-    private name: string,
-    private kwargs: unknown
-  ) {}
+interface SerializableWorkflowHandle {
+  runId?: string;
+
+  internal: TaskContext;
+  name: string;
+  kwargs: unknown;
+}
+
+export class ChildWorkflowHandle {
+  constructor(public handleDef: SerializableWorkflowHandle) {}
 
   async start(): Promise<string> {
-    const data = await this.spawnerContext.gql/**/ `query {
-      _sub_internal_start(name: $name, kwargs: $kwargs)
-    }`.run({
-      name: this.name,
-      kwargs: JSON.stringify(this.kwargs),
+    const gql = createGQLClient(this.handleDef.internal);
+    const { data } = await gql/**/ `
+      mutation ($name: String!, $kwargs: String!) {
+        _sub_internal_start(name: $name, kwargs: $kwargs)
+      }
+    `.run({
+      name: this.handleDef.name,
+      kwargs: JSON.stringify(this.handleDef.kwargs),
     });
 
-    console.log("START", data);
+    this.handleDef.runId = (data as any)._sub_internal_start as string;
+    this.#checkRunId();
 
-    this.runId = data._sub_internal_start as string;
-    return this.runId!;
+    return this.handleDef.runId!;
   }
 
   async result<O>(): Promise<O> {
-    const data = await this.spawnerContext.gql/**/ `query {
-      _sub_internal_results(name: $name) {
-        completed {
-          runs {
-            run_id
-            result {
-              value
-              status
-            }  
+    this.#checkRunId();
+    console.log("ENTER result");
+
+    const gql = createGQLClient(this.handleDef.internal);
+    const { data } = await gql/**/ `
+      query ($name: String!) {
+        _sub_internal_results(name: $name) {
+          completed {
+            runs {
+              run_id
+              result {
+                value
+                status
+              }
+            }
           }
         }
       }
-    }`.run({
-      name: this.name,
+    `.run({
+      name: this.handleDef.name,
     });
 
-    console.log("RESULTS", data);
     const runs = (data as any)?._sub_internal_results?.completed
       ?.runs as Array<any>;
 
-    const current = runs.filter(({ run_id }) => run_id == this.runId).shift();
+    const current = runs
+      .filter(({ run_id }) => run_id == this.handleDef.runId)
+      .shift();
     if (current) {
-      return JSON.parse(current.value) as O;
+      return JSON.parse(current.result.value) as O;
     }
 
-    throw new Error(`Result for child workflow ${name} not yet resolved`);
+    throw Error(`Result for child workflow "${name}" not yet resolved`);
   }
 
   async stop(): Promise<string> {
-    const data = await this.spawnerContext.gql/**/ `query {
-      _sub_internal_stop(run_id: $run_id)
-    }`.run({
-      name: this.name,
+    this.#checkRunId();
+
+    const gql = createGQLClient(this.handleDef.internal);
+    const { data } = await gql/**/ `
+      mutation ($run_id: String!) {
+        _sub_internal_stop(run_id: $run_id)
+      }
+    `.run({
+      run_id: this.handleDef.runId,
     });
 
-    console.log("STOP", data);
-
-    return data._sub_internal_stop as string;
+    return (data as any)._sub_internal_stop as string;
   }
 
   async hasStopped(): Promise<boolean> {
-    const data = await this.spawnerContext.gql/**/ `query {
-      _sub_internal_results(name: $name) {
-        ongoing {
-          runs { run_id }
+    this.#checkRunId();
+
+    const gql = createGQLClient(this.handleDef.internal);
+    const { data } = await gql/**/ `
+      query {
+        _sub_internal_results(name: $name) {
+          completed {
+            runs {
+              run_id
+            }
+          }
         }
       }
-    }`.run({
-      name: this.name,
+    `.run({
+      name: this.handleDef.name,
     });
 
-    console.log("HAS STOPPED?", data);
-    const runs = (data as any)?._sub_internal_results?.ongoing
+    const runs = (data as any)?._sub_internal_results?.completed
       ?.runs as Array<any>;
 
-    return runs.some(({ run_id }) => run_id == this.runId);
+    return runs.some(({ run_id }) => run_id == this.handleDef.runId);
+  }
+
+  #checkRunId() {
+    if (!this.handleDef.runId) {
+      throw new Error(
+        "Invalid state: run_id is not properly set, this could mean that the workflow was not started yet"
+      );
+    }
   }
 }
 
@@ -380,4 +413,17 @@ class RetryStrategy {
     const dt = (this.maxBackoffMs ?? 0) - (this.minBackoffMs ?? 0);
     return Math.floor(((this.maxRetries - retriesLeft) * dt) / this.maxRetries);
   }
+}
+
+function createGQLClient(internal: TaskContext) {
+  const tgLocal = new URL(internal.meta.url);
+  if (testBaseUrl) {
+    const newBase = new URL(testBaseUrl);
+    tgLocal.protocol = newBase.protocol;
+    tgLocal.hostname = newBase.hostname;
+    tgLocal.port = newBase.port;
+  }
+
+  const meta = { ...internal.meta, url: tgLocal.toString() };
+  return make_internal({ ...internal, meta }, additionalHeaders).gql;
 }

@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { errorToString } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
 import { Err, Msg, Ok, WorkerData, WorkflowResult } from "./types.ts";
 
@@ -45,10 +46,7 @@ self.onmessage = async function (event) {
             Ok(
               Msg(type, {
                 kind: "FAIL",
-                result:
-                  wfException instanceof Error
-                    ? wfException.message
-                    : JSON.stringify(wfException),
+                result: errorToString(wfException),
                 exception:
                   wfException instanceof Error ? wfException : undefined,
                 run: runCtx!.getRun(),

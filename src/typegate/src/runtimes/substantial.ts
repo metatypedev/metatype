@@ -328,8 +328,6 @@ export class SubstantialRuntime extends Runtime {
 
   #stopResolver(): Resolver {
     return async ({ run_id }) => {
-      const schedule = new Date().toJSON();
-
       const children = await Meta.substantial.metadataEnumerateAllChildren({
         backend: this.backend,
         parent_run_id: run_id,
@@ -341,10 +339,11 @@ export class SubstantialRuntime extends Runtime {
         // TODO: what if some fail? maybe collect all failing ones instead and put that on the error?
         const currRunId = stopQueue.shift();
         if (currRunId) {
+          const schedule = new Date().toJSON();
           await this.agent.schedule({
             backend: this.backend,
             queue: this.queue,
-            run_id,
+            run_id: currRunId,
             schedule,
             operation: {
               at: new Date().toJSON(),

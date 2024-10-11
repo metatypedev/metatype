@@ -16,25 +16,26 @@ export async function bumpPackage(ctx: Context) {
   return `Now using ${pkg} v${version}`;
 }
 
-export async function concurrentBump(ctx: Context) {
+export async function bumpAll(ctx: Context) {
   const { packages } = ctx.kwargs;
 
-  const handles = await ctx.save(async () => {
-    // A handle exactly matches to a runId on the implementation
-    const handles = [];
+  const handlersDef = await ctx.save(async () => {
+    const handlersDef = [];
     for (const pkg of packages) {
-      const handle = ctx.childWorkflow(bumpPackage, pkg);
-      handles.push(handle);
-
-      // Maps to a mutation { _internalResult(name: "bumpPackage", kwargs: { pkg: .. } ) }
-      await handle.start();
+      const handleDef = await ctx.startChildWorkflow(bumpPackage, {
+        pkg,
+        version: 1,
+      });
+      handlersDef.push(handleDef);
     }
-    return handles;
+
+    return handlersDef;
   });
+
+  const handles = handlersDef.map((def) => ctx.createWorkflowHandle(def));
 
   await ctx.ensure(async () => {
     for (const handle of handles) {
-      // Maps to query { _internalResult(runId: "...") != null }
       if (!(await handle.hasStopped())) {
         return false;
       }
@@ -42,9 +43,15 @@ export async function concurrentBump(ctx: Context) {
     return true;
   });
 
-  const ret = await ctx.save(() =>
-    Promise.all(handles.map((h) => h.result<string>()))
-  );
+  const ret = await ctx.save(async () => {
+    const ret = [];
+    for (const handle of handles) {
+      const childResult = await handle.result<string>();
+      ret.push(childResult);
+    }
 
-  return ret;
+    return ret;
+  });
+
+  return ret.join(", ");
 }

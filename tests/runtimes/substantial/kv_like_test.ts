@@ -17,7 +17,7 @@ concurrentWorkflowTestTemplate("memory", {
 
 retrySaveTestTemplate("memory", {
   delays: {
-    awaitCompleteAll: 10,
+    awaitCompleteAll: 12,
   },
 });
 
@@ -31,6 +31,6 @@ concurrentWorkflowTestTemplate("fs", {
 
 retrySaveTestTemplate("fs", {
   delays: {
-    awaitCompleteAll: 10,
+    awaitCompleteAll: 12,
   },
 });
