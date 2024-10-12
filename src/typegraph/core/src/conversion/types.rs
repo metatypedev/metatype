@@ -91,7 +91,6 @@ impl BaseBuilder {
             config: config.unwrap_or_default(),
             description: None,
             enumeration: self.enumeration,
-            injection: self.injection,
             policies: self.policies,
             runtime: self.runtime_idx,
             title: self.name,

@@ -129,7 +129,6 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             config: [].into_iter().collect(),
             description: None,
             enumeration: None,
-            injection: None,
             policies: Default::default(),
             runtime: default_runtime_idx,
             title: params.name,

@@ -8,7 +8,6 @@ pub async fn test_typegraph_1() -> anyhow::Result<Box<Typegraph>> {
     let out = tokio::process::Command::new("cargo")
         .args(
             "run -p meta-cli -- serialize -f fixtures/tg.ts -vvv"
-                // "run -p meta-cli -- serialize -f ../../examples/typegraphs/reduce.py"
                 .split(' ')
                 .collect::<Vec<_>>(),
         )
@@ -80,6 +79,7 @@ pub fn test_typegraph_2() -> Typegraph {
                 data: FunctionTypeData {
                     input: 1,
                     output: 1,
+                    injections: Default::default(),
                     rate_calls: false,
                     rate_weight: None,
                     materializer: 0,
@@ -100,7 +100,6 @@ pub fn default_type_node_base() -> TypeNodeBase {
         config: Default::default(),
         runtime: 0,
         policies: vec![],
-        injection: None,
         description: None,
         enumeration: None,
     }

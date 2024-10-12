@@ -46,6 +46,7 @@
       "config": {},
       "input": 2,
       "output": 3,
+      "injections": {},
       "materializer": 0,
       "rate_weight": null,
       "rate_calls": true
@@ -106,6 +107,7 @@
       "config": {},
       "input": 8,
       "output": 9,
+      "injections": {},
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": true
@@ -153,6 +155,7 @@
       "config": {},
       "input": 2,
       "output": 5,
+      "injections": {},
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
@@ -167,6 +170,7 @@
       "config": {},
       "input": 13,
       "output": 15,
+      "injections": {},
       "materializer": 4,
       "rate_weight": null,
       "rate_calls": true
@@ -281,6 +285,7 @@
       "config": {},
       "input": 23,
       "output": 25,
+      "injections": {},
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": true
@@ -322,6 +327,7 @@
       "config": {},
       "input": 27,
       "output": 30,
+      "injections": {},
       "materializer": 6,
       "rate_weight": null,
       "rate_calls": true
@@ -478,6 +484,7 @@
       "config": {},
       "input": 42,
       "output": 43,
+      "injections": {},
       "materializer": 7,
       "rate_weight": null,
       "rate_calls": true
@@ -569,6 +576,7 @@
       "config": {},
       "input": 42,
       "output": 50,
+      "injections": {},
       "materializer": 8,
       "rate_weight": null,
       "rate_calls": true
@@ -647,6 +655,7 @@
       "config": {},
       "input": 56,
       "output": 14,
+      "injections": {},
       "materializer": 9,
       "rate_weight": null,
       "rate_calls": false
@@ -804,6 +813,7 @@
       "config": {},
       "input": 56,
       "output": 14,
+      "injections": {},
       "materializer": 10,
       "rate_weight": null,
       "rate_calls": false
@@ -818,6 +828,7 @@
       "config": {},
       "input": 56,
       "output": 14,
+      "injections": {},
       "materializer": 11,
       "rate_weight": null,
       "rate_calls": false
@@ -832,6 +843,7 @@
       "config": {},
       "input": 56,
       "output": 14,
+      "injections": {},
       "materializer": 12,
       "rate_weight": null,
       "rate_calls": false
@@ -846,6 +858,7 @@
       "config": {},
       "input": 71,
       "output": 73,
+      "injections": {},
       "materializer": 13,
       "rate_weight": null,
       "rate_calls": false

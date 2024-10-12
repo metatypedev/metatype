@@ -26,6 +26,7 @@
       "config": {},
       "input": 2,
       "output": 4,
+      "injections": {},
       "materializer": 0,
       "rate_weight": null,
       "rate_calls": false
@@ -131,6 +132,7 @@
       "config": {},
       "input": 11,
       "output": 14,
+      "injections": {},
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -214,6 +216,7 @@
       "config": {},
       "input": 19,
       "output": 21,
+      "injections": {},
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -342,6 +345,7 @@
       "config": {},
       "input": 32,
       "output": 34,
+      "injections": {},
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -425,6 +429,7 @@
       "config": {},
       "input": 40,
       "output": 42,
+      "injections": {},
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -486,6 +491,7 @@
       "config": {},
       "input": 46,
       "output": 47,
+      "injections": {},
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
@@ -629,6 +635,7 @@
       "config": {},
       "input": 58,
       "output": 60,
+      "injections": {},
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false

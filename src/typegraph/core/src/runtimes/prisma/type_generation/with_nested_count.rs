@@ -8,7 +8,6 @@ use crate::runtimes::prisma::relationship::Cardinality;
 use crate::runtimes::prisma::type_generation::count::Count;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{ResolveRef as _, TypeDefExt, TypeId};
-// use crate::utils::{remove_injection, remove_injections_recursive};
 
 use super::TypeGen;
 

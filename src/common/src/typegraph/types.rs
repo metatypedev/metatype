@@ -61,8 +61,6 @@ pub struct TypeNodeBase {
     pub policies: Vec<PolicyIndices>,
     #[serde(default)]
     pub description: Option<String>,
-    #[serde(default)]
-    pub injection: Option<Injection>,
     #[serde(default, rename = "enum")]
     pub enumeration: Option<Vec<String>>, // JSON-serialized values
     #[serde(default)]
@@ -169,6 +167,17 @@ pub struct ListTypeData<Id = TypeId> {
     pub unique_items: Option<bool>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum InjectionNode {
+    Parent {
+        children: IndexMap<String, InjectionNode>,
+    },
+    Leaf {
+        injection: Injection,
+    },
+}
+
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionTypeData<Id = TypeId> {
@@ -176,6 +185,7 @@ pub struct FunctionTypeData<Id = TypeId> {
     #[serde(rename = "parameterTransform")]
     pub parameter_transform: Option<FunctionParameterTransform>,
     pub output: Id,
+    pub injections: IndexMap<String, InjectionNode>,
     pub materializer: u32,
     #[serialize_always]
     pub rate_weight: Option<u32>,

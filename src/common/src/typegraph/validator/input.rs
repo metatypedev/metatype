@@ -27,9 +27,10 @@ impl Validator {
             return VisitResult::Continue(false);
         }
 
-        if let Some(injection) = &type_node.base().injection {
-            self.validate_injection(injection, current_node, context);
-        }
+        // FIXME
+        // if let Some(injection) = &type_node.base().injection {
+        //     self.validate_injection(injection, current_node, context);
+        // }
 
         if let Some(enumeration) = &type_node.base().enumeration {
             match context
@@ -50,6 +51,7 @@ impl Validator {
 }
 
 impl Validator {
+    #[allow(dead_code)]
     fn validate_injection(
         &mut self,
         injection: &Injection,

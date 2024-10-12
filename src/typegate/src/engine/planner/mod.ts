@@ -444,7 +444,6 @@ export class Planner {
       output: outputIdx,
       rate_calls,
       rate_weight,
-      parameterTransform = null,
     } = schema;
     const outputType = this.tg.type(outputIdx);
 
@@ -472,9 +471,8 @@ export class Planner {
       node.path.join("."),
       mat.effect.effect ?? "read",
       parentProps,
-      inputIdx,
+      schema,
       argNodes,
-      parameterTransform,
     );
 
     deps.push(...collected.deps);

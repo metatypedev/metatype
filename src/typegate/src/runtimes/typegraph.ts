@@ -31,7 +31,7 @@ import {
 } from "../typegraph/visitor.ts";
 import { distinctBy } from "@std/collections/distinct-by";
 import { isInjected } from "../typegraph/utils.ts";
-import type { PolicyIndices } from "../typegraph/types.ts";
+import type { InjectionNode, PolicyIndices } from "../typegraph/types.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -128,8 +128,16 @@ export class TypeGraphRuntime extends Runtime {
       description: () => `${root.type} typegraph`,
       types: () => {
         // filter non-native GraphQL types
-        const filter = (type: TypeNode) => {
-          return !isInjected(this.tg, type) && !isQuantifier(type);
+        const filter = (
+          type: TypeNode,
+          input: {
+            injectionTree: Record<string, InjectionNode>;
+            path: string[];
+          } | null,
+        ) => {
+          return (input == null ||
+            !isInjected(this.tg, type, input.path, input.injectionTree)) &&
+            !isQuantifier(type);
         };
 
         const scalarTypeIndices = new Set<number>();
@@ -160,7 +168,8 @@ export class TypeGraphRuntime extends Runtime {
                   this.scalarIndex.set(type.type, idx);
                   return false;
                 }
-                if (filter(type)) {
+                // FIXME
+                if (filter(type, null)) {
                   inputTypeIndices.add(idx);
                 }
                 return true;
@@ -182,7 +191,8 @@ export class TypeGraphRuntime extends Runtime {
               this.scalarIndex.set(type.type, idx);
               return false;
             }
-            if (filter(type)) {
+            // FIXME
+            if (filter(type, null)) {
               regularTypeIndices.add(idx);
             }
             return true;
@@ -252,15 +262,15 @@ export class TypeGraphRuntime extends Runtime {
   formatInputFields = ([name, typeIdx]: [string, number]) => {
     const type = this.tg.types[typeIdx];
 
-    if (
-      type.injection ||
-      (isObject(type) &&
-        Object.values(type.properties)
-          .map((prop) => this.tg.types[prop])
-          .every((nested) => nested.injection))
-    ) {
-      return null;
-    }
+    // if (
+    //   type.injection ||
+    //   (isObject(type) &&
+    //     Object.values(type.properties)
+    //       .map((prop) => this.tg.types[prop])
+    //       .every((nested) => nested.injection))
+    // ) {
+    //   return null;
+    // }
 
     return {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L374

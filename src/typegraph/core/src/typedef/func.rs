@@ -1,12 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::hash::Hash as _;
-
-use common::typegraph::{
-    parameter_transform::FunctionParameterTransform, FunctionTypeData, TypeNode,
-};
-
 use crate::conversion::hash::Hashable;
 use crate::conversion::parameter_transform::convert_tree;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};
@@ -14,9 +8,18 @@ use crate::errors::{self, Result, TgError};
 use crate::params::apply::ParameterTransformNode;
 use crate::typegraph::TypegraphContext;
 use crate::types::{
-    FindAttribute as _, Func, RefAttrs, ResolveRef as _, TypeDef, TypeDefData, TypeId,
+    FindAttribute as _, Func, RefAttr, RefAttrs, ResolveRef as _, Struct, TypeDef, TypeDefData,
+    TypeId,
 };
 use crate::wit::core::TypeFunc;
+use common::typegraph::InjectionNode;
+use common::typegraph::{
+    parameter_transform::FunctionParameterTransform, FunctionTypeData, TypeNode,
+};
+use indexmap::IndexMap;
+use std::collections::HashSet;
+use std::hash::Hash as _;
+use std::rc::Rc;
 
 impl TypeConversion for Func {
     fn convert(
@@ -27,14 +30,14 @@ impl TypeConversion for Func {
     ) -> Result<TypeNode> {
         let (mat_id, runtime_id) = ctx.register_materializer(self.data.mat)?;
 
-        let input = {
-            let inp_id = TypeId(self.data.inp);
-            match TypeId(self.data.inp).resolve_ref()?.0 {
-                TypeDef::Struct(_) => Ok(ctx.register_type(inp_id, Some(runtime_id))?),
-                _ => Err(errors::invalid_input_type(&inp_id.repr()?)),
-            }
-        }?
-        .into();
+        let inp_id = TypeId(self.data.inp);
+        let (input, injection_tree) = match TypeId(self.data.inp).resolve_ref()?.0 {
+            TypeDef::Struct(s) => (
+                ctx.register_type(inp_id, Some(runtime_id))?.into(),
+                collect_injections(s, Default::default())?,
+            ),
+            _ => return Err(errors::invalid_input_type(&inp_id.repr()?)),
+        };
 
         let output = ctx
             .register_type(TypeId(self.data.out), Some(runtime_id))?
@@ -80,6 +83,7 @@ impl TypeConversion for Func {
                 input,
                 parameter_transform,
                 output,
+                injections: injection_tree,
                 materializer: mat_id,
                 rate_calls: self.data.rate_calls,
                 rate_weight: self.data.rate_weight,
@@ -116,5 +120,65 @@ impl Hashable for TypeFunc {
         TypeId(self.inp).hash_child_type(hasher, tg, runtime_id)?;
         TypeId(self.out).hash_child_type(hasher, tg, runtime_id)?;
         Ok(())
+    }
+}
+
+/// Note: only direct children of t.struct support injections; only if they
+/// are not part of a polymorphic type (unions)
+// FIXME: emit a warning if any other type has injections -- (typegraph-ng)
+fn collect_injections(
+    input_type: Rc<Struct>,
+    mut visited: HashSet<TypeId>,
+) -> Result<IndexMap<String, InjectionNode>> {
+    if !visited.insert(input_type.id) {
+        return Ok(IndexMap::new());
+    }
+    let mut res = IndexMap::new();
+
+    for (name, prop_id) in input_type.data.props.iter() {
+        let (type_def, attrs) = TypeId(*prop_id).resolve_ref()?;
+        let injection = attrs.find_injection();
+        if let Some(injection) = injection {
+            res.insert(
+                name.clone(),
+                InjectionNode::Leaf {
+                    injection: injection.clone(),
+                },
+            );
+        } else {
+            let type_def = resolve_quantifiers(type_def, |_| ())?;
+            match type_def {
+                TypeDef::Struct(s) => {
+                    let children = collect_injections(s, visited.clone())?;
+                    if !children.is_empty() {
+                        res.insert(name.clone(), InjectionNode::Parent { children });
+                    }
+                }
+                _ => {
+                    // TODO emit a warning if any descendant have injections
+                }
+            }
+        }
+    }
+
+    Ok(res)
+}
+
+fn resolve_quantifiers(
+    type_def: TypeDef,
+    consume_attributes: impl Fn(Vec<Rc<RefAttr>>),
+) -> Result<TypeDef> {
+    match type_def {
+        TypeDef::Optional(inner) => {
+            let (type_def, attrs) = TypeId(inner.data.of).resolve_ref()?;
+            consume_attributes(attrs);
+            resolve_quantifiers(type_def, consume_attributes)
+        }
+        TypeDef::List(inner) => {
+            let (type_def, attrs) = TypeId(inner.data.of).resolve_ref()?;
+            consume_attributes(attrs);
+            resolve_quantifiers(type_def, consume_attributes)
+        }
+        _ => Ok(type_def),
     }
 }

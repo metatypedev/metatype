@@ -98,26 +98,6 @@ impl TypeRef {
     }
 }
 
-// impl Hash for RefAttr {
-//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-//         match self {
-//             RefAttr::AsId(id) => {
-//                 "as_id".hash(state);
-//                 id.hash(state);
-//             }
-//             RefAttr::Injection(injection) => {
-//                 "injection".hash(state);
-//                 injection.hash(state);
-//             }
-//             RefAttr::Runtime { runtime, data } => {
-//                 "runtime".hash(state);
-//                 runtime.hash(state);
-//                 data.hash(state);
-//             }
-//         }
-//     }
-// }
-
 pub type RefAttrs = Vec<Rc<RefAttr>>;
 
 impl RefAttr {
@@ -144,86 +124,6 @@ impl RefTarget {
     }
 }
 
-// impl RefAttrs {
-//     #[allow(clippy::wrong_self_convention)]
-//     pub fn as_id(mut self, id: IdKind) -> Self {
-//         self.0.push(RefAttr::AsId(id));
-//         self
-//     }
-//
-//     pub fn with_injection(mut self, injection: Injection) -> Self {
-//         self.0.push(RefAttr::Injection(injection));
-//         self
-//     }
-//
-//     pub fn runtime(mut self, key: impl Into<String>, value: HashMap<String, JsonValue>) -> Self {
-//         self.runtime.insert(key.into(), value);
-//         self
-//     }
-//
-//     pub fn merge(mut self, other: RefAttrs) -> Self {
-//         if let Some(id) = other.as_id {
-//             self.as_id = Some(id);
-//         }
-//         if let Some(injection) = other.injection {
-//             self.injection = Some(injection);
-//         }
-//         for (k, v) in other.runtime {
-//             let runtime_attrs = self.runtime.entry(k).or_default();
-//             for (k, v) in v {
-//                 runtime_attrs.insert(k, v);
-//             }
-//         }
-//         self
-//     }
-//
-//
-//     pub fn direct(self, target: TypeDef) -> TypeRefBuilder {
-//         TypeRefBuilder {
-//             target: RefTarget::Direct(target),
-//             attributes: self,
-//         }
-//     }
-//
-//     pub fn indirect(self, name: String) -> TypeRefBuilder {
-//         TypeRefBuilder {
-//             target: RefTarget::Indirect(name),
-//             attributes: self,
-//         }
-//     }
-//
-//     pub fn wrap(self) -> Option<Rc<Self>> {
-//         Some(Rc::new(self))
-//     }
-// }
-
-impl TypeRef {
-    // pub fn collect_attributes(&self) -> RefAttrs {
-    //     match self.target.as_ref() {
-    //         RefTarget::Link(next) => {
-    //             let mut attrs = next.collect_attributes();
-    //             attrs.push(self.attribute.clone());
-    //             attrs
-    //         }
-    //         _ => vec![self.attribute.clone()],
-    //     }
-    // }
-
-    // pub fn as_id(&self) -> Option<IdKind> {
-    //     self.attributes.as_ref().and_then(|it| it.as_id)
-    // }
-    //
-    // pub fn runtime_attrs(&self, runtime_key: &str) -> Option<&HashMap<String, JsonValue>> {
-    //     self.attributes
-    //         .as_ref()
-    //         .and_then(|it| it.runtime.get(runtime_key))
-    // }
-    //
-    // pub fn runtime_attr(&self, runtime_key: &str, key: &str) -> Option<&serde_json::Value> {
-    //     self.runtime_attrs(runtime_key).and_then(|it| it.get(key))
-    // }
-}
-
 impl TypeRefBuilder {
     pub fn with_id(self, id: TypeId) -> TypeRef {
         TypeRef {
@@ -240,16 +140,6 @@ impl TypeRefBuilder {
 
 impl TypeRef {
     pub fn new(target: Type, attribute: Option<RefAttr>) -> Result<TypeRef> {
-        // Store::register_type_ref(match target {
-        //     Type::Def(type_def) => TypeRefBuilder {
-        //         target: RefTarget::Direct(type_def),
-        //         attribute,
-        //     },
-        //     Type::Ref(type_ref) => TypeRefBuilder {
-        //         target: RefTarget::Link(type_ref),
-        //         attribute,
-        //     },
-        // })
         Store::register_type_ref(
             match target {
                 Type::Def(type_def) => RefTarget::Direct(type_def),
