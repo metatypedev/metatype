@@ -1,12 +1,31 @@
 export const snapshot = {};
 
 snapshot[`type comparison errors 1`] = `
-\`- at type-comparison:: Expected all variants to be a subtype
-- at type-comparison::  - Variant 0 is not a subtype
-- at type-comparison::  - - Expected a single variant to be a supertype, got more: variants 0, 1
-- at type-comparison:: Expected all variants to be a subtype
-- at type-comparison::  - Variant 0 is not a subtype
-- at type-comparison::  - - Expected a single variant to be a supertype, got more: variants 0, 1
+\`- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
+- at type-comparison:: Type 'TypeId { t: (13341090598306040365, 5041207419464534576) }' in typegraph 'type-comparison' is a subtype of another variant of the same type
 - at type-comparison:/integer_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
 - at type-comparison:/integer_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' cannot be lower on the subtype: 12 < 13
 - at type-comparison:/integer_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: 'maximum' cannot be higher on the subtype: 12 > 11

@@ -6,7 +6,10 @@ mod input;
 mod types;
 mod value;
 
-use std::collections::{hash_map, HashMap};
+use std::{
+    any::Any,
+    collections::{hash_map, HashMap},
+};
 
 use crate::typegraph::{TypeNode, Typegraph};
 
@@ -49,6 +52,7 @@ pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     // FIXME temporarily disabled, will be re-enabled after all changes on the
     // typegraph are merged
     // errors.extend(assert_unique_titles(&tg.types));
+
     let context = ValidatorContext { typegraph: tg };
     let mut validator = Validator::default();
 
@@ -56,15 +60,30 @@ pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
 
     for ttype in tg.types.clone() {
         if let TypeNode::Either { data, .. } = ttype {
-            let sup = EitherTypeData {
-                one_of: data.one_of.clone(),
-            };
-            data.ensure_subtype_of(&sup, tg, &mut errors_collector);
+            for (i, sub_id) in data.one_of.iter().enumerate() {
+                for sup_id in data.one_of.iter().skip(i + 1) {
+                    let sub_data = EitherTypeData {
+                        one_of: vec![*sub_id],
+                    };
+                    let sup_data = EitherTypeData {
+                        one_of: vec![*sup_id],
+                    };
+                    sub_data.ensure_subtype_of(&sup_data, tg, &mut errors_collector);
+                }
+            }
         }
     }
 
     for error in errors_collector.errors.iter() {
-        validator.push_error(&[], error);
+        let tg_name = tg.name().unwrap();
+        let type_title = &error.type_id();
+        validator.push_error(
+            &[],
+            format!(
+                "Type '{:?}' in typegraph '{}' is a subtype of another variant of the same type",
+                type_title, tg_name
+            ),
+        );
     }
 
     errors.extend(tg.traverse_types(validator, &context, Layer).unwrap());
