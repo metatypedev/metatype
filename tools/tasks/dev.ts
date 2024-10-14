@@ -73,7 +73,7 @@ export default {
     desc: "meta dev example/typegraphs",
     inherit: ["_rust", "_ecma", "_python"],
     fn: ($) =>
-      $`cargo run -p meta-cli -- -C examples/typegraphs dev --run-destructive-migrations`,
+      $`cargo run -p meta-cli -- -C examples/typegraphs dev --run-destructive-migrations ${$.argv}`,
   },
 
   "dev-gate1": {

@@ -8,7 +8,6 @@ use crate::interlude::*;
 use anyhow::anyhow;
 use anyhow::Result;
 use convert_case::{Case, Casing};
-use log::{error, trace};
 use regex::Regex;
 use schema_core::json_rpc::types::SchemasContainer;
 use schema_core::json_rpc::types::SchemasWithConfigDir;
@@ -18,10 +17,9 @@ use schema_core::json_rpc::types::{
 };
 use schema_core::{CoreError, CoreResult, GenericApi};
 use serde::Serialize;
-use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use tempfile::{tempdir_in, NamedTempFile, TempDir};
+use tempfile::{tempdir_in, TempDir};
 
 trait FormatError<R> {
     fn format_error(self) -> Result<R>;
@@ -53,7 +51,7 @@ pub async fn loss(
         schema: SchemasContainer {
             files: vec![SchemaContainer {
                 content: schema,
-                path: "generated.prisma".into(),
+                path: "schema.generated.prisma".into(),
             }],
         },
     };
@@ -129,7 +127,7 @@ impl MigrationContext {
         SchemasContainer {
             files: vec![SchemaContainer {
                 content: format!("{}{}", self.builder.datasource, self.builder.datamodel),
-                path: "generated.prisma".into(),
+                path: "schema.generated.prisma".into(),
             }],
         }
     }
@@ -234,7 +232,6 @@ impl MigrationContext {
 }
 
 pub async fn diff(
-    tmp_dir_path: &Path,
     datasource: String,
     datamodel: String,
     script: bool,
@@ -248,29 +245,21 @@ pub async fn diff(
         )))),
     )?;
 
-    let dir = tempdir_in(tmp_dir_path)?;
-    debug!("diff dir: {dir:?} tmp_dir: {tmp_dir_path:?} script: {script}");
-    let mut source_file = NamedTempFile::new_in(&dir)?;
-    writeln!(source_file, "{datasource}").unwrap();
-
-    let mut model_file = NamedTempFile::new_in(&dir)?;
-    writeln!(model_file, "{schema}").unwrap();
-
     let params = DiffParams {
         exit_code: None,
         from: DiffTarget::SchemaDatasource(SchemasWithConfigDir {
             config_dir: super::engine::CONFIG_DIR.into(),
             files: vec![SchemaContainer {
-                content: source_file.path().display().to_string(),
-                path: "generated_from.prisma".into(),
+                content: datasource,
+                path: "schema_diff_from.generated.prisma".into(),
             }],
         }),
         script,
         shadow_database_url: None,
         to: DiffTarget::SchemaDatamodel(SchemasContainer {
             files: vec![SchemaContainer {
-                content: model_file.path().display().to_string(),
-                path: "generated_to.prisma".into(),
+                content: schema,
+                path: "schema_diff_to.generated.prisma".into(),
             }],
         }),
     };

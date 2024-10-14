@@ -58,7 +58,7 @@ pub async fn op_prisma_register_engine(
 
     engine::register_engine(&ctx, datamodel, input.engine_name)
         .await
-        .tap_err(|e| log::error!("Error registering engine: {:?}", e))
+        .tap_err(|e| error!("Error registering engine: {:?}", e))
 }
 
 // unregister engine
@@ -116,15 +116,11 @@ pub struct PrismaDiffInp {
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_diff(
-    state: Rc<RefCell<OpState>>,
+    // state: Rc<RefCell<OpState>>,
     #[serde] input: PrismaDiffInp,
 ) -> Result<Option<(String, Vec<ParsedDiff>)>> {
     let datamodel = reformat_datamodel(&input.datamodel).context("Error formatting datamodel")?;
-    let tmp_dir = {
-        let state = state.borrow();
-        state.borrow::<Ctx>().tmp_dir.clone()
-    };
-    migration::diff(&tmp_dir, input.datasource, datamodel, input.script).await
+    migration::diff(input.datasource, datamodel, input.script).await
 }
 
 #[derive(Deserialize)]

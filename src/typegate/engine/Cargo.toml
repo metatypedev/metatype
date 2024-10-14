@@ -14,7 +14,7 @@ futures.workspace = true
 tokio = { workspace = true, features = ["full"] }
 
 # logging
-log.workspace = true
+tracing.workspace = true
 
 # encoding
 serde.workspace = true
