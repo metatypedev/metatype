@@ -43,13 +43,44 @@ export class Agent {
     await Meta.substantial.storeAddSchedule(input);
   }
 
-  async log(runId: string, schedule: string, content: unknown) {
-    await Meta.substantial.metadataAppend({
+  async reScheduleNow(input: NextRun) {
+    const relatedEvent = await Meta.substantial.storeReadSchedule({
       backend: this.backend,
-      schedule,
-      run_id: runId,
-      content,
+      queue: this.queue,
+      run_id: input.run_id,
+      schedule: input.schedule_date,
     });
+
+    if (relatedEvent) {
+      await this.schedule({
+        backend: this.backend,
+        queue: this.queue,
+        run_id: input.run_id,
+        schedule: new Date().toJSON(),
+        operation: relatedEvent,
+      });
+    } else {
+      logger.error(
+        `Failed reschedule: could not find related event for ${JSON.stringify(
+          input
+        )}`
+      );
+    }
+  }
+
+  async log(runId: string, schedule: string, content: unknown) {
+    try {
+      await Meta.substantial.metadataAppend({
+        backend: this.backend,
+        schedule,
+        run_id: runId,
+        content,
+      });
+    } catch (err) {
+      logger.warn(
+        `Failed writing log metadata for schedule "${schedule}" (${runId}), skipping it: ${err}`
+      );
+    }
   }
 
   async link(workflowName: string, runId: string) {
@@ -121,7 +152,6 @@ export class Agent {
       }
     }
 
-    const errors = [];
     for (const workflow of this.workflows) {
       const requests = replayRequests.filter(
         ({ run_id }) => Agent.parseWorkflowName(run_id) == workflow.name
@@ -133,26 +163,23 @@ export class Agent {
         if (next) {
           try {
             await this.#replay(next, workflow);
+          } catch (err) {
+            logger.error(
+              `Replay failed for ${workflow.name} => ${JSON.stringify(
+                next
+              )}: rescheduling it.`
+            );
+            logger.error(err);
+
+            await this.reScheduleNow(next);
+          } finally {
             await this.log(next.run_id, next.schedule_date, {
               message: "Replaying workflow",
               next,
             });
-          } catch (err) {
-            logger.error(
-              `Replay or metadata write failed for ${
-                workflow.name
-              } => ${JSON.stringify(next)}`
-            );
-            errors.push({ err, next });
           }
         }
       }
-    }
-
-    if (errors.length > 0) {
-      throw Error("Replaying runs", {
-        cause: errors,
-      });
     }
   }
 
