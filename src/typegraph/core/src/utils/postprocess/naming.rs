@@ -37,7 +37,7 @@ impl super::PostProcessor for NamingProcessor {
             acc.path.push((
                 PathSegment {
                     from: 0,
-                    edge: Edge::ObjectProp(&key[..]),
+                    edge: Edge::ObjectProp(key.clone()),
                 },
                 Rc::from("root"),
             ));
@@ -56,16 +56,12 @@ struct VisitContext<'a> {
     tg: &'a Typegraph,
     user_named: HashSet<u32>,
 }
-struct VisitCollector<'b> {
+struct VisitCollector {
     named_types: HashMap<u32, Rc<str>>,
-    path: Vec<(PathSegment<'b>, Rc<str>)>,
+    path: Vec<(PathSegment, Rc<str>)>,
 }
 
-fn visit_type<'a: 'b, 'b>(
-    cx: &'a VisitContext,
-    acc: &mut VisitCollector<'b>,
-    id: u32,
-) -> anyhow::Result<Rc<str>> {
+fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::Result<Rc<str>> {
     if let Some(name) = acc.named_types.get(&id) {
         return Ok(name.clone());
     }
@@ -112,7 +108,7 @@ fn visit_type<'a: 'b, 'b>(
                 acc.path.push((
                     PathSegment {
                         from: id,
-                        edge: Edge::ObjectProp(&key[..]),
+                        edge: Edge::ObjectProp(key.clone()),
                     },
                     name.clone(),
                 ));
@@ -215,12 +211,7 @@ fn visit_type<'a: 'b, 'b>(
     Ok(name)
 }
 
-fn gen_name<'a: 'b, 'b>(
-    cx: &'a VisitContext,
-    acc: &mut VisitCollector<'b>,
-    id: u32,
-    ty_name: &str,
-) -> Rc<str> {
+fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str) -> Rc<str> {
     let name: Rc<str> = if cx.user_named.contains(&id) {
         let node = &cx.tg.types[id as usize];
         node.base().title.clone().into()
@@ -230,7 +221,7 @@ fn gen_name<'a: 'b, 'b>(
         loop {
             last -= 1;
             let (last_segment, last_name) = &acc.path[last];
-            title = match last_segment.edge {
+            title = match &last_segment.edge {
                 // we don't include optional and list nodes in
                 // generated names (useless but also, they might be placeholders)
                 Edge::OptionalItem | Edge::ArrayItem => continue,
