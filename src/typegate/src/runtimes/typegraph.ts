@@ -259,18 +259,20 @@ export class TypeGraphRuntime extends Runtime {
     return type ? this.formatType(type, false, false) : null;
   };
 
-  formatInputFields = ([name, typeIdx]: [string, number]) => {
+  formatInputFields = (
+    [name, typeIdx]: [string, number],
+    injections: Record<string, InjectionNode>,
+  ) => {
     const type = this.tg.types[typeIdx];
 
-    // if (
-    //   type.injection ||
-    //   (isObject(type) &&
-    //     Object.values(type.properties)
-    //       .map((prop) => this.tg.types[prop])
-    //       .every((nested) => nested.injection))
-    // ) {
-    //   return null;
-    // }
+    const injection = injections[name];
+    if (
+      ("injection" in injection) ||
+      (("children" in injection) &&
+        Object.keys(type.properties).every((key) => key in injection.children))
+    ) {
+      return null;
+    }
 
     return {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L374
@@ -499,7 +501,7 @@ export class TypeGraphRuntime extends Runtime {
           let entries = Object.entries((inp as ObjectNode).properties);
           entries = entries.sort((a, b) => b[1] - a[1]);
           return entries
-            .map(this.formatInputFields)
+            .map((entry) => this.formatInputFields(entry, type.injections))
             .filter((f) => f !== null);
         },
         type: () => {
