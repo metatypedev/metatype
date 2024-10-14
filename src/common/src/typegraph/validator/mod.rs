@@ -46,14 +46,15 @@ pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
 
-    let get_type_name = |idx: &u32| tg.types.get(*idx as usize).unwrap().type_name();
+    let get_type_name = |idx: u32| tg.types.get(idx as usize).unwrap().type_name();
 
     for ttype in tg.types.iter() {
         if let TypeNode::Either { data, .. } = ttype {
-            for (i, variant1) in data.one_of.iter().enumerate() {
-                for variant2 in data.one_of.iter().skip(i + 1) {
-                    let type1 = ExtendedTypeNode::new(tg, *variant1);
-                    let type2 = ExtendedTypeNode::new(tg, *variant2);
+            let variants = data.one_of.clone();
+            for i in 0..variants.len() {
+                for j in (i + 1)..variants.len() {
+                    let type1 = ExtendedTypeNode::new(tg, variants[i]);
+                    let type2 = ExtendedTypeNode::new(tg, variants[j]);
 
                     let mut subtype_errors = ErrorCollector::default();
                     type1.ensure_subtype_of(&type2, tg, &mut subtype_errors);
@@ -63,8 +64,8 @@ pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
                             path: "".to_string(),
                             message: format!(
                                 "Type '{}' is a subtype of '{}'",
-                                get_type_name(variant1),
-                                get_type_name(variant2)
+                                get_type_name(variants[i]),
+                                get_type_name(variants[j]),
                             ),
                         });
                     }
