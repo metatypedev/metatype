@@ -8,7 +8,7 @@ import BlogIntro from "@site/src/components/BlogIntro";
 
 Before we dive into the gRPC Runtime, let's recap what Metatype is all about:
 
-Metatype is a revolutionary platform that allows developers to create typegraphs - strongly-typed, composable backend structures. With Metatype, you can:
+Metatype is a platform that allows developers to create typegraphs - strongly-typed, composable backend structures. With Metatype, you can:
 
 - Construct solid, type-safe backends
 - Leverage multiple runtimes for different services and protocols
@@ -22,8 +22,6 @@ The new gRPC Runtime is the latest addition to Metatype's suite of runtimes, joi
 
 ### Architecture
 The gRPC Runtime integrates seamlessly with Metatype's existing architecture. It acts as a bridge between your typegraph and external gRPC services, allowing you to incorporate gRPC calls alongside other runtime operations in your backend logic.
-
-### Core Components
 
 1. **GrpcRuntime Class**: The main interface for defining gRPC interactions within your typegraph.
 2. **proto_file**: Path to the .proto file that defines the gRPC service.
@@ -42,21 +40,40 @@ from typegraph.runtimes.grpc import GrpcRuntime
 @typegraph(
     cors=Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 )
-def grpc(g: Graph):
-    endpoint = "tcp://localhost:4770"
-    proto_file = "proto/helloworld.proto"
-    grpc_runtime = GrpcRuntime(proto_file, endpoint)
+def create_grpc_typegraph(g: Graph):
+    # The GrpcRuntime acts as a bridge between your typegraph and external gRPC services
+    grpc_runtime = GrpcRuntime(
+        # proto_file: Path to the .proto file that defines the gRPC service
+        proto_file="proto/helloworld.proto",
+        # endpoint: The gRPC server address in the format tcp://<host>:<port>
+        endpoint="tcp://localhost:4770"
+    )
+    
+    # Expose the gRPC service within your typegraph
+    # This allows you to incorporate gRPC calls alongside other runtime operations
     g.expose(
         Policy.public(),
+        # call method: Creates a typegraph function for gRPC method calls
+        # It uses the full path to the gRPC method: /package_name.service_name/method_name
         greet=grpc_runtime.call("/helloworld.Greeter/SayHello"),
     )
+
+# The typegraph can now be exposed via GraphQL or HTTP, 
+# allowing clients to interact with the gRPC service through Metatype's unified interface
 ```
+This implementation demonstrates how the gRPC Runtime integrates with your typegraph, allowing you to:
+
+1. Define gRPC service connections using the GrpcRuntime class
+2. Expose gRPC methods as part of your typegraph
+3. Combine gRPC functionality with other Metatype features and runtimes
+
+By structuring your gRPC interactions this way, you can seamlessly incorporate gRPC services into your larger Metatype-powered backend, alongside other data sources and business logic.
 
 ### Key Points
 
-1. **Typegraph Integration**: The gRPC Runtime is used within a typegraph, allowing it to be composed with other runtimes and services.
-2. **Exposure**: The `g.expose()` method allows you to make the gRPC service accessible via GraphQL or HTTP, depending on how you configure your Metatype backend.
-3. **Policy Control**: Metatype's policy system (`Policy.public()` in this example) allows fine-grained access control for your exposed services.
+The gRPC Runtime integrates seamlessly with Metatype's architecture, acting as a bridge between your typegraph and external gRPC services.
+It allows you to incorporate gRPC calls alongside other runtime operations in your backend logic. The main components include the GrpcRuntime
+class for defining interactions, the proto_file path for service definitions, the endpoint for the server address, and the call method to create typegraph functions for gRPC method calls.
 
 ## Benefits for Developers
 
