@@ -17,6 +17,7 @@ export default {
   "gen-subs-protoc": {
     desc: "Regenerate substantial types",
     workingDir: "src/substantial",
+    inherit: "_rust",
     installs: [
       ports.cargobi({ crateName: "protobuf-codegen", version: "3.5.1" }),
     ],

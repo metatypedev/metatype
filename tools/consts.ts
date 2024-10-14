@@ -92,10 +92,10 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "examples/templates/**/package.json": [
     [/(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)/, METATYPE_VERSION],
   ],
-  "examples/**/*.ts": [
+  "examples/templates/**/*.ts": [
     [
       /(import\s+.+\s+from "jsr:@typegraph\/sdk@)[^\/]+(\/.+";)/,
-      PUBLISHED_VERSION,
+      METATYPE_VERSION,
     ],
   ],
   "CONTRIBUTING.md": [[/(GHJK_VERSION=").*(")/, GHJK_VERSION]],
