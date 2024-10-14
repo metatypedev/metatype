@@ -11,7 +11,7 @@ Why use it?
 
 - **Long-running "processes"**: Durable tasks that need to run over extended periods (days, weeks or months), handling **retries** and **restarts** seamlessly.
 - **Fault-tolerant execution**: Ensure reliable execution of tasks, even upon failures, by maintaining a durable state of the latest run.
-- **Task orchestration**: Coordinate complex sequences of workflows (analoguous to microservices interactions).
+- **Task orchestration**: Coordinate complex sequences of workflows (analogous to microservices interactions).
 
 For example, the workflow bellow will continue running until a `confirmation` event is sent to the **associated run**.
 
@@ -157,7 +157,7 @@ def substantial_example(g: Graph):
     backend = Backend.redis("REDIS_SECRET")
     file = (
         WorkflowFile.deno(file="my_workflow.ts", deps=["shared/types.ts"])
-        .import_(["sendEmail", "sendEmailForAll"])
+        .import_(["sendEmail", "sendMultipleEmails"])
         .build()
     )
 
@@ -167,7 +167,7 @@ def substantial_example(g: Graph):
         pub,
         stop=sub.stop(),
         send_multiple_emails=sub.start(t.struct({ "emails": t.list(t.email()) })).reduce(
-            { "name": "sendEmailForAll"}
+            { "name": "sendMultipleEmails"}
         ),
         send_single_email=sub.start(t.struct({"to": t.email()})).reduce(
             {"name": "sendEmail"}
@@ -198,7 +198,7 @@ typegraph(
     const pub = Policy.public();
     const backend = Backend.redis("REDIS_SECRET");
     const file = WorkflowFile.deno("my_workflow.ts", [])
-      .import(["sendEmail", "sendEmailForAll"])
+      .import(["sendEmail", "sendMultipleEmails"])
       .build();
 
     const sub = new SubstantialRuntime(backend, [file]);
@@ -208,7 +208,7 @@ typegraph(
         stop: sub.stop(),
         send_multiple_emails: sub
           .start(t.struct({ emails: t.list(t.email()) }))
-          .reduce({ name: "sendEmailForAll" }),
+          .reduce({ name: "sendMultipleEmails" }),
         send_single_email: sub
           .start(t.struct({ to: t.email() }))
           .reduce({ name: "sendEmail" }),
