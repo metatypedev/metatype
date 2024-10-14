@@ -22,11 +22,6 @@ impl Validator {
             return VisitResult::Continue(false);
         }
 
-        // FIXME
-        // if let Some(injection) = &type_node.base().injection {
-        //     self.validate_injection(injection, current_node, context);
-        // }
-
         if let Some(enumeration) = &type_node.base().enumeration {
             match context
                 .get_typegraph()
