@@ -37,7 +37,7 @@ export function basicTestTemplate(
 ) {
   Meta.test(
     {
-      name: `Substantial runtime and workflow execution lifecycle (${backendName})`,
+      name: `Basic workflow execution lifecycle + interrupts (${backendName})`,
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
@@ -52,7 +52,7 @@ export function basicTestTemplate(
 
       let currentRunId: string | null = null;
       await t.should(
-        `start a workflow and return its run id (${backendName})`,
+        `start saveAndSleepExample workflow and return its run id (${backendName})`,
         async () => {
           await gql`
             mutation {
@@ -74,7 +74,7 @@ export function basicTestTemplate(
       await sleep(10 * 1000); // including remote_add cost (about 1.5s)
 
       await t.should(
-        `have workflow marked as ongoing (${backendName})`,
+        `have saveAndSleepExample workflow marked as ongoing (${backendName})`,
         async () => {
           await gql`
             query {
@@ -106,44 +106,47 @@ export function basicTestTemplate(
 
       await sleep(delays.awaitSleepCompleteSec * 1000);
 
-      await t.should(`complete sleep workflow (${backendName})`, async () => {
-        await gql`
-          query {
-            results(name: "saveAndSleepExample") {
-              ongoing {
-                count
-              }
-              completed {
-                count
-                runs {
-                  run_id
-                  result {
-                    status
-                    value
+      await t.should(
+        `complete saveAndSleepExample workflow (${backendName})`,
+        async () => {
+          await gql`
+            query {
+              results(name: "saveAndSleepExample") {
+                ongoing {
+                  count
+                }
+                completed {
+                  count
+                  runs {
+                    run_id
+                    result {
+                      status
+                      value
+                    }
                   }
                 }
               }
             }
-          }
-        `
-          .expectData({
-            results: {
-              ongoing: {
-                count: 0,
+          `
+            .expectData({
+              results: {
+                ongoing: {
+                  count: 0,
+                },
+                completed: {
+                  count: 1,
+                  runs: [
+                    {
+                      run_id: currentRunId,
+                      result: { status: "COMPLETED", value: 30 },
+                    },
+                  ],
+                },
               },
-              completed: {
-                count: 1,
-                runs: [
-                  {
-                    run_id: currentRunId,
-                    result: { status: "COMPLETED", value: 30 },
-                  },
-                ],
-              },
-            },
-          })
-          .on(e);
-      });
+            })
+            .on(e);
+        }
+      );
     }
   );
 }
@@ -274,13 +277,13 @@ export function concurrentWorkflowTestTemplate(
             assertEquals(
               body?.data?.results?.ongoing?.count,
               0,
-              "0 workflow currently running"
+              `0 workflow currently running (${backendName})`
             );
 
             assertEquals(
               body?.data?.results?.completed?.count,
               3,
-              "3 workflows completed"
+              `3 workflows completed (${backendName})`
             );
 
             const localSorter = (a: any, b: any) =>
@@ -315,7 +318,7 @@ export function concurrentWorkflowTestTemplate(
             assertEquals(
               received.sort(localSorter),
               expected.sort(localSorter),
-              "All three workflows have completed, including the aborted one"
+              `All three workflows have completed, including the aborted one (${backendName})`
             );
           })
           .on(e);
@@ -433,13 +436,13 @@ export function retrySaveTestTemplate(
               assertEquals(
                 body?.data?.results?.ongoing?.count,
                 0,
-                "0 workflow currently running"
+                `0 workflow currently running (${backendName})`
               );
 
               assertEquals(
                 body?.data?.results?.completed?.count,
                 4,
-                "4 workflows completed"
+                `4 workflows completed (${backendName})`
               );
 
               const localSorter = (a: any, b: any) =>
@@ -481,7 +484,7 @@ export function retrySaveTestTemplate(
               assertEquals(
                 received.sort(localSorter),
                 expected.sort(localSorter),
-                "All workflows have completed"
+                `All workflows have completed (${backendName})`
               );
             })
             .on(e);

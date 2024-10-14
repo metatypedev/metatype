@@ -3,6 +3,7 @@ import {
   Backend,
   NextRun,
   Run,
+  ReadOrCloseScheduleInput,
 } from "../../../engine/runtime.js";
 import { getLogger } from "../../log.ts";
 import {
@@ -60,6 +61,7 @@ export class Agent {
         operation: relatedEvent,
       });
     } else {
+      // This could occur if it was closed or never existed (inconsistent state)
       logger.error(
         `Failed reschedule: could not find related event for ${JSON.stringify(
           input
@@ -234,9 +236,8 @@ export class Agent {
       backend: this.backend,
       queue: this.queue,
       run_id: next.run_id,
-      workflow_name: workflow.name,
       schedule: next.schedule_date,
-    };
+    } satisfies ReadOrCloseScheduleInput;
     const newEventOp = await Meta.substantial.storeReadSchedule(schedDef);
 
     if (checkIfRunHasStopped(run)) {

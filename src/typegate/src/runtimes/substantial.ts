@@ -234,6 +234,9 @@ export class SubstantialRuntime extends Runtime {
       const runId = Agent.nextId(workflowName);
       const schedule = new Date().toJSON();
 
+      logger.info(
+        `Start request "${workflowName}" received: new run "${runId}" should be scheduled.`
+      );
       await this.agent.schedule({
         backend: this.backend,
         queue: this.queue,
@@ -261,6 +264,7 @@ export class SubstantialRuntime extends Runtime {
         },
         headers,
       });
+      logger.info(`Recorded internal metadata for "${runId}" context object`);
 
       await this.agent.link(workflowName, runId);
       return runId;
