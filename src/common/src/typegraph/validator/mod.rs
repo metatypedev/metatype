@@ -6,22 +6,16 @@ mod input;
 mod types;
 mod value;
 
-use std::{
-    any::Any,
-    collections::{hash_map, HashMap},
-};
+use std::collections::{hash_map, HashMap};
 
 use crate::typegraph::{TypeNode, Typegraph};
 
-use super::{
-    visitor::{
-        visit_child, ChildNode, CurrentNode, ParentFn, Path, PathSegment, TypeVisitor,
-        TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
-    },
-    EitherTypeData,
+use super::visitor::{
+    visit_child, ChildNode, CurrentNode, ParentFn, Path, PathSegment, TypeVisitor,
+    TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
 };
 
-use self::types::{EnsureSubtypeOf, ErrorCollector};
+use self::types::{EnsureSubtypeOf, ErrorCollector, ExtendedTypeNode};
 
 #[allow(dead_code)]
 fn assert_unique_titles(types: &[TypeNode]) -> Vec<ValidatorError> {
@@ -49,41 +43,34 @@ fn assert_unique_titles(types: &[TypeNode]) -> Vec<ValidatorError> {
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     let mut errors = vec![];
-    // FIXME temporarily disabled, will be re-enabled after all changes on the
-    // typegraph are merged
-    // errors.extend(assert_unique_titles(&tg.types));
-
     let context = ValidatorContext { typegraph: tg };
-    let mut validator = Validator::default();
+    let validator = Validator::default();
 
-    let mut errors_collector = ErrorCollector::default();
+    let get_type_name = |idx: &u32| tg.types.get(*idx as usize).unwrap().type_name();
 
-    for ttype in tg.types.clone() {
+    for ttype in tg.types.iter() {
         if let TypeNode::Either { data, .. } = ttype {
-            for (i, sub_id) in data.one_of.iter().enumerate() {
-                for sup_id in data.one_of.iter().skip(i + 1) {
-                    let sub_data = EitherTypeData {
-                        one_of: vec![*sub_id],
-                    };
-                    let sup_data = EitherTypeData {
-                        one_of: vec![*sup_id],
-                    };
-                    sub_data.ensure_subtype_of(&sup_data, tg, &mut errors_collector);
+            for (i, variant1) in data.one_of.iter().enumerate() {
+                for variant2 in data.one_of.iter().skip(i + 1) {
+                    let type1 = ExtendedTypeNode::new(tg, *variant1);
+                    let type2 = ExtendedTypeNode::new(tg, *variant2);
+
+                    let mut subtype_errors = ErrorCollector::default();
+                    type1.ensure_subtype_of(&type2, tg, &mut subtype_errors);
+
+                    if subtype_errors.errors.is_empty() {
+                        errors.push(ValidatorError {
+                            path: "".to_string(),
+                            message: format!(
+                                "Type '{}' is a subtype of '{}'",
+                                get_type_name(variant1),
+                                get_type_name(variant2)
+                            ),
+                        });
+                    }
                 }
             }
         }
-    }
-
-    for error in errors_collector.errors.iter() {
-        let tg_name = tg.name().unwrap();
-        let type_title = &error.type_id();
-        validator.push_error(
-            &[],
-            format!(
-                "Type '{:?}' in typegraph '{}' is a subtype of another variant of the same type",
-                type_title, tg_name
-            ),
-        );
     }
 
     errors.extend(tg.traverse_types(validator, &context, Layer).unwrap());
