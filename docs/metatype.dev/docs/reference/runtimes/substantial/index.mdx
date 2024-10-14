@@ -5,13 +5,13 @@ import TabItem from "@theme/TabItem";
 
 ## Substantial runtime
 
-The Substantial runtime enables the execution of durable workflows.
+The Substantial runtime enables the execution of durable workflows in one or accross multiple typegates.
 
 Why use it?
 
-- **Long-Running processes**: Durable tasks that need to run over extended periods (days or weeks), handling **retries** and **restarts** seamlessly.
-- **Fault-tolerant execution**: Ensure reliable execution of tasks, even in the face of server failures, by maintaining a durable state of the latest run.
-- **Task orchestration**: Coordinate complex sequences of workflows (like microservices interactions).
+- **Long-running "processes"**: Durable tasks that need to run over extended periods (days, weeks or months), handling **retries** and **restarts** seamlessly.
+- **Fault-tolerant execution**: Ensure reliable execution of tasks, even upon failures, by maintaining a durable state of the latest run.
+- **Task orchestration**: Coordinate complex sequences of workflows (analoguous to microservices interactions).
 
 For example, the workflow bellow will continue running until a `confirmation` event is sent to the **associated run**.
 
