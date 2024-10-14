@@ -8,6 +8,19 @@ import {
   retrySaveTestTemplate,
 } from "./common.ts";
 
+basicTestTemplate("memory", {
+  delays: { awaitSleepCompleteSec: 7 },
+});
+concurrentWorkflowTestTemplate("memory", {
+  delays: { awaitEmailCompleteSec: 8 },
+});
+
+retrySaveTestTemplate("memory", {
+  delays: {
+    awaitCompleteAll: 12,
+  },
+});
+
 basicTestTemplate("fs", {
   delays: { awaitSleepCompleteSec: 7 },
 });
@@ -27,21 +40,3 @@ childWorkflowTestTemplate("fs", {
     awaitCompleteSec: 15,
   },
 });
-
-// FIXME: start does not occur properly
-// 1. internal metadata from are set into a record when #startResolver is called
-//  - it is missing considering what triggerStart failure suggests
-// 2. This record is not populated on the CI, and is impossible to reproduce locally (michael) but is failing on the CI
-// It seems to only occur on the memory backend
-// basicTestTemplate("memory", {
-//   delays: { awaitSleepCompleteSec: 7 },
-// });
-// concurrentWorkflowTestTemplate("memory", {
-//   delays: { awaitEmailCompleteSec: 8 },
-// });
-
-// retrySaveTestTemplate("memory", {
-//   delays: {
-//     awaitCompleteAll: 12,
-//   },
-// });

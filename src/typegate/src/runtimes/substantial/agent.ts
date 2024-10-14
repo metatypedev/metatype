@@ -6,6 +6,7 @@ import {
   ReadOrCloseScheduleInput,
 } from "../../../engine/runtime.js";
 import { getLogger } from "../../log.ts";
+import { TaskContext } from "../deno/shared_types.ts";
 import {
   Interrupt,
   Result,
@@ -37,7 +38,8 @@ export class Agent {
   constructor(
     private backend: Backend,
     private queue: string,
-    private config: AgentConfig
+    private config: AgentConfig,
+    private internalTCtx: TaskContext
   ) {}
 
   async schedule(input: AddScheduleInput) {
@@ -277,7 +279,8 @@ export class Agent {
       workflow.path,
       run,
       next.schedule_date,
-      first.event.kwargs
+      first.event.kwargs,
+      this.internalTCtx
     );
 
     this.workerManager.listen(

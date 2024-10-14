@@ -109,7 +109,6 @@ export class WorkflowRecorder {
  */
 export class WorkerManager {
   private recorder: WorkflowRecorder = new WorkflowRecorder();
-  internalParamRecorder: Map<RunId, TaskContext> = new Map();
 
   constructor() {}
 
@@ -222,15 +221,9 @@ export class WorkerManager {
     workflowModPath: string,
     storedRun: Run,
     schedule: string,
-    kwargs: Record<string, unknown>
+    kwargs: Record<string, unknown>,
+    internalTCtx: TaskContext
   ) {
-    const internal = this.internalParamRecorder.get(runId);
-    if (!internal) {
-      throw new Error(
-        `Invalid state: "${runId}" context internal was not set properly`
-      );
-    }
-
     this.#createWorker(name, workflowModPath, runId);
     this.trigger("START", runId, {
       modulePath: workflowModPath,
@@ -238,7 +231,7 @@ export class WorkerManager {
       run: storedRun,
       kwargs,
       schedule,
-      internal,
+      internal: internalTCtx,
     });
   }
 }

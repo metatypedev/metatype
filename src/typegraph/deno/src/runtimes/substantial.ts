@@ -144,11 +144,11 @@ export class WorkflowFile {
     public deps: Array<string> = []
   ) {}
 
-  deno(file: string, deps: Array<string> = []): WorkflowFile {
+  static deno(file: string, deps: Array<string> = []): WorkflowFile {
     return new WorkflowFile(file, "deno", deps);
   }
 
-  python(file: string, deps: Array<string> = []): WorkflowFile {
+  static python(file: string, deps: Array<string> = []): WorkflowFile {
     return new WorkflowFile(file, "python", deps);
   }
 

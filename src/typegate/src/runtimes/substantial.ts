@@ -12,9 +12,15 @@ import { path } from "compress/deps.ts";
 import { Artifact } from "../typegraph/types.ts";
 import { Typegate } from "../typegate/mod.ts";
 import { Backend } from "../../engine/runtime.js";
-import { Agent, WorkflowDescription } from "./substantial/agent.ts";
+import {
+  Agent,
+  AgentConfig,
+  WorkflowDescription,
+} from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
+import { TaskContext } from "./deno/shared_types.ts";
+import { globalConfig } from "../config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -101,12 +107,26 @@ export class SubstantialRuntime extends Runtime {
 
     const queue = "default";
 
-    // Prepare the backend event poller
-    const agent = new Agent(backend, queue, {
+    const agentConfig = {
       pollIntervalSec: typegate.config.base.substantial_poll_interval_sec,
       leaseLifespanSec: typegate.config.base.substantial_lease_lifespan_sec,
       maxAcquirePerTick: typegate.config.base.substantial_max_acquire_per_tick,
-    });
+    } satisfies AgentConfig;
+
+    // Note: required for ctx.gql()
+    const token = await InternalAuth.emit(typegate.cryptoKeys);
+    const internalTCtx = {
+      context: {},
+      secrets: {},
+      effect: null,
+      meta: {
+        url: `http://127.0.0.1:${globalConfig.tg_port}/${tgName}`,
+        token,
+      },
+      headers: {},
+    } satisfies TaskContext;
+
+    const agent = new Agent(backend, queue, agentConfig, internalTCtx);
 
     const wfDescriptions = await getWorkflowDescriptions(
       tgName,
@@ -250,21 +270,6 @@ export class SubstantialRuntime extends Runtime {
           },
         },
       });
-
-      // Note: required for configuring ctx.gql for this run
-      const token = await InternalAuth.emit(this.typegate.cryptoKeys);
-      this.agent.workerManager.internalParamRecorder.set(runId, {
-        parent,
-        context,
-        secrets: {}, // TODO: required?
-        effect: null,
-        meta: {
-          url: `${url.protocol}//${url.host}/${this.typegraphName}`,
-          token,
-        },
-        headers,
-      });
-      logger.info(`Recorded internal metadata for "${runId}" context object`);
 
       await this.agent.link(workflowName, runId);
       return runId;
