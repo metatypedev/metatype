@@ -14,12 +14,12 @@ export default {
         console.log(
           `sudo apt update && ` +
             `sudo apt install -y --no-install-recommends ` +
-            `gcc-multilib pkg-config libssl-dev libclang-dev perl make`
+            `gcc-multilib pkg-config libssl-dev libclang-dev perl make`,
         );
       } else if (/Fedora|Red Hat|CentOS/.test(osRelease)) {
         console.log(
           `sudo dnf install -y ` +
-            `gcc gcc-c++ pkg-config openssl-devel clang-devel perl make`
+            `gcc gcc-c++ pkg-config openssl-devel clang-devel perl make`,
         );
       } else {
         $.logger.error("unable to determine platform");
@@ -47,7 +47,7 @@ export default {
           `poetry install --no-root`,
           `cd src/typegraph/python`,
           `poetry install --no-root`,
-        ].join("\n")
+        ].join("\n"),
       );
     },
   },
@@ -61,7 +61,7 @@ export default {
           --filter ./src/metagen/tests/*...`.stdinText(
         Array(1000)
           .map(() => "y")
-          .join("\n")
+          .join("\n"),
       ),
   },
 
@@ -85,15 +85,14 @@ export default {
           const dir = await $.workingDir.join(".metatype").ensureDir();
           return await $.co(
             ["command", "reactor", "proxy"].map((kind) => {
-              const url =
-                `https://github.com/bytecodealliance/wasmtime` +
+              const url = `https://github.com/bytecodealliance/wasmtime` +
                 `/releases/download/v${WASMTIME_VERSION}/wasi_snapshot_preview1.${kind}.wasm`;
-              const token =
-                Deno.env.get("GITHUB_TOKEN") || Deno.env.get("GH_TOKEN");
+              const token = Deno.env.get("GITHUB_TOKEN") ||
+                Deno.env.get("GH_TOKEN");
               const headers = token
                 ? {
-                    Authorization: `Bearer ${token}`,
-                  }
+                  Authorization: `Bearer ${token}`,
+                }
                 : {};
               return $.request(url)
                 .header(headers)
@@ -101,7 +100,7 @@ export default {
                 .pipeToPath(dir.join(std_url.basename(url)), {
                   create: true,
                 });
-            })
+            }),
           );
         },
       });

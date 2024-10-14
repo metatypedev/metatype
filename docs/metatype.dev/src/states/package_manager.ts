@@ -20,8 +20,8 @@ const tsPmQueryAtom = atom(
   (get) =>
     get(locationAtom).searchParams?.get(tsKey) as TsPackageManager | null,
   (get, set, value: TsPackageManager) => {
-    const searchParams =
-      get(locationAtom).searchParams ?? new URLSearchParams();
+    const searchParams = get(locationAtom).searchParams ??
+      new URLSearchParams();
     searchParams.set(tsKey, value);
     set(locationAtom, (prev) => ({
       ...prev,
@@ -36,8 +36,8 @@ const pythonPmQueryAtom = atom(
       pythonKey,
     ) as PythonPackageManager | null,
   (get, set, value: TsPackageManager) => {
-    const searchParams =
-      get(locationAtom).searchParams ?? new URLSearchParams();
+    const searchParams = get(locationAtom).searchParams ??
+      new URLSearchParams();
     searchParams.set(pythonKey, value);
     set(locationAtom, (prev) => ({
       ...prev,

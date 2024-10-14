@@ -7,7 +7,8 @@ import React from "react";
 interface TGExampleProps extends MiniQLProps {
   python?: { content: string; path: string };
   typescript?: { content: string; path: string };
-  codeLang?: "py" | "ts";
+  rust?: { content: string; path: string };
+  codeLang?: "py" | "ts" | "rust";
   code?: string;
   codePath?: string;
 }
@@ -15,6 +16,7 @@ interface TGExampleProps extends MiniQLProps {
 export default function TGExample({
   python,
   typescript,
+  rust,
   ...props
 }: TGExampleProps) {
   const code = [
@@ -27,6 +29,11 @@ export default function TGExample({
       content: typescript.content,
       codeLanguage: "typescript",
       codeFileUrl: typescript.path,
+    },
+    rust && {
+      content: rust.content,
+      codeLanguage: "rust",
+      codeFileUrl: rust.path,
     },
   ].filter((v) => !!v);
 
