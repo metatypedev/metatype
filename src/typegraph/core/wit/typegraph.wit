@@ -70,7 +70,6 @@ interface core {
         name: option<string>,
         // string => json string
         runtime-config: option<list<tuple<string, string>>>,
-        as-id: bool,
     }
 
     with-injection: func(type-id: type-id, injection: string) -> result<type-id, error>;
@@ -79,7 +78,7 @@ interface core {
         name: string,
         extras: list<tuple<string, string>>,
     }
-    refb: func(name: string, attributes: list<tuple<string, string>>) -> result<type-id, error>;
+    refb: func(name: string, attributes: option<string>) -> result<type-id, error>;
 
     record type-integer {
         min: option<s32>,
@@ -111,6 +110,8 @@ interface core {
         enumeration: option<list<string>>
     }
     stringb: func(data: type-string, base: type-base) -> result<type-id, error>;
+
+    as-id: func(id: type-id, composite: bool) -> result<type-id, error>;
 
     record type-file {
         min: option<u32>,
@@ -652,8 +653,6 @@ interface utils {
 
     gql-deploy-query: func(params: query-deploy-params) -> result<string, error>;
     gql-remove-query: func(tg-name: list<string>) -> result<string, error>;
-
-    remove-injections: func(type-id: type-id) -> result<type-id, error>;
 
     record fdk-config {
         workspace-path: string,

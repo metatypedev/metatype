@@ -18,6 +18,6 @@ def simple(g: Graph):
         test=deno.identity(
             t.struct({"a": t.integer(name="arg1")}, name="inp"),
         )
-        .with_policy(public)
-        .rename("f"),
+        .rename("f")
+        .with_policy(public),
     )

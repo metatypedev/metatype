@@ -20,24 +20,26 @@ await typegraph(
     const pub = Policy.public();
 
     // highlight-next-line
-    const user = t.struct({ "id": t.string(), "name": t.string() }, { name: "User" });
+    const user = t.struct({ "id": t.string(), "name": t.string() }, {
+      name: "User",
+    });
 
     const message = t.struct(
       {
         id: t.integer({}, { asId: true, config: { auto: true } }),
         title: t.string(),
         // highlight-next-line
-        user_id: t.string({}, { name: "uid" }),
+        user_id: t.string({}),
         // highlight-next-line
         user: gql.query(
           t.struct({
             // highlight-next-line
-            id: t.string({}, { asId: true }).fromParent("uid"),
+            id: t.string({}, { asId: true }).fromParent("user_id"),
           }),
-          t.optional(user)
+          t.optional(user),
         ),
       },
-      { name: "message" }
+      { name: "message" },
     );
 
     g.expose(
@@ -47,7 +49,7 @@ await typegraph(
         // highlight-next-line
         users: gql.query(t.struct({}), t.struct({ data: t.list(user) })),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

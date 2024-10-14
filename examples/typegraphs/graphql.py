@@ -30,13 +30,13 @@ def graphql(g: Graph):
             "id": t.integer(as_id=True, config=["auto"]),
             "title": t.string(),
             # highlight-next-line
-            "user_id": t.string(name="uid"),
+            "user_id": t.string(),
             # highlight-next-line
             "user": gql.query(
                 t.struct(
                     {
                         # highlight-next-line
-                        "id": t.string(as_id=True).from_parent("uid")
+                        "id": t.string(as_id=True).from_parent("user_id")
                     }
                 ),
                 t.optional(user),

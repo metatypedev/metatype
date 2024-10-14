@@ -11,7 +11,7 @@ def prisma(g: Graph):
 
     record = t.struct(
         {
-            "id": t.uuid(as_id=True, config={"auto": True}),
+            "id": t.uuid(config={"auto": True}).id(),
             "name": t.string(),
             "age": t.integer().optional(),
             "createdAt": t.datetime()
@@ -25,7 +25,7 @@ def prisma(g: Graph):
 
     messages = t.struct(
         {
-            "id": t.integer(as_id=True),
+            "id": t.integer().id(),
             "time": t.integer(),
             "message": t.string(),
             "sender": db.link("users", "messageSender"),
@@ -34,7 +34,7 @@ def prisma(g: Graph):
 
     user_identities = t.struct(
         {
-            "id": t.uuid(as_id=True, config={"auto": True}),
+            "id": t.uuid(config={"auto": True}).id(),
             "provider": t.enum(["github", "google", "facebook"]),
             "identifier": t.string(),
             "user": g.ref("users"),
@@ -44,7 +44,7 @@ def prisma(g: Graph):
 
     users = t.struct(
         {
-            "id": t.integer(as_id=True, config={"auto": True}),
+            "id": t.integer(config={"auto": True}).id(),
             "identities": t.list(user_identities),
             "email": t.string(),
             "name": t.string(),

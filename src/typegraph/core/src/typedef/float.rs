@@ -14,12 +14,17 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Float, TypeDefData},
+    types::{FindAttribute as _, Float, RefAttrs, TypeDefData},
     wit::core::TypeFloat,
 };
 
 impl TypeConversion for Float {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: &RefAttrs,
+    ) -> Result<TypeNode> {
         Ok(TypeNode::Float {
             base: BaseBuilderInit {
                 ctx,
@@ -27,12 +32,12 @@ impl TypeConversion for Float {
                 type_id: self.id,
                 name: self.base.name.clone(),
                 runtime_idx: runtime_id.unwrap(),
-                policies: &self.extended_base.policies,
+                policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(self.extended_base.injection.clone())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: FloatTypeData {
                 minimum: self.data.min,

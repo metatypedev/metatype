@@ -1,7 +1,7 @@
 export const snapshot = {};
 
 snapshot[`input validator compiler 1`] = `
-"function validate_33(value, path, errors, context) {
+"function validate_32(value, path, errors, context) {
 if (typeof value !== \\"object\\") {
 errors.push([path, \`expected an object, got \${typeof value}\`]);
 }
@@ -12,19 +12,19 @@ errors.push([path, \\"exptected a non-null object, got null\\"]);
 else {
 const keys = new Set(Object.keys(value))
 keys.delete(\\"title\\")
-validate_34(value[\\"title\\"], path + \\".title\\", errors, context)
+validate_25(value[\\"title\\"], path + \\".title\\", errors, context)
 keys.delete(\\"content\\")
-validate_35(value[\\"content\\"], path + \\".content\\", errors, context)
+validate_26(value[\\"content\\"], path + \\".content\\", errors, context)
 keys.delete(\\"authorId\\")
-validate_30(value[\\"authorId\\"], path + \\".authorId\\", errors, context)
+validate_3(value[\\"authorId\\"], path + \\".authorId\\", errors, context)
 keys.delete(\\"tags\\")
-validate_36(value[\\"tags\\"], path + \\".tags\\", errors, context)
+validate_33(value[\\"tags\\"], path + \\".tags\\", errors, context)
 if (keys.size > 0) {
 errors.push([path, \`unexpected fields: \${[...keys].join(', ')}\`]);
 }
 }
 }
-function validate_34(value, path, errors, context) {
+function validate_25(value, path, errors, context) {
 if (typeof value !== \\"string\\") {
 errors.push([path, \`expected a string, got \${typeof value}\`]);
 }
@@ -37,7 +37,7 @@ if (value.length > 200) {
 errors.push([path, \`expected maximum length: 200, got \${value.length}\`]);
 }
 }
-function validate_35(value, path, errors, context) {
+function validate_26(value, path, errors, context) {
 if (typeof value !== \\"string\\") {
 errors.push([path, \`expected a string, got \${typeof value}\`]);
 }
@@ -46,7 +46,7 @@ if (value.length < 100) {
 errors.push([path, \`expected minimum length: 100, got \${value.length}\`]);
 }
 }
-function validate_30(value, path, errors, context) {
+function validate_3(value, path, errors, context) {
 if (typeof value !== \\"string\\") {
 errors.push([path, \`expected a string, got \${typeof value}\`]);
 }
@@ -61,12 +61,12 @@ errors.push([path, \\"string does not statisfy the required format 'uuid'\\"]);
 }
 }
 }
-function validate_36(value, path, errors, context) {
+function validate_33(value, path, errors, context) {
 if (value != null) {
-validate_37(value, path, errors, context)
+validate_34(value, path, errors, context)
 }
 }
-function validate_37(value, path, errors, context) {
+function validate_34(value, path, errors, context) {
 if (!Array.isArray(value)) {
 errors.push([path, \`expected an array, got \${typeof value}\`]);
 }
@@ -91,7 +91,7 @@ errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
 }
 }
 
-return validate_33"
+return validate_32"
 `;
 
 snapshot[`input validator compiler 2`] = `
@@ -114,7 +114,7 @@ snapshot[`input validator compiler 3`] = `
 `;
 
 snapshot[`input validator compiler 4`] = `
-"function validate_39(value, path, errors, context) {
+"function validate_36(value, path, errors, context) {
 if (typeof value !== \\"object\\") {
 errors.push([path, \`expected an object, got \${typeof value}\`]);
 }
@@ -125,42 +125,42 @@ errors.push([path, \\"exptected a non-null object, got null\\"]);
 else {
 const keys = new Set(Object.keys(value))
 keys.delete(\\"userRole\\")
-validate_40(value[\\"userRole\\"], path + \\".userRole\\", errors, context)
+validate_37(value[\\"userRole\\"], path + \\".userRole\\", errors, context)
 keys.delete(\\"availableItems\\")
-validate_42(value[\\"availableItems\\"], path + \\".availableItems\\", errors, context)
+validate_39(value[\\"availableItems\\"], path + \\".availableItems\\", errors, context)
 if (keys.size > 0) {
 errors.push([path, \`unexpected fields: \${[...keys].join(', ')}\`]);
 }
 }
 }
-function validate_40(value, path, errors, context) {
+function validate_37(value, path, errors, context) {
 if (value != null) {
-validate_41(value, path, errors, context)
+validate_38(value, path, errors, context)
 }
 }
-function validate_42(value, path, errors, context) {
+function validate_39(value, path, errors, context) {
 if (!Array.isArray(value)) {
 errors.push([path, \`expected an array, got \${typeof value}\`]);
 }
 else {
 for (let i = 0; i < value.length; ++i) {
 const item = value[i]
-validate_43(value[i], path + \`[\${i}]\`, errors, context)
+validate_40(value[i], path + \`[\${i}]\`, errors, context)
 }
 }
 }
-function validate_41(value, path, errors, context) {
+function validate_38(value, path, errors, context) {
 if (value !== \\"admin\\" && value !== \\"moderator\\") {
 errors.push([path, \\"value did not match to any of the enum values\\"]);
 }
 }
-function validate_43(value, path, errors, context) {
+function validate_40(value, path, errors, context) {
 if (!context.deepEqual(value, {\\"name\\": \\"banana\\", \\"unitPrice\\": 200}) && !context.deepEqual(value, {\\"name\\": \\"orange\\", \\"unitPrice\\": 300}) && !context.deepEqual(value, {\\"name\\": \\"apple\\", \\"unitPrice\\": 400})) {
 errors.push([path, \\"value did not match to any of the enum values\\"]);
 }
 }
 
-return validate_39"
+return validate_36"
 `;
 
 snapshot[`input validator compiler 5`] = `

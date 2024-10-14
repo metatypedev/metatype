@@ -4,6 +4,11 @@ from dataclasses import dataclass, asdict, fields
 
 FORWARD_REFS = {}
 
+
+class Ctx:
+    def gql(self, query: str, variables: str) -> Any:
+        pass
+
 class Struct:
     def repr(self):
         return asdict(self)
@@ -93,10 +98,10 @@ def __repr(value: Any):
 
 
 {%for func in funcs %}
-def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}], {{ func.output_name }}]):
-    def exported_wrapper(raw_inp):
+def typed_{{ func.name }}(user_fn: Callable[[{{ func.input_name }}, Ctx], {{ func.output_name }}]):
+    def exported_wrapper(raw_inp, ctx):
         inp: {{ func.input_name }} = Struct.new({{ func.input_name }}, raw_inp)
-        out: {{ func.output_name }} = user_fn(inp)
+        out: {{ func.output_name }} = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)

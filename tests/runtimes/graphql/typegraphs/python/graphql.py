@@ -28,9 +28,9 @@ def graphql(g: Graph):
         {
             "id": t.integer(as_id=True, config=["auto"]),
             "title": t.string(),
-            "user_id": t.string(name="uid"),
+            "user_id": t.string(),
             "user": graphql.query(
-                t.struct({"id": t.string(as_id=True).from_parent("uid")}),
+                t.struct({"id": t.string(as_id=True).from_parent("user_id")}),
                 t.optional(_user),
             ),
         },

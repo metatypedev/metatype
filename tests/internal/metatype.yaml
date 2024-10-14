@@ -1,0 +1,12 @@
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+
+metagen:
+  targets:
+    main:
+      - generator: fdk_python
+        path: ./py/
+        typegraph_path: internal.py

@@ -269,7 +269,7 @@ export async function typegraph(
 
 /** generate a type reference (by name) */
 export function genRef(name: string): t.Typedef {
-  const value = core.refb(name, []);
+  const value = core.refb(name, null);
   if (typeof value == "object") {
     throw new Error(JSON.stringify(value));
   }

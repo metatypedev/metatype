@@ -31,10 +31,10 @@ def validator(g: Graph):
 
     parents = t.struct(
         {
-            "a": t.integer().rename("A"),
-            "b": t.string(max=20).rename("B"),
-            "c": t.struct({"a": t.integer(), "b": t.integer().optional()}).rename("C"),
-            "d": t.list(t.integer()).rename("D"),
+            "a": t.integer(),
+            "b": t.string(max=20),
+            "c": t.struct({"a": t.integer(), "b": t.integer().optional()}),
+            "d": t.list(t.integer()),
         }
     )
 
@@ -46,12 +46,12 @@ def validator(g: Graph):
                 "nested": deno.func(
                     t.struct(
                         {
-                            "a": t.string().from_parent("A"),
-                            "b": t.string(min=12, max=16).from_parent("B"),
+                            "a": t.string().from_parent("a"),
+                            "b": t.string(min=12, max=16).from_parent("b"),
                             "c": t.struct(
                                 {"a": t.integer(), "c": t.boolean().optional()}
-                            ).from_parent("C"),
-                            "d": t.list(t.integer()).from_parent("D"),
+                            ).from_parent("c"),
+                            "d": t.list(t.integer()).from_parent("d"),
                         }
                     ),
                     t.struct(),

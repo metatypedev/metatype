@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{TypeDef, TypeId};
+use crate::types::{ResolveRef as _, TypeDef, TypeId};
 
 use super::TypeGen;
 
@@ -256,7 +256,7 @@ impl TypeGen for AvgFilter {
             .unwrap()
             .iter_props()
             .filter_map(|(k, type_id)| {
-                let (_, type_def) = type_id.resolve_ref().unwrap();
+                let type_def = type_id.resolve_ref().unwrap().0;
                 let non_opt_type = match type_def {
                     TypeDef::Optional(inner) => inner.item().as_type_def().unwrap().unwrap(),
                     _ => type_def,
@@ -295,9 +295,9 @@ impl TypeGen for SumFilter {
             .unwrap()
             .iter_props()
             .filter_map(|(k, type_id)| {
-                let (_, type_def) = type_id.resolve_ref().unwrap();
+                let type_def = type_id.resolve_ref().unwrap().0;
                 let non_opt_type = match type_def {
-                    TypeDef::Optional(inner) => inner.item().resolve_ref().unwrap().1,
+                    TypeDef::Optional(inner) => inner.item().resolve_ref().unwrap().0,
                     _ => type_def,
                 };
                 match non_opt_type {

@@ -82,7 +82,7 @@ class Typegraph:
     ):
         res = core.expose(
             store,
-            [(k, v.id) for k, v in kwargs.items()],
+            [(k, v._id) for k, v in kwargs.items()],
             default_policy=get_policy_chain(default_policy) if default_policy else None,
         )
 
@@ -260,7 +260,7 @@ def typegraph(
 
 
 def gen_ref(name: str) -> "t.typedef":
-    res = core.refb(store, name, [])
+    res = core.refb(store, name, None)
     if isinstance(res, Err):
         raise ErrorStack(res.value)
     from typegraph.t import typedef

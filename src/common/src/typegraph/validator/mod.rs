@@ -6,17 +6,48 @@ mod input;
 mod types;
 mod value;
 
+use std::collections::{hash_map, HashMap};
+
 use crate::typegraph::{TypeNode, Typegraph};
 
 use super::visitor::{
-    visit_child, ChildNode, CurrentNode, Edge, Path, PathSegment, TypeVisitor, TypeVisitorContext,
-    VisitLayer, VisitResult, VisitorResult,
+    visit_child, ChildNode, CurrentNode, ParentFn, Path, PathSegment, TypeVisitor,
+    TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
 };
 
+#[allow(dead_code)]
+fn assert_unique_titles(types: &[TypeNode]) -> Vec<ValidatorError> {
+    let mut duplicates = vec![];
+    let mut map: HashMap<String, usize> = HashMap::new();
+    for (i, t) in types.iter().enumerate() {
+        let entry = map.entry(t.base().title.clone());
+        match entry {
+            hash_map::Entry::Occupied(o) => {
+                duplicates.push((t.base().title.clone(), *o.get(), i));
+            }
+            hash_map::Entry::Vacant(v) => {
+                v.insert(i);
+            }
+        }
+    }
+    duplicates
+        .into_iter()
+        .map(|(title, i, j)| ValidatorError {
+            path: "<types>".to_owned(),
+            message: format!("Duplicate title '{}' in types #{} and #{}", title, i, j),
+        })
+        .collect()
+}
+
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
+    let mut errors = vec![];
+    // FIXME temporarily disabled, will be re-enabled after all changes on the
+    // typegraph are merged
+    // errors.extend(assert_unique_titles(&tg.types));
     let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
-    tg.traverse_types(validator, &context, Layer).unwrap()
+    errors.extend(tg.traverse_types(validator, &context, Layer).unwrap());
+    errors
 }
 
 #[derive(Debug)]
@@ -91,14 +122,6 @@ impl<'a> TypeVisitor<'a> for Validator {
     ) -> VisitResult<Self::Return> {
         let type_node = current_node.type_node;
 
-        let last_seg = current_node.path.last();
-        if let Some(last_seg) = last_seg {
-            if let Edge::FunctionInput = last_seg.edge {
-                self.visit_input_type(current_node, context);
-                return VisitResult::Continue(false);
-            }
-        }
-
         if let TypeNode::Function { .. } = type_node {
             // validate materializer??
             // TODO deno static
@@ -134,6 +157,7 @@ impl<'a> TypeVisitor<'a> for Validator {
         &mut self,
         current_node: CurrentNode<'_>,
         context: &Self::Context,
+        _parent_fn: ParentFn,
     ) -> VisitResult<Self::Return> {
         self.visit_input_type_impl(current_node, context)
     }

@@ -12,12 +12,17 @@ use crate::{
     },
     errors::Result,
     typegraph::TypegraphContext,
-    types::{List, TypeDefData, TypeId},
+    types::{FindAttribute as _, List, RefAttrs, TypeDefData, TypeId},
     wit::core::TypeList,
 };
 
 impl TypeConversion for List {
-    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
+    fn convert(
+        &self,
+        ctx: &mut TypegraphContext,
+        runtime_id: Option<u32>,
+        ref_attrs: &RefAttrs,
+    ) -> Result<TypeNode> {
         Ok(TypeNode::List {
             base: BaseBuilderInit {
                 ctx,
@@ -25,16 +30,14 @@ impl TypeConversion for List {
                 type_id: self.id,
                 name: self.base.name.clone(),
                 runtime_idx: runtime_id.unwrap(),
-                policies: &self.extended_base.policies,
+                policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
             .init_builder()?
-            .inject(self.extended_base.injection.clone())?
+            .inject(ref_attrs.find_injection())?
             .build()?,
             data: ListTypeData {
-                items: ctx
-                    .register_type(TypeId(self.data.of).try_into()?, runtime_id)?
-                    .into(),
+                items: ctx.register_type(TypeId(self.data.of), runtime_id)?.into(),
                 max_items: self.data.max,
                 min_items: self.data.min,
                 unique_items: self.data.unique_items,

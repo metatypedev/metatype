@@ -10,10 +10,10 @@ expression: typegraph.0
       "runtime": 0,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "one": 1
       },
+      "id": [],
       "required": [
         "one"
       ]
@@ -24,7 +24,6 @@ expression: typegraph.0
       "runtime": 0,
       "policies": [],
       "config": {},
-      "as_id": false,
       "input": 2,
       "output": 4,
       "materializer": 0,
@@ -37,12 +36,12 @@ expression: typegraph.0
       "runtime": 0,
       "policies": [],
       "config": {},
-      "as_id": false,
       "properties": {
         "one": 3,
         "two": 4,
         "three": 5
       },
+      "id": [],
       "required": []
     },
     {
@@ -50,8 +49,7 @@ expression: typegraph.0
       "title": "root_one_fn_input_one_integer",
       "runtime": 0,
       "policies": [],
-      "config": {},
-      "as_id": false
+      "config": {}
     },
     {
       "type": "integer",
@@ -59,7 +57,6 @@ expression: typegraph.0
       "runtime": 0,
       "policies": [],
       "config": {},
-      "as_id": false,
       "minimum": 12,
       "maximum": 44
     },
@@ -69,7 +66,6 @@ expression: typegraph.0
       "runtime": 0,
       "policies": [],
       "config": {},
-      "as_id": false,
       "item": 6,
       "default_value": null
     },
@@ -79,7 +75,6 @@ expression: typegraph.0
       "runtime": 0,
       "policies": [],
       "config": {},
-      "as_id": false,
       "items": 7
     },
     {
@@ -87,8 +82,7 @@ expression: typegraph.0
       "title": "root_one_fn_input_three_float",
       "runtime": 0,
       "policies": [],
-      "config": {},
-      "as_id": false
+      "config": {}
     }
   ],
   "materializers": [
