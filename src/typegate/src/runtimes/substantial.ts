@@ -240,15 +240,7 @@ export class SubstantialRuntime extends Runtime {
   }
 
   #startResolver(enableGenerics: boolean): Resolver {
-    return async ({
-      _: {
-        context,
-        parent,
-        info: { url, headers },
-      },
-      name: workflowName,
-      kwargs,
-    }) => {
+    return async ({ name: workflowName, kwargs }) => {
       this.#checkWorkflowExistOrThrow(workflowName);
 
       const runId = Agent.nextId(workflowName);

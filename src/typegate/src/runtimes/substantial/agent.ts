@@ -273,20 +273,34 @@ export class Agent {
       return;
     }
 
-    this.workerManager.triggerStart(
-      workflow.name,
-      next.run_id,
-      workflow.path,
-      run,
-      next.schedule_date,
-      first.event.kwargs,
-      this.internalTCtx
-    );
+    try {
+      this.workerManager.triggerStart(
+        workflow.name,
+        next.run_id,
+        workflow.path,
+        run,
+        next.schedule_date,
+        first.event.kwargs,
+        this.internalTCtx
+      );
 
-    this.workerManager.listen(
-      next.run_id,
-      this.#eventResultHandlerFor(workflow.name, next.run_id)
-    );
+      this.workerManager.listen(
+        next.run_id,
+        this.#eventResultHandlerFor(workflow.name, next.run_id)
+      );
+    } catch (err) {
+      throw err;
+    } finally {
+      if (run.operations.length == 1) {
+        // Make sure it is already visible on the ongoing list
+        // without waiting for interrupts to store the first run
+        logger.info(`Persist first run "${next.run_id}"`);
+        await Meta.substantial.storePersistRun({
+          backend: this.backend,
+          run,
+        });
+      }
+    }
   }
 
   #eventResultHandlerFor(workflowName: string, runId: string) {

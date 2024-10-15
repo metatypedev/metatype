@@ -33,6 +33,7 @@ def substantial(g: Graph):
             t.integer(),
             code="({a, b}) => a + b",
         ),
+        remote_static=deno.static(t.integer(), 1234),
         # common
         stop=sub.stop(),
         results=sub.query_results(

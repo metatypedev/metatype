@@ -8,8 +8,6 @@ import {
   retrySaveTestTemplate,
 } from "./common.ts";
 
-// FIXME: always failing on CI
-
 basicTestTemplate("fs", {
   delays: { awaitSleepCompleteSec: 8 },
 });
