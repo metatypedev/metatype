@@ -3,12 +3,15 @@
 
 mod type_generation;
 
+use std::path::Path;
 use std::rc::Rc;
 
 use super::Runtime;
 use crate::global_store::Store;
+use crate::typegraph::current_typegraph_dir;
 use crate::types::core::{FuncParams, RuntimeId};
 use crate::types::runtimes::{Effect, GrpcData, GrpcRuntimeData};
+use crate::utils::fs::FsContext;
 use crate::{
     conversion::runtimes::MaterializerConverter, errors::Result, typegraph::TypegraphContext,
 };
@@ -65,4 +68,12 @@ pub fn call_grpc_method(runtime: RuntimeId, data: GrpcData) -> Result<FuncParams
         out: t.output.0,
         mat: mat_id,
     })
+}
+
+pub fn register_grpc_runtime(data: GrpcRuntimeData) -> Result<RuntimeId> {
+    let fs_ctx = FsContext::new(current_typegraph_dir()?);
+    let proto_file = fs_ctx.read_text_file(Path::new(&data.proto_file))?;
+    let data = GrpcRuntimeData { proto_file, ..data };
+
+    Ok(Store::register_runtime(Runtime::Grpc(data.into())))
 }

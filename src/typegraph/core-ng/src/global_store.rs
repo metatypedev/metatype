@@ -124,7 +124,7 @@ pub struct NameRegistration(pub bool);
 #[cfg(test)]
 impl Store {
     pub fn reset() {
-        let _ = crate::typegraph::serialize(Default::default());
+        // let _ = crate::typegraph::serialize(Default::default()); FIXME: uncomment this later
         with_store_mut(|s| *s = Store::new());
     }
 }

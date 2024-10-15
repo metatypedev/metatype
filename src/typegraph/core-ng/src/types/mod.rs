@@ -3,6 +3,7 @@
 
 #[allow(unused)]
 pub mod aws;
+pub mod builders;
 #[allow(unused)]
 pub mod core;
 #[allow(unused)]

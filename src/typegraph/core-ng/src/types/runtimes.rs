@@ -190,7 +190,7 @@ pub struct TemporalOperationData {
 
 // typegate
 pub enum TypegateOperation {
-    VecTypegraphs,
+    ListTypegraphs,
     FindTypegraph,
     AddTypegraph,
     RemoveTypegraphs,

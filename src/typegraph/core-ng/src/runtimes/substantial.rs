@@ -4,13 +4,13 @@
 use std::path::PathBuf;
 
 use common::typegraph::{runtimes::substantial::WorkflowMatData, Materializer};
-
 use serde_json::json;
 
 use crate::types::{
     core::{FuncParams, RuntimeId},
     runtimes::{
-        Effect, SubstantialOperationData, SubstantialOperationType, Workflow, WorkflowKind,
+        Effect, SubstantialOperationData, SubstantialOperationType, SubstantialRuntimeData,
+        Workflow, WorkflowKind,
     },
 };
 
@@ -21,6 +21,8 @@ use crate::{
     t::{self, TypeBuilder},
     typegraph::TypegraphContext,
 };
+
+use super::Runtime;
 
 #[derive(Debug)]
 pub enum SubstantialMaterializer {
@@ -221,4 +223,15 @@ impl From<Workflow> for WorkflowMatData {
             deps: value.deps.iter().map(PathBuf::from).collect(),
         }
     }
+}
+
+pub fn register_substantial_runtime(data: SubstantialRuntimeData) -> Result<RuntimeId> {
+    Ok(Store::register_runtime(Runtime::Substantial(data.into())))
+}
+
+pub fn generate_substantial_operation(
+    runtime: RuntimeId,
+    data: SubstantialOperationData,
+) -> Result<FuncParams> {
+    substantial_operation(runtime, data)
 }

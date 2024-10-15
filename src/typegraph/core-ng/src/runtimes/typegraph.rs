@@ -9,12 +9,7 @@ use crate::{
     types::runtimes::Effect,
 };
 
-#[derive(Clone, Debug)]
-pub enum TypegraphOperation {
-    Resolver,
-    GetType,
-    GetSchema,
-}
+pub use crate::types::runtimes::TypegraphOperation;
 
 impl MaterializerConverter for TypegraphOperation {
     fn convert(

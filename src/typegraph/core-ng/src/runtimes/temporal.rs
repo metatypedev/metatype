@@ -1,14 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::Materializer;
-use crate::errors::Result;
-use crate::global_store::Store;
-use crate::t;
-use crate::t::TypeBuilder;
-use crate::types::core::{FuncParams, RuntimeId};
-use crate::types::runtimes::Effect;
-use crate::types::runtimes::{TemporalOperationData, TemporalOperationType};
+use crate::{
+    errors::Result,
+    global_store::Store,
+    t::{self, TypeBuilder},
+    types::{
+        core::{FuncParams, RuntimeId},
+        runtimes::{Effect, TemporalOperationData, TemporalOperationType, TemporalRuntimeData},
+    },
+};
+
+use super::{Materializer, Runtime};
 
 #[derive(Debug)]
 pub enum TemporalMaterializer {
@@ -108,4 +111,15 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
         out: out_ty.into(),
         mat: mat_id,
     })
+}
+
+pub fn register_temporal_runtime(data: TemporalRuntimeData) -> Result<RuntimeId> {
+    Ok(Store::register_runtime(Runtime::Temporal(data.into())))
+}
+
+pub fn generate_temporal_operation(
+    runtime: RuntimeId,
+    data: TemporalOperationData,
+) -> Result<FuncParams> {
+    temporal_operation(runtime, data)
 }

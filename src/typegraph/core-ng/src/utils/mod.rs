@@ -306,7 +306,7 @@ impl TryFrom<Oauth2Params<'_>> for String {
 //     }
 // }
 
-pub fn clear_name(base: &TypeBase) -> TypeBase {
+fn clear_name(base: &TypeBase) -> TypeBase {
     TypeBase {
         name: None,
         ..base.clone()

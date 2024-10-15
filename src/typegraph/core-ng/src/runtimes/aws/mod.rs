@@ -123,53 +123,51 @@ impl MaterializerConverter for S3Materializer {
     }
 }
 
-// impl crate::wit::aws::Guest for crate::Lib {
-//     fn register_s3_runtime(data: S3RuntimeData) -> Result<RuntimeId> {
-//         Ok(Store::register_runtime(Runtime::S3(data.into())))
-//     }
-//
-//     fn s3_presign_get(runtime: RuntimeId, params: S3PresignGetParams) -> Result<MaterializerId> {
-//         let mat = Materializer::s3(
-//             runtime,
-//             S3Materializer::PresignGet(params.into()),
-//             WitEffect::Read,
-//         );
-//         Ok(Store::register_materializer(mat))
-//     }
-//
-//     fn s3_presign_put(runtime: RuntimeId, params: S3PresignPutParams) -> Result<MaterializerId> {
-//         let mat = Materializer::s3(
-//             runtime,
-//             S3Materializer::PresignPut(params.into()),
-//             WitEffect::Read,
-//         );
-//         Ok(Store::register_materializer(mat))
-//     }
-//
-//     fn s3_list(runtime: RuntimeId, bucket: String) -> Result<MaterializerId> {
-//         let mat = Materializer::s3(
-//             runtime,
-//             S3Materializer::List(S3ListItemsMat { bucket }),
-//             WitEffect::Read,
-//         );
-//         Ok(Store::register_materializer(mat))
-//     }
-//
-//     fn s3_upload(runtime: RuntimeId, bucket: String) -> Result<MaterializerId> {
-//         let mat = Materializer::s3(
-//             runtime,
-//             S3Materializer::Upload(S3UploadMat { bucket }),
-//             WitEffect::Create(true),
-//         );
-//         Ok(Store::register_materializer(mat))
-//     }
-//
-//     fn s3_upload_all(runtime: RuntimeId, bucket: String) -> Result<MaterializerId> {
-//         let mat = Materializer::s3(
-//             runtime,
-//             S3Materializer::UploadAll(S3UploadMat { bucket }),
-//             WitEffect::Create(true),
-//         );
-//         Ok(Store::register_materializer(mat))
-//     }
-// }
+pub fn register_s3_runtime(data: S3RuntimeData) -> Result<RuntimeId> {
+    Ok(Store::register_runtime(Runtime::S3(data.into())))
+}
+
+pub fn s3_presign_get(runtime: RuntimeId, params: S3PresignGetParams) -> Result<MaterializerId> {
+    let mat = Materializer::s3(
+        runtime,
+        S3Materializer::PresignGet(params.into()),
+        Effect::Read,
+    );
+    Ok(Store::register_materializer(mat))
+}
+
+pub fn s3_presign_put(runtime: RuntimeId, params: S3PresignPutParams) -> Result<MaterializerId> {
+    let mat = Materializer::s3(
+        runtime,
+        S3Materializer::PresignPut(params.into()),
+        Effect::Read,
+    );
+    Ok(Store::register_materializer(mat))
+}
+
+pub fn s3_list(runtime: RuntimeId, bucket: String) -> Result<MaterializerId> {
+    let mat = Materializer::s3(
+        runtime,
+        S3Materializer::List(S3ListItemsMat { bucket }),
+        Effect::Read,
+    );
+    Ok(Store::register_materializer(mat))
+}
+
+pub fn s3_upload(runtime: RuntimeId, bucket: String) -> Result<MaterializerId> {
+    let mat = Materializer::s3(
+        runtime,
+        S3Materializer::Upload(S3UploadMat { bucket }),
+        Effect::Create(true),
+    );
+    Ok(Store::register_materializer(mat))
+}
+
+pub fn s3_upload_all(runtime: RuntimeId, bucket: String) -> Result<MaterializerId> {
+    let mat = Materializer::s3(
+        runtime,
+        S3Materializer::UploadAll(S3UploadMat { bucket }),
+        Effect::Create(true),
+    );
+    Ok(Store::register_materializer(mat))
+}
