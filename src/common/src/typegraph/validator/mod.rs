@@ -43,36 +43,11 @@ fn assert_unique_titles(types: &[TypeNode]) -> Vec<ValidatorError> {
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     let mut errors = vec![];
+    // FIXME temporarily disabled, will be re-enabled after all changes on the
+    // typegraph are merged
+    // errors.extend(assert_unique_titles(&tg.types));
     let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
-
-    let get_type_name = |idx: u32| tg.types.get(idx as usize).unwrap().type_name();
-
-    for ttype in tg.types.iter() {
-        if let TypeNode::Either { data, .. } = ttype {
-            let variants = data.one_of.clone();
-            for i in 0..variants.len() {
-                for j in (i + 1)..variants.len() {
-                    let type1 = ExtendedTypeNode::new(tg, variants[i]);
-                    let type2 = ExtendedTypeNode::new(tg, variants[j]);
-
-                    let mut subtype_errors = ErrorCollector::default();
-                    type1.ensure_subtype_of(&type2, tg, &mut subtype_errors);
-
-                    if subtype_errors.errors.is_empty() {
-                        errors.push(ValidatorError {
-                            path: "".to_string(),
-                            message: format!(
-                                "Type '{}' is a subtype of '{}'",
-                                get_type_name(variants[i]),
-                                get_type_name(variants[j]),
-                            ),
-                        });
-                    }
-                }
-            }
-        }
-    }
 
     errors.extend(tg.traverse_types(validator, &context, Layer).unwrap());
     errors
@@ -150,9 +125,49 @@ impl<'a> TypeVisitor<'a> for Validator {
     ) -> VisitResult<Self::Return> {
         let type_node = current_node.type_node;
 
+        let tg = context.get_typegraph();
+
+        let get_type_name = |idx: u32| tg.types.get(idx as usize).unwrap().type_name();
+
         if let TypeNode::Function { .. } = type_node {
             // validate materializer??
             // TODO deno static
+        } else if let TypeNode::Either { data, .. } = type_node {
+            let variants = data.one_of.clone();
+            for i in 0..variants.len() {
+                for j in (i + 1)..variants.len() {
+                    let type1 = ExtendedTypeNode::new(tg, variants[i]);
+                    let type2 = ExtendedTypeNode::new(tg, variants[j]);
+
+                    let mut subtype_errors = ErrorCollector::default();
+                    type1.ensure_subtype_of(&type2, tg, &mut subtype_errors);
+
+                    if subtype_errors.errors.is_empty() {
+                        self.push_error(
+                            current_node.path,
+                            format!(
+                                "type '{}' is a subtype of '{}'",
+                                get_type_name(variants[i]),
+                                get_type_name(variants[j]),
+                            ),
+                        );
+                    }
+
+                    let mut subtype_errors = ErrorCollector::default();
+                    type2.ensure_subtype_of(&type1, tg, &mut subtype_errors);
+
+                    if subtype_errors.errors.is_empty() {
+                        self.push_error(
+                            current_node.path,
+                            format!(
+                                "type '{}' is a subtype of '{}'",
+                                get_type_name(variants[j]),
+                                get_type_name(variants[i]),
+                            ),
+                        );
+                    }
+                }
+            }
         }
 
         if let Some(enumeration) = &type_node.base().enumeration {
