@@ -69,14 +69,10 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
 
         TypeDef::Either(inner) => {
             let mut match_count = 0;
-            let mut matched_variants: Vec<TypeId> = Vec::new();
 
             for type_id in inner.data.variants.iter() {
                 match validate_value(value, type_id.into(), path.clone()) {
-                    Ok(()) => {
-                        match_count += 1;
-                        matched_variants.push(type_id.into());
-                    }
+                    Ok(()) => match_count += 1,
                     Err(_) => continue,
                 }
             }
