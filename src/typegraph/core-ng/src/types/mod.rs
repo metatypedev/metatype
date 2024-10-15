@@ -20,6 +20,8 @@ pub use type_def::*;
 pub use type_id::*;
 pub use type_ref::*;
 
+use crate::{errors::Result, types::core::TypeId as CoreTypeId};
+
 #[derive(Clone, Debug)]
 pub enum Type {
     Ref(TypeRef),
@@ -57,4 +59,8 @@ impl Type {
             Type::Def(typ) => typ.repr(),
         }
     }
+}
+
+pub fn get_type_repr(type_id: CoreTypeId) -> Result<String> {
+    TypeId(type_id).repr()
 }

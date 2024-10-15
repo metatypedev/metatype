@@ -3,14 +3,13 @@
 
 use crate::{
     errors::{Result, TgError},
-    types::{
-        core::{
-            TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
-            TypeString, TypeStruct, TypeUnion,
-        },
-        RefAttr, TypeId, TypeRef,
+    types::core::{
+        TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional, TypeString,
+        TypeStruct, TypeUnion,
     },
 };
+
+use crate::types::{builders, RefAttr, TypeId, TypeRef};
 
 #[cfg(test)]
 use common::typegraph::{Injection, InjectionData, SingleValue};
@@ -203,6 +202,7 @@ impl StringBuilder {
     }
 }
 
+#[allow(unused)]
 #[derive(Default)]
 pub struct OptionalBuilder {
     base: TypeBase,
@@ -232,6 +232,7 @@ pub fn optionalx(item_builder: impl TypeBuilder) -> Result<OptionalBuilder> {
     Ok(optional(item_builder.build()?))
 }
 
+#[allow(unused)]
 #[derive(Default)]
 pub struct ListBuilder {
     base: TypeBase,
@@ -301,6 +302,7 @@ macro_rules! unionx {
 }
 pub(crate) use unionx;
 
+#[allow(unused)]
 #[derive(Default)]
 pub struct EitherBuilder {
     base: TypeBase,
@@ -447,18 +449,16 @@ macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident, true ) => {
         impl TypeBuilder for $ty {
             fn build(&self) -> Result<TypeId> {
-                // let builder = self.clone();
-                // Ok($crate::Lib::$build(builder.data.clone())?.into())
-                todo!()
+                let builder = self.clone();
+                Ok($crate::types::builders::$build(builder.data.clone())?.into())
             }
         }
     };
 }
 impl TypeBuilder for BooleanBuilder {
     fn build(&self) -> Result<TypeId> {
-        // let res = crate::Lib::booleanb(self.base.clone())?;
-        // Ok(res.into())
-        todo!()
+        let res = builders::booleanb(self.base.clone())?;
+        Ok(res.into())
     }
 }
 
@@ -480,13 +480,12 @@ impl_type_builder!(IntegerBuilder, integerb);
 
 impl TypeBuilder for RefBuilder {
     fn build(&self) -> Result<TypeId> {
-        todo!()
-        // Ok(crate::Lib::refb(
-        //     self.name.clone(),
-        //     self.attribute
-        //         .as_ref()
-        //         .map(|attr| serde_json::to_string(&attr).unwrap()),
-        // )?
-        // .into())
+        Ok(builders::refb(
+            self.name.clone(),
+            self.attribute
+                .as_ref()
+                .map(|attr| serde_json::to_string(&attr).unwrap()),
+        )?
+        .into())
     }
 }

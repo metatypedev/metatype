@@ -1,30 +1,23 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::hash::Hash as _;
-use std::rc::Rc;
+use std::{hash::Hash as _, rc::Rc};
 
-use common::typegraph::TypeNode;
 use enum_dispatch::enum_dispatch;
 
-use super::{ResolveRef as _, TypeId};
-
-use crate::types::{
-    core::{
-        TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
-        TypeString, TypeStruct, TypeUnion,
-    },
-    RefAttrs,
-};
 use crate::{
-    conversion::{
-        hash::{Hashable, Hasher},
-        types::TypeConversion,
-    },
+    conversion::hash::{Hashable, Hasher},
     errors::Result,
     global_store::{NameRegistration, Store},
     typegraph::TypegraphContext,
 };
+
+use crate::types::core::{
+    TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
+    TypeString, TypeStruct, TypeUnion,
+};
+
+use super::{ResolveRef as _, TypeId};
 
 pub trait TypeDefData: Hashable {
     fn get_display_params_into(&self, params: &mut Vec<String>);

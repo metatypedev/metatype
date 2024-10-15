@@ -3,19 +3,21 @@
 
 use std::collections::HashSet;
 
+use common::typegraph::Injection;
+
 use crate::{
-    errors::{self, Result},
+    errors::{self, Result, TgError},
     global_store::{NameRegistration, Store},
 };
 
 use super::core::{
-    TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger,
-    TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
+    PolicySpec, TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId,
+    TypeInteger, TypeList, TypeOptional, TypeString, TypeStruct, TypeUnion,
 };
 
 use super::{
     AsId, Boolean, Either, File, Float, Func, Integer, List, Optional, StringT, Struct,
-    TypeBoolean, TypeDef, TypeId, TypeRef, Union,
+    TypeBoolean, TypeDef, TypeDefExt, TypeId, TypeRef, Union, WithInjection, WithPolicy,
 };
 
 pub fn refb(name: String, attr: Option<String>) -> Result<CoreTypeId> {
@@ -199,4 +201,68 @@ pub fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
         NameRegistration(true),
     )?
     .into())
+}
+
+pub fn extend_struct(
+    type_id: CoreTypeId,
+    new_props: Vec<(String, CoreTypeId)>,
+) -> Result<CoreTypeId> {
+    let type_def = TypeId(type_id).as_struct()?;
+    let mut props = type_def.data.props.clone();
+    props.extend(new_props);
+
+    Ok(Store::register_type_def(
+        |id| {
+            TypeDef::Struct(
+                Struct {
+                    id,
+                    base: clear_name(&type_def.base),
+                    data: TypeStruct {
+                        props,
+                        ..type_def.data.clone()
+                    },
+                }
+                .into(),
+            )
+        },
+        NameRegistration(false),
+    )?
+    .into())
+}
+
+pub fn with_policy(type_id: CoreTypeId, policy_chain: Vec<PolicySpec>) -> Result<CoreTypeId> {
+    let policy_chain = policy_chain
+        .into_iter()
+        .map(|p| p.into())
+        .collect::<Vec<_>>();
+    Ok(TypeId(type_id).with_policy(policy_chain)?.id.into())
+}
+
+pub fn with_injection(type_id: CoreTypeId, injection: String) -> Result<CoreTypeId> {
+    // validation
+    let injection: Injection =
+        serde_json::from_str(&injection).map_err(|e| errors::TgError::from(e.to_string()))?;
+    Ok(TypeId(type_id).with_injection(injection)?.id.into())
+}
+
+pub fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId> {
+    match TypeId(type_id).as_type_def()? {
+        Some(type_def) => {
+            let mut base = type_def.base().clone();
+            base.name = Some(new_name);
+            Ok(Store::register_type_def(
+                move |id| type_def.with_base(id, base.clone()),
+                NameRegistration(true),
+            )?
+            .into())
+        }
+        None => Err(TgError::from("cannot rename ref type")),
+    }
+}
+
+fn clear_name(base: &TypeBase) -> TypeBase {
+    TypeBase {
+        name: None,
+        ..base.clone()
+    }
 }

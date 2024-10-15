@@ -1,7 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::types::runtimes::{Effect, MaterializerDenoFunc};
+use crate::{
+    self as typegraph,
+    errors::Result,
+    types::{
+        core::TypegraphInitParams,
+        runtimes::{Effect, MaterializerDenoFunc},
+    },
+};
 
 impl MaterializerDenoFunc {
     pub fn with_code(code: impl Into<String>) -> Self {
@@ -68,15 +75,14 @@ pub mod models {
     }
 }
 
-pub fn setup(name: Option<&str>) -> crate::errors::Result<()> {
-    todo!()
-    // crate::Lib::init_typegraph(crate::wit::core::TypegraphInitParams {
-    //     name: name
-    //         .map(|n| n.to_string())
-    //         .unwrap_or_else(|| "test".to_string()),
-    //     path: ".".to_string(),
-    //     ..Default::default()
-    // })
+pub fn setup(name: Option<&str>) -> Result<()> {
+    typegraph::init(TypegraphInitParams {
+        name: name
+            .map(|n| n.to_string())
+            .unwrap_or_else(|| "test".to_string()),
+        path: ".".to_string(),
+        ..Default::default()
+    })
 }
 
 pub mod tree {
