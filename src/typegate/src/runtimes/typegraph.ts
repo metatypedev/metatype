@@ -36,11 +36,11 @@ import type { PolicyIndices } from "../typegraph/types.ts";
 type DeprecatedArg = { includeDeprecated?: boolean };
 
 const SCALAR_TYPE_MAP = {
-  "boolean": "Boolean",
-  "integer": "Int",
-  "float": "Float",
-  "string": "String",
-  "file": "File",
+  boolean: "Boolean",
+  integer: "Int",
+  float: "Float",
+  string: "String",
+  file: "File",
 };
 
 function generateCustomScalar(type: TypeNode, idx: number) {
@@ -69,7 +69,7 @@ export class TypeGraphRuntime extends Runtime {
   static init(
     typegraph: TypeGraphDS,
     _materializers: TypeMaterializer[],
-    _args: Record<string, unknown>,
+    _args: Record<string, unknown>
   ): Runtime {
     return new TypeGraphRuntime(typegraph);
   }
@@ -79,7 +79,7 @@ export class TypeGraphRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     _waitlist: ComputeStage[],
-    _verbose: boolean,
+    _verbose: boolean
   ): ComputeStage[] {
     const resolver: Resolver = (() => {
       const name = stage.props.materializer?.name;
@@ -93,18 +93,16 @@ export class TypeGraphRuntime extends Runtime {
       if (name === "resolver") {
         return async ({ _: { parent } }) => {
           const resolver = parent[stage.props.node];
-          const ret = typeof resolver === "function"
-            ? await resolver()
-            : resolver;
+          const ret =
+            typeof resolver === "function" ? await resolver() : resolver;
           return ret;
         };
       }
 
       return async ({ _: { parent } }) => {
         const resolver = parent[stage.props.node];
-        const ret = typeof resolver === "function"
-          ? await resolver()
-          : resolver;
+        const ret =
+          typeof resolver === "function" ? await resolver() : resolver;
         return ret;
       };
     })();
@@ -164,7 +162,7 @@ export class TypeGraphRuntime extends Runtime {
                   inputTypeIndices.add(idx);
                 }
                 return true;
-              },
+              }
             );
             return true;
           },
@@ -192,7 +190,7 @@ export class TypeGraphRuntime extends Runtime {
         visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
         const distinctScalars = distinctBy(
           [...scalarTypeIndices].map((idx) => this.tg.types[idx]),
-          (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
+          (t) => t.type // for scalars: one GraphQL type per `type` not `title`
         );
         const scalarTypes = distinctScalars.map((type) =>
           this.formatType(type, false, false)
@@ -200,20 +198,20 @@ export class TypeGraphRuntime extends Runtime {
 
         const customScalarTypes = hasUnion
           ? distinctScalars.map((node) => {
-            const idx = this.scalarIndex.get(node.type)!;
-            const asObject = generateCustomScalar(node, idx);
-            return this.formatType(asObject, false, false);
-          })
+              const idx = this.scalarIndex.get(node.type)!;
+              const asObject = generateCustomScalar(node, idx);
+              return this.formatType(asObject, false, false);
+            })
           : [];
 
         const regularTypes = distinctBy(
           [...regularTypeIndices].map((idx) => this.tg.types[idx]),
-          (t) => t.title,
+          (t) => t.title
         ).map((type) => this.formatType(type, false, false));
 
         const inputTypes = distinctBy(
           [...inputTypeIndices].map((idx) => this.tg.types[idx]),
-          (t) => t.title,
+          (t) => t.title
         ).map((type) => this.formatType(type, false, true));
 
         const types = [
@@ -279,7 +277,7 @@ export class TypeGraphRuntime extends Runtime {
   formatType = (
     type: TypeNode,
     required: boolean,
-    asInput: boolean,
+    asInput: boolean
   ): Record<string, () => unknown> => {
     const common = {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L207
@@ -342,21 +340,34 @@ export class TypeGraphRuntime extends Runtime {
           kind: () => TypeKind.OBJECT,
           name: () => "Query",
           description: () => `${type.title} type`,
-          fields: () => [{
-            name: () => "_",
-            args: () => [],
-            type: () =>
-              this.formatType(
-                this.tg
-                  .types[(this.tg.types[0] as ObjectNode).properties["query"]], // itself
-                false,
-                false,
-              ),
-            isDeprecated: () => true,
-            deprecationReason: () =>
-              "Dummy value due to https://github.com/graphql/graphiql/issues/2308",
-          }],
+          fields: () => [
+            {
+              name: () => "_",
+              args: () => [],
+              type: () =>
+                this.formatType(
+                  this.tg.types[
+                    (this.tg.types[0] as ObjectNode).properties["query"]
+                  ], // itself
+                  false,
+                  false
+                ),
+              isDeprecated: () => true,
+              deprecationReason: () =>
+                "Dummy value due to https://github.com/graphql/graphiql/issues/2308",
+            },
+          ],
           interfaces: () => [],
+        };
+      }
+
+      if (Object.keys(type.properties).length == 0) {
+        return {
+          ...common,
+          kind: () => TypeKind.SCALAR,
+          name: () => "EmptyObject",
+          description: () =>
+            `${type.type} scalar type representing an empty object`,
         };
       }
 
@@ -367,9 +378,7 @@ export class TypeGraphRuntime extends Runtime {
           name: () => `${type.title}Inp`,
           description: () => `${type.title} input type`,
           inputFields: () => {
-            return Object.entries(type.properties).map(
-              this.formatField(true),
-            );
+            return Object.entries(type.properties).map(this.formatField(true));
           },
           interfaces: () => [],
         };
@@ -404,11 +413,11 @@ export class TypeGraphRuntime extends Runtime {
       const variants = isUnion(type) ? type.anyOf : type.oneOf;
       if (asInput) {
         const titles = new Set<string>(
-          variants.map((idx) => this.tg.types[idx].title),
+          variants.map((idx) => this.tg.types[idx].title)
         );
-        const description = `${type.type} type\n${
-          Array.from(titles).join(", ")
-        }`;
+        const description = `${type.type} type\n${Array.from(titles).join(
+          ", "
+        )}`;
 
         return {
           ...common,
@@ -450,9 +459,9 @@ export class TypeGraphRuntime extends Runtime {
       if (typeof p === "number") {
         return describeOne(p);
       }
-      return Object.entries(p).map(
-        ([eff, polIdx]) => `${eff}:${describeOne(polIdx)}`,
-      ).join("; ");
+      return Object.entries(p)
+        .map(([eff, polIdx]) => `${eff}:${describeOne(polIdx)}`)
+        .join("; ");
     };
     const policies = type.policies.map(describe);
 
@@ -467,44 +476,46 @@ export class TypeGraphRuntime extends Runtime {
     return ret;
   }
 
-  formatField = (asInput: boolean) => ([name, typeIdx]: [string, number]) => {
-    const type = this.tg.types[typeIdx];
-    const common = {
-      // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L329
-      name: () => name,
-      description: () => `${name} field${this.policyDescription(type)}`,
-      isDeprecated: () => false,
-      deprecationReason: () => null,
-    };
+  formatField =
+    (asInput: boolean) =>
+    ([name, typeIdx]: [string, number]) => {
+      const type = this.tg.types[typeIdx];
+      const common = {
+        // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L329
+        name: () => name,
+        description: () => `${name} field${this.policyDescription(type)}`,
+        isDeprecated: () => false,
+        deprecationReason: () => null,
+      };
 
-    if (isFunction(type)) {
+      if (isFunction(type)) {
+        return {
+          ...common,
+          args: (_: DeprecatedArg = {}) => {
+            const inp = this.tg.types[type.input as number];
+            ensure(
+              isObject(inp),
+              `${type} cannot be an input field, require struct`
+            );
+            let entries = Object.entries((inp as ObjectNode).properties);
+            entries = entries.sort((a, b) => b[1] - a[1]);
+            return entries
+              .map(this.formatInputFields)
+              .filter((f) => f !== null);
+          },
+          type: () => {
+            const output = this.tg.types[type.output as number];
+            return this.formatType(output, true, false);
+          },
+        };
+      }
+
       return {
         ...common,
-        args: (_: DeprecatedArg = {}) => {
-          const inp = this.tg.types[type.input as number];
-          ensure(
-            isObject(inp),
-            `${type} cannot be an input field, require struct`,
-          );
-          let entries = Object.entries((inp as ObjectNode).properties);
-          entries = entries.sort((a, b) => b[1] - a[1]);
-          return entries
-            .map(this.formatInputFields)
-            .filter((f) => f !== null);
-        },
+        args: () => [],
         type: () => {
-          const output = this.tg.types[type.output as number];
-          return this.formatType(output, true, false);
+          return this.formatType(type, true, asInput);
         },
       };
-    }
-
-    return {
-      ...common,
-      args: () => [],
-      type: () => {
-        return this.formatType(type, true, asInput);
-      },
     };
-  };
 }
