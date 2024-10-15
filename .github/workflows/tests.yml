@@ -20,18 +20,17 @@ env:
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir
-  RUSTC_WRAPPER: "sccache"
-  SCCACHE_BUCKET: "metacache"
-  SCCACHE_ENDPOINT: "https://s3.pub1.infomaniak.cloud"
-  SCCACHE_REGION: "us-east-1"
-  SCCACHE_S3_USE_SSL: "true"
-  SCCACHE_CACHE_SIZE: "30G"
-  AWS_ACCESS_KEY_ID: ${{ secrets.SCCACHE_AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.SCCACHE_AWS_SECRET_ACCESS_KEY }}
   # used by ghjk
   # TODO: add logic to setup-ghjk
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DOCKER_BUILD_NO_SUMMARY: true
+  SCCACHE_BUCKET: "metacache"
+  SCCACHE_ENDPOINT: "https://s3.pub1.infomaniak.cloud"
+  SCCACHE_REGION: "us-east-1"
+  SCCACHE_S3_USE_SSL: "true"
+  SCCACHE_CACHE_SIZE: "50G"
+  AWS_ACCESS_KEY_ID: ${{ secrets.SCCACHE_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.SCCACHE_AWS_SECRET_ACCESS_KEY }}
 
 jobs:
   changes:
@@ -71,7 +70,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: mozilla-actions/sccache-action@v0.0.5
+      - if: ${{ env.AWS_ACCESS_KEY_ID }} != ""
+        name: Setup sccache secrets
+        run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+      - if: ${{ env.AWS_ACCESS_KEY_ID  != "" }}
+        uses: mozilla-actions/sccache-action@v0.0.5
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         run: |
@@ -111,7 +114,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: mozilla-actions/sccache-action@v0.0.5
+      - if: ${{ env.AWS_ACCESS_KEY_ID }} != ""
+        name: Setup sccache secrets
+        run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+      - if: ${{ env.AWS_ACCESS_KEY_ID  != "" }}
+        uses: mozilla-actions/sccache-action@v0.0.5
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
         with:
           # temporary fix
@@ -223,7 +230,11 @@ jobs:
         with:
           detached: true
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: mozilla-actions/sccache-action@v0.0.5
+      - if: ${{ env.AWS_ACCESS_KEY_ID }} != ""
+        name: Setup sccache secrets
+        run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+      - if: ${{ env.AWS_ACCESS_KEY_ID  != "" }}
+        uses: mozilla-actions/sccache-action@v0.0.5
       # - name: Cache deno dir
       #  uses: actions/cache@v4
       #  with:
