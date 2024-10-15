@@ -16,19 +16,13 @@ use crate::{
 use std::hash::Hash;
 
 impl TypeConversion for Boolean {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
         Ok(TypeNode::Boolean {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "boolean",
                 type_id: self.id,
                 name: self.base.name.clone(),
-                runtime_idx: runtime_id.unwrap(),
                 policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
@@ -52,7 +46,6 @@ impl Hashable for TypeBoolean {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         _tg: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
     ) -> Result<()> {
         "boolean".hash(hasher);
         Ok(())

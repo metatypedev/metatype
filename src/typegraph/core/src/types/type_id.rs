@@ -63,15 +63,14 @@ impl TypeId {
         &self,
         state: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         let typ = self.as_type()?;
         match typ {
             Type::Ref(type_ref) => {
-                type_ref.hash_type(state, tg, runtime_id)?;
+                type_ref.hash_type(state, tg)?;
             }
             Type::Def(type_def) => {
-                type_def.hash_type(state, tg, runtime_id)?;
+                type_def.hash_type(state, tg)?;
             }
         }
         Ok(())

@@ -18,12 +18,7 @@ use crate::{
 };
 
 impl TypeConversion for Optional {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
         let default_value = match self.data.default_item.clone() {
             Some(value) => {
                 let ret = serde_json::from_str(&value).map_err(|s| s.to_string())?;
@@ -38,7 +33,6 @@ impl TypeConversion for Optional {
                 base_name: "optional",
                 type_id: self.id,
                 name: self.base.name.clone(),
-                runtime_idx: runtime_id.unwrap(),
                 policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
@@ -46,7 +40,7 @@ impl TypeConversion for Optional {
             .inject(ref_attrs.find_injection())?
             .build()?,
             data: OptionalTypeData {
-                item: ctx.register_type(TypeId(self.data.of), runtime_id)?.into(),
+                item: ctx.register_type(TypeId(self.data.of))?.into(),
                 default_value,
             },
         })
@@ -77,10 +71,9 @@ impl Hashable for TypeOptional {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         self.default_item.hash(hasher);
-        TypeId(self.of).hash_child_type(hasher, tg, runtime_id)?;
+        TypeId(self.of).hash_child_type(hasher, tg)?;
         Ok(())
     }
 }

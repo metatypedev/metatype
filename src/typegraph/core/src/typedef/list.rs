@@ -17,19 +17,13 @@ use crate::{
 };
 
 impl TypeConversion for List {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
         Ok(TypeNode::List {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "list",
                 type_id: self.id,
                 name: self.base.name.clone(),
-                runtime_idx: runtime_id.unwrap(),
                 policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
@@ -37,7 +31,7 @@ impl TypeConversion for List {
             .inject(ref_attrs.find_injection())?
             .build()?,
             data: ListTypeData {
-                items: ctx.register_type(TypeId(self.data.of), runtime_id)?.into(),
+                items: ctx.register_type(TypeId(self.data.of))?.into(),
                 max_items: self.data.max,
                 min_items: self.data.min,
                 unique_items: self.data.unique_items,
@@ -70,13 +64,12 @@ impl Hashable for TypeList {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         "list".hash(hasher);
         self.min.hash(hasher);
         self.max.hash(hasher);
         self.unique_items.hash(hasher);
-        TypeId(self.of).hash_child_type(hasher, tg, runtime_id)?;
+        TypeId(self.of).hash_child_type(hasher, tg)?;
         Ok(())
     }
 }

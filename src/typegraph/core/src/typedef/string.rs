@@ -18,12 +18,7 @@ use crate::{
 };
 
 impl TypeConversion for StringT {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
         let format: Option<StringFormat> = match self.data.format.clone() {
             Some(format) => {
                 let ret =
@@ -39,7 +34,6 @@ impl TypeConversion for StringT {
                 base_name: "string",
                 type_id: self.id,
                 name: self.base.name.clone(),
-                runtime_idx: runtime_id.unwrap(),
                 policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
@@ -83,7 +77,6 @@ impl Hashable for TypeString {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         _tg: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
     ) -> Result<()> {
         "string".hash(hasher);
         self.min.hash(hasher);

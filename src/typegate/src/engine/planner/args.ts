@@ -135,14 +135,14 @@ export function collectArgs(
 
   if (!collector.hasDeps()) { // no deps
     // pre-compute
-    const value = mapValues(
+    const value = cleanObjectValue(mapValues(
       compute,
       (c) =>
         c({
           ...DEFAULT_COMPUTE_PARAMS,
           effect: effect !== "read" ? effect : null,
         }),
-    );
+    ));
     // typecheck
     validate(value);
     return {
@@ -178,6 +178,49 @@ interface Dependencies {
   context: Set<string>;
   parent: Set<string>;
   variables: Set<string>;
+}
+
+// TODO only filter out non-required optional fields
+function cleanObject(
+  c: ComputeArg<Record<string, unknown>>,
+  optional?: false,
+): ComputeArg<Record<string, unknown>>;
+function cleanObject(
+  c: ComputeArg<Record<string, unknown>>,
+  optional: true,
+): ComputeArg<Record<string, unknown> | null>;
+function cleanObject(
+  c: ComputeArg<Record<string, unknown>>,
+  optional = false,
+): ComputeArg<Record<string, unknown> | null> {
+  if (optional) {
+    return (...params) => {
+      const res = filterValues(c(...params), (v) => v != null);
+      return Object.keys(res).length === 0 ? null : res;
+    };
+  } else {
+    return (...params) => filterValues(c(...params), (v) => v != null);
+  }
+}
+
+function cleanObjectValue(
+  obj: Record<string, unknown>,
+  optional?: false,
+): Record<string, unknown>;
+function cleanObjectValue(
+  obj: Record<string, unknown>,
+  optional: true,
+): Record<string, unknown> | null;
+function cleanObjectValue(
+  obj: Record<string, unknown>,
+  optional = false,
+): Record<string, unknown> | null {
+  if (optional) {
+    const res = filterValues(obj, (v) => v != null);
+    return Object.keys(res).length === 0 ? null : res;
+  } else {
+    return filterValues(obj, (v) => v != null);
+  }
 }
 
 /**
@@ -282,10 +325,20 @@ class ArgumentCollector {
       if (typ.type === Type.OPTIONAL) {
         this.addPoliciesFrom(typ.item);
         const itemType = this.tg.type(typ.item);
+        const { default_value: defaultValue } = typ;
+        if (defaultValue != null) {
+          return () => defaultValue;
+        }
         switch (itemType.type) {
           case Type.OBJECT:
             try {
-              return this.collectDefaults(itemType.properties, node.path);
+              return cleanObject(
+                this.collectDefaults(
+                  itemType.properties,
+                  node.path,
+                ),
+                true,
+              );
             } catch (_e) {
               // fallthrough
             }
@@ -296,9 +349,12 @@ class ArgumentCollector {
               for (const idx of itemType.anyOf) {
                 const variantType = this.tg.type(idx);
                 if (variantType.type === Type.OBJECT) {
-                  return this.collectDefaults(
-                    variantType.properties,
-                    node.path,
+                  return cleanObject(
+                    this.collectDefaults(
+                      variantType.properties,
+                      node.path,
+                    ),
+                    true,
                   );
                 }
               }
@@ -333,9 +389,7 @@ class ArgumentCollector {
             break;
           }
         }
-        const { default_value: defaultValue } = typ;
-        const value = defaultValue ?? null;
-        return () => value;
+        return () => null;
       }
 
       if (typ.type === Type.OBJECT) {
@@ -628,11 +682,9 @@ class ArgumentCollector {
       );
     }
 
-    return (...params: Parameters<ComputeArg>) =>
-      filterValues(
-        mapValues(computes, (c) => c(...params)),
-        (v) => v != undefined,
-      );
+    return cleanObject((...params: Parameters<ComputeArg>) =>
+      mapValues(computes, (c) => c(...params))
+    );
   }
 
   /** Collect the default value for a parameter of type 'object';
@@ -641,7 +693,7 @@ class ArgumentCollector {
   private collectDefaults(
     props: Record<string, number>,
     path: string[],
-  ): ComputeArg {
+  ): ComputeArg<Record<string, unknown>> {
     const computes: Record<string, ComputeArg> = {};
 
     for (const [name, idx] of Object.entries(props)) {
@@ -650,8 +702,7 @@ class ArgumentCollector {
       path.pop();
     }
 
-    return (...params: Parameters<ComputeArg>) =>
-      mapValues(computes, (c) => c(...params));
+    return (...params) => mapValues(computes, (c) => c(...params));
   }
 
   private collectInjectedFields(props: Record<string, number>, path: string[]) {

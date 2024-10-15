@@ -22,26 +22,19 @@ use std::hash::Hash as _;
 use std::rc::Rc;
 
 impl TypeConversion for Func {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
-        let (mat_id, runtime_id) = ctx.register_materializer(self.data.mat)?;
+    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
+        let mat_id = ctx.register_materializer(self.data.mat)?;
 
         let inp_id = TypeId(self.data.inp);
         let (input, mut injection_tree) = match TypeId(self.data.inp).resolve_ref()?.0 {
             TypeDef::Struct(s) => (
-                ctx.register_type(inp_id, Some(runtime_id))?.into(),
+                ctx.register_type(inp_id)?.into(),
                 collect_injections(s, Default::default())?,
             ),
             _ => return Err(errors::invalid_input_type(&inp_id.repr()?)),
         };
 
-        let output = ctx
-            .register_type(TypeId(self.data.out), Some(runtime_id))?
-            .into();
+        let output = ctx.register_type(TypeId(self.data.out))?.into();
 
         let parameter_transform = self
             .data
@@ -54,12 +47,10 @@ impl TypeConversion for Func {
                         TgError::from(format!("Failed to parse transform_root: {}", e))
                     })?;
 
-                let transform_root = convert_tree(ctx, &transform_root, runtime_id)?;
+                let transform_root = convert_tree(ctx, &transform_root)?;
                 Ok(FunctionParameterTransform {
                     resolver_input: match resolver_input.resolve_ref()?.0 {
-                        TypeDef::Struct(_) => {
-                            ctx.register_type(resolver_input, Some(runtime_id))?
-                        }
+                        TypeDef::Struct(_) => ctx.register_type(resolver_input)?,
                         _ => return Err(errors::invalid_input_type(&resolver_input.repr()?)),
                     }
                     .into(),
@@ -76,7 +67,6 @@ impl TypeConversion for Func {
                 base_name: "func",
                 type_id: self.id,
                 name: self.base.name.clone(),
-                runtime_idx: runtime_id,
                 policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
@@ -110,7 +100,6 @@ impl Hashable for TypeFunc {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         "func".hash(hasher);
         self.mat.hash(hasher);
@@ -118,10 +107,10 @@ impl Hashable for TypeFunc {
         self.rate_weight.hash(hasher);
         if let Some(transform) = &self.parameter_transform {
             transform.transform_tree.hash(hasher);
-            TypeId(transform.resolver_input).hash_child_type(hasher, tg, runtime_id)?;
+            TypeId(transform.resolver_input).hash_child_type(hasher, tg)?;
         }
-        TypeId(self.inp).hash_child_type(hasher, tg, runtime_id)?;
-        TypeId(self.out).hash_child_type(hasher, tg, runtime_id)?;
+        TypeId(self.inp).hash_child_type(hasher, tg)?;
+        TypeId(self.out).hash_child_type(hasher, tg)?;
         Ok(())
     }
 }

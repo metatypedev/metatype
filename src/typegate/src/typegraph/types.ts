@@ -6,7 +6,6 @@
 export type OptionalNode = {
   type: "optional";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -19,7 +18,6 @@ export type OptionalNode = {
 export type BooleanNode = {
   type: "boolean";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -30,7 +28,6 @@ export type BooleanNode = {
 export type FloatNode = {
   type: "float";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -46,7 +43,6 @@ export type FloatNode = {
 export type IntegerNode = {
   type: "integer";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -62,7 +58,6 @@ export type IntegerNode = {
 export type StringNode = {
   type: "string";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -77,7 +72,6 @@ export type StringNode = {
 export type FileNode = {
   type: "file";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -91,7 +85,6 @@ export type FileNode = {
 export type ObjectNode = {
   type: "object";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -107,7 +100,6 @@ export type ObjectNode = {
 export type ListNode = {
   type: "list";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -125,7 +117,6 @@ export type InjectionNode =
 export type FunctionNode = {
   type: "function";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -143,7 +134,6 @@ export type FunctionNode = {
 export type UnionNode = {
   type: "union";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -155,7 +145,6 @@ export type UnionNode = {
 export type EitherNode = {
   type: "either";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
@@ -167,7 +156,6 @@ export type EitherNode = {
 export type AnyNode = {
   type: "any";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;

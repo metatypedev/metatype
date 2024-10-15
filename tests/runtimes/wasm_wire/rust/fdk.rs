@@ -270,9 +270,6 @@ pub mod types {
         pub profile: Profile,
     }
     pub type RecordCreationOutput = Vec<Entity>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootRandomFnInput {
-    }
     pub type HundredRandomOutput = Vec<Entity>;
 }
 pub mod stubs {

@@ -3,7 +3,6 @@
     {
       "type": "object",
       "title": "typegate/prisma_migration",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "properties": {
@@ -25,7 +24,6 @@
     {
       "type": "function",
       "title": "root_diff_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
@@ -40,7 +38,6 @@
     {
       "type": "object",
       "title": "root_diff_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -54,14 +51,12 @@
     {
       "type": "string",
       "title": "root_diff_fn_input_typegraph_string",
-      "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "optional",
       "title": "root_diff_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -70,14 +65,12 @@
     {
       "type": "boolean",
       "title": "root_diff_fn_input_script_boolean",
-      "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "object",
       "title": "root_diff_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -90,7 +83,6 @@
     {
       "type": "optional",
       "title": "root_diff_fn_output_diff_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -99,7 +91,6 @@
     {
       "type": "function",
       "title": "root_apply_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
@@ -114,7 +105,6 @@
     {
       "type": "object",
       "title": "root_apply_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -129,7 +119,6 @@
     {
       "type": "optional",
       "title": "root_apply_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -138,7 +127,6 @@
     {
       "type": "optional",
       "title": "root_apply_fn_input_migrations_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -147,7 +135,6 @@
     {
       "type": "object",
       "title": "root_apply_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -160,7 +147,6 @@
     {
       "type": "list",
       "title": "root_apply_fn_output_appliedMigrations_root_diff_fn_input_typegraph_string_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 3
@@ -168,7 +154,6 @@
     {
       "type": "function",
       "title": "root_create_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
@@ -183,7 +168,6 @@
     {
       "type": "object",
       "title": "root_create_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -199,7 +183,6 @@
     {
       "type": "optional",
       "title": "root_create_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -208,7 +191,6 @@
     {
       "type": "optional",
       "title": "root_create_fn_input_migrations_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -217,7 +199,6 @@
     {
       "type": "object",
       "title": "root_create_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -232,7 +213,6 @@
     {
       "type": "optional",
       "title": "root_create_fn_output_applyError_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -241,7 +221,6 @@
     {
       "type": "optional",
       "title": "root_create_fn_output_migrations_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -250,7 +229,6 @@
     {
       "type": "function",
       "title": "root_deploy_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
@@ -265,7 +243,6 @@
     {
       "type": "object",
       "title": "root_deploy_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -279,7 +256,6 @@
     {
       "type": "optional",
       "title": "root_deploy_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -288,7 +264,6 @@
     {
       "type": "object",
       "title": "root_deploy_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -301,14 +276,12 @@
     {
       "type": "integer",
       "title": "root_deploy_fn_output_migrationCount_integer",
-      "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "list",
       "title": "root_deploy_fn_output_appliedMigrations_root_diff_fn_input_typegraph_string_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 3
@@ -316,7 +289,6 @@
     {
       "type": "function",
       "title": "root_reset_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
@@ -331,7 +303,6 @@
     {
       "type": "object",
       "title": "root_reset_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -344,7 +315,6 @@
     {
       "type": "optional",
       "title": "root_reset_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,

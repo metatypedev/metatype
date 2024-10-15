@@ -12,22 +12,12 @@ use std::rc::Rc;
 #[enum_dispatch]
 pub trait TypeConversion {
     /// takes already converted runtime id
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode>;
+    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode>;
 }
 
 impl<T: TypeConversion> TypeConversion for Rc<T> {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
-        (**self).convert(ctx, runtime_id, ref_attrs)
+    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
+        (**self).convert(ctx, ref_attrs)
     }
 }
 
@@ -36,14 +26,12 @@ pub struct BaseBuilderInit<'a, 'b> {
     pub base_name: &'static str,
     pub type_id: TypeId,
     pub name: Option<String>,
-    pub runtime_idx: u32,
     pub policies: &'b [PolicySpec],
     pub runtime_config: Option<&'b [(String, String)]>,
 }
 
 pub struct BaseBuilder {
     name: String,
-    runtime_idx: u32,
     policies: Vec<PolicyIndices>,
     runtime_config: Option<IndexMap<String, String>>,
 
@@ -69,7 +57,6 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
 
         Ok(BaseBuilder {
             name,
-            runtime_idx: self.runtime_idx,
             policies,
             runtime_config,
 
@@ -92,7 +79,6 @@ impl BaseBuilder {
             description: None,
             enumeration: self.enumeration,
             policies: self.policies,
-            runtime: self.runtime_idx,
             title: self.name,
         })
     }

@@ -174,9 +174,8 @@ impl TypeRef {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
-        self.flatten().hash_type(hasher, tg, runtime_id)
+        self.flatten().hash_type(hasher, tg)
     }
 }
 
@@ -185,16 +184,14 @@ impl FlatTypeRef {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         match &self.target {
             FlatTypeRefTarget::Direct(type_def) => {
-                type_def.hash_type(hasher, tg, runtime_id)?;
+                type_def.hash_type(hasher, tg)?;
             }
             FlatTypeRefTarget::Indirect(name) => {
                 "named".hash(hasher);
                 name.hash(hasher);
-                runtime_id.hash(hasher);
             }
         }
         if !self.attributes.is_empty() {

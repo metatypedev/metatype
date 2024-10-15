@@ -57,7 +57,6 @@ pub enum Injection {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TypeNodeBase {
     pub title: String,
-    pub runtime: u32,
     pub policies: Vec<PolicyIndices>,
     #[serde(default)]
     pub description: Option<String>,

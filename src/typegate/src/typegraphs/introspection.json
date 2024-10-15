@@ -3,7 +3,6 @@
     {
       "type": "object",
       "title": "introspection",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "properties": {
@@ -19,7 +18,6 @@
     {
       "type": "function",
       "title": "root___type_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
@@ -34,7 +32,6 @@
     {
       "type": "object",
       "title": "root___type_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -46,14 +43,12 @@
     {
       "type": "string",
       "title": "root___type_fn_input_name_string",
-      "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "optional",
       "title": "root___type_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 5,
@@ -62,7 +57,6 @@
     {
       "type": "object",
       "title": "type",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -83,7 +77,6 @@
     {
       "type": "string",
       "title": "type_kind",
-      "runtime": 1,
       "policies": [],
       "enum": [
         "\"SCALAR\"",
@@ -100,7 +93,6 @@
     {
       "type": "optional",
       "title": "type_name_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -109,7 +101,6 @@
     {
       "type": "optional",
       "title": "type_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -118,7 +109,6 @@
     {
       "type": "optional",
       "title": "type_specifiedByURL_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -127,7 +117,6 @@
     {
       "type": "function",
       "title": "type_fields_fn",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "input": 11,
@@ -140,7 +129,6 @@
     {
       "type": "object",
       "title": "type_fields_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -152,7 +140,6 @@
     {
       "type": "optional",
       "title": "type_fields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 13,
@@ -161,14 +148,12 @@
     {
       "type": "boolean",
       "title": "type_fields_fn_input_includeDeprecated_boolean",
-      "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "optional",
       "title": "type_fields_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 15,
@@ -177,7 +162,6 @@
     {
       "type": "list",
       "title": "type_fields_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 16
@@ -185,7 +169,6 @@
     {
       "type": "object",
       "title": "field",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -202,7 +185,6 @@
     {
       "type": "optional",
       "title": "field_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -211,7 +193,6 @@
     {
       "type": "function",
       "title": "field_args_fn",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "input": 19,
@@ -224,7 +205,6 @@
     {
       "type": "object",
       "title": "field_args_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -236,7 +216,6 @@
     {
       "type": "optional",
       "title": "field_args_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 13,
@@ -245,7 +224,6 @@
     {
       "type": "list",
       "title": "field_args_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 22
@@ -253,7 +231,6 @@
     {
       "type": "object",
       "title": "input_value",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -270,7 +247,6 @@
     {
       "type": "optional",
       "title": "input_value_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -279,7 +255,6 @@
     {
       "type": "optional",
       "title": "input_value_defaultValue_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -288,7 +263,6 @@
     {
       "type": "optional",
       "title": "input_value_deprecationReason_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -297,7 +271,6 @@
     {
       "type": "optional",
       "title": "field_deprecationReason_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -306,7 +279,6 @@
     {
       "type": "optional",
       "title": "type_interfaces_type_interfaces_type_list_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 28,
@@ -315,7 +287,6 @@
     {
       "type": "list",
       "title": "type_interfaces_type_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 5
@@ -323,7 +294,6 @@
     {
       "type": "optional",
       "title": "type_possibleTypes_type_possibleTypes_type_list_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 30,
@@ -332,7 +302,6 @@
     {
       "type": "list",
       "title": "type_possibleTypes_type_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 5
@@ -340,7 +309,6 @@
     {
       "type": "function",
       "title": "type_enumValues_fn",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "input": 32,
@@ -353,7 +321,6 @@
     {
       "type": "object",
       "title": "type_enumValues_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -365,7 +332,6 @@
     {
       "type": "optional",
       "title": "type_enumValues_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 13,
@@ -374,7 +340,6 @@
     {
       "type": "optional",
       "title": "type_enumValues_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 35,
@@ -383,7 +348,6 @@
     {
       "type": "list",
       "title": "type_enumValues_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 36
@@ -391,7 +355,6 @@
     {
       "type": "object",
       "title": "enum_value",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -406,7 +369,6 @@
     {
       "type": "optional",
       "title": "enum_value_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -415,7 +377,6 @@
     {
       "type": "optional",
       "title": "enum_value_deprecationReason_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -424,7 +385,6 @@
     {
       "type": "function",
       "title": "type_inputFields_fn",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "input": 40,
@@ -437,7 +397,6 @@
     {
       "type": "object",
       "title": "type_inputFields_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -449,7 +408,6 @@
     {
       "type": "optional",
       "title": "type_inputFields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 13,
@@ -458,7 +416,6 @@
     {
       "type": "optional",
       "title": "type_inputFields_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 43,
@@ -467,7 +424,6 @@
     {
       "type": "list",
       "title": "type_inputFields_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 22
@@ -475,7 +431,6 @@
     {
       "type": "optional",
       "title": "type_ofType_type_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 5,
@@ -484,7 +439,6 @@
     {
       "type": "function",
       "title": "root___schema_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
@@ -499,7 +453,6 @@
     {
       "type": "object",
       "title": "root___schema_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {},
@@ -509,7 +462,6 @@
     {
       "type": "object",
       "title": "schema",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -526,7 +478,6 @@
     {
       "type": "optional",
       "title": "schema_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -535,7 +486,6 @@
     {
       "type": "list",
       "title": "schema_types_type_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 5
@@ -543,7 +493,6 @@
     {
       "type": "optional",
       "title": "schema_mutationType_type_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 5,
@@ -552,7 +501,6 @@
     {
       "type": "optional",
       "title": "schema_subscriptionType_type_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 5,
@@ -561,7 +509,6 @@
     {
       "type": "list",
       "title": "schema_directives_directive_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 53
@@ -569,7 +516,6 @@
     {
       "type": "object",
       "title": "directive",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -585,7 +531,6 @@
     {
       "type": "optional",
       "title": "directive_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 3,
@@ -594,7 +539,6 @@
     {
       "type": "list",
       "title": "directive_locations_directive_location_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 56
@@ -602,7 +546,6 @@
     {
       "type": "string",
       "title": "directive_location",
-      "runtime": 1,
       "policies": [],
       "enum": [
         "\"QUERY\"",
@@ -630,7 +573,6 @@
     {
       "type": "function",
       "title": "directive_args_fn",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "input": 58,
@@ -643,7 +585,6 @@
     {
       "type": "object",
       "title": "directive_args_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -655,7 +596,6 @@
     {
       "type": "optional",
       "title": "directive_args_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 13,
@@ -664,7 +604,6 @@
     {
       "type": "list",
       "title": "directive_args_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 22

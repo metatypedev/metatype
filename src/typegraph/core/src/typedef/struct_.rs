@@ -13,7 +13,6 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
-    global_store::Store,
     typegraph::TypegraphContext,
     types::{FindAttribute as _, IdKind, RefAttrs, Struct, Type, TypeDefData, TypeId},
     wit::core::TypeStruct,
@@ -68,23 +67,13 @@ impl TypeStruct {
 }
 
 impl TypeConversion for Struct {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
-        let runtime_id = match runtime_id {
-            Some(runtime_id) => runtime_id,
-            None => ctx.register_runtime(Store::get_deno_runtime())?,
-        };
+    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
         Ok(TypeNode::Object {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "object",
                 type_id: self.id,
                 name: self.base.name.clone(),
-                runtime_idx: runtime_id,
                 policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }
@@ -96,10 +85,7 @@ impl TypeConversion for Struct {
                 properties: self
                     .iter_props()
                     .map(|(name, type_id)| -> Result<(String, u32)> {
-                        Ok((
-                            name.to_string(),
-                            ctx.register_type(type_id, Some(runtime_id))?.into(),
-                        ))
+                        Ok((name.to_string(), ctx.register_type(type_id)?.into()))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
                 id: self.data.find_id_fields()?,
@@ -132,12 +118,11 @@ impl Hashable for TypeStruct {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         "struct".hash(hasher);
         for (name, tpe_id) in &self.props {
             name.hash(hasher);
-            TypeId(*tpe_id).hash_child_type(hasher, tg, runtime_id)?;
+            TypeId(*tpe_id).hash_child_type(hasher, tg)?;
         }
         Ok(())
     }

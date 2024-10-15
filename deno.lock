@@ -59,6 +59,7 @@
       "npm:lodash@4.17.21": "npm:lodash@4.17.21",
       "npm:mathjs@11.11.1": "npm:mathjs@11.11.1",
       "npm:multiformats@13.1.0": "npm:multiformats@13.1.0",
+      "npm:pg@8.12.0": "npm:pg@8.12.0",
       "npm:validator@13.12.0": "npm:validator@13.12.0",
       "npm:zod-validation-error@3.3.0": "npm:zod-validation-error@3.3.0_zod@3.23.8",
       "npm:zod@3.23.8": "npm:zod@3.23.8"
@@ -438,12 +439,83 @@
         "integrity": "sha512-HzdtdBwxsIkzpeXzhQ5mAhhuxcHbjEHH+JQoxt7hG/2HGFjjwyolLo7hbaexcnhoEuV4e0TNJ8kkpMjiEYY4VQ==",
         "dependencies": {}
       },
+      "pg-cloudflare@1.1.1": {
+        "integrity": "sha512-xWPagP/4B6BgFO+EKz3JONXv3YDgvkbVrGw2mTo3D6tVDQRh1e7cqVGvyR3BE+eQgAvx1XhW/iEASj4/jCWl3Q==",
+        "dependencies": {}
+      },
+      "pg-connection-string@2.6.4": {
+        "integrity": "sha512-v+Z7W/0EO707aNMaAEfiGnGL9sxxumwLl2fJvCQtMn9Fxsg+lPpPkdcyBSv/KFgpGdYkMfn+EI1Or2EHjpgLCA==",
+        "dependencies": {}
+      },
+      "pg-int8@1.0.1": {
+        "integrity": "sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==",
+        "dependencies": {}
+      },
+      "pg-pool@3.6.2_pg@8.12.0": {
+        "integrity": "sha512-Htjbg8BlwXqSBQ9V8Vjtc+vzf/6fVUuak/3/XXKA9oxZprwW3IMDQTGHP+KDmVL7rtd+R1QjbnCFPuTHm3G4hg==",
+        "dependencies": {
+          "pg": "pg@8.12.0"
+        }
+      },
+      "pg-protocol@1.6.1": {
+        "integrity": "sha512-jPIlvgoD63hrEuihvIg+tJhoGjUsLPn6poJY9N5CnlPd91c2T18T/9zBtLxZSb1EhYxBRoZJtzScCaWlYLtktg==",
+        "dependencies": {}
+      },
+      "pg-types@2.2.0": {
+        "integrity": "sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==",
+        "dependencies": {
+          "pg-int8": "pg-int8@1.0.1",
+          "postgres-array": "postgres-array@2.0.0",
+          "postgres-bytea": "postgres-bytea@1.0.0",
+          "postgres-date": "postgres-date@1.0.7",
+          "postgres-interval": "postgres-interval@1.2.0"
+        }
+      },
+      "pg@8.12.0": {
+        "integrity": "sha512-A+LHUSnwnxrnL/tZ+OLfqR1SxLN3c/pgDztZ47Rpbsd4jUytsTtwQo/TLPRzPJMp/1pbhYVhH9cuSZLAajNfjQ==",
+        "dependencies": {
+          "pg-cloudflare": "pg-cloudflare@1.1.1",
+          "pg-connection-string": "pg-connection-string@2.6.4",
+          "pg-pool": "pg-pool@3.6.2_pg@8.12.0",
+          "pg-protocol": "pg-protocol@1.6.1",
+          "pg-types": "pg-types@2.2.0",
+          "pgpass": "pgpass@1.0.5"
+        }
+      },
+      "pgpass@1.0.5": {
+        "integrity": "sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==",
+        "dependencies": {
+          "split2": "split2@4.2.0"
+        }
+      },
+      "postgres-array@2.0.0": {
+        "integrity": "sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==",
+        "dependencies": {}
+      },
+      "postgres-bytea@1.0.0": {
+        "integrity": "sha512-xy3pmLuQqRBZBXDULy7KbaitYqLcmxigw14Q5sj8QBVLqEwXfeybIKVWiqAXTlcvdvb0+xkOtDbfQMOf4lST1w==",
+        "dependencies": {}
+      },
+      "postgres-date@1.0.7": {
+        "integrity": "sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q==",
+        "dependencies": {}
+      },
+      "postgres-interval@1.2.0": {
+        "integrity": "sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==",
+        "dependencies": {
+          "xtend": "xtend@4.0.2"
+        }
+      },
       "regenerator-runtime@0.14.1": {
         "integrity": "sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==",
         "dependencies": {}
       },
       "seedrandom@3.0.5": {
         "integrity": "sha512-8OwmbklUNzwezjGInmZ+2clQmExQPvomqjL7LFqOYqtmuxRgQYqOD3mHaU+MvZn5FLUeVxVfQjwLZW/n/JFuqg==",
+        "dependencies": {}
+      },
+      "split2@4.2.0": {
+        "integrity": "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==",
         "dependencies": {}
       },
       "tiny-emitter@2.1.0": {
@@ -460,6 +532,10 @@
       },
       "validator@13.12.0": {
         "integrity": "sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==",
+        "dependencies": {}
+      },
+      "xtend@4.0.2": {
+        "integrity": "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==",
         "dependencies": {}
       },
       "zod-validation-error@3.3.0_zod@3.23.8": {
