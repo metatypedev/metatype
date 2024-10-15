@@ -265,10 +265,11 @@ export class TypeGraphRuntime extends Runtime {
   ) => {
     const type = this.tg.types[typeIdx];
 
+    // TODO resolve quantifiers
     const injection = injections[name];
     if (
       ("injection" in injection) ||
-      (("children" in injection) &&
+      (("children" in injection) && (type.type === Type.OBJECT) &&
         Object.keys(type.properties).every((key) => key in injection.children))
     ) {
       return null;

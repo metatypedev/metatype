@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::utils::metagen_utils::RawTgResolver;
+use crate::wit::metatype::typegraph::host::print;
 use common::typegraph::{Auth, AuthProtocol};
 use fs::FsContext;
 use indexmap::IndexMap;
@@ -13,10 +13,12 @@ use serde_json::json;
 use self::oauth2::std::{named_provider, Oauth2Builder};
 use crate::errors::Result;
 use crate::global_store::{get_sdk_version, Store};
+use crate::types::type_ref::InjectionTree;
+use crate::types::type_ref::OverrideInjections;
+
 use crate::types::TypeId;
-use crate::wit::core::{Guest, TypeBase, TypeId as CoreTypeId, TypeStruct};
-use crate::wit::utils::{Auth as WitAuth, FdkConfig, FdkOutput, QueryDeployParams};
-use crate::Lib;
+use crate::wit::core::{TypeBase, TypeId as CoreTypeId};
+use crate::wit::utils::{Auth as WitAuth, FdkConfig, FdkOutput, QueryDeployParams, ReduceEntry};
 use std::path::Path;
 
 mod archive;
@@ -26,34 +28,6 @@ pub mod metagen_utils;
 mod oauth2;
 mod pathlib;
 pub mod postprocess;
-pub mod reduce;
-
-fn find_missing_props(
-    supertype_id: TypeId,
-    new_props: &Vec<(String, u32)>,
-) -> Result<Vec<(String, u32)>> {
-    let old_props = supertype_id
-        .as_struct()?
-        .iter_props()
-        .map(|(k, v)| (k.to_string(), v))
-        .collect::<Vec<_>>();
-
-    let mut missing_props = vec![];
-    for (k_old, v_old) in old_props {
-        let mut is_missing = true;
-        for (k_new, _) in new_props {
-            if k_old.eq(k_new) {
-                is_missing = false;
-                break;
-            }
-        }
-        if is_missing {
-            missing_props.push((k_old, v_old.into()));
-        }
-    }
-
-    Ok(missing_props)
-}
 
 struct Oauth2Params<'a> {
     name: &'a str,
@@ -90,83 +64,13 @@ impl TryFrom<Oauth2Params<'_>> for String {
 }
 
 impl crate::wit::utils::Guest for crate::Lib {
-    fn gen_reduceb(
-        supertype_id: CoreTypeId,
-        reduce: crate::wit::utils::Reduce,
-    ) -> Result<CoreTypeId> {
-        if reduce.paths.is_empty() {
-            return Err("reduce object is empty".into());
-        }
-        let reduce_tree = reduce::PathTree::build_from(&reduce)?;
-        let mut item_list = reduce::flatten_to_sorted_items_array(&reduce_tree)?;
-        let p2c_indices = reduce::build_parent_to_child_indices(&item_list);
-        // item_list index => (node name, store id)
-        let mut idx_to_store_id_cache: HashMap<u32, (String, u32)> = HashMap::new();
-
-        while !item_list.is_empty() {
-            let item = match item_list.pop() {
-                Some(value) => value,
-                None => break,
-            };
-
-            if item.node.is_leaf() {
-                let path_infos = item.node.path_infos.clone();
-                let reduce_value = path_infos.value.clone();
-                let id = Store::get_type_by_path(supertype_id.into(), &path_infos.path)?.1;
-
-                if reduce_value.inherit && reduce_value.payload.is_none() {
-                    // if inherit and no injection, keep original id
-                    idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id.into()));
-                } else {
-                    // has injection
-                    let payload = reduce_value.payload.ok_or(format!(
-                        "cannot set undefined value at {:?}",
-                        path_infos.path.join(".")
-                    ))?;
-                    let new_id = Lib::with_injection(id.into(), payload)?;
-
-                    idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), new_id));
-                }
-            } else {
-                // parent node => must be a struct
-                let child_indices = p2c_indices.get(&item.index).unwrap();
-                if child_indices.is_empty() {
-                    return Err(format!("parent item at index {} has no child", item.index).into());
-                }
-
-                let mut props = vec![];
-                for idx in child_indices {
-                    // cache must hit
-                    let prop = idx_to_store_id_cache.get(idx).ok_or(format!(
-                        "store id for item at index {idx} was not yet generated"
-                    ))?;
-                    props.push(prop.clone());
-                }
-
-                if item.parent_index.is_none() {
-                    // if root, props g.inherit() should be implicit
-                    let missing_props = find_missing_props(supertype_id.into(), &props)?;
-                    for pair in missing_props {
-                        props.push(pair);
-                    }
-                }
-
-                let id = Lib::structb(
-                    TypeStruct {
-                        props,
-                        ..Default::default()
-                    },
-                    TypeBase::default(),
-                )?;
-                idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id));
-            }
-        }
-
-        let (_root_name, root_id) = idx_to_store_id_cache
-            .get(&0)
-            .ok_or("root type does not have any field".to_string())?;
-
-        Ok(*root_id)
+    fn reduceb(fn_type_id: CoreTypeId, entries: Vec<ReduceEntry>) -> Result<CoreTypeId> {
+        let injection_tree = InjectionTree::try_from(entries)?;
+        print(&format!("injeciton_tree: {:?}", injection_tree));
+        Ok(TypeId(fn_type_id)
+            .override_injections(injection_tree)?
+            .id
+            .into())
     }
 
     fn add_graphql_endpoint(graphql: String) -> Result<u32> {

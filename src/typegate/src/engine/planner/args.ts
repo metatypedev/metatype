@@ -281,6 +281,58 @@ class ArgumentCollector {
     if (astNode == null) {
       if (typ.type === Type.OPTIONAL) {
         this.addPoliciesFrom(typ.item);
+        const itemType = this.tg.type(typ.item);
+        switch (itemType.type) {
+          case Type.OBJECT:
+            try {
+              return this.collectDefaults(itemType.properties, node.path);
+            } catch (_e) {
+              // fallthrough
+            }
+            break;
+
+          case Type.UNION:
+            try {
+              for (const idx of itemType.anyOf) {
+                const variantType = this.tg.type(idx);
+                if (variantType.type === Type.OBJECT) {
+                  return this.collectDefaults(
+                    variantType.properties,
+                    node.path,
+                  );
+                }
+              }
+            } catch (_e) {
+              // fallthrough
+            }
+            break;
+
+          case Type.EITHER: {
+            let compute: ComputeArg | null = null;
+            for (const idx of itemType.oneOf) {
+              const variantType = this.tg.type(idx);
+              if (variantType.type === Type.OBJECT) {
+                try {
+                  if (compute != null) {
+                    // multiple matches
+                    break;
+                  }
+                  compute = this.collectDefaults(
+                    variantType.properties,
+                    node.path,
+                  );
+                  break;
+                } catch (_e) {
+                  // fallthrough
+                }
+              }
+            }
+            if (compute != null) {
+              return compute;
+            }
+            break;
+          }
+        }
         const { default_value: defaultValue } = typ;
         const value = defaultValue ?? null;
         return () => value;
@@ -624,9 +676,6 @@ class ArgumentCollector {
     path: string[],
   ): ComputeArg {
     const typ = this.tg.type(typeIdx);
-    if (typ == null) {
-      throw new Error(`Expected a type at index '${typeIdx}'`);
-    }
     this.addPoliciesFrom(typeIdx);
 
     const injection = this.#getInjection(path);

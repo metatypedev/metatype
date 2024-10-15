@@ -8,8 +8,8 @@ use crate::errors::{self, Result, TgError};
 use crate::params::apply::ParameterTransformNode;
 use crate::typegraph::TypegraphContext;
 use crate::types::{
-    FindAttribute as _, Func, RefAttr, RefAttrs, ResolveRef as _, Struct, TypeDef, TypeDefData,
-    TypeId,
+    FindAttribute as _, Func, InjectionTree, RefAttr, RefAttrs, ResolveRef as _, Struct, TypeDef,
+    TypeDefData, TypeId,
 };
 use crate::wit::core::TypeFunc;
 use common::typegraph::InjectionNode;
@@ -31,7 +31,7 @@ impl TypeConversion for Func {
         let (mat_id, runtime_id) = ctx.register_materializer(self.data.mat)?;
 
         let inp_id = TypeId(self.data.inp);
-        let (input, injection_tree) = match TypeId(self.data.inp).resolve_ref()?.0 {
+        let (input, mut injection_tree) = match TypeId(self.data.inp).resolve_ref()?.0 {
             TypeDef::Struct(s) => (
                 ctx.register_type(inp_id, Some(runtime_id))?.into(),
                 collect_injections(s, Default::default())?,
@@ -67,6 +67,9 @@ impl TypeConversion for Func {
                 })
             })
             .transpose()?;
+        for reduce_tree in ref_attrs.find_reduce_trees() {
+            InjectionTree::merge(&mut injection_tree.0, reduce_tree.0.clone());
+        }
         Ok(TypeNode::Function {
             base: BaseBuilderInit {
                 ctx,
@@ -83,7 +86,7 @@ impl TypeConversion for Func {
                 input,
                 parameter_transform,
                 output,
-                injections: injection_tree,
+                injections: injection_tree.0,
                 materializer: mat_id,
                 rate_calls: self.data.rate_calls,
                 rate_weight: self.data.rate_weight,
@@ -129,9 +132,9 @@ impl Hashable for TypeFunc {
 fn collect_injections(
     input_type: Rc<Struct>,
     mut visited: HashSet<TypeId>,
-) -> Result<IndexMap<String, InjectionNode>> {
+) -> Result<InjectionTree> {
     if !visited.insert(input_type.id) {
-        return Ok(IndexMap::new());
+        return Ok(Default::default());
     }
     let mut res = IndexMap::new();
 
@@ -150,8 +153,13 @@ fn collect_injections(
             match type_def {
                 TypeDef::Struct(s) => {
                     let children = collect_injections(s, visited.clone())?;
-                    if !children.is_empty() {
-                        res.insert(name.clone(), InjectionNode::Parent { children });
+                    if !children.0.is_empty() {
+                        res.insert(
+                            name.clone(),
+                            InjectionNode::Parent {
+                                children: children.0,
+                            },
+                        );
                     }
                 }
                 _ => {
@@ -161,7 +169,7 @@ fn collect_injections(
         }
     }
 
-    Ok(res)
+    Ok(InjectionTree(res))
 }
 
 fn resolve_quantifiers(

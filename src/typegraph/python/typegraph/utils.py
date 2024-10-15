@@ -6,7 +6,7 @@ from functools import reduce
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from typegraph.gen.exports.core import SerializeParams
-from typegraph.gen.exports.utils import ReducePath, ReduceValue
+from typegraph.gen.exports.utils import ReduceEntry
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.injection import InheritDef, serialize_static_injection
 from typegraph.wit import store, wit_utils
@@ -34,41 +34,35 @@ def serialize_config(config: Optional[ConfigSpec]) -> Optional[List[Tuple[str, s
     return [(k, json.dumps(v)) for k, v in config.items()]
 
 
-def build_reduce_data(node: Any, paths: List[ReducePath], curr_path: List[str]):
+def build_reduce_entries(node: Any, paths: List[ReduceEntry], curr_path: List[str]):
     if node is None:
         raise Exception(f"unsupported value {str(node)} at {'.'.join(curr_path)},")
 
     if isinstance(node, InheritDef):
-        paths.append(
-            ReducePath(
-                path=curr_path, value=ReduceValue(inherit=True, payload=node.payload)
-            )
-        )
+        if node.payload is None:
+            return paths
+        paths.append(ReduceEntry(path=curr_path, injection_data=node.payload))
         return paths
 
     if isinstance(node, list):
         paths.append(
-            ReducePath(
+            ReduceEntry(
                 path=curr_path,
-                value=ReduceValue(
-                    inherit=False, payload=serialize_static_injection(node)
-                ),
+                injection_data=serialize_static_injection(node),
             )
         )
         return paths
 
     if isinstance(node, dict):
         for k, v in node.items():
-            build_reduce_data(v, paths, curr_path + [k])
+            build_reduce_entries(v, paths, curr_path + [k])
         return paths
 
     if isinstance(node, int) or isinstance(node, str) or isinstance(node, bool):
         paths.append(
-            ReducePath(
+            ReduceEntry(
                 path=curr_path,
-                value=ReduceValue(
-                    inherit=False, payload=serialize_static_injection(node)
-                ),
+                injection_data=serialize_static_injection(node),
             )
         )
         return paths

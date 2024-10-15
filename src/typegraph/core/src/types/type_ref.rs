@@ -6,9 +6,10 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::types::{TypeDef, TypeDefExt as _, TypeId};
+use crate::wit::metatype::typegraph::host::print;
 pub use as_id::{AsId, IdKind};
 use common::typegraph::Injection;
-pub use injection::WithInjection;
+pub use injection::{InjectionTree, OverrideInjections, WithInjection};
 pub use policy::{PolicySpec, WithPolicy};
 pub use resolve_ref::ResolveRef;
 use serde::{Deserialize, Serialize};
@@ -32,6 +33,7 @@ type JsonValue = serde_json::Value;
 pub enum RefAttr {
     AsId(IdKind),
     Injection(Injection),
+    Reduce(InjectionTree),
     Policy(Vec<PolicySpec>),
     RuntimeConfig { runtime: String, data: JsonValue },
 }
@@ -107,10 +109,13 @@ impl RefAttr {
                 target: RefTarget::Direct(type_def),
                 attribute: self.into(),
             },
-            Type::Ref(type_ref) => TypeRefBuilder {
-                target: RefTarget::Link(type_ref),
-                attribute: self.into(),
-            },
+            Type::Ref(type_ref) => {
+                print(&format!("linking to ref: {:?}; {:?}", type_ref, self));
+                TypeRefBuilder {
+                    target: RefTarget::Link(type_ref),
+                    attribute: self.into(),
+                }
+            }
         }
     }
 }
@@ -236,6 +241,9 @@ impl RefAttr {
             RefAttr::RuntimeConfig { runtime, data } => {
                 format!("rt/{}: {}", runtime, serde_json::to_string(data).unwrap())
             }
+            RefAttr::Reduce(tree) => {
+                format!("reduce: {}", serde_json::to_string(tree).unwrap())
+            }
         }
     }
 }
@@ -278,6 +286,13 @@ pub trait FindAttribute {
     fn find_policy(&self) -> Option<&[PolicySpec]> {
         self.find_attr(|attr| match attr {
             RefAttr::Policy(policy) => Some(policy.as_slice()),
+            _ => None,
+        })
+    }
+
+    fn find_reduce_trees(&self) -> Vec<&InjectionTree> {
+        self.find_attrs(|attr| match attr {
+            RefAttr::Reduce(tree) => Some(tree),
             _ => None,
         })
     }

@@ -25,7 +25,6 @@ from typegraph.gen.exports.core import (
     PolicySpec as WitPolicySpec,
 )
 from typegraph.gen.exports.runtimes import EffectRead
-from typegraph.gen.exports.utils import Reduce
 from typegraph.gen.types import Err
 from typegraph.graph.typegraph import (
     core,
@@ -45,7 +44,7 @@ from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_cha
 from typegraph.runtimes.deno import Materializer
 from typegraph.utils import (
     ConfigSpec,
-    build_reduce_data,
+    build_reduce_entries,
     serialize_config,
 )
 from typegraph.wit import wit_utils
@@ -679,19 +678,24 @@ class func(typedef):
         rate_calls: bool = False,
         rate_weight: Optional[int] = None,
         parameter_transform: Optional[ParameterTransform] = None,
+        type_id: Optional[int] = None,
     ):
-        data = TypeFunc(
-            inp=inp._id,
-            out=out._id,
-            parameter_transform=parameter_transform,
-            mat=mat.id,
-            rate_calls=rate_calls,
-            rate_weight=rate_weight,
-        )
-        res = core.funcb(store, data)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        id = res.value
+        def register():
+            data = TypeFunc(
+                inp=inp._id,
+                out=out._id,
+                parameter_transform=parameter_transform,
+                mat=mat.id,
+                rate_calls=rate_calls,
+                rate_weight=rate_weight,
+            )
+            res = core.funcb(store, data)
+            if isinstance(res, Err):
+                raise Exception(res.value)
+            return res.value
+
+        id = register() if type_id is None else type_id
+
         super().__init__(id)
         self.inp = inp
         self.out = out
@@ -729,20 +733,21 @@ class func(typedef):
         )
 
     def reduce(self, value: Dict[str, Any]) -> "func":
-        data = Reduce(paths=build_reduce_data(value, [], []))
-        reduced_id = wit_utils.gen_reduceb(store, self.inp._id, data=data)
+        reduce_entries = build_reduce_entries(value, [], [])
+        reduced_id = wit_utils.reduceb(store, self._id, reduce_entries)
 
         if isinstance(reduced_id, Err):
             raise Exception(reduced_id.value)
 
         # TODO typedef(...).as_struct()
         return func(
-            typedef(id=reduced_id.value),
+            self.inp,
             self.out,
             self.mat,
             parameter_transform=self.parameter_transform,
             rate_calls=self.rate_calls,
             rate_weight=self.rate_weight,
+            type_id=reduced_id.value,
         )
 
     def apply(self, value: ApplyParamObjectNode) -> "func":

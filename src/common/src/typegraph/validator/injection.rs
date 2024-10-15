@@ -1,3 +1,4 @@
+use indexmap::IndexMap;
 use serde_json::Value;
 
 use super::types::{EnsureSubtypeOf as _, ErrorCollector, ExtendedTypeNode};
@@ -26,6 +27,11 @@ impl<'a> InjectionValidationContext<'a> {
         });
         res
     }
+}
+
+enum UnionKind {
+    Union,
+    Either,
 }
 
 impl Validator {
@@ -81,8 +87,8 @@ impl Validator {
                                     self.push_error(
                                         &cx.get_path(path),
                                         format!(
-                                            "unexpected injection path prefix: {:?}",
-                                            path.join(".")
+                                            "unexpected injection path prefix: {:?}, available properties are: {:?}",
+                                            path.join("."), data.properties.keys().collect::<Vec<_>>()
                                         ),
                                     );
                                 }
@@ -90,7 +96,31 @@ impl Validator {
                             path.pop();
                         }
                     }
+                    TypeNode::Union { data, .. } => {
+                        self.validate_union(
+                            type_node,
+                            &data.any_of,
+                            children,
+                            path,
+                            cx,
+                            UnionKind::Union,
+                        );
+                    }
+                    TypeNode::Either { data, .. } => {
+                        self.validate_union(
+                            type_node,
+                            &data.one_of,
+                            children,
+                            path,
+                            cx,
+                            UnionKind::Either,
+                        );
+                    }
                     _ => {
+                        self.push_error(
+                            &cx.get_path(path),
+                            format!("expected object type, found: {:?}", type_node),
+                        );
                         self.push_error(
                             &cx.get_path(path),
                             format!("unexpected injection path prefix: {:?}", path.join(".")),
@@ -136,6 +166,101 @@ impl Validator {
                 &cx.get_path(in_path),
                 format!("from_parent injection: {error}", error = error),
             );
+        }
+    }
+
+    fn validate_union(
+        &mut self,
+        type_node: &TypeNode,
+        variants: &[TypeId],
+        children: &IndexMap<String, InjectionNode>,
+        path: &mut Vec<String>,
+        cx: &InjectionValidationContext<'_>,
+        union_kind: UnionKind,
+    ) {
+        let eligible_variants = variants
+            .iter()
+            .cloned()
+            .filter_map(|type_idx| {
+                let type_node = &cx.validator.get_typegraph().types[type_idx as usize];
+                match type_node {
+                    TypeNode::Object { data, .. } => children
+                        .keys()
+                        .all(|key| data.properties.contains_key(key))
+                        .then_some(data),
+                    _ => None,
+                }
+            })
+            .collect::<Vec<_>>();
+        if eligible_variants.is_empty() {
+            self.push_error(
+                &cx.get_path(path),
+                format!("expected object type, found: {:?}", type_node),
+            );
+            self.push_error(
+                &cx.get_path(path),
+                format!("unexpected injection path prefix: {:?}", path.join(".")),
+            );
+        }
+
+        let mut match_count = 0;
+
+        for type_data in eligible_variants {
+            let mut validator = Validator::default();
+            for (key, node) in children.iter() {
+                path.push(key.clone());
+                match type_data.properties.get(key) {
+                    Some(type_idx) => {
+                        validator.validate_injection(path, *type_idx, node, cx);
+                    }
+                    None => {
+                        unreachable!();
+                    }
+                }
+                path.pop();
+            }
+            if validator.errors.is_empty() {
+                match union_kind {
+                    UnionKind::Union => {
+                        return;
+                    }
+                    UnionKind::Either => {
+                        match_count += 1;
+                    }
+                }
+            }
+        }
+        match union_kind {
+            UnionKind::Union => {
+                self.push_error(
+                    &cx.get_path(path),
+                    format!(
+                        "no variant of the union type matches the injection path prefix: {:?}",
+                        path.join(".")
+                    ),
+                );
+            }
+            UnionKind::Either => match match_count {
+                0 => {
+                    self.push_error(
+                        &cx.get_path(path),
+                        format!(
+                            "no variant of the union type matches the injection path prefix: {:?}",
+                            path.join(".")
+                        ),
+                    );
+                }
+                1 => {}
+                _ => {
+                    self.push_error(
+                            &cx.get_path(path),
+                            format!(
+                                "multiple variants of the union type match the injection path prefix: {:?}",
+                                path.join(".")
+                            ),
+                        );
+                }
+            },
         }
     }
 }

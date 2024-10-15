@@ -191,7 +191,7 @@ Meta.test("python(sdk): reduce", async (t) => {
   await t.should("work with reduce composition and injections", async () => {
     await gql`
       query {
-        simpleInjection(two: { user: 4444 }) {
+        simpleInjection(two: { user: 4444, reduce: 4 }) {
           one
           two {
             set
