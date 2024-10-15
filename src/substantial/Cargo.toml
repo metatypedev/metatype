@@ -8,7 +8,6 @@ anyhow.workspace = true
 chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-lazy_static.workspace = true
 uuid.workspace = true
 
 protobuf = "3.5.1"

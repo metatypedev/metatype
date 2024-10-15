@@ -1,15 +1,13 @@
 use super::key_value::{Item, KeyValueBackend, KeyValueLike};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use lazy_static::lazy_static;
 use std::sync::RwLock;
 use std::{collections::HashMap, sync::Arc};
 
-lazy_static! {
-    static ref STORAGE: Arc<RwLock<HashMap<String, Item>>> = Arc::new(RwLock::new(HashMap::new()));
+#[derive(Default)]
+pub struct BasicMemoryStore {
+    pub storage: Arc<RwLock<HashMap<String, Item>>>,
 }
-
-pub struct BasicMemoryStore;
 
 impl KeyValueLike for BasicMemoryStore {
     fn run_key(&self, run_id: &str, subpath: &str) -> Result<String> {
@@ -26,25 +24,26 @@ impl KeyValueLike for BasicMemoryStore {
     }
 
     fn get(&self, key: &str) -> Result<Option<Item>> {
-        Ok(STORAGE.read().unwrap().get(key).cloned())
+        Ok(self.storage.read().unwrap().get(key).cloned())
     }
 
     fn put(&self, key: &str, value: Item) -> Result<()> {
-        STORAGE.write().unwrap().insert(key.to_string(), value);
+        self.storage.write().unwrap().insert(key.to_string(), value);
         Ok(())
     }
 
     fn remove(&self, key: &str) -> Result<()> {
-        STORAGE.write().unwrap().remove(key);
+        self.storage.write().unwrap().remove(key);
         Ok(())
     }
 
     fn exists(&self, key: &str) -> Result<bool> {
-        Ok(STORAGE.write().unwrap().contains_key(key))
+        Ok(self.storage.write().unwrap().contains_key(key))
     }
 
     fn keys(&self) -> Result<Vec<String>> {
-        Ok(STORAGE
+        Ok(self
+            .storage
             .read()
             .unwrap()
             .keys()
@@ -58,7 +57,7 @@ pub struct MemoryBackend(KeyValueBackend);
 impl Default for MemoryBackend {
     fn default() -> Self {
         MemoryBackend(KeyValueBackend {
-            store: Box::new(BasicMemoryStore),
+            store: Box::new(BasicMemoryStore::default()),
         })
     }
 }

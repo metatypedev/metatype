@@ -295,7 +295,12 @@ impl BackendMetadataWriter for KeyValueBackend {
         let base_key = format!("links/children/{}/", parent_run_id);
 
         for key in self.store.keys()? {
-            let value = self.store.get(&key)?.unwrap();
+            let value = self
+                .store
+                .get(&key)?
+                .with_context(|| format!("Get known key {:?}", key))
+                .unwrap();
+
             if key.starts_with(&base_key) {
                 ret.push(String::from_utf8(value.data)?);
             }
