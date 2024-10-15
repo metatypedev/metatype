@@ -71,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - if: ${{ env.AWS_ACCESS_KEY_ID }} != ""
+      - if: ${{ env.AWS_ACCESS_KEY_ID != "" }}
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != "" }}
@@ -115,7 +115,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
-      - if: ${{ env.AWS_ACCESS_KEY_ID }} != ""
+      - if: ${{ env.AWS_ACCESS_KEY_ID  != "" }}
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != "" }}
@@ -231,7 +231,7 @@ jobs:
         with:
           detached: true
       - uses: dsherret/rust-toolchain-file@v1
-      - if: ${{ env.AWS_ACCESS_KEY_ID }} != ""
+      - if: ${{ env.AWS_ACCESS_KEY_ID  != "" }}
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != "" }}
