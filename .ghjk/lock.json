@@ -1017,6 +1017,8 @@
             "ghjkEnvProvInstSet_______task_env_gen-subs-protoc": {
               "installs": [
                 "bciqm2rvnfe77sj6jekrm65oayuywt5lbrw33qezqjcg5rzaioc6uszy",
+                "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
+                "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
@@ -1497,39 +1499,6 @@
                 }
               ]
             },
-            "bciqpunhgxn3npmv6lwplhckwyn5zls7crj3vodn6we6ihuhu4y7djcy": {
-              "provides": [
-                {
-                  "ty": "posix.envVar",
-                  "key": "RUST_LOG",
-                  "val": "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "TYPEGRAPH_VERSION",
-                  "val": "0.0.3"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "CLICOLOR_FORCE",
-                  "val": "1"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "CROSS_CONFIG",
-                  "val": "tools/Cross.toml"
-                },
-                {
-                  "ty": "posix.envVar",
-                  "key": "GIT_CLIFF_CONFIG",
-                  "val": "tools/cliff.toml"
-                },
-                {
-                  "ty": "ghjk.ports.InstallSetRef",
-                  "setId": "ghjkEnvProvInstSet_______task_env_gen-subs-protoc"
-                }
-              ]
-            },
             "bciqdpiup27tflfkq26oirbutkz53wrp34entiq423upf47za7zoq4za": {
               "provides": [
                 {
@@ -1730,6 +1699,39 @@
                 {
                   "ty": "ghjk.ports.InstallSetRef",
                   "setId": "ghjkEnvProvInstSet_______task_env_test-rust"
+                }
+              ]
+            },
+            "bciqpunhgxn3npmv6lwplhckwyn5zls7crj3vodn6we6ihuhu4y7djcy": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_gen-subs-protoc"
                 }
               ]
             },

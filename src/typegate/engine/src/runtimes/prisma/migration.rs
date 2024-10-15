@@ -133,7 +133,7 @@ impl MigrationContext {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(crate = "serde")]
 pub enum PrismaApplyResult {
     ResetRequired {
@@ -178,7 +178,7 @@ impl MigrationContext {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaCreateResult {
     created_migration_name: Option<String>,
@@ -387,7 +387,7 @@ impl ParsedDiff {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaDeployOut {
     migration_count: usize,

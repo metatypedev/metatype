@@ -83,7 +83,7 @@ pub async fn op_prisma_unregister_engine(
 
 // query
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaQueryInp {
     engine_name: String,
@@ -92,6 +92,7 @@ pub struct PrismaQueryInp {
     datamodel: String,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[string]
 pub async fn op_prisma_query(
@@ -105,7 +106,7 @@ pub async fn op_prisma_query(
     engine::query(&ctx, input.engine_name, input.query).await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaDiffInp {
     datasource: String,
@@ -113,6 +114,7 @@ pub struct PrismaDiffInp {
     script: bool,
 }
 
+#[tracing::instrument(ret, level = "debug")]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_diff(
@@ -123,7 +125,7 @@ pub async fn op_prisma_diff(
     migration::diff(input.datasource, datamodel, input.script).await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaDevInp {
     pub datasource: String,
@@ -132,6 +134,7 @@ pub struct PrismaDevInp {
     pub reset_database: bool,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_apply(
@@ -150,7 +153,7 @@ pub async fn op_prisma_apply(
         .await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaDeployInp {
     datasource: String,
@@ -158,6 +161,7 @@ pub struct PrismaDeployInp {
     migrations: String,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_deploy(
@@ -176,7 +180,7 @@ pub async fn op_prisma_deploy(
         .await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaCreateInp {
     datasource: String,
@@ -186,6 +190,7 @@ pub struct PrismaCreateInp {
     apply: bool,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_create(
@@ -204,6 +209,7 @@ pub async fn op_prisma_create(
         .await
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 pub async fn op_prisma_reset(
     state: Rc<RefCell<OpState>>,

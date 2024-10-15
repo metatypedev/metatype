@@ -14571,9 +14571,11 @@ version = "0.4.11-rc.0"
 dependencies = [
  "anyhow",
  "clap",
- "env_logger 0.11.0",
+ "color-eyre",
  "log",
  "mt_deno",
+ "tracing-error",
+ "tracing-subscriber",
  "typegate_engine",
 ]
 
