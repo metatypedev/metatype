@@ -1,0 +1,13 @@
+---
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+expression: tp.print(out)
+---
+root: list 'list_168' #168
+└─ item: struct 'Post_with_nested_count' #167
+   ├─ [author]: struct 'User' #79
+   │  ├─ [id]: integer #75
+   │  ├─ [name]: string #76
+   │  └─ [posts]: list 'list_78' #78
+   │     └─ item: &Post #77
+   ├─ [id]: integer #80
+   └─ [title]: string #82

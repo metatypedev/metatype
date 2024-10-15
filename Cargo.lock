@@ -12740,6 +12740,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "typegraph_core_ng"
+version = "0.4.11-rc.0"
+dependencies = [
+ "anyhow",
+ "color-eyre",
+ "common",
+ "enum_dispatch",
+ "glob",
+ "graphql-parser 0.4.0",
+ "indexmap 2.4.0",
+ "indoc",
+ "insta",
+ "metagen",
+ "once_cell",
+ "ordered-float 4.2.1",
+ "paste",
+ "ptree",
+ "regex",
+ "seahash",
+ "serde 1.0.204",
+ "serde_json",
+ "sha2 0.10.8",
+ "unindent",
+ "wit-bindgen",
+]
+
+[[package]]
 name = "typeid"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,0 +1,6 @@
+---
+source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+expression: tp.print(out)
+---
+root: struct #117
+└─ [count]: integer #116
