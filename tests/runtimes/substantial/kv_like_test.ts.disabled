@@ -8,6 +8,8 @@ import {
   retrySaveTestTemplate,
 } from "./common.ts";
 
+// FIXME: always failing on CI
+
 basicTestTemplate("fs", {
   delays: { awaitSleepCompleteSec: 8 },
 });
@@ -28,16 +30,15 @@ childWorkflowTestTemplate("fs", {
   },
 });
 
-// FIXME: memory backend is always failing on CI
-// basicTestTemplate("memory", {
-//   delays: { awaitSleepCompleteSec: 7 },
-// });
-// concurrentWorkflowTestTemplate("memory", {
-//   delays: { awaitEmailCompleteSec: 8 },
-// });
+basicTestTemplate("memory", {
+  delays: { awaitSleepCompleteSec: 7 },
+});
+concurrentWorkflowTestTemplate("memory", {
+  delays: { awaitEmailCompleteSec: 8 },
+});
 
-// retrySaveTestTemplate("memory", {
-//   delays: {
-//     awaitCompleteAll: 12,
-//   },
-// });
+retrySaveTestTemplate("memory", {
+  delays: {
+    awaitCompleteAll: 12,
+  },
+});
