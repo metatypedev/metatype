@@ -35,7 +35,7 @@ pub struct Artifact {
     pub size: u32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct MigrationAction {
     pub apply: bool,
     pub create: bool,
@@ -110,15 +110,15 @@ pub struct TypeFile {
     pub allow: Option<Vec<String>>,
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct TypeVec {
+#[derive(Debug, Clone)]
+pub struct TypeList {
     pub of: TypeId,
     pub min: Option<u32>,
     pub max: Option<u32>,
     pub unique_items: Option<bool>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct TypeOptional {
     pub of: TypeId,
     pub default_item: Option<String>,

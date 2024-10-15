@@ -1,14 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::errors::Result;
-use crate::errors::TgError;
-use crate::types::RefAttr;
-use crate::types::{TypeId, TypeRef};
-use crate::wit::core::{
-    Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
-    TypeString, TypeStruct, TypeUnion,
+use crate::{
+    errors::{Result, TgError},
+    types::{
+        core::{
+            TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
+            TypeString, TypeStruct, TypeUnion,
+        },
+        RefAttr, TypeId, TypeRef,
+    },
 };
+
 #[cfg(test)]
 use common::typegraph::{Injection, InjectionData, SingleValue};
 
@@ -106,20 +109,6 @@ pub struct IntegerBuilder {
     data: TypeInteger,
 }
 
-#[allow(clippy::derivable_impls)]
-impl Default for TypeInteger {
-    fn default() -> Self {
-        Self {
-            min: None,
-            max: None,
-            exclusive_minimum: None,
-            exclusive_maximum: None,
-            multiple_of: None,
-            enumeration: None,
-        }
-    }
-}
-
 impl IntegerBuilder {
     #[allow(dead_code)]
     pub fn min(mut self, min: i32) -> Self {
@@ -156,20 +145,6 @@ pub struct FloatBuilder {
     data: TypeFloat,
 }
 
-#[allow(clippy::derivable_impls)]
-impl Default for TypeFloat {
-    fn default() -> Self {
-        Self {
-            min: None,
-            max: None,
-            exclusive_minimum: None,
-            exclusive_maximum: None,
-            multiple_of: None,
-            enumeration: None,
-        }
-    }
-}
-
 impl FloatBuilder {
     #[allow(dead_code)]
     pub fn min(mut self, min: f64) -> Self {
@@ -204,19 +179,6 @@ pub fn float() -> FloatBuilder {
 pub struct StringBuilder {
     base: TypeBase,
     data: TypeString,
-}
-
-#[allow(clippy::derivable_impls)]
-impl Default for TypeString {
-    fn default() -> Self {
-        Self {
-            min: None,
-            max: None,
-            format: None,
-            pattern: None,
-            enumeration: None,
-        }
-    }
 }
 
 pub fn string() -> StringBuilder {
@@ -307,15 +269,6 @@ pub struct UnionBuilder {
     data: TypeUnion,
 }
 
-#[allow(clippy::derivable_impls)]
-impl Default for TypeUnion {
-    fn default() -> Self {
-        Self {
-            variants: Default::default(),
-        }
-    }
-}
-
 impl UnionBuilder {
     pub fn add(&mut self, ty: TypeId) -> &mut Self {
         self.data.variants.push(ty.0);
@@ -354,15 +307,6 @@ pub struct EitherBuilder {
     data: TypeEither,
 }
 
-#[allow(clippy::derivable_impls)]
-impl Default for TypeEither {
-    fn default() -> Self {
-        Self {
-            variants: Default::default(),
-        }
-    }
-}
-
 pub fn either(variants: impl IntoIterator<Item = TypeId>) -> EitherBuilder {
     EitherBuilder {
         data: TypeEither {
@@ -387,19 +331,6 @@ pub(crate) use eitherx;
 pub struct StructBuilder {
     base: TypeBase,
     data: TypeStruct,
-}
-
-#[allow(clippy::derivable_impls)]
-impl Default for TypeStruct {
-    fn default() -> Self {
-        Self {
-            props: Vec::new(),
-            additional_props: false,
-            min: None,
-            max: None,
-            enumeration: None,
-        }
-    }
 }
 
 pub fn struct_() -> StructBuilder {
@@ -500,8 +431,9 @@ macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident ) => {
         impl TypeBuilder for $ty {
             fn build(&self) -> Result<TypeId> {
-                let res = $crate::Lib::$build(self.data.clone(), self.base.clone())?;
-                Ok(res.into())
+                todo!()
+                // let res = $crate::Lib::$build(self.data.clone(), self.base.clone())?;
+                // Ok(res.into())
             }
         }
 
@@ -515,16 +447,18 @@ macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident, true ) => {
         impl TypeBuilder for $ty {
             fn build(&self) -> Result<TypeId> {
-                let builder = self.clone();
-                Ok($crate::Lib::$build(builder.data.clone())?.into())
+                // let builder = self.clone();
+                // Ok($crate::Lib::$build(builder.data.clone())?.into())
+                todo!()
             }
         }
     };
 }
 impl TypeBuilder for BooleanBuilder {
     fn build(&self) -> Result<TypeId> {
-        let res = crate::Lib::booleanb(self.base.clone())?;
-        Ok(res.into())
+        // let res = crate::Lib::booleanb(self.base.clone())?;
+        // Ok(res.into())
+        todo!()
     }
 }
 
@@ -534,7 +468,6 @@ impl ConcreteTypeBuilder for BooleanBuilder {
     }
 }
 
-impl_type_builder!(IntegerBuilder, integerb);
 impl_type_builder!(FloatBuilder, floatb);
 impl_type_builder!(OptionalBuilder, optionalb);
 impl_type_builder!(StringBuilder, stringb);
@@ -543,15 +476,17 @@ impl_type_builder!(UnionBuilder, unionb);
 impl_type_builder!(EitherBuilder, eitherb);
 impl_type_builder!(StructBuilder, structb);
 impl_type_builder!(FuncBuilder, funcb, true);
+impl_type_builder!(IntegerBuilder, integerb);
 
 impl TypeBuilder for RefBuilder {
     fn build(&self) -> Result<TypeId> {
-        Ok(crate::Lib::refb(
-            self.name.clone(),
-            self.attribute
-                .as_ref()
-                .map(|attr| serde_json::to_string(&attr).unwrap()),
-        )?
-        .into())
+        todo!()
+        // Ok(crate::Lib::refb(
+        //     self.name.clone(),
+        //     self.attribute
+        //         .as_ref()
+        //         .map(|attr| serde_json::to_string(&attr).unwrap()),
+        // )?
+        // .into())
     }
 }

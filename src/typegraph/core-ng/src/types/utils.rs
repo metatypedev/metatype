@@ -16,7 +16,7 @@ pub struct Reduce {
     pub paths: Vec<ReducePath>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum AuthProtocol {
     Oauth2,
     Jwt,

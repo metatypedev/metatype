@@ -6,7 +6,7 @@ use super::{Type, TypeDef};
 use crate::errors::Result;
 use crate::errors::TgError;
 use crate::typegraph::TypegraphContext;
-use crate::wit::core::TypeId as CoreTypeId;
+use crate::types::core::TypeId as CoreTypeId;
 use std::fmt::Debug;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

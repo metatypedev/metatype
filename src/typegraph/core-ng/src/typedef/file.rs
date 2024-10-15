@@ -5,12 +5,15 @@ use std::hash::Hash as _;
 
 use common::typegraph::{FileTypeData, TypeNode};
 
-use crate::conversion::hash::Hashable;
-use crate::conversion::types::{BaseBuilderInit, TypeConversion};
-use crate::errors::Result;
-use crate::typegraph::TypegraphContext;
-use crate::types::{File, FindAttribute as _, RefAttrs, TypeDefData};
-use crate::wit::core::TypeFile;
+use crate::{
+    conversion::{
+        hash::Hashable,
+        types::{BaseBuilderInit, TypeConversion},
+    },
+    errors::Result,
+    typegraph::TypegraphContext,
+    types::{core::TypeFile, File, FindAttribute as _, RefAttrs, TypeDefData},
+};
 
 impl TypeDefData for TypeFile {
     fn get_display_params_into(&self, params: &mut Vec<String>) {

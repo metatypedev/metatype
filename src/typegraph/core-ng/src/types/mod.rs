@@ -1,12 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+#[allow(unused)]
 pub mod aws;
+#[allow(unused)]
 pub mod core;
+#[allow(unused)]
 pub mod runtimes;
 pub mod type_def;
 pub mod type_id;
 pub mod type_ref;
+#[allow(unused)]
 pub mod utils;
 
 use std::borrow::Cow;

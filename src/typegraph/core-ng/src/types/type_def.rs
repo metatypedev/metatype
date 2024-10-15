@@ -1,22 +1,30 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::hash::Hash as _;
 use std::rc::Rc;
 
-use super::{ResolveRef as _, TypeId};
-use crate::conversion::hash::{Hashable, Hasher};
-use crate::conversion::types::TypeConversion;
-use crate::errors::Result;
-use crate::global_store::{NameRegistration, Store};
-use crate::typegraph::TypegraphContext;
-use crate::types::RefAttrs;
-use crate::wit::core::{
-    TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
-    TypeString, TypeStruct, TypeUnion,
-};
 use common::typegraph::TypeNode;
 use enum_dispatch::enum_dispatch;
-use std::hash::Hash as _;
+
+use super::{ResolveRef as _, TypeId};
+
+use crate::types::{
+    core::{
+        TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
+        TypeString, TypeStruct, TypeUnion,
+    },
+    RefAttrs,
+};
+use crate::{
+    conversion::{
+        hash::{Hashable, Hasher},
+        types::TypeConversion,
+    },
+    errors::Result,
+    global_store::{NameRegistration, Store},
+    typegraph::TypegraphContext,
+};
 
 pub trait TypeDefData: Hashable {
     fn get_display_params_into(&self, params: &mut Vec<String>);
@@ -51,16 +59,6 @@ where
             },
             NameRegistration(false),
         )
-    }
-}
-
-#[allow(clippy::derivable_impls)]
-impl Default for TypeBase {
-    fn default() -> Self {
-        Self {
-            name: None,
-            runtime_config: None,
-        }
     }
 }
 

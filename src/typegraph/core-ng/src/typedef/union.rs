@@ -13,8 +13,8 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
+    types::core::TypeUnion,
     types::{FindAttribute as _, RefAttrs, TypeDefData, TypeId, Union},
-    wit::core::TypeUnion,
 };
 
 impl TypeConversion for Union {

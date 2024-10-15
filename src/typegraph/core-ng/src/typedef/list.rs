@@ -12,8 +12,8 @@ use crate::{
     },
     errors::Result,
     typegraph::TypegraphContext,
+    types::core::TypeList,
     types::{FindAttribute as _, List, RefAttrs, TypeDefData, TypeId},
-    wit::core::TypeList,
 };
 
 impl TypeConversion for List {

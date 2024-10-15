@@ -1,17 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::pathlib::PathLib;
-use crate::wit::metatype::typegraph::host::{
-    expand_path as expand_path_host, path_exists as path_exists_host, read_file as read_file_host,
-    write_file as write_file_host,
-};
-use crate::{errors::Result, wit::core::Error as TgError};
-use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeSet,
+    fs,
     path::{Path, PathBuf},
 };
+
+use sha2::{Digest, Sha256};
+
+use crate::errors::{Result, TgError};
+
+use super::pathlib::PathLib;
 
 #[derive(Clone, Debug)]
 pub struct FsContext {
@@ -26,9 +26,7 @@ impl FsContext {
     }
 
     pub fn exists(&self, path: &Path) -> Result<bool> {
-        Ok(path_exists_host(
-            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
-        )?)
+        Ok(self.pathlib.get_base_dir().join(path).exists())
     }
 
     pub fn expand_path(&self, path: &Path, exclude_globs: &[String]) -> Result<Vec<PathBuf>> {
@@ -57,7 +55,7 @@ impl FsContext {
             })
             .collect::<Vec<_>>();
 
-        expand_path_host(
+        expand_path(
             &self.pathlib.get_base_dir().join(path).to_string_lossy(),
             &exclude_as_regex,
         )?
@@ -117,9 +115,7 @@ impl FsContext {
     }
 
     pub fn read_file(&self, path: &Path) -> Result<Vec<u8>> {
-        Ok(read_file_host(
-            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
-        )?)
+        Ok(fs::read(self.pathlib.get_base_dir().join(path))?)
     }
 
     pub fn read_text_file(&self, path: &Path) -> Result<String> {
@@ -128,10 +124,7 @@ impl FsContext {
     }
 
     pub fn write_file(&self, path: &Path, bytes: &[u8]) -> Result<()> {
-        Ok(write_file_host(
-            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
-            bytes,
-        )?)
+        Ok(fs::write(&self.pathlib.get_base_dir().join(path), bytes)?)
     }
 
     pub fn write_text_file(&self, path: &Path, text: String) -> Result<()> {
@@ -146,4 +139,8 @@ impl FsContext {
         sha256.update(bytes);
         Ok((format!("{:x}", sha256.finalize()), size))
     }
+}
+
+fn expand_path(root: &str, exclue: &[String]) -> Result<Vec<String>> {
+    todo!() // TODO: implement me
 }

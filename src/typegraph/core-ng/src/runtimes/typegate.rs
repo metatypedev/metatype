@@ -6,7 +6,7 @@ use indexmap::IndexMap;
 
 use crate::{
     conversion::runtimes::MaterializerConverter, errors::Result, typegraph::TypegraphContext,
-    wit::runtimes::Effect,
+    types::runtimes::Effect,
 };
 
 #[derive(Clone, Debug)]

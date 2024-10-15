@@ -59,7 +59,7 @@ pub struct HttpRuntimeData {
     pub basic_auth_secret: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum HttpMethod {
     Get,
     Post,

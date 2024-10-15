@@ -1,7 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::runtimes as wit;
+use crate::types::{
+    core::MaterializerId,
+    runtimes::{MaterializerDenoFunc, MaterializerDenoPredefined},
+};
 
 #[derive(Debug)]
 pub struct MaterializerDenoModule {
@@ -12,7 +15,7 @@ pub struct MaterializerDenoModule {
 #[derive(Debug)]
 pub struct MaterializerDenoImport {
     pub func_name: String,
-    pub module: wit::MaterializerId,
+    pub module: MaterializerId,
     pub secrets: Vec<String>,
 }
 
@@ -24,8 +27,8 @@ pub struct MaterializerDenoStatic {
 #[derive(Debug)]
 pub enum DenoMaterializer {
     Static(MaterializerDenoStatic),
-    Inline(wit::MaterializerDenoFunc),
-    Predefined(wit::MaterializerDenoPredefined),
+    Inline(MaterializerDenoFunc),
+    Predefined(MaterializerDenoPredefined),
     Module(MaterializerDenoModule),
     Import(MaterializerDenoImport),
 }

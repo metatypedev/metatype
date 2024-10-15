@@ -13,8 +13,8 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
+    types::core::TypeEither,
     types::{Either, FindAttribute as _, RefAttrs, TypeDefData, TypeId},
-    wit::core::TypeEither,
 };
 
 impl TypeConversion for Either {

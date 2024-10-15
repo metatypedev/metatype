@@ -15,8 +15,8 @@ use crate::{
     errors,
     global_store::Store,
     typegraph::TypegraphContext,
+    types::core::TypeStruct,
     types::{FindAttribute as _, IdKind, RefAttrs, Struct, Type, TypeDefData, TypeId},
-    wit::core::TypeStruct,
 };
 
 impl TypeStruct {

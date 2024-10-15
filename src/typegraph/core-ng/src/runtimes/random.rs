@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::runtimes as wit;
+use crate::types::runtimes::MaterializerRandom;
 
 #[derive(Debug)]
 pub enum RandomMaterializer {
-    Runtime(wit::MaterializerRandom),
+    Runtime(MaterializerRandom),
 }

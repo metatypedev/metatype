@@ -7,11 +7,11 @@ use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
     Runtime, TemporalMaterializer, WasmMaterializer,
 };
-use crate::wit::core::{Artifact as WitArtifact, RuntimeId};
-use crate::wit::runtimes::{
-    HttpMethod, KvMaterializer, MaterializerHttpRequest, SubstantialBackend,
+use crate::typegraph::TypegraphContext;
+use crate::types::core::{Artifact, RuntimeId};
+use crate::types::runtimes::{
+    Effect, HttpMethod, KvMaterializer, MaterializerHttpRequest, SubstantialBackend,
 };
-use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
 use common::typegraph::runtimes::grpc::GrpcRuntimeData;
@@ -24,9 +24,10 @@ use common::typegraph::runtimes::substantial::{self, RedisConfig, SubstantialRun
 use common::typegraph::runtimes::temporal::TemporalRuntimeData;
 use common::typegraph::runtimes::wasm::WasmRuntimeData;
 use common::typegraph::runtimes::{
-    Artifact, KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
+    Artifact as CommonArtifact, KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData,
+    TypegraphRuntimeData,
 };
-use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
+use common::typegraph::{runtimes::TGRuntime, Effect as CommonEffect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 use serde_json::json;
@@ -35,20 +36,20 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use unindent::Unindent;
 
-fn effect(typ: EffectType, idempotent: bool) -> Effect {
-    Effect {
+fn effect(typ: EffectType, idempotent: bool) -> CommonEffect {
+    CommonEffect {
         effect: Some(typ),
         idempotent,
     }
 }
 
-impl From<WitEffect> for Effect {
-    fn from(eff: WitEffect) -> Self {
+impl From<Effect> for CommonEffect {
+    fn from(eff: Effect) -> Self {
         match eff {
-            WitEffect::Read => effect(EffectType::Read, true),
-            WitEffect::Create(idemp) => effect(EffectType::Create, idemp),
-            WitEffect::Update(idemp) => effect(EffectType::Update, idemp),
-            WitEffect::Delete(idemp) => effect(EffectType::Delete, idemp),
+            Effect::Read => effect(EffectType::Read, true),
+            Effect::Create(idemp) => effect(EffectType::Create, idemp),
+            Effect::Update(idemp) => effect(EffectType::Update, idemp),
+            Effect::Delete(idemp) => effect(EffectType::Delete, idemp),
         }
     }
 }
@@ -59,7 +60,7 @@ pub trait MaterializerConverter {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<common::typegraph::Materializer>;
 }
 
@@ -68,7 +69,7 @@ impl<T: MaterializerConverter> MaterializerConverter for Rc<T> {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<common::typegraph::Materializer> {
         (**self).convert(c, runtime_id, effect)
     }
@@ -79,7 +80,7 @@ impl MaterializerConverter for DenoMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<Materializer> {
         use crate::runtimes::DenoMaterializer::*;
         let runtime = c.register_runtime(runtime_id)?;
@@ -156,7 +157,7 @@ impl MaterializerConverter for MaterializerHttpRequest {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<common::typegraph::Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
 
@@ -209,7 +210,7 @@ impl MaterializerConverter for PythonMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<Materializer> {
         use crate::runtimes::PythonMaterializer::*;
         let runtime = c.register_runtime(runtime_id)?;
@@ -269,7 +270,7 @@ impl MaterializerConverter for RandomMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
         let RandomMaterializer::Runtime(ret) = self;
@@ -288,9 +289,9 @@ impl MaterializerConverter for RandomMaterializer {
     }
 }
 
-impl From<WitArtifact> for Artifact {
-    fn from(artifact: WitArtifact) -> Self {
-        Artifact {
+impl From<Artifact> for CommonArtifact {
+    fn from(artifact: Artifact) -> Self {
+        CommonArtifact {
             path: artifact.path.into(),
             hash: artifact.hash,
             size: artifact.size,
@@ -298,9 +299,9 @@ impl From<WitArtifact> for Artifact {
     }
 }
 
-impl From<Artifact> for WitArtifact {
-    fn from(artifact: Artifact) -> Self {
-        WitArtifact {
+impl From<CommonArtifact> for Artifact {
+    fn from(artifact: CommonArtifact) -> Self {
+        Artifact {
             path: artifact.path.as_os_str().to_str().unwrap().to_string(),
             hash: artifact.hash,
             size: artifact.size,
@@ -313,7 +314,7 @@ impl MaterializerConverter for WasmMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
         let (name, func_name) = match &self {
@@ -341,7 +342,7 @@ impl MaterializerConverter for TemporalMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<Materializer> {
         use crate::runtimes::TemporalMaterializer::*;
         let runtime = c.register_runtime(runtime_id)?;
@@ -387,7 +388,7 @@ impl MaterializerConverter for KvMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
         let data = serde_json::from_value(json!({})).map_err(|e| e.to_string())?;

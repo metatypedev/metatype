@@ -13,8 +13,8 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
+    types::core::TypeInteger,
     types::{FindAttribute as _, Integer, RefAttrs, TypeDefData},
-    wit::core::TypeInteger,
 };
 
 impl TypeConversion for Integer {

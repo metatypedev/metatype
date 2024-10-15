@@ -1,22 +1,26 @@
-use std::hash::Hash;
-use std::rc::Rc;
-
-use super::Type;
-use crate::errors::Result;
-use crate::global_store::Store;
-use crate::typegraph::TypegraphContext;
-use crate::types::{TypeDef, TypeDefExt as _, TypeId};
-pub use as_id::{AsId, IdKind};
-use common::typegraph::Injection;
-pub use injection::WithInjection;
-pub use policy::{PolicySpec, WithPolicy};
-pub use resolve_ref::ResolveRef;
-use serde::{Deserialize, Serialize};
-
 mod as_id;
 mod injection;
 mod policy;
 mod resolve_ref;
+
+pub use as_id::{AsId, IdKind};
+pub use injection::WithInjection;
+pub use policy::{PolicySpec, WithPolicy};
+pub use resolve_ref::ResolveRef;
+
+use std::{hash::Hash, rc::Rc};
+
+use common::typegraph::Injection;
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    errors::Result,
+    global_store::Store,
+    typegraph::TypegraphContext,
+    types::{TypeDef, TypeDefExt as _, TypeId},
+};
+
+use super::Type;
 
 #[derive(Clone, Debug)]
 pub enum RefTarget {

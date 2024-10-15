@@ -7,20 +7,23 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use crate::{typegraph::TypegraphContext, wit::runtimes as wit};
 use common::typegraph::runtimes::prisma as cm;
 use indexmap::{map::Entry, IndexMap, IndexSet};
 
-use super::relationship::discovery::CandidatePair;
-use super::relationship::RelationshipModel;
-use super::{
-    model::{InjectionHandler, Property, RelationshipProperty, ScalarProperty},
-    relationship::discovery::RelationshipName,
+use crate::{
+    errors::Result,
+    typegraph::TypegraphContext,
+    types::{runtimes::PrismaRuntimeData, TypeId},
 };
-use crate::errors::Result;
-use crate::types::TypeId;
 
-use super::{errors, model::Model, relationship::Relationship};
+use super::{
+    errors,
+    model::{InjectionHandler, Model, Property, RelationshipProperty, ScalarProperty},
+    relationship::{
+        discovery::{CandidatePair, RelationshipName},
+        Relationship, RelationshipModel,
+    },
+};
 
 #[derive(Debug, Clone)]
 pub struct ModelRef(Rc<RefCell<Model>>);
@@ -337,7 +340,7 @@ impl PrismaContext {
         &self,
         ctx: &mut TypegraphContext,
         runtime_idx: u32,
-        data: Rc<wit::PrismaRuntimeData>,
+        data: Rc<PrismaRuntimeData>,
     ) -> Result<cm::PrismaRuntimeData> {
         Ok(cm::PrismaRuntimeData {
             name: data.name.clone(),
