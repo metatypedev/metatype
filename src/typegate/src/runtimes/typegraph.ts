@@ -22,6 +22,7 @@ import {
   type ObjectNode,
   Type,
   type TypeNode,
+  isEmptyObject,
 } from "../typegraph/type_node.ts";
 import type { Resolver } from "../types.ts";
 import {
@@ -136,8 +137,10 @@ export class TypeGraphRuntime extends Runtime {
 
         const inputRootTypeIndices = new Set<number>();
         const outputRootTypeIndices = new Set<number>();
+
         // decides whether or not custom object should be generated
         let hasUnion = false;
+        let requireEmptyObject = false;
 
         const myVisitor: TypeVisitorMap = {
           [Type.FUNCTION]: ({ type }) => {
@@ -167,6 +170,8 @@ export class TypeGraphRuntime extends Runtime {
             return true;
           },
           default: ({ type, idx }) => {
+            requireEmptyObject ||= isEmptyObject(type);
+
             if (
               inputRootTypeIndices.has(idx) &&
               !outputRootTypeIndices.has(idx)
@@ -196,7 +201,7 @@ export class TypeGraphRuntime extends Runtime {
           this.formatType(type, false, false)
         );
 
-        const customScalarTypes = hasUnion
+        const adhocCustomScalarTypes = hasUnion
           ? distinctScalars.map((node) => {
               const idx = this.scalarIndex.get(node.type)!;
               const asObject = generateCustomScalar(node, idx);
@@ -216,10 +221,18 @@ export class TypeGraphRuntime extends Runtime {
 
         const types = [
           ...scalarTypes,
-          ...customScalarTypes,
+          ...adhocCustomScalarTypes,
           ...regularTypes,
           ...inputTypes,
         ];
+
+        // Handle non-root leaf case
+        if (
+          requireEmptyObject &&
+          !types.some((t: any) => t!.title == "EmptyObject")
+        ) {
+          types.push(emptyObjectScalar());
+        }
 
         this.scalarIndex.clear();
         return types;
@@ -361,14 +374,8 @@ export class TypeGraphRuntime extends Runtime {
         };
       }
 
-      if (Object.keys(type.properties).length == 0) {
-        return {
-          ...common,
-          kind: () => TypeKind.SCALAR,
-          name: () => "EmptyObject",
-          description: () =>
-            `${type.type} scalar type representing an empty object`,
-        };
+      if (isEmptyObject(type)) {
+        return emptyObjectScalar();
       }
 
       if (asInput) {
@@ -518,4 +525,17 @@ export class TypeGraphRuntime extends Runtime {
         },
       };
     };
+}
+
+function emptyObjectScalar() {
+  return {
+    kind: () => TypeKind.SCALAR,
+    name: () => "EmptyObject",
+    description: () => "object scalar type representing an empty object",
+    fields: () => {},
+    inputFields: () => {},
+    interfaces: () => {},
+    enumValues: () => {},
+    possibleTypes: () => {},
+  };
 }
