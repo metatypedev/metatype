@@ -40,7 +40,6 @@ impl Hashable for TypeFile {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         _tg: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
     ) -> Result<()> {
         self.min.hash(hasher);
         self.max.hash(hasher);
@@ -50,12 +49,7 @@ impl Hashable for TypeFile {
 }
 
 impl TypeConversion for File {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
         Ok(TypeNode::File {
             // TODO should `as_id` be supported?
             base: BaseBuilderInit {
@@ -63,7 +57,6 @@ impl TypeConversion for File {
                 base_name: "file",
                 type_id: self.id,
                 name: self.base.name.clone(),
-                runtime_idx: runtime_id.unwrap(),
                 policies: ref_attrs.find_policy().unwrap_or(&[]),
                 runtime_config: self.base.runtime_config.as_deref(),
             }

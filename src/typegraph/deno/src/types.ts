@@ -16,12 +16,14 @@ import {
   TypeString,
   TypeUnion,
 } from "./gen/typegraph_core.d.ts";
-import { Reduce } from "./gen/typegraph_core.d.ts";
 import { FuncParams } from "./gen/typegraph_core.d.ts";
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps/mod.ts";
 import Policy, { PolicyPerEffectObject } from "./policy.ts";
-import { buildReduceData, serializeRecordValues } from "./utils/func_utils.ts";
+import {
+  buildReduceEntries,
+  serializeRecordValues,
+} from "./utils/func_utils.ts";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
@@ -657,13 +659,19 @@ export class Func<
    * see [parameter transformations](https://metatype.dev/docs/reference/types/parameter-transformations)
    */
   reduce(value: Record<string, unknown | InheritDef>): Func {
-    const data: Reduce = {
-      paths: buildReduceData(value),
-    };
+    const reducedId = wit_utils.reduceb(
+      this._id,
+      buildReduceEntries(value),
+    );
 
-    const reducedId = wit_utils.genReduceb(this.inp._id, data);
-
-    return func(new Typedef(reducedId, {}), this.out, this.mat);
+    return new Func(
+      reducedId,
+      this.inp,
+      this.out,
+      this.mat,
+      this.parameterTransform,
+      this.config,
+    );
   }
 
   /** apply injections to the input type;

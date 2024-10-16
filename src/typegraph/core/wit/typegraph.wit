@@ -598,31 +598,11 @@ interface utils {
     use core.{error};
     type type-id = u32;
 
-
-    // Example:
-    // reduce({a: 1, { b: {c: g.inherit(), d: [1, 2, 3]}})
-    // produces a list of reduce-path
-    // [
-    //  { path: [a], value: { inherit: false, payload: 1 } }
-    //  { path: [a, b, c], value: { inherit: true } }
-    //  { path: [a, b, d], value: { inherit: false, payload: [1, 2, 3] } }
-    // ]
-    record reduce-value {
-        inherit: bool,
-        // json string
-        payload: option<string>
-    }
-
-    record reduce-path {
+    record reduce-entry {
         path: list<string>,
-        value: reduce-value,
+        injection-data: string,
     }
-
-    record reduce {
-        paths: list<reduce-path>
-    }
-
-    gen-reduceb: func(supertype-id: type-id, data: reduce) -> result<type-id, error>;
+    reduceb: func(fn-type-id: type-id, entries: list<reduce-entry>) -> result<type-id, error>;
 
     add-graphql-endpoint: func(graphql: string) -> result<u32, error>;
 

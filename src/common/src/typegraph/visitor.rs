@@ -12,13 +12,13 @@ use super::{TypeNode, Typegraph};
 #[derive(Clone)]
 pub struct DefaultLayer;
 
-pub struct ChildNode<'a>(pub PathSegment<'a>, pub u32);
+pub struct ChildNode(pub PathSegment, pub u32);
 
 pub trait VisitLayer<'a, V: TypeVisitor<'a>>: Clone + Sized + 'a {
     fn visit(
         &self,
         traversal: &mut TypegraphTraversal<'a, V, Self>,
-        source: impl Iterator<Item = ChildNode<'a>>,
+        source: impl Iterator<Item = ChildNode>,
         context: &'a V::Context,
     ) -> Option<V::Return>;
 }
@@ -27,7 +27,7 @@ impl<'a, V: TypeVisitor<'a>> VisitLayer<'a, V> for DefaultLayer {
     fn visit(
         &self,
         traversal: &mut TypegraphTraversal<'a, V, Self>,
-        source: impl Iterator<Item = ChildNode<'a>>,
+        source: impl Iterator<Item = ChildNode>,
         context: &'a V::Context,
     ) -> Option<V::Return> {
         for ChildNode(path_seg, idx) in source {
@@ -41,7 +41,7 @@ impl<'a, V: TypeVisitor<'a>> VisitLayer<'a, V> for DefaultLayer {
 
 pub fn visit_child<'a, V: TypeVisitor<'a>, L: VisitLayer<'a, V>>(
     traversal: &mut TypegraphTraversal<'a, V, L>,
-    path_seg: PathSegment<'a>,
+    path_seg: PathSegment,
     idx: u32,
     context: &'a V::Context,
 ) -> Option<V::Return> {
@@ -95,7 +95,7 @@ where
     L: VisitLayer<'a, V>,
 {
     tg: &'a Typegraph,
-    path: Vec<PathSegment<'a>>,
+    path: Vec<PathSegment>,
     parent_fn: Option<ParentFn>,
     as_input: bool,
     visited_types: HashMap<ParentFn, HashSet<u32>>, // non input types; per parent function
@@ -221,7 +221,7 @@ where
                 (
                     PathSegment {
                         from: type_idx,
-                        edge: Edge::ObjectProp(name),
+                        edge: Edge::ObjectProp(name.clone()),
                     },
                     *idx,
                 )
@@ -294,7 +294,7 @@ where
         }
 
         let last_seg = self.path.last().unwrap();
-        let fn_key = match last_seg.edge {
+        let fn_key = match &last_seg.edge {
             Edge::ObjectProp(k) => k.to_string(),
             _ => unreachable!(), // or error?
         };
@@ -332,7 +332,7 @@ where
 
     fn visit_children(
         &mut self,
-        children: impl Iterator<Item = (PathSegment<'a>, u32)>,
+        children: impl Iterator<Item = (PathSegment, u32)>,
         context: &'a V::Context,
     ) -> Option<V::Return> {
         self.layer.clone().visit(
@@ -344,7 +344,7 @@ where
 
     fn visit_child(
         &mut self,
-        segment: PathSegment<'a>,
+        segment: PathSegment,
         type_idx: u32,
         context: &'a V::Context,
     ) -> Option<V::Return> {
@@ -356,15 +356,14 @@ where
 }
 
 #[derive(Debug, Clone)]
-pub struct PathSegment<'a> {
-    #[allow(dead_code)]
+pub struct PathSegment {
     pub from: u32, // typeIdx
-    pub edge: Edge<'a>,
+    pub edge: Edge,
 }
 
-impl<'a> Display for PathSegment<'a> {
+impl Display for PathSegment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.edge {
+        match &self.edge {
             Edge::ObjectProp(name) => write!(f, "{}", name)?,
             Edge::ArrayItem => write!(f, "[]")?,
             Edge::OptionalItem => write!(f, "*")?,
@@ -376,7 +375,7 @@ impl<'a> Display for PathSegment<'a> {
     }
 }
 
-pub struct Path<'a>(pub &'a [PathSegment<'a>]);
+pub struct Path<'a>(pub &'a [PathSegment]);
 
 impl<'a> Display for Path<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -388,8 +387,8 @@ impl<'a> Display for Path<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub enum Edge<'a> {
-    ObjectProp(&'a str),
+pub enum Edge {
+    ObjectProp(String),
     ArrayItem,
     OptionalItem,
     FunctionInput,
@@ -407,7 +406,7 @@ pub enum VisitResult<T> {
 pub struct CurrentNode<'a> {
     pub type_idx: u32,
     pub type_node: &'a TypeNode,
-    pub path: &'a [PathSegment<'a>],
+    pub path: &'a [PathSegment],
 }
 
 pub trait TypeVisitorContext {

@@ -115,7 +115,7 @@ impl MaterializerConverter for DenoMaterializer {
                 ("module".to_string(), data)
             }
             Import(import) => {
-                let module_mat = c.register_materializer(import.module).unwrap().0;
+                let module_mat = c.register_materializer(import.module).unwrap();
                 let data = serde_json::from_value(json!({
                     "mod": module_mat,
                     "name": import.func_name,
@@ -245,7 +245,7 @@ impl MaterializerConverter for PythonMaterializer {
                 ("pymodule".to_string(), data)
             }
             Import(import) => {
-                let module_mat = c.register_materializer(import.module).unwrap().0;
+                let module_mat = c.register_materializer(import.module).unwrap();
                 let data = serde_json::from_value(json!({
                     "mod": module_mat,
                     "name": import.func_name,
@@ -414,8 +414,7 @@ pub fn convert_materializer(
     mat.data.convert(c, mat.runtime_id, mat.effect)
 }
 
-type RuntimeInitializer =
-    Box<dyn FnOnce(RuntimeId, RuntimeId, &mut TypegraphContext) -> Result<TGRuntime>>;
+type RuntimeInitializer = Box<dyn FnOnce(RuntimeId, &mut TypegraphContext) -> Result<TGRuntime>>;
 
 pub enum ConvertedRuntime {
     Converted(TGRuntime),
@@ -470,15 +469,11 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
         }))
         .into()),
         Runtime::Prisma(d, _) => Ok(ConvertedRuntime::Lazy(Box::new(
-            move |runtime_id, runtime_idx, tg| -> Result<_> {
+            move |runtime_id, tg| -> Result<_> {
                 let ctx = get_prisma_context(runtime_id);
                 let ctx = ctx.borrow();
 
-                Ok(TGRuntime::Known(Rt::Prisma(ctx.convert(
-                    tg,
-                    runtime_idx,
-                    d,
-                )?)))
+                Ok(TGRuntime::Known(Rt::Prisma(ctx.convert(tg, d)?)))
             },
         ))),
         Runtime::PrismaMigration => {

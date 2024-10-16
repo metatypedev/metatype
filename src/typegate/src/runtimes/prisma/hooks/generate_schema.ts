@@ -6,6 +6,7 @@ import type { PushHandler } from "../../../typegate/hooks.ts";
 import type { SecretManager, TypeGraphDS } from "../../../typegraph/mod.ts";
 import type {
   Cardinality,
+  Injection,
   Model,
   Property,
   Relationship,
@@ -89,7 +90,7 @@ class FieldBuilder {
           if (typeNode.type !== Type.STRING) {
             throw new Error("expected string type");
           }
-          [typeName, tags] = this.#getStringTypeAndTags(typeNode);
+          [typeName, tags] = this.#getStringTypeAndTags(typeNode, prop);
         }
 
         if (prop.unique) {
@@ -202,44 +203,10 @@ class FieldBuilder {
     }
   }
 
-  fieldFromScalarType(
-    name: string,
-    typeNode: TypeNode,
-    quantifier: QuantifierSuffix,
-  ): ModelField | null {
-    const scalar = this.#getScalarTypeNameAndTags(typeNode);
-    if (scalar == null) {
-      return null;
-    }
-    const [type, tags] = scalar;
-    return new ModelField(name, type + quantifier, tags);
-  }
-
-  #getScalarTypeNameAndTags(
-    typeNode: TypeNode,
-  ): [string, string[]] | null {
-    switch (typeNode.type) {
-      case Type.STRING:
-        return this.#getStringTypeAndTags(typeNode);
-
-      case Type.BOOLEAN:
-        return ["Boolean", []];
-
-      case Type.INTEGER:
-        return ["Int", []];
-
-      case Type.FLOAT:
-        return ["Float", []];
-
-      case Type.OBJECT:
-        return null;
-
-      default:
-        throw new Error(`unsupported type: ${typeNode.type}`);
-    }
-  }
-
-  #getStringTypeAndTags(typeNode: StringNode): [string, string[]] {
+  #getStringTypeAndTags(
+    typeNode: StringNode,
+    prop: Property & { type: "scalar" },
+  ): [string, string[]] {
     const tags: string[] = [];
     const src = this.source;
     switch (this.provider) {
@@ -253,21 +220,13 @@ class FieldBuilder {
 
           case "date":
           case "date-time": {
-            const injection = typeNode.injection;
-            const tags = [];
-            if (injection) {
-              if (injection.source === "dynamic") {
-                if ("value" in injection.data) {
-                  throw new Error("");
-                }
-                const onCreate = injection.data.create;
-                if (onCreate === "now") {
-                  tags.push("@default(now())");
-                }
-                const onUpdate = injection.data.update;
-                if (onUpdate === "now") {
-                  tags.push("@updatedAt");
-                }
+            const injection = prop.injection;
+            if (injection != null) {
+              if (injection.create === "DateNow") {
+                tags.push("@default(now())");
+              }
+              if (injection.update === "DateNow") {
+                tags.push("@updatedAt");
               }
             }
             return ["DateTime", tags];

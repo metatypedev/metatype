@@ -110,12 +110,7 @@ pub trait TypeDefExt {
     fn id(&self) -> TypeId;
     fn base(&self) -> &TypeBase;
     fn data(&self) -> &dyn TypeDefData;
-    fn hash_type(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()>;
+    fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()>;
     // fn to_string(&self) -> String;
 
     fn name(&self) -> Option<&str> {
@@ -148,13 +143,8 @@ impl<T: TypeDefExt> TypeDefExt for Rc<T> {
         (**self).data()
     }
 
-    fn hash_type(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
-        (**self).hash_type(hasher, tg, runtime_id)
+    fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()> {
+        (**self).hash_type(hasher, tg)
     }
 
     fn variant_name(&self) -> &'static str {
@@ -208,34 +198,22 @@ where
         format!("{}({})", self.data.variant_name(), params.join(", "))
     }
 
-    fn hash_type(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
+    fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()> {
         // unicity of name
         if let Some(name) = &self.base.name {
             "named".hash(hasher);
             name.hash(hasher);
-            runtime_id.hash(hasher); // hum?? XD
         } else {
             "unnamed".hash(hasher);
-            self.base.hash(hasher, tg, runtime_id)?;
-            self.data.hash(hasher, tg, runtime_id)?;
-            runtime_id.hash(hasher);
+            self.base.hash(hasher, tg)?;
+            self.data.hash(hasher, tg)?;
         }
         Ok(())
     }
 }
 
 impl Hashable for TypeBase {
-    fn hash(
-        &self,
-        hasher: &mut Hasher,
-        _tg: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
-    ) -> Result<()> {
+    fn hash(&self, hasher: &mut Hasher, _tg: &mut TypegraphContext) -> Result<()> {
         // self.name.hash(hasher);  // see TypeDefExt::hash_type
         self.runtime_config.hash(hasher);
 

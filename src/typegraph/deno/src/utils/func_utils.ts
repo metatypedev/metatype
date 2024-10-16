@@ -6,7 +6,7 @@ import {
   TgFinalizationResult,
   TypegraphOutput,
 } from "../typegraph.ts";
-import { ReducePath } from "../gen/typegraph_core.d.ts";
+import { ReduceEntry } from "../gen/typegraph_core.d.ts";
 import { serializeStaticInjection } from "./injection_utils.ts";
 import { SerializeParams } from "../gen/typegraph_core.d.ts";
 import { log } from "../io.ts";
@@ -25,43 +25,46 @@ export function serializeRecordValues<T>(
   return Object.entries(obj).map(([k, v]) => [k, JSON.stringify(v)]);
 }
 
-export function buildReduceData(
+export function buildReduceEntries(
   node: InheritDef | unknown,
-  paths: ReducePath[] = [],
+  entries: ReduceEntry[] = [],
   currPath: string[] = [],
-): ReducePath[] {
+): ReduceEntry[] {
   if (node === null || node === undefined) {
     throw new Error(`unsupported value "${node}" at ${currPath.join(".")}`);
   }
   if (node instanceof InheritDef) {
-    paths.push({
+    if (!node.payload) {
+      return entries;
+    }
+    entries.push({
       path: currPath,
-      value: { inherit: true, payload: node.payload },
+      injectionData: node.payload,
     });
-    return paths;
+    return entries;
   }
 
   if (typeof node === "object") {
     if (Array.isArray(node)) {
-      paths.push({
+      entries.push({
         path: currPath,
-        value: { inherit: false, payload: serializeStaticInjection(node) },
+        injectionData: serializeStaticInjection(node),
       });
-      return paths;
+      return entries;
     }
     for (const [k, v] of Object.entries(node)) {
-      buildReduceData(v, paths, [...currPath, k]);
+      buildReduceEntries(v, entries, [...currPath, k]);
     }
-    return paths;
+    return entries;
   }
 
   const allowed = ["number", "string", "boolean"];
   if (allowed.includes(typeof node)) {
-    paths.push({
+    entries.push({
       path: currPath,
-      value: { inherit: false, payload: serializeStaticInjection(node) },
+      injectionData: serializeStaticInjection(node),
     });
-    return paths;
+    return entries;
   }
   throw new Error(`unsupported type "${typeof node}" at ${currPath.join(".")}`);
 }

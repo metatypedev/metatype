@@ -6,9 +6,10 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
 use crate::types::{TypeDef, TypeDefExt as _, TypeId};
+use crate::wit::metatype::typegraph::host::print;
 pub use as_id::{AsId, IdKind};
 use common::typegraph::Injection;
-pub use injection::WithInjection;
+pub use injection::{InjectionTree, OverrideInjections, WithInjection};
 pub use policy::{PolicySpec, WithPolicy};
 pub use resolve_ref::ResolveRef;
 use serde::{Deserialize, Serialize};
@@ -32,6 +33,7 @@ type JsonValue = serde_json::Value;
 pub enum RefAttr {
     AsId(IdKind),
     Injection(Injection),
+    Reduce(InjectionTree),
     Policy(Vec<PolicySpec>),
     RuntimeConfig { runtime: String, data: JsonValue },
 }
@@ -98,26 +100,6 @@ impl TypeRef {
     }
 }
 
-// impl Hash for RefAttr {
-//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-//         match self {
-//             RefAttr::AsId(id) => {
-//                 "as_id".hash(state);
-//                 id.hash(state);
-//             }
-//             RefAttr::Injection(injection) => {
-//                 "injection".hash(state);
-//                 injection.hash(state);
-//             }
-//             RefAttr::Runtime { runtime, data } => {
-//                 "runtime".hash(state);
-//                 runtime.hash(state);
-//                 data.hash(state);
-//             }
-//         }
-//     }
-// }
-
 pub type RefAttrs = Vec<Rc<RefAttr>>;
 
 impl RefAttr {
@@ -127,10 +109,13 @@ impl RefAttr {
                 target: RefTarget::Direct(type_def),
                 attribute: self.into(),
             },
-            Type::Ref(type_ref) => TypeRefBuilder {
-                target: RefTarget::Link(type_ref),
-                attribute: self.into(),
-            },
+            Type::Ref(type_ref) => {
+                print(&format!("linking to ref: {:?}; {:?}", type_ref, self));
+                TypeRefBuilder {
+                    target: RefTarget::Link(type_ref),
+                    attribute: self.into(),
+                }
+            }
         }
     }
 }
@@ -142,86 +127,6 @@ impl RefTarget {
             attribute: attr,
         }
     }
-}
-
-// impl RefAttrs {
-//     #[allow(clippy::wrong_self_convention)]
-//     pub fn as_id(mut self, id: IdKind) -> Self {
-//         self.0.push(RefAttr::AsId(id));
-//         self
-//     }
-//
-//     pub fn with_injection(mut self, injection: Injection) -> Self {
-//         self.0.push(RefAttr::Injection(injection));
-//         self
-//     }
-//
-//     pub fn runtime(mut self, key: impl Into<String>, value: HashMap<String, JsonValue>) -> Self {
-//         self.runtime.insert(key.into(), value);
-//         self
-//     }
-//
-//     pub fn merge(mut self, other: RefAttrs) -> Self {
-//         if let Some(id) = other.as_id {
-//             self.as_id = Some(id);
-//         }
-//         if let Some(injection) = other.injection {
-//             self.injection = Some(injection);
-//         }
-//         for (k, v) in other.runtime {
-//             let runtime_attrs = self.runtime.entry(k).or_default();
-//             for (k, v) in v {
-//                 runtime_attrs.insert(k, v);
-//             }
-//         }
-//         self
-//     }
-//
-//
-//     pub fn direct(self, target: TypeDef) -> TypeRefBuilder {
-//         TypeRefBuilder {
-//             target: RefTarget::Direct(target),
-//             attributes: self,
-//         }
-//     }
-//
-//     pub fn indirect(self, name: String) -> TypeRefBuilder {
-//         TypeRefBuilder {
-//             target: RefTarget::Indirect(name),
-//             attributes: self,
-//         }
-//     }
-//
-//     pub fn wrap(self) -> Option<Rc<Self>> {
-//         Some(Rc::new(self))
-//     }
-// }
-
-impl TypeRef {
-    // pub fn collect_attributes(&self) -> RefAttrs {
-    //     match self.target.as_ref() {
-    //         RefTarget::Link(next) => {
-    //             let mut attrs = next.collect_attributes();
-    //             attrs.push(self.attribute.clone());
-    //             attrs
-    //         }
-    //         _ => vec![self.attribute.clone()],
-    //     }
-    // }
-
-    // pub fn as_id(&self) -> Option<IdKind> {
-    //     self.attributes.as_ref().and_then(|it| it.as_id)
-    // }
-    //
-    // pub fn runtime_attrs(&self, runtime_key: &str) -> Option<&HashMap<String, JsonValue>> {
-    //     self.attributes
-    //         .as_ref()
-    //         .and_then(|it| it.runtime.get(runtime_key))
-    // }
-    //
-    // pub fn runtime_attr(&self, runtime_key: &str, key: &str) -> Option<&serde_json::Value> {
-    //     self.runtime_attrs(runtime_key).and_then(|it| it.get(key))
-    // }
 }
 
 impl TypeRefBuilder {
@@ -240,16 +145,6 @@ impl TypeRefBuilder {
 
 impl TypeRef {
     pub fn new(target: Type, attribute: Option<RefAttr>) -> Result<TypeRef> {
-        // Store::register_type_ref(match target {
-        //     Type::Def(type_def) => TypeRefBuilder {
-        //         target: RefTarget::Direct(type_def),
-        //         attribute,
-        //     },
-        //     Type::Ref(type_ref) => TypeRefBuilder {
-        //         target: RefTarget::Link(type_ref),
-        //         attribute,
-        //     },
-        // })
         Store::register_type_ref(
             match target {
                 Type::Def(type_def) => RefTarget::Direct(type_def),
@@ -279,9 +174,8 @@ impl TypeRef {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
-        self.flatten().hash_type(hasher, tg, runtime_id)
+        self.flatten().hash_type(hasher, tg)
     }
 }
 
@@ -290,16 +184,14 @@ impl FlatTypeRef {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         match &self.target {
             FlatTypeRefTarget::Direct(type_def) => {
-                type_def.hash_type(hasher, tg, runtime_id)?;
+                type_def.hash_type(hasher, tg)?;
             }
             FlatTypeRefTarget::Indirect(name) => {
                 "named".hash(hasher);
                 name.hash(hasher);
-                runtime_id.hash(hasher);
             }
         }
         if !self.attributes.is_empty() {
@@ -346,6 +238,9 @@ impl RefAttr {
             RefAttr::RuntimeConfig { runtime, data } => {
                 format!("rt/{}: {}", runtime, serde_json::to_string(data).unwrap())
             }
+            RefAttr::Reduce(tree) => {
+                format!("reduce: {}", serde_json::to_string(tree).unwrap())
+            }
         }
     }
 }
@@ -388,6 +283,13 @@ pub trait FindAttribute {
     fn find_policy(&self) -> Option<&[PolicySpec]> {
         self.find_attr(|attr| match attr {
             RefAttr::Policy(policy) => Some(policy.as_slice()),
+            _ => None,
+        })
+    }
+
+    fn find_reduce_trees(&self) -> Vec<&InjectionTree> {
+        self.find_attrs(|attr| match attr {
+            RefAttr::Reduce(tree) => Some(tree),
             _ => None,
         })
     }
