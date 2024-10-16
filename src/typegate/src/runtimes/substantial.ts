@@ -78,7 +78,7 @@ export class SubstantialRuntime extends Runtime {
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     logger.info("initializing SubstantialRuntime");
-    logger.debug(`init params: ${JSON.stringify(params)}`);
+    // logger.debug(`init params: ${JSON.stringify(params)}`);
 
     const {
       typegraph: tg,
