@@ -27,9 +27,32 @@ export async function saveAndSleepExample(ctx: Context) {
   // + 2s
 
   const sum = await ctx.save(async () => {
+    const remoteStatic_ = new Date().getTime();
     const { data } = await ctx.gql/**/ `query { remote_static }`.run({});
+    const remoteStaticEnd = new Date().getTime();
+    console.log(
+      "Remote static:",
+      (remoteStaticEnd - remoteStatic_) / 1000,
+      "Response:",
+      data
+    );
+
+    const remoteAdd = new Date().getTime();
+    const { data: add } =
+      await ctx.gql/**/ `query { remote_add(a: $a, b: $b) }`.run({
+        a: newA,
+        b: newB,
+      });
+    const remoteAddEnd = new Date().getTime();
+    console.log(
+      "Remote add:",
+      (remoteAddEnd - remoteAdd) / 1000,
+      ", Response:",
+      add
+    );
+
     const remoteStatic = (data as any)?.remote_static as number;
-    console.log("Remote value received", remoteStatic);
+    console.log("Response", remoteStatic);
     return newA + newB + remoteStatic - remoteStatic;
   });
 
