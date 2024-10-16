@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Cors {
     pub allow_origin: Vec<String>,
     pub allow_headers: Vec<String>,
@@ -11,7 +13,7 @@ pub struct Cors {
     pub max_age_sec: Option<u32>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Rate {
     pub window_limit: u32,
     pub window_sec: u32,
@@ -20,7 +22,7 @@ pub struct Rate {
     pub local_excess: u32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypegraphInitParams {
     pub name: String,
     pub dynamic: Option<bool>,
@@ -31,28 +33,28 @@ pub struct TypegraphInitParams {
     pub rate: Option<Rate>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Artifact {
     pub path: String,
     pub hash: String,
     pub size: u32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct MigrationAction {
     pub apply: bool,
     pub create: bool,
     pub reset: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrismaMigrationConfig {
     pub migrations_dir: String,
     pub migration_actions: Vec<(String, MigrationAction)>,
     pub default_migration_action: MigrationAction,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SerializeParams {
     pub typegraph_path: String,
     pub prefix: Option<String>,
@@ -64,20 +66,20 @@ pub struct SerializeParams {
 
 pub type TypeId = u32;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TypeBase {
     pub name: Option<String>,
     // String => json String
     pub runtime_config: Option<Vec<(String, String)>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypeProxy {
     pub name: String,
     pub extras: Vec<(String, String)>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TypeInteger {
     pub min: Option<i32>,
     pub max: Option<i32>,
@@ -87,7 +89,7 @@ pub struct TypeInteger {
     pub enumeration: Option<Vec<i32>>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TypeFloat {
     pub min: Option<f64>,
     pub max: Option<f64>,
@@ -97,7 +99,7 @@ pub struct TypeFloat {
     pub enumeration: Option<Vec<f64>>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TypeString {
     pub min: Option<u32>,
     pub max: Option<u32>,
@@ -106,14 +108,14 @@ pub struct TypeString {
     pub enumeration: Option<Vec<String>>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TypeFile {
     pub min: Option<u32>,
     pub max: Option<u32>,
     pub allow: Option<Vec<String>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypeList {
     pub of: TypeId,
     pub min: Option<u32>,
@@ -121,23 +123,23 @@ pub struct TypeList {
     pub unique_items: Option<bool>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypeOptional {
     pub of: TypeId,
     pub default_item: Option<String>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TypeUnion {
     pub variants: Vec<TypeId>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TypeEither {
     pub variants: Vec<TypeId>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TypeStruct {
     pub props: Vec<(String, TypeId)>,
     pub additional_props: bool,
@@ -146,7 +148,7 @@ pub struct TypeStruct {
     pub enumeration: Option<Vec<String>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ValueSource {
     Raw(String),     // json
     Context(String), // key
@@ -155,13 +157,13 @@ pub enum ValueSource {
     Param(String),   // name
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParameterTransform {
     pub resolver_input: TypeId,
     pub transform_tree: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypeFunc {
     pub inp: TypeId,
     pub parameter_transform: Option<ParameterTransform>,
@@ -171,7 +173,7 @@ pub struct TypeFunc {
     pub rate_weight: Option<u32>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransformData {
     pub query_input: TypeId,
     pub parameter_transform: ParameterTransform,
@@ -179,13 +181,13 @@ pub struct TransformData {
 
 pub type PolicyId = u32;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Policy {
     pub name: String,
     pub materializer: MaterializerId,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PolicyPerEffect {
     pub read: Option<PolicyId>,
     pub create: Option<PolicyId>,
@@ -193,13 +195,13 @@ pub struct PolicyPerEffect {
     pub delete: Option<PolicyId>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PolicySpec {
     Simple(PolicyId),
     PerEffect(PolicyPerEffect),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ContextCheck {
     NotNull,
     Value(String),
@@ -209,7 +211,7 @@ pub enum ContextCheck {
 pub type RuntimeId = u32;
 pub type MaterializerId = u32;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FuncParams {
     pub inp: TypeId,
     pub out: TypeId,
