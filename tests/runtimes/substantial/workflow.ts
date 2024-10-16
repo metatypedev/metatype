@@ -41,15 +41,15 @@ export async function saveAndSleepExample(ctx: Context) {
       add
     );
 
-    const remoteStatic_ = new Date().getTime();
-    const { data } = await ctx.gql/**/ `query { remote_static }`.run({});
-    const remoteStaticEnd = new Date().getTime();
-    console.log(
-      "Remote static:",
-      (remoteStaticEnd - remoteStatic_) / 1000,
-      "Response:",
-      data
-    );
+    // const remoteStatic_ = new Date().getTime();
+    // const { data } = await ctx.gql/**/ `query { remote_static }`.run({});
+    // const remoteStaticEnd = new Date().getTime();
+    // console.log(
+    //   "Remote static:",
+    //   (remoteStaticEnd - remoteStatic_) / 1000,
+    //   "Response:",
+    //   data
+    // );
 
     const remoteStatic = (data as any)?.remote_static as number;
     console.log("Response", remoteStatic);
