@@ -2,19 +2,20 @@
 // SPDX-License-Identifier: MPL-2.0
 
 pub use common::typegraph::runtimes::prisma::{ScalarType, StringType};
-use common::typegraph::{EffectType, InjectionData};
-use indexmap::IndexMap;
+
 use std::hash::Hash;
 
-use crate::errors::Result;
-use crate::runtimes::prisma::errors;
-use crate::runtimes::prisma::type_utils::RuntimeConfig;
-use crate::types::{FindAttribute as _, RefAttrs, ResolveRef as _, TypeDef, TypeDefExt};
-use crate::validation::types::validate_value;
-use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
+use common::typegraph::{EffectType, InjectionData};
+use indexmap::IndexMap;
 
-use super::constraints::get_struct_level_unique_constraints;
-use super::relationship::PrismaRefData;
+use crate::{
+    errors::{Result, TgError},
+    runtimes::prisma::{errors, relationship::Cardinality, type_utils::RuntimeConfig},
+    types::{FindAttribute as _, RefAttrs, ResolveRef as _, TypeDef, TypeDefExt, TypeId},
+    validation::types::validate_value,
+};
+
+use super::{constraints::get_struct_level_unique_constraints, relationship::PrismaRefData};
 
 #[derive(Debug)]
 pub struct Model {
@@ -28,7 +29,7 @@ pub struct Model {
 }
 
 impl TryFrom<TypeId> for Model {
-    type Error = crate::wit::core::Error;
+    type Error = TgError;
 
     fn try_from(type_id: TypeId) -> Result<Self> {
         let typ = type_id.as_struct()?;

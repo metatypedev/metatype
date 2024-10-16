@@ -3,15 +3,15 @@
 
 use common::typegraph::Policy;
 
+use std::hash::Hash as _;
+
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::wit::core::PolicySpec;
-
-use std::hash::Hash as _;
+use crate::types::core::{Policy as CorePolicy, PolicySpec};
 
 use super::hash::Hashable;
 
-impl crate::wit::core::Policy {
+impl CorePolicy {
     pub fn convert(&self, ctx: &mut TypegraphContext) -> Result<Policy> {
         let (mat_id, _) = ctx.register_materializer(self.materializer)?;
         Ok(Policy {

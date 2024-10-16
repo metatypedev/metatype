@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use crate::{
     errors::Result,
-    wit::utils::{Reduce, ReducePath, ReduceValue},
+    types::utils::{Reduce, ReducePath, ReduceValue},
 };
 
 #[derive(Debug, Clone)]

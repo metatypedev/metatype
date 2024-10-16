@@ -14,8 +14,8 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
+    types::core::TypeFloat,
     types::{FindAttribute as _, Float, RefAttrs, TypeDefData},
-    wit::core::TypeFloat,
 };
 
 impl TypeConversion for Float {

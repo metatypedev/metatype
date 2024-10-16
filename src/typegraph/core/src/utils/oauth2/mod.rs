@@ -7,10 +7,13 @@ use crate::{
     global_store::Store,
     runtimes::{DenoMaterializer, Materializer},
     t,
-    types::TypeId,
+    types::{
+        runtimes::{Effect, MaterializerDenoFunc},
+        TypeId,
+    },
 };
 
-pub use crate::wit::core::Error as TgError;
+use crate::errors::TgError;
 
 pub struct OAuth2Profiler {
     pub input: TypeId,
@@ -22,11 +25,11 @@ impl TryInto<TypeId> for OAuth2Profiler {
     type Error = TgError;
 
     fn try_into(self) -> Result<TypeId, Self::Error> {
-        let deno_mat = DenoMaterializer::Inline(crate::wit::runtimes::MaterializerDenoFunc {
+        let deno_mat = DenoMaterializer::Inline(MaterializerDenoFunc {
             code: self.js_code,
             secrets: vec![],
         });
-        let mat = Materializer::deno(deno_mat, crate::wit::runtimes::Effect::Read);
+        let mat = Materializer::deno(deno_mat, Effect::Read);
         t::func(self.input, self.output, Store::register_materializer(mat))
     }
 }

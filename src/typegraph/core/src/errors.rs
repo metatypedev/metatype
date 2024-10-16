@@ -1,9 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::convert::Infallible;
+use std::{convert::Infallible, io};
 
-pub use crate::wit::core::Error as TgError;
+#[derive(Debug, Clone)]
+pub struct TgError {
+    pub stack: Vec<String>,
+}
+
+impl std::fmt::Display for TgError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.stack.join("\n"))
+    }
+}
+
+impl std::error::Error for TgError {}
 
 pub type Result<T, E = TgError> = std::result::Result<T, E>;
 
@@ -27,6 +38,14 @@ impl From<Vec<String>> for TgError {
 
 impl From<anyhow::Error> for TgError {
     fn from(e: anyhow::Error) -> Self {
+        Self {
+            stack: vec![e.to_string()],
+        }
+    }
+}
+
+impl From<io::Error> for TgError {
+    fn from(e: io::Error) -> Self {
         Self {
             stack: vec![e.to_string()],
         }

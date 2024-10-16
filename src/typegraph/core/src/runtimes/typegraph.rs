@@ -6,15 +6,10 @@ use indexmap::IndexMap;
 
 use crate::{
     conversion::runtimes::MaterializerConverter, errors::Result, typegraph::TypegraphContext,
-    wit::runtimes::Effect,
+    types::runtimes::Effect,
 };
 
-#[derive(Clone, Debug)]
-pub enum TypegraphOperation {
-    Resolver,
-    GetType,
-    GetSchema,
-}
+pub use crate::types::runtimes::TypegraphOperation;
 
 impl MaterializerConverter for TypegraphOperation {
     fn convert(
