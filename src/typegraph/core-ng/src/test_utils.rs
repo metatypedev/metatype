@@ -30,9 +30,11 @@ pub mod models {
 
     use common::typegraph::{EffectType, Injection, InjectionData};
 
-    use crate::errors::Result;
-    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-    use crate::types::TypeId;
+    use crate::{
+        errors::Result,
+        t::{self, ConcreteTypeBuilder, TypeBuilder},
+        types::TypeId,
+    };
 
     pub fn simple_record() -> Result<TypeId> {
         let mut created_at_injection_map = BTreeMap::new();

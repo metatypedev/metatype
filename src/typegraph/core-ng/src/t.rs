@@ -433,9 +433,8 @@ macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident ) => {
         impl TypeBuilder for $ty {
             fn build(&self) -> Result<TypeId> {
-                todo!()
-                // let res = $crate::Lib::$build(self.data.clone(), self.base.clone())?;
-                // Ok(res.into())
+                let res = $crate::types::builders::$build(self.data.clone(), self.base.clone())?;
+                Ok(res.into())
             }
         }
 

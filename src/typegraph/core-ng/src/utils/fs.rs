@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use regex::Regex;
 use sha2::{Digest, Sha256};
 
 use crate::errors::{Result, TgError};
@@ -55,13 +56,10 @@ impl FsContext {
             })
             .collect::<Vec<_>>();
 
-        expand_path(
-            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
-            &exclude_as_regex,
-        )?
-        .iter()
-        .map(|p| self.pathlib.relative(Path::new(p)))
-        .collect::<Result<Vec<_>, _>>()
+        self.expand_path_re(self.pathlib.get_base_dir().join(path), &exclude_as_regex)?
+            .iter()
+            .map(|p| self.pathlib.relative(Path::new(p)))
+            .collect::<Result<Vec<_>, _>>()
     }
 
     fn extract_glob_dirname(path: &str) -> PathBuf {
@@ -124,7 +122,7 @@ impl FsContext {
     }
 
     pub fn write_file(&self, path: &Path, bytes: &[u8]) -> Result<()> {
-        Ok(fs::write(&self.pathlib.get_base_dir().join(path), bytes)?)
+        Ok(fs::write(self.pathlib.get_base_dir().join(path), bytes)?)
     }
 
     pub fn write_text_file(&self, path: &Path, text: String) -> Result<()> {
@@ -139,8 +137,41 @@ impl FsContext {
         sha256.update(bytes);
         Ok((format!("{:x}", sha256.finalize()), size))
     }
-}
 
-fn expand_path(root: &str, exclue: &[String]) -> Result<Vec<String>> {
-    todo!() // TODO: implement me
+    fn expand_path_re(&self, root: PathBuf, exclude: &[String]) -> Result<Vec<String>> {
+        let mut results = Vec::new();
+
+        let exclude = exclude
+            .iter()
+            .flat_map(|pat| Regex::new(pat))
+            .collect::<Vec<_>>();
+
+        self.expand_path_helper(root, &exclude, &mut results)?;
+
+        Ok(results)
+    }
+
+    fn expand_path_helper(
+        &self,
+        path: PathBuf,
+        exclude: &[Regex],
+        results: &mut Vec<String>,
+    ) -> Result<()> {
+        for entry in fs::read_dir(path)? {
+            let path = entry?.path();
+            let path_str = path.to_string_lossy();
+
+            if path.is_file() && !self.match_path(&path_str, exclude) {
+                results.push(path_str.to_string());
+            } else if path.is_dir() {
+                self.expand_path_helper(path, exclude, results)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn match_path(&self, path: &str, patterns: &[Regex]) -> bool {
+        patterns.iter().any(|pat| pat.is_match(path))
+    }
 }

@@ -1,21 +1,25 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::errors::{self, Result, TgError};
-use crate::runtimes::{
-    DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
+use graphql_parser::parse_query;
+use indexmap::IndexMap;
+
+use crate::{
+    errors::{self, Result, TgError},
+    runtimes::{DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime},
 };
-use crate::types::core::{MaterializerId, Policy as CorePolicy, PolicyId, RuntimeId};
-use crate::types::type_ref::TypeRef;
-use crate::types::utils::Auth;
-use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
+
+use crate::types::{
+    core::{MaterializerId, Policy as CorePolicy, PolicyId, RuntimeId},
+    type_ref::TypeRef,
+    utils::Auth,
+    ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder,
+};
 
 #[allow(unused)]
 use crate::types::runtimes::{Effect, MaterializerDenoPredefined};
-use graphql_parser::parse_query;
-use indexmap::IndexMap;
-use std::rc::Rc;
-use std::{cell::RefCell, collections::HashMap};
 
 pub type Policy = Rc<CorePolicy>;
 
@@ -124,7 +128,7 @@ pub struct NameRegistration(pub bool);
 #[cfg(test)]
 impl Store {
     pub fn reset() {
-        // let _ = crate::typegraph::serialize(Default::default()); FIXME: uncomment this later
+        let _ = crate::typegraph::serialize(Default::default());
         with_store_mut(|s| *s = Store::new());
     }
 }
