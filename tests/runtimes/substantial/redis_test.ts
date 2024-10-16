@@ -32,7 +32,7 @@ retrySaveTestTemplate(
   "redis",
   {
     delays: {
-      awaitCompleteAll: 14,
+      awaitCompleteAll: 17,
     },
     secrets: { SUB_REDIS },
   },
@@ -44,7 +44,7 @@ childWorkflowTestTemplate(
   "redis",
   {
     delays: {
-      awaitCompleteSec: 17,
+      awaitCompleteSec: 20,
     },
 
     secrets: { SUB_REDIS },

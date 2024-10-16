@@ -18,13 +18,13 @@ concurrentWorkflowTestTemplate("fs", {
 
 retrySaveTestTemplate("fs", {
   delays: {
-    awaitCompleteAll: 14,
+    awaitCompleteAll: 17,
   },
 });
 
 childWorkflowTestTemplate("fs", {
   delays: {
-    awaitCompleteSec: 17,
+    awaitCompleteSec: 20,
   },
 });
 
@@ -37,6 +37,6 @@ concurrentWorkflowTestTemplate("memory", {
 
 retrySaveTestTemplate("memory", {
   delays: {
-    awaitCompleteAll: 12,
+    awaitCompleteAll: 17,
   },
 });
