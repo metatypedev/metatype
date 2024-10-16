@@ -168,6 +168,23 @@ impl<'a> TypeVisitor<'a> for Validator {
                     }
                 }
             }
+        } else if let TypeNode::Union { data, .. } = type_node {
+            let variants = data.any_of.clone();
+
+            for i in 0..variants.len() {
+                for j in (i + 1)..variants.len() {
+                    if variants[i] == variants[j] {
+                        self.push_error(
+                            current_node.path,
+                            format!(
+                                "Invalid union type: variant #{i} ('{}') is the same type as variant #{j} ('{}')",
+                                get_type_name(variants[i]),
+                                get_type_name(variants[j]),
+                            ),
+                        );
+                    }
+                }
+            }
         }
 
         if let Some(enumeration) = &type_node.base().enumeration {

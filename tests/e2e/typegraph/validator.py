@@ -65,6 +65,26 @@ def validator(g: Graph):
         }
     )
 
+    union = t.struct(
+        {
+            "a": t.union(
+                [
+                    t.integer(min=0, max=10),
+                    t.integer(min=5, max=15),
+                    t.integer(min=10, max=20),
+                ]
+            ).set(25),
+            "b": t.union([t.string(), t.string()]),
+            "c": t.union(
+                [
+                    t.struct({"x": t.integer(), "y": t.string()}),
+                    t.struct({"x": t.integer(), "y": t.string(), "z": t.boolean()}),
+                ]
+            ).set({"x": 1, "y": "test", "z": "not a boolean"}),
+            "d": t.union([t.list(t.integer()), t.list(t.string())]).set([1, "2", 3]),
+        }
+    )
+
     g.expose(
         test=deno.identity(injection),
         testEnums=deno.identity(enums),
@@ -87,4 +107,5 @@ def validator(g: Graph):
             }
         ),
         testEither=deno.identity(either),
+        testUnion=deno.identity(union),
     )

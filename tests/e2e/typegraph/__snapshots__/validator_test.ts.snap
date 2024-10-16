@@ -25,6 +25,10 @@ snapshot[`typegraph validation 1`] = `
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/f: invalide either type: variant #0 ('string') is a subtype of variant #1 ('string')
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/g: invalide either type: variant #1 ('object') is a subtype of variant #0 ('object')
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/h: invalide either type: variant #0 ('list') is a subtype of variant #1 ('list')
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[in]/a: Value '25' did not match any of the variants of the union
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[in]/c: Value '{"x":1,"y":"test","z":"not a boolean"}' did not match any of the variants of the union
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[in]/d: Value '[1,"2",3]' did not match any of the variants of the union
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[out]/b: Invalid union type: variant #0 ('string') is the same type as variant #1 ('string')
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - Typegraph validator failed validation
 Error: 
    0: [91mfailed[0m
