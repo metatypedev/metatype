@@ -1,0 +1,34 @@
+---
+source: src/typegraph/core-ng/src/runtimes/prisma/type_generation/mod.rs
+expression: tp.print(out)
+---
+root: list 'Record_group' #119
+└─ item: struct #118
+   ├─ [_avg]: struct 'Record_number_fields_float' #112
+   │  └─ [age]: optional 'optional_111' #111
+   │     └─ item: float #110
+   ├─ [_count]: struct 'Record_count_aggregate' #109
+   │  ├─ [_all]: optional 'optional_108' #108
+   │  │  └─ item: integer #107
+   │  ├─ [age]: optional 'optional_108' #108
+   │  │  └─ item: integer #107
+   │  ├─ [created_at]: optional 'optional_108' #108
+   │  │  └─ item: integer #107
+   │  ├─ [id]: optional 'optional_108' #108
+   │  │  └─ item: integer #107
+   │  └─ [name]: optional 'optional_108' #108
+   │     └─ item: integer #107
+   ├─ [_max]: struct 'Record_number_fields' #117
+   │  └─ [age]: optional 'optional_116' #116
+   │     └─ item: integer #115
+   ├─ [_min]: struct 'Record_number_fields' #117
+   │  └─ [age]: optional 'optional_116' #116
+   │     └─ item: integer #115
+   ├─ [_sum]: struct 'Record_number_fields' #117
+   │  └─ [age]: optional 'optional_116' #116
+   │     └─ item: integer #115
+   ├─ [age]: optional 'optional_6' #6
+   │  └─ item: integer #5
+   ├─ [created_at]: string #1
+   ├─ [id]: string #3
+   └─ [name]: string #4

@@ -15,8 +15,9 @@ use crate::types::{
     core::{MaterializerId, Policy as CorePolicy, PolicyId, RuntimeId},
     type_ref::TypeRef,
     utils::Auth,
-    ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder,
 };
+
+use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
 
 #[allow(unused)]
 use crate::types::runtimes::{Effect, MaterializerDenoPredefined};

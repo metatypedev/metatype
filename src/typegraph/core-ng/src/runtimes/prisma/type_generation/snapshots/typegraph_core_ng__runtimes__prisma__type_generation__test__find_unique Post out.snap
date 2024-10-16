@@ -1,0 +1,13 @@
+---
+source: src/typegraph/core-ng/src/runtimes/prisma/type_generation/mod.rs
+expression: tp.print(out)
+---
+root: optional 'optional_115' #115
+└─ item: struct 'Post_with_nested_count' #114
+   ├─ [author]: struct 'User' #55
+   │  ├─ [id]: integer #51
+   │  ├─ [name]: string #52
+   │  └─ [posts]: list 'list_54' #54
+   │     └─ item: &Post #53
+   ├─ [id]: integer #56
+   └─ [title]: string #58
