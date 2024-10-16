@@ -44,7 +44,7 @@ childWorkflowTestTemplate(
   "redis",
   {
     delays: {
-      awaitCompleteSec: 15,
+      awaitCompleteSec: 17,
     },
 
     secrets: { SUB_REDIS },

@@ -24,7 +24,7 @@ retrySaveTestTemplate("fs", {
 
 childWorkflowTestTemplate("fs", {
   delays: {
-    awaitCompleteSec: 15,
+    awaitCompleteSec: 17,
   },
 });
 

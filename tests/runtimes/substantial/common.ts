@@ -563,6 +563,9 @@ export function childWorkflowTestTemplate(
               }
             }
             parent: results_raw(name: "bumpAll") {
+              ongoing {
+                count
+              }
               completed {
                 runs {
                   run_id
@@ -585,6 +588,9 @@ export function childWorkflowTestTemplate(
               },
             },
             parent: {
+              ongoing: {
+                count: 0,
+              },
               completed: {
                 runs: [
                   {
