@@ -2207,11 +2207,30 @@ mod node_metas {
     pub fn RootCompositeNoArgsFn() -> NodeMeta {
         NodeMeta { ..Post() }
     }
+    pub fn RootScalarArgsFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("id".into(), "UserIdStringUuid".into()),
+                    ("slug".into(), "PostSlugString".into()),
+                    ("title".into(), "PostSlugString".into()),
+                ]
+                .into(),
+            ),
+            ..scalar()
+        }
+    }
     pub fn RootScalarUnionFn() -> NodeMeta {
         NodeMeta {
             arg_types: Some([("id".into(), "RootScalarArgsFnOutput".into())].into()),
             ..scalar()
         }
+    }
+    pub fn RootGetPostsFn() -> NodeMeta {
+        NodeMeta { ..Post() }
+    }
+    pub fn RootScalarNoArgsFn() -> NodeMeta {
+        NodeMeta { ..scalar() }
     }
     pub fn User() -> NodeMeta {
         NodeMeta {
@@ -2246,21 +2265,8 @@ mod node_metas {
             ..RootMixedUnionFnOutput()
         }
     }
-    pub fn RootScalarNoArgsFn() -> NodeMeta {
-        NodeMeta { ..scalar() }
-    }
-    pub fn RootScalarArgsFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("id".into(), "UserIdStringUuid".into()),
-                    ("slug".into(), "PostSlugString".into()),
-                    ("title".into(), "PostSlugString".into()),
-                ]
-                .into(),
-            ),
-            ..scalar()
-        }
+    pub fn RootGetUserFn() -> NodeMeta {
+        NodeMeta { ..User() }
     }
     pub fn RootCompositeArgsFn() -> NodeMeta {
         NodeMeta {
@@ -2287,15 +2293,14 @@ mod node_metas {
             ..RootCompositeUnionFnOutput()
         }
     }
-    pub fn RootGetUserFn() -> NodeMeta {
-        NodeMeta { ..User() }
-    }
-    pub fn RootGetPostsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
-    }
 }
 use types::*;
 pub mod types {
+    pub type RootScalarArgsFnOutput = String;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootCompositeArgsFnInputPartial {
+        pub id: Option<RootScalarArgsFnOutput>,
+    }
     pub type UserIdStringUuid = String;
     pub type PostSlugString = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -2303,11 +2308,6 @@ pub mod types {
         pub id: Option<UserIdStringUuid>,
         pub slug: Option<PostSlugString>,
         pub title: Option<PostSlugString>,
-    }
-    pub type RootScalarArgsFnOutput = String;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootCompositeArgsFnInputPartial {
-        pub id: Option<RootScalarArgsFnOutput>,
     }
     pub type UserEmailStringEmail = String;
     pub type UserPostsPostList = Vec<PostPartial>;
@@ -2354,22 +2354,22 @@ pub struct UserSelections<ATy = NoAlias> {
 }
 impl_selection_traits!(UserSelections, id, email, posts);
 #[derive(Default, Debug)]
-pub struct RootMixedUnionFnOutputSelections<ATy = NoAlias> {
-    pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
-    pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
-}
-impl_union_selection_traits!(
-    RootMixedUnionFnOutputSelections,
-    ("post", post),
-    ("user", user)
-);
-#[derive(Default, Debug)]
 pub struct RootCompositeUnionFnOutputSelections<ATy = NoAlias> {
     pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
     pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
 }
 impl_union_selection_traits!(
     RootCompositeUnionFnOutputSelections,
+    ("post", post),
+    ("user", user)
+);
+#[derive(Default, Debug)]
+pub struct RootMixedUnionFnOutputSelections<ATy = NoAlias> {
+    pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
+    pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
+}
+impl_union_selection_traits!(
+    RootMixedUnionFnOutputSelections,
     ("post", post),
     ("user", user)
 );
