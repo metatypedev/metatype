@@ -19,8 +19,17 @@ pub enum SubstantialBackend {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct WorkflowFileDescription {
+    pub imports: Vec<String>,
+    pub kind: WorkflowKind,
+    pub file: PathBuf,
+    pub deps: Vec<PathBuf>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SubstantialRuntimeData {
     pub backend: SubstantialBackend,
+    pub workflows: Vec<WorkflowFileDescription>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -28,14 +37,6 @@ pub struct SubstantialRuntimeData {
 pub enum WorkflowKind {
     Python,
     Deno,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct WorkflowMatData {
-    pub name: String,
-    pub file: PathBuf,
-    pub kind: WorkflowKind,
-    pub deps: Vec<PathBuf>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

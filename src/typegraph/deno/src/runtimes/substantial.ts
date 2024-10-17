@@ -8,9 +8,9 @@ import type {
   SubstantialBackend,
   SubstantialOperationData,
   SubstantialOperationType,
-  Workflow,
+  WorkflowFileDescription,
+  WorkflowKind,
 } from "../gen/typegraph_core.d.ts";
-import { t } from "../index.ts";
 
 export class Backend {
   static devMemory(): SubstantialBackend {
@@ -34,9 +34,13 @@ export class Backend {
 export class SubstantialRuntime extends Runtime {
   backend: SubstantialBackend;
 
-  constructor(backend: SubstantialBackend) {
+  constructor(
+    backend: SubstantialBackend,
+    fileDescriptions: Array<WorkflowFileDescription>
+  ) {
     const id = runtimes.registerSubstantialRuntime({
       backend,
+      fileDescriptions,
     });
     super(id);
     this.backend = backend;
@@ -56,68 +60,109 @@ export class SubstantialRuntime extends Runtime {
     return Func.fromTypeFunc(funcData);
   }
 
-  deno(file: string, name: string, deps: Array<string> = []): WorkflowHandle {
-    return new WorkflowHandle(this, { file, name, deps, kind: "deno" });
-  }
-
-  python(file: string, name: string, deps: Array<string> = []): WorkflowHandle {
-    return new WorkflowHandle(this, { file, name, deps, kind: "python" });
-  }
-}
-
-export class WorkflowHandle {
-  constructor(private sub: SubstantialRuntime, private workflow: Workflow) {}
-
   start(kwargs: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this.sub._genericSubstantialFunc(
+    return this._genericSubstantialFunc(
       {
         tag: "start",
-        val: this.workflow!,
       },
       kwargs
     );
   }
 
-  stop(): Func<Typedef, Typedef, Materializer> {
-    return this.sub._genericSubstantialFunc({
-      tag: "stop",
-      val: this.workflow!,
+  startRaw(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "start-raw",
     });
   }
 
-  send(
-    payload: Typedef,
-    eventName?: string
-  ): Func<Typedef, Typedef, Materializer> {
-    const event = t.struct({
-      name: eventName ? t.string().set(eventName) : t.string(),
-      payload,
+  stop(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "stop",
     });
+  }
 
-    return this.sub._genericSubstantialFunc(
+  send(payload: Typedef): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc(
       {
         tag: "send",
-        val: this.workflow!,
       },
-      event
+      payload
     );
   }
 
+  sendRaw(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "send-raw",
+    });
+  }
+
   queryResources(): Func<Typedef, Typedef, Materializer> {
-    return this.sub._genericSubstantialFunc({
+    return this._genericSubstantialFunc({
       tag: "resources",
-      val: this.workflow!,
     });
   }
 
   queryResults(output: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this.sub._genericSubstantialFunc(
+    return this._genericSubstantialFunc(
       {
         tag: "results",
-        val: this.workflow!,
       },
       undefined,
       output
     );
+  }
+
+  queryResultsRaw(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "results-raw",
+    });
+  }
+
+  #internalLinkParentChild(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "internal-link-parent-child",
+    });
+  }
+
+  internals(): Record<string, Func<Typedef, Typedef, Materializer>> {
+    return {
+      _sub_internal_start: this.startRaw(),
+      _sub_internal_stop: this.stop(),
+      _sub_internal_send: this.sendRaw(),
+      _sub_internal_results: this.queryResultsRaw(),
+      _sub_internal_link_parent_child: this.#internalLinkParentChild(),
+    };
+  }
+}
+
+export class WorkflowFile {
+  private workflows: Array<string> = [];
+
+  private constructor(
+    public readonly file: string,
+    public readonly kind: WorkflowKind,
+    public deps: Array<string> = []
+  ) {}
+
+  static deno(file: string, deps: Array<string> = []): WorkflowFile {
+    return new WorkflowFile(file, "deno", deps);
+  }
+
+  static python(file: string, deps: Array<string> = []): WorkflowFile {
+    return new WorkflowFile(file, "python", deps);
+  }
+
+  import(names: Array<string>): WorkflowFile {
+    this.workflows.push(...names);
+    return this;
+  }
+
+  build(): WorkflowFileDescription {
+    return {
+      deps: this.deps,
+      file: this.file,
+      kind: this.kind,
+      workflows: this.workflows,
+    };
   }
 }

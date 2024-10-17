@@ -73,6 +73,10 @@ typegates:
       temporal:
         HOST: "http://localhost:7233"
         NAMESPACE: "default"
+      substantial:
+        SUB_REDIS: "redis://:password@localhost:6380/0"
+      substantial-child-workflow:
+        SUB_REDIS: "redis://:password@localhost:6380/0"
 
   prd:
     url: https://demo.metatype.dev

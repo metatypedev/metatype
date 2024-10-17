@@ -3,15 +3,16 @@ import {
   Backend,
   NextRun,
   Run,
+  ReadOrCloseScheduleInput,
 } from "../../../engine/runtime.js";
 import { getLogger } from "../../log.ts";
-import { sleep } from "../../utils.ts";
+import { TaskContext } from "../deno/shared_types.ts";
 import {
   Interrupt,
-  Operation,
   Result,
   WorkerData,
   WorkflowResult,
+  appendIfOngoing,
 } from "./types.ts";
 import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
 
@@ -23,14 +24,10 @@ export interface WorkflowDescription {
   kind: "DENO" | "PYTHON";
 }
 
-export interface StagedUserEvent {
-  runId: string;
-  operation: Operation;
-}
-
 export interface AgentConfig {
-  poll_interval_sec: number;
-  lease_lifespan_sec: number;
+  pollIntervalSec: number;
+  leaseLifespanSec: number;
+  maxAcquirePerTick: number;
 }
 
 export class Agent {
@@ -41,20 +38,53 @@ export class Agent {
   constructor(
     private backend: Backend,
     private queue: string,
-    private config: AgentConfig
+    private config: AgentConfig,
+    private internalTCtx: TaskContext
   ) {}
 
   async schedule(input: AddScheduleInput) {
     await Meta.substantial.storeAddSchedule(input);
   }
 
-  async log(runId: string, schedule: string, content: unknown) {
-    await Meta.substantial.metadataAppend({
+  async reScheduleNow(input: NextRun) {
+    const relatedEvent = await Meta.substantial.storeReadSchedule({
       backend: this.backend,
-      schedule,
-      run_id: runId,
-      content,
+      queue: this.queue,
+      run_id: input.run_id,
+      schedule: input.schedule_date,
     });
+
+    if (relatedEvent) {
+      await this.schedule({
+        backend: this.backend,
+        queue: this.queue,
+        run_id: input.run_id,
+        schedule: new Date().toJSON(),
+        operation: relatedEvent,
+      });
+    } else {
+      // This could occur if it was closed or never existed (inconsistent state)
+      logger.error(
+        `Failed reschedule: could not find related event for ${JSON.stringify(
+          input
+        )}`
+      );
+    }
+  }
+
+  async log(runId: string, schedule: string, content: unknown) {
+    try {
+      await Meta.substantial.metadataAppend({
+        backend: this.backend,
+        schedule,
+        run_id: runId,
+        content,
+      });
+    } catch (err) {
+      logger.warn(
+        `Failed writing log metadata for schedule "${schedule}" (${runId}), skipping it: ${err}`
+      );
+    }
   }
 
   async link(workflowName: string, runId: string) {
@@ -96,7 +126,7 @@ export class Agent {
       } catch (err) {
         logger.error(err);
       }
-    }, 1000 * this.config.poll_interval_sec);
+    }, 1000 * this.config.pollIntervalSec);
   }
 
   stop() {
@@ -108,19 +138,51 @@ export class Agent {
 
   async #nextIteration() {
     logger.warn("POLL");
-    const next = await this.#tryAcquireNextRun();
+
+    // Note: in multiple agents/typegate scenario, a single node may acquire all runs for itself within a tick span
+    // To account for that, keep this reasonable
+    const acquireMaxForThisAgent = this.config.maxAcquirePerTick;
+    const replayRequests = [] as Array<NextRun>;
+    const runIdSeen = new Set<string>();
+
+    while (replayRequests.length <= acquireMaxForThisAgent) {
+      const next = await this.#tryAcquireNextRun();
+      if (next && !runIdSeen.has(next.run_id)) {
+        replayRequests.push(next);
+        // we cannot start more than 1 worker associated to a runId
+        runIdSeen.add(next.run_id);
+      } else {
+        break;
+      }
+    }
 
     for (const workflow of this.workflows) {
-      if (next && Agent.parseWorkflowName(next.run_id) == workflow.name) {
+      const requests = replayRequests.filter(
+        ({ run_id }) => Agent.parseWorkflowName(run_id) == workflow.name
+      );
+
+      while (requests.length > 0) {
         // logger.warn(`Run workflow ${JSON.stringify(next)}`);
+        const next = requests.shift();
+        if (next) {
+          try {
+            await this.#replay(next, workflow);
+          } catch (err) {
+            logger.error(
+              `Replay failed for ${workflow.name} => ${JSON.stringify(
+                next
+              )}: rescheduling it.`
+            );
+            logger.error(err);
 
-        await this.log(next.run_id, next.schedule_date, {
-          message: "Replay workflow",
-          next,
-        });
-
-        await this.#replay(next, workflow);
-        return;
+            await this.reScheduleNow(next);
+          } finally {
+            await this.log(next.run_id, next.schedule_date, {
+              message: "Replaying workflow",
+              next,
+            });
+          }
+        }
       }
     }
   }
@@ -128,7 +190,7 @@ export class Agent {
   async #tryAcquireNextRun() {
     const activeRunIds = await Meta.substantial.agentActiveLeases({
       backend: this.backend,
-      lease_seconds: this.config.lease_lifespan_sec,
+      lease_seconds: this.config.leaseLifespanSec,
     });
 
     logger.info(`Active leases: ${activeRunIds.join(",  ")}`);
@@ -145,7 +207,7 @@ export class Agent {
 
     const acquired = await Meta.substantial.agentAcquireLease({
       backend: this.backend,
-      lease_seconds: this.config.lease_lifespan_sec,
+      lease_seconds: this.config.leaseLifespanSec,
       run_id: next.run_id,
     });
 
@@ -176,9 +238,8 @@ export class Agent {
       backend: this.backend,
       queue: this.queue,
       run_id: next.run_id,
-      workflow_name: workflow.name,
       schedule: next.schedule_date,
-    };
+    } satisfies ReadOrCloseScheduleInput;
     const newEventOp = await Meta.substantial.storeReadSchedule(schedDef);
 
     if (checkIfRunHasStopped(run)) {
@@ -190,7 +251,7 @@ export class Agent {
     }
 
     if (newEventOp) {
-      run.operations.push(newEventOp);
+      appendIfOngoing(run, newEventOp);
     }
 
     if (run.operations.length == 0) {
@@ -212,19 +273,34 @@ export class Agent {
       return;
     }
 
-    this.workerManager.triggerStart(
-      workflow.name,
-      next.run_id,
-      workflow.path,
-      run,
-      next.schedule_date,
-      first.event.kwargs
-    );
+    try {
+      this.workerManager.triggerStart(
+        workflow.name,
+        next.run_id,
+        workflow.path,
+        run,
+        next.schedule_date,
+        first.event.kwargs,
+        this.internalTCtx
+      );
 
-    this.workerManager.listen(
-      next.run_id,
-      this.#eventResultHandlerFor(workflow.name, next.run_id)
-    );
+      this.workerManager.listen(
+        next.run_id,
+        this.#eventResultHandlerFor(workflow.name, next.run_id)
+      );
+    } catch (err) {
+      throw err;
+    } finally {
+      if (run.operations.length == 1) {
+        // Make sure it is already visible on the ongoing list
+        // without waiting for interrupts to store the first run
+        logger.info(`Persist first run "${next.run_id}"`);
+        await Meta.substantial.storePersistRun({
+          backend: this.backend,
+          run,
+        });
+      }
+    }
   }
 
   #eventResultHandlerFor(workflowName: string, runId: string) {
@@ -246,7 +322,8 @@ export class Agent {
       switch (answer.type) {
         case "START": {
           const ret = answer.data as WorkflowResult;
-          switch (Interrupt.getTypeOf(ret.exception)) {
+          const interrupt = Interrupt.getTypeOf(ret.exception);
+          switch (interrupt) {
             case "SAVE_RETRY":
             case "SLEEP":
             case "WAIT_ENSURE_VALUE":
@@ -255,14 +332,17 @@ export class Agent {
               await this.#workflowHandleInterrupts(workflowName, runId, ret);
               break;
             }
-            default: {
+            case null: {
               await this.#workflowHandleGracefullCompletion(
                 startedAt,
                 workflowName,
                 runId,
                 ret
               );
+              break;
             }
+            default:
+              throw new Error(`Unknown interrupt "${interrupt}"`);
           }
           break;
         }
@@ -319,7 +399,7 @@ export class Agent {
     logger.info(`Renew lease ${runId}`);
     await Meta.substantial.agentRenewLease({
       backend: this.backend,
-      lease_seconds: this.config.lease_lifespan_sec,
+      lease_seconds: this.config.leaseLifespanSec,
       run_id: runId,
     });
   }
@@ -340,8 +420,10 @@ export class Agent {
 
     logger.info(`Append Stop ${runId}`);
     const rustResult = kind == "FAIL" ? "Err" : "Ok";
-    run.operations.push({
-      // Note: run is a one-time value, thus can be mutated
+
+    // Note: run is a one-time value, thus can be mutated
+
+    appendIfOngoing(run, {
       at: new Date().toJSON(),
       event: {
         type: "Stop",
@@ -372,7 +454,7 @@ export class Agent {
     await Meta.substantial.agentRemoveLease({
       backend: this.backend,
       run_id: runId,
-      lease_seconds: this.config.lease_lifespan_sec,
+      lease_seconds: this.config.leaseLifespanSec,
     });
   }
 

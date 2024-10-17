@@ -402,3 +402,53 @@ pub async fn op_sub_metadata_read_workflow_links(
 
     backend.read_workflow_links(input.workflow_name)
 }
+
+#[derive(Deserialize)]
+pub struct WriteParentChildLinkInput {
+    pub backend: SubstantialBackend,
+    pub parent_run_id: String,
+    pub child_run_id: String,
+}
+
+#[deno_core::op2(async)]
+pub async fn op_sub_metadata_write_parent_child_link(
+    state: Rc<RefCell<OpState>>,
+    #[serde] input: WriteParentChildLinkInput,
+) -> Result<()> {
+    let ctx = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().clone()
+    };
+
+    let backend = ctx
+        .backends
+        .entry(input.backend.as_key())
+        .or_try_insert_with(|| init_backend(&input.backend))?;
+
+    backend.write_parent_child_link(input.parent_run_id.clone(), input.child_run_id)
+}
+
+#[derive(Deserialize)]
+pub struct EnumerateAllChildrenInput {
+    pub backend: SubstantialBackend,
+    pub parent_run_id: String,
+}
+
+#[deno_core::op2(async)]
+#[serde]
+pub async fn op_sub_metadata_enumerate_all_children(
+    state: Rc<RefCell<OpState>>,
+    #[serde] input: EnumerateAllChildrenInput,
+) -> Result<Vec<String>> {
+    let ctx = {
+        let state = state.borrow();
+        state.borrow::<Ctx>().clone()
+    };
+
+    let backend = ctx
+        .backends
+        .entry(input.backend.as_key())
+        .or_try_insert_with(|| init_backend(&input.backend))?;
+
+    backend.enumerate_all_children(input.parent_run_id.clone())
+}

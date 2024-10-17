@@ -26,9 +26,28 @@ export async function saveAndSleepExample(ctx: Context) {
   const newB = await ctx.save(() => queryThatTakesAWhile(b as number));
   // + 2s
 
-  // + ~5s (depending on the wait relaunch setting)
+  const sum = await ctx.save(async () => {
+    const remoteAdd = new Date().getTime();
+    const { data } = await ctx.gql/**/ `query { remote_add(a: $a, b: $b) }`.run(
+      {
+        a: newA,
+        b: newB,
+      }
+    );
+    const remoteAddEnd = new Date().getTime();
+    console.log(
+      "Remote add:",
+      (remoteAddEnd - remoteAdd) / 1000,
+      ", Response:",
+      data
+    );
+
+    return (data as any)?.remote_add as number;
+  });
+
+  // +- ~5s
   ctx.sleep(5000);
-  return newA + newB;
+  return sum;
 }
 
 export async function retryExample(ctx: Context) {

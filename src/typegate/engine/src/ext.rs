@@ -57,6 +57,8 @@ deno_core::extension!(
         substantial::op_sub_metadata_read_all,
         substantial::op_sub_metadata_read_workflow_links,
         substantial::op_sub_metadata_write_workflow_link,
+        substantial::op_sub_metadata_write_parent_child_link,
+        substantial::op_sub_metadata_enumerate_all_children,
 
         // FIXME(yohe): this test broke and has proven difficult to fix
         // #[cfg(test)]
