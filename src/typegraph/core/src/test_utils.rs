@@ -1,7 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-pub(crate) use crate::wit::runtimes::{Effect, MaterializerDenoFunc};
+use crate::{
+    self as typegraph,
+    errors::Result,
+    types::{
+        core::TypegraphInitParams,
+        runtimes::{Effect, MaterializerDenoFunc},
+    },
+};
 
 impl MaterializerDenoFunc {
     pub fn with_code(code: impl Into<String>) -> Self {
@@ -23,9 +30,11 @@ pub mod models {
 
     use common::typegraph::{EffectType, Injection, InjectionData};
 
-    use crate::errors::Result;
-    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-    use crate::types::TypeId;
+    use crate::{
+        errors::Result,
+        t::{self, ConcreteTypeBuilder, TypeBuilder},
+        types::TypeId,
+    };
 
     pub fn simple_record() -> Result<TypeId> {
         let mut created_at_injection_map = BTreeMap::new();
@@ -68,10 +77,8 @@ pub mod models {
     }
 }
 
-pub fn setup(name: Option<&str>) -> crate::errors::Result<()> {
-    use crate::wit::core::Guest;
-
-    crate::Lib::init_typegraph(crate::wit::core::TypegraphInitParams {
+pub fn setup(name: Option<&str>) -> Result<()> {
+    typegraph::init(TypegraphInitParams {
         name: name
             .map(|n| n.to_string())
             .unwrap_or_else(|| "test".to_string()),

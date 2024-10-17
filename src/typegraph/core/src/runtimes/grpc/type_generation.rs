@@ -1,12 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::HashMap;
+
 use anyhow::{bail, Result};
 use common::grpc::{
     get_file_descriptor, get_message_field_descriptor, get_method_descriptor_proto, Fields,
     FileDescriptor, Type,
 };
-use std::collections::HashMap;
 
 use crate::{
     t::{self, TypeBuilder},

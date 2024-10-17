@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::global_store::Store;
+use crate::types::core::TypeFunc;
 use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId};
-use crate::wit::core::TypeFunc;
 use crate::{errors, Result};
 
 impl TypeFunc {

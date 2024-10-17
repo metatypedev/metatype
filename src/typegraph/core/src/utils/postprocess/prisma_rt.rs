@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: MPL-2.0
 use std::path::PathBuf;
 
-use common::typegraph::runtimes::prisma::MigrationOptions;
-use common::typegraph::runtimes::{KnownRuntime::Prisma, TGRuntime};
-use common::typegraph::Typegraph;
+use common::typegraph::{
+    runtimes::{prisma::MigrationOptions, KnownRuntime::Prisma, TGRuntime},
+    Typegraph,
+};
 
-use crate::errors::Result;
-use crate::utils::archive::ArchiveExt;
-use crate::utils::fs::FsContext;
-use crate::utils::postprocess::PostProcessor;
-use crate::wit::core::MigrationAction;
-use crate::wit::core::PrismaMigrationConfig;
+use crate::{
+    errors::Result,
+    types::core::{MigrationAction, PrismaMigrationConfig},
+    utils::{archive::ArchiveExt, fs::FsContext, postprocess::PostProcessor},
+};
 
 pub struct PrismaProcessor {
     config: PrismaMigrationConfig,

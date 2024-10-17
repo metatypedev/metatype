@@ -13,10 +13,10 @@ use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::{self, Result, TgError};
 use crate::params::apply::ParameterTransformNode;
 use crate::typegraph::TypegraphContext;
+use crate::types::core::TypeFunc;
 use crate::types::{
     FindAttribute as _, Func, RefAttrs, ResolveRef as _, TypeDef, TypeDefData, TypeId,
 };
-use crate::wit::core::TypeFunc;
 
 impl TypeConversion for Func {
     fn convert(

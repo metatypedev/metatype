@@ -1,13 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::errors::{ErrorContext, Result, TgError};
-use crate::t::{self, TypeBuilder};
-use crate::types::{Type, TypeDef, TypeId};
-use crate::wit::core::{ParameterTransform, TransformData};
+use std::{collections::HashMap, fmt::Write};
+
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fmt::Write;
+
+use crate::{
+    errors::{ErrorContext, Result, TgError},
+    t::{self, TypeBuilder},
+    types::{
+        core::{ParameterTransform, TransformData},
+        Type, TypeDef, TypeId,
+    },
+};
 
 pub mod raw_tree {
     use serde::Deserialize;

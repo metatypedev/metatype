@@ -8,9 +8,9 @@ use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
 use crate::t::{self, StructBuilder, TypeBuilder};
 use crate::typegraph::TypegraphContext;
+use crate::types::core::RuntimeId;
+use crate::types::runtimes::{Effect, PrismaMigrationOperation};
 use crate::types::TypeId;
-use crate::wit::core::RuntimeId;
-use crate::wit::runtimes::{Effect, PrismaMigrationOperation};
 
 impl MaterializerConverter for PrismaMigrationOperation {
     fn convert(

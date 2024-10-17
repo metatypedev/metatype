@@ -33,6 +33,7 @@ common = { path = "src/common/" }
 substantial = { path = "src/substantial/" }
 metagen = { path = "src/metagen/" }
 typegate_engine = { path = "src/typegate/engine" }
+typegraph_core = { path = "src/typegraph/core" }
 
 # cli
 clap = "=4.5.13"
