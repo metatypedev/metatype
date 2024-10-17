@@ -146,7 +146,7 @@ impl<'a> TypeVisitor<'a> for Validator {
                         self.push_error(
                             current_node.path,
                             format!(
-                                "invalide either type: variant #{i} ('{}') is a subtype of variant #{j} ('{}')",
+                                "Invalid either type: variant #{i} ('{}') is a subtype of variant #{j} ('{}')",
                                 get_type_name(variants[i]),
                                 get_type_name(variants[j]),
                             ),
@@ -160,7 +160,7 @@ impl<'a> TypeVisitor<'a> for Validator {
                         self.push_error(
                             current_node.path,
                             format!(
-                                "invalide either type: variant #{j} ('{}') is a subtype of variant #{i} ('{}')",
+                                "Invalid either type: variant #{j} ('{}') is a subtype of variant #{i} ('{}')",
                                 get_type_name(variants[j]),
                                 get_type_name(variants[i]),
                             ),

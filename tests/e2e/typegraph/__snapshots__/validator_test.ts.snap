@@ -19,12 +19,12 @@ snapshot[`typegraph validation 1`] = `
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: 'minimum_length' is required on the subtype if it is defined on the supertype
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: 'maximum_length' cannot be higher on the subtype: 20 > 16
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/c: from_parent injection: property b is not allowed: it is not defined in the supertype
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/a: invalide either type: variant #0 ('integer') is a subtype of variant #1 ('float')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/b: invalide either type: variant #0 ('string') is a subtype of variant #1 ('string')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/d: invalide either type: variant #0 ('list') is a subtype of variant #1 ('list')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/f: invalide either type: variant #0 ('string') is a subtype of variant #1 ('string')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/g: invalide either type: variant #1 ('object') is a subtype of variant #0 ('object')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/h: invalide either type: variant #0 ('list') is a subtype of variant #1 ('list')
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/a: Invalid either type: variant #0 ('integer') is a subtype of variant #1 ('float')
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/b: Invalid either type: variant #0 ('string') is a subtype of variant #1 ('string')
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/d: Invalid either type: variant #0 ('list') is a subtype of variant #1 ('list')
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/f: Invalid either type: variant #0 ('string') is a subtype of variant #1 ('string')
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/g: Invalid either type: variant #1 ('object') is a subtype of variant #0 ('object')
+[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/h: Invalid either type: variant #0 ('list') is a subtype of variant #1 ('list')
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[in]/a: Value '25' did not match any of the variants of the union
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[in]/c: Value '{"x":1,"y":"test","z":"not a boolean"}' did not match any of the variants of the union
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[in]/d: Value '[1,"2",3]' did not match any of the variants of the union
