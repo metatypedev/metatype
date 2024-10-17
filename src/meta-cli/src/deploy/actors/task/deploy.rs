@@ -12,6 +12,7 @@ use crate::deploy::actors::console::Console;
 use crate::deploy::actors::task_manager::TaskRef;
 use crate::interlude::*;
 use crate::secrets::Secrets;
+use crate::typegraph::rpc::{TypegraphFunc, TypegraphRpcCall};
 use color_eyre::owo_colors::OwoColorize;
 use common::node::Node;
 use serde::Deserialize;
@@ -161,7 +162,11 @@ pub enum MigrationActionOverride {
 #[serde(tag = "method", content = "params")]
 pub enum RpcCall {
     GetDeployTarget,
-    GetDeployData { typegraph: String },
+    GetDeployData {
+        typegraph: String,
+    },
+    #[serde(untagged)]
+    Typegraph(TypegraphRpcCall),
 }
 
 struct ResetDatabase(PrismaRuntimeId);
@@ -305,6 +310,7 @@ impl TaskAction for DeployAction {
             }
 
             RpcCall::GetDeployData { typegraph } => Ok(self.get_deploy_data(typegraph).await?),
+            RpcCall::Typegraph(call) => Ok(call.execute()?),
         }
     }
 }

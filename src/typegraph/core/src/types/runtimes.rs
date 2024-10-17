@@ -194,6 +194,7 @@ pub struct TemporalOperationData {
 }
 
 // typegate
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TypegateOperation {
     ListTypegraphs,
     FindTypegraph,
