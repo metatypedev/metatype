@@ -38,8 +38,8 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
             venv_bin = venv_dir.as_path().join("bin").to_str().unwrap()
         );
 
-        set_var("VIRTUAL_ENV", venv_dir.to_str().unwrap());
-        set_var("PATH", path);
+        unsafe { set_var("VIRTUAL_ENV", venv_dir.to_str().unwrap()) };
+        unsafe { set_var("PATH", path) };
         Ok(())
     } else {
         bail!("Python venv required")

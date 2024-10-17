@@ -34,6 +34,7 @@ snapshot[`type comparison errors 1`] = `
 - at type-comparison:/union_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: Expected all variants to be a subtype
 - at type-comparison:/union_fail_2_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 0 is not a subtype
 - at type-comparison:/union_fail_2_test_type/[out]/injected/[in]/field: from_parent injection:  - - Expected a single variant to be a supertype, got more: variants 0, 1
+- at type-comparison:/union_fail_2_test_type/[out]/injected/[out]/field: Invalid either type: variant #0 ('integer') is a subtype of variant #1 ('float')
 - at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: Expected a single variant to be a supertype, got none
 - at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 0
 - at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - - Type mismatch: float to integer
