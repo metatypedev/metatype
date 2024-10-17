@@ -20,48 +20,17 @@ mod validation;
 mod test_utils;
 
 pub use errors::{Result, TgError};
-pub use typegraph::{init, serialize, set_seed};
-
-use self::{
-    params::apply,
-    types::{
-        core::{TransformData, TypeId as CoreTypeId},
-        PolicySpec,
-    },
-};
-
-pub fn get_transform_data(
-    resolver_input: CoreTypeId,
-    transform_tree: String,
-) -> Result<TransformData> {
-    apply::build_transform_data(
-        resolver_input.into(),
-        &serde_json::from_str(&transform_tree).map_err(|e| -> TgError {
-            format!("Error while parsing transform tree: {e:?}").into()
-        })?,
-    )
-}
-
-pub fn expose(
-    fns: Vec<(String, CoreTypeId)>,
-    default_policy: Option<Vec<PolicySpec>>,
-) -> Result<()> {
-    typegraph::expose(
-        fns.into_iter().map(|(k, ty)| (k, ty.into())).collect(),
-        default_policy,
-    )
-}
+pub use typegraph::{expose, get_transform_data, init, serialize, set_seed};
 
 #[cfg(test)]
 mod tests {
-    use crate as typegraph;
-
     use crate::{
         errors::{self, Result},
         global_store::Store,
         runtimes::deno::register_deno_func,
         t::{self, TypeBuilder},
         test_utils::setup,
+        typegraph,
     };
 
     use crate::types::core::{

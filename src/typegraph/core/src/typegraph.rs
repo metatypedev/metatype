@@ -22,9 +22,13 @@ use crate::{
         runtimes::{convert_materializer, convert_runtime, ConvertedRuntime},
         types::TypeConversion,
     },
-    errors::{self, Result},
+    errors::{self, Result, TgError},
     global_store::{SavedState, Store},
-    types::PolicySpec,
+    params::apply,
+    types::{
+        core::{PolicySpec as CorePolicySpec, TransformData, TypeId as CoreTypeId},
+        PolicySpec,
+    },
     utils::postprocess::{naming::NamingProcessor, PostProcessor, TypegraphPostProcessor},
     validation::validate_name,
 };
@@ -284,12 +288,13 @@ fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
 }
 
 pub fn expose(
-    fields: Vec<(String, TypeId)>,
-    default_policy: Option<Vec<PolicySpec>>,
+    fields: Vec<(String, CoreTypeId)>,
+    default_policy: Option<Vec<CorePolicySpec>>,
 ) -> Result<()> {
     let fields = fields
         .into_iter()
         .map(|(key, type_id)| -> Result<_> {
+            let type_id = TypeId(type_id);
             let (_, attrs) = type_id.resolve_ref()?;
             let policy_chain = attrs.find_policy().unwrap_or(&[]);
             let has_policy = !policy_chain.is_empty();
@@ -341,6 +346,18 @@ pub fn expose(
 pub fn set_seed(seed: Option<u32>) -> Result<()> {
     Store::set_random_seed(seed);
     Ok(())
+}
+
+pub fn get_transform_data(
+    resolver_input: CoreTypeId,
+    transform_tree: String,
+) -> Result<TransformData> {
+    apply::build_transform_data(
+        resolver_input.into(),
+        &serde_json::from_str(&transform_tree).map_err(|e| -> TgError {
+            format!("Error while parsing transform tree: {e:?}").into()
+        })?,
+    )
 }
 
 impl TypegraphContext {
