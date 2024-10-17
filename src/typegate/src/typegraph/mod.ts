@@ -56,10 +56,7 @@ export type RuntimeResolver = Record<string, Runtime>;
 
 export class SecretManager {
   private typegraphName: string;
-  constructor(
-    typegraph: TypeGraphDS,
-    public secrets: Record<string, string>,
-  ) {
+  constructor(typegraph: TypeGraphDS, public secrets: Record<string, string>) {
     // name without prefix as secrets are not prefixed
     this.typegraphName = TypeGraph.formatName(typegraph, false);
   }
@@ -68,7 +65,7 @@ export class SecretManager {
     const value = this.secretOrNull(name);
     ensure(
       value != null,
-      `cannot find secret "${name}" for "${this.typegraphName}"`,
+      `cannot find secret "${name}" for "${this.typegraphName}"`
     );
     return value as string;
   }
@@ -112,7 +109,7 @@ export class TypeGraph implements AsyncDisposable {
     public runtimeReferences: Runtime[],
     public cors: (req: Request) => Record<string, string>,
     public auths: Map<string, Protocol>,
-    public introspection: TypeGraph | null,
+    public introspection: TypeGraph | null
   ) {
     this.root = this.type(0);
     this.name = TypeGraph.formatName(tg);
@@ -156,7 +153,7 @@ export class TypeGraph implements AsyncDisposable {
         name = "<unknown>";
       }
       throw new Error(
-        `Invalid typegraph definition for '${name}': ${res.NotValid.reason}`,
+        `Invalid typegraph definition for '${name}': ${res.NotValid.reason}`
       );
     }
   }
@@ -166,7 +163,7 @@ export class TypeGraph implements AsyncDisposable {
     typegraph: TypeGraphDS,
     secretManager: SecretManager,
     staticReference: RuntimeResolver,
-    introspection: TypeGraph | null,
+    introspection: TypeGraph | null
   ): Promise<TypeGraph> {
     const typegraphName = TypeGraph.formatName(typegraph);
     const { meta, runtimes } = typegraph;
@@ -183,13 +180,13 @@ export class TypeGraph implements AsyncDisposable {
           "Content-Type",
           "Authorization",
           ...meta.cors.allow_headers,
-        ]),
+        ])
       ).join(","),
       "Access-Control-Expose-Headers": Array.from(
-        new Set([nextAuthorizationHeader, ...meta.cors.expose_headers]),
+        new Set([nextAuthorizationHeader, ...meta.cors.expose_headers])
       ).join(","),
-      "Access-Control-Allow-Credentials": meta.cors.allow_credentials
-        .toString(),
+      "Access-Control-Allow-Credentials":
+        meta.cors.allow_credentials.toString(),
     };
     if (meta.cors.max_age_sec) {
       staticCors["Access-Control-Max-Age"] = meta.cors.max_age_sec.toString();
@@ -220,7 +217,7 @@ export class TypeGraph implements AsyncDisposable {
         }
 
         const materializers = typegraph.materializers.filter(
-          (mat) => mat.runtime === idx,
+          (mat) => mat.runtime === idx
         );
 
         return initRuntime(runtime.name, {
@@ -231,7 +228,7 @@ export class TypeGraph implements AsyncDisposable {
           args: (runtime as any)?.data ?? {},
           secretManager,
         });
-      }),
+      })
     );
 
     const denoRuntime = runtimeReferences[denoRuntimeIdx];
@@ -247,7 +244,7 @@ export class TypeGraph implements AsyncDisposable {
       runtimeReferences,
       cors,
       auths,
-      introspection,
+      introspection
     );
 
     for (const auth of meta.auths) {
@@ -261,15 +258,15 @@ export class TypeGraph implements AsyncDisposable {
           {
             tg: tg, // required for validation
             runtimeReferences,
-          },
-        ),
+          }
+        )
       );
     }
 
     // override "internal" to enforce internal auth
     auths.set(
       internalAuthName,
-      await InternalAuth.init(typegraphName, typegate.cryptoKeys),
+      await InternalAuth.init(typegraphName, typegate.cryptoKeys)
     );
 
     return tg;
@@ -278,12 +275,12 @@ export class TypeGraph implements AsyncDisposable {
   type(idx: number): TypeNode;
   type<T extends TypeNode["type"]>(
     idx: number,
-    asType: T,
+    asType: T
   ): TypeNode & { type: T };
   type<T extends TypeNode["type"]>(idx: number, asType?: T): TypeNode {
     ensure(
       typeof idx === "number" && idx < this.tg.types.length,
-      `cannot find type with index '${idx}'`,
+      `cannot find type with index '${idx}'`
     );
     const ret = this.tg.types[idx];
     if (asType != undefined) {
@@ -388,7 +385,7 @@ export class TypeGraph implements AsyncDisposable {
         isString(type) ||
         isUnion(type) ||
         isEither(type),
-      `object expected but got ${type.type}`,
+      `object expected but got ${type.type}`
     );
     return (x: any) => {
       return ensureArray(x);
@@ -410,11 +407,7 @@ export class TypeGraph implements AsyncDisposable {
     return tpe;
   }
 
-  getGraphQLType(
-    typeNode: TypeNode,
-    optional = false,
-    as_id = false,
-  ): string {
+  getGraphQLType(typeNode: TypeNode, optional = false, as_id = false): string {
     if (typeNode.type === Type.OPTIONAL) {
       return this.getGraphQLType(this.type(typeNode.item), true);
     }
@@ -445,7 +438,7 @@ export class TypeGraph implements AsyncDisposable {
   isSelectionSetExpectedFor(typeIdx: number): boolean {
     const typ = this.type(typeIdx);
     if (typ.type === Type.OBJECT) {
-      return true;
+      return Object.keys(typ.properties).length > 0;
     }
 
     if (typ.type === Type.UNION) {
@@ -481,7 +474,7 @@ export class TypeGraph implements AsyncDisposable {
         Object.entries(typeNode.properties).map(([key, idx]) => [
           key,
           this.getPossibleSelectionFields(idx),
-        ]),
+        ])
       );
     }
 
@@ -496,13 +489,13 @@ export class TypeGraph implements AsyncDisposable {
 
     const entries = variants.map(
       (idx) =>
-        [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const,
+        [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const
     );
 
     if (entries[0][1] === null) {
       if (entries.some((e) => e[1] !== null)) {
         throw new Error(
-          "Unexpected: All the variants must not expect selection set",
+          "Unexpected: All the variants must not expect selection set"
         );
       }
       return null;
@@ -513,7 +506,7 @@ export class TypeGraph implements AsyncDisposable {
     }
 
     const expandNestedUnions = (
-      entry: readonly [string, PossibleSelectionFields],
+      entry: readonly [string, PossibleSelectionFields]
     ): Array<[string, Map<string, PossibleSelectionFields>]> => {
       const [typeName, possibleSelections] = entry;
 

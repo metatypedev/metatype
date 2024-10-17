@@ -82,7 +82,7 @@ fn main() -> Result<()> {
 
     if args.verbose.is_present() {
         let filter = args.verbose.log_level_filter().to_string();
-        std::env::set_var("RUST_LOG", format!("warn,meta={filter}"));
+        unsafe { std::env::set_var("RUST_LOG", format!("warn,meta={filter}")) };
     }
     logger::init();
     if args.version {

@@ -15,6 +15,8 @@ use super::visitor::{
     TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
 };
 
+use self::types::{EnsureSubtypeOf, ErrorCollector, ExtendedTypeNode};
+
 #[allow(dead_code)]
 fn assert_unique_titles(types: &[TypeNode]) -> Vec<ValidatorError> {
     let mut duplicates = vec![];
@@ -46,6 +48,7 @@ pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     // errors.extend(assert_unique_titles(&tg.types));
     let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
+
     errors.extend(tg.traverse_types(validator, &context, Layer).unwrap());
     errors
 }
@@ -122,9 +125,66 @@ impl<'a> TypeVisitor<'a> for Validator {
     ) -> VisitResult<Self::Return> {
         let type_node = current_node.type_node;
 
+        let tg = context.get_typegraph();
+
+        let get_type_name = |idx: u32| tg.types.get(idx as usize).unwrap().type_name();
+
         if let TypeNode::Function { .. } = type_node {
             // validate materializer??
             // TODO deno static
+        } else if let TypeNode::Either { data, .. } = type_node {
+            let variants = data.one_of.clone();
+            for i in 0..variants.len() {
+                for j in (i + 1)..variants.len() {
+                    let type1 = ExtendedTypeNode::new(tg, variants[i]);
+                    let type2 = ExtendedTypeNode::new(tg, variants[j]);
+
+                    let mut subtype_errors = ErrorCollector::default();
+                    type1.ensure_subtype_of(&type2, tg, &mut subtype_errors);
+
+                    if subtype_errors.errors.is_empty() {
+                        self.push_error(
+                            current_node.path,
+                            format!(
+                                "Invalid either type: variant #{i} ('{}') is a subtype of variant #{j} ('{}')",
+                                get_type_name(variants[i]),
+                                get_type_name(variants[j]),
+                            ),
+                        );
+                    }
+
+                    let mut subtype_errors = ErrorCollector::default();
+                    type2.ensure_subtype_of(&type1, tg, &mut subtype_errors);
+
+                    if subtype_errors.errors.is_empty() {
+                        self.push_error(
+                            current_node.path,
+                            format!(
+                                "Invalid either type: variant #{j} ('{}') is a subtype of variant #{i} ('{}')",
+                                get_type_name(variants[j]),
+                                get_type_name(variants[i]),
+                            ),
+                        );
+                    }
+                }
+            }
+        } else if let TypeNode::Union { data, .. } = type_node {
+            let variants = data.any_of.clone();
+
+            for i in 0..variants.len() {
+                for j in (i + 1)..variants.len() {
+                    if variants[i] == variants[j] {
+                        self.push_error(
+                            current_node.path,
+                            format!(
+                                "Invalid union type: variant #{i} ('{}') is the same type as variant #{j} ('{}')",
+                                get_type_name(variants[i]),
+                                get_type_name(variants[j]),
+                            ),
+                        );
+                    }
+                }
+            }
         }
 
         if let Some(enumeration) = &type_node.base().enumeration {

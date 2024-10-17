@@ -87,6 +87,10 @@ export function isObject(t: TypeNode): t is ObjectNode {
   return t.type === Type.OBJECT;
 }
 
+export function isEmptyObject(t: TypeNode): t is AnyNode {
+  return isObject(t) && Object.keys(t.properties).length == 0;
+}
+
 export function isOptional(t: TypeNode): t is OptionalNode {
   return t.type === Type.OPTIONAL;
 }
@@ -126,7 +130,7 @@ export function getWrappedType(t: QuantifierNode): number {
  * or `either`.
  */
 export function getVariantTypesIndexes(
-  typeNode: UnionNode | EitherNode,
+  typeNode: UnionNode | EitherNode
 ): number[] {
   if (typeNode.type === "union") {
     return typeNode.anyOf;

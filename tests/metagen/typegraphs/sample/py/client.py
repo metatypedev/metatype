@@ -610,17 +610,6 @@ class NodeDescs:
         return NodeMeta()
 
     @staticmethod
-    def RootScalarUnionFn():
-        return_node = NodeDescs.scalar()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "RootScalarArgsFnOutput",
-            },
-        )
-
-    @staticmethod
     def Post():
         return NodeMeta(
             sub_nodes={
@@ -628,6 +617,14 @@ class NodeDescs:
                 "slug": NodeDescs.scalar,
                 "title": NodeDescs.scalar,
             },
+        )
+
+    @staticmethod
+    def RootCompositeNoArgsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
         )
 
     @staticmethod
@@ -649,6 +646,14 @@ class NodeDescs:
         )
 
     @staticmethod
+    def RootGetPostsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+        )
+
+    @staticmethod
     def RootScalarNoArgsFn():
         return_node = NodeDescs.scalar()
         return NodeMeta(
@@ -657,15 +662,24 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootScalarArgsFn():
+    def RootCompositeArgsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "id": "RootScalarArgsFnOutput",
+            },
+        )
+
+    @staticmethod
+    def RootScalarUnionFn():
         return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "id": "UserIdStringUuid",
-                "slug": "PostSlugString",
-                "title": "PostSlugString",
+                "id": "RootScalarArgsFnOutput",
             },
         )
 
@@ -690,33 +704,6 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootGetPostsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
-    def RootCompositeArgsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "RootScalarArgsFnOutput",
-            },
-        )
-
-    @staticmethod
-    def RootCompositeNoArgsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
     def RootCompositeUnionFnOutput():
         return NodeMeta(
             variants={
@@ -736,6 +723,29 @@ class NodeDescs:
             },
         )
 
+    @staticmethod
+    def RootScalarArgsFn():
+        return_node = NodeDescs.scalar()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "id": "UserIdStringUuid",
+                "slug": "PostSlugString",
+                "title": "PostSlugString",
+            },
+        )
+
+
+RootScalarArgsFnOutput = str
+
+RootCompositeArgsFnInput = typing.TypedDict(
+    "RootCompositeArgsFnInput",
+    {
+        "id": RootScalarArgsFnOutput,
+    },
+    total=False,
+)
 
 UserIdStringUuid = str
 
@@ -747,16 +757,6 @@ Post = typing.TypedDict(
         "id": UserIdStringUuid,
         "slug": PostSlugString,
         "title": PostSlugString,
-    },
-    total=False,
-)
-
-RootScalarArgsFnOutput = str
-
-RootCompositeArgsFnInput = typing.TypedDict(
-    "RootCompositeArgsFnInput",
-    {
-        "id": RootScalarArgsFnOutput,
     },
     total=False,
 )
@@ -847,8 +847,8 @@ class QueryGraph(QueryGraphBase):
                 "UserIdStringUuid": "String!",
                 "PostSlugString": "String!",
                 "RootScalarArgsFnOutput": "String!",
-                "post": "post!",
                 "user": "user!",
+                "post": "post!",
             }
         )
 
