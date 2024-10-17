@@ -14,7 +14,7 @@ futures.workspace = true
 tokio = { workspace = true, features = ["full"] }
 
 # logging
-log.workspace = true
+tracing.workspace = true
 
 # encoding
 serde.workspace = true
@@ -36,7 +36,6 @@ temporal-sdk-core-protos.workspace = true
 query-core.workspace = true
 query-connector.workspace = true
 request-handlers.workspace = true
-prisma-models.workspace = true
 datamodel-renderer.workspace = true
 user-facing-errors.workspace = true
 query-engine-metrics.workspace = true

@@ -6,11 +6,11 @@ export const PUBLISHED_VERSION = "0.4.10";
 export const GHJK_VERSION = "v0.2.1";
 export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";
 export const RUST_VERSION = "1.80.1";
-export const DENO_VERSION = "1.46.1";
-export const WASMTIME_VERSION = "21.0.0";
-export const WASMTIME_PY_VERSION = "21.0.0";
+export const DENO_VERSION = "1.46.3";
+export const WASMTIME_VERSION = "25.0.2";
+export const WASMTIME_PY_VERSION = "25.0.0";
 export const TYPEGRAPH_VERSION = "0.0.3";
-export const PRISMA_VERSION = "5.6.0";
+export const PRISMA_VERSION = "5.20.0";
 export const SDK_PACKAGE_NAME_TS = "@typegraph/sdk";
 export const PYTHON_VERSION = "3.9.19";
 export const TAGLINE =
@@ -92,10 +92,10 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "examples/templates/**/package.json": [
     [/(\s*"@typegraph\/sdk"\s*:\s*"\^).+(",?)/, METATYPE_VERSION],
   ],
-  "examples/**/*.ts": [
+  "examples/templates/**/*.ts": [
     [
       /(import\s+.+\s+from "jsr:@typegraph\/sdk@)[^\/]+(\/.+";)/,
-      PUBLISHED_VERSION,
+      METATYPE_VERSION,
     ],
   ],
   "CONTRIBUTING.md": [[/(GHJK_VERSION=").*(")/, GHJK_VERSION]],

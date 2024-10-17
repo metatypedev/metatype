@@ -610,17 +610,6 @@ class NodeDescs:
         return NodeMeta()
 
     @staticmethod
-    def RootScalarUnionFn():
-        return_node = NodeDescs.scalar()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "RootScalarArgsFnOutput",
-            },
-        )
-
-    @staticmethod
     def Post():
         return NodeMeta(
             sub_nodes={
@@ -698,6 +687,14 @@ class NodeDescs:
         )
 
     @staticmethod
+    def RootCompositeNoArgsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+        )
+
+    @staticmethod
     def RootCompositeArgsFn():
         return_node = NodeDescs.Post()
         return NodeMeta(
@@ -709,11 +706,14 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootCompositeNoArgsFn():
-        return_node = NodeDescs.Post()
+    def RootScalarUnionFn():
+        return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
+            arg_types={
+                "id": "RootScalarArgsFnOutput",
+            },
         )
 
     @staticmethod
@@ -847,8 +847,8 @@ class QueryGraph(QueryGraphBase):
                 "UserIdStringUuid": "String!",
                 "PostSlugString": "String!",
                 "RootScalarArgsFnOutput": "String!",
-                "post": "post!",
                 "user": "user!",
+                "post": "post!",
             }
         )
 

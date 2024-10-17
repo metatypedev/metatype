@@ -16,14 +16,14 @@ type LangRuntimeConfig<V> = {
 
 const envs = {
   python: {
-    RUST_LOG: "trace",
+    RUST_LOG: "debug",
   },
   deno: {
     MCLI_LOADER_CMD: "deno run -A  {filepath}",
-    RUST_LOG: "trace",
+    RUST_LOG: "debug",
   },
   node: {
-    RUST_LOG: "trace",
+    RUST_LOG: "debug",
   },
 } as LangRuntimeConfig<Record<string, string>>;
 
@@ -101,10 +101,12 @@ for (const template of ["python", "deno", "node"] as const) {
           env: envs[template],
         },
         "deploy",
+        "-vvvv",
         "--target",
         "dev",
         "--gate",
         `http://localhost:${t.port}`,
+        // `http://localhost:7891`,
         "--allow-dirty",
         "-f",
         files[template],

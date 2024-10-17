@@ -91,12 +91,12 @@ interface core {
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>;
 
     record type-float {
-        min: option<float64>,
-        max: option<float64>,
-        exclusive-minimum: option<float64>,
-        exclusive-maximum: option<float64>,
-        multiple-of: option<float64>,
-        enumeration: option<list<float64>>
+        min: option<f64>,
+        max: option<f64>,
+        exclusive-minimum: option<f64>,
+        exclusive-maximum: option<f64>,
+        multiple-of: option<f64>,
+        enumeration: option<list<f64>>
     }
     floatb: func(data: type-float, base: type-base) -> result<type-id, error>;
 
