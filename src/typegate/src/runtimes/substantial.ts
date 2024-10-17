@@ -4,7 +4,7 @@
 import { Runtime } from "./Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { TypeGraph, TypeMaterializer } from "../typegraph/mod.ts";
+import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
 import { getLogger, Logger } from "../log.ts";
 import * as ast from "graphql/ast";
@@ -42,9 +42,10 @@ export class SubstantialRuntime extends Runtime {
 
   private constructor(
     typegraphName: string,
+    private tg: TypeGraphDS,
     backend: Backend,
     queue: string,
-    agent: Agent
+    agent: Agent,
   ) {
     super(typegraphName);
     this.logger = getLogger(`substantial:'${typegraphName}'`);
@@ -76,7 +77,7 @@ export class SubstantialRuntime extends Runtime {
     const backend = (args as any)!.backend as Backend;
     if (backend.type == "redis") {
       backend.connection_string = secretManager.secretOrFail(
-        backend.connection_string
+        backend.connection_string,
       );
     }
 
@@ -92,17 +93,17 @@ export class SubstantialRuntime extends Runtime {
       tgName,
       tg.meta.artifacts,
       materializers,
-      typegate
+      typegate,
     );
 
     agent.start(wfDescriptions);
 
     // Prepare the runtime
-    const instance = new SubstantialRuntime(tgName, backend, queue, agent);
+    const instance = new SubstantialRuntime(tgName, tg, backend, queue, agent);
     await instance.#prepareWorkflowFiles(
       tg.meta.artifacts,
       materializers,
-      typegate
+      typegate,
     );
 
     return instance;
@@ -117,7 +118,7 @@ export class SubstantialRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     _waitlist: ComputeStage[],
-    _verbose: boolean
+    _verbose: boolean,
   ): ComputeStage[] {
     if (stage.props.node === "__typename") {
       return [
@@ -133,14 +134,14 @@ export class SubstantialRuntime extends Runtime {
               return "Mutation";
             default:
               throw new Error(
-                `Unsupported operation type '${stage.props.operationType}'`
+                `Unsupported operation type '${stage.props.operationType}'`,
               );
           }
         }),
       ];
     }
 
-    if (stage.props.outType.config?.__namespace) {
+    if (this.tg.meta.namespaces!.includes(stage.props.typeIdx)) {
       return [stage.withResolver(() => ({}))];
     }
 
@@ -174,8 +175,9 @@ export class SubstantialRuntime extends Runtime {
         return this.#sendResolver();
       case "resources":
         return () => {
-          const res =
-            this.agent.workerManager.getAllocatedResources(workflowName);
+          const res = this.agent.workerManager.getAllocatedResources(
+            workflowName,
+          );
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
@@ -315,13 +317,13 @@ export class SubstantialRuntime extends Runtime {
   async #prepareWorkflowFiles(
     artifacts: Record<string, Artifact>,
     materializers: Materializer[],
-    typegate: Typegate
+    typegate: Typegate,
   ) {
     const descriptions = await getWorkflowDescriptions(
       this.typegraphName,
       artifacts,
       materializers,
-      typegate
+      typegate,
     );
 
     for (const wf of descriptions) {
@@ -334,7 +336,7 @@ async function getWorkflowDescriptions(
   typegraphName: string,
   artifacts: Record<string, Artifact>,
   materializers: Materializer[],
-  typegate: Typegate
+  typegate: Typegate,
 ) {
   const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
 
@@ -351,7 +353,7 @@ async function getWorkflowDescriptions(
         typegraphName,
         artifacts,
         mat.data,
-        typegate
+        typegate,
       );
 
       logger.info(`Resolved runtime artifacts at ${basePath}`);
@@ -373,7 +375,7 @@ async function getWorkflowEntryPointPath(
   typegraphName: string,
   artifacts: Record<string, Artifact>,
   matData: Record<string, unknown>,
-  typegate: Typegate
+  typegate: Typegate,
 ) {
   const entryPoint = artifacts[matData.file as string];
   const deps = (matData.deps as string[]).map((dep) => artifacts[dep]);

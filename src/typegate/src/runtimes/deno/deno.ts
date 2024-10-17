@@ -201,7 +201,7 @@ export class DenoRuntime extends Runtime {
       ];
     }
 
-    if (stage.props.outType.config?.__namespace) {
+    if (this.tg.meta.namespaces!.includes(stage.props.typeIdx)) {
       return [stage.withResolver(() => ({}))];
     }
 

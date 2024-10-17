@@ -6,7 +6,7 @@ use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::model::{Property, ScalarType};
 use crate::runtimes::prisma::relationship::Cardinality;
-use crate::t::{ConcreteTypeBuilder, TypeBuilder};
+use crate::t::TypeBuilder;
 use crate::{t, types::TypeId};
 
 use super::TypeGen;
@@ -53,10 +53,9 @@ impl TypeGen for OrderBy {
         for (k, prop) in model.iter_props() {
             match prop {
                 Property::Model(prop) => {
-                    let rel_name = model
-                        .relationships
-                        .get(k)
-                        .ok_or_else(|| errors::unregistered_relationship(&model.type_name, k))?;
+                    let rel_name = model.relationships.get(k).ok_or_else(|| {
+                        errors::unregistered_relationship(&model.model_type.name(), k)
+                    })?;
 
                     if self.skip_rel.contains(rel_name) {
                         continue;
@@ -70,8 +69,8 @@ impl TypeGen for OrderBy {
                         Cardinality::Optional | Cardinality::One => {
                             let mut skip_rel = self.skip_rel.clone();
                             skip_rel.push(rel_name.clone());
-                            let inner =
-                                context.generate(&OrderBy::new(prop.model_id).skip(skip_rel))?;
+                            let inner = context
+                                .generate(&OrderBy::new(prop.model_type.type_id).skip(skip_rel))?;
                             builder.propx(k, t::optional(inner))?;
                         }
                     }
@@ -92,7 +91,7 @@ impl TypeGen for OrderBy {
             }
         }
 
-        t::listx(builder)?.named(self.name()).build()
+        t::listx(builder)?.build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -118,8 +117,7 @@ impl TypeGen for SortOrder {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["asc".to_string(), "desc".to_string()])
-            .named(self.name())
-            .build()
+            .build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -133,8 +131,7 @@ impl TypeGen for NullsOrder {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["first".to_string(), "last".to_string()])
-            .named(self.name())
-            .build()
+            .build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -156,9 +153,7 @@ impl TypeGen for Sort {
             builder.prop("nulls", nulls_order);
         }
 
-        t::optionalx(t::unionx![builder, sort_order])?
-            .named(self.name())
-            .build()
+        t::optionalx(t::unionx![builder, sort_order])?.build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -179,7 +174,7 @@ impl TypeGen for SortByAggregates {
         builder.prop("_min", sort);
         builder.prop("_max", sort);
 
-        t::optionalx(builder)?.named(self.name()).build()
+        t::optionalx(builder)?.build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -249,8 +244,7 @@ impl TypeGen for AggregateSorting {
             .prop("_sum", others)
             .prop("_min", others)
             .prop("_max", others)
-            .named(self.name())
-            .build()
+            .build_named(self.name())
     }
 
     fn name(&self) -> String {

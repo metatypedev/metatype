@@ -11,23 +11,21 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{Boolean, FindAttribute as _, RefAttrs, TypeBoolean, TypeDefData},
+    types::{Boolean, ExtendedTypeDef, FindAttribute as _, TypeBoolean, TypeDefData},
 };
 use std::hash::Hash;
 
 impl TypeConversion for Boolean {
-    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::Boolean {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "boolean",
                 type_id: self.id,
-                name: self.base.name.clone(),
-                policies: ref_attrs.find_policy().unwrap_or(&[]),
-                runtime_config: self.base.runtime_config.as_deref(),
+                name: xdef.get_owned_name(),
+                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
-            .inject(ref_attrs.find_injection())?
             .build()?,
         })
     }

@@ -1,12 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use serde::{Deserialize, Serialize};
-
+use super::model::ModelType;
 use crate::errors::Result;
-use crate::t;
 use crate::t::TypeBuilder;
-use crate::types::{RefAttr, TypeId};
+use crate::types::{RefAttr, Type, TypeId, TypeRef};
+use serde::{Deserialize, Serialize};
 
 pub mod discovery;
 
@@ -19,10 +18,9 @@ pub enum Cardinality {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RelationshipModel {
-    pub model_type: TypeId,
-    pub model_name: String,
     pub wrapper_type: TypeId,
     pub cardinality: Cardinality,
+    pub model_type: ModelType,
     pub field: String,
 }
 
@@ -55,13 +53,31 @@ pub struct Relationship {
     pub right: RelationshipModel,
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
+pub enum PrismaLinkTarget {
+    Direct(Type),
+    Indirect(String),
+}
+
+#[derive(Clone)]
 pub struct PrismaLink {
-    type_name: String,
+    target: PrismaLinkTarget,
     rel_name: Option<String>,
     fkey: Option<bool>,
     target_field: Option<String>,
     unique: bool,
+}
+
+impl PrismaLink {
+    pub fn with_target(target: PrismaLinkTarget) -> Self {
+        Self {
+            target,
+            rel_name: None,
+            fkey: None,
+            target_field: None,
+            unique: false,
+        }
+    }
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -103,14 +119,16 @@ impl PrismaLink {
     }
 
     fn build_link(&self) -> Result<TypeId> {
-        t::ref_(
-            &self.type_name,
-            Some(RefAttr::runtime(
-                "prisma",
-                serde_json::to_value(PrismaRefData::from(self)).unwrap(),
-            )),
-        )
-        .build()
+        let attr = RefAttr::runtime(
+            "prisma",
+            serde_json::to_value(PrismaRefData::from(self)).unwrap(),
+        );
+        match &self.target {
+            PrismaLinkTarget::Direct(t) => TypeRef::from_type(t.clone(), attr),
+            PrismaLinkTarget::Indirect(n) => TypeRef::indirect(n, Some(attr)),
+        }
+        .register()
+        .map(|t| t.id())
     }
 }
 
@@ -126,17 +144,13 @@ pub fn prisma_linkx(typ: impl TypeBuilder) -> Result<PrismaLink> {
 }
 
 pub fn prisma_link(type_id: TypeId) -> Result<PrismaLink> {
-    let name = type_id
-        .name()?
-        .ok_or_else(|| "Prisma link target must be named".to_string())?;
-    Ok(prisma_linkn(name))
+    Ok(PrismaLink::with_target(PrismaLinkTarget::Direct(
+        type_id.as_type()?,
+    )))
 }
 
 pub fn prisma_linkn(name: impl Into<String>) -> PrismaLink {
-    PrismaLink {
-        type_name: name.into(),
-        ..Default::default()
-    }
+    PrismaLink::with_target(PrismaLinkTarget::Indirect(name.into()))
 }
 
 #[cfg(test)]
@@ -146,7 +160,7 @@ mod test {
     use crate::global_store::Store;
     use crate::runtimes::prisma::context::PrismaContext;
     use crate::runtimes::prisma::errors;
-    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+    use crate::t::{self, TypeBuilder};
     use crate::test_utils::*;
 
     #[test]

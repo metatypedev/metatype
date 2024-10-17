@@ -26,8 +26,6 @@ interface TypeInfo {
   /** list of json string */
   enum: string[] | null;
   /** json string */
-  config: string | null;
-  /** json string */
   default: string | null;
   /** json string */
   format: StringFormat | null;
@@ -562,7 +560,6 @@ function walkPath(
     title: node.title,
     type: node.type,
     enum: node.enum ?? null,
-    config: node.config ? JSON.stringify(node.config) : null,
     default: defaultValue ? JSON.stringify(defaultValue) : null,
     format: format ?? null,
     fields: node.type == "object" ? collectObjectFields(tg, parent) : null,

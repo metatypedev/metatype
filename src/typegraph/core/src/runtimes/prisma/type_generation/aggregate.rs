@@ -4,7 +4,7 @@
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::{Property, ScalarType};
-use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::t::{self, TypeBuilder};
 use crate::types::TypeId;
 
 use super::TypeGen;
@@ -38,7 +38,7 @@ impl TypeGen for CountOutput {
         }
 
         // TODO union
-        builder.named(self.name()).build()
+        builder.build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -88,7 +88,7 @@ impl TypeGen for NumberAggregateOutput {
             }
         }
 
-        builder.named(self.name()).build()
+        builder.build_named(self.name())
     }
 
     fn name(&self) -> String {

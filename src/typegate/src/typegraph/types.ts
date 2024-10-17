@@ -9,9 +9,6 @@ export type OptionalNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   item: number;
   default_value?: any;
 };
@@ -21,9 +18,6 @@ export type BooleanNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
 };
 export type FloatNode = {
   type: "float";
@@ -31,9 +25,6 @@ export type FloatNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   minimum?: number | null;
   maximum?: number | null;
   exclusiveMinimum?: number | null;
@@ -46,9 +37,6 @@ export type IntegerNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   minimum?: number | null;
   maximum?: number | null;
   exclusiveMinimum?: number | null;
@@ -61,9 +49,6 @@ export type StringNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   minLength?: number | null;
   maxLength?: number | null;
   pattern?: string | null;
@@ -75,9 +60,6 @@ export type FileNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   minSize?: number | null;
   maxSize?: number | null;
   mimeTypes?: string[] | null;
@@ -88,9 +70,6 @@ export type ObjectNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   properties: {
     [k: string]: number;
   };
@@ -103,9 +82,6 @@ export type ListNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   items: number;
   maxItems?: number | null;
   minItems?: number | null;
@@ -120,9 +96,6 @@ export type FunctionNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   input: number;
   injections: Record<string, InjectionNode>;
   parameterTransform?: FunctionParameterTransform | null;
@@ -137,9 +110,6 @@ export type UnionNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   anyOf: number[];
 };
 export type EitherNode = {
@@ -148,9 +118,6 @@ export type EitherNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   oneOf: number[];
 };
 export type AnyNode = {
@@ -159,9 +126,6 @@ export type AnyNode = {
   policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
 };
 export type TypeNode =
   | OptionalNode
@@ -480,6 +444,7 @@ export interface TypeMeta {
   artifacts: {
     [k: string]: Artifact;
   };
+  namespaces?: number[] | null;
 }
 export interface Queries {
   dynamic: boolean;

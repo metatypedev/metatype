@@ -12,23 +12,21 @@ use crate::{
     },
     errors::Result,
     typegraph::TypegraphContext,
-    types::{FindAttribute as _, List, RefAttrs, TypeDefData, TypeId},
+    types::{ExtendedTypeDef, FindAttribute as _, List, TypeDefData, TypeId},
     wit::core::TypeList,
 };
 
 impl TypeConversion for List {
-    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::List {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "list",
                 type_id: self.id,
-                name: self.base.name.clone(),
-                policies: ref_attrs.find_policy().unwrap_or(&[]),
-                runtime_config: self.base.runtime_config.as_deref(),
+                name: xdef.get_owned_name(),
+                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
-            .inject(ref_attrs.find_injection())?
             .build()?,
             data: ListTypeData {
                 items: ctx.register_type(TypeId(self.data.of))?.into(),

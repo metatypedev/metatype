@@ -3,10 +3,10 @@
 
 use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
-use crate::conversion::types::TypeConversion;
+use crate::conversion::types::TypeConversion as _;
 use crate::global_store::SavedState;
 use crate::types::{
-    FindAttribute as _, PolicySpec, ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, WithPolicy,
+    AsTypeDefEx as _, FindAttribute as _, PolicySpec, TypeDef, TypeDefExt, TypeId, WithPolicy,
 };
 use crate::utils::postprocess::naming::NamingProcessor;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
@@ -126,7 +126,6 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
 
     ctx.types.push(Some(TypeNode::Object {
         base: TypeNodeBase {
-            config: [].into_iter().collect(),
             description: None,
             enumeration: None,
             policies: Default::default(),
@@ -266,7 +265,7 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> 
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
-    match type_id.resolve_ref()?.0 {
+    match &type_id.as_xdef()?.type_def {
         TypeDef::Struct(inner) => {
             // namespace
             for (prop_name, prop_type_id) in inner.iter_props() {
@@ -287,18 +286,16 @@ pub fn expose(
     let fields = fields
         .into_iter()
         .map(|(key, type_id)| -> Result<_> {
-            let (_, attrs) = type_id.resolve_ref()?;
-            let policy_chain = attrs.find_policy().unwrap_or(&[]);
+            let xdef = type_id.as_xdef()?;
+            let policy_chain = xdef.attributes.find_policy().unwrap_or(&[]);
             let has_policy = !policy_chain.is_empty();
 
             // TODO how to set default policy on a namespace? Or will it inherit
             // the policies of the namespace?
             let type_id: TypeId = match (has_policy, default_policy.as_ref()) {
-                (false, Some(default_policy)) => {
-                    type_id
-                        .with_policy(default_policy.clone().into_iter().map(Into::into).collect())?
-                        .id
-                }
+                (false, Some(default_policy)) => type_id
+                    .with_policy(default_policy.clone().into_iter().map(Into::into).collect())?
+                    .id(),
                 _ => type_id,
             };
 
@@ -347,14 +344,8 @@ impl TypegraphContext {
             Ok(*hash)
         } else {
             let mut hasher = Hasher::new();
-            match type_id.as_type()? {
-                Type::Def(type_def) => {
-                    type_def.hash_type(&mut hasher, self)?;
-                }
-                Type::Ref(type_ref) => {
-                    type_ref.hash_type(&mut hasher, self)?;
-                }
-            }
+            let xdef = type_id.as_xdef()?;
+            xdef.hash_type(&mut hasher, self)?;
             let hash = hasher.finish();
             self.mapping.types_to_hash.insert(type_id.into(), hash);
             Ok(hash)
@@ -362,19 +353,19 @@ impl TypegraphContext {
     }
 
     pub fn register_type(&mut self, type_id: TypeId) -> Result<TypeId, TgError> {
-        let (mut type_def, ref_attrs) = type_id.resolve_ref()?;
         // we remove the name before hashing if it's not
         // user named
-        let user_named = if let Some(name) = type_def.name() {
+        let xdef = type_id.as_xdef()?;
+        let is_user_named = if let Some(name) = xdef.name.as_deref() {
             if let Some(true) = Store::is_user_named(name) {
                 true
             } else {
-                type_def = type_def.with_name(None);
                 false
             }
         } else {
             false
         };
+        let xdef = type_id.as_xdef()?;
         let hash = self.hash_type(type_id)?;
 
         match self.mapping.hash_to_type.entry(hash) {
@@ -390,10 +381,10 @@ impl TypegraphContext {
 
                 // let tpe = id.as_type()?;
 
-                let type_node = type_def.convert(self, &ref_attrs)?;
+                let type_node = xdef.type_def.clone().convert(self, xdef)?;
 
                 self.types[idx] = Some(type_node);
-                if user_named {
+                if is_user_named {
                     self.user_named_types.insert(idx as u32);
                 }
 
@@ -495,7 +486,7 @@ impl TypegraphContext {
     }
 
     pub fn get_correct_id(&self, id: TypeId) -> Result<u32> {
-        let id = id.resolve_ref()?.0.id();
+        let id = id.as_xdef()?.type_def.id();
         self.find_type_index_by_store_id(id)
             .ok_or(format!("unable to find type for store id {}", u32::from(id)).into())
     }

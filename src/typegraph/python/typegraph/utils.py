@@ -3,13 +3,14 @@
 
 import json
 from functools import reduce
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 from typegraph.gen.exports.core import SerializeParams
 from typegraph.gen.exports.utils import ReduceEntry
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.injection import InheritDef, serialize_static_injection
 from typegraph.wit import store, wit_utils
+from typegraph.io import Log
 
 # def serialize_record_values(obj: Union[Dict[str, any], None]):
 #     return [(k, json.dumps(v)) for k, v in obj.items()] if obj is not None else None
@@ -18,20 +19,25 @@ from typegraph.wit import store, wit_utils
 ConfigSpec = Union[List[Union[str, Dict[str, Any]]], Dict[str, Any]]
 
 
-def serialize_config(config: Optional[ConfigSpec]) -> Optional[List[Tuple[str, str]]]:
+def serialize_config(config: Optional[ConfigSpec]) -> Optional[str]:
     if config is None:
         return None
 
     if isinstance(config, list):
-        return reduce(
-            lambda acc, c: (
-                acc + [(c, "true")] if isinstance(c, str) else acc + serialize_config(c)
-            ),
-            config,
-            [],
-        )
+        lst = config
+    else:
+        lst = [config]
 
-    return [(k, json.dumps(v)) for k, v in config.items()]
+    if len(lst) == 0:
+        return None
+
+    config_object = reduce(
+        lambda acc, conf: acc | ({conf: True} if isinstance(conf, str) else conf),
+        lst,
+        {},
+    )
+    Log.info("config_object", config_object)
+    return json.dumps(config_object)
 
 
 def build_reduce_entries(node: Any, paths: List[ReduceEntry], curr_path: List[str]):

@@ -6,7 +6,7 @@ use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
 use crate::types::type_ref::TypeRef;
-use crate::types::{Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
+use crate::types::{NamedTypeRef, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
@@ -42,7 +42,7 @@ pub struct Store {
     pub types: Vec<Type>,
     // the bool indicates weather the name was from
     // user or generated placeholder (false)
-    pub type_by_names: IndexMap<String, (TypeDef, bool)>,
+    pub type_by_names: IndexMap<Rc<str>, (NamedTypeRef, bool)>,
 
     pub runtimes: Vec<Runtime>,
     pub materializers: Vec<Materializer>,
@@ -150,7 +150,7 @@ impl Store {
         })
     }
 
-    pub fn get_type_by_name(name: &str) -> Option<TypeDef> {
+    pub fn get_type_by_name(name: &str) -> Option<NamedTypeRef> {
         with_store(|s| s.type_by_names.get(name).map(|id| id.0.clone()))
     }
 
@@ -164,41 +164,45 @@ impl Store {
             Ok(())
         })?;
 
+        match &res {
+            TypeRef::Named(name_ref) => {
+                Self::register_type_name(name_ref.name.clone(), name_ref.clone(), true)?;
+            }
+            _ => {}
+        }
+
         Ok(res)
     }
 
-    pub fn register_type_def(
-        build: impl FnOnce(TypeId) -> TypeDef,
-        name_registration: NameRegistration,
-    ) -> Result<TypeId> {
+    pub fn register_type_def(build: impl FnOnce(TypeId) -> TypeDef) -> Result<TypeId> {
         // this works since the store is thread local
         let id = with_store(|s| s.types.len()) as u32;
-        let mut type_def = build(id.into());
+        let type_def = build(id.into());
 
-        // very hacky solution where we keep track of
-        // explicitly named types in user_named_types
-        // we generate names for everything else to
-        // allow the ref system to work
-        if name_registration.0 {
-            if let Some(name) = type_def.base().name.clone() {
-                Self::register_type_name(name, type_def.clone(), true)?;
-            } else {
-                // we only need to assign temporary non-user named
-                // types for lists and optionals. other refs
-                // will need explicit names by the user
-                match type_def {
-                    TypeDef::List(_) | TypeDef::Optional(_) => {
-                        let variant = type_def.variant_name();
-                        let placeholder_name = format!("{variant}_{id}");
-                        Self::register_type_name(&placeholder_name, type_def.clone(), false)?;
-                        let mut base = type_def.base().clone();
-                        base.name = Some(placeholder_name);
-                        type_def = type_def.with_base(id.into(), base);
-                    }
-                    _ => {}
-                }
-            }
-        }
+        // // very hacky solution where we keep track of
+        // // explicitly named types in user_named_types
+        // // we generate names for everything else to
+        // // allow the ref system to work
+        // if name_registration.0 {
+        //     if let Some(name) = type_def.base().name.clone() {
+        //         Self::register_type_name(name, type_def.clone(), true)?;
+        //     } else {
+        //         // we only need to assign temporary non-user named
+        //         // types for lists and optionals. other refs
+        //         // will need explicit names by the user
+        //         match type_def {
+        //             TypeDef::List(_) | TypeDef::Optional(_) => {
+        //                 let variant = type_def.variant_name();
+        //                 let placeholder_name = format!("{variant}_{id}");
+        //                 Self::register_type_name(&placeholder_name, type_def.clone(), false)?;
+        //                 let mut base = type_def.base().clone();
+        //                 base.name = Some(placeholder_name);
+        //                 type_def = type_def.with_base(id.into(), base);
+        //             }
+        //             _ => {}
+        //         }
+        //     }
+        // }
 
         with_store_mut(move |s| -> Result<()> {
             s.types.push(Type::Def(type_def));
@@ -208,8 +212,8 @@ impl Store {
     }
 
     pub fn register_type_name(
-        name: impl Into<String>,
-        type_def: TypeDef,
+        name: Rc<str>,
+        name_ref: NamedTypeRef,
         user_named: bool,
     ) -> Result<()> {
         let name = name.into();
@@ -217,7 +221,7 @@ impl Store {
             if s.type_by_names.contains_key(&name) {
                 return Err(format!("type with name {:?} already exists", name).into());
             }
-            s.type_by_names.insert(name, (type_def, user_named));
+            s.type_by_names.insert(name, (name_ref, user_named));
             Ok(())
         })
     }
@@ -411,10 +415,10 @@ macro_rules! as_variant {
     ($variant:ident) => {
         paste::paste! {
             pub fn [<as_ $variant:lower>](&self) -> Result<Rc<crate::types::[<$variant>]>> {
-                use crate::types::type_ref::ResolveRef;
+                use crate::types::AsTypeDefEx as _;
                 match self.as_type()? {
                     Type::Def(TypeDef::$variant(inner)) => Ok(inner),
-                    Type::Ref(type_ref) => type_ref.resolve_ref()?.0.id().[<as_ $variant:lower>](),
+                    Type::Ref(_) => self.as_xdef()?.type_def.id().[<as_ $variant:lower>](),
                     _ => Err(errors::invalid_type(stringify!($variant), &self.repr()?)),
                 }
             }

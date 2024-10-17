@@ -23,14 +23,19 @@ impl PrismaContext {
         prop_name: String,
         source_candidate: Option<&Candidate>,
     ) -> Result<Option<Candidate>> {
-        let model = source_model.borrow();
+        // let model = source_model.borrow();
         let prop = {
-            let prop = model.get_prop(&prop_name).ok_or_else(|| {
-                format!(
-                    "Property {} not found on model {}",
-                    prop_name, model.type_name
-                )
-            })?;
+            let prop = source_model
+                .borrow()
+                .get_prop(&prop_name)
+                .cloned()
+                .ok_or_else(|| {
+                    format!(
+                        "Property {} not found on model {}",
+                        prop_name,
+                        source_model.borrow().model_type.name()
+                    )
+                })?;
             let Property::Model(prop) = prop else {
                 return Ok(None);
             };
@@ -38,11 +43,11 @@ impl PrismaContext {
         };
 
         if let Some(source_candidate) = source_candidate {
-            if source_candidate.source_model.type_id() != prop.model_id {
+            if source_candidate.source_model.model_type() != prop.model_type {
                 return Ok(None);
             }
 
-            if source_candidate.model.type_id() == prop.model_id {
+            if source_candidate.model.model_type() == prop.model_type {
                 // self reference
                 if prop_name == source_candidate.field_name {
                     return Ok(None);
@@ -50,7 +55,7 @@ impl PrismaContext {
             }
         }
 
-        let target_model = self.model(prop.model_id)?;
+        let target_model = self.model(prop.model_type.type_id)?;
 
         Ok(Some(Candidate {
             source_model: source_model.clone(),
@@ -131,9 +136,9 @@ impl PrismaContext {
         let alternatives = self.get_potential_targets(candidate.clone())?;
         match alternatives.len() {
             0 => Err(errors::no_relationship_target(
-                &candidate.source_model.type_name(),
+                &candidate.source_model.name(),
                 &candidate.field_name,
-                &candidate.model.type_name(),
+                &candidate.model.name(),
             )),
             1 => Ok(CandidatePair(
                 candidate,
@@ -155,19 +160,18 @@ impl PrismaContext {
     }
 
     pub fn scan_model(&self, model: ModelRef) -> Result<Vec<CandidatePair>> {
-        let candidates = model
-            .borrow()
-            .iter_relationship_props()
-            .filter_map(|(k, _prop)| {
-                self.create_candidate(model.clone(), k.to_string(), None)
-                    .transpose()
-            })
-            .collect::<Result<Vec<_>>>()?;
+        let mut candidates = vec![];
+        let keys = model.borrow().props.keys().cloned().collect::<Vec<_>>();
+        for k in keys {
+            let c = self.create_candidate(model.clone(), k.to_string(), None)?;
+            candidates.extend(c);
+        }
 
-        candidates
+        let res = candidates
             .into_iter()
             .map(|c| self.create_candidate_pair_from(c))
-            .collect::<Result<Vec<_>>>()
+            .collect::<Result<Vec<_>>>();
+        res
     }
 }
 
@@ -208,8 +212,8 @@ impl CandidatePair {
         ) {
             (None, None) => Ok(Generated(format!(
                 "rel_{}_{}",
-                self.1.model.type_name(),
-                self.0.model.type_name()
+                self.1.model.name(),
+                self.0.model.name()
             ))),
             (Some(a), None) => Ok(User(a.clone())),
             (None, Some(b)) => Ok(User(b.clone())),
@@ -235,9 +239,9 @@ impl CandidatePair {
                     (Some(true), Some(false)) => Ok(Self(first, second)),
                     (Some(false), Some(true)) => Ok(Self(second, first)),
                     (Some(true), Some(true)) => {
-                        Err(errors::conflicting_attributes("fkey", &first.model.type_name(), &second.field_name, &second.model.type_name(), &first.field_name))
+                        Err(errors::conflicting_attributes("fkey", &first.model.name(), &second.field_name, &second.model.name(), &first.field_name))
                     }
-                    (Some(false), Some(false)) => Err(errors::conflicting_attributes("fkey", &first.model.type_name(), &second.field_name, &second.model.type_name(), &first.field_name)),
+                    (Some(false), Some(false)) => Err(errors::conflicting_attributes("fkey", &first.model.name(), &second.field_name, &second.model.name(), &first.field_name)),
                     (Some(true), None) => Ok(Self(first, second)),
                     (Some(false), None) => Ok(Self(second, first)),
                     (None, Some(true)) => Ok(Self(second, first)),
@@ -247,8 +251,8 @@ impl CandidatePair {
                         match (first.property.unique, second.property.unique) {
                             (true, false) => Ok(Self(first, second)),
                             (false, true) => Ok(Self(second, first)),
-                            (true, true) => Err(errors::conflicting_attributes("unique", &first.model.type_name(), &second.field_name, &second.model.type_name(), &first.field_name)),
-                            (false, false) => Err(errors::ambiguous_side(&first.model.type_name(), &second.field_name, &second.model.type_name(), &first.field_name)),
+                            (true, true) => Err(errors::conflicting_attributes("unique", &first.model.name(), &second.field_name, &second.model.name(), &first.field_name)),
+                            (false, false) => Err(errors::ambiguous_side(&first.model.name(), &second.field_name, &second.model.name(), &first.field_name)),
                         }
                     }
                 }
@@ -266,7 +270,7 @@ impl CandidatePair {
             (C::Many, C::Many) => {
                 Err(format!(
                     "many-to-many relationship not supported: use explicit join table between {} and {}",
-                    first.model.type_name(), second.model.type_name()
+                    first.model.name(), second.model.name()
                 ).into())
             }
         }

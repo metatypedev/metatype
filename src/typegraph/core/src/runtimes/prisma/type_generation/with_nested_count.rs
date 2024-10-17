@@ -6,8 +6,8 @@ use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::Property;
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::runtimes::prisma::type_generation::count::Count;
-use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{ResolveRef as _, TypeDefExt, TypeId};
+use crate::t::{self, TypeBuilder as _};
+use crate::types::{AsTypeDefEx as _, TypeDefExt, TypeId};
 
 use super::TypeGen;
 
@@ -36,7 +36,11 @@ impl TypeGen for WithNestedCount {
             match prop {
                 Property::Model(prop) => {
                     let rel_name = model.relationships.get(key).ok_or_else(|| {
-                        format!("relationship not registered: {}::{}", model.type_name, key)
+                        format!(
+                            "relationship not registered: {}::{}",
+                            model.model_type.name(),
+                            key
+                        )
                     })?;
                     let rel = context.relationships.get(rel_name).unwrap();
 
@@ -47,7 +51,7 @@ impl TypeGen for WithNestedCount {
                     match prop.quantifier {
                         Cardinality::Optional => {
                             let inner = context.generate(&WithNestedCount {
-                                model_id: prop.model_id,
+                                model_id: prop.model_type.type_id,
                                 skip: [self.skip.as_slice(), &[rel_name.clone()]].concat(),
                             })?;
                             builder.propx(key, t::optional(inner))?;
@@ -56,7 +60,7 @@ impl TypeGen for WithNestedCount {
 
                         Cardinality::Many => {
                             let inner = context.generate(&WithNestedCount {
-                                model_id: prop.model_id,
+                                model_id: prop.model_type.type_id,
                                 skip: [self.skip.as_slice(), &[rel_name.clone()]].concat(),
                             })?;
                             builder.propx(key, t::list(inner))?;
@@ -64,13 +68,13 @@ impl TypeGen for WithNestedCount {
                         }
 
                         Cardinality::One => {
-                            builder.prop(key, prop.model_id);
+                            builder.prop(key, prop.model_type.type_id);
                         }
                     }
                 }
 
                 Property::Scalar(prop) => {
-                    let type_id = prop.wrapper_type_id.resolve_ref()?.0.id();
+                    let type_id = prop.wrapper_type_id.as_xdef()?.type_def.id();
                     builder.prop(key, type_id);
                 }
 
@@ -88,7 +92,7 @@ impl TypeGen for WithNestedCount {
             builder.propx("_count", count)?;
         }
 
-        builder.named(self.name()).build()
+        builder.build_named(self.name())
     }
 
     fn name(&self) -> String {

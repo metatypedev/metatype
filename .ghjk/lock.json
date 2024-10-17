@@ -1212,7 +1212,7 @@
             "build-tgraph-core": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-core",
-              "envKey": "bciqayfl7nvr6g7qgplwj6ymglj7giqb6wz5pjw7tfct66fyrmnpcmwq"
+              "envKey": "bciqljrticrx4avsq4dj2w6yzmtp4ej6oqlmdktvpm543545nynw22hq"
             },
             "build-tgraph-py": {
               "ty": "denoFile@v1",
@@ -1220,7 +1220,7 @@
               "dependsOn": [
                 "build-tgraph-core"
               ],
-              "envKey": "bciqewdms4swk2kufu6idlcha7vc42auzhglynkpuv7ulnfdnpmdul2a"
+              "envKey": "bciqd4vu3ow7qhvwax2avvtae6cj47rib7ediw2yuf3bvf6lplulopmq"
             },
             "build-tgraph-ts": {
               "ty": "denoFile@v1",
@@ -1228,7 +1228,7 @@
               "dependsOn": [
                 "build-tgraph-core"
               ],
-              "envKey": "bciqkqwta6epy65btclam4d25s5wph3mvhyg7fbxds4jbajx5uumx46q"
+              "envKey": "bciqju5apwjfuuc7s5oeakmswydtsnjzgsvdkk6hfx5wyp74df2xv7mi"
             },
             "build-tgraph-ts-node": {
               "ty": "denoFile@v1",
@@ -1236,7 +1236,7 @@
               "dependsOn": [
                 "build-tgraph-ts"
               ],
-              "envKey": "bciqkqwta6epy65btclam4d25s5wph3mvhyg7fbxds4jbajx5uumx46q"
+              "envKey": "bciqju5apwjfuuc7s5oeakmswydtsnjzgsvdkk6hfx5wyp74df2xv7mi"
             },
             "build-tgraph": {
               "ty": "denoFile@v1",
@@ -1806,7 +1806,7 @@
                 }
               ]
             },
-            "bciqayfl7nvr6g7qgplwj6ymglj7giqb6wz5pjw7tfct66fyrmnpcmwq": {
+            "bciqljrticrx4avsq4dj2w6yzmtp4ej6oqlmdktvpm543545nynw22hq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1836,7 +1836,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "WASM_FILE",
-                  "val": "target/wasm/release/typegraph_core.wasm"
+                  "val": "target/wasm/debug/typegraph_core.wasm"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1844,7 +1844,7 @@
                 }
               ]
             },
-            "bciqewdms4swk2kufu6idlcha7vc42auzhglynkpuv7ulnfdnpmdul2a": {
+            "bciqd4vu3ow7qhvwax2avvtae6cj47rib7ediw2yuf3bvf6lplulopmq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1874,7 +1874,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "WASM_FILE",
-                  "val": "target/wasm/release/typegraph_core.wasm"
+                  "val": "target/wasm/debug/typegraph_core.wasm"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1882,7 +1882,7 @@
                 }
               ]
             },
-            "bciqkqwta6epy65btclam4d25s5wph3mvhyg7fbxds4jbajx5uumx46q": {
+            "bciqju5apwjfuuc7s5oeakmswydtsnjzgsvdkk6hfx5wyp74df2xv7mi": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1912,7 +1912,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "WASM_FILE",
-                  "val": "target/wasm/release/typegraph_core.wasm"
+                  "val": "target/wasm/debug/typegraph_core.wasm"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",

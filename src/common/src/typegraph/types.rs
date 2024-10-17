@@ -62,8 +62,6 @@ pub struct TypeNodeBase {
     pub description: Option<String>,
     #[serde(default, rename = "enum")]
     pub enumeration: Option<Vec<String>>, // JSON-serialized values
-    #[serde(default)]
-    pub config: IndexMap<String, serde_json::Value>,
 }
 
 #[skip_serializing_none]
@@ -185,6 +183,7 @@ pub struct FunctionTypeData<Id = TypeId> {
     pub parameter_transform: Option<FunctionParameterTransform>,
     pub output: Id,
     pub injections: IndexMap<String, InjectionNode>,
+    pub runtime_config: serde_json::Value,
     pub materializer: u32,
     #[serialize_always]
     pub rate_weight: Option<u32>,

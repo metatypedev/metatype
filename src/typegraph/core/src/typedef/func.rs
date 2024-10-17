@@ -5,11 +5,13 @@ use crate::conversion::hash::Hashable;
 use crate::conversion::parameter_transform::convert_tree;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::{self, Result, TgError};
+use crate::global_store::Store;
 use crate::params::apply::ParameterTransformNode;
+use crate::runtimes::Runtime;
 use crate::typegraph::TypegraphContext;
 use crate::types::{
-    FindAttribute as _, Func, InjectionTree, RefAttr, RefAttrs, ResolveRef as _, Struct, TypeDef,
-    TypeDefData, TypeId,
+    AsTypeDefEx as _, ExtendedTypeDef, FindAttribute as _, Func, InjectionTree, RefAttr, Struct,
+    TypeDef, TypeDefData, TypeId,
 };
 use crate::wit::core::TypeFunc;
 use common::typegraph::InjectionNode;
@@ -22,11 +24,11 @@ use std::hash::Hash as _;
 use std::rc::Rc;
 
 impl TypeConversion for Func {
-    fn convert(&self, ctx: &mut TypegraphContext, ref_attrs: &RefAttrs) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         let mat_id = ctx.register_materializer(self.data.mat)?;
 
         let inp_id = TypeId(self.data.inp);
-        let (input, mut injection_tree) = match TypeId(self.data.inp).resolve_ref()?.0 {
+        let (input, mut injection_tree) = match TypeId(self.data.inp).as_xdef()?.type_def {
             TypeDef::Struct(s) => (
                 ctx.register_type(inp_id)?.into(),
                 collect_injections(s, Default::default())?,
@@ -49,7 +51,7 @@ impl TypeConversion for Func {
 
                 let transform_root = convert_tree(ctx, &transform_root)?;
                 Ok(FunctionParameterTransform {
-                    resolver_input: match resolver_input.resolve_ref()?.0 {
+                    resolver_input: match resolver_input.as_xdef()?.type_def {
                         TypeDef::Struct(_) => ctx.register_type(resolver_input)?,
                         _ => return Err(errors::invalid_input_type(&resolver_input.repr()?)),
                     }
@@ -58,17 +60,17 @@ impl TypeConversion for Func {
                 })
             })
             .transpose()?;
-        for reduce_tree in ref_attrs.find_reduce_trees() {
+        for reduce_tree in xdef.attributes.find_reduce_trees() {
             InjectionTree::merge(&mut injection_tree.0, reduce_tree.0.clone());
         }
+
         Ok(TypeNode::Function {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "func",
                 type_id: self.id,
-                name: self.base.name.clone(),
-                policies: ref_attrs.find_policy().unwrap_or(&[]),
-                runtime_config: self.base.runtime_config.as_deref(),
+                name: xdef.get_owned_name(),
+                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .build()?,
@@ -77,6 +79,7 @@ impl TypeConversion for Func {
                 parameter_transform,
                 output,
                 injections: injection_tree.0,
+                runtime_config: self.collect_runtime_config(ctx)?,
                 materializer: mat_id,
                 rate_calls: self.data.rate_calls,
                 rate_weight: self.data.rate_weight,
@@ -128,8 +131,8 @@ fn collect_injections(
     let mut res = IndexMap::new();
 
     for (name, prop_id) in input_type.data.props.iter() {
-        let (type_def, attrs) = TypeId(*prop_id).resolve_ref()?;
-        let injection = attrs.find_injection();
+        let xdef = TypeId(*prop_id).as_xdef()?;
+        let injection = xdef.attributes.find_injection();
         if let Some(injection) = injection {
             res.insert(
                 name.clone(),
@@ -138,7 +141,7 @@ fn collect_injections(
                 },
             );
         } else {
-            let type_def = resolve_quantifiers(type_def, |_| ())?;
+            let type_def = resolve_quantifiers(xdef.type_def, |_| ())?;
             match type_def {
                 TypeDef::Struct(s) => {
                     let children = collect_injections(s, visited.clone())?;
@@ -167,15 +170,30 @@ fn resolve_quantifiers(
 ) -> Result<TypeDef> {
     match type_def {
         TypeDef::Optional(inner) => {
-            let (type_def, attrs) = TypeId(inner.data.of).resolve_ref()?;
-            consume_attributes(attrs);
-            resolve_quantifiers(type_def, consume_attributes)
+            let xdef = TypeId(inner.data.of).as_xdef()?;
+            consume_attributes(xdef.attributes);
+            resolve_quantifiers(xdef.type_def, consume_attributes)
         }
         TypeDef::List(inner) => {
-            let (type_def, attrs) = TypeId(inner.data.of).resolve_ref()?;
-            consume_attributes(attrs);
-            resolve_quantifiers(type_def, consume_attributes)
+            let xdef = TypeId(inner.data.of).as_xdef()?;
+            consume_attributes(xdef.attributes);
+            resolve_quantifiers(xdef.type_def, consume_attributes)
         }
         _ => Ok(type_def),
+    }
+}
+
+impl Func {
+    fn collect_runtime_config(&self, _ctx: &mut TypegraphContext) -> Result<serde_json::Value> {
+        let mat = Store::get_materializer(self.data.mat)?;
+        let runtime = Store::get_runtime(mat.runtime_id)?;
+        match runtime {
+            Runtime::Random(_) => Self::collect_random_runtime_config(TypeId(self.data.out)),
+            _ => Ok(serde_json::Value::Null),
+        }
+    }
+
+    fn collect_random_runtime_config(out_type: TypeId) -> Result<serde_json::Value> {
+        Ok(serde_json::Value::Null)
     }
 }

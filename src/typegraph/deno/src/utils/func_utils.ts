@@ -10,6 +10,7 @@ import { ReduceEntry } from "../gen/typegraph_core.d.ts";
 import { serializeStaticInjection } from "./injection_utils.ts";
 import { SerializeParams } from "../gen/typegraph_core.d.ts";
 import { log } from "../io.ts";
+import { core } from "../wit.ts";
 
 export function stringifySymbol(symbol: symbol): string {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -17,6 +18,61 @@ export function stringifySymbol(symbol: symbol): string {
     throw new Error("unable to determine symbol name");
   }
   return name;
+}
+
+export type ConfigSpec =
+  | Record<string, unknown>
+  | Array<string | Record<string, unknown>>;
+
+export function serializeConfig(config: ConfigSpec | undefined): string | null {
+  if (!config) {
+    return null;
+  }
+  const array = Array.isArray(config) ? config : [config];
+  if (array.length === 0) {
+    return null;
+  }
+  return JSON.stringify(array.reduce<Record<string, unknown>>((acc, item) => {
+    if (typeof item === "string") {
+      return { ...acc, [item]: true };
+    } else {
+      return { ...acc, ...item };
+    }
+  }, {} as Record<string, unknown>));
+}
+
+export type AsIdField = boolean | "simple" | "composite";
+export interface Base {
+  config?: ConfigSpec;
+  name?: string;
+}
+export interface BaseEx extends Base {
+  asId?: AsIdField;
+}
+
+function withConfig(id: number, config: ConfigSpec | undefined): number {
+  if (!config) {
+    return id;
+  }
+  const serialized = serializeConfig(config);
+  if (!serialized) {
+    return id;
+  }
+  return core.withConfig(id, serialized);
+}
+
+export function withBase(id: number, base: BaseEx): number {
+  let newId = id;
+  if (base.asId) {
+    newId = core.asId(newId, base.asId === "composite");
+  }
+  if (base.config) {
+    newId = withConfig(newId, base.config);
+  }
+  if (base.name) {
+    newId = core.renameType(newId, base.name);
+  }
+  return newId;
 }
 
 export function serializeRecordValues<T>(

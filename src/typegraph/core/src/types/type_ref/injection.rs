@@ -22,9 +22,7 @@ where
     crate::errors::TgError: From<<T as TryInto<Type>>::Error>,
 {
     fn with_injection(self, injection: Injection) -> Result<TypeRef> {
-        RefAttr::Injection(injection)
-            .with_target(self.try_into()?)
-            .build()
+        TypeRef::from_type(self.try_into()?, RefAttr::Injection(injection)).register()
     }
 }
 
@@ -38,7 +36,7 @@ where
     crate::errors::TgError: From<<T as TryInto<Type>>::Error>,
 {
     fn override_injections(self, tree: InjectionTree) -> Result<TypeRef> {
-        RefAttr::Reduce(tree).with_target(self.try_into()?).build()
+        TypeRef::from_type(self.try_into()?, RefAttr::Reduce(tree)).register()
     }
 }
 

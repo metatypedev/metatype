@@ -3,16 +3,16 @@
 
 use std::rc::Rc;
 
-use super::{ResolveRef as _, TypeId};
+use super::{AsTypeDefEx as _, TypeId};
 use crate::conversion::hash::{Hashable, Hasher};
 use crate::conversion::types::TypeConversion;
 use crate::errors::Result;
-use crate::global_store::{NameRegistration, Store};
+use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
-use crate::types::RefAttrs;
+use crate::types::ExtendedTypeDef;
 use crate::wit::core::{
-    TypeBase, TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
-    TypeString, TypeStruct, TypeUnion,
+    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional, TypeString,
+    TypeStruct, TypeUnion,
 };
 use common::typegraph::TypeNode;
 use enum_dispatch::enum_dispatch;
@@ -27,7 +27,6 @@ pub trait TypeDefData: Hashable {
 #[derive(Debug)]
 pub struct NonRefType<T: TypeDefData> {
     pub id: TypeId,
-    pub base: TypeBase,
     pub data: T,
 }
 
@@ -36,31 +35,7 @@ where
     Rc<NonRefType<T>>: Into<TypeDef>,
 {
     pub fn type_with_data(&self, data: T) -> Result<TypeId> {
-        let base = TypeBase {
-            name: None, // different name -- since it is now a different type
-            ..self.base.clone()
-        };
-        Store::register_type_def(
-            |type_id| {
-                Rc::new(Self {
-                    id: type_id,
-                    base,
-                    data,
-                })
-                .into()
-            },
-            NameRegistration(false),
-        )
-    }
-}
-
-#[allow(clippy::derivable_impls)]
-impl Default for TypeBase {
-    fn default() -> Self {
-        Self {
-            name: None,
-            runtime_config: None,
-        }
+        Store::register_type_def(|type_id| Rc::new(Self { id: type_id, data }).into())
     }
 }
 
@@ -98,8 +73,8 @@ pub enum TypeDef {
 impl TypeDef {
     pub fn resolve_quantifier(&self) -> Result<TypeDef> {
         match self {
-            TypeDef::List(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.0),
-            TypeDef::Optional(inner) => Ok(TypeId(inner.data.of).resolve_ref()?.0),
+            TypeDef::List(inner) => Ok(TypeId(inner.data.of).as_xdef()?.type_def),
+            TypeDef::Optional(inner) => Ok(TypeId(inner.data.of).as_xdef()?.type_def),
             _ => Ok(self.clone()),
         }
     }
@@ -108,24 +83,17 @@ impl TypeDef {
 #[enum_dispatch]
 pub trait TypeDefExt {
     fn id(&self) -> TypeId;
-    fn base(&self) -> &TypeBase;
     fn data(&self) -> &dyn TypeDefData;
     fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()>;
     // fn to_string(&self) -> String;
 
-    fn name(&self) -> Option<&str> {
-        self.base().name.as_deref()
-    }
-
     fn variant_name(&self) -> &'static str;
 
-    fn with_base(&self, id: TypeId, base: TypeBase) -> TypeDef;
-
-    fn with_name(&self, name: Option<String>) -> TypeDef {
-        let mut base = self.base().clone();
-        base.name = name;
-        self.with_base(self.id(), base)
-    }
+    // fn with_name(&self, name: Option<String>) -> TypeDef {
+    //     let mut base = self.base().clone();
+    //     base.name = name;
+    //     self.with_base(self.id(), base)
+    // }
 
     fn repr(&self) -> String;
 }
@@ -133,10 +101,6 @@ pub trait TypeDefExt {
 impl<T: TypeDefExt> TypeDefExt for Rc<T> {
     fn id(&self) -> TypeId {
         (**self).id()
-    }
-
-    fn base(&self) -> &TypeBase {
-        (**self).base()
     }
 
     fn data(&self) -> &dyn TypeDefData {
@@ -149,10 +113,6 @@ impl<T: TypeDefExt> TypeDefExt for Rc<T> {
 
     fn variant_name(&self) -> &'static str {
         (**self).variant_name()
-    }
-
-    fn with_base(&self, id: TypeId, base: TypeBase) -> TypeDef {
-        (**self).with_base(id, base)
     }
 
     fn repr(&self) -> String {
@@ -173,19 +133,6 @@ where
         &self.data
     }
 
-    fn base(&self) -> &TypeBase {
-        &self.base
-    }
-
-    fn with_base(&self, id: TypeId, base: TypeBase) -> TypeDef {
-        Rc::new(Self {
-            id,
-            base,
-            data: self.data.clone(),
-        })
-        .into()
-    }
-
     fn variant_name(&self) -> &'static str {
         self.data().variant_name()
     }
@@ -199,24 +146,26 @@ where
     }
 
     fn hash_type(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()> {
-        // unicity of name
-        if let Some(name) = &self.base.name {
-            "named".hash(hasher);
-            name.hash(hasher);
-        } else {
-            "unnamed".hash(hasher);
-            self.base.hash(hasher, tg)?;
-            self.data.hash(hasher, tg)?;
+        "unnamed".hash(hasher);
+        self.data.hash(hasher, tg)?;
+        Ok(())
+    }
+}
+
+impl TypeDef {
+    pub fn as_struct(&self) -> Result<Rc<Struct>> {
+        match self {
+            TypeDef::Struct(s) => Ok(s.clone()),
+            _ => Err(crate::errors::invalid_type("struct", &self.repr())),
         }
-        Ok(())
     }
 }
 
-impl Hashable for TypeBase {
-    fn hash(&self, hasher: &mut Hasher, _tg: &mut TypegraphContext) -> Result<()> {
-        // self.name.hash(hasher);  // see TypeDefExt::hash_type
-        self.runtime_config.hash(hasher);
-
-        Ok(())
-    }
-}
+// impl Hashable for TypeBase {
+//     fn hash(&self, hasher: &mut Hasher, _tg: &mut TypegraphContext) -> Result<()> {
+//         // self.name.hash(hasher);  // see TypeDefExt::hash_type
+//         self.runtime_config.hash(hasher);
+//
+//         Ok(())
+//     }
+// }

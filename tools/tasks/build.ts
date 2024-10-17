@@ -27,12 +27,12 @@ export default {
   "build-tgraph-core": {
     inherit: ["_rust", "_wasm"],
     vars: {
-      WASM_FILE: "target/wasm/release/typegraph_core.wasm",
+      WASM_FILE: "target/wasm/debug/typegraph_core.wasm",
     },
     async fn($) {
       const target = "wasm32-unknown-unknown";
-      await $`cargo build -p typegraph_core --target ${target} --release --target-dir target/wasm`;
-      await $`cp target/wasm/${target}/release/typegraph_core.wasm $WASM_FILE.tmp`;
+      await $`cargo build -p typegraph_core --target ${target} --target-dir target/wasm`;
+      await $`cp target/wasm/${target}/debug/typegraph_core.wasm $WASM_FILE.tmp`;
       if ($.env["WASM_OPT"]) {
         await $`wasm-opt -Oz $WASM_FILE.tmp -o $WASM_FILE.tmp`;
       }

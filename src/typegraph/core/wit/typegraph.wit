@@ -66,13 +66,10 @@ interface core {
     serialize-typegraph: func(params: serialize-params) -> result<tuple<string, list<artifact>>, error>;
 
     type type-id = u32;
-    record type-base {
-        name: option<string>,
-        // string => json string
-        runtime-config: option<list<tuple<string, string>>>,
-    }
 
     with-injection: func(type-id: type-id, injection: string) -> result<type-id, error>;
+
+    with-config: func(type-id: type-id, config: string) -> result<type-id, error>;
 
     record type-proxy {
         name: string,
@@ -88,7 +85,7 @@ interface core {
         multiple-of: option<s32>,
         enumeration: option<list<s32>>
     }
-    integerb: func(data: type-integer, base: type-base) -> result<type-id, error>;
+    integerb: func(data: type-integer) -> result<type-id, error>;
 
     record type-float {
         min: option<float64>,
@@ -98,9 +95,9 @@ interface core {
         multiple-of: option<float64>,
         enumeration: option<list<float64>>
     }
-    floatb: func(data: type-float, base: type-base) -> result<type-id, error>;
+    floatb: func(data: type-float) -> result<type-id, error>;
 
-    booleanb: func(base: type-base) -> result<type-id, error>;
+    booleanb: func() -> result<type-id, error>;
 
     record type-string {
         min: option<u32>,
@@ -109,7 +106,7 @@ interface core {
         pattern: option<string>,
         enumeration: option<list<string>>
     }
-    stringb: func(data: type-string, base: type-base) -> result<type-id, error>;
+    stringb: func(data: type-string) -> result<type-id, error>;
 
     as-id: func(id: type-id, composite: bool) -> result<type-id, error>;
 
@@ -118,7 +115,7 @@ interface core {
         max: option<u32>,
         allow: option<list<string>>,
     }
-    fileb: func(data: type-file, base: type-base) -> result<type-id, error>;
+    fileb: func(data: type-file) -> result<type-id, error>;
 
 
     record type-list {
@@ -127,23 +124,23 @@ interface core {
         max: option<u32>,
         unique-items: option<bool>
     }
-    listb: func(data: type-list, base: type-base) -> result<type-id, error>;
+    listb: func(data: type-list) -> result<type-id, error>;
 
     record type-optional {
         of: type-id,
         default-item: option<string>
     }
-    optionalb: func(data: type-optional, base: type-base) -> result<type-id, error>;
+    optionalb: func(data: type-optional) -> result<type-id, error>;
 
     record type-union {
         variants: list<type-id>,
     }
-    unionb: func(data: type-union, base: type-base) -> result<type-id, error>;
+    unionb: func(data: type-union) -> result<type-id, error>;
 
     record type-either {
         variants: list<type-id>,
     }
-    eitherb: func(data: type-either, base: type-base) -> result<type-id, error>;
+    eitherb: func(data: type-either) -> result<type-id, error>;
 
     record type-struct {
         props: list<tuple<string, type-id>>,
@@ -152,7 +149,7 @@ interface core {
         max: option<u32>,
         enumeration: option<list<string>>,
     }
-    structb: func(data: type-struct, base: type-base) -> result<type-id, error>;
+    structb: func(data: type-struct) -> result<type-id, error>;
     extend-struct: func(tpe: type-id, props: list<tuple<string, type-id>>) -> result<type-id, error>;
 
     get-type-repr: func(id: type-id) -> result<string, error>;

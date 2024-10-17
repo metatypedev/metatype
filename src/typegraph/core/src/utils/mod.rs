@@ -4,7 +4,6 @@
 use std::path::PathBuf;
 
 use crate::utils::metagen_utils::RawTgResolver;
-use crate::wit::metatype::typegraph::host::print;
 use common::typegraph::{Auth, AuthProtocol};
 use fs::FsContext;
 use indexmap::IndexMap;
@@ -17,7 +16,7 @@ use crate::types::type_ref::InjectionTree;
 use crate::types::type_ref::OverrideInjections;
 
 use crate::types::TypeId;
-use crate::wit::core::{TypeBase, TypeId as CoreTypeId};
+use crate::wit::core::TypeId as CoreTypeId;
 use crate::wit::utils::{Auth as WitAuth, FdkConfig, FdkOutput, QueryDeployParams, ReduceEntry};
 use std::path::Path;
 
@@ -66,10 +65,9 @@ impl TryFrom<Oauth2Params<'_>> for String {
 impl crate::wit::utils::Guest for crate::Lib {
     fn reduceb(fn_type_id: CoreTypeId, entries: Vec<ReduceEntry>) -> Result<CoreTypeId> {
         let injection_tree = InjectionTree::try_from(entries)?;
-        print(&format!("injeciton_tree: {:?}", injection_tree));
         Ok(TypeId(fn_type_id)
             .override_injections(injection_tree)?
-            .id
+            .id()
             .into())
     }
 
@@ -199,12 +197,5 @@ impl crate::wit::utils::Guest for crate::Lib {
             fs_ctx.write_text_file(Path::new(&item.path), item.content)?;
         }
         Ok(())
-    }
-}
-
-pub fn clear_name(base: &TypeBase) -> TypeBase {
-    TypeBase {
-        name: None,
-        ..base.clone()
     }
 }

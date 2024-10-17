@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{FindAttribute as _, RefAttr, ResolveRef as _, TypeRef};
+use super::{ExtendedTypeDef, FindAttribute as _, RefAttr, TypeRef};
 use crate::errors::Result;
 use crate::types::{Type, TypeDef, TypeDefExt};
 
@@ -16,7 +16,7 @@ where
 {
     #[allow(clippy::wrong_self_convention)]
     fn as_id(self, composite: bool) -> Result<TypeRef> {
-        TypeRef::new(
+        TypeRef::from_type(
             self.try_into()?,
             RefAttr::AsId(if composite {
                 IdKind::Composite
@@ -25,6 +25,7 @@ where
             })
             .into(),
         )
+        .register()
     }
 }
 
@@ -36,11 +37,10 @@ pub enum IdKind {
     Composite,
 }
 
-impl TypeRef {
+impl ExtendedTypeDef {
     pub fn id_kind(&self) -> Result<Option<IdKind>> {
-        let (type_def, attrs) = self.resolve_ref()?;
-        if let Some(as_id) = attrs.find_id_kind() {
-            match type_def {
+        if let Some(as_id) = self.attributes.find_id_kind() {
+            match &self.type_def {
                 TypeDef::Integer(_) | TypeDef::String(_) => Ok(Some(as_id)),
                 TypeDef::Boolean(_) => {
                     if as_id == IdKind::Composite {
@@ -48,12 +48,16 @@ impl TypeRef {
                     } else {
                         Err(format!(
                             "Type {:?} cannot be used as id unless composite",
-                            type_def.variant_name()
+                            self.type_def.variant_name()
                         )
                         .into())
                     }
                 }
-                _ => Err(format!("Type {:?} cannot be used as id", type_def.variant_name()).into()),
+                _ => Err(format!(
+                    "Type {:?} cannot be used as id",
+                    self.type_def.variant_name()
+                )
+                .into()),
             }
         } else {
             Ok(None)

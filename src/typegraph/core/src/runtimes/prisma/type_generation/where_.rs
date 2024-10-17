@@ -8,7 +8,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::Property;
 use crate::runtimes::prisma::relationship::Cardinality;
-use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::t::{self, TypeBuilder};
 use crate::types::TypeId;
 
 use super::filters::{
@@ -61,9 +61,9 @@ impl TypeGen for Where {
         for (key, prop) in model.iter_props() {
             match prop {
                 Property::Model(prop) => {
-                    let inner = match self.skip_models.get(&prop.model_id) {
+                    let inner = match self.skip_models.get(&prop.model_type.type_id) {
                         Some(name) => t::ref_(name.clone(), Default::default()).build()?,
-                        None => context.generate(&self.nested(&name, prop.model_id))?,
+                        None => context.generate(&self.nested(&name, prop.model_type.type_id))?,
                     };
                     match prop.quantifier {
                         Cardinality::Many => {
@@ -108,7 +108,7 @@ impl TypeGen for Where {
             }
         }
 
-        builder.named(self.name()).build()
+        builder.build_named(self.name())
     }
 
     fn name(&self) -> String {

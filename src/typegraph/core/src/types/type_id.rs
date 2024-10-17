@@ -1,11 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{ResolveRef as _, TypeDefExt};
 use super::{Type, TypeDef};
 use crate::errors::Result;
-use crate::errors::TgError;
 use crate::typegraph::TypegraphContext;
+use crate::types::AsTypeDefEx as _;
 use crate::wit::core::TypeId as CoreTypeId;
 use std::fmt::Debug;
 
@@ -64,23 +63,15 @@ impl TypeId {
         state: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
     ) -> Result<()> {
-        let typ = self.as_type()?;
-        match typ {
-            Type::Ref(type_ref) => {
-                type_ref.hash_type(state, tg)?;
-            }
-            Type::Def(type_def) => {
-                type_def.hash_type(state, tg)?;
-            }
-        }
-        Ok(())
+        let xdef = self.as_xdef()?;
+        xdef.hash_type(state, tg)
     }
 }
 
-impl TryFrom<TypeId> for TypeDef {
-    type Error = TgError;
-
-    fn try_from(type_id: TypeId) -> std::result::Result<Self, Self::Error> {
-        Ok(type_id.resolve_ref()?.0)
-    }
-}
+// impl TryFrom<TypeId> for TypeDef {
+//     type Error = TgError;
+//
+//     fn try_from(type_id: TypeId) -> std::result::Result<Self, Self::Error> {
+//         Ok(type_id.resolve_ref()?.0)
+//     }
+// }

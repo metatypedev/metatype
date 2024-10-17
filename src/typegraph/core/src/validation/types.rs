@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::global_store::Store;
-use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId};
+use crate::types::{AsTypeDefEx as _, Type, TypeDef, TypeId};
 use crate::wit::core::TypeFunc;
 use crate::{errors, Result};
 
 impl TypeFunc {
     pub fn validate(&self) -> Result<()> {
-        if let Ok((inp_type, _)) = TypeId(self.inp).resolve_ref() {
-            let TypeDef::Struct(_) = inp_type else {
-                return Err(errors::invalid_input_type(&inp_type.id().repr()?));
+        if let Ok(xdef) = TypeId(self.inp).as_xdef() {
+            let TypeDef::Struct(_) = xdef.type_def else {
+                return Err(errors::invalid_input_type(&xdef.id.repr()?));
             };
         }
 
@@ -22,7 +22,7 @@ impl TypeFunc {
 }
 
 pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) -> Result<()> {
-    match TypeDef::try_from(type_id)? {
+    match &type_id.as_xdef()?.type_def {
         TypeDef::Func(_) => Err("cannot validate function".into()),
 
         TypeDef::Struct(inner) => {
@@ -156,7 +156,7 @@ pub fn validate_value(value: &serde_json::Value, type_id: TypeId, path: String) 
 }
 
 pub(super) mod utils {
-    use crate::types::{RefTarget, TypeId};
+    use crate::types::{FlatTypeRefTarget, TypeDefExt as _, TypeId};
 
     use super::*;
 
@@ -164,22 +164,25 @@ pub(super) mod utils {
         if left == right {
             Ok(true)
         } else {
-            match left.resolve_ref() {
-                Ok((left_type, _)) => Ok(right
-                    .resolve_ref()
-                    .map_or(left_type.id() == right, |(right_type, _)| {
-                        left_type.id() == right_type.id()
+            match left.as_xdef() {
+                Ok(left_xdef) => Ok(right
+                    .as_xdef()
+                    .map_or(left_xdef.type_def.id() == right, |right_xdef| {
+                        left_xdef.type_def.id() == right_xdef.type_def.id()
                     })),
 
                 // left is a proxy that could not be resolved
                 // -> right must be a proxy for the types to be equal
                 Err(_) => match (left.as_type()?, right.as_type()?) {
                     (Type::Ref(left_proxy), Type::Ref(right_proxy)) => {
-                        match (left_proxy.target.as_ref(), right_proxy.target.as_ref()) {
-                            (RefTarget::Indirect(left_name), RefTarget::Indirect(right_name)) => {
+                        let left_proxy = left_proxy.flatten();
+                        let right_proxy = right_proxy.flatten();
+                        use FlatTypeRefTarget as FRT;
+                        match (left_proxy.target, right_proxy.target) {
+                            (FRT::Indirect(left_name), FRT::Indirect(right_name)) => {
                                 Ok(left_name == right_name)
                             }
-                            (RefTarget::Direct(left_def), RefTarget::Direct(right_def)) => {
+                            (FRT::Direct(left_def), FRT::Direct(right_def)) => {
                                 Ok(left_def.id() == right_def.id())
                             }
                             _ => Ok(false),
