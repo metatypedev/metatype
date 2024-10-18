@@ -357,11 +357,7 @@ impl TypegraphContext {
         // user named
         let xdef = type_id.as_xdef()?;
         let is_user_named = if let Some(name) = xdef.name.as_deref() {
-            if let Some(true) = Store::is_user_named(name) {
-                true
-            } else {
-                false
-            }
+            Store::is_user_named(name).unwrap_or(false)
         } else {
             false
         };

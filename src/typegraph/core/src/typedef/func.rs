@@ -193,7 +193,7 @@ impl Func {
         }
     }
 
-    fn collect_random_runtime_config(out_type: TypeId) -> Result<serde_json::Value> {
+    fn collect_random_runtime_config(_out_type: TypeId) -> Result<serde_json::Value> {
         Ok(serde_json::Value::Null)
     }
 }

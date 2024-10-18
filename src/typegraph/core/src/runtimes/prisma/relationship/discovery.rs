@@ -167,11 +167,10 @@ impl PrismaContext {
             candidates.extend(c);
         }
 
-        let res = candidates
+        candidates
             .into_iter()
             .map(|c| self.create_candidate_pair_from(c))
-            .collect::<Result<Vec<_>>>();
-        res
+            .collect::<Result<Vec<_>>>()
     }
 }
 

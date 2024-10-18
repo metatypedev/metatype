@@ -56,6 +56,7 @@ pub struct Relationship {
 #[derive(Clone)]
 pub enum PrismaLinkTarget {
     Direct(Type),
+    #[allow(unused)]
     Indirect(String),
 }
 
@@ -149,6 +150,7 @@ pub fn prisma_link(type_id: TypeId) -> Result<PrismaLink> {
     )))
 }
 
+#[allow(dead_code)]
 pub fn prisma_linkn(name: impl Into<String>) -> PrismaLink {
     PrismaLink::with_target(PrismaLinkTarget::Indirect(name.into()))
 }
@@ -173,8 +175,8 @@ mod test {
         assert_eq!(ctx.relationships.len(), 1);
         let (name, rel) = ctx.relationships.iter().next().unwrap();
         assert_eq!(name, "rel_Post_User");
-        assert_eq!(rel.left.model_name, "User");
-        assert_eq!(rel.right.model_name, "Post");
+        assert_eq!(rel.left.model_type.name().as_ref(), "User");
+        assert_eq!(rel.right.model_type.name().as_ref(), "Post");
 
         Ok(())
     }
@@ -186,15 +188,13 @@ mod test {
             .propx("id", t::integer().as_id())?
             .propx("name", t::string())?
             .propx("posts", t::listx(t::ref_("Post", Default::default()))?)?
-            .named("User")
-            .build()?;
+            .build_named("User")?;
 
         let post = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("title", t::string())?
             .propx("author", prisma_linkn("User").name("PostAuthor"))?
-            .named("Post")
-            .build()?;
+            .build_named("Post")?;
 
         let mut ctx = PrismaContext::default();
         ctx.manage(user)?;
@@ -204,8 +204,8 @@ mod test {
         assert_eq!(relationships.len(), 1);
         let (name, rel) = relationships.iter().next().unwrap();
         assert_eq!(name, "PostAuthor");
-        assert_eq!(rel.left.model_name, "User");
-        assert_eq!(rel.right.model_name, "Post");
+        assert_eq!(rel.left.model_type.name().as_ref(), "User");
+        assert_eq!(rel.right.model_type.name().as_ref(), "Post");
 
         Ok(())
     }
@@ -219,14 +219,12 @@ mod test {
                 "profile",
                 prisma_linkx(t::optionalx(t::ref_("Profile", Default::default()))?)?.fkey(true),
             )?
-            .named("User")
-            .build()?;
+            .build_named("User")?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("user", t::optionalx(t::ref_("User", Default::default()))?)?
-            .named("Profile")
-            .build()?;
+            .build_named("Profile")?;
 
         let mut ctx = PrismaContext::default();
         ctx.manage(user)?;
@@ -236,8 +234,8 @@ mod test {
         assert_eq!(relationships.len(), 1);
         let (name, rel) = relationships.iter().next().unwrap();
         assert_eq!(name, "rel_User_Profile");
-        assert_eq!(rel.left.model_name, "Profile");
-        assert_eq!(rel.right.model_name, "User");
+        assert_eq!(rel.left.model_type.name().as_ref(), "Profile");
+        assert_eq!(rel.right.model_type.name().as_ref(), "User");
 
         Ok(())
     }
@@ -249,16 +247,14 @@ mod test {
             .propx("id", t::integer().as_id())?
             .propx(
                 "profile",
-                t::optionalx(t::ref_("Profile", Default::default()))?.config("unique", "true"),
+                t::optionalx(t::ref_("Profile", Default::default()))?.config("unique", true),
             )?
-            .named("User")
-            .build()?;
+            .build_named("User")?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("user", t::optionalx(t::ref_("User", Default::default()))?)?
-            .named("Profile")
-            .build()?;
+            .build_named("Profile")?;
 
         let mut ctx = PrismaContext::default();
         ctx.manage(user)?;
@@ -267,8 +263,8 @@ mod test {
         assert_eq!(ctx.relationships.len(), 1);
         let (name, rel) = ctx.relationships.iter().next().unwrap();
         assert_eq!(name, "rel_User_Profile");
-        assert_eq!(rel.left.model_name, "Profile");
-        assert_eq!(rel.right.model_name, "User");
+        assert_eq!(rel.left.model_type.name().as_ref(), "Profile");
+        assert_eq!(rel.right.model_type.name().as_ref(), "User");
 
         Ok(())
     }
@@ -280,8 +276,7 @@ mod test {
             .propx("id", t::string().as_id())?
             .propx("children", t::listx(t::ref_("Node", Default::default()))?)?
             .propx("parent", t::ref_("Node", Default::default()))?
-            .named("Node")
-            .build()?;
+            .build_named("Node")?;
 
         let mut ctx = PrismaContext::default();
         ctx.manage(node)?;
@@ -289,8 +284,8 @@ mod test {
         assert_eq!(ctx.relationships.len(), 1);
         let (name, rel) = ctx.relationships.iter().next().unwrap();
         assert_eq!(name, "rel_Node_Node");
-        assert_eq!(rel.left.model_name, "Node");
-        assert_eq!(rel.right.model_name, "Node");
+        assert_eq!(rel.left.model_type.name().as_ref(), "Node");
+        assert_eq!(rel.right.model_type.name().as_ref(), "Node");
 
         Ok(())
     }
@@ -301,14 +296,12 @@ mod test {
         let user = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("profile", t::ref_("Profile", Default::default()))?
-            .named("User")
-            .build()?;
+            .build_named("User")?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("user", t::ref_("User", Default::default()))?
-            .named("Profile")
-            .build()?;
+            .build_named("Profile")?;
 
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);
@@ -329,14 +322,12 @@ mod test {
                 "profile",
                 t::optionalx(t::ref_("Profile", Default::default()))?,
             )?
-            .named("User")
-            .build()?;
+            .build_named("User")?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("user", t::optionalx(t::ref_("User", Default::default()))?)?
-            .named("Profile")
-            .build()?;
+            .build_named("Profile")?;
 
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);
@@ -359,14 +350,12 @@ mod test {
         let user = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("profile", prisma_linkn("Profile").fkey(true))?
-            .named("User")
-            .build()?;
+            .build_named("User")?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("user", prisma_linkn("User").fkey(true))?
-            .named("Profile")
-            .build()?;
+            .build_named("Profile")?;
 
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);
@@ -388,14 +377,12 @@ mod test {
         let user = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("profile", prisma_linkn("Profile").fkey(false))?
-            .named("User")
-            .build()?;
+            .build_named("User")?;
 
         let profile = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("user", prisma_linkn("User").fkey(false))?
-            .named("Profile")
-            .build()?;
+            .build_named("Profile")?;
 
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);
@@ -422,13 +409,11 @@ mod test {
         let user = t::struct_()
             .propx("id", t::integer().as_id())?
             .propx("profile", prisma_linkn("Profile").fkey(true))?
-            .named("User")
-            .build()?;
+            .build_named("User")?;
 
         let _profile = t::struct_()
             .propx("id", t::integer().as_id())?
-            .named("Profile")
-            .build()?;
+            .build_named("Profile")?;
 
         let mut ctx = PrismaContext::default();
         let res = ctx.manage(user);

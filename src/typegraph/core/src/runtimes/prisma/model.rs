@@ -425,6 +425,7 @@ impl TryFrom<&common::typegraph::Injection> for Injection {
 pub struct ScalarProperty {
     pub wrapper_type_id: TypeId,
     pub type_id: TypeId,
+    #[allow(unused)]
     pub type_def: TypeDef,
     pub prop_type: ScalarType,
     pub injection: Option<Injection>,
@@ -437,7 +438,7 @@ pub struct ScalarProperty {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+    use crate::t::{self, TypeBuilder};
 
     impl Property {
         fn as_scalar(&self) -> Option<&ScalarProperty> {
@@ -453,8 +454,7 @@ mod test {
         let type1 = t::struct_()
             .propx("one", t::string().as_id()?)?
             .propx("two", t::string().set_value("Hello".to_string()))?
-            .named("A")
-            .build()?;
+            .build_named("A")?;
         let model = Model::try_from(type1)?;
 
         let one = model.props.get("one");

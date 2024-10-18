@@ -10,7 +10,6 @@ use super::{
 };
 use crate::errors::Result;
 use crate::types::TypeId;
-use crate::wit::metatype::typegraph::host::print;
 use crate::{typegraph::TypegraphContext, wit::runtimes as wit};
 use common::typegraph::runtimes::prisma as cm;
 use indexmap::{map::Entry, IndexMap, IndexSet};
@@ -178,13 +177,11 @@ impl PrismaContext {
     }
 
     pub fn manage(&mut self, model_id: TypeId) -> Result<()> {
-        print(&format!("managing model: {:?}", model_id));
         if self.complete_registrations.contains(&model_id) {
             return Ok(());
         }
 
         let models = self.register_models(model_id)?;
-        print(&format!("registered models: {:?}", models));
 
         if models.is_empty() {
             // model already registered
@@ -401,8 +398,8 @@ mod test {
         assert_eq!(
             models,
             vec![
-                (user, user.name()?.unwrap()),
-                (profile, profile.name()?.unwrap())
+                (user, user.name()?.unwrap().into()),
+                (profile, profile.name()?.unwrap().into())
             ]
         );
 

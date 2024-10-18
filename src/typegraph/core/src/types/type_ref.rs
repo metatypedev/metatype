@@ -85,18 +85,25 @@ pub enum TypeRef {
     Named(NamedTypeRef),
 }
 
+#[derive(Clone)]
 pub struct DirectRefBuilder {
     target: TypeDef,
     attribute: Rc<RefAttr>,
 }
+
+#[derive(Clone)]
 pub struct LinkRefBuilder {
     target: TypeRef,
     attribute: Rc<RefAttr>,
 }
+
+#[derive(Clone)]
 pub struct IndirectRefBuilder {
     name: String,
     attributes: Vec<Rc<RefAttr>>,
 }
+
+#[derive(Clone)]
 pub struct NamedRefBuilder {
     pub name: Rc<str>,
     target: Type,
@@ -161,6 +168,7 @@ impl TypeRef {
     }
 }
 
+#[derive(Clone)]
 pub enum TypeRefBuilder {
     Direct(DirectRefBuilder),
     Link(LinkRefBuilder),
@@ -225,7 +233,7 @@ impl TypeRefBuilder {
             }),
             TypeRefBuilder::Named(builder) => TypeRef::Named(NamedTypeRef {
                 id,
-                name: builder.name.into(),
+                name: builder.name,
                 target: Box::new(builder.target),
             }),
         }
@@ -287,7 +295,7 @@ impl FlatTypeRef {
             attrs.push_str(&format!(", {}", attr.repr()));
         }
         let name = if let Some(name) = self.name.as_deref() {
-            format!("['{}']", name)
+            format!("&{}", name)
         } else {
             "".to_string()
         };
@@ -302,23 +310,23 @@ impl FlatTypeRef {
     }
 }
 
-pub trait AsFlatTypeRef {
-    fn as_flat_ref(&self) -> FlatTypeRef;
-}
-
-impl AsFlatTypeRef for Type {
-    fn as_flat_ref(&self) -> FlatTypeRef {
-        match self {
-            Type::Def(def) => FlatTypeRef {
-                id: def.id(),
-                target: FlatTypeRefTarget::Direct(def.clone()),
-                attributes: vec![],
-                name: None,
-            },
-            Type::Ref(r) => r.flatten(),
-        }
-    }
-}
+// pub trait AsFlatTypeRef {
+//     fn as_flat_ref(&self) -> FlatTypeRef;
+// }
+//
+// impl AsFlatTypeRef for Type {
+//     fn as_flat_ref(&self) -> FlatTypeRef {
+//         match self {
+//             Type::Def(def) => FlatTypeRef {
+//                 id: def.id(),
+//                 target: FlatTypeRefTarget::Direct(def.clone()),
+//                 attributes: vec![],
+//                 name: None,
+//             },
+//             Type::Ref(r) => r.flatten(),
+//         }
+//     }
+// }
 
 impl RefAttr {
     fn repr(&self) -> String {

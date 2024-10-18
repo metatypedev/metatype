@@ -4,6 +4,7 @@
 use crate::errors::Result;
 use crate::errors::TgError;
 use crate::types::RefAttr;
+use crate::types::TypeRefBuilder;
 use crate::types::{Named as _, TypeId, TypeRef};
 
 use crate::wit::core::{
@@ -42,6 +43,21 @@ pub trait TypeBuilder {
             value: serde_json::to_string(&val).unwrap(),
         })))
     }
+
+    #[cfg(test)]
+    fn config(
+        self,
+        key: impl Into<String>,
+        value: impl serde::ser::Serialize,
+    ) -> Result<TypeRefBuilder>
+    where
+        Self: Sized,
+    {
+        Ok(TypeRef::from_type(
+            self.build()?.as_type()?,
+            RefAttr::runtime("", serde_json::json!({key.into(): value})),
+        ))
+    }
 }
 
 impl<T> TypeBuilder for &mut T
@@ -72,21 +88,6 @@ where
     fn build(&self) -> Result<TypeId, TgError> {
         self.as_ref().map_err(|e| e.clone())?.build()
     }
-}
-
-#[allow(unused)]
-pub trait ConcreteTypeBuilder: TypeBuilder {
-    // fn config(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
-    //     let runtime_config = &mut self.base_mut().runtime_config;
-    //     if runtime_config.is_none() {
-    //         *runtime_config = Some(Default::default());
-    //     }
-    //     runtime_config
-    //         .as_mut()
-    //         .unwrap()
-    //         .push((key.into(), value.into()));
-    //     self
-    // }
 }
 
 #[derive(Default)]
@@ -321,7 +322,6 @@ pub fn union(variants: impl IntoIterator<Item = TypeId>) -> UnionBuilder {
         data: TypeUnion {
             variants: variants.into_iter().map(|tid| tid.0).collect(),
         },
-        ..Default::default()
     }
 }
 
@@ -355,7 +355,6 @@ pub fn either(variants: impl IntoIterator<Item = TypeId>) -> EitherBuilder {
         data: TypeEither {
             variants: variants.into_iter().map(|tid| tid.0).collect(),
         },
-        ..Default::default()
     }
 }
 
@@ -398,7 +397,6 @@ pub fn struct_extends(ty: TypeId) -> Result<StructBuilder> {
             props: ty.as_struct().map(|typ| typ.data.props.clone())?,
             ..Default::default()
         },
-        ..Default::default()
     })
 }
 
@@ -463,7 +461,6 @@ pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
             mat,
             ..Default::default()
         },
-        ..Default::default()
     }
     .build()
 }
@@ -525,5 +522,11 @@ impl TypeBuilder for RefBuilder {
                 .map(|attr| serde_json::to_string(&attr).unwrap()),
         )?
         .into())
+    }
+}
+
+impl TypeBuilder for TypeRefBuilder {
+    fn build(&self) -> Result<TypeId> {
+        (*self).clone().register().map(|r| r.id())
     }
 }

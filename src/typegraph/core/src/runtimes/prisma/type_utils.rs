@@ -16,14 +16,10 @@ impl<'a> RuntimeConfig<'a> {
         self.0
             .iter()
             .find_map(|&v| {
-                if let Some(v) = v.get(key) {
-                    Some(
-                        serde_json::from_value(v.clone())
-                            .map_err(|e| format!("invalid config value for {}: {}", key, e).into()),
-                    )
-                } else {
-                    None
-                }
+                v.get(key).map(|v| {
+                    serde_json::from_value(v.clone())
+                        .map_err(|e| format!("invalid config value for {}: {}", key, e).into())
+                })
             })
             .transpose()
     }

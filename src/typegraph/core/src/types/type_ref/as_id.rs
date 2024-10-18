@@ -22,8 +22,7 @@ where
                 IdKind::Composite
             } else {
                 IdKind::Simple
-            })
-            .into(),
+            }),
         )
         .register()
     }
@@ -64,12 +63,12 @@ impl ExtendedTypeDef {
         }
     }
 
-    pub fn is_id(&self) -> Result<bool> {
-        self.id_kind().map(|it| matches!(it, Some(IdKind::Simple)))
-    }
-
-    pub fn is_part_of_id(&self) -> Result<bool> {
-        self.id_kind()
-            .map(|it| matches!(it, Some(IdKind::Composite)))
-    }
+    // pub fn is_id(&self) -> Result<bool> {
+    //     self.id_kind().map(|it| matches!(it, Some(IdKind::Simple)))
+    // }
+    //
+    // pub fn is_part_of_id(&self) -> Result<bool> {
+    //     self.id_kind()
+    //         .map(|it| matches!(it, Some(IdKind::Composite)))
+    // }
 }

@@ -80,6 +80,7 @@ pub fn test_typegraph_2() -> Typegraph {
                     input: 1,
                     output: 1,
                     injections: Default::default(),
+                    runtime_config: Default::default(),
                     rate_calls: false,
                     rate_weight: None,
                     materializer: 0,
@@ -97,7 +98,6 @@ pub fn test_typegraph_2() -> Typegraph {
 pub fn default_type_node_base() -> TypeNodeBase {
     TypeNodeBase {
         title: String::new(),
-        config: Default::default(),
         policies: vec![],
         description: None,
         enumeration: None,

@@ -17,6 +17,8 @@ use indexmap::IndexMap;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
 
+const PLACEHOLDER_TYPE_SUFFIX: &str = "_____PLACEHOLDER_____";
+
 pub type Policy = Rc<CorePolicy>;
 
 /// As all the store entries are append only, we can set a restore point
@@ -117,10 +119,6 @@ pub fn get_sdk_version() -> String {
     SDK_VERSION.with(|v| v.clone())
 }
 
-/// Option to register or not a type name.
-/// Should be disabled for type extensions, because they inherit the name.
-pub struct NameRegistration(pub bool);
-
 #[cfg(test)]
 impl Store {
     pub fn reset() {
@@ -159,19 +157,50 @@ impl Store {
         let type_ref = builder.with_id(id.into());
         let res = type_ref.clone();
 
-        with_store_mut(move |s| -> Result<()> {
-            s.types.push(Type::Ref(type_ref));
-            Ok(())
-        })?;
-
-        match &res {
+        // very hacky solution where we keep track of
+        // explicitly named types in user_named_types
+        // we generate names for everything else to
+        // allow the ref system to work
+        match &type_ref {
             TypeRef::Named(name_ref) => {
-                Self::register_type_name(name_ref.name.clone(), name_ref.clone(), true)?;
+                let (type_ref, name_ref, name, user_named) =
+                    if name_ref.name.ends_with(PLACEHOLDER_TYPE_SUFFIX) {
+                        let name = name_ref.name.strip_suffix(PLACEHOLDER_TYPE_SUFFIX).unwrap();
+                        let name_ref = NamedTypeRef {
+                            id: name_ref.id,
+                            name: name.into(),
+                            target: name_ref.target.clone(),
+                        };
+                        (
+                            TypeRef::Named(name_ref.clone()),
+                            name_ref,
+                            name.to_string().into(),
+                            false,
+                        )
+                    } else {
+                        (
+                            type_ref.clone(),
+                            name_ref.clone(),
+                            name_ref.name.clone(),
+                            true,
+                        )
+                    };
+                let res = type_ref.clone();
+                with_store_mut(move |s| -> Result<()> {
+                    s.types.push(Type::Ref(type_ref));
+                    Ok(())
+                })?;
+                Self::register_type_name(name, name_ref, user_named)?;
+                Ok(res)
             }
-            _ => {}
+            _ => {
+                with_store_mut(move |s| -> Result<()> {
+                    s.types.push(Type::Ref(type_ref));
+                    Ok(())
+                })?;
+                Ok(res)
+            }
         }
-
-        Ok(res)
     }
 
     pub fn register_type_def(build: impl FnOnce(TypeId) -> TypeDef) -> Result<TypeId> {
@@ -204,11 +233,24 @@ impl Store {
         //     }
         // }
 
-        with_store_mut(move |s| -> Result<()> {
-            s.types.push(Type::Def(type_def));
-            Ok(())
-        })?;
-        Ok(id.into())
+        {
+            let type_def = type_def.clone();
+            with_store_mut(move |s| -> Result<()> {
+                s.types.push(Type::Def(type_def));
+                Ok(())
+            })?;
+        }
+
+        let type_id: TypeId = id.into();
+        match type_def {
+            TypeDef::List(_) | TypeDef::Optional(_) => {
+                let variant = type_def.variant_name();
+                let placeholder_name = format!("{variant}_{id}{PLACEHOLDER_TYPE_SUFFIX}");
+                let type_ref = TypeRef::named(placeholder_name, Type::Def(type_def)).register()?;
+                Ok(type_ref.id())
+            }
+            _ => Ok(type_id),
+        }
     }
 
     pub fn register_type_name(
@@ -216,7 +258,6 @@ impl Store {
         name_ref: NamedTypeRef,
         user_named: bool,
     ) -> Result<()> {
-        let name = name.into();
         with_store_mut(move |s| -> Result<()> {
             if s.type_by_names.contains_key(&name) {
                 return Err(format!("type with name {:?} already exists", name).into());

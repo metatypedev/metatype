@@ -1,4 +1,4 @@
-use super::{AsFlatTypeRef as _, FlatTypeRef, FlatTypeRefTarget, RefAttrs, TypeRef};
+use super::{FlatTypeRef, FlatTypeRefTarget, RefAttrs, TypeRef};
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
@@ -133,7 +133,7 @@ impl TryFrom<FlatTypeRef> for ExtendedTypeDef {
                 // TODO inner.name is dropped??
                 let inner = name_ref.target.as_ref().as_xdef()?;
                 let mut attributes = inner.attributes;
-                attributes.extend(value.attributes.into_iter());
+                attributes.extend(value.attributes);
                 Ok(ExtendedTypeDef {
                     id: value.id,
                     type_def: inner.type_def,

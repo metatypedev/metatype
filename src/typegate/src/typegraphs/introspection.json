@@ -4,10 +4,9 @@
       "type": "object",
       "title": "introspection",
       "policies": [],
-      "config": {},
       "properties": {
         "__type": 1,
-        "__schema": 45
+        "__schema": 26
       },
       "id": [],
       "required": [
@@ -21,10 +20,10 @@
       "policies": [
         0
       ],
-      "config": {},
       "input": 2,
       "output": 4,
       "injections": {},
+      "runtime_config": null,
       "materializer": 0,
       "rate_weight": null,
       "rate_calls": false
@@ -33,7 +32,6 @@
       "type": "object",
       "title": "root___type_fn_input",
       "policies": [],
-      "config": {},
       "properties": {
         "name": 3
       },
@@ -43,14 +41,12 @@
     {
       "type": "string",
       "title": "root___type_fn_input_name_string",
-      "policies": [],
-      "config": {}
+      "policies": []
     },
     {
       "type": "optional",
       "title": "root___type_fn_output",
       "policies": [],
-      "config": {},
       "item": 5,
       "default_value": null
     },
@@ -58,18 +54,17 @@
       "type": "object",
       "title": "type",
       "policies": [],
-      "config": {},
       "properties": {
         "kind": 6,
         "name": 7,
-        "description": 8,
-        "specifiedByURL": 9,
-        "fields": 10,
-        "interfaces": 27,
-        "possibleTypes": 29,
-        "enumValues": 31,
-        "inputFields": 39,
-        "ofType": 44
+        "description": 7,
+        "specifiedByURL": 7,
+        "fields": 8,
+        "interfaces": 18,
+        "possibleTypes": 18,
+        "enumValues": 20,
+        "inputFields": 24,
+        "ofType": 4
       },
       "id": [],
       "required": []
@@ -87,30 +82,12 @@
         "\"INPUT_OBJECT\"",
         "\"LIST\"",
         "\"NON_NULL\""
-      ],
-      "config": {}
+      ]
     },
     {
       "type": "optional",
       "title": "type_name_root___type_fn_input_name_string_optional",
       "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
-      "type": "optional",
-      "title": "type_description_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
-      "type": "optional",
-      "title": "type_specifiedByURL_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
@@ -118,10 +95,10 @@
       "type": "function",
       "title": "type_fields_fn",
       "policies": [],
-      "config": {},
-      "input": 11,
-      "output": 14,
+      "input": 9,
+      "output": 12,
       "injections": {},
+      "runtime_config": null,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -130,9 +107,8 @@
       "type": "object",
       "title": "type_fields_fn_input",
       "policies": [],
-      "config": {},
       "properties": {
-        "includeDeprecated": 12
+        "includeDeprecated": 10
       },
       "id": [],
       "required": []
@@ -141,299 +117,143 @@
       "type": "optional",
       "title": "type_fields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
       "policies": [],
-      "config": {},
-      "item": 13,
+      "item": 11,
       "default_value": null
     },
     {
       "type": "boolean",
       "title": "type_fields_fn_input_includeDeprecated_boolean",
-      "policies": [],
-      "config": {}
+      "policies": []
     },
     {
       "type": "optional",
       "title": "type_fields_fn_output",
       "policies": [],
-      "config": {},
-      "item": 15,
-      "default_value": null
-    },
-    {
-      "type": "list",
-      "title": "type_fields_fn_output",
-      "policies": [],
-      "config": {},
-      "items": 16
-    },
-    {
-      "type": "object",
-      "title": "field",
-      "policies": [],
-      "config": {},
-      "properties": {
-        "name": 3,
-        "description": 17,
-        "args": 18,
-        "type": 5,
-        "isDeprecated": 13,
-        "deprecationReason": 26
-      },
-      "id": [],
-      "required": []
-    },
-    {
-      "type": "optional",
-      "title": "field_description_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
-      "type": "function",
-      "title": "field_args_fn",
-      "policies": [],
-      "config": {},
-      "input": 19,
-      "output": 21,
-      "injections": {},
-      "materializer": 1,
-      "rate_weight": null,
-      "rate_calls": false
-    },
-    {
-      "type": "object",
-      "title": "field_args_fn_input",
-      "policies": [],
-      "config": {},
-      "properties": {
-        "includeDeprecated": 20
-      },
-      "id": [],
-      "required": []
-    },
-    {
-      "type": "optional",
-      "title": "field_args_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "policies": [],
-      "config": {},
       "item": 13,
       "default_value": null
     },
     {
       "type": "list",
+      "title": "type_fields_fn_output",
+      "policies": [],
+      "items": 14
+    },
+    {
+      "type": "object",
+      "title": "field",
+      "policies": [],
+      "properties": {
+        "name": 3,
+        "description": 7,
+        "args": 15,
+        "type": 5,
+        "isDeprecated": 11,
+        "deprecationReason": 7
+      },
+      "id": [],
+      "required": []
+    },
+    {
+      "type": "function",
+      "title": "field_args_fn",
+      "policies": [],
+      "input": 9,
+      "output": 16,
+      "injections": {},
+      "runtime_config": null,
+      "materializer": 1,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "list",
       "title": "field_args_fn_output",
       "policies": [],
-      "config": {},
-      "items": 22
+      "items": 17
     },
     {
       "type": "object",
       "title": "input_value",
       "policies": [],
-      "config": {},
       "properties": {
         "name": 3,
-        "description": 23,
+        "description": 7,
         "type": 5,
-        "defaultValue": 24,
-        "isDeprecated": 13,
-        "deprecationReason": 25
+        "defaultValue": 7,
+        "isDeprecated": 11,
+        "deprecationReason": 7
       },
       "id": [],
       "required": []
     },
     {
       "type": "optional",
-      "title": "input_value_description_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
-      "type": "optional",
-      "title": "input_value_defaultValue_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
-      "type": "optional",
-      "title": "input_value_deprecationReason_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
-      "type": "optional",
-      "title": "field_deprecationReason_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
-      "type": "optional",
       "title": "type_interfaces_type_interfaces_type_list_optional",
       "policies": [],
-      "config": {},
-      "item": 28,
+      "item": 19,
       "default_value": null
     },
     {
       "type": "list",
       "title": "type_interfaces_type_list",
       "policies": [],
-      "config": {},
-      "items": 5
-    },
-    {
-      "type": "optional",
-      "title": "type_possibleTypes_type_possibleTypes_type_list_optional",
-      "policies": [],
-      "config": {},
-      "item": 30,
-      "default_value": null
-    },
-    {
-      "type": "list",
-      "title": "type_possibleTypes_type_list",
-      "policies": [],
-      "config": {},
       "items": 5
     },
     {
       "type": "function",
       "title": "type_enumValues_fn",
       "policies": [],
-      "config": {},
-      "input": 32,
-      "output": 34,
+      "input": 9,
+      "output": 21,
       "injections": {},
+      "runtime_config": null,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
     },
     {
-      "type": "object",
-      "title": "type_enumValues_fn_input",
-      "policies": [],
-      "config": {},
-      "properties": {
-        "includeDeprecated": 33
-      },
-      "id": [],
-      "required": []
-    },
-    {
-      "type": "optional",
-      "title": "type_enumValues_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "policies": [],
-      "config": {},
-      "item": 13,
-      "default_value": null
-    },
-    {
       "type": "optional",
       "title": "type_enumValues_fn_output",
       "policies": [],
-      "config": {},
-      "item": 35,
+      "item": 22,
       "default_value": null
     },
     {
       "type": "list",
       "title": "type_enumValues_fn_output",
       "policies": [],
-      "config": {},
-      "items": 36
+      "items": 23
     },
     {
       "type": "object",
       "title": "enum_value",
       "policies": [],
-      "config": {},
       "properties": {
         "name": 3,
-        "description": 37,
-        "isDeprecated": 13,
-        "deprecationReason": 38
+        "description": 7,
+        "isDeprecated": 11,
+        "deprecationReason": 7
       },
       "id": [],
       "required": []
-    },
-    {
-      "type": "optional",
-      "title": "enum_value_description_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
-      "type": "optional",
-      "title": "enum_value_deprecationReason_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
     },
     {
       "type": "function",
       "title": "type_inputFields_fn",
       "policies": [],
-      "config": {},
-      "input": 40,
-      "output": 42,
+      "input": 9,
+      "output": 25,
       "injections": {},
+      "runtime_config": null,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
     },
     {
-      "type": "object",
-      "title": "type_inputFields_fn_input",
-      "policies": [],
-      "config": {},
-      "properties": {
-        "includeDeprecated": 41
-      },
-      "id": [],
-      "required": []
-    },
-    {
-      "type": "optional",
-      "title": "type_inputFields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "policies": [],
-      "config": {},
-      "item": 13,
-      "default_value": null
-    },
-    {
       "type": "optional",
       "title": "type_inputFields_fn_output",
       "policies": [],
-      "config": {},
-      "item": 43,
-      "default_value": null
-    },
-    {
-      "type": "list",
-      "title": "type_inputFields_fn_output",
-      "policies": [],
-      "config": {},
-      "items": 22
-    },
-    {
-      "type": "optional",
-      "title": "type_ofType_type_optional",
-      "policies": [],
-      "config": {},
-      "item": 5,
+      "item": 16,
       "default_value": null
     },
     {
@@ -442,10 +262,10 @@
       "policies": [
         0
       ],
-      "config": {},
-      "input": 46,
-      "output": 47,
+      "input": 27,
+      "output": 28,
       "injections": {},
+      "runtime_config": null,
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
@@ -454,7 +274,6 @@
       "type": "object",
       "title": "root___schema_fn_input",
       "policies": [],
-      "config": {},
       "properties": {},
       "id": [],
       "required": []
@@ -463,85 +282,42 @@
       "type": "object",
       "title": "schema",
       "policies": [],
-      "config": {},
       "properties": {
-        "description": 48,
-        "types": 49,
+        "description": 7,
+        "types": 19,
         "queryType": 5,
-        "mutationType": 50,
-        "subscriptionType": 51,
-        "directives": 52
+        "mutationType": 4,
+        "subscriptionType": 4,
+        "directives": 29
       },
       "id": [],
       "required": []
-    },
-    {
-      "type": "optional",
-      "title": "schema_description_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
-      "type": "list",
-      "title": "schema_types_type_list",
-      "policies": [],
-      "config": {},
-      "items": 5
-    },
-    {
-      "type": "optional",
-      "title": "schema_mutationType_type_optional",
-      "policies": [],
-      "config": {},
-      "item": 5,
-      "default_value": null
-    },
-    {
-      "type": "optional",
-      "title": "schema_subscriptionType_type_optional",
-      "policies": [],
-      "config": {},
-      "item": 5,
-      "default_value": null
     },
     {
       "type": "list",
       "title": "schema_directives_directive_list",
       "policies": [],
-      "config": {},
-      "items": 53
+      "items": 30
     },
     {
       "type": "object",
       "title": "directive",
       "policies": [],
-      "config": {},
       "properties": {
         "name": 3,
-        "description": 54,
-        "isRepeatable": 13,
-        "locations": 55,
-        "args": 57
+        "description": 7,
+        "isRepeatable": 11,
+        "locations": 31,
+        "args": 15
       },
       "id": [],
       "required": []
     },
     {
-      "type": "optional",
-      "title": "directive_description_root___type_fn_input_name_string_optional",
-      "policies": [],
-      "config": {},
-      "item": 3,
-      "default_value": null
-    },
-    {
       "type": "list",
       "title": "directive_locations_directive_location_list",
       "policies": [],
-      "config": {},
-      "items": 56
+      "items": 32
     },
     {
       "type": "string",
@@ -567,46 +343,7 @@
         "\"ENUM_VALUE\"",
         "\"INPUT_OBJECT\"",
         "\"INPUT_FIELD_DEFINITION\""
-      ],
-      "config": {}
-    },
-    {
-      "type": "function",
-      "title": "directive_args_fn",
-      "policies": [],
-      "config": {},
-      "input": 58,
-      "output": 60,
-      "injections": {},
-      "materializer": 1,
-      "rate_weight": null,
-      "rate_calls": false
-    },
-    {
-      "type": "object",
-      "title": "directive_args_fn_input",
-      "policies": [],
-      "config": {},
-      "properties": {
-        "includeDeprecated": 59
-      },
-      "id": [],
-      "required": []
-    },
-    {
-      "type": "optional",
-      "title": "directive_args_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "policies": [],
-      "config": {},
-      "item": 13,
-      "default_value": null
-    },
-    {
-      "type": "list",
-      "title": "directive_args_fn_output",
-      "policies": [],
-      "config": {},
-      "items": 22
+      ]
     }
   ],
   "materializers": [
