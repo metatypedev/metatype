@@ -38,6 +38,53 @@ def validator(g: Graph):
         }
     )
 
+    either = t.struct(
+        {
+            "a": t.either([t.integer(), t.float()]),
+            "b": t.either([t.string(max=10), t.string()]),
+            "c": t.either(
+                [
+                    t.struct({"x": t.integer(), "y": t.string()}),
+                    t.struct({"x": t.integer(), "y": t.string(), "z": t.boolean()}),
+                ]
+            ),
+            "d": t.either([t.list(t.integer()), t.list(t.float())]),
+            "e": t.either([t.integer(min=0, max=10), t.integer(min=5, max=15)]),
+            "f": t.either(
+                [t.string(enum=["a", "b", "c"]), t.string(enum=["a", "b", "c", "d"])]
+            ),
+            "g": t.either(
+                [t.struct({"x": t.integer().optional()}), t.struct({"x": t.integer()})]
+            ),
+            "h": t.either(
+                [
+                    t.list(t.either([t.integer(), t.string()])),
+                    t.list(t.either([t.float(), t.string()])),
+                ]
+            ),
+        }
+    )
+
+    union = t.struct(
+        {
+            "a": t.union(
+                [
+                    t.integer(min=0, max=10),
+                    t.integer(min=5, max=15),
+                    t.integer(min=10, max=20),
+                ]
+            ).set(25),
+            "b": t.union([t.string(), t.string()]),
+            "c": t.union(
+                [
+                    t.struct({"x": t.integer(), "y": t.string()}),
+                    t.struct({"x": t.integer(), "y": t.string(), "z": t.boolean()}),
+                ]
+            ).set({"x": 1, "y": "test", "z": "not a boolean"}),
+            "d": t.union([t.list(t.integer()), t.list(t.string())]).set([1, "2", 3]),
+        }
+    )
+
     g.expose(
         test=deno.identity(injection),
         testEnums=deno.identity(enums),
@@ -59,4 +106,6 @@ def validator(g: Graph):
                 ),
             }
         ),
+        testEither=deno.identity(either),
+        testUnion=deno.identity(union),
     )

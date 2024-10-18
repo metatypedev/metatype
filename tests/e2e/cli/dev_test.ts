@@ -12,21 +12,33 @@ import { workspaceDir } from "../../utils/dir.ts";
 
 const m = new TestModule(import.meta);
 
-const tgName = "migration-failure-test";
+// both dev_test and deploy_test rely on the same typegraph
+// we need to do different versions of the typegraph to avoid
+// races during testing
+const test_code = "dev";
+const tgName = `migration-failure-test-${test_code}`;
 /**
  * These tests use different ports for the virtual typegate instance to avoid
  * conflicts with one another when running in parallel.
  */
 
-async function writeTypegraph(version: number | null, target = "migration.py") {
+async function writeTypegraph(
+  version: number | null,
+  target = "migration_dev.py",
+) {
   if (version == null) {
-    await m.shell(["bash", "-c", `cp ./templates/migration.py ${target}`]);
+    await m.shell([
+      "bash",
+      "-c",
+      `cat ./templates/migration.py | sed  -e "s/migration_failure_test_code/migration_failure_test_${test_code}" > ${target}`,
+    ]);
   } else {
     await m.shell([
       "bash",
       "select.sh",
       "templates/migration.py",
       `${version}`,
+      test_code,
       target,
     ]);
   }

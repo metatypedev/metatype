@@ -19,7 +19,7 @@ updates:
         exclude-patterns:
           - "swc_*"
   - package-ecosystem: pip
-    directory: /typegraph
+    directory: /src/typegraph
     schedule:
       interval: monthly
     groups:
@@ -35,7 +35,7 @@ updates:
         patterns:
           - "*"
   - package-ecosystem: npm
-    directory: /website
+    directory: /docs
     schedule:
       interval: monthly
     groups:

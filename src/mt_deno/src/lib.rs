@@ -305,7 +305,9 @@ pub fn new_thread_builder() -> std::thread::Builder {
         // FIXME: find a better location for this as tihs won't work
         // if a second thread has already launched by this point
         if std::env::var("RUST_MIN_STACK").is_err() {
-            std::env::set_var("RUST_MIN_STACK", "8388608");
+            unsafe {
+                std::env::set_var("RUST_MIN_STACK", "8388608");
+            }
         }
         // deno & swc need 8 MiB with dev profile (release is ok)
         // https://github.com/swc-project/swc/blob/main/CONTRIBUTING.md

@@ -718,24 +718,6 @@ const nodeMetas = {
     return {};
   },
   
-  RootScalarArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "UserIdStringUuid",
-        slug: "PostSlugString",
-        title: "PostSlugString",
-      },
-    };
-  },
-  RootScalarUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "RootScalarArgsFnOutput",
-      },
-    };
-  },
   Post(): NodeMeta {
     return {
       subNodes: [
@@ -745,22 +727,9 @@ const nodeMetas = {
       ],
     };
   },
-  RootGetPostsFn(): NodeMeta {
+  RootCompositeNoArgsFn(): NodeMeta {
     return {
       ...nodeMetas.Post(),
-    };
-  },
-  RootCompositeArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "RootScalarArgsFnOutput",
-      },
-    };
-  },
-  RootScalarNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
     };
   },
   User(): NodeMeta {
@@ -788,12 +757,15 @@ const nodeMetas = {
       },
     };
   },
-  RootGetUserFn(): NodeMeta {
+  RootScalarUnionFn(): NodeMeta {
     return {
-      ...nodeMetas.User(),
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "RootScalarArgsFnOutput",
+      },
     };
   },
-  RootCompositeNoArgsFn(): NodeMeta {
+  RootGetPostsFn(): NodeMeta {
     return {
       ...nodeMetas.Post(),
     };
@@ -814,6 +786,38 @@ const nodeMetas = {
       },
     };
   },
+  RootCompositeArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "RootScalarArgsFnOutput",
+      },
+    };
+  },
+  RootGetUserFn(): NodeMeta {
+    return {
+      ...nodeMetas.User(),
+    };
+  },
+  RootScalarNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+  RootScalarArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "UserIdStringUuid",
+        slug: "PostSlugString",
+        title: "PostSlugString",
+      },
+    };
+  },
+};
+export type RootScalarArgsFnOutput = string;
+export type RootCompositeArgsFnInput = {
+  id: RootScalarArgsFnOutput;
 };
 export type UserIdStringUuid = string;
 export type PostSlugString = string;
@@ -822,10 +826,10 @@ export type Post = {
   slug: PostSlugString;
   title: PostSlugString;
 };
-export type RootScalarArgsFnOutput = string;
-export type RootCompositeArgsFnInput = {
-  id: RootScalarArgsFnOutput;
-};
+export type RootScalarUnionFnOutputT1Integer = number;
+export type RootScalarUnionFnOutput =
+  | (RootScalarArgsFnOutput)
+  | (RootScalarUnionFnOutputT1Integer);
 export type UserEmailStringEmail = string;
 export type UserPostsPostList = Array<Post>;
 export type User = {
@@ -833,16 +837,12 @@ export type User = {
   email: UserEmailStringEmail;
   posts: UserPostsPostList;
 };
-export type RootScalarUnionFnOutputT1Integer = number;
-export type RootMixedUnionFnOutput =
-  | (Post)
-  | (User)
-  | (RootScalarArgsFnOutput)
-  | (RootScalarUnionFnOutputT1Integer);
 export type RootCompositeUnionFnOutput =
   | (Post)
   | (User);
-export type RootScalarUnionFnOutput =
+export type RootMixedUnionFnOutput =
+  | (Post)
+  | (User)
   | (RootScalarArgsFnOutput)
   | (RootScalarUnionFnOutputT1Integer);
 
@@ -875,8 +875,8 @@ export class QueryGraph extends _QueryGraphBase {
       "UserIdStringUuid": "String!",
       "PostSlugString": "String!",
       "RootScalarArgsFnOutput": "String!",
-      "post": "post!",
       "user": "user!",
+      "post": "post!",
     });
   }
     
