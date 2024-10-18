@@ -32,7 +32,7 @@ Meta.test({
       "--target=dev",
       `--gate=http://localhost:${t.port}`,
       "--typegraph",
-      "migration-failure-test",
+      "migration-failure-test-code",
     );
   });
 });
