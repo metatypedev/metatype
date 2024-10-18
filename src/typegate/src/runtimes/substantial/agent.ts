@@ -46,32 +46,6 @@ export class Agent {
     await Meta.substantial.storeAddSchedule(input);
   }
 
-  async reScheduleNow(input: NextRun) {
-    const relatedEvent = await Meta.substantial.storeReadSchedule({
-      backend: this.backend,
-      queue: this.queue,
-      run_id: input.run_id,
-      schedule: input.schedule_date,
-    });
-
-    if (relatedEvent) {
-      await this.schedule({
-        backend: this.backend,
-        queue: this.queue,
-        run_id: input.run_id,
-        schedule: new Date().toJSON(),
-        operation: relatedEvent,
-      });
-    } else {
-      // This could occur if it was closed or never existed (inconsistent state)
-      logger.error(
-        `Failed reschedule: could not find related event for ${JSON.stringify(
-          input
-        )}`
-      );
-    }
-  }
-
   async log(runId: string, schedule: string, content: unknown) {
     try {
       await Meta.substantial.metadataAppend({
@@ -169,13 +143,9 @@ export class Agent {
             await this.#replay(next, workflow);
           } catch (err) {
             logger.error(
-              `Replay failed for ${workflow.name} => ${JSON.stringify(
-                next
-              )}: rescheduling it.`
+              `Replay failed for ${workflow.name} => ${JSON.stringify(next)}`
             );
             logger.error(err);
-
-            await this.reScheduleNow(next);
           } finally {
             await this.log(next.run_id, next.schedule_date, {
               message: "Replaying workflow",
