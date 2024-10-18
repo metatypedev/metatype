@@ -30,7 +30,7 @@ import {
 export function generateValidator(
   tg: TypeGraph,
   operation: OperationDefinitionNode,
-  fragments: FragmentDefs,
+  fragments: FragmentDefs
 ): Validator {
   const code = new ResultValidationCompiler(tg, fragments).generate(operation);
   const validator = new Function(code)() as ValidatorFn;
@@ -58,10 +58,7 @@ export class ResultValidationCompiler {
   codes: Map<string, string> = new Map();
   counter = 0;
 
-  constructor(
-    private tg: TypeGraph,
-    private fragments: FragmentDefs,
-  ) {}
+  constructor(private tg: TypeGraph, private fragments: FragmentDefs) {}
 
   private validatorName(idx: number, additionalSuffix = false) {
     if (!additionalSuffix) {
@@ -111,7 +108,7 @@ export class ResultValidationCompiler {
       } else if (isScalar(typeNode)) {
         if (entry.selectionSet != null) {
           throw new Error(
-            `Unexpected selection set for scalar type '${typeNode.type}' at '${entry.path}'`,
+            `Unexpected selection set for scalar type '${typeNode.type}' at '${entry.path}'`
           );
         }
 
@@ -138,7 +135,7 @@ export class ResultValidationCompiler {
           case "optional": {
             const itemValidatorName = this.validatorName(
               typeNode.item,
-              entry.selectionSet != null,
+              entry.selectionSet != null
             );
             cg.generateOptionalValidator(typeNode, itemValidatorName);
             queue.push({
@@ -153,7 +150,7 @@ export class ResultValidationCompiler {
           case "list": {
             const itemValidatorName = this.validatorName(
               typeNode.items,
-              entry.selectionSet != null,
+              entry.selectionSet != null
             );
             cg.generateArrayValidator(typeNode, itemValidatorName);
             queue.push({
@@ -166,11 +163,11 @@ export class ResultValidationCompiler {
           }
 
           case "object": {
-            const childEntries: Record<string, QueueEntry> = this
-              .getChildEntries(typeNode, entry);
+            const childEntries: Record<string, QueueEntry> =
+              this.getChildEntries(typeNode, entry);
             cg.generateObjectValidator(
               typeNode,
-              mapValues(childEntries, (e) => e.name),
+              mapValues(childEntries, (e) => e.name)
             );
             queue.push(...Object.values(childEntries));
             break;
@@ -180,7 +177,7 @@ export class ResultValidationCompiler {
             const childEntries = this.getVariantEntries(typeNode.anyOf, entry);
             cg.generateUnionValidator(
               typeNode,
-              childEntries.map((e) => e.name),
+              childEntries.map((e) => e.name)
             );
             queue.push(...childEntries);
             break;
@@ -190,7 +187,7 @@ export class ResultValidationCompiler {
             const childEntries = this.getVariantEntries(typeNode.oneOf, entry);
             cg.generateEitherValidator(
               typeNode,
-              childEntries.map((e) => e.name),
+              childEntries.map((e) => e.name)
             );
             queue.push(...childEntries);
             break;
@@ -199,7 +196,7 @@ export class ResultValidationCompiler {
           case "function": {
             const outputValidator = this.validatorName(
               typeNode.output,
-              entry.selectionSet != null,
+              entry.selectionSet != null
             );
             cg.line(`${outputValidator}(value, path, errors, context)`);
             queue.push({
@@ -220,7 +217,7 @@ export class ResultValidationCompiler {
       const fnBody = cg.reset().join("\n");
       this.codes.set(
         fnName,
-        `function ${fnName}(value, path, errors, context) {\n${fnBody}\n}`,
+        `function ${fnName}(value, path, errors, context) {\n${fnBody}\n}`
       );
     }
 
@@ -234,7 +231,7 @@ export class ResultValidationCompiler {
   private getChildEntryFromFieldNode(
     typeNode: ObjectNode,
     entry: QueueEntry,
-    node: FieldNode,
+    node: FieldNode
   ): [string, QueueEntry] {
     const { name, selectionSet, alias } = node;
     const propName = alias?.value ?? name.value;
@@ -282,7 +279,7 @@ export class ResultValidationCompiler {
   private getChildEntriesFromSelectionNode(
     typeNode: ObjectNode,
     entry: QueueEntry,
-    node: SelectionNode,
+    node: SelectionNode
   ): Array<[string, QueueEntry]> {
     switch (node.kind) {
       case Kind.FIELD:
@@ -311,34 +308,37 @@ export class ResultValidationCompiler {
 
   private getChildEntries(
     typeNode: ObjectNode,
-    entry: QueueEntry,
+    entry: QueueEntry
   ): Record<string, QueueEntry> {
-    return Object.fromEntries(
-      entry.selectionSet!.selections.flatMap((node) =>
-        this.getChildEntriesFromSelectionNode(typeNode, entry, node)
-      ),
-    );
+    if (entry.selectionSet?.selections) {
+      return Object.fromEntries(
+        entry.selectionSet!.selections.flatMap((node) =>
+          this.getChildEntriesFromSelectionNode(typeNode, entry, node)
+        )
+      );
+    }
+
+    // Empty object has no fields
+    return {};
   }
 
   private getVariantEntries(
     variants: number[],
-    entry: QueueEntry,
+    entry: QueueEntry
   ): QueueEntry[] {
     const multilevelVariants = this.tg.typeUtils.flattenUnionVariants(variants);
     const selectableVariants = multilevelVariants.filter(
       (variant) =>
-        !this.tg.typeUtils.isScalarOrListOfScalars(this.tg.type(variant)),
+        !this.tg.typeUtils.isScalarOrListOfScalars(this.tg.type(variant))
     );
     if (entry.selectionSet == null) {
       if (selectableVariants.length > 0) {
         const s = selectableVariants.length === 1 ? "" : "s";
         const names = selectableVariants.map((idx) => this.tg.type(idx).title);
         throw new Error(
-          `at '${entry.path}': selection set required for type${s} ${
-            names.join(
-              ", ",
-            )
-          }`,
+          `at '${entry.path}': selection set required for type${s} ${names.join(
+            ", "
+          )}`
         );
       }
     }
@@ -347,18 +347,18 @@ export class ResultValidationCompiler {
     const variantSelections: Map<string, InlineFragmentNode> =
       entry.selectionSet != null
         ? new Map(
-          entry.selectionSet.selections.map((node) => {
-            if (
-              node.kind !== Kind.INLINE_FRAGMENT ||
-              node.typeCondition == null
-            ) {
-              throw new Error(
-                `at '${entry.path}': selection nodes must be inline fragments with type condition`,
-              );
-            }
-            return [node.typeCondition.name.value, node];
-          }),
-        )
+            entry.selectionSet.selections.map((node) => {
+              if (
+                node.kind !== Kind.INLINE_FRAGMENT ||
+                node.typeCondition == null
+              ) {
+                throw new Error(
+                  `at '${entry.path}': selection nodes must be inline fragments with type condition`
+                );
+              }
+              return [node.typeCondition.name.value, node];
+            })
+          )
         : new Map();
 
     const entries: QueueEntry[] = variants.map((variantIdx) => {
@@ -371,7 +371,7 @@ export class ResultValidationCompiler {
           if (selectionSet == null) {
             // TODO link to matching documentation page
             throw new Error(
-              `at '${entry.path}': variant type '${typeName}' must have a selection set on an inline fragment with type condition`,
+              `at '${entry.path}': variant type '${typeName}' must have a selection set on an inline fragment with type condition`
             );
           }
           variantSelections.delete(typeName);
@@ -385,7 +385,7 @@ export class ResultValidationCompiler {
         case Type.UNION:
         case Type.EITHER: {
           const nestedVariants = this.tg.typeUtils.getFlatUnionVariants(
-            typeNode as UnionNode | EitherNode,
+            typeNode as UnionNode | EitherNode
           );
           return {
             name: this.validatorName(variantIdx, true),
@@ -420,7 +420,7 @@ export class ResultValidationCompiler {
     if (variantSelections.size > 0) {
       const names = [...variantSelections.keys()].join(", ");
       throw new Error(
-        `at '${entry.path}': Unexpected type conditions: ${names}`,
+        `at '${entry.path}': Unexpected type conditions: ${names}`
       );
     }
     return entries;
@@ -432,8 +432,9 @@ export class ResultValidationCompiler {
     for (let idx = queue.shift(); idx != null; idx = queue.shift()) {
       const typeNode = this.tg.type(idx);
       switch (typeNode.type) {
-        case Type.OBJECT:
-          return true;
+        case Type.OBJECT: {
+          return Object.keys(typeNode.properties).length > 0;
+        }
         case Type.FUNCTION:
           queue.push(typeNode.output);
           break;

@@ -25,7 +25,7 @@ Meta.test("typecheck", async (t) => {
     }
 
     return new ResultValidationCompiler(tg, fragments).generate(
-      operation.unwrap(),
+      operation.unwrap()
     );
   };
 
@@ -49,7 +49,7 @@ Meta.test("typecheck", async (t) => {
           }
         `),
       Error,
-      "Unexpected property 'postis' at 'Query1'",
+      "Unexpected property 'postis' at 'Query1'"
     );
 
     assertThrows(
@@ -64,7 +64,7 @@ Meta.test("typecheck", async (t) => {
           }
         `),
       Error,
-      "Unexpected property 'text' at 'Query2.posts'",
+      "Unexpected property 'text' at 'Query2.posts'"
     );
   });
 
@@ -226,6 +226,18 @@ Meta.test("typecheck", async (t) => {
           equivalent: [{ name: "B" }, { name: "C" }, { name: "D", score: 10 }],
           score: null,
         },
+      })
+      .on(e);
+  });
+
+  await t.should("accept empty object output at root", async () => {
+    await gql`
+      query {
+        emptyObjectOutput
+      }
+    `
+      .expectData({
+        emptyObjectOutput: {},
       })
       .on(e);
   });
