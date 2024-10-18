@@ -103,7 +103,7 @@ pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
 
     fn get_rpc_response(
         &self,
-        call: &Self::RpcCall,
+        call: Self::RpcCall,
     ) -> impl Future<Output = Result<serde_json::Value>>;
 }
 

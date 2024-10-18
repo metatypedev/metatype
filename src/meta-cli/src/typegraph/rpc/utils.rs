@@ -9,6 +9,7 @@ use super::TypegraphFunc;
 
 #[rustfmt::skip]
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "method", content = "params")]
 pub enum UtilsCall {
     GenReduceb { supertype_id: TypeId, data: Reduce },
     AddGraphqlEndpoint { graphql: String },
@@ -25,7 +26,7 @@ pub enum UtilsCall {
 }
 
 impl TypegraphFunc for UtilsCall {
-    fn execute(&self) -> Result<Value> {
+    fn execute(self) -> Result<Value> {
         todo!()
     }
 }

@@ -12,6 +12,7 @@ use super::TypegraphFunc;
 
 #[rustfmt::skip]
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "method", content = "params")]
 pub enum RuntimeCall {
     GetDenoRuntime,
     RegisterDenoFunc { data: MaterializerDenoFunc, effect: Effect },
@@ -64,7 +65,7 @@ pub enum RuntimeCall {
 }
 
 impl TypegraphFunc for RuntimeCall {
-    fn execute(&self) -> Result<Value> {
+    fn execute(self) -> Result<Value> {
         todo!()
     }
 }

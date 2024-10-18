@@ -9,6 +9,7 @@ use super::TypegraphFunc;
 
 #[rustfmt::skip]
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "method", content = "params")]
 pub enum AwsCall {
     RegisterS3Runtime { data: S3RuntimeData },
     S3PresignGet { runtime: RuntimeId, data: S3PresignGetParams },
@@ -19,7 +20,7 @@ pub enum AwsCall {
 }
 
 impl TypegraphFunc for AwsCall {
-    fn execute(&self) -> Result<Value> {
+    fn execute(self) -> Result<Value> {
         todo!()
     }
 }

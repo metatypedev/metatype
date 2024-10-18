@@ -302,14 +302,13 @@ impl TaskAction for DeployAction {
         &self.task_ref
     }
 
-    async fn get_rpc_response(&self, call: &RpcCall) -> Result<serde_json::Value> {
+    async fn get_rpc_response(&self, call: RpcCall) -> Result<serde_json::Value> {
         match call {
             RpcCall::GetDeployTarget => {
                 let deploy_target: &Node = &self.deploy_target;
                 Ok(serde_json::to_value(deploy_target)?)
             }
-
-            RpcCall::GetDeployData { typegraph } => Ok(self.get_deploy_data(typegraph).await?),
+            RpcCall::GetDeployData { typegraph } => Ok(self.get_deploy_data(&typegraph).await?),
             RpcCall::Typegraph(call) => Ok(call.execute()?),
         }
     }

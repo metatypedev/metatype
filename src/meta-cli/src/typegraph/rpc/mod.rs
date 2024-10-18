@@ -10,7 +10,17 @@ use typegraph_core::Result;
 
 #[enum_dispatch]
 pub trait TypegraphFunc {
-    fn execute(&self) -> Result<Value>;
+    fn execute(self) -> Result<Value>;
+}
+
+pub(self) trait SerializeChain {
+    fn serialize(self) -> Result<Value>;
+}
+
+impl<T: Serialize> SerializeChain for Result<T> {
+    fn serialize(self) -> Result<Value> {
+        self.map(|value| serde_json::to_value(&value).unwrap())
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

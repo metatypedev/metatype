@@ -1,14 +1,18 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use typegraph_core::{types::core::*, Result};
+use typegraph_core::{
+    types::{builders, core::*},
+    Result,
+};
 
-use super::TypegraphFunc;
+use super::{SerializeChain, TypegraphFunc};
 
 #[rustfmt::skip]
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "method", content = "params")]
 pub enum CoreCall {
-    InitTypegraph { params: TypegraphInitParams },
-    SerializeTypegraph { params: SerializeParams },
+    InitTypegraph(TypegraphInitParams),
+    SerializeTypegraph (SerializeParams),
     WithInjection { type_id: TypeId, injection: String },
     Refb { name: String, attributes: Option<String> },
     Integerb { data: TypeInteger, base: TypeBase },
@@ -37,7 +41,7 @@ pub enum CoreCall {
 }
 
 impl TypegraphFunc for CoreCall {
-    fn execute(&self) -> Result<Value> {
+    fn execute(self) -> Result<Value> {
         todo!()
     }
 }
