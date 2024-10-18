@@ -35,11 +35,15 @@ interface PrismaError {
   };
 }
 
-type PrismaResult = {
-  data: Record<string, any>;
-} | {
-  errors: PrismaError[];
-};
+type PrismaResult =
+  | {
+    data: Record<string, any>;
+  }
+  | {
+    errors: PrismaError[];
+  };
+
+type BatchPrismaResult = { batchResult: PrismaResult[] };
 
 type PrismaRuntimeData = PrismaRT.DataFinal;
 
@@ -126,7 +130,7 @@ export class PrismaRuntime extends Runtime {
         datamodel: this.datamodel,
       }),
     );
-    const result = JSON.parse(res);
+    const result = JSON.parse(res) as PrismaResult | BatchPrismaResult;
 
     if ("errors" in result) {
       this.logger.error("remote prisma errors", result.errors);
@@ -137,7 +141,9 @@ export class PrismaRuntime extends Runtime {
     }
 
     // TODO refactor when we support partial results in GraphQL
-    const results = isBatchQuery ? result.batchResult : [result];
+    const results = isBatchQuery
+      ? (result as BatchPrismaResult).batchResult
+      : [result as PrismaResult];
     const ret = [];
     for (const r of results) {
       if ("errors" in r) {
@@ -149,7 +155,7 @@ export class PrismaRuntime extends Runtime {
       }
       ret.push(r.data);
     }
-    return isBatchQuery ? ret : ret[0];
+    return ret;
   }
 
   execute(
@@ -157,7 +163,7 @@ export class PrismaRuntime extends Runtime {
     path: string[],
     renames: Record<string, string>,
   ): Resolver {
-    return async ({ _: { variables, context, effect, parent }, ..._args }) => {
+    return async ({ _: { variables, context, effect, parent } }) => {
       path[0] = renames[path[0]] ?? path[0];
 
       const startTime = performance.now();
@@ -168,7 +174,20 @@ export class PrismaRuntime extends Runtime {
         `queried prisma in ${(endTime - startTime).toFixed(2)}ms`,
       );
 
-      return path.reduce((r, field) => r[field], res);
+      if (path[0] == "queryRaw") {
+        const rawRes = res[0];
+        return rawRes.queryRaw.rows.map(
+          (row: any[]) =>
+            Object.fromEntries(
+              row.map(
+                (val, idx) => [rawRes.queryRaw.columns[idx], val],
+              ),
+            ),
+        );
+      } else {
+        // FIXME: why do we only process the first item??
+        return path.reduce((r, field) => r[field], res[0]);
+      }
     };
   }
 
@@ -304,22 +323,13 @@ export class PrismaRuntime extends Runtime {
       } else {
         const resolver: Resolver = ({ _: { parent } }) => {
           const resolver = parent[field.props.node];
-          const rawValue = typeof resolver === "function"
-            ? resolver()
-            : resolver;
-          const matData = stage.props.materializer
-            ?.data as unknown as PrismaOperationMatData;
-
-          // if queryRaw is used, the result has a type tag
-          const ret = matData.operation === "queryRaw"
-            ? rawValue["prisma__value"]
-            : rawValue;
+          const ret = typeof resolver === "function" ? resolver() : resolver;
 
           // Prisma uses $type tag for formatted strings
           // eg. `createAt: { "$type": "DateTime", value: "2023-12-05T14:10:21.840Z" }`
           if (
-            !Array.isArray(ret) &&
             typeof ret === "object" &&
+            !Array.isArray(ret) &&
             ret !== null &&
             "$type" in ret // !
           ) {

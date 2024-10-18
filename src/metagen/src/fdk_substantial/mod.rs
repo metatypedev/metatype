@@ -1,6 +1,3 @@
-// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-// SPDX-License-Identifier: MPL-2.0
-
 // TODO: keyword filtering
 
 use crate::interlude::*;
@@ -34,13 +31,13 @@ impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
     pub fn new(config: FdkSubstantialGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
-        config.validate(&())?;
+        config.validate()?;
         Ok(Self { config })
     }
 }
 
 impl crate::Plugin for Generator {
-    fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder> {
+    fn bill_of_inputs(&self) -> IndexMap<String, GeneratorInputOrder> {
         [(
             Self::INPUT_TG.to_string(),
             if let Some(tg_name) = &self.config.base.typegraph_name {
@@ -64,9 +61,9 @@ impl crate::Plugin for Generator {
         &self,
         // TODO: enable additionnal parameters for metagen
         // For example: meta gen --params workflow-name=hello_world
-        _: HashMap<String, GeneratorInputResolved>,
+        _: IndexMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
-        let mut files = HashMap::new();
+        let mut files = IndexMap::new();
         let base = self.config.base.path.clone();
         files.insert(
             base.join("substantial.py"),

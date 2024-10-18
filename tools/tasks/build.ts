@@ -78,16 +78,6 @@ export default {
   "build-tgraph": {
     dependsOn: ["build-tgraph-py", "build-tgraph-ts-node"],
   },
-
-  "gen-pyrt-bind": {
-    inherit: "_wasm",
-    async fn($) {
-      await $.removeIfExists("./src/pyrt_wit_wire/wit_wire");
-      await $`componentize-py -d ../wit/wit-wire.wit bindings .`.cwd(
-        "./src/pyrt_wit_wire",
-      );
-    },
-  },
   "build-pyrt": {
     inherit: "_wasm",
     dependsOn: "gen-pyrt-bind",

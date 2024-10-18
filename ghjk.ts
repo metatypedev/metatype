@@ -1,5 +1,6 @@
 // @ts-nocheck: Deno file
 
+// --
 import { METATYPE_VERSION, PUBLISHED_VERSION } from "./tools/consts.ts";
 import { file, ports, sedLock, semver, stdDeps } from "./tools/deps.ts";
 import installs from "./tools/installs.ts";
@@ -15,7 +16,8 @@ const { env, task } = ghjk;
 env("main")
   .install(installs.deno)
   .vars({
-    RUST_LOG: "info,deno=warn,swc_ecma_codegen=off,tracing::span=off",
+    RUST_LOG:
+      "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
     CROSS_CONFIG: "tools/Cross.toml",
@@ -101,6 +103,9 @@ env("ci")
 
 env("dev")
   .inherit("ci")
+  // debug v8 to fix MET-633: segementation fault bug with custom deno rt
+  // doesn't appear in CI so only dev envs get it
+  .var("V8_FORCE_DEBUG", "true")
   .install(
     ports.act(),
     ports.cargobi({ crateName: "whiz", locked: true }),
@@ -161,13 +166,15 @@ task("version-bump", async ($) => {
 });
 
 task(
-  "b",
-  async ($) => {
-    await $`cargo b --target wasm32-unknown-unknown --package typegraph-ng`;
-    await $`wasm-tools component new "target/wasm32-unknown-unknown/debug/typegraph_ng.wasm"
-    -o ./target/ng.wasm
-   `;
-    // --adapt wasi_snapshot_preview1=./tmp/wasi_snapshot_preview1.reactor.wasm
-  },
-  { inherit: "_wasm" },
+  "clean-rust",
+  ($) =>
+    $.co([
+      $`cargo clean`,
+      $`cargo clean`.cwd("tests/runtimes/wasm_reflected/rust"),
+      $`cargo clean`.cwd("tests/runtimes/wasm_wire/rust"),
+      $`cargo clean`.cwd("tests/metagen/typegraphs/sample/rs"),
+      $`cargo clean`.cwd("tests/metagen/typegraphs/identities/rs"),
+      $`cargo clean`.cwd("./examples/typegraphs/metagen/"),
+    ]),
+  { inherit: "_rust", desc: "Clean cache of all cargo workspaces in repo." },
 );

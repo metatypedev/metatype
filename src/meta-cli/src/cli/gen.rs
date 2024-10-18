@@ -130,7 +130,7 @@ async fn load_fdk_template(
         }));
     }
 
-    let mut entries = HashMap::new();
+    let mut entries = indexmap::IndexMap::new();
     while let Some(res) = group.next().await {
         let (file_name, content) = res?;
         entries.insert(file_name, content);

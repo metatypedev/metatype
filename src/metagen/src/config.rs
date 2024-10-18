@@ -21,7 +21,7 @@ use crate::interlude::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
-    pub targets: HashMap<String, Target>,
+    pub targets: IndexMap<String, Target>,
 }
 
 #[derive(Deserialize, Debug, Clone)]

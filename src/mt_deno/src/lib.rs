@@ -21,7 +21,7 @@ use deno_runtime::deno_core as deno_core; // necessary for re-exported macros to
 
 use std::path::PathBuf;
 
-const DEFAULT_UNSTABLE_FLAGS: &[&str] = &["worker-options", "net"];
+const DEFAULT_UNSTABLE_FLAGS: &[&str] = &["worker-options", "net", "http"];
 const CACHE_BLOCKLIST: &[&str] = &[
     "npm:/@typegraph/sdk",
     "npm:/@typegraph/sdk/",

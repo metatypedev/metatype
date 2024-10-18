@@ -110,9 +110,6 @@ tracing-unwrap.workspace = true
 # tracing-appender.workspace = true
 color-eyre.workspace = true
 
-# prisma
-prisma-models.workspace = true
-
 # os
 num_cpus.workspace = true
 ctrlc.workspace = true

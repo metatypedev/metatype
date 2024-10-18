@@ -120,7 +120,7 @@ for (const name of list) {
       let pyVersion: string;
       await t.should("serialize python typegraph", async () => {
         const { stdout } = await Meta.cli(
-          { currentDir: "examples", env: { RUST_LOG: "trace" } },
+          { currentDir: "examples" },
           "serialize",
           "-f",
           `typegraphs/${name}.py`,
@@ -134,7 +134,6 @@ for (const name of list) {
           {
             currentDir: "examples",
             env: {
-              RUST_LOG: "trace",
               MCLI_LOADER_CMD: "deno run -A {filepath}",
             },
           },

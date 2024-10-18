@@ -7,7 +7,7 @@ use common::typegraph::*;
 
 use crate::{interlude::*, utils::GenDestBuf};
 
-pub type VisitedTypePaths = HashMap<u32, Vec<Vec<u32>>>;
+pub type VisitedTypePaths = IndexMap<u32, Vec<Vec<u32>>>;
 
 #[derive(Debug, Clone)]
 pub enum RenderedName {
@@ -96,7 +96,7 @@ type ReplacementRecords = Vec<(u32, Rc<str>, Box<dyn Fn(&str) -> String>)>;
 pub struct TypeRenderer {
     dest: GenDestBuf,
     pub nodes: Vec<Rc<TypeNode>>,
-    name_memo: HashMap<u32, RenderedName>,
+    name_memo: IndexMap<u32, RenderedName>,
     render_type: Rc<dyn RenderType>,
     replacement_records: ReplacementRecords,
 }

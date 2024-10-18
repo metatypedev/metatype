@@ -6,7 +6,7 @@ mod interlude {
     pub use common::typegraph::TypeNode;
     pub use common::typegraph::Typegraph;
 
-    pub use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+    pub use std::collections::{BTreeMap, BTreeSet};
     pub use std::ops::Deref;
     pub use std::path::{Path, PathBuf};
     pub use std::rc::Rc;
@@ -16,7 +16,7 @@ mod interlude {
         self, self as anyhow, bail, ensure, format_err, ContextCompat, OptionExt, Result, WrapErr,
     };
     pub use futures_concurrency::prelude::*;
-    pub use indexmap::IndexMap;
+    pub use indexmap::{IndexMap, IndexSet};
     pub use log::{debug, error, info, trace, warn};
     pub use pretty_assertions::assert_str_eq;
     pub use serde::{Deserialize, Serialize};
@@ -106,18 +106,18 @@ pub struct GeneratedFile {
 }
 
 #[derive(Debug)]
-pub struct GeneratorOutput(pub HashMap<PathBuf, GeneratedFile>);
+pub struct GeneratorOutput(pub IndexMap<PathBuf, GeneratedFile>);
 
 /// The core trait any metagen generator modules will implement.
 trait Plugin: Send + Sync {
     /// A list of inputs required by an implementatoin to do it's job.
     /// The [GeneratorInputOrder]s here will be resolved by the
     /// host's [InputResolver].
-    fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder>;
+    fn bill_of_inputs(&self) -> IndexMap<String, GeneratorInputOrder>;
 
     fn generate(
         &self,
-        inputs: HashMap<String, GeneratorInputResolved>,
+        inputs: IndexMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput>;
 }
 
@@ -137,7 +137,7 @@ impl GeneratorRunner {
 impl GeneratorRunner {
     pub fn get(name: &str) -> Option<GeneratorRunner> {
         thread_local! {
-            static GENERATORS: HashMap<String, GeneratorRunner> = HashMap::from([
+            static GENERATORS: IndexMap<String, GeneratorRunner> = IndexMap::from([
                 // builtin generatorsFdkPythonGenConfig
                 (
                     "fdk_rust".to_string(),
@@ -249,7 +249,7 @@ pub async fn generate_target(
 
         let gen_name: Arc<str> = gen_name[..].into();
         group.insert(Box::pin(async move {
-            let mut inputs = HashMap::new();
+            let mut inputs = IndexMap::new();
             while let Some(res) = resolve_group.next().await {
                 let (name, input) = res?;
                 inputs.insert(name, input);
@@ -258,7 +258,7 @@ pub async fn generate_target(
             anyhow::Ok((gen_name, out))
         }));
     }
-    let mut out = HashMap::new();
+    let mut out = IndexMap::new();
     while let Some(res) = group.next().await {
         let (gen_name, files) = res?;
         for (path, buf) in files.0 {
@@ -268,7 +268,7 @@ pub async fn generate_target(
             out.insert(path, (gen_name.clone(), buf));
         }
     }
-    let out: HashMap<PathBuf, GeneratedFile> = out
+    let out: IndexMap<PathBuf, GeneratedFile> = out
         .into_iter()
         .map(|(path, (_, buf))| (path, buf))
         .collect();
@@ -304,7 +304,7 @@ pub fn generate_target_sync(
 
         let gen_name: Arc<str> = gen_name[..].into();
         generate_set.push(move || {
-            let mut inputs = HashMap::new();
+            let mut inputs = IndexMap::new();
             for res in resolve_set {
                 let (name, input) = res?;
                 inputs.insert(name, input?);
@@ -314,7 +314,7 @@ pub fn generate_target_sync(
         });
     }
 
-    let mut out = HashMap::new();
+    let mut out = IndexMap::new();
     for res in generate_set {
         let (gen_name, files) = res()?;
         for (path, buf) in files.0 {

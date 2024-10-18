@@ -5,12 +5,13 @@ use crate::interlude::*;
 
 use super::types::*;
 use common::typegraph::{EffectType, ListTypeData, OptionalTypeData};
+use indexmap::IndexSet;
 
 pub struct RenderManifest {
-    pub return_types: HashSet<u32>,
-    pub arg_types: HashSet<u32>,
-    pub node_metas: HashSet<u32>,
-    pub selections: HashSet<u32>,
+    pub return_types: IndexSet<u32>,
+    pub arg_types: IndexSet<u32>,
+    pub node_metas: IndexSet<u32>,
+    pub selections: IndexSet<u32>,
     pub root_fns: Vec<RootFn>,
 }
 
@@ -26,10 +27,10 @@ pub struct RootFn {
 /// Collect upfront all the items we need to render
 pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
     let mut root_fns = vec![];
-    let mut selections = HashSet::new();
-    let mut return_types = HashSet::new();
-    let mut node_metas = HashSet::new();
-    let mut arg_types = HashSet::new();
+    let mut selections = IndexSet::new();
+    let mut return_types = IndexSet::new();
+    let mut node_metas = IndexSet::new();
+    let mut arg_types = IndexSet::new();
 
     let (_root_base, root) = tg.root().map_err(anyhow_to_eyre!())?;
     for (key, &func_id) in &root.properties {

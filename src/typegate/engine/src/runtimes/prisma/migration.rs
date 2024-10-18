@@ -8,18 +8,18 @@ use crate::interlude::*;
 use anyhow::anyhow;
 use anyhow::Result;
 use convert_case::{Case, Casing};
-use log::{error, trace};
 use regex::Regex;
+use schema_core::json_rpc::types::SchemasContainer;
+use schema_core::json_rpc::types::SchemasWithConfigDir;
 use schema_core::json_rpc::types::{
     ApplyMigrationsInput, CreateMigrationInput, DevAction, DevDiagnosticInput, DevDiagnosticOutput,
     DiffParams, DiffTarget, EvaluateDataLossInput, ListMigrationDirectoriesInput, SchemaContainer,
 };
 use schema_core::{CoreError, CoreResult, GenericApi};
 use serde::Serialize;
-use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use tempfile::{tempdir_in, NamedTempFile, TempDir};
+use tempfile::{tempdir_in, TempDir};
 
 trait FormatError<R> {
     fn format_error(self) -> Result<R>;
@@ -48,7 +48,12 @@ pub async fn loss(
     let api = schema_core::schema_api(Some(datasource.clone()), None)?;
     let data_loss = EvaluateDataLossInput {
         migrations_directory_path: migration_folder.to_string(),
-        prisma_schema: schema.to_string(),
+        schema: SchemasContainer {
+            files: vec![SchemaContainer {
+                content: schema,
+                path: "schema.generated.prisma".into(),
+            }],
+        },
     };
 
     let loss = match api.evaluate_data_loss(data_loss).await {
@@ -118,12 +123,17 @@ impl MigrationContext {
             .await
     }
 
-    fn schema(&self) -> String {
-        format!("{}{}", self.builder.datasource, self.builder.datamodel)
+    fn schema(&self) -> SchemasContainer {
+        SchemasContainer {
+            files: vec![SchemaContainer {
+                content: format!("{}{}", self.builder.datasource, self.builder.datamodel),
+                path: "schema.generated.prisma".into(),
+            }],
+        }
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(crate = "serde")]
 pub enum PrismaApplyResult {
     ResetRequired {
@@ -168,7 +178,7 @@ impl MigrationContext {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaCreateResult {
     created_migration_name: Option<String>,
@@ -185,7 +195,7 @@ impl MigrationContext {
                 draft: !apply,
                 migration_name: name.to_case(Case::Snake),
                 migrations_directory_path: self.migrations_dir.to_string(),
-                prisma_schema: self.schema(),
+                schema: self.schema(),
             })
             .await
             .format_error()?;
@@ -222,7 +232,6 @@ impl MigrationContext {
 }
 
 pub async fn diff(
-    tmp_dir_path: &Path,
     datasource: String,
     datamodel: String,
     script: bool,
@@ -236,23 +245,22 @@ pub async fn diff(
         )))),
     )?;
 
-    let dir = tempdir_in(tmp_dir_path)?;
-    debug!("diff dir: {dir:?} tmp_dir: {tmp_dir_path:?} script: {script}");
-    let mut source_file = NamedTempFile::new_in(&dir)?;
-    writeln!(source_file, "{datasource}").unwrap();
-
-    let mut model_file = NamedTempFile::new_in(&dir)?;
-    writeln!(model_file, "{schema}").unwrap();
-
     let params = DiffParams {
         exit_code: None,
-        from: DiffTarget::SchemaDatasource(SchemaContainer {
-            schema: source_file.path().display().to_string(),
+        from: DiffTarget::SchemaDatasource(SchemasWithConfigDir {
+            config_dir: super::engine::CONFIG_DIR.into(),
+            files: vec![SchemaContainer {
+                content: datasource,
+                path: "schema_diff_from.generated.prisma".into(),
+            }],
         }),
         script,
         shadow_database_url: None,
-        to: DiffTarget::SchemaDatamodel(SchemaContainer {
-            schema: model_file.path().display().to_string(),
+        to: DiffTarget::SchemaDatamodel(SchemasContainer {
+            files: vec![SchemaContainer {
+                content: schema,
+                path: "schema_diff_to.generated.prisma".into(),
+            }],
         }),
     };
 
@@ -379,7 +387,7 @@ impl ParsedDiff {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaDeployOut {
     migration_count: usize,

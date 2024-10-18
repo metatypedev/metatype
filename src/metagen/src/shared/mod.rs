@@ -13,7 +13,7 @@ use crate::interlude::*;
 
 #[derive(Debug, Clone)]
 pub struct FdkTemplate {
-    pub entries: HashMap<&'static str, std::borrow::Cow<'static, str>>,
+    pub entries: IndexMap<&'static str, std::borrow::Cow<'static, str>>,
 }
 
 pub struct StubbedFunction {
@@ -38,7 +38,7 @@ pub fn filter_stubbed_funcs(
                 .map(|idx| (idx as u32, Rc::new(tg.runtimes[idx].clone())))
                 .with_context(|| format!("runtime {rt_name} not found in typegraph"))
         })
-        .collect::<Result<HashMap<_, _>, _>>()?;
+        .collect::<Result<IndexMap<_, _>, _>>()?;
     let stubbed_materializers = tg
         .materializers
         .iter()
@@ -46,7 +46,7 @@ pub fn filter_stubbed_funcs(
         // TODO: consider filtering out non "function" mats
         .filter(|(_, mat)| stubbed_runtimes.contains_key(&mat.runtime))
         .map(|(id, _)| id as u32)
-        .collect::<HashSet<_>>();
+        .collect::<IndexSet<_>>();
     let stubbed_funcs = tg
         .types
         .iter()

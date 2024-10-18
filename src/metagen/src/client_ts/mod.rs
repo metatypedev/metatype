@@ -47,13 +47,13 @@ impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
     pub fn new(config: ClienTsGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
-        config.validate(&())?;
+        config.validate()?;
         Ok(Self { config })
     }
 }
 
 impl crate::Plugin for Generator {
-    fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder> {
+    fn bill_of_inputs(&self) -> IndexMap<String, GeneratorInputOrder> {
         [(
             Self::INPUT_TG.to_string(),
             if let Some(tg_name) = &self.config.base.typegraph_name {
@@ -75,7 +75,7 @@ impl crate::Plugin for Generator {
 
     fn generate(
         &self,
-        inputs: HashMap<String, GeneratorInputResolved>,
+        inputs: IndexMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
         let tg = match inputs
             .get(Self::INPUT_TG)
@@ -85,7 +85,7 @@ impl crate::Plugin for Generator {
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
             _ => bail!("unexpected input type"),
         };
-        let mut out = HashMap::new();
+        let mut out = IndexMap::new();
         out.insert(
             self.config.base.path.join("client.ts"),
             GeneratedFile {
@@ -279,8 +279,8 @@ fn render_node_metas(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
     name_mapper: Rc<NameMapper>,
-) -> Result<(NameMemo, HashSet<u32>)> {
-    let named_types = Rc::new(std::sync::Mutex::new(HashSet::new()));
+) -> Result<(NameMemo, IndexSet<u32>)> {
+    let named_types = Rc::new(std::sync::Mutex::new(IndexSet::new()));
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
         Rc::new(node_metas::TsNodeMetasRenderer {

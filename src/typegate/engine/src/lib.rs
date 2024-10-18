@@ -9,7 +9,6 @@ mod typegraph;
 #[allow(unused_imports)]
 mod interlude {
     pub use anyhow::{Context, Result};
-    pub use log::{debug, error, info, trace, warn};
     pub use mt_deno::deno::{
         self,
         deno_runtime::{
@@ -23,6 +22,7 @@ mod interlude {
     };
     pub use std::{borrow::Cow, cell::RefCell, path::Path, path::PathBuf, rc::Rc, sync::Arc};
     pub use tap::prelude::*;
+    pub use tracing::{debug, error, info, trace, warn};
 }
 
 pub use deno_core::{resolve_url, resolve_url_or_path};
