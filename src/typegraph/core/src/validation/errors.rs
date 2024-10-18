@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::core::Error;
+use crate::errors::TgError;
 
 // pub fn invalid_runtime_type(runtime: &str, materializer: &str) -> Error {
 //     format!(
@@ -10,7 +10,7 @@ use crate::wit::core::Error;
 //     )
 // }
 
-pub fn invalid_output_type_predefined(name: &str, expected: &str, got: &str) -> Error {
+pub fn invalid_output_type_predefined(name: &str, expected: &str, got: &str) -> TgError {
     format!(
         "invalid output type for predefined function {}: expected {}, got {}",
         name, expected, got
@@ -18,6 +18,6 @@ pub fn invalid_output_type_predefined(name: &str, expected: &str, got: &str) -> 
     .into()
 }
 
-pub fn unknown_predefined_function(name: &str) -> Error {
+pub fn unknown_predefined_function(name: &str) -> TgError {
     format!("unknown predefined function {}", name).into()
 }

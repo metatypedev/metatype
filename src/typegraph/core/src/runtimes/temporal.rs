@@ -1,14 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::Materializer;
-use crate::errors::Result;
-use crate::global_store::Store;
-use crate::t;
-use crate::t::TypeBuilder;
-use crate::wit::core::FuncParams;
-use crate::wit::runtimes::Effect as WitEffect;
-use crate::wit::runtimes::{RuntimeId, TemporalOperationData, TemporalOperationType};
+use crate::{
+    errors::Result,
+    global_store::Store,
+    t::{self, TypeBuilder},
+    types::{
+        core::{FuncParams, RuntimeId},
+        runtimes::{Effect, TemporalOperationData, TemporalOperationType, TemporalRuntimeData},
+    },
+};
+
+use super::{Materializer, Runtime};
 
 #[derive(Debug)]
 pub enum TemporalMaterializer {
@@ -32,7 +35,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
             inp.prop("task_queue", t::string().build()?);
             inp.prop("args", t::list(arg.into()).build()?);
             (
-                WitEffect::Create(false),
+                Effect::Create(false),
                 TemporalMaterializer::Start {
                     workflow_type: mat_arg,
                 },
@@ -50,7 +53,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
             inp.prop("run_id", t::string().build()?);
             inp.prop("args", t::list(arg.into()).build()?);
             (
-                WitEffect::Update(false),
+                Effect::Update(false),
                 TemporalMaterializer::Signal {
                     signal_name: mat_arg,
                 },
@@ -68,7 +71,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
             inp.prop("run_id", t::string().build()?);
             inp.prop("args", t::list(arg.into()).build()?);
             (
-                WitEffect::Read,
+                Effect::Read,
                 TemporalMaterializer::Query {
                     query_type: mat_arg,
                 },
@@ -94,7 +97,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
                 ),
             ]);
             (
-                WitEffect::Read,
+                Effect::Read,
                 TemporalMaterializer::Describe,
                 out_ty.build()?,
             )
@@ -108,4 +111,15 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
         out: out_ty.into(),
         mat: mat_id,
     })
+}
+
+pub fn register_temporal_runtime(data: TemporalRuntimeData) -> Result<RuntimeId> {
+    Ok(Store::register_runtime(Runtime::Temporal(data.into())))
+}
+
+pub fn generate_temporal_operation(
+    runtime: RuntimeId,
+    data: TemporalOperationData,
+) -> Result<FuncParams> {
+    temporal_operation(runtime, data)
 }

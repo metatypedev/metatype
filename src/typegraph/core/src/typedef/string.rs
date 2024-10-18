@@ -13,8 +13,8 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
+    types::core::TypeString,
     types::{FindAttribute as _, RefAttrs, StringT, TypeDefData},
-    wit::core::TypeString,
 };
 
 impl TypeConversion for StringT {

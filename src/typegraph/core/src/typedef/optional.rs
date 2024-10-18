@@ -13,8 +13,8 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
+    types::core::TypeOptional,
     types::{FindAttribute as _, Optional, RefAttrs, TypeDefData, TypeId},
-    wit::core::TypeOptional,
 };
 
 impl TypeConversion for Optional {

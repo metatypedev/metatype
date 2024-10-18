@@ -3,7 +3,7 @@
 
 use std::borrow::Cow;
 
-use crate::errors::Result;
+use crate::errors::{Result, TgError};
 use crate::types::{TypeDef, TypeDefExt};
 
 #[derive(Debug)]
@@ -32,7 +32,7 @@ impl<'a> RuntimeConfig<'a> {
 }
 
 impl<'a> TryFrom<&'a TypeDef> for RuntimeConfig<'a> {
-    type Error = crate::wit::core::Error;
+    type Error = TgError;
 
     fn try_from(type_def: &'a TypeDef) -> Result<Self> {
         Ok(Self::new(type_def.base().runtime_config.as_ref()))

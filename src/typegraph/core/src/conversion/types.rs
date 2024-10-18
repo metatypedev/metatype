@@ -1,13 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::errors::Result;
-use crate::typegraph::TypegraphContext;
-use crate::types::{PolicySpec, RefAttrs, TypeId};
+use std::rc::Rc;
+
 use common::typegraph::{Injection, PolicyIndices, TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
-use std::rc::Rc;
+
+use crate::{
+    errors::Result,
+    typegraph::TypegraphContext,
+    types::{PolicySpec, RefAttrs, TypeDef, TypeId},
+};
 
 #[enum_dispatch]
 pub trait TypeConversion {

@@ -1,15 +1,26 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+#[allow(unused)]
+pub mod aws;
+pub mod builders;
+#[allow(unused)]
+pub mod core;
+#[allow(unused)]
+pub mod runtimes;
 pub mod type_def;
 pub mod type_id;
 pub mod type_ref;
+#[allow(unused)]
+pub mod utils;
 
 use std::borrow::Cow;
 
 pub use type_def::*;
 pub use type_id::*;
 pub use type_ref::*;
+
+use crate::{errors::Result, types::core::TypeId as CoreTypeId};
 
 #[derive(Clone, Debug)]
 pub enum Type {
@@ -48,4 +59,8 @@ impl Type {
             Type::Def(typ) => typ.repr(),
         }
     }
+}
+
+pub fn get_type_repr(type_id: CoreTypeId) -> Result<String> {
+    TypeId(type_id).repr()
 }

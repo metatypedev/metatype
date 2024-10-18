@@ -1,6 +1,9 @@
-use crate::errors::Result;
-use crate::types::Type;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    errors::Result,
+    types::{core::PolicySpec as CorePolicySpec, Type},
+};
 
 use super::{RefAttr, TypeRef};
 
@@ -21,18 +24,16 @@ pub enum PolicySpec {
     PerEffect(PolicyPerEffect),
 }
 
-impl From<crate::wit::core::PolicySpec> for PolicySpec {
-    fn from(spec: crate::wit::core::PolicySpec) -> Self {
+impl From<CorePolicySpec> for PolicySpec {
+    fn from(spec: CorePolicySpec) -> Self {
         match spec {
-            crate::wit::core::PolicySpec::Simple(id) => PolicySpec::Simple(PolicyId(id)),
-            crate::wit::core::PolicySpec::PerEffect(per_effect) => {
-                PolicySpec::PerEffect(PolicyPerEffect {
-                    read: per_effect.read.map(PolicyId),
-                    create: per_effect.create.map(PolicyId),
-                    update: per_effect.update.map(PolicyId),
-                    delete: per_effect.delete.map(PolicyId),
-                })
-            }
+            CorePolicySpec::Simple(id) => PolicySpec::Simple(PolicyId(id)),
+            CorePolicySpec::PerEffect(per_effect) => PolicySpec::PerEffect(PolicyPerEffect {
+                read: per_effect.read.map(PolicyId),
+                create: per_effect.create.map(PolicyId),
+                update: per_effect.update.map(PolicyId),
+                delete: per_effect.delete.map(PolicyId),
+            }),
         }
     }
 }

@@ -175,7 +175,7 @@ impl TaskAction for ListAction {
         &self.task_ref
     }
 
-    async fn get_rpc_response(&self, _call: &serde_json::Value) -> Result<serde_json::Value> {
+    async fn get_rpc_response(&self, _call: serde_json::Value) -> Result<serde_json::Value> {
         Err(ferr!("rpc request not supported on list task"))
     }
 }

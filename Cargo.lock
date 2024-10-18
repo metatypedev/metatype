@@ -6816,6 +6816,7 @@ dependencies = [
  "tracing-subscriber",
  "tracing-unwrap",
  "typegate_engine",
+ "typegraph_core",
 ]
 
 [[package]]
@@ -12736,7 +12737,6 @@ dependencies = [
  "serde_json",
  "sha2 0.10.8",
  "unindent",
- "wit-bindgen",
 ]
 
 [[package]]

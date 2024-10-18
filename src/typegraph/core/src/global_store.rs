@@ -1,21 +1,26 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::errors::{self, Result, TgError};
-use crate::runtimes::{
-    DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
-};
-use crate::types::type_ref::TypeRef;
-use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
-use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
-use crate::wit::utils::Auth as WitAuth;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-#[allow(unused)]
-use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
-use std::rc::Rc;
-use std::{cell::RefCell, collections::HashMap};
+
+use crate::{
+    errors::{self, Result, TgError},
+    runtimes::{DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime},
+};
+
+use crate::types::{
+    core::{MaterializerId, Policy as CorePolicy, PolicyId, RuntimeId},
+    type_ref::TypeRef,
+    utils::Auth,
+};
+
+use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
+
+#[allow(unused)]
+use crate::types::runtimes::{Effect, MaterializerDenoPredefined};
 
 pub type Policy = Rc<CorePolicy>;
 
@@ -82,7 +87,7 @@ impl Store {
                 runtime_id: deno_runtime,
                 effect: Effect::Read,
                 data: MaterializerData::Deno(Rc::new(DenoMaterializer::Predefined(
-                    crate::wit::runtimes::MaterializerDenoPredefined {
+                    MaterializerDenoPredefined {
                         name: "true".to_string(),
                     },
                 ))),
@@ -491,7 +496,7 @@ impl Store {
         with_store(|s| s.graphql_endpoints.clone())
     }
 
-    pub fn add_auth(auth: WitAuth) -> Result<u32> {
+    pub fn add_auth(auth: Auth) -> Result<u32> {
         with_store_mut(|s| {
             let auth = auth.convert()?;
             s.auths.push(auth);

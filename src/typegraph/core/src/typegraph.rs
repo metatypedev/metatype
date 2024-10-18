@@ -1,36 +1,41 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::conversion::hash::Hasher;
-use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
-use crate::conversion::types::TypeConversion;
-use crate::global_store::SavedState;
-use crate::types::{
-    FindAttribute as _, PolicySpec, ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, WithPolicy,
+use std::{
+    cell::RefCell,
+    collections::{hash_map::Entry, HashMap, HashSet},
+    hash::Hasher as _,
+    path::{Path, PathBuf},
+    rc::Rc,
 };
-use crate::utils::postprocess::naming::NamingProcessor;
-use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
-use crate::validation::validate_name;
-use crate::{
-    errors::{self, Result},
-    global_store::Store,
-};
-use common::typegraph::runtimes::TGRuntime;
-use common::typegraph::{
-    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
-    TypeNode, TypeNodeBase, Typegraph,
-};
-use indexmap::IndexMap;
-use std::cell::RefCell;
-use std::collections::hash_map::Entry;
-use std::collections::{HashMap, HashSet};
-use std::hash::Hasher as _;
-use std::path::{Path, PathBuf};
-use std::rc::Rc;
 
-use crate::wit::core::{
-    Artifact as WitArtifact, Error as TgError, MaterializerId, PolicyId, RuntimeId,
-    SerializeParams, TypegraphInitParams,
+use common::typegraph::{
+    runtimes::TGRuntime, Materializer, ObjectTypeData, Policy, PolicyIndices,
+    PolicyIndicesByEffect, Queries, TypeMeta, TypeNode, TypeNodeBase, Typegraph,
+};
+
+use indexmap::IndexMap;
+
+use crate::{
+    conversion::{
+        hash::Hasher,
+        runtimes::{convert_materializer, convert_runtime, ConvertedRuntime},
+        types::TypeConversion,
+    },
+    errors::{self, Result, TgError},
+    global_store::{SavedState, Store},
+    params::apply,
+    types::{
+        core::{PolicySpec as CorePolicySpec, TransformData, TypeId as CoreTypeId},
+        PolicySpec,
+    },
+    utils::postprocess::{naming::NamingProcessor, PostProcessor, TypegraphPostProcessor},
+    validation::validate_name,
+};
+
+use crate::types::{
+    core::{Artifact, MaterializerId, PolicyId, RuntimeId, SerializeParams, TypegraphInitParams},
+    FindAttribute as _, ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, WithPolicy,
 };
 
 #[derive(Default)]
@@ -185,7 +190,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> {
+pub fn serialize(params: SerializeParams) -> Result<(String, Vec<Artifact>)> {
     #[cfg(test)]
     eprintln!("Serializing typegraph...");
 
@@ -283,12 +288,13 @@ fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
 }
 
 pub fn expose(
-    fields: Vec<(String, TypeId)>,
-    default_policy: Option<Vec<crate::wit::core::PolicySpec>>,
+    fields: Vec<(String, CoreTypeId)>,
+    default_policy: Option<Vec<CorePolicySpec>>,
 ) -> Result<()> {
     let fields = fields
         .into_iter()
         .map(|(key, type_id)| -> Result<_> {
+            let type_id = TypeId(type_id);
             let (_, attrs) = type_id.resolve_ref()?;
             let policy_chain = attrs.find_policy().unwrap_or(&[]);
             let has_policy = !policy_chain.is_empty();
@@ -342,6 +348,18 @@ pub fn set_seed(seed: Option<u32>) -> Result<()> {
     Ok(())
 }
 
+pub fn get_transform_data(
+    resolver_input: CoreTypeId,
+    transform_tree: String,
+) -> Result<TransformData> {
+    apply::build_transform_data(
+        resolver_input.into(),
+        &serde_json::from_str(&transform_tree).map_err(|e| -> TgError {
+            format!("Error while parsing transform tree: {e:?}").into()
+        })?,
+    )
+}
+
 impl TypegraphContext {
     pub fn hash_type(&mut self, type_id: TypeId, runtime_id: Option<u32>) -> Result<u64> {
         // let type_id = type_def.id().into();
@@ -363,11 +381,7 @@ impl TypegraphContext {
         }
     }
 
-    pub fn register_type(
-        &mut self,
-        type_id: TypeId,
-        runtime_id: Option<u32>,
-    ) -> Result<TypeId, TgError> {
+    pub fn register_type(&mut self, type_id: TypeId, runtime_id: Option<u32>) -> Result<TypeId> {
         let (mut type_def, ref_attrs) = type_id.resolve_ref()?;
         // we remove the name before hashing if it's not
         // user named
@@ -410,10 +424,7 @@ impl TypegraphContext {
         }
     }
 
-    pub fn register_materializer(
-        &mut self,
-        id: u32,
-    ) -> Result<(MaterializerId, RuntimeId), TgError> {
+    pub fn register_materializer(&mut self, id: u32) -> Result<(MaterializerId, RuntimeId)> {
         match self.mapping.materializers.entry(id) {
             Entry::Vacant(e) => {
                 let idx = self.materializers.len();
@@ -479,7 +490,7 @@ impl TypegraphContext {
         }
     }
 
-    pub fn register_runtime(&mut self, id: u32) -> Result<RuntimeId, TgError> {
+    pub fn register_runtime(&mut self, id: u32) -> Result<RuntimeId> {
         if let Some(idx) = self.mapping.runtimes.get(&id) {
             Ok(*idx)
         } else {
