@@ -2,20 +2,40 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Operation, Run } from "../../../engine/runtime.js";
+import { TaskContext } from "../deno/shared_types.ts";
 export type {
+  Backend,
   Operation,
   OperationEvent,
   Run,
-  Backend,
 } from "../../../engine/runtime.js";
 
 export type AnyString = string & Record<string | number | symbol, never>;
 
 export type WorkerEvent = "START" | AnyString;
 
+export type TaskData = {
+  modulePath: string;
+  functionName: string;
+  run: Run;
+  kwargs: Record<string, unknown>;
+  schedule: string;
+  internal: TaskContext;
+};
+
+export type ResultData = {
+  kind: string;
+  result: unknown;
+  run: Run;
+  schedule: string;
+  exception?: Error;
+};
+
+export type Data = TaskData | ResultData | string;
+
 export type WorkerData = {
   type: WorkerEvent;
-  data: any;
+  data: Data;
 };
 
 export type WorkerEventHandler = (message: Result<unknown>) => Promise<void>;
@@ -33,7 +53,7 @@ export function Err<E>(payload: E): Result<E> {
   return { error: true, payload };
 }
 
-export function Msg(type: WorkerEvent, data: unknown): WorkerData {
+export function Msg(type: WorkerEvent, data: Data): WorkerData {
   return { type, data };
 }
 

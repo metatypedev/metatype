@@ -1,9 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { errorToString } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
-import { Err, Msg, Ok, WorkerData, WorkflowResult } from "./types.ts";
+import { Err, Msg, Ok, TaskData, WorkerData, WorkflowResult } from "./types.ts";
 
 let runCtx: Context | undefined;
 
@@ -12,7 +11,7 @@ self.onmessage = async function (event) {
   switch (type) {
     case "START": {
       const { modulePath, functionName, run, schedule, kwargs, internal } =
-        data;
+        data as TaskData;
       // FIXME: handle case when script is missing and notify WorkerManager so it cleans up
       // its registry.
       const module = await import(modulePath);
@@ -32,27 +31,36 @@ self.onmessage = async function (event) {
         .then((wfResult: unknown) => {
           self.postMessage(
             Ok(
-              Msg(type, {
-                kind: "SUCCESS",
-                result: wfResult,
-                run: runCtx!.getRun(),
-                schedule,
-              } satisfies WorkflowResult)
-            )
+              Msg(
+                type,
+                {
+                  kind: "SUCCESS",
+                  result: wfResult,
+                  run: runCtx!.getRun(),
+                  schedule,
+                } satisfies WorkflowResult,
+              ),
+            ),
           );
         })
         .catch((wfException: unknown) => {
           self.postMessage(
             Ok(
-              Msg(type, {
-                kind: "FAIL",
-                result: errorToString(wfException),
-                exception:
-                  wfException instanceof Error ? wfException : undefined,
-                run: runCtx!.getRun(),
-                schedule,
-              } satisfies WorkflowResult)
-            )
+              Msg(
+                type,
+                {
+                  kind: "FAIL",
+                  result: wfException instanceof Error
+                    ? wfException.message
+                    : JSON.stringify(wfException),
+                  exception: wfException instanceof Error
+                    ? wfException
+                    : undefined,
+                  run: runCtx!.getRun(),
+                  schedule,
+                } satisfies WorkflowResult,
+              ),
+            ),
           );
         });
       break;

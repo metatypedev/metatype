@@ -30,12 +30,15 @@ from typegraph.wit import runtimes, store
 
 
 class Backend:
+    @staticmethod
     def dev_memory():
         return SubstantialBackendMemory()
 
+    @staticmethod
     def dev_fs():
         return SubstantialBackendFs()
 
+    @staticmethod
     def redis(connection_string_secret: str):
         return SubstantialBackendRedis(value=RedisBackend(connection_string_secret))
 
@@ -47,7 +50,13 @@ class SubstantialRuntime(Runtime):
         file_descriptions: List[WorkflowFileDescription],
     ):
         data = SubstantialRuntimeData(backend, file_descriptions)
-        super().__init__(runtimes.register_substantial_runtime(store, data))
+
+        runtime_id = runtimes.register_substantial_runtime(store, data)
+        if isinstance(runtime_id, Err):
+            raise Exception(runtime_id.value)
+
+        super().__init__(runtime_id.value)
+
         self.backend = backend
 
     def _generic_substantial_func(
@@ -61,7 +70,7 @@ class SubstantialRuntime(Runtime):
             func_out=None if func_out is None else func_out._id,
             operation=operation,
         )
-        func_data = runtimes.generate_substantial_operation(store, self.id.value, data)
+        func_data = runtimes.generate_substantial_operation(store, self.id, data)
 
         if isinstance(func_data, Err):
             raise Exception(func_data.value)
