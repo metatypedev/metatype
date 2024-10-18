@@ -73,6 +73,8 @@ const Meta = {
     metadataAppend: getOp("op_sub_metadata_append"),
     metadataWriteWorkflowLink: getOp("op_sub_metadata_write_workflow_link"),
     metadataReadWorkflowLinks: getOp("op_sub_metadata_read_workflow_links"),
+    metadataWriteParentChildLink: getOp("op_sub_metadata_write_parent_child_link"),
+    metadataEnumerateAllChildren: getOp("op_sub_metadata_enumerate_all_children"),
   },
   grpc: {
     register: getOp("op_grpc_register"),

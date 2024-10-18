@@ -37,10 +37,13 @@ export function basicTestTemplate(
 ) {
   Meta.test(
     {
-      name: `Substantial runtime and workflow execution lifecycle (${backendName})`,
+      name: `Basic workflow execution lifecycle + interrupts (${backendName})`,
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
+      // FIXME: typegate.local not available through workers when using ctx.gql on tests?
+      Deno.env.set("TEST_OVERRIDE_GQL_ORIGIN", `http://localhost:${t.port}`);
+
       cleanup && t.addCleanup(cleanup);
 
       const e = await t.engine("runtimes/substantial/substantial.py", {
@@ -49,15 +52,15 @@ export function basicTestTemplate(
 
       let currentRunId: string | null = null;
       await t.should(
-        `start a workflow and return its run id (${backendName})`,
+        `start saveAndSleepExample workflow and return its run id (${backendName})`,
         async () => {
           await gql`
             mutation {
-              start(kwargs: { a: 10, b: 20 })
+              start_sleep(kwargs: { a: 10, b: 20 })
             }
           `
             .expectBody((body) => {
-              currentRunId = body.data?.start! as string;
+              currentRunId = body.data?.start_sleep! as string;
               assertExists(
                 currentRunId,
                 "Run id was not returned when workflow was started"
@@ -68,14 +71,14 @@ export function basicTestTemplate(
       );
 
       // Let interrupts to do their jobs for a bit
-      await sleep(8 * 1000);
+      await sleep(10 * 1000); // including remote_add cost (about 1.5s)
 
       await t.should(
-        `have workflow marked as ongoing (${backendName})`,
+        `have saveAndSleepExample workflow marked as ongoing (${backendName})`,
         async () => {
           await gql`
             query {
-              results {
+              results(name: "saveAndSleepExample") {
                 ongoing {
                   count
                   runs {
@@ -103,44 +106,47 @@ export function basicTestTemplate(
 
       await sleep(delays.awaitSleepCompleteSec * 1000);
 
-      await t.should(`complete sleep workflow (${backendName})`, async () => {
-        await gql`
-          query {
-            results {
-              ongoing {
-                count
-              }
-              completed {
-                count
-                runs {
-                  run_id
-                  result {
-                    status
-                    value
+      await t.should(
+        `complete saveAndSleepExample workflow (${backendName})`,
+        async () => {
+          await gql`
+            query {
+              results(name: "saveAndSleepExample") {
+                ongoing {
+                  count
+                }
+                completed {
+                  count
+                  runs {
+                    run_id
+                    result {
+                      status
+                      value
+                    }
                   }
                 }
               }
             }
-          }
-        `
-          .expectData({
-            results: {
-              ongoing: {
-                count: 0,
+          `
+            .expectData({
+              results: {
+                ongoing: {
+                  count: 0,
+                },
+                completed: {
+                  count: 1,
+                  runs: [
+                    {
+                      run_id: currentRunId,
+                      result: { status: "COMPLETED", value: 30 },
+                    },
+                  ],
+                },
               },
-              completed: {
-                count: 1,
-                runs: [
-                  {
-                    run_id: currentRunId,
-                    result: { status: "COMPLETED", value: 30 },
-                  },
-                ],
-              },
-            },
-          })
-          .on(e);
-      });
+            })
+            .on(e);
+        }
+      );
     }
   );
 }
@@ -223,7 +229,7 @@ export function concurrentWorkflowTestTemplate(
                 event: { payload: false }
               )
               # will abort
-              three: abort_email_confirmation(run_id: $three_run_id)
+              three: stop(run_id: $three_run_id)
             }
           `
             .withVars({
@@ -234,7 +240,7 @@ export function concurrentWorkflowTestTemplate(
             .expectData({
               one: runIds[0],
               two: runIds[1],
-              three: runIds[2],
+              three: [runIds[2]],
             })
             .on(e);
         }
@@ -250,7 +256,7 @@ export function concurrentWorkflowTestTemplate(
       await t.should(`complete execution (${backendName})`, async () => {
         await gql`
           query {
-            email_results {
+            results(name: "eventsAndExceptionExample") {
               ongoing {
                 count
               }
@@ -269,22 +275,22 @@ export function concurrentWorkflowTestTemplate(
         `
           .expectBody((body) => {
             assertEquals(
-              body?.data?.email_results?.ongoing?.count,
+              body?.data?.results?.ongoing?.count,
               0,
-              "0 workflow currently running"
+              `0 workflow currently running (${backendName})`
             );
 
             assertEquals(
-              body?.data?.email_results?.completed?.count,
+              body?.data?.results?.completed?.count,
               3,
-              "3 workflows completed"
+              `3 workflows completed (${backendName})`
             );
 
             const localSorter = (a: any, b: any) =>
               a.run_id.localeCompare(b.run_id);
 
             const received =
-              body?.data?.email_results?.completed?.runs ?? ([] as Array<any>);
+              body?.data?.results?.completed?.runs ?? ([] as Array<any>);
             const expected = [
               {
                 result: {
@@ -312,7 +318,7 @@ export function concurrentWorkflowTestTemplate(
             assertEquals(
               received.sort(localSorter),
               expected.sort(localSorter),
-              "All three workflows have completed, including the aborted one"
+              `All three workflows have completed, including the aborted one (${backendName})`
             );
           })
           .on(e);
@@ -371,7 +377,7 @@ export function retrySaveTestTemplate(
 
               assertExists(resolvedId, "resolve runId");
               assertExists(retryId, "retry runId");
-              assertExists(timeoutId, "timeou runId");
+              assertExists(timeoutId, "timeout runId");
               assertExists(retryAbortMeId, "retry_abort_me runId");
             })
             .on(e);
@@ -385,14 +391,14 @@ export function retrySaveTestTemplate(
         async () => {
           await gql`
             mutation {
-              abort_retry(run_id: $run_id)
+              abort_retry: stop(run_id: $run_id)
             }
           `
             .withVars({
               run_id: retryAbortMeId,
             })
             .expectData({
-              abort_retry: retryAbortMeId,
+              abort_retry: [retryAbortMeId],
             })
             .on(e);
         }
@@ -406,7 +412,7 @@ export function retrySaveTestTemplate(
         async () => {
           await gql`
             query {
-              retry_results {
+              results(name: "retryExample") {
                 ongoing {
                   count
                   runs {
@@ -428,23 +434,22 @@ export function retrySaveTestTemplate(
           `
             .expectBody((body) => {
               assertEquals(
-                body?.data?.retry_results?.ongoing?.count,
+                body?.data?.results?.ongoing?.count,
                 0,
-                "0 workflow currently running"
+                `0 workflow currently running (${backendName})`
               );
 
               assertEquals(
-                body?.data?.retry_results?.completed?.count,
+                body?.data?.results?.completed?.count,
                 4,
-                "4 workflows completed"
+                `4 workflows completed (${backendName})`
               );
 
               const localSorter = (a: any, b: any) =>
                 a.run_id.localeCompare(b.run_id);
 
               const received =
-                body?.data?.retry_results?.completed?.runs ??
-                ([] as Array<any>);
+                body?.data?.results?.completed?.runs ?? ([] as Array<any>);
               const expected = [
                 {
                   result: {
@@ -479,12 +484,132 @@ export function retrySaveTestTemplate(
               assertEquals(
                 received.sort(localSorter),
                 expected.sort(localSorter),
-                "All workflows have completed"
+                `All workflows have completed (${backendName})`
               );
             })
             .on(e);
         }
       );
+    }
+  );
+}
+
+export function childWorkflowTestTemplate(
+  backendName: BackendName,
+  {
+    delays,
+    secrets,
+  }: {
+    delays: {
+      awaitCompleteSec: number;
+    };
+    secrets?: Record<string, string>;
+  },
+  cleanup?: MetaTestCleanupFn
+) {
+  Meta.test(
+    {
+      name: `Child workflows (${backendName})`,
+    },
+    async (t) => {
+      Deno.env.set("SUB_BACKEND", backendName);
+      // FIXME: typegate.local not available through workers when using ctx.gql on tests?
+      Deno.env.set("TEST_OVERRIDE_GQL_ORIGIN", `http://localhost:${t.port}`);
+
+      cleanup && t.addCleanup(cleanup);
+
+      const e = await t.engine(
+        "runtimes/substantial/substantial_child_workflow.py",
+        {
+          secrets,
+        }
+      );
+
+      const packages = [
+        { name: "metatype", version: 1 },
+        { name: "substantial", version: 2 },
+        { name: "typegraph", version: 3 },
+      ];
+
+      let parentRunId: string | null = null;
+      t.should(`start parent workflow`, async () => {
+        await gql`
+          mutation {
+            start(kwargs: { packages: $packages })
+          }
+        `
+          .withVars({ packages })
+          .expectBody((body) => {
+            parentRunId = body.data?.start! as string;
+            assertExists(
+              parentRunId,
+              "Run id was not returned when workflow was started"
+            );
+          })
+          .on(e);
+      });
+
+      await sleep(delays.awaitCompleteSec * 1000);
+
+      t.should(`complete parent and all child workflows`, async () => {
+        await gql`
+          query {
+            children: results_raw(name: "bumpPackage") {
+              ongoing {
+                count
+              }
+              completed {
+                count
+              }
+            }
+            parent: results_raw(name: "bumpAll") {
+              ongoing {
+                count
+              }
+              completed {
+                runs {
+                  run_id
+                  result {
+                    status
+                    value
+                  }
+                }
+              }
+            }
+          }
+        `
+          .expectData({
+            children: {
+              ongoing: {
+                count: 0,
+              },
+              completed: {
+                count: packages.length,
+              },
+            },
+            parent: {
+              ongoing: {
+                count: 0,
+              },
+              completed: {
+                runs: [
+                  {
+                    run_id: parentRunId,
+                    result: {
+                      status: "COMPLETED",
+                      value: JSON.stringify([
+                        "Bump metatype v1 => v2",
+                        "Bump substantial v2 => v3",
+                        "Bump typegraph v3 => v4",
+                      ]),
+                    },
+                  },
+                ],
+              },
+            },
+          })
+          .on(e);
+      });
     }
   );
 }
