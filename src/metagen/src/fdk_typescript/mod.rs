@@ -24,7 +24,7 @@ struct FdkTypescriptTemplate {
 
 impl From<FdkTemplate> for FdkTypescriptTemplate {
     fn from(mut fdk_template: FdkTemplate) -> Self {
-        let fdk_ts = fdk_template.entries.remove("fdk.ts").unwrap();
+        let fdk_ts = fdk_template.entries.swap_remove("fdk.ts").unwrap();
         Self {
             fdk_ts: fdk_ts.clone(),
         }
@@ -125,7 +125,7 @@ impl FdkTypescriptTemplate {
 }
 
 impl crate::Plugin for Generator {
-    fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder> {
+    fn bill_of_inputs(&self) -> IndexMap<String, GeneratorInputOrder> {
         [(
             Self::INPUT_TG.to_string(),
             if let Some(tg_name) = &self.config.base.typegraph_name {
@@ -154,22 +154,22 @@ impl crate::Plugin for Generator {
 
     fn generate(
         &self,
-        mut inputs: HashMap<String, GeneratorInputResolved>,
+        mut inputs: IndexMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
         let tg = match inputs
-            .remove(Self::INPUT_TG)
+            .swap_remove(Self::INPUT_TG)
             .context("missing generator input")?
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
             _ => unreachable!(),
         };
-        let template: FdkTypescriptTemplate = match inputs.remove("template_dir").unwrap() {
+        let template: FdkTypescriptTemplate = match inputs.swap_remove("template_dir").unwrap() {
             GeneratorInputResolved::FdkTemplate { template } => template.into(),
             _ => unreachable!(),
         };
 
-        let mut out = HashMap::new();
+        let mut out = IndexMap::new();
         out.insert(
             self.config.base.path.join("fdk.ts"),
             GeneratedFile {

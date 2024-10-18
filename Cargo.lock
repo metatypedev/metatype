@@ -11271,7 +11271,6 @@ version = "0.4.11-rc.0"
 dependencies = [
  "anyhow",
  "chrono",
- "lazy_static 1.5.0",
  "protobuf",
  "redis",
  "serde",

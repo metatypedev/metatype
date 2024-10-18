@@ -74,7 +74,7 @@ impl TryFrom<FdkTemplate> for tera::Tera {
 }
 
 impl crate::Plugin for Generator {
-    fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder> {
+    fn bill_of_inputs(&self) -> IndexMap<String, GeneratorInputOrder> {
         [(
             Self::INPUT_TG.to_string(),
             if let Some(tg_name) = &self.config.base.typegraph_name {
@@ -103,11 +103,11 @@ impl crate::Plugin for Generator {
 
     fn generate(
         &self,
-        mut inputs: HashMap<String, GeneratorInputResolved>,
+        mut inputs: IndexMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
         // return Ok(GeneratorOutput(Default::default()))
         let tg = match inputs
-            .remove(Self::INPUT_TG)
+            .swap_remove(Self::INPUT_TG)
             .context("missing generator input")?
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
@@ -115,7 +115,7 @@ impl crate::Plugin for Generator {
             _ => unreachable!(),
         };
 
-        let template: tera::Tera = match inputs.remove("template_dir").unwrap() {
+        let template: tera::Tera = match inputs.swap_remove("template_dir").unwrap() {
             GeneratorInputResolved::FdkTemplate { template } => template.try_into()?,
             _ => unreachable!(),
         };
@@ -156,7 +156,7 @@ impl crate::Plugin for Generator {
         }
 
         let merged_list = merge_requirements(mergeable_output);
-        let mut out = HashMap::new();
+        let mut out = IndexMap::new();
         for merged_req in merged_list {
             let entry_point_path = merged_req.entry_point_path.clone();
             let file_stem = merged_req

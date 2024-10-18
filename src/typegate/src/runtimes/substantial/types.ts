@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Run } from "../../../engine/runtime.js";
+import { Operation, Run } from "../../../engine/runtime.js";
 export type {
   Operation,
   OperationEvent,
@@ -77,5 +77,12 @@ export class Interrupt extends Error {
 
   static Variant(kind: InterruptType, cause?: unknown) {
     return new Interrupt(kind, cause);
+  }
+}
+
+export function appendIfOngoing(run: Run, operation: Operation) {
+  const hasStopped = run.operations.some(({ event }) => event.type == "Stop");
+  if (!hasStopped) {
+    run.operations.push(operation);
   }
 }
