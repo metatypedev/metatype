@@ -12,8 +12,8 @@ const m = new TestModule(import.meta);
 // both dev_test and deploy_test rely on the same typegraph
 // we need to do different versions of the typegraph to avoid
 // races during testing
-const test_code = "dev";
-const tgName = `migration-failure-test-${deploy}`;
+const testCode = "dev";
+const tgName = `migration-failure-test-${testCode}`;
 
 /**
  * These tests use different ports for the virtual typegate instance to avoid
@@ -23,20 +23,20 @@ const tgName = `migration-failure-test-${deploy}`;
 // TODO custom postgres schema
 async function writeTypegraph(
   version: number | null,
-  target = "migration_deploy.py",
+  target = `migration_${testCode}.py`,
 ) {
   if (version == null) {
     await m.shell([
       "bash",
       "-c",
-      `cat ./templates/migration.py | sed  -e "s/migration_failure_test_code/migration_failure_test_${test_code}" > ${target}`,
+      `cat ./templates/migration.py | sed -e "s/migration_failure_test_code/migration_failure_test_${testCode}/" > ${target}`,
     ]);
   } else {
     await m.shell([
       "bash",
       "select.sh",
       "templates/migration.py",
-      test_code,
+      testCode,
       `${version}`,
       target,
     ]);
@@ -68,7 +68,7 @@ async function deploy({
       `--gate=http://localhost:${port}`,
       ...secretOpts,
       "-f",
-      "migration_deploy.py",
+      `migration_${testCode}.py`,
       "--allow-dirty",
       ...migrationOpts,
       "--allow-destructive",
@@ -151,8 +151,6 @@ Meta.test(
 
 Meta.test(
   {
-    // FIXME: MET-622
-    only: true,
     name: "meta deploy: succeeds migration for new columns with default value",
   },
   async (t) => {
