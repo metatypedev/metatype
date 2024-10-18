@@ -7,6 +7,9 @@ import { dropSchema, randomSchema } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
+const testCode = "undeploy";
+const tgName = `migration-failure-test-${testCode}`;
+
 Meta.test({
   name: "meta undeploy",
 }, async (t) => {
@@ -16,13 +19,19 @@ Meta.test({
 
   // no leaked resources error
   await t.should("free resources", async () => {
+    const target = `migration_${testCode}.py`;
+    await m.shell([
+      "bash",
+      "-c",
+      `cat ./templates/migration.py | sed -e "s/migration_failure_test_code/migration_failure_test_${testCode}/" > ${target}`,
+    ]);
     await m.cli(
       {},
       "deploy",
       "--target=dev",
       `--gate=http://localhost:${t.port}`,
       "-f",
-      "templates/migration.py",
+      target,
       "--allow-dirty",
     );
 
@@ -32,7 +41,7 @@ Meta.test({
       "--target=dev",
       `--gate=http://localhost:${t.port}`,
       "--typegraph",
-      "migration-failure-test-code",
+      tgName,
     );
   });
 });
