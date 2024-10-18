@@ -1,4 +1,4 @@
-use crate::errors::Result;
+use crate::errors::{Result, TgError};
 use crate::types::Type;
 use serde::{Deserialize, Serialize};
 
@@ -43,11 +43,9 @@ pub trait WithPolicy {
 
 impl<T> WithPolicy for T
 where
-    T: TryInto<Type>,
+    T: TryInto<Type, Error = TgError>,
 {
     fn with_policy(self, policy: Vec<PolicySpec>) -> Result<TypeRef> {
-        RefAttr::Policy(policy)
-            .with_target(self.try_into().map_err(|_e| "failed to get type")?)
-            .build()
+        TypeRef::from_type(self.try_into()?, RefAttr::Policy(policy)).register()
     }
 }

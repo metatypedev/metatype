@@ -6,10 +6,5 @@ use crate::typegraph::TypegraphContext;
 pub use seahash::SeaHasher as Hasher;
 
 pub trait Hashable {
-    fn hash(
-        &self,
-        hasher: &mut Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()>;
+    fn hash(&self, hasher: &mut Hasher, tg: &mut TypegraphContext) -> Result<()>;
 }

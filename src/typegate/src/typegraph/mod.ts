@@ -93,7 +93,6 @@ export class TypeGraph implements AsyncDisposable {
     title: "string",
     type: "string",
     policies: [],
-    runtime: -1,
   };
 
   root: TypeNode;

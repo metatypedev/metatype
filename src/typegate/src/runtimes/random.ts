@@ -88,7 +88,8 @@ export default function randomizeRecursively(
   chance: typeof Chance,
   tgTypes: TypeNode[],
 ): any {
-  const config = typ.config ?? {};
+  // const config = typ.config ?? {};
+  const config = {} as { [key: string]: any };
   if (Object.prototype.hasOwnProperty.call(config, "gen")) {
     const { gen, ...arg } = config;
     return chance[gen as string](arg);

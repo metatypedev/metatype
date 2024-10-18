@@ -192,5 +192,5 @@ function prismaLink(
     targetField: arg.field,
     unique: arg.unique,
   });
-  return new Typedef(typeId, {});
+  return new Typedef(typeId);
 }

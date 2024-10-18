@@ -1,4 +1,5 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+//
 // SPDX-License-Identifier: MPL-2.0
 
 //! This module is responsible for generating the types for prisma operations.
@@ -109,13 +110,11 @@ impl PrismaContext {
             let type_id = generator.generate(self)?;
 
             // name validation
-            let type_def = type_id.as_type_def()?.unwrap();
-            let name = type_def
-                .base()
-                .name
-                .as_ref()
+            let name = type_id
+                .as_type()?
+                .name()
                 .ok_or_else(|| format!("Generated type must have name: {type_name}"))?;
-            if name != &type_name {
+            if name.as_ref() != type_name.as_str() {
                 return Err(format!(
                     "Generated type name mismatch: expected {}, got {}",
                     type_name, name

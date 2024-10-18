@@ -4,7 +4,7 @@
 use crate::{
     errors::Result,
     runtimes::prisma::context::PrismaContext,
-    t::{self, ConcreteTypeBuilder, TypeBuilder},
+    t::{self, TypeBuilder as _},
     types::TypeId,
 };
 
@@ -14,7 +14,7 @@ pub struct Count;
 
 impl TypeGen for Count {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
-        t::optionalx(t::integer())?.named(self.name()).build()
+        t::optionalx(t::integer()).build_named(self.name())
     }
 
     fn name(&self) -> String {

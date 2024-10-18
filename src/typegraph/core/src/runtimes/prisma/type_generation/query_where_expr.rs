@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::runtimes::prisma::context::PrismaContext;
-use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::t::{self, TypeBuilder};
 use crate::{errors::Result, types::TypeId};
 
 use super::{where_::Where, TypeGen};
@@ -48,7 +48,6 @@ impl TypeGen for QueryWhereExpr {
         let and = t::optionalx(t::list(self_ref))?.build()?;
 
         let mut builder = t::struct_();
-        builder.named(name);
         for (k, ty) in props.into_iter() {
             builder.prop(k.clone(), ty.into());
         }
@@ -56,7 +55,7 @@ impl TypeGen for QueryWhereExpr {
         builder.prop("OR", and);
         builder.propx("NOT", t::optional(self_ref))?;
 
-        builder.build()
+        builder.build_named(name)
     }
 
     fn name(&self) -> String {

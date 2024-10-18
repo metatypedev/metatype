@@ -5,7 +5,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::model::Property;
-use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::t::{self, TypeBuilder};
 use crate::types::TypeId;
 
 use super::{Cardinality, TypeGen};
@@ -34,10 +34,9 @@ impl TypeGen for OutType {
         for (key, prop) in model.iter_props() {
             match prop {
                 Property::Model(prop) => {
-                    let rel_name = model
-                        .relationships
-                        .get(key)
-                        .ok_or_else(|| errors::unregistered_relationship(&model.type_name, key))?;
+                    let rel_name = model.relationships.get(key).ok_or_else(|| {
+                        errors::unregistered_relationship(&model.model_type.name(), key)
+                    })?;
                     let rel = context.relationships.get(rel_name).unwrap();
                     if self.skip_rel.contains(rel_name)
                         || rel.left.model_type == rel.right.model_type
@@ -49,7 +48,7 @@ impl TypeGen for OutType {
                     skip_rel.push(rel_name.clone());
 
                     let out_type = context.generate(&OutType {
-                        model_id: prop.model_id,
+                        model_id: prop.model_type.type_id,
                         skip_rel,
                     })?;
 
@@ -71,7 +70,7 @@ impl TypeGen for OutType {
             }
         }
 
-        builder.named(self.name()).build()
+        builder.build_named(self.name())
     }
 
     fn name(&self) -> String {

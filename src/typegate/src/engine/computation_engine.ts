@@ -134,9 +134,10 @@ export class ComputationEngine {
     }
 
     const res = await Promise.all(
-      previousValues.map((parent) =>
-        resolver!({
-          ...this.computeArgs(stage, parent as Parents),
+      previousValues.map((parent) => {
+        const args = this.computeArgs(stage, parent as Parents);
+        return resolver!({
+          ...args,
           _: {
             // parent: parent ?? {},
             parent: parent as Parents,
@@ -146,8 +147,8 @@ export class ComputationEngine {
             effect,
             ...deps,
           },
-        })
-      ),
+        });
+      }),
     );
 
     if (!rateCalls) {

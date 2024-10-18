@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 
 Meta.test("Python: Random Injection", async (metaTest) => {
-  const engine = await metaTest.engine("random/injection/random_injection.py");
+  const engine = await metaTest.engine("injection/random_injection.py");
 
   await metaTest.should("generate random values", async () => {
     await gql`
@@ -145,7 +145,7 @@ Meta.test("Python: Random Injection", async (metaTest) => {
 });
 
 Meta.test("Deno: Random Injection", async (metaTest) => {
-  const engine = await metaTest.engine("random/injection/random_injection.ts");
+  const engine = await metaTest.engine("injection/random_injection.ts");
 
   await metaTest.should("work", async () => {
     await gql`

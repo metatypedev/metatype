@@ -7,7 +7,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::{InjectionHandler, Property};
 use crate::runtimes::prisma::{relationship::Cardinality, type_generation::where_::Where};
-use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::t::{self, TypeBuilder};
 use crate::types::TypeId;
 
 use super::TypeGen;
@@ -52,14 +52,18 @@ impl TypeGen for InputType {
             match prop {
                 Property::Model(prop) => {
                     let rel_name = model.relationships.get(k).ok_or_else(|| {
-                        format!("relationship not registered: {}::{}", model.type_name, k)
+                        format!(
+                            "relationship not registered: {}::{}",
+                            model.model_type.name(),
+                            k
+                        )
                     })?;
                     if self.skip_rel.contains(rel_name) {
                         continue;
                     }
 
                     let create = context.generate(&InputType {
-                        model_id: prop.model_id,
+                        model_id: prop.model_type.type_id,
                         skip_rel: {
                             let mut skip_rel = self.skip_rel.clone();
                             skip_rel.push(rel_name.to_string());
@@ -72,7 +76,7 @@ impl TypeGen for InputType {
                         _ => create,
                     };
 
-                    let connect = context.generate(&Where::new(prop.model_id))?;
+                    let connect = context.generate(&Where::new(prop.model_type.type_id))?;
                     let connect = match prop.quantifier {
                         Cardinality::Many => t::unionx!(connect, t::list(connect)).build()?,
                         _ => connect,
@@ -91,7 +95,7 @@ impl TypeGen for InputType {
 
                     if let Operation::Update = self.operation {
                         let update = context.generate(&InputType {
-                            model_id: prop.model_id,
+                            model_id: prop.model_type.type_id,
                             skip_rel: {
                                 let mut skip_rel = self.skip_rel.clone();
                                 skip_rel.push(rel_name.to_string());
@@ -206,7 +210,7 @@ impl TypeGen for InputType {
             }
         }
 
-        builder.named(self.name()).build()
+        builder.build_named(self.name())
     }
 
     fn name(&self) -> String {

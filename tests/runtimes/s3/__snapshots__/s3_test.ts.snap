@@ -6,7 +6,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "s3",
-      "runtime": 0,
       "policies": [],
       "config": {},
       "properties": {
@@ -28,13 +27,13 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "function",
       "title": "root_listObjects_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "input": 2,
       "output": 5,
+      "injections": {},
       "materializer": 0,
       "rate_weight": null,
       "rate_calls": false
@@ -42,7 +41,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_listObjects_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -54,7 +52,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "optional",
       "title": "root_listObjects_fn_input_path_root_listObjects_fn_input_path_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 4,
@@ -63,14 +60,12 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "string",
       "title": "root_listObjects_fn_input_path_string",
-      "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "object",
       "title": "root_listObjects_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -83,7 +78,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "list",
       "title": "root_listObjects_fn_output_keys_root_listObjects_fn_output_keys_struct_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 7
@@ -91,7 +85,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_listObjects_fn_output_keys_struct",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -104,14 +97,12 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "integer",
       "title": "root_listObjects_fn_output_keys_struct_size_integer",
-      "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "list",
       "title": "root_listObjects_fn_output_prefix_root_listObjects_fn_input_path_string_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 4
@@ -119,13 +110,13 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "function",
       "title": "root_getDownloadUrl_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "input": 11,
       "output": 12,
+      "injections": {},
       "materializer": 2,
       "rate_weight": null,
       "rate_calls": false
@@ -133,7 +124,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_getDownloadUrl_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -145,7 +135,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "string",
       "title": "root_getDownloadUrl_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "format": "uri"
@@ -153,13 +142,13 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "function",
       "title": "root_signTextUploadUrl_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "input": 14,
       "output": 12,
+      "injections": {},
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
@@ -167,7 +156,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_signTextUploadUrl_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -180,13 +168,13 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "function",
       "title": "root_upload_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "input": 16,
       "output": 19,
+      "injections": {},
       "materializer": 4,
       "rate_weight": null,
       "rate_calls": false
@@ -194,7 +182,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_upload_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -207,7 +194,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "file",
       "title": "root_upload_fn_input_file_file",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "mimeTypes": [
@@ -217,7 +203,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "optional",
       "title": "root_upload_fn_input_path_root_listObjects_fn_input_path_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 4,
@@ -226,20 +211,19 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "boolean",
       "title": "root_upload_fn_output",
-      "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "function",
       "title": "root_uploadMany_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
       "input": 21,
       "output": 19,
+      "injections": {},
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": false
@@ -247,7 +231,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_uploadMany_fn_input",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
@@ -260,7 +243,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "optional",
       "title": "root_uploadMany_fn_input_prefix_root_listObjects_fn_input_path_string_optional",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "item": 4,
@@ -269,7 +251,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "list",
       "title": "root_uploadMany_fn_input_files_root_uploadMany_fn_input_files_file_list",
-      "runtime": 1,
       "policies": [],
       "config": {},
       "items": 24
@@ -277,7 +258,6 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "file",
       "title": "root_uploadMany_fn_input_files_file",
-      "runtime": 1,
       "policies": [],
       "config": {}
     }

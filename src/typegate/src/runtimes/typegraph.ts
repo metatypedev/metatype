@@ -32,7 +32,7 @@ import {
 } from "../typegraph/visitor.ts";
 import { distinctBy } from "@std/collections/distinct-by";
 import { isInjected } from "../typegraph/utils.ts";
-import type { PolicyIndices } from "../typegraph/types.ts";
+import type { InjectionNode, PolicyIndices } from "../typegraph/types.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -127,8 +127,18 @@ export class TypeGraphRuntime extends Runtime {
       description: () => `${root.type} typegraph`,
       types: () => {
         // filter non-native GraphQL types
-        const filter = (type: TypeNode) => {
-          return !isInjected(this.tg, type) && !isQuantifier(type);
+        const filter = (
+          type: TypeNode,
+          input: {
+            injectionTree: Record<string, InjectionNode>;
+            path: string[];
+          } | null
+        ) => {
+          return (
+            (input == null ||
+              !isInjected(this.tg, type, input.path, input.injectionTree)) &&
+            !isQuantifier(type)
+          );
         };
 
         const scalarTypeIndices = new Set<number>();
@@ -161,7 +171,8 @@ export class TypeGraphRuntime extends Runtime {
                   this.scalarIndex.set(type.type, idx);
                   return false;
                 }
-                if (filter(type)) {
+                // FIXME
+                if (filter(type, null)) {
                   inputTypeIndices.add(idx);
                 }
                 return true;
@@ -185,7 +196,8 @@ export class TypeGraphRuntime extends Runtime {
               this.scalarIndex.set(type.type, idx);
               return false;
             }
-            if (filter(type)) {
+            // FIXME
+            if (filter(type, null)) {
               regularTypeIndices.add(idx);
             }
             return true;
@@ -260,15 +272,19 @@ export class TypeGraphRuntime extends Runtime {
     return type ? this.formatType(type, false, false) : null;
   };
 
-  formatInputFields = ([name, typeIdx]: [string, number]) => {
+  formatInputFields = (
+    [name, typeIdx]: [string, number],
+    injections: Record<string, InjectionNode>
+  ) => {
     const type = this.tg.types[typeIdx];
 
+    // TODO resolve quantifiers
+    const injection = injections[name];
     if (
-      type.injection ||
-      (isObject(type) &&
-        Object.values(type.properties)
-          .map((prop) => this.tg.types[prop])
-          .every((nested) => nested.injection))
+      "injection" in injection ||
+      ("children" in injection &&
+        type.type === Type.OBJECT &&
+        Object.keys(type.properties).every((key) => key in injection.children))
     ) {
       return null;
     }
@@ -507,7 +523,7 @@ export class TypeGraphRuntime extends Runtime {
             let entries = Object.entries((inp as ObjectNode).properties);
             entries = entries.sort((a, b) => b[1] - a[1]);
             return entries
-              .map(this.formatInputFields)
+              .map((entry) => this.formatInputFields(entry, type.injections))
               .filter((f) => f !== null);
           },
           type: () => {

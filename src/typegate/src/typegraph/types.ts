@@ -6,40 +6,25 @@
 export type OptionalNode = {
   type: "optional";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   item: number;
   default_value?: any;
 };
 export type BooleanNode = {
   type: "boolean";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
 };
 export type FloatNode = {
   type: "float";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   minimum?: number | null;
   maximum?: number | null;
   exclusiveMinimum?: number | null;
@@ -49,14 +34,9 @@ export type FloatNode = {
 export type IntegerNode = {
   type: "integer";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   minimum?: number | null;
   maximum?: number | null;
   exclusiveMinimum?: number | null;
@@ -66,14 +46,9 @@ export type IntegerNode = {
 export type StringNode = {
   type: "string";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   minLength?: number | null;
   maxLength?: number | null;
   pattern?: string | null;
@@ -82,14 +57,9 @@ export type StringNode = {
 export type FileNode = {
   type: "file";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   minSize?: number | null;
   maxSize?: number | null;
   mimeTypes?: string[] | null;
@@ -97,14 +67,9 @@ export type FileNode = {
 export type ObjectNode = {
   type: "object";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   properties: {
     [k: string]: number;
   };
@@ -114,31 +79,25 @@ export type ObjectNode = {
 export type ListNode = {
   type: "list";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   items: number;
   maxItems?: number | null;
   minItems?: number | null;
   uniqueItems?: boolean | null;
 };
+export type InjectionNode =
+  | { children: Record<string, InjectionNode> }
+  | { injection: Injection };
 export type FunctionNode = {
   type: "function";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   input: number;
+  injections: Record<string, InjectionNode>;
   parameterTransform?: FunctionParameterTransform | null;
   output: number;
   materializer: number;
@@ -148,40 +107,25 @@ export type FunctionNode = {
 export type UnionNode = {
   type: "union";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   anyOf: number[];
 };
 export type EitherNode = {
   type: "either";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
   oneOf: number[];
 };
 export type AnyNode = {
   type: "any";
   title: string;
-  runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: Injection | null;
   enum?: string[] | null;
-  config?: {
-    [k: string]: unknown;
-  };
 };
 export type TypeNode =
   | OptionalNode
@@ -500,6 +444,7 @@ export interface TypeMeta {
   artifacts: {
     [k: string]: Artifact;
   };
+  namespaces?: number[] | null;
 }
 export interface Queries {
   dynamic: boolean;
