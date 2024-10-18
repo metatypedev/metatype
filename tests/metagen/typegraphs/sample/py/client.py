@@ -610,31 +610,23 @@ class NodeDescs:
         return NodeMeta()
 
     @staticmethod
-    def RootScalarUnionFn():
-        return_node = NodeDescs.scalar()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "RootScalarArgsFnOutput",
-            },
-        )
-
-    @staticmethod
-    def RootScalarNoArgsFn():
-        return_node = NodeDescs.scalar()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
     def Post():
         return NodeMeta(
             sub_nodes={
                 "id": NodeDescs.scalar,
                 "slug": NodeDescs.scalar,
                 "title": NodeDescs.scalar,
+            },
+        )
+
+    @staticmethod
+    def RootCompositeArgsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "id": "RootScalarArgsFnOutput",
             },
         )
 
@@ -660,16 +652,8 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootCompositeNoArgsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
-    def RootCompositeArgsFn():
-        return_node = NodeDescs.Post()
+    def RootScalarUnionFn():
+        return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
@@ -709,8 +693,16 @@ class NodeDescs:
         )
 
     @staticmethod
-    def RootGetUserFn():
-        return_node = NodeDescs.User()
+    def RootCompositeNoArgsFn():
+        return_node = NodeDescs.Post()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+        )
+
+    @staticmethod
+    def RootScalarNoArgsFn():
+        return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
@@ -734,6 +726,14 @@ class NodeDescs:
             arg_types={
                 "id": "RootScalarArgsFnOutput",
             },
+        )
+
+    @staticmethod
+    def RootGetUserFn():
+        return_node = NodeDescs.User()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
         )
 
 
@@ -775,6 +775,12 @@ User = typing.TypedDict(
     total=False,
 )
 
+RootCompositeUnionFnOutput = typing.Union[
+    Post,
+    User,
+]
+
+
 RootScalarUnionFnOutputT1Integer = int
 
 RootMixedUnionFnOutput = typing.Union[
@@ -788,12 +794,6 @@ RootMixedUnionFnOutput = typing.Union[
 RootScalarUnionFnOutput = typing.Union[
     RootScalarArgsFnOutput,
     RootScalarUnionFnOutputT1Integer,
-]
-
-
-RootCompositeUnionFnOutput = typing.Union[
-    Post,
-    User,
 ]
 
 

@@ -79,6 +79,12 @@ export type MetaNS = {
     metadataReadWorkflowLinks: (
       inp: ReadWorkflowLinkInput
     ) => Promise<Array<string>>;
+    metadataWriteParentChildLink: (
+      inp: WriteParentChildLinkInput
+    ) => Promise<void>;
+    metadataEnumerateAllChildren: (
+      inp: EnumerateAllChildrenInput
+    ) => Promise<Array<string>>;
   };
 };
 
@@ -402,4 +408,15 @@ export type MetadataPayload =
 export interface MetadataEvent {
   at: string;
   metadata?: MetadataPayload;
+}
+
+export interface WriteParentChildLinkInput {
+  backend: Backend;
+  parent_run_id: string;
+  child_run_id: string;
+}
+
+export interface EnumerateAllChildrenInput {
+  backend: Backend;
+  parent_run_id: string;
 }

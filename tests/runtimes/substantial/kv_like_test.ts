@@ -3,24 +3,40 @@
 
 import {
   basicTestTemplate,
+  childWorkflowTestTemplate,
   concurrentWorkflowTestTemplate,
   retrySaveTestTemplate,
 } from "./common.ts";
 
-basicTestTemplate("memory", {
-  delays: { awaitSleepCompleteSec: 7 },
-});
-
 basicTestTemplate("fs", {
-  delays: { awaitSleepCompleteSec: 7 },
+  delays: { awaitSleepCompleteSec: 12 },
 });
 
 concurrentWorkflowTestTemplate("fs", {
-  delays: { awaitEmailCompleteSec: 10 },
+  delays: { awaitEmailCompleteSec: 12 },
 });
 
 retrySaveTestTemplate("fs", {
   delays: {
-    awaitCompleteAll: 15,
+    awaitCompleteAll: 17,
+  },
+});
+
+childWorkflowTestTemplate("fs", {
+  delays: {
+    awaitCompleteSec: 20,
+  },
+});
+
+basicTestTemplate("memory", {
+  delays: { awaitSleepCompleteSec: 12 },
+});
+concurrentWorkflowTestTemplate("memory", {
+  delays: { awaitEmailCompleteSec: 8 },
+});
+
+retrySaveTestTemplate("memory", {
+  delays: {
+    awaitCompleteAll: 17,
   },
 });
