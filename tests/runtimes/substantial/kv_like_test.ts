@@ -9,7 +9,7 @@ import {
 } from "./common.ts";
 
 basicTestTemplate("fs", {
-  delays: { awaitSleepCompleteSec: 10 },
+  delays: { awaitSleepCompleteSec: 12 },
 });
 
 concurrentWorkflowTestTemplate("fs", {
@@ -29,7 +29,7 @@ childWorkflowTestTemplate("fs", {
 });
 
 basicTestTemplate("memory", {
-  delays: { awaitSleepCompleteSec: 10 },
+  delays: { awaitSleepCompleteSec: 12 },
 });
 concurrentWorkflowTestTemplate("memory", {
   delays: { awaitEmailCompleteSec: 8 },
