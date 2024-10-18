@@ -97,6 +97,8 @@ export const typegateConfigBaseSchema = z.object({
   substantial_poll_interval_sec: z.coerce.number().positive().min(0.5).max(60),
   /** Lease duration associated to a run_id */
   substantial_lease_lifespan_sec: z.coerce.number().positive().min(1),
+  /** Maximum amount of new acquired replay requests per tick */
+  substantial_max_acquire_per_tick: z.coerce.number().positive().min(1),
 });
 
 export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;

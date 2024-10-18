@@ -9,11 +9,11 @@ import tasksLock from "./lock.ts";
 import tasksTest from "./test.ts";
 
 export default {
-    ...tasksBuild,
-    ...tasksDev,
-    ...tasksFetch,
-    ...tasksInstall,
-    ...tasksLint,
-    ...tasksLock,
-    ...tasksTest,
+  ...tasksBuild,
+  ...tasksDev,
+  ...tasksFetch,
+  ...tasksInstall,
+  ...tasksLint,
+  ...tasksLock,
+  ...tasksTest,
 } satisfies Record<string, DenoTaskDefArgs>;

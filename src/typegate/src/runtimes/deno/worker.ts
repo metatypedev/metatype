@@ -5,6 +5,7 @@
 /// <reference lib="deno.worker" />
 
 import { getLogger } from "../../log.ts";
+import { make_internal } from "../../worker_utils.ts";
 import type { Answer, Message } from "../patterns/messenger/types.ts";
 
 import type {
@@ -13,7 +14,6 @@ import type {
   RegisterFuncTask,
   RegisterImportFuncTask,
   Task,
-  TaskContext,
   TaskExec,
 } from "./shared_types.ts";
 
@@ -29,40 +29,6 @@ const additionalHeaders = isTest
   ? { connection: "close" }
   : { connection: "keep-alive" };
 
-const make_internal = ({ meta: { url, token } }: TaskContext) => {
-  const gql = (query: readonly string[], ...args: unknown[]) => {
-    if (args.length > 0) {
-      throw new Error("gql does not support arguments, use variables instead");
-    }
-    // console.log(query);
-    return {
-      run: async (
-        variables: Record<string, unknown>,
-      ): Promise<Record<string, unknown>> => {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            accept: "application/json",
-            "content-type": "application/json",
-            authorization: `Bearer ${token}`,
-            ...additionalHeaders,
-          },
-          body: JSON.stringify({
-            query: query[0],
-            variables,
-          }),
-        });
-        if (!res.ok) {
-          throw new Error(`gql fetch on ${url} failed: ${await res.text()}`);
-        }
-        // console.log
-        return res.json();
-      },
-    };
-  };
-  return { gql };
-};
-
 async function import_func(op: number, task: ImportFuncTask) {
   const { name, args, internals, verbose } = task;
 
@@ -73,7 +39,11 @@ async function import_func(op: number, task: ImportFuncTask) {
   verbose && logger.info(`exec func "${name}" from module ${op}`);
   const mod = registry.get(op)! as TaskModule;
   if (name in mod && typeof mod[name] === "function") {
-    return await mod[name](args, internals, make_internal(internals));
+    return await mod[name](
+      args,
+      internals,
+      make_internal(internals, additionalHeaders)
+    );
   }
   throw new Error(`"${name}" is not a valid method`);
 }
@@ -87,7 +57,7 @@ async function func(op: number, task: FuncTask) {
 
   verbose && logger.info(`exec func "${op}"`);
   const fn = registry.get(op)! as TaskExec;
-  return await fn(args, internals, make_internal(internals));
+  return await fn(args, internals, make_internal(internals, additionalHeaders));
 }
 
 async function register_import_func(_: null, task: RegisterImportFuncTask) {
@@ -104,7 +74,7 @@ function register_func(_: null, task: RegisterFuncTask) {
 
   registry.set(
     op,
-    new Function(`"use strict"; ${fnCode}; return _my_lambda;`)(),
+    new Function(`"use strict"; ${fnCode}; return _my_lambda;`)()
   );
 }
 

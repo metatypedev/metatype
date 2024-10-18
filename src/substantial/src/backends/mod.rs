@@ -49,6 +49,12 @@ pub trait BackendMetadataWriter {
 
     fn read_workflow_links(&self, workflow_name: String) -> Result<Vec<String>>;
 
+    fn write_parent_child_link(&self, parent_run_id: String, child_run_id: String) -> Result<()>;
+
+    fn read_direct_children(&self, parent_run_id: String) -> Result<Vec<String>>;
+
+    fn enumerate_all_children(&self, parent_run_id: String) -> Result<Vec<String>>;
+
     fn read_all_metadata(&self, run_id: String) -> Result<Vec<Metadata>>;
 
     fn append_metadata(

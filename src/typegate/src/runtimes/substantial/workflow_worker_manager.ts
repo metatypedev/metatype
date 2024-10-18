@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { envSharedWithWorkers } from "../../config/shared.ts";
 import { getLogger } from "../../log.ts";
+import { TaskContext } from "../deno/shared_types.ts";
 import {
   Err,
   Msg,
@@ -112,7 +114,23 @@ export class WorkerManager {
 
   #createWorker(name: string, modulePath: string, runId: RunId) {
     const worker = new Worker(import.meta.resolve("./worker.ts"), {
+      name: runId,
       type: "module",
+      deno: {
+        permissions: {
+          // overrideable default permissions
+          hrtime: false,
+          net: true,
+          // on request permissions
+          read: "inherit", // default read permission
+          sys: "inherit",
+          // non-overridable permissions (security between typegraphs)
+          run: false,
+          write: false,
+          ffi: false,
+          env: envSharedWithWorkers,
+        },
+      },
     });
 
     this.recorder.addWorker(
@@ -203,7 +221,8 @@ export class WorkerManager {
     workflowModPath: string,
     storedRun: Run,
     schedule: string,
-    kwargs: Record<string, unknown>
+    kwargs: Record<string, unknown>,
+    internalTCtx: TaskContext
   ) {
     this.#createWorker(name, workflowModPath, runId);
     this.trigger("START", runId, {
@@ -212,6 +231,7 @@ export class WorkerManager {
       run: storedRun,
       kwargs,
       schedule,
+      internal: internalTCtx,
     });
   }
 }

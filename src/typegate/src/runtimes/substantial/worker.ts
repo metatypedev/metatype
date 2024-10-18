@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { errorToString } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
 import { Err, Msg, Ok, WorkerData, WorkflowResult } from "./types.ts";
 
@@ -10,7 +11,8 @@ self.onmessage = async function (event) {
   const { type, data } = event.data as WorkerData;
   switch (type) {
     case "START": {
-      const { modulePath, functionName, run, schedule, kwargs } = data;
+      const { modulePath, functionName, run, schedule, kwargs, internal } =
+        data;
       // FIXME: handle case when script is missing and notify WorkerManager so it cleans up
       // its registry.
       const module = await import(modulePath);
@@ -19,12 +21,12 @@ self.onmessage = async function (event) {
       const workflowFn = module[functionName];
 
       if (typeof workflowFn !== "function") {
-        self.postMessage(Err(`Function ${functionName} is not found`));
+        self.postMessage(Err(`Function "${functionName}" not found`));
         self.close();
         return;
       }
 
-      runCtx = new Context(run, kwargs);
+      runCtx = new Context(run, kwargs, internal);
 
       workflowFn(runCtx)
         .then((wfResult: unknown) => {
@@ -44,10 +46,7 @@ self.onmessage = async function (event) {
             Ok(
               Msg(type, {
                 kind: "FAIL",
-                result:
-                  wfException instanceof Error
-                    ? wfException.message
-                    : JSON.stringify(wfException),
+                result: errorToString(wfException),
                 exception:
                   wfException instanceof Error ? wfException : undefined,
                 run: runCtx!.getRun(),
