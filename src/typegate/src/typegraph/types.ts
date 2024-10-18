@@ -100,6 +100,7 @@ export type FunctionNode = {
   injections: Record<string, InjectionNode>;
   parameterTransform?: FunctionParameterTransform | null;
   output: number;
+  runtimeConfig: unknown;
   materializer: number;
   rate_weight?: number | null;
   rate_calls: boolean;

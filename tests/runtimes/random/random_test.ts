@@ -19,10 +19,10 @@ Meta.test("Python: Random", async (t) => {
     `
       .expectData({
         randomRec: {
-          email: "vu@jel.ml",
-          int: 7360602246742016,
-          str: "v%vijM",
-          uuid: "415013d6-efc5-5781-aa74-056ee27dbb22",
+          email: "vi@itabefir.bb",
+          int: 7457276839329792,
+          str: "HPFk*o570)7",
+          uuid: "1069ace0-cdb1-5c1f-8193-81f53d29da35",
         },
       })
       .on(e);
@@ -30,30 +30,30 @@ Meta.test("Python: Random", async (t) => {
 
   await t.should("work with custom generation params", async () => {
     await gql`
-      query {
-        randomUser {
-          id
-          name
-          age
-          address {
-            street
-            city
-            postcode
-            country
+        query {
+          randomUser {
+            id
+            name
+            age
+            address {
+              street
+              city
+              postcode
+              country
+            }
           }
         }
-      }
-    `
+      `
       .expectData({
         randomUser: {
-          age: 35,
-          id: "190a524b-b70b-52f4-911d-7974ea74cf43",
-          name: "Chase Dennis",
+          age: 61,
+          id: "415013d6-efc5-5781-aa74-056ee27dbb22",
+          name: "Gertrude Robertson",
           address: {
-            city: "Peehhiz",
-            country: "Mexico",
-            postcode: "TA2G 2CP",
-            street: "103 Pafma Circle",
+            city: "Igpisi",
+            country: "Croatia",
+            postcode: "NR1 5GS",
+            street: "579 Dico Turnpike",
           },
         },
       })
@@ -62,65 +62,60 @@ Meta.test("Python: Random", async (t) => {
 
   await t.should("work for nested arrays", async () => {
     await gql`
-      query {
-        randomList {
-          array_of_array_of_names
+        query {
+          randomList {
+            array_of_array_of_names
+          }
         }
-      }
-    `
+      `
       .expectData(
         {
           randomList: {
             array_of_array_of_names: [
               [
-                "Ethel Casey",
-                "Della Garner",
-                "Ronald Wade",
-                "Clayton Tate",
-                "Martin Neal",
-                "Charlie Soto",
+                "Olivia Smith",
+                "Lydia Atkins",
+                "Stella Parker",
+                "Daisy Chavez",
+                "Essie Franklin",
+                "Betty Gill",
+                "Susan Reeves",
+                "Rosa Hansen",
+                "Blanche White",
+                "Essie Marsh",
               ],
               [
-                "Jessie Fleming",
+                "Inez Meyer",
+                "Ophelia Hayes",
+                "Bernice Delgado",
+                "Bernice Rose",
+                "Rena Vargas",
               ],
               [
-                "Bertha Watts",
-                "Cecelia Neal",
-                "Gabriel Ramirez",
-                "Jean Carpenter",
-                "Alfred Jenkins",
-                "Cecilia Bradley",
-                "Lee Potter",
-                "Eunice Cox",
+                "Marguerite Tyler",
+                "Adeline Robinson",
+                "Lucy King",
+                "Essie Collins",
+                "Henrietta Cummings",
+                "Esther Wade",
+                "Rena Holmes",
+                "Louise Warner",
+                "Gussie Castillo",
               ],
               [
-                "Mable Leonard",
-                "Belle Olson",
-                "Susie Hart",
-                "Nelle Banks",
-                "Loretta Davis",
-                "Delia Love",
-                "Jeffrey Adkins",
-                "Laura Harvey",
-                "Jeffery Figueroa",
+                "Lelia Curry",
               ],
               [
-                "Arthur Patton",
-                "Minerva Miles",
-                "James Maldonado",
-                "Myrtle Gardner",
-                "Evelyn Brown",
-              ],
-              [
-                "Belle Dean",
-                "Lilly Steele",
-                "Michael Mason",
-                "Gussie Burgess",
-                "Rosalie Adams",
-                "Cody Gray",
-                "Olivia Alexander",
-                "Lola Scott",
-                "Miguel Pearson",
+                "Lelia Daniels",
+                "Augusta Webster",
+                "Hattie Baker",
+                "Sophia Owen",
+                "Caroline Poole",
+                "Catherine Ward",
+                "Margaret Perez",
+                "Verna Wallace",
+                "Flora Daniels",
+                "Cornelia Allen",
               ],
             ],
           },
@@ -144,8 +139,8 @@ Meta.test("Deno: Random", async (t) => {
     `
       .expectData({
         test1: {
-          country: "Turkey",
-          email: "mummer@nubi.no",
+          country: "Guyana",
+          email: "wubju@de.cg",
         },
       })
       .on(e);
@@ -183,12 +178,12 @@ Meta.test("Deno: Random", async (t) => {
     `.expectData({
       test2: {
         field: {
-          x: -158908830187.52,
-          y: 59745273852.7232,
-          z: -544843873281.6384,
+          B: 784597442048.8192,
+          G: -185967195874.9184,
+          R: 305787281657.0368,
         },
         toy: {
-          color: "]W3wuH6qhfHI^h",
+          color: "FxYMpG#qcNX^EHPFk*",
         },
         cents: 1,
         educationLevel: "primary",

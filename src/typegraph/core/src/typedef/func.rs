@@ -7,6 +7,7 @@ use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::{self, Result, TgError};
 use crate::global_store::Store;
 use crate::params::apply::ParameterTransformNode;
+use crate::runtimes::random::collect_random_runtime_config;
 use crate::runtimes::Runtime;
 use crate::typegraph::TypegraphContext;
 use crate::types::{
@@ -193,7 +194,8 @@ impl Func {
         }
     }
 
-    fn collect_random_runtime_config(_out_type: TypeId) -> Result<serde_json::Value> {
-        Ok(serde_json::Value::Null)
+    fn collect_random_runtime_config(out_type: TypeId) -> Result<serde_json::Value> {
+        serde_json::to_value(&collect_random_runtime_config(out_type)?)
+            .map_err(|e| format!("Failed to serialize random runtime config: {}", e).into())
     }
 }
