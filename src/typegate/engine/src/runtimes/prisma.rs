@@ -118,7 +118,6 @@ pub struct PrismaDiffInp {
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_diff(
-    // state: Rc<RefCell<OpState>>,
     #[serde] input: PrismaDiffInp,
 ) -> Result<Option<(String, Vec<ParsedDiff>)>> {
     let datamodel = reformat_datamodel(&input.datamodel).context("Error formatting datamodel")?;
