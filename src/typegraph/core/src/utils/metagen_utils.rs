@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
 
 use super::fs::FsContext;
 use color_eyre::Result;
@@ -39,7 +39,7 @@ impl RawTgResolver {
         default: &[(&'static str, &'static str)],
         template_dir: Option<&std::path::Path>,
     ) -> Result<metagen::FdkTemplate> {
-        let mut entries = HashMap::new();
+        let mut entries = indexmap::IndexMap::default();
         for (file_name, default_content) in default.iter() {
             let content = if let Some(override_path) = template_dir {
                 let path = override_path.join(file_name);

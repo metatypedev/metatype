@@ -134,7 +134,7 @@ export async function testE2e(args: {
     CLICOLOR_FORCE: "1",
     // RUST_LOG: "trace",
     RUST_LOG:
-      "info,xtask=debug,meta=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
+      "info,xtask=debug,meta=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,typegate=trace",
     RUST_SPANTRACE: "1",
     // "RUST_BACKTRACE": "short",
     RUST_MIN_STACK: "8388608",
@@ -215,9 +215,8 @@ export async function testE2e(args: {
   $.logStep(`${prefix} Building xtask and meta-cli...`);
   await $`cargo build -p meta-cli -F typegate --profile ${buildProfile}
           && mv target/${profile}/meta target/${profile}/meta-full
-          && cargo build -p xtask -p meta-cli --profile ${buildProfile}`.cwd(
-    wd,
-  );
+          && cargo build -p xtask -p meta-cli --profile ${buildProfile}`
+    .cwd(wd);
 
   $.logStep(`Discovered ${queue.length} test files to run`);
 

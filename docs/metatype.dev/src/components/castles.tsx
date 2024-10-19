@@ -360,16 +360,16 @@ export function StableCastle() {
                   [
                     col3 - size - 10,
                     topMargin +
-                      blockMargin * 1 +
-                      blockHeight(size, 2) * 0.5 -
-                      5,
+                    blockMargin * 1 +
+                    blockHeight(size, 2) * 0.5 -
+                    5,
                   ],
                   [
                     col3 - size - 10,
                     topMargin +
-                      blockMargin * 2 +
-                      blockHeight(size, 2) * 1.5 -
-                      10,
+                    blockMargin * 2 +
+                    blockHeight(size, 2) * 1.5 -
+                    10,
                   ],
                 ]}
               />

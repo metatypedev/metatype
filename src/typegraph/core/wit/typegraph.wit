@@ -88,12 +88,12 @@ interface core {
     integerb: func(data: type-integer) -> result<type-id, error>;
 
     record type-float {
-        min: option<float64>,
-        max: option<float64>,
-        exclusive-minimum: option<float64>,
-        exclusive-maximum: option<float64>,
-        multiple-of: option<float64>,
-        enumeration: option<list<float64>>
+        min: option<f64>,
+        max: option<f64>,
+        exclusive-minimum: option<f64>,
+        exclusive-maximum: option<f64>,
+        multiple-of: option<f64>,
+        enumeration: option<list<f64>>
     }
     floatb: func(data: type-float) -> result<type-id, error>;
 
@@ -495,28 +495,34 @@ interface runtimes {
         redis(redis-backend)
     }
 
-    record substantial-runtime-data {
-        backend: substantial-backend
-    }
 
     enum workflow-kind {
         python,
         deno
     }
 
-    record workflow {
-        name: string,
+    record workflow-file-description {
+        workflows: list<string>,
         file: string,
         deps: list<string>,
         kind: workflow-kind
     }
 
+    record substantial-runtime-data {
+        backend: substantial-backend,
+        file-descriptions: list<workflow-file-description>  
+    }
+
     variant substantial-operation-type {
-        start(workflow),
-        stop(workflow),
-        send(workflow),
-        resources(workflow),
-        results(workflow),
+        start,
+        start-raw,
+        stop,
+        send,
+        send-raw,
+        resources,
+        results,
+        results-raw,
+        internal-link-parent-child
     }
 
     record substantial-operation-data {

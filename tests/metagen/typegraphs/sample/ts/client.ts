@@ -718,11 +718,6 @@ const nodeMetas = {
     return {};
   },
   
-  RootScalarNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
   Post(): NodeMeta {
     return {
       subNodes: [
@@ -741,43 +736,19 @@ const nodeMetas = {
       ],
     };
   },
-  RootCompositeUnionFnOutput(): NodeMeta {
-    return {
-      variants: [
-        ["post", nodeMetas.Post],
-        ["user", nodeMetas.User],
-      ],
-    };
-  },
-  RootCompositeUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.RootCompositeUnionFnOutput(),
-      argumentTypes: {
-        id: "RootScalarArgsFnOutput",
-      },
-    };
-  },
-  RootCompositeNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
   RootGetUserFn(): NodeMeta {
     return {
       ...nodeMetas.User(),
     };
   },
-  RootCompositeArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "RootScalarArgsFnOutput",
-      },
-    };
-  },
   RootGetPostsFn(): NodeMeta {
     return {
       ...nodeMetas.Post(),
+    };
+  },
+  RootScalarNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
     };
   },
   RootScalarArgsFn(): NodeMeta {
@@ -790,9 +761,38 @@ const nodeMetas = {
       },
     };
   },
+  RootCompositeNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+  RootCompositeArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "RootScalarArgsFnOutput",
+      },
+    };
+  },
   RootScalarUnionFn(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "RootScalarArgsFnOutput",
+      },
+    };
+  },
+  RootCompositeUnionFnOutput(): NodeMeta {
+    return {
+      variants: [
+        ["post", nodeMetas.Post],
+        ["user", nodeMetas.User],
+      ],
+    };
+  },
+  RootCompositeUnionFn(): NodeMeta {
+    return {
+      ...nodeMetas.RootCompositeUnionFnOutput(),
       argumentTypes: {
         id: "RootScalarArgsFnOutput",
       },
@@ -815,16 +815,16 @@ const nodeMetas = {
     };
   },
 };
-export type RootScalarArgsFnOutput = string;
-export type RootCompositeArgsFnInput = {
-  id: RootScalarArgsFnOutput;
-};
 export type UserIdStringUuid = string;
 export type PostSlugString = string;
 export type Post = {
   id: UserIdStringUuid;
   slug: PostSlugString;
   title: PostSlugString;
+};
+export type RootScalarArgsFnOutput = string;
+export type RootCompositeArgsFnInput = {
+  id: RootScalarArgsFnOutput;
 };
 export type UserEmailStringEmail = string;
 export type UserPostsPostList = Array<Post>;
@@ -834,17 +834,17 @@ export type User = {
   posts: UserPostsPostList;
 };
 export type RootScalarUnionFnOutputT1Integer = number;
-export type RootMixedUnionFnOutput =
-  | (Post)
-  | (User)
-  | (RootScalarArgsFnOutput)
-  | (RootScalarUnionFnOutputT1Integer);
 export type RootScalarUnionFnOutput =
   | (RootScalarArgsFnOutput)
   | (RootScalarUnionFnOutputT1Integer);
 export type RootCompositeUnionFnOutput =
   | (Post)
   | (User);
+export type RootMixedUnionFnOutput =
+  | (Post)
+  | (User)
+  | (RootScalarArgsFnOutput)
+  | (RootScalarUnionFnOutputT1Integer);
 
 export type PostSelections = {
   _?: SelectionFlags;
@@ -858,12 +858,12 @@ export type UserSelections = {
   email?: ScalarSelectNoArgs;
   posts?: CompositeSelectNoArgs<PostSelections>;
 };
-export type RootMixedUnionFnOutputSelections = {
+export type RootCompositeUnionFnOutputSelections = {
   _?: SelectionFlags;
   "post"?: CompositeSelectNoArgs<PostSelections>;
   "user"?: CompositeSelectNoArgs<UserSelections>;
 };
-export type RootCompositeUnionFnOutputSelections = {
+export type RootMixedUnionFnOutputSelections = {
   _?: SelectionFlags;
   "post"?: CompositeSelectNoArgs<PostSelections>;
   "user"?: CompositeSelectNoArgs<UserSelections>;

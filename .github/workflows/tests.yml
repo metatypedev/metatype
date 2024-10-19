@@ -1,3 +1,5 @@
+name: Test Suite
+run-name: Test Suite for ${{ github.ref }}
 on:
   workflow_dispatch:
     inputs:
@@ -15,6 +17,13 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+
+
+# Cancel any in-flight jobs for the same PR/branch so there's only one active
+# at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   GHJK_VERSION: "v0.2.1"

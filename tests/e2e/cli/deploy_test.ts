@@ -9,7 +9,11 @@ import { randomPGConnStr, reset } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
-const tgName = "migration-failure-test";
+// both dev_test and deploy_test rely on the same typegraph
+// we need to do different versions of the typegraph to avoid
+// races during testing
+const testCode = "dev";
+const tgName = `migration-failure-test-${testCode}`;
 
 /**
  * These tests use different ports for the virtual typegate instance to avoid
@@ -17,14 +21,22 @@ const tgName = "migration-failure-test";
  */
 
 // TODO custom postgres schema
-async function writeTypegraph(version: number | null, target = "migration.py") {
+async function writeTypegraph(
+  version: number | null,
+  target = `migration_${testCode}.py`,
+) {
   if (version == null) {
-    await m.shell(["bash", "-c", `cp ./templates/migration.py ${target}`]);
+    await m.shell([
+      "bash",
+      "-c",
+      `cat ./templates/migration.py | sed -e "s/migration_failure_test_code/migration_failure_test_${testCode}/" > ${target}`,
+    ]);
   } else {
     await m.shell([
       "bash",
       "select.sh",
       "templates/migration.py",
+      testCode,
       `${version}`,
       target,
     ]);
@@ -56,7 +68,7 @@ async function deploy({
       `--gate=http://localhost:${port}`,
       ...secretOpts,
       "-f",
-      "migration.py",
+      `migration_${testCode}.py`,
       "--allow-dirty",
       ...migrationOpts,
       "--allow-destructive",
@@ -139,8 +151,6 @@ Meta.test(
 
 Meta.test(
   {
-    // FIXME:
-    ignore: true,
     name: "meta deploy: succeeds migration for new columns with default value",
   },
   async (t) => {

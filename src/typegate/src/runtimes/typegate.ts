@@ -331,14 +331,13 @@ export class TypeGateRuntime extends Runtime {
     const result = await rt.query(queryObj);
 
     const queries = isBatch ? query.batch : [query];
-    const resultValues =
-      ((isBatch ? result : [result]) as Array<Record<string, unknown>>)
-        .map((r, i) => {
-          const q = queries[i];
-          const key = q.action + q.modelName ?? "";
-          return r[key];
-        });
-
+    const resultValues = result
+      .map((r, i) => {
+        const q = queries[i];
+        const key = q.action + q.modelName ?? "";
+        console.debug("DEBUG", { q, r, key });
+        return r[key];
+      });
     return JSON.stringify(isBatch ? resultValues : resultValues[0]);
   };
 
