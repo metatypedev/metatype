@@ -3,60 +3,82 @@
 
 import { gql, Meta } from "test-utils/mod.ts";
 
-Meta.test("Python: Random Injection", async (metaTest) => {
-  const engine = await metaTest.engine("injection/random_injection.py");
+const cases = [
+  {
+    key: "python",
+    typegraph: "injection/random_injection.py",
+    testName: "Python: Random injection",
+  },
+  {
+    key: "deno",
+    typegraph: "injection/random_injection.ts",
+    testName: "Deno: Random injection",
+  },
+];
 
-  await metaTest.should("generate random values", async () => {
-    await gql`
-          query {
-              randomUser {
-                  id
-                  ean
-                  name
-                  age
-                  married
-                  birthday
-                  phone
-                  gender
-                  firstname
-                  lastname
-                  friends
-                  occupation
-                  street
-                  city
-                  postcode
-                  country
-                  uri
-                  hostname
-              }
+for (const testCase of cases) {
+  Meta.test({
+    name: testCase.testName,
+    only: false,
+  }, async (t) => {
+    const engine = await t.engine(testCase.typegraph);
+
+    await t.should("generate random values", async () => {
+      await gql`
+        query {
+          randomUser {
+            id
+            ean
+            name
+            age
+            married
+            birthday
+            phone
+            gender
+            firstname
+            lastname
+            friends
+            occupation
+            street
+            city
+            postcode
+            country
+            uri
+            hostname
           }
-          `
-      .expectData({
-        randomUser: {
-          id: "1069ace0-cdb1-5c1f-8193-81f53d29da35",
-          ean: "0497901391205",
-          name: "Landon Glover",
-          age: 38,
-          married: true,
-          birthday: "2124-06-22T22:00:07.302Z",
-          phone: "(587) 901-3720",
-          gender: "Male",
-          firstname: "Landon",
-          lastname: "Mengoni",
-          friends: ["Hettie", "Mary", "Sean", "Ethel", "Joshua"],
-          occupation: "Health Care Manager",
-          street: "837 Wubju Drive",
-          city: "Urbahfec",
-          postcode: "IM9 9AD",
-          country: "Indonesia",
-          uri: "http://wubju.bs/ma",
-          hostname: "wubju.bs",
-        },
-      })
-      .on(engine);
+        }
+      `
+        .expectData({
+          randomUser: {
+            id: "1069ace0-cdb1-5c1f-8193-81f53d29da35",
+            ean: "0497901391205",
+            name: "Landon Glover",
+            age: 38,
+            married: true,
+            birthday: "2124-06-22T22:00:07.302Z",
+            phone: "(587) 901-3720",
+            gender: "Male",
+            firstname: "Landon",
+            lastname: "Mengoni",
+            friends: ["Hettie", "Mary", "Lydia", "Ethel", "Jennie"],
+            occupation: "Health Care Manager",
+            street: "837 Wubju Drive",
+            city: "Urbahfec",
+            postcode: "IM9 9AD",
+            country: "Indonesia",
+            uri: "http://wubju.bs/ma",
+            hostname: "wubju.bs",
+          },
+        })
+        .on(engine);
+    });
   });
+}
 
-  await metaTest.should("work on random lists", async () => {
+Meta.test("random injection on unions", async (t) => {
+  const engine = await t.engine("injection/random_injection.py");
+
+  await t.should("work on random lists", async () => {
     await gql`
             query {
                 randomList {
@@ -67,16 +89,16 @@ Meta.test("Python: Random Injection", async (metaTest) => {
       randomList: {
         names: [
           "Hettie Huff",
-          "Nicholas Mills",
+          "Ada Mills",
           "Ethel Marshall",
-          "Phillip Gonzales",
-          "Russell Barber",
+          "Emily Gonzales",
+          "Lottie Barber",
         ],
       },
     }).on(engine);
   });
 
-  await metaTest.should(
+  await t.should(
     "generate random values for enums, either and union variants",
     async () => {
       await gql`
@@ -142,64 +164,4 @@ Meta.test("Python: Random Injection", async (metaTest) => {
       }).on(engine);
     },
   );
-});
-
-Meta.test("Deno: Random Injection", async (metaTest) => {
-  const engine = await metaTest.engine("injection/random_injection.ts");
-
-  await metaTest.should("work", async () => {
-    await gql`
-        query {
-            randomUser {
-                  id
-                  ean
-                  name
-                  age
-                  married
-                  birthday
-                  phone
-                  gender
-                  firstname
-                  lastname
-                  friends
-                  occupation
-                  street
-                  city
-                  postcode
-                  country
-                  uri
-                  hostname
-              }
-        }
-        `
-      .expectData({
-        randomUser: {
-          id: "1069ace0-cdb1-5c1f-8193-81f53d29da35",
-          ean: "0497901391205",
-          name: "Landon Glover",
-          age: 38,
-          married: true,
-          birthday: "2124-06-22T22:00:07.302Z",
-          phone: "(587) 901-3720",
-          gender: "Male",
-          firstname: "Landon",
-          lastname: "Mengoni",
-          friends: [
-            "Hettie Huff",
-            "Nicholas Mills",
-            "Ethel Marshall",
-            "Phillip Gonzales",
-            "Russell Barber",
-          ],
-          occupation: "Health Care Manager",
-          street: "837 Wubju Drive",
-          city: "Urbahfec",
-          postcode: "IM9 9AD",
-          country: "Indonesia",
-          uri: "http://wubju.bs/ma",
-          hostname: "wubju.bs",
-        },
-      })
-      .on(engine);
-  });
 });

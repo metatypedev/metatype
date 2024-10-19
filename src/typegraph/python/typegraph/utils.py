@@ -10,7 +10,6 @@ from typegraph.gen.exports.utils import ReduceEntry
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.injection import InheritDef, serialize_static_injection
 from typegraph.wit import store, wit_utils
-from typegraph.io import Log
 
 # def serialize_record_values(obj: Union[Dict[str, any], None]):
 #     return [(k, json.dumps(v)) for k, v in obj.items()] if obj is not None else None
@@ -36,7 +35,6 @@ def serialize_config(config: Optional[ConfigSpec]) -> Optional[str]:
         lst,
         {},
     )
-    Log.info("config_object", config_object)
     return json.dumps(config_object)
 
 

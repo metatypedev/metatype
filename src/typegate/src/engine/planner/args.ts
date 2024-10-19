@@ -13,14 +13,13 @@ import type {
   Variables,
 } from "../../types.ts";
 import type { JSONValue } from "../../utils.ts";
-import {
-  getVariantTypesIndexes,
-  type ListNode,
-  type ObjectNode,
-  Type,
-  type TypeNode,
-  type UnionNode,
+import type {
+  ListNode,
+  ObjectNode,
+  TypeNode,
+  UnionNode,
 } from "../../typegraph/type_node.ts";
+import { getVariantTypesIndexes, Type } from "../../typegraph/type_node.ts";
 import { mapValues } from "@std/collections/map-values";
 import { filterValues } from "@std/collections/filter-values";
 
@@ -43,6 +42,7 @@ import {
 } from "./parameter_transformer.ts";
 import { QueryFunction as JsonPathQuery } from "../../libs/jsonpath.ts";
 import { getInjection } from "../../typegraph/utils.ts";
+import { GeneratorNode } from "../../runtimes/random.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -824,7 +824,11 @@ class ArgumentCollector {
       }
 
       case "random": {
-        return () => this.tg.getRandom(typ);
+        return () =>
+          this.tg.getRandom(
+            typ,
+            selectInjection<GeneratorNode>(injection.data, this.effect),
+          );
       }
     }
   }

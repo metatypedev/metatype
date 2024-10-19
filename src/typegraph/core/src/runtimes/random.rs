@@ -26,8 +26,8 @@ pub enum RandConfigNode {
     },
 }
 
-#[derive(Debug, Deserialize)]
-struct Generator {
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Generator {
     pub gen: String,
     #[serde(flatten)]
     pub args: IndexMap<String, serde_json::Value>,
@@ -35,11 +35,11 @@ struct Generator {
 
 pub fn collect_random_runtime_config(out_type: TypeId) -> Result<Option<RandConfigNode>> {
     let xdef = out_type.as_xdef()?;
-    let attr = xdef.attributes.find_runtime_attr("");
-    let gen = attr
-        .map(|attr| serde_json::from_value::<Generator>(attr.clone()))
-        .transpose()
-        .map_err(|e| format!("failed to decode random generator config: {e}"))?;
+    let gen = {
+        let xdef = &xdef;
+        let attr = xdef.attributes.find_runtime_attr("");
+        attr.and_then(|attr| serde_json::from_value::<Generator>(attr.clone()).ok())
+    };
     // TODO fail if gen is some on parent?
     match xdef.type_def {
         TypeDef::Struct(s) => {

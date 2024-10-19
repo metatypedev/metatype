@@ -144,25 +144,25 @@ export type TypeNode =
 export type PolicyIndices = number | PolicyIndicesByEffect;
 export type Injection = {
   source: "static";
-  data: InjectionDataFor_String;
+  data: InjectionData;
 } | {
   source: "context";
-  data: InjectionDataFor_String;
+  data: InjectionData;
 } | {
   source: "secret";
-  data: InjectionDataFor_String;
+  data: InjectionData;
 } | {
   source: "parent";
-  data: InjectionDataFor_String;
+  data: InjectionData;
 } | {
   source: "dynamic";
-  data: InjectionDataFor_String;
+  data: InjectionData;
 } | {
   source: "random";
-  data: InjectionDataFor_String;
+  data: InjectionData;
 };
-export type InjectionDataFor_String = SingleValueFor_String | {
-  [k: string]: string;
+export type InjectionData = SingleInjectionValue | {
+  [k: string]: unknown;
 };
 export type StringFormat =
   | "uuid"
@@ -322,11 +322,8 @@ export interface PolicyIndicesByEffect {
   delete?: number | null;
   update?: number | null;
 }
-export interface SingleValueFor_String {
-  value: string;
-}
-export interface SingleValueForUint32 {
-  value: number;
+export interface SingleInjectionValue {
+  value: unknown;
 }
 export interface FunctionParameterTransform {
   resolver_input: number;

@@ -23,7 +23,7 @@ def serialize_injection(
         return json.dumps({"source": source, "data": value_per_effect})
 
     if value is None:
-        return json.dumps({"source": source, "data": {}})
+        return json.dumps({"source": source, "data": {"value": None}})
 
     return json.dumps({"source": source, "data": {"value": value_mapper(value)}})
 

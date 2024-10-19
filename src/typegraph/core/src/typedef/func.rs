@@ -15,10 +15,10 @@ use crate::types::{
     TypeDef, TypeDefData, TypeId,
 };
 use crate::wit::core::TypeFunc;
-use common::typegraph::InjectionNode;
 use common::typegraph::{
     parameter_transform::FunctionParameterTransform, FunctionTypeData, TypeNode,
 };
+use common::typegraph::{Injection, InjectionData, InjectionNode};
 use indexmap::IndexMap;
 use std::collections::HashSet;
 use std::hash::Hash as _;
@@ -135,12 +135,26 @@ fn collect_injections(
         let xdef = TypeId(*prop_id).as_xdef()?;
         let injection = xdef.attributes.find_injection();
         if let Some(injection) = injection {
-            res.insert(
-                name.clone(),
-                InjectionNode::Leaf {
-                    injection: injection.clone(),
-                },
-            );
+            let mut injection = injection.clone();
+            if let Injection::Random(random_inj) = &mut injection {
+                let value = collect_random_runtime_config(TypeId(*prop_id))?
+                    .map(|gen| {
+                        serde_json::to_value(gen).map_err(|e| {
+                            format!("Failed to serialize random runtime config: {}", e)
+                        })
+                    })
+                    .transpose()?
+                    .unwrap_or(serde_json::Value::Null);
+                match random_inj {
+                    InjectionData::SingleValue(v) => {
+                        v.value = value;
+                    }
+                    InjectionData::ValueByEffect(vv) => vv.values_mut().for_each(|v| {
+                        *v = value.clone();
+                    }),
+                }
+            }
+            res.insert(name.clone(), InjectionNode::Leaf { injection });
         } else {
             let type_def = resolve_quantifiers(xdef.type_def, |_| ())?;
             match type_def {

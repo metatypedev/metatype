@@ -79,7 +79,7 @@ export class RandomRuntime extends Runtime {
   }
 }
 
-type GeneratorNode =
+export type GeneratorNode =
   | { children: Record<string, GeneratorNode> }
   | { gen: string; args: Record<string, unknown> };
 
@@ -146,7 +146,6 @@ export default function randomizeRecursively(
 
         // Get the timestamp of the random date
         const timestamp = randomDate.getTime();
-        console.log(randomDate);
 
         // Create a new Date object with the timestamp adjusted for the local timezone offset
         const dateInUtc = new Date(

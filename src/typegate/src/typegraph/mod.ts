@@ -39,7 +39,7 @@ import type {
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import type { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
-import randomizeRecursively from "../runtimes/random.ts";
+import randomizeRecursively, { GeneratorNode } from "../runtimes/random.ts";
 import type { Typegate } from "../typegate/mod.ts";
 import { TypeUtils } from "./utils.ts";
 
@@ -326,7 +326,10 @@ export class TypeGraph implements AsyncDisposable {
     throw new Error(`invalid type for secret injection: ${schema.type}`);
   }
 
-  getRandom(schema: TypeNode): number | string | null {
+  getRandom(
+    schema: TypeNode,
+    generator: GeneratorNode | null,
+  ): number | string | null {
     const tgTypes: TypeNode[] = this.tg.types;
     let seed = 12; // default seed
     if (
@@ -338,7 +341,7 @@ export class TypeGraph implements AsyncDisposable {
     const chance: typeof Chance = new Chance(seed);
 
     try {
-      const result = randomizeRecursively(schema, chance, tgTypes, null);
+      const result = randomizeRecursively(schema, chance, tgTypes, generator);
 
       return result;
     } catch (_) {

@@ -12,7 +12,7 @@ const user = t.struct({
   married: t.boolean().fromRandom(),
   email: t.string({ format: "email" }).fromRandom(),
   birthday: t.datetime().fromRandom(),
-  friends: t.list(t.string({}, { config: { gen: "name" } })).fromRandom(),
+  friends: t.list(t.string({}, { config: { gen: "first" } })).fromRandom(),
   phone: t.string({}, { config: { gen: "phone" } }).fromRandom(),
   gender: t.string({}, { config: { gen: "gender" } }).fromRandom(),
   firstname: t.string({}, { config: { gen: "first" } }).fromRandom(),
