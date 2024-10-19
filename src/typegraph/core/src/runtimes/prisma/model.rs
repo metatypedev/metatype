@@ -16,7 +16,6 @@ use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 pub use common::typegraph::runtimes::prisma::{ScalarType, StringType};
 use common::typegraph::{EffectType, InjectionData};
 use indexmap::IndexMap;
-use std::hash::Hash;
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
@@ -359,7 +358,7 @@ impl Injection {
     /// return None if the injection implies that the property is unmanaged.
     /// Unmanaged properties are properties that will not be present in the
     /// prisma model.
-    fn convert_injection<T: Hash>(data: &InjectionData<T>) -> Option<Self> {
+    fn convert_injection(data: &InjectionData) -> Option<Self> {
         match data {
             InjectionData::SingleValue(_) => None, // unmanaged
             InjectionData::ValueByEffect(map) => {
@@ -380,7 +379,7 @@ impl Injection {
         }
     }
 
-    fn convert_dynamic_injection(data: &InjectionData<String>) -> Option<Self> {
+    fn convert_dynamic_injection(data: &InjectionData) -> Option<Self> {
         match data {
             InjectionData::SingleValue(_) => None, // unmanaged
             InjectionData::ValueByEffect(map) => {
@@ -390,11 +389,11 @@ impl Injection {
                 } else {
                     Some(Self {
                         create: map.get(&EffectType::Create).and_then(|i| match i.as_str() {
-                            "now" => Some(InjectionHandler::PrismaDateNow),
+                            Some("now") => Some(InjectionHandler::PrismaDateNow),
                             _ => None,
                         }),
                         update: map.get(&EffectType::Update).and_then(|i| match i.as_str() {
-                            "now" => Some(InjectionHandler::PrismaDateNow),
+                            Some("now") => Some(InjectionHandler::PrismaDateNow),
                             _ => None,
                         }),
                     })

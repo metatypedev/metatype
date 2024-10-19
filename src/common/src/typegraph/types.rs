@@ -3,6 +3,7 @@
 
 use std::collections::BTreeMap;
 
+use anyhow::Result;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
@@ -14,27 +15,32 @@ use super::{parameter_transform::FunctionParameterTransform, EffectType, PolicyI
 pub type TypeName = String;
 pub type TypeId = u32;
 
+type JsonValue = serde_json::Value;
+
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
-pub struct SingleValue<T: Hash> {
-    pub value: T,
+pub struct SingleValue {
+    pub value: JsonValue,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(untagged)]
-pub enum InjectionData<T: Hash = String> {
-    SingleValue(SingleValue<T>),
-    ValueByEffect(BTreeMap<EffectType, T>),
+pub enum InjectionData {
+    SingleValue(SingleValue),
+    ValueByEffect(BTreeMap<EffectType, JsonValue>),
 }
 
-impl<T: Hash> InjectionData<T> {
-    pub fn values(&self) -> Vec<&T> {
+impl InjectionData {
+    pub fn values<T: serde::de::DeserializeOwned>(&self) -> Result<Vec<T>> {
         match self {
-            InjectionData::SingleValue(v) => vec![&v.value],
-            InjectionData::ValueByEffect(m) => m.values().collect(),
+            InjectionData::SingleValue(v) => Ok(vec![serde_json::from_value(v.value.clone())?]),
+            InjectionData::ValueByEffect(m) => m
+                .values()
+                .map(|v| serde_json::from_value(v.clone()).map_err(Into::into))
+                .collect(),
         }
     }
 
-    pub fn values_mut(&mut self) -> Vec<&mut T> {
+    pub fn values_mut(&mut self) -> Vec<&mut JsonValue> {
         match self {
             InjectionData::SingleValue(v) => vec![&mut v.value],
             InjectionData::ValueByEffect(m) => m.values_mut().collect(),

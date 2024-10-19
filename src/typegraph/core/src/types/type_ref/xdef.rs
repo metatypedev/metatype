@@ -1,4 +1,4 @@
-use super::{FlatTypeRef, FlatTypeRefTarget, RefAttrs, TypeRef};
+use super::{FlatTypeRef, FlatTypeRefTarget, RefAttr, RefAttrs, TypeRef};
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::typegraph::TypegraphContext;
@@ -30,9 +30,15 @@ impl ExtendedTypeDef {
         }
 
         self.type_def.hash_type(hasher, tg)?;
-        if !self.attributes.is_empty() {
+        // hashable attributes -- only the ones that affect the type
+        let attributes = self
+            .attributes
+            .iter()
+            .filter(|a| matches!(a.as_ref(), RefAttr::Policy(_)))
+            .collect::<Vec<_>>();
+        if !attributes.is_empty() {
             "attributes".hash(hasher);
-            for attr in self.attributes.iter().rev() {
+            for attr in attributes.iter().rev() {
                 attr.as_ref().hash(hasher);
             }
         }

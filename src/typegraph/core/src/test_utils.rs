@@ -29,7 +29,10 @@ pub mod models {
 
     pub fn simple_record() -> Result<TypeId> {
         let mut created_at_injection_map = BTreeMap::new();
-        created_at_injection_map.insert(EffectType::Create, "now".to_string());
+        created_at_injection_map.insert(
+            EffectType::Create,
+            serde_json::Value::String("now".to_string()),
+        );
         let created_at = t::string()
             .format("date-time")
             .inject(Injection::Dynamic(InjectionData::ValueByEffect(

@@ -1,49 +1,25 @@
 export const snapshot = {};
 
 snapshot[`type comparison errors 1`] = `
-\`- at type-comparison:/integer_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
-- at type-comparison:/integer_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' cannot be lower on the subtype: 12 < 13
-- at type-comparison:/integer_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: 'maximum' cannot be higher on the subtype: 12 > 11
-- at type-comparison:/integer_fail_4_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' cannot be lower on the subtype: 9 < 10
-- at type-comparison:/integer_fail_4_test_type/[out]/injected/[in]/field: from_parent injection: 'maximum' cannot be higher on the subtype: 13 > 12
-- at type-comparison:/integer_fail_5_test_type/[out]/injected/[in]/field: from_parent injection: 'multiple_of' is not a multiple of the 'multiple_of' of the supertype (12 % 8 != 0)
-- at type-comparison:/integer_fail_6_test_type/[out]/injected/[in]/field: from_parent injection: 'multiple_of' is not a multiple of the 'multiple_of' of the supertype (6 % 12 != 0)
-- at type-comparison:/float_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
-- at type-comparison:/float_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' cannot be lower on the subtype: 12 < 13
-- at type-comparison:/float_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: 'maximum' cannot be higher on the subtype: 12 > 11
-- at type-comparison:/float_fail_4_test_type/[out]/injected/[in]/field: from_parent injection: 'maximum' cannot be higher on the subtype: 13 > 12
-- at type-comparison:/float_fail_5_test_type/[out]/injected/[in]/field: from_parent injection: 'multiple_of' is not a multiple of the 'multiple_of' of the supertype (12 % 5.999 != 0)
-- at type-comparison:/float_fail_6_test_type/[out]/injected/[in]/field: from_parent injection: 'multiple_of' is not a multiple of the 'multiple_of' of the supertype (6 % 12 != 0)
-- at type-comparison:/number_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Type mismatch: float to integer
-- at type-comparison:/number_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' cannot be lower on the subtype: 12 < 12.1
-- at type-comparison:/number_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: 'multiple_of' is not a multiple of the 'multiple_of' of the supertype (12 % 12.1 != 0)
-- at type-comparison:/string_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum_length' is required on the subtype if it is defined on the supertype
-- at type-comparison:/string_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum_length' cannot be lower on the subtype: 12 < 13
-- at type-comparison:/optional_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Optional type cannot be a subtype of a non-optional type
-- at type-comparison:/optional_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
-- at type-comparison:/list_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Type mismatch: list to integer
-- at type-comparison:/list_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
-- at type-comparison:/list_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
-- at type-comparison:/struct_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
-- at type-comparison:/struct_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: property field is not allowed: it is not defined in the supertype
-- at type-comparison:/struct_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: property field1 is required: it is not optional in the supertype
-- at type-comparison:/struct_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: property field2 is required: it is not optional in the supertype
-- at type-comparison:/union_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Expected all variants to be a subtype
-- at type-comparison:/union_fail_1_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 1 is not a subtype
-- at type-comparison:/union_fail_1_test_type/[out]/injected/[in]/field: from_parent injection:  - - Expected at least one variant to be a supertype, got none
-- at type-comparison:/union_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: Expected all variants to be a subtype
-- at type-comparison:/union_fail_2_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 0 is not a subtype
-- at type-comparison:/union_fail_2_test_type/[out]/injected/[in]/field: from_parent injection:  - - Expected a single variant to be a supertype, got more: variants 0, 1
-- at type-comparison:/union_fail_2_test_type/[out]/injected/[out]/field: Invalid either type: variant #0 ('integer') is a subtype of variant #1 ('float')
-- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: Expected a single variant to be a supertype, got none
-- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 0
-- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - - Type mismatch: float to integer
-- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - Variant 1
-- at type-comparison:/union_fail_3_test_type/[out]/injected/[in]/field: from_parent injection:  - - Type mismatch: float to string
-- at type-comparison:/union_fail_4_test_type/[out]/injected/[in]/field: from_parent injection: Expected at least one variant to be a supertype, got none
-- at type-comparison:/enum_fail_1_test_type/[out]/injected/[in]/field: from_parent injection:  - Expected all enum values to be defined on the supertype
-- at type-comparison:/enum_fail_1_test_type/[out]/injected/[in]/field: from_parent injection:  - - Value "\\\\"c\\\\"" (#2) is not defined on the supertype
-- at type-comparison:/enum_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: Expected the subtype to be an enum
-- Typegraph type-comparison failed validation
+\`ll last):
+  File "/home/natoandro/devel/metatypedev/metatype-1/tests/utils/tg_deploy_script.py", line 34, in <module>
+    spec.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "schema_validation/type_comparison.py", line 6, in <module>
+    def type_comparison(g: Graph):
+  File "/home/natoandro/devel/metatypedev/metatype-1/src/typegraph/python/typegraph/graph/typegraph.py", line 232, in decorator
+    builder(Graph(tg))
+  File "schema_validation/type_comparison.py", line 44, in type_comparison
+    case("float_ok_2", t.float(min=12), t.float())
+  File "/home/natoandro/devel/metatypedev/metatype-1/src/typegraph/python/typegraph/t.py", line 283, in __init__
+    res = core.floatb(
+  File "/home/natoandro/devel/metatypedev/metatype-1/src/typegraph/python/typegraph/gen/exports/core.py", line 687, in floatb
+    ret = self.component.lift_callee6(caller, variant, variant6, variant9, variant10, variant13, variant14, variant17, variant18, variant21, variant22, variant26, variant27, variant28)
+  File "/home/natoandro/devel/metatypedev/metatype-1/.venv/lib/python3.9/site-packages/wasmtime/_func.py", line 87, in __call__
+    params_ptr[params_set] = Val._convert_to_raw(store, param_tys[params_set], val)
+  File "/home/natoandro/devel/metatypedev/metatype-1/.venv/lib/python3.9/site-packages/wasmtime/_value.py", line 140, in _convert_to_raw
+    raise TypeError("don't know how to convert %r to %s" % (val, ty))
+TypeError: don't know how to convert 12 to f64
 \`
 `;

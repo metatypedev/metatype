@@ -3,7 +3,7 @@
 
 import type { ComputeStage } from "../engine/query_engine.ts";
 import { equal } from "@std/assert/equal";
-import type { Resolver } from "../types.ts";
+import type { Resolver, ResolverArgs } from "../types.ts";
 
 export abstract class Runtime {
   readonly id: string;
@@ -56,7 +56,7 @@ export abstract class Runtime {
   static resolveFromParent(name: string): Resolver {
     return ({ _: { parent } }) => {
       const resolver = parent[name];
-      return typeof resolver === "function" ? resolver() : resolver;
+      return (typeof resolver === "function" ? resolver() : resolver) ?? null;
     };
   }
 }

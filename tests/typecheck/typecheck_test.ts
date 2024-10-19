@@ -25,7 +25,7 @@ Meta.test("typecheck", async (t) => {
     }
 
     return new ResultValidationCompiler(tg, fragments).generate(
-      operation.unwrap()
+      operation.unwrap(),
     );
   };
 
@@ -49,7 +49,7 @@ Meta.test("typecheck", async (t) => {
           }
         `),
       Error,
-      "Unexpected property 'postis' at 'Query1'"
+      "Unexpected property 'postis' at 'Query1'",
     );
 
     assertThrows(
@@ -64,7 +64,7 @@ Meta.test("typecheck", async (t) => {
           }
         `),
       Error,
-      "Unexpected property 'text' at 'Query2.posts'"
+      "Unexpected property 'text' at 'Query2.posts'",
     );
   });
 
@@ -223,7 +223,11 @@ Meta.test("typecheck", async (t) => {
       .expectData({
         findProduct: {
           name: "A",
-          equivalent: [{ name: "B" }, { name: "C" }, { name: "D", score: 10 }],
+          equivalent: [{ name: "B", equivalent: null, score: null }, {
+            name: "C",
+            equivalent: null,
+            score: null,
+          }, { name: "D", equivalent: null, score: 10 }],
           score: null,
         },
       })

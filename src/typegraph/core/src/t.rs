@@ -40,7 +40,7 @@ pub trait TypeBuilder {
     #[cfg(test)]
     fn set_value<V: serde::ser::Serialize>(&mut self, val: V) -> Result<TypeRef> {
         self.inject(Injection::Static(InjectionData::SingleValue(SingleValue {
-            value: serde_json::to_string(&val).unwrap(),
+            value: serde_json::to_value(&val).unwrap(),
         })))
     }
 

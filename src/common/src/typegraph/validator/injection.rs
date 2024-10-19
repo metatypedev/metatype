@@ -46,7 +46,7 @@ impl Validator {
         match injection_node {
             InjectionNode::Leaf { injection } => match injection {
                 Injection::Static(data) => {
-                    for value in data.values().iter() {
+                    for value in data.values::<String>().unwrap().iter() {
                         match serde_json::from_str::<Value>(value) {
                             Ok(val) => match tg.validate_value(type_idx, &val) {
                                 Ok(_) => {}
@@ -65,7 +65,7 @@ impl Validator {
                     }
                 }
                 Injection::Parent(data) => {
-                    let sources = data.values();
+                    let sources = data.values::<String>().unwrap();
                     for source_key in sources.iter() {
                         self.validate_parent_injection(source_key, type_idx, path, cx);
                     }

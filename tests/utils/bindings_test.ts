@@ -38,9 +38,7 @@ Deno.test("typegraphValidate", () => {
       {
         "type": "object",
         "title": "introspection",
-        "runtime": 0,
         "policies": [],
-        "config": {},
         "properties": {
           "__type": 1,
           "__schema": 64,
@@ -54,13 +52,13 @@ Deno.test("typegraphValidate", () => {
       {
         "type": "function",
         "title": "func_79",
-        "runtime": 1,
         "policies": [
           0,
         ],
-        "config": {},
         "input": 2,
         "output": 4,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 0,
         "rate_weight": null,
         "rate_calls": false,

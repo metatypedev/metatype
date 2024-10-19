@@ -250,45 +250,9 @@ impl TypeRef {
     pub fn repr(&self) -> String {
         self.flatten().repr()
     }
-
-    // pub fn hash_type(
-    //     &self,
-    //     hasher: &mut crate::conversion::hash::Hasher,
-    //     tg: &mut TypegraphContext,
-    // ) -> Result<()> {
-    //     self.flatten().hash_type(hasher, tg)
-    // }
 }
 
 impl FlatTypeRef {
-    // pub fn hash_type(
-    //     &self,
-    //     hasher: &mut crate::conversion::hash::Hasher,
-    //     tg: &mut crate::typegraph::TypegraphContext,
-    // ) -> Result<()> {
-    //     if let Some(name) = self.name.as_deref() {
-    //         "named".hash(hasher);
-    //         name.hash(hasher);
-    //         return Ok(());
-    //     }
-    //     match &self.target {
-    //         FlatTypeRefTarget::Direct(type_def) => {
-    //             type_def.hash_type(hasher, tg)?;
-    //         }
-    //         FlatTypeRefTarget::Indirect(_) => {
-    //             unreachable!()
-    //         }
-    //     }
-    //     // TODO do not hash attributes as they are not part of the type
-    //     if !self.attributes.is_empty() {
-    //         "attributes".hash(hasher);
-    //         for attr in self.attributes.iter().rev() {
-    //             attr.as_ref().hash(hasher);
-    //         }
-    //     }
-    //     Ok(())
-    // }
-
     fn repr(&self) -> String {
         let mut attrs = "".to_string();
         for attr in self.attributes.iter().rev() {
@@ -309,24 +273,6 @@ impl FlatTypeRef {
         }
     }
 }
-
-// pub trait AsFlatTypeRef {
-//     fn as_flat_ref(&self) -> FlatTypeRef;
-// }
-//
-// impl AsFlatTypeRef for Type {
-//     fn as_flat_ref(&self) -> FlatTypeRef {
-//         match self {
-//             Type::Def(def) => FlatTypeRef {
-//                 id: def.id(),
-//                 target: FlatTypeRefTarget::Direct(def.clone()),
-//                 attributes: vec![],
-//                 name: None,
-//             },
-//             Type::Ref(r) => r.flatten(),
-//         }
-//     }
-// }
 
 impl RefAttr {
     fn repr(&self) -> String {
@@ -433,30 +379,3 @@ where
         TypeRef::named(name, self.try_into()?).register()
     }
 }
-
-// impl TypeRef {
-//     pub fn extract_name(self) -> Option<(Type, String)> {
-//         match self.target.as_ref() {
-//             RefTarget::Indirect(name) => {
-//                 Store::get_type_by_name(&name).map(|t| (Type::Ref(t), name.clone()))
-//             }
-//             RefTarget::Direct(def) => match self.attribute.as_deref() {
-//                 Some(RefAttr::Name(name)) => Some((Type::Def(def.clone()), name.clone())),
-//                 _ => None,
-//             },
-//             RefTarget::Link(link) => match self.attribute.as_deref() {
-//                 Some(RefAttr::Name(name)) => Some((Type::Ref(link.clone()), name.clone())),
-//                 _ => None,
-//             },
-//         }
-//     }
-// }
-
-// impl Type {
-//     pub fn extract_name(self) -> Option<(Type, String)> {
-//         match self {
-//             Type::Def(_) => None,
-//             Type::Ref(r) => r.extract_name(),
-//         }
-//     }
-// }

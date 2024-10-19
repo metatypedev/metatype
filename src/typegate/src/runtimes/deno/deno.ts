@@ -212,7 +212,7 @@ export class DenoRuntime extends Runtime {
           return {};
         }
         const resolver = parent[stage.props.node];
-        return typeof resolver === "function" ? resolver() : resolver;
+        return (typeof resolver === "function" ? resolver() : resolver) ?? null;
       }),
     ];
   }
