@@ -106,11 +106,4 @@ export default {
       });
     },
   },
-  // "install-protobuf-compiler": {
-  //   fn: ($) => $`sudo apt install protobuf-compiler`,
-  // },
-  "install-protobuf-rust": {
-    desc: "Enable rust codegen for protoc",
-    fn: ($) => $`cargo binstall protobuf-codegen@3.5.1`,
-  },
 } satisfies Record<string, DenoTaskDefArgs>;

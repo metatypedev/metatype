@@ -19,7 +19,7 @@
 
 use crate::interlude::*;
 
-use psl::diagnostics::Diagnostics;
+use psl::diagnostics::{Diagnostics, FileId};
 use query_connector::error::ConnectorError;
 use query_core::CoreError;
 use query_core::{
@@ -163,7 +163,7 @@ impl QueryEngine {
         schema
             .diagnostics
             .to_result()
-            .map_err(|err| ApiError::conversion(err, schema.db.source()))?;
+            .map_err(|err| ApiError::conversion(err, schema.db.source(FileId(0))))?;
 
         config
             .resolve_datasource_urls_query_engine(
@@ -171,11 +171,11 @@ impl QueryEngine {
                 |key| env.get(key).map(ToString::to_string),
                 ignore_env_var_errors,
             )
-            .map_err(|err| ApiError::conversion(err, schema.db.source()))?;
+            .map_err(|err| ApiError::conversion(err, schema.db.source(FileId(0))))?;
 
         config
             .validate_that_one_datasource_is_provided()
-            .map_err(|errors| ApiError::conversion(errors, schema.db.source()))?;
+            .map_err(|errors| ApiError::conversion(errors, schema.db.source(FileId(0))))?;
 
         // let enable_metrics = config.preview_features().contains(PreviewFeature::Metrics);
         // let enable_tracing = config.preview_features().contains(PreviewFeature::Tracing);
@@ -211,7 +211,9 @@ impl QueryEngine {
                 .load_url_with_config_dir(&builder.config_dir, |key| {
                     builder.env.get(key).map(ToString::to_string)
                 })
-                .map_err(|err| ApiError::Conversion(err, builder.schema.db.source().to_owned()))?
+                .map_err(|err| {
+                    ApiError::Conversion(err, builder.schema.db.source(FileId(0)).to_owned())
+                })?
         };
 
         let engine = async move {
@@ -226,10 +228,11 @@ impl QueryEngine {
 
             let executor_fut = async {
                 let executor = load_executor(
-                    request_handlers::ConnectorMode::Rust,
-                    data_source,
+                    request_handlers::ConnectorKind::Rust {
+                        url,
+                        datasource: data_source,
+                    },
                     preview_features,
-                    &url,
                 )
                 .await?;
                 let connector = executor.primary_connector();

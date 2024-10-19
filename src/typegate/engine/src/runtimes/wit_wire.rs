@@ -97,7 +97,6 @@ impl Ctx {
 
 struct Instance {
     bindings: wit::WitWire,
-    _instance: wasmtime::component::Instance,
     store: wasmtime::Store<InstanceState>,
     preopen_dir: PathBuf,
 }
@@ -378,7 +377,7 @@ pub async fn op_wit_wire_init<'scope>(
             },
         ),
     );
-    let (bindings, instance) = wit::WitWire::instantiate_async(&mut store, &component, &ctx.linker)
+    let bindings = wit::WitWire::instantiate_async(&mut store, &component, &ctx.linker)
         .await
         .map_err(|err| {
             WitWireInitError::ModuleErr(format!("error tring to make component instance: {err}"))
@@ -392,7 +391,6 @@ pub async fn op_wit_wire_init<'scope>(
     ctx.instances.insert(
         instance_id,
         Instance {
-            _instance: instance,
             bindings,
             store,
             preopen_dir: work_dir,

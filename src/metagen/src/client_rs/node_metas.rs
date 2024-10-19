@@ -10,7 +10,7 @@ use crate::{interlude::*, shared::types::*};
 
 pub struct RsNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
-    pub named_types: Rc<std::sync::Mutex<HashSet<u32>>>,
+    pub named_types: Rc<std::sync::Mutex<IndexSet<u32>>>,
 }
 
 impl RsNodeMetasRenderer {

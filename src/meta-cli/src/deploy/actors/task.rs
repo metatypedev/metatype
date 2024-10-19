@@ -295,9 +295,10 @@ impl<A: TaskAction + 'static> Handler<WaitForProcess<A>> for TaskActor<A> {
                             addr.do_send(Exit(TaskFinishStatus::<A>::Finished(Default::default())));
                         }
                     } else {
+                        use std::os::unix::process::ExitStatusExt;
                         console.error(action.get_error_message(&format!(
                             "process failed with code {:?}",
-                            output.status.code()
+                            output.status.code().or_else(|| output.status.signal())
                         )));
                         console.error(format!(
                             "(stderr):\n{}",

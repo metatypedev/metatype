@@ -12,21 +12,33 @@ import { workspaceDir } from "../../utils/dir.ts";
 
 const m = new TestModule(import.meta);
 
-const tgName = "migration-failure-test";
+// both dev_test and deploy_test rely on the same typegraph
+// we need to do different versions of the typegraph to avoid
+// races during testing
+const testCode = "dev";
+const tgName = `migration-failure-test-${testCode}`;
 /**
  * These tests use different ports for the virtual typegate instance to avoid
  * conflicts with one another when running in parallel.
  */
 
-async function writeTypegraph(version: number | null, target = "migration.py") {
+async function writeTypegraph(
+  version: number | null,
+  target = `migration_${testCode}.py`,
+) {
   if (version == null) {
-    await m.shell(["bash", "-c", `cp ./templates/migration.py ${target}`]);
+    await m.shell([
+      "bash",
+      "-c",
+      `cat ./templates/migration.py | sed -e "s/migration_failure_test_code/migration_failure_test_${testCode}/" > ${target}`,
+    ]);
   } else {
     await m.shell([
       "bash",
       "select.sh",
       "templates/migration.py",
       `${version}`,
+      testCode,
       target,
     ]);
   }
@@ -34,8 +46,6 @@ async function writeTypegraph(version: number | null, target = "migration.py") {
 
 Meta.test(
   {
-    // FIXME: MET-622
-    ignore: true,
     name: "meta dev: choose to reset the database",
     gitRepo: {
       content: {
@@ -59,7 +69,7 @@ Meta.test(
         "--target=dev",
         `--gate=http://localhost:${t.port}`,
         "--secret",
-        `migration-failure-test:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+        `${tgName}:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
       ],
       // stdout: "piped",
       stderr: "piped",
@@ -77,7 +87,7 @@ Meta.test(
     await stderr.readWhile((line) => {
       // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
-        "successfully deployed typegraph migration-failure-test from migration.py",
+        `successfully deployed typegraph ${tgName} from migration.py`,
       );
     });
 
@@ -114,7 +124,7 @@ Meta.test(
     await stderr.readWhile((line) => {
       // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
-        "successfully deployed typegraph migration-failure-test",
+        `successfully deployed typegraph ${tgName}`,
       );
     });
 
@@ -160,7 +170,7 @@ Meta.test(
   },
   async (t) => {
     const schema = randomSchema();
-    const tgDefFile = join(t.workingDir, "migration.py");
+    const tgDefFile = join(t.workingDir, `migration.py`);
 
     await t.should("have no migration file", async () => {
       await assertRejects(() =>
@@ -179,7 +189,7 @@ Meta.test(
         "dev",
         "--target=dev",
         `--gate=http://localhost:${t.port}`,
-        `--secret=migration-failure-test:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+        `--secret=${tgName}:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
       ],
       // stdout: "piped",
       stderr: "piped",
@@ -198,7 +208,7 @@ Meta.test(
     await stderr.readWhile((line) => {
       console.log("line:", line);
       return !$.stripAnsi(line).includes(
-        "successfully deployed typegraph migration-failure-test",
+        `successfully deployed typegraph ${tgName}`,
       );
     });
 
@@ -229,7 +239,7 @@ Meta.test(
     const migrationsDir = resolve(
       t.workingDir,
       "prisma-migrations",
-      "migration-failure-test/main",
+      `${tgName}/main`,
     );
     console.log("Typegate migration dir", migrationsDir);
 

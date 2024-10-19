@@ -20,8 +20,12 @@ typegates:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
       sample:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=sample"
-      migration-failure-test:
+      migration-failure-test-deploy:
         POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e2"
+      migration-failure-test-dev:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e3"
+      migration-failure-test-undeploy:
+        POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e4"
 
 typegraphs:
   materializers:

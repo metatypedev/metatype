@@ -3,7 +3,7 @@ from typegraph.providers import PrismaRuntime
 
 
 @typegraph()
-def migration_failure_test(g: Graph):
+def migration_failure_test_code(g: Graph):
     db = PrismaRuntime("main", "POSTGRES")
 
     record = t.struct(
