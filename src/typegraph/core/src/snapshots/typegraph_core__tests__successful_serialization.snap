@@ -23,7 +23,7 @@ expression: typegraph.0
       "input": 2,
       "output": 4,
       "injections": {},
-      "runtime_config": null,
+      "runtimeConfig": null,
       "materializer": 0,
       "rate_weight": null,
       "rate_calls": false
