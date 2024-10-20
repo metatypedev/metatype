@@ -33,7 +33,7 @@ impl Ctx {
 }
 
 fn reformat_datamodel(datamodel: &str) -> Option<String> {
-    prisma_models::psl::reformat(datamodel, 4)
+    psl::reformat(datamodel, 4)
 }
 
 // register engine
@@ -58,7 +58,7 @@ pub async fn op_prisma_register_engine(
 
     engine::register_engine(&ctx, datamodel, input.engine_name)
         .await
-        .tap_err(|e| log::error!("Error registering engine: {:?}", e))
+        .tap_err(|e| error!("Error registering engine: {:?}", e))
 }
 
 // unregister engine
@@ -83,7 +83,7 @@ pub async fn op_prisma_unregister_engine(
 
 // query
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaQueryInp {
     engine_name: String,
@@ -92,6 +92,7 @@ pub struct PrismaQueryInp {
     datamodel: String,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[string]
 pub async fn op_prisma_query(
@@ -105,7 +106,7 @@ pub async fn op_prisma_query(
     engine::query(&ctx, input.engine_name, input.query).await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaDiffInp {
     datasource: String,
@@ -113,21 +114,17 @@ pub struct PrismaDiffInp {
     script: bool,
 }
 
+#[tracing::instrument(ret, level = "debug")]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_diff(
-    state: Rc<RefCell<OpState>>,
     #[serde] input: PrismaDiffInp,
 ) -> Result<Option<(String, Vec<ParsedDiff>)>> {
     let datamodel = reformat_datamodel(&input.datamodel).context("Error formatting datamodel")?;
-    let tmp_dir = {
-        let state = state.borrow();
-        state.borrow::<Ctx>().tmp_dir.clone()
-    };
-    migration::diff(&tmp_dir, input.datasource, datamodel, input.script).await
+    migration::diff(input.datasource, datamodel, input.script).await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaDevInp {
     pub datasource: String,
@@ -136,6 +133,7 @@ pub struct PrismaDevInp {
     pub reset_database: bool,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_apply(
@@ -154,7 +152,7 @@ pub async fn op_prisma_apply(
         .await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaDeployInp {
     datasource: String,
@@ -162,6 +160,7 @@ pub struct PrismaDeployInp {
     migrations: String,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_deploy(
@@ -180,7 +179,7 @@ pub async fn op_prisma_deploy(
         .await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(crate = "serde")]
 pub struct PrismaCreateInp {
     datasource: String,
@@ -190,6 +189,7 @@ pub struct PrismaCreateInp {
     apply: bool,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_prisma_create(
@@ -208,6 +208,7 @@ pub async fn op_prisma_create(
         .await
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 pub async fn op_prisma_reset(
     state: Rc<RefCell<OpState>>,

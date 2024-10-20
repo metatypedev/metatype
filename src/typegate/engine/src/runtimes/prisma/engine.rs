@@ -6,6 +6,8 @@ use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 use anyhow::{Context, Result};
 use query_core::protocol::EngineProtocol;
 
+pub(super) const CONFIG_DIR: &str = ".";
+
 pub async fn register_engine(
     ctx: &super::Ctx,
     datamodel: String,
@@ -17,7 +19,7 @@ pub async fn register_engine(
         log_queries: true,
         datasource_overrides: BTreeMap::default(),
         env: serde_json::json!({}),
-        config_dir: PathBuf::from_str(".")?,
+        config_dir: PathBuf::from_str(CONFIG_DIR)?,
         ignore_env_var_errors: false,
         engine_protocol: Some(EngineProtocol::Json),
     };

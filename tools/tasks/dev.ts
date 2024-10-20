@@ -73,7 +73,7 @@ export default {
     desc: "meta dev example/typegraphs",
     inherit: ["_rust", "_ecma", "_python"],
     fn: ($) =>
-      $`cargo run -p meta-cli -- -C examples/typegraphs dev --run-destructive-migrations`,
+      $`cargo run -p meta-cli -- -C examples/typegraphs dev --run-destructive-migrations ${$.argv}`,
   },
 
   "dev-gate1": {
@@ -163,16 +163,5 @@ export default {
       TG_URL: "http://localhost:7890",
     },
     fn: ($) => $`pnpm start --no-open`,
-  },
-
-  // Note: make sure to call `ghjk x install-protobuf-rust` if not present
-  "dev-sub-gen": {
-    desc: "Regenerate substantial types",
-    workingDir: "src/substantial",
-    fn: ($) => {
-      // https://github.com/protocolbuffers/protobuf/issues/13346
-      const protoFiles = ["protocol/events.proto", "protocol/metadata.proto"];
-      return $`protoc --proto_path=. ${protoFiles} --rust_out=src/protocol`;
-    },
   },
 } satisfies Record<string, DenoTaskDefArgs>;

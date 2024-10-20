@@ -62,7 +62,7 @@ impl From<FdkTemplate> for FdkRustTemplate {
     fn from(template: FdkTemplate) -> Self {
         let mut template = template.entries;
         Self {
-            mod_rs: template.remove("fdk.rs").unwrap(),
+            mod_rs: template.swap_remove("fdk.rs").unwrap(),
         }
     }
 }
@@ -75,13 +75,13 @@ impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
     pub fn new(config: FdkRustGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
-        config.validate(&())?;
+        config.validate()?;
         Ok(Self { config })
     }
 }
 
 impl crate::Plugin for Generator {
-    fn bill_of_inputs(&self) -> HashMap<String, GeneratorInputOrder> {
+    fn bill_of_inputs(&self) -> IndexMap<String, GeneratorInputOrder> {
         [(
             Self::INPUT_TG.to_string(),
             if let Some(tg_name) = &self.config.base.typegraph_name {
@@ -110,11 +110,11 @@ impl crate::Plugin for Generator {
 
     fn generate(
         &self,
-        mut inputs: HashMap<String, GeneratorInputResolved>,
+        mut inputs: IndexMap<String, GeneratorInputResolved>,
     ) -> anyhow::Result<GeneratorOutput> {
         // TODO remove code duplication in fdk generators
         let tg = match inputs
-            .remove(Self::INPUT_TG)
+            .swap_remove(Self::INPUT_TG)
             .context("missing generator input for typegraph")?
         {
             GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
@@ -123,14 +123,14 @@ impl crate::Plugin for Generator {
         };
 
         let template: FdkRustTemplate = match inputs
-            .remove("template_dir")
+            .swap_remove("template_dir")
             .context("missing generator input for template_dir")?
         {
             GeneratorInputResolved::FdkTemplate { template } => template.into(),
             _ => bail!("unexpected generator input variant"),
         };
 
-        let mut out = HashMap::new();
+        let mut out = IndexMap::new();
         out.insert(
             self.config.base.path.join("fdk.rs"),
             GeneratedFile {

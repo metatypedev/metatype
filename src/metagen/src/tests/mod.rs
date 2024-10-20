@@ -11,7 +11,7 @@ use futures_lite::StreamExt as _;
 
 #[derive(Clone)]
 struct TestCtx {
-    typegraphs: Arc<HashMap<String, Box<Typegraph>>>,
+    typegraphs: Arc<IndexMap<String, Box<Typegraph>>>,
 }
 
 impl InputResolver for TestCtx {
@@ -56,7 +56,7 @@ async fn load_fdk_template(
         }));
     }
 
-    let mut entries = HashMap::new();
+    let mut entries = IndexMap::new();
     while let Some(res) = group.next().await {
         let (file_name, content) = res?;
         entries.insert(file_name, content);
@@ -74,7 +74,7 @@ pub struct E2eTestCase {
     pub target: String,
     pub config: config::Config,
     pub target_dir: Option<PathBuf>,
-    pub typegraphs: HashMap<String, Box<Typegraph>>,
+    pub typegraphs: IndexMap<String, Box<Typegraph>>,
     pub build_fn: fn(BuildArgs) -> BoxFuture<anyhow::Result<()>>,
 }
 
