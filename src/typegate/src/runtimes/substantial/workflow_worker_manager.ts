@@ -7,6 +7,7 @@ import { TaskContext } from "../deno/shared_types.ts";
 import {
   Data,
   Err,
+  Kind,
   Msg,
   Result,
   Run,
@@ -226,6 +227,7 @@ export class WorkerManager {
     schedule: string,
     kwargs: Record<string, unknown>,
     internalTCtx: TaskContext,
+    kind: Kind,
   ) {
     this.#createWorker(name, workflowModPath, runId);
     this.trigger("START", runId, {
@@ -235,6 +237,7 @@ export class WorkerManager {
       kwargs,
       schedule,
       internal: internalTCtx,
+      kind,
     });
   }
 }

@@ -14,6 +14,8 @@ export type AnyString = string & Record<string | number | symbol, never>;
 
 export type WorkerEvent = "START" | AnyString;
 
+export type Kind = "DENO" | "PYTHON";
+
 export type TaskData = {
   modulePath: string;
   functionName: string;
@@ -21,6 +23,7 @@ export type TaskData = {
   kwargs: Record<string, unknown>;
   schedule: string;
   internal: TaskContext;
+  kind: Kind;
 };
 
 export type ResultData = {

@@ -10,6 +10,7 @@ import { TaskContext } from "../deno/shared_types.ts";
 import {
   appendIfOngoing,
   Interrupt,
+  Kind,
   Result,
   WorkerData,
   WorkflowResult,
@@ -21,7 +22,7 @@ const logger = getLogger();
 export interface WorkflowDescription {
   name: string;
   path: string;
-  kind: "DENO" | "PYTHON";
+  kind: Kind;
 }
 
 export interface AgentConfig {
@@ -256,6 +257,7 @@ export class Agent {
         next.schedule_date,
         first.event.kwargs,
         this.internalTCtx,
+        workflow.kind,
       );
 
       this.workerManager.listen(
