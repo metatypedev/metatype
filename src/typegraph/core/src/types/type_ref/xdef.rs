@@ -6,6 +6,7 @@ use crate::types::{Type, TypeDef, TypeDefExt as _, TypeId};
 use std::hash::Hash as _;
 use std::rc::Rc;
 
+#[derive(Debug)]
 pub struct ExtendedTypeDef {
     pub id: TypeId,
     pub type_def: TypeDef,
@@ -34,7 +35,7 @@ impl ExtendedTypeDef {
         let attributes = self
             .attributes
             .iter()
-            .filter(|a| matches!(a.as_ref(), RefAttr::Policy(_)))
+            .filter(|a| matches!(a.as_ref(), RefAttr::Policy(_) | RefAttr::Reduce(_)))
             .collect::<Vec<_>>();
         if !attributes.is_empty() {
             "attributes".hash(hasher);
@@ -78,45 +79,37 @@ impl AsTypeDefEx for TypeDef {
 
 impl AsTypeDefEx for TypeRef {
     fn as_xdef(&self) -> Result<ExtendedTypeDef> {
-        match self {
-            TypeRef::Direct(direct) => Ok(ExtendedTypeDef {
-                id: direct.id,
-                type_def: direct.target.clone(),
-                attributes: vec![direct.attribute.clone()],
-                name: None,
+        let flat = self.flatten();
+        use FlatTypeRefTarget as T;
+        match flat.target {
+            T::Direct(d) => Ok(ExtendedTypeDef {
+                id: flat.id,
+                type_def: d.clone(),
+                attributes: flat.attributes,
+                name: flat.name,
             }),
-            TypeRef::Indirect(indirect) => {
-                let named = Store::get_type_by_name(&indirect.name)
-                    .ok_or_else(|| crate::errors::unregistered_type_name(&indirect.name))?;
-                let inner = named.target.as_ref().as_xdef()?;
-                let mut attributes = inner.attributes;
-                attributes.extend(indirect.attributes.iter().cloned());
-                Ok(ExtendedTypeDef {
-                    id: indirect.id,
-                    type_def: inner.type_def,
-                    attributes,
-                    name: Some(indirect.name.clone()),
-                })
-            }
-            TypeRef::Link(link) => {
-                let inner = link.target.as_ref().as_xdef()?;
-                let mut attributes = inner.attributes;
-                attributes.push(link.attribute.clone());
-                Ok(ExtendedTypeDef {
-                    id: link.id,
-                    type_def: inner.type_def,
-                    attributes,
-                    name: inner.name.clone(),
-                })
-            }
-            TypeRef::Named(named) => {
-                let inner = named.target.as_ref().as_xdef()?;
-                Ok(ExtendedTypeDef {
-                    id: named.id,
-                    type_def: inner.type_def,
-                    attributes: inner.attributes,
-                    name: Some(named.name.clone()),
-                })
+            T::Indirect(name) => {
+                let resolved = Store::get_type_by_name(&name)
+                    .ok_or_else(|| crate::errors::unregistered_type_name(&name))?;
+                match resolved.target.as_ref() {
+                    Type::Def(type_def) => Ok(ExtendedTypeDef {
+                        id: flat.id,
+                        type_def: type_def.clone(),
+                        attributes: flat.attributes,
+                        name: Some(name.into()),
+                    }),
+                    Type::Ref(type_ref) => {
+                        let inner = type_ref.as_xdef()?;
+                        let mut attributes = inner.attributes;
+                        attributes.extend(flat.attributes.iter().cloned());
+                        Ok(ExtendedTypeDef {
+                            id: flat.id,
+                            type_def: inner.type_def,
+                            attributes,
+                            name: Some(name.into()),
+                        })
+                    }
+                }
             }
         }
     }
