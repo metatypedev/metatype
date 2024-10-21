@@ -53,6 +53,26 @@ export abstract class Runtime {
     return ret;
   }
 
+  static materializeDefault(
+    stage: ComputeStage,
+    waitlist: ComputeStage[],
+    materializeRoot: (stage: ComputeStage) => ComputeStage[],
+  ): ComputeStage[] {
+    const materializedStages: ComputeStage[] = [];
+    const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
+    for (const s of [stage, ...sameRuntime]) {
+      if (s.props.materializer) {
+        materializedStages.push(...materializeRoot(s));
+      } else {
+        materializedStages.push(
+          s.withResolver(Runtime.resolveFromParent(s.props.node)),
+        );
+      }
+    }
+
+    return materializedStages;
+  }
+
   static resolveFromParent(name: string): Resolver {
     return ({ _: { parent } }) => {
       const resolver = parent[name];

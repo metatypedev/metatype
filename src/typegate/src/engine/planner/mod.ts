@@ -283,7 +283,7 @@ export class Planner {
     }
     return {
       parent: node,
-      name: canonicalName,
+      name,
       path,
       selectionSet: field.selectionSet,
       args: args ?? [],

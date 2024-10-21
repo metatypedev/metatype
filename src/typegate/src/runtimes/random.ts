@@ -49,27 +49,11 @@ export class RandomRuntime extends Runtime {
     waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const stagesMat: ComputeStage[] = [];
-
-    const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
-
-    const genNode = (this.tg.types[stage.props.typeIdx] as FunctionNode)
-      .runtimeConfig as GeneratorNode | null;
-    stagesMat.push(
-      new ComputeStage({
-        ...stage.props,
-        resolver: this.execute(stage.props.outType, genNode),
-        batcher: (x: any) => x,
-      }),
-    );
-
-    stagesMat.push(
-      ...sameRuntime.map((stage) =>
-        stage.withResolver(Runtime.resolveFromParent(stage.props.node))
-      ),
-    );
-
-    return stagesMat;
+    return Runtime.materializeDefault(stage, waitlist, (s) => {
+      const genNode = (this.tg.types[s.props.typeIdx] as FunctionNode)
+        .runtimeConfig as GeneratorNode | null;
+      return [s.withResolver(this.execute(s.props.outType, genNode))];
+    });
   }
 
   execute(typ: TypeNode, genNode: GeneratorNode | null): Resolver {

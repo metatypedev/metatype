@@ -28,7 +28,7 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs && cd ../dev && deno fmt && cd ../typegraph/deno && deno fmt --ignore=node_modules,dist && cd ../../libs/metagen/src && deno fmt'
+        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs,tests/metagen/typegraphs/sample/ts/client.ts && cd ../dev && deno fmt && cd ../typegraph/deno && deno fmt --ignore=node_modules,dist && cd ../../libs/metagen/src && deno fmt'
         pass_filenames: false
         types:
           - ts
@@ -160,6 +160,7 @@ repos:
     hooks:
       - id: ruff
       - id: ruff-format
+        exclude: "tests/metagen/typegraphs/sample/py/client.py"
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v3.27.0
     hooks:
@@ -170,6 +171,7 @@ repos:
     rev: v1.0
     hooks:
       - id: fmt
+        exclude: tests/metagen/typegraphs/sample/rs/client.rs
       - id: clippy
         args:
           - "--locked"
