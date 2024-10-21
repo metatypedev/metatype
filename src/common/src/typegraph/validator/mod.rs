@@ -239,15 +239,6 @@ impl<'a> TypeVisitor<'a> for Validator {
             }
         }
 
-        // FIXME: does not work for deno.identity()
-        // if type_node.base().injection.is_some() {
-        //     self.push_error(
-        //         current_node.path,
-        //         "Injection is not allowed in output types".to_owned(),
-        //     );
-        //     return VisitResult::Continue(false);
-        // }
-
         VisitResult::Continue(true)
     }
 

@@ -51,6 +51,7 @@ from typegraph.wit import wit_utils
 
 # TODO: better approach?
 og_list = list
+og_float = float
 
 
 class typedef:
@@ -273,11 +274,15 @@ class float(typedef):
         config: Optional[ConfigSpec] = None,
     ):
         data = TypeFloat(
-            min=min,
-            max=max,
-            exclusive_minimum=exclusive_minimum,
-            exclusive_maximum=exclusive_maximum,
-            multiple_of=multiple_of,
+            min=og_float(min) if min is not None else None,
+            max=og_float(max) if max is not None else None,
+            exclusive_minimum=og_float(exclusive_minimum)
+            if exclusive_minimum is not None
+            else None,
+            exclusive_maximum=og_float(exclusive_maximum)
+            if exclusive_maximum is not None
+            else None,
+            multiple_of=og_float(multiple_of) if multiple_of is not None else None,
             enumeration=enum,
         )
         res = core.floatb(

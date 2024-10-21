@@ -248,7 +248,7 @@ Meta.test("nested context access", async (t) => {
         profile: { datum: 123 },
       })
       .expectData({
-        optional: {},
+        optional: { optional: null },
       })
       .on(e);
   });
