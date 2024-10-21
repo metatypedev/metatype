@@ -25,7 +25,7 @@ Meta.test({
   }
   assertEquals(ints.length, 2);
   assert(ints.some((ty) => ty.title == "namedInt"));
-  assertEquals(strs.length, 4);
+  assertEquals(strs.length, 3);
   assert(strs.some((ty) => ty.format == "uuid"));
-  assertEquals(strs.filter((ty) => ty.format == "date-time").length, 2);
+  assertEquals(strs.filter((ty) => ty.format == "date-time").length, 1);
 });

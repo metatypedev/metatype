@@ -4,7 +4,6 @@
 import { CREATE, DELETE, READ, UPDATE } from "../effects.ts";
 import { InjectionSource, InjectionValue } from "./type_utils.ts";
 import { stringifySymbol } from "./func_utils.ts";
-import { genRef } from "./../typegraph.ts";
 
 export function serializeInjection(
   source: InjectionSource,
@@ -33,7 +32,7 @@ export function serializeInjection(
   }
 
   if (value === null) {
-    return JSON.stringify({ source, data: {} });
+    return JSON.stringify({ source, data: { value: null } });
   }
   return JSON.stringify({
     source,

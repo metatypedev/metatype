@@ -318,9 +318,13 @@ export class OperationPoliciesBuilder {
     }
   }
 
+  #isNamespace(typeIdx: TypeIdx): boolean {
+    return this.tg.tg.meta.namespaces!.includes(typeIdx);
+  }
+
   setReferencedTypes(stageId: StageId, ...types: TypeIdx[]): TypeIdx[] {
     if (this.current == null) {
-      if (this.tg.type(types[0]).config?.["__namespace"]) {
+      if (this.tg.tg.meta.namespaces!.includes(types[0])) {
         return types;
       }
       throw new Error("unexpected state");

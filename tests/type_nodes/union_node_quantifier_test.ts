@@ -68,6 +68,7 @@ Meta.test(
                 {
                   label: "ref",
                   content: "LG_1234",
+                  source: null,
                 },
               ],
             },

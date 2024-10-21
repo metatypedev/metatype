@@ -1,21 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import type {
-  EffectType,
-  InjectionDataFor_String,
-} from "../../typegraph/types.ts";
+import type { EffectType, InjectionData } from "../../typegraph/types.ts";
 
-export function selectInjection(
-  data: InjectionDataFor_String,
+export function selectInjection<T = string>(
+  data: InjectionData,
   effect: EffectType,
-): string | null {
+): T | null {
   if ("value" in data) {
-    return data.value;
+    return data.value as T;
   }
 
   if (effect in data) {
-    return data[effect];
+    return data[effect] as T;
   }
   return null;
 }

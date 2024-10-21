@@ -24,12 +24,15 @@ pub mod models {
     use common::typegraph::{EffectType, Injection, InjectionData};
 
     use crate::errors::Result;
-    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+    use crate::t::{self, TypeBuilder};
     use crate::types::TypeId;
 
     pub fn simple_record() -> Result<TypeId> {
         let mut created_at_injection_map = BTreeMap::new();
-        created_at_injection_map.insert(EffectType::Create, "now".to_string());
+        created_at_injection_map.insert(
+            EffectType::Create,
+            serde_json::Value::String("now".to_string()),
+        );
         let created_at = t::string()
             .format("date-time")
             .inject(Injection::Dynamic(InjectionData::ValueByEffect(
@@ -38,15 +41,14 @@ pub mod models {
             .build()?;
 
         t::struct_()
-            .named("Record")
             .propx(
                 "id",
-                t::string().format("uuid").config("auto", "true").as_id(),
+                t::string().format("uuid").config("auto", true).as_id(),
             )?
             .propx("name", t::string())?
             .propx("age", t::optionalx(t::integer())?)?
             .prop("created_at", created_at)
-            .build()
+            .build_named("Record")
     }
 
     pub fn simple_relationship() -> Result<(TypeId, TypeId)> {
@@ -54,15 +56,13 @@ pub mod models {
             .propx("id", t::integer().as_id())?
             .propx("name", t::string())?
             .propx("posts", t::listx(t::ref_("Post", Default::default()))?)?
-            .named("User")
-            .build()?;
+            .build_named("User")?;
 
         let post = t::struct_()
-            .propx("id", t::integer().config("auto", "true").as_id())?
+            .propx("id", t::integer().config("auto", true).as_id())?
             .propx("title", t::string())?
             .propx("author", t::ref_("User", Default::default()))?
-            .named("Post")
-            .build()?;
+            .build_named("Post")?;
 
         Ok((user, post))
     }
@@ -157,17 +157,16 @@ pub mod tree {
         fn write_self<W: Write>(&self, f: &mut W, _style: &Style) -> std::io::Result<()> {
             let ty = self.type_id.as_type().unwrap();
             let (name, title) = match ty {
-                Type::Def(type_def) => (
-                    type_def.data().variant_name().to_owned(),
-                    type_def.base().name.clone(),
-                ),
-                Type::Ref(type_ref) => match type_ref.flatten().target {
-                    FlatTypeRefTarget::Direct(def) => (
-                        def.data().variant_name().to_owned(),
-                        def.base().name.clone(),
-                    ),
-                    FlatTypeRefTarget::Indirect(name) => (format!("&{}", name), None),
-                },
+                Type::Def(type_def) => (type_def.data().variant_name().to_owned(), None),
+                Type::Ref(type_ref) => {
+                    let flat = type_ref.flatten();
+                    match flat.target {
+                        FlatTypeRefTarget::Direct(def) => {
+                            (def.data().variant_name().to_owned(), flat.name)
+                        }
+                        FlatTypeRefTarget::Indirect(name) => (format!("&{}", name), None),
+                    }
+                }
             };
 
             let enum_variants: Option<Vec<String>> =
@@ -209,21 +208,28 @@ pub mod tree {
         }
 
         fn children(&self) -> Cow<[Self::Child]> {
+            let type_def = match self.type_id.as_type().unwrap() {
+                Type::Def(type_def) => type_def,
+                Type::Ref(type_ref) => {
+                    let flat = type_ref.flatten();
+                    match flat.target {
+                        FlatTypeRefTarget::Indirect(_) => return Cow::Owned(vec![]),
+                        FlatTypeRefTarget::Direct(d) => d,
+                    }
+                }
+            };
+
             if self
                 .parents
                 .iter()
-                .any(|&parent_id| parent_id == self.type_id)
+                .any(|&parent_id| parent_id == type_def.id())
             {
                 Cow::Owned(vec![])
             } else {
                 let parents = {
                     let mut p = (*self.parents).clone();
-                    p.push(self.type_id);
+                    p.push(type_def.id());
                     Rc::new(p)
-                };
-
-                let Type::Def(type_def) = self.type_id.as_type().unwrap() else {
-                    return Cow::Owned(vec![]);
                 };
 
                 match type_def {

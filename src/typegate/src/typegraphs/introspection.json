@@ -3,9 +3,7 @@
     {
       "type": "object",
       "title": "introspection",
-      "runtime": 0,
       "policies": [],
-      "config": {},
       "properties": {
         "__type": 1,
         "__schema": 45
@@ -19,13 +17,13 @@
     {
       "type": "function",
       "title": "root___type_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
-      "config": {},
       "input": 2,
       "output": 4,
+      "injections": {},
+      "runtimeConfig": null,
       "materializer": 0,
       "rate_weight": null,
       "rate_calls": false
@@ -33,9 +31,7 @@
     {
       "type": "object",
       "title": "root___type_fn_input",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "name": 3
       },
@@ -45,25 +41,19 @@
     {
       "type": "string",
       "title": "root___type_fn_input_name_string",
-      "runtime": 1,
-      "policies": [],
-      "config": {}
+      "policies": []
     },
     {
       "type": "optional",
       "title": "root___type_fn_output",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 5,
       "default_value": null
     },
     {
       "type": "object",
       "title": "type",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "kind": 6,
         "name": 7,
@@ -82,7 +72,6 @@
     {
       "type": "string",
       "title": "type_kind",
-      "runtime": 1,
       "policies": [],
       "enum": [
         "\"SCALAR\"",
@@ -93,44 +82,37 @@
         "\"INPUT_OBJECT\"",
         "\"LIST\"",
         "\"NON_NULL\""
-      ],
-      "config": {}
+      ]
     },
     {
       "type": "optional",
       "title": "type_name_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "type_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "type_specifiedByURL_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "function",
       "title": "type_fields_fn",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "input": 11,
       "output": 14,
+      "injections": {},
+      "runtimeConfig": null,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -138,9 +120,7 @@
     {
       "type": "object",
       "title": "type_fields_fn_input",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "includeDeprecated": 12
       },
@@ -150,42 +130,32 @@
     {
       "type": "optional",
       "title": "type_fields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 13,
       "default_value": null
     },
     {
       "type": "boolean",
       "title": "type_fields_fn_input_includeDeprecated_boolean",
-      "runtime": 1,
-      "policies": [],
-      "config": {}
+      "policies": []
     },
     {
       "type": "optional",
       "title": "type_fields_fn_output",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 15,
       "default_value": null
     },
     {
       "type": "list",
       "title": "type_fields_fn_output",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 16
     },
     {
       "type": "object",
       "title": "field",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "name": 3,
         "description": 17,
@@ -200,20 +170,18 @@
     {
       "type": "optional",
       "title": "field_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "function",
       "title": "field_args_fn",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "input": 19,
       "output": 21,
+      "injections": {},
+      "runtimeConfig": null,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -221,9 +189,7 @@
     {
       "type": "object",
       "title": "field_args_fn_input",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "includeDeprecated": 20
       },
@@ -233,26 +199,20 @@
     {
       "type": "optional",
       "title": "field_args_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 13,
       "default_value": null
     },
     {
       "type": "list",
       "title": "field_args_fn_output",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 22
     },
     {
       "type": "object",
       "title": "input_value",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "name": 3,
         "description": 23,
@@ -267,81 +227,65 @@
     {
       "type": "optional",
       "title": "input_value_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "input_value_defaultValue_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "input_value_deprecationReason_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "field_deprecationReason_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "type_interfaces_type_interfaces_type_list_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 28,
       "default_value": null
     },
     {
       "type": "list",
       "title": "type_interfaces_type_list",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 5
     },
     {
       "type": "optional",
       "title": "type_possibleTypes_type_possibleTypes_type_list_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 30,
       "default_value": null
     },
     {
       "type": "list",
       "title": "type_possibleTypes_type_list",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 5
     },
     {
       "type": "function",
       "title": "type_enumValues_fn",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "input": 32,
       "output": 34,
+      "injections": {},
+      "runtimeConfig": null,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -349,9 +293,7 @@
     {
       "type": "object",
       "title": "type_enumValues_fn_input",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "includeDeprecated": 33
       },
@@ -361,35 +303,27 @@
     {
       "type": "optional",
       "title": "type_enumValues_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 13,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "type_enumValues_fn_output",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 35,
       "default_value": null
     },
     {
       "type": "list",
       "title": "type_enumValues_fn_output",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 36
     },
     {
       "type": "object",
       "title": "enum_value",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "name": 3,
         "description": 37,
@@ -402,29 +336,25 @@
     {
       "type": "optional",
       "title": "enum_value_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "enum_value_deprecationReason_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "function",
       "title": "type_inputFields_fn",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "input": 40,
       "output": 42,
+      "injections": {},
+      "runtimeConfig": null,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -432,9 +362,7 @@
     {
       "type": "object",
       "title": "type_inputFields_fn_input",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "includeDeprecated": 41
       },
@@ -444,48 +372,40 @@
     {
       "type": "optional",
       "title": "type_inputFields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 13,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "type_inputFields_fn_output",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 43,
       "default_value": null
     },
     {
       "type": "list",
       "title": "type_inputFields_fn_output",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 22
     },
     {
       "type": "optional",
       "title": "type_ofType_type_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 5,
       "default_value": null
     },
     {
       "type": "function",
       "title": "root___schema_fn",
-      "runtime": 1,
       "policies": [
         0
       ],
-      "config": {},
       "input": 46,
       "output": 47,
+      "injections": {},
+      "runtimeConfig": null,
       "materializer": 3,
       "rate_weight": null,
       "rate_calls": false
@@ -493,9 +413,7 @@
     {
       "type": "object",
       "title": "root___schema_fn_input",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {},
       "id": [],
       "required": []
@@ -503,9 +421,7 @@
     {
       "type": "object",
       "title": "schema",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "description": 48,
         "types": 49,
@@ -520,52 +436,40 @@
     {
       "type": "optional",
       "title": "schema_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "list",
       "title": "schema_types_type_list",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 5
     },
     {
       "type": "optional",
       "title": "schema_mutationType_type_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 5,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "schema_subscriptionType_type_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 5,
       "default_value": null
     },
     {
       "type": "list",
       "title": "schema_directives_directive_list",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 53
     },
     {
       "type": "object",
       "title": "directive",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "name": 3,
         "description": 54,
@@ -579,24 +483,19 @@
     {
       "type": "optional",
       "title": "directive_description_root___type_fn_input_name_string_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 3,
       "default_value": null
     },
     {
       "type": "list",
       "title": "directive_locations_directive_location_list",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 56
     },
     {
       "type": "string",
       "title": "directive_location",
-      "runtime": 1,
       "policies": [],
       "enum": [
         "\"QUERY\"",
@@ -618,17 +517,16 @@
         "\"ENUM_VALUE\"",
         "\"INPUT_OBJECT\"",
         "\"INPUT_FIELD_DEFINITION\""
-      ],
-      "config": {}
+      ]
     },
     {
       "type": "function",
       "title": "directive_args_fn",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "input": 58,
       "output": 60,
+      "injections": {},
+      "runtimeConfig": null,
       "materializer": 1,
       "rate_weight": null,
       "rate_calls": false
@@ -636,9 +534,7 @@
     {
       "type": "object",
       "title": "directive_args_fn_input",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "properties": {
         "includeDeprecated": 59
       },
@@ -648,18 +544,14 @@
     {
       "type": "optional",
       "title": "directive_args_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "item": 13,
       "default_value": null
     },
     {
       "type": "list",
       "title": "directive_args_fn_output",
-      "runtime": 1,
       "policies": [],
-      "config": {},
       "items": 22
     }
   ],

@@ -7,9 +7,7 @@ expression: typegraph.0
     {
       "type": "object",
       "title": "test",
-      "runtime": 0,
       "policies": [],
-      "config": {},
       "properties": {
         "one": 1
       },
@@ -21,11 +19,11 @@ expression: typegraph.0
     {
       "type": "function",
       "title": "root_one_fn",
-      "runtime": 0,
       "policies": [],
-      "config": {},
       "input": 2,
       "output": 4,
+      "injections": {},
+      "runtimeConfig": null,
       "materializer": 0,
       "rate_weight": null,
       "rate_calls": false
@@ -33,9 +31,7 @@ expression: typegraph.0
     {
       "type": "object",
       "title": "root_one_fn_input",
-      "runtime": 0,
       "policies": [],
-      "config": {},
       "properties": {
         "one": 3,
         "two": 4,
@@ -47,42 +43,32 @@ expression: typegraph.0
     {
       "type": "integer",
       "title": "root_one_fn_input_one_integer",
-      "runtime": 0,
-      "policies": [],
-      "config": {}
+      "policies": []
     },
     {
       "type": "integer",
       "title": "root_one_fn_input_two_integer",
-      "runtime": 0,
       "policies": [],
-      "config": {},
       "minimum": 12,
       "maximum": 44
     },
     {
       "type": "optional",
       "title": "root_one_fn_input_three_root_one_fn_input_three_root_one_fn_input_three_float_list_optional",
-      "runtime": 0,
       "policies": [],
-      "config": {},
       "item": 6,
       "default_value": null
     },
     {
       "type": "list",
       "title": "root_one_fn_input_three_root_one_fn_input_three_float_list",
-      "runtime": 0,
       "policies": [],
-      "config": {},
       "items": 7
     },
     {
       "type": "float",
       "title": "root_one_fn_input_three_float",
-      "runtime": 0,
-      "policies": [],
-      "config": {}
+      "policies": []
     }
   ],
   "materializers": [

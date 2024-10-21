@@ -135,7 +135,7 @@ Meta.test("prisma mixed runtime", async (t) => {
             id: "1",
             title: "Test",
           },
-          user: { age: 65, name: "Nicholas Mills" },
+          user: { age: 62, name: "Landon Glover" },
         },
       })
         .on(e);

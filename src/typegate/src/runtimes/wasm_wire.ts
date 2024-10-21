@@ -10,6 +10,7 @@ import type { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
 import { getLogger, type Logger } from "../log.ts";
 import { WitWireMessenger } from "./wit_wire/mod.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
+import { TypeGraphDS } from "../typegraph/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -19,6 +20,7 @@ export class WasmRuntimeWire extends Runtime {
 
   private constructor(
     typegraphName: string,
+    private tg: TypeGraphDS,
     uuid: string,
     private wire: WitWireMessenger,
   ) {
@@ -73,7 +75,7 @@ export class WasmRuntimeWire extends Runtime {
     );
     logger.info("wit wire messenger initialized");
 
-    return new WasmRuntimeWire(typegraphName, uuid, wire);
+    return new WasmRuntimeWire(typegraphName, typegraph, uuid, wire);
   }
 
   async deinit(): Promise<void> {
@@ -112,7 +114,7 @@ export class WasmRuntimeWire extends Runtime {
       return [stage.withResolver(this.delegate(mat))];
     }
 
-    if (stage.props.outType.config?.__namespace) {
+    if (this.tg.meta.namespaces!.includes(stage.props.typeIdx)) {
       return [stage.withResolver(() => ({}))];
     }
 

@@ -3,21 +3,22 @@
 
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import type { TypeNode } from "../typegraph/type_node.ts";
+import type { FunctionNode, TypeNode } from "../typegraph/type_node.ts";
 import Chance from "chance";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
 import type { RandomRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
+import { TypeGraphDS } from "../typegraph/mod.ts";
 
 @registerRuntime("random")
 export class RandomRuntime extends Runtime {
   seed: number | null;
   chance: typeof Chance;
-  private _tgTypes: TypeNode[] = [];
 
   constructor(
     typegraphName: string,
     seed: number | null,
+    private tg: TypeGraphDS,
   ) {
     super(typegraphName);
     this.seed = seed;
@@ -29,21 +30,16 @@ export class RandomRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { args, typegraphName } = params as RuntimeInitParams<
+    const { args, typegraphName, typegraph: tg } = params as RuntimeInitParams<
       RandomRuntimeData
     >;
     const { seed } = args;
-    const runtime = await new RandomRuntime(typegraphName, seed ?? null);
-    runtime.setTgTypes(params.typegraph.types);
+    const runtime = await new RandomRuntime(typegraphName, seed ?? null, tg);
     return runtime;
   }
 
-  private setTgTypes(tg_types: TypeNode[]) {
-    this._tgTypes = tg_types;
-  }
-
   private getTgTypeNameByIndex(index: number) {
-    return this._tgTypes[index];
+    return this.tg.types[index];
   }
 
   async deinit(): Promise<void> {}
@@ -53,59 +49,57 @@ export class RandomRuntime extends Runtime {
     waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const stagesMat: ComputeStage[] = [];
-
-    const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
-
-    stagesMat.push(
-      new ComputeStage({
-        ...stage.props,
-        resolver: this.execute(stage.props.outType),
-        batcher: (x: any) => x,
-      }),
-    );
-
-    stagesMat.push(...sameRuntime.map((stage) =>
-      new ComputeStage({
-        ...stage.props,
-        dependencies: [...stage.props.dependencies, stagesMat[0].id()],
-        resolver: this.execute(stage.props.outType),
-      })
-    ));
-
-    return stagesMat;
+    return Runtime.materializeDefault(stage, waitlist, (s) => {
+      const genNode = (this.tg.types[s.props.typeIdx] as FunctionNode)
+        .runtimeConfig as GeneratorNode | null;
+      return [s.withResolver(this.execute(s.props.outType, genNode))];
+    });
   }
 
-  execute(typ: TypeNode): Resolver {
+  execute(typ: TypeNode, genNode: GeneratorNode | null): Resolver {
     return () => {
-      return randomizeRecursively(typ, this.chance, this._tgTypes);
+      return randomizeRecursively(typ, this.chance, this.tg.types, genNode);
     };
   }
 }
+
+export type GeneratorNode =
+  | { children: Record<string, GeneratorNode> }
+  | { gen: string; args: Record<string, unknown> };
 
 export default function randomizeRecursively(
   typ: TypeNode,
   chance: typeof Chance,
   tgTypes: TypeNode[],
+  generatorNode: GeneratorNode | null,
 ): any {
-  const config = typ.config ?? {};
-  if (Object.prototype.hasOwnProperty.call(config, "gen")) {
-    const { gen, ...arg } = config;
-    return chance[gen as string](arg);
+  if (generatorNode && ("gen" in generatorNode)) {
+    const { gen, args } = generatorNode;
+    const res = chance[gen as string](args);
+    return res;
   }
   switch (typ.type) {
     case "object": {
       const result: Record<string, any> = {};
       for (const [field, idx] of Object.entries(typ.properties)) {
+        const genNode = generatorNode && ("children" in generatorNode) &&
+            generatorNode.children[field] || null;
         const nextNode = tgTypes[idx];
-        result[field] = randomizeRecursively(nextNode, chance, tgTypes);
+        result[field] = randomizeRecursively(
+          nextNode,
+          chance,
+          tgTypes,
+          genNode,
+        );
       }
       return result;
     }
     case "optional": {
       const childNodeName = tgTypes[typ.item];
+      const genNode = generatorNode && ("children" in generatorNode) &&
+          generatorNode.children["_"] || null;
       return chance.bool()
-        ? randomizeRecursively(childNodeName, chance, tgTypes)
+        ? randomizeRecursively(childNodeName, chance, tgTypes, genNode)
         : null;
     }
     case "integer":
@@ -136,7 +130,6 @@ export default function randomizeRecursively(
 
         // Get the timestamp of the random date
         const timestamp = randomDate.getTime();
-        console.log(randomDate);
 
         // Create a new Date object with the timestamp adjusted for the local timezone offset
         const dateInUtc = new Date(
@@ -161,30 +154,36 @@ export default function randomizeRecursively(
       const res = [];
       let size = chance.integer({ min: 1, max: 10 });
       const childNodeName = tgTypes[typ.items];
+      const genNode = generatorNode && ("children" in generatorNode) &&
+          generatorNode.children["_"] || null;
       while (size--) {
         res.push(
-          randomizeRecursively(childNodeName, chance, tgTypes),
+          randomizeRecursively(childNodeName, chance, tgTypes, genNode),
         );
       }
       return res;
     }
     case "either": {
+      const variant = chance.integer({ min: 0, max: typ.oneOf.length - 1 });
+      const genNode = generatorNode && ("children" in generatorNode) &&
+          generatorNode.children[`_${variant}`] || null;
       const result = randomizeRecursively(
-        tgTypes[
-          typ.oneOf[chance.integer({ min: 0, max: typ.oneOf.length - 1 })]
-        ],
+        tgTypes[typ.oneOf[variant]],
         chance,
         tgTypes,
+        genNode,
       );
       return result;
     }
     case "union": {
+      const variant = chance.integer({ min: 0, max: typ.anyOf.length - 1 });
+      const genNode = generatorNode && ("children" in generatorNode) &&
+          generatorNode.children[`_${variant}`] || null;
       const result = randomizeRecursively(
-        tgTypes[
-          typ.anyOf[chance.integer({ min: 0, max: typ.anyOf.length - 1 })]
-        ],
+        tgTypes[typ.anyOf[variant]],
         chance,
         tgTypes,
+        genNode,
       );
       return result;
     }

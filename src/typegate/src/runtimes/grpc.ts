@@ -28,7 +28,6 @@ export class GrpcRuntime extends Runtime {
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     logger.info("Initliazing GrpcRuntime");
-    logger.debug(`Init params: ${JSON.stringify(params)}`);
 
     const { typegraph, args } = params as RuntimeInitParams<GrpcRuntimeData>;
     const typegraphName = TypeGraph.formatName(typegraph);

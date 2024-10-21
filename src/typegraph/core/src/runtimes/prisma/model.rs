@@ -1,25 +1,129 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use super::constraints::get_struct_level_unique_constraints;
+use super::relationship::PrismaRefData;
+use crate::errors::{ErrorContext as _, Result, TgError};
+use crate::global_store::Store;
+use crate::runtimes::prisma::errors;
+use crate::runtimes::prisma::type_utils::RuntimeConfig;
+use crate::types::{
+    AsTypeDefEx as _, FindAttribute, NamedTypeRef, RefAttr, RefAttrs, Struct, Type, TypeDef,
+    TypeRef,
+};
+use crate::validation::types::validate_value;
+use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
 pub use common::typegraph::runtimes::prisma::{ScalarType, StringType};
 use common::typegraph::{EffectType, InjectionData};
 use indexmap::IndexMap;
-use std::hash::Hash;
+use std::rc::Rc;
 
-use crate::errors::Result;
-use crate::runtimes::prisma::errors;
-use crate::runtimes::prisma::type_utils::RuntimeConfig;
-use crate::types::{FindAttribute as _, RefAttrs, ResolveRef as _, TypeDef, TypeDefExt};
-use crate::validation::types::validate_value;
-use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
+#[derive(Debug, Clone)]
+pub struct ModelType {
+    pub type_id: TypeId,
+    pub name_ref: NamedTypeRef,
+    pub resolved: Rc<Struct>,
+    pub attrs: RefAttrs,
+}
 
-use super::constraints::get_struct_level_unique_constraints;
-use super::relationship::PrismaRefData;
+impl ModelType {
+    pub fn name(&self) -> Rc<str> {
+        self.name_ref.name.clone()
+    }
+}
+
+// fn resolve_indirect(type_id: TypeId) -> Result<TypeId> {
+//     match type_id.as_type()? {
+//         Type::Def(_) => Ok(type_id),
+//         Type::Ref(type_ref) => match type_ref.target.as_ref() {
+//             RefTarget::Indirect(name) => Store::get_type_by_name(&name)
+//                 .ok_or_else(|| format!("indirect type not found: {}", name).into())
+//                 .map(|t| t.id)
+//                 .and_then(resolve_indirect),
+//             RefTarget::Link(link) => resolve_indirect(link.id),
+//             _ => Ok(type_id),
+//         },
+//     }
+// }
+
+impl TryFrom<TypeId> for ModelType {
+    type Error = TgError;
+
+    fn try_from(type_id: TypeId) -> Result<Self> {
+        match type_id.as_type().context("building ModelType")? {
+            Type::Def(_) => Err(errors::unnamed_model(&type_id.repr().unwrap())),
+            Type::Ref(type_ref) => match &type_ref {
+                TypeRef::Named(name_ref) => {
+                    let xdef = type_id.as_xdef()?;
+                    let resolved = xdef.type_def.as_struct()?;
+                    Ok(Self {
+                        type_id,
+                        name_ref: name_ref.clone(),
+                        resolved,
+                        attrs: xdef.attributes,
+                    })
+                }
+                TypeRef::Indirect(indirect) => {
+                    let xdef = type_id.as_xdef()?;
+                    let resolved = xdef.type_def.as_struct()?;
+                    Ok(Self {
+                        type_id,
+                        name_ref: Store::get_type_by_name(&indirect.name)
+                            .ok_or_else(|| errors::unnamed_model(&type_id.repr().unwrap()))?,
+                        resolved,
+                        attrs: xdef.attributes,
+                    })
+                }
+                TypeRef::Link(link) => match link.attribute.as_ref() {
+                    RefAttr::RuntimeConfig { runtime, .. } if runtime == "prisma" => {
+                        ModelType::try_from(link.target.id())
+                    }
+                    _ => {
+                        let flat = type_ref.flatten();
+                        if flat.name.is_some() {
+                            Err(format!(
+                                "name should be the latest attribute on a model type: {:?}",
+                                type_id.repr().unwrap()
+                            )
+                            .into())
+                        } else {
+                            Err(errors::unnamed_model(&type_id.repr().unwrap()))
+                        }
+                    }
+                },
+                _ => {
+                    let flat = type_ref.flatten();
+                    if flat.name.is_some() {
+                        Err(format!(
+                            "name should be the latest attribute on a model type: {:?}",
+                            type_id.repr().unwrap()
+                        )
+                        .into())
+                    } else {
+                        Err(errors::unnamed_model(&type_id.repr().unwrap()))
+                    }
+                }
+            },
+        }
+    }
+}
+
+impl std::hash::Hash for ModelType {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.type_id.hash(state);
+    }
+}
+
+impl std::cmp::PartialEq for ModelType {
+    fn eq(&self, other: &Self) -> bool {
+        self.name_ref.name == other.name_ref.name
+    }
+}
+impl std::cmp::Eq for ModelType {}
 
 #[derive(Debug)]
 pub struct Model {
-    pub type_id: TypeId,
-    pub type_name: String,
+    pub model_type: ModelType,
     pub props: IndexMap<String, Property>,
     pub id_fields: Vec<String>,
     pub unique_constraints: Vec<Vec<String>>,
@@ -31,36 +135,37 @@ impl TryFrom<TypeId> for Model {
     type Error = crate::wit::core::Error;
 
     fn try_from(type_id: TypeId) -> Result<Self> {
-        let typ = type_id.as_struct()?;
+        let model_type = ModelType::try_from(type_id)?;
+        // print(&format!(
+        //     "MODEL type_id={type_id:?}; type_def.id={:?} attrs={attrs:?}",
+        //     type_def.id()
+        // ));
+        // let typ = type_def.as_struct()?;
 
-        let props = typ
+        let props = model_type
+            .resolved
             .iter_props()
             .map(|(k, type_id)| Property::new(type_id).map(|p| (k.to_string(), p)))
             .collect::<Result<IndexMap<_, _>>>()?;
 
-        let type_name = type_id
-            .name()?
-            .ok_or_else(|| errors::unnamed_model(&type_id.repr().unwrap()))?;
+        let config = RuntimeConfig(model_type.attrs.find_runtime_attrs(""));
 
-        let config = RuntimeConfig::new(typ.base().runtime_config.as_ref());
-
-        let id_fields = typ.data.find_id_fields()?;
+        let id_fields = model_type.resolved.data.find_id_fields()?;
         let id_fields = match id_fields.len() {
             0 => {
                 let id_fields = config.get("id")?;
                 match id_fields {
                     Some(id_fields) => id_fields,
-                    None => return Err(errors::id_field_not_found(&type_name)),
+                    None => return Err(errors::id_field_not_found(&model_type.name())),
                 }
             }
             _ => id_fields,
         };
 
-        let unique_constraints = get_struct_level_unique_constraints(&type_name, &config)?;
+        let unique_constraints = get_struct_level_unique_constraints(&model_type.name(), &config)?;
 
         Ok(Self {
-            type_id,
-            type_name,
+            model_type,
             props,
             id_fields,
             unique_constraints,
@@ -81,9 +186,9 @@ impl Model {
         })
     }
 
-    pub fn iter_related_models(&self) -> impl Iterator<Item = TypeId> + '_ {
+    pub fn iter_related_models(&self) -> impl Iterator<Item = ModelType> + '_ {
         self.props.iter().filter_map(|(_, p)| match p {
-            Property::Model(p) => Some(p.model_id),
+            Property::Model(p) => Some(p.model_type.clone()),
             _ => None,
         })
     }
@@ -129,7 +234,7 @@ pub enum Property {
 #[derive(Debug, Clone)]
 pub struct RelationshipProperty {
     pub wrapper_type_id: TypeId,
-    pub model_id: TypeId,
+    pub model_type: ModelType,
     pub quantifier: Cardinality,
     pub relationship_attributes: RelationshipAttributes,
     pub unique: bool,
@@ -137,9 +242,9 @@ pub struct RelationshipProperty {
 
 impl Property {
     fn new(wrapper_type_id: TypeId) -> Result<Self> {
-        let (type_def, ref_data) = wrapper_type_id.resolve_ref()?;
-        let runtime_config = RuntimeConfig::new(type_def.base().runtime_config.as_ref());
-        let unique = if matches!(type_def, TypeDef::Struct(_)) {
+        let xdef = wrapper_type_id.as_xdef()?;
+        let runtime_config = RuntimeConfig(xdef.attributes.find_runtime_attrs(""));
+        let unique = if matches!(xdef.type_def, TypeDef::Struct(_)) {
             // the unique config is used to specify struct-level unique constraints on structs
             false
         } else {
@@ -155,19 +260,19 @@ impl Property {
             )?;
         }
 
-        let (inner_type_def, card) = match &type_def {
-            TypeDef::Optional(ref inner) => (
-                TypeId(inner.data.of).resolve_ref()?.0,
-                Cardinality::Optional,
-            ),
-            TypeDef::List(inner) => (TypeId(inner.data.of).resolve_ref()?.0, Cardinality::Many),
-            _ => (type_def.clone(), Cardinality::One),
+        let (inner_type_id, card) = match &xdef.type_def {
+            TypeDef::Optional(ref inner) => (TypeId(inner.data.of), Cardinality::Optional),
+            TypeDef::List(inner) => (TypeId(inner.data.of), Cardinality::Many),
+            _ => (wrapper_type_id, Cardinality::One),
         };
+
+        let type_def = inner_type_id.as_xdef()?.type_def;
 
         let scalar = |typ, injection| {
             Self::Scalar(ScalarProperty {
                 wrapper_type_id,
-                type_id: inner_type_def.id(),
+                type_id: inner_type_id,
+                type_def: type_def.clone(),
                 prop_type: typ,
                 injection,
                 quantifier: card,
@@ -177,21 +282,22 @@ impl Property {
             })
         };
 
-        match ref_data
+        match xdef
+            .attributes
             .find_injection()
             .map(Injection::try_from)
             .transpose()
         {
-            Ok(injection) => match &inner_type_def {
+            Ok(injection) => match &type_def {
                 TypeDef::Struct(_) => {
                     if injection.is_some() {
                         return Err("injection not supported for models".to_string().into());
                     }
                     Ok(Self::Model(RelationshipProperty {
                         wrapper_type_id,
-                        model_id: inner_type_def.id(),
                         quantifier: card,
-                        relationship_attributes: RelationshipAttributes::new(&ref_data)?,
+                        model_type: ModelType::try_from(inner_type_id)?,
+                        relationship_attributes: RelationshipAttributes::new(&xdef.attributes)?,
                         unique,
                     }))
                 }
@@ -220,7 +326,7 @@ impl Property {
                 }
                 _ => Err("unsupported property type".into()),
             },
-            Err(_) => match inner_type_def {
+            Err(_) => match &type_def {
                 TypeDef::Func(_) => Err("injection not supported on t::struct()".into()),
                 TypeDef::Optional(_) | TypeDef::List(_) => {
                     Err("nested optional/list not supported".into())
@@ -252,7 +358,7 @@ impl Injection {
     /// return None if the injection implies that the property is unmanaged.
     /// Unmanaged properties are properties that will not be present in the
     /// prisma model.
-    fn convert_injection<T: Hash>(data: &InjectionData<T>) -> Option<Self> {
+    fn convert_injection(data: &InjectionData) -> Option<Self> {
         match data {
             InjectionData::SingleValue(_) => None, // unmanaged
             InjectionData::ValueByEffect(map) => {
@@ -273,7 +379,7 @@ impl Injection {
         }
     }
 
-    fn convert_dynamic_injection(data: &InjectionData<String>) -> Option<Self> {
+    fn convert_dynamic_injection(data: &InjectionData) -> Option<Self> {
         match data {
             InjectionData::SingleValue(_) => None, // unmanaged
             InjectionData::ValueByEffect(map) => {
@@ -283,11 +389,11 @@ impl Injection {
                 } else {
                     Some(Self {
                         create: map.get(&EffectType::Create).and_then(|i| match i.as_str() {
-                            "now" => Some(InjectionHandler::PrismaDateNow),
+                            Some("now") => Some(InjectionHandler::PrismaDateNow),
                             _ => None,
                         }),
                         update: map.get(&EffectType::Update).and_then(|i| match i.as_str() {
-                            "now" => Some(InjectionHandler::PrismaDateNow),
+                            Some("now") => Some(InjectionHandler::PrismaDateNow),
                             _ => None,
                         }),
                     })
@@ -318,6 +424,8 @@ impl TryFrom<&common::typegraph::Injection> for Injection {
 pub struct ScalarProperty {
     pub wrapper_type_id: TypeId,
     pub type_id: TypeId,
+    #[allow(unused)]
+    pub type_def: TypeDef,
     pub prop_type: ScalarType,
     pub injection: Option<Injection>,
     pub quantifier: Cardinality,
@@ -329,7 +437,7 @@ pub struct ScalarProperty {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+    use crate::t::{self, TypeBuilder};
 
     impl Property {
         fn as_scalar(&self) -> Option<&ScalarProperty> {
@@ -345,8 +453,7 @@ mod test {
         let type1 = t::struct_()
             .propx("one", t::string().as_id()?)?
             .propx("two", t::string().set_value("Hello".to_string()))?
-            .named("A")
-            .build()?;
+            .build_named("A")?;
         let model = Model::try_from(type1)?;
 
         let one = model.props.get("one");

@@ -7,9 +7,7 @@ snapshot[`Typegraph using grpc 1`] = `
       {
         "type": "object",
         "title": "helloworld",
-        "runtime": 0,
         "policies": [],
-        "config": {},
         "properties": {
           "greet": 1
         },
@@ -21,13 +19,13 @@ snapshot[`Typegraph using grpc 1`] = `
       {
         "type": "function",
         "title": "root_greet_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
         "input": 2,
         "output": 5,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 0,
         "rate_weight": null,
         "rate_calls": false
@@ -35,9 +33,7 @@ snapshot[`Typegraph using grpc 1`] = `
       {
         "type": "object",
         "title": "root_greet_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "name": 3
         },
@@ -47,25 +43,19 @@ snapshot[`Typegraph using grpc 1`] = `
       {
         "type": "optional",
         "title": "root_greet_fn_input_name_root_greet_fn_input_name_string_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "item": 4,
         "default_value": null
       },
       {
         "type": "string",
         "title": "root_greet_fn_input_name_string",
-        "runtime": 1,
-        "policies": [],
-        "config": {}
+        "policies": []
       },
       {
         "type": "object",
         "title": "root_greet_fn_output",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "message": 6
         },
@@ -75,9 +65,7 @@ snapshot[`Typegraph using grpc 1`] = `
       {
         "type": "optional",
         "title": "root_greet_fn_output_message_root_greet_fn_input_name_string_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "item": 4,
         "default_value": null
       }
@@ -160,9 +148,7 @@ snapshot[`Typegraph using grpc 2`] = `
       {
         "type": "object",
         "title": "helloworld",
-        "runtime": 0,
         "policies": [],
-        "config": {},
         "properties": {
           "greet": 1
         },
@@ -174,13 +160,13 @@ snapshot[`Typegraph using grpc 2`] = `
       {
         "type": "function",
         "title": "root_greet_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
         "input": 2,
         "output": 5,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 0,
         "rate_weight": null,
         "rate_calls": false
@@ -188,9 +174,7 @@ snapshot[`Typegraph using grpc 2`] = `
       {
         "type": "object",
         "title": "root_greet_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "name": 3
         },
@@ -200,25 +184,19 @@ snapshot[`Typegraph using grpc 2`] = `
       {
         "type": "optional",
         "title": "root_greet_fn_input_name_root_greet_fn_input_name_string_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "item": 4,
         "default_value": null
       },
       {
         "type": "string",
         "title": "root_greet_fn_input_name_string",
-        "runtime": 1,
-        "policies": [],
-        "config": {}
+        "policies": []
       },
       {
         "type": "object",
         "title": "root_greet_fn_output",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "message": 6
         },
@@ -228,9 +206,7 @@ snapshot[`Typegraph using grpc 2`] = `
       {
         "type": "optional",
         "title": "root_greet_fn_output_message_root_greet_fn_input_name_string_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "item": 4,
         "default_value": null
       }

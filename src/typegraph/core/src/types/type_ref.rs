@@ -4,26 +4,21 @@ use std::rc::Rc;
 use super::Type;
 use crate::errors::Result;
 use crate::global_store::Store;
-use crate::typegraph::TypegraphContext;
 use crate::types::{TypeDef, TypeDefExt as _, TypeId};
-pub use as_id::{AsId, IdKind};
 use common::typegraph::Injection;
-pub use injection::WithInjection;
-pub use policy::{PolicySpec, WithPolicy};
-pub use resolve_ref::ResolveRef;
 use serde::{Deserialize, Serialize};
+
+pub use as_id::{AsId, IdKind};
+pub use injection::{InjectionTree, OverrideInjections, WithInjection};
+pub use policy::{PolicySpec, WithPolicy};
+pub use runtime_config::WithRuntimeConfig;
+pub use xdef::{AsTypeDefEx, ExtendedTypeDef};
 
 mod as_id;
 mod injection;
 mod policy;
-mod resolve_ref;
-
-#[derive(Clone, Debug)]
-pub enum RefTarget {
-    Direct(TypeDef),
-    Indirect(String),
-    Link(TypeRef),
-}
+mod runtime_config;
+mod xdef;
 
 type JsonValue = serde_json::Value;
 
@@ -32,6 +27,7 @@ type JsonValue = serde_json::Value;
 pub enum RefAttr {
     AsId(IdKind),
     Injection(Injection),
+    Reduce(InjectionTree),
     Policy(Vec<PolicySpec>),
     RuntimeConfig { runtime: String, data: JsonValue },
 }
@@ -54,15 +50,63 @@ impl RefAttr {
 }
 
 #[derive(Clone, Debug)]
-pub struct TypeRef {
+pub struct DirectTypeRef {
     pub id: TypeId,
-    pub target: Box<RefTarget>,
-    pub attribute: Option<Rc<RefAttr>>,
+    pub target: TypeDef,
+    pub attribute: Rc<RefAttr>,
 }
 
-pub struct TypeRefBuilder {
-    target: RefTarget,
-    attribute: Option<RefAttr>,
+#[derive(Clone, Debug)]
+pub struct LinkTypeRef {
+    pub id: TypeId,
+    pub target: Box<TypeRef>,
+    pub attribute: Rc<RefAttr>,
+}
+
+#[derive(Clone, Debug)]
+pub struct IndirectTypeRef {
+    pub id: TypeId,
+    pub name: Rc<str>,
+    pub attributes: Vec<Rc<RefAttr>>,
+}
+
+#[derive(Clone, Debug)]
+pub struct NamedTypeRef {
+    pub id: TypeId,
+    pub name: Rc<str>,
+    pub target: Box<Type>,
+}
+
+#[derive(Clone, Debug)]
+pub enum TypeRef {
+    Direct(DirectTypeRef),
+    Link(LinkTypeRef),
+    Indirect(IndirectTypeRef),
+    Named(NamedTypeRef),
+}
+
+#[derive(Clone)]
+pub struct DirectRefBuilder {
+    target: TypeDef,
+    attribute: Rc<RefAttr>,
+}
+
+#[derive(Clone)]
+pub struct LinkRefBuilder {
+    target: TypeRef,
+    attribute: Rc<RefAttr>,
+}
+
+#[derive(Clone)]
+pub struct IndirectRefBuilder {
+    name: String,
+    attributes: Vec<Rc<RefAttr>>,
+}
+
+#[derive(Clone)]
+pub struct NamedRefBuilder {
+    pub name: Rc<str>,
+    target: Type,
 }
 
 pub enum FlatTypeRefTarget {
@@ -74,254 +118,157 @@ pub struct FlatTypeRef {
     pub id: TypeId,
     pub target: FlatTypeRefTarget,
     pub attributes: RefAttrs,
+    pub name: Option<Rc<str>>,
 }
 
 impl TypeRef {
+    pub fn id(&self) -> TypeId {
+        match &self {
+            TypeRef::Direct(direct) => direct.id,
+            TypeRef::Indirect(indirect) => indirect.id,
+            TypeRef::Link(link) => link.id,
+            TypeRef::Named(named) => named.id,
+        }
+    }
     pub fn flatten(&self) -> FlatTypeRef {
-        match self.target.as_ref() {
-            RefTarget::Direct(target) => FlatTypeRef {
-                id: self.id,
-                target: FlatTypeRefTarget::Direct(target.clone()),
-                attributes: self.attribute.clone().into_iter().collect(),
+        match &self {
+            TypeRef::Direct(direct) => FlatTypeRef {
+                id: direct.id,
+                target: FlatTypeRefTarget::Direct(direct.target.clone()),
+                attributes: vec![direct.attribute.clone()],
+                name: None,
             },
-            RefTarget::Indirect(name) => FlatTypeRef {
-                id: self.id,
-                target: FlatTypeRefTarget::Indirect(name.clone()),
-                attributes: self.attribute.clone().into_iter().collect(),
+            TypeRef::Indirect(indirect) => FlatTypeRef {
+                id: indirect.id,
+                target: FlatTypeRefTarget::Indirect(indirect.name.to_string()),
+                attributes: indirect.attributes.clone(),
+                name: Some(indirect.name.clone()),
             },
-            RefTarget::Link(target) => {
-                let mut flat = target.flatten();
-                flat.attributes.extend(self.attribute.clone());
+            TypeRef::Link(link) => {
+                let mut flat = link.target.flatten();
+                flat.attributes.push(link.attribute.clone());
+                flat.id = link.id;
                 flat
             }
-        }
-    }
-}
-
-// impl Hash for RefAttr {
-//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-//         match self {
-//             RefAttr::AsId(id) => {
-//                 "as_id".hash(state);
-//                 id.hash(state);
-//             }
-//             RefAttr::Injection(injection) => {
-//                 "injection".hash(state);
-//                 injection.hash(state);
-//             }
-//             RefAttr::Runtime { runtime, data } => {
-//                 "runtime".hash(state);
-//                 runtime.hash(state);
-//                 data.hash(state);
-//             }
-//         }
-//     }
-// }
-
-pub type RefAttrs = Vec<Rc<RefAttr>>;
-
-impl RefAttr {
-    pub fn with_target(self, target: Type) -> TypeRefBuilder {
-        match target {
-            Type::Def(type_def) => TypeRefBuilder {
-                target: RefTarget::Direct(type_def),
-                attribute: self.into(),
-            },
-            Type::Ref(type_ref) => TypeRefBuilder {
-                target: RefTarget::Link(type_ref),
-                attribute: self.into(),
+            TypeRef::Named(named) => match named.target.as_ref() {
+                Type::Def(type_def) => FlatTypeRef {
+                    id: named.id,
+                    target: FlatTypeRefTarget::Direct(type_def.clone()),
+                    attributes: vec![],
+                    name: Some(named.name.clone()),
+                },
+                Type::Ref(type_ref) => {
+                    let mut flat = type_ref.flatten();
+                    flat.name = Some(named.name.clone());
+                    flat.id = named.id;
+                    flat
+                }
             },
         }
     }
 }
 
-impl RefTarget {
-    pub fn with_attr(self, attr: Option<RefAttr>) -> TypeRefBuilder {
-        TypeRefBuilder {
-            target: self,
-            attribute: attr,
-        }
-    }
+#[derive(Clone)]
+pub enum TypeRefBuilder {
+    Direct(DirectRefBuilder),
+    Link(LinkRefBuilder),
+    Indirect(IndirectRefBuilder),
+    Named(NamedRefBuilder),
 }
-
-// impl RefAttrs {
-//     #[allow(clippy::wrong_self_convention)]
-//     pub fn as_id(mut self, id: IdKind) -> Self {
-//         self.0.push(RefAttr::AsId(id));
-//         self
-//     }
-//
-//     pub fn with_injection(mut self, injection: Injection) -> Self {
-//         self.0.push(RefAttr::Injection(injection));
-//         self
-//     }
-//
-//     pub fn runtime(mut self, key: impl Into<String>, value: HashMap<String, JsonValue>) -> Self {
-//         self.runtime.insert(key.into(), value);
-//         self
-//     }
-//
-//     pub fn merge(mut self, other: RefAttrs) -> Self {
-//         if let Some(id) = other.as_id {
-//             self.as_id = Some(id);
-//         }
-//         if let Some(injection) = other.injection {
-//             self.injection = Some(injection);
-//         }
-//         for (k, v) in other.runtime {
-//             let runtime_attrs = self.runtime.entry(k).or_default();
-//             for (k, v) in v {
-//                 runtime_attrs.insert(k, v);
-//             }
-//         }
-//         self
-//     }
-//
-//
-//     pub fn direct(self, target: TypeDef) -> TypeRefBuilder {
-//         TypeRefBuilder {
-//             target: RefTarget::Direct(target),
-//             attributes: self,
-//         }
-//     }
-//
-//     pub fn indirect(self, name: String) -> TypeRefBuilder {
-//         TypeRefBuilder {
-//             target: RefTarget::Indirect(name),
-//             attributes: self,
-//         }
-//     }
-//
-//     pub fn wrap(self) -> Option<Rc<Self>> {
-//         Some(Rc::new(self))
-//     }
-// }
 
 impl TypeRef {
-    // pub fn collect_attributes(&self) -> RefAttrs {
-    //     match self.target.as_ref() {
-    //         RefTarget::Link(next) => {
-    //             let mut attrs = next.collect_attributes();
-    //             attrs.push(self.attribute.clone());
-    //             attrs
-    //         }
-    //         _ => vec![self.attribute.clone()],
-    //     }
-    // }
-
-    // pub fn as_id(&self) -> Option<IdKind> {
-    //     self.attributes.as_ref().and_then(|it| it.as_id)
-    // }
-    //
-    // pub fn runtime_attrs(&self, runtime_key: &str) -> Option<&HashMap<String, JsonValue>> {
-    //     self.attributes
-    //         .as_ref()
-    //         .and_then(|it| it.runtime.get(runtime_key))
-    // }
-    //
-    // pub fn runtime_attr(&self, runtime_key: &str, key: &str) -> Option<&serde_json::Value> {
-    //     self.runtime_attrs(runtime_key).and_then(|it| it.get(key))
-    // }
+    pub fn from_type(target: Type, attribute: RefAttr) -> TypeRefBuilder {
+        match target {
+            Type::Def(def) => TypeRef::direct(def, attribute),
+            Type::Ref(r) => TypeRef::link(r, attribute),
+        }
+    }
+    pub fn direct(target: TypeDef, attribute: RefAttr) -> TypeRefBuilder {
+        TypeRefBuilder::Direct(DirectRefBuilder {
+            target,
+            attribute: Rc::new(attribute),
+        })
+    }
+    pub fn link(target: TypeRef, attribute: RefAttr) -> TypeRefBuilder {
+        TypeRefBuilder::Link(LinkRefBuilder {
+            target,
+            attribute: Rc::new(attribute),
+        })
+    }
+    pub fn indirect(
+        name: impl Into<String>,
+        attributes: impl IntoIterator<Item = RefAttr>,
+    ) -> TypeRefBuilder {
+        TypeRefBuilder::Indirect(IndirectRefBuilder {
+            name: name.into(),
+            attributes: attributes.into_iter().map(Rc::new).collect(),
+        })
+    }
+    pub fn named(name: impl Into<String>, target: Type) -> TypeRefBuilder {
+        let name: String = name.into();
+        TypeRefBuilder::Named(NamedRefBuilder {
+            name: name.into(),
+            target,
+        })
+    }
 }
 
 impl TypeRefBuilder {
     pub fn with_id(self, id: TypeId) -> TypeRef {
-        TypeRef {
-            id,
-            target: self.target.into(),
-            attribute: self.attribute.map(Rc::new),
+        match self {
+            TypeRefBuilder::Direct(builder) => TypeRef::Direct(DirectTypeRef {
+                id,
+                target: builder.target,
+                attribute: builder.attribute,
+            }),
+            TypeRefBuilder::Link(builder) => TypeRef::Link(LinkTypeRef {
+                id,
+                target: Box::new(builder.target),
+                attribute: builder.attribute,
+            }),
+            TypeRefBuilder::Indirect(builder) => TypeRef::Indirect(IndirectTypeRef {
+                id,
+                name: builder.name.into(),
+                attributes: builder.attributes,
+            }),
+            TypeRefBuilder::Named(builder) => TypeRef::Named(NamedTypeRef {
+                id,
+                name: builder.name,
+                target: Box::new(builder.target),
+            }),
         }
     }
 
-    pub fn build(self) -> Result<TypeRef> {
+    pub fn register(self) -> Result<TypeRef> {
         Store::register_type_ref(self)
     }
 }
 
+pub type RefAttrs = Vec<Rc<RefAttr>>;
+
 impl TypeRef {
-    pub fn new(target: Type, attribute: Option<RefAttr>) -> Result<TypeRef> {
-        // Store::register_type_ref(match target {
-        //     Type::Def(type_def) => TypeRefBuilder {
-        //         target: RefTarget::Direct(type_def),
-        //         attribute,
-        //     },
-        //     Type::Ref(type_ref) => TypeRefBuilder {
-        //         target: RefTarget::Link(type_ref),
-        //         attribute,
-        //     },
-        // })
-        Store::register_type_ref(
-            match target {
-                Type::Def(type_def) => RefTarget::Direct(type_def),
-                Type::Ref(type_ref) => RefTarget::Link(type_ref),
-            }
-            .with_attr(attribute),
-        )
-    }
-
-    pub fn direct(target: TypeDef, attribute: Option<RefAttr>) -> Result<Self> {
-        Store::register_type_ref(RefTarget::Direct(target).with_attr(attribute))
-    }
-
-    pub fn indirect(name: String, attribute: Option<RefAttr>) -> Result<Self> {
-        Store::register_type_ref(RefTarget::Indirect(name).with_attr(attribute))
-    }
-
-    pub fn link(target: TypeRef, attribute: RefAttr) -> Result<Self> {
-        Store::register_type_ref(RefTarget::Link(target).with_attr(Some(attribute)))
-    }
-
     pub fn repr(&self) -> String {
         self.flatten().repr()
-    }
-
-    pub fn hash_type(
-        &self,
-        hasher: &mut crate::conversion::hash::Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
-        self.flatten().hash_type(hasher, tg, runtime_id)
     }
 }
 
 impl FlatTypeRef {
-    pub fn hash_type(
-        &self,
-        hasher: &mut crate::conversion::hash::Hasher,
-        tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-    ) -> Result<()> {
-        match &self.target {
-            FlatTypeRefTarget::Direct(type_def) => {
-                type_def.hash_type(hasher, tg, runtime_id)?;
-            }
-            FlatTypeRefTarget::Indirect(name) => {
-                "named".hash(hasher);
-                name.hash(hasher);
-                runtime_id.hash(hasher);
-            }
-        }
-        if !self.attributes.is_empty() {
-            "ref".hash(hasher);
-            for attr in self.attributes.iter().rev() {
-                attr.as_ref().hash(hasher);
-            }
-        }
-        Ok(())
-    }
-
     fn repr(&self) -> String {
         let mut attrs = "".to_string();
         for attr in self.attributes.iter().rev() {
             attrs.push_str(&format!(", {}", attr.repr()));
         }
+        let name = if let Some(name) = self.name.as_deref() {
+            format!("&{}", name)
+        } else {
+            "".to_string()
+        };
         match &self.target {
             FlatTypeRefTarget::Direct(type_def) => {
-                format!("ref(#{}{attrs}) to {}", self.id.0, type_def.repr())
+                format!("ref(#{}{name}{attrs}) to {}", self.id.0, type_def.repr())
             }
-            FlatTypeRefTarget::Indirect(name) => {
-                format!("ref(#{} , target_name: '{}'{attrs})", self.id.0, name)
+            FlatTypeRefTarget::Indirect(_) => {
+                format!("ref(#{}{name}(indirect){attrs})", self.id.0)
             }
         }
     }
@@ -345,6 +292,9 @@ impl RefAttr {
             }
             RefAttr::RuntimeConfig { runtime, data } => {
                 format!("rt/{}: {}", runtime, serde_json::to_string(data).unwrap())
+            }
+            RefAttr::Reduce(tree) => {
+                format!("reduce: {}", serde_json::to_string(tree).unwrap())
             }
         }
     }
@@ -391,6 +341,13 @@ pub trait FindAttribute {
             _ => None,
         })
     }
+
+    fn find_reduce_trees(&self) -> Vec<&InjectionTree> {
+        self.find_attrs(|attr| match attr {
+            RefAttr::Reduce(tree) => Some(tree),
+            _ => None,
+        })
+    }
 }
 
 impl FindAttribute for RefAttrs {
@@ -406,5 +363,19 @@ impl FindAttribute for RefAttrs {
             .rev()
             .filter_map(|attr| pred(attr.as_ref()))
             .collect()
+    }
+}
+
+pub trait Named {
+    fn named(self, name: impl Into<String>) -> Result<TypeRef>;
+}
+
+impl<T> Named for T
+where
+    T: TryInto<Type>,
+    crate::errors::TgError: From<<T as TryInto<Type>>::Error>,
+{
+    fn named(self, name: impl Into<String>) -> Result<TypeRef> {
+        TypeRef::named(name, self.try_into()?).register()
     }
 }

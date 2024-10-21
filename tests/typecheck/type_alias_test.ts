@@ -18,9 +18,9 @@ Meta.test("Random", async (t) => {
     `
       .expectData({
         get_message: {
-          B: -6252260489166848,
-          a: -6940119625891840,
-          title: "(eHAQ*ECr4%5Qwa5T",
+          B: 3336617896968192,
+          a: -1494798787674112,
+          title: "1*ajw]krgDnCzXD*N!Fx",
         },
       })
       .on(e);
@@ -40,9 +40,9 @@ Meta.test("Random", async (t) => {
     `
         .expectData({
           one: {
-            four: 7781716965982208,
-            three: "ye12M52^m",
-            two: 2221033285222400,
+            four: -6252260489166848,
+            three: "(eHAQ*ECr4%5Qwa5T",
+            two: -6940119625891840,
           },
         })
         .on(e);
@@ -72,18 +72,33 @@ Meta.test("Random", async (t) => {
       }
     `
       .expectData({
-        some_alias: { some_id: -8923192479449088, title: "tXIHACrEbD" },
+        some_alias: {
+          some_id: -4461702699548672,
+          title: "3lo*RB)",
+        },
         get_message: {
-          user_id: 6379176739209216,
+          user_id: 316945098342400,
           info: [
-            { content: "c(3]DC39H[", title: "Rg!mCL36" },
-            { content: "RJXJg7]D5%]c", title: "%Oq(27tcP0jIB" },
-            { content: "5cj1TYaTNhau(5%", title: "gqLtZgHFAi8Ud7CZH42z" },
-            { content: "6L^0kflTn9UZ^P]@032", title: "!uF88WUak2fSbYeRHQi" },
+            {
+              content: "7nQg2dMG5bQeI8zVf5",
+              title: "sw@ON",
+            },
+            {
+              content: "WQnlMI%zJq!R!xk^",
+              title: "0fr[dnu8##f",
+            },
+            {
+              content: "sX@eElTSrxh$M",
+              title: "^ItqiGoJKy1ap",
+            },
           ],
         },
-        some_alias_2: { some_title: "KB2bni&" },
-        some_alias_3: { some_title: "S#4]L*K" },
+        some_alias_2: {
+          some_title: "qloUYOlWLk]3",
+        },
+        some_alias_3: {
+          some_title: "$bNlQ3^cxB",
+        },
       })
       .on(e);
   });

@@ -13,7 +13,7 @@ use super::hash::Hashable;
 
 impl crate::wit::core::Policy {
     pub fn convert(&self, ctx: &mut TypegraphContext) -> Result<Policy> {
-        let (mat_id, _) = ctx.register_materializer(self.materializer)?;
+        let mat_id = ctx.register_materializer(self.materializer)?;
         Ok(Policy {
             name: self.name.clone(),
             materializer: mat_id,
@@ -26,7 +26,6 @@ impl Hashable for PolicySpec {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         _tg: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
     ) -> Result<()> {
         match self {
             PolicySpec::Simple(id) => {

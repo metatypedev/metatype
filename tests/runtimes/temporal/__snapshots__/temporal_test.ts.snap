@@ -7,14 +7,12 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "object",
         "title": "temporal",
-        "runtime": 0,
         "policies": [],
-        "config": {},
         "properties": {
           "start": 1,
           "query": 6,
           "signal": 9,
-          "describe": 14
+          "describe": 13
         },
         "id": [],
         "required": [
@@ -27,13 +25,13 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "function",
         "title": "root_start_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
         "input": 2,
         "output": 3,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 0,
         "rate_weight": null,
         "rate_calls": false
@@ -41,9 +39,7 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "object",
         "title": "root_start_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "workflow_id": 3,
           "task_queue": 3,
@@ -55,24 +51,18 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "string",
         "title": "root_start_fn_input_workflow_id_string",
-        "runtime": 1,
-        "policies": [],
-        "config": {}
+        "policies": []
       },
       {
         "type": "list",
         "title": "root_start_fn_input_args_root_start_fn_input_args_struct_list",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "items": 5
       },
       {
         "type": "object",
         "title": "root_start_fn_input_args_struct",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "some_field": 3
         },
@@ -82,13 +72,13 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "function",
         "title": "root_query_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
         "input": 7,
         "output": 3,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 2,
         "rate_weight": null,
         "rate_calls": false
@@ -96,9 +86,7 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "object",
         "title": "root_query_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "workflow_id": 3,
           "run_id": 3,
@@ -110,21 +98,28 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "list",
         "title": "root_query_fn_input_args_root_start_fn_input_args_struct_list",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "items": 5
       },
       {
         "type": "function",
         "title": "root_signal_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
         "input": 10,
-        "output": 13,
+        "output": 12,
+        "injections": {
+          "workflow_id": {
+            "injection": {
+              "source": "static",
+              "data": {
+                "value": "\\\\"1234\\\\""
+              }
+            }
+          }
+        },
+        "runtimeConfig": null,
         "materializer": 3,
         "rate_weight": null,
         "rate_calls": false
@@ -132,55 +127,36 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "object",
         "title": "root_signal_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
-          "workflow_id": 11,
+          "workflow_id": 3,
           "run_id": 3,
-          "args": 12
+          "args": 11
         },
         "id": [],
         "required": []
       },
       {
-        "type": "string",
-        "title": "root_signal_fn_input_workflow_id_string",
-        "runtime": 1,
-        "policies": [],
-        "injection": {
-          "source": "static",
-          "data": {
-            "value": "\\\\"1234\\\\""
-          }
-        },
-        "config": {}
-      },
-      {
         "type": "list",
         "title": "root_signal_fn_input_args_root_start_fn_input_args_struct_list",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "items": 5
       },
       {
         "type": "boolean",
         "title": "root_signal_fn_output",
-        "runtime": 1,
-        "policies": [],
-        "config": {}
+        "policies": []
       },
       {
         "type": "function",
         "title": "root_describe_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
-        "input": 15,
-        "output": 16,
+        "input": 14,
+        "output": 15,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 4,
         "rate_weight": null,
         "rate_calls": false
@@ -188,9 +164,7 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "object",
         "title": "root_describe_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "workflow_id": 3,
           "run_id": 3
@@ -201,13 +175,11 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "object",
         "title": "root_describe_fn_output",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
-          "start_time": 17,
-          "close_time": 19,
-          "state": 20
+          "start_time": 16,
+          "close_time": 18,
+          "state": 19
         },
         "id": [],
         "required": []
@@ -215,35 +187,27 @@ snapshot[`Typegraph using temporal 1`] = `
       {
         "type": "optional",
         "title": "root_describe_fn_output_start_time_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
-        "item": 18,
+        "item": 17,
         "default_value": null
       },
       {
         "type": "integer",
         "title": "root_describe_fn_output_start_time_integer",
-        "runtime": 1,
-        "policies": [],
-        "config": {}
+        "policies": []
       },
       {
         "type": "optional",
         "title": "root_describe_fn_output_close_time_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
-        "item": 18,
+        "item": 17,
         "default_value": null
       },
       {
         "type": "optional",
         "title": "root_describe_fn_output_state_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
-        "item": 18,
+        "item": 17,
         "default_value": null
       }
     ],
@@ -357,9 +321,7 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "object",
         "title": "temporal",
-        "runtime": 0,
         "policies": [],
-        "config": {},
         "properties": {
           "startKv": 1,
           "query": 6,
@@ -377,13 +339,13 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "function",
         "title": "root_startKv_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
         "input": 2,
         "output": 3,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 0,
         "rate_weight": null,
         "rate_calls": false
@@ -391,9 +353,7 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "object",
         "title": "root_startKv_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "workflow_id": 3,
           "task_queue": 3,
@@ -405,24 +365,18 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "string",
         "title": "root_startKv_fn_input_workflow_id_string",
-        "runtime": 1,
-        "policies": [],
-        "config": {}
+        "policies": []
       },
       {
         "type": "list",
         "title": "root_startKv_fn_input_args_root_startKv_fn_input_args_struct_list",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "items": 5
       },
       {
         "type": "object",
         "title": "root_startKv_fn_input_args_struct",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {},
         "id": [],
         "required": []
@@ -430,13 +384,13 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "function",
         "title": "root_query_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
         "input": 7,
         "output": 9,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 2,
         "rate_weight": null,
         "rate_calls": false
@@ -444,9 +398,7 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "object",
         "title": "root_query_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "workflow_id": 3,
           "run_id": 3,
@@ -458,30 +410,26 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "list",
         "title": "root_query_fn_input_args_root_startKv_fn_input_workflow_id_string_list",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "items": 3
       },
       {
         "type": "optional",
         "title": "root_query_fn_output",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "item": 3,
         "default_value": null
       },
       {
         "type": "function",
         "title": "root_signal_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
         "input": 11,
         "output": 14,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 3,
         "rate_weight": null,
         "rate_calls": false
@@ -489,9 +437,7 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "object",
         "title": "root_signal_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "workflow_id": 3,
           "run_id": 3,
@@ -503,17 +449,13 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "list",
         "title": "root_signal_fn_input_args_root_signal_fn_input_args_struct_list",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "items": 13
       },
       {
         "type": "object",
         "title": "root_signal_fn_input_args_struct",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "key": 3,
           "value": 3
@@ -524,20 +466,18 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "boolean",
         "title": "root_signal_fn_output",
-        "runtime": 1,
-        "policies": [],
-        "config": {}
+        "policies": []
       },
       {
         "type": "function",
         "title": "root_describe_fn",
-        "runtime": 1,
         "policies": [
           0
         ],
-        "config": {},
         "input": 16,
         "output": 17,
+        "injections": {},
+        "runtimeConfig": null,
         "materializer": 4,
         "rate_weight": null,
         "rate_calls": false
@@ -545,9 +485,7 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "object",
         "title": "root_describe_fn_input",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "workflow_id": 3,
           "run_id": 3
@@ -558,9 +496,7 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "object",
         "title": "root_describe_fn_output",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "properties": {
           "start_time": 18,
           "close_time": 20,
@@ -572,34 +508,26 @@ snapshot[`Typegraph using temporal 2`] = `
       {
         "type": "optional",
         "title": "root_describe_fn_output_start_time_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "item": 19,
         "default_value": null
       },
       {
         "type": "integer",
         "title": "root_describe_fn_output_start_time_integer",
-        "runtime": 1,
-        "policies": [],
-        "config": {}
+        "policies": []
       },
       {
         "type": "optional",
         "title": "root_describe_fn_output_close_time_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "item": 19,
         "default_value": null
       },
       {
         "type": "optional",
         "title": "root_describe_fn_output_state_root_describe_fn_output_start_time_integer_optional",
-        "runtime": 1,
         "policies": [],
-        "config": {},
         "item": 19,
         "default_value": null
       }

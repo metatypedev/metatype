@@ -97,7 +97,7 @@ snapshot[`planner 2`] = `
 {
   one: {
     funcType: {
-      config: {},
+      injections: {},
       input: 2,
       materializer: 0,
       output: 3,
@@ -106,7 +106,7 @@ snapshot[`planner 2`] = `
       ],
       rate_calls: false,
       rate_weight: null,
-      runtime: 0,
+      runtimeConfig: null,
       title: "root_one_fn",
       type: "function",
     },
@@ -273,28 +273,28 @@ snapshot[`planner: dependencies 6`] = `
 snapshot[`planner: dependencies in union/either 1`] = `
 [
   "three  three  three  object  root_three_fn_output  false",
-  "three.id  id  three/id  integer  root_three_fn_output_id_integer  false",
+  "three.id  id  three/id  integer  root_one_fn_output_union1_union_t0_integer  false",
   "three.user  user  three/user  either  root_three_fn_output_user_either  false",
-  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  RegisteredUser_id_string_uuid  false",
+  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  root_one_fn_output_id_string_uuid  false",
   "three.user\$RegisteredUser.email  email  three/user\$RegisteredUser/email  string  root_one_fn_output_email_string_email  false",
   "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  RegisteredUser_profile_fn_output  false",
   "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  root_one_fn_output_email_string_email  false",
   "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  root_one_fn_output_nested_struct_first_string  false",
   "three.user\$RegisteredUser.profile.profilePic  profilePic  three/user\$RegisteredUser/profile/profilePic  string  root_one_fn_output_nested_struct_first_string  false",
-  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  RegisteredUser_id_string_uuid  false",
+  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  root_one_fn_output_id_string_uuid  false",
 ]
 `;
 
 snapshot[`planner: dependencies in union/either 2`] = `
 [
   "three  three  three  object  root_three_fn_output  false",
-  "three.id  id  three/id  integer  root_three_fn_output_id_integer  false",
+  "three.id  id  three/id  integer  root_one_fn_output_union1_union_t0_integer  false",
   "three.user  user  three/user  either  root_three_fn_output_user_either  false",
-  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  RegisteredUser_id_string_uuid  false",
+  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  root_one_fn_output_id_string_uuid  false",
   "three.user\$RegisteredUser.email  email  three/user\$RegisteredUser/email  string  root_one_fn_output_email_string_email  true",
   "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  RegisteredUser_profile_fn_output  false",
   "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  root_one_fn_output_email_string_email  false",
   "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  root_one_fn_output_nested_struct_first_string  false",
-  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  RegisteredUser_id_string_uuid  false",
+  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  root_one_fn_output_id_string_uuid  false",
 ]
 `;

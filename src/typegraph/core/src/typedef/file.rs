@@ -9,7 +9,7 @@ use crate::conversion::hash::Hashable;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::types::{File, FindAttribute as _, RefAttrs, TypeDefData};
+use crate::types::{ExtendedTypeDef, File, FindAttribute as _, TypeDefData};
 use crate::wit::core::TypeFile;
 
 impl TypeDefData for TypeFile {
@@ -40,7 +40,6 @@ impl Hashable for TypeFile {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         _tg: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
     ) -> Result<()> {
         self.min.hash(hasher);
         self.max.hash(hasher);
@@ -50,22 +49,15 @@ impl Hashable for TypeFile {
 }
 
 impl TypeConversion for File {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::File {
             // TODO should `as_id` be supported?
             base: BaseBuilderInit {
                 ctx,
                 base_name: "file",
                 type_id: self.id,
-                name: self.base.name.clone(),
-                runtime_idx: runtime_id.unwrap(),
-                policies: ref_attrs.find_policy().unwrap_or(&[]),
-                runtime_config: self.base.runtime_config.as_deref(),
+                name: xdef.get_owned_name(),
+                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .build()?,

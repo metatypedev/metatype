@@ -19,6 +19,11 @@ snapshot[`type comparison errors 1`] = `
 - at type-comparison:/number_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: 'multiple_of' is not a multiple of the 'multiple_of' of the supertype (12 % 12.1 != 0)
 - at type-comparison:/string_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum_length' is required on the subtype if it is defined on the supertype
 - at type-comparison:/string_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum_length' cannot be lower on the subtype: 12 < 13
+- at type-comparison:/file_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum_size' is required on the subtype if it is defined on the supertype
+- at type-comparison:/file_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum_size' cannot be lower on the subtype: 12 < 13
+- at type-comparison:/file_fail_3_test_type/[out]/injected/[in]/field: from_parent injection: 'mime_types' is required on the subtype if it is defined on the supertype
+- at type-comparison:/file_fail_4_test_type/[out]/injected/[in]/field: from_parent injection: 'mime_types' is required to be a subset of the supertype's
+- at type-comparison:/file_fail_5_test_type/[out]/injected/[in]/field: from_parent injection: 'mime_types' is required to be a subset of the supertype's
 - at type-comparison:/optional_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Optional type cannot be a subtype of a non-optional type
 - at type-comparison:/optional_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: 'minimum' is required on the subtype if it is defined on the supertype
 - at type-comparison:/list_fail_1_test_type/[out]/injected/[in]/field: from_parent injection: Type mismatch: list to integer

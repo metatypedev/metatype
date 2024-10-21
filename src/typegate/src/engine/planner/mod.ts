@@ -283,7 +283,7 @@ export class Planner {
     }
     return {
       parent: node,
-      name: canonicalName,
+      name,
       path,
       selectionSet: field.selectionSet,
       args: args ?? [],
@@ -392,7 +392,11 @@ export class Planner {
       );
     }
 
-    const runtime = this.tg.runtimeReferences[schema.runtime];
+    const runtime = (schema.type === Type.FUNCTION)
+      ? this.tg
+        .runtimeReferences[(this.tg.materializer(schema.materializer)).runtime]
+      : node.parentStage?.props.runtime ??
+        this.tg.runtimeReferences[this.tg.denoRuntimeIdx];
 
     const stage = this.createComputeStage(node, {
       dependencies: node.parentStage ? [node.parentStage.id()] : [],
@@ -444,7 +448,6 @@ export class Planner {
       output: outputIdx,
       rate_calls,
       rate_weight,
-      parameterTransform = null,
     } = schema;
     const outputType = this.tg.type(outputIdx);
 
@@ -472,9 +475,8 @@ export class Planner {
       node.path.join("."),
       mat.effect.effect ?? "read",
       parentProps,
-      inputIdx,
+      schema,
       argNodes,
-      parameterTransform,
     );
 
     deps.push(...collected.deps);

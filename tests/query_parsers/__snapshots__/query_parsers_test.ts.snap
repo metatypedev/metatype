@@ -3,7 +3,6 @@ export const snapshot = {};
 snapshot[`GraphQL parser 1`] = `
 [
   {
-    config: {},
     id: [],
     policies: [],
     properties: {
@@ -13,12 +12,10 @@ snapshot[`GraphQL parser 1`] = `
     required: [
       "user",
     ],
-    runtime: 0,
     title: "graphql_namespaces",
     type: "object",
   },
   {
-    config: {},
     id: [],
     policies: [
       0,
@@ -29,12 +26,11 @@ snapshot[`GraphQL parser 1`] = `
       update: 7,
     },
     required: [],
-    runtime: 0,
     title: "UserNamespace",
     type: "object",
   },
   {
-    config: {},
+    injections: {},
     input: 3,
     materializer: 1,
     output: 5,
@@ -43,12 +39,11 @@ snapshot[`GraphQL parser 1`] = `
     ],
     rate_calls: false,
     rate_weight: null,
-    runtime: 1,
+    runtimeConfig: null,
     title: "UserNamespace_find_fn",
     type: "function",
   },
   {
-    config: {},
     id: [
       "id",
     ],
@@ -57,19 +52,15 @@ snapshot[`GraphQL parser 1`] = `
       id: 4,
     },
     required: [],
-    runtime: 1,
     title: "UserNamespace_find_fn_input",
     type: "object",
   },
   {
-    config: {},
     policies: [],
-    runtime: 1,
     title: "UserId",
     type: "string",
   },
   {
-    config: {},
     id: [
       "id",
     ],
@@ -79,19 +70,16 @@ snapshot[`GraphQL parser 1`] = `
       name: 6,
     },
     required: [],
-    runtime: 1,
     title: "User",
     type: "object",
   },
   {
-    config: {},
     policies: [],
-    runtime: 1,
     title: "User_name_string",
     type: "string",
   },
   {
-    config: {},
+    injections: {},
     input: 5,
     materializer: 2,
     output: 5,
@@ -100,12 +88,11 @@ snapshot[`GraphQL parser 1`] = `
     ],
     rate_calls: false,
     rate_weight: null,
-    runtime: 1,
+    runtimeConfig: null,
     title: "UserNamespace_update_fn",
     type: "function",
   },
   {
-    config: {},
     id: [],
     policies: [],
     properties: {
@@ -113,12 +100,11 @@ snapshot[`GraphQL parser 1`] = `
       setPicture: 12,
     },
     required: [],
-    runtime: 0,
     title: "ProfileNamespace",
     type: "object",
   },
   {
-    config: {},
+    injections: {},
     input: 3,
     materializer: 3,
     output: 10,
@@ -127,12 +113,11 @@ snapshot[`GraphQL parser 1`] = `
     ],
     rate_calls: false,
     rate_weight: null,
-    runtime: 1,
+    runtimeConfig: null,
     title: "ProfileNamespace_picture_fn",
     type: "function",
   },
   {
-    config: {},
     id: [
       "id",
     ],
@@ -142,20 +127,17 @@ snapshot[`GraphQL parser 1`] = `
       url: 11,
     },
     required: [],
-    runtime: 1,
     title: "Picture",
     type: "object",
   },
   {
-    config: {},
     format: "uri",
     policies: [],
-    runtime: 1,
     title: "Picture_url_string_uri",
     type: "string",
   },
   {
-    config: {},
+    injections: {},
     input: 10,
     materializer: 4,
     output: 10,
@@ -164,14 +146,11 @@ snapshot[`GraphQL parser 1`] = `
     ],
     rate_calls: false,
     rate_weight: null,
-    runtime: 1,
+    runtimeConfig: null,
     title: "ProfileNamespace_setPicture_fn",
     type: "function",
   },
   {
-    config: {
-      __namespace: true,
-    },
     id: [],
     policies: [
       0,
@@ -180,14 +159,10 @@ snapshot[`GraphQL parser 1`] = `
       picture: 9,
     },
     required: [],
-    runtime: 0,
     title: "UserNamespace_q",
     type: "object",
   },
   {
-    config: {
-      __namespace: true,
-    },
     id: [],
     policies: [
       0,
@@ -196,14 +171,10 @@ snapshot[`GraphQL parser 1`] = `
       setPicture: 12,
     },
     required: [],
-    runtime: 0,
     title: "UserNamespace_m",
     type: "object",
   },
   {
-    config: {
-      __namespace: true,
-    },
     id: [],
     policies: [],
     properties: {
@@ -213,14 +184,10 @@ snapshot[`GraphQL parser 1`] = `
     required: [
       "user",
     ],
-    runtime: 0,
     title: "graphql_namespaces_q",
     type: "object",
   },
   {
-    config: {
-      __namespace: true,
-    },
     id: [],
     policies: [],
     properties: {
@@ -230,14 +197,10 @@ snapshot[`GraphQL parser 1`] = `
     required: [
       "user",
     ],
-    runtime: 0,
     title: "graphql_namespaces_m",
     type: "object",
   },
   {
-    config: {
-      __namespace: true,
-    },
     id: [],
     policies: [],
     properties: {
@@ -246,14 +209,10 @@ snapshot[`GraphQL parser 1`] = `
     required: [
       "user",
     ],
-    runtime: 0,
     title: "Query",
     type: "object",
   },
   {
-    config: {
-      __namespace: true,
-    },
     id: [],
     policies: [],
     properties: {
@@ -262,7 +221,6 @@ snapshot[`GraphQL parser 1`] = `
     required: [
       "user",
     ],
-    runtime: 0,
     title: "Mutation",
     type: "object",
   },

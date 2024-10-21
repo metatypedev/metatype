@@ -2,18 +2,19 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 mod common;
+mod injection;
 mod input;
 mod types;
 mod value;
 
-use std::collections::{hash_map, HashMap};
-
-use crate::typegraph::{TypeNode, Typegraph};
+use self::injection::InjectionValidationContext;
 
 use super::visitor::{
     visit_child, ChildNode, CurrentNode, ParentFn, Path, PathSegment, TypeVisitor,
     TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
 };
+use crate::typegraph::{TypeNode, Typegraph};
+use std::collections::{hash_map, HashMap};
 
 use self::types::{EnsureSubtypeOf, ErrorCollector, ExtendedTypeNode};
 
@@ -76,7 +77,7 @@ impl<'a> VisitLayer<'a, Validator> for Layer {
     fn visit(
         &self,
         traversal: &mut super::visitor::TypegraphTraversal<'a, Validator, Self>,
-        source: impl Iterator<Item = ChildNode<'a>>,
+        source: impl Iterator<Item = ChildNode>,
         context: &'a ValidatorContext<'a>,
     ) -> Option<<Validator as TypeVisitor>::Return> {
         let mut errors = vec![];
@@ -129,9 +130,46 @@ impl<'a> TypeVisitor<'a> for Validator {
 
         let get_type_name = |idx: u32| tg.types.get(idx as usize).unwrap().type_name();
 
-        if let TypeNode::Function { .. } = type_node {
-            // validate materializer??
-            // TODO deno static
+        if let TypeNode::Function { data, .. } = type_node {
+            let parent_idx = current_node.path.last().unwrap().from;
+            let parent_object = match &context.get_typegraph().types[parent_idx as usize] {
+                TypeNode::Object { data, .. } => data,
+                _ => {
+                    self.push_error(
+                        current_node.path,
+                        "function parent is not an object".to_owned(),
+                    );
+                    return VisitResult::Continue(false);
+                }
+            };
+            let mut path = vec![];
+            let inj_cx = InjectionValidationContext {
+                fn_path: current_node.path.to_vec(),
+                fn_idx: current_node.type_idx,
+                input_idx: data.input,
+                parent_object,
+                validator: context,
+            };
+            let input_object = match &context.get_typegraph().types[data.input as usize] {
+                TypeNode::Object { data, .. } => data,
+                _ => {
+                    self.push_error(
+                        current_node.path,
+                        "function input is not an object".to_owned(),
+                    );
+                    return VisitResult::Continue(false);
+                }
+            };
+            for (k, inj) in data.injections.iter() {
+                path.push(k.clone());
+                self.validate_injection(
+                    &mut path,
+                    *input_object.properties.get(k).unwrap(),
+                    inj,
+                    &inj_cx,
+                );
+                path.pop();
+            }
         } else if let TypeNode::Either { data, .. } = type_node {
             let variants = data.one_of.clone();
             for i in 0..variants.len() {
@@ -200,15 +238,6 @@ impl<'a> TypeVisitor<'a> for Validator {
                 }
             }
         }
-
-        // FIXME: does not work for deno.identity()
-        // if type_node.base().injection.is_some() {
-        //     self.push_error(
-        //         current_node.path,
-        //         "Injection is not allowed in output types".to_owned(),
-        //     );
-        //     return VisitResult::Continue(false);
-        // }
 
         VisitResult::Continue(true)
     }
