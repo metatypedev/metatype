@@ -13,7 +13,7 @@ import {
 basicTestTemplate(
   "redis",
   {
-    delays: { awaitSleepCompleteSec: 8 },
+    delays: { awaitSleepCompleteSec: 12 },
     secrets: { SUB_REDIS },
   },
   redisCleanup(SUB_REDIS),
