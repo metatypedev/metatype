@@ -17,6 +17,11 @@ function splitGraphQLOperations(
   const queryProperties: PropertiesTable = {};
   const mutationProperties: PropertiesTable = {};
 
+  if (typegraph.meta.namespaces == null) {
+    typegraph.meta.namespaces = [];
+  }
+  const namespaces = typegraph.meta.namespaces;
+
   for (const [propertyName, typeIndex] of Object.entries(node.properties)) {
     const childNode = typegraph.types[typeIndex];
 
@@ -34,27 +39,23 @@ function splitGraphQLOperations(
 
         if (Object.keys(childQueryProperties).length === 0) {
           mutationProperties[propertyName] = typeIndex;
-          childNode.config = Object.assign(childNode.config ?? {}, {
-            __namespace: true,
-          });
+          namespaces.push(typeIndex);
         } else if (Object.keys(childMutationProperties).length === 0) {
           queryProperties[propertyName] = typeIndex;
-          childNode.config = Object.assign(childNode.config ?? {}, {
-            __namespace: true,
-          });
+          namespaces.push(typeIndex);
         } else {
           queryProperties[propertyName] = addNode(typegraph, {
             ...node,
             title: `${node.title}_q`,
             properties: childQueryProperties,
-            config: { ...(node.config ?? {}), __namespace: true },
           });
+          namespaces.push(queryProperties[propertyName]);
           mutationProperties[propertyName] = addNode(typegraph, {
             ...node,
             title: `${node.title}_m`,
             properties: childMutationProperties,
-            config: { ...(node.config ?? {}), __namespace: true },
           });
+          namespaces.push(mutationProperties[propertyName]);
         }
         break;
       }
@@ -106,8 +107,8 @@ export function parseGraphQLTypeGraph(tgOrig: TypeGraphDS): TypeGraphDS {
     ...rootNode,
     title: "Query",
     properties: queryProperties,
-    config: { ...(rootNode.config ?? {}), __namespace: true },
   });
+  typegraph.meta.namespaces!.push(queryIndex);
   rootNode.properties.query = queryIndex;
 
   if (Object.keys(mutationProperties).length > 0) {
@@ -115,8 +116,8 @@ export function parseGraphQLTypeGraph(tgOrig: TypeGraphDS): TypeGraphDS {
       ...rootNode,
       title: "Mutation",
       properties: mutationProperties,
-      config: { ...(rootNode.config ?? {}), __namespace: true },
     });
+    typegraph.meta.namespaces!.push(mutationIndex);
     rootNode.properties.mutation = mutationIndex;
   }
 

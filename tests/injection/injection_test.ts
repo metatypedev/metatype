@@ -300,6 +300,7 @@ Meta.test("Deno: value injection", async (t) => {
           input: {
             a: 12,
             context: "123",
+            optional_context: null,
             raw_int: 4,
             raw_obj: { in: -1 },
             alt_raw: "2",

@@ -4,7 +4,7 @@
 use crate::{
     errors::Result,
     runtimes::prisma::context::PrismaContext,
-    t::{self, ConcreteTypeBuilder, TypeBuilder},
+    t::{self, TypeBuilder as _},
     types::TypeId,
 };
 
@@ -69,7 +69,7 @@ impl TypeGen for QueryInputType {
             )?;
         }
 
-        builder.named(self.name()).build()
+        builder.build_named(self.name())
     }
 
     fn name(&self) -> String {

@@ -12,6 +12,7 @@ import { WitWireMessenger } from "./wit_wire/mod.ts";
 import type { WitWireMatInfo } from "../../engine/runtime.js";
 import { sha256 } from "../crypto.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
+import { TypeGraphDS } from "../typegraph/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -21,6 +22,7 @@ export class PythonRuntime extends Runtime {
 
   private constructor(
     typegraphName: string,
+    private tg: TypeGraphDS,
     uuid: string,
     private wire: WitWireMessenger,
   ) {
@@ -139,7 +141,7 @@ export class PythonRuntime extends Runtime {
     );
     logger.info("WitWireMessenger initialized");
 
-    return new PythonRuntime(typegraphName, uuid, wire);
+    return new PythonRuntime(typegraphName, typegraph, uuid, wire);
   }
 
   async deinit(): Promise<void> {
@@ -182,7 +184,7 @@ export class PythonRuntime extends Runtime {
       return [stage.withResolver(await this.delegate(mat))];
     }
 
-    if (stage.props.outType.config?.__namespace) {
+    if (this.tg.meta.namespaces!.includes(stage.props.typeIdx)) {
       return [stage.withResolver(() => ({}))];
     }
 

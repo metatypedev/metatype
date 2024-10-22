@@ -54,3 +54,5 @@ src/typegraph/python/typegraph/gen
 examples/typegraphs/migrations
 examples/typegraphs/**/*.wasm
 src/pyrt_wit_wire/wit_wire
+
+/.metatype/

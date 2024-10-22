@@ -11,6 +11,7 @@ import * as ast from "graphql/ast";
 import type { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
 import type { Typegate } from "../typegate/mod.ts";
 import { getLogger, type Logger } from "../log.ts";
+import { TypeGraphDS } from "../typegraph/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -21,6 +22,7 @@ export class WasmRuntimeReflected extends Runtime {
   private constructor(
     public artifactKey: string,
     typegraphName: string,
+    private tg: TypeGraphDS,
     private typegate: Typegate,
   ) {
     super(typegraphName);
@@ -29,8 +31,14 @@ export class WasmRuntimeReflected extends Runtime {
 
   static init(params: RuntimeInitParams<WasmRuntimeData>): Runtime {
     logger.info("initializing WasmRuntimeReflected");
-    const { typegraphName, typegate, args: { wasm_artifact } } = params;
-    return new WasmRuntimeReflected(wasm_artifact, typegraphName, typegate);
+    const { typegraphName, typegraph, typegate, args: { wasm_artifact } } =
+      params;
+    return new WasmRuntimeReflected(
+      wasm_artifact,
+      typegraphName,
+      typegraph,
+      typegate,
+    );
   }
 
   async deinit(): Promise<void> {}
@@ -71,7 +79,7 @@ export class WasmRuntimeReflected extends Runtime {
       ];
     }
 
-    if (stage.props.outType.config?.__namespace) {
+    if (this.tg.meta.namespaces!.includes(stage.props.typeIdx)) {
       return [stage.withResolver(() => ({}))];
     }
 

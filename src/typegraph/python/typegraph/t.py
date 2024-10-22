@@ -12,7 +12,6 @@ from typegraph.gen.exports.core import (
     FuncParams,
     ParameterTransform,
     TypeList,
-    TypeBase,
     TypeEither,
     TypeFile,
     TypeFloat,
@@ -25,7 +24,6 @@ from typegraph.gen.exports.core import (
     PolicySpec as WitPolicySpec,
 )
 from typegraph.gen.exports.runtimes import EffectRead
-from typegraph.gen.exports.utils import Reduce
 from typegraph.gen.types import Err
 from typegraph.graph.typegraph import (
     core,
@@ -36,6 +34,7 @@ from typegraph.graph.typegraph import (
     ApplyFromSecret,
     ApplyFromStatic,
 )
+from typegraph.io import Log
 from typegraph.injection import (
     serialize_generic_injection,
     serialize_parent_injection,
@@ -45,25 +44,24 @@ from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_cha
 from typegraph.runtimes.deno import Materializer
 from typegraph.utils import (
     ConfigSpec,
-    build_reduce_data,
+    build_reduce_entries,
     serialize_config,
 )
 from typegraph.wit import wit_utils
 
 # TODO: better approach?
 og_list = list
+og_float = float
 
 
 class typedef:
     _id: int
-    runtime_config: Optional[List[Tuple[str, str]]]
     injection: Optional[str]
     policy_chain: Optional[List[WitPolicySpec]]
     name: Optional[str]
 
     def __init__(self, id: int):
         self._id = id
-        self.runtime_config = None
         self.injection = None
         self.policy_chain = None
         self.name = None
@@ -176,6 +174,33 @@ class _TypeWrapper(typedef):
 AsId = Union[bool, Literal["simple", "composite"]]
 
 
+def _with_ext(
+    type_id: int,
+    as_id: Optional[AsId],
+    raw_config: Optional[ConfigSpec],
+    name: Optional[str],
+) -> int:
+    if as_id:
+        res = core.as_id(store, type_id, as_id == "composite")
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        type_id = res.value
+    config = serialize_config(raw_config)
+    if config:
+        res = core.with_config(store, type_id, config)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        type_id = res.value
+    if name:
+        res = core.rename_type(store, type_id, name)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        type_id = res.value
+    if name == "ExtendedProfile":
+        Log.info(f">>> type#{type_id}; as_id={as_id}; config={config}; name={name}")
+    return type_id
+
+
 class integer(typedef):
     min: Optional[int] = None
     max: Optional[int] = None
@@ -206,26 +231,19 @@ class integer(typedef):
             multiple_of=multiple_of,
             enumeration=enum,
         )
-        runtime_config = serialize_config(config)
         res = core.integerb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
-        if as_id:
-            res = core.as_id(store, res.value, as_id == "composite")
-            if isinstance(res, Err):
-                raise Exception(res.value)
-        super().__init__(res.value)
+        super().__init__(_with_ext(res.value, as_id, config, name))
         self.min = min
         self.max = max
         self.exclusive_minimum = exclusive_minimum
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
         self.enumeration = enum
-        self.runtime_config = runtime_config
         self.as_id = as_id
 
     def id(self, as_id: AsId = True) -> "typedef":  # "integer"
@@ -256,41 +274,40 @@ class float(typedef):
         config: Optional[ConfigSpec] = None,
     ):
         data = TypeFloat(
-            min=min,
-            max=max,
-            exclusive_minimum=exclusive_minimum,
-            exclusive_maximum=exclusive_maximum,
-            multiple_of=multiple_of,
+            min=og_float(min) if min is not None else None,
+            max=og_float(max) if max is not None else None,
+            exclusive_minimum=og_float(exclusive_minimum)
+            if exclusive_minimum is not None
+            else None,
+            exclusive_maximum=og_float(exclusive_maximum)
+            if exclusive_maximum is not None
+            else None,
+            multiple_of=og_float(multiple_of) if multiple_of is not None else None,
             enumeration=enum,
         )
-        runtime_config = serialize_config(config)
         res = core.floatb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
-        super().__init__(res.value)
+        super().__init__(_with_ext(res.value, None, config, name))
         self.min = min
         self.max = max
         self.exclusive_minimum = exclusive_minimum
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
         self.enumeration = enum
-        self.runtime_config = runtime_config
 
 
 class boolean(typedef):
     def __init__(
         self, *, name: Optional[str] = None, config: Optional[ConfigSpec] = None
     ):
-        runtime_config = serialize_config(config)
-        res = core.booleanb(store, TypeBase(name=name, runtime_config=runtime_config))
+        res = core.booleanb(store)
         if isinstance(res, Err):
             raise Exception(res.value)
-        super().__init__(res.value)
-        self.runtime_config = runtime_config
+        super().__init__(_with_ext(res.value, None, config, name))
 
 
 class string(typedef):
@@ -321,25 +338,18 @@ class string(typedef):
             min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
         )
 
-        runtime_config = serialize_config(config)
         res = core.stringb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
-        if as_id:
-            res = core.as_id(store, res.value, as_id == "composite")
-            if isinstance(res, Err):
-                raise Exception(res.value)
-        super().__init__(res.value)
+        super().__init__(_with_ext(res.value, as_id, config, name))
         self.min = min
         self.max = max
         self.pattern = pattern
         self.format = format
         self.enumeration = enum
-        self.runtime_config = runtime_config
         self.as_id = as_id
 
     def id(self, as_id: AsId = True) -> "typedef":  # "integer"
@@ -410,6 +420,7 @@ class file(typedef):
         max: Optional[int] = None,
         allow: Optional[List[str]] = None,
         config: Optional[ConfigSpec] = None,
+        name: Optional[str] = None,
     ):
         data = TypeFile(
             min=min,
@@ -417,16 +428,14 @@ class file(typedef):
             allow=allow,
         )
 
-        runtime_config = serialize_config(config)
         res = core.fileb(
             store,
             data,
-            TypeBase(name=None, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
 
-        super().__init__(res.value)
+        super().__init__(_with_ext(res.value, None, config, name))
         self.min = min
         self.max = max
         self.allow = allow
@@ -454,20 +463,17 @@ class list(typedef):
             unique_items=unique_items,
         )
 
-        runtime_config = serialize_config(config)
         res = core.listb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
-        super().__init__(res.value)
+        super().__init__(_with_ext(res.value, None, config, name))
         self.min = min
         self.max = max
         self.items = items
         self.unique_items = unique_items
-        self.runtime_config = runtime_config
 
 
 class optional(typedef):
@@ -486,18 +492,15 @@ class optional(typedef):
             default_item=None if default_item is None else JsonLib.dumps(default_item),
         )
 
-        runtime_config = serialize_config(config)
         res = core.optionalb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
-        super().__init__(res.value)
+        super().__init__(_with_ext(res.value, None, config, name))
         self.item = item
         self.default_item = default_item
-        self.runtime_config = runtime_config
 
 
 class union(typedef):
@@ -511,17 +514,14 @@ class union(typedef):
     ):
         data = TypeUnion(variants=og_list(map(lambda v: v._id, variants)))
 
-        runtime_config = serialize_config(config)
         res = core.unionb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
-        super().__init__(res.value)
+        super().__init__(_with_ext(res.value, None, config, name))
         self.variants = variants
-        self.runtime_config = runtime_config
 
 
 class either(typedef):
@@ -534,18 +534,14 @@ class either(typedef):
         config: Optional[ConfigSpec] = None,
     ):
         data = TypeEither(variants=og_list(map(lambda v: v._id, variants)))
-
-        runtime_config = serialize_config(config)
         res = core.eitherb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
-        super().__init__(res.value)
+        super().__init__(_with_ext(res.value, None, config, name))
         self.variants = variants
-        self.runtime_config = runtime_config
 
 
 class struct(typedef):
@@ -614,17 +610,14 @@ class struct(typedef):
             enumeration=[JsonLib.dumps(v) for v in enum] if enum else None,
         )
 
-        runtime_config = serialize_config(config)
         res = core.structb(
             store,
             data,
-            base=TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
-        super().__init__(res.value)
+        super().__init__(_with_ext(res.value, None, config, name))
         self.props = props
-        self.runtime_config = runtime_config
         self.enumeration = enum
 
     def extend(self, props: Dict[str, typedef]):
@@ -679,19 +672,24 @@ class func(typedef):
         rate_calls: bool = False,
         rate_weight: Optional[int] = None,
         parameter_transform: Optional[ParameterTransform] = None,
+        type_id: Optional[int] = None,
     ):
-        data = TypeFunc(
-            inp=inp._id,
-            out=out._id,
-            parameter_transform=parameter_transform,
-            mat=mat.id,
-            rate_calls=rate_calls,
-            rate_weight=rate_weight,
-        )
-        res = core.funcb(store, data)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        id = res.value
+        def register():
+            data = TypeFunc(
+                inp=inp._id,
+                out=out._id,
+                parameter_transform=parameter_transform,
+                mat=mat.id,
+                rate_calls=rate_calls,
+                rate_weight=rate_weight,
+            )
+            res = core.funcb(store, data)
+            if isinstance(res, Err):
+                raise Exception(res.value)
+            return res.value
+
+        id = register() if type_id is None else type_id
+
         super().__init__(id)
         self.inp = inp
         self.out = out
@@ -729,20 +727,21 @@ class func(typedef):
         )
 
     def reduce(self, value: Dict[str, Any]) -> "func":
-        data = Reduce(paths=build_reduce_data(value, [], []))
-        reduced_id = wit_utils.gen_reduceb(store, self.inp._id, data=data)
+        reduce_entries = build_reduce_entries(value, [], [])
+        reduced_id = wit_utils.reduceb(store, self._id, reduce_entries)
 
         if isinstance(reduced_id, Err):
             raise Exception(reduced_id.value)
 
         # TODO typedef(...).as_struct()
         return func(
-            typedef(id=reduced_id.value),
+            self.inp,
             self.out,
             self.mat,
             parameter_transform=self.parameter_transform,
             rate_calls=self.rate_calls,
             rate_weight=self.rate_weight,
+            type_id=reduced_id.value,
         )
 
     def apply(self, value: ApplyParamObjectNode) -> "func":

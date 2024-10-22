@@ -2,238 +2,238 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct #62
-├─ [data]: struct 'Record_update_input' #23
-│  ├─ [age]: optional 'optional_19' #19
-│  │  └─ item: union #18
-│  │     ├─ variant_0: optional 'optional_6' #6
-│  │     │  └─ item: integer #5
-│  │     ├─ variant_1: struct #14
-│  │     │  └─ [set]: optional 'optional_6' #6
-│  │     │     └─ item: integer #5
-│  │     ├─ variant_2: struct #15
-│  │     │  └─ [multiply]: integer #5
-│  │     ├─ variant_3: struct #16
-│  │     │  └─ [decrement]: integer #5
-│  │     └─ variant_4: struct #17
-│  │        └─ [increment]: integer #5
-│  ├─ [created_at]: optional 'optional_22' #22
-│  │  └─ item: union #21
+root: struct #90
+├─ [data]: struct 'Record_update_input' #31
+│  ├─ [age]: optional 'optional_24' #25
+│  │  └─ item: union #23
+│  │     ├─ variant_0: optional 'optional_7' #8
+│  │     │  └─ item: integer #6
+│  │     ├─ variant_1: struct #19
+│  │     │  └─ [set]: optional 'optional_7' #8
+│  │     │     └─ item: integer #6
+│  │     ├─ variant_2: struct #20
+│  │     │  └─ [multiply]: integer #6
+│  │     ├─ variant_3: struct #21
+│  │     │  └─ [decrement]: integer #6
+│  │     └─ variant_4: struct #22
+│  │        └─ [increment]: integer #6
+│  ├─ [created_at]: optional 'optional_28' #29
+│  │  └─ item: union #27
 │  │     ├─ variant_0: string #1
-│  │     └─ variant_1: struct #20
+│  │     └─ variant_1: struct #26
 │  │        └─ [set]: string #1
-│  ├─ [id]: optional 'optional_10' #10
-│  │  └─ item: union #9
-│  │     ├─ variant_0: string #3
-│  │     └─ variant_1: struct #8
-│  │        └─ [set]: string #3
-│  └─ [name]: optional 'optional_13' #13
-│     └─ item: union #12
-│        ├─ variant_0: string #4
-│        └─ variant_1: struct #11
-│           └─ [set]: string #4
-└─ [where]: struct 'Record_query_where_unique_input' #61
-   ├─ [AND]: optional 'optional_59' #59
-   │  └─ item: list 'list_58' #58
-   │     └─ item: &Record_query_where_unique_input #57
-   ├─ [NOT]: optional 'optional_60' #60
-   │  └─ item: &Record_query_where_unique_input #57
-   ├─ [OR]: optional 'optional_59' #59
-   │  └─ item: list 'list_58' #58
-   │     └─ item: &Record_query_where_unique_input #57
-   ├─ [age]: optional 'optional_54' #54
-   │  └─ item: optional '_prisma_integer_filter_ex' #53
-   │     └─ item: union #52
-   │        ├─ variant_0: either '_prisma_integer_filter' #50
-   │        │  ├─ variant_0: integer #42
-   │        │  ├─ variant_1: struct #45
-   │        │  │  └─ [equals]: integer #42
-   │        │  ├─ variant_2: struct #46
-   │        │  │  └─ [not]: integer #42
-   │        │  ├─ variant_3: struct #47
-   │        │  │  ├─ [gt]: optional 'optional_43' #43
-   │        │  │  │  └─ item: integer #42
-   │        │  │  ├─ [gte]: optional 'optional_43' #43
-   │        │  │  │  └─ item: integer #42
-   │        │  │  ├─ [lt]: optional 'optional_43' #43
-   │        │  │  │  └─ item: integer #42
-   │        │  │  └─ [lte]: optional 'optional_43' #43
-   │        │  │     └─ item: integer #42
-   │        │  ├─ variant_4: struct #48
-   │        │  │  └─ [in]: list 'list_44' #44
-   │        │  │     └─ item: integer #42
-   │        │  └─ variant_5: struct #49
-   │        │     └─ [notIn]: list 'list_44' #44
-   │        │        └─ item: integer #42
-   │        └─ variant_1: struct #51
-   │           └─ [not]: either '_prisma_integer_filter' #50
-   │              ├─ variant_0: integer #42
-   │              ├─ variant_1: struct #45
-   │              │  └─ [equals]: integer #42
-   │              ├─ variant_2: struct #46
-   │              │  └─ [not]: integer #42
-   │              ├─ variant_3: struct #47
-   │              │  ├─ [gt]: optional 'optional_43' #43
-   │              │  │  └─ item: integer #42
-   │              │  ├─ [gte]: optional 'optional_43' #43
-   │              │  │  └─ item: integer #42
-   │              │  ├─ [lt]: optional 'optional_43' #43
-   │              │  │  └─ item: integer #42
-   │              │  └─ [lte]: optional 'optional_43' #43
-   │              │     └─ item: integer #42
-   │              ├─ variant_4: struct #48
-   │              │  └─ [in]: list 'list_44' #44
-   │              │     └─ item: integer #42
-   │              └─ variant_5: struct #49
-   │                 └─ [notIn]: list 'list_44' #44
-   │                    └─ item: integer #42
-   ├─ [created_at]: optional 'optional_55' #55
-   │  └─ item: optional '_prisma_string_filter_ex' #39
-   │     └─ item: union #38
-   │        ├─ variant_0: union '_prisma_string_filter' #36
-   │        │  ├─ variant_0: string #24
-   │        │  ├─ variant_1: struct #27
-   │        │  │  └─ [equals]: string #24
-   │        │  ├─ variant_2: struct #28
-   │        │  │  └─ [not]: string #24
-   │        │  ├─ variant_3: struct #29
-   │        │  │  └─ [in]: list 'list_26' #26
-   │        │  │     └─ item: string #24
-   │        │  ├─ variant_4: struct #30
-   │        │  │  └─ [notIn]: list 'list_26' #26
-   │        │  │     └─ item: string #24
-   │        │  ├─ variant_5: struct #33
-   │        │  │  ├─ [contains]: string #24
-   │        │  │  └─ [mode]: optional 'optional_32' #32
-   │        │  │     └─ item: string #31 enum{ '"insensitive"' }
-   │        │  ├─ variant_6: struct #34
-   │        │  │  └─ [search]: string #24
-   │        │  └─ variant_7: struct #35
-   │        │     ├─ [endsWith]: optional 'optional_25' #25
-   │        │     │  └─ item: string #24
-   │        │     └─ [startsWith]: optional 'optional_25' #25
-   │        │        └─ item: string #24
-   │        └─ variant_1: struct #37
-   │           └─ [not]: union '_prisma_string_filter' #36
-   │              ├─ variant_0: string #24
-   │              ├─ variant_1: struct #27
-   │              │  └─ [equals]: string #24
-   │              ├─ variant_2: struct #28
-   │              │  └─ [not]: string #24
-   │              ├─ variant_3: struct #29
-   │              │  └─ [in]: list 'list_26' #26
-   │              │     └─ item: string #24
-   │              ├─ variant_4: struct #30
-   │              │  └─ [notIn]: list 'list_26' #26
-   │              │     └─ item: string #24
-   │              ├─ variant_5: struct #33
-   │              │  ├─ [contains]: string #24
-   │              │  └─ [mode]: optional 'optional_32' #32
-   │              │     └─ item: string #31 enum{ '"insensitive"' }
-   │              ├─ variant_6: struct #34
-   │              │  └─ [search]: string #24
-   │              └─ variant_7: struct #35
-   │                 ├─ [endsWith]: optional 'optional_25' #25
-   │                 │  └─ item: string #24
-   │                 └─ [startsWith]: optional 'optional_25' #25
-   │                    └─ item: string #24
-   ├─ [id]: optional 'optional_40' #40
-   │  └─ item: optional '_prisma_string_filter_ex' #39
-   │     └─ item: union #38
-   │        ├─ variant_0: union '_prisma_string_filter' #36
-   │        │  ├─ variant_0: string #24
-   │        │  ├─ variant_1: struct #27
-   │        │  │  └─ [equals]: string #24
-   │        │  ├─ variant_2: struct #28
-   │        │  │  └─ [not]: string #24
-   │        │  ├─ variant_3: struct #29
-   │        │  │  └─ [in]: list 'list_26' #26
-   │        │  │     └─ item: string #24
-   │        │  ├─ variant_4: struct #30
-   │        │  │  └─ [notIn]: list 'list_26' #26
-   │        │  │     └─ item: string #24
-   │        │  ├─ variant_5: struct #33
-   │        │  │  ├─ [contains]: string #24
-   │        │  │  └─ [mode]: optional 'optional_32' #32
-   │        │  │     └─ item: string #31 enum{ '"insensitive"' }
-   │        │  ├─ variant_6: struct #34
-   │        │  │  └─ [search]: string #24
-   │        │  └─ variant_7: struct #35
-   │        │     ├─ [endsWith]: optional 'optional_25' #25
-   │        │     │  └─ item: string #24
-   │        │     └─ [startsWith]: optional 'optional_25' #25
-   │        │        └─ item: string #24
-   │        └─ variant_1: struct #37
-   │           └─ [not]: union '_prisma_string_filter' #36
-   │              ├─ variant_0: string #24
-   │              ├─ variant_1: struct #27
-   │              │  └─ [equals]: string #24
-   │              ├─ variant_2: struct #28
-   │              │  └─ [not]: string #24
-   │              ├─ variant_3: struct #29
-   │              │  └─ [in]: list 'list_26' #26
-   │              │     └─ item: string #24
-   │              ├─ variant_4: struct #30
-   │              │  └─ [notIn]: list 'list_26' #26
-   │              │     └─ item: string #24
-   │              ├─ variant_5: struct #33
-   │              │  ├─ [contains]: string #24
-   │              │  └─ [mode]: optional 'optional_32' #32
-   │              │     └─ item: string #31 enum{ '"insensitive"' }
-   │              ├─ variant_6: struct #34
-   │              │  └─ [search]: string #24
-   │              └─ variant_7: struct #35
-   │                 ├─ [endsWith]: optional 'optional_25' #25
-   │                 │  └─ item: string #24
-   │                 └─ [startsWith]: optional 'optional_25' #25
-   │                    └─ item: string #24
-   └─ [name]: optional 'optional_41' #41
-      └─ item: optional '_prisma_string_filter_ex' #39
-         └─ item: union #38
-            ├─ variant_0: union '_prisma_string_filter' #36
-            │  ├─ variant_0: string #24
-            │  ├─ variant_1: struct #27
-            │  │  └─ [equals]: string #24
-            │  ├─ variant_2: struct #28
-            │  │  └─ [not]: string #24
-            │  ├─ variant_3: struct #29
-            │  │  └─ [in]: list 'list_26' #26
-            │  │     └─ item: string #24
-            │  ├─ variant_4: struct #30
-            │  │  └─ [notIn]: list 'list_26' #26
-            │  │     └─ item: string #24
-            │  ├─ variant_5: struct #33
-            │  │  ├─ [contains]: string #24
-            │  │  └─ [mode]: optional 'optional_32' #32
-            │  │     └─ item: string #31 enum{ '"insensitive"' }
-            │  ├─ variant_6: struct #34
-            │  │  └─ [search]: string #24
-            │  └─ variant_7: struct #35
-            │     ├─ [endsWith]: optional 'optional_25' #25
-            │     │  └─ item: string #24
-            │     └─ [startsWith]: optional 'optional_25' #25
-            │        └─ item: string #24
-            └─ variant_1: struct #37
-               └─ [not]: union '_prisma_string_filter' #36
-                  ├─ variant_0: string #24
-                  ├─ variant_1: struct #27
-                  │  └─ [equals]: string #24
-                  ├─ variant_2: struct #28
-                  │  └─ [not]: string #24
-                  ├─ variant_3: struct #29
-                  │  └─ [in]: list 'list_26' #26
-                  │     └─ item: string #24
-                  ├─ variant_4: struct #30
-                  │  └─ [notIn]: list 'list_26' #26
-                  │     └─ item: string #24
-                  ├─ variant_5: struct #33
-                  │  ├─ [contains]: string #24
-                  │  └─ [mode]: optional 'optional_32' #32
-                  │     └─ item: string #31 enum{ '"insensitive"' }
-                  ├─ variant_6: struct #34
-                  │  └─ [search]: string #24
-                  └─ variant_7: struct #35
-                     ├─ [endsWith]: optional 'optional_25' #25
-                     │  └─ item: string #24
-                     └─ [startsWith]: optional 'optional_25' #25
-                        └─ item: string #24
+│  ├─ [id]: optional 'optional_13' #14
+│  │  └─ item: union #12
+│  │     ├─ variant_0: string #4
+│  │     └─ variant_1: struct #11
+│  │        └─ [set]: string #4
+│  └─ [name]: optional 'optional_17' #18
+│     └─ item: union #16
+│        ├─ variant_0: string #5
+│        └─ variant_1: struct #15
+│           └─ [set]: string #5
+└─ [where]: struct 'Record_query_where_unique_input' #89
+   ├─ [AND]: optional 'optional_84' #85
+   │  └─ item: list 'list_82' #83
+   │     └─ item: &Record_query_where_unique_input #81
+   ├─ [NOT]: optional 'optional_86' #87
+   │  └─ item: &Record_query_where_unique_input #81
+   ├─ [OR]: optional 'optional_84' #85
+   │  └─ item: list 'list_82' #83
+   │     └─ item: &Record_query_where_unique_input #81
+   ├─ [age]: optional 'optional_75' #76
+   │  └─ item: optional '_prisma_integer_filter_ex' #74
+   │     └─ item: union #71
+   │        ├─ variant_0: either '_prisma_integer_filter' #69
+   │        │  ├─ variant_0: integer #58
+   │        │  ├─ variant_1: struct #63
+   │        │  │  └─ [equals]: integer #58
+   │        │  ├─ variant_2: struct #64
+   │        │  │  └─ [not]: integer #58
+   │        │  ├─ variant_3: struct #65
+   │        │  │  ├─ [gt]: optional 'optional_59' #60
+   │        │  │  │  └─ item: integer #58
+   │        │  │  ├─ [gte]: optional 'optional_59' #60
+   │        │  │  │  └─ item: integer #58
+   │        │  │  ├─ [lt]: optional 'optional_59' #60
+   │        │  │  │  └─ item: integer #58
+   │        │  │  └─ [lte]: optional 'optional_59' #60
+   │        │  │     └─ item: integer #58
+   │        │  ├─ variant_4: struct #66
+   │        │  │  └─ [in]: list 'list_61' #62
+   │        │  │     └─ item: integer #58
+   │        │  └─ variant_5: struct #67
+   │        │     └─ [notIn]: list 'list_61' #62
+   │        │        └─ item: integer #58
+   │        └─ variant_1: struct #70
+   │           └─ [not]: either '_prisma_integer_filter' #69
+   │              ├─ variant_0: integer #58
+   │              ├─ variant_1: struct #63
+   │              │  └─ [equals]: integer #58
+   │              ├─ variant_2: struct #64
+   │              │  └─ [not]: integer #58
+   │              ├─ variant_3: struct #65
+   │              │  ├─ [gt]: optional 'optional_59' #60
+   │              │  │  └─ item: integer #58
+   │              │  ├─ [gte]: optional 'optional_59' #60
+   │              │  │  └─ item: integer #58
+   │              │  ├─ [lt]: optional 'optional_59' #60
+   │              │  │  └─ item: integer #58
+   │              │  └─ [lte]: optional 'optional_59' #60
+   │              │     └─ item: integer #58
+   │              ├─ variant_4: struct #66
+   │              │  └─ [in]: list 'list_61' #62
+   │              │     └─ item: integer #58
+   │              └─ variant_5: struct #67
+   │                 └─ [notIn]: list 'list_61' #62
+   │                    └─ item: integer #58
+   ├─ [created_at]: optional 'optional_77' #78
+   │  └─ item: optional '_prisma_string_filter_ex' #53
+   │     └─ item: union #50
+   │        ├─ variant_0: union '_prisma_string_filter' #48
+   │        │  ├─ variant_0: string #32
+   │        │  ├─ variant_1: struct #37
+   │        │  │  └─ [equals]: string #32
+   │        │  ├─ variant_2: struct #38
+   │        │  │  └─ [not]: string #32
+   │        │  ├─ variant_3: struct #39
+   │        │  │  └─ [in]: list 'list_35' #36
+   │        │  │     └─ item: string #32
+   │        │  ├─ variant_4: struct #40
+   │        │  │  └─ [notIn]: list 'list_35' #36
+   │        │  │     └─ item: string #32
+   │        │  ├─ variant_5: struct #44
+   │        │  │  ├─ [contains]: string #32
+   │        │  │  └─ [mode]: optional 'optional_42' #43
+   │        │  │     └─ item: string #41 enum{ '"insensitive"' }
+   │        │  ├─ variant_6: struct #45
+   │        │  │  └─ [search]: string #32
+   │        │  └─ variant_7: struct #46
+   │        │     ├─ [endsWith]: optional 'optional_33' #34
+   │        │     │  └─ item: string #32
+   │        │     └─ [startsWith]: optional 'optional_33' #34
+   │        │        └─ item: string #32
+   │        └─ variant_1: struct #49
+   │           └─ [not]: union '_prisma_string_filter' #48
+   │              ├─ variant_0: string #32
+   │              ├─ variant_1: struct #37
+   │              │  └─ [equals]: string #32
+   │              ├─ variant_2: struct #38
+   │              │  └─ [not]: string #32
+   │              ├─ variant_3: struct #39
+   │              │  └─ [in]: list 'list_35' #36
+   │              │     └─ item: string #32
+   │              ├─ variant_4: struct #40
+   │              │  └─ [notIn]: list 'list_35' #36
+   │              │     └─ item: string #32
+   │              ├─ variant_5: struct #44
+   │              │  ├─ [contains]: string #32
+   │              │  └─ [mode]: optional 'optional_42' #43
+   │              │     └─ item: string #41 enum{ '"insensitive"' }
+   │              ├─ variant_6: struct #45
+   │              │  └─ [search]: string #32
+   │              └─ variant_7: struct #46
+   │                 ├─ [endsWith]: optional 'optional_33' #34
+   │                 │  └─ item: string #32
+   │                 └─ [startsWith]: optional 'optional_33' #34
+   │                    └─ item: string #32
+   ├─ [id]: optional 'optional_54' #55
+   │  └─ item: optional '_prisma_string_filter_ex' #53
+   │     └─ item: union #50
+   │        ├─ variant_0: union '_prisma_string_filter' #48
+   │        │  ├─ variant_0: string #32
+   │        │  ├─ variant_1: struct #37
+   │        │  │  └─ [equals]: string #32
+   │        │  ├─ variant_2: struct #38
+   │        │  │  └─ [not]: string #32
+   │        │  ├─ variant_3: struct #39
+   │        │  │  └─ [in]: list 'list_35' #36
+   │        │  │     └─ item: string #32
+   │        │  ├─ variant_4: struct #40
+   │        │  │  └─ [notIn]: list 'list_35' #36
+   │        │  │     └─ item: string #32
+   │        │  ├─ variant_5: struct #44
+   │        │  │  ├─ [contains]: string #32
+   │        │  │  └─ [mode]: optional 'optional_42' #43
+   │        │  │     └─ item: string #41 enum{ '"insensitive"' }
+   │        │  ├─ variant_6: struct #45
+   │        │  │  └─ [search]: string #32
+   │        │  └─ variant_7: struct #46
+   │        │     ├─ [endsWith]: optional 'optional_33' #34
+   │        │     │  └─ item: string #32
+   │        │     └─ [startsWith]: optional 'optional_33' #34
+   │        │        └─ item: string #32
+   │        └─ variant_1: struct #49
+   │           └─ [not]: union '_prisma_string_filter' #48
+   │              ├─ variant_0: string #32
+   │              ├─ variant_1: struct #37
+   │              │  └─ [equals]: string #32
+   │              ├─ variant_2: struct #38
+   │              │  └─ [not]: string #32
+   │              ├─ variant_3: struct #39
+   │              │  └─ [in]: list 'list_35' #36
+   │              │     └─ item: string #32
+   │              ├─ variant_4: struct #40
+   │              │  └─ [notIn]: list 'list_35' #36
+   │              │     └─ item: string #32
+   │              ├─ variant_5: struct #44
+   │              │  ├─ [contains]: string #32
+   │              │  └─ [mode]: optional 'optional_42' #43
+   │              │     └─ item: string #41 enum{ '"insensitive"' }
+   │              ├─ variant_6: struct #45
+   │              │  └─ [search]: string #32
+   │              └─ variant_7: struct #46
+   │                 ├─ [endsWith]: optional 'optional_33' #34
+   │                 │  └─ item: string #32
+   │                 └─ [startsWith]: optional 'optional_33' #34
+   │                    └─ item: string #32
+   └─ [name]: optional 'optional_56' #57
+      └─ item: optional '_prisma_string_filter_ex' #53
+         └─ item: union #50
+            ├─ variant_0: union '_prisma_string_filter' #48
+            │  ├─ variant_0: string #32
+            │  ├─ variant_1: struct #37
+            │  │  └─ [equals]: string #32
+            │  ├─ variant_2: struct #38
+            │  │  └─ [not]: string #32
+            │  ├─ variant_3: struct #39
+            │  │  └─ [in]: list 'list_35' #36
+            │  │     └─ item: string #32
+            │  ├─ variant_4: struct #40
+            │  │  └─ [notIn]: list 'list_35' #36
+            │  │     └─ item: string #32
+            │  ├─ variant_5: struct #44
+            │  │  ├─ [contains]: string #32
+            │  │  └─ [mode]: optional 'optional_42' #43
+            │  │     └─ item: string #41 enum{ '"insensitive"' }
+            │  ├─ variant_6: struct #45
+            │  │  └─ [search]: string #32
+            │  └─ variant_7: struct #46
+            │     ├─ [endsWith]: optional 'optional_33' #34
+            │     │  └─ item: string #32
+            │     └─ [startsWith]: optional 'optional_33' #34
+            │        └─ item: string #32
+            └─ variant_1: struct #49
+               └─ [not]: union '_prisma_string_filter' #48
+                  ├─ variant_0: string #32
+                  ├─ variant_1: struct #37
+                  │  └─ [equals]: string #32
+                  ├─ variant_2: struct #38
+                  │  └─ [not]: string #32
+                  ├─ variant_3: struct #39
+                  │  └─ [in]: list 'list_35' #36
+                  │     └─ item: string #32
+                  ├─ variant_4: struct #40
+                  │  └─ [notIn]: list 'list_35' #36
+                  │     └─ item: string #32
+                  ├─ variant_5: struct #44
+                  │  ├─ [contains]: string #32
+                  │  └─ [mode]: optional 'optional_42' #43
+                  │     └─ item: string #41 enum{ '"insensitive"' }
+                  ├─ variant_6: struct #45
+                  │  └─ [search]: string #32
+                  └─ variant_7: struct #46
+                     ├─ [endsWith]: optional 'optional_33' #34
+                     │  └─ item: string #32
+                     └─ [startsWith]: optional 'optional_33' #34
+                        └─ item: string #32

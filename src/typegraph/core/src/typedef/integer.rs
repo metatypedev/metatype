@@ -13,30 +13,22 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{FindAttribute as _, Integer, RefAttrs, TypeDefData},
+    types::{ExtendedTypeDef, FindAttribute as _, Integer, TypeDefData},
     wit::core::TypeInteger,
 };
 
 impl TypeConversion for Integer {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::Integer {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "integer",
                 type_id: self.id,
-                name: self.base.name.clone(),
-                runtime_idx: runtime_id.unwrap(),
-                policies: ref_attrs.find_policy().unwrap_or(&[]),
-                runtime_config: self.base.runtime_config.as_deref(),
+                name: xdef.get_owned_name(),
+                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(ref_attrs.find_injection())?
             .build()?,
             data: IntegerTypeData {
                 minimum: self.data.min,
@@ -78,7 +70,6 @@ impl Hashable for TypeInteger {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         _tg: &mut TypegraphContext,
-        _runtime_id: Option<u32>,
     ) -> Result<()> {
         "integer".hash(hasher);
         self.min.hash(hasher);

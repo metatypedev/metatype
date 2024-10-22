@@ -13,21 +13,22 @@ import type {
   Variables,
 } from "../../types.ts";
 import type { JSONValue } from "../../utils.ts";
-import {
-  getVariantTypesIndexes,
-  type ListNode,
-  type ObjectNode,
-  Type,
-  type TypeNode,
-  type UnionNode,
+import type {
+  ListNode,
+  ObjectNode,
+  TypeNode,
+  UnionNode,
 } from "../../typegraph/type_node.ts";
+import { getVariantTypeIndices, Type } from "../../typegraph/type_node.ts";
 import { mapValues } from "@std/collections/map-values";
 import { filterValues } from "@std/collections/filter-values";
 
 import type {
   EffectType,
   EitherNode,
-  FunctionParameterTransform,
+  FunctionNode,
+  Injection,
+  InjectionNode,
 } from "../../typegraph/types.ts";
 
 import { getChildTypes, visitTypes } from "../../typegraph/visitor.ts";
@@ -40,6 +41,8 @@ import {
   defaultParameterTransformer,
 } from "./parameter_transformer.ts";
 import { QueryFunction as JsonPathQuery } from "../../libs/jsonpath.ts";
+import { getInjection } from "../../typegraph/utils.ts";
+import { GeneratorNode } from "../../runtimes/random.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -91,15 +94,17 @@ export function collectArgs(
   stageId: StageId,
   effect: EffectType,
   parentProps: Record<string, number>,
-  typeIdx: TypeIdx,
+  fnTypeNode: FunctionNode,
   astNodes: Record<string, ast.ArgumentNode>,
-  parameterTransform: FunctionParameterTransform | null,
 ): CollectedArgs {
+  const { input: typeIdx, parameterTransform, injections: injectionTree } =
+    fnTypeNode;
   const collector = new ArgumentCollector(
     typegraph,
     stageId,
     effect,
     parentProps,
+    injectionTree,
   );
   const argTypeNode = typegraph.type(typeIdx, Type.OBJECT);
   for (const argName of Object.keys(astNodes)) {
@@ -130,14 +135,14 @@ export function collectArgs(
 
   if (!collector.hasDeps()) { // no deps
     // pre-compute
-    const value = mapValues(
+    const value = cleanObjectValue(mapValues(
       compute,
       (c) =>
         c({
           ...DEFAULT_COMPUTE_PARAMS,
           effect: effect !== "read" ? effect : null,
         }),
-    );
+    ));
     // typecheck
     validate(value);
     return {
@@ -175,6 +180,49 @@ interface Dependencies {
   variables: Set<string>;
 }
 
+// TODO only filter out non-required optional fields
+function cleanObject(
+  c: ComputeArg<Record<string, unknown>>,
+  optional?: false,
+): ComputeArg<Record<string, unknown>>;
+function cleanObject(
+  c: ComputeArg<Record<string, unknown>>,
+  optional: true,
+): ComputeArg<Record<string, unknown> | null>;
+function cleanObject(
+  c: ComputeArg<Record<string, unknown>>,
+  optional = false,
+): ComputeArg<Record<string, unknown> | null> {
+  if (optional) {
+    return (...params) => {
+      const res = filterValues(c(...params), (v) => v != null);
+      return Object.keys(res).length === 0 ? null : res;
+    };
+  } else {
+    return (...params) => filterValues(c(...params), (v) => v != null);
+  }
+}
+
+function cleanObjectValue(
+  obj: Record<string, unknown>,
+  optional?: false,
+): Record<string, unknown>;
+function cleanObjectValue(
+  obj: Record<string, unknown>,
+  optional: true,
+): Record<string, unknown> | null;
+function cleanObjectValue(
+  obj: Record<string, unknown>,
+  optional = false,
+): Record<string, unknown> | null {
+  if (optional) {
+    const res = filterValues(obj, (v) => v != null);
+    return Object.keys(res).length === 0 ? null : res;
+  } else {
+    return filterValues(obj, (v) => v != null);
+  }
+}
+
 /**
  * Utility class to collect the arguments for fields.
  *
@@ -206,12 +254,18 @@ class ArgumentCollector {
     private stageId: StageId,
     private effect: EffectType,
     private parentProps: Record<string, number>,
+    private injectionTree: Record<string, InjectionNode>,
   ) {
     this.deps = {
       context: new Set(),
       parent: new Set(),
       variables: new Set(),
     };
+    this.stageId;
+  }
+
+  #getInjection(path: string[]): Injection | null {
+    return getInjection(this.injectionTree, path);
   }
 
   /** Collect the arguments for the node `astNode` corresponding to type at `typeIdx` */
@@ -250,13 +304,14 @@ class ArgumentCollector {
 
     this.addPoliciesFrom(typeIdx);
 
-    if ("injection" in typ) {
+    const injection = this.#getInjection(node.path);
+    if (injection != null) {
       if (astNode != null) {
         throw new Error(
           `Unexpected value for injected parameter ${this.currentNodeDetails}`,
         );
       }
-      const compute = this.collectInjection(typ);
+      const compute = this.collectInjection(typ, injection);
       if (compute != null) {
         return compute;
       }
@@ -269,14 +324,77 @@ class ArgumentCollector {
     if (astNode == null) {
       if (typ.type === Type.OPTIONAL) {
         this.addPoliciesFrom(typ.item);
+        const itemType = this.tg.type(typ.item);
         const { default_value: defaultValue } = typ;
-        const value = defaultValue ?? null;
-        return () => value;
+        if (defaultValue != null) {
+          return () => defaultValue;
+        }
+        switch (itemType.type) {
+          case Type.OBJECT:
+            try {
+              return cleanObject(
+                this.collectDefaults(
+                  itemType.properties,
+                  node.path,
+                ),
+                true,
+              );
+            } catch (_e) {
+              // fallthrough
+            }
+            break;
+
+          case Type.UNION:
+            try {
+              for (const idx of itemType.anyOf) {
+                const variantType = this.tg.type(idx);
+                if (variantType.type === Type.OBJECT) {
+                  return cleanObject(
+                    this.collectDefaults(
+                      variantType.properties,
+                      node.path,
+                    ),
+                    true,
+                  );
+                }
+              }
+            } catch (_e) {
+              // fallthrough
+            }
+            break;
+
+          case Type.EITHER: {
+            let compute: ComputeArg | null = null;
+            for (const idx of itemType.oneOf) {
+              const variantType = this.tg.type(idx);
+              if (variantType.type === Type.OBJECT) {
+                try {
+                  if (compute != null) {
+                    // multiple matches
+                    break;
+                  }
+                  compute = this.collectDefaults(
+                    variantType.properties,
+                    node.path,
+                  );
+                  break;
+                } catch (_e) {
+                  // fallthrough
+                }
+              }
+            }
+            if (compute != null) {
+              return compute;
+            }
+            break;
+          }
+        }
+        return () => null;
       }
 
       if (typ.type === Type.OBJECT) {
         const props = typ.properties;
-        return this.collectDefaults(props);
+        return this.collectDefaults(props, node.path);
       }
 
       throw new MandatoryArgumentError(this.currentNodeDetails);
@@ -294,7 +412,10 @@ class ArgumentCollector {
       } = valueNode;
       this.deps.variables.add(varName);
       if (typ.type === Type.OBJECT) {
-        const injectedFields = this.collectInjectedFields(typ.properties);
+        const injectedFields = this.collectInjectedFields(
+          typ.properties,
+          node.path,
+        );
         return (params: ComputeArgParams) => {
           const fromVars = params.variables[varName] as Record<string, unknown>;
           const injected = injectedFields(params);
@@ -442,7 +563,7 @@ class ArgumentCollector {
     typeNode: UnionNode | EitherNode,
   ): ComputeArg {
     const { value: valueNode } = astNode;
-    const variantTypesIndexes: number[] = getVariantTypesIndexes(typeNode);
+    const variantTypesIndexes: number[] = getVariantTypeIndices(typeNode);
     const errors: Error[] = [];
 
     // throw type mismatch error only if the argument node of the query
@@ -561,35 +682,39 @@ class ArgumentCollector {
       );
     }
 
-    return (...params: Parameters<ComputeArg>) =>
-      filterValues(
-        mapValues(computes, (c) => c(...params)),
-        (v) => v != undefined,
-      );
+    return cleanObject((...params: Parameters<ComputeArg>) =>
+      mapValues(computes, (c) => c(...params))
+    );
   }
 
   /** Collect the default value for a parameter of type 'object';
    * this requires that all the props have a default value.
    */
-  private collectDefaults(props: Record<string, number>): ComputeArg {
+  private collectDefaults(
+    props: Record<string, number>,
+    path: string[],
+  ): ComputeArg<Record<string, unknown>> {
     const computes: Record<string, ComputeArg> = {};
 
     for (const [name, idx] of Object.entries(props)) {
-      computes[name] = this.collectDefault(idx);
+      path.push(name);
+      computes[name] = this.collectDefault(idx, path);
+      path.pop();
     }
 
-    return (...params: Parameters<ComputeArg>) =>
-      mapValues(computes, (c) => c(...params));
+    return (...params) => mapValues(computes, (c) => c(...params));
   }
 
-  private collectInjectedFields(props: Record<string, number>) {
+  private collectInjectedFields(props: Record<string, number>, path: string[]) {
     const computes: Record<string, ComputeArg | null> = {};
     for (const [name, idx] of Object.entries(props)) {
-      const typ = this.tg.type(idx);
-      if ("injection" in typ) {
-        const value = this.collectInjection(this.tg.type(idx));
+      path.push(name);
+      const injection = this.#getInjection(path);
+      if (injection != null) {
+        const value = this.collectInjection(this.tg.type(idx), injection);
         computes[name] = value;
       }
+      path.pop();
     }
 
     return (params: ComputeArgParams) =>
@@ -599,15 +724,14 @@ class ArgumentCollector {
   /** Collect the value for a missing parameter. */
   private collectDefault(
     typeIdx: number,
+    path: string[],
   ): ComputeArg {
     const typ = this.tg.type(typeIdx);
-    if (typ == null) {
-      throw new Error(`Expected a type at index '${typeIdx}'`);
-    }
     this.addPoliciesFrom(typeIdx);
 
-    if ("injection" in typ) {
-      const compute = this.collectInjection(typ);
+    const injection = this.#getInjection(path);
+    if (injection != null) {
+      const compute = this.collectInjection(typ, injection);
       if (compute != null) {
         return compute;
       }
@@ -623,7 +747,7 @@ class ArgumentCollector {
       }
 
       case Type.OBJECT: {
-        return this.collectDefaults(typ.properties);
+        return this.collectDefaults(typ.properties, path);
       }
 
       default:
@@ -634,13 +758,12 @@ class ArgumentCollector {
   /** Collect the value of an injected parameter. */
   private collectInjection(
     typ: TypeNode,
+    injection: Injection,
   ): ComputeArg | null {
     visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
       this.addPoliciesFrom(node.idx);
       return true;
     });
-
-    const injection = typ.injection!;
 
     switch (injection.source) {
       case "static": {
@@ -701,7 +824,11 @@ class ArgumentCollector {
       }
 
       case "random": {
-        return () => this.tg.getRandom(typ);
+        return () =>
+          this.tg.getRandom(
+            typ,
+            selectInjection<GeneratorNode>(injection.data, this.effect),
+          );
       }
     }
   }

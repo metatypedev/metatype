@@ -1,16 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{
-    cell::{OnceCell, Ref, RefCell, RefMut},
-    collections::HashMap,
-    rc::{Rc, Weak},
-};
-
-use crate::{typegraph::TypegraphContext, wit::runtimes as wit};
-use common::typegraph::runtimes::prisma as cm;
-use indexmap::{map::Entry, IndexMap, IndexSet};
-
+use super::model::ModelType;
 use super::relationship::discovery::CandidatePair;
 use super::relationship::RelationshipModel;
 use super::{
@@ -19,6 +10,14 @@ use super::{
 };
 use crate::errors::Result;
 use crate::types::TypeId;
+use crate::{typegraph::TypegraphContext, wit::runtimes as wit};
+use common::typegraph::runtimes::prisma as cm;
+use indexmap::{map::Entry, IndexMap, IndexSet};
+use std::{
+    cell::{OnceCell, Ref, RefCell, RefMut},
+    collections::HashMap,
+    rc::{Rc, Weak},
+};
 
 use super::{errors, model::Model, relationship::Relationship};
 
@@ -34,12 +33,20 @@ impl ModelRef {
         self.0.borrow_mut()
     }
 
-    pub fn type_name(&self) -> String {
-        self.0.borrow().type_name.clone()
+    pub fn model_id(&self) -> TypeId {
+        self.borrow().model_type.name_ref.id
     }
 
-    pub fn type_id(&self) -> TypeId {
-        self.0.borrow().type_id
+    pub fn model_type(&self) -> ModelType {
+        self.borrow().model_type.clone()
+    }
+
+    pub fn name(&self) -> Rc<str> {
+        self.borrow().model_type.name_ref.name.clone()
+    }
+
+    pub fn get_rel_name(&self, prop: &str) -> Option<String> {
+        self.borrow().relationships.get(prop).cloned()
     }
 }
 
@@ -52,7 +59,7 @@ impl From<Rc<RefCell<Model>>> for ModelRef {
 #[derive(Default, Debug)]
 pub struct PrismaContext {
     models: IndexMap<TypeId, ModelRef>,
-    pub models_by_name: IndexMap<String, TypeId>,
+    pub models_by_name: IndexMap<Rc<str>, TypeId>,
     pub relationships: IndexMap<String, Relationship>,
     pub typegen_cache: OnceCell<Weak<RefCell<HashMap<String, TypeId>>>>, // shared
     complete_registrations: IndexSet<TypeId>,
@@ -60,26 +67,26 @@ pub struct PrismaContext {
 
 impl PrismaContext {
     pub fn model(&self, type_id: TypeId) -> Result<ModelRef> {
+        let model_type: ModelType = type_id.try_into()?;
         let model = self
             .models
-            .get(&type_id)
-            .ok_or_else(|| errors::unregistered_model(type_id))
-            .unwrap(); // TODO ?
+            .get(&model_type.name_ref.id)
+            .ok_or_else(|| errors::unregistered_model(type_id))?;
 
         Ok(model.clone())
     }
 
     pub fn is_registered(&self, pair: &CandidatePair) -> Result<bool> {
-        let left_model = pair.0.model.borrow();
-        let right_model = pair.1.model.borrow();
+        let left_model = &pair.0.model;
+        let right_model = &pair.1.model;
 
-        let left = self.models.contains_key(&left_model.type_id)
-            && self.models_by_name.contains_key(&left_model.type_name)
-            && left_model.relationships.contains_key(&pair.1.field_name);
+        let left = self.models.contains_key(&left_model.model_id())
+            && self.models_by_name.contains_key(&left_model.name())
+            && left_model.get_rel_name(&pair.1.field_name).is_some();
 
-        let right = self.models.contains_key(&right_model.type_id)
-            && self.models_by_name.contains_key(&right_model.type_name)
-            && right_model.relationships.contains_key(&pair.0.field_name);
+        let right = self.models.contains_key(&right_model.model_id())
+            && self.models_by_name.contains_key(&right_model.name())
+            && right_model.get_rel_name(&pair.0.field_name).is_some();
 
         match (left, right) {
             (true, true) => Ok(true),
@@ -102,7 +109,7 @@ impl PrismaContext {
                 E::Occupied(rel) => {
                     let rel = rel.get();
                     return Err(format!("relationship name '{}' already used between {} and {}, please provide another name",
-                        name, rel.left.model_name, rel.right.model_name).into());
+                        name, rel.left.model_type.name(), rel.right.model_type.name()).into());
                 }
                 E::Vacant(e) => {
                     e.insert(relationship);
@@ -112,8 +119,8 @@ impl PrismaContext {
             Generated(name) => match self.relationships.entry(name.clone()) {
                 E::Occupied(rel) => {
                     let rel = rel.get();
-                    return Err(format!("relationship name '{}' already used between {} and {}, please provide a name",
-                                    name, rel.left.model_name, rel.right.model_name).into());
+                    return Err(format!("generated relationship name '{}' already used between {} and {}, please provide a name",
+                                    name, rel.left.model_type.name(), rel.right.model_type.name()).into());
                 }
                 E::Vacant(e) => {
                     e.insert(relationship);
@@ -134,17 +141,15 @@ impl PrismaContext {
             let relationship = Relationship {
                 name: rel_name.to_string(),
                 left: RelationshipModel {
-                    model_type: left.model.type_id(),
-                    model_name: left.model.type_name(),
                     wrapper_type: left.property.wrapper_type_id,
                     cardinality: left.property.quantifier,
+                    model_type: left.model.model_type(),
                     field: right.field_name.clone(),
                 },
                 right: RelationshipModel {
-                    model_type: right.model.type_id(),
-                    model_name: right.model.type_name(),
                     wrapper_type: right.property.wrapper_type_id,
                     cardinality: right.property.quantifier,
+                    model_type: right.model.model_type(),
                     field: left.field_name.clone(),
                 },
             };
@@ -199,20 +204,21 @@ impl PrismaContext {
     /// returns the registered models
     /// returns empty if the given root model is already registered
     fn register_models(&mut self, root_model_id: TypeId) -> Result<Vec<TypeId>> {
-        let model_id = root_model_id;
+        let model_type: ModelType = root_model_id.try_into()?;
+        let model_id = model_type.name_ref.id;
         if let Entry::Vacant(e) = self.models.entry(model_id) {
             let model: ModelRef = Rc::new(RefCell::new(model_id.try_into()?)).into();
             e.insert(model.clone());
             self.models_by_name
-                .insert(model.borrow().type_name.clone(), model_id);
+                .insert(model.borrow().model_type.name(), model_id);
 
             let mut res = vec![model_id];
 
             // register related models
             {
                 let model = model.borrow();
-                for model_id in model.iter_related_models() {
-                    res.extend(self.register_models(model_id)?);
+                for related in model.iter_related_models() {
+                    res.extend(self.register_models(related.type_id)?);
                 }
             }
 
@@ -227,14 +233,11 @@ impl PrismaContext {
         ctx: &mut TypegraphContext,
         key: &str,
         prop: &ScalarProperty,
-        runtime_idx: u32,
     ) -> Result<cm::ScalarProperty> {
         Ok(cm::ScalarProperty {
             key: key.to_string(),
             cardinality: prop.quantifier.into(),
-            type_idx: ctx
-                .register_type(prop.wrapper_type_id, Some(runtime_idx))?
-                .into(),
+            type_idx: ctx.register_type(prop.wrapper_type_id)?.into(),
             prop_type: prop.prop_type.clone(),
             injection: prop.injection.as_ref().map(|inj| cm::ManagedInjection {
                 create: inj.create.as_ref().and_then(|handler| match handler {
@@ -258,18 +261,15 @@ impl PrismaContext {
         key: &str,
         prop: &RelationshipProperty,
         rel_name: String,
-        runtime_idx: u32,
     ) -> Result<cm::RelationshipProperty> {
-        let model = self.model(prop.model_id)?;
+        let model = self.model(prop.model_type.type_id)?;
         let model = model.borrow();
 
         Ok(cm::RelationshipProperty {
             key: key.to_string(),
             cardinality: prop.quantifier.into(),
-            type_idx: ctx
-                .register_type(prop.wrapper_type_id, Some(runtime_idx))?
-                .into(),
-            model_name: model.type_name.clone(),
+            type_idx: ctx.register_type(prop.wrapper_type_id)?.into(),
+            model_name: model.model_type.name().to_string(),
             unique: prop.unique,
             relationship_name: rel_name.clone(),
             relationship_side: {
@@ -290,18 +290,17 @@ impl PrismaContext {
         ctx: &mut TypegraphContext,
         model: &Model,
         type_id: TypeId,
-        runtime_idx: u32,
     ) -> Result<cm::Model> {
         Ok(cm::Model {
-            type_idx: ctx.register_type(type_id, Some(runtime_idx))?.into(),
-            type_name: model.type_name.clone(),
+            type_idx: ctx.register_type(type_id)?.into(),
+            type_name: model.model_type.name().to_string(),
             props: model
                 .props
                 .iter()
                 .map(|(key, prop): (&String, &Property)| -> Result<_> {
                     Ok(match prop {
                         Property::Scalar(prop) => Some(cm::Property::Scalar(
-                            self.convert_scalar_prop(ctx, key, prop, runtime_idx)?,
+                            self.convert_scalar_prop(ctx, key, prop)?,
                         )),
 
                         Property::Model(prop) => {
@@ -311,13 +310,9 @@ impl PrismaContext {
                                 model.relationships.get(key).unwrap().clone()
                             };
 
-                            Some(cm::Property::Relationship(self.convert_relationship_prop(
-                                ctx,
-                                key,
-                                prop,
-                                rel_name,
-                                runtime_idx,
-                            )?))
+                            Some(cm::Property::Relationship(
+                                self.convert_relationship_prop(ctx, key, prop, rel_name)?,
+                            ))
                         }
 
                         Property::Unmanaged(_) => {
@@ -336,7 +331,6 @@ impl PrismaContext {
     pub fn convert(
         &self,
         ctx: &mut TypegraphContext,
-        runtime_idx: u32,
         data: Rc<wit::PrismaRuntimeData>,
     ) -> Result<cm::PrismaRuntimeData> {
         Ok(cm::PrismaRuntimeData {
@@ -347,7 +341,7 @@ impl PrismaContext {
                 .iter()
                 .map(|(type_id, model)| -> Result<_> {
                     let model = model.borrow();
-                    self.convert_model(ctx, &model, *type_id, runtime_idx)
+                    self.convert_model(ctx, &model, *type_id)
                 })
                 .collect::<Result<Vec<_>>>()?,
 
@@ -355,10 +349,8 @@ impl PrismaContext {
                 self.relationships
                     .iter()
                     .map(|(_, rel)| {
-                        let left =
-                            self.convert_relationship_model(ctx, rel.left.clone(), runtime_idx)?;
-                        let right =
-                            self.convert_relationship_model(ctx, rel.right.clone(), runtime_idx)?;
+                        let left = self.convert_relationship_model(ctx, rel.left.clone())?;
+                        let right = self.convert_relationship_model(ctx, rel.right.clone())?;
                         Ok(cm::Relationship {
                             name: rel.name.clone(),
                             left,
@@ -375,12 +367,9 @@ impl PrismaContext {
         &self,
         ctx: &mut TypegraphContext,
         model: RelationshipModel,
-        runtime_idx: u32,
     ) -> Result<cm::RelationshipModel> {
         Ok(cm::RelationshipModel {
-            type_idx: ctx
-                .register_type(model.model_type, Some(runtime_idx))?
-                .into(),
+            type_idx: ctx.register_type(model.model_type.type_id)?.into(),
             field: model.field.clone(),
             cardinality: model.cardinality.into(),
         })
@@ -402,16 +391,15 @@ mod test {
             .into_iter()
             .map(|model_id| {
                 let model = ctx.model(model_id).unwrap();
-                let model = model.borrow();
-                (model.type_id, model.type_name.clone())
+                (model.model_id(), model.name().clone())
             })
             .collect();
 
         assert_eq!(
             models,
             vec![
-                (user, user.name()?.unwrap()),
-                (profile, profile.name()?.unwrap())
+                (user, user.name()?.unwrap().into()),
+                (profile, profile.name()?.unwrap().into())
             ]
         );
 

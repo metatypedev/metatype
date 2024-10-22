@@ -61,7 +61,7 @@ try {
     (req, connInfo) => typegate.handle(req, connInfo.remoteAddr),
   );
 
-  getLogger().info(`typegate ready on ${globalConfig.tg_port}`);
+  getLogger().info(`typegate ready on :${server.addr.port}`);
 
   await server.finished;
 } catch (err) {

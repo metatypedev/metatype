@@ -129,8 +129,8 @@ export function getWrappedType(t: QuantifierNode): number {
  * Returns the indexes of the variant types for a node of type `union`
  * or `either`.
  */
-export function getVariantTypesIndexes(
-  typeNode: UnionNode | EitherNode
+export function getVariantTypeIndices(
+  typeNode: UnionNode | EitherNode,
 ): number[] {
   if (typeNode.type === "union") {
     return typeNode.anyOf;

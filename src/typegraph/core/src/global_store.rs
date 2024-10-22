@@ -6,7 +6,7 @@ use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
 use crate::types::type_ref::TypeRef;
-use crate::types::{ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
+use crate::types::{NamedTypeRef, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
@@ -16,6 +16,8 @@ use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
+
+const PLACEHOLDER_TYPE_SUFFIX: &str = "_____PLACEHOLDER_____";
 
 pub type Policy = Rc<CorePolicy>;
 
@@ -42,7 +44,7 @@ pub struct Store {
     pub types: Vec<Type>,
     // the bool indicates weather the name was from
     // user or generated placeholder (false)
-    pub type_by_names: IndexMap<String, (TypeDef, bool)>,
+    pub type_by_names: IndexMap<Rc<str>, (NamedTypeRef, bool)>,
 
     pub runtimes: Vec<Runtime>,
     pub materializers: Vec<Materializer>,
@@ -102,7 +104,7 @@ const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity", "true"];
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
-    pub static SDK_VERSION: String = "0.4.11-rc.0".to_owned();
+    pub static SDK_VERSION: String = "0.5.0-rc.1".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
@@ -116,10 +118,6 @@ fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
 pub fn get_sdk_version() -> String {
     SDK_VERSION.with(|v| v.clone())
 }
-
-/// Option to register or not a type name.
-/// Should be disabled for type extensions, because they inherit the name.
-pub struct NameRegistration(pub bool);
 
 #[cfg(test)]
 impl Store {
@@ -150,7 +148,7 @@ impl Store {
         })
     }
 
-    pub fn get_type_by_name(name: &str) -> Option<TypeDef> {
+    pub fn get_type_by_name(name: &str) -> Option<NamedTypeRef> {
         with_store(|s| s.type_by_names.get(name).map(|id| id.0.clone()))
     }
 
@@ -159,65 +157,112 @@ impl Store {
         let type_ref = builder.with_id(id.into());
         let res = type_ref.clone();
 
-        with_store_mut(move |s| -> Result<()> {
-            s.types.push(Type::Ref(type_ref));
-            Ok(())
-        })?;
-
-        Ok(res)
-    }
-
-    pub fn register_type_def(
-        build: impl FnOnce(TypeId) -> TypeDef,
-        name_registration: NameRegistration,
-    ) -> Result<TypeId> {
-        // this works since the store is thread local
-        let id = with_store(|s| s.types.len()) as u32;
-        let mut type_def = build(id.into());
-
         // very hacky solution where we keep track of
         // explicitly named types in user_named_types
         // we generate names for everything else to
         // allow the ref system to work
-        if name_registration.0 {
-            if let Some(name) = type_def.base().name.clone() {
-                Self::register_type_name(name, type_def.clone(), true)?;
-            } else {
-                // we only need to assign temporary non-user named
-                // types for lists and optionals. other refs
-                // will need explicit names by the user
-                match type_def {
-                    TypeDef::List(_) | TypeDef::Optional(_) => {
-                        let variant = type_def.variant_name();
-                        let placeholder_name = format!("{variant}_{id}");
-                        Self::register_type_name(&placeholder_name, type_def.clone(), false)?;
-                        let mut base = type_def.base().clone();
-                        base.name = Some(placeholder_name);
-                        type_def = type_def.with_base(id.into(), base);
-                    }
-                    _ => {}
-                }
+        match &type_ref {
+            TypeRef::Named(name_ref) => {
+                let (type_ref, name_ref, name, user_named) =
+                    if name_ref.name.ends_with(PLACEHOLDER_TYPE_SUFFIX) {
+                        let name = name_ref.name.strip_suffix(PLACEHOLDER_TYPE_SUFFIX).unwrap();
+                        let name_ref = NamedTypeRef {
+                            id: name_ref.id,
+                            name: name.into(),
+                            target: name_ref.target.clone(),
+                        };
+                        (
+                            TypeRef::Named(name_ref.clone()),
+                            name_ref,
+                            name.to_string().into(),
+                            false,
+                        )
+                    } else {
+                        (
+                            type_ref.clone(),
+                            name_ref.clone(),
+                            name_ref.name.clone(),
+                            true,
+                        )
+                    };
+                let res = type_ref.clone();
+                with_store_mut(move |s| -> Result<()> {
+                    s.types.push(Type::Ref(type_ref));
+                    Ok(())
+                })?;
+                Self::register_type_name(name, name_ref, user_named)?;
+                Ok(res)
+            }
+            _ => {
+                with_store_mut(move |s| -> Result<()> {
+                    s.types.push(Type::Ref(type_ref));
+                    Ok(())
+                })?;
+                Ok(res)
             }
         }
+    }
 
-        with_store_mut(move |s| -> Result<()> {
-            s.types.push(Type::Def(type_def));
-            Ok(())
-        })?;
-        Ok(id.into())
+    pub fn register_type_def(build: impl FnOnce(TypeId) -> TypeDef) -> Result<TypeId> {
+        // this works since the store is thread local
+        let id = with_store(|s| s.types.len()) as u32;
+        let type_def = build(id.into());
+
+        // // very hacky solution where we keep track of
+        // // explicitly named types in user_named_types
+        // // we generate names for everything else to
+        // // allow the ref system to work
+        // if name_registration.0 {
+        //     if let Some(name) = type_def.base().name.clone() {
+        //         Self::register_type_name(name, type_def.clone(), true)?;
+        //     } else {
+        //         // we only need to assign temporary non-user named
+        //         // types for lists and optionals. other refs
+        //         // will need explicit names by the user
+        //         match type_def {
+        //             TypeDef::List(_) | TypeDef::Optional(_) => {
+        //                 let variant = type_def.variant_name();
+        //                 let placeholder_name = format!("{variant}_{id}");
+        //                 Self::register_type_name(&placeholder_name, type_def.clone(), false)?;
+        //                 let mut base = type_def.base().clone();
+        //                 base.name = Some(placeholder_name);
+        //                 type_def = type_def.with_base(id.into(), base);
+        //             }
+        //             _ => {}
+        //         }
+        //     }
+        // }
+
+        {
+            let type_def = type_def.clone();
+            with_store_mut(move |s| -> Result<()> {
+                s.types.push(Type::Def(type_def));
+                Ok(())
+            })?;
+        }
+
+        let type_id: TypeId = id.into();
+        match type_def {
+            TypeDef::List(_) | TypeDef::Optional(_) => {
+                let variant = type_def.variant_name();
+                let placeholder_name = format!("{variant}_{id}{PLACEHOLDER_TYPE_SUFFIX}");
+                let type_ref = TypeRef::named(placeholder_name, Type::Def(type_def)).register()?;
+                Ok(type_ref.id())
+            }
+            _ => Ok(type_id),
+        }
     }
 
     pub fn register_type_name(
-        name: impl Into<String>,
-        type_def: TypeDef,
+        name: Rc<str>,
+        name_ref: NamedTypeRef,
         user_named: bool,
     ) -> Result<()> {
-        let name = name.into();
         with_store_mut(move |s| -> Result<()> {
             if s.type_by_names.contains_key(&name) {
                 return Err(format!("type with name {:?} already exists", name).into());
             }
-            s.type_by_names.insert(name, (type_def, user_named));
+            s.type_by_names.insert(name, (name_ref, user_named));
             Ok(())
         })
     }
@@ -235,121 +280,6 @@ impl Store {
 
     pub fn set_random_seed(value: Option<u32>) {
         with_store_mut(|store| store.random_seed = value)
-    }
-
-    pub fn pick_branch_by_path(supertype_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
-        let supertype = supertype_id.resolve_ref()?.0;
-        let supertype = &supertype;
-        let filter_and_reduce = |variants: Vec<u32>| match path.len() {
-            0 => Ok((Type::Def(supertype.clone()), supertype_id)), // terminal node
-            _ => {
-                let mut compatible = vec![];
-                let mut failures = vec![];
-                let chunk = path.first().unwrap();
-                for (i, variant) in variants.iter().enumerate() {
-                    let variant: TypeId = variant.into();
-                    let type_def = variant.resolve_ref()?.0;
-                    match type_def {
-                        TypeDef::Struct(t) => {
-                            for (prop_name, prop_id) in t.iter_props() {
-                                if prop_name.eq(chunk) {
-                                    // variant is compatible with the path
-                                    // try expanding it, if it fails, just skip
-                                    match Store::get_type_by_path(prop_id, &path[1..]) {
-                                        Ok((_, solution)) => compatible.push(solution),
-                                        Err(e) => failures.push(format!(
-                                            "[v{i} → {prop_name}]: {}",
-                                            e.stack.first().unwrap().clone()
-                                        )),
-                                    }
-                                }
-                            }
-                        }
-                        TypeDef::Either(..) | TypeDef::Union(..) => {
-                            // get_type_by_path => pick_branch_by_path
-                            match Store::get_type_by_path(variant, &path[1..]) {
-                                Ok((_, solution)) => compatible.push(solution),
-                                Err(e) => failures
-                                    .push(format!("[v{i}]: {}", e.stack.first().unwrap().clone())),
-                            }
-                        }
-                        _ => {} // skip
-                    }
-                }
-
-                if compatible.is_empty() {
-                    return Err(format!(
-                        "unable to expand variant with **.{}\nDetails:\n{}",
-                        path.join("."),
-                        failures.join("\n")
-                    )
-                    .into());
-                }
-
-                let first = compatible.first().unwrap().to_owned();
-                let ret_id = match &supertype {
-                    TypeDef::Union(..) => first,
-                    TypeDef::Either(..) => {
-                        if compatible.len() > 1 {
-                            return Err(format!(
-                                    "either node with more than one compatible variant encountered at path **.{}",
-                                    path.join("."),
-                                ).into(),
-                            );
-                        }
-                        first
-                    }
-                    _ => {
-                        return Err("invalid state: either or union expected as supertype".into());
-                    }
-                };
-
-                Ok((ret_id.as_type()?, ret_id))
-            }
-        };
-
-        match supertype {
-            TypeDef::Either(t) => filter_and_reduce(t.data.variants.clone()),
-            TypeDef::Union(t) => filter_and_reduce(t.data.variants.clone()),
-            _ => Store::get_type_by_path(supertype_id, path), // no branching, trivial case
-        }
-    }
-
-    pub fn get_type_by_path(struct_id: TypeId, path: &[String]) -> Result<(Type, TypeId)> {
-        let mut ret = (struct_id.as_type()?, struct_id);
-
-        let mut curr_path = vec![];
-        for (pos, chunk) in path.iter().enumerate() {
-            let type_def = ret.1.resolve_ref()?.0;
-            let type_def = type_def.resolve_quantifier()?;
-            match &type_def {
-                TypeDef::Struct(t) => {
-                    let result = t.data.props.iter().find(|(k, _)| k.eq(chunk));
-                    curr_path.push(chunk.clone());
-                    ret = match result {
-                        Some((_, id)) => (TypeId(*id).as_type()?, id.to_owned().into()),
-                        None => {
-                            return Err(errors::invalid_path(
-                                pos,
-                                path,
-                                &t.data
-                                    .props
-                                    .iter()
-                                    .map(|v| format!("{:?}", v.0.clone()))
-                                    .collect::<Vec<String>>(),
-                            ));
-                        }
-                    };
-                }
-                TypeDef::Union(..) | TypeDef::Either(..) => {
-                    ret = Store::pick_branch_by_path(type_def.id(), &path[pos..])?;
-                    break;
-                }
-                _ => return Err(errors::expect_object_at_path(&curr_path, &type_def.repr())),
-            }
-        }
-
-        Ok(ret)
     }
 
     pub fn register_runtime(rt: Runtime) -> RuntimeId {
@@ -526,10 +456,10 @@ macro_rules! as_variant {
     ($variant:ident) => {
         paste::paste! {
             pub fn [<as_ $variant:lower>](&self) -> Result<Rc<crate::types::[<$variant>]>> {
-                use crate::types::type_ref::ResolveRef;
+                use crate::types::AsTypeDefEx as _;
                 match self.as_type()? {
                     Type::Def(TypeDef::$variant(inner)) => Ok(inner),
-                    Type::Ref(type_ref) => type_ref.resolve_ref()?.0.id().[<as_ $variant:lower>](),
+                    Type::Ref(_) => self.as_xdef()?.type_def.id().[<as_ $variant:lower>](),
                     _ => Err(errors::invalid_type(stringify!($variant), &self.repr()?)),
                 }
             }
