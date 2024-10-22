@@ -188,7 +188,12 @@ pub struct FunctionTypeData<Id = TypeId> {
     #[serde(rename = "parameterTransform")]
     pub parameter_transform: Option<FunctionParameterTransform>,
     pub output: Id,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    #[serde(default)]
     pub injections: IndexMap<String, InjectionNode>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    #[serde(default)]
+    pub outjections: IndexMap<String, InjectionNode>,
     #[serde(rename = "runtimeConfig")]
     pub runtime_config: serde_json::Value,
     pub materializer: u32,

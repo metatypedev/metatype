@@ -26,8 +26,15 @@ import { getLogger } from "../../log.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "@std/collections/map-values";
 import { DependencyResolver } from "./dependency_resolver.ts";
+import { Runtime } from "../../runtimes/Runtime.ts";
 
 const logger = getLogger(import.meta);
+
+interface Scope {
+  runtime: Runtime;
+  fnIdx: number | null;
+  path: string[];
+}
 
 interface Node {
   name: string;
@@ -37,6 +44,7 @@ interface Node {
   typeIdx: number;
   parent?: Node;
   parentStage?: ComputeStage;
+  scope?: Scope;
 }
 
 export interface Plan {
@@ -392,13 +400,27 @@ export class Planner {
       );
     }
 
-    const runtime = (schema.type === Type.FUNCTION)
-      ? this.tg
-        .runtimeReferences[(this.tg.materializer(schema.materializer)).runtime]
-      : node.parentStage?.props.runtime ??
-        this.tg.runtimeReferences[this.tg.denoRuntimeIdx];
+    const scope: Scope | undefined = (schema.type === Type.FUNCTION)
+      ? {
+        runtime: this.tg
+          .runtimeReferences[
+            this.tg.materializer(schema.materializer).runtime
+          ],
+        fnIdx: node.typeIdx,
+        path: [],
+      }
+      : node.scope;
 
-    const stage = this.createComputeStage(node, {
+    const runtime = scope?.runtime ??
+      this.tg.runtimeReferences[this.tg.denoRuntimeIdx];
+
+    if (scope?.fnIdx != null) {
+      if (scope.path.length > 0) {
+        const fnType = this.tg.type(scope.fnIdx, Type.FUNCTION);
+      }
+    }
+
+    const stage = this.createComputeStage({ scope, ...node }, {
       dependencies: node.parentStage ? [node.parentStage.id()] : [],
       args: null,
       effect: null,
