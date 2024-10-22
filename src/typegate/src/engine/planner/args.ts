@@ -19,7 +19,7 @@ import type {
   TypeNode,
   UnionNode,
 } from "../../typegraph/type_node.ts";
-import { getVariantTypesIndexes, Type } from "../../typegraph/type_node.ts";
+import { getVariantTypeIndices, Type } from "../../typegraph/type_node.ts";
 import { mapValues } from "@std/collections/map-values";
 import { filterValues } from "@std/collections/filter-values";
 
@@ -563,7 +563,7 @@ class ArgumentCollector {
     typeNode: UnionNode | EitherNode,
   ): ComputeArg {
     const { value: valueNode } = astNode;
-    const variantTypesIndexes: number[] = getVariantTypesIndexes(typeNode);
+    const variantTypesIndexes: number[] = getVariantTypeIndices(typeNode);
     const errors: Error[] = [];
 
     // throw type mismatch error only if the argument node of the query
