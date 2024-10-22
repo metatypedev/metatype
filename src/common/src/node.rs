@@ -26,6 +26,18 @@ pub struct Node {
     pub auth: Option<BasicAuth>,
 }
 
+impl Node {
+    pub fn override_port(self, port: u16) -> Self {
+        let mut base_url = self.base_url;
+        base_url.set_port(Some(port)).unwrap();
+        Self {
+            base_url,
+            prefix: self.prefix,
+            auth: self.auth,
+        }
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error(transparent)]

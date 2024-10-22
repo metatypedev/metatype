@@ -18,7 +18,7 @@ mod message {
 
     #[derive(Message)]
     #[rtype(result = "()")]
-    pub struct StartProcess(pub Command, pub oneshot::Sender<()>);
+    pub struct StartProcess(pub Command, pub oneshot::Sender<u16>);
 
     #[derive(Message)]
     #[rtype(result = "()")]
@@ -72,7 +72,7 @@ impl TypegateInit {
     }
 
     #[tracing::instrument]
-    pub async fn start(self, console: Addr<ConsoleActor>) -> Result<Addr<TypegateActor>> {
+    pub async fn start(self, console: Addr<ConsoleActor>) -> Result<(Addr<TypegateActor>, u16)> {
         let (ready_tx, ready_rx) = oneshot::channel();
 
         let (temp_dir, temp_dir_handle) = if let Ok(temp_dir) = std::env::var("TMP_DIR") {
@@ -95,9 +95,9 @@ impl TypegateInit {
             }
         });
 
-        ready_rx.await.context("typegate did not start")?;
+        let port = ready_rx.await.context("typegate did not start")?;
 
-        Ok(addr)
+        Ok((addr, port))
     }
 
     fn create_command(&self, temp_dir: &Path) -> Result<Command> {
@@ -298,7 +298,7 @@ impl TypegateActor {
         addr: Addr<Self>,
         stdout: ChildStdout,
         console: Addr<ConsoleActor>,
-        ready_tx: oneshot::Sender<()>,
+        ready_tx: oneshot::Sender<u16>,
     ) {
         let mut reader = BufReader::new(stdout).lines();
         let prefix = "typegate>".dimmed();
@@ -308,6 +308,8 @@ impl TypegateActor {
             console: console.clone(),
         };
 
+        let ready_message_prefix = "typegate ready on :";
+
         while let Some(line) = error_handler.handle(reader.next_line().await) {
             let naked_line = strip_ansi_escapes::strip_str(&line);
             if let Some(log_record) = LogRecord::from_line(&naked_line) {
@@ -315,8 +317,10 @@ impl TypegateActor {
             } else {
                 console.info(format!("{prefix} {line}"));
             }
-            if line.contains("typegate ready on ") {
-                ready_tx.send(()).unwrap();
+            if naked_line.contains(ready_message_prefix) {
+                let (_, port) = naked_line.split_once(ready_message_prefix).unwrap();
+                let port = port.trim().parse::<u16>().unwrap();
+                ready_tx.send(port).unwrap();
                 break;
             }
         }
