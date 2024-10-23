@@ -158,7 +158,7 @@ export class PrismaRuntime extends Runtime {
     return ret;
   }
 
-  execute(
+  #executeResolver(
     q: GenQuery,
     path: string[],
     renames: Record<string, string>,
@@ -286,11 +286,11 @@ export class PrismaRuntime extends Runtime {
 
     const fields = [stage, ...Runtime.collectRelativeStages(stage, waitlist)];
 
-    const [query, renames] = this.buildQuery(fields);
+    const [queryFn, renames] = this.buildQuery(fields);
 
     const queryStage = stage.withResolver(
-      this.execute(
-        query,
+      this.#executeResolver(
+        queryFn,
         stage.props.materializer?.data.path as string[] ??
           [stage.props.node],
         renames,
@@ -311,6 +311,11 @@ export class PrismaRuntime extends Runtime {
           const fieldName = field.props.path[field.props.path.length - 1];
           const resolver = (queryRes as any)[0][fieldName];
           const ret = typeof resolver === "function" ? resolver() : resolver;
+          this.logger.info("XXXX {}", {
+            node: field.props.node,
+            queryRes,
+            fieldName,
+          });
           return ret;
         };
         stagesMat.push(
@@ -322,6 +327,10 @@ export class PrismaRuntime extends Runtime {
         );
       } else {
         const resolver: Resolver = ({ _: { parent } }) => {
+          this.logger.info("XXXX {}", {
+            node: field.props.node,
+            parent,
+          });
           const resolver = parent[field.props.node];
           const ret = typeof resolver === "function" ? resolver() : resolver;
 

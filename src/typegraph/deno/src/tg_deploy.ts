@@ -9,7 +9,7 @@ import { execRequest } from "./utils/func_utils.ts";
 import { log } from "./io.ts";
 
 export class BasicAuth {
-  constructor(public username: string, public password: string) {}
+  constructor(public username: string, public password: string) { }
   asHeaderValue(): string {
     return `Basic ${btoa(this.username + ":" + this.password)}`;
   }

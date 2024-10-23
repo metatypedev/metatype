@@ -3,7 +3,7 @@ typegates:
     url: "http://localhost:7890"
     username: admin
     password: password
-    secrets":
+    secrets:
       example:
         POSTGRES: "postgresql://postgres:password@postgres:5432/db"
         MONGO: "mongodb://root:password@mongo:27017/db"

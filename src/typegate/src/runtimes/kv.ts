@@ -24,8 +24,6 @@ export class KvRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    logger.info("Initializing KvRuntime");
-    logger.debug(`Init params: ${JSON.stringify(params)}`);
     const { typegraph, args, secretManager } = params as RuntimeInitParams<
       KvRuntimeData
     >;

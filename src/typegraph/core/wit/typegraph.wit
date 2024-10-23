@@ -49,6 +49,7 @@ interface core {
     }
 
     record prisma-migration-config {
+        // Path towards the migrations for the specific typegraph.
         migrations-dir: string,
         migration-actions: list<tuple<string, migration-action>>,
         default-migration-action: migration-action,
