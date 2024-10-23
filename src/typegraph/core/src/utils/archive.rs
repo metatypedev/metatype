@@ -36,7 +36,6 @@ impl FsContext {
 impl ArchiveExt for FsContext {
     fn compress_and_encode(&self, path: impl AsRef<Path>) -> Result<String> {
         let path = path.as_ref();
-        crate::logger::debug!("compress_and_encode: {path:?}");
         let ignore = {
             let tg_ignore_path = Path::new(".tgignore");
             let mut ignore = self.load_tg_ignore(tg_ignore_path)?;

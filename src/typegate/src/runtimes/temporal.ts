@@ -27,8 +27,6 @@ export class TemporalRuntime extends Runtime {
   static async init(
     params: RuntimeInitParams,
   ): Promise<Runtime> {
-    logger.info("initializing TemporalRuntime");
-    logger.debug(`init params: ${JSON.stringify(params)}`);
     const { typegraph, args, secretManager } = params as RuntimeInitParams<
       TemporalRuntimeData
     >;
