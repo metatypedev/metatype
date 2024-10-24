@@ -22,24 +22,24 @@ root: struct 'Record_query_input' #114
 │        ├─ [age]: optional '_prisma_sort_nullable' #84
 │        │  └─ item: union #81
 │        │     ├─ variant_0: struct #80
-│        │     │  ├─ [nulls]: string '_prisma_nulls_order' #74
-│        │     │  └─ [sort]: string '_prisma_sort_order' #72
-│        │     └─ variant_1: string '_prisma_sort_order' #72
+│        │     │  ├─ [nulls]: string '_prisma_nulls_order' #74 enum{ '"first"', '"last"' }
+│        │     │  └─ [sort]: string '_prisma_sort_order' #72 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_prisma_sort_order' #72 enum{ '"asc"', '"desc"' }
 │        ├─ [created_at]: optional '_prisma_sort' #79
 │        │  └─ item: union #76
 │        │     ├─ variant_0: struct #75
-│        │     │  └─ [sort]: string '_prisma_sort_order' #72
-│        │     └─ variant_1: string '_prisma_sort_order' #72
+│        │     │  └─ [sort]: string '_prisma_sort_order' #72 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_prisma_sort_order' #72 enum{ '"asc"', '"desc"' }
 │        ├─ [id]: optional '_prisma_sort' #79
 │        │  └─ item: union #76
 │        │     ├─ variant_0: struct #75
-│        │     │  └─ [sort]: string '_prisma_sort_order' #72
-│        │     └─ variant_1: string '_prisma_sort_order' #72
+│        │     │  └─ [sort]: string '_prisma_sort_order' #72 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_prisma_sort_order' #72 enum{ '"asc"', '"desc"' }
 │        └─ [name]: optional '_prisma_sort' #79
 │           └─ item: union #76
 │              ├─ variant_0: struct #75
-│              │  └─ [sort]: string '_prisma_sort_order' #72
-│              └─ variant_1: string '_prisma_sort_order' #72
+│              │  └─ [sort]: string '_prisma_sort_order' #72 enum{ '"asc"', '"desc"' }
+│              └─ variant_1: string '_prisma_sort_order' #72 enum{ '"asc"', '"desc"' }
 ├─ [skip]: optional 'optional_97' #98
 │  └─ item: integer '_skip' #96
 ├─ [take]: optional 'optional_93' #94

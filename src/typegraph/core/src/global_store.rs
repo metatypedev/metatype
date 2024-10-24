@@ -6,7 +6,9 @@ use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
 use crate::types::type_ref::TypeRef;
-use crate::types::{NamedTypeRef, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder};
+use crate::types::{
+    AsTypeDefEx as _, NamedTypeRef, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder,
+};
 use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
 use crate::wit::utils::Auth as WitAuth;
 
@@ -489,22 +491,22 @@ impl TypeId {
     as_variant!(List);
 
     pub fn is_func(&self) -> Result<bool> {
-        Ok(matches!(self.as_type_def()?, Some(TypeDef::Func(_))))
+        Ok(matches!(self.as_xdef()?.type_def, TypeDef::Func(_)))
     }
 
     pub fn resolve_quant(&self) -> Result<TypeId> {
         let type_id = *self;
-        match type_id.as_type_def()? {
-            Some(TypeDef::List(a)) => Ok(a.data.of.into()),
-            Some(TypeDef::Optional(o)) => Ok(o.data.of.into()),
+        match type_id.as_xdef()?.type_def {
+            TypeDef::List(a) => Ok(a.data.of.into()),
+            TypeDef::Optional(o) => Ok(o.data.of.into()),
             _ => Ok(type_id),
         }
     }
 
     pub fn resolve_optional(&self) -> Result<TypeId> {
         let type_id = *self;
-        match type_id.as_type_def()? {
-            Some(TypeDef::Optional(o)) => Ok(o.data.of.into()),
+        match type_id.as_xdef()?.type_def {
+            TypeDef::Optional(o) => Ok(o.data.of.into()),
             _ => Ok(type_id),
         }
     }
