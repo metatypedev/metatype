@@ -2,6 +2,85 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.5.0-rc.2](https://github.com/metatypedev/metatype/releases/tag/v0.5.0-rc.2) - 2024-10-24
+
+### Bug Fixes
+
+<details >
+<summary>
+Fix `.apply` serialization error with optional structs (<a href="https://github.com/metatypedev/metatype/pull/886">#886</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+- Fix the error on `.apply` when the apply tree goes beyond an optional
+struct, mostly changing the implementation of `resolve_optional` method.
+- Improve the errors when we encounter an exception raise by
+`Result::Err` from typegraph_core.
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+
+...
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Features
+
+<details >
+<summary>
+Add GraphQL alias support for prisma runtime (<a href="https://github.com/metatypedev/metatype/pull/887">#887</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+- Add GraphQL alias support for prisma runtime
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+
+...
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
 ## [v0.5.0-rc.1](https://github.com/metatypedev/metatype/releases/tag/v0.5.0-rc.1) - 2024-10-22
 
 ### Bug Fixes
@@ -3404,54 +3483,6 @@ _N/A_
 
 <details >
 <summary>
-Add  examples for each command (<a href="https://github.com/metatypedev/metatype/pull/684">#684</a>)
-</summary>
-
-#### Motivation and context
-
-Getting started with `meta` cli should be easy
-
-#### Migration notes
-
-None
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
-</details>
-<details >
-<summary>
-Improve `/tutorials/quick-start` section. (<a href="https://github.com/metatypedev/metatype/pull/681">#681</a>)
-</summary>
-
-- [x] Improve Layout
-- [x] Include a simple project.
-- [x] Add the result/outputs to running CLI commands.
-- [x] Remove Metatype cloud registration form.
-- [x] Separate the CLI commands to separate code blocks
-- [x] Add links to references and concepts.
-- [x] Add playground.
-
-#### Motivation and context
-
-[Docs
-Meta-task](https://linear.app/metatypedev/issue/MET-440/docs-meta-task)
-
-#### Migration notes
-
-_No Migration Needed_
-
-### Checklist
-
-- [x] Test the commands and the examples.
-- [ ] The change come with new or modified tests
-
-</details>
-<details >
-<summary>
 Improve `/docs/tutorials/metatype-basics` (<a href="https://github.com/metatypedev/metatype/pull/688">#688</a>)
 </summary>
 
@@ -3608,31 +3639,6 @@ None
 - [ ] The change come with new or modified tests
 - [ ] Hard-to-understand functions have explanatory comments
 - [ ] End-user documentation is updated to reflect the change
-
-</details>
-<details >
-<summary>
-Upload artifacts to s3 (<a href="https://github.com/metatypedev/metatype/pull/638">#638</a>)
-</summary>
-
-Upload artifacts to S3 when sync-mode is enabled
-
-#### Motivation and context
-
-Sharing artifacts between replicas without including it in the typegraph
-(and sync through redis)
-
-#### Migration notes
-
-No changes needed.
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----------
 
 </details>
 <details >
@@ -3844,3 +3850,6 @@ Make sure to sync `typegate/src/types.ts` when an update is made on the
 typegraph schema.
 
 </details>
+
+
+
