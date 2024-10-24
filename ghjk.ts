@@ -6,7 +6,7 @@ import installs from "./tools/installs.ts";
 import tasks from "./tools/tasks/mod.ts";
 
 const ghjk = file({
-  defaultEnv: Deno.env.get("CI") ? "ci" : Deno.env.get("OCI") ? "oci" : "dev",
+  defaultEnv: "dev",
   tasks,
 });
 export const sophon = ghjk.sophon;
