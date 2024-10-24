@@ -214,7 +214,7 @@ Meta.test(
     const stdout = new Lines(proc.stdout);
     await stdout.readWhile((line) => {
       console.log(`typegate>`, line);
-      return !line.includes(`typegate ready on ${port}`);
+      return !line.includes(`typegate ready on :${port}`);
     });
     stdout.readWhile((line) => {
       const match = line.match(/Initializing engine '(.+)'/);
@@ -272,7 +272,7 @@ Meta.test(
         if (match) {
           typegraphs2.push(match[1]);
         }
-        return !line.includes(`typegate ready on ${port}`);
+        return !line.includes(`typegate ready on :${port}`);
       });
 
       await stdout.close();
@@ -338,7 +338,7 @@ Meta.test(
 
     await stdout.readWhile((line) => {
       console.error("typegate>", line);
-      return !line.includes(`typegate ready on ${port}`);
+      return !line.includes(`typegate ready on :${port}`);
     });
 
     const tgsDir = $.path(

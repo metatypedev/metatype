@@ -65,7 +65,10 @@ export abstract class Runtime {
         materializedStages.push(...materializeRoot(s));
       } else {
         materializedStages.push(
-          s.withResolver(Runtime.resolveFromParent(s.props.node)),
+          s.withResolver(
+            Runtime.resolveFromParent(s.props.node),
+            [s.props.parent!.id()],
+          ),
         );
       }
     }
