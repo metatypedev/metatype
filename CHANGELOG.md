@@ -3844,6 +3844,3 @@ Make sure to sync `typegate/src/types.ts` when an update is made on the
 typegraph schema.
 
 </details>
-
-
-
