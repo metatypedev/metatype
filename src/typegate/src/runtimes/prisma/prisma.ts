@@ -292,7 +292,7 @@ export class PrismaRuntime extends Runtime {
       this.execute(
         query,
         stage.props.materializer?.data.path as string[] ??
-          [node],
+          [stage.props.node],
         renames,
       ),
     );
