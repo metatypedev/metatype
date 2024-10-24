@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Type, TypeDef};
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
 use crate::types::AsTypeDefEx as _;
@@ -49,13 +48,6 @@ impl TypeId {
     pub fn repr(&self) -> Result<String> {
         let typ = self.as_type()?;
         Ok(typ.repr())
-    }
-
-    pub fn as_type_def(&self) -> Result<Option<TypeDef>> {
-        match self.as_type()? {
-            Type::Ref(_) => Ok(None),
-            Type::Def(type_def) => Ok(Some(type_def)),
-        }
     }
 
     pub fn hash_child_type(

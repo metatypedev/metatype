@@ -53,7 +53,11 @@ impl Optional {
 
 impl TypeDefData for TypeOptional {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
-        params.push(format!("item={}", self.of));
+        if let Ok(item_repr) = TypeId(self.of).repr() {
+            params.push(format!("item={item_repr}"));
+        } else {
+            params.push(format!("item=#{}", self.of));
+        }
         if let Some(default) = self.default_item.clone() {
             params.push(format!("defaultItem={}", default));
         }

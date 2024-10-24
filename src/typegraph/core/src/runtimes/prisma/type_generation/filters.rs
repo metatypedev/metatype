@@ -148,7 +148,7 @@ pub(super) struct ScalarListFilter(pub TypeId);
 
 impl TypeGen for ScalarListFilter {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
-        if let Some(TypeDef::Optional(_)) = self.0.as_type_def()? {
+        if let TypeDef::Optional(_) = self.0.as_xdef()?.type_def {
             return Err("array of optional not supported".into());
         }
 
@@ -251,7 +251,7 @@ impl TypeGen for AvgFilter {
             .filter_map(|(k, type_id)| {
                 let type_def = type_id.as_xdef().unwrap().type_def;
                 let non_opt_type = match type_def {
-                    TypeDef::Optional(inner) => inner.item().as_type_def().unwrap().unwrap(),
+                    TypeDef::Optional(inner) => inner.item().as_xdef().unwrap().type_def,
                     _ => type_def,
                 };
                 match non_opt_type {

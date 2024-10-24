@@ -223,6 +223,14 @@ export async function typegraph(
     if (err.payload && !err.cause) {
       err.cause = err.payload;
     }
+    if ("stack" in err.cause) {
+      console.error(`Error in typegraph '${name}':`);
+      for (const msg of err.cause.stack) {
+        console.error(`- ${msg}`);
+      }
+      process.exit(1);
+    }
+
     throw err;
   }
 
