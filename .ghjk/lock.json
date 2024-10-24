@@ -1,4 +1,4 @@
-{
+https://github.com/prisma/prisma/issues/12999{
   "version": "0",
   "platform": "x86_64-linux",
   "moduleEntries": {
@@ -2191,7 +2191,7 @@
               ]
             }
           },
-          "defaultEnv": "ci",
+          "defaultEnv": "dev",
           "envsNamed": {
             "main": "bciqiaaqxx3azvrkvlj2eknjj6awsczu4gdcohccrvjpwk3vmkrnyfpi",
             "_wasm": "bciqdpiup27tflfkq26oirbutkz53wrp34entiq423upf47za7zoq4za",
