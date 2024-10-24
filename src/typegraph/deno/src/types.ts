@@ -40,6 +40,7 @@ import {
   ApplyFromStatic,
   InheritDef,
 } from "./typegraph.ts";
+import { log } from "./io.ts";
 
 export type PolicySpec =
   | Policy
@@ -529,7 +530,7 @@ function serializeApplyParamNode(
   if (node instanceof ApplyFromArg) {
     return { source: "arg", name: node.name, typeId: node.type };
   } else if (node instanceof ApplyFromStatic) {
-    return { source: "static", value: JSON.stringify(node.value) };
+    return { source: "static", value_json: JSON.stringify(node.value) };
   } else if (node instanceof ApplyFromContext) {
     return { source: "context", key: node.key, typeId: node.type };
   } else if (node instanceof ApplyFromSecret) {
@@ -626,6 +627,7 @@ export class Func<
       throw new Error("Invalid apply value: root must be an object");
     }
     const transformTree = JSON.stringify(serialized.fields);
+    log.info("transform tree", transformTree);
     const transformData = core.getTransformData(this.inp._id, transformTree);
 
     return func(

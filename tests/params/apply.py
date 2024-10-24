@@ -64,6 +64,23 @@ def apply(g: Graph):
                 "b": g.from_secret("MY_SECRET"),
             }
         ),
+        onOptional=deno.identity(
+            t.struct(
+                {
+                    "a": t.struct(
+                        {
+                            "b": t.integer(),
+                        }
+                    ).optional()
+                }
+            )
+        ).apply(
+            {
+                "a": {
+                    "b": g.set(12),
+                }
+            }
+        ),
         withParent=deno.func(
             t.struct(),
             t.struct(

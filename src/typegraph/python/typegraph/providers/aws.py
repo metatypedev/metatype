@@ -13,7 +13,7 @@ from typegraph.gen.exports.aws import (
 from typegraph.gen.exports.runtimes import EffectCreate, EffectRead
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import aws, store
+from typegraph.wit import aws, ErrorStack, store
 
 
 class S3Runtime(Runtime):
@@ -42,7 +42,7 @@ class S3Runtime(Runtime):
             ),
         )
         if isinstance(runtime_id, Err):
-            raise Exception(runtime_id.value)
+            raise ErrorStack(runtime_id.value)
 
         super().__init__(runtime_id.value)
         self.host_secret = host_secret
@@ -61,7 +61,7 @@ class S3Runtime(Runtime):
             ),
         )
         if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
+            raise ErrorStack(mat_id.value)
 
         return t.func(
             t.struct({"path": t.string()}),
@@ -90,7 +90,7 @@ class S3Runtime(Runtime):
             ),
         )
         if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
+            raise ErrorStack(mat_id.value)
 
         return t.func(
             t.struct({"length": t.integer(), "path": t.string()}),
@@ -107,7 +107,7 @@ class S3Runtime(Runtime):
     def list(self, bucket: str):
         mat_id = aws.s3_list(store, self.id, bucket)
         if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
+            raise ErrorStack(mat_id.value)
 
         return t.func(
             t.struct({"path": t.string().optional()}),
@@ -123,7 +123,7 @@ class S3Runtime(Runtime):
     def upload(self, bucket: str, file_type: Optional[t.file] = None):
         mat_id = aws.s3_upload(store, self.id, bucket)
         if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
+            raise ErrorStack(mat_id.value)
 
         if file_type is None:
             file_type = t.file()
@@ -141,7 +141,7 @@ class S3Runtime(Runtime):
     def upload_all(self, bucket: str, file_type: Optional[t.file] = None):
         mat_id = aws.s3_upload_all(store, self.id, bucket)
         if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
+            raise ErrorStack(mat_id.value)
 
         if file_type is None:
             file_type = t.file()

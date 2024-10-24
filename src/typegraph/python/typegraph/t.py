@@ -26,6 +26,7 @@ from typegraph.gen.exports.core import (
 from typegraph.gen.exports.runtimes import EffectRead
 from typegraph.gen.types import Err
 from typegraph.graph.typegraph import (
+    ErrorStack,
     core,
     store,
     ApplyFromArg,
@@ -69,14 +70,14 @@ class typedef:
     def __repr__(self):
         res = core.get_type_repr(store, self._id)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         return res.value
 
     def with_policy(self, *policies: Optional[PolicySpec]) -> Self:
         policy_chain = get_policy_chain(policies)
         res = core.with_policy(store, self._id, policy_chain)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
 
         ret = copy.copy(self)
         ret._id = res.value
@@ -87,7 +88,7 @@ class typedef:
         res = core.rename_type(store, self._id, name)
 
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
 
         ret = copy.copy(self)
         ret._id = res.value
@@ -97,7 +98,7 @@ class typedef:
     def _with_injection(self, injection: str) -> Self:
         res = core.with_injection(store, self._id, injection)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
 
         ret = copy.copy(self)
         ret._id = res.value
@@ -183,18 +184,18 @@ def _with_ext(
     if as_id:
         res = core.as_id(store, type_id, as_id == "composite")
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         type_id = res.value
     config = serialize_config(raw_config)
     if config:
         res = core.with_config(store, type_id, config)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         type_id = res.value
     if name:
         res = core.rename_type(store, type_id, name)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         type_id = res.value
     if name == "ExtendedProfile":
         Log.info(f">>> type#{type_id}; as_id={as_id}; config={config}; name={name}")
@@ -236,7 +237,7 @@ class integer(typedef):
             data,
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         super().__init__(_with_ext(res.value, as_id, config, name))
         self.min = min
         self.max = max
@@ -249,7 +250,7 @@ class integer(typedef):
     def id(self, as_id: AsId = True) -> "typedef":  # "integer"
         res = core.as_id(store, self._id, as_id == "composite")
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         return typedef(res.value)
 
 
@@ -290,7 +291,7 @@ class float(typedef):
             data,
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         super().__init__(_with_ext(res.value, None, config, name))
         self.min = min
         self.max = max
@@ -306,7 +307,7 @@ class boolean(typedef):
     ):
         res = core.booleanb(store)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         super().__init__(_with_ext(res.value, None, config, name))
 
 
@@ -343,7 +344,7 @@ class string(typedef):
             data,
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         super().__init__(_with_ext(res.value, as_id, config, name))
         self.min = min
         self.max = max
@@ -355,7 +356,7 @@ class string(typedef):
     def id(self, as_id: AsId = True) -> "typedef":  # "integer"
         res = core.as_id(store, self._id, as_id == "composite")
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         return typedef(res.value)
 
 
@@ -433,7 +434,7 @@ class file(typedef):
             data,
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
 
         super().__init__(_with_ext(res.value, None, config, name))
         self.min = min
@@ -468,7 +469,7 @@ class list(typedef):
             data,
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         super().__init__(_with_ext(res.value, None, config, name))
         self.min = min
         self.max = max
@@ -497,7 +498,7 @@ class optional(typedef):
             data,
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         super().__init__(_with_ext(res.value, None, config, name))
         self.item = item
         self.default_item = default_item
@@ -519,7 +520,7 @@ class union(typedef):
             data,
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         super().__init__(_with_ext(res.value, None, config, name))
         self.variants = variants
 
@@ -539,7 +540,7 @@ class either(typedef):
             data,
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         super().__init__(_with_ext(res.value, None, config, name))
         self.variants = variants
 
@@ -564,7 +565,9 @@ class struct(typedef):
     ):
         if self.__class__ != struct:  # custom class
             if len(self.__class__.__bases__) > 1:
-                raise Exception("multiple inheritance is currently not supported")
+                raise ErrorStack.from_str(
+                    "multiple inheritance is currently not supported"
+                )
             (base,) = self.__class__.__bases__
             child_cls = self.__class__
             child_attr = set([i for i in vars(child_cls) if not i.startswith("__")])
@@ -579,14 +582,14 @@ class struct(typedef):
                     err_msg += " is a reserved field"
                 else:
                     err_msg += " are reserved fields"
-                raise Exception(err_msg)
+                raise ErrorStack(err_msg)
             self_attr = child_attr
             if base != struct:
                 # child.props should inherit parent.props
                 curr_base = base
                 while curr_base != struct:
                     if len(curr_base.__bases__) > 1:
-                        raise Exception(
+                        raise ErrorStack(
                             "multiple inheritance is currently not supported"
                         )
                     (curr_base,) = curr_base.__bases__
@@ -615,7 +618,7 @@ class struct(typedef):
             data,
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         super().__init__(_with_ext(res.value, None, config, name))
         self.props = props
         self.enumeration = enum
@@ -652,7 +655,7 @@ def serialize_apply_param_node(node: ApplyParamNode) -> Any:
     if isinstance(node, (og_list, tuple)):
         return {"type": "array", "items": [serialize_apply_param_node(v) for v in node]}
 
-    raise Exception(f"unexpected node type: node={node}")
+    raise ErrorStack(f"unexpected node type: node={node}")
 
 
 class func(typedef):
@@ -685,7 +688,7 @@ class func(typedef):
             )
             res = core.funcb(store, data)
             if isinstance(res, Err):
-                raise Exception(res.value)
+                raise ErrorStack(res.value)
             return res.value
 
         id = register() if type_id is None else type_id
@@ -713,7 +716,7 @@ class func(typedef):
             store, self.out._id, og_list((k, v._id) for k, v in props.items())
         )
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
 
         out = typedef(res.value)
 
@@ -731,7 +734,7 @@ class func(typedef):
         reduced_id = wit_utils.reduceb(store, self._id, reduce_entries)
 
         if isinstance(reduced_id, Err):
-            raise Exception(reduced_id.value)
+            raise ErrorStack(reduced_id.value)
 
         # TODO typedef(...).as_struct()
         return func(
@@ -755,7 +758,7 @@ class func(typedef):
             import sys
 
             print(transform_tree, file=sys.stderr)
-            raise Exception(transform_data.value)
+            raise ErrorStack(transform_data.value)
 
         return func(
             typedef(transform_data.value.query_input),

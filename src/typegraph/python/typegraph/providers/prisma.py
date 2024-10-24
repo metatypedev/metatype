@@ -4,7 +4,7 @@
 from typing import Union, Optional
 
 from typegraph.runtimes.base import Runtime
-from typegraph.wit import runtimes, store
+from typegraph.wit import ErrorStack, runtimes, store
 from typegraph.gen.types import Err
 from typegraph.gen.exports.runtimes import (
     Effect,
@@ -24,7 +24,7 @@ class PrismaRuntime(Runtime):
             store, PrismaRuntimeData(name, connection_string_secret)
         )
         if isinstance(runtime_id, Err):
-            raise Exception(runtime_id.value)
+            raise ErrorStack(runtime_id.value)
 
         super().__init__(runtime_id.value)
         self.name = name
@@ -35,7 +35,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_find_unique(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def find_many(self, model: Union[str, t.typedef]) -> t.func:
@@ -43,7 +43,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_find_many(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def find_first(self, model: Union[str, t.typedef]) -> t.func:
@@ -51,7 +51,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_find_first(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def aggregate(self, model: Union[str, t.typedef]) -> t.func:
@@ -59,7 +59,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_aggregate(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def count(self, model: Union[str, t.typedef]) -> t.func:
@@ -67,7 +67,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_count(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def group_by(self, model: Union[str, t.typedef]) -> t.func:
@@ -75,7 +75,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_group_by(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def create(self, model: Union[str, t.typedef]) -> t.func:
@@ -83,7 +83,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_create_one(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def create_many(self, model: Union[str, t.typedef]) -> t.func:
@@ -91,7 +91,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_create_many(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def update(self, model: Union[str, t.typedef]) -> t.func:
@@ -99,7 +99,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_update_one(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def update_many(self, model: Union[str, t.typedef]) -> t.func:
@@ -107,7 +107,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_update_many(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def upsert(self, model: Union[str, t.typedef]) -> t.func:
@@ -115,7 +115,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_upsert_one(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def delete(self, model: Union[str, t.typedef]) -> t.func:
@@ -123,7 +123,7 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_delete_one(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def delete_many(self, model: Union[str, t.typedef]) -> t.func:
@@ -131,13 +131,13 @@ class PrismaRuntime(Runtime):
             model = gen_ref(model)
         type = runtimes.prisma_delete_many(store, self.id, model._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def execute(self, query: str, parameters: t.typedef, effect: Effect) -> t.func:
         type = runtimes.prisma_execute(store, self.id, query, parameters._id, effect)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def query_raw(
@@ -146,7 +146,7 @@ class PrismaRuntime(Runtime):
         params_id = None if parameters is None else parameters._id
         type = runtimes.prisma_query_raw(store, self.id, query, params_id, output._id)
         if isinstance(type, Err):
-            raise Exception(type.value)
+            raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
     def link(
@@ -185,5 +185,5 @@ def prisma_link(
     )
 
     if isinstance(type_id, Err):
-        raise Exception(type_id.value)
+        raise ErrorStack(type_id.value)
     return t.typedef(type_id.value)

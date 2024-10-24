@@ -12,7 +12,7 @@ from typegraph.gen.exports.utils import FdkConfig, FdkOutput
 from typegraph.gen.types import Err
 from typegraph.graph.shared_types import TypegraphOutput
 from typegraph.utils import freeze_tg_output
-from typegraph.wit import store, wit_utils
+from typegraph.wit import ErrorStack, store, wit_utils
 
 
 class Metagen:
@@ -60,7 +60,7 @@ class Metagen:
         fdk_config = self._get_fdk_config(tg_output, target_name)
         res = wit_utils.metagen_exec(store, fdk_config)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         for item in res.value:
             if overwrite is not None:
                 item.overwrite = overwrite
@@ -75,4 +75,4 @@ class Metagen:
         items = self.dry_run(tg_output, target_name, overwrite)
         res = wit_utils.metagen_write_files(store, items, self.workspace_path)
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
