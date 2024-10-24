@@ -1,10 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchemas, recreateMigrations } from "test-utils/migrations.ts";
+import { randomPGConnStr } from "test-utils/database.ts";
 
 Meta.test("Random", async (t) => {
-  const e = await t.engine("typecheck/type_alias.py");
+  const { connStr } = randomPGConnStr();
+  const e = await t.engine("typecheck/type_alias.py", {
+    secrets: {
+      POSTGRES: connStr,
+    },
+  });
+  await dropSchemas(e);
+  await recreateMigrations(e);
 
   await t.should("validate and work with a basic alias", async () => {
     await gql`
@@ -98,6 +107,67 @@ Meta.test("Random", async (t) => {
         },
         some_alias_3: {
           some_title: "$bNlQ3^cxB",
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("validate and work with prisma runtime", async () => {
+    await gql`
+      mutation {
+        user1: create_user(
+          data: { id: 123, name: "john", }
+          ) {
+            user_id: id
+            name
+            posts {
+              title
+              content
+            }
+          }
+      }
+    `
+      .expectData({
+        user1: {
+          name: "john",
+          user_id: 123,
+          posts: [],
+        },
+      })
+      .on(e);
+
+    await gql`
+      mutation {
+        user1: create_user(
+          data: {
+            id: 124,
+            name: "john",
+            posts: {
+              create: {
+                id: 321,
+                title: "hello",
+                content: "Hello World!",
+              }
+            }
+          }
+        ) {
+          id
+          name
+          user_posts: posts {
+            post_title: title
+            content
+          }
+        }
+      }
+    `
+      .expectData({
+        user1: {
+          id: 124,
+          name: "john",
+          user_posts: [{
+            content: "Hello World!",
+            post_title: "hello",
+          }],
         },
       })
       .on(e);
