@@ -117,31 +117,31 @@ pub fn object_not_found(kind: &str, id: u32) -> TgError {
     format!("{kind} #{id} not found").into()
 }
 
-pub fn invalid_path(pos: usize, path: &[String], curr_keys: &[String]) -> TgError {
-    let mut path_with_cursor = vec![];
-    for (i, chunk) in path.iter().enumerate() {
-        if i == pos {
-            path_with_cursor.push(format!("[{}]", chunk));
-        } else {
-            path_with_cursor.push(chunk.clone());
-        }
-    }
-    format!(
-        "invalid path {:?}, none of {} match the chunk {:?}",
-        path_with_cursor.join("."),
-        curr_keys.join(", "),
-        path.get(pos).unwrap_or(&"".to_string()),
-    )
-    .into()
-}
-
-pub fn expect_object_at_path(path: &[String], actual: &str) -> TgError {
-    format!(
-        "object was expected at path {:?}; but got: {actual}",
-        path.join(".")
-    )
-    .into()
-}
+// pub fn invalid_path(pos: usize, path: &[String], curr_keys: &[String]) -> TgError {
+//     let mut path_with_cursor = vec![];
+//     for (i, chunk) in path.iter().enumerate() {
+//         if i == pos {
+//             path_with_cursor.push(format!("[{}]", chunk));
+//         } else {
+//             path_with_cursor.push(chunk.clone());
+//         }
+//     }
+//     format!(
+//         "invalid path {:?}, none of {} match the chunk {:?}",
+//         path_with_cursor.join("."),
+//         curr_keys.join(", "),
+//         path.get(pos).unwrap_or(&"".to_string()),
+//     )
+//     .into()
+// }
+//
+// pub fn expect_object_at_path(path: &[String], actual: &str) -> TgError {
+//     format!(
+//         "object was expected at path {:?}; but got: {actual}",
+//         path.join(".")
+//     )
+//     .into()
+// }
 
 pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {
     format!("unknown predefined function {name} for runtime {runtime}").into()

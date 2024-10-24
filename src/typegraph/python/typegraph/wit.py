@@ -33,3 +33,6 @@ class ErrorStack(Exception):
     def __init__(self, err: Error):
         super(ErrorStack, self).__init__("\n".join(f"- {msg}" for msg in err.stack))
         self.stack = err.stack
+
+    def from_str(msg: str) -> "ErrorStack":
+        return ErrorStack(Error([msg]))

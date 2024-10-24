@@ -290,21 +290,8 @@ mod watch_mode {
         let mut secrets = deploy.secrets.clone();
         secrets.apply_overrides(&deploy.options.secrets)?;
 
-        let action_generator = DeployActionGenerator::new(
-            deploy.node.into(),
-            secrets.into(),
-            deploy.config.dir().unwrap_or_log().into(),
-            deploy.base_dir.clone(),
-            deploy
-                .config
-                .prisma_migrations_base_dir(PathOption::Absolute)
-                .into(),
-            deploy.options.create_migration,
-            deploy.options.allow_destructive,
-        );
-
         #[cfg(feature = "typegate")]
-        let _typegate_addr = if let Some(tg_opts) = deploy.options.typegate_options {
+        let typegate_addr = if let Some(tg_opts) = deploy.options.typegate_options {
             use crate::deploy::actors::typegate::TypegateInit;
             info!("starting typegate");
             Some(
@@ -321,6 +308,31 @@ mod watch_mode {
         } else {
             None
         };
+
+        #[cfg(feature = "typegate")]
+        let port_override = typegate_addr.map(|(_, port)| port);
+        #[cfg(not(feature = "typegate"))]
+        let port_override = None;
+
+        let deploy_node = deploy.node.clone();
+        let deploy_node = if let Some(port) = port_override {
+            deploy_node.override_port(port)
+        } else {
+            deploy_node
+        };
+
+        let action_generator = DeployActionGenerator::new(
+            deploy_node.into(),
+            secrets.into(),
+            deploy.config.dir().unwrap_or_log().into(),
+            deploy.base_dir.clone(),
+            deploy
+                .config
+                .prisma_migrations_base_dir(PathOption::Absolute)
+                .into(),
+            deploy.options.create_migration,
+            deploy.options.allow_destructive,
+        );
 
         let mut init = TaskManagerInit::<DeployAction>::new(
             deploy.config.clone(),

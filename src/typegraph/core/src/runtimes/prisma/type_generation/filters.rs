@@ -3,8 +3,8 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
-use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::types::{ResolveRef as _, TypeDef, TypeId};
+use crate::t::{self, TypeBuilder};
+use crate::types::{AsTypeDefEx as _, TypeDef, TypeId};
 
 use super::TypeGen;
 
@@ -14,9 +14,7 @@ impl<T: TypeGen> TypeGen for CompleteFilter<T> {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let inner = context.generate(&self.0)?;
         // TODO and, or ???
-        t::optionalx(t::unionx![inner, t::struct_().prop("not", inner)])?
-            .named(self.name())
-            .build()
+        t::optionalx(t::unionx![inner, t::struct_().prop("not", inner)]).build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -33,8 +31,7 @@ impl TypeGen for BooleanFilter {
             t::struct_().propx("equals", t::boolean())?,
             t::struct_().propx("not", t::boolean())?,
         ]
-        .named(self.name())
-        .build()
+        .build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -76,8 +73,7 @@ impl TypeGen for NumberFilter {
                 t::struct_().prop("_min", base),
                 t::struct_().prop("_max", base),
             ]
-            .named(self.name())
-            .build()
+            .build_named(self.name())
         } else {
             let type_id = match self.number_type {
                 NumberType::Integer => t::integer().build()?,
@@ -98,8 +94,7 @@ impl TypeGen for NumberFilter {
                 t::struct_().prop("in", list_type_id),
                 t::struct_().prop("notIn", list_type_id),
             ]
-            .named(self.name())
-            .build()
+            .build_named(self.name())
         }
     }
 
@@ -141,8 +136,7 @@ impl TypeGen for StringFilter {
                 .prop("endsWith", opt_type_id)
                 .min(1),
         ]
-        .named(self.name())
-        .build()
+        .build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -154,7 +148,7 @@ pub(super) struct ScalarListFilter(pub TypeId);
 
 impl TypeGen for ScalarListFilter {
     fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
-        if let Some(TypeDef::Optional(_)) = self.0.as_type_def()? {
+        if let TypeDef::Optional(_) = self.0.as_xdef()?.type_def {
             return Err("array of optional not supported".into());
         }
 
@@ -169,8 +163,7 @@ impl TypeGen for ScalarListFilter {
             // TODO "isSet": mongo only
             t::struct_().propx("equals", t::list(self.0))?,
         ]
-        .named(self.name())
-        .build()
+        .build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -256,9 +249,9 @@ impl TypeGen for AvgFilter {
             .unwrap()
             .iter_props()
             .filter_map(|(k, type_id)| {
-                let type_def = type_id.resolve_ref().unwrap().0;
+                let type_def = type_id.as_xdef().unwrap().type_def;
                 let non_opt_type = match type_def {
-                    TypeDef::Optional(inner) => inner.item().as_type_def().unwrap().unwrap(),
+                    TypeDef::Optional(inner) => inner.item().as_xdef().unwrap().type_def,
                     _ => type_def,
                 };
                 match non_opt_type {
@@ -295,9 +288,9 @@ impl TypeGen for SumFilter {
             .unwrap()
             .iter_props()
             .filter_map(|(k, type_id)| {
-                let type_def = type_id.resolve_ref().unwrap().0;
+                let type_def = type_id.as_xdef().unwrap().type_def;
                 let non_opt_type = match type_def {
-                    TypeDef::Optional(inner) => inner.item().resolve_ref().unwrap().0,
+                    TypeDef::Optional(inner) => inner.item().as_xdef().unwrap().type_def,
                     _ => type_def,
                 };
                 match non_opt_type {
@@ -332,5 +325,5 @@ fn gen_aggregate_filter<P, F: Fn(P) -> (String, NumberType)>(
         );
     }
 
-    builder.named(name).build()
+    builder.build_named(name)
 }

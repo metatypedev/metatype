@@ -130,16 +130,11 @@ export class GraphQLRuntime extends Runtime {
           }),
         );
       } else {
-        const resolver: Resolver = ({ _: { parent } }) => {
-          const resolver = parent[field.props.node];
-          const ret = typeof resolver === "function" ? resolver() : resolver;
-          return ret;
-        };
         stagesMat.push(
           new ComputeStage({
             ...field.props,
             dependencies: [...field.props.dependencies, queryStage.id()],
-            resolver,
+            resolver: Runtime.resolveFromParent(field.props.node),
           }),
         );
       }

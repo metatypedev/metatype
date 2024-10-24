@@ -201,7 +201,7 @@ export class DenoRuntime extends Runtime {
       ];
     }
 
-    if (stage.props.outType.config?.__namespace) {
+    if (this.tg.meta.namespaces!.includes(stage.props.typeIdx)) {
       return [stage.withResolver(() => ({}))];
     }
 
@@ -212,7 +212,7 @@ export class DenoRuntime extends Runtime {
           return {};
         }
         const resolver = parent[stage.props.node];
-        return typeof resolver === "function" ? resolver() : resolver;
+        return (typeof resolver === "function" ? resolver() : resolver) ?? null;
       }),
     ];
   }

@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { z, RefinementCtx } from "zod";
+import { RefinementCtx, z } from "zod";
 import { decodeBase64 } from "@std/encoding/base64";
 import type { RedisConnectOptions } from "redis";
 import type { S3ClientConfig } from "aws-sdk/client-s3";
 
 const zBooleanString = z.preprocess(
   (a: unknown) => z.coerce.string().parse(a) === "true",
-  z.boolean()
+  z.boolean(),
 );
 
 const addMissingEnvVarIssue = (envVar: string, ctx: RefinementCtx) => {
@@ -51,7 +51,7 @@ export const globalConfigSchema = z.object({
   packaged: zBooleanString,
   version: z.string(),
   hostname: z.string(),
-  tg_port: z.coerce.number().positive().max(65535),
+  tg_port: z.coerce.number().nonnegative().max(65535),
   trust_proxy: zBooleanString,
   trust_header_ip: z.string(),
   request_log: z.string().optional(),
@@ -77,7 +77,8 @@ export const typegateConfigBaseSchema = z.object({
       if (bytes.length != 64) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
+          message:
+            `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
         });
       }
       return bytes;

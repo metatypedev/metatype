@@ -28,7 +28,7 @@ Meta.test("deno(sdk): reduce", async (t) => {
             student: {
               id: 1,
               name: "Jake",
-              infos: { age: 15 },
+              infos: { age: 15, school: null },
             },
           },
         })
@@ -79,7 +79,7 @@ Meta.test("deno(sdk): reduce", async (t) => {
             student: {
               id: 1234, // from reduce 1
               name: "Jake", // from user
-              infos: { age: 15 }, // from user
+              infos: { age: 15, school: null }, // from user
               distinctions: {
                 awards: [
                   // from reduce 1
@@ -136,7 +136,7 @@ Meta.test("deno(sdk): reduce", async (t) => {
           student: {
             id: 1234, // from reduce
             name: "Kyle", // from user
-            infos: { age: 17 }, // from context
+            infos: { age: 17, school: null }, // from context
           },
           grades: {
             year: 2000, // from explicit injection set(..)
@@ -191,7 +191,7 @@ Meta.test("python(sdk): reduce", async (t) => {
   await t.should("work with reduce composition and injections", async () => {
     await gql`
       query {
-        simpleInjection(two: { user: 4444 }) {
+        simpleInjection(two: { user: 4444, reduce: 4 }) {
           one
           two {
             set

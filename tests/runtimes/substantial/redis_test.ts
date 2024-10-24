@@ -2,21 +2,21 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import {
-  SUB_REDIS,
   basicTestTemplate,
   childWorkflowTestTemplate,
   concurrentWorkflowTestTemplate,
   redisCleanup,
   retrySaveTestTemplate,
+  SUB_REDIS,
 } from "./common.ts";
 
 basicTestTemplate(
   "redis",
   {
-    delays: { awaitSleepCompleteSec: 8 },
+    delays: { awaitSleepCompleteSec: 16 },
     secrets: { SUB_REDIS },
   },
-  redisCleanup(SUB_REDIS)
+  redisCleanup(SUB_REDIS),
 );
 
 concurrentWorkflowTestTemplate(
@@ -25,7 +25,7 @@ concurrentWorkflowTestTemplate(
     delays: { awaitEmailCompleteSec: 12 },
     secrets: { SUB_REDIS },
   },
-  redisCleanup(SUB_REDIS)
+  redisCleanup(SUB_REDIS),
 );
 
 retrySaveTestTemplate(
@@ -36,8 +36,7 @@ retrySaveTestTemplate(
     },
     secrets: { SUB_REDIS },
   },
-
-  redisCleanup(SUB_REDIS)
+  redisCleanup(SUB_REDIS),
 );
 
 childWorkflowTestTemplate(
@@ -49,5 +48,5 @@ childWorkflowTestTemplate(
 
     secrets: { SUB_REDIS },
   },
-  redisCleanup(SUB_REDIS)
+  redisCleanup(SUB_REDIS),
 );

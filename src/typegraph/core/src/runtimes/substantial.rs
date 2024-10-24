@@ -4,8 +4,9 @@
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
 use crate::global_store::Store;
-use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::t::{self, TypeBuilder};
 use crate::typegraph::TypegraphContext;
+use crate::types::WithRuntimeConfig;
 use crate::wit::core::FuncParams;
 use crate::wit::{
     core::RuntimeId, runtimes::Effect as WitEffect, runtimes::SubstantialOperationData,
@@ -214,10 +215,11 @@ fn use_arg_or_json_string(arg: Option<u32>, flag: bool) -> Result<u32> {
     };
 
     t::string()
-        .config(
-            "format",
-            serde_json::to_string("json").map_err(|e| e.to_string())?,
-        )
         .build()
-        .map(|r| r.into())
+        .and_then(|r| {
+            r.with_config(json!({
+                "format": "json"
+            }))
+        })
+        .map(|r| r.id().into())
 }

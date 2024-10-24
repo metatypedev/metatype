@@ -6,10 +6,11 @@ import {
   TgFinalizationResult,
   TypegraphOutput,
 } from "../typegraph.ts";
-import { ReducePath } from "../gen/typegraph_core.d.ts";
+import { ReduceEntry } from "../gen/typegraph_core.d.ts";
 import { serializeStaticInjection } from "./injection_utils.ts";
 import { SerializeParams } from "../gen/typegraph_core.d.ts";
 import { log } from "../io.ts";
+import { core } from "../wit.ts";
 
 export function stringifySymbol(symbol: symbol): string {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -19,49 +20,107 @@ export function stringifySymbol(symbol: symbol): string {
   return name;
 }
 
+export type ConfigSpec =
+  | Record<string, unknown>
+  | Array<string | Record<string, unknown>>;
+
+export function serializeConfig(config: ConfigSpec | undefined): string | null {
+  if (!config) {
+    return null;
+  }
+  const array = Array.isArray(config) ? config : [config];
+  if (array.length === 0) {
+    return null;
+  }
+  return JSON.stringify(array.reduce<Record<string, unknown>>((acc, item) => {
+    if (typeof item === "string") {
+      return { ...acc, [item]: true };
+    } else {
+      return { ...acc, ...item };
+    }
+  }, {} as Record<string, unknown>));
+}
+
+export type AsIdField = boolean | "simple" | "composite";
+export interface Base {
+  config?: ConfigSpec;
+  name?: string;
+}
+export interface BaseEx extends Base {
+  asId?: AsIdField;
+}
+
+function withConfig(id: number, config: ConfigSpec | undefined): number {
+  if (!config) {
+    return id;
+  }
+  const serialized = serializeConfig(config);
+  if (!serialized) {
+    return id;
+  }
+  return core.withConfig(id, serialized);
+}
+
+export function withBase(id: number, base: BaseEx): number {
+  let newId = id;
+  if (base.asId) {
+    newId = core.asId(newId, base.asId === "composite");
+  }
+  if (base.config) {
+    newId = withConfig(newId, base.config);
+  }
+  if (base.name) {
+    newId = core.renameType(newId, base.name);
+  }
+  return newId;
+}
+
 export function serializeRecordValues<T>(
   obj: Record<string, T>,
 ): Array<[string, string]> {
   return Object.entries(obj).map(([k, v]) => [k, JSON.stringify(v)]);
 }
 
-export function buildReduceData(
+export function buildReduceEntries(
   node: InheritDef | unknown,
-  paths: ReducePath[] = [],
+  entries: ReduceEntry[] = [],
   currPath: string[] = [],
-): ReducePath[] {
+): ReduceEntry[] {
   if (node === null || node === undefined) {
     throw new Error(`unsupported value "${node}" at ${currPath.join(".")}`);
   }
   if (node instanceof InheritDef) {
-    paths.push({
+    if (!node.payload) {
+      return entries;
+    }
+    entries.push({
       path: currPath,
-      value: { inherit: true, payload: node.payload },
+      injectionData: node.payload,
     });
-    return paths;
+    return entries;
   }
 
   if (typeof node === "object") {
     if (Array.isArray(node)) {
-      paths.push({
+      entries.push({
         path: currPath,
-        value: { inherit: false, payload: serializeStaticInjection(node) },
+        injectionData: serializeStaticInjection(node),
       });
-      return paths;
+      return entries;
     }
     for (const [k, v] of Object.entries(node)) {
-      buildReduceData(v, paths, [...currPath, k]);
+      buildReduceEntries(v, entries, [...currPath, k]);
     }
-    return paths;
+    return entries;
   }
 
   const allowed = ["number", "string", "boolean"];
   if (allowed.includes(typeof node)) {
-    paths.push({
+    entries.push({
       path: currPath,
-      value: { inherit: false, payload: serializeStaticInjection(node) },
+      injectionData: serializeStaticInjection(node),
     });
-    return paths;
+    return entries;
   }
   throw new Error(`unsupported type "${typeof node}" at ${currPath.join(".")}`);
 }

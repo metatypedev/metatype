@@ -1,10 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchemas, recreateMigrations } from "test-utils/migrations.ts";
+import { randomPGConnStr } from "test-utils/database.ts";
 
 Meta.test("Random", async (t) => {
-  const e = await t.engine("typecheck/type_alias.py");
+  const { connStr } = randomPGConnStr();
+  const e = await t.engine("typecheck/type_alias.py", {
+    secrets: {
+      POSTGRES: connStr,
+    },
+  });
+  await dropSchemas(e);
+  await recreateMigrations(e);
 
   await t.should("validate and work with a basic alias", async () => {
     await gql`
@@ -18,9 +27,9 @@ Meta.test("Random", async (t) => {
     `
       .expectData({
         get_message: {
-          B: -6252260489166848,
-          a: -6940119625891840,
-          title: "(eHAQ*ECr4%5Qwa5T",
+          B: 3336617896968192,
+          a: -1494798787674112,
+          title: "1*ajw]krgDnCzXD*N!Fx",
         },
       })
       .on(e);
@@ -40,9 +49,9 @@ Meta.test("Random", async (t) => {
     `
         .expectData({
           one: {
-            four: 7781716965982208,
-            three: "ye12M52^m",
-            two: 2221033285222400,
+            four: -6252260489166848,
+            three: "(eHAQ*ECr4%5Qwa5T",
+            two: -6940119625891840,
           },
         })
         .on(e);
@@ -72,18 +81,94 @@ Meta.test("Random", async (t) => {
       }
     `
       .expectData({
-        some_alias: { some_id: -8923192479449088, title: "tXIHACrEbD" },
+        some_alias: {
+          some_id: -4461702699548672,
+          title: "3lo*RB)",
+        },
         get_message: {
-          user_id: 6379176739209216,
+          user_id: 316945098342400,
           info: [
-            { content: "c(3]DC39H[", title: "Rg!mCL36" },
-            { content: "RJXJg7]D5%]c", title: "%Oq(27tcP0jIB" },
-            { content: "5cj1TYaTNhau(5%", title: "gqLtZgHFAi8Ud7CZH42z" },
-            { content: "6L^0kflTn9UZ^P]@032", title: "!uF88WUak2fSbYeRHQi" },
+            {
+              content: "7nQg2dMG5bQeI8zVf5",
+              title: "sw@ON",
+            },
+            {
+              content: "WQnlMI%zJq!R!xk^",
+              title: "0fr[dnu8##f",
+            },
+            {
+              content: "sX@eElTSrxh$M",
+              title: "^ItqiGoJKy1ap",
+            },
           ],
         },
-        some_alias_2: { some_title: "KB2bni&" },
-        some_alias_3: { some_title: "S#4]L*K" },
+        some_alias_2: {
+          some_title: "qloUYOlWLk]3",
+        },
+        some_alias_3: {
+          some_title: "$bNlQ3^cxB",
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("validate and work with prisma runtime", async () => {
+    await gql`
+      mutation {
+        user1: create_user(
+          data: { id: 123, name: "john", }
+          ) {
+            user_id: id
+            name
+            posts {
+              title
+              content
+            }
+          }
+      }
+    `
+      .expectData({
+        user1: {
+          name: "john",
+          user_id: 123,
+          posts: [],
+        },
+      })
+      .on(e);
+
+    await gql`
+      mutation {
+        user1: create_user(
+          data: {
+            id: 124,
+            name: "john",
+            posts: {
+              create: {
+                id: 321,
+                title: "hello",
+                content: "Hello World!",
+              }
+            }
+          }
+        ) {
+          id
+          name
+          user_posts: posts {
+            post_title: title
+            content
+          }
+        }
+      }
+    `
+      .expectData({
+        user1: {
+          id: 124,
+          name: "john",
+          user_posts: [{
+            content: "Hello World!",
+            post_title: "hello",
+          }],
+        },
       })
       .on(e);
   });

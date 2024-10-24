@@ -2,33 +2,33 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list 'Record_group' #119
-└─ item: struct #118
-   ├─ [_avg]: struct 'Record_number_fields_float' #112
-   │  └─ [age]: optional 'optional_111' #111
-   │     └─ item: float #110
-   ├─ [_count]: struct 'Record_count_aggregate' #109
-   │  ├─ [_all]: optional 'optional_108' #108
-   │  │  └─ item: integer #107
-   │  ├─ [age]: optional 'optional_108' #108
-   │  │  └─ item: integer #107
-   │  ├─ [created_at]: optional 'optional_108' #108
-   │  │  └─ item: integer #107
-   │  ├─ [id]: optional 'optional_108' #108
-   │  │  └─ item: integer #107
-   │  └─ [name]: optional 'optional_108' #108
-   │     └─ item: integer #107
-   ├─ [_max]: struct 'Record_number_fields' #117
-   │  └─ [age]: optional 'optional_116' #116
-   │     └─ item: integer #115
-   ├─ [_min]: struct 'Record_number_fields' #117
-   │  └─ [age]: optional 'optional_116' #116
-   │     └─ item: integer #115
-   ├─ [_sum]: struct 'Record_number_fields' #117
-   │  └─ [age]: optional 'optional_116' #116
-   │     └─ item: integer #115
-   ├─ [age]: optional 'optional_6' #6
-   │  └─ item: integer #5
+root: list 'Record_group' #188
+└─ item: struct #185
+   ├─ [_avg]: struct 'Record_number_fields_float' #176
+   │  └─ [age]: optional 'optional_173' #174
+   │     └─ item: float #172
+   ├─ [_count]: struct 'Record_count_aggregate' #171
+   │  ├─ [_all]: optional 'optional_168' #169
+   │  │  └─ item: integer #167
+   │  ├─ [age]: optional 'optional_168' #169
+   │  │  └─ item: integer #167
+   │  ├─ [created_at]: optional 'optional_168' #169
+   │  │  └─ item: integer #167
+   │  ├─ [id]: optional 'optional_168' #169
+   │  │  └─ item: integer #167
+   │  └─ [name]: optional 'optional_168' #169
+   │     └─ item: integer #167
+   ├─ [_max]: struct 'Record_number_fields' #184
+   │  └─ [age]: optional 'optional_181' #182
+   │     └─ item: integer #180
+   ├─ [_min]: struct 'Record_number_fields' #184
+   │  └─ [age]: optional 'optional_181' #182
+   │     └─ item: integer #180
+   ├─ [_sum]: struct 'Record_number_fields' #184
+   │  └─ [age]: optional 'optional_181' #182
+   │     └─ item: integer #180
+   ├─ [age]: optional 'optional_7' #8
+   │  └─ item: integer #6
    ├─ [created_at]: string #1
-   ├─ [id]: string #3
-   └─ [name]: string #4
+   ├─ [id]: string #4
+   └─ [name]: string #5

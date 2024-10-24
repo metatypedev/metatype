@@ -4,7 +4,7 @@
 import { Runtime } from "./Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { TypeGraph, TypeMaterializer } from "../typegraph/mod.ts";
+import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
 import { getLogger, Logger } from "../log.ts";
 import * as ast from "graphql/ast";
@@ -63,6 +63,7 @@ export class SubstantialRuntime extends Runtime {
 
   private constructor(
     typegraphName: string,
+    private tg: TypeGraphDS,
     backend: Backend,
     queue: string,
     agent: Agent,
@@ -78,8 +79,6 @@ export class SubstantialRuntime extends Runtime {
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     logger.info("initializing SubstantialRuntime");
-    // logger.debug(`init params: ${JSON.stringify(params)}`);
-
     const {
       typegraph: tg,
       args,
@@ -101,7 +100,7 @@ export class SubstantialRuntime extends Runtime {
     const backend = runtimeArgs.backend;
     if (backend.type == "redis") {
       backend.connection_string = secretManager.secretOrFail(
-        backend.connection_string
+        backend.connection_string,
       );
     }
 
@@ -140,6 +139,7 @@ export class SubstantialRuntime extends Runtime {
     // Prepare the runtime
     const instance = new SubstantialRuntime(
       tgName,
+      tg,
       backend,
       queue,
       agent,
@@ -163,7 +163,7 @@ export class SubstantialRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     _waitlist: ComputeStage[],
-    _verbose: boolean
+    _verbose: boolean,
   ): ComputeStage[] {
     if (stage.props.node === "__typename") {
       return [
@@ -179,14 +179,14 @@ export class SubstantialRuntime extends Runtime {
               return "Mutation";
             default:
               throw new Error(
-                `Unsupported operation type '${stage.props.operationType}'`
+                `Unsupported operation type '${stage.props.operationType}'`,
               );
           }
         }),
       ];
     }
 
-    if (stage.props.outType.config?.__namespace) {
+    if (this.tg.meta.namespaces!.includes(stage.props.typeIdx)) {
       return [stage.withResolver(() => ({}))];
     }
 

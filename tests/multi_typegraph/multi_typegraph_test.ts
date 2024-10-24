@@ -54,15 +54,16 @@ Meta.test("Deno: Multi-typegraph file - Random typegraph", async (t) => {
       .expectData({
         test2: {
           field: {
-            B: 333661789696.8192,
-            G: -336376534925.312,
-            R: -145566213550.8992,
+            B: 779226068287.488,
+            G: 396901315143.2704,
+            R: 895648526657.1263,
           },
           toy: {
-            color: "PFk*o570)7xg",
+            name: "w]krgDn",
+            size: -2019220594360320,
           },
-          cents: 0.5,
-          educationLevel: "tertiary",
+          cents: 1,
+          educationLevel: "secondary",
         },
       })
       .on(e);

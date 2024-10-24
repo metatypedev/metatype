@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json
-from typing import Callable, Dict, Union
+from typing import Callable, Dict, Union, Optional
 
 from typegraph.effects import EffectType
 
@@ -23,7 +23,7 @@ def serialize_injection(
         return json.dumps({"source": source, "data": value_per_effect})
 
     if value is None:
-        return json.dumps({"source": source, "data": {}})
+        return json.dumps({"source": source, "data": {"value": None}})
 
     return json.dumps({"source": source, "data": {"value": value_mapper(value)}})
 
@@ -56,7 +56,7 @@ def serialize_parent_injection(value: Union[str, Dict[EffectType, str]]):
 
 
 class InheritDef:
-    payload: str = None
+    payload: Optional[str] = None
 
     def set(self, value: Union[any, Dict[EffectType, any]]):
         self.payload = serialize_static_injection(value)

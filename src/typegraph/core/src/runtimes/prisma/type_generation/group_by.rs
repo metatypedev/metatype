@@ -5,7 +5,7 @@ use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::{Property, ScalarType};
 use crate::runtimes::prisma::type_generation::where_::Where;
-use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::t::{self, TypeBuilder};
 use crate::types::TypeId;
 
 use super::{aggregate::CountOutput, TypeGen};
@@ -33,9 +33,7 @@ impl TypeGen for GroupingFields {
             })
             .collect();
 
-        t::listx(t::string().enum_(fields))?
-            .named(self.name())
-            .build()
+        t::listx(t::string().enum_(fields))?.build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -68,8 +66,7 @@ impl TypeGen for Having {
             t::struct_().propx("OR", t::list(self_ref))?,
             t::struct_().prop("NOT", self_ref)
         ]
-        .named(name)
-        .build()
+        .build_named(name)
     }
 
     fn name(&self) -> String {
@@ -115,8 +112,7 @@ impl TypeGen for GroupByResult {
                 )
                 .build()?,
         )
-        .named(self.name())
-        .build()
+        .build_named(self.name())
     }
 
     fn name(&self) -> String {
@@ -168,7 +164,7 @@ impl TypeGen for SelectNumbers {
             }
         }
 
-        builder.named(self.name()).build()
+        builder.build_named(self.name())
     }
 
     fn name(&self) -> String {

@@ -273,7 +273,6 @@ Meta.test({
 }, async (t) => {
   await $`bash build.sh`.cwd(examplesDir.join("typegraphs/metagen/rs"));
 
-  const port = String(t.port + 1);
   const metadev = new Deno.Command("meta-full", {
     cwd: examplesDir.toString(),
     args: [
@@ -282,7 +281,7 @@ Meta.test({
       import.meta.resolve("../../../src/typegate/src/main.ts"),
       `--import-map-url`,
       import.meta.resolve("../../../import_map.json"),
-      `--gate=http://localhost:${port}`,
+      `--gate=http://localhost:0`,
     ],
     stdout: "piped",
     stderr: "piped",

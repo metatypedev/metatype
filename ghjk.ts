@@ -1,6 +1,5 @@
 // @ts-nocheck: Deno file
 
-// --
 import { METATYPE_VERSION, PUBLISHED_VERSION } from "./tools/consts.ts";
 import { file, ports, sedLock, semver, stdDeps } from "./tools/deps.ts";
 import installs from "./tools/installs.ts";

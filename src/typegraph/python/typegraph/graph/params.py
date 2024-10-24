@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import json
 from typing import List, Optional, TYPE_CHECKING, Any
 from typegraph.gen.exports import utils
-from typegraph.wit import store, wit_utils
+from typegraph.wit import ErrorStack, store, wit_utils
 
 from typegraph.gen.types import Err
 
@@ -217,7 +217,7 @@ class RawAuth:
             res = wit_utils.oauth2(store, service, scopes)
 
         if isinstance(res, Err):
-            raise Exception(res.value)
+            raise ErrorStack(res.value)
         return cls(res.value)
 
 
