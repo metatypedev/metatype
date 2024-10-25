@@ -5,15 +5,15 @@ use crate::errors::{self, Result, TgError};
 use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
+use crate::sdk::core::{MaterializerId, Policy as CorePolicy, PolicyId, RuntimeId};
+use crate::sdk::utils::Auth as SdkAuth;
 use crate::types::type_ref::TypeRef;
 use crate::types::{
     AsTypeDefEx as _, NamedTypeRef, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder,
 };
-use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
-use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
-use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
+use crate::sdk::runtimes::{Effect, MaterializerDenoPredefined};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::rc::Rc;
@@ -86,7 +86,7 @@ impl Store {
                 runtime_id: deno_runtime,
                 effect: Effect::Read,
                 data: MaterializerData::Deno(Rc::new(DenoMaterializer::Predefined(
-                    crate::wit::runtimes::MaterializerDenoPredefined {
+                    crate::sdk::runtimes::MaterializerDenoPredefined {
                         name: "true".to_string(),
                     },
                 ))),
@@ -423,7 +423,7 @@ impl Store {
         with_store(|s| s.graphql_endpoints.clone())
     }
 
-    pub fn add_auth(auth: WitAuth) -> Result<u32> {
+    pub fn add_auth(auth: SdkAuth) -> Result<u32> {
         with_store_mut(|s| {
             let auth = auth.convert()?;
             s.auths.push(auth);

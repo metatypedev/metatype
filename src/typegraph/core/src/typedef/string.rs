@@ -12,9 +12,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeString,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, FindAttribute as _, StringT, TypeDefData},
-    wit::core::TypeString,
 };
 
 impl TypeConversion for StringT {

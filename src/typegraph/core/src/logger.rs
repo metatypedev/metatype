@@ -4,52 +4,28 @@
 #[allow(unused)]
 macro_rules! debug {
     ( $($arg:tt)* ) => {
-        {
-            use std::fmt::Write as _;
-
-            let mut msg = "debug: ".to_string();
-            write!(&mut msg, $($arg)*).unwrap();
-            $crate::wit::metatype::typegraph::host::print(&msg);
-        }
+        println!("debug: {}", format!($($arg)*));
     };
 }
 
 #[allow(unused)]
 macro_rules! info {
     ( $($arg:tt)* ) => {
-        {
-            use std::fmt::Write as _;
-
-            let mut msg = "info: ".to_string();
-            write!(&mut msg, $($arg)*).unwrap();
-            $crate::wit::metatype::typegraph::host::print(&msg);
-        }
+        println!("info: {}", format!($($arg)*));
     };
 }
 
 #[allow(unused)]
 macro_rules! warning {
     ( $($arg:tt)* ) => {
-        {
-            use std::fmt::Write as _;
-
-            let mut msg = "warn: ".to_string();
-            write!(&mut msg, $($arg)*).unwrap();
-            $crate::wit::metatype::typegraph::host::print(&msg);
-        }
+        eprintln!("warning: {}", format!($($arg)*));
     };
 }
 
 #[allow(unused)]
 macro_rules! error {
     ( $($arg:tt)* ) => {
-        {
-            use std::fmt::Write as _;
-
-            let mut msg = "error: ".to_string();
-            write!(&mut msg, $($arg)*).unwrap();
-            $crate::wit::metatype::typegraph::host::print(&msg);
-        }
+        eprintln!("error: {}", format!($($arg)*));
     };
 }
 

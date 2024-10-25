@@ -71,7 +71,6 @@ seahash = "4.1.0"
 # patterns
 anyhow = "1.0.89"            # FIXME: replace anyhow with eyre
 color-eyre = "0.6.3"
-eyre = "0.6.12"              # NOTE: keep in sync with verison used by color-eyre
 thiserror = "1.0.64"
 indoc = "2.0.5"
 unindent = "0.2.3"
@@ -124,7 +123,6 @@ uuid = "1.10.0"
 # wasm
 wasmtime = "25.0.2"
 wasmtime-wasi = "25.0.2"
-wit-bindgen = "0.34.0"
 
 # deno
 # deno = { path =  "../deno/cli" }
@@ -145,8 +143,6 @@ tracing-subscriber = { version = "0.3.18", features = [
 tracing-error = "0.2"
 # `unwrap` that also logs
 tracing-unwrap = { version = "1.0.1", features = ["log-location"] }
-# collect traces to file
-tracing-appender = "0.2.3"
 
 # async
 futures = "=0.3.30" # pinned due to bug with .31 with zeromq (deno)

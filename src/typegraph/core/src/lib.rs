@@ -1,8 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+pub mod errors;
+pub use types::sdk;
+
 mod conversion;
-mod errors;
 mod global_store;
 mod logger;
 mod params;
@@ -26,6 +28,12 @@ use indoc::formatdoc;
 use params::apply;
 use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
+use sdk::core::{
+    Artifact, ContextCheck, Policy, PolicyId, PolicySpec, SerializeParams, TransformData,
+    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
+    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
+};
+use sdk::runtimes::{Handler, MaterializerDenoFunc};
 use types::type_ref::AsId;
 use types::{
     AsTypeDefEx as _, Boolean, Either, File, Float, Func, Integer, List, Named, Optional, StringT,
@@ -33,25 +41,9 @@ use types::{
     WithRuntimeConfig as _,
 };
 
-use wit::core::{
-    Artifact, ContextCheck, Policy, PolicyId, PolicySpec, SerializeParams, TransformData,
-    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
-    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
-};
-use wit::runtimes::{Guest, MaterializerDenoFunc};
-
-pub mod wit {
-    wit_bindgen::generate!({
-        world: "typegraph"
-    });
-    use crate::Lib;
-    pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
-    export!(Lib);
-}
-
 pub struct Lib {}
 
-impl wit::core::Guest for Lib {
+impl sdk::core::Handler for Lib {
     fn init_typegraph(params: TypegraphInitParams) -> Result<()> {
         typegraph::init(params)
     }
@@ -255,10 +247,10 @@ impl wit::core::Guest for Lib {
     }
 
     fn get_internal_policy() -> Result<(PolicyId, String)> {
-        let deno_mat = DenoMaterializer::Predefined(wit::runtimes::MaterializerDenoPredefined {
+        let deno_mat = DenoMaterializer::Predefined(sdk::runtimes::MaterializerDenoPredefined {
             name: "internal_policy".to_string(),
         });
-        let mat = Materializer::deno(deno_mat, crate::wit::runtimes::Effect::Read);
+        let mat = Materializer::deno(deno_mat, crate::sdk::runtimes::Effect::Read);
         let policy_id = Store::register_policy(
             Policy {
                 materializer: Store::register_materializer(mat),
@@ -314,7 +306,7 @@ impl wit::core::Guest for Lib {
                 code,
                 secrets: vec![],
             },
-            wit::runtimes::Effect::Read,
+            sdk::runtimes::Effect::Read,
         )?;
 
         Lib::register_policy(Policy {
@@ -324,7 +316,7 @@ impl wit::core::Guest for Lib {
         .map(|id| (id, name))
     }
 
-    fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, wit::core::Error> {
+    fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, sdk::core::Error> {
         TypeId(type_id).named(new_name).map(|t| t.id().0)
     }
 
@@ -358,10 +350,12 @@ macro_rules! log {
 mod tests {
     use crate::errors::{self, Result};
     use crate::global_store::Store;
+    use crate::sdk::core::{
+        Cors, Handler, MigrationAction, PrismaMigrationConfig, SerializeParams,
+    };
+    use crate::sdk::runtimes::{Effect, Handler as GuestRuntimes, MaterializerDenoFunc};
     use crate::t::{self, TypeBuilder};
     use crate::test_utils::setup;
-    use crate::wit::core::{Cors, Guest, MigrationAction, PrismaMigrationConfig, SerializeParams};
-    use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
     use crate::TypegraphInitParams;
 

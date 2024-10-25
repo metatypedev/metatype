@@ -28,8 +28,8 @@ use std::hash::Hasher as _;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use crate::wit::core::{
-    Artifact as WitArtifact, Error as TgError, MaterializerId, PolicyId, RuntimeId,
+use crate::sdk::core::{
+    Artifact as SdkArtifact, Error as TgError, MaterializerId, PolicyId, RuntimeId,
     SerializeParams, TypegraphInitParams,
 };
 
@@ -182,7 +182,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> {
+pub fn serialize(params: SerializeParams) -> Result<(String, Vec<SdkArtifact>)> {
     #[cfg(test)]
     eprintln!("Serializing typegraph...");
 
@@ -281,7 +281,7 @@ fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
 
 pub fn expose(
     fields: Vec<(String, TypeId)>,
-    default_policy: Option<Vec<crate::wit::core::PolicySpec>>,
+    default_policy: Option<Vec<crate::sdk::core::PolicySpec>>,
 ) -> Result<()> {
     let fields = fields
         .into_iter()

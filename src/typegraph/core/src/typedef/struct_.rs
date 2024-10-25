@@ -6,7 +6,7 @@ use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::types::{
     AsTypeDefEx as _, ExtendedTypeDef, FindAttribute as _, IdKind, Struct, TypeDefData, TypeId,
 };
-use crate::{errors, typegraph::TypegraphContext, wit::core::TypeStruct};
+use crate::{errors, sdk::core::TypeStruct, typegraph::TypegraphContext};
 use common::typegraph::{ObjectTypeData, TypeNode};
 use errors::Result;
 use indexmap::IndexMap;

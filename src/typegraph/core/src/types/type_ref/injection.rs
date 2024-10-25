@@ -1,7 +1,7 @@
 use super::{RefAttr, TypeRef};
+use crate::sdk::utils::ReduceEntry;
 use crate::types::Type;
-use crate::wit::utils::ReduceEntry;
-use crate::{errors::Result, wit::core::Error};
+use crate::{errors::Result, sdk::core::Error};
 use common::typegraph::{Injection, InjectionNode};
 use indexmap::{map::Entry, IndexMap};
 use serde::{Deserialize, Serialize};

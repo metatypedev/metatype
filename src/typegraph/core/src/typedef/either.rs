@@ -12,9 +12,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeEither,
     typegraph::TypegraphContext,
     types::{Either, ExtendedTypeDef, FindAttribute as _, TypeDefData, TypeId},
-    wit::core::TypeEither,
 };
 
 impl TypeConversion for Either {

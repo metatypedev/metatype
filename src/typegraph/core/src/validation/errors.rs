@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::core::Error;
+use crate::sdk::core::Error;
 
 // pub fn invalid_runtime_type(runtime: &str, materializer: &str) -> Error {
 //     format!(

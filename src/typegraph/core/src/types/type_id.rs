@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
+use crate::sdk::core::TypeId as CoreTypeId;
 use crate::typegraph::TypegraphContext;
 use crate::types::AsTypeDefEx as _;
-use crate::wit::core::TypeId as CoreTypeId;
 use std::fmt::Debug;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
