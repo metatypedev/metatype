@@ -50,7 +50,7 @@ pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
     let context = ValidatorContext { typegraph: tg };
     let validator = Validator::default();
 
-    errors.extend(tg.traverse_types(validator, &context, Layer).unwrap());
+    errors.extend(tg.traverse_types(validator, &context, Layer, 0).unwrap());
     errors
 }
 

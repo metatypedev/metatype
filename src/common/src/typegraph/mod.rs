@@ -7,6 +7,7 @@ pub mod types;
 pub mod utils;
 pub mod validator;
 pub mod visitor;
+pub mod visitor2;
 
 pub use types::*;
 

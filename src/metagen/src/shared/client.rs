@@ -1,9 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::HashMap;
+
 use crate::interlude::*;
 
-use super::types::*;
+use super::{
+    files::{get_path_to_files, ValuePath},
+    types::*,
+};
 use common::typegraph::{EffectType, ListTypeData, OptionalTypeData};
 use indexmap::IndexSet;
 
@@ -13,6 +18,7 @@ pub struct RenderManifest {
     pub node_metas: IndexSet<u32>,
     pub selections: IndexSet<u32>,
     pub root_fns: Vec<RootFn>,
+    pub input_files: Rc<HashMap<u32, Vec<ValuePath>>>,
 }
 
 pub struct RootFn {
@@ -87,6 +93,7 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
         return_types,
         node_metas,
         arg_types,
+        input_files: get_path_to_files(tg, 0)?.into(),
     })
 }
 
