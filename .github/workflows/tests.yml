@@ -310,7 +310,10 @@ jobs:
 
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 
-      - uses: codecov/codecov-action@v4
+      # we need secrets for coverage so we skip if not avail
+      # this applies to dedpendabot PRs for example
+      - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov
