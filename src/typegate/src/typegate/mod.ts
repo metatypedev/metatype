@@ -335,12 +335,11 @@ export class Typegate implements AsyncDisposable {
     );
 
     if (pushResponse.failure) {
-      throw pushResponse.failure;
-      /* return {
+      return {
         name,
         engine: null,
         response: pushResponse,
-      }; */
+      };
     }
 
     logger.info(`Initializing engine '${name}'`);

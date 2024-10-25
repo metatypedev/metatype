@@ -39,6 +39,7 @@ pub struct SavedState {
     runtimes: usize,
     materializers: usize,
     policies: usize,
+    deno_modules: usize,
 }
 
 #[derive(Default)]
@@ -54,7 +55,7 @@ pub struct Store {
 
     deno_runtime: RuntimeId,
     predefined_deno_functions: HashMap<String, MaterializerId>,
-    deno_modules: HashMap<String, MaterializerId>,
+    deno_modules: IndexMap<String, MaterializerId>,
 
     public_policy_id: PolicyId,
 
@@ -137,6 +138,7 @@ impl Store {
             runtimes: s.runtimes.len(),
             materializers: s.materializers.len(),
             policies: s.policies.len(),
+            deno_modules: s.deno_modules.len(),
         })
     }
 
@@ -147,6 +149,7 @@ impl Store {
             s.runtimes.truncate(saved_state.runtimes);
             s.materializers.truncate(saved_state.materializers);
             s.policies.truncate(saved_state.policies);
+            s.deno_modules.truncate(saved_state.deno_modules);
         })
     }
 

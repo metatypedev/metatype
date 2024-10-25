@@ -9,7 +9,7 @@ import { execRequest } from "./utils/func_utils.ts";
 import { log } from "./io.ts";
 
 export class BasicAuth {
-  constructor(public username: string, public password: string) { }
+  constructor(public username: string, public password: string) {}
   asHeaderValue(): string {
     return `Basic ${btoa(this.username + ":" + this.password)}`;
   }
@@ -117,9 +117,16 @@ export async function tgDeploy(
     throw new Error(`failed to deploy typegraph ${typegraph.name}`);
   }
 
+  const addTypegraph = response.data.addTypegraph;
+
+  if (addTypegraph.failure) {
+    console.error(addTypegraph.failure);
+    throw new Error(`failed to deploy typegraph ${typegraph.name}`);
+  }
+
   return {
     serialized: tgJson,
-    response: response.data.addTypegraph,
+    response: addTypegraph,
   };
 }
 

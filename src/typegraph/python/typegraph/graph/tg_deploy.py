@@ -15,6 +15,7 @@ from typegraph.graph.tg_artifact_upload import ArtifactUploader
 from typegraph.graph.typegraph import TypegraphOutput
 from typegraph.wit import ErrorStack, SerializeParams, store, wit_utils
 from typegraph import version as sdk_version
+from typegraph.io import Log
 
 
 @dataclass
@@ -123,10 +124,20 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
 
     response = exec_request(req)
     response = response.read().decode()
-    return DeployResult(
-        serialized=tg_json,
-        response=handle_response(response).get("data").get("addTypegraph"),
-    )
+    response = handle_response(response)
+
+    if response.errors:
+        for err in response.errors:
+            Log.error(err.message)
+        raise Exception(f"failed to deploy typegraph {tg.name}")
+
+    add_typegraph = response.get("data").get("addTypegraph")
+
+    if add_typegraph.failure is not None:
+        Log.error(add_typegraph.failure)
+        raise Exception(f"failed to deploy typegraph {tg.name}")
+
+    return DeployResult(serialized=tg_json, response=add_typegraph)
 
 
 def tg_remove(typegraph_name: str, params: TypegraphRemoveParams):

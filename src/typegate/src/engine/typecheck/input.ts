@@ -13,7 +13,8 @@ import {
 } from "./common.ts";
 
 export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
-  const validatorName = (typeIdx: number) => `validate_${typeIdx}`;
+  const validatorName = (typeIdx: number) =>
+    `validate_${tg.type(typeIdx).title}`;
   const validatorCode = new InputValidationCompiler(tg, validatorName)
     .generate(typeIdx);
 
@@ -24,7 +25,9 @@ export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
     if (errors.length > 0) {
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
-      throw new Error(`Validation errors:\n${messages}`);
+      throw new Error(
+        `Validation errors on ${validatorName(typeIdx)}:\n${messages}`,
+      );
     }
   };
 }
