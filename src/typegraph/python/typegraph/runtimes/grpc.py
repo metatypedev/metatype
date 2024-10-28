@@ -7,7 +7,7 @@ from typegraph.gen.runtimes import (
     GrpcRuntimeData,
 )
 from typegraph.runtimes.base import Runtime
-from typegraph.wit import runtimes
+from typegraph.sdk import runtimes
 
 
 class GrpcRuntime(Runtime):

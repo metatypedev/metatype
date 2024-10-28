@@ -11,7 +11,7 @@ from typegraph.gen.runtimes import (
     KvRuntimeData,
 )
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import runtimes
+from typegraph.sdk import runtimes
 
 
 class KvRuntime(Runtime):

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import json
 from typing import List, Optional, TYPE_CHECKING, Any
 from typegraph.gen import utils
-from typegraph.wit import sdk_utils
+from typegraph.sdk import sdk_utils
 
 if TYPE_CHECKING:
     from typegraph import t

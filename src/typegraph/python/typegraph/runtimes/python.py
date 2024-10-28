@@ -15,7 +15,7 @@ from typegraph.gen.runtimes import (
     MaterializerPythonModule,
 )
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import runtimes
+from typegraph.sdk import runtimes
 
 if TYPE_CHECKING:
     from typegraph import t

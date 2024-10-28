@@ -11,7 +11,7 @@ from typegraph.gen.core import (
     PolicySpec as CorePolicySpec,
     PolicyPerEffect as CorePolicyPerEffect,
 )
-from typegraph.wit import core
+from typegraph.sdk import core
 
 
 class Policy:

@@ -11,7 +11,7 @@ from typegraph.gen.aws import (
     S3RuntimeData,
 )
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import aws
+from typegraph.sdk import aws
 
 
 class S3Runtime(Runtime):

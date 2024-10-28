@@ -19,7 +19,7 @@ from typegraph.graph.params import Cors, RawAuth
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.envs.cli import CLI_ENV
-from typegraph.wit import core, sdk_utils
+from typegraph.sdk import core, sdk_utils
 from typegraph.io import Log
 
 if TYPE_CHECKING:

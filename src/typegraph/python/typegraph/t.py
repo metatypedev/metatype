@@ -44,7 +44,7 @@ from typegraph.utils import (
     build_reduce_entries,
     serialize_config,
 )
-from typegraph.wit import sdk_utils
+from typegraph.sdk import sdk_utils
 
 # TODO: better approach?
 og_list = list

@@ -11,7 +11,7 @@ from typegraph.gen.core import (
 from typegraph.gen.utils import FdkConfig, FdkOutput
 from typegraph.graph.shared_types import TypegraphOutput
 from typegraph.utils import freeze_tg_output
-from typegraph.wit import sdk_utils
+from typegraph.sdk import sdk_utils
 
 
 class Metagen:

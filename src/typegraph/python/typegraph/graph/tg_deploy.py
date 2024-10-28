@@ -12,7 +12,7 @@ from typegraph.gen.core import MigrationAction, PrismaMigrationConfig, Serialize
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_artifact_upload import ArtifactUploader
 from typegraph.graph.typegraph import TypegraphOutput
-from typegraph.wit import sdk_utils
+from typegraph.sdk import sdk_utils
 from typegraph import version as sdk_version
 
 

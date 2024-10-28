@@ -10,7 +10,7 @@ from typegraph.gen.runtimes import (
     TemporalRuntimeData,
     TemporalOperationType,
 )
-from typegraph.wit import runtimes
+from typegraph.sdk import runtimes
 
 from typegraph import t
 

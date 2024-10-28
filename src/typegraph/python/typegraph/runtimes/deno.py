@@ -15,9 +15,9 @@ from typegraph.gen.runtimes import (
 )
 from typegraph.policy import Policy
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import runtimes
+from typegraph.sdk import runtimes
 
-# from typegraph.wit import sdk_utils
+# from typegraph.sdk import sdk_utils
 
 
 if TYPE_CHECKING:

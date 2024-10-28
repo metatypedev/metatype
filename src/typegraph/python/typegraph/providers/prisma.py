@@ -4,7 +4,7 @@
 from typing import Union, Optional
 
 from typegraph.runtimes.base import Runtime
-from typegraph.wit import runtimes
+from typegraph.sdk import runtimes
 from typegraph.gen.runtimes import (
     Effect,
     PrismaRuntimeData,
