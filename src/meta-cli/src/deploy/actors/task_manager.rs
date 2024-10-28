@@ -205,9 +205,12 @@ impl<A: TaskAction + 'static> TaskManagerInit<A> {
     ) -> Option<Addr<WatcherActor<A>>> {
         match &self.task_source {
             TaskSource::Static(paths) => {
+                let config = self.action_generator.get_shared_config();
                 for path in paths {
+                    let relative_path = pathdiff::diff_paths(path, &config.working_dir)
+                        .unwrap_or_else(|| path.clone());
                     addr.do_send(AddTask {
-                        task_ref: task_generator.generate(path.clone().into(), 0),
+                        task_ref: task_generator.generate(relative_path.into(), 0),
                         reason: TaskReason::User,
                     });
                 }

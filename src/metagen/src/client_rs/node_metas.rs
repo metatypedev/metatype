@@ -131,7 +131,7 @@ pub fn {ty_name}() -> NodeMeta {{
             write!(
                 dest,
                 r#"
-        input_files: Some(input_file_list(&{input_files})),"#
+        input_files: Some(PathToInputFiles(&{input_files})),"#
             )?;
         }
         write!(
