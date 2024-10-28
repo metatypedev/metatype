@@ -49,39 +49,43 @@ export class KvRuntime extends Runtime {
   ): ComputeStage[] | Promise<ComputeStage[]> {
     const name = stage.props.materializer?.name;
 
-    const resolver: Resolver = async (args) => {
-      if (name == "kv_set") {
+    let resolver: Resolver;
+    if (name == "kv_set") {
+      resolver = async (args) => {
         const { key, value } = args;
         return await this.redis.set(key, value);
-      }
-
-      if (name == "kv_get") {
+      };
+    } else if (name == "kv_get") {
+      resolver = async (args) => {
         const { key } = args;
-        return await this.redis.get(key);
-      }
-
-      if (name == "kv_delete") {
+        const resp = await this.redis.get(key);
+        return resp;
+      };
+    } else if (name == "kv_delete") {
+      resolver = async (args) => {
         const { key } = args;
         return await this.redis.del(key);
-      }
-
-      if (name == "kv_keys") {
+      };
+    } else if (name == "kv_keys") {
+      resolver = async (args) => {
         const { filter } = args;
         return await this.redis.keys(filter ?? "*");
-      }
-
-      if (name === "kv_values") {
+      };
+    } else if (name === "kv_values") {
+      resolver = async (args) => {
         const { filter } = args;
         const keys = await this.redis.keys(filter ?? "*");
         const values = await Promise.all(
-          keys.map(async (key) => {
+          keys.map(async (key: unknown) => {
             const value = await this.redis.get(key);
             return value;
           }),
         );
         return values;
-      }
-    };
+      };
+    } else {
+      throw new Error(`unrecognized mat name: ${name}`);
+    }
     return [new ComputeStage({ ...stage.props, resolver })];
   }
 }
