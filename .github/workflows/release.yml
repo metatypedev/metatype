@@ -337,6 +337,9 @@ jobs:
       - build-docker
       - pub-docker
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -357,3 +360,8 @@ jobs:
           title: "chore(release): prepare for ${{ steps.bump.outputs.version }}"
           body: "Automatic suggested bump"
           base: main
+          # since PRs created from workflows won't have actions run
+          # on them, we create it as a draft PR 
+          # the actions will then run when it's readied for review
+          # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
+          draft: always-true

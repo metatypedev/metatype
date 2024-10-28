@@ -76,7 +76,7 @@ export class KvRuntime extends Runtime {
         const { filter } = args;
         const keys = await this.redis.keys(filter ?? "*");
         const values = await Promise.all(
-          keys.map(async (key: unknown) => {
+          keys.map(async (key: string) => {
             const value = await this.redis.get(key);
             return value;
           }),
