@@ -5,15 +5,13 @@ from dataclasses import dataclass
 from typing import Optional
 
 from typegraph import t
-from typegraph.gen.exports.aws import (
+from typegraph.gen.aws import (
     S3PresignGetParams,
     S3PresignPutParams,
     S3RuntimeData,
 )
-from typegraph.gen.exports.runtimes import EffectCreate, EffectRead
-from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import aws, ErrorStack, store
+from typegraph.wit import aws
 
 
 class S3Runtime(Runtime):
@@ -32,7 +30,6 @@ class S3Runtime(Runtime):
         path_style_secret: str,
     ):
         runtime_id = aws.register_s3_runtime(
-            store,
             S3RuntimeData(
                 host_secret=host_secret,
                 region_secret=region_secret,
@@ -41,10 +38,8 @@ class S3Runtime(Runtime):
                 path_style_secret=path_style_secret,
             ),
         )
-        if isinstance(runtime_id, Err):
-            raise ErrorStack(runtime_id.value)
 
-        super().__init__(runtime_id.value)
+        super().__init__(runtime_id)
         self.host_secret = host_secret
         self.region_secret = region_secret
         self.access_key_secret = access_key_secret
@@ -53,24 +48,21 @@ class S3Runtime(Runtime):
 
     def presign_get(self, bucket: str, expiry_secs: Optional[int] = None):
         mat_id = aws.s3_presign_get(
-            store,
             self.id,
             S3PresignGetParams(
                 bucket=bucket,
                 expiry_secs=expiry_secs,
             ),
         )
-        if isinstance(mat_id, Err):
-            raise ErrorStack(mat_id.value)
 
         return t.func(
             t.struct({"path": t.string()}),
             t.uri(),
             PresignGetMat(
-                mat_id.value,
+                mat_id,
                 bucket=bucket,
                 expiry_secs=expiry_secs,
-                effect=EffectRead(),
+                effect="read",
             ),
         )
 
@@ -81,7 +73,6 @@ class S3Runtime(Runtime):
         expiry_secs: Optional[int] = None,
     ):
         mat_id = aws.s3_presign_put(
-            store,
             self.id,
             S3PresignPutParams(
                 bucket=bucket,
@@ -89,25 +80,21 @@ class S3Runtime(Runtime):
                 expiry_secs=expiry_secs,
             ),
         )
-        if isinstance(mat_id, Err):
-            raise ErrorStack(mat_id.value)
 
         return t.func(
             t.struct({"length": t.integer(), "path": t.string()}),
             t.uri(),
             PresignPutMat(
-                mat_id.value,
+                mat_id,
                 bucket=bucket,
                 content_type=content_type,
                 expiry_secs=expiry_secs,
-                effect=EffectRead(),
+                effect="read",
             ),
         )
 
     def list(self, bucket: str):
-        mat_id = aws.s3_list(store, self.id, bucket)
-        if isinstance(mat_id, Err):
-            raise ErrorStack(mat_id.value)
+        mat_id = aws.s3_list(self.id, bucket)
 
         return t.func(
             t.struct({"path": t.string().optional()}),
@@ -117,16 +104,15 @@ class S3Runtime(Runtime):
                     "prefix": t.list(t.string()),
                 }
             ),
-            S3ListMat(mat_id.value, bucket=bucket, effect=EffectRead()),
+            S3ListMat(mat_id, bucket=bucket, effect="read"),
         )
 
     def upload(self, bucket: str, file_type: Optional[t.file] = None):
-        mat_id = aws.s3_upload(store, self.id, bucket)
-        if isinstance(mat_id, Err):
-            raise ErrorStack(mat_id.value)
+        mat_id = aws.s3_upload(self.id, bucket)
 
         if file_type is None:
             file_type = t.file()
+
         return t.func(
             t.struct(
                 {
@@ -135,16 +121,15 @@ class S3Runtime(Runtime):
                 }
             ),
             t.boolean(),
-            S3UploadMat(mat_id.value, bucket=bucket, effect=EffectCreate(True)),
+            S3UploadMat(mat_id, bucket=bucket, effect={"create": True}),
         )
 
     def upload_all(self, bucket: str, file_type: Optional[t.file] = None):
-        mat_id = aws.s3_upload_all(store, self.id, bucket)
-        if isinstance(mat_id, Err):
-            raise ErrorStack(mat_id.value)
+        mat_id = aws.s3_upload_all(self.id, bucket)
 
         if file_type is None:
             file_type = t.file()
+
         return t.func(
             t.struct(
                 {
@@ -153,7 +138,7 @@ class S3Runtime(Runtime):
                 }
             ),
             t.boolean(),
-            S3UploadAllMat(mat_id.value, bucket=bucket, effect=EffectCreate(True)),
+            S3UploadAllMat(mat_id, bucket=bucket, effect={"create": True}),
         )
 
 

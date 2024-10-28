@@ -1,15 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { MigrationAction, SerializeParams } from "./gen/typegraph_core.d.ts";
+import { MigrationAction, SerializeParams } from "./gen/core.ts";
 import { ArtifactUploader } from "./tg_artifact_upload.ts";
 import { TypegraphOutput } from "./typegraph.ts";
-import { wit_utils } from "./wit.ts";
+import { sdkUtils } from "./sdk.ts";
 import { execRequest } from "./utils/func_utils.ts";
 import { log } from "./io.ts";
 
 export class BasicAuth {
-  constructor(public username: string, public password: string) {}
+  constructor(
+    public username: string,
+    public password: string,
+  ) {}
   asHeaderValue(): string {
     return `Basic ${btoa(this.username + ":" + this.password)}`;
   }
@@ -55,14 +58,14 @@ export async function tgDeploy(
   params: TypegraphDeployParams,
 ): Promise<DeployResult> {
   const serializeParams = {
-    typegraphPath: params.typegraphPath,
+    typegraph_path: params.typegraphPath,
     prefix: params.prefix,
-    artifactResolution: true,
+    artifact_resolution: true,
     codegen: false,
-    prismaMigration: {
-      migrationsDir: params.migrationsDir ?? "prisma-migrations",
-      migrationActions: Object.entries(params.migrationActions ?? {}),
-      defaultMigrationAction: params.defaultMigrationAction ?? {
+    prisma_migration: {
+      migrations_dir: params.migrationsDir ?? "prisma-migrations",
+      migration_actions: Object.entries(params.migrationActions ?? {}),
+      default_migration_action: params.defaultMigrationAction ?? {
         apply: true,
         create: false,
         reset: false,
@@ -102,7 +105,7 @@ export async function tgDeploy(
     {
       method: "POST",
       headers,
-      body: wit_utils.gqlDeployQuery({
+      body: sdkUtils.gqlDeployQuery({
         tg: tgJson,
         secrets: Object.entries(params.secrets ?? {}),
       }),
@@ -140,7 +143,7 @@ export async function tgRemove(
     {
       method: "POST",
       headers,
-      body: wit_utils.gqlRemoveQuery([typegraphName.toString()]),
+      body: sdkUtils.gqlRemoveQuery([typegraphName.toString()]),
     },
     `tgRemove failed to remove typegraph ${typegraphName}`,
   )) as Record<string, any> | string;

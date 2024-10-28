@@ -44,19 +44,16 @@ abstract class TypeDefProcessor {
   protected funcDefs: FuncDef[];
   protected imports: TypeImport[];
   protected typeMap: Record<string, string | undefined>;
-  protected reservedKeywords: string[];
   protected fileExtension: string;
 
   constructor(params: {
     typeMap: Record<string, string | undefined>;
-    reservedKeywords: string[];
     fileExtension: string;
   }) {
     this.typeDefs = [];
     this.funcDefs = [];
     this.imports = [];
     this.typeMap = params.typeMap;
-    this.reservedKeywords = params.reservedKeywords;
     this.fileExtension = params.fileExtension;
   }
 
@@ -133,8 +130,8 @@ abstract class TypeDefProcessor {
   abstract makeArrayType(inner: string): string;
   abstract makeTupleType(first: string, second: string): string;
 
-  resolveIdent(ident: string) {
-    return this.reservedKeywords.includes(ident) ? ident + "_" : ident;
+  resolveIdent(ident: SyntaxNode) {
+    return ident.text;
   }
 
   resolveType(value: SyntaxNode): string {
@@ -162,7 +159,7 @@ abstract class TypeDefProcessor {
 
       const optional = prop.childCount === 3; // includes the `?` symbol
       const [identNode, valueNode] = prop.namedChildren;
-      const name = this.resolveIdent(identNode.text);
+      const name = this.resolveIdent(identNode);
       const value = this.resolveType(valueNode.namedChildren[0]);
 
       results.push({ name, value, optional });
@@ -209,7 +206,7 @@ abstract class TypeDefProcessor {
   abstract formatRecordTypeDef(def: RecordTypeDef): string;
   abstract formatUnionTypeDef(def: UnionTypeDef): string;
   abstract formatFuncDef(def: FuncDef): string;
-  abstract formatHeaders(): string;
+  abstract formatHeaders(moduleName: string): string;
 
   formatTypeDef(def: TypeDef) {
     if (def.kind === "alias") return this.formatAliasTypeDef(def);
@@ -225,12 +222,20 @@ abstract class TypeDefProcessor {
     return this.funcDefs.map((func) => this.formatFuncDef(func)).join("\n\n");
   }
 
+  formatFile(moduleNmae: string) {
+    return [
+      this.formatHeaders(moduleNmae),
+      this.formatTypeDefs(),
+      this.formatFuncDefs(),
+    ].join("\n\n");
+  }
+
   generate(sources: TypeDefSource[], outDir: string) {
     for (const { moduleName, content } of sources) {
       this.process(content);
 
       const filePath = path.join(outDir, moduleName + this.fileExtension);
-      const fileContent = `${this.formatHeaders()}\n\n${this.formatTypeDefs()}\n\n${this.formatFuncDefs()}`;
+      const fileContent = this.formatFile(moduleName);
 
       Deno.writeTextFileSync(filePath, fileContent);
 

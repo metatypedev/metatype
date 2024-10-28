@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { type Materializer, Runtime } from "../runtimes/mod.ts";
-import { runtimes } from "../wit.ts";
+import { runtimes } from "../sdk.ts";
 import { Func, type Typedef } from "../types.ts";
 import type {
   SubstantialBackend,
@@ -10,22 +10,21 @@ import type {
   SubstantialOperationType,
   WorkflowFileDescription,
   WorkflowKind,
-} from "../gen/typegraph_core.d.ts";
+} from "../gen/runtimes.ts";
 
 export class Backend {
   static devMemory(): SubstantialBackend {
-    return { tag: "memory" };
+    return "memory";
   }
 
   static devFs(): SubstantialBackend {
-    return { tag: "fs" };
+    return "fs";
   }
 
   static redis(connectionStringSecret: string): SubstantialBackend {
     return {
-      tag: "redis",
-      val: {
-        connectionStringSecret,
+      redis: {
+        connection_string_secret: connectionStringSecret,
       },
     };
   }
@@ -36,11 +35,11 @@ export class SubstantialRuntime extends Runtime {
 
   constructor(
     backend: SubstantialBackend,
-    fileDescriptions: Array<WorkflowFileDescription>
+    fileDescriptions: Array<WorkflowFileDescription>,
   ) {
     const id = runtimes.registerSubstantialRuntime({
       backend,
-      fileDescriptions,
+      file_descriptions: fileDescriptions,
     });
     super(id);
     this.backend = backend;
@@ -49,7 +48,7 @@ export class SubstantialRuntime extends Runtime {
   _genericSubstantialFunc(
     operation: SubstantialOperationType,
     funcArg?: Typedef,
-    funcOut?: Typedef
+    funcOut?: Typedef,
   ): Func<Typedef, Typedef, Materializer> {
     const data = {
       funcArg: funcArg?._id,
@@ -61,67 +60,39 @@ export class SubstantialRuntime extends Runtime {
   }
 
   start(kwargs: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc(
-      {
-        tag: "start",
-      },
-      kwargs
-    );
+    return this._genericSubstantialFunc("start", kwargs);
   }
 
   startRaw(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "start-raw",
-    });
+    return this._genericSubstantialFunc("start_raw");
   }
 
   stop(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "stop",
-    });
+    return this._genericSubstantialFunc("stop");
   }
 
   send(payload: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc(
-      {
-        tag: "send",
-      },
-      payload
-    );
+    return this._genericSubstantialFunc("send", payload);
   }
 
   sendRaw(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "send-raw",
-    });
+    return this._genericSubstantialFunc("send_raw");
   }
 
   queryResources(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "resources",
-    });
+    return this._genericSubstantialFunc("resources");
   }
 
   queryResults(output: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc(
-      {
-        tag: "results",
-      },
-      undefined,
-      output
-    );
+    return this._genericSubstantialFunc("results", undefined, output);
   }
 
   queryResultsRaw(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "results-raw",
-    });
+    return this._genericSubstantialFunc("results_raw");
   }
 
   #internalLinkParentChild(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "internal-link-parent-child",
-    });
+    return this._genericSubstantialFunc("internal_link_parent_child");
   }
 
   internals(): Record<string, Func<Typedef, Typedef, Materializer>> {
@@ -141,7 +112,7 @@ export class WorkflowFile {
   private constructor(
     public readonly file: string,
     public readonly kind: WorkflowKind,
-    public deps: Array<string> = []
+    public deps: Array<string> = [],
   ) {}
 
   static deno(file: string, deps: Array<string> = []): WorkflowFile {

@@ -7,13 +7,12 @@ from typing import Any, Dict, Optional, Union
 from urllib import request
 from platform import python_version
 
-from typegraph.gen.exports.utils import QueryDeployParams
-from typegraph.gen.types import Err
-from typegraph.gen.exports.core import MigrationAction, PrismaMigrationConfig
+from typegraph.gen.utils import QueryDeployParams
+from typegraph.gen.core import MigrationAction, PrismaMigrationConfig, SerializeParams
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_artifact_upload import ArtifactUploader
 from typegraph.graph.typegraph import TypegraphOutput
-from typegraph.wit import ErrorStack, SerializeParams, store, wit_utils
+from typegraph.wit import sdk_utils
 from typegraph import version as sdk_version
 
 
@@ -103,22 +102,18 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         artifact_uploader.upload_artifacts()
 
     # deploy the typegraph
-    res = wit_utils.gql_deploy_query(
-        store,
+    res = sdk_utils.gql_deploy_query(
         params=QueryDeployParams(
             tg=tg_json,
             secrets=[(k, v) for k, v in (params.secrets or {}).items()],
         ),
     )
 
-    if isinstance(res, Err):
-        raise ErrorStack(res.value)
-
     req = request.Request(
         url=url,
         method="POST",
         headers=headers,
-        data=res.value.encode(),
+        data=res.encode(),
     )
 
     response = exec_request(req)
@@ -139,16 +134,13 @@ def tg_remove(typegraph_name: str, params: TypegraphRemoveParams):
     if typegate.auth is not None:
         headers["Authorization"] = typegate.auth.as_header_value()
 
-    res = wit_utils.gql_remove_query(store, [typegraph_name])
-
-    if isinstance(res, Err):
-        raise ErrorStack(res.value)
+    res = sdk_utils.gql_remove_query([typegraph_name])
 
     req = request.Request(
         url=url,
         method="POST",
         headers=headers,
-        data=res.value.encode(),
+        data=res.encode(),
     )
 
     response = exec_request(req).read().decode()

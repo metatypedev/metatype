@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "../types.ts";
-import { runtimes } from "../wit.ts";
-import type { Effect } from "../gen/typegraph_core.d.ts";
+import { runtimes } from "../sdk.ts";
+import type { Effect } from "../gen/runtimes.ts";
 import Policy from "../policy.ts";
 import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
@@ -87,7 +87,7 @@ export class DenoRuntime extends Runtime {
   ): t.Func<I, O, ImportMat> {
     const matId = runtimes.importDenoFunction(
       {
-        funcName: name,
+        func_name: name,
         module,
         deps,
         secrets,
@@ -130,9 +130,10 @@ export class DenoRuntime extends Runtime {
   policy(name: string, _code: string): Policy;
   policy(name: string, data: Omit<DenoFunc, "effect">): Policy;
   policy(name: string, data: string | Omit<DenoFunc, "effect">): Policy {
-    const params = typeof data === "string"
-      ? { code: data, secrets: [] }
-      : { secrets: [], ...data };
+    const params =
+      typeof data === "string"
+        ? { code: data, secrets: [] }
+        : { secrets: [], ...data };
 
     return Policy.create(
       name,
@@ -144,13 +145,14 @@ export class DenoRuntime extends Runtime {
   }
 
   importPolicy(data: Omit<DenoImport, "effect">, name?: string): Policy {
-    const policyName = name ??
+    const policyName =
+      name ??
       `__imp_${data.module}_${data.name}`.replace(/[^a-zA-Z0-9_]/g, "_");
     return Policy.create(
       policyName,
       runtimes.importDenoFunction(
         {
-          funcName: data.name,
+          func_name: data.name,
           module: data.module,
           secrets: data.secrets ?? [],
           deps: data.deps ?? [],

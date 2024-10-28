@@ -6953,6 +6953,7 @@ dependencies = [
  "tracing-subscriber",
  "tracing-unwrap",
  "typegate_engine",
+ "typegraph_core",
 ]
 
 [[package]]

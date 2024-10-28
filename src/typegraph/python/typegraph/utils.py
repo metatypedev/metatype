@@ -5,8 +5,8 @@ import json
 from functools import reduce
 from typing import Any, Dict, List, Optional, Union
 
-from typegraph.gen.exports.core import SerializeParams
-from typegraph.gen.exports.utils import ReduceEntry
+from typegraph.gen.core import SerializeParams
+from typegraph.gen.utils import ReduceEntry
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.injection import InheritDef, serialize_static_injection
 from typegraph.wit import store, wit_utils

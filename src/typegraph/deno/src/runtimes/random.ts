@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "../types.ts";
-import { runtimes } from "../wit.ts";
-import { RandomRuntimeData } from "../gen/typegraph_core.d.ts";
+import { runtimes } from "../sdk.ts";
+import { RandomRuntimeData } from "../gen/runtimes.ts";
 import { Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { core, wit_utils } from "./wit.ts";
+import { core, sdkUtils } from "./sdk.ts";
 import {
   ParameterTransform,
   PolicyPerEffect,
@@ -14,8 +14,8 @@ import {
   TypeOptional,
   TypeString,
   TypeUnion,
-} from "./gen/typegraph_core.d.ts";
-import { FuncParams } from "./gen/typegraph_core.d.ts";
+} from "./gen/core.ts";
+import { FuncParams } from "./gen/core.ts";
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps/mod.ts";
 import Policy, { PolicyPerEffectObject } from "./policy.ts";
@@ -46,20 +46,18 @@ export type PolicySpec =
   | Policy
   | PolicyPerEffectObject
   | {
-    none: Policy;
-    create: Policy;
-    update: Policy;
-    delete: Policy;
-  };
+      none: Policy;
+      create: Policy;
+      update: Policy;
+      delete: Policy;
+    };
 
 export type Simplified<T> = Omit<T, "of">;
 
-export type SimplifiedNumericData<T> =
-  & { enumeration?: number[] }
-  & Omit<
-    T,
-    "enumeration"
-  >;
+export type SimplifiedNumericData<T> = { enumeration?: number[] } & Omit<
+  T,
+  "enumeration"
+>;
 
 export function getPolicyChain(
   policy: PolicySpec[] | PolicySpec,
@@ -67,12 +65,11 @@ export function getPolicyChain(
   const chain = Array.isArray(policy) ? policy : [policy];
   return chain.map((p) => {
     if (p instanceof Policy) {
-      return { tag: "simple", val: p._id } as const;
+      return { simple: p._id } as const;
     }
 
     return {
-      tag: "per-effect",
-      val: mapValues(
+      per_effect: mapValues(
         p instanceof PolicyPerEffectObject ? p.value : p,
         (v: any) => v._id,
       ) as unknown as PolicyPerEffect,
@@ -189,9 +186,7 @@ class Boolean extends Typedef {
 }
 
 /** boolean type */
-export function boolean(
-  base: Base = {},
-): Boolean {
+export function boolean(base: Base = {}): Boolean {
   return new Boolean(withBase(core.booleanb(), base));
 }
 
@@ -201,15 +196,15 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
-  readonly enumeration?: Int32Array;
+  readonly enumeration?: number[];
 
   constructor(_id: number, data: TypeInteger) {
     super(_id);
     this.min = data.min;
     this.max = data.max;
-    this.exclusiveMinimum = data.exclusiveMinimum;
-    this.exclusiveMaximum = data.exclusiveMaximum;
-    this.multipleOf = data.multipleOf;
+    this.exclusiveMinimum = data.exclusive_minimum;
+    this.exclusiveMaximum = data.exclusive_maximum;
+    this.multipleOf = data.multiple_of;
     this.enumeration = data.enumeration;
   }
 
@@ -226,9 +221,7 @@ export function integer(
 ): Integer {
   const completeData = {
     ...data,
-    enumeration: data.enumeration
-      ? new Int32Array(data.enumeration)
-      : undefined,
+    enumeration: data.enumeration,
   };
   return new Integer(withBase(core.integerb(completeData), base), completeData);
 }
@@ -239,15 +232,15 @@ class Float extends Typedef implements Readonly<TypeFloat> {
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
-  readonly enumeration?: Float64Array;
+  readonly enumeration?: number[];
 
   constructor(_id: number, data: TypeFloat) {
     super(_id);
     this.min = data.min;
     this.max = data.max;
-    this.exclusiveMinimum = data.exclusiveMinimum;
-    this.exclusiveMaximum = data.exclusiveMaximum;
-    this.multipleOf = data.multipleOf;
+    this.exclusiveMinimum = data.exclusive_minimum;
+    this.exclusiveMaximum = data.exclusive_maximum;
+    this.multipleOf = data.multiple_of;
     this.enumeration = data.enumeration;
   }
 }
@@ -259,14 +252,9 @@ export function float(
 ): Float {
   const completeData = {
     ...data,
-    enumeration: data.enumeration
-      ? new Float64Array(data.enumeration)
-      : undefined,
+    enumeration: data.enumeration,
   };
-  return new Float(
-    withBase(core.floatb(completeData), base),
-    completeData,
-  );
+  return new Float(withBase(core.floatb(completeData), base), completeData);
 }
 
 class StringT extends Typedef implements Readonly<TypeString> {
@@ -292,10 +280,7 @@ class StringT extends Typedef implements Readonly<TypeString> {
 }
 
 /** string type */
-export function string(
-  data: TypeString = {},
-  base: BaseEx = {},
-): StringT {
+export function string(data: TypeString = {}, base: BaseEx = {}): StringT {
   return new StringT(withBase(core.stringb(data), base), data);
 }
 
@@ -346,10 +331,7 @@ export function phone(): StringT {
 
 // Note: enum is a reserved word
 /** string enum type */
-export function enum_(
-  variants: string[],
-  base: Base = {},
-): StringT {
+export function enum_(variants: string[], base: Base = {}): StringT {
   return string(
     {
       enumeration: variants.map((variant) => JSON.stringify(variant)),
@@ -372,14 +354,8 @@ class File extends Typedef {
 }
 
 /** file type */
-export function file(
-  data: Simplified<TypeFile> = {},
-  base: Base = {},
-): File {
-  return new File(
-    withBase(core.fileb(data), base),
-    data,
-  );
+export function file(data: Simplified<TypeFile> = {}, base: Base = {}): File {
+  return new File(withBase(core.fileb(data), base), data);
 }
 
 class List extends Typedef {
@@ -393,7 +369,7 @@ class List extends Typedef {
     this.min = data.min;
     this.max = data.max;
     this.items = data.of;
-    this.uniqueItems = data.uniqueItems;
+    this.uniqueItems = data.unique_items;
   }
 }
 
@@ -407,10 +383,7 @@ export function list(
     of: variant._id,
     ...data,
   } as TypeList;
-  return new List(
-    withBase(core.listb(completeData), base),
-    completeData,
-  );
+  return new List(withBase(core.listb(completeData), base), completeData);
 }
 
 class Optional extends Typedef {
@@ -420,7 +393,7 @@ class Optional extends Typedef {
   constructor(_id: number, data: TypeOptional) {
     super(_id);
     this.item = data.of;
-    this.defaultItem = data.defaultItem;
+    this.defaultItem = data.default_item;
   }
 }
 
@@ -433,7 +406,7 @@ export function optional(
   const completeData = {
     of: variant._id,
     ...data,
-    defaultItem: JSON.stringify(data.defaultItem),
+    defaultItem: JSON.stringify(data.default_item),
   } as TypeOptional;
   return new Optional(
     withBase(core.optionalb(completeData), base),
@@ -451,12 +424,9 @@ class Union extends Typedef {
 }
 
 /** union type */
-export function union(
-  variants: Array<Typedef>,
-  base: Base = {},
-): Union {
+export function union(variants: Array<Typedef>, base: Base = {}): Union {
   const data = {
-    variants: new Uint32Array(variants.map((variant) => variant._id)),
+    variants: variants.map((variant) => variant._id),
   };
   return new Union(withBase(core.unionb(data), base), data);
 }
@@ -471,12 +441,9 @@ class Either extends Typedef {
 }
 
 /** either type */
-export function either(
-  variants: Array<Typedef>,
-  base: Base = {},
-): Either {
+export function either(variants: Array<Typedef>, base: Base = {}): Either {
   const data = {
-    variants: new Uint32Array(variants.map((variant) => variant._id)),
+    variants: variants.map((variant) => variant._id),
   };
   return new Either(withBase(core.eitherb(data), base), data);
 }
@@ -492,7 +459,10 @@ export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
 /** struct type */
 export function struct<P extends { [key: string]: Typedef }>(
   props: P,
-  { additionalProps, ...base }: Base & {
+  {
+    additionalProps,
+    ...base
+  }: Base & {
     additionalProps?: boolean;
   } = {},
 ): Struct<P> {
@@ -500,7 +470,7 @@ export function struct<P extends { [key: string]: Typedef }>(
     withBase(
       core.structb({
         props: Object.entries(props).map(([name, typ]) => [name, typ._id]),
-        additionalProps: additionalProps ?? false,
+        additional_props: additionalProps ?? false,
       }),
       base,
     ),
@@ -599,10 +569,7 @@ export class Func<
    * see [parameter transformations](https://metatype.dev/docs/reference/types/parameter-transformations)
    */
   reduce(value: Record<string, unknown | InheritDef>): Func {
-    const reducedId = wit_utils.reduceb(
-      this._id,
-      buildReduceEntries(value),
-    );
+    const reducedId = sdkUtils.reduceb(this._id, buildReduceEntries(value));
 
     return new Func(
       reducedId,
@@ -631,10 +598,10 @@ export class Func<
     const transformData = core.getTransformData(this.inp._id, transformTree);
 
     return func(
-      new Typedef(transformData.queryInput),
+      new Typedef(transformData.query_input),
       this.out,
       this.mat,
-      transformData.parameterTransform,
+      transformData.parameter_transform,
       this.config,
     );
   }
@@ -681,9 +648,9 @@ export function func<
       inp: inp._id,
       out: out._id,
       mat: mat._id,
-      parameterTransform: transformData ?? undefined,
-      rateCalls,
-      rateWeight,
+      parameter_transform: transformData ?? undefined,
+      rate_calls: rateCalls,
+      rate_weight: rateWeight,
     }) as number,
     inp,
     out,

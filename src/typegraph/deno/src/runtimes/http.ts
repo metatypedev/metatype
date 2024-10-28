@@ -6,15 +6,13 @@ import {
   Effect,
   HttpMethod,
   MaterializerHttpRequest,
-} from "../gen/typegraph_core.d.ts";
-import { runtimes } from "../wit.ts";
+} from "../gen/runtimes.ts";
+import { runtimes } from "../sdk.ts";
 import { Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 
-type HttpRequestMat<M extends string> =
-  & Materializer
-  & Omit<MaterializerHttpRequest, "method">
-  & {
+type HttpRequestMat<M extends string> = Materializer &
+  Omit<MaterializerHttpRequest, "method"> & {
     method: M;
   };
 
@@ -27,8 +25,8 @@ export class HttpRuntime extends Runtime {
     super(
       runtimes.registerHttpRuntime({
         endpoint,
-        certSecret,
-        basicAuthSecret,
+        cert_secret: certSecret,
+        basic_auth_secret: basicAuthSecret,
       }),
     );
   }

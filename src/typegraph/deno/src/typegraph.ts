@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "./types.ts";
-import { core } from "./gen/typegraph_core.js";
+import { core } from "./sdk.ts";
 import { caller, dirname, fromFileUrl } from "./deps/mod.ts";
 import { InjectionValue } from "./utils/type_utils.ts";
 import {
@@ -10,9 +10,9 @@ import {
   serializeGenericInjection,
   serializeStaticInjection,
 } from "./utils/injection_utils.ts";
-import { Auth, Cors as CorsWit, Rate, wit_utils } from "./wit.ts";
+import { Auth, Cors as CoreCors, Rate, sdkUtils } from "./sdk.ts";
 import { getPolicyChain } from "./types.ts";
-import { Artifact, SerializeParams } from "./gen/typegraph_core.d.ts";
+import { Artifact, SerializeParams } from "./gen/core.ts";
 import { Manager } from "./tg_manage.ts";
 import { log } from "./io.ts";
 import { hasCliEnv } from "./envs/cli.ts";
@@ -20,7 +20,7 @@ import process from "node:process";
 
 type Exports = Record<string, t.Func>;
 
-type Cors = Partial<CorsWit>;
+type Cors = Partial<CoreCors>;
 
 interface TypegraphArgs {
   name: string;
@@ -34,7 +34,10 @@ interface TypegraphArgs {
 }
 
 export class ApplyFromArg {
-  constructor(public name: string | null, public type: number | null) {}
+  constructor(
+    public name: string | null,
+    public type: number | null,
+  ) {}
 }
 
 export class ApplyFromStatic {
@@ -46,7 +49,10 @@ export class ApplyFromSecret {
 }
 
 export class ApplyFromContext {
-  constructor(public key: string | null, public type: number | null) {}
+  constructor(
+    public key: string | null,
+    public type: number | null,
+  ) {}
 }
 
 export class ApplyFromParent {
@@ -150,14 +156,12 @@ export async function typegraph(
   maybeBuilder?: TypegraphBuilder,
 ): Promise<TypegraphOutput> {
   ++counter;
-  const args = typeof nameOrArgs === "string"
-    ? { name: nameOrArgs }
-    : nameOrArgs;
+  const args =
+    typeof nameOrArgs === "string" ? { name: nameOrArgs } : nameOrArgs;
 
   const { name, dynamic, cors, prefix, rate, secrets } = args;
-  const builder = "builder" in args
-    ? (args.builder as TypegraphBuilder)
-    : maybeBuilder!;
+  const builder =
+    "builder" in args ? (args.builder as TypegraphBuilder) : maybeBuilder!;
 
   const file = caller();
   if (!file) {
@@ -168,13 +172,13 @@ export async function typegraph(
   const path = fromFileUrl(`file://${simpleFile}`);
 
   const defaultCorsFields = {
-    allowCredentials: true,
-    allowHeaders: [],
-    allowMethods: [],
-    allowOrigin: [],
-    exposeHeaders: [],
-    maxAgeSec: undefined,
-  } as CorsWit;
+    allow_credentials: true,
+    allow_headers: [],
+    allow_methods: [],
+    allow_origin: [],
+    expose_headers: [],
+    max_age_sec: undefined,
+  } as CoreCors;
 
   const defaultRateFields = {
     localExcess: 0,
@@ -200,13 +204,13 @@ export async function typegraph(
       return new InheritDef();
     },
     rest: (graphql: string) => {
-      return wit_utils.addGraphqlEndpoint(graphql);
+      return sdkUtils.addGraphqlEndpoint(graphql);
     },
     auth: (value: Auth | RawAuth) => {
       if (value instanceof RawAuth) {
-        return wit_utils.addRawAuth(value.jsonStr);
+        return sdkUtils.addRawAuth(value.jsonStr);
       }
-      return wit_utils.addAuth(value);
+      return sdkUtils.addAuth(value);
     },
     ref: (name: string) => {
       return genRef(name);
@@ -219,7 +223,7 @@ export async function typegraph(
 
   try {
     builder(g);
-  } catch (err) {
+  } catch (err: any) {
     if (err.payload && !err.cause) {
       err.cause = err.payload;
     }
@@ -277,7 +281,7 @@ export async function typegraph(
 
 /** generate a type reference (by name) */
 export function genRef(name: string): t.Typedef {
-  const value = core.refb(name, null);
+  const value = core.refb(name);
   if (typeof value == "object") {
     throw new Error(JSON.stringify(value));
   }

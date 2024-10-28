@@ -3,16 +3,15 @@
 
 import json
 from typing import List, Union
-from typegraph.gen.exports.core import (
+from typegraph.gen.core import (
     MigrationAction,
     SerializeParams,
     PrismaMigrationConfig,
 )
-from typegraph.gen.exports.utils import FdkConfig, FdkOutput
-from typegraph.gen.types import Err
+from typegraph.gen.utils import FdkConfig, FdkOutput
 from typegraph.graph.shared_types import TypegraphOutput
 from typegraph.utils import freeze_tg_output
-from typegraph.wit import ErrorStack, store, wit_utils
+from typegraph.wit import sdk_utils
 
 
 class Metagen:
@@ -58,13 +57,11 @@ class Metagen:
         overwrite: Union[bool, None] = None,
     ) -> List[FdkOutput]:
         fdk_config = self._get_fdk_config(tg_output, target_name)
-        res = wit_utils.metagen_exec(store, fdk_config)
-        if isinstance(res, Err):
-            raise ErrorStack(res.value)
-        for item in res.value:
+        res = sdk_utils.metagen_exec(fdk_config)
+        for item in res:
             if overwrite is not None:
                 item.overwrite = overwrite
-        return res.value
+        return res
 
     def run(
         self,
@@ -73,6 +70,4 @@ class Metagen:
         overwrite: Union[bool, None] = None,
     ):
         items = self.dry_run(tg_output, target_name, overwrite)
-        res = wit_utils.metagen_write_files(store, items, self.workspace_path)
-        if isinstance(res, Err):
-            raise ErrorStack(res.value)
+        _ = sdk_utils.metagen_write_files(items, self.workspace_path)

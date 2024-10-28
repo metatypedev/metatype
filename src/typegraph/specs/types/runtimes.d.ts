@@ -69,12 +69,12 @@ type MaterializerHttpRequest = {
 type MaterializerPythonDef = {
   runtime: RuntimeId;
   name: string;
-  fn: string;
+  function: string;
 };
 
 type MaterializerPythonLambda = {
   runtime: RuntimeId;
-  fn: string;
+  function: string;
 };
 
 type MaterializerPythonModule = {

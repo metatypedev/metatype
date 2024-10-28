@@ -27,7 +27,7 @@ function rpcRequest<R, P>(method: string, params?: P) {
 
   const jsonRequest = JSON.stringify(request);
 
-  process.stdout.write(jsonRequest + "\n");
+  process.stdout.write("jsonrpc: " + jsonRequest + "\n");
   state.id += 1;
 
   const buffer = Buffer.alloc(BUFFER_SIZE);

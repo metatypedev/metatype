@@ -514,3 +514,11 @@ pub fn current_typegraph_dir() -> Result<PathBuf> {
     // TODO error handling
     Ok(tg_path.parent().unwrap().to_owned())
 }
+
+pub fn reset() {
+    TG.with_borrow_mut(|tg| {
+        if let Some(ctx) = tg.take() {
+            Store::restore(ctx.saved_store_state.unwrap());
+        }
+    });
+}

@@ -2,11 +2,7 @@
   "name": "@typegraph/sdk",
   "version": "0.5.0-rc.2",
   "publish": {
-    "exclude": [
-      "!src/gen",
-      "!LICENSE.md",
-      "!README.md"
-    ]
+    "exclude": ["!src/gen", "!LICENSE.md", "!README.md"]
   },
   "exports": {
     "./deps/_import.ts": "./src/deps/_import.ts",
@@ -40,6 +36,6 @@
     "./utils/func_utils.ts": "./src/utils/func_utils.ts",
     "./utils/injection_utils.ts": "./src/utils/injection_utils.ts",
     "./utils/type_utils.ts": "./src/utils/type_utils.ts",
-    "./wit.ts": "./src/wit.ts"
+    "./sdk.ts": "./src/sdk.ts"
   }
 }

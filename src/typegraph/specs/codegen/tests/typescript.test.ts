@@ -14,11 +14,11 @@ Deno.test("TypeScript type alias codegen", () => {
 });
 
 Deno.test("TypeScript struct codegen", () => {
-  const pycg = new TypeScriptCodeGenerator();
+  const tscg = new TypeScriptCodeGenerator();
 
-  pycg.process(utils.recordCase);
+  tscg.process(utils.recordCase);
 
-  const result = pycg.formatTypeDefs();
+  const result = tscg.formatTypeDefs();
   const expected = `export type RecordLike = {
   num: number
   key: string
@@ -65,7 +65,7 @@ Deno.test("TypeScript import codegen", () => {
 
   const result = tscg.formatHeaders();
   const expected = `import { rpcRequest } from "./client.ts";
-import { Foo, Bar } from "./foobar.ts";`;
+import type { Foo, Bar } from "./foobar.ts";`;
 
   assertEquals(result, expected);
 });

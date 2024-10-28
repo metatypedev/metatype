@@ -85,13 +85,13 @@ pub struct MaterializerHttpRequest {
 pub struct MaterializerPythonDef {
     pub runtime: RuntimeId,
     pub name: String,
-    pub fn_: String,
+    pub function: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MaterializerPythonLambda {
     pub runtime: RuntimeId,
-    pub fn_: String,
+    pub function: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

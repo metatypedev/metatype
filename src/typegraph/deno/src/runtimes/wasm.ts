@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "../types.ts";
-import { runtimes } from "../wit.ts";
-import { Effect } from "../gen/typegraph_core.d.ts";
+import { runtimes } from "../sdk.ts";
+import { Effect } from "../gen/runtimes.ts";
 import { Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 
@@ -32,7 +32,7 @@ class WasmRuntimeWire extends WasmRuntime {
   constructor(artifactPath: string) {
     super(
       runtimes.registerWasmWireRuntime({
-        wasmArtifact: artifactPath,
+        wasm_artifact: artifactPath,
       }),
     );
   }
@@ -54,7 +54,7 @@ class WasmRuntimeWire extends WasmRuntime {
         effect,
       },
       {
-        funcName: name,
+        func_name: name,
       },
     );
 
@@ -70,7 +70,7 @@ class WasmRuntimeReflected extends WasmRuntime {
   constructor(artifactPath: string) {
     super(
       runtimes.registerWasmReflectedRuntime({
-        wasmArtifact: artifactPath,
+        wasm_artifact: artifactPath,
       }),
     );
   }
@@ -92,7 +92,7 @@ class WasmRuntimeReflected extends WasmRuntime {
         effect,
       },
       {
-        funcName: name,
+        func_name: name,
       },
     );
 

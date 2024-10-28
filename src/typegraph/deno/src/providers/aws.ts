@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Materializer, Runtime } from "../runtimes/mod.ts";
-import { aws } from "../wit.ts";
+import { aws } from "../sdk.ts";
 import {
   S3PresignGetParams,
   S3PresignPutParams,
   S3RuntimeData,
-} from "../gen/typegraph_core.d.ts";
+} from "../gen/aws.ts";
 import { t } from "../index.ts";
 
 type S3PresignGetMat = Materializer & S3PresignGetParams;
@@ -26,32 +26,32 @@ export class S3Runtime extends Runtime {
   constructor(options: S3RuntimeData) {
     const id = aws.registerS3Runtime(options);
     super(id);
-    this.hostSecret = options.hostSecret;
-    this.regionSecret = options.regionSecret;
-    this.accessKeySecret = options.accessKeySecret;
-    this.secretKeySecret = options.secretKeySecret;
-    this.pathStyleSecret = options.pathStyleSecret;
+    this.hostSecret = options.host_secret;
+    this.regionSecret = options.region_secret;
+    this.accessKeySecret = options.access_key_secret;
+    this.secretKeySecret = options.secret_key_secret;
+    this.pathStyleSecret = options.path_style_secret;
   }
 
   /** create a function to presign an S3 GetObject request */
   public presignGet(params: S3PresignGetParams): t.Func {
-    const { bucket, expirySecs } = params;
+    const { bucket, expiry_secs } = params;
     const mat: S3PresignGetMat = {
       _id: aws.s3PresignGet(this._id, params),
       bucket,
-      expirySecs,
+      expiry_secs,
     };
     return t.func(t.struct({ path: t.string() }), t.uri(), mat);
   }
 
   /** create a function to presign an S3 PutObject request */
   public presignPut(params: S3PresignPutParams): t.Func {
-    const { bucket, expirySecs, contentType } = params;
+    const { bucket, expiry_secs, content_type } = params;
     const mat: S3PresignPutMat = {
       _id: aws.s3PresignPut(this._id, params),
       bucket,
-      expirySecs,
-      contentType,
+      expiry_secs,
+      content_type,
     };
     return t.func(
       t.struct({ length: t.integer(), path: t.string() }),
@@ -101,7 +101,7 @@ export class S3Runtime extends Runtime {
     };
     return t.func(
       t.struct({
-        prefix: t.string().optional({ defaultItem: "" }),
+        prefix: t.string().optional({ default_item: "" }),
         files: t.list(fileType),
       }),
       t.boolean(),

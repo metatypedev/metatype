@@ -339,6 +339,12 @@ impl sdk::core::Handler for Lib {
     }
 }
 
+impl Lib {
+    pub fn reset() {
+        typegraph::reset();
+    }
+}
+
 #[macro_export]
 macro_rules! log {
     ($($arg:tt)*) => {

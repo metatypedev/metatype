@@ -23,7 +23,6 @@ class PythonCodeGenerator extends TypeDefProcessor {
   constructor() {
     super({
       typeMap,
-      reservedKeywords: [],
       fileExtension: ".py",
     });
   }
@@ -37,17 +36,17 @@ class PythonCodeGenerator extends TypeDefProcessor {
   }
 
   override formatHeaders() {
-    return [
+    const baseImports = [
       "import typing as t",
       "from pydantic import BaseModel",
       "from client import rpc_request",
-      this.imports
-        .map(
-          ({ source, imports }) =>
-            `from ${source} import ${imports.join(", ")}`,
-        )
-        .join("\n"),
-    ].join("\n");
+    ];
+
+    const imports = this.imports.map(
+      ({ source, imports }) => `from ${source} import ${imports.join(", ")}`,
+    );
+
+    return [...baseImports, ...imports].filter(Boolean).join("\n");
   }
 
   override formatAliasTypeDef(def: AliasTypeDef) {

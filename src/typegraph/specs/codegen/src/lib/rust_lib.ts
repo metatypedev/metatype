@@ -18,13 +18,10 @@ const typeMap = {
   void: "()",
 };
 
-const reservedKeywords = ["fn", "type"];
-
 class RustLibCodeGenerator extends TypeDefProcessor {
   constructor() {
     super({
       typeMap,
-      reservedKeywords,
       fileExtension: ".rs",
     });
   }
@@ -37,16 +34,15 @@ class RustLibCodeGenerator extends TypeDefProcessor {
     return `(${first}, ${second})`;
   }
 
-  override formatHeaders() {
-    return [
-      "use serde::{Serialize, Deserialize};",
-      this.imports
-        .map(
-          ({ imports, source }) =>
-            `use super::${source}::${imports.length > 1 ? `{${imports.join(", ")}}` : imports};`,
-        )
-        .join("\n"),
-    ].join("\n");
+  override formatHeaders(_moduleName?: string) {
+    const baseImport = "use serde::{Serialize, Deserialize};";
+
+    const imports = this.imports.map(
+      ({ imports, source }) =>
+        `use super::${source}::${imports.length > 1 ? `{${imports.join(", ")}}` : imports};`,
+    );
+
+    return [baseImport, ...imports].filter(Boolean).join("\n");
   }
 
   override formatAliasTypeDef(def: AliasTypeDef) {
@@ -97,9 +93,10 @@ ${this.funcDefs.map((f) => `    ${this.formatFuncDef(f)}`).join("\n")}
   }
 
   override postGenerate(sources: TypeDefSource[], outDir: string) {
-    const imports =
-      sources.map(({ moduleName }) => `pub mod ${moduleName};`).join("\n") +
-      "pub use core::Error;";
+    const imports = sources
+      .map(({ moduleName }) => `pub mod ${moduleName};`)
+      .concat("pub use core::Error;")
+      .join("\n");
 
     Deno.writeTextFileSync(path.join(outDir, "mod.rs"), imports);
 

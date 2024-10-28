@@ -3,8 +3,8 @@
 
 import { Materializer, Runtime } from "./mod.ts";
 import * as t from "../types.ts";
-import { runtimes } from "../wit.ts";
-import { Effect, KvMaterializer } from "../gen/typegraph_core.d.ts";
+import { runtimes } from "../sdk.ts";
+import { Effect, KvMaterializer } from "../gen/runtimes.ts";
 
 import { fx } from "../index.ts";
 
@@ -26,10 +26,13 @@ export class KvRuntime extends Runtime {
   }
 
   #operation(operation: KvMaterializer, effect: Effect) {
-    const mad_id = runtimes.kvOperation({
-      runtime: this._id,
-      effect: effect,
-    }, operation);
+    const mad_id = runtimes.kvOperation(
+      {
+        runtime: this._id,
+        effect: effect,
+      },
+      operation,
+    );
 
     return new KvOperationMat(mad_id, operation);
   }
@@ -37,7 +40,7 @@ export class KvRuntime extends Runtime {
   set() {
     const mat = this.#operation("set", fx.update());
     return t.func(
-      t.struct({ "key": t.string(), "value": t.string() }),
+      t.struct({ key: t.string(), value: t.string() }),
       t.string(),
       mat,
     );
@@ -45,18 +48,18 @@ export class KvRuntime extends Runtime {
 
   get() {
     const mat = this.#operation("get", fx.read());
-    return t.func(t.struct({ "key": t.string() }), t.string(), mat);
+    return t.func(t.struct({ key: t.string() }), t.string(), mat);
   }
 
   delete() {
     const mat = this.#operation("delete", fx.delete_());
-    return t.func(t.struct({ "key": t.string() }), t.integer(), mat);
+    return t.func(t.struct({ key: t.string() }), t.integer(), mat);
   }
 
   keys() {
     const mat = this.#operation("keys", fx.read());
     return t.func(
-      t.struct({ "filter": t.string().optional() }),
+      t.struct({ filter: t.string().optional() }),
       t.list(t.string()),
       mat,
     );
@@ -65,7 +68,7 @@ export class KvRuntime extends Runtime {
   values() {
     const mat = this.#operation("values", fx.read());
     return t.func(
-      t.struct({ "filter": t.string().optional() }),
+      t.struct({ filter: t.string().optional() }),
       t.list(t.string()),
       mat,
     );

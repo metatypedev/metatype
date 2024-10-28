@@ -10,6 +10,7 @@ use super::deploy::MigrationAction;
 use crate::deploy::actors::console::Console;
 use crate::deploy::actors::task_manager::TaskRef;
 use crate::interlude::*;
+use crate::typegraph::rpc::{RpcCall as TypegraphRpcCall, RpcDispatch};
 use color_eyre::owo_colors::OwoColorize;
 use common::typegraph::Typegraph;
 use serde::Deserialize;
@@ -106,7 +107,7 @@ impl TaskAction for SerializeAction {
     type FailureData = SerializeError;
     type Options = SerializeOptions;
     type Generator = SerializeActionGenerator;
-    type RpcCall = serde_json::Value;
+    type RpcCall = TypegraphRpcCall;
 
     async fn get_command(&self) -> Result<Command> {
         build_task_command(
@@ -171,7 +172,7 @@ impl TaskAction for SerializeAction {
         &self.task_ref
     }
 
-    async fn get_rpc_response(&self, _call: &serde_json::Value) -> Result<serde_json::Value> {
-        Err(ferr!("rpc request not supported on serialize task"))
+    async fn get_rpc_response(&self, call: Self::RpcCall) -> Result<serde_json::Value> {
+        Ok(call.dispatch()?)
     }
 }

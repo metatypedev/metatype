@@ -4,19 +4,18 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-from typing_extensions import TypedDict
 
+from typing_extensions import TypedDict
 from typegraph import fx, t
-from typegraph.gen.exports.runtimes import (
+from typegraph.gen.runtimes import (
     BaseMaterializer,
     Effect,
     HttpMethod,
     HttpRuntimeData,
     MaterializerHttpRequest,
 )
-from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import runtimes, store
+from typegraph.wit import runtimes
 
 
 class HttpRequestKwargs(TypedDict):
@@ -67,12 +66,9 @@ class HttpRuntime(Runtime):
         basic_auth_secret: Optional[str] = None,
     ):
         runtime_id = runtimes.register_http_runtime(
-            store, HttpRuntimeData(endpoint, cert_secret, basic_auth_secret)
+            HttpRuntimeData(endpoint, cert_secret, basic_auth_secret)
         )
-        if isinstance(runtime_id, Err):
-            raise Exception(runtime_id.value)
-
-        super().__init__(runtime_id.value)
+        super().__init__(runtime_id)
         self.endpoint = endpoint
         self.cert_secret = cert_secret
         self.basic_auth_secret = basic_auth_secret
@@ -87,7 +83,6 @@ class HttpRuntime(Runtime):
         opts: HttpRequestOptions,
     ):
         mat_id = runtimes.http_request(
-            store,
             BaseMaterializer(runtime=self.id, effect=effect),
             MaterializerHttpRequest(
                 method,
@@ -95,22 +90,19 @@ class HttpRuntime(Runtime):
                 content_type=opts.content_type,
                 header_prefix=opts.header_prefix,
                 query_fields=opts.query_fields,
-                rename_fields=list(opts.rename_fields.items())
-                if opts.rename_fields
-                else None,
+                rename_fields=(
+                    list(opts.rename_fields.items()) if opts.rename_fields else None
+                ),
                 body_fields=opts.body_fields,
                 auth_token_field=opts.auth_token_field,
             ),
         )
 
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
-
         return t.func(
             inp,
             out,
             HttpRequestMat(
-                mat_id.value,
+                mat_id,
                 method=method,
                 effect=effect,
                 path=path,
@@ -126,7 +118,7 @@ class HttpRuntime(Runtime):
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
-            HttpMethod.GET,
+            "get",
             path,
             inp,
             out,
@@ -144,7 +136,7 @@ class HttpRuntime(Runtime):
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
-            HttpMethod.POST,
+            "post",
             path,
             inp,
             out,
@@ -162,7 +154,7 @@ class HttpRuntime(Runtime):
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
-            HttpMethod.PUT,
+            "put",
             path,
             inp,
             out,
@@ -180,7 +172,7 @@ class HttpRuntime(Runtime):
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
-            HttpMethod.PATCH,
+            "patch",
             path,
             inp,
             out,
@@ -198,7 +190,7 @@ class HttpRuntime(Runtime):
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
-            HttpMethod.DELETE,
+            "delete",
             path,
             inp,
             out,

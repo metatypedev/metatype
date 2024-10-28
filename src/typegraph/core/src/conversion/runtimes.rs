@@ -220,12 +220,12 @@ impl MaterializerConverter for PythonMaterializer {
             Lambda(lambda) => {
                 let mut data = IndexMap::new();
                 let mut sha256 = Sha256::new();
-                sha256.update(lambda.fn_.clone());
+                sha256.update(lambda.function.clone());
                 let fn_hash: String = format!("sha256_{:x}", sha256.finalize());
                 data.insert("name".to_string(), serde_json::Value::String(fn_hash));
                 data.insert(
                     "fn".to_string(),
-                    serde_json::Value::String(lambda.fn_.clone()),
+                    serde_json::Value::String(lambda.function.clone()),
                 );
                 ("lambda".to_string(), data)
             }
@@ -235,7 +235,10 @@ impl MaterializerConverter for PythonMaterializer {
                     "name".to_string(),
                     serde_json::Value::String(def.name.clone()),
                 );
-                data.insert("fn".to_string(), serde_json::Value::String(def.fn_.clone()));
+                data.insert(
+                    "fn".to_string(),
+                    serde_json::Value::String(def.function.clone()),
+                );
                 ("def".to_string(), data)
             }
             Module(module) => {

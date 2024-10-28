@@ -35,8 +35,12 @@ async function testClient(params: { command: string; args: string[] }) {
   const writer = client.stdin.getWriter();
 
   for (const transaction of transactions) {
-    const request = await readOutput(reader);
-    assertEquals(JSON.parse(request), transaction.request);
+    const request = await readOutput(reader); // "jsonrpc: { ... }\n"
+    const sliceIndex = request.search(":");
+    const json = request.slice(sliceIndex + 1);
+
+    assertEquals(JSON.parse(json), transaction.request);
+
     await writeToInput(writer, JSON.stringify(transaction.response) + "\n");
   }
 

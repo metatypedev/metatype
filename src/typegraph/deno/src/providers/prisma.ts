@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Runtime } from "../runtimes/mod.ts";
-import { runtimes } from "../wit.ts";
+import { runtimes } from "../sdk.ts";
 import { Typedef } from "../types.ts";
 import { t } from "../index.ts";
-import { Effect } from "../gen/typegraph_core.d.ts";
+import { Effect } from "../gen/runtimes.ts";
 import { genRef } from "./../typegraph.ts";
 
 type PrismaLinkArg = {
@@ -20,7 +20,7 @@ export class PrismaRuntime extends Runtime {
   constructor(name: string, connectionStringSecret: string) {
     const id = runtimes.registerPrismaRuntime({
       name,
-      connectionStringSecret,
+      connection_string_secret: connectionStringSecret,
     });
     super(id);
     this.name = name;
@@ -160,8 +160,8 @@ export class PrismaRuntime extends Runtime {
     const type = runtimes.prismaQueryRaw(
       this._id,
       query,
-      parameters ? parameters._id : undefined,
       output._id,
+      parameters ? parameters._id : undefined,
     );
     return t.Func.fromTypeFunc(type);
   }
@@ -186,10 +186,10 @@ function prismaLink(
   }
   arg = arg ?? {};
   const typeId = runtimes.prismaLink({
-    targetType: targetType._id,
-    relationshipName: name,
-    foreignKey: arg.fkey,
-    targetField: arg.field,
+    target_type: targetType._id,
+    relationship_name: name,
+    foreign_key: arg.fkey,
+    target_field: arg.field,
     unique: arg.unique,
   });
   return new Typedef(typeId);

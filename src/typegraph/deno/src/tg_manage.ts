@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { SerializeParams } from "./gen/typegraph_core.d.ts";
+import { SerializeParams } from "./gen/core.ts";
 import { BasicAuth, tgDeploy } from "./tg_deploy.ts";
 import { TgFinalizationResult, TypegraphOutput } from "./typegraph.ts";
 import { freezeTgOutput } from "./utils/func_utils.ts";
@@ -45,14 +45,14 @@ export class Manager {
     try {
       const env = this.#env;
       finalizationResult = this.#typegraph.serialize({
-        typegraphPath: env.typegraph_path,
+        typegraph_path: env.typegraph_path,
         prefix: env.prefix,
-        artifactResolution: this.#env.artifact_resolution,
+        artifact_resolution: this.#env.artifact_resolution,
         codegen: false,
-        prismaMigration: {
-          migrationsDir: this.#getMigrationsDir(),
-          migrationActions: [],
-          defaultMigrationAction: {
+        prisma_migration: {
+          migrations_dir: this.#getMigrationsDir(),
+          migration_actions: [],
+          default_migration_action: {
             apply: true,
             create: false,
             reset: false,
@@ -83,14 +83,14 @@ export class Manager {
       }
 
       const params: SerializeParams = {
-        typegraphPath: env.typegraph_path,
+        typegraph_path: env.typegraph_path,
         prefix: env.prefix,
-        artifactResolution: true,
+        artifact_resolution: true,
         codegen: false,
-        prismaMigration: {
-          migrationsDir: this.#getMigrationsDir(),
-          migrationActions: Object.entries(deployData.migrationActions),
-          defaultMigrationAction: deployData.defaultMigrationAction,
+        prisma_migration: {
+          migrations_dir: this.#getMigrationsDir(),
+          migration_actions: Object.entries(deployData.migrationActions),
+          default_migration_action: deployData.defaultMigrationAction,
         },
         pretty: false,
       };

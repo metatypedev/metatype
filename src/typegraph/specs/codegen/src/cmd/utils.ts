@@ -1,8 +1,8 @@
 import * as path from "@std/path";
-import type { TypeDefProcessor } from "../lib/base.ts";
 import TypeScriptCodeGenerator from "../lib/typescript.ts";
 import RustLibCodeGenerator from "../lib/rust_lib.ts";
 import PythonCodeGenerator from "../lib/python.ts";
+import RustRpcCodeGenerator from "../lib/rust_rpc.ts";
 
 const dirname = new URL(".", import.meta.url).pathname;
 
@@ -22,19 +22,11 @@ function getTypeDefSources() {
   return typeDefModules;
 }
 
-type GenTarget = "typescript" | "python" | "rust-lib";
-
-const validTargets = ["typescript", "python", "rust-lib"];
-
-function getCodeGenerator(target: GenTarget): TypeDefProcessor {
+function getCodeGenerator(target: string) {
   if (target === "typescript") return new TypeScriptCodeGenerator();
   if (target === "python") return new PythonCodeGenerator();
-  return new RustLibCodeGenerator();
+  if (target === "rust-lib") return new RustLibCodeGenerator();
+  if (target === "rust-rpc") return new RustRpcCodeGenerator();
 }
 
-function isValidTarget(target: string): target is GenTarget {
-  return validTargets.includes(target);
-}
-
-export type { GenTarget };
-export { getTypeDefSources, getCodeGenerator, isValidTarget, validTargets };
+export { getTypeDefSources, getCodeGenerator };

@@ -3,41 +3,30 @@
 
 from typing import List, Union
 from typegraph import t
-from typegraph.gen.exports.runtimes import (
+from typegraph.gen.runtimes import (
     RedisBackend,
     SubstantialBackend,
-    SubstantialBackendFs,
-    SubstantialBackendMemory,
-    SubstantialBackendRedis,
     SubstantialOperationData,
     SubstantialOperationType,
-    SubstantialOperationTypeSend,
-    SubstantialOperationTypeSendRaw,
-    SubstantialOperationTypeStart,
-    SubstantialOperationTypeStartRaw,
-    SubstantialOperationTypeStop,
-    SubstantialOperationTypeResources,
-    SubstantialOperationTypeResults,
-    SubstantialOperationTypeResultsRaw,
-    SubstantialOperationTypeInternalLinkParentChild,
     SubstantialRuntimeData,
     WorkflowFileDescription,
     WorkflowKind,
 )
-from typegraph.gen.types import Err
 from typegraph.runtimes.base import Runtime
-from typegraph.wit import runtimes, store
+from typegraph.wit import runtimes
 
 
 class Backend:
-    def dev_memory():
-        return SubstantialBackendMemory()
+    def dev_memory() -> SubstantialBackend:
+        return "memory"
 
-    def dev_fs():
-        return SubstantialBackendFs()
+    def dev_fs() -> SubstantialBackend:
+        return "fs"
 
-    def redis(connection_string_secret: str):
-        return SubstantialBackendRedis(value=RedisBackend(connection_string_secret))
+    def redis(connection_string_secret: str) -> SubstantialBackend:
+        return {
+            "redis": RedisBackend(connection_string_secret=connection_string_secret)
+        }
 
 
 class SubstantialRuntime(Runtime):
@@ -47,7 +36,7 @@ class SubstantialRuntime(Runtime):
         file_descriptions: List[WorkflowFileDescription],
     ):
         data = SubstantialRuntimeData(backend, file_descriptions)
-        super().__init__(runtimes.register_substantial_runtime(store, data))
+        super().__init__(runtimes.register_substantial_runtime(data))
         self.backend = backend
 
     def _generic_substantial_func(
@@ -61,48 +50,36 @@ class SubstantialRuntime(Runtime):
             func_out=None if func_out is None else func_out._id,
             operation=operation,
         )
-        func_data = runtimes.generate_substantial_operation(store, self.id.value, data)
-
-        if isinstance(func_data, Err):
-            raise Exception(func_data.value)
+        func_data = runtimes.generate_substantial_operation(self.id, data)
 
         return t.func.from_type_func(func_data.value)
 
     def start(self, kwargs: "t.struct"):
-        operation = SubstantialOperationTypeStart()
-        return self._generic_substantial_func(operation, kwargs, None)
+        return self._generic_substantial_func("start", kwargs, None)
 
     def start_raw(self):
-        operation = SubstantialOperationTypeStartRaw()
-        return self._generic_substantial_func(operation, None, None)
+        return self._generic_substantial_func("start_raw", None, None)
 
     def stop(self):
-        operation = SubstantialOperationTypeStop()
-        return self._generic_substantial_func(operation, None, None)
+        return self._generic_substantial_func("stop", None, None)
 
     def send(self, payload: "t.typedef"):
-        operation = SubstantialOperationTypeSend()
-        return self._generic_substantial_func(operation, payload, None)
+        return self._generic_substantial_func("send", payload, None)
 
     def send_raw(self):
-        operation = SubstantialOperationTypeSendRaw()
-        return self._generic_substantial_func(operation, None, None)
+        return self._generic_substantial_func("send_raw", None, None)
 
     def query_resources(self):
-        operation = SubstantialOperationTypeResources()
-        return self._generic_substantial_func(operation, None, None)
+        return self._generic_substantial_func("resources", None, None)
 
     def query_results(self, output: "t.typedef"):
-        operation = SubstantialOperationTypeResults()
-        return self._generic_substantial_func(operation, None, output)
+        return self._generic_substantial_func("results", None, output)
 
     def query_results_raw(self):
-        operation = SubstantialOperationTypeResultsRaw()
-        return self._generic_substantial_func(operation, None, None)
+        return self._generic_substantial_func("results_raw", None, None)
 
     def _internal_link_parent_child(self):
-        operation = SubstantialOperationTypeInternalLinkParentChild()
-        return self._generic_substantial_func(operation, None, None)
+        return self._generic_substantial_func("internal_link_parent_child", None, None)
 
     def internals(self):
         return {
@@ -122,10 +99,10 @@ class WorkflowFile:
         self.workflows: List[str] = []
 
     def deno(*, file: str, deps: List[str] = []):
-        return WorkflowFile(file, WorkflowKind.DENO, deps)
+        return WorkflowFile(file, "deno", deps)
 
     def python(*, file: str, deps: List[str] = []):
-        return WorkflowFile(file, WorkflowKind.PYTHON, deps)
+        return WorkflowFile(file, "python", deps)
 
     def import_(self, names: List[str]):
         self.workflows += names

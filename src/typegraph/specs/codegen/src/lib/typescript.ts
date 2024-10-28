@@ -20,7 +20,6 @@ class TypeScriptCodeGenerator extends TypeDefProcessor {
   constructor() {
     super({
       typeMap,
-      reservedKeywords: [],
       fileExtension: ".ts",
     });
   }
@@ -34,15 +33,14 @@ class TypeScriptCodeGenerator extends TypeDefProcessor {
   }
 
   override formatHeaders(): string {
-    return [
-      'import { rpcRequest } from "./client.ts";',
-      this.imports
-        .map(
-          ({ source, imports }) =>
-            `import { ${imports.join(", ")} } from "./${source}.ts";`,
-        )
-        .join("\n"),
-    ].join("\n");
+    const baseImport = 'import { rpcRequest } from "./client.ts";';
+
+    const imports = this.imports.map(
+      ({ source, imports }) =>
+        `import type { ${imports.join(", ")} } from "./${source}.ts";`,
+    );
+
+    return [baseImport, ...imports].filter(Boolean).join("\n");
   }
 
   override formatAliasTypeDef(def: AliasTypeDef): string {

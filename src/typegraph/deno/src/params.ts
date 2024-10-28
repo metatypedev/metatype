@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { RawAuth } from "./typegraph.ts";
-import { Auth as Auth_, wit_utils } from "./wit.ts";
+import { Auth as Auth_, sdkUtils } from "./sdk.ts";
 import * as t from "./types.ts";
 
 export type StdOauth2Profiler =
@@ -39,8 +39,8 @@ export class Auth {
 
     return {
       name,
-      authData,
-      protocol: { tag: "jwt" },
+      auth_data: authData,
+      protocol: "jwt",
     };
   }
 
@@ -55,8 +55,8 @@ export class Auth {
     const authData = [["users", JSON.stringify(users)]] as [string, string][];
     return {
       name: "basic",
-      protocol: { tag: "basic" },
-      authData,
+      protocol: "basic",
+      auth_data: authData,
     };
   }
 
@@ -67,10 +67,10 @@ export class Auth {
   ): RawAuth {
     switch (profiler.profiler) {
       case "none":
-        return new RawAuth(wit_utils.oauth2WithoutProfiler(provider, scopes));
+        return new RawAuth(sdkUtils.oauth2WithoutProfiler(provider, scopes));
       case "extended":
         return new RawAuth(
-          wit_utils.oauth2WithExtendedProfiler(
+          sdkUtils.oauth2WithExtendedProfiler(
             provider,
             scopes,
             JSON.stringify(profiler.extension),
@@ -78,10 +78,10 @@ export class Auth {
         );
       case "custom":
         return new RawAuth(
-          wit_utils.oauth2WithCustomProfiler(provider, scopes, profiler.id),
+          sdkUtils.oauth2WithCustomProfiler(provider, scopes, profiler.id),
         );
       default:
-        return new RawAuth(wit_utils.oauth2(provider, scopes));
+        return new RawAuth(sdkUtils.oauth2(provider, scopes));
     }
   }
 

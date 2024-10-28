@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Runtime } from "../runtimes/mod.ts";
-import { runtimes } from "../wit.ts";
+import { runtimes } from "../sdk.ts";
 import { Func, Typedef } from "../types.ts";
 import {
   TemporalOperationData,
   TemporalOperationType,
-} from "../gen/typegraph_core.d.ts";
+} from "../gen/runtimes.ts";
 
 export class TemporalRuntime extends Runtime {
   name: string;
@@ -25,8 +25,8 @@ export class TemporalRuntime extends Runtime {
   }) {
     const id = runtimes.registerTemporalRuntime({
       name,
-      hostSecret,
-      namespaceSecret,
+      host_secret: hostSecret,
+      namespace_secret: namespaceSecret,
     });
     super(id);
     this.name = name;
@@ -52,40 +52,21 @@ export class TemporalRuntime extends Runtime {
 
   /** create a function to start a workflow */
   startWorkflow(workflowType: string, arg: Typedef): Func {
-    return this.#genericTemporalFunc(
-      {
-        tag: "start-workflow",
-      },
-      workflowType,
-      arg,
-    );
+    return this.#genericTemporalFunc("start_workflow", workflowType, arg);
   }
 
   /** create a function to signal a workflow */
   signalWorkflow(signalName: string, arg: Typedef): Func {
-    return this.#genericTemporalFunc(
-      {
-        tag: "signal-workflow",
-      },
-      signalName,
-      arg,
-    );
+    return this.#genericTemporalFunc("signal_workflow", signalName, arg);
   }
 
   /** create a function to query a workflow */
   queryWorkflow(queryType: string, arg: Typedef, out: Typedef): Func {
-    return this.#genericTemporalFunc(
-      {
-        tag: "query-workflow",
-      },
-      queryType,
-      arg,
-      out,
-    );
+    return this.#genericTemporalFunc("query_workflow", queryType, arg, out);
   }
 
   /** create a function that describes a workflow */
   describeWorkflow(): Func {
-    return this.#genericTemporalFunc({ tag: "describe-workflow" });
+    return this.#genericTemporalFunc("describe_workflow");
   }
 }
