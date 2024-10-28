@@ -91,6 +91,6 @@ pub fn op_execute_python_with_context(
 
     Ok(PythonExecutionOutput {
         execution_result: result_value,
-        execution_status: "success".to_string(),
+        execution_status: "SUCCESS".to_string(),
     })
 }
