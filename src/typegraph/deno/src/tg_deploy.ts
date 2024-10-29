@@ -119,10 +119,14 @@ export async function tgDeploy(
 
   const addTypegraph = response.data.addTypegraph;
 
+  /* 
+  // FIXME: failure field is used by interactive deployment
+  // which means errors need to be ignored here but this 
+  // allows deployment errors in non-interactive scenarios
   if (addTypegraph.failure) {
     console.error(addTypegraph.failure);
     throw new Error(`failed to deploy typegraph ${typegraph.name}`);
-  }
+  } */
 
   return {
     serialized: tgJson,

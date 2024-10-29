@@ -14,7 +14,7 @@ import {
 
 export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
   const validatorName = (typeIdx: number) =>
-    `validate_${tg.type(typeIdx).title}`;
+    `validate_${tg.type(typeIdx).title.replace(/[^1-9a-zA-Z_$]/g, "_")}`;
   const validatorCode = new InputValidationCompiler(tg, validatorName)
     .generate(typeIdx);
 
@@ -26,7 +26,7 @@ export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
       throw new Error(
-        `Validation errors on ${validatorName(typeIdx)}:\n${messages}`,
+        `Validation errors on ${tg.type(typeIdx).title}:\n${messages}`,
       );
     }
   };

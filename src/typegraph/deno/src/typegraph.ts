@@ -188,7 +188,6 @@ export async function typegraph(
   };
 
 
-  console.log("initializing typegraph context");
   core.initTypegraph({ name, dynamic, path, ...tgParams });
 
   const g: TypegraphBuilderArgs = {
@@ -239,7 +238,6 @@ export async function typegraph(
   const ret = {
     serialize(config: SerializeParams) {
       try {
-        console.log("serializing typegraph context");
         const [tgJson, ref_artifacts] = core.serializeTypegraph(
           config,
         ) as Array<any>; // FIXME: bad typing?
