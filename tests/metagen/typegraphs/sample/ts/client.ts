@@ -770,7 +770,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.Post(),
       argumentTypes: {
-        id: "RootScalarArgsFnOutput",
+        id: "PostSlugString",
       },
     };
   },
@@ -778,7 +778,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        id: "RootScalarArgsFnOutput",
+        id: "PostSlugString",
       },
     };
   },
@@ -794,7 +794,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.RootCompositeUnionFnOutput(),
       argumentTypes: {
-        id: "RootScalarArgsFnOutput",
+        id: "PostSlugString",
       },
     };
   },
@@ -810,7 +810,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.RootMixedUnionFnOutput(),
       argumentTypes: {
-        id: "RootScalarArgsFnOutput",
+        id: "PostSlugString",
       },
     };
   },
@@ -822,9 +822,8 @@ export type Post = {
   slug: PostSlugString;
   title: PostSlugString;
 };
-export type RootScalarArgsFnOutput = string;
 export type RootCompositeArgsFnInput = {
-  id: RootScalarArgsFnOutput;
+  id: PostSlugString;
 };
 export type UserEmailStringEmail = string;
 export type UserPostsPostList = Array<Post>;
@@ -835,7 +834,7 @@ export type User = {
 };
 export type RootScalarUnionFnOutputT1Integer = number;
 export type RootScalarUnionFnOutput =
-  | (RootScalarArgsFnOutput)
+  | (PostSlugString)
   | (RootScalarUnionFnOutputT1Integer);
 export type RootCompositeUnionFnOutput =
   | (Post)
@@ -843,7 +842,7 @@ export type RootCompositeUnionFnOutput =
 export type RootMixedUnionFnOutput =
   | (Post)
   | (User)
-  | (RootScalarArgsFnOutput)
+  | (PostSlugString)
   | (RootScalarUnionFnOutputT1Integer);
 
 export type PostSelections = {
@@ -874,7 +873,6 @@ export class QueryGraph extends _QueryGraphBase {
     super({
       "UserIdStringUuid": "String!",
       "PostSlugString": "String!",
-      "RootScalarArgsFnOutput": "String!",
       "post": "post!",
       "user": "user!",
     });
@@ -910,7 +908,7 @@ export class QueryGraph extends _QueryGraphBase {
       [["scalarArgs", nodeMetas.RootScalarArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<RootScalarArgsFnOutput>;
+    return new MutationNode(inner) as MutationNode<PostSlugString>;
   }
   compositeNoArgs(select: PostSelections) {
     const inner = _selectionToNodeSet(
