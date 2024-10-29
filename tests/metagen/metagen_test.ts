@@ -661,7 +661,12 @@ Meta.test.only({
     uploadMany: zod.boolean(),
   });
 
-  const expectedSchema = zod.tuple([expectedSchemaU1, expectedSchemaUn]);
+  const expectedSchema = zod.tuple([
+    expectedSchemaU1,
+    expectedSchemaUn,
+    expectedSchemaU1,
+    expectedSchemaUn,
+  ]);
 
   const cases = [
     {

@@ -251,7 +251,7 @@ impl std::error::Error for SelectionError {}
 // --- --- Input files --- --- //
 //
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TypePath(&'static [&'static str]);
 
 fn path_segment_as_prop(segment: &str) -> Option<&str> {
@@ -1442,25 +1442,32 @@ pub mod graphql {
     #[derive(Debug)]
     struct FileExtractor {
         path: TypePath,
+        prefix: String,
         current_path: ValuePath,
         output: HashMap<String, FileId>,
     }
 
     impl FileExtractor {
         fn extract_all_from(
-            value: &mut serde_json::Value,
-            paths: impl Iterator<Item = TypePath>,
+            variables: &mut JsonObject,
+            mut path_to_files: HashMap<String, Vec<TypePath>>,
         ) -> Result<HashMap<String, FileId>, BoxErr> {
             let mut output = HashMap::new();
-            for path in paths {
-                let mut extractor = Self {
-                    path,
-                    current_path: ValuePath::default(),
-                    output: std::mem::take(&mut output),
-                };
-                extractor.extract_from_value(value)?;
-                output = extractor.output;
+
+            for (key, value) in variables.iter_mut() {
+                let paths = path_to_files.remove(key).unwrap_or_default();
+                for path in paths.into_iter() {
+                    let mut extractor = Self {
+                        path,
+                        prefix: key.clone(),
+                        current_path: ValuePath::default(),
+                        output: std::mem::take(&mut output),
+                    };
+                    extractor.extract_from_value(value)?;
+                    output = extractor.output;
+                }
             }
+
             Ok(output)
         }
 
@@ -1512,7 +1519,7 @@ pub mod graphql {
         /// format the path following the GraphQL multipart request spec
         /// see: https://github.com/jaydenseric/graphql-multipart-request-spec
         fn format_path(&self) -> String {
-            let mut res = String::new();
+            let mut res = self.prefix.clone();
             use ValuePathSegment as VPSeg;
             for seg in &self.current_path.0 {
                 match seg {
@@ -1529,16 +1536,17 @@ pub mod graphql {
         doc: String,
         variables: JsonObject,
         placeholders: FoundPlaceholders,
-        files: HashMap<String, FileId>,
+        path_to_files: HashMap<String, Vec<TypePath>>,
     }
 
     struct GqlRequestBuilder<'a> {
         ty_to_gql_ty_map: &'a TyToGqlTyMap,
         variable_values: JsonObject,
         variable_types: HashMap<CowStr, CowStr>,
+        // map variable name to path to file types
+        path_to_files: HashMap<String, Vec<TypePath>>,
         doc: String,
         placeholders: Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>,
-        files: HashMap<String, FileId>,
     }
 
     impl<'a> GqlRequestBuilder<'a> {
@@ -1547,10 +1555,26 @@ pub mod graphql {
                 ty_to_gql_ty_map,
                 variable_values: Default::default(),
                 variable_types: Default::default(),
+                path_to_files: Default::default(),
                 doc: Default::default(),
                 placeholders: Default::default(),
-                files: Default::default(),
             }
+        }
+
+        fn register_path_to_files(&mut self, name: String, key: &str, files: &PathToInputFiles) {
+            let path_to_files = files
+                .0
+                .iter()
+                .filter_map(|path| {
+                    let first = path[0];
+                    if first.starts_with('.') && &first[1..] == key {
+                        Some(TypePath(&path[1..]))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
+            self.path_to_files.insert(name, path_to_files);
         }
 
         fn select_node_to_gql(&mut self, node: SelectNodeErased) -> std::fmt::Result {
@@ -1574,31 +1598,7 @@ pub mod graphql {
                                 let mut object = serde_json::Value::Object(map);
 
                                 if let Some(files) = node.input_files.as_ref() {
-                                    let extracted_files = FileExtractor::extract_all_from(
-                                        &mut object,
-                                        files.0.iter().filter_map(|&path| {
-                                            let first = path[0];
-                                            if first.starts_with('.') && &first[1..] == key.as_ref()
-                                            {
-                                                Some(TypePath(path))
-                                            } else {
-                                                None
-                                            }
-                                        }),
-                                    )
-                                    .unwrap();
-                                    // .map_err(|_| {
-                                    //     // TODO
-                                    //     std::fmt::Error::default()
-                                    // })?;
-
-                                    for (path, file) in extracted_files {
-                                        if let Some((_, path_tail)) = path[1..].split_once('.') {
-                                            self.files.insert(format!("{name}.{path_tail}"), file);
-                                        } else {
-                                            self.files.insert(name.clone(), file);
-                                        }
-                                    }
+                                    self.register_path_to_files(name.clone(), key.as_ref(), files);
                                 }
 
                                 write!(&mut self.doc, "{key}: ${name}, ")?;
@@ -1621,6 +1621,9 @@ pub mod graphql {
                             let mut map = HashMap::new();
                             for (key, type_name) in arg_types {
                                 let name = format!("in{}", self.variable_types.len());
+                                if let Some(files) = node.input_files.as_ref() {
+                                    self.register_path_to_files(name.clone(), key.as_ref(), files);
+                                }
                                 write!(&mut self.doc, "{key}: ${name}, ")?;
                                 self.variable_types.insert(name.clone().into(), type_name);
                                 map.insert(key, name.into());
@@ -1704,7 +1707,7 @@ pub mod graphql {
                 doc,
                 variables: self.variable_values,
                 placeholders: self.placeholders,
-                files: self.files,
+                path_to_files: self.path_to_files,
             })
         }
     }
@@ -1731,11 +1734,14 @@ pub mod graphql {
         client: &ClientSync,
         addr: Url,
         doc: &str,
-        variables: &JsonObject,
-        files: &HashMap<String, FileId>, // TODO index map or order by file id?
+        mut variables: JsonObject,
+        path_to_files: HashMap<String, Vec<TypePath>>,
         opts: &GraphQlTransportOptions,
     ) -> Result<RequestBuilderSync, BuildReqError> {
         use reqwest::blocking::multipart::Form;
+
+        let files = FileExtractor::extract_all_from(&mut variables, path_to_files)
+            .map_err(|error| BuildReqError::FileUpload { error })?;
 
         let mut request = client.request(reqwest::Method::POST, addr);
         if let Some(timeout) = opts.timeout {
@@ -1764,7 +1770,7 @@ pub mod graphql {
             let (map, files): (HashMap<_, _>, Vec<_>) = files
                 .into_iter()
                 .enumerate()
-                .map(|(idx, (path, &file_id))| {
+                .map(|(idx, (path, file_id))| {
                     (
                         (idx.to_string(), vec![format!("variables.{path}")]),
                         file_id,
@@ -1800,11 +1806,14 @@ pub mod graphql {
         client: &Client,
         addr: Url,
         doc: &str,
-        variables: &JsonObject,
-        files: &HashMap<String, FileId>, // TODO index map or order by file id?
+        mut variables: JsonObject,
+        path_to_files: HashMap<String, Vec<TypePath>>,
         opts: &GraphQlTransportOptions,
     ) -> Result<RequestBuilder, BuildReqError> {
         use reqwest::multipart::Form;
+
+        let files = FileExtractor::extract_all_from(&mut variables, path_to_files)
+            .map_err(|error| BuildReqError::FileUpload { error })?;
 
         let request = client.request(reqwest::Method::POST, addr);
         let mut headers = reqwest::header::HeaderMap::new();
@@ -1819,8 +1828,6 @@ pub mod graphql {
             "variables": variables
         });
 
-        // TODO rename files
-
         if files.len() > 0 {
             // multipart
             let mut form = Form::new();
@@ -1830,8 +1837,11 @@ pub mod graphql {
             let (map, files): (HashMap<_, _>, Vec<_>) = files
                 .into_iter()
                 .enumerate()
-                .map(|(idx, (path, &file_id))| {
-                    ((idx.to_string(), format!("variables.{path}")), file_id)
+                .map(|(idx, (path, file_id))| {
+                    (
+                        (idx.to_string(), vec![format!("variables.{path}")]),
+                        file_id,
+                    )
                 })
                 .unzip();
 
@@ -2043,7 +2053,7 @@ pub mod graphql {
                 doc,
                 variables,
                 placeholders,
-                files,
+                path_to_files,
             } = GqlRequestBuilder::new(&self.ty_to_gql_ty_map).build(nodes, ty, None)?;
             if !placeholders.is_empty() {
                 panic!("placeholders found in non-prepared query")
@@ -2052,8 +2062,8 @@ pub mod graphql {
                 &self.client,
                 self.addr.clone(),
                 &doc,
-                &variables,
-                &files,
+                variables,
+                path_to_files,
                 opts,
             )?;
             match req.send() {
@@ -2184,7 +2194,7 @@ pub mod graphql {
                 doc,
                 variables,
                 placeholders,
-                files,
+                path_to_files,
             } = GqlRequestBuilder::new(&self.ty_to_gql_ty_map).build(nodes, ty, None)?;
             if !placeholders.is_empty() {
                 panic!("placeholders found in non-prepared query")
@@ -2194,8 +2204,8 @@ pub mod graphql {
                 &self.client,
                 self.addr.clone(),
                 &doc,
-                &variables,
-                &files,
+                variables,
+                path_to_files,
                 opts,
             )
             .await?;
@@ -2344,7 +2354,7 @@ pub mod graphql {
         nodes_len: usize,
         pub doc: String,
         variables: JsonObject,
-        files: HashMap<String, FileId>,
+        path_to_files: HashMap<String, Vec<TypePath>>,
         opts: GraphQlTransportOptions,
         placeholders: Arc<FoundPlaceholders>,
         _phantom: PhantomData<Out>,
@@ -2356,7 +2366,7 @@ pub mod graphql {
         nodes_len: usize,
         pub doc: String,
         variables: JsonObject,
-        files: HashMap<String, FileId>,
+        path_to_files: HashMap<String, Vec<TypePath>>,
         opts: GraphQlTransportOptions,
         placeholders: Arc<FoundPlaceholders>,
         _phantom: PhantomData<Doc>,
@@ -2377,14 +2387,14 @@ pub mod graphql {
                 doc,
                 variables,
                 placeholders,
-                files,
+                path_to_files,
             } = GqlRequestBuilder::new(ty_to_gql_ty_map)
                 .build(nodes, ty, None)
                 .map_err(PrepareRequestError::BuildError)?;
             Ok(Self {
                 doc,
                 variables,
-                files,
+                path_to_files,
                 nodes_len,
                 addr,
                 client: reqwest::blocking::Client::new(),
@@ -2414,8 +2424,8 @@ pub mod graphql {
                 &self.client,
                 self.addr.clone(),
                 &self.doc,
-                &variables,
-                &self.files,
+                variables,
+                self.path_to_files.clone(),
                 &self.opts,
             )?;
             let res = match req.send() {
@@ -2474,7 +2484,7 @@ pub mod graphql {
                 doc,
                 variables,
                 placeholders,
-                files,
+                path_to_files,
             } = GqlRequestBuilder::new(ty_to_gql_ty_map)
                 .build(nodes, ty, None)
                 .map_err(PrepareRequestError::BuildError)?;
@@ -2482,7 +2492,7 @@ pub mod graphql {
             Ok(Self {
                 doc,
                 variables,
-                files,
+                path_to_files,
                 nodes_len,
                 addr,
                 client: reqwest::Client::new(),
@@ -2512,8 +2522,8 @@ pub mod graphql {
                 &self.client,
                 self.addr.clone(),
                 &self.doc,
-                &variables,
-                &self.files,
+                variables,
+                self.path_to_files.clone(),
                 &self.opts,
             )
             .await?;
@@ -2568,7 +2578,7 @@ pub mod graphql {
                 nodes_len: self.nodes_len,
                 doc: self.doc.clone(),
                 variables: self.variables.clone(),
-                files: self.files.clone(),
+                path_to_files: self.path_to_files.clone(),
                 opts: self.opts.clone(),
                 placeholders: self.placeholders.clone(),
                 _phantom: PhantomData,
@@ -2583,7 +2593,7 @@ pub mod graphql {
                 nodes_len: self.nodes_len,
                 doc: self.doc.clone(),
                 variables: self.variables.clone(),
-                files: self.files.clone(),
+                path_to_files: self.path_to_files.clone(),
                 opts: self.opts.clone(),
                 placeholders: self.placeholders.clone(),
                 _phantom: PhantomData,

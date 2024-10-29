@@ -170,6 +170,7 @@ fn selection_to_select_node(
                             instance_name: "__typename".into(),
                             args: None,
                             sub_nodes: SubNodes::None,
+                            input_files: meta.input_files.clone(),
                         });
                         out.insert(variant_ty.clone(), nodes);
                     }
@@ -189,6 +190,7 @@ fn selection_to_select_node(
         instance_name,
         args,
         sub_nodes,
+        input_files: meta.input_files.clone(),
     })
 }
 
@@ -249,6 +251,191 @@ impl std::fmt::Display for SelectionError {
 impl std::error::Error for SelectionError {}
 
 //
+// --- --- Input files --- --- //
+//
+
+#[derive(Debug, Clone)]
+pub struct TypePath(&'static [&'static str]);
+
+fn path_segment_as_prop(segment: &str) -> Option<&str> {
+    if segment.starts_with('.') {
+        Some(&segment[1..])
+    } else {
+        None
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct PathToInputFiles(&'static [&'static [&'static str]]);
+
+#[derive(Debug)]
+pub enum ValuePathSegment {
+    Optional,
+    Index(usize),
+    Prop(&'static str),
+}
+
+#[derive(Default, Debug)]
+pub struct ValuePath(Vec<ValuePathSegment>);
+
+lazy_static::lazy_static! {
+    static ref LATEST_FILE_ID: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    static ref FILE_STORE: std::sync::Mutex<HashMap<FileId, File>> = Default::default();
+}
+
+enum FileData {
+    Path(std::path::PathBuf),
+    Bytes(Vec<u8>),
+    Reader(Box<dyn std::io::Read + Send + 'static>),
+    Async(reqwest::Body),
+}
+
+pub struct File {
+    data: FileData,
+    file_name: Option<String>,
+    mime_type: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Hash, PartialEq, Eq, Clone, Copy)]
+pub struct FileId(usize);
+
+impl TryFrom<File> for FileId {
+    type Error = BoxErr;
+
+    fn try_from(file: File) -> Result<Self, Self::Error> {
+        let file_id = LATEST_FILE_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let mut guard = FILE_STORE.lock().map_err(|_| "file store lock poisoned")?;
+        guard.insert(FileId(file_id), file);
+        Ok(FileId(file_id))
+    }
+}
+
+impl TryFrom<FileId> for File {
+    type Error = BoxErr;
+
+    fn try_from(file_id: FileId) -> Result<Self, Self::Error> {
+        let mut guard = FILE_STORE.lock().map_err(|_| "file store lock poisoned")?;
+        let file = guard.remove(&file_id).ok_or_else(|| "file not found")?;
+        if file.file_name.is_none() {
+            Ok(file.file_name(file_id.0.to_string()))
+        } else {
+            Ok(file)
+        }
+    }
+}
+
+impl File {
+    pub fn from_path<P: Into<std::path::PathBuf>>(path: P) -> Self {
+        Self {
+            data: FileData::Path(path.into()),
+            file_name: None,
+            mime_type: None,
+        }
+    }
+
+    pub fn from_bytes<B: Into<Vec<u8>>>(data: B) -> Self {
+        Self {
+            data: FileData::Bytes(data.into()),
+            file_name: None,
+            mime_type: None,
+        }
+    }
+
+    pub fn from_reader<R: std::io::Read + Send + 'static>(reader: R) -> Self {
+        Self {
+            data: FileData::Reader(Box::new(reader)),
+            file_name: None,
+            mime_type: None,
+        }
+    }
+
+    pub fn from_async_reader<R: futures::io::AsyncRead + Send + 'static>(reader: R) -> Self {
+        use tokio_util::compat::FuturesAsyncReadCompatExt as _;
+        let reader = reader.compat();
+        Self {
+            data: FileData::Async(reqwest::Body::wrap_stream(
+                tokio_util::io::ReaderStream::new(reader),
+            )),
+            file_name: None,
+            mime_type: None,
+        }
+    }
+}
+
+impl File {
+    pub fn file_name(mut self, file_name: impl Into<String>) -> Self {
+        self.file_name = Some(file_name.into());
+        self
+    }
+
+    pub fn mime_type(mut self, mime_type: impl Into<String>) -> Self {
+        self.mime_type = Some(mime_type.into());
+        self
+    }
+}
+
+impl TryFrom<File> for reqwest::blocking::multipart::Part {
+    type Error = BoxErr;
+
+    fn try_from(file: File) -> Result<Self, Self::Error> {
+        let mut part = match file.data {
+            FileData::Path(path) => {
+                let file = std::fs::File::open(path.as_path())?;
+                let file_size = file.metadata()?.len();
+                let mut part =
+                    reqwest::blocking::multipart::Part::reader_with_length(file, file_size);
+                if let Some(name) = path.file_name() {
+                    part = part.file_name(name.to_string_lossy().into_owned());
+                }
+                part = part.mime_str(
+                    mime_guess::from_path(&path)
+                        .first_or_octet_stream()
+                        .as_ref(),
+                )?;
+                part
+            }
+
+            FileData::Bytes(data) => reqwest::blocking::multipart::Part::bytes(data),
+
+            FileData::Reader(reader) => reqwest::blocking::multipart::Part::reader(reader),
+
+            FileData::Async(_) => {
+                return Err("async readers are not supported".into());
+            }
+        };
+
+        if let Some(file_name) = file.file_name {
+            part = part.file_name(file_name);
+        }
+        if let Some(mime_type) = file.mime_type {
+            part = part.mime_str(&mime_type)?;
+        }
+        Ok(part)
+    }
+}
+
+impl File {
+    pub async fn into_reqwest_part(self) -> Result<reqwest::multipart::Part, BoxErr> {
+        let mut part = match self.data {
+            FileData::Path(path) => reqwest::multipart::Part::file(path).await?,
+            FileData::Bytes(data) => reqwest::multipart::Part::bytes(data),
+            FileData::Async(body) => reqwest::multipart::Part::stream(body),
+            FileData::Reader(_) => {
+                return Err("sync readers are not supported".into());
+            }
+        };
+
+        if let Some(file_name) = self.file_name {
+            part = part.file_name(file_name);
+        }
+        if let Some(mime_type) = self.mime_type {
+            part = part.mime_str(&mime_type)?;
+        }
+        Ok(part)
+    }
+}
+
+//
 // --- --- Graph node types  --- --- //
 //
 
@@ -260,6 +447,7 @@ struct NodeMeta {
     sub_nodes: Option<HashMap<CowStr, NodeMetaFn>>,
     arg_types: Option<HashMap<CowStr, CowStr>>,
     variants: Option<HashMap<CowStr, NodeMetaFn>>,
+    input_files: Option<PathToInputFiles>,
 }
 
 enum SubNodes {
@@ -274,6 +462,7 @@ pub struct SelectNodeErased {
     instance_name: CowStr,
     args: Option<NodeArgsMerged>,
     sub_nodes: SubNodes,
+    input_files: Option<PathToInputFiles>,
 }
 
 /// Wrappers around [`SelectNodeErased`] that only holds query nodes
@@ -1253,175 +1442,433 @@ pub mod graphql {
     // PlaceholderValue, fieldName -> gql_var_name
     type FoundPlaceholders = Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>;
 
-    fn select_node_to_gql(
-        ty_to_gql_ty_map: &TyToGqlTyMap,
-        dest: &mut impl std::fmt::Write,
-        node: SelectNodeErased,
-        variable_types: &mut HashMap<CowStr, CowStr>,
-        variables_object: &mut JsonObject,
-        placeholders: &mut FoundPlaceholders,
-    ) -> std::fmt::Result {
-        if node.instance_name != node.node_name {
-            write!(dest, "{}: {}", node.instance_name, node.node_name)?;
-        } else {
-            write!(dest, "{}", node.node_name)?;
-        }
-        if let Some(args) = node.args {
-            match args {
-                NodeArgsMerged::Inline(args) => {
-                    if !args.is_empty() {
-                        write!(dest, "(")?;
-                        for (key, val) in args {
-                            let name = format!("in{}", variable_types.len());
-                            write!(dest, "{key}: ${name}, ")?;
-                            variables_object.insert(name.clone(), val.value);
-                            variable_types.insert(name.into(), val.type_name);
-                        }
-                        write!(dest, ")")?;
-                    }
-                }
-                NodeArgsMerged::Placeholder { value, arg_types } => {
-                    if !arg_types.is_empty() {
-                        write!(dest, "(")?;
-                        let mut map = HashMap::new();
-                        for (key, type_name) in arg_types {
-                            let name = format!("in{}", variable_types.len());
-                            write!(dest, "{key}: ${name}, ")?;
-                            variable_types.insert(name.clone().into(), type_name);
-                            map.insert(key, name.into());
-                        }
-                        write!(dest, ")")?;
-                        placeholders.push((value, map));
-                    }
-                }
-            }
-        }
-        match node.sub_nodes {
-            SubNodes::None => {}
-            SubNodes::Atomic(sub_nodes) => {
-                write!(dest, "{{ ")?;
-                for node in sub_nodes {
-                    select_node_to_gql(
-                        ty_to_gql_ty_map,
-                        dest,
-                        node,
-                        variable_types,
-                        variables_object,
-                        placeholders,
-                    )?;
-                    write!(dest, " ")?;
-                }
-                write!(dest, " }}")?;
-            }
-            SubNodes::Union(variants) => {
-                write!(dest, "{{ ")?;
-                for (ty, sub_nodes) in variants {
-                    let gql_ty = ty_to_gql_ty_map
-                        .get(&ty[..])
-                        .expect("impossible: no GraphQL type equivalent found for variant type");
-                    let gql_ty = match gql_ty.strip_suffix('!') {
-                        Some(val) => val,
-                        None => &gql_ty[..],
-                    };
-                    write!(dest, " ... on {gql_ty} {{ ")?;
-                    for node in sub_nodes {
-                        select_node_to_gql(
-                            ty_to_gql_ty_map,
-                            dest,
-                            node,
-                            variable_types,
-                            variables_object,
-                            placeholders,
-                        )?;
-                        write!(dest, " ")?;
-                    }
-                    write!(dest, " }}")?;
-                }
-                write!(dest, " }}")?;
-            }
-        }
-        Ok(())
+    #[derive(Debug)]
+    struct FileExtractor {
+        path: TypePath,
+        prefix: String,
+        current_path: ValuePath,
+        output: HashMap<String, FileId>,
     }
 
-    fn build_gql_doc(
-        ty_to_gql_ty_map: &TyToGqlTyMap,
-        nodes: Vec<SelectNodeErased>,
-        ty: &'static str,
-        name: Option<CowStr>,
-    ) -> Result<(String, JsonObject, FoundPlaceholders), GraphQLRequestError> {
-        use std::fmt::Write;
-        let mut variables_types = HashMap::new();
-        let mut variables_values = serde_json::Map::new();
-        let mut root_nodes = String::new();
-        let mut placeholders = vec![];
-        for (idx, node) in nodes.into_iter().enumerate() {
-            let node = SelectNodeErased {
-                instance_name: format!("node{idx}").into(),
-                ..node
-            };
-            write!(&mut root_nodes, "  ").expect("error building to string");
-            select_node_to_gql(
-                ty_to_gql_ty_map,
-                &mut root_nodes,
-                node,
-                &mut variables_types,
-                &mut variables_values,
-                &mut placeholders,
-            )
-            .expect("error building to string");
-            writeln!(&mut root_nodes).expect("error building to string");
-        }
-        let mut args_row = String::new();
-        if !variables_types.is_empty() {
-            write!(&mut args_row, "(").expect("error building to string");
-            for (key, ty) in &variables_types {
-                let gql_ty = ty_to_gql_ty_map.get(&ty[..]).ok_or_else(|| {
-                    GraphQLRequestError::InvalidQuery {
-                        error: Box::from(format!("unknown typegraph type found: {}", ty)),
-                    }
-                })?;
-                write!(&mut args_row, "${key}: {gql_ty}, ").expect("error building to string");
+    impl FileExtractor {
+        fn extract_all_from(
+            variables: &mut JsonObject,
+            mut path_to_files: HashMap<String, Vec<TypePath>>,
+        ) -> Result<HashMap<String, FileId>, BoxErr> {
+            let mut output = HashMap::new();
+
+            for (key, value) in variables.iter_mut() {
+                let paths = path_to_files.remove(key).unwrap_or_default();
+                for path in paths.into_iter() {
+                    let mut extractor = Self {
+                        path,
+                        prefix: key.clone(),
+                        current_path: ValuePath::default(),
+                        output: std::mem::take(&mut output),
+                    };
+                    extractor.extract_from_value(value)?;
+                    output = extractor.output;
+                }
             }
-            write!(&mut args_row, ")").expect("error building to string");
+
+            Ok(output)
         }
-        let name = name.unwrap_or_else(|| "".into());
-        let doc = format!("{ty} {name}{args_row} {{\n{root_nodes}}}");
-        Ok((doc, variables_values, placeholders))
+
+        fn extract_from_value(&mut self, value: &mut serde_json::Value) -> Result<(), BoxErr> {
+            let cursor = self.current_path.0.len();
+            if cursor == self.path.0.len() {
+                // end of type_path; replace file_id with null
+                let file_id: FileId = serde_json::from_value(value.take())?;
+                self.output.insert(self.format_path(), file_id);
+                return Ok(());
+            }
+            let segment = self.path.0[cursor];
+            use ValuePathSegment as VPSeg;
+            match segment {
+                "?" => {
+                    if !value.is_null() {
+                        self.current_path.0.push(VPSeg::Optional);
+                        self.extract_from_value(value)?;
+                        self.current_path.0.pop();
+                    }
+                }
+                "[]" => {
+                    let items = value
+                        .as_array_mut()
+                        .ok_or_else(|| format!("expected an array at {:?}", self.format_path()))?;
+                    for (idx, item) in items.iter_mut().enumerate() {
+                        self.current_path.0.push(VPSeg::Index(idx));
+                        self.extract_from_value(item)?;
+                        self.current_path.0.pop();
+                    }
+                }
+                x if x.starts_with('.') => {
+                    let key = &x[1..];
+                    let object = value
+                        .as_object_mut()
+                        .ok_or_else(|| format!("expected an object at {:?}", self.format_path()))?;
+                    let mut null = serde_json::Value::Null;
+                    let value = object.get_mut(key).unwrap_or(&mut null);
+                    self.current_path.0.push(VPSeg::Prop(key));
+                    self.extract_from_value(value)?;
+                    self.current_path.0.pop();
+                }
+                _ => unreachable!(),
+            }
+
+            Ok(())
+        }
+
+        /// format the path following the GraphQL multipart request spec
+        /// see: https://github.com/jaydenseric/graphql-multipart-request-spec
+        fn format_path(&self) -> String {
+            let mut res = self.prefix.clone();
+            use ValuePathSegment as VPSeg;
+            for seg in &self.current_path.0 {
+                match seg {
+                    VPSeg::Optional => {}
+                    VPSeg::Index(idx) => res.push_str(&format!(".{}", idx)),
+                    VPSeg::Prop(key) => res.push_str(&format!(".{}", key)),
+                }
+            }
+            res
+        }
+    }
+
+    struct GqlRequest {
+        doc: String,
+        variables: JsonObject,
+        placeholders: FoundPlaceholders,
+        path_to_files: HashMap<String, Vec<TypePath>>,
+    }
+
+    struct GqlRequestBuilder<'a> {
+        ty_to_gql_ty_map: &'a TyToGqlTyMap,
+        variable_values: JsonObject,
+        variable_types: HashMap<CowStr, CowStr>,
+        // map variable name to path to file types
+        path_to_files: HashMap<String, Vec<TypePath>>,
+        doc: String,
+        placeholders: Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>,
+    }
+
+    impl<'a> GqlRequestBuilder<'a> {
+        fn new(ty_to_gql_ty_map: &'a TyToGqlTyMap) -> Self {
+            Self {
+                ty_to_gql_ty_map,
+                variable_values: Default::default(),
+                variable_types: Default::default(),
+                path_to_files: Default::default(),
+                doc: Default::default(),
+                placeholders: Default::default(),
+            }
+        }
+
+        fn register_path_to_files(&mut self, name: String, key: &str, files: &PathToInputFiles) {
+            let path_to_files = files
+                .0
+                .iter()
+                .filter_map(|path| {
+                    let first = path[0];
+                    if first.starts_with('.') && &first[1..] == key {
+                        Some(TypePath(&path[1..]))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
+            self.path_to_files.insert(name, path_to_files);
+        }
+
+        fn select_node_to_gql(&mut self, node: SelectNodeErased) -> std::fmt::Result {
+            use std::fmt::Write;
+            if node.instance_name != node.node_name {
+                write!(self.doc, "{}: {}", node.instance_name, node.node_name)?;
+            } else {
+                write!(self.doc, "{}", node.node_name)?;
+            }
+
+            if let Some(args) = node.args {
+                match args {
+                    NodeArgsMerged::Inline(args) => {
+                        if !args.is_empty() {
+                            write!(&mut self.doc, "(")?;
+                            for (key, val) in args {
+                                let name = format!("in{}", self.variable_types.len());
+
+                                let mut map = serde_json::Map::new();
+                                map.insert(key.clone().into(), val.value.clone());
+                                let mut object = serde_json::Value::Object(map);
+
+                                if let Some(files) = node.input_files.as_ref() {
+                                    self.register_path_to_files(name.clone(), key.as_ref(), files);
+                                }
+
+                                write!(&mut self.doc, "{key}: ${name}, ")?;
+                                self.variable_values.insert(
+                                    name.clone(),
+                                    object
+                                        .as_object_mut()
+                                        .unwrap()
+                                        .remove(key.as_ref())
+                                        .unwrap(),
+                                );
+                                self.variable_types.insert(name.into(), val.type_name);
+                            }
+                            write!(&mut self.doc, ")")?;
+                        }
+                    }
+                    NodeArgsMerged::Placeholder { value, arg_types } => {
+                        if !arg_types.is_empty() {
+                            write!(&mut self.doc, "(")?;
+                            let mut map = HashMap::new();
+                            for (key, type_name) in arg_types {
+                                let name = format!("in{}", self.variable_types.len());
+                                if let Some(files) = node.input_files.as_ref() {
+                                    self.register_path_to_files(name.clone(), key.as_ref(), files);
+                                }
+                                write!(&mut self.doc, "{key}: ${name}, ")?;
+                                self.variable_types.insert(name.clone().into(), type_name);
+                                map.insert(key, name.into());
+                            }
+                            write!(&mut self.doc, ")")?;
+                            self.placeholders.push((value, map));
+                        }
+                    }
+                }
+            }
+
+            match node.sub_nodes {
+                SubNodes::None => {}
+                SubNodes::Atomic(sub_nodes) => {
+                    write!(&mut self.doc, "{{ ")?;
+                    for node in sub_nodes {
+                        self.select_node_to_gql(node)?;
+                        write!(&mut self.doc, " ")?;
+                    }
+                    write!(&mut self.doc, " }}")?;
+                }
+                SubNodes::Union(variants) => {
+                    write!(&mut self.doc, "{{ ")?;
+                    for (ty, sub_nodes) in variants {
+                        let gql_ty = self.ty_to_gql_ty_map.get(&ty[..]).expect(
+                            "impossible: no GraphQL type equivalent found for variant type",
+                        );
+                        let gql_ty = match gql_ty.strip_suffix('!') {
+                            Some(val) => val,
+                            None => &gql_ty[..],
+                        };
+                        write!(&mut self.doc, " ... on {gql_ty} {{ ")?;
+                        for node in sub_nodes {
+                            self.select_node_to_gql(node)?;
+                            write!(&mut self.doc, " ")?;
+                        }
+                        write!(&mut self.doc, " }}")?;
+                    }
+                    write!(&mut self.doc, " }}")?;
+                }
+            }
+            Ok(())
+        }
+
+        fn build(
+            mut self,
+            nodes: Vec<SelectNodeErased>,
+            ty: &'static str,
+            name: Option<CowStr>,
+        ) -> Result<GqlRequest, GraphQLRequestError> {
+            use std::fmt::Write;
+
+            for (idx, node) in nodes.into_iter().enumerate() {
+                let node = SelectNodeErased {
+                    instance_name: format!("node{idx}").into(),
+                    ..node
+                };
+                write!(&mut self.doc, "  ").expect("error building to string");
+                self.select_node_to_gql(node)
+                    .expect("error building to string");
+                writeln!(&mut self.doc).expect("error building to string");
+            }
+
+            let mut args_row = String::new();
+            if !self.variable_types.is_empty() {
+                write!(&mut args_row, "(").expect("error building to string");
+                for (key, ty) in &self.variable_types {
+                    let gql_ty = self.ty_to_gql_ty_map.get(&ty[..]).ok_or_else(|| {
+                        GraphQLRequestError::InvalidQuery {
+                            error: Box::from(format!("unknown typegraph type found: {}", ty)),
+                        }
+                    })?;
+                    write!(&mut args_row, "${key}: {gql_ty}, ").expect("error building to string");
+                }
+                write!(&mut args_row, ")").expect("error building to string");
+            }
+
+            let name = name.unwrap_or_else(|| "".into());
+            let doc = format!("{ty} {name}{args_row} {{\n{doc}}}", doc = self.doc);
+            Ok(GqlRequest {
+                doc,
+                variables: self.variable_values,
+                placeholders: self.placeholders,
+                path_to_files: self.path_to_files,
+            })
+        }
+    }
+
+    enum GraphQLRequestBody {
+        Json(serde_json::Value),
+        Multipart(reqwest::multipart::Form),
     }
 
     struct GraphQLRequest {
         addr: Url,
         method: reqwest::Method,
         headers: reqwest::header::HeaderMap,
-        body: serde_json::Value,
+        body: GraphQLRequestBody,
     }
 
-    fn build_gql_req(
+    use reqwest::blocking::{Client as ClientSync, RequestBuilder as RequestBuilderSync};
+
+    enum BuildReqError {
+        FileUpload { error: BoxErr },
+    }
+
+    fn build_gql_req_sync(
+        client: &ClientSync,
         addr: Url,
         doc: &str,
-        variables: &JsonObject,
+        mut variables: JsonObject,
+        path_to_files: HashMap<String, Vec<TypePath>>,
         opts: &GraphQlTransportOptions,
-    ) -> GraphQLRequest {
+    ) -> Result<RequestBuilderSync, BuildReqError> {
+        use reqwest::blocking::multipart::Form;
+
+        let files = FileExtractor::extract_all_from(&mut variables, path_to_files)
+            .map_err(|error| BuildReqError::FileUpload { error })?;
+
+        let mut request = client.request(reqwest::Method::POST, addr);
+        if let Some(timeout) = opts.timeout {
+            request = request.timeout(timeout);
+        }
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::ACCEPT,
             "application/json".try_into().unwrap(),
         );
-        headers.insert(
-            reqwest::header::CONTENT_TYPE,
-            "application/json".try_into().unwrap(),
-        );
         headers.extend(opts.headers.clone());
-        // println!("{doc}, {variables:#?}");
-        let body = serde_json::json!({
+
+        let operations = serde_json::json!({
             "query": doc,
             "variables": variables
         });
-        GraphQLRequest {
-            addr,
-            method: reqwest::Method::POST,
-            headers,
-            body,
+
+        // TODO rename files
+
+        if files.len() > 0 {
+            // multipart
+            let mut form = Form::new();
+
+            form = form.text("operations", serde_json::to_string(&operations).unwrap());
+
+            let (map, files): (HashMap<_, _>, Vec<_>) = files
+                .into_iter()
+                .enumerate()
+                .map(|(idx, (path, file_id))| {
+                    (
+                        (idx.to_string(), vec![format!("variables.{path}")]),
+                        file_id,
+                    )
+                })
+                .unzip();
+
+            form = form.text("map", serde_json::to_string(&map).unwrap());
+
+            for (idx, file_id) in files.into_iter().enumerate() {
+                let file: File = file_id
+                    .try_into()
+                    .map_err(|error| BuildReqError::FileUpload { error })?;
+                form = form.part(
+                    idx.to_string(),
+                    file.try_into()
+                        .map_err(|error| BuildReqError::FileUpload { error })?,
+                );
+            }
+
+            Ok(request.headers(headers).multipart(form))
+        } else {
+            headers.insert(
+                reqwest::header::CONTENT_TYPE,
+                "application/json".try_into().unwrap(),
+            );
+            Ok(request.headers(headers).json(&operations))
+        }
+    }
+
+    use reqwest::{Client, RequestBuilder};
+    async fn build_gql_req(
+        client: &Client,
+        addr: Url,
+        doc: &str,
+        mut variables: JsonObject,
+        path_to_files: HashMap<String, Vec<TypePath>>,
+        opts: &GraphQlTransportOptions,
+    ) -> Result<RequestBuilder, BuildReqError> {
+        use reqwest::multipart::Form;
+
+        let files = FileExtractor::extract_all_from(&mut variables, path_to_files)
+            .map_err(|error| BuildReqError::FileUpload { error })?;
+
+        let request = client.request(reqwest::Method::POST, addr);
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::ACCEPT,
+            "application/json".try_into().unwrap(),
+        );
+        headers.extend(opts.headers.clone());
+
+        let operations = serde_json::json!({
+            "query": doc,
+            "variables": variables
+        });
+
+        if files.len() > 0 {
+            // multipart
+            let mut form = Form::new();
+
+            form = form.text("operations", serde_json::to_string(&operations).unwrap());
+
+            let (map, files): (HashMap<_, _>, Vec<_>) = files
+                .into_iter()
+                .enumerate()
+                .map(|(idx, (path, file_id))| {
+                    (
+                        (idx.to_string(), vec![format!("variables.{path}")]),
+                        file_id,
+                    )
+                })
+                .unzip();
+
+            form = form.text("map", serde_json::to_string(&map).unwrap());
+
+            for (idx, file_id) in files.into_iter().enumerate() {
+                let file: File = file_id
+                    .try_into()
+                    .map_err(|error| BuildReqError::FileUpload { error })?;
+                form = form.part(
+                    idx.to_string(),
+                    file.into_reqwest_part()
+                        .await
+                        .map_err(|error| BuildReqError::FileUpload { error })?,
+                );
+            }
+
+            Ok(request.headers(headers).multipart(form))
+        } else {
+            headers.insert(
+                reqwest::header::CONTENT_TYPE,
+                "application/json".try_into().unwrap(),
+            );
+            Ok(request.headers(headers).json(&operations))
         }
     }
 
@@ -1498,6 +1945,18 @@ pub mod graphql {
         InvalidQuery {
             error: BoxErr,
         },
+        /// Unable to upload file
+        FileUpload {
+            error: BoxErr,
+        },
+    }
+
+    impl From<BuildReqError> for GraphQLRequestError {
+        fn from(error: BuildReqError) -> Self {
+            match error {
+                BuildReqError::FileUpload { error } => GraphQLRequestError::FileUpload { error },
+            }
+        }
     }
 
     impl std::fmt::Display for GraphQLRequestError {
@@ -1520,6 +1979,9 @@ pub mod graphql {
                 }
                 GraphQLRequestError::InvalidQuery { error } => {
                     write!(f, "error building request: {error}")?
+                }
+                GraphQLRequestError::FileUpload { error } => {
+                    write!(f, "error uploading file: {error}")?
                 }
             }
             Ok(())
@@ -1590,22 +2052,23 @@ pub mod graphql {
             ty: &'static str,
         ) -> Result<Vec<serde_json::Value>, GraphQLRequestError> {
             let nodes_len = nodes.len();
-            let (doc, variables, placeholders) =
-                build_gql_doc(&self.ty_to_gql_ty_map, nodes, ty, None)?;
+            let GqlRequest {
+                doc,
+                variables,
+                placeholders,
+                path_to_files,
+            } = GqlRequestBuilder::new(&self.ty_to_gql_ty_map).build(nodes, ty, None)?;
             if !placeholders.is_empty() {
                 panic!("placeholders found in non-prepared query")
             }
-            let req = build_gql_req(self.addr.clone(), &doc, &variables, opts);
-            let req = self
-                .client
-                .request(req.method, req.addr)
-                .headers(req.headers)
-                .json(&req.body);
-            let req = if let Some(timeout) = opts.timeout {
-                req.timeout(timeout)
-            } else {
-                req
-            };
+            let req = build_gql_req_sync(
+                &self.client,
+                self.addr.clone(),
+                &doc,
+                variables,
+                path_to_files,
+                opts,
+            )?;
             match req.send() {
                 Ok(res) => {
                     let status = res.status();
@@ -1730,22 +2193,25 @@ pub mod graphql {
             ty: &'static str,
         ) -> Result<Vec<serde_json::Value>, GraphQLRequestError> {
             let nodes_len = nodes.len();
-            let (doc, variables, placeholders) =
-                build_gql_doc(&self.ty_to_gql_ty_map, nodes, ty, None)?;
+            let GqlRequest {
+                doc,
+                variables,
+                placeholders,
+                path_to_files,
+            } = GqlRequestBuilder::new(&self.ty_to_gql_ty_map).build(nodes, ty, None)?;
             if !placeholders.is_empty() {
                 panic!("placeholders found in non-prepared query")
             }
-            let req = build_gql_req(self.addr.clone(), &doc, &variables, opts);
-            let req = self
-                .client
-                .request(req.method, req.addr)
-                .headers(req.headers)
-                .json(&req.body);
-            let req = if let Some(timeout) = opts.timeout {
-                req.timeout(timeout)
-            } else {
-                req
-            };
+
+            let req = build_gql_req(
+                &self.client,
+                self.addr.clone(),
+                &doc,
+                variables,
+                path_to_files,
+                opts,
+            )
+            .await?;
             match req.send().await {
                 Ok(res) => {
                     let status = res.status();
@@ -1891,6 +2357,7 @@ pub mod graphql {
         nodes_len: usize,
         pub doc: String,
         variables: JsonObject,
+        path_to_files: HashMap<String, Vec<TypePath>>,
         opts: GraphQlTransportOptions,
         placeholders: Arc<FoundPlaceholders>,
         _phantom: PhantomData<Out>,
@@ -1902,6 +2369,7 @@ pub mod graphql {
         nodes_len: usize,
         pub doc: String,
         variables: JsonObject,
+        path_to_files: HashMap<String, Vec<TypePath>>,
         opts: GraphQlTransportOptions,
         placeholders: Arc<FoundPlaceholders>,
         _phantom: PhantomData<Doc>,
@@ -1918,11 +2386,18 @@ pub mod graphql {
             let nodes = fun(&mut PreparedArgs);
             let nodes = nodes.to_select_doc();
             let nodes_len = nodes.len();
-            let (doc, variables, placeholders) = build_gql_doc(ty_to_gql_ty_map, nodes, ty, None)
+            let GqlRequest {
+                doc,
+                variables,
+                placeholders,
+                path_to_files,
+            } = GqlRequestBuilder::new(ty_to_gql_ty_map)
+                .build(nodes, ty, None)
                 .map_err(PrepareRequestError::BuildError)?;
             Ok(Self {
                 doc,
                 variables,
+                path_to_files,
                 nodes_len,
                 addr,
                 client: reqwest::blocking::Client::new(),
@@ -1947,17 +2422,15 @@ pub mod graphql {
                 .collect();
             let variables =
                 resolve_prepared_variables(&self.placeholders, self.variables.clone(), args)?;
-            let req = build_gql_req(self.addr.clone(), &self.doc, &variables, &self.opts);
-            let req = self
-                .client
-                .request(req.method, req.addr)
-                .headers(req.headers)
-                .json(&req.body);
-            let req = if let Some(timeout) = self.opts.timeout {
-                req.timeout(timeout)
-            } else {
-                req
-            };
+            // TODO extract files from variables after resolution
+            let req = build_gql_req_sync(
+                &self.client,
+                self.addr.clone(),
+                &self.doc,
+                variables,
+                self.path_to_files.clone(),
+                &self.opts,
+            )?;
             let res = match req.send() {
                 Ok(res) => {
                     let status = res.status();
@@ -2010,12 +2483,19 @@ pub mod graphql {
             let nodes = fun(&mut PreparedArgs);
             let nodes = nodes.to_select_doc();
             let nodes_len = nodes.len();
-            let (doc, variables, placeholders) = build_gql_doc(ty_to_gql_ty_map, nodes, ty, None)
+            let GqlRequest {
+                doc,
+                variables,
+                placeholders,
+                path_to_files,
+            } = GqlRequestBuilder::new(ty_to_gql_ty_map)
+                .build(nodes, ty, None)
                 .map_err(PrepareRequestError::BuildError)?;
             let placeholders = std::sync::Arc::new(placeholders);
             Ok(Self {
                 doc,
                 variables,
+                path_to_files,
                 nodes_len,
                 addr,
                 client: reqwest::Client::new(),
@@ -2040,17 +2520,16 @@ pub mod graphql {
                 .collect();
             let variables =
                 resolve_prepared_variables(&self.placeholders, self.variables.clone(), args)?;
-            let req = build_gql_req(self.addr.clone(), &self.doc, &variables, &self.opts);
-            let req = self
-                .client
-                .request(req.method, req.addr)
-                .headers(req.headers)
-                .json(&req.body);
-            let req = if let Some(timeout) = self.opts.timeout {
-                req.timeout(timeout)
-            } else {
-                req
-            };
+            // TODO extract files from variables
+            let req = build_gql_req(
+                &self.client,
+                self.addr.clone(),
+                &self.doc,
+                variables,
+                self.path_to_files.clone(),
+                &self.opts,
+            )
+            .await?;
             let res = match req.send().await {
                 Ok(res) => {
                     let status = res.status();
@@ -2102,6 +2581,7 @@ pub mod graphql {
                 nodes_len: self.nodes_len,
                 doc: self.doc.clone(),
                 variables: self.variables.clone(),
+                path_to_files: self.path_to_files.clone(),
                 opts: self.opts.clone(),
                 placeholders: self.placeholders.clone(),
                 _phantom: PhantomData,
@@ -2116,6 +2596,7 @@ pub mod graphql {
                 nodes_len: self.nodes_len,
                 doc: self.doc.clone(),
                 variables: self.variables.clone(),
+                path_to_files: self.path_to_files.clone(),
                 opts: self.opts.clone(),
                 placeholders: self.placeholders.clone(),
                 _phantom: PhantomData,
@@ -2128,6 +2609,15 @@ pub mod graphql {
         BuildError(GraphQLRequestError),
         PlaceholderError(BoxErr),
         RequestError(GraphQLRequestError),
+        FileUploadError(BoxErr),
+    }
+
+    impl From<BuildReqError> for PrepareRequestError {
+        fn from(error: BuildReqError) -> Self {
+            match error {
+                BuildReqError::FileUpload { error } => PrepareRequestError::FileUploadError(error),
+            }
+        }
     }
 
     impl std::error::Error for PrepareRequestError {}
@@ -2143,6 +2633,9 @@ pub mod graphql {
                 }
                 PrepareRequestError::RequestError(err) => {
                     write!(f, "error making graphql request: {err}")
+                }
+                PrepareRequestError::FileUploadError(err) => {
+                    write!(f, "error uploading file: {err}")
                 }
             }
         }
@@ -2172,6 +2665,7 @@ impl QueryGraph {
 // --- --- Typegraph types --- --- //
 //
 
+
 #[allow(non_snake_case)]
 mod node_metas {
     use super::*;
@@ -2180,8 +2674,9 @@ mod node_metas {
             arg_types: None,
             sub_nodes: None,
             variants: None,
+            input_files: None,
         }
-    }
+    }    
     pub fn Post() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -2191,9 +2686,9 @@ mod node_metas {
                     ("id".into(), scalar as NodeMetaFn),
                     ("slug".into(), scalar as NodeMetaFn),
                     ("title".into(), scalar as NodeMetaFn),
-                ]
-                .into(),
+                ].into()
             ),
+            input_files: None,
         }
     }
     pub fn User() -> NodeMeta {
@@ -2205,19 +2700,25 @@ mod node_metas {
                     ("id".into(), scalar as NodeMetaFn),
                     ("email".into(), scalar as NodeMetaFn),
                     ("posts".into(), Post as NodeMetaFn),
-                ]
-                .into(),
+                ].into()
             ),
+            input_files: None,
         }
     }
     pub fn RootGetUserFn() -> NodeMeta {
-        NodeMeta { ..User() }
+        NodeMeta {
+            ..User()
+        }
     }
     pub fn RootGetPostsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
+        NodeMeta {
+            ..Post()
+        }
     }
     pub fn RootScalarNoArgsFn() -> NodeMeta {
-        NodeMeta { ..scalar() }
+        NodeMeta {
+            ..scalar()
+        }
     }
     pub fn RootScalarArgsFn() -> NodeMeta {
         NodeMeta {
@@ -2226,24 +2727,33 @@ mod node_metas {
                     ("id".into(), "UserIdStringUuid".into()),
                     ("slug".into(), "PostSlugString".into()),
                     ("title".into(), "PostSlugString".into()),
-                ]
-                .into(),
+                ].into()
             ),
             ..scalar()
         }
     }
     pub fn RootCompositeNoArgsFn() -> NodeMeta {
-        NodeMeta { ..Post() }
+        NodeMeta {
+            ..Post()
+        }
     }
     pub fn RootCompositeArgsFn() -> NodeMeta {
         NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarArgsFnOutput".into())].into()),
+            arg_types: Some(
+                [
+                    ("id".into(), "PostSlugString".into()),
+                ].into()
+            ),
             ..Post()
         }
     }
     pub fn RootScalarUnionFn() -> NodeMeta {
         NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarArgsFnOutput".into())].into()),
+            arg_types: Some(
+                [
+                    ("id".into(), "PostSlugString".into()),
+                ].into()
+            ),
             ..scalar()
         }
     }
@@ -2255,14 +2765,18 @@ mod node_metas {
                 [
                     ("post".into(), Post as NodeMetaFn),
                     ("user".into(), User as NodeMetaFn),
-                ]
-                .into(),
+                ].into()
             ),
+            input_files: None,
         }
     }
     pub fn RootCompositeUnionFn() -> NodeMeta {
         NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarArgsFnOutput".into())].into()),
+            arg_types: Some(
+                [
+                    ("id".into(), "PostSlugString".into()),
+                ].into()
+            ),
             ..RootCompositeUnionFnOutput()
         }
     }
@@ -2274,17 +2788,22 @@ mod node_metas {
                 [
                     ("post".into(), Post as NodeMetaFn),
                     ("user".into(), User as NodeMetaFn),
-                ]
-                .into(),
+                ].into()
             ),
+            input_files: None,
         }
     }
     pub fn RootMixedUnionFn() -> NodeMeta {
         NodeMeta {
-            arg_types: Some([("id".into(), "RootScalarArgsFnOutput".into())].into()),
+            arg_types: Some(
+                [
+                    ("id".into(), "PostSlugString".into()),
+                ].into()
+            ),
             ..RootMixedUnionFnOutput()
         }
     }
+
 }
 use types::*;
 pub mod types {
@@ -2296,10 +2815,9 @@ pub mod types {
         pub slug: Option<PostSlugString>,
         pub title: Option<PostSlugString>,
     }
-    pub type RootScalarArgsFnOutput = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootCompositeArgsFnInputPartial {
-        pub id: Option<RootScalarArgsFnOutput>,
+        pub id: Option<PostSlugString>,
     }
     pub type UserEmailStringEmail = String;
     pub type UserPostsPostList = Vec<PostPartial>;
@@ -2313,7 +2831,7 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
     pub enum RootScalarUnionFnOutput {
-        RootScalarArgsFnOutput(RootScalarArgsFnOutput),
+        PostSlugString(PostSlugString),
         RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -2327,7 +2845,7 @@ pub mod types {
     pub enum RootMixedUnionFnOutput {
         PostPartial(PostPartial),
         UserPartial(UserPartial),
-        RootScalarArgsFnOutput(RootScalarArgsFnOutput),
+        PostSlugString(PostSlugString),
         RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
     }
 }
@@ -2350,42 +2868,33 @@ pub struct RootCompositeUnionFnOutputSelections<ATy = NoAlias> {
     pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
     pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
 }
-impl_union_selection_traits!(
-    RootCompositeUnionFnOutputSelections,
-    ("post", post),
-    ("user", user)
-);
+impl_union_selection_traits!(RootCompositeUnionFnOutputSelections, ("post", post), ("user", user));
 #[derive(Default, Debug)]
 pub struct RootMixedUnionFnOutputSelections<ATy = NoAlias> {
     pub post: CompositeSelect<PostSelections<ATy>, NoAlias>,
     pub user: CompositeSelect<UserSelections<ATy>, NoAlias>,
 }
-impl_union_selection_traits!(
-    RootMixedUnionFnOutputSelections,
-    ("post", post),
-    ("user", user)
-);
+impl_union_selection_traits!(RootMixedUnionFnOutputSelections, ("post", post), ("user", user));
 
 impl QueryGraph {
+
     pub fn new(addr: Url) -> Self {
         Self {
             addr,
-            ty_to_gql_ty_map: std::sync::Arc::new(
-                [
-                    ("UserIdStringUuid".into(), "String!".into()),
-                    ("PostSlugString".into(), "String!".into()),
-                    ("RootScalarArgsFnOutput".into(), "String!".into()),
-                    ("post".into(), "post!".into()),
-                    ("user".into(), "user!".into()),
-                ]
-                .into(),
-            ),
+            ty_to_gql_ty_map: std::sync::Arc::new([
+            
+                ("UserIdStringUuid".into(), "String!".into()),
+                ("PostSlugString".into(), "String!".into()),
+                ("post".into(), "post!".into()),
+                ("user".into(), "user!".into()),
+        ].into()),
         }
     }
-
+    
     pub fn get_user(
         &self,
-    ) -> UnselectedNode<UserSelections, UserSelections<HasAlias>, QueryMarker, UserPartial> {
+    ) -> UnselectedNode<UserSelections, UserSelections<HasAlias>, QueryMarker, UserPartial>
+    {
         UnselectedNode {
             root_name: "getUser".into(),
             root_meta: node_metas::RootGetUserFn,
@@ -2395,7 +2904,8 @@ impl QueryGraph {
     }
     pub fn get_posts(
         &self,
-    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, QueryMarker, PostPartial> {
+    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, QueryMarker, PostPartial>
+    {
         UnselectedNode {
             root_name: "getPosts".into(),
             root_meta: node_metas::RootGetPostsFn,
@@ -2403,14 +2913,21 @@ impl QueryGraph {
             _marker: PhantomData,
         }
     }
-    pub fn scalar_no_args(&self) -> QueryNode<PostSlugString> {
+    pub fn scalar_no_args(
+        &self,
+    ) -> QueryNode<PostSlugString>
+    {
         let nodes = selection_to_node_set(
-            SelectionErasedMap([("scalarNoArgs".into(), SelectionErased::Scalar)].into()),
-            &[(
-                "scalarNoArgs".into(),
-                node_metas::RootScalarNoArgsFn as NodeMetaFn,
-            )]
-            .into(),
+            SelectionErasedMap(
+                [(
+                    "scalarNoArgs".into(),
+                    SelectionErased::Scalar,
+                )]
+                .into(),
+            ),
+            &[
+                ("scalarNoArgs".into(), node_metas::RootScalarNoArgsFn as NodeMetaFn),
+            ].into(),
             "$q".into(),
         )
         .unwrap();
@@ -2418,8 +2935,9 @@ impl QueryGraph {
     }
     pub fn scalar_args(
         &self,
-        args: impl Into<NodeArgs<PostPartial>>,
-    ) -> MutationNode<RootScalarArgsFnOutput> {
+        args: impl Into<NodeArgs<PostPartial>>
+    ) -> MutationNode<PostSlugString>
+    {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -2428,11 +2946,9 @@ impl QueryGraph {
                 )]
                 .into(),
             ),
-            &[(
-                "scalarArgs".into(),
-                node_metas::RootScalarArgsFn as NodeMetaFn,
-            )]
-            .into(),
+            &[
+                ("scalarArgs".into(), node_metas::RootScalarArgsFn as NodeMetaFn),
+            ].into(),
             "$q".into(),
         )
         .unwrap();
@@ -2440,7 +2956,8 @@ impl QueryGraph {
     }
     pub fn composite_no_args(
         &self,
-    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial> {
+    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial>
+    {
         UnselectedNode {
             root_name: "compositeNoArgs".into(),
             root_meta: node_metas::RootCompositeNoArgsFn,
@@ -2450,8 +2967,9 @@ impl QueryGraph {
     }
     pub fn composite_args(
         &self,
-        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>,
-    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial> {
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
+    ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial>
+    {
         UnselectedNode {
             root_name: "compositeArgs".into(),
             root_meta: node_metas::RootCompositeArgsFn,
@@ -2461,8 +2979,9 @@ impl QueryGraph {
     }
     pub fn scalar_union(
         &self,
-        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>,
-    ) -> QueryNode<RootScalarUnionFnOutput> {
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
+    ) -> QueryNode<RootScalarUnionFnOutput>
+    {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -2471,11 +2990,9 @@ impl QueryGraph {
                 )]
                 .into(),
             ),
-            &[(
-                "scalarUnion".into(),
-                node_metas::RootScalarUnionFn as NodeMetaFn,
-            )]
-            .into(),
+            &[
+                ("scalarUnion".into(), node_metas::RootScalarUnionFn as NodeMetaFn),
+            ].into(),
             "$q".into(),
         )
         .unwrap();
@@ -2483,13 +3000,9 @@ impl QueryGraph {
     }
     pub fn composite_union(
         &self,
-        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>,
-    ) -> UnselectedNode<
-        RootCompositeUnionFnOutputSelections,
-        RootCompositeUnionFnOutputSelections<HasAlias>,
-        QueryMarker,
-        RootCompositeUnionFnOutput,
-    > {
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
+    ) -> UnselectedNode<RootCompositeUnionFnOutputSelections, RootCompositeUnionFnOutputSelections<HasAlias>, QueryMarker, RootCompositeUnionFnOutput>
+    {
         UnselectedNode {
             root_name: "compositeUnion".into(),
             root_meta: node_metas::RootCompositeUnionFn,
@@ -2499,13 +3012,9 @@ impl QueryGraph {
     }
     pub fn mixed_union(
         &self,
-        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>,
-    ) -> UnselectedNode<
-        RootMixedUnionFnOutputSelections,
-        RootMixedUnionFnOutputSelections<HasAlias>,
-        QueryMarker,
-        RootMixedUnionFnOutput,
-    > {
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
+    ) -> UnselectedNode<RootMixedUnionFnOutputSelections, RootMixedUnionFnOutputSelections<HasAlias>, QueryMarker, RootMixedUnionFnOutput>
+    {
         UnselectedNode {
             root_name: "mixedUnion".into(),
             root_meta: node_metas::RootMixedUnionFn,

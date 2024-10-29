@@ -11,6 +11,7 @@ futures = "0.3"
 tokio-util = { version = "0.7", features = ["compat", "io"] }
 derive_more = { version = "1.0", features = ["debug"] }
 lazy_static = "1.5"
+tokio = { version = "1", features = ["rt-multi-thread"] }
 
 [[bin]]
 name = "sample_client"
