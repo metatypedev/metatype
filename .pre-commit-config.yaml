@@ -174,9 +174,12 @@ repos:
         exclude: tests/metagen/typegraphs/sample/rs/client.rs
       - id: clippy
         args:
+          - "--workspace"
           - "--locked"
           - "--all-features"
           - "--all-targets"
+          - "--exclude"
+          - "client_rs_static"
           - "--"
           - "--deny"
           - "warnings"
