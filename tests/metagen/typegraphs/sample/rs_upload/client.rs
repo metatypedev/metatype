@@ -415,7 +415,7 @@ impl TryFrom<File> for reqwest::blocking::multipart::Part {
 }
 
 impl File {
-    pub async fn into_reqwest_part(self) -> Result<reqwest::multipart::Part, BoxErr> {
+    async fn into_reqwest_part(self) -> Result<reqwest::multipart::Part, BoxErr> {
         let mut part = match self.data {
             FileData::Path(path) => reqwest::multipart::Part::file(path).await?,
             FileData::Bytes(data) => reqwest::multipart::Part::bytes(data),

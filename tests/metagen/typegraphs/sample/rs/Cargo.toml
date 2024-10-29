@@ -5,7 +5,12 @@ package.version = "0.0.1"
 [dependencies]
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
-reqwest = { version = "0.12", features = ["blocking", "json"] }
+reqwest = { version = "0.12", features = ["blocking", "json", "stream", "multipart"] }
+mime_guess = "2.0"
+futures = "0.3"
+tokio-util = { version = "0.7", features = ["compat", "io"] }
+derive_more = { version = "1.0", features = ["debug"] }
+lazy_static = "1.5"
 tokio = { version = "1", features = ["rt-multi-thread"] }
 
 # The options after here are configured for crates intended to be

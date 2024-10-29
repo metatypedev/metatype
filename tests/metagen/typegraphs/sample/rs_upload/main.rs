@@ -1,5 +1,9 @@
-mod client;
+#![deny(clippy::all)]
 
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
+mod client;
 use client::*;
 
 fn main() -> Result<(), BoxErr> {
@@ -28,14 +32,14 @@ fn main() -> Result<(), BoxErr> {
             })),)
         })?;
 
+        let hello_path: FileId = File::from_path("hello.txt").try_into()?;
+        let hello_stream: FileId = File::from_reader(std::fs::File::open("hello.txt")?)
+            .mime_type("text/plain")
+            .try_into()?;
+
         let prepared_clone = prepared_m.clone();
-        let res2 = prepared_clone.perform([(
-            "files",
-            serde_json::json!([
-                FileId::try_from(File::from_bytes("hello".as_bytes()).mime_type("text/plain"))?,
-                FileId::try_from(File::from_bytes("world".as_bytes()).mime_type("text/plain"))?,
-            ]),
-        )])?;
+        let res2 =
+            prepared_clone.perform([("files", serde_json::json!([hello_path, hello_stream,]))])?;
 
         (res2, res3)
     };
@@ -55,7 +59,7 @@ fn main() -> Result<(), BoxErr> {
                     }),
                 ),)
             })?;
-            let prepared_clone = prepared_m.clone();
+
             let file = File::from_bytes("hello".as_bytes()).mime_type("text/plain");
             let file: FileId = file.try_into()?;
             let res1 = prepared_m
@@ -69,16 +73,17 @@ fn main() -> Result<(), BoxErr> {
             //     ),
             // ]).await?;
             //
+
+            use tokio_util::compat::TokioAsyncReadCompatExt as _;
+            let hello_path: FileId = File::from_path("hello.txt").try_into()?;
+            let hello_stream: FileId =
+                File::from_async_reader(tokio::fs::File::open("hello.txt").await?.compat())
+                    .mime_type("text/plain")
+                    .try_into()?;
+
             let res4 = gql
                 .mutation((api1.upload_many(types::RootUploadManyFnInputPartial {
-                    files: Some(vec![
-                        File::from_bytes("hello".as_bytes())
-                            .mime_type("text/plain")
-                            .try_into()?,
-                        File::from_bytes("world".as_bytes())
-                            .mime_type("text/plain")
-                            .try_into()?,
-                    ]),
+                    files: Some(vec![hello_path, hello_stream]),
                     prefix: Some("assets/".to_string()),
                 }),))
                 .await?;
