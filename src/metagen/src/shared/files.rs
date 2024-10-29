@@ -8,7 +8,7 @@ use common::typegraph::{
 };
 
 #[derive(Debug)]
-pub struct ValuePath(pub Vec<Cow<'static, str>>);
+pub struct TypePath(pub Vec<Cow<'static, str>>);
 
 fn serialize_path_segment(seg: &PathSegment) -> Result<Cow<'static, str>> {
     match &seg.edge {
@@ -20,7 +20,7 @@ fn serialize_path_segment(seg: &PathSegment) -> Result<Cow<'static, str>> {
     }
 }
 
-impl<'a> TryFrom<&'a [PathSegment]> for ValuePath {
+impl<'a> TryFrom<&'a [PathSegment]> for TypePath {
     type Error = anyhow::Error;
 
     fn try_from(tg_path: &'a [PathSegment]) -> Result<Self, Self::Error> {
@@ -28,11 +28,11 @@ impl<'a> TryFrom<&'a [PathSegment]> for ValuePath {
         for seg in tg_path {
             path.push(serialize_path_segment(seg)?);
         }
-        Ok(ValuePath(path))
+        Ok(TypePath(path))
     }
 }
 
-pub fn get_path_to_files(tg: &Typegraph, root: u32) -> Result<HashMap<u32, Vec<ValuePath>>> {
+pub fn get_path_to_files(tg: &Typegraph, root: u32) -> Result<HashMap<u32, Vec<TypePath>>> {
     visitor2::traverse_types(
         tg,
         root,
@@ -50,7 +50,7 @@ pub fn get_path_to_files(tg: &Typegraph, root: u32) -> Result<HashMap<u32, Vec<V
                         if is_input {
                             let entry = acc.entry(fn_idx).or_default();
                             let current_path = cx.current_node.path.borrow();
-                            entry.push(ValuePath::try_from(&current_path[(path_index + 1)..])?);
+                            entry.push(TypePath::try_from(&current_path[(path_index + 1)..])?);
                         }
                     }
                     Ok(visitor2::VisitNext::Siblings)

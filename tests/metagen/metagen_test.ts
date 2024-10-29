@@ -644,7 +644,7 @@ Meta.test({
   }
 });
 
-Meta.test.only({
+Meta.test({
   name: "client table suite for file upload",
 }, async (t) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");

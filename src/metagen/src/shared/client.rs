@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use crate::interlude::*;
 
 use super::{
-    files::{get_path_to_files, ValuePath},
+    files::{get_path_to_files, TypePath},
     types::*,
 };
 use common::typegraph::{EffectType, ListTypeData, OptionalTypeData};
@@ -18,7 +18,7 @@ pub struct RenderManifest {
     pub node_metas: IndexSet<u32>,
     pub selections: IndexSet<u32>,
     pub root_fns: Vec<RootFn>,
-    pub input_files: Rc<HashMap<u32, Vec<ValuePath>>>,
+    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
 }
 
 pub struct RootFn {

@@ -8,14 +8,14 @@ use common::typegraph::*;
 use super::utils::normalize_type_title;
 use crate::{
     interlude::*,
-    shared::{files::ValuePath, types::*},
+    shared::{files::TypePath, types::*},
 };
 
 pub struct RsNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
     pub named_types: Rc<std::sync::Mutex<IndexSet<u32>>>,
     /// path to file types in the input type
-    pub input_files: Rc<HashMap<u32, Vec<ValuePath>>>,
+    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
 }
 
 impl RsNodeMetasRenderer {

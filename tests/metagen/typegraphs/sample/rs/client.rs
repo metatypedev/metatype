@@ -435,6 +435,99 @@ impl File {
     }
 }
 
+#[derive(Debug)]
+struct FileExtractor {
+    path: TypePath,
+    prefix: String,
+    current_path: ValuePath,
+    output: HashMap<String, FileId>,
+}
+
+impl FileExtractor {
+    fn extract_all_from(
+        variables: &mut JsonObject,
+        mut path_to_files: HashMap<String, Vec<TypePath>>,
+    ) -> Result<HashMap<String, FileId>, BoxErr> {
+        let mut output = HashMap::new();
+
+        for (key, value) in variables.iter_mut() {
+            let paths = path_to_files.remove(key).unwrap_or_default();
+            for path in paths.into_iter() {
+                let mut extractor = Self {
+                    path,
+                    prefix: key.clone(),
+                    current_path: ValuePath::default(),
+                    output: std::mem::take(&mut output),
+                };
+                extractor.extract_from_value(value)?;
+                output = extractor.output;
+            }
+        }
+
+        Ok(output)
+    }
+
+    fn extract_from_value(&mut self, value: &mut serde_json::Value) -> Result<(), BoxErr> {
+        let cursor = self.current_path.0.len();
+        if cursor == self.path.0.len() {
+            // end of type_path; replace file_id with null
+            let file_id: FileId = serde_json::from_value(value.take())?;
+            self.output.insert(self.format_path(), file_id);
+            return Ok(());
+        }
+        let segment = self.path.0[cursor];
+        use ValuePathSegment as VPSeg;
+        match segment {
+            "?" => {
+                if !value.is_null() {
+                    self.current_path.0.push(VPSeg::Optional);
+                    self.extract_from_value(value)?;
+                    self.current_path.0.pop();
+                }
+            }
+            "[]" => {
+                let items = value
+                    .as_array_mut()
+                    .ok_or_else(|| format!("expected an array at {:?}", self.format_path()))?;
+                for (idx, item) in items.iter_mut().enumerate() {
+                    self.current_path.0.push(VPSeg::Index(idx));
+                    self.extract_from_value(item)?;
+                    self.current_path.0.pop();
+                }
+            }
+            x if x.starts_with('.') => {
+                let key = &x[1..];
+                let object = value
+                    .as_object_mut()
+                    .ok_or_else(|| format!("expected an object at {:?}", self.format_path()))?;
+                let mut null = serde_json::Value::Null;
+                let value = object.get_mut(key).unwrap_or(&mut null);
+                self.current_path.0.push(VPSeg::Prop(key));
+                self.extract_from_value(value)?;
+                self.current_path.0.pop();
+            }
+            _ => unreachable!(),
+        }
+
+        Ok(())
+    }
+
+    /// format the path following the GraphQL multipart request spec
+    /// see: https://github.com/jaydenseric/graphql-multipart-request-spec
+    fn format_path(&self) -> String {
+        let mut res = self.prefix.clone();
+        use ValuePathSegment as VPSeg;
+        for seg in &self.current_path.0 {
+            match seg {
+                VPSeg::Optional => {}
+                VPSeg::Index(idx) => res.push_str(&format!(".{}", idx)),
+                VPSeg::Prop(key) => res.push_str(&format!(".{}", key)),
+            }
+        }
+        res
+    }
+}
+
 //
 // --- --- Graph node types  --- --- //
 //
@@ -1441,99 +1534,6 @@ pub mod graphql {
 
     // PlaceholderValue, fieldName -> gql_var_name
     type FoundPlaceholders = Vec<(PlaceholderValue, HashMap<CowStr, CowStr>)>;
-
-    #[derive(Debug)]
-    struct FileExtractor {
-        path: TypePath,
-        prefix: String,
-        current_path: ValuePath,
-        output: HashMap<String, FileId>,
-    }
-
-    impl FileExtractor {
-        fn extract_all_from(
-            variables: &mut JsonObject,
-            mut path_to_files: HashMap<String, Vec<TypePath>>,
-        ) -> Result<HashMap<String, FileId>, BoxErr> {
-            let mut output = HashMap::new();
-
-            for (key, value) in variables.iter_mut() {
-                let paths = path_to_files.remove(key).unwrap_or_default();
-                for path in paths.into_iter() {
-                    let mut extractor = Self {
-                        path,
-                        prefix: key.clone(),
-                        current_path: ValuePath::default(),
-                        output: std::mem::take(&mut output),
-                    };
-                    extractor.extract_from_value(value)?;
-                    output = extractor.output;
-                }
-            }
-
-            Ok(output)
-        }
-
-        fn extract_from_value(&mut self, value: &mut serde_json::Value) -> Result<(), BoxErr> {
-            let cursor = self.current_path.0.len();
-            if cursor == self.path.0.len() {
-                // end of type_path; replace file_id with null
-                let file_id: FileId = serde_json::from_value(value.take())?;
-                self.output.insert(self.format_path(), file_id);
-                return Ok(());
-            }
-            let segment = self.path.0[cursor];
-            use ValuePathSegment as VPSeg;
-            match segment {
-                "?" => {
-                    if !value.is_null() {
-                        self.current_path.0.push(VPSeg::Optional);
-                        self.extract_from_value(value)?;
-                        self.current_path.0.pop();
-                    }
-                }
-                "[]" => {
-                    let items = value
-                        .as_array_mut()
-                        .ok_or_else(|| format!("expected an array at {:?}", self.format_path()))?;
-                    for (idx, item) in items.iter_mut().enumerate() {
-                        self.current_path.0.push(VPSeg::Index(idx));
-                        self.extract_from_value(item)?;
-                        self.current_path.0.pop();
-                    }
-                }
-                x if x.starts_with('.') => {
-                    let key = &x[1..];
-                    let object = value
-                        .as_object_mut()
-                        .ok_or_else(|| format!("expected an object at {:?}", self.format_path()))?;
-                    let mut null = serde_json::Value::Null;
-                    let value = object.get_mut(key).unwrap_or(&mut null);
-                    self.current_path.0.push(VPSeg::Prop(key));
-                    self.extract_from_value(value)?;
-                    self.current_path.0.pop();
-                }
-                _ => unreachable!(),
-            }
-
-            Ok(())
-        }
-
-        /// format the path following the GraphQL multipart request spec
-        /// see: https://github.com/jaydenseric/graphql-multipart-request-spec
-        fn format_path(&self) -> String {
-            let mut res = self.prefix.clone();
-            use ValuePathSegment as VPSeg;
-            for seg in &self.current_path.0 {
-                match seg {
-                    VPSeg::Optional => {}
-                    VPSeg::Index(idx) => res.push_str(&format!(".{}", idx)),
-                    VPSeg::Prop(key) => res.push_str(&format!(".{}", key)),
-                }
-            }
-            res
-        }
-    }
 
     struct GqlRequest {
         doc: String,
