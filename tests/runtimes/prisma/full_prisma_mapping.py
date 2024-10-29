@@ -1,5 +1,5 @@
 from typegraph import typegraph, Policy, t, Graph
-from typegraph.gen.exports.runtimes import EffectUpdate
+from typegraph.gen.runtimes import EffectUpdate
 from typegraph.providers.prisma import PrismaRuntime
 
 

@@ -9,7 +9,7 @@ from typegraph.gen.core import SerializeParams
 from typegraph.gen.utils import ReduceEntry
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.injection import InheritDef, serialize_static_injection
-from typegraph.sdk import store, wit_utils
+from typegraph.sdk import sdk_utils
 
 # def serialize_record_values(obj: Union[Dict[str, any], None]):
 #     return [(k, json.dumps(v)) for k, v in obj.items()] if obj is not None else None
@@ -74,8 +74,9 @@ def build_reduce_entries(node: Any, paths: List[ReduceEntry], curr_path: List[st
     raise Exception(f"unsupported type {type(node)} at {'.'.join(curr_path)}")
 
 
-def unpack_tarb64(tar_b64: str, dest: str):
-    return wit_utils.unpack_tarb64(store, tar_b64, dest)
+# FIXME: What is this?
+# def unpack_tarb64(tar_b64: str, dest: str):
+#     return sdk_utils.unpack_tarb64(tar_b64, dest)
 
 
 frozen_memo: Dict[str, FinalizationResult] = {}

@@ -3,7 +3,7 @@ import json
 import os
 import sys
 
-from typegraph.gen.exports.core import (
+from typegraph.gen.core import (
     MigrationAction,
 )
 from typegraph.graph.shared_types import BasicAuth

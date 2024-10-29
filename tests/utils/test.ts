@@ -215,95 +215,16 @@ export class MetaTest {
   }
 
   async engine(path: string, opts: ParseOptions = {}) {
-    const extension = extname(path);
-    let sdkLang: SDKLangugage;
-    switch (extension) {
-      case ".py":
-        sdkLang = SDKLangugage.Python;
-        break;
-      case ".ts":
-      case ".js":
-      case ".mjs":
-        sdkLang = SDKLangugage.TypeScript;
-        break;
-      default:
-        throw new Error(`Unsupported file type ${extension}`);
-    }
-
-    // FIXME: this breaks if an absolute path is passed
-    const testDirName = dirname(path);
-    const cwd = join(testDir, testDirName);
-
-    const serialized = await this.#deployTypegraphFromShell(
-      path,
-      sdkLang,
-      cwd,
-      opts,
-    );
-
-    return await this.#engineFromDeployed(serialized, opts.secrets ?? {});
-  }
-
-  async #deployTypegraphFromShell(
-    path: string,
-    lang: SDKLangugage,
-    cwd: string,
-    opts: ParseOptions,
-  ): Promise<string> {
-    const secrets = opts.secrets ?? {};
-    const secretsStr = JSON.stringify(secrets);
-
-    const cmd = [];
-
-    if (lang === SDKLangugage.TypeScript) {
-      cmd.push(
-        lang.toString(),
-        "run",
-        "--allow-all",
-        "utils/tg_deploy_script.ts",
-        cwd,
-        this.port.toString(),
-        path,
-        secretsStr,
-      );
-    } else {
-      cmd.push(
-        ...(Deno.env.get("MCLI_LOADER_PY")?.split(" ") ?? [lang.toString()]),
-        "utils/tg_deploy_script.py",
-        cwd,
-        this.port.toString(),
-        path,
-        secretsStr,
-      );
-    }
-
-    if (opts.typegraph) {
-      cmd.push(opts.typegraph);
-    }
-
-    const env: Record<string, string> = {};
-    if (opts.prefix) {
-      env["PREFIX"] = opts.prefix;
-    }
-
-    const output = await this.shell(cmd, { env });
-
-    const { stderr, stdout, code } = output;
+    const args = ["serialize", "--file", path, "--quiet"];
+    const { code, stdout, stderr } = await this.meta(args);
 
     if (code !== 0) {
-      throw new Error(`Failed with exit code ${code}: ${stderr}`);
+      throw new Error(stderr);
     }
 
-    if (stdout.length === 0) {
-      throw new Error("No typegraph");
-    }
+    const tgString = stdout.trim().slice(1, stdout.length - 1); // remove the brackets []
 
-    const tg_json = extractJsonFromStdout(stdout);
-    if (!tg_json) {
-      throw new Error("No typegraph");
-    }
-
-    return tg_json;
+    return await this.#engineFromDeployed(tgString, opts.secrets ?? {});
   }
 
   async unregister(engine: QueryEngine) {

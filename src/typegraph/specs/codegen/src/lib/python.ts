@@ -37,13 +37,14 @@ class PythonCodeGenerator extends TypeDefProcessor {
 
   override formatHeaders() {
     const baseImports = [
-      "import typing as t",
+      "import typing_extensions as t",
       "from pydantic import BaseModel",
-      "from client import rpc_request",
+      "from typegraph.gen.client import rpc_request",
     ];
 
     const imports = this.imports.map(
-      ({ source, imports }) => `from ${source} import ${imports.join(", ")}`,
+      ({ source, imports }) =>
+        `from typegraph.gen.${source} import ${imports.join(", ")}`,
     );
 
     return [...baseImports, ...imports].filter(Boolean).join("\n");
@@ -54,15 +55,15 @@ class PythonCodeGenerator extends TypeDefProcessor {
   }
 
   override formatRecordTypeDef(def: RecordTypeDef) {
-    const props = def.props
-      .map(
-        (p) =>
-          `    ${p.name}: ${p.optional ? `t.Optional[${p.value}]` : p.value}`,
-      )
-      .join("\n");
+    const props = def.props.map(
+      (p) => `${p.name}: ${p.optional ? `t.Optional[${p.value}]` : p.value}`,
+    );
 
     return `class ${def.ident}(BaseModel):
-${props}`;
+${props.map((p) => "    " + p).join("\n")}
+
+    def __init__(self, ${props.join(", ")}, **kwargs):
+        super().__init__(${def.props.map((p) => p.name + "=" + p.name)}, **kwargs)`;
   }
 
   override formatUnionTypeDef(def: UnionTypeDef) {
@@ -85,7 +86,7 @@ ${variants}
         value: ${def.ret}
 
     res = rpc_request("${def.ident}")
-    ret = ReturnType(**res)
+    ret = ReturnType(value=res)
 
     return ret.value`;
     }
@@ -106,7 +107,7 @@ ${def.params.map((p) => `        ${p.name}: ${p.optional ? `t.Optional[${p.type}
 
     req = RequestType(${def.params.map(({ name }) => `${name}=${name}`).join(", ")})
     res = rpc_request("${def.ident}", req.model_dump())
-    ret = ReturnType(**res)
+    ret = ReturnType(value=res)
 
     return ret.value`;
   }
