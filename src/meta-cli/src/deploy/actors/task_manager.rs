@@ -20,7 +20,6 @@ pub use report::Report;
 mod signal_handler;
 
 pub mod message {
-
     use super::*;
 
     #[derive(Message)]

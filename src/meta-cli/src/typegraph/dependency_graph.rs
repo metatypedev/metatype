@@ -16,12 +16,11 @@ pub struct DependencyGraph {
 
 impl DependencyGraph {
     pub fn update_typegraph(&mut self, path: PathBuf, tg: &Typegraph) {
-        if !self.deps.contains_key(&path) {
-            self.deps.insert(path.to_path_buf(), HashSet::default());
-        }
-
-        let deps = self.deps.get_mut(&path).unwrap();
-        let old_deps = std::mem::replace(deps, tg.deps.iter().cloned().collect());
+        let parent_dir = path.parent().unwrap();
+        let artifacts = tg.meta.artifacts.values();
+        let artifact_paths = artifacts.flat_map(|a| parent_dir.join(&a.path).canonicalize());
+        let deps = self.deps.entry(path.clone()).or_default();
+        let old_deps = std::mem::replace(deps, artifact_paths.collect());
         let removed_deps = old_deps.difference(deps);
         let added_deps = deps.difference(&old_deps);
 
@@ -35,10 +34,10 @@ impl DependencyGraph {
 
         for added in added_deps {
             if let Some(set) = self.reverse_deps.get_mut(added) {
-                set.insert(path.to_path_buf());
+                set.insert(path.clone());
             } else {
                 self.reverse_deps
-                    .insert(added.clone(), HashSet::from_iter(Some(path.to_path_buf())));
+                    .insert(added.clone(), HashSet::from_iter(Some(path.clone())));
             }
         }
     }

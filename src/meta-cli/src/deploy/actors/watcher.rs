@@ -152,7 +152,7 @@ impl<A: TaskAction + 'static> Handler<File> for WatcherActor<A> {
         let path = msg.0;
         if &path == self.config.path.as_ref().unwrap() {
             self.console
-                .warning("metatype configuration filie changed".to_owned());
+                .warning("metatype configuration file changed".to_owned());
             self.console
                 .warning("reloading all the typegraphs".to_owned());
             self.task_manager.do_send(task_manager::message::Restart);
