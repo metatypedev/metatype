@@ -95,7 +95,7 @@ return validate_32"
 `;
 
 snapshot[`input validator compiler 2`] = `
-"Validation errors:
+"Validation errors on root_createPost_fn_input:
   - at <value>.title: expected minimum length: 10, got 6
   - at <value>.content: expected minimum length: 100, got 13
   - at <value>.authorId: string does not statisfy the required format 'uuid'
@@ -105,7 +105,7 @@ snapshot[`input validator compiler 2`] = `
 
 snapshot[`input validator compiler 3`] = `
 [
-  "Validation errors:
+  "Validation errors on User:
   - at <value>.username: string does not match to the pattern /^[a-z]+\$/
   - at <value>.email: string does not statisfy the required format 'email'
   - at <value>.website: string does not statisfy the required format 'uri'
@@ -165,7 +165,7 @@ return validate_36"
 
 snapshot[`input validator compiler 5`] = `
 [
-  "Validation errors:
+  "Validation errors on root_enums_fn_input:
   - at <value>.userRole: value did not match to any of the enum values
 ",
 ]
@@ -173,7 +173,7 @@ snapshot[`input validator compiler 5`] = `
 
 snapshot[`input validator compiler 6`] = `
 [
-  "Validation errors:
+  "Validation errors on root_enums_fn_input:
   - at <value>.availableItems[0]: value did not match to any of the enum values
   - at <value>.availableItems[2]: value did not match to any of the enum values
 ",
@@ -393,7 +393,7 @@ return validate_9"
 
 snapshot[`input validator compiler 8`] = `
 [
-  "Validation errors:
+  "Validation errors on root_posts_fn_input:
   - at <value>.authorId: string does not statisfy the required format 'uuid'
 ",
 ]
@@ -401,7 +401,7 @@ snapshot[`input validator compiler 8`] = `
 
 snapshot[`input validator compiler 9`] = `
 [
-  "Validation errors:
+  "Validation errors on root_posts_fn_input:
   - at <value>.tag: Value does not match to any variant of the union type 
   #0 <value>.tag,expected a string, got object
   #1 <value>.tag[1],expected maximum length: 10, got 11
@@ -410,7 +410,7 @@ snapshot[`input validator compiler 9`] = `
 `;
 
 snapshot[`input validator compiler 10`] = `
-"Validation errors:
+"Validation errors on root_posts_fn_input:
   - at <value>.search: Value does not match to any variant of the either type 
   #0 <value>.search.title,Value match to more than one variant of the either type 
   #1 <value>.search.content,Value does not match to any variant of the either type 
@@ -420,7 +420,7 @@ snapshot[`input validator compiler 10`] = `
 `;
 
 snapshot[`input validator compiler 11`] = `
-"Validation errors:
+"Validation errors on root_posts_fn_input:
   - at <value>.search: Value does not match to any variant of the either type 
   #0 <value>.search.title,Value does not match to any variant of the either type 
   #0 <value>.search.title,expected a string, got undefined

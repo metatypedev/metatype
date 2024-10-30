@@ -51,6 +51,18 @@ Meta.test(
         .on(e);
     });
 
+    await t.should("return null when key not found", async () => {
+      await gql`
+        query {
+          get(key: "INEXISTENT")
+        }
+      `
+        .expectData({
+          get: null,
+        })
+        .on(e);
+    });
+
     await t.should("get all keys from redis", async () => {
       await gql`
         query {

@@ -18,7 +18,7 @@ Having a good title and description is important for the users to get readable c
 
 #### Migration notes
 
-...
+---
 
 - [ ] The change comes with new or modified tests
 - [ ] Hard-to-understand functions have explanatory comments
