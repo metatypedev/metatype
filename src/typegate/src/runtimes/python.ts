@@ -31,8 +31,6 @@ export class PythonRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    logger.info("initializing PythonRuntime");
-    logger.debug("init params: " + JSON.stringify(params));
     const { materializers, typegraphName, typegraph, typegate } = params;
     const artifacts = typegraph.meta.artifacts;
 
@@ -139,7 +137,6 @@ export class PythonRuntime extends Runtime {
         typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
       },
     );
-    logger.info("WitWireMessenger initialized");
 
     return new PythonRuntime(typegraphName, typegraph, uuid, wire);
   }

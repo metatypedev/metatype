@@ -2,7 +2,7 @@
   "name": "vscode-metatype-support",
   "description": "VSCode extension for Metatype support",
   "author": "Metatype Team",
-  "version": "0.5.0-rc.2",
+  "version": "0.5.0-rc.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/metatypedev/metatype"

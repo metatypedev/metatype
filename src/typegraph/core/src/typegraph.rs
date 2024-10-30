@@ -397,7 +397,8 @@ impl TypegraphContext {
                 let idx = self.materializers.len();
                 e.insert(idx as u32);
                 self.materializers.push(None);
-                let converted = convert_materializer(self, Store::get_materializer(id)?)?;
+                let mat_internal = Store::get_materializer(id)?;
+                let converted = convert_materializer(self, mat_internal)?;
                 self.materializers[idx] = Some(converted);
                 Ok(idx as MaterializerId)
             }
