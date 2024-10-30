@@ -169,10 +169,14 @@ export class ArtifactStore implements AsyncDisposable {
   }
 
   #resolveLocalPath(dep: ArtifactMeta, parentDirName: string) {
-    let promise = this.#localPathMemo.get(dep.hash);
+    // we combine the parentDirName with the hash for the local
+    // memo since the same artifact might be by different
+    // relative solutions
+    // FIXME: use the artifact set solution from substantial for Deno rt
+    let promise = this.#localPathMemo.get(dep.hash + parentDirName);
     if (!promise) {
       promise = readyLocalPath(dep, parentDirName, this.persistence.dirs);
-      this.#localPathMemo.set(dep.hash, promise);
+      this.#localPathMemo.set(dep.hash + parentDirName, promise);
     }
     return promise;
   }

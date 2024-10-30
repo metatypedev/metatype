@@ -45,7 +45,8 @@ export class KvRuntime extends Runtime {
 
   get() {
     const mat = this.#operation("get", fx.read());
-    return t.func(t.struct({ "key": t.string() }), t.string(), mat);
+    // FIXME: consolidate response type construction inside tg_core
+    return t.func(t.struct({ "key": t.string() }), t.string().optional(), mat);
   }
 
   delete() {
