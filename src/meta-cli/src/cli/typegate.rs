@@ -82,6 +82,7 @@ fn run_typegate(cmd: Typegate) -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "typegate")]
 async fn shutdown_signal() {
     #[cfg(unix)]
     {

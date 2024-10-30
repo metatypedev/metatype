@@ -311,6 +311,7 @@ mod watch_mode {
         };
 
         let deploy_node = deploy.node.clone();
+        #[cfg(feature = "typegate")]
         let deploy_node = if let Some((_, port)) = typegate_addr.as_ref() {
             deploy_node.override_port(*port)
         } else {
@@ -346,6 +347,7 @@ mod watch_mode {
         }
         let report = init.run().await;
 
+        #[cfg(feature = "typegate")]
         if let Some((addr, _)) = typegate_addr {
             addr.do_send(typegate::message::Stop);
         }
