@@ -273,6 +273,7 @@ mod default_mode {
 mod watch_mode {
     use std::time::Duration;
 
+    use actors::typegate;
     use task_manager::{TaskManagerInit, TaskSource};
 
     use crate::config::PathOption;
@@ -309,14 +310,9 @@ mod watch_mode {
             None
         };
 
-        #[cfg(feature = "typegate")]
-        let port_override = typegate_addr.map(|(_, port)| port);
-        #[cfg(not(feature = "typegate"))]
-        let port_override = None;
-
         let deploy_node = deploy.node.clone();
-        let deploy_node = if let Some(port) = port_override {
-            deploy_node.override_port(port)
+        let deploy_node = if let Some((_, port)) = typegate_addr.as_ref() {
+            deploy_node.override_port(*port)
         } else {
             deploy_node
         };
@@ -349,6 +345,10 @@ mod watch_mode {
             init = init.max_parallel_tasks(max_parallel_tasks);
         }
         let report = init.run().await;
+
+        if let Some((addr, _)) = typegate_addr {
+            addr.do_send(typegate::message::Stop);
+        }
 
         match report.stop_reason {
             StopReason::Natural => {
