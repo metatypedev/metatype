@@ -15,20 +15,19 @@ pub struct DependencyGraph {
 }
 
 impl DependencyGraph {
-    pub fn update_typegraph(&mut self, tg: &Typegraph) {
-        let path = tg.path.clone().unwrap();
-        if !self.deps.contains_key(path.as_ref()) {
+    pub fn update_typegraph(&mut self, path: PathBuf, tg: &Typegraph) {
+        if !self.deps.contains_key(&path) {
             self.deps.insert(path.to_path_buf(), HashSet::default());
         }
 
-        let deps = self.deps.get_mut(path.as_ref()).unwrap();
+        let deps = self.deps.get_mut(&path).unwrap();
         let old_deps = std::mem::replace(deps, tg.deps.iter().cloned().collect());
         let removed_deps = old_deps.difference(deps);
         let added_deps = deps.difference(&old_deps);
 
         for removed in removed_deps {
             let rdeps = self.reverse_deps.get_mut(removed).unwrap();
-            rdeps.take(path.as_ref()).unwrap();
+            rdeps.take(&path).unwrap();
             if rdeps.is_empty() {
                 self.reverse_deps.remove(removed);
             }

@@ -115,7 +115,7 @@ export class Manager {
       } as TypegraphOutput;
 
       const deployTarget = await rpc.getDeployTarget();
-      const { response } = await tgDeploy(reusableTgOutput, {
+      const { response, serialized } = await tgDeploy(reusableTgOutput, {
         typegate: {
           url: deployTarget.baseUrl,
           auth: new BasicAuth(
@@ -131,7 +131,14 @@ export class Manager {
         defaultMigrationAction: deployData.defaultMigrationAction,
       });
 
-      log.success({ typegraph: this.#typegraph.name, ...response });
+      log.success({
+        typegraph: {
+          name: this.#typegraph.name,
+          path: env.typegraph_path,
+          value: serialized,
+        },
+        ...response,
+      });
     } catch (err: any) {
       log.failure({
         typegraph: this.#typegraph.name,

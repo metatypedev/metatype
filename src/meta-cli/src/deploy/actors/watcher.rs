@@ -6,11 +6,11 @@ use super::task::action::TaskAction;
 use super::task_manager::{self, TaskGenerator, TaskManager, TaskReason};
 use crate::config::Config;
 use crate::deploy::actors::console::ConsoleActor;
+use crate::deploy::actors::task::deploy::TypegraphData;
 use crate::deploy::push::pusher::RetryManager;
 use crate::interlude::*;
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
-use common::typegraph::Typegraph;
 use notify_debouncer_mini::notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_mini::{new_debouncer, notify, DebounceEventResult, Debouncer};
 use pathdiff::diff_paths;
@@ -31,7 +31,7 @@ pub mod message {
 
     #[derive(Message)]
     #[rtype(result = "()")]
-    pub struct UpdateDependencies(pub Arc<Typegraph>);
+    pub struct UpdateDependencies(pub TypegraphData);
 
     #[derive(Message)]
     #[rtype(result = "()")]
@@ -202,7 +202,8 @@ impl<A: TaskAction + 'static> Handler<UpdateDependencies> for WatcherActor<A> {
     type Result = ();
 
     fn handle(&mut self, msg: UpdateDependencies, _ctx: &mut Self::Context) -> Self::Result {
-        self.dependency_graph.update_typegraph(&msg.0)
+        let TypegraphData { path, value, .. } = msg.0;
+        self.dependency_graph.update_typegraph(path, &value)
     }
 }
 

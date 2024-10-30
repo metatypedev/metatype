@@ -4,7 +4,7 @@ use super::console::{Console, ConsoleActor};
 use super::discovery::DiscoveryActor;
 use super::task::action::{TaskAction, TaskActionGenerator};
 use super::task::{self, TaskActor, TaskFinishStatus};
-use super::watcher::WatcherActor;
+use super::watcher::{self, WatcherActor};
 use crate::{config::Config, interlude::*};
 use colored::OwoColorize;
 use futures::channel::oneshot;
@@ -13,12 +13,14 @@ use signal_handler::set_stop_recipient;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
+use task::deploy::TypegraphData;
 
 pub mod report;
 pub use report::Report;
 mod signal_handler;
 
 pub mod message {
+
     use super::*;
 
     #[derive(Message)]
@@ -55,6 +57,10 @@ pub mod message {
     #[derive(Message)]
     #[rtype(result = "()")]
     pub struct DiscoveryDone;
+
+    #[derive(Message)]
+    #[rtype(result = "()")]
+    pub struct TypegraphDeployed(pub TypegraphData);
 }
 
 use message::*;
@@ -516,5 +522,15 @@ impl<A: TaskAction + 'static> Handler<Restart> for TaskManager<A> {
     fn handle(&mut self, _msg: Restart, ctx: &mut Context<Self>) -> Self::Result {
         self.stop_reason = Some(StopReason::Restart);
         ctx.address().do_send(ForceStop);
+    }
+}
+
+impl<A: TaskAction + 'static> Handler<TypegraphDeployed> for TaskManager<A> {
+    type Result = ();
+
+    fn handle(&mut self, msg: TypegraphDeployed, _ctx: &mut Self::Context) -> Self::Result {
+        if let Some(addr) = &self.watcher_addr {
+            addr.do_send(watcher::message::UpdateDependencies(msg.0));
+        }
     }
 }
