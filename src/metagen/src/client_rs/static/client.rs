@@ -255,11 +255,7 @@ impl std::error::Error for SelectionError {}
 pub struct TypePath(&'static [&'static str]);
 
 fn path_segment_as_prop(segment: &str) -> Option<&str> {
-    if segment.starts_with('.') {
-        Some(&segment[1..])
-    } else {
-        None
-    }
+    segment.strip_prefix('.')
 }
 
 #[derive(Debug, Clone)]
@@ -312,7 +308,7 @@ impl TryFrom<FileId> for File {
 
     fn try_from(file_id: FileId) -> Result<Self, Self::Error> {
         let mut guard = FILE_STORE.lock().map_err(|_| "file store lock poisoned")?;
-        let file = guard.remove(&file_id).ok_or_else(|| "file not found")?;
+        let file = guard.remove(&file_id).ok_or("file not found")?;
         if file.file_name.is_none() {
             Ok(file.file_name(file_id.0.to_string()))
         } else {
@@ -1761,7 +1757,7 @@ pub mod graphql {
 
         // TODO rename files
 
-        if files.len() > 0 {
+        if !files.is_empty() {
             // multipart
             let mut form = Form::new();
 
@@ -1828,7 +1824,7 @@ pub mod graphql {
             "variables": variables
         });
 
-        if files.len() > 0 {
+        if !files.is_empty() {
             // multipart
             let mut form = Form::new();
 

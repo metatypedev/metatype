@@ -10,7 +10,8 @@ typegraph({
         int: t.integer(),
         float: t.float(),
         boolean: t.boolean(),
-        file: t.file(),
+        // FIXME file upload for FDK
+        // file: t.file(),
         opt: t.optional(t.string()),
         either: t.either([
           t.struct({ a: t.string() }),

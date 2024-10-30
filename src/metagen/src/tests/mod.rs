@@ -64,6 +64,7 @@ async fn load_fdk_template(
     Ok(FdkTemplate { entries })
 }
 
+#[derive(Debug)]
 pub struct BuildArgs {
     pub path: PathBuf,
 }
