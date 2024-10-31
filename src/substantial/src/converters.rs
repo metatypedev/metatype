@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use serde_json::Value;
+use std::{collections::HashMap, fmt};
 
-use anyhow::{bail, Context, Ok, Result};
-use chrono::{DateTime, Utc};
+use anyhow::{bail, Context, Result};
+use chrono::{DateTime, TimeZone, Utc};
 
 use protobuf::{
     well_known_types::{
@@ -82,6 +83,111 @@ pub struct Run {
     pub operations: Vec<Operation>,
 }
 
+#[derive(Debug)]
+pub enum Interupt {
+    Sleep,
+    Saveretry,
+    WaitReceiveEvent,
+    WaitHandleEvent,
+    WaitEnsureValue,
+}
+
+impl Interupt {
+    const PREFIX: &'static str = "SUBSTANTIAL_INTERRUPT_";
+}
+
+impl fmt::Display for Interupt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let variant = match self {
+            Self::Sleep => "SLEEP",
+            Self::Saveretry => "SAVE_RETRY",
+            Self::WaitReceiveEvent => "WAIT_RECEIVE_EVENT",
+            Self::WaitHandleEvent => "WAIT_HANDLE_EVENT",
+            Self::WaitEnsureValue => "WAIT_ENSURE_VALUE",
+        };
+        write!(f, "{}{:?}", Self::PREFIX, variant)
+    }
+}
+
+impl std::error::Error for Interupt {}
+
+pub enum Strategy {
+    Linear,
+}
+
+pub struct Retry {
+    pub strategy: Option<String>,
+    pub min_backoff_ms: i32,
+    pub max_backoff_ms: i32,
+    pub max_retries: i32,
+}
+
+pub struct RetryStrategy {
+    min_backoff_ms: Option<i32>,
+    max_backoff_ms: Option<i32>,
+    max_retries: i32,
+}
+
+impl RetryStrategy {
+    pub fn new(
+        max_retries: i32,
+        min_backoff_ms: Option<i32>,
+        max_backoff_ms: Option<i32>,
+    ) -> anyhow::Result<Self> {
+        if max_retries < 1 {
+            anyhow::bail!("maxRetries < 1");
+        }
+
+        let mut min_ms = min_backoff_ms;
+        let mut max_ms = max_backoff_ms;
+
+        match (min_ms, max_ms) {
+            (Some(low), Some(high)) => {
+                if low >= high {
+                    anyhow::bail!("minBackoffMs >= maxBackoffMs");
+                }
+                if low < 0 {
+                    anyhow::bail!("minBackoffMs < 0");
+                }
+            }
+            (Some(low), None) => {
+                max_ms = Some(low + 10);
+            }
+            (None, Some(high)) => {
+                min_ms = Some(0.max(high - 10));
+            }
+            (None, None) => {}
+        }
+
+        Ok(Self {
+            min_backoff_ms: min_ms,
+            max_backoff_ms: max_ms,
+            max_retries,
+        })
+    }
+
+    pub fn eval(&self, strategy: Strategy, retries_left: i32) -> anyhow::Result<i32> {
+        match strategy {
+            Strategy::Linear => self.linear(retries_left),
+            // Add more strategy matches here
+        }
+    }
+
+    fn linear(&self, retries_left: i32) -> anyhow::Result<i32> {
+        if retries_left <= 0 {
+            anyhow::bail!("retries left <= 0");
+        }
+
+        let dt = self.max_backoff_ms.unwrap_or(0) - self.min_backoff_ms.unwrap_or(0);
+        Ok(((self.max_retries - retries_left) * dt) / self.max_retries)
+    }
+}
+
+pub struct Save {
+    pub timeout_ms: Option<i32>,
+    pub retry: Option<Retry>,
+}
+
 impl Run {
     pub fn new(run_id: String) -> Self {
         Self {
@@ -124,6 +230,98 @@ impl Run {
 
     pub fn reset(&mut self) {
         self.operations = vec![];
+    }
+
+    fn _save<F>(&mut self, func: F, option: Option<Save>) -> Result<Value>
+    where
+        F: Fn() -> Result<Value>,
+    {
+        let next_id = 1;
+        let mut current_retry_count: i32 = 1;
+
+        for Operation { event, .. } in self.operations.iter() {
+            if let OperationEvent::Save { id, value } = event {
+                if *id == next_id {
+                    if let SavedValue::Resolved { payload } = value {
+                        return Ok(payload.clone());
+                    } else if let SavedValue::Retry {
+                        counter,
+                        wait_until,
+                    } = value
+                    {
+                        let now = Utc::now();
+                        if wait_until > &now {
+                            bail!(Interupt::Saveretry);
+                        } else {
+                            current_retry_count = *counter;
+                        }
+                    }
+                }
+            }
+        }
+
+        current_retry_count += 1;
+
+        let option = option.unwrap();
+
+        match func() {
+            Ok(result) => {
+                self.operations.push(Operation {
+                    at: Utc::now(),
+                    event: OperationEvent::Save {
+                        id: next_id,
+                        value: SavedValue::Resolved {
+                            payload: result.clone(),
+                        },
+                    },
+                });
+                Ok(result)
+            }
+            Err(err) => {
+                let retry = option.retry.unwrap();
+                if retry.max_retries != 0 && current_retry_count < retry.max_retries {
+                    let strategy = RetryStrategy {
+                        min_backoff_ms: Some(retry.max_backoff_ms),
+                        max_backoff_ms: Some(retry.max_backoff_ms),
+                        max_retries: retry.max_retries,
+                    };
+
+                    let retries_left = (retry.max_retries - current_retry_count).max(0);
+                    let delay_ms = strategy.eval(Strategy::Linear, retries_left)? as i64;
+                    let wait_until_as_ms = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis() as i64
+                        + delay_ms;
+
+                    self.operations.push(Operation {
+                        at: Utc::now(), // TODO verify if it's good
+                        event: OperationEvent::Save {
+                            id: next_id,
+                            value: SavedValue::Retry {
+                                counter: current_retry_count,
+                                wait_until: Utc.timestamp_millis_opt(wait_until_as_ms).unwrap(),
+                            },
+                        },
+                    });
+                    bail!(Interupt::Saveretry);
+                } else {
+                    self.operations.push(Operation {
+                        at: Utc::now(), // TODO verify if it's good
+                        event: OperationEvent::Save {
+                            id: next_id,
+                            value: SavedValue::Failed {
+                                err: serde_json::json!({
+                                    "retries": current_retry_count,
+                                    "message": err.to_string()
+                                }),
+                            },
+                        },
+                    });
+                }
+                bail!(err)
+            }
+        }
     }
 }
 

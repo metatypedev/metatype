@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
 use anyhow::Result;
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
