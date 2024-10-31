@@ -107,10 +107,10 @@ repos:
           - python
         files: ^typegraph/
       - id: insert-license
-        name: "License Elastic-2.0 rust"
+        name: "License MPL-2.0 rust"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-Elastic-2.0.txt
+          - --license-filepath=dev/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
           - "--skip-license-insertion-comment=@generated"
@@ -128,10 +128,10 @@ repos:
           - rust
         files: ^(meta-cli|typegraph|libs/metagen)/
       - id: insert-license
-        name: "License Elastic-2.0 deno"
+        name: "License MPL-2.0 deno"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-Elastic-2.0.txt
+          - --license-filepath=dev/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
           - "--skip-license-insertion-comment=@generated"
@@ -149,10 +149,10 @@ repos:
           - ts
         files: ^typegraph/
       - id: insert-license
-        name: "License Elastic-2.0 typescript"
+        name: "License MPL-2.0 typescript"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-Elastic-2.0.txt
+          - --license-filepath=dev/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
