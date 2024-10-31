@@ -59,6 +59,9 @@ deno_core::extension!(
         substantial::op_sub_metadata_write_workflow_link,
         substantial::op_sub_metadata_write_parent_child_link,
         substantial::op_sub_metadata_enumerate_all_children,
+        substantial::op_context_save,
+        substantial::op_context_sleep,
+        substantial::op_context_append_event,
 
         // FIXME(yohe): this test broke and has proven difficult to fix
         // #[cfg(test)]

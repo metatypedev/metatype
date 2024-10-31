@@ -102,10 +102,3 @@ export class Interrupt extends Error {
     return new Interrupt(kind, cause);
   }
 }
-
-export function appendIfOngoing(run: Run, operation: Operation) {
-  const hasStopped = run.operations.some(({ event }) => event.type == "Stop");
-  if (!hasStopped) {
-    run.operations.push(operation);
-  }
-}

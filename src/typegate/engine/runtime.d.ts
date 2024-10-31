@@ -85,6 +85,10 @@ export type MetaNS = {
     metadataEnumerateAllChildren: (
       inp: EnumerateAllChildrenInput,
     ) => Promise<Array<string>>;
+    contextSave: (inp: SaveInput) => SaveOutput;
+    contextSleep: (inp: SleepInput) => void;
+    contextAppendEvent: (inp: AppendEventInput) => void;
+    contextAppendOp: (inp: AppendOpInput) => void;
   };
 
   python: {
@@ -327,6 +331,7 @@ export type OperationEvent =
 export type Operation = { at: string; event: OperationEvent };
 
 export interface Run {
+  id: number;
   run_id: string;
   operations: Array<Operation>;
 }
@@ -434,4 +439,29 @@ export interface PythonExecutionInput {
 export interface PythonExecutionOutput {
   execution_result: any;
   execution_status: string;
+}
+
+export interface SaveInput {
+  run: Run;
+}
+
+export interface SaveOutput {
+  payload?: any;
+  current_retry_count?: number;
+}
+
+export interface SleepInput {
+  run: Run;
+  duration_ms: number; // in millisecond
+}
+
+export interface AppendEventInput {
+  run: Run;
+  event_name: string;
+  payload: any;
+}
+
+export interface AppendOpInput {
+  run: Run;
+  op: OperationEvent;
 }

@@ -2,7 +2,7 @@ use serde_json::Value;
 use std::{collections::HashMap, fmt};
 
 use anyhow::{bail, Context, Result};
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Duration, Utc};
 
 use protobuf::{
     well_known_types::{
@@ -79,6 +79,7 @@ pub struct Operation {
 /// Each operation is produced from the workflow execution
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Run {
+    pub id: u32,
     pub run_id: String,
     pub operations: Vec<Operation>,
 }
@@ -188,9 +189,16 @@ pub struct Save {
     pub retry: Option<Retry>,
 }
 
+#[derive(Serialize)]
+pub struct SaveOutput {
+    pub payload: Option<Value>,
+    pub current_retry_count: Option<i32>,
+}
+
 impl Run {
     pub fn new(run_id: String) -> Self {
         Self {
+            id: 0,
             run_id,
             operations: vec![],
         }
@@ -232,18 +240,36 @@ impl Run {
         self.operations = vec![];
     }
 
-    fn _save<F>(&mut self, func: F, option: Option<Save>) -> Result<Value>
-    where
-        F: Fn() -> Result<Value>,
-    {
-        let next_id = 1;
+    pub fn next_id(&mut self) -> u32 {
+        self.id += 1;
+        self.id
+    }
+
+    pub fn append_op(&mut self, op: OperationEvent) {
+        let has_stopped = self
+            .operations
+            .iter()
+            .any(|op| matches!(op.event, OperationEvent::Stop { .. }));
+        if !has_stopped {
+            self.operations.push(Operation {
+                at: Utc::now(),
+                event: op,
+            });
+        }
+    }
+
+    pub fn save(&mut self) -> Result<SaveOutput> {
+        let next_id = self.next_id();
         let mut current_retry_count: i32 = 1;
 
         for Operation { event, .. } in self.operations.iter() {
             if let OperationEvent::Save { id, value } = event {
                 if *id == next_id {
                     if let SavedValue::Resolved { payload } = value {
-                        return Ok(payload.clone());
+                        return Ok(SaveOutput {
+                            payload: Some(payload.clone()),
+                            current_retry_count: None,
+                        });
                     } else if let SavedValue::Retry {
                         counter,
                         wait_until,
@@ -260,68 +286,49 @@ impl Run {
             }
         }
 
-        current_retry_count += 1;
+        Ok(SaveOutput {
+            payload: None,
+            current_retry_count: Some(current_retry_count),
+        })
+    }
 
-        let option = option.unwrap();
-
-        match func() {
-            Ok(result) => {
-                self.operations.push(Operation {
-                    at: Utc::now(),
-                    event: OperationEvent::Save {
-                        id: next_id,
-                        value: SavedValue::Resolved {
-                            payload: result.clone(),
-                        },
-                    },
-                });
-                Ok(result)
-            }
-            Err(err) => {
-                let retry = option.retry.unwrap();
-                if retry.max_retries != 0 && current_retry_count < retry.max_retries {
-                    let strategy = RetryStrategy {
-                        min_backoff_ms: Some(retry.max_backoff_ms),
-                        max_backoff_ms: Some(retry.max_backoff_ms),
-                        max_retries: retry.max_retries,
-                    };
-
-                    let retries_left = (retry.max_retries - current_retry_count).max(0);
-                    let delay_ms = strategy.eval(Strategy::Linear, retries_left)? as i64;
-                    let wait_until_as_ms = std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis() as i64
-                        + delay_ms;
-
-                    self.operations.push(Operation {
-                        at: Utc::now(), // TODO verify if it's good
-                        event: OperationEvent::Save {
-                            id: next_id,
-                            value: SavedValue::Retry {
-                                counter: current_retry_count,
-                                wait_until: Utc.timestamp_millis_opt(wait_until_as_ms).unwrap(),
-                            },
-                        },
-                    });
-                    bail!(Interupt::Saveretry);
-                } else {
-                    self.operations.push(Operation {
-                        at: Utc::now(), // TODO verify if it's good
-                        event: OperationEvent::Save {
-                            id: next_id,
-                            value: SavedValue::Failed {
-                                err: serde_json::json!({
-                                    "retries": current_retry_count,
-                                    "message": err.to_string()
-                                }),
-                            },
-                        },
-                    });
+    pub fn sleep(&mut self, duration_ms: i32) -> Result<()> {
+        let next_id = self.next_id();
+        for Operation { event, .. } in self.operations.iter() {
+            if let OperationEvent::Sleep { id, end, .. } = event {
+                if next_id == *id {
+                    if end <= &Utc::now() {
+                        return Ok(());
+                    } else {
+                        bail!(Interupt::Sleep);
+                    }
                 }
-                bail!(err)
             }
         }
+
+        let start = Utc::now();
+
+        let end = start + Duration::milliseconds(start.timestamp() + duration_ms as i64);
+
+        self.operations.push(Operation {
+            at: start,
+            event: OperationEvent::Sleep {
+                id: next_id,
+                start,
+                end,
+            },
+        });
+        bail!(Interupt::Sleep);
+    }
+
+    pub fn append_event(&mut self, event_name: String, payload: Value) {
+        self.operations.push(Operation {
+            at: Utc::now(),
+            event: OperationEvent::Send {
+                event_name,
+                value: payload,
+            },
+        });
     }
 }
 

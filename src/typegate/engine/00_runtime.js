@@ -79,14 +79,15 @@ const Meta = {
     metadataEnumerateAllChildren: getOp(
       "op_sub_metadata_enumerate_all_children",
     ),
+    contextSave: getOp("op_context_save"),
+    contextSleep: getOp("op_context_sleep"),
+    contextAppendEvent: getOp("op_context_append_event"),
+    contextAppendOp: getOp("op_context_append_op"),
   },
   grpc: {
     register: getOp("op_grpc_register"),
     unregister: getOp("op_grpc_unregister"),
     callGrpcMethod: getOp("op_call_grpc_method"),
-  },
-  python: {
-    executePython: getOp("op_execute_python_with_context"),
   },
 };
 
