@@ -2,6 +2,8 @@
 sidebar_position: 50
 ---
 
+import TGExample from "@site/src/components/TGExample";
+
 # GraphQL
 
 [GraphQL](https://graphql.org/) is the primary means of querying your typegraph. 
@@ -170,3 +172,12 @@ query {
 
 List members act accordingly to their wrapped times. 
 Lists of scalars are treated as scalars and lists of composites as a standard GraphQL composites list.
+
+The following playground shows all the different types of unions/eithers:
+
+<TGExample
+  typegraph="union-either"
+  typescript={require("!!code-loader!../../../../../examples/typegraphs/union-either.ts")}
+  python={require("!!code-loader!../../../../../examples/typegraphs/union-either.py")}
+  query={require("./union-either.graphql")}
+/>
