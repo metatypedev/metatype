@@ -43,7 +43,6 @@ env:
   SCCACHE_CACHE_SIZE: "50G"
   AWS_ACCESS_KEY_ID: ${{ secrets.SCCACHE_AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.SCCACHE_AWS_SECRET_ACCESS_KEY }}
-  TMATE_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.tmate_enabled }}
 
 jobs:
   changes:
@@ -105,7 +104,7 @@ jobs:
 
   lint-compat:
     needs: changes
-    if: ${{ env.TMATE_ENABLED == 'false' && needs.changes.outputs.full == 'true' }}
+    if: ${{ needs.changes.outputs.full == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.tmate_enabled) }}
     runs-on: "${{ matrix.os }}"
     strategy:
       matrix:
@@ -150,7 +149,7 @@ jobs:
 
   test-website:
     needs: changes
-    if: ${{ env.TMATE_ENABLED == 'false' && needs.changes.outputs.website == 'true' }}
+    if: ${{ needs.changes.outputs.website == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.tmate_enabled) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -175,7 +174,7 @@ jobs:
 
   bulid-docker:
     needs: changes
-    if: ${{ env.TMATE_ENABLED == 'false' && needs.changes.outputs.typegate == 'true' }}
+    if: ${{ needs.changes.outputs.typegate == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.tmate_enabled) }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
