@@ -10,10 +10,10 @@ snapshot[`Typegraph using kv 1`] = `
         "policies": [],
         "properties": {
           "get": 1,
-          "set": 4,
-          "delete": 6,
-          "keys": 8,
-          "values": 12
+          "set": 5,
+          "delete": 7,
+          "keys": 9,
+          "values": 13
         },
         "id": [],
         "required": [
@@ -31,7 +31,7 @@ snapshot[`Typegraph using kv 1`] = `
           0
         ],
         "input": 2,
-        "output": 3,
+        "output": 4,
         "injections": {},
         "runtimeConfig": null,
         "materializer": 0,
@@ -54,12 +54,19 @@ snapshot[`Typegraph using kv 1`] = `
         "policies": []
       },
       {
+        "type": "optional",
+        "title": "root_get_fn_output",
+        "policies": [],
+        "item": 3,
+        "default_value": null
+      },
+      {
         "type": "function",
         "title": "root_set_fn",
         "policies": [
           0
         ],
-        "input": 5,
+        "input": 6,
         "output": 3,
         "injections": {},
         "runtimeConfig": null,
@@ -85,7 +92,7 @@ snapshot[`Typegraph using kv 1`] = `
           0
         ],
         "input": 2,
-        "output": 7,
+        "output": 8,
         "injections": {},
         "runtimeConfig": null,
         "materializer": 3,
@@ -103,8 +110,8 @@ snapshot[`Typegraph using kv 1`] = `
         "policies": [
           0
         ],
-        "input": 9,
-        "output": 11,
+        "input": 10,
+        "output": 12,
         "injections": {},
         "runtimeConfig": null,
         "materializer": 4,
@@ -116,7 +123,7 @@ snapshot[`Typegraph using kv 1`] = `
         "title": "root_keys_fn_input",
         "policies": [],
         "properties": {
-          "filter": 10
+          "filter": 11
         },
         "id": [],
         "required": []
@@ -140,8 +147,8 @@ snapshot[`Typegraph using kv 1`] = `
         "policies": [
           0
         ],
-        "input": 13,
-        "output": 15,
+        "input": 14,
+        "output": 16,
         "injections": {},
         "runtimeConfig": null,
         "materializer": 5,
@@ -153,7 +160,7 @@ snapshot[`Typegraph using kv 1`] = `
         "title": "root_values_fn_input",
         "policies": [],
         "properties": {
-          "filter": 14
+          "filter": 15
         },
         "id": [],
         "required": []
@@ -286,10 +293,10 @@ snapshot[`Typegraph using kv 2`] = `
         "policies": [],
         "properties": {
           "get": 1,
-          "set": 4,
-          "delete": 6,
-          "keys": 8,
-          "values": 12
+          "set": 5,
+          "delete": 7,
+          "keys": 9,
+          "values": 13
         },
         "id": [],
         "required": [
@@ -307,7 +314,7 @@ snapshot[`Typegraph using kv 2`] = `
           0
         ],
         "input": 2,
-        "output": 3,
+        "output": 4,
         "injections": {},
         "runtimeConfig": null,
         "materializer": 0,
@@ -330,12 +337,19 @@ snapshot[`Typegraph using kv 2`] = `
         "policies": []
       },
       {
+        "type": "optional",
+        "title": "root_get_fn_output",
+        "policies": [],
+        "item": 3,
+        "default_value": null
+      },
+      {
         "type": "function",
         "title": "root_set_fn",
         "policies": [
           0
         ],
-        "input": 5,
+        "input": 6,
         "output": 3,
         "injections": {},
         "runtimeConfig": null,
@@ -361,7 +375,7 @@ snapshot[`Typegraph using kv 2`] = `
           0
         ],
         "input": 2,
-        "output": 7,
+        "output": 8,
         "injections": {},
         "runtimeConfig": null,
         "materializer": 3,
@@ -379,8 +393,8 @@ snapshot[`Typegraph using kv 2`] = `
         "policies": [
           0
         ],
-        "input": 9,
-        "output": 11,
+        "input": 10,
+        "output": 12,
         "injections": {},
         "runtimeConfig": null,
         "materializer": 4,
@@ -392,7 +406,7 @@ snapshot[`Typegraph using kv 2`] = `
         "title": "root_keys_fn_input",
         "policies": [],
         "properties": {
-          "filter": 10
+          "filter": 11
         },
         "id": [],
         "required": []
@@ -416,8 +430,8 @@ snapshot[`Typegraph using kv 2`] = `
         "policies": [
           0
         ],
-        "input": 13,
-        "output": 15,
+        "input": 14,
+        "output": 16,
         "injections": {},
         "runtimeConfig": null,
         "materializer": 5,
@@ -429,7 +443,7 @@ snapshot[`Typegraph using kv 2`] = `
         "title": "root_values_fn_input",
         "policies": [],
         "properties": {
-          "filter": 14
+          "filter": 15
         },
         "id": [],
         "required": []

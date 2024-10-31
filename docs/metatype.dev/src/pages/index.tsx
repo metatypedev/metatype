@@ -301,10 +301,10 @@ function TryIt(): JSX.Element {
 }
 
 const runtimeList = [
-  {
+  /* {
     name: "MongoDB",
     logo: "/images/runtimes/mongodb.svg",
-  },
+  }, */
   {
     name: "GraphQL",
     logo: "/images/runtimes/graphql.svg",
@@ -333,10 +333,10 @@ const runtimeList = [
     name: "Google APIs Explorer",
     logo: "/images/runtimes/google-apis-explorer.svg",
   },
-  {
+  /* {
     name: "MariaDB",
     logo: "/images/runtimes/mariadb.svg",
-  },
+  }, */
   {
     name: "Python",
     logo: "/images/runtimes/python.svg",

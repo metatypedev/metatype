@@ -209,8 +209,8 @@ impl PrismaContext {
         if let Entry::Vacant(e) = self.models.entry(model_id) {
             let model: ModelRef = Rc::new(RefCell::new(model_id.try_into()?)).into();
             e.insert(model.clone());
-            self.models_by_name
-                .insert(model.borrow().model_type.name(), model_id);
+            let model_name = model.borrow().model_type.name();
+            self.models_by_name.insert(model_name, model_id);
 
             let mut res = vec![model_id];
 
