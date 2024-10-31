@@ -7,7 +7,7 @@ sidebar_position: 50
 [GraphQL](https://graphql.org/) is the primary means of querying your typegraph. 
 This page documents all the semantics of how your typegraph translates into a GraphQL schema.
 
-## Query and Mutation
+## `Query` and `Mutation`
 
 The root functions passed to the `expose` function will be added as fields to the [special `query` and `mutation`](https://graphql.org/learn/schema/#the-query-and-mutation-types) GraphQL objects.
 Under which object a function is assigned depends on it's [effect](/docs/reference/types/functions).
@@ -34,7 +34,7 @@ query ($varRight: String!, $varWrong: Int!) {
 
 ### Scalars
 
-The simpile primitive typegraph types translate directly to their [GraphQL equivalent](https://graphql.org/learn/schema/#scalar-types).
+The simple primitive typegraph types translate directly to their [GraphQL equivalent](https://graphql.org/learn/schema/#scalar-types).
 This includes standard scalar variants like `t.uuid` or any user declared aliases with custom configurations.
 No custom GraphQL scalars are generated for such types.
 
@@ -48,14 +48,14 @@ No custom GraphQL scalars are generated for such types.
 
 ### Files
 
-File types, primarily used through the [`S3Runtime`](/docs/reference/runtimes/s3), translate to a custom scalar called `File` in the Graphql schema.
+File types, primarily used through the [`S3Runtime`](/docs/reference/runtimes/s3), translate to a custom scalar called `File` in the GraphQL schema.
 The `S3Runtime` provides a set of helpers for all your file needs including support for [multipart HTTP requests](/docs/guides/files-upload) for file upload.
 
 ### Structs
 
 `t.structs` types translate to:
 - [GraphQL input types](https://graphql.org/learn/schema/#input-types) when used as inputs to functions
-- [GraphQl object types](https://graphql.org/learn/schema/#object-types-and-fields) in any other place.
+- [GraphQL object types](https://graphql.org/learn/schema/#object-types-and-fields) in any other place.
 
 ### Lists
 
@@ -66,16 +66,16 @@ The `S3Runtime` provides a set of helpers for all your file needs including supp
 `t.func` types are represented by their output type in the GraphQL schema. 
 If their input struct has fields present, these are converted to [arguments](https://graphql.org/learn/schema/#arguments) for the field.
 
-### Unions/Either
+### Unions and Eithers
 
 Unions and either translate to a number of different forms depending on their usage in the graph and their composition.
 
 When used as a field in an input struct, unions/eithers are converted to custom scalars since the GraphQL spec doesn't allow GraphQL unions on input types.
-These scalars expect the standard json representation of your value and that is all.
+These scalars expect the standard JSON representation of your value and that is all.
 
 When querying union/either values, there are a few more details.
 For struct variants, the standard GraphQL rules apply and [inline fragments](https://graphql.org/learn/queries/#inline-fragments) must be used.
-Currently, all struct variants must have inline fragments present even the the user is not intersted in them.
+Currently, all struct variants must have inline fragments present even if the user is not interested in them.
 And as per GraphQL spec, common field querying is not supported and any fields must be part of the inline fragment. 
 Unlike the GraphQL spec, this includes the `__typename` field which must be included in the fragments instead.
 
@@ -126,7 +126,7 @@ query {
 }
 ```
 
-For scalar variant, the introspected GraphQL schema will include a `_NameOFScalar` variant in the introspection schema **but** the value is returned at the field level as a simple scalar.
+For scalar variant, the introspected GraphQL schema will include a `_NameOfScalar` variant in the introspection schema **but** the value is returned at the field level as a simple scalar.
 That is, GraphQL API explorers will show union __object__ members that include the scalar values and they'll prompt you to use [inline fragments](https://graphql.org/learn/queries/#inline-fragments) for querying the scalar members.
 But the typegate will reject these kind of queries in preference to simple fields.
 Look at the following example:
@@ -162,10 +162,11 @@ query {
   myUnion
 }
 
-# recieved json
+# received json
 {
   "myUnion": "string"
 }
 ```
 
-For list members, TODO.
+List members act accordingly to their wrapped times. 
+Lists of scalars are treated as scalars and lists of composites as a standard GraphQL composites list.
