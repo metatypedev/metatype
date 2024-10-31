@@ -75,9 +75,9 @@ COPY . .
 RUN . "$GHJK_ACTIVATE" \
     && cargo build --profile $CARGO_PROFILE --package typegate --locked \
     && ( \
-        [ $CARGO_PROFILE = 'release' ]  \
-            && cp target/release/typegate typegate-bin \
-            || cp target/debug/typegate typegate-bin \
+    [ $CARGO_PROFILE = 'release' ]  \
+    && cp target/release/typegate typegate-bin \
+    || cp target/debug/typegate typegate-bin \
     )
 
 RUN . "$GHJK_ACTIVATE" \
@@ -131,7 +131,7 @@ COPY --from=builder /app/src/typegate/deno.jsonc ./src/typegate/
 COPY --from=builder /app/src/typegraph/deno/deno.json ./src/typegraph/deno/
 COPY --from=builder /app/tests/deno.jsonc ./tests/
 COPY --from=builder /app/examples/deno.jsonc ./examples/
-COPY tools/LICENSE-Elastic-2.0.md LICENSE.md
+COPY tools/LICENSE-MPL-2.0.md LICENSE.md
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
