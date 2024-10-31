@@ -4,15 +4,13 @@ Copyright © Metatype OÜ.
 
 Portions of this repository are licensed as follows:
 
-- all third party components incorporated into the repository are licensed under
+- all third-party components incorporated into the repository are licensed under
   the original license provided by the owner of the applicable component (see
   the license header of the relevant files)
-- all content under `typegraph/` and `meta-cli/` is licensed under
-  [Mozilla Public License 2.0 (MPL-2.0)](./tools/LICENSE-MPL-2.0.md)
-- all content outside the above-mentioned files or restrictions is available
-  under the [Elastic License 2.0 (Elastic-2.0)](./tools/LICENSE-Elastic-2.0.md)
-- alternatively, the Metatype Commercial Licensing can take precedence in case
-  your usage requires ad-hoc clarifications (reach out!)
+- all content, except for the above-mentioned components, is available
+  under the [Mozilla Public License 2.0 (MPL-2.0)](./tools/LICENSE-MPL-2.0.md)
+- alternatively, the Metatype Commercial Licensing can take precedence if your usage
+  requires specific clarifications (reach out!)
 
 **Are all of Metatype's components open source?**
 
