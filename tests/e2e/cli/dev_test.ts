@@ -371,6 +371,7 @@ Meta.test({
       ["roadmap-policies.ts", "roadmap-policies"],
       ["roadmap-random.ts", "roadmap-random"],
       ["triggers.ts", "triggers"],
+      ["union-either.ts", "union-either"],
     ]);
   });
 });
