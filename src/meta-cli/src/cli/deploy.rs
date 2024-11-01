@@ -273,7 +273,6 @@ mod default_mode {
 mod watch_mode {
     use std::time::Duration;
 
-    use actors::typegate;
     use task_manager::{TaskManagerInit, TaskSource};
 
     use crate::config::PathOption;
@@ -346,11 +345,6 @@ mod watch_mode {
             init = init.max_parallel_tasks(max_parallel_tasks);
         }
         let report = init.run().await;
-
-        #[cfg(feature = "typegate")]
-        if let Some((addr, _)) = typegate_addr {
-            addr.do_send(typegate::message::Stop);
-        }
 
         match report.stop_reason {
             StopReason::Natural => {

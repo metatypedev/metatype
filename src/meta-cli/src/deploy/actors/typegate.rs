@@ -12,7 +12,6 @@ use rand::RngCore;
 use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{ChildStderr, ChildStdout, Command};
-use tokio::sync::Mutex;
 
 pub mod message {
     use super::*;
@@ -30,7 +29,6 @@ pub struct TypegateActor {
     console: Addr<ConsoleActor>,
     #[allow(unused)]
     temp_dir: Option<tempfile::TempDir>,
-    child_process: Option<Arc<Mutex<tokio::process::Child>>>,
 }
 
 #[derive(Debug)]
@@ -94,7 +92,6 @@ impl TypegateInit {
             TypegateActor {
                 temp_dir: temp_dir_handle,
                 console,
-                child_process: None,
             }
         });
 
@@ -168,9 +165,7 @@ impl Handler<message::StartProcess> for TypegateActor {
         });
 
         match spawn_res {
-            Ok(Ok((child, stdout, stderr))) => {
-                self.child_process = Some(Mutex::new(child.into_inner()).into());
-
+            Ok(Ok((mut child, stdout, stderr))) => {
                 {
                     let addr = ctx.address();
                     let console = console.clone();
@@ -189,19 +184,14 @@ impl Handler<message::StartProcess> for TypegateActor {
                     ctx.spawn(fut.in_current_span().into_actor(self));
                 }
 
-                if let Some(child_arc) = &self.child_process {
-                    let addr = ctx.address();
-                    let child_arc = Arc::clone(child_arc);
-                    let fut = async move {
-                        let mut child = child_arc.lock().await;
-                        child
-                            .wait()
-                            .await
-                            .expect("failed to wait for typegate process");
-                        addr.do_send(message::Stop);
-                    };
-                    ctx.spawn(fut.in_current_span().into_actor(self));
-                }
+                let addr = ctx.address();
+                let fut = async move {
+                    Box::into_pin(child.wait())
+                        .await
+                        .expect("failed to wait for typegate process");
+                    addr.do_send(message::Stop);
+                };
+                ctx.spawn(fut.in_current_span().into_actor(self));
             }
 
             Err(e) | Ok(Err(e)) => {
@@ -216,14 +206,6 @@ impl Handler<message::Stop> for TypegateActor {
     type Result = ();
 
     fn handle(&mut self, _msg: message::Stop, ctx: &mut Self::Context) {
-        if let Some(child_arc) = self.child_process.take() {
-            let fut = async move {
-                let mut child = child_arc.lock().await;
-                let _ = child.kill().await;
-            };
-            ctx.spawn(fut.into_actor(self));
-        }
-
         ctx.stop();
     }
 }

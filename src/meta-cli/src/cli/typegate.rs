@@ -66,36 +66,11 @@ async fn run_typegate_async(cmd: Typegate) -> Result<()> {
 
 #[cfg(feature = "typegate")]
 fn run_typegate(cmd: Typegate) -> Result<()> {
+    use crate::deploy::actors::task_manager::signal_handler::listen_signals_in_the_background;
+
     let runtime = typegate_engine::runtime();
-
-    // runtime.block_on(async { run_typegate_async(cmd).await })?;
-
-    runtime.block_on(async {
-        tokio::select! {
-            _ = run_typegate_async(cmd) => {}
-            _ = shutdown_signal() => {
-                println!("Signal");
-            }
-        }
-    });
+    listen_signals_in_the_background();
+    runtime.block_on(async { run_typegate_async(cmd).await })?;
 
     Ok(())
-}
-
-#[cfg(feature = "typegate")]
-async fn shutdown_signal() {
-    #[cfg(unix)]
-    {
-        use tokio::signal::unix;
-        let mut signal =
-            unix::signal(unix::SignalKind::terminate()).expect("SIGTERM listener failed");
-        signal.recv().await;
-    }
-
-    #[cfg(not(unix))]
-    {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("Ctrl+C signal listener failed");
-    }
 }
