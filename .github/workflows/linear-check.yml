@@ -1,8 +1,5 @@
 name: linear ticket check
 on:
-  push:
-    branches:
-      - main
   pull_request:
     types:
       - opened
@@ -22,6 +19,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: tools/linear-checker/package-lock.json
 
       - name: Check comment issues
         working-directory: tools/linear-checker
