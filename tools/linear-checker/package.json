@@ -1,0 +1,14 @@
+{
+  "name": "linear-checker",
+  "version": "1.0.0",
+  "description": "Checks if issues in the code comments are assigned to a Linear ticket",
+  "main": "src/index.js",
+  "author": "Metatype Team",
+  "type": "module",
+  "scripts": {
+    "check": "node ./src/index.js"
+  },
+  "dependencies": {
+    "@linear/sdk": "^32.0.0"
+  }
+}
