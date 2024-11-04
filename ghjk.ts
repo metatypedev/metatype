@@ -1,6 +1,5 @@
 // @ts-nocheck: Deno file
 
-// --
 import { METATYPE_VERSION, PUBLISHED_VERSION } from "./tools/consts.ts";
 import { file, ports, sedLock, semver, stdDeps } from "./tools/deps.ts";
 import installs from "./tools/installs.ts";
@@ -43,6 +42,7 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
   });
   env("dev").install(mold);
   env("oci").install(mold);
+  env("ci").install(mold);
 }
 
 env("_ecma").install(
@@ -177,4 +177,23 @@ task(
       $`cargo clean`.cwd("./examples/typegraphs/metagen/"),
     ]),
   { inherit: "_rust", desc: "Clean cache of all cargo workspaces in repo." },
+);
+
+task(
+  "clean-node",
+  ($) =>
+    $.co([
+      $.path("./docs/metatype.dev/node_modules"),
+      $.path("./docs/metatype.dev/build"),
+      $.path("./tests/e2e/nextjs/apollo/node_modules"),
+      $.path("./tests/runtimes/temporal/worker/node_modules"),
+    ].map(async (path) => {
+      if (await path.exists()) {
+        await path.remove({ recursive: true });
+      }
+    })),
+  {
+    inherit: "_ecma",
+    desc: "Remove all node_modules directories in tree and other js artifacts.",
+  },
 );

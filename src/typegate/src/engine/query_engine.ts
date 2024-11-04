@@ -97,9 +97,10 @@ export class ComputeStage {
     }\n--`;
   }
 
-  withResolver(resolver: Resolver): ComputeStage {
+  withResolver(resolver: Resolver, deps: string[] = []): ComputeStage {
     return new ComputeStage({
       ...this.props,
+      dependencies: [...this.props.dependencies, ...deps],
       resolver,
     });
   }

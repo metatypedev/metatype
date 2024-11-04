@@ -110,8 +110,6 @@ export class DenoRuntime extends Runtime {
           depMetas,
         );
 
-        logger.info(`Resolved runtime artifacts at ${basePath}`);
-
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
         // hence the use of contentHash
@@ -140,7 +138,7 @@ export class DenoRuntime extends Runtime {
     );
 
     if (Deno.env.get("DENO_TESTING") === "true") {
-      await w.disableLazyness();
+      w.disableLazyness();
     }
 
     const rt = new DenoRuntime(
@@ -201,7 +199,7 @@ export class DenoRuntime extends Runtime {
       ];
     }
 
-    if (stage.props.outType.config?.__namespace) {
+    if (this.tg.meta.namespaces!.includes(stage.props.typeIdx)) {
       return [stage.withResolver(() => ({}))];
     }
 
@@ -212,7 +210,7 @@ export class DenoRuntime extends Runtime {
           return {};
         }
         const resolver = parent[stage.props.node];
-        return typeof resolver === "function" ? resolver() : resolver;
+        return (typeof resolver === "function" ? resolver() : resolver) ?? null;
       }),
     ];
   }

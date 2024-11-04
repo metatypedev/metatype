@@ -2,25 +2,25 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: struct #54
-├─ [_avg]: struct 'Post_avg_aggregate' #48
-│  └─ [id]: optional 'optional_47' #47
-│     └─ item: float #46
-├─ [_count]: struct 'Post_count_aggregate' #45
-│  ├─ [_all]: optional 'optional_44' #44
-│  │  └─ item: integer #43
-│  ├─ [author]: optional 'optional_44' #44
-│  │  └─ item: integer #43
-│  ├─ [id]: optional 'optional_44' #44
-│  │  └─ item: integer #43
-│  └─ [title]: optional 'optional_44' #44
-│     └─ item: integer #43
-├─ [_max]: struct 'Post_number_aggregate' #53
-│  └─ [id]: optional 'optional_52' #52
-│     └─ item: integer #51
-├─ [_min]: struct 'Post_number_aggregate' #53
-│  └─ [id]: optional 'optional_52' #52
-│     └─ item: integer #51
-└─ [_sum]: struct 'Post_number_aggregate' #53
-   └─ [id]: optional 'optional_52' #52
-      └─ item: integer #51
+root: struct #82
+├─ [_avg]: struct 'Post_avg_aggregate' #73
+│  └─ [id]: optional 'optional_70' #71
+│     └─ item: float #69
+├─ [_count]: struct 'Post_count_aggregate' #68
+│  ├─ [_all]: optional 'optional_65' #66
+│  │  └─ item: integer #64
+│  ├─ [author]: optional 'optional_65' #66
+│  │  └─ item: integer #64
+│  ├─ [id]: optional 'optional_65' #66
+│  │  └─ item: integer #64
+│  └─ [title]: optional 'optional_65' #66
+│     └─ item: integer #64
+├─ [_max]: struct 'Post_number_aggregate' #81
+│  └─ [id]: optional 'optional_78' #79
+│     └─ item: integer #77
+├─ [_min]: struct 'Post_number_aggregate' #81
+│  └─ [id]: optional 'optional_78' #79
+│     └─ item: integer #77
+└─ [_sum]: struct 'Post_number_aggregate' #81
+   └─ [id]: optional 'optional_78' #79
+      └─ item: integer #77

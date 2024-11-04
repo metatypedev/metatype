@@ -39,9 +39,12 @@ import type {
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import type { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
-import randomizeRecursively from "../runtimes/random.ts";
+import randomizeRecursively, { GeneratorNode } from "../runtimes/random.ts";
 import type { Typegate } from "../typegate/mod.ts";
 import { TypeUtils } from "./utils.ts";
+import { getLogger } from "../log.ts";
+
+const logger = getLogger(import.meta);
 
 export type {
   Cors,
@@ -65,7 +68,7 @@ export class SecretManager {
     const value = this.secretOrNull(name);
     ensure(
       value != null,
-      `cannot find secret "${name}" for "${this.typegraphName}"`
+      `cannot find secret "${name}" for "${this.typegraphName}"`,
     );
     return value as string;
   }
@@ -93,7 +96,6 @@ export class TypeGraph implements AsyncDisposable {
     title: "string",
     type: "string",
     policies: [],
-    runtime: -1,
   };
 
   root: TypeNode;
@@ -109,7 +111,7 @@ export class TypeGraph implements AsyncDisposable {
     public runtimeReferences: Runtime[],
     public cors: (req: Request) => Record<string, string>,
     public auths: Map<string, Protocol>,
-    public introspection: TypeGraph | null
+    public introspection: TypeGraph | null,
   ) {
     this.root = this.type(0);
     this.name = TypeGraph.formatName(tg);
@@ -153,7 +155,7 @@ export class TypeGraph implements AsyncDisposable {
         name = "<unknown>";
       }
       throw new Error(
-        `Invalid typegraph definition for '${name}': ${res.NotValid.reason}`
+        `Invalid typegraph definition for '${name}': ${res.NotValid.reason}`,
       );
     }
   }
@@ -163,7 +165,7 @@ export class TypeGraph implements AsyncDisposable {
     typegraph: TypeGraphDS,
     secretManager: SecretManager,
     staticReference: RuntimeResolver,
-    introspection: TypeGraph | null
+    introspection: TypeGraph | null,
   ): Promise<TypeGraph> {
     const typegraphName = TypeGraph.formatName(typegraph);
     const { meta, runtimes } = typegraph;
@@ -180,13 +182,13 @@ export class TypeGraph implements AsyncDisposable {
           "Content-Type",
           "Authorization",
           ...meta.cors.allow_headers,
-        ])
+        ]),
       ).join(","),
       "Access-Control-Expose-Headers": Array.from(
-        new Set([nextAuthorizationHeader, ...meta.cors.expose_headers])
+        new Set([nextAuthorizationHeader, ...meta.cors.expose_headers]),
       ).join(","),
-      "Access-Control-Allow-Credentials":
-        meta.cors.allow_credentials.toString(),
+      "Access-Control-Allow-Credentials": meta.cors.allow_credentials
+        .toString(),
     };
     if (meta.cors.max_age_sec) {
       staticCors["Access-Control-Max-Age"] = meta.cors.max_age_sec.toString();
@@ -217,9 +219,10 @@ export class TypeGraph implements AsyncDisposable {
         }
 
         const materializers = typegraph.materializers.filter(
-          (mat) => mat.runtime === idx
+          (mat) => mat.runtime === idx,
         );
 
+        logger.info("initializing runtime {}", { name: runtime.name })
         return initRuntime(runtime.name, {
           typegate,
           typegraph,
@@ -228,7 +231,7 @@ export class TypeGraph implements AsyncDisposable {
           args: (runtime as any)?.data ?? {},
           secretManager,
         });
-      })
+      }),
     );
 
     const denoRuntime = runtimeReferences[denoRuntimeIdx];
@@ -244,7 +247,7 @@ export class TypeGraph implements AsyncDisposable {
       runtimeReferences,
       cors,
       auths,
-      introspection
+      introspection,
     );
 
     for (const auth of meta.auths) {
@@ -258,15 +261,15 @@ export class TypeGraph implements AsyncDisposable {
           {
             tg: tg, // required for validation
             runtimeReferences,
-          }
-        )
+          },
+        ),
       );
     }
 
     // override "internal" to enforce internal auth
     auths.set(
       internalAuthName,
-      await InternalAuth.init(typegraphName, typegate.cryptoKeys)
+      await InternalAuth.init(typegraphName, typegate.cryptoKeys),
     );
 
     return tg;
@@ -275,12 +278,12 @@ export class TypeGraph implements AsyncDisposable {
   type(idx: number): TypeNode;
   type<T extends TypeNode["type"]>(
     idx: number,
-    asType: T
+    asType: T,
   ): TypeNode & { type: T };
   type<T extends TypeNode["type"]>(idx: number, asType?: T): TypeNode {
     ensure(
       typeof idx === "number" && idx < this.tg.types.length,
-      `cannot find type with index '${idx}'`
+      `cannot find type with index '${idx}'`,
     );
     const ret = this.tg.types[idx];
     if (asType != undefined) {
@@ -327,7 +330,10 @@ export class TypeGraph implements AsyncDisposable {
     throw new Error(`invalid type for secret injection: ${schema.type}`);
   }
 
-  getRandom(schema: TypeNode): number | string | null {
+  getRandom(
+    schema: TypeNode,
+    generator: GeneratorNode | null,
+  ): number | string | null {
     const tgTypes: TypeNode[] = this.tg.types;
     let seed = 12; // default seed
     if (
@@ -339,7 +345,7 @@ export class TypeGraph implements AsyncDisposable {
     const chance: typeof Chance = new Chance(seed);
 
     try {
-      const result = randomizeRecursively(schema, chance, tgTypes);
+      const result = randomizeRecursively(schema, chance, tgTypes, generator);
 
       return result;
     } catch (_) {
@@ -378,14 +384,14 @@ export class TypeGraph implements AsyncDisposable {
     }
     ensure(
       isObject(type) ||
-        isInteger(type) ||
-        isNumber(type) ||
-        isBoolean(type) ||
-        isFunction(type) ||
-        isString(type) ||
-        isUnion(type) ||
-        isEither(type),
-      `object expected but got ${type.type}`
+      isInteger(type) ||
+      isNumber(type) ||
+      isBoolean(type) ||
+      isFunction(type) ||
+      isString(type) ||
+      isUnion(type) ||
+      isEither(type),
+      `object expected but got ${type.type}`,
     );
     return (x: any) => {
       return ensureArray(x);
@@ -474,7 +480,7 @@ export class TypeGraph implements AsyncDisposable {
         Object.entries(typeNode.properties).map(([key, idx]) => [
           key,
           this.getPossibleSelectionFields(idx),
-        ])
+        ]),
       );
     }
 
@@ -489,13 +495,13 @@ export class TypeGraph implements AsyncDisposable {
 
     const entries = variants.map(
       (idx) =>
-        [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const
+        [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const,
     );
 
     if (entries[0][1] === null) {
       if (entries.some((e) => e[1] !== null)) {
         throw new Error(
-          "Unexpected: All the variants must not expect selection set"
+          "Unexpected: All the variants must not expect selection set",
         );
       }
       return null;
@@ -506,7 +512,7 @@ export class TypeGraph implements AsyncDisposable {
     }
 
     const expandNestedUnions = (
-      entry: readonly [string, PossibleSelectionFields]
+      entry: readonly [string, PossibleSelectionFields],
     ): Array<[string, Map<string, PossibleSelectionFields>]> => {
       const [typeName, possibleSelections] = entry;
 

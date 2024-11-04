@@ -29,7 +29,7 @@ class KvRuntime(Runtime):
 
     def get(self):
         mat = self.__operation(KvMaterializer.GET, fx.read())
-        return t.func(t.struct({"key": t.string()}), t.string(), mat)
+        return t.func(t.struct({"key": t.string()}), t.string().optional(), mat)
 
     def set(self):
         mat = self.__operation(KvMaterializer.SET, fx.update())

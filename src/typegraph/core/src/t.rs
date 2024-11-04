@@ -4,10 +4,12 @@
 use crate::errors::Result;
 use crate::errors::TgError;
 use crate::types::RefAttr;
-use crate::types::{TypeId, TypeRef};
+use crate::types::TypeRefBuilder;
+use crate::types::{Named as _, TypeId, TypeRef};
+
 use crate::wit::core::{
-    Guest, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional,
-    TypeString, TypeStruct, TypeUnion,
+    Guest, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional, TypeString,
+    TypeStruct, TypeUnion,
 };
 #[cfg(test)]
 use common::typegraph::{Injection, InjectionData, SingleValue};
@@ -17,6 +19,10 @@ pub trait TypeBuilder {
 
     fn optional(&self) -> Result<OptionalBuilder> {
         Ok(optional(self.build()?))
+    }
+
+    fn build_named(&self, name: impl Into<String>) -> Result<TypeId> {
+        Ok(self.build()?.named(name)?.id())
     }
 
     #[cfg(test)]
@@ -34,8 +40,23 @@ pub trait TypeBuilder {
     #[cfg(test)]
     fn set_value<V: serde::ser::Serialize>(&mut self, val: V) -> Result<TypeRef> {
         self.inject(Injection::Static(InjectionData::SingleValue(SingleValue {
-            value: serde_json::to_string(&val).unwrap(),
+            value: serde_json::to_value(&val).unwrap(),
         })))
+    }
+
+    #[cfg(test)]
+    fn config(
+        self,
+        key: impl Into<String>,
+        value: impl serde::ser::Serialize,
+    ) -> Result<TypeRefBuilder>
+    where
+        Self: Sized,
+    {
+        Ok(TypeRef::from_type(
+            self.build()?.as_type()?,
+            RefAttr::runtime("", serde_json::json!({key.into(): value})),
+        ))
     }
 }
 
@@ -56,7 +77,7 @@ impl TypeBuilder for TypeId {
 
 impl TypeBuilder for TypeRef {
     fn build(&self) -> Result<TypeId> {
-        Ok(self.id)
+        Ok(self.id())
     }
 }
 
@@ -69,32 +90,8 @@ where
     }
 }
 
-#[allow(unused)]
-pub trait ConcreteTypeBuilder: TypeBuilder {
-    fn base_mut(&mut self) -> &mut TypeBase;
-
-    fn named(&mut self, name: impl Into<String>) -> &mut Self {
-        self.base_mut().name = Some(name.into());
-        self
-    }
-
-    fn config(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
-        let runtime_config = &mut self.base_mut().runtime_config;
-        if runtime_config.is_none() {
-            *runtime_config = Some(Default::default());
-        }
-        runtime_config
-            .as_mut()
-            .unwrap()
-            .push((key.into(), value.into()));
-        self
-    }
-}
-
 #[derive(Default)]
-pub struct BooleanBuilder {
-    base: TypeBase,
-}
+pub struct BooleanBuilder;
 
 pub fn boolean() -> BooleanBuilder {
     Default::default()
@@ -102,7 +99,6 @@ pub fn boolean() -> BooleanBuilder {
 
 #[derive(Default)]
 pub struct IntegerBuilder {
-    base: TypeBase,
     data: TypeInteger,
 }
 
@@ -152,7 +148,6 @@ pub fn integer() -> IntegerBuilder {
 
 #[derive(Default)]
 pub struct FloatBuilder {
-    base: TypeBase,
     data: TypeFloat,
 }
 
@@ -202,7 +197,6 @@ pub fn float() -> FloatBuilder {
 
 #[derive(Default)]
 pub struct StringBuilder {
-    base: TypeBase,
     data: TypeString,
 }
 
@@ -243,7 +237,6 @@ impl StringBuilder {
 
 #[derive(Default)]
 pub struct OptionalBuilder {
-    base: TypeBase,
     data: TypeOptional,
 }
 
@@ -258,7 +251,6 @@ impl Default for TypeOptional {
 
 pub fn optional(ty: TypeId) -> OptionalBuilder {
     OptionalBuilder {
-        base: TypeBase::default(),
         data: TypeOptional {
             of: ty.into(),
             default_item: None,
@@ -272,7 +264,6 @@ pub fn optionalx(item_builder: impl TypeBuilder) -> Result<OptionalBuilder> {
 
 #[derive(Default)]
 pub struct ListBuilder {
-    base: TypeBase,
     data: TypeList,
 }
 
@@ -289,7 +280,6 @@ impl Default for TypeList {
 
 pub fn list(ty: TypeId) -> ListBuilder {
     ListBuilder {
-        base: TypeBase::default(),
         data: TypeList {
             of: ty.into(),
             ..Default::default()
@@ -303,7 +293,6 @@ pub fn listx(item_builder: impl TypeBuilder) -> Result<ListBuilder> {
 
 #[derive(Default)]
 pub struct UnionBuilder {
-    base: TypeBase,
     data: TypeUnion,
 }
 
@@ -333,7 +322,6 @@ pub fn union(variants: impl IntoIterator<Item = TypeId>) -> UnionBuilder {
         data: TypeUnion {
             variants: variants.into_iter().map(|tid| tid.0).collect(),
         },
-        ..Default::default()
     }
 }
 
@@ -350,7 +338,6 @@ pub(crate) use unionx;
 
 #[derive(Default)]
 pub struct EitherBuilder {
-    base: TypeBase,
     data: TypeEither,
 }
 
@@ -368,7 +355,6 @@ pub fn either(variants: impl IntoIterator<Item = TypeId>) -> EitherBuilder {
         data: TypeEither {
             variants: variants.into_iter().map(|tid| tid.0).collect(),
         },
-        ..Default::default()
     }
 }
 
@@ -385,7 +371,6 @@ pub(crate) use eitherx;
 
 #[derive(Default)]
 pub struct StructBuilder {
-    base: TypeBase,
     data: TypeStruct,
 }
 
@@ -412,7 +397,6 @@ pub fn struct_extends(ty: TypeId) -> Result<StructBuilder> {
             props: ty.as_struct().map(|typ| typ.data.props.clone())?,
             ..Default::default()
         },
-        ..Default::default()
     })
 }
 
@@ -452,8 +436,6 @@ impl StructBuilder {
 
 #[derive(Default)]
 pub struct FuncBuilder {
-    #[allow(dead_code)]
-    base: TypeBase,
     data: TypeFunc,
 }
 
@@ -479,7 +461,6 @@ pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
             mat,
             ..Default::default()
         },
-        ..Default::default()
     }
     .build()
 }
@@ -500,14 +481,8 @@ macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident ) => {
         impl TypeBuilder for $ty {
             fn build(&self) -> Result<TypeId> {
-                let res = $crate::Lib::$build(self.data.clone(), self.base.clone())?;
+                let res = $crate::Lib::$build(self.data.clone())?;
                 Ok(res.into())
-            }
-        }
-
-        impl ConcreteTypeBuilder for $ty {
-            fn base_mut(&mut self) -> &mut TypeBase {
-                &mut self.base
             }
         }
     };
@@ -523,14 +498,8 @@ macro_rules! impl_type_builder {
 }
 impl TypeBuilder for BooleanBuilder {
     fn build(&self) -> Result<TypeId> {
-        let res = crate::Lib::booleanb(self.base.clone())?;
+        let res = crate::Lib::booleanb()?;
         Ok(res.into())
-    }
-}
-
-impl ConcreteTypeBuilder for BooleanBuilder {
-    fn base_mut(&mut self) -> &mut TypeBase {
-        &mut self.base
     }
 }
 
@@ -553,5 +522,11 @@ impl TypeBuilder for RefBuilder {
                 .map(|attr| serde_json::to_string(&attr).unwrap()),
         )?
         .into())
+    }
+}
+
+impl TypeBuilder for TypeRefBuilder {
+    fn build(&self) -> Result<TypeId> {
+        (*self).clone().register().map(|r| r.id())
     }
 }

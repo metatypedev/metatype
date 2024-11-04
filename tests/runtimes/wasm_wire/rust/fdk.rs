@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.4.11-rc.0";
+        static MT_VERSION: &str = "0.5.0-rc.3";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -270,9 +270,6 @@ pub mod types {
         pub profile: Profile,
     }
     pub type RecordCreationOutput = Vec<Entity>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootRandomFnInput {
-    }
     pub type HundredRandomOutput = Vec<Entity>;
 }
 pub mod stubs {

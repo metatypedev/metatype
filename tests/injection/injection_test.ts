@@ -28,7 +28,7 @@ const schema = buildSchema(`
 `);
 
 const POSTGRES =
-  "postgresql://postgres:password@localhost:5432/db?schema=prisma";
+  "postgresql://postgres:password@localhost:5432/db?schema=injection_test_prisma";
 
 Meta.test("Injected values", async (t) => {
   const e = await t.engine("injection/injection.py", {
@@ -300,6 +300,7 @@ Meta.test("Deno: value injection", async (t) => {
           input: {
             a: 12,
             context: "123",
+            optional_context: null,
             raw_int: 4,
             raw_obj: { in: -1 },
             alt_raw: "2",

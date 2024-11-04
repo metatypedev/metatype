@@ -56,6 +56,7 @@ impl Action for Dev {
             allow_destructive: self.run_destructive_migrations,
             watch: true,
             no_migration: false,
+
             create_migration: true,
             secrets: self.secrets.clone(),
             #[cfg(feature = "typegate")]

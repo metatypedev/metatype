@@ -69,7 +69,7 @@ class Typegraph:
     @classmethod
     def get_active(cls) -> Optional["Typegraph"]:
         if len(cls._context) == 0:
-            raise Exception("No active typegraph")
+            raise ErrorStack("No active typegraph")
         return cls._context[-1]
 
     def __call__(self, **kwargs: ExposeItem):
@@ -229,7 +229,19 @@ def typegraph(
             ),
         )
 
-        builder(Graph(tg))
+        try:
+            builder(Graph(tg))
+        except ErrorStack as e:
+            import sys
+
+            sys.stderr.write(f"Error in typegraph '{actual_name}':\n")
+            for line in e.stack:
+                sys.stderr.write("- ")
+                sys.stderr.write(line)
+                sys.stderr.write("\n")
+            sys.exit(1)
+        except Exception:
+            raise
 
         popped = Typegraph._context.pop()
         assert tg == popped

@@ -13,17 +13,12 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{FindAttribute as _, Optional, RefAttrs, TypeDefData, TypeId},
+    types::{ExtendedTypeDef, FindAttribute as _, Optional, TypeDefData, TypeId},
     wit::core::TypeOptional,
 };
 
 impl TypeConversion for Optional {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         let default_value = match self.data.default_item.clone() {
             Some(value) => {
                 let ret = serde_json::from_str(&value).map_err(|s| s.to_string())?;
@@ -37,16 +32,13 @@ impl TypeConversion for Optional {
                 ctx,
                 base_name: "optional",
                 type_id: self.id,
-                name: self.base.name.clone(),
-                runtime_idx: runtime_id.unwrap(),
-                policies: ref_attrs.find_policy().unwrap_or(&[]),
-                runtime_config: self.base.runtime_config.as_deref(),
+                name: xdef.get_owned_name(),
+                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
-            .inject(ref_attrs.find_injection())?
             .build()?,
             data: OptionalTypeData {
-                item: ctx.register_type(TypeId(self.data.of), runtime_id)?.into(),
+                item: ctx.register_type(TypeId(self.data.of))?.into(),
                 default_value,
             },
         })
@@ -61,7 +53,11 @@ impl Optional {
 
 impl TypeDefData for TypeOptional {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
-        params.push(format!("item={}", self.of));
+        if let Ok(item_repr) = TypeId(self.of).repr() {
+            params.push(format!("item={item_repr}"));
+        } else {
+            params.push(format!("item=#{}", self.of));
+        }
         if let Some(default) = self.default_item.clone() {
             params.push(format!("defaultItem={}", default));
         }
@@ -77,10 +73,9 @@ impl Hashable for TypeOptional {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         self.default_item.hash(hasher);
-        TypeId(self.of).hash_child_type(hasher, tg, runtime_id)?;
+        TypeId(self.of).hash_child_type(hasher, tg)?;
         Ok(())
     }
 }

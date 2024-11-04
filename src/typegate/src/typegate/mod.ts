@@ -195,7 +195,9 @@ export class Typegate implements AsyncDisposable {
         res = await handler(res, secretManager, response);
       } catch (e) {
         logger.error(`Error in onPush hook: ${e}`);
-        if (e instanceof MigrationFailure) {
+        // FIXME: MigrationFailur err message parser doesn't support all errors like
+        // can't reach database errs
+        if (e instanceof MigrationFailure && e.errors[0]) {
           response.setFailure(e.errors[0]);
         } else {
           response.setFailure({

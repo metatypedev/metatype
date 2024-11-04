@@ -1,23 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::hash::Hash as _;
-
+use crate::conversion::hash::Hashable;
+use crate::conversion::types::{BaseBuilderInit, TypeConversion};
+use crate::types::{
+    AsTypeDefEx as _, ExtendedTypeDef, FindAttribute as _, IdKind, Struct, TypeDefData, TypeId,
+};
+use crate::{errors, typegraph::TypegraphContext, wit::core::TypeStruct};
 use common::typegraph::{ObjectTypeData, TypeNode};
 use errors::Result;
 use indexmap::IndexMap;
-
-use crate::{
-    conversion::{
-        hash::Hashable,
-        types::{BaseBuilderInit, TypeConversion},
-    },
-    errors,
-    global_store::Store,
-    typegraph::TypegraphContext,
-    types::{FindAttribute as _, IdKind, RefAttrs, Struct, Type, TypeDefData, TypeId},
-    wit::core::TypeStruct,
-};
+use std::hash::Hash as _;
 
 impl TypeStruct {
     pub fn get_prop(&self, key: &str) -> Option<TypeId> {
@@ -33,34 +26,33 @@ impl TypeStruct {
         let mut res = Vec::new();
         let mut kind = None;
         for (name, type_id) in &self.props {
-            if let Type::Ref(type_ref) = TypeId(*type_id).as_type()? {
-                match kind {
-                    None => match type_ref.id_kind()? {
-                        Some(IdKind::Simple) => {
-                            res.push(name.clone());
-                            kind = Some(IdKind::Simple);
-                        }
-                        Some(IdKind::Composite) => {
-                            res.push(name.clone());
-                            kind = Some(IdKind::Composite);
-                        }
-                        None => {}
-                    },
+            let xdef = TypeId(*type_id).as_xdef()?;
+            match kind {
+                None => match xdef.id_kind()? {
                     Some(IdKind::Simple) => {
-                        if type_ref.id_kind()?.is_some() {
-                            return Err("Multiple id fields found".into());
-                        }
+                        res.push(name.clone());
+                        kind = Some(IdKind::Simple);
                     }
-                    Some(IdKind::Composite) => match type_ref.id_kind()? {
-                        Some(IdKind::Simple) => {
-                            return Err("Inconsistent id fields".into());
-                        }
-                        Some(IdKind::Composite) => {
-                            res.push(name.clone());
-                        }
-                        None => {}
-                    },
+                    Some(IdKind::Composite) => {
+                        res.push(name.clone());
+                        kind = Some(IdKind::Composite);
+                    }
+                    None => {}
+                },
+                Some(IdKind::Simple) => {
+                    if xdef.id_kind()?.is_some() {
+                        return Err("Multiple id fields found".into());
+                    }
                 }
+                Some(IdKind::Composite) => match xdef.id_kind()? {
+                    Some(IdKind::Simple) => {
+                        return Err("Inconsistent id fields".into());
+                    }
+                    Some(IdKind::Composite) => {
+                        res.push(name.clone());
+                    }
+                    None => {}
+                },
             }
         }
         Ok(res)
@@ -68,38 +60,23 @@ impl TypeStruct {
 }
 
 impl TypeConversion for Struct {
-    fn convert(
-        &self,
-        ctx: &mut TypegraphContext,
-        runtime_id: Option<u32>,
-        ref_attrs: &RefAttrs,
-    ) -> Result<TypeNode> {
-        let runtime_id = match runtime_id {
-            Some(runtime_id) => runtime_id,
-            None => ctx.register_runtime(Store::get_deno_runtime())?,
-        };
+    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::Object {
             base: BaseBuilderInit {
                 ctx,
                 base_name: "object",
                 type_id: self.id,
-                name: self.base.name.clone(),
-                runtime_idx: runtime_id,
-                policies: ref_attrs.find_policy().unwrap_or(&[]),
-                runtime_config: self.base.runtime_config.as_deref(),
+                name: xdef.get_owned_name(),
+                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
-            .inject(ref_attrs.find_injection())?
             .build()?,
             data: ObjectTypeData {
                 properties: self
                     .iter_props()
                     .map(|(name, type_id)| -> Result<(String, u32)> {
-                        Ok((
-                            name.to_string(),
-                            ctx.register_type(type_id, Some(runtime_id))?.into(),
-                        ))
+                        Ok((name.to_string(), ctx.register_type(type_id)?.into()))
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,
                 id: self.data.find_id_fields()?,
@@ -132,12 +109,11 @@ impl Hashable for TypeStruct {
         &self,
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
-        runtime_id: Option<u32>,
     ) -> Result<()> {
         "struct".hash(hasher);
         for (name, tpe_id) in &self.props {
             name.hash(hasher);
-            TypeId(*tpe_id).hash_child_type(hasher, tg, runtime_id)?;
+            TypeId(*tpe_id).hash_child_type(hasher, tg)?;
         }
         Ok(())
     }

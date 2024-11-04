@@ -43,14 +43,10 @@ const syncConfig = transformSyncConfig({
   s3_bucket: syncEnvs.SYNC_S3_BUCKET,
   s3_path_style: true,
 });
-console.log(syncConfig);
 
-// TODO remove after the next release
-// The build.rs script now uses a META_CMD env var allowing us
-// to use meta-old
-const disabled = [
-  "metagen-rs.ts",
-];
+// put here typegraphs that are to be excluded
+// from the test
+const disabled = [] as string[];
 
 async function checkMetaBin(path: typeof tempDir, version: string) {
   try {
@@ -214,7 +210,7 @@ Meta.test(
     const stdout = new Lines(proc.stdout);
     await stdout.readWhile((line) => {
       console.log(`typegate>`, line);
-      return !line.includes(`typegate ready on ${port}`);
+      return !line.includes(`typegate ready on :${port}`);
     });
     stdout.readWhile((line) => {
       const match = line.match(/Initializing engine '(.+)'/);
@@ -272,7 +268,7 @@ Meta.test(
         if (match) {
           typegraphs2.push(match[1]);
         }
-        return !line.includes(`typegate ready on ${port}`);
+        return !line.includes(`typegate ready on :${port}`);
       });
 
       await stdout.close();
@@ -338,7 +334,7 @@ Meta.test(
 
     await stdout.readWhile((line) => {
       console.error("typegate>", line);
-      return !line.includes(`typegate ready on ${port}`);
+      return !line.includes(`typegate ready on :${port}`);
     });
 
     const tgsDir = $.path(
@@ -410,7 +406,6 @@ typegraphs:
       await $`bash -c ${command}`
         .cwd(denoJsrDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        // FIXME: rename to deno.jsonc on bump 0.4.9
         .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`)
         .env("RUST_LOG", "trace");
     });

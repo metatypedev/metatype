@@ -10,16 +10,48 @@ import {
   type UnionNode,
 } from "./type_node.ts";
 import type { TypeIdx } from "../types.ts";
+import { Injection, InjectionNode } from "./types.ts";
 
-export function isInjected(tg: TypeGraphDS, t: TypeNode): boolean {
-  return (
-    t.injection != null ||
-    (isObject(t) &&
-      t.properties.length > 0 &&
-      Object.values(t.properties)
-        .map((propIdx) => tg.types[propIdx])
-        .every((nested) => isInjected(tg, nested)))
-  );
+/**
+ * @param path - the path to `t` in the input type of the nearest ascendant function
+ */
+export function isInjected(
+  tg: TypeGraphDS,
+  t: TypeNode,
+  path: string[],
+  injectionTree: Record<string, InjectionNode>,
+): boolean {
+  if (getInjection(injectionTree, path) != null) {
+    return true;
+  }
+  if (isObject(t)) {
+    return Object.entries(t.properties).every(([name, typeIdx]) => {
+      const propType = tg.types[typeIdx];
+      return isInjected(tg, propType, [...path, name], injectionTree);
+    });
+  }
+  return false;
+}
+
+export function getInjection(
+  tree: Record<string, InjectionNode>,
+  path: string[],
+): Injection | null {
+  const [key, ...rest] = path;
+  const node = tree[key];
+  if (node == null) {
+    return null;
+  }
+  if (rest.length === 0) {
+    if ("children" in node) {
+      return null;
+    }
+    return node.injection;
+  }
+  if ("injection" in node) {
+    return null;
+  }
+  return getInjection(node.children, rest);
 }
 
 const NON_SCALAR_TYPES: Array<TypeNode["type"]> = [

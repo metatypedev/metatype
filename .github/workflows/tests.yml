@@ -1,11 +1,13 @@
-name: Test Suite
-run-name: Test Suite for ${{ github.ref }}
+name: test suite
+run-name: test suite for ${{ github.event.pull_request.title || github.ref }}
 on:
   workflow_dispatch:
     inputs:
-      debug_enabled:
+      tmate_enabled:
         type: boolean
-        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
+        description: |
+          Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate). 
+          This disables all but the test-full jobs.
         required: false
         default: false
   push:
@@ -102,7 +104,7 @@ jobs:
 
   lint-compat:
     needs: changes
-    if: ${{ needs.changes.outputs.full == 'true' }}
+    if: ${{ needs.changes.outputs.full == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.tmate_enabled) }}
     runs-on: "${{ matrix.os }}"
     strategy:
       matrix:
@@ -147,7 +149,7 @@ jobs:
 
   test-website:
     needs: changes
-    if: ${{ needs.changes.outputs.website == 'true' }}
+    if: ${{ needs.changes.outputs.website == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.tmate_enabled) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -172,7 +174,7 @@ jobs:
 
   bulid-docker:
     needs: changes
-    if: ${{ needs.changes.outputs.typegate == 'true' }}
+    if: ${{ needs.changes.outputs.typegate == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.tmate_enabled) }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -235,7 +237,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup tmate session
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tmate_enabled }}
         uses: mxschmitt/action-tmate@v3
         with:
           detached: true
@@ -310,7 +312,10 @@ jobs:
 
           deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
 
-      - uses: codecov/codecov-action@v4
+      # we need secrets for coverage so we skip if not avail
+      # this applies to dedpendabot PRs for example
+      - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov

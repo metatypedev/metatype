@@ -150,7 +150,9 @@ pub fn build_transform_data(
     root_fields: &HashMap<String, raw_tree::ParameterTransformNode>,
 ) -> Result<TransformData> {
     let mut context = TransformDataBuildContext::default();
-    let (new_tree, type_id) = context.check_object_node(resolver_input, root_fields)?;
+    let (new_tree, type_id) = context
+        .check_object_node(resolver_input, root_fields)
+        .context("building apply transform tree")?;
 
     let mut query_input_type = t::struct_();
     for (name, param) in context.query_params.into_iter() {
@@ -552,7 +554,7 @@ mod test {
         assert_eq!(
             print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
-                root: struct #5
+                root: struct #6
                     [a]: string #0
                     [first]: string #1
                     [second]: string #1

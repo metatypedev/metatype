@@ -1,3 +1,5 @@
+name: publish website
+run-name: publish website jobs for ${{ github.ref }}
 on:
   push:
     branches:

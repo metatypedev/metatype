@@ -3,10 +3,10 @@
 
 use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
-use crate::conversion::types::TypeConversion;
+use crate::conversion::types::TypeConversion as _;
 use crate::global_store::SavedState;
 use crate::types::{
-    FindAttribute as _, PolicySpec, ResolveRef as _, Type, TypeDef, TypeDefExt, TypeId, WithPolicy,
+    AsTypeDefEx as _, FindAttribute as _, PolicySpec, TypeDef, TypeDefExt, TypeId, WithPolicy,
 };
 use crate::utils::postprocess::naming::NamingProcessor;
 use crate::utils::postprocess::{PostProcessor, TypegraphPostProcessor};
@@ -122,16 +122,13 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     };
 
     // register the deno runtime
-    let default_runtime_idx = ctx.register_runtime(Store::get_deno_runtime())?;
+    let _default_runtime_idx = ctx.register_runtime(Store::get_deno_runtime())?;
 
     ctx.types.push(Some(TypeNode::Object {
         base: TypeNodeBase {
-            config: [].into_iter().collect(),
             description: None,
             enumeration: None,
-            injection: None,
             policies: Default::default(),
-            runtime: default_runtime_idx,
             title: params.name,
         },
         data: ObjectTypeData {
@@ -167,7 +164,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
                                     })
                                 })? as u32;
 
-                            let type_idx = ctx.register_type(TypeId(func_store_idx), None)?;
+                            let type_idx = ctx.register_type(TypeId(func_store_idx))?;
 
                             let mut auth_processed = auth.clone();
                             auth_processed
@@ -268,7 +265,7 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> 
 }
 
 fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
-    match type_id.resolve_ref()?.0 {
+    match &type_id.as_xdef()?.type_def {
         TypeDef::Struct(inner) => {
             // namespace
             for (prop_name, prop_type_id) in inner.iter_props() {
@@ -289,18 +286,16 @@ pub fn expose(
     let fields = fields
         .into_iter()
         .map(|(key, type_id)| -> Result<_> {
-            let (_, attrs) = type_id.resolve_ref()?;
-            let policy_chain = attrs.find_policy().unwrap_or(&[]);
+            let xdef = type_id.as_xdef()?;
+            let policy_chain = xdef.attributes.find_policy().unwrap_or(&[]);
             let has_policy = !policy_chain.is_empty();
 
             // TODO how to set default policy on a namespace? Or will it inherit
             // the policies of the namespace?
             let type_id: TypeId = match (has_policy, default_policy.as_ref()) {
-                (false, Some(default_policy)) => {
-                    type_id
-                        .with_policy(default_policy.clone().into_iter().map(Into::into).collect())?
-                        .id
-                }
+                (false, Some(default_policy)) => type_id
+                    .with_policy(default_policy.clone().into_iter().map(Into::into).collect())?
+                    .id(),
                 _ => type_id,
             };
 
@@ -325,7 +320,7 @@ pub fn expose(
                 }
                 ensure_valid_export(key.clone(), type_id)?;
 
-                let type_idx = ctx.register_type(type_id, None)?;
+                let type_idx = ctx.register_type(type_id)?;
                 root_data.properties.insert(key.clone(), type_idx.into());
                 root_data.required.push(key);
                 Ok(())
@@ -343,45 +338,31 @@ pub fn set_seed(seed: Option<u32>) -> Result<()> {
 }
 
 impl TypegraphContext {
-    pub fn hash_type(&mut self, type_id: TypeId, runtime_id: Option<u32>) -> Result<u64> {
+    pub fn hash_type(&mut self, type_id: TypeId) -> Result<u64> {
         // let type_id = type_def.id().into();
         if let Some(hash) = self.mapping.types_to_hash.get(&type_id.into()) {
             Ok(*hash)
         } else {
             let mut hasher = Hasher::new();
-            match type_id.as_type()? {
-                Type::Def(type_def) => {
-                    type_def.hash_type(&mut hasher, self, runtime_id)?;
-                }
-                Type::Ref(type_ref) => {
-                    type_ref.hash_type(&mut hasher, self, runtime_id)?;
-                }
-            }
+            let xdef = type_id.as_xdef()?;
+            xdef.hash_type(&mut hasher, self)?;
             let hash = hasher.finish();
             self.mapping.types_to_hash.insert(type_id.into(), hash);
             Ok(hash)
         }
     }
 
-    pub fn register_type(
-        &mut self,
-        type_id: TypeId,
-        runtime_id: Option<u32>,
-    ) -> Result<TypeId, TgError> {
-        let (mut type_def, ref_attrs) = type_id.resolve_ref()?;
+    pub fn register_type(&mut self, type_id: TypeId) -> Result<TypeId, TgError> {
         // we remove the name before hashing if it's not
         // user named
-        let user_named = if let Some(name) = type_def.name() {
-            if let Some(true) = Store::is_user_named(name) {
-                true
-            } else {
-                type_def = type_def.with_name(None);
-                false
-            }
+        let xdef = type_id.as_xdef()?;
+        let is_user_named = if let Some(name) = xdef.name.as_deref() {
+            Store::is_user_named(name).unwrap_or(false)
         } else {
             false
         };
-        let hash = self.hash_type(type_id, runtime_id)?;
+        let xdef = type_id.as_xdef()?;
+        let hash = self.hash_type(type_id)?;
 
         match self.mapping.hash_to_type.entry(hash) {
             Entry::Vacant(e) => {
@@ -396,10 +377,10 @@ impl TypegraphContext {
 
                 // let tpe = id.as_type()?;
 
-                let type_node = type_def.convert(self, runtime_id, &ref_attrs)?;
+                let type_node = xdef.type_def.clone().convert(self, xdef)?;
 
                 self.types[idx] = Some(type_node);
-                if user_named {
+                if is_user_named {
                     self.user_named_types.insert(idx as u32);
                 }
 
@@ -410,24 +391,20 @@ impl TypegraphContext {
         }
     }
 
-    pub fn register_materializer(
-        &mut self,
-        id: u32,
-    ) -> Result<(MaterializerId, RuntimeId), TgError> {
+    pub fn register_materializer(&mut self, id: u32) -> Result<MaterializerId, TgError> {
         match self.mapping.materializers.entry(id) {
             Entry::Vacant(e) => {
                 let idx = self.materializers.len();
                 e.insert(idx as u32);
                 self.materializers.push(None);
-                let converted = convert_materializer(self, Store::get_materializer(id)?)?;
-                let runtime_id = converted.runtime;
+                let mat_internal = Store::get_materializer(id)?;
+                let converted = convert_materializer(self, mat_internal)?;
                 self.materializers[idx] = Some(converted);
-                Ok((idx as MaterializerId, runtime_id as RuntimeId))
+                Ok(idx as MaterializerId)
             }
             Entry::Occupied(e) => {
                 let mat_idx = *e.get();
-                let mat = self.materializers[mat_idx as usize].as_ref().unwrap();
-                Ok((mat_idx, mat.runtime))
+                Ok(mat_idx)
             }
         }
     }
@@ -492,7 +469,7 @@ impl TypegraphContext {
                     // we allocate first a slot in the array, as the lazy conversion might register
                     // other runtimes
                     self.runtimes.push(TGRuntime::Unknown(Default::default()));
-                    let rt = lazy(id, idx as u32, self)?;
+                    let rt = lazy(id, self)?;
                     self.runtimes[idx] = rt;
                 }
             };
@@ -506,7 +483,7 @@ impl TypegraphContext {
     }
 
     pub fn get_correct_id(&self, id: TypeId) -> Result<u32> {
-        let id = id.resolve_ref()?.0.id();
+        let id = id.as_xdef()?.type_def.id();
         self.find_type_index_by_store_id(id)
             .ok_or(format!("unable to find type for store id {}", u32::from(id)).into())
     }
