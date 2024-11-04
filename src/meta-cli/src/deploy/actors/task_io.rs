@@ -236,7 +236,6 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
             }
         } else {
             // JSON-RPC notification
-
             match serde_json::from_value::<RpcNotificationMessage>(message)
                 .map(|msg| msg.notification)
             {
