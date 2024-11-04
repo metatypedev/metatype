@@ -69,7 +69,7 @@ for (const issue of issues) {
       `Error: A Linear ticket was not found for the issue "${type}: ${desc}" in the file "${file}" at line ${line}.`,
       "Consider creating a Linear ticket for this issue and referencing it in the comment.",
     );
-    console.error(`\nSource: ${source}\n`);
+    console.error(`${line} | ${source}`);
     foundInvalidIssue = true;
   } else {
     const issue = await getIssue(ticket);
@@ -78,12 +78,18 @@ for (const issue of issues) {
       console.error(
         `Error: The ticket MET-${ticket} referenced in the file "${file}" at line ${line} does not exist`,
       );
-      console.error(`\nSource: ${source}\n`);
+      console.error(`${line} | ${source}`);
       foundInvalidIssue = true;
+    } else {
+      console.info(
+        `Info: Found a Linear ticket "MET-${ticket}" in the file "${file}" at line ${line} (${type}: ${desc})`,
+      );
     }
   }
 }
 
-if (foundInvalidIssue) {
+if (!issues.length) {
+  console.log("No issues or tickets found");
+} else if (foundInvalidIssue) {
   process.exit(1);
 }
