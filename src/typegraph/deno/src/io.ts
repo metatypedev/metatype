@@ -71,7 +71,6 @@ export const log = {
     rpcNotify("Failure", { data: data });
   },
   success(data: any, noEncode = false) {
-    // TODO why no encode??
     if (noEncode) {
       rpcNotify("Success", { data: JSON.parse(data) });
     } else {
