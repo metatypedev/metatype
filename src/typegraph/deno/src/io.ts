@@ -133,7 +133,7 @@ const rpcCall = (() => {
       params,
     });
 
-    process.stdout.write(`jsonrpc: ${rpcMessage}\n`);
+    writeRpcMessage(rpcMessage);
     return responseReader.read(rpcId);
   };
 })();
