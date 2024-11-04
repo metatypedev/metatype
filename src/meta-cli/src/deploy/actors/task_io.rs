@@ -31,14 +31,6 @@ mod message {
     pub(super) struct Exit;
 }
 
-#[derive(Clone, Copy)]
-enum OutputLevel {
-    Debug,
-    Info,
-    Warning,
-    Error,
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 enum JsonRpcVersion {
     #[serde(rename = "2.0")]
@@ -76,8 +68,8 @@ pub(super) struct TaskIoActor<A: TaskAction + 'static> {
     action: A,
     task: Addr<TaskActor<A>>,
     console: Addr<ConsoleActor>,
-    latest_level: OutputLevel,
     results: Vec<ActionResult<A>>,
+    rpc_message_buffer: String,
 }
 
 impl<A: TaskAction + 'static> TaskIoActor<A> {
@@ -102,8 +94,8 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                 action,
                 task,
                 console: console.clone(),
-                latest_level: OutputLevel::Info,
                 results: vec![],
+                rpc_message_buffer: String::new(),
             };
 
             let self_addr = ctx.address().downgrade();
@@ -155,6 +147,25 @@ impl<A: TaskAction + 'static> Actor for TaskIoActor<A> {
     }
 }
 
+#[derive(Deserialize, Debug)]
+struct RpcNotificationMessage {
+    #[allow(dead_code)]
+    jsonrpc: JsonRpcVersion,
+    #[serde(flatten)]
+    notification: RpcNotification,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(tag = "method", content = "params")]
+enum RpcNotification {
+    Debug { message: String },
+    Info { message: String },
+    Warning { message: String },
+    Error { message: String },
+    Success { data: serde_json::Value },
+    Failure { data: serde_json::Value },
+}
+
 impl<A: TaskAction + 'static> Handler<message::OutputLine> for TaskIoActor<A> {
     type Result = ();
 
@@ -166,57 +177,28 @@ impl<A: TaskAction + 'static> Handler<message::OutputLine> for TaskIoActor<A> {
             Some((prefix, tail)) => {
                 trace!("prefix: {prefix}");
                 match prefix {
-                    "debug" => {
-                        console.debug(format!("{scope} {tail}"));
-                        self.latest_level = OutputLevel::Debug;
+                    "jsonrpc^" => {
+                        self.rpc_message_buffer.push_str(tail);
                     }
-                    "info" => {
-                        console.info(format!("{scope} {tail}"));
-                        self.latest_level = OutputLevel::Info;
-                    }
-                    "warning" => {
-                        console.warning(format!("{scope} {tail}"));
-                        self.latest_level = OutputLevel::Warning;
-                    }
-                    "error" => {
-                        console.error(format!("{scope} {tail}"));
-                        self.latest_level = OutputLevel::Error;
-                    }
-                    "success" => {
-                        match serde_json::from_str(tail) {
-                            Ok(data) => self.results.push(Ok(data)),
-                            Err(err) => {
-                                console.error(format!("{scope} failed to process message: {err}"));
-                                // TODO fail task?
-                            }
-                        }
-                    }
-                    "failure" => {
-                        match serde_json::from_str(tail) {
-                            Ok(data) => {
-                                self.results.push(Err(data));
-                            }
-                            Err(err) => {
-                                console.error(format!("{scope} failed to process message: {err}"));
-                                // TODO fail task?
-                            }
-                        }
-                    }
-                    "jsonrpc" => {
-                        match serde_json::from_str(tail) {
-                            Ok(req) => self.handle_rpc_request(req, ctx.address(), ctx),
-                            Err(err) => {
-                                console.error(format!("{scope} failed to process message: {err}"));
-                                // TODO fail task?
-                            }
-                        }
+                    "jsonrpc$" => {
+                        self.rpc_message_buffer.push_str(tail);
+                        let message = std::mem::take(&mut self.rpc_message_buffer);
+                        self.handle_rpc_message(&message, ctx);
                     }
 
-                    _ => self.handle_continuation(&line),
+                    _ => {
+                        // a log message that were not outputted with the log library
+                        // on the typegraph client
+                        // --> as a debug message
+                        console.debug(format!("{scope}$>{line}"));
+                    }
                 }
             }
             None => {
-                self.handle_continuation(&line);
+                // a log message that were not outputted with the log library
+                // on the typegraph client
+                // --> as a debug message
+                console.debug(format!("{scope}$>{line}"));
             }
         }
     }
@@ -228,23 +210,96 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
         format!("[{path}]", path = path.yellow())
     }
 
-    // process as continuation to previous output
-    fn handle_continuation(&self, line: &str) {
+    fn handle_rpc_message(&mut self, message: &str, ctx: &mut Context<Self>) {
         let console = &self.console;
         let scope = self.get_console_scope();
+        let message: serde_json::Value = match serde_json::from_str(message) {
+            Ok(value) => value,
+            Err(err) => {
+                self.console
+                    .error(format!("{scope} failed to parse JSON-RPC message: {err}"));
+                // TODO send JSON-RPC error response (-32700)
+                return;
+            }
+        };
 
-        match self.latest_level {
-            OutputLevel::Debug => {
-                console.debug(format!("{scope}>{line}"));
+        if message.get("id").is_some() {
+            // JSON-RPC request
+            match serde_json::from_value(message) {
+                Ok(req) => self.handle_rpc_request(req, ctx.address(), ctx),
+                Err(err) => {
+                    console.error(format!(
+                        "{scope} failed to validate JSON-RPC request: {err}"
+                    ));
+                    // TODO send JSON-RPC error response (-32600)
+                }
             }
-            OutputLevel::Info => {
-                console.info(format!("{scope}>{line}"));
+        } else {
+            // JSON-RPC notification
+
+            match serde_json::from_value::<RpcNotificationMessage>(message)
+                .map(|msg| msg.notification)
+            {
+                Ok(notification) => self.handle_rpc_notification(notification),
+                Err(err) => {
+                    console.error(format!(
+                        "{scope} failed to validate JSON-RPC notification: {err}"
+                    ));
+                    // TODO send JSON-RPC error response (-32600)
+                }
+            };
+        }
+    }
+
+    fn handle_rpc_notification(&mut self, notification: RpcNotification) {
+        let console = &self.console;
+        let scope = self.get_console_scope();
+        match notification {
+            RpcNotification::Debug { message } => {
+                for line in message.lines() {
+                    console.debug(format!("{scope} {line}"));
+                }
             }
-            OutputLevel::Warning => {
-                console.warning(format!("{scope}>{line}"));
+            RpcNotification::Info { message } => {
+                for line in message.lines() {
+                    console.info(format!("{scope} {line}"));
+                }
             }
-            OutputLevel::Error => {
-                console.error(format!("{scope}>{line}"));
+            RpcNotification::Warning { message } => {
+                for line in message.lines() {
+                    console.warning(format!("{scope} {line}"));
+                }
+            }
+            RpcNotification::Error { message } => {
+                for line in message.lines() {
+                    console.error(format!("{scope} {line}"));
+                }
+            }
+            RpcNotification::Success { data } => {
+                let data = match serde_json::from_value(data) {
+                    Ok(data) => data,
+                    Err(err) => {
+                        console.error(format!(
+                            "{scope} failed to validate JSON-RPC notification (success): {err}"
+                        ));
+                        // TODO send JSON-RPC error response (-32600)
+                        return;
+                    }
+                };
+                self.results.push(Ok(data));
+            }
+            RpcNotification::Failure { data } => {
+                let data = match serde_json::from_value(data) {
+                    Ok(data) => data,
+                    Err(err) => {
+                        console.error(format!(
+                            "{scope} failed to validate JSON-RPC notification (failure): {err}"
+                        ));
+                        // TODO send JSON-RPC error response (-32600)
+                        return;
+                    }
+                };
+                self.results.push(Err(data));
             }
         }
     }
