@@ -71,7 +71,7 @@ export class Manager {
 
   async #deploy(): Promise<void> {
     try {
-      const deployData = await rpc.getDeployData(this.#typegraph.name);
+      const deployData = rpc.getDeployData(this.#typegraph.name);
 
       const env = this.#env;
       if (!env.artifact_resolution) {

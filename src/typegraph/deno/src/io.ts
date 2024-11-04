@@ -3,6 +3,7 @@
 import { inspect } from "node:util";
 // import { createInterface, Interface } from "node:readline";
 import process from "node:process";
+import { rpcRequest } from "./gen/client.ts";
 /**
  * see: module level documentation `meta-cli/src/deploy/actors/task.rs`
  */
@@ -48,65 +49,8 @@ export const log = {
   },
 };
 
-class RpcResponseReader {
-  private buffer: string = "";
-
-  constructor() {
-    process.stdin.setEncoding("utf-8");
-  }
-
-  read(id: number) {
-    return new Promise((resolve, reject) => {
-      const handler = () => {
-        while (true) {
-          const chunk = process.stdin.read();
-          if (chunk == null) {
-            break;
-          }
-          this.buffer += chunk;
-          const lines = this.buffer.split(/\r\n|\n/);
-          if (lines.length > 2) {
-            reject(new Error("not sequential"));
-          } else if (lines.length <= 1) {
-            continue;
-          }
-          this.buffer = lines.pop()!;
-
-          try {
-            const message = JSON.parse(lines[0]);
-            if (message.id === id) {
-              resolve(message.result);
-              break;
-            }
-          } catch (e) {
-            reject("invalid message");
-          }
-        }
-        process.stdin.off("readable", handler);
-      };
-      process.stdin.on("readable", handler);
-    });
-  }
-}
-
-const JSONRPC_VERSION = "2.0";
-
 const rpcCall = (() => {
-  const responseReader = new RpcResponseReader();
-  let latestRpcId = 0;
-
-  return (method: string, params: any = null) => {
-    const rpcId = latestRpcId++;
-    const rpcMessage = JSON.stringify({
-      jsonrpc: JSONRPC_VERSION,
-      id: rpcId,
-      method,
-      params,
-    });
-
-    process.stdout.write(`jsonrpc: ${rpcMessage}\n`);
-    return responseReader.read(rpcId);
-  };
+  return (method: string, params: any = null) => rpcRequest(method, params);
 })();
 
 export interface DeployTarget {
@@ -132,5 +76,7 @@ export interface DeployData {
 export const rpc = {
   getDeployTarget: () => rpcCall("GetDeployTarget") as Promise<DeployTarget>,
   getDeployData: (typegraph: string) =>
-    rpcCall("GetDeployData", { typegraph }) as Promise<DeployData>,
+    rpcRequest<DeployData, { typegraph: string }>("GetDeployData", {
+      typegraph,
+    }),
 };

@@ -222,7 +222,9 @@ export class MetaTest {
       throw new Error(stderr);
     }
 
-    const tgString = stdout.trim().slice(1, stdout.length - 1); // remove the brackets []
+    const output = stdout.trim();
+    const startIndex = output.search("[{");
+    const tgString = output.slice(startIndex + 1, stdout.length - 1); // remove the brackets []
 
     return await this.#engineFromDeployed(tgString, opts.secrets ?? {});
   }
