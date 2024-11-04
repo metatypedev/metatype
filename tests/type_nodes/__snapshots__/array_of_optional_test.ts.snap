@@ -2,7 +2,7 @@ export const snapshot = {};
 
 snapshot[`array of optional 1`] = `
 [
-  "Validation errors:
+  "Validation errors on root_testNonNull_fn_input:
   - at <value>.struct_array[2]: exptected a non-null object, got null
   - at <value>.string_array[2]: expected a string, got object
   - at <value>.integer_array[2]: expected number, got object

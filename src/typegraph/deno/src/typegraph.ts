@@ -191,6 +191,7 @@ export async function typegraph(
     rate: rate ? { ...defaultRateFields, ...rate } : undefined,
   };
 
+
   core.initTypegraph({ name, dynamic, path, ...tgParams });
 
   const g: TypegraphBuilderArgs = {

@@ -14,7 +14,7 @@ Meta.test({
   const prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES:
-        "postgresql://postgres:password@localhost:5432/postgres?schema=prisma",
+        "postgresql://postgres:password@localhost:5432/postgres?schema=prisma_tg_test",
     },
   });
 
@@ -40,7 +40,6 @@ Meta.test({
               title
               type
               enum
-              config
               default
               format
               policies

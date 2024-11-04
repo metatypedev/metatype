@@ -172,7 +172,7 @@ export async function execRequest(
   try {
     const response = await fetch(url, reqInit);
     if (!response.ok) {
-      log.debug("error", response.json());
+      log.error("error response json", await response.json().catch(_err => 'non json response'));
       throw Error(
         `${errMsg}: request failed with status ${response.status} (${response.statusText})`,
       );
@@ -181,7 +181,7 @@ export async function execRequest(
     if (response.headers.get("Content-Type") == "application/json") {
       return await response.json();
     }
-    log.debug("response", response);
+    log.error("non json response", response);
     throw Error(
       `${errMsg}: expected json object, got "${await response.text()}"`,
     );

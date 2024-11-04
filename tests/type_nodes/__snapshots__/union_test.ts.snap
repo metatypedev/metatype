@@ -2,7 +2,7 @@ export const snapshot = {};
 
 snapshot[`Union type 1`] = `
 [
-  "Validation errors:
+  "Validation errors on root_convert_fn_input:
   - at <value>.color: Value does not match to any variant of the union type 
   #0 <value>.color,expected an array, got string
   #1 <value>.color,expected an object, got string

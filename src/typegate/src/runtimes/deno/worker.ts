@@ -7,6 +7,7 @@
 import { getLogger } from "../../log.ts";
 import { make_internal } from "../../worker_utils.ts";
 import type { Answer, Message } from "../patterns/messenger/types.ts";
+import { toFileUrl } from "@std/path/to-file-url";
 
 import type {
   FuncTask,
@@ -65,7 +66,7 @@ async function register_import_func(_: null, task: RegisterImportFuncTask) {
   verbose &&
     logger.info(`register import func "${op}" from "${modulePath.toString()}`);
 
-  registry.set(op, await import(modulePath));
+  registry.set(op, await import(toFileUrl(modulePath).toString()));
 }
 
 function register_func(_: null, task: RegisterFuncTask) {

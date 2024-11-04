@@ -1,3 +1,4 @@
+name: nightly docker builds
 on:
   schedule:
     - cron: "0 2 * * *"

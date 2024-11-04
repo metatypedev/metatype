@@ -110,8 +110,6 @@ export class DenoRuntime extends Runtime {
           depMetas,
         );
 
-        logger.info(`Resolved runtime artifacts at ${basePath}`);
-
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))
         // hence the use of contentHash
@@ -140,7 +138,7 @@ export class DenoRuntime extends Runtime {
     );
 
     if (Deno.env.get("DENO_TESTING") === "true") {
-      await w.disableLazyness();
+      w.disableLazyness();
     }
 
     const rt = new DenoRuntime(

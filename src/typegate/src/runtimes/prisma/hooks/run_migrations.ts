@@ -44,8 +44,6 @@ export class MigrationFailure extends Error {
   ) {
     const err = new MigrationFailure(message, runtimeName);
 
-    console.log({ message });
-
     const prefix = "ERROR: ";
     const prefixLen = prefix.length;
     err.errors = message
