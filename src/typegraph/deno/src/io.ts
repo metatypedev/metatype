@@ -10,8 +10,8 @@ import process from "node:process";
 const JSONRPC_VERSION = "2.0";
 
 function writeRpcMessage(message: string) {
-  // split into 32-kibibyte chunks
-  const chunkSize = 32768;
+  // split into 32-KiB chunks
+  const chunkSize = 32758; // 32 KiB - 10 bytes for "jsonrpc^: " or "jsonrpc$: "
   for (let i = 0; i < message.length; i += chunkSize) {
     const chunk = message.slice(i, i + chunkSize);
     if (i + chunkSize < message.length) {
