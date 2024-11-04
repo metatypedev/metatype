@@ -37,10 +37,4 @@ export default {
       await $`cargo test --locked --package typegraph_core --tests`;
     },
   },
-  "test-lsp": {
-    inherit: "_ecma",
-    fn: ($) =>
-      $`bash -sx`.stdinText("node --test --import=tsx tests/*.test.ts")
-        .cwd("src/meta-lsp/ts-language-server"),
-  },
 } satisfies Record<string, DenoTaskDefArgs>;

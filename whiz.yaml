@@ -67,5 +67,4 @@ setup:
     ghjk x install-py
     ghjk x install-ts
     ghjk x install-website
-    ghjk x install-lsp
     echo 'NOTE: To install system dependencies, do "ghjk x install-sys | bash"'
