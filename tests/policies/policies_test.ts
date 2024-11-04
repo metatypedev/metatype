@@ -23,7 +23,7 @@ Meta.test("Policies", async (t) => {
   const crypto = t.typegate.cryptoKeys;
   const e = await t.engine("policies/policies.py", {
     secrets: await genSecretKey(config),
-    // typegraph: "policies",
+    typegraph: "policies",
   });
 
   await t.should("have public access", async () => {

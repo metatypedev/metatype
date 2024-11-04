@@ -216,15 +216,17 @@ export class MetaTest {
 
   async engine(path: string, opts: ParseOptions = {}) {
     const args = ["serialize", "--file", path, "--quiet"];
-    const { code, stdout, stderr } = await this.meta(args);
+    const tgArgs = opts.typegraph ? ["--typegraph", opts.typegraph] : ["-1"];
+    const { code, stdout, stderr } = await this.meta(args.concat(tgArgs));
 
     if (code !== 0) {
       throw new Error(stderr);
     }
 
+    // FIXME: meta cli prints debug output to stdout
     const output = stdout.trim();
-    const startIndex = output.search(/\[{/);
-    const tgString = output.slice(startIndex + 1, stdout.length - 1); // remove the brackets []
+    const startIndex = output.search(/\{/);
+    const tgString = output.slice(startIndex);
 
     return await this.#engineFromDeployed(tgString, opts.secrets ?? {});
   }
