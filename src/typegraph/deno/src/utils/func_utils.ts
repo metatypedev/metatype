@@ -100,7 +100,7 @@ export function buildReduceEntries(
     }
     entries.push({
       path: currPath,
-      injection_data: node.payload,
+      injectionData: node.payload,
     });
     return entries;
   }
@@ -109,7 +109,7 @@ export function buildReduceEntries(
     if (Array.isArray(node)) {
       entries.push({
         path: currPath,
-        injection_data: serializeStaticInjection(node),
+        injectionData: serializeStaticInjection(node),
       });
       return entries;
     }
@@ -123,7 +123,7 @@ export function buildReduceEntries(
   if (allowed.includes(typeof node)) {
     entries.push({
       path: currPath,
-      injection_data: serializeStaticInjection(node),
+      injectionData: serializeStaticInjection(node),
     });
     return entries;
   }
@@ -172,7 +172,10 @@ export async function execRequest(
   try {
     const response = await fetch(url, reqInit);
     if (!response.ok) {
-      log.error("error response json", await response.json().catch(_err => 'non json response'));
+      log.error(
+        "error response json",
+        await response.json().catch((_err) => "non json response"),
+      );
       throw Error(
         `${errMsg}: request failed with status ${response.status} (${response.statusText})`,
       );

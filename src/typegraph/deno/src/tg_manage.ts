@@ -45,14 +45,14 @@ export class Manager {
     try {
       const env = this.#env;
       finalizationResult = this.#typegraph.serialize({
-        typegraph_path: env.typegraph_path,
+        typegraphPath: env.typegraph_path,
         prefix: env.prefix,
-        artifact_resolution: this.#env.artifact_resolution,
+        artifactResolution: this.#env.artifact_resolution,
         codegen: false,
-        prisma_migration: {
-          migrations_dir: this.#getMigrationsDir(),
-          migration_actions: [],
-          default_migration_action: {
+        prismaMigration: {
+          migrationsDir: this.#getMigrationsDir(),
+          migrationActions: [],
+          defaultMigrationAction: {
             apply: true,
             create: false,
             reset: false,
@@ -83,14 +83,14 @@ export class Manager {
       }
 
       const params: SerializeParams = {
-        typegraph_path: env.typegraph_path,
+        typegraphPath: env.typegraph_path,
         prefix: env.prefix,
-        artifact_resolution: true,
+        artifactResolution: true,
         codegen: false,
-        prisma_migration: {
-          migrations_dir: this.#getMigrationsDir(),
-          migration_actions: Object.entries(deployData.migrationActions),
-          default_migration_action: deployData.defaultMigrationAction,
+        prismaMigration: {
+          migrationsDir: this.#getMigrationsDir(),
+          migrationActions: Object.entries(deployData.migrationActions),
+          defaultMigrationAction: deployData.defaultMigrationAction,
         },
         pretty: false,
       };

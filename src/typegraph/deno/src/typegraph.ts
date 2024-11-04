@@ -172,12 +172,12 @@ export async function typegraph(
   const path = fromFileUrl(`file://${simpleFile}`);
 
   const defaultCorsFields = {
-    allow_credentials: true,
-    allow_headers: [],
-    allow_methods: [],
-    allow_origin: [],
-    expose_headers: [],
-    max_age_sec: undefined,
+    allowCredentials: true,
+    allowHeaders: [],
+    allowMethods: [],
+    allowOrigin: [],
+    exposeHeaders: [],
+    maxAgeSec: undefined,
   } as CoreCors;
 
   const defaultRateFields = {
@@ -190,7 +190,6 @@ export async function typegraph(
     cors: cors ? { ...defaultCorsFields, ...cors } : defaultCorsFields,
     rate: rate ? { ...defaultRateFields, ...rate } : undefined,
   };
-
 
   core.initTypegraph({ name, dynamic, path, ...tgParams });
 

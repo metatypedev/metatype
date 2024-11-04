@@ -58,14 +58,14 @@ export async function tgDeploy(
   params: TypegraphDeployParams,
 ): Promise<DeployResult> {
   const serializeParams = {
-    typegraph_path: params.typegraphPath,
+    typegraphPath: params.typegraphPath,
     prefix: params.prefix,
-    artifact_resolution: true,
+    artifactResolution: true,
     codegen: false,
-    prisma_migration: {
-      migrations_dir: params.migrationsDir ?? "prisma-migrations",
-      migration_actions: Object.entries(params.migrationActions ?? {}),
-      default_migration_action: params.defaultMigrationAction ?? {
+    prismaMigration: {
+      migrationsDir: params.migrationsDir ?? "prisma-migrations",
+      migrationActions: Object.entries(params.migrationActions ?? {}),
+      defaultMigrationAction: params.defaultMigrationAction ?? {
         apply: true,
         create: false,
         reset: false,

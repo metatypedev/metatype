@@ -678,10 +678,10 @@ class func(typedef):
             raise e
 
         return func(
-            typedef(transform_data.value.query_input),
+            typedef(transform_data.query_input),
             self.out,
             self.mat,
-            parameter_transform=transform_data.value.parameter_transform,
+            parameter_transform=transform_data.parameter_transform,
             rate_calls=self.rate_calls,
             rate_weight=self.rate_weight,
         )

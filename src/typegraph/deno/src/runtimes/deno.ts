@@ -87,7 +87,7 @@ export class DenoRuntime extends Runtime {
   ): t.Func<I, O, ImportMat> {
     const matId = runtimes.importDenoFunction(
       {
-        func_name: name,
+        funcName: name,
         module,
         deps,
         secrets,
@@ -152,7 +152,7 @@ export class DenoRuntime extends Runtime {
       policyName,
       runtimes.importDenoFunction(
         {
-          func_name: data.name,
+          funcName: data.name,
           module: data.module,
           secrets: data.secrets ?? [],
           deps: data.deps ?? [],

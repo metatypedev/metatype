@@ -24,7 +24,7 @@ export class Backend {
   static redis(connectionStringSecret: string): SubstantialBackend {
     return {
       redis: {
-        connection_string_secret: connectionStringSecret,
+        connectionStringSecret,
       },
     };
   }
@@ -39,7 +39,7 @@ export class SubstantialRuntime extends Runtime {
   ) {
     const id = runtimes.registerSubstantialRuntime({
       backend,
-      file_descriptions: fileDescriptions,
+      fileDescriptions,
     });
     super(id);
     this.backend = backend;

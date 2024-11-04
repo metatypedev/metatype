@@ -50,7 +50,7 @@ class TypeScriptCodeGenerator extends TypeDefProcessor {
   override formatRecordTypeDef(def: RecordTypeDef): string {
     return `export type ${def.ident} = {
 ${def.props
-  .map((p) => `  ${p.name}${p.optional ? "?" : ""}: ${p.value}`)
+  .map((p) => `  ${toCamelCase(p.name)}${p.optional ? "?" : ""}: ${p.value}`)
   .join("\n")}
 }`;
   }

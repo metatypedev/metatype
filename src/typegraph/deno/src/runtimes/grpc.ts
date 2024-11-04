@@ -8,7 +8,7 @@ import { Runtime } from "./mod.ts";
 export class GrpcRuntime extends Runtime {
   constructor(protoFile: string, endpoint: string) {
     const id = runtimes.registerGrpcRuntime({
-      proto_file: protoFile,
+      protoFile,
       endpoint,
     });
     super(id);

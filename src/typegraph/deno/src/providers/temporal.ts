@@ -25,8 +25,8 @@ export class TemporalRuntime extends Runtime {
   }) {
     const id = runtimes.registerTemporalRuntime({
       name,
-      host_secret: hostSecret,
-      namespace_secret: namespaceSecret,
+      hostSecret,
+      namespaceSecret,
     });
     super(id);
     this.name = name;

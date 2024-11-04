@@ -25,7 +25,10 @@ Deno.test("Python struct codegen", () => {
     str_arr: t.List[str]
     tup: t.Tuple[float, float]
     opt: t.Optional[bool]
-    comp: t.Optional[t.List[t.Tuple[int, Something]]]`;
+    comp: t.Optional[t.List[t.Tuple[int, Something]]]
+
+    def __init__(self, num: int, key: str, str_arr: t.List[str], tup: t.Tuple[float, float], opt: t.Optional[bool], comp: t.Optional[t.List[t.Tuple[int, Something]]], **kwargs):
+        super().__init__(num=num,key=key,str_arr=str_arr,tup=tup,opt=opt,comp=comp, **kwargs)`;
 
   assertEquals(result, expected);
 });
@@ -61,7 +64,7 @@ Deno.test("Python function codegen", () => {
 
     req = RequestType(param=param, opt=opt)
     res = rpc_request("func", req.model_dump())
-    ret = ReturnType(**res)
+    ret = ReturnType(value=res)
 
     return ret.value`;
 
@@ -74,10 +77,10 @@ Deno.test("Python import codegen", () => {
   pycg.process(utils.importCase);
 
   const result = pycg.formatHeaders();
-  const expected = `import typing as t
+  const expected = `import typing_extensions as t
 from pydantic import BaseModel
-from client import rpc_request
-from foobar import Foo, Bar`;
+from typegraph.gen.client import rpc_request
+from typegraph.gen.foobar import Foo, Bar`;
 
   assertEquals(result, expected);
 });

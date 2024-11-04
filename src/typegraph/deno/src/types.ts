@@ -202,9 +202,9 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
     super(_id);
     this.min = data.min;
     this.max = data.max;
-    this.exclusiveMinimum = data.exclusive_minimum;
-    this.exclusiveMaximum = data.exclusive_maximum;
-    this.multipleOf = data.multiple_of;
+    this.exclusiveMinimum = data.exclusiveMinimum;
+    this.exclusiveMaximum = data.exclusiveMaximum;
+    this.multipleOf = data.multipleOf;
     this.enumeration = data.enumeration;
   }
 
@@ -238,9 +238,9 @@ class Float extends Typedef implements Readonly<TypeFloat> {
     super(_id);
     this.min = data.min;
     this.max = data.max;
-    this.exclusiveMinimum = data.exclusive_minimum;
-    this.exclusiveMaximum = data.exclusive_maximum;
-    this.multipleOf = data.multiple_of;
+    this.exclusiveMinimum = data.exclusiveMinimum;
+    this.exclusiveMaximum = data.exclusiveMaximum;
+    this.multipleOf = data.multipleOf;
     this.enumeration = data.enumeration;
   }
 }
@@ -369,7 +369,7 @@ class List extends Typedef {
     this.min = data.min;
     this.max = data.max;
     this.items = data.of;
-    this.uniqueItems = data.unique_items;
+    this.uniqueItems = data.uniqueItems;
   }
 }
 
@@ -393,7 +393,7 @@ class Optional extends Typedef {
   constructor(_id: number, data: TypeOptional) {
     super(_id);
     this.item = data.of;
-    this.defaultItem = data.default_item;
+    this.defaultItem = data.defaultItem;
   }
 }
 
@@ -406,7 +406,7 @@ export function optional(
   const completeData = {
     of: variant._id,
     ...data,
-    defaultItem: JSON.stringify(data.default_item),
+    defaultItem: JSON.stringify(data.defaultItem),
   } as TypeOptional;
   return new Optional(
     withBase(core.optionalb(completeData), base),
@@ -470,7 +470,7 @@ export function struct<P extends { [key: string]: Typedef }>(
     withBase(
       core.structb({
         props: Object.entries(props).map(([name, typ]) => [name, typ._id]),
-        additional_props: additionalProps ?? false,
+        additionalProps: additionalProps ?? false,
       }),
       base,
     ),
@@ -598,10 +598,10 @@ export class Func<
     const transformData = core.getTransformData(this.inp._id, transformTree);
 
     return func(
-      new Typedef(transformData.query_input),
+      new Typedef(transformData.queryInput),
       this.out,
       this.mat,
-      transformData.parameter_transform,
+      transformData.parameterTransform,
       this.config,
     );
   }
@@ -648,9 +648,9 @@ export function func<
       inp: inp._id,
       out: out._id,
       mat: mat._id,
-      parameter_transform: transformData ?? undefined,
-      rate_calls: rateCalls,
-      rate_weight: rateWeight,
+      parameterTransform: transformData ?? undefined,
+      rateCalls,
+      rateWeight,
     }) as number,
     inp,
     out,

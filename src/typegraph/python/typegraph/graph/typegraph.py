@@ -11,9 +11,7 @@ from typegraph.gen.core import (
     Rate,
     TypegraphInitParams,
 )
-from typegraph.gen.core import (
-    Cors as CoreCors,
-)
+from typegraph.gen.core import Cors as CoreCors, Rate as CoreRate
 from typegraph.gen.utils import Auth
 from typegraph.graph.params import Cors, RawAuth
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
@@ -35,7 +33,7 @@ class Typegraph:
     dynamic: Optional[bool]
     path: str
     _context: List["Typegraph"] = []
-    rate: Optional[Rate]
+    rate: Optional[CoreRate]
     cors: Optional[CoreCors]
     prefix: Optional[str]
 
@@ -52,17 +50,10 @@ class Typegraph:
         self.dynamic = dynamic
         self.path = str(Path(inspect.stack()[2].filename).resolve())
 
-        self.rate = rate
+        self.rate = Rate(**rate.__dict__) if rate else None
 
         cors = cors or Cors()
-        self.cors = CoreCors(
-            allow_origin=cors.allow_origin,
-            allow_headers=cors.allow_headers,
-            expose_headers=cors.expose_headers,
-            allow_methods=cors.allow_methods,
-            allow_credentials=cors.allow_credentials,
-            max_age_sec=cors.max_age_sec,
-        )
+        self.cors = CoreCors(**cors.__dict__)
         self.prefix = prefix
 
     @classmethod

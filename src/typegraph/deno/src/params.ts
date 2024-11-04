@@ -39,7 +39,7 @@ export class Auth {
 
     return {
       name,
-      auth_data: authData,
+      authData,
       protocol: "jwt",
     };
   }
@@ -56,7 +56,7 @@ export class Auth {
     return {
       name: "basic",
       protocol: "basic",
-      auth_data: authData,
+      authData,
     };
   }
 

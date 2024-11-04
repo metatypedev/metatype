@@ -107,7 +107,7 @@ export class PythonRuntime extends Runtime {
 
     const pyModMatId = runtimes.fromPythonImport(base, {
       module: matId,
-      func_name: name,
+      funcName: name,
       secrets,
     });
 

@@ -32,7 +32,7 @@ class WasmRuntimeWire extends WasmRuntime {
   constructor(artifactPath: string) {
     super(
       runtimes.registerWasmWireRuntime({
-        wasm_artifact: artifactPath,
+        wasmArtifact: artifactPath,
       }),
     );
   }
@@ -54,7 +54,7 @@ class WasmRuntimeWire extends WasmRuntime {
         effect,
       },
       {
-        func_name: name,
+        funcName: name,
       },
     );
 
@@ -70,7 +70,7 @@ class WasmRuntimeReflected extends WasmRuntime {
   constructor(artifactPath: string) {
     super(
       runtimes.registerWasmReflectedRuntime({
-        wasm_artifact: artifactPath,
+        wasmArtifact: artifactPath,
       }),
     );
   }
@@ -92,7 +92,7 @@ class WasmRuntimeReflected extends WasmRuntime {
         effect,
       },
       {
-        func_name: name,
+        funcName: name,
       },
     );
 

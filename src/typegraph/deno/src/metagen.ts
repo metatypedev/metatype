@@ -15,14 +15,14 @@ export class Metagen {
 
   private getFdkConfig(tgOutput: TypegraphOutput, targetName: string) {
     const serializeParams = {
-      typegraph_path: `${this.workspacePath}/tg.ts`,
+      typegraphPath: `${this.workspacePath}/tg.ts`,
       prefix: undefined,
-      artifact_resolution: false,
+      artifactResolution: false,
       codegen: true,
-      prisma_migration: {
-        migrations_dir: "prisma-migrations",
-        migration_actions: [],
-        default_migration_action: {
+      prismaMigration: {
+        migrationsDir: "prisma-migrations",
+        migrationActions: [],
+        defaultMigrationAction: {
           apply: false,
           create: false,
           reset: false,
@@ -32,10 +32,10 @@ export class Metagen {
     } satisfies SerializeParams;
     const frozenOut = freezeTgOutput(serializeParams, tgOutput);
     return {
-      config_json: JSON.stringify(this.genConfig),
-      tg_json: frozenOut.serialize(serializeParams).tgJson,
-      target_name: targetName,
-      workspace_path: this.workspacePath,
+      configJson: JSON.stringify(this.genConfig),
+      tgJson: frozenOut.serialize(serializeParams).tgJson,
+      targetName: targetName,
+      workspacePath: this.workspacePath,
     } as FdkConfig;
   }
 

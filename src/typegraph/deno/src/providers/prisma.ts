@@ -20,7 +20,7 @@ export class PrismaRuntime extends Runtime {
   constructor(name: string, connectionStringSecret: string) {
     const id = runtimes.registerPrismaRuntime({
       name,
-      connection_string_secret: connectionStringSecret,
+      connectionStringSecret,
     });
     super(id);
     this.name = name;
@@ -186,10 +186,10 @@ function prismaLink(
   }
   arg = arg ?? {};
   const typeId = runtimes.prismaLink({
-    target_type: targetType._id,
-    relationship_name: name,
-    foreign_key: arg.fkey,
-    target_field: arg.field,
+    targetType: targetType._id,
+    relationshipName: name,
+    foreignKey: arg.fkey,
+    targetField: arg.field,
     unique: arg.unique,
   });
   return new Typedef(typeId);

@@ -10,4 +10,4 @@ DENO_PERMISSIONS=(
   --allow-run
 )
 
-~/.deno/bin/deno run ${DENO_PERMISSIONS[*]} "$SCRIPT_DIR/src/cmd/main.ts" "$1" "$2"
+deno run ${DENO_PERMISSIONS[*]} "$SCRIPT_DIR/src/cmd/main.ts" "$1" "$2"

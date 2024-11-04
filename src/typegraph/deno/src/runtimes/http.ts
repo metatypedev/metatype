@@ -25,8 +25,8 @@ export class HttpRuntime extends Runtime {
     super(
       runtimes.registerHttpRuntime({
         endpoint,
-        cert_secret: certSecret,
-        basic_auth_secret: basicAuthSecret,
+        certSecret,
+        basicAuthSecret,
       }),
     );
   }
