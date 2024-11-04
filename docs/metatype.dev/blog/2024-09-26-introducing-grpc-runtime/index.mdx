@@ -1,20 +1,39 @@
-import BlogIntro from "@site/src/components/BlogIntro";
-
 # Introducing gRPC Runtime
 
-<BlogIntro text="We're excited to announce the new gRPC Runtime feature in Metatype, further enhancing our platform's ability to create versatile and powerful backends through typegraphs." />
+We're excited to announce the new gRPC Runtime feature in Metatype, further enhancing our platform's ability to create versatile and powerful backends through typegraphs.
 
-## What is Metatype?
+## What is gRPC?
 
-Before we dive into the gRPC Runtime, let's recap what Metatype is all about:
+gRPC, or **g**oogle **R**emote **P**rocedure **C**all, is a high-performance, open-source communication framework initially developed by Google. It enables **efficient and fast communication between microservices** in a distributed system, making it ideal for modern backend architectures.
 
-Metatype is a platform that allows developers to create typegraphs - strongly-typed, composable backend structures. With Metatype, you can:
+Unlike traditional HTTP APIs that use JSON, gRPC relies on **Protocol Buffers** (protobufs) for serializing data, which are more compact and faster to process. This approach allows gRPC to support high-throughput, low-latency communication, which is crucial for applications where speed and efficiency matter, such as in real-time data processing or large-scale distributed systems.
 
-- Construct solid, type-safe backends
-- Leverage multiple runtimes for different services and protocols
-- Expose your typegraphs via GraphQL or HTTP endpoints
+Key benefits of gRPC include:
+- **Cross-language support**: gRPC supports multiple programming languages, allowing services written in different languages to communicate seamlessly.
+- **Strong type safety**: Protocol Buffers ensure type-safe communication, catching errors early and improving reliability.
+- **Bidirectional streaming**: gRPC allows for client and server streaming, enabling continuous data transfer in both directions, ideal for applications like real-time analytics.
 
-## Introducing gRPC Runtime
+In short, gRPC is well-suited for high-performance, scalable backend systems where speed and type safety are essential.
+
+## Why gRPC Matters for Metatype
+
+Metatype is a platform that enables developers to create **typegraphs**—strongly-typed, composable backend structures that can support multiple protocols and runtime environments. With the introduction of the gRPC Runtime, Metatype allows developers to incorporate gRPC services into these typegraphs, further enhancing the platform’s versatility.
+
+By integrating gRPC, Metatype empowers developers to:
+- **Leverage the speed and efficiency of gRPC alongside other protocols** such as HTTP, within a single unified backend structure.
+- **Expose gRPC services via GraphQL or HTTP endpoints**, making them accessible to clients in a way that best suits their needs.
+- **Compose gRPC services with other backend components**, such as databases or other APIs, to create powerful and cohesive backend systems.
+
+## Diagram: gRPC and Metatype Integration
+
+<center>
+    ![gRPC and Metatype Integration Diagram](./GrpcMetatype.drawio.png)
+</center>
+
+
+*Metatype’s gRPC Runtime allows developers to integrate gRPC services into their typegraphs, enabling seamless interaction with gRPC services in the backend.*
+
+## Introducing gRPC Runtime in Metatype
 
 The new gRPC Runtime is the latest addition to Metatype's suite of runtimes, joining existing options like the HTTP runtime. This expansion allows you to incorporate gRPC services into your typegraphs, further enhancing the versatility of your Metatype-powered backends.
 
