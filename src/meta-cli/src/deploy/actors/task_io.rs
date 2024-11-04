@@ -218,7 +218,7 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
             Err(err) => {
                 self.console
                     .error(format!("{scope} failed to parse JSON-RPC message: {err}"));
-                // TODO send JSON-RPC error response (-32700)
+                // TODO cancel task?
                 return;
             }
         };
@@ -231,7 +231,7 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                     console.error(format!(
                         "{scope} failed to validate JSON-RPC request: {err}"
                     ));
-                    // TODO send JSON-RPC error response (-32600)
+                    // TODO cancel task?
                 }
             }
         } else {
@@ -244,7 +244,7 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                     console.error(format!(
                         "{scope} failed to validate JSON-RPC notification: {err}"
                     ));
-                    // TODO send JSON-RPC error response (-32600)
+                    // TODO cancel task?
                 }
             };
         }
@@ -281,7 +281,7 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                         console.error(format!(
                             "{scope} failed to validate JSON-RPC notification (success): {err}"
                         ));
-                        // TODO send JSON-RPC error response (-32600)
+                        // TODO cancel task?
                         return;
                     }
                 };
@@ -294,7 +294,7 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                         console.error(format!(
                             "{scope} failed to validate JSON-RPC notification (failure): {err}"
                         ));
-                        // TODO send JSON-RPC error response (-32600)
+                        // TODO cancel task?
                         return;
                     }
                 };
