@@ -3,8 +3,8 @@ package.edition = "2021"
 package.version = "0.0.1"
 
 [dependencies]
-serde = { version = "1.0.210", features = ["derive"] }
-serde_json = "1.0.128"
+serde = { version = "1.0.214", features = ["derive"] }
+serde_json = "1.0.132"
 reqwest = { version = "0.12", features = ["blocking","json"] }
 
 # The options after here are configured for crates intended to be
