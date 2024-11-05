@@ -17,7 +17,7 @@ use std::time::Duration;
 
 pub mod report;
 pub use report::Report;
-mod signal_handler;
+pub mod signal_handler;
 
 pub mod message {
     use super::*;

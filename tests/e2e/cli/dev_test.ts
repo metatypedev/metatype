@@ -1,13 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "test-utils/mod.ts";
+import { gql, Meta, sleep } from "test-utils/mod.ts";
 import { join, resolve } from "@std/path";
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "@david/dax";
-import { killProcess, Lines, LineWriter } from "../../utils/process.ts";
+import {
+  ctrlcProcess,
+  enumerateAllChildUNIX,
+  isPIDAliveUNIX,
+  Lines,
+  LineWriter,
+  termProcess,
+} from "../../utils/process.ts";
 import { workspaceDir } from "../../utils/dir.ts";
 
 const m = new TestModule(import.meta);
@@ -81,7 +88,7 @@ Meta.test(
     t.addCleanup(async () => {
       await stderr.close();
       await stdin.close();
-      await killProcess(metadev);
+      await termProcess(metadev);
     });
 
     await stderr.readWhile((line) => {
@@ -202,7 +209,7 @@ Meta.test(
     t.addCleanup(async () => {
       await stderr.close();
       await stdin.close();
-      await killProcess(metadev);
+      await termProcess(metadev);
     });
 
     await stderr.readWhile((line) => {
@@ -268,110 +275,143 @@ Meta.test(
 
 const examplesDir = $.path(workspaceDir).join("examples");
 
-Meta.test({
-  name: "meta dev with typegate",
-}, async (t) => {
-  await $`bash build.sh`.cwd(examplesDir.join("typegraphs/metagen/rs"));
+const expectedDeployed = [
+  ["authentication.ts", "authentication"],
+  ["backend-for-frontend.ts", "backend-for-frontend"],
+  ["basic.ts", "basic-authentication"],
+  ["cors.ts", "cors"],
+  ["database.ts", "database"],
+  ["deno.ts", "deno"],
+  ["example_rest.ts", "example-rest"],
+  ["execute.ts", "roadmap-execute"],
+  ["faas-runner.ts", "faas-runner"],
+  ["files-upload.ts", "files-upload"],
+  ["first-typegraph.ts", "first-typegraph"],
+  ["func-ctx.ts", "func-ctx"],
+  ["func-gql.ts", "func-gql"],
+  ["func.ts", "roadmap-func"],
+  ["graphql-server.ts", "graphql-server"],
+  ["graphql.ts", "graphql"],
+  ["grpc.ts", "grpc"],
+  ["http-runtime.ts", "http-runtime"],
+  ["iam-provider.ts", "iam-provider"],
+  ["index.ts", "homepage"],
+  ["injections.ts", "injection-example"],
+  ["jwt.ts", "jwt-authentication"],
+  ["math.ts", "math"],
+  ["metagen-deno.ts", "metagen-deno"],
+  ["metagen-py.ts", "metagen-py"],
+  ["metagen-rs.ts", "metagen-rs"],
+  ["metagen-sdk.ts", "metagen-sdk"],
+  ["microservice-orchestration.ts", "team-a"],
+  ["microservice-orchestration.ts", "team-b"],
+  ["oauth2.ts", "oauth2-authentication"],
+  ["policies.ts", "policies"],
+  ["prisma-runtime.ts", "prisma-runtime"],
+  ["prisma.ts", "roadmap-prisma"],
+  ["programmable-api-gateway.ts", "programmable-api-gateway"],
+  ["quick-start-project.ts", "quick-start-project"],
+  ["random-field.ts", "random-field"],
+  ["rate.ts", "rate"],
+  ["reduce.ts", "roadmap-reduce"],
+  ["rest.ts", "roadmap-rest"],
+  ["roadmap-policies.ts", "roadmap-policies"],
+  ["roadmap-random.ts", "roadmap-random"],
+  ["triggers.ts", "triggers"],
+  ["union-either.ts", "union-either"],
+];
 
-  const metadev = new Deno.Command("meta-full", {
-    cwd: examplesDir.toString(),
-    args: [
-      "dev",
-      `--main-url`,
-      import.meta.resolve("../../../src/typegate/src/main.ts"),
-      `--import-map-url`,
-      import.meta.resolve("../../../import_map.json"),
-      `--gate=http://localhost:0`,
-    ],
-    stdout: "piped",
-    stderr: "piped",
-    env: {
-      MCLI_LOADER_CMD: "deno run -A --config deno.jsonc",
-    },
-  }).spawn();
-  const stderr = new Lines(metadev.stderr);
-  const stdout = new Lines(metadev.stdout);
-  t.addCleanup(async () => {
-    await stderr.close();
-    await stdout.close();
-    // FIXME: it still leaks the child typegate process even
-    // though we the cli has a ctrl_c handler
-    metadev.kill("SIGTERM");
-    await metadev.status;
-  });
-  const deployed: [string, string][] = [];
+Meta.test(
+  {
+    name: "meta dev with typegate",
+  },
+  async (t) => {
+    await $`bash build.sh`.cwd(examplesDir.join("typegraphs/metagen/rs"));
 
-  console.log(new Date());
-  stdout.readWhile((line) => {
-    console.log("meta-full dev>", line);
-    return true;
-  }, null);
+    const metadev = new Deno.Command("meta-full", {
+      cwd: examplesDir.toString(),
+      args: [
+        "dev",
+        `--main-url`,
+        import.meta.resolve("../../../src/typegate/src/main.ts"),
+        `--import-map-url`,
+        import.meta.resolve("../../../import_map.json"),
+        `--gate=http://localhost:0`,
+      ],
+      stdout: "piped",
+      stderr: "piped",
+      stdin: "piped",
+      env: {
+        MCLI_LOADER_CMD: "deno run -A --config deno.jsonc",
+      },
+    }).spawn();
+    const stderr = new Lines(metadev.stderr);
+    const stdout = new Lines(metadev.stdout);
 
-  await stderr.readWhile((rawLine) => {
-    const line = $.stripAnsi(rawLine);
-    console.log("meta-full dev[E]>", line);
-    if (line.match(/failed to deploy/i)) {
-      throw new Error("error detected on line: " + rawLine);
-    }
-    const match = line.match(
-      /successfully deployed typegraph ([\w_-]+) from (.+)$/,
-    );
-    if (match) {
-      const prefix = "typegraphs/";
-      if (!match[2].startsWith(prefix)) {
-        throw new Error("unexpected");
+    const deployed: [string, string][] = [];
+
+    console.log(new Date());
+    stdout.readWhile((line) => {
+      console.log("meta-full dev>", line);
+      return true;
+    }, null);
+
+    await stderr.readWhile((rawLine) => {
+      const line = $.stripAnsi(rawLine);
+      console.log("meta-full dev[E]>", line);
+      if (line.match(/failed to deploy/i)) {
+        throw new Error("error detected on line: " + rawLine);
       }
-      deployed.push([match[2].slice(prefix.length), match[1]]);
-    }
-    return deployed.length < 42;
-  }, 3 * 60 * 1000);
+      const match = line.match(
+        /successfully deployed typegraph ([\w_-]+) from (.+)$/,
+      );
+      if (match) {
+        const prefix = "typegraphs/";
+        if (!match[2].startsWith(prefix)) {
+          throw new Error("unexpected");
+        }
+        deployed.push([match[2].slice(prefix.length), match[1]]);
+      }
+      return deployed.length < expectedDeployed.length;
+    }, 3 * 60 * 1000);
 
-  await t.should("have deployed all the typegraphs", () => {
-    // TODO use `meta list`
-    assertEquals(deployed.sort(), [
-      ["authentication.ts", "authentication"],
-      ["backend-for-frontend.ts", "backend-for-frontend"],
-      ["basic.ts", "basic-authentication"],
-      ["cors.ts", "cors"],
-      ["database.ts", "database"],
-      ["deno.ts", "deno"],
-      ["example_rest.ts", "example-rest"],
-      ["execute.ts", "roadmap-execute"],
-      ["faas-runner.ts", "faas-runner"],
-      ["files-upload.ts", "files-upload"],
-      ["first-typegraph.ts", "first-typegraph"],
-      ["func-ctx.ts", "func-ctx"],
-      ["func-gql.ts", "func-gql"],
-      ["func.ts", "roadmap-func"],
-      ["graphql-server.ts", "graphql-server"],
-      ["graphql.ts", "graphql"],
-      ["grpc.ts", "grpc"],
-      ["http-runtime.ts", "http-runtime"],
-      ["iam-provider.ts", "iam-provider"],
-      ["index.ts", "homepage"],
-      ["injections.ts", "injection-example"],
-      ["jwt.ts", "jwt-authentication"],
-      ["math.ts", "math"],
-      ["metagen-deno.ts", "metagen-deno"],
-      ["metagen-py.ts", "metagen-py"],
-      ["metagen-rs.ts", "metagen-rs"],
-      ["metagen-sdk.ts", "metagen-sdk"],
-      ["microservice-orchestration.ts", "team-a"],
-      ["microservice-orchestration.ts", "team-b"],
-      ["oauth2.ts", "oauth2-authentication"],
-      ["policies.ts", "policies"],
-      ["prisma-runtime.ts", "prisma-runtime"],
-      ["prisma.ts", "roadmap-prisma"],
-      ["programmable-api-gateway.ts", "programmable-api-gateway"],
-      ["quick-start-project.ts", "quick-start-project"],
-      ["random-field.ts", "random-field"],
-      ["rate.ts", "rate"],
-      ["reduce.ts", "roadmap-reduce"],
-      ["rest.ts", "roadmap-rest"],
-      ["roadmap-policies.ts", "roadmap-policies"],
-      ["roadmap-random.ts", "roadmap-random"],
-      ["triggers.ts", "triggers"],
-      ["union-either.ts", "union-either"],
-    ]);
-  });
-});
+    await t.should("have deployed all the typegraphs", () => {
+      // TODO use `meta list`
+      assertEquals(deployed.sort(), expectedDeployed);
+    });
+
+    await t.should("kill meta-full process", async () => {
+      const parentPID = metadev.pid;
+      console.log("meta-full PID", parentPID);
+
+      await metadev.stdin.close();
+      await stdout.close();
+      await stderr.close();
+
+      const childrenPIDs = await enumerateAllChildUNIX(parentPID);
+      console.log("children", childrenPIDs);
+
+      // FIXME: SIGTERM not working in tests
+      // Also tried a manual kill -SIGTERM PID_THIS_META_FULL, same issue.
+      // But it will work with "./target/debug/meta dev" or "cargo run --features typegate  -p meta-cli -- dev"
+      // await termProcess(metadev);
+
+      await ctrlcProcess(metadev);
+
+      // No handle for the children status
+      // This is the simplest way to get around it
+      await sleep(10000);
+      assert(
+        (await isPIDAliveUNIX(parentPID)) == false,
+        `Parent ${parentPID} should be cleaned up`,
+      );
+
+      for (const child of childrenPIDs) {
+        assert(
+          (await isPIDAliveUNIX(child)) == false,
+          `Child PID ${child} should be cleaned up`,
+        );
+      }
+    });
+  },
+);
