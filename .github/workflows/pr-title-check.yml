@@ -1,3 +1,5 @@
+name: pr title check
+run-name: checking pr title for ${{ github.event.pull_request.title || github.ref }}
 on:
   pull_request_target:
     types:
