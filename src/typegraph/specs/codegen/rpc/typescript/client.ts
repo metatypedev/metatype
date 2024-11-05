@@ -15,20 +15,26 @@ type RpcResponse<R, E = null> = {
   id: number | string;
 };
 
-function camelToSnakeCase(obj: Record<string, any>): Record<string, any> {
-  const result: Record<string, any> = {};
+function camelToSnakeCase(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(camelToSnakeCase);
+  } else if (obj && typeof obj === "object") {
+    const result: Record<string, any> = {};
 
-  for (const [key, value] of Object.entries(obj)) {
-    const snakeKey = key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
+    for (const [key, value] of Object.entries(obj)) {
+      const snakeKey = key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
 
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      result[snakeKey] = camelToSnakeCase(value);
-    } else {
-      result[snakeKey] = value;
+      if (value && typeof value === "object") {
+        result[snakeKey] = camelToSnakeCase(value);
+      } else {
+        result[snakeKey] = value;
+      }
     }
+
+    return result;
   }
 
-  return result;
+  return obj;
 }
 
 function rpcRequest<R, P>(method: string, params?: P) {
