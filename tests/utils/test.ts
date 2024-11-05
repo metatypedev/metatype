@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { SystemTypegraph } from "@metatype/typegate/system_typegraphs.ts";
-import { dirname, extname, join } from "@std/path";
+import { basename, dirname, extname, join } from "@std/path";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
 import { assertSnapshot } from "@std/testing/snapshot";
@@ -19,6 +19,10 @@ import {
 } from "@metatype/typegate/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
+import { Typegraph } from "@metatype/typegate/typegraph/types.ts";
+import { ArtifactUploader } from "@typegraph/sdk/tg_artifact_upload.ts";
+import { BasicAuth } from "@typegraph/sdk/tg_deploy.ts";
+import { exists } from "@std/fs/exists";
 
 export interface ParseOptions {
   deploy?: boolean;
@@ -195,11 +199,10 @@ export class MetaTest {
     await this.typegates.next().removeTypegraph(tgName);
   }
 
-  async #engineFromDeployed(
-    tgString: string,
+  async #engineFromTypegraph(
+    tg: Typegraph,
     secrets: Record<string, string>,
   ): Promise<QueryEngine> {
-    const tg = await TypeGraph.parseJson(tgString);
     const { engine, response } = await this.typegate.pushTypegraph(
       tg,
       secrets,
@@ -227,8 +230,27 @@ export class MetaTest {
     const output = stdout.trim();
     const startIndex = output.search(/\{/);
     const tgString = output.slice(startIndex);
+    const tg = await TypeGraph.parseJson(tgString);
 
-    return await this.#engineFromDeployed(tgString, opts.secrets ?? {});
+    const artifacts = Object.values(tg.meta.artifacts);
+    const tgUrl = `http://localhost:${this.port}`;
+    const tgName = TypeGraph.formatName(tg);
+    const auth = new BasicAuth("username", "password");
+    const headers = new Headers();
+
+    if (artifacts.length > 0) {
+      const artifactUploader = new ArtifactUploader(
+        tgUrl,
+        artifacts,
+        tgName,
+        auth,
+        headers,
+        join(this.workingDir, path),
+      );
+      await artifactUploader.uploadArtifacts();
+    }
+
+    return await this.#engineFromTypegraph(tg, opts.secrets ?? {});
   }
 
   async unregister(engine: QueryEngine) {

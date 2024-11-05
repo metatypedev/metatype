@@ -15,13 +15,11 @@ console.log("deno2node");
 await dnt.emptyDir(outDir);
 
 const entryPoints: dnt.BuildOptions["entryPoints"] = [join(srcDir, "index.ts")];
-for (
-  const { name, path } of expandGlobSync("./**/*.*", {
-    root: srcDir,
-    includeDirs: false,
-    globstar: true,
-  })
-) {
+for (const { name, path } of expandGlobSync("./**/*.*", {
+  root: srcDir,
+  includeDirs: false,
+  globstar: true,
+})) {
   if (path.endsWith(".d.ts")) {
     continue;
   }
@@ -76,8 +74,6 @@ await dnt.build({
       {
         [fromRoot("README.md")]: "README.md",
         [fromRoot("tools/LICENSE-MPL-2.0.md")]: "LICENSE.md",
-        [fromRoot("./src/typegraph/deno/src/gen/typegraph_core.core.wasm")]:
-          "./esm/gen/typegraph_core.core.wasm",
       },
     );
   },

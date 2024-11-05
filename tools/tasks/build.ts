@@ -25,18 +25,17 @@ export default {
   },
 
   "build-tgraph-core": {
-    inherit: ["_rust", "_wasm"],
+    inherit: ["_rust"],
     vars: {
-      WASM_FILE: "target/wasm/release/typegraph_core.wasm",
+      TG_CODEGEN: "src/typegraph/specs/codegen/tg-codegen",
     },
     async fn($) {
-      const target = "wasm32-unknown-unknown";
-      await $`cargo build -p typegraph_core --target ${target} --release --target-dir target/wasm`;
-      await $`cp target/wasm/${target}/release/typegraph_core.wasm $WASM_FILE.tmp`;
-      if ($.env["WASM_OPT"]) {
-        await $`wasm-opt -Oz $WASM_FILE.tmp -o $WASM_FILE.tmp`;
-      }
-      await $`wasm-tools component new $WASM_FILE.tmp -o $WASM_FILE`;
+      const genPath = await $.removeIfExists(
+        $.workingDir.join("src/typegraph/core/src/types/sdk"),
+      );
+
+      await $`chmod +x $TG_CODEGEN`;
+      await $`$TG_CODEGEN rust-lib ${genPath}`;
     },
   },
   "build-tgraph-ts": {
@@ -47,9 +46,7 @@ export default {
         $.workingDir.join("src/typegraph/deno/src/gen"),
       );
 
-      await $`jco transpile $WASM_FILE -o ${genPath} --map metatype:typegraph/host=../host/host.js`;
-      // FIXME: deno workspace discovery broken when
-      await $`bash -c "deno run -A tools/jsr/fix-declarations.ts"`;
+      await $`$TG_CODEGEN typescript ${genPath}`;
     },
   },
   "build-tgraph-ts-node": {
@@ -68,10 +65,11 @@ export default {
     dependsOn: "build-tgraph-core",
     inherit: ["build-tgraph-core", "_python"],
     async fn($) {
-      await $.removeIfExists(
-        $.workingDir.join("typegraph/python/typegraph/gen"),
+      const genPath = await $.removeIfExists(
+        $.workingDir.join("src/typegraph/python/typegraph/gen"),
       );
-      await $`poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir src/typegraph/python/typegraph/gen`;
+
+      await $`$TG_CODEGEN python ${genPath}`;
       await $`poetry run ruff check src/typegraph/python/typegraph`;
     },
   },

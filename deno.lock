@@ -5,6 +5,7 @@
       "jsr:@david/dax@0.41.0": "jsr:@david/dax@0.41.0",
       "jsr:@david/which@^0.4.1": "jsr:@david/which@0.4.1",
       "jsr:@std/archive@^0.225.0": "jsr:@std/archive@0.225.1",
+      "jsr:@std/assert": "jsr:@std/assert@1.0.6",
       "jsr:@std/assert@^0.221.0": "jsr:@std/assert@0.221.0",
       "jsr:@std/assert@^1.0.2": "jsr:@std/assert@1.0.4",
       "jsr:@std/assert@^1.0.4": "jsr:@std/assert@1.0.6",
@@ -39,6 +40,7 @@
       "jsr:@std/io@^0.224.5": "jsr:@std/io@0.224.6",
       "jsr:@std/io@^0.224.6": "jsr:@std/io@0.224.6",
       "jsr:@std/log@^0.224.5": "jsr:@std/log@0.224.6",
+      "jsr:@std/path": "jsr:@std/path@1.0.4",
       "jsr:@std/path@0.221.0": "jsr:@std/path@0.221.0",
       "jsr:@std/path@^0.221.0": "jsr:@std/path@0.221.0",
       "jsr:@std/path@^1.0.2": "jsr:@std/path@1.0.4",
@@ -49,6 +51,7 @@
       "jsr:@std/streams@1": "jsr:@std/streams@1.0.4",
       "jsr:@std/streams@^1.0.2": "jsr:@std/streams@1.0.4",
       "jsr:@std/testing@^1.0.1": "jsr:@std/testing@1.0.2",
+      "jsr:@std/text@^1.0.7": "jsr:@std/text@1.0.8",
       "jsr:@std/url@^0.225.0": "jsr:@std/url@0.225.0",
       "jsr:@std/uuid@^1.0.1": "jsr:@std/uuid@1.0.2",
       "jsr:@std/yaml@^1.0.4": "jsr:@std/yaml@1.0.5",
@@ -58,10 +61,13 @@
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:chance@1.1.11": "npm:chance@1.1.11",
       "npm:graphql@16.8.1": "npm:graphql@16.8.1",
+      "npm:json-schema-faker@0.5.3": "npm:json-schema-faker@0.5.3",
       "npm:lodash@4.17.21": "npm:lodash@4.17.21",
       "npm:mathjs@11.11.1": "npm:mathjs@11.11.1",
       "npm:multiformats@13.1.0": "npm:multiformats@13.1.0",
       "npm:pg@8.12.0": "npm:pg@8.12.0",
+      "npm:tree-sitter-typescript@^0.23.0": "npm:tree-sitter-typescript@0.23.0_tree-sitter@0.21.1",
+      "npm:tree-sitter@^0.21.1": "npm:tree-sitter@0.21.1",
       "npm:validator@13.12.0": "npm:validator@13.12.0",
       "npm:zod-validation-error@3.3.0": "npm:zod-validation-error@3.3.0_zod@3.23.8",
       "npm:zod@3.23.8": "npm:zod@3.23.8"
@@ -280,6 +286,9 @@
           "jsr:@std/path@^1.0.4"
         ]
       },
+      "@std/text@1.0.8": {
+        "integrity": "40ba34caa095f393e78796e5eda37b8b4e2cc6cfd6f51f34658ad7487b1451e4"
+      },
       "@std/url@0.225.0": {
         "integrity": "fc854cc8a720e9c974904071140b462880d8347030006f43193935ae06c7a0f9",
         "dependencies": [
@@ -369,6 +378,16 @@
           "debug": "debug@4.3.6"
         }
       },
+      "argparse@1.0.10": {
+        "integrity": "sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==",
+        "dependencies": {
+          "sprintf-js": "sprintf-js@1.0.3"
+        }
+      },
+      "call-me-maybe@1.0.2": {
+        "integrity": "sha512-HpX65o1Hnr9HH25ojC1YGs7HCQLq0GCOibSaWER0eNpgJ/Z1MZv2mTc7+xh6WOPxbRVcmgbv4hGU+uSQ/2xFZQ==",
+        "dependencies": {}
+      },
       "chance@1.1.11": {
         "integrity": "sha512-kqTg3WWywappJPqtgrdvbA380VoXO2eu9VCV895JgbyHsaErXdyHK9LOZ911OvAk6L0obK7kDk9CGs8+oBawVA==",
         "dependencies": {}
@@ -395,6 +414,14 @@
         "integrity": "sha512-nV5aVWW1K0wEiUIEdZ4erkGGH8mDxGyxSeqPzRNtWP7ataw+/olFObw7hujFWlVjNsaDFw5VZ5NzVSIqRgfTiw==",
         "dependencies": {}
       },
+      "esprima@4.0.1": {
+        "integrity": "sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==",
+        "dependencies": {}
+      },
+      "format-util@1.0.5": {
+        "integrity": "sha512-varLbTj0e0yVyRpqQhuWV+8hlePAgaoFRhNFj50BNjEIrw1/DphHSObtqwskVCPWNgzwPoQrZAbfa/SBiicNeg==",
+        "dependencies": {}
+      },
       "fraction.js@4.3.4": {
         "integrity": "sha512-pwiTgt0Q7t+GHZA4yaLjObx4vXmmdcS0iSJ19o8d/goUGgItX9UZWKWNnLHehxviD8wU2IWRsnR8cD5+yOJP2Q==",
         "dependencies": {}
@@ -412,6 +439,32 @@
       },
       "javascript-natural-sort@0.7.1": {
         "integrity": "sha512-nO6jcEfZWQXDhOiBtG2KvKyEptz7RVbpGP4vTD2hLBdmNQSsCiicO2Ioinv6UI4y9ukqnBpy+XZ9H6uLNgJTlw==",
+        "dependencies": {}
+      },
+      "js-yaml@3.14.1": {
+        "integrity": "sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==",
+        "dependencies": {
+          "argparse": "argparse@1.0.10",
+          "esprima": "esprima@4.0.1"
+        }
+      },
+      "json-schema-faker@0.5.3": {
+        "integrity": "sha512-BeIrR0+YSrTbAR9dOMnjbFl1MvHyXnq+Wpdw1FpWZDHWKLzK229hZ5huyPcmzFUfVq1ODwf40WdGVoE266UBUg==",
+        "dependencies": {
+          "json-schema-ref-parser": "json-schema-ref-parser@6.1.0",
+          "jsonpath-plus": "jsonpath-plus@7.2.0"
+        }
+      },
+      "json-schema-ref-parser@6.1.0": {
+        "integrity": "sha512-pXe9H1m6IgIpXmE5JSb8epilNTGsmTb2iPohAXpOdhqGFbQjNeHHsZxU+C8w6T81GZxSPFLeUoqDJmzxx5IGuw==",
+        "dependencies": {
+          "call-me-maybe": "call-me-maybe@1.0.2",
+          "js-yaml": "js-yaml@3.14.1",
+          "ono": "ono@4.0.11"
+        }
+      },
+      "jsonpath-plus@7.2.0": {
+        "integrity": "sha512-zBfiUPM5nD0YZSBT/o/fbCUlCcepMIdP0CJZxM1+KgA4f2T206f6VAg9e7mX35+KlMaIc5qXW34f3BnwJ3w+RA==",
         "dependencies": {}
       },
       "lodash@4.17.21": {
@@ -443,6 +496,20 @@
       "multiformats@13.1.0": {
         "integrity": "sha512-HzdtdBwxsIkzpeXzhQ5mAhhuxcHbjEHH+JQoxt7hG/2HGFjjwyolLo7hbaexcnhoEuV4e0TNJ8kkpMjiEYY4VQ==",
         "dependencies": {}
+      },
+      "node-addon-api@8.2.1": {
+        "integrity": "sha512-vmEOvxwiH8tlOcv4SyE8RH34rI5/nWVaigUeAUPawC6f0+HoDthwI0vkMu4tbtsZrXq6QXFfrkhjofzKEs5tpA==",
+        "dependencies": {}
+      },
+      "node-gyp-build@4.8.2": {
+        "integrity": "sha512-IRUxE4BVsHWXkV/SFOut4qTlagw2aM8T5/vnTsmrHJvVoKueJHRc/JaFND7QDDc61kLYUJ6qlZM3sqTSyx2dTw==",
+        "dependencies": {}
+      },
+      "ono@4.0.11": {
+        "integrity": "sha512-jQ31cORBFE6td25deYeD80wxKBMj+zBmHTrVxnc6CKhx8gho6ipmWM5zj/oeoqioZ99yqBls9Z/9Nss7J26G2g==",
+        "dependencies": {
+          "format-util": "format-util@1.0.5"
+        }
       },
       "pg-cloudflare@1.1.1": {
         "integrity": "sha512-xWPagP/4B6BgFO+EKz3JONXv3YDgvkbVrGw2mTo3D6tVDQRh1e7cqVGvyR3BE+eQgAvx1XhW/iEASj4/jCWl3Q==",
@@ -523,9 +590,28 @@
         "integrity": "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==",
         "dependencies": {}
       },
+      "sprintf-js@1.0.3": {
+        "integrity": "sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==",
+        "dependencies": {}
+      },
       "tiny-emitter@2.1.0": {
         "integrity": "sha512-NB6Dk1A9xgQPMoGqC5CVXn123gWyte215ONT5Pp5a0yt4nlEoO1ZWeCwpncaekPHXO60i47ihFnZPiRPjRMq4Q==",
         "dependencies": {}
+      },
+      "tree-sitter-typescript@0.23.0_tree-sitter@0.21.1": {
+        "integrity": "sha512-hRy5O9d+9ON4HxIWWxkI4zonrw2v/WNN1JoiGW5HkXfC9K2R3p53ugMvs6Vs4T7ASCwggsoQ75LNdgpExC/zgQ==",
+        "dependencies": {
+          "node-addon-api": "node-addon-api@8.2.1",
+          "node-gyp-build": "node-gyp-build@4.8.2",
+          "tree-sitter": "tree-sitter@0.21.1"
+        }
+      },
+      "tree-sitter@0.21.1": {
+        "integrity": "sha512-7dxoA6kYvtgWw80265MyqJlkRl4yawIjO7S5MigytjELkX43fV2WsAXzsNfO7sBpPPCF5Gp0+XzHk0DwLCq3xQ==",
+        "dependencies": {
+          "node-addon-api": "node-addon-api@8.2.1",
+          "node-gyp-build": "node-gyp-build@4.8.2"
+        }
       },
       "tslib@2.6.3": {
         "integrity": "sha512-xNvxJEOUiWPGhUuUdQgAJPKOOJfGnIyKySOc09XkKsgdUV/3E2zvwZYdejjmRgPCgcym1juLH3226yA7sEFJKQ==",

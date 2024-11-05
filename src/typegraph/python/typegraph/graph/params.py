@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import json
 from typing import List, Optional, TYPE_CHECKING, Any
 from typegraph.gen import utils
-from typegraph.gen.core import Rate as CoreRate
 from typegraph.sdk import sdk_utils
 
 if TYPE_CHECKING:
