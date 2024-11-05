@@ -44,7 +44,7 @@ export const forceOptionToValue = <T>(m: Option<T>): T | undefined => {
 export const createUrl = (
   base: string,
   path: string,
-  search_params?: URLSearchParams
+  search_params?: URLSearchParams,
 ): string => {
   if (!base.endsWith("/")) {
     base = base + "/";
@@ -74,7 +74,7 @@ export const createUrl = (
 
 export function ensure(
   predicat: boolean,
-  message: string | (() => string)
+  message: string | (() => string),
 ): asserts predicat is true {
   if (!predicat) {
     throw Error(typeof message === "function" ? message() : message);
@@ -83,7 +83,7 @@ export function ensure(
 
 export function ensureNonNullable<T>(
   value: T,
-  message: string | (() => string)
+  message: string | (() => string),
 ): asserts value is NonNullable<T> {
   if (value == null) {
     throw Error(typeof message === "function" ? message() : message);
@@ -92,7 +92,7 @@ export function ensureNonNullable<T>(
 
 export const collectFields = (
   obj: Record<string, unknown>,
-  fields: string[]
+  fields: string[],
 ) => {
   return fields.reduce((agg, f) => ({ ...agg, [f]: obj[f] }), {});
 };
@@ -118,7 +118,7 @@ function isChildStage(parentId: string, stageId: string) {
 
 export function iterParentStages(
   stages: ComputeStage[],
-  cb: (stage: ComputeStage, children: ComputeStage[]) => void
+  cb: (stage: ComputeStage, children: ComputeStage[]) => void,
 ) {
   let cursor = 0;
   while (cursor < stages.length) {
@@ -140,7 +140,7 @@ export const b64encode = (v: string): string => {
 };
 
 export function nativeResult<R>(
-  res: { Ok: R } | { Err: { message: string } }
+  res: { Ok: R } | { Err: { message: string } },
 ): R {
   if ("Err" in res) {
     throw new Error(res.Err.message);
@@ -163,7 +163,7 @@ export function closestWord(
   str: string,
   list: string[],
   ignoreCase = true,
-  maxDistance = 3
+  maxDistance = 3,
 ) {
   if (list.length == 0) {
     return null;

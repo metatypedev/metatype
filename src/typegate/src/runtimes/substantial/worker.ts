@@ -32,27 +32,34 @@ self.onmessage = async function (event) {
         .then((wfResult: unknown) => {
           self.postMessage(
             Ok(
-              Msg(type, {
-                kind: "SUCCESS",
-                result: wfResult,
-                run: runCtx!.getRun(),
-                schedule,
-              } satisfies WorkflowResult)
-            )
+              Msg(
+                type,
+                {
+                  kind: "SUCCESS",
+                  result: wfResult,
+                  run: runCtx!.getRun(),
+                  schedule,
+                } satisfies WorkflowResult,
+              ),
+            ),
           );
         })
         .catch((wfException: unknown) => {
           self.postMessage(
             Ok(
-              Msg(type, {
-                kind: "FAIL",
-                result: errorToString(wfException),
-                exception:
-                  wfException instanceof Error ? wfException : undefined,
-                run: runCtx!.getRun(),
-                schedule,
-              } satisfies WorkflowResult)
-            )
+              Msg(
+                type,
+                {
+                  kind: "FAIL",
+                  result: errorToString(wfException),
+                  exception: wfException instanceof Error
+                    ? wfException
+                    : undefined,
+                  run: runCtx!.getRun(),
+                  schedule,
+                } satisfies WorkflowResult,
+              ),
+            ),
           );
         });
       break;

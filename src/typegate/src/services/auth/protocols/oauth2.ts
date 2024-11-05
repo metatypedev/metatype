@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { TypegateConfigBase } from "../../../config.ts";
-import { OAuth2Client, type OAuth2ClientConfig, type Tokens } from "oauth2_client";
+import {
+  OAuth2Client,
+  type OAuth2ClientConfig,
+  type Tokens,
+} from "oauth2_client";
 import { randomUUID, type TypegateCryptoKeys } from "../../../crypto.ts";
 import type { AdditionalAuthParams, JWTClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";

@@ -24,7 +24,7 @@ export const sharedConfig = await configOrExit(
     Object.fromEntries(
       envSharedWithWorkers
         .map((k) => [k.toLocaleLowerCase(), Deno.env.get(k)])
-        .filter(([_, v]) => v !== undefined)
+        .filter(([_, v]) => v !== undefined),
     ),
-  ]
+  ],
 );

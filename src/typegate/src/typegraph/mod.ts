@@ -222,7 +222,7 @@ export class TypeGraph implements AsyncDisposable {
           (mat) => mat.runtime === idx,
         );
 
-        logger.info("initializing runtime {}", { name: runtime.name })
+        logger.info("initializing runtime {}", { name: runtime.name });
         return initRuntime(runtime.name, {
           typegate,
           typegraph,
@@ -384,13 +384,13 @@ export class TypeGraph implements AsyncDisposable {
     }
     ensure(
       isObject(type) ||
-      isInteger(type) ||
-      isNumber(type) ||
-      isBoolean(type) ||
-      isFunction(type) ||
-      isString(type) ||
-      isUnion(type) ||
-      isEither(type),
+        isInteger(type) ||
+        isNumber(type) ||
+        isBoolean(type) ||
+        isFunction(type) ||
+        isString(type) ||
+        isUnion(type) ||
+        isEither(type),
       `object expected but got ${type.type}`,
     );
     return (x: any) => {

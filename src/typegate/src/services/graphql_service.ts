@@ -9,7 +9,10 @@ import {
   type Operations,
   parseRequest,
 } from "../transports/graphql/request_parser.ts";
-import { findOperation, type FragmentDefs } from "../transports/graphql/graphql.ts";
+import {
+  findOperation,
+  type FragmentDefs,
+} from "../transports/graphql/graphql.ts";
 import { forceAnyToOption } from "../utils.ts";
 import type { QueryEngine } from "../engine/query_engine.ts";
 import type * as ast from "graphql/ast";

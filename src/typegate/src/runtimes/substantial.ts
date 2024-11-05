@@ -67,7 +67,7 @@ export class SubstantialRuntime extends Runtime {
     backend: Backend,
     queue: string,
     agent: Agent,
-    typegate: Typegate
+    typegate: Typegate,
   ) {
     super(typegraphName);
     this.logger = getLogger(`substantial:'${typegraphName}'`);
@@ -131,7 +131,7 @@ export class SubstantialRuntime extends Runtime {
       tgName,
       tg.meta.artifacts,
       runtimeArgs.workflows,
-      typegate
+      typegate,
     );
 
     agent.start(wfDescriptions);
@@ -143,12 +143,12 @@ export class SubstantialRuntime extends Runtime {
       backend,
       queue,
       agent,
-      typegate
+      typegate,
     );
     await instance.#prepareWorkflowFiles(
       tg.meta.artifacts,
       runtimeArgs.workflows,
-      typegate
+      typegate,
     );
 
     return instance;
@@ -224,8 +224,9 @@ export class SubstantialRuntime extends Runtime {
         return ({ name: workflowName }) => {
           this.#checkWorkflowExistOrThrow(workflowName);
 
-          const res =
-            this.agent.workerManager.getAllocatedResources(workflowName);
+          const res = this.agent.workerManager.getAllocatedResources(
+            workflowName,
+          );
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
@@ -247,7 +248,7 @@ export class SubstantialRuntime extends Runtime {
       const schedule = new Date().toJSON();
 
       logger.info(
-        `Start request "${workflowName}" received: new run "${runId}" should be scheduled.`
+        `Start request "${workflowName}" received: new run "${runId}" should be scheduled.`,
       );
       await this.agent.schedule({
         backend: this.backend,
@@ -404,13 +405,13 @@ export class SubstantialRuntime extends Runtime {
   async #prepareWorkflowFiles(
     artifacts: Record<string, Artifact>,
     fileDescriptions: Array<WorkflowFileDescription>,
-    typegate: Typegate
+    typegate: Typegate,
   ) {
     const descriptions = await getWorkflowDescriptions(
       this.typegraphName,
       artifacts,
       fileDescriptions,
-      typegate
+      typegate,
     );
 
     for (const wf of descriptions) {
@@ -424,14 +425,16 @@ export class SubstantialRuntime extends Runtime {
       const closest = closestWord(name, known);
       if (closest) {
         throw new Error(
-          `workflow "${name}" does not exist, did you mean "${closest}"?`
+          `workflow "${name}" does not exist, did you mean "${closest}"?`,
         );
       }
 
       throw new Error(
-        `workflow "${name}" does not exist, available workflows are ${known
-          .map((name) => `"${name}"`)
-          .join(", ")}`
+        `workflow "${name}" does not exist, available workflows are ${
+          known
+            .map((name) => `"${name}"`)
+            .join(", ")
+        }`,
       );
     }
   }
@@ -441,7 +444,7 @@ async function getWorkflowDescriptions(
   typegraphName: string,
   artifacts: Record<string, Artifact>,
   descriptions: Array<WorkflowFileDescription>,
-  typegate: Typegate
+  typegate: Typegate,
 ) {
   const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
   logger.info(`Resolved runtime artifacts at ${basePath}`);
@@ -456,7 +459,7 @@ async function getWorkflowDescriptions(
           typegraphName,
           artifacts,
           description,
-          typegate
+          typegate,
         );
 
         workflowDescriptions.push({
@@ -477,7 +480,7 @@ async function getWorkflowEntryPointPath(
   typegraphName: string,
   artifacts: Record<string, Artifact>,
   description: WorkflowFileDescription,
-  typegate: Typegate
+  typegate: Typegate,
 ) {
   const entryPoint = artifacts[description.file as string];
   const deps = (description.deps as string[]).map((dep) => artifacts[dep]);

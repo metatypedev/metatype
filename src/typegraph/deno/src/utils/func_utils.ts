@@ -167,7 +167,10 @@ export async function execRequest(
   try {
     const response = await fetch(url, reqInit);
     if (!response.ok) {
-      log.error("error response json", await response.json().catch(_err => 'non json response'));
+      log.error(
+        "error response json",
+        await response.json().catch((_err) => "non json response"),
+      );
       throw Error(
         `${errMsg}: request failed with status ${response.status} (${response.statusText})`,
       );

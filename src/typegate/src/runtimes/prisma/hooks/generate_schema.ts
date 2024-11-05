@@ -6,7 +6,6 @@ import type { PushHandler } from "../../../typegate/hooks.ts";
 import type { SecretManager, TypeGraphDS } from "../../../typegraph/mod.ts";
 import type {
   Cardinality,
-  Injection,
   Model,
   Property,
   Relationship,
@@ -108,9 +107,7 @@ class FieldBuilder {
                   tags.push("@default(uuid())");
                   break;
                 default:
-                  throw new Error(
-                    "unsupported auto attribute on type string",
-                  );
+                  throw new Error("unsupported auto attribute on type string");
               }
               break;
             case "Int":
@@ -133,8 +130,8 @@ class FieldBuilder {
 
       case "relationship": {
         const quant = FieldBuilder.#quantifier(prop.cardinality);
-        const rel = this.relationships.find((r) =>
-          r.name === prop.relationshipName
+        const rel = this.relationships.find(
+          (r) => r.name === prop.relationshipName,
         );
         const tags: string[] = [];
         if (rel == null) {
@@ -155,20 +152,21 @@ class FieldBuilder {
 
           case "left": {
             const toPascalCase = (s: string) => s[0].toUpperCase() + s.slice(1);
-            const leftModel = this.models.find((m) =>
-              m.typeIdx === rel.left.type_idx
+            const leftModel = this.models.find(
+              (m) => m.typeIdx === rel.left.type_idx,
             );
             if (leftModel == null) {
               throw new Error("left model not found");
             }
-            const fields = leftModel.idFields.map((key) =>
-              `${prop.key}${toPascalCase(key)}`
+            const fields = leftModel.idFields.map(
+              (key) => `${prop.key}${toPascalCase(key)}`,
             );
             const fkeys = leftModel.idFields.map((key) => {
               const idProp = leftModel.props.find((p) => p.key === key)!;
-              const modelField = this.build(
-                { ...idProp, cardinality: prop.cardinality },
-              );
+              const modelField = this.build({
+                ...idProp,
+                cardinality: prop.cardinality,
+              });
               modelField.name = `${prop.key}${toPascalCase(modelField.name)}`;
               modelField.tags = modelField.tags.filter(
                 (t) => !t.startsWith("@default"),
@@ -269,7 +267,7 @@ class FieldBuilder {
 }
 
 const SUPPORTED_PROVIDERS = ["postgresql", "mysql", "mongodb"] as const;
-type Provider = typeof SUPPORTED_PROVIDERS[number];
+type Provider = (typeof SUPPORTED_PROVIDERS)[number];
 
 export class SchemaGenerator {
   #provider: Provider;
@@ -316,7 +314,10 @@ export class SchemaGenerator {
       modelFields.push(field);
       modelFields.push(...field.fkeys);
       if (field.fkeys.length > 0) {
-        fkeysMap.set(field.name, field.fkeys.map((fkey) => fkey.name));
+        fkeysMap.set(
+          field.name,
+          field.fkeys.map((fkey) => fkey.name),
+        );
       }
       if (
         field.fkeysUnique &&
@@ -342,17 +343,16 @@ export class SchemaGenerator {
     }
 
     // expand foreign keys
-    const uniqueConstraints = model.uniqueConstraints.map(
-      (constraint) => constraint.flatMap((key) => fkeysMap.get(key) ?? [key]),
+    const uniqueConstraints = model.uniqueConstraints.map((constraint) =>
+      constraint.flatMap((key) => fkeysMap.get(key) ?? [key])
     );
     for (const constraint of uniqueConstraints) {
       const names = constraint.join(", ");
       tags.push(`@@unique([${names}])`);
     }
 
-    const formattedFields = modelFields.map((field) =>
-      `    ${field.stringify()}\n`
-    )
+    const formattedFields = modelFields
+      .map((field) => `    ${field.stringify()}\n`)
       .join("");
     const formattedTags = tags.length > 0
       ? "\n" + tags.map((tag) => `    ${tag}\n`).join("")
@@ -362,9 +362,7 @@ export class SchemaGenerator {
   }
 
   generate() {
-    return this.#models.map((model) => this.generateModel(model)).join(
-      "\n\n",
-    );
+    return this.#models.map((model) => this.generateModel(model)).join("\n\n");
   }
 }
 

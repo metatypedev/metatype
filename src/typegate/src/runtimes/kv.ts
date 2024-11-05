@@ -10,8 +10,6 @@ import type { Resolver, RuntimeInitParams } from "../types.ts";
 import { registerRuntime } from "./mod.ts";
 import { Runtime } from "./Runtime.ts";
 
-const logger = getLogger(import.meta);
-
 @registerRuntime("kv")
 export class KvRuntime extends Runtime {
   private logger: Logger;

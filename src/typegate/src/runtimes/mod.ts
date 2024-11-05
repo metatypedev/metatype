@@ -11,7 +11,7 @@ interface RegistrableRuntime {
 }
 
 export function registerRuntime<T extends RegistrableRuntime>(
-  name: string
+  name: string,
 ): (runtime: T) => void {
   return (runtime: T) => {
     if (registeredRuntimes.has(name)) {
@@ -23,7 +23,7 @@ export function registerRuntime<T extends RegistrableRuntime>(
 
 export async function initRuntime(
   name: string,
-  params: RuntimeInitParams
+  params: RuntimeInitParams,
 ): Promise<Runtime> {
   const init = registeredRuntimes.get(name);
   if (!init) {

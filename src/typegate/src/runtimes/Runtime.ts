@@ -3,7 +3,7 @@
 
 import type { ComputeStage } from "../engine/query_engine.ts";
 import { equal } from "@std/assert/equal";
-import type { Resolver, ResolverArgs } from "../types.ts";
+import type { Resolver } from "../types.ts";
 
 export abstract class Runtime {
   readonly id: string;
@@ -65,10 +65,9 @@ export abstract class Runtime {
         materializedStages.push(...materializeRoot(s));
       } else {
         materializedStages.push(
-          s.withResolver(
-            Runtime.resolveFromParent(s.props.node),
-            [s.props.parent!.id()],
-          ),
+          s.withResolver(Runtime.resolveFromParent(s.props.node), [
+            s.props.parent!.id(),
+          ]),
         );
       }
     }

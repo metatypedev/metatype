@@ -13,9 +13,6 @@ import { DenoMessenger } from "./deno_messenger.ts";
 import type { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
-import { getLogger } from "../../log.ts";
-
-const logger = getLogger(import.meta);
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => args,
@@ -188,9 +185,7 @@ export class DenoRuntime extends Runtime {
 
       const typename = getTypename();
 
-      return [
-        stage.withResolver(() => typename),
-      ];
+      return [stage.withResolver(() => typename)];
     }
 
     if (stage.props.materializer != null) {

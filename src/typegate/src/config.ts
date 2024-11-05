@@ -26,7 +26,7 @@ async function getHostname() {
     return new TextDecoder().decode(stdout).trim();
   } catch (_e) {
     console.debug(
-      `Not hostname binary found, falling back to env var HOSTNAME`
+      `Not hostname binary found, falling back to env var HOSTNAME`,
     );
     return Deno.env.get("HOSTNAME") ?? "UNKNOWN_HOSTNAME";
   }
@@ -51,7 +51,7 @@ export const globalConfig = configOrExit(
   [
     mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
     parseArgs(Deno.args) as Record<string, unknown>,
-  ]
+  ],
 );
 
 export const defaultTypegateConfigBase = {
@@ -70,7 +70,7 @@ const SYNC_PREFIX = "sync_";
 function filterMapSyncKeys(obj: Record<string, unknown>) {
   return mapKeys(
     filterKeys(obj, (k) => k.startsWith(SYNC_PREFIX)),
-    (k) => k.slice(SYNC_PREFIX.length)
+    (k) => k.slice(SYNC_PREFIX.length),
   );
 }
 
@@ -79,8 +79,9 @@ function envsAsConfig() {
 }
 
 function argsAsConfig() {
-  return mapKeys(parseArgs(Deno.args) as Record<string, unknown>, (k) =>
-    k.toLocaleLowerCase().replace("-", "_")
+  return mapKeys(
+    parseArgs(Deno.args) as Record<string, unknown>,
+    (k) => k.toLocaleLowerCase().replace("-", "_"),
   );
 }
 

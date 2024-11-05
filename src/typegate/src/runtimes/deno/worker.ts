@@ -43,7 +43,7 @@ async function import_func(op: number, task: ImportFuncTask) {
     return await mod[name](
       args,
       internals,
-      make_internal(internals, additionalHeaders)
+      make_internal(internals, additionalHeaders),
     );
   }
   throw new Error(`"${name}" is not a valid method`);
@@ -75,7 +75,7 @@ function register_func(_: null, task: RegisterFuncTask) {
 
   registry.set(
     op,
-    new Function(`"use strict"; ${fnCode}; return _my_lambda;`)()
+    new Function(`"use strict"; ${fnCode}; return _my_lambda;`)(),
   );
 }
 

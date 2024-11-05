@@ -7,7 +7,7 @@ import { TaskContext } from "./runtimes/deno/shared_types.ts";
 
 export function make_internal(
   { meta: { url, token } }: TaskContext,
-  additionalHeaders: Record<string, string>
+  additionalHeaders: Record<string, string>,
 ) {
   const gql = (query: readonly string[], ...args: unknown[]) => {
     if (args.length > 0) {
@@ -16,7 +16,7 @@ export function make_internal(
     // console.log(query);
     return {
       run: async (
-        variables: Record<string, unknown>
+        variables: Record<string, unknown>,
       ): Promise<Record<string, unknown>> => {
         const res = await fetch(url, {
           method: "POST",
