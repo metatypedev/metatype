@@ -9,6 +9,7 @@ use crate::{config::Config, interlude::*};
 use colored::OwoColorize;
 use futures::channel::oneshot;
 use indexmap::IndexMap;
+use pathdiff::diff_paths;
 use signal_handler::set_stop_recipient;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -210,9 +211,16 @@ impl<A: TaskAction + 'static> TaskManagerInit<A> {
     ) -> Option<Addr<WatcherActor<A>>> {
         match &self.task_source {
             TaskSource::Static(paths) => {
+                let working_dir = self
+                    .action_generator
+                    .get_shared_config()
+                    .working_dir
+                    .clone();
                 for path in paths {
+                    let relative_path = diff_paths(path, &working_dir);
                     addr.do_send(AddTask {
-                        task_ref: task_generator.generate(path.clone().into(), 0),
+                        task_ref: task_generator
+                            .generate(relative_path.unwrap_or_else(|| path.clone()).into(), 0),
                         reason: TaskReason::User,
                     });
                 }

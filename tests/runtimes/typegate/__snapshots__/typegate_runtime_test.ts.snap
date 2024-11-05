@@ -2,13 +2,549 @@ export const snapshot = {};
 
 snapshot[`typegate: find available operations 1`] = `
 {
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "'config' not found at 'Q.findAvailableOperations.inputs.type', available names are: optional, title, type, enum, default, format, policies, fields",
-      path: [],
-    },
-  ],
+  data: {
+    findAvailableOperations: [
+      {
+        inputs: [
+          {
+            name: "where",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "record_query_where_unique_input",
+              type: "object",
+            },
+          },
+        ],
+        name: "findRecord",
+        output: {
+          default: null,
+          enum: null,
+          fields: [
+            {
+              subPath: [
+                "id",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: "uuid",
+                optional: false,
+                title: "record_with_nested_count_id_string_uuid",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "name",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_string_filter_t0_string",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "age",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: true,
+                title: "_prisma_integer_filter_t0_integer",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "createdAt",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: "date-time",
+                optional: false,
+                title: "record_with_nested_count_createdAt_string_datetime",
+                type: "string",
+              },
+            },
+          ],
+          format: null,
+          optional: true,
+          title: "record_with_nested_count",
+          type: "object",
+        },
+        outputItem: null,
+      },
+      {
+        inputs: [
+          {
+            name: "where",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "record_query_where_input",
+              type: "object",
+            },
+          },
+          {
+            name: "orderBy",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "record_order_by",
+              type: "list",
+            },
+          },
+          {
+            name: "take",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "_take",
+              type: "integer",
+            },
+          },
+          {
+            name: "skip",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "_skip",
+              type: "integer",
+            },
+          },
+          {
+            name: "cursor",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "record_cursor",
+              type: "union",
+            },
+          },
+          {
+            name: "distinct",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "record_keys_union",
+              type: "list",
+            },
+          },
+        ],
+        name: "findManyRecords",
+        output: {
+          default: null,
+          enum: null,
+          fields: null,
+          format: null,
+          optional: false,
+          title: "root_findManyRecords_fn_output",
+          type: "list",
+        },
+        outputItem: {
+          default: null,
+          enum: null,
+          fields: [
+            {
+              subPath: [
+                "id",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: "uuid",
+                optional: false,
+                title: "record_with_nested_count_id_string_uuid",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "name",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_string_filter_t0_string",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "age",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: true,
+                title: "_prisma_integer_filter_t0_integer",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "createdAt",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: "date-time",
+                optional: false,
+                title: "record_with_nested_count_createdAt_string_datetime",
+                type: "string",
+              },
+            },
+          ],
+          format: null,
+          optional: false,
+          title: "record_with_nested_count",
+          type: "object",
+        },
+      },
+      {
+        inputs: [
+          {
+            name: "where",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "users_query_where_unique_input",
+              type: "object",
+            },
+          },
+        ],
+        name: "findUniqueUser",
+        output: {
+          default: null,
+          enum: null,
+          fields: [
+            {
+              subPath: [
+                "id",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_integer_filter_t0_integer",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "identities",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "users_with_nested_count_identities_user_identity_with_nested_count_excluding_rel_user_identity_users_list",
+                type: "list",
+              },
+            },
+            {
+              subPath: [
+                "email",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_string_filter_t0_string",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "name",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_string_filter_t0_string",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "messages",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "users_with_nested_count_messages_messages_with_nested_count_excluding_messageSender_list",
+                type: "list",
+              },
+            },
+            {
+              subPath: [
+                "_count",
+                "identities",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: true,
+                title: "_prisma_integer_filter_t0_integer",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "_count",
+                "messages",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: true,
+                title: "_prisma_integer_filter_t0_integer",
+                type: "integer",
+              },
+            },
+          ],
+          format: null,
+          optional: true,
+          title: "users_with_nested_count",
+          type: "object",
+        },
+        outputItem: null,
+      },
+      {
+        inputs: [
+          {
+            name: "where",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "messages_query_where_input",
+              type: "object",
+            },
+          },
+          {
+            name: "orderBy",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "messages_order_by",
+              type: "list",
+            },
+          },
+          {
+            name: "take",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "_take",
+              type: "integer",
+            },
+          },
+          {
+            name: "skip",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "_skip",
+              type: "integer",
+            },
+          },
+          {
+            name: "cursor",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "messages_cursor",
+              type: "union",
+            },
+          },
+          {
+            name: "distinct",
+            type: {
+              default: null,
+              enum: null,
+              format: null,
+              optional: true,
+              title: "messages_keys_union",
+              type: "list",
+            },
+          },
+        ],
+        name: "findMessages",
+        output: {
+          default: null,
+          enum: null,
+          fields: null,
+          format: null,
+          optional: false,
+          title: "root_findMessages_fn_output",
+          type: "list",
+        },
+        outputItem: {
+          default: null,
+          enum: null,
+          fields: [
+            {
+              subPath: [
+                "id",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_integer_filter_t0_integer",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "time",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_integer_filter_t0_integer",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "message",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_string_filter_t0_string",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "sender",
+                "id",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_integer_filter_t0_integer",
+                type: "integer",
+              },
+            },
+            {
+              subPath: [
+                "sender",
+                "identities",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "users_identities_user_identity_list",
+                type: "list",
+              },
+            },
+            {
+              subPath: [
+                "sender",
+                "email",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_string_filter_t0_string",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "sender",
+                "name",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "_prisma_string_filter_t0_string",
+                type: "string",
+              },
+            },
+            {
+              subPath: [
+                "sender",
+                "messages",
+              ],
+              termNode: {
+                default: null,
+                enum: null,
+                format: null,
+                optional: false,
+                title: "users_messages_messages_list",
+                type: "list",
+              },
+            },
+          ],
+          format: null,
+          optional: false,
+          title: "messages_with_nested_count",
+          type: "object",
+        },
+      },
+    ],
+  },
 }
 `;

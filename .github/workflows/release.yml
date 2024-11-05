@@ -1,3 +1,5 @@
+name: release jobs
+run-name: release jobs for ${{  github.ref }}
 on:
   workflow_dispatch:
     inputs:
@@ -319,10 +321,13 @@ jobs:
 
           # avoid publishing pre-release versions as they don't
           # support it
-          [[ "$(ghjk x version-print)" != *-* ]] \
-            && ([ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
-              && pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} --skip-duplicate \
-              || pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }})
+          if [[ "$(ghjk x version-print)" != *-* ]]; then
+            if [ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ]; then
+              pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} --skip-duplicate
+            else
+              pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }}
+            fi
+          fi
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ steps.latest-tag.outputs.tag }}
@@ -352,7 +357,10 @@ jobs:
           ghjk x version-bump prerelease
           echo "version=$(ghjk x version-print)" >> $GITHUB_OUTPUT
           git cliff --output CHANGELOG.md
-      - uses: peter-evans/create-pull-request@v6
+          # exclude .ghjk from the changeset to avoid modifying
+          # the lockfile
+          git checkout -- .ghjk
+      - uses: peter-evans/create-pull-request@v7
         with:
           branch: bump-${{ steps.bump.outputs.version }}
           delete-branch: true
@@ -364,4 +372,4 @@ jobs:
           # on them, we create it as a draft PR 
           # the actions will then run when it's readied for review
           # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
-          draft: always-true
+          draft: "always-true"

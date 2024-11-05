@@ -28,7 +28,7 @@ const schema = buildSchema(`
 `);
 
 const POSTGRES =
-  "postgresql://postgres:password@localhost:5432/db?schema=prisma";
+  "postgresql://postgres:password@localhost:5432/db?schema=injection_test_prisma";
 
 Meta.test("Injected values", async (t) => {
   const e = await t.engine("injection/injection.py", {
