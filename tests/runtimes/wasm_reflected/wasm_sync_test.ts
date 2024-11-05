@@ -63,11 +63,11 @@ Meta.test(
         "runtimes/wasm_reflected/wasm_reflected.ts",
       );
       const s3 = new S3Client(syncConfig.s3);
-      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 3);
+      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 2);
 
       const s3Objects = await listObjects(s3, syncConfig.s3Bucket);
       // two objects, the artifact and the typegraph
-      assertEquals(s3Objects?.length, 3);
+      assertEquals(s3Objects?.length, 2);
 
       await gql`
         query {
@@ -88,7 +88,7 @@ Meta.test(
       const s3 = new S3Client(syncConfig.s3);
 
       // typegraphs are pushed to s3 whenever pushed to a typegate
-      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 3);
+      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 2);
 
       const engine = await metaTest.engine(
         "runtimes/wasm_reflected/wasm_reflected.ts",
