@@ -1,3 +1,5 @@
+import { toCamelCase, toSnakeCase } from "@std/text";
+
 const BUFFER_SIZE = 1024;
 
 const state = { id: 0 };
@@ -15,20 +17,15 @@ type RpcResponse<R, E = null> = {
   id: number | string;
 };
 
-function camelToSnakeCase(obj: any): any {
+function transformKeys(obj: any, convertKey: (key: string) => string): any {
   if (Array.isArray(obj)) {
-    return obj.map(camelToSnakeCase);
+    return obj.map((item) => transformKeys(item, convertKey));
   } else if (obj && typeof obj === "object") {
     const result: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(obj)) {
-      const snakeKey = key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
-
-      if (value && typeof value === "object") {
-        result[snakeKey] = camelToSnakeCase(value);
-      } else {
-        result[snakeKey] = value;
-      }
+      const newKey = convertKey(key);
+      result[newKey] = transformKeys(value, convertKey);
     }
 
     return result;
@@ -41,7 +38,7 @@ function rpcRequest<R, P>(method: string, params?: P) {
   const request = {
     jsonrpc: "2.0",
     method,
-    params: params && camelToSnakeCase(params),
+    params: params && transformKeys(params, toSnakeCase),
     id: state.id,
   };
 
@@ -68,7 +65,7 @@ function rpcRequest<R, P>(method: string, params?: P) {
     throw new Error(response.error.message);
   }
 
-  return response.result as R;
+  return transformKeys(response.result, toCamelCase) as R;
 }
 
 export { rpcRequest };

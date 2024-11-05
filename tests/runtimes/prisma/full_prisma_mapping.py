@@ -1,5 +1,4 @@
-from typegraph import typegraph, Policy, t, Graph
-from typegraph.gen.runtimes import EffectUpdate
+from typegraph import typegraph, Policy, t, Graph, fx
 from typegraph.providers.prisma import PrismaRuntime
 
 
@@ -100,7 +99,7 @@ def full_prisma_mapping(g: Graph):
                     "replacement": t.string(),
                 }
             ),
-            EffectUpdate(True),
+            fx.update(True),
         ),
         # https://www.postgresql.org/docs/10/functions-subquery.html
         # expr = ANY(array) equiv. to expr IN (array[0], array[1], ..)

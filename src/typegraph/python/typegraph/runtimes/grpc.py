@@ -19,4 +19,4 @@ class GrpcRuntime(Runtime):
     def call(self, method: str):
         data = GrpcData(method)
         func_data = runtimes.call_grpc_method(self.id, data)
-        return t.func.from_type_func(func_data.value)
+        return t.func.from_type_func(func_data)

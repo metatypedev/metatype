@@ -52,7 +52,7 @@ class SubstantialRuntime(Runtime):
         )
         func_data = runtimes.generate_substantial_operation(self.id, data)
 
-        return t.func.from_type_func(func_data.value)
+        return t.func.from_type_func(func_data)
 
     def start(self, kwargs: "t.struct"):
         return self._generic_substantial_func("start", kwargs, None)

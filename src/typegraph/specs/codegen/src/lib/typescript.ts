@@ -57,7 +57,7 @@ ${def.props
 
   override formatUnionTypeDef(def: UnionTypeDef): string {
     return `export type ${def.ident} =
-${def.variants.map((v) => `  | ${v.value ? `{ ${v.tag}: ${v.value} }` : `"${v.tag}"`}`).join("\n")};`;
+${def.variants.map((v) => `  | ${v.value ? `{ ${toCamelCase(v.tag)}: ${v.value} }` : `"${v.tag}"`}`).join("\n")};`;
   }
 
   override formatFuncDef(def: FuncDef) {

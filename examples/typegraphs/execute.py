@@ -1,8 +1,7 @@
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import typegraph, Policy, t, Graph, fx
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.graph.params import Auth
 from typegraph.providers.prisma import PrismaRuntime
-from typegraph.gen.exports.runtimes import EffectUpdate
 from typegraph.graph.params import Cors
 
 
@@ -82,7 +81,7 @@ def roadmap(g: Graph):
                     "importance": t.enum(["medium", "important", "critical"]),
                 }
             ),
-            EffectUpdate(True),
+            fx.update(True),
         ),
         get_context=deno.identity(t.struct({"username": t.string().optional()})).apply(
             {

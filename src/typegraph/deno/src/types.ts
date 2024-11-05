@@ -69,7 +69,7 @@ export function getPolicyChain(
     }
 
     return {
-      per_effect: mapValues(
+      perEffect: mapValues(
         p instanceof PolicyPerEffectObject ? p.value : p,
         (v: any) => v._id,
       ) as unknown as PolicyPerEffect,
