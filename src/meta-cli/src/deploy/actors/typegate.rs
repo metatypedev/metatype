@@ -13,7 +13,7 @@ use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{ChildStderr, ChildStdout, Command};
 
-mod message {
+pub mod message {
     use super::*;
 
     #[derive(Message)]
@@ -152,7 +152,7 @@ impl Handler<message::StartProcess> for TypegateActor {
 
         let spawn_res = TokioCommandWrap::from(command)
             .wrap(KillOnDrop)
-            .wrap(ProcessSession)
+            .wrap(ProcessSession) // UNIX only
             .spawn()
             .context("failed to spawn typegate process");
 
