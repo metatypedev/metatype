@@ -281,12 +281,12 @@ jobs:
           source .venv/bin/activate
 
           # this doesn't publish it but only builds it
-          WASM_OPT=1 ghjk x build-tgraph-ts
+          ghjk x build-tgraph-ts
 
           # start the docker containers
           ghjk x dev-compose base prisma grpc subredis
 
-          WASM_OPT=1 ghjk x build-tgraph
+          ghjk x build-tgraph
 
           ghjk x install-ts
 

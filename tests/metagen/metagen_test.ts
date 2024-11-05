@@ -11,7 +11,7 @@ import { testDir } from "test-utils/dir.ts";
 import $ from "@david/dax";
 import { z as zod } from "zod";
 import { workspaceDir } from "test-utils/dir.ts";
-import { FdkOutput } from "@typegraph/sdk/gen/typegraph_core.d.ts";
+import { FdkOutput } from "@typegraph/sdk/gen/utils.ts";
 
 const denoJson = resolve(testDir, "./deno.jsonc");
 

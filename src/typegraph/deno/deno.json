@@ -9,7 +9,6 @@
     "./deps/mod.ts": "./src/deps/mod.ts",
     "./effects.ts": "./src/effects.ts",
     "./envs/cli.ts": "./src/envs/cli.ts",
-    "./gen/typegraph_core.d.ts": "./src/gen/typegraph_core.d.ts",
     "./host/host.d.ts": "./src/host/host.d.ts",
     "./index.ts": "./src/index.ts",
     "./io.ts": "./src/io.ts",
