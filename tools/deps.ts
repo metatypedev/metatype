@@ -38,7 +38,7 @@ export {
   expandGlob,
   expandGlobSync,
 } from "jsr:@std/fs@^1.0.1";
-export { cyan, gray, green, red, yellow } from "jsr:@std/fmt@^1.0.0/colors";
+export { cyan, gray, green, red, yellow, dim } from "jsr:@std/fmt@^1.0.0/colors";
 export { format as formatDuration } from "jsr:@std/fmt@^1.0.0/duration";
 export { mergeReadableStreams, TextLineStream } from "jsr:@std/streams@1";
 export type {} from "jsr:@std/path@^1.0.2";

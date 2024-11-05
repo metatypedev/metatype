@@ -275,6 +275,8 @@ Meta.test(
 
 const examplesDir = $.path(workspaceDir).join("examples");
 
+const skipDeployed = new Set(["play.ts"]);
+
 const expectedDeployed = [
   ["authentication.ts", "authentication"],
   ["backend-for-frontend.ts", "backend-for-frontend"],
@@ -357,8 +359,8 @@ Meta.test(
     }, null);
 
     await stderr.readWhile((rawLine) => {
+      console.log("meta-full dev[E]>", rawLine);
       const line = $.stripAnsi(rawLine);
-      console.log("meta-full dev[E]>", line);
       if (line.match(/failed to deploy/i)) {
         throw new Error("error detected on line: " + rawLine);
       }
@@ -370,9 +372,12 @@ Meta.test(
         if (!match[2].startsWith(prefix)) {
           throw new Error("unexpected");
         }
-        deployed.push([match[2].slice(prefix.length), match[1]]);
+        const file = match[2].slice(prefix.length);
+        if (!skipDeployed.has(file)) {
+          deployed.push([file, match[1]]);
+        }
       }
-      return deployed.length < expectedDeployed.length;
+      return deployed.length != expectedDeployed.length;
     }, 3 * 60 * 1000);
 
     await t.should("have deployed all the typegraphs", () => {

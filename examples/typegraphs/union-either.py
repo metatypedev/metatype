@@ -41,12 +41,18 @@ def union_either(g: Graph):
             t.struct(),
             t.struct(
                 {
-                    "unionList": t.list(t.union(members)),
                     "union": t.union(members),
                     "either": t.either(members),
+                    "unionList": t.list(t.union(members)),
                 }
             ),
             code="""() => ({
+                either: {
+                    field1: "1",
+                },
+                union: {
+                    field2: "2",
+                },
                 unionList: [
                     "scalar",
                     2,
@@ -58,12 +64,6 @@ def union_either(g: Graph):
                     },
                     ["scalar_1", "scalar_2"],
                 ],
-                either: {
-                    field1: "1",
-                },
-                union: {
-                    field2: "2",
-                },
             })""",
         ),
     )

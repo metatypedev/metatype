@@ -67,6 +67,7 @@ const skip = [
   "runtimes",
   "typecheck",
   "types",
+  "play",
 ];
 
 const prepare = {
