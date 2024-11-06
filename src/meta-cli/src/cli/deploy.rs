@@ -309,14 +309,10 @@ mod watch_mode {
             None
         };
 
-        #[cfg(feature = "typegate")]
-        let port_override = typegate_addr.map(|(_, port)| port);
-        #[cfg(not(feature = "typegate"))]
-        let port_override = None;
-
         let deploy_node = deploy.node.clone();
-        let deploy_node = if let Some(port) = port_override {
-            deploy_node.override_port(port)
+        #[cfg(feature = "typegate")]
+        let deploy_node = if let Some((_, port)) = typegate_addr.as_ref() {
+            deploy_node.override_port(*port)
         } else {
             deploy_node
         };
