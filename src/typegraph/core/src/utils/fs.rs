@@ -143,7 +143,13 @@ impl FsContext {
             .flat_map(|pat| Regex::new(pat))
             .collect::<Vec<_>>();
 
-        self.expand_path_helper(root, &exclude, &mut results)?;
+        if root.is_file() {
+            let path_buf = root.to_path_buf();
+            let path_str = path_buf.to_string_lossy().to_string();
+            results.push(path_str);
+        } else {
+            self.expand_path_helper(root, &exclude, &mut results)?;
+        }
 
         Ok(results)
     }

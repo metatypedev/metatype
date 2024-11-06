@@ -27,28 +27,6 @@ six = ">=1.6.1,<2.0"
 wheel = ">=0.23.0,<1.0"
 
 [[package]]
-name = "importlib-resources"
-version = "6.4.5"
-description = "Read resources from Python packages"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "importlib_resources-6.4.5-py3-none-any.whl", hash = "sha256:ac29d5f956f01d5e4bb63102a5a19957f1b9175e45649977264a1416783bb717"},
-    {file = "importlib_resources-6.4.5.tar.gz", hash = "sha256:980862a1d16c9e147a59603677fa2aa5fd82b87f223b6cb870695bcfce830065"},
-]
-
-[package.dependencies]
-zipp = {version = ">=3.1.0", markers = "python_version < \"3.10\""}
-
-[package.extras]
-check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1)"]
-cover = ["pytest-cov"]
-doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
-enabler = ["pytest-enabler (>=2.2)"]
-test = ["jaraco.test (>=5.4)", "pytest (>=6,!=8.1.*)", "zipp (>=3.17)"]
-type = ["pytest-mypy"]
-
-[[package]]
 name = "pydantic"
 version = "2.9.2"
 description = "Data validation using Python type hints"
@@ -230,28 +208,6 @@ files = [
 ]
 
 [[package]]
-name = "wasmtime"
-version = "25.0.0"
-description = "A WebAssembly runtime powered by Wasmtime"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "wasmtime-25.0.0-py3-none-any.whl", hash = "sha256:22aa59fc6e01deec8a6703046f82466090d5811096a3bb5c169907e36c842af1"},
-    {file = "wasmtime-25.0.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:13e9a718e9d580c1738782cc19f4dcb9fb068f7e51778ea621fd664f4433525b"},
-    {file = "wasmtime-25.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:5bdf1214ee3ee78a4a8a92da339f4c4c8c109e65af881b37f4adfc05d02af426"},
-    {file = "wasmtime-25.0.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:b4364e14d44e3b7afe6a40bf608e9d0d2c40b09dece441d20f4f6e31906b729c"},
-    {file = "wasmtime-25.0.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:a07445073cf36a6e5d1dc28246a897dcbdaa537ba8be8805be65422ecca297eb"},
-    {file = "wasmtime-25.0.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:53d5f614348a28aabdf80ae4f6fdfa803031af1f74ada03826fd4fd43aeee6c8"},
-    {file = "wasmtime-25.0.0-py3-none-win_amd64.whl", hash = "sha256:f8a2a213b9179965db2d2eedececd69a37e287e902330509afae51c71a3a6842"},
-]
-
-[package.dependencies]
-importlib-resources = ">=5.10"
-
-[package.extras]
-testing = ["componentize-py", "coverage", "pycparser", "pytest", "pytest-mypy"]
-
-[[package]]
 name = "wheel"
 version = "0.44.0"
 description = "A built-package format for Python"
@@ -265,26 +221,7 @@ files = [
 [package.extras]
 test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
 
-[[package]]
-name = "zipp"
-version = "3.20.2"
-description = "Backport of pathlib-compatible object wrapper for zip files"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "zipp-3.20.2-py3-none-any.whl", hash = "sha256:a817ac80d6cf4b23bf7f2828b7cabf326f15a001bea8b1f9b49631780ba28350"},
-    {file = "zipp-3.20.2.tar.gz", hash = "sha256:bc9eb26f4506fda01b81bcde0ca78103b6e62f991b381fec825435c836edbc29"},
-]
-
-[package.extras]
-check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1)"]
-cover = ["pytest-cov"]
-doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
-enabler = ["pytest-enabler (>=2.2)"]
-test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-ignore-flaky"]
-type = ["pytest-mypy"]
-
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<4.0"
-content-hash = "65e0405fc1e8bd21af3dd733f5ffdf62de392fb7c78ed0037d4b8206aab3ccda"
+content-hash = "16dbdf60f5d67f14a59495193491cd19bd47d020ced76a6e6a358786758114ca"
