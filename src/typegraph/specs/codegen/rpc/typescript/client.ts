@@ -1,6 +1,10 @@
+import fs from "node:fs";
+import { Buffer } from "node:buffer";
+
 const BUFFER_SIZE = 1024;
 
 const state = { id: 0 };
+const isDeno = !Deno.version.v8.includes("node");
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
@@ -40,6 +44,30 @@ function transformKeys(obj: any, convertKey: (key: string) => string): any {
   return obj;
 }
 
+function readResponse() {
+  const buffer = Buffer.alloc(BUFFER_SIZE);
+
+  let bytesRead = null;
+  let content = Buffer.alloc(0);
+
+  if (isDeno) {
+    do {
+      bytesRead = Deno.stdin.readSync(buffer) ?? 0;
+      content = Buffer.concat([content, buffer.subarray(0, bytesRead)]);
+    } while (bytesRead == BUFFER_SIZE);
+  } else {
+    const fd = fs.openSync("/dev/stdin", "r");
+    do {
+      bytesRead = fs.readSync(fd, buffer) ?? 0;
+      content = Buffer.concat([content, buffer.subarray(0, bytesRead)]);
+    } while (bytesRead == BUFFER_SIZE);
+
+    fs.closeSync(fd);
+  }
+
+  return decoder.decode(content);
+}
+
 function rpcRequest<R, P>(method: string, params?: P) {
   const request = {
     jsonrpc: "2.0",
@@ -54,24 +82,14 @@ function rpcRequest<R, P>(method: string, params?: P) {
   Deno.stdout.writeSync(message);
   state.id += 1;
 
-  const buffer = new Uint8Array(BUFFER_SIZE);
+  const response = readResponse();
+  const jsonResponse: RpcResponse<R> = JSON.parse(response);
 
-  let bytesRead = null;
-  let content = new Uint8Array(0);
-
-  do {
-    bytesRead = Deno.stdin.readSync(buffer) ?? 0;
-    content = new Uint8Array([...content, ...buffer.subarray(0, bytesRead)]);
-  } while (bytesRead == BUFFER_SIZE);
-
-  const decoded = decoder.decode(content);
-  const response: RpcResponse<R> = JSON.parse(decoded);
-
-  if (response.error) {
-    throw new Error(response.error.message);
+  if (jsonResponse.error) {
+    throw new Error(jsonResponse.error.message);
   }
 
-  return transformKeys(response.result, toCamelCase) as R;
+  return transformKeys(jsonResponse.result, toCamelCase) as R;
 }
 
 export { rpcRequest };
