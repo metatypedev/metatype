@@ -1,5 +1,3 @@
-import { toCamelCase, toSnakeCase } from "@std/text";
-
 const BUFFER_SIZE = 1024;
 
 const state = { id: 0 };
@@ -16,6 +14,14 @@ type RpcResponse<R, E = null> = {
   };
   id: number | string;
 };
+
+function toCamelCase(str: string) {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+function toSnakeCase(str: string) {
+  return str.replace(/([A-Z])/g, "_$1").toLowerCase();
+}
 
 function transformKeys(obj: any, convertKey: (key: string) => string): any {
   if (Array.isArray(obj)) {
