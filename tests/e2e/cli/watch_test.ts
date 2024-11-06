@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import * as path from "@std/path";
 import { Meta } from "test-utils/mod.ts";
@@ -46,7 +46,7 @@ Meta.test({ name: "meta dev: watch artifacts" }, async (t) => {
 
   await t.should("deploy typegraph", async () => {
     await stderr.readWhile(
-      (line) => !line.includes("successfully deployed typegraph"),
+      (line) => !line.includes("successfully deployed typegraph")
     );
   });
 
@@ -64,7 +64,7 @@ Meta.test({ name: "meta dev: watch artifacts" }, async (t) => {
 
   await t.should("re-deploy typegraph", async () => {
     await stderr.readWhile(
-      (line) => !line.includes("successfully deployed typegraph"),
+      (line) => !line.includes("successfully deployed typegraph")
     );
   });
 
