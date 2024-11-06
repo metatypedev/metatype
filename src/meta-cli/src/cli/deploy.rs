@@ -78,8 +78,9 @@ pub struct DeployOptions {
     #[clap(skip = None)]
     pub typegate_options: Option<super::typegate::Typegate>,
 
+    /// FIXME: restructure the typegraph core to handle multiple threads
     /// maximum number of concurrent deployment tasks
-    #[clap(long)]
+    #[clap(skip = None)]
     pub threads: Option<usize>,
 
     /// max retry count

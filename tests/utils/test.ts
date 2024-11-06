@@ -232,6 +232,9 @@ export class MetaTest {
     const tgString = output.slice(startIndex);
     const tg = await TypeGraph.parseJson(tgString);
 
+    // FIXME: hack waiting for MET-738 or a better way to create an engine
+    tg.meta.prefix = opts.prefix;
+
     const artifacts = Object.values(tg.meta.artifacts);
     const tgUrl = `http://localhost:${this.port}`;
     const tgName = TypeGraph.formatName(tg);

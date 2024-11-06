@@ -43,7 +43,8 @@ pub struct Serialize {
     #[clap(short, long)]
     prefix: Option<String>,
 
-    #[clap(long)]
+    /// FIXME: restructure the typegraph core to handle multiple threads
+    #[clap(skip = None)]
     max_parallel_loads: Option<usize>,
 }
 
