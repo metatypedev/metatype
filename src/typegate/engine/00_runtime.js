@@ -73,8 +73,17 @@ const Meta = {
     metadataAppend: getOp("op_sub_metadata_append"),
     metadataWriteWorkflowLink: getOp("op_sub_metadata_write_workflow_link"),
     metadataReadWorkflowLinks: getOp("op_sub_metadata_read_workflow_links"),
-    metadataWriteParentChildLink: getOp("op_sub_metadata_write_parent_child_link"),
-    metadataEnumerateAllChildren: getOp("op_sub_metadata_enumerate_all_children"),
+    metadataWriteParentChildLink: getOp(
+      "op_sub_metadata_write_parent_child_link",
+    ),
+    metadataEnumerateAllChildren: getOp(
+      "op_sub_metadata_enumerate_all_children",
+    ),
+    contextSave: getOp("op_context_save"),
+    contextSleep: getOp("op_context_sleep"),
+    contextAppendEvent: getOp("op_context_append_event"),
+    contextAppendOp: getOp("op_context_append_op"),
+    executePythonWithContext: getOp("op_execute_python_with_context"),
   },
   grpc: {
     register: getOp("op_grpc_register"),
@@ -82,7 +91,5 @@ const Meta = {
     callGrpcMethod: getOp("op_call_grpc_method"),
   },
 };
-
-
 
 globalThis.Meta = Meta;

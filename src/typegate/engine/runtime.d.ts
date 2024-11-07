@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { TaskContext } from "../src/runtimes/deno/shared_types.ts";
+
 declare global {
   const Meta: MetaNS;
 }
@@ -17,7 +19,7 @@ export type MetaNS = {
     unregisterEngine: (engine_name: string) => Promise<void>;
     query: (inp: PrismaQueryInp) => Promise<string>;
     diff: (
-      inp: PrismaDiffInp
+      inp: PrismaDiffInp,
     ) => Promise<[string, ParsedDiff[]] | undefined | null>;
     apply: (inp: PrismaDevInp) => Promise<PrismaApplyOut>;
     deploy: (inp: PrismaDeployInp) => Promise<PrismaDeployOut>;
@@ -34,7 +36,7 @@ export type MetaNS = {
     workflowSignal: (inp: TemporalWorkflowSignalInput) => Promise<void>;
     workflowQuery: (inp: TemporalWorkflowQueryInput) => Promise<Array<string>>;
     workflowDescribe: (
-      inp: TemporalWorkflowDescribeInput
+      inp: TemporalWorkflowDescribeInput,
     ) => Promise<TemporalWorkflowDescribeOutput>;
   };
 
@@ -43,12 +45,12 @@ export type MetaNS = {
       componentPath: string,
       instanceId: string,
       args: WitWireInitArgs,
-      cb: (op_name: string, json: string) => Promise<string>
+      cb: (op_name: string, json: string) => Promise<string>,
     ) => Promise<WitWireInitResponse>;
     destroy: (instanceId: string) => Promise<void>;
     handle: (
       instanceId: string,
-      args: WitWireReq
+      args: WitWireReq,
     ) => Promise<WitWireHandleResponse>;
   };
 
@@ -63,7 +65,7 @@ export type MetaNS = {
     storePersistRun: (inp: PersistRunInput) => Promise<string>;
     storeAddSchedule: (inp: AddScheduleInput) => Promise<void>;
     storeReadSchedule: (
-      inp: ReadOrCloseScheduleInput
+      inp: ReadOrCloseScheduleInput,
     ) => Promise<Operation | undefined>;
     storeCloseSchedule: (inp: ReadOrCloseScheduleInput) => Promise<void>;
     agentNextRun: (inp: NextRunInput) => Promise<NextRun | undefined>;
@@ -72,19 +74,26 @@ export type MetaNS = {
     agentRenewLease: (inp: LeaseInput) => Promise<boolean>;
     agentRemoveLease: (inp: LeaseInput) => Promise<void>;
     metadataReadAll: (
-      inp: ReadAllMetadataInput
+      inp: ReadAllMetadataInput,
     ) => Promise<Array<MetadataEvent>>;
     metadataAppend: (inp: AppendMetadataInput) => Promise<void>;
     metadataWriteWorkflowLink: (inp: WriteLinkInput) => Promise<void>;
     metadataReadWorkflowLinks: (
-      inp: ReadWorkflowLinkInput
+      inp: ReadWorkflowLinkInput,
     ) => Promise<Array<string>>;
     metadataWriteParentChildLink: (
-      inp: WriteParentChildLinkInput
+      inp: WriteParentChildLinkInput,
     ) => Promise<void>;
     metadataEnumerateAllChildren: (
-      inp: EnumerateAllChildrenInput
+      inp: EnumerateAllChildrenInput,
     ) => Promise<Array<string>>;
+    contextSave: (inp: SaveInput) => SaveOutput;
+    contextSleep: (inp: SleepInput) => void;
+    contextAppendEvent: (inp: AppendEventInput) => void;
+    contextAppendOp: (inp: AppendOpInput) => void;
+    executePythonWithContext: (
+      inp: PythonExecutionInput,
+    ) => PythonExecutionOutput;
   };
 };
 
@@ -116,16 +125,16 @@ interface PrismaDevInp {
 }
 type PrismaApplyOut =
   | {
-      ResetRequired: {
-        reset_reason: string;
-      };
-    }
-  | {
-      Ok: {
-        applied_migrations: Array<string>;
-        reset_reason: string | undefined | null;
-      };
+    ResetRequired: {
+      reset_reason: string;
     };
+  }
+  | {
+    Ok: {
+      applied_migrations: Array<string>;
+      reset_reason: string | undefined | null;
+    };
+  };
 interface PrismaDeployOut {
   migration_count: number;
   applied_migrations: Array<string>;
@@ -237,14 +246,14 @@ export type WitWireReq = {
 
 export type WitWireHandleError =
   | {
-      InstanceNotFound: string;
-    }
+    InstanceNotFound: string;
+  }
   | {
-      ModuleErr: string;
-    }
+    ModuleErr: string;
+  }
   | {
-      MatErr: string;
-    };
+    MatErr: string;
+  };
 
 export type WitWireMatInfo = {
   op_name: string;
@@ -261,29 +270,29 @@ export type WitWireInitArgs = {
 export type WitWireInitResponse = object;
 export type WitWireInitError =
   | {
-      VersionMismatch: string;
-    }
+    VersionMismatch: string;
+  }
   | {
-      UnexpectedMat: string;
-    }
+    UnexpectedMat: string;
+  }
   | {
-      ModuleErr: string;
-    }
+    ModuleErr: string;
+  }
   | {
-      Other: string;
-    };
+    Other: string;
+  };
 
 export type WitWireHandleResponse =
   | {
-      Ok: string;
-    }
+    Ok: string;
+  }
   | "NoHandler"
   | {
-      InJsonErr: string;
-    }
+    InJsonErr: string;
+  }
   | {
-      HandlerErr: string;
-    };
+    HandlerErr: string;
+  };
 
 export type GrpcRegisterInput = {
   proto_file_content: string;
@@ -301,20 +310,20 @@ export type Backend =
   | { type: "fs" }
   | { type: "memory" }
   | {
-      type: "redis";
-      connection_string: string;
-    };
+    type: "redis";
+    connection_string: string;
+  };
 
 export type OperationEvent =
   | { type: "Sleep"; id: number; start: string; end: string }
   | {
-      type: "Save";
-      id: number;
-      value:
-        | { type: "Retry"; wait_until: string; counter: number }
-        | { type: "Resolved"; payload: unknown }
-        | { type: "Failed"; err: unknown };
-    }
+    type: "Save";
+    id: number;
+    value:
+      | { type: "Retry"; wait_until: string; counter: number }
+      | { type: "Resolved"; payload: unknown }
+      | { type: "Failed"; err: unknown };
+  }
   | { type: "Send"; event_name: string; value: unknown }
   | { type: "Stop"; result: unknown }
   | { type: "Start"; kwargs: Record<string, unknown> }
@@ -323,6 +332,7 @@ export type OperationEvent =
 export type Operation = { at: string; event: OperationEvent };
 
 export interface Run {
+  id: number;
   run_id: string;
   operations: Array<Operation>;
 }
@@ -419,4 +429,41 @@ export interface WriteParentChildLinkInput {
 export interface EnumerateAllChildrenInput {
   backend: Backend;
   parent_run_id: string;
+}
+
+export interface PythonExecutionInput {
+  run: Run;
+  internal: TaskContext;
+  kwargs: Record<string, unknown>;
+  module_path: string;
+  function_name: string;
+}
+
+export interface PythonExecutionOutput {
+  wfResult: any;
+}
+
+export interface SaveInput {
+  run: Run;
+}
+
+export interface SaveOutput {
+  payload?: any;
+  current_retry_count?: number;
+}
+
+export interface SleepInput {
+  run: Run;
+  duration_ms: number; // in millisecond
+}
+
+export interface AppendEventInput {
+  run: Run;
+  event_name: string;
+  payload: any;
+}
+
+export interface AppendOpInput {
+  run: Run;
+  op: OperationEvent;
 }

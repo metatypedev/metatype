@@ -70,6 +70,6 @@ export interface TaskExec {
   (
     args: Record<string, unknown>,
     context: TaskContext,
-    helpers: Record<string, unknown>
+    helpers: Record<string, unknown>,
   ): unknown;
 }

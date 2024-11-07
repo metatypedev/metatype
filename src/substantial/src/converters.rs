@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use serde_json::Value;
+use std::{collections::HashMap, fmt};
 
-use anyhow::{bail, Context, Ok, Result};
-use chrono::{DateTime, Utc};
+use anyhow::{bail, Context, Result};
+use chrono::{DateTime, Duration, Utc};
 
 use protobuf::{
     well_known_types::{
@@ -78,13 +79,126 @@ pub struct Operation {
 /// Each operation is produced from the workflow execution
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Run {
+    pub id: u32,
     pub run_id: String,
     pub operations: Vec<Operation>,
+}
+
+#[derive(Debug)]
+pub enum Interupt {
+    Sleep,
+    SaveRetry,
+    WaitReceiveEvent,
+    WaitHandleEvent,
+    WaitEnsureValue,
+}
+
+impl Interupt {
+    const PREFIX: &'static str = "SUBSTANTIAL_INTERRUPT_";
+}
+
+impl fmt::Display for Interupt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let variant = match self {
+            Self::Sleep => "SLEEP",
+            Self::SaveRetry => "SAVE_RETRY",
+            Self::WaitReceiveEvent => "WAIT_RECEIVE_EVENT",
+            Self::WaitHandleEvent => "WAIT_HANDLE_EVENT",
+            Self::WaitEnsureValue => "WAIT_ENSURE_VALUE",
+        };
+        write!(f, "{}{:?}", Self::PREFIX, variant)
+    }
+}
+
+impl std::error::Error for Interupt {}
+
+pub enum Strategy {
+    Linear,
+}
+
+pub struct Retry {
+    pub strategy: Option<String>,
+    pub min_backoff_ms: i32,
+    pub max_backoff_ms: i32,
+    pub max_retries: i32,
+}
+
+pub struct RetryStrategy {
+    min_backoff_ms: Option<i32>,
+    max_backoff_ms: Option<i32>,
+    max_retries: i32,
+}
+
+impl RetryStrategy {
+    pub fn new(
+        max_retries: i32,
+        min_backoff_ms: Option<i32>,
+        max_backoff_ms: Option<i32>,
+    ) -> anyhow::Result<Self> {
+        if max_retries < 1 {
+            anyhow::bail!("maxRetries < 1");
+        }
+
+        let mut min_ms = min_backoff_ms;
+        let mut max_ms = max_backoff_ms;
+
+        match (min_ms, max_ms) {
+            (Some(low), Some(high)) => {
+                if low >= high {
+                    anyhow::bail!("minBackoffMs >= maxBackoffMs");
+                }
+                if low < 0 {
+                    anyhow::bail!("minBackoffMs < 0");
+                }
+            }
+            (Some(low), None) => {
+                max_ms = Some(low + 10);
+            }
+            (None, Some(high)) => {
+                min_ms = Some(0.max(high - 10));
+            }
+            (None, None) => {}
+        }
+
+        Ok(Self {
+            min_backoff_ms: min_ms,
+            max_backoff_ms: max_ms,
+            max_retries,
+        })
+    }
+
+    pub fn eval(&self, strategy: Strategy, retries_left: i32) -> anyhow::Result<i32> {
+        match strategy {
+            Strategy::Linear => self.linear(retries_left),
+            // Add more strategy matches here
+        }
+    }
+
+    fn linear(&self, retries_left: i32) -> anyhow::Result<i32> {
+        if retries_left <= 0 {
+            anyhow::bail!("retries left <= 0");
+        }
+
+        let dt = self.max_backoff_ms.unwrap_or(0) - self.min_backoff_ms.unwrap_or(0);
+        Ok(((self.max_retries - retries_left) * dt) / self.max_retries)
+    }
+}
+
+pub struct Save {
+    pub timeout_ms: Option<i32>,
+    pub retry: Option<Retry>,
+}
+
+#[derive(Serialize)]
+pub struct SaveOutput {
+    pub payload: Option<Value>,
+    pub current_retry_count: Option<i32>,
 }
 
 impl Run {
     pub fn new(run_id: String) -> Self {
         Self {
+            id: 0,
             run_id,
             operations: vec![],
         }
@@ -124,6 +238,97 @@ impl Run {
 
     pub fn reset(&mut self) {
         self.operations = vec![];
+    }
+
+    pub fn next_id(&mut self) -> u32 {
+        self.id += 1;
+        self.id
+    }
+
+    pub fn append_op(&mut self, op: OperationEvent) {
+        let has_stopped = self
+            .operations
+            .iter()
+            .any(|op| matches!(op.event, OperationEvent::Stop { .. }));
+        if !has_stopped {
+            self.operations.push(Operation {
+                at: Utc::now(),
+                event: op,
+            });
+        }
+    }
+
+    pub fn save(&mut self) -> Result<SaveOutput> {
+        let next_id = self.next_id();
+        let mut current_retry_count: i32 = 1;
+
+        for Operation { event, .. } in self.operations.iter() {
+            if let OperationEvent::Save { id, value } = event {
+                if *id == next_id {
+                    if let SavedValue::Resolved { payload } = value {
+                        return Ok(SaveOutput {
+                            payload: Some(payload.clone()),
+                            current_retry_count: None,
+                        });
+                    } else if let SavedValue::Retry {
+                        counter,
+                        wait_until,
+                    } = value
+                    {
+                        let now = Utc::now();
+                        if wait_until > &now {
+                            bail!(Interupt::SaveRetry);
+                        } else {
+                            current_retry_count = *counter;
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(SaveOutput {
+            payload: None,
+            current_retry_count: Some(current_retry_count),
+        })
+    }
+
+    pub fn sleep(&mut self, duration_ms: i32) -> Result<()> {
+        let next_id = self.next_id();
+        for Operation { event, .. } in self.operations.iter() {
+            if let OperationEvent::Sleep { id, end, .. } = event {
+                if next_id == *id {
+                    if end <= &Utc::now() {
+                        return Ok(());
+                    } else {
+                        bail!(Interupt::Sleep);
+                    }
+                }
+            }
+        }
+
+        let start = Utc::now();
+
+        let end = start + Duration::milliseconds(start.timestamp() + duration_ms as i64);
+
+        self.operations.push(Operation {
+            at: start,
+            event: OperationEvent::Sleep {
+                id: next_id,
+                start,
+                end,
+            },
+        });
+        bail!(Interupt::Sleep);
+    }
+
+    pub fn append_event(&mut self, event_name: String, payload: Value) {
+        self.operations.push(Operation {
+            at: Utc::now(),
+            event: OperationEvent::Send {
+                event_name,
+                value: payload,
+            },
+        });
     }
 }
 

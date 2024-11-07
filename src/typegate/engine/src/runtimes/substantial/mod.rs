@@ -3,15 +3,20 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+mod python_context;
+
+pub use python_context::op_execute_python_with_context;
+
 use crate::interlude::*;
 
 use chrono::{DateTime, Utc};
 use common::typegraph::runtimes::substantial::SubstantialBackend;
 use dashmap::DashMap;
 use deno_core::OpState;
+use serde_json::Value;
 use substantial::{
     backends::{fs::FsBackend, memory::MemoryBackend, redis::RedisBackend, Backend, NextRun},
-    converters::{MetadataEvent, Operation, Run},
+    converters::{MetadataEvent, Operation, OperationEvent, Run, SaveOutput},
 };
 
 #[rustfmt::skip]
@@ -451,4 +456,53 @@ pub async fn op_sub_metadata_enumerate_all_children(
         .or_try_insert_with(|| init_backend(&input.backend))?;
 
     backend.enumerate_all_children(input.parent_run_id.clone())
+}
+
+#[derive(Deserialize)]
+pub struct SaveInput {
+    pub run: Run,
+}
+
+#[deno_core::op2]
+#[serde]
+pub fn op_context_save(#[serde] input: SaveInput) -> Result<SaveOutput> {
+    let mut run = input.run;
+    run.save()
+}
+
+#[derive(Deserialize)]
+pub struct SleepInut {
+    pub run: Run,
+    pub duration_ms: i32,
+}
+
+#[deno_core::op2]
+pub fn op_context_sleep(#[serde] input: SleepInut) -> Result<()> {
+    let mut run = input.run;
+    run.sleep(input.duration_ms)
+}
+
+#[derive(Deserialize)]
+pub struct AppendEventInput {
+    pub run: Run,
+    pub event_name: String,
+    pub payload: Value,
+}
+
+#[deno_core::op2]
+pub fn op_context_append_event(#[serde] input: AppendEventInput) {
+    let mut run = input.run;
+    run.append_event(input.event_name, input.payload)
+}
+
+#[derive(Deserialize)]
+pub struct AppendOpInput {
+    pub run: Run,
+    pub op: OperationEvent,
+}
+
+#[deno_core::op2]
+pub fn op_context_append_op(#[serde] input: AppendOpInput) {
+    let mut run = input.run;
+    run.append_op(input.op);
 }
