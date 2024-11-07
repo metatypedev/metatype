@@ -6942,6 +6942,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "shadow-rs",
+ "signal-hook",
  "strip-ansi-escapes",
  "tabled",
  "tar",

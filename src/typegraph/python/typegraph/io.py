@@ -12,6 +12,22 @@ import json
 _JSONRPC_VERSION = "2.0"
 
 
+def write_rpc_message(message: str):
+    # we do not chunk the message as Python's print function supports long lines
+    print(f"jsonrpc$: {message}")
+
+
+def rpc_notify(method: str, params: Any):
+    message = json.dumps(
+        {
+            "jsonrpc": _JSONRPC_VERSION,
+            "method": method,
+            "params": params,
+        }
+    )
+    write_rpc_message(message)
+
+
 class Log:
     @staticmethod
     def __format(*largs: Any):
@@ -19,30 +35,31 @@ class Log:
 
     @staticmethod
     def debug(*largs: Any):
-        print("debug:", Log.__format(*largs))
+        rpc_notify("Debug", {"message": Log.__format(*largs)})
 
     @staticmethod
     def info(*largs: Any):
-        print("info:", Log.__format(*largs))
+        rpc_notify("Info", {"message": Log.__format(*largs)})
 
     @staticmethod
     def warn(*largs: Any):
-        print("warning:", Log.__format(*largs))
+        rpc_notify("Warning", {"message": Log.__format(*largs)})
 
     @staticmethod
     def error(*largs: Any):
-        print("error:", Log.__format(*largs))
+        rpc_notify("Error", {"message": Log.__format(*largs)})
 
     @staticmethod
     def failure(data: Any):
-        print("failure:", json.dumps(data))
+        rpc_notify("Failure", {"data": data})
 
     @staticmethod
     def success(data: Any, noencode: bool = False):
         if noencode:
-            print("success:", data)
+            parsed = json.loads(data)
+            rpc_notify("Success", {"data": parsed})
         else:
-            print("success:", json.dumps(data))
+            rpc_notify("Success", {"data": data})
 
 
 class _RpcResponseReader:
@@ -90,7 +107,7 @@ class _RpcCall:
             }
         )
 
-        print(f"jsonrpc: {rpc_message}")
+        write_rpc_message(rpc_message)
         return cls.response_reader.read(rpc_id)
 
 
