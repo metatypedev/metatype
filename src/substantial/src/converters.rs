@@ -87,7 +87,7 @@ pub struct Run {
 #[derive(Debug)]
 pub enum Interupt {
     Sleep,
-    Saveretry,
+    SaveRetry,
     WaitReceiveEvent,
     WaitHandleEvent,
     WaitEnsureValue,
@@ -101,7 +101,7 @@ impl fmt::Display for Interupt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let variant = match self {
             Self::Sleep => "SLEEP",
-            Self::Saveretry => "SAVE_RETRY",
+            Self::SaveRetry => "SAVE_RETRY",
             Self::WaitReceiveEvent => "WAIT_RECEIVE_EVENT",
             Self::WaitHandleEvent => "WAIT_HANDLE_EVENT",
             Self::WaitEnsureValue => "WAIT_ENSURE_VALUE",
@@ -277,7 +277,7 @@ impl Run {
                     {
                         let now = Utc::now();
                         if wait_until > &now {
-                            bail!(Interupt::Saveretry);
+                            bail!(Interupt::SaveRetry);
                         } else {
                             current_retry_count = *counter;
                         }

@@ -72,6 +72,8 @@ protobuf-json-mapping.workspace = true
 # python
 pyo3 = { workspace = true, features = ["extension-module"] }
 
+reqwest = { workspace = true }
+
 [dev-dependencies]
 env_logger.workspace = true
 

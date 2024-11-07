@@ -83,6 +83,7 @@ const Meta = {
     contextSleep: getOp("op_context_sleep"),
     contextAppendEvent: getOp("op_context_append_event"),
     contextAppendOp: getOp("op_context_append_op"),
+    executePythonWithContext: getOp("op_execute_python_with_context"),
   },
   grpc: {
     register: getOp("op_grpc_register"),

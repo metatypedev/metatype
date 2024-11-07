@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { TaskContext } from "../src/runtimes/deno/shared_types.ts";
+
 declare global {
   const Meta: MetaNS;
 }
@@ -89,10 +91,9 @@ export type MetaNS = {
     contextSleep: (inp: SleepInput) => void;
     contextAppendEvent: (inp: AppendEventInput) => void;
     contextAppendOp: (inp: AppendOpInput) => void;
-  };
-
-  python: {
-    executePython: (inp: PythonExecutionInput) => PythonExecutionOutput;
+    executePythonWithContext: (
+      inp: PythonExecutionInput,
+    ) => PythonExecutionOutput;
   };
 };
 
@@ -431,14 +432,15 @@ export interface EnumerateAllChildrenInput {
 }
 
 export interface PythonExecutionInput {
-  python_module_path: string;
-  python_function_name: string;
-  executing_context: any;
+  run: Run;
+  internal: TaskContext;
+  kwargs: Record<string, unknown>;
+  module_path: string;
+  function_name: string;
 }
 
 export interface PythonExecutionOutput {
-  execution_result: any;
-  execution_status: string;
+  wfResult: any;
 }
 
 export interface SaveInput {

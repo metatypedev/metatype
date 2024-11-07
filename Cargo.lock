@@ -12856,6 +12856,7 @@ dependencies = [
  "query-engine-metrics",
  "regex",
  "request-handlers",
+ "reqwest",
  "schema-connector",
  "schema-core",
  "serde",

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 mod ext;
-mod python;
 mod runtimes;
 // mod snapshot;
 mod typegraph;

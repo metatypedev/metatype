@@ -62,6 +62,7 @@ deno_core::extension!(
         substantial::op_context_save,
         substantial::op_context_sleep,
         substantial::op_context_append_event,
+        substantial::op_execute_python_with_context,
 
         // FIXME(yohe): this test broke and has proven difficult to fix
         // #[cfg(test)]

@@ -17,21 +17,66 @@ self.onmessage = async function (event) {
         schedule,
         kwargs,
         internal,
+        kind,
       } = data as TaskData;
       // FIXME: handle case when script is missing and notify WorkerManager so it cleans up
       // its registry.
       const module = await import(modulePath);
 
-      runCtx = new Context(run, kwargs, internal);
-      const workflowFn = module[functionName];
+      if (kind == "DENO") {
+        runCtx = new Context(run, kwargs, internal);
+        const workflowFn = module[functionName];
 
-      if (typeof workflowFn !== "function") {
-        self.postMessage(Err(`Function "${functionName}" not found`));
-        self.close();
-        return;
-      }
-      workflowFn(runCtx)
-        .then((wfResult: unknown) => {
+        if (typeof workflowFn !== "function") {
+          self.postMessage(Err(`Function "${functionName}" not found`));
+          self.close();
+          return;
+        }
+        workflowFn(runCtx)
+          .then((wfResult: unknown) => {
+            self.postMessage(
+              Ok(
+                Msg(
+                  type,
+                  {
+                    kind: "SUCCESS",
+                    result: wfResult,
+                    run: runCtx!.getRun(),
+                    schedule,
+                  } satisfies WorkflowResult,
+                ),
+              ),
+            );
+          })
+          .catch((wfException: unknown) => {
+            self.postMessage(
+              Ok(
+                Msg(
+                  type,
+                  {
+                    kind: "FAIL",
+                    result: wfException instanceof Error
+                      ? wfException.message
+                      : JSON.stringify(wfException),
+                    exception: wfException instanceof Error
+                      ? wfException
+                      : undefined,
+                    run: runCtx!.getRun(),
+                    schedule,
+                  } satisfies WorkflowResult,
+                ),
+              ),
+            );
+          });
+      } else if (kind == "PYTHON") {
+        try {
+          const { wfResult } = Meta.substantial.executePythonWithContext({
+            run,
+            internal,
+            kwargs,
+            module_path: modulePath,
+            function_name: functionName,
+          });
           self.postMessage(
             Ok(
               Msg(
@@ -39,33 +84,32 @@ self.onmessage = async function (event) {
                 {
                   kind: "SUCCESS",
                   result: wfResult,
-                  run: runCtx!.getRun(),
+                  run,
                   schedule,
                 } satisfies WorkflowResult,
               ),
             ),
           );
-        })
-        .catch((wfException: unknown) => {
+        } catch (wfException) {
           self.postMessage(
-            Ok(
-              Msg(
-                type,
-                {
-                  kind: "FAIL",
-                  result: wfException instanceof Error
-                    ? wfException.message
-                    : JSON.stringify(wfException),
-                  exception: wfException instanceof Error
-                    ? wfException
-                    : undefined,
-                  run: runCtx!.getRun(),
-                  schedule,
-                } satisfies WorkflowResult,
-              ),
-            ),
+            Ok(Msg(
+              type,
+              {
+                kind: "FAIL",
+                result: wfException instanceof Error
+                  ? wfException.message
+                  : JSON.stringify(wfException),
+                exception: wfException instanceof Error
+                  ? wfException
+                  : undefined,
+                run,
+                schedule,
+              } satisfies WorkflowResult,
+            )),
           );
-        });
+        }
+      }
+
       break;
     }
     default:

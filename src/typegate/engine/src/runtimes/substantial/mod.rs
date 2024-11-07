@@ -3,6 +3,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+mod python_context;
+
+pub use python_context::op_execute_python_with_context;
+
 use crate::interlude::*;
 
 use chrono::{DateTime, Utc};

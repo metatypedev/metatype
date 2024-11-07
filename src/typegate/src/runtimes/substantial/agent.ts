@@ -8,7 +8,6 @@ import {
 import { getLogger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import {
-  appendIfOngoing,
   Interrupt,
   Kind,
   Result,
@@ -224,7 +223,7 @@ export class Agent {
     }
 
     if (newEventOp) {
-      appendIfOngoing(run, newEventOp);
+      Meta.substantial.contextAppendOp({ run, op: newEventOp?.event });
     }
 
     if (run.operations.length == 0) {
@@ -325,7 +324,9 @@ export class Agent {
         default:
           logger.error(
             `Fatal: invalid type ${answer.type} sent by "${runId}": ${
-              JSON.stringify(answer.data)
+              JSON.stringify(
+                answer.data,
+              )
             }`,
           );
       }
@@ -401,9 +402,9 @@ export class Agent {
 
     // Note: run is a one-time value, thus can be mutated
 
-    appendIfOngoing(run, {
-      at: new Date().toJSON(),
-      event: {
+    Meta.substantial.contextAppendOp({
+      run,
+      op: {
         type: "Stop",
         result: {
           [rustResult]: result ?? null,

@@ -1,4 +1,4 @@
-import { assertExists, assertEquals } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { connect, parseURL } from "redis";
 import { gql, Meta, sleep } from "../../utils/mod.ts";
 import { MetaTestCleanupFn } from "test-utils/test.ts";
@@ -33,7 +33,7 @@ export function basicTestTemplate(
     };
     secrets?: Record<string, string>;
   },
-  cleanup?: MetaTestCleanupFn
+  cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
@@ -63,11 +63,11 @@ export function basicTestTemplate(
               currentRunId = body.data?.start_sleep! as string;
               assertExists(
                 currentRunId,
-                "Run id was not returned when workflow was started"
+                "Run id was not returned when workflow was started",
               );
             })
             .on(e);
-        }
+        },
       );
 
       // Let interrupts to do their jobs for a bit
@@ -101,7 +101,7 @@ export function basicTestTemplate(
               },
             })
             .on(e);
-        }
+        },
       );
 
       await sleep(delays.awaitSleepCompleteSec * 1000);
@@ -145,9 +145,9 @@ export function basicTestTemplate(
               },
             })
             .on(e);
-        }
+        },
       );
-    }
+    },
   );
 }
 
@@ -162,7 +162,7 @@ export function concurrentWorkflowTestTemplate(
     };
     secrets?: Record<string, string>;
   },
-  cleanup?: MetaTestCleanupFn
+  cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
@@ -207,7 +207,7 @@ export function concurrentWorkflowTestTemplate(
               runIds.push(...[one, two, three]);
             })
             .on(e);
-        }
+        },
       );
 
       // let's wait for a bit to make sure interrupts are doing their jobs
@@ -243,7 +243,7 @@ export function concurrentWorkflowTestTemplate(
               three: [runIds[2]],
             })
             .on(e);
-        }
+        },
       );
 
       // This is arbitrary, if ops are leaking that means it should be increased
@@ -277,20 +277,20 @@ export function concurrentWorkflowTestTemplate(
             assertEquals(
               body?.data?.results?.ongoing?.count,
               0,
-              `0 workflow currently running (${backendName})`
+              `0 workflow currently running (${backendName})`,
             );
 
             assertEquals(
               body?.data?.results?.completed?.count,
               3,
-              `3 workflows completed (${backendName})`
+              `3 workflows completed (${backendName})`,
             );
 
             const localSorter = (a: any, b: any) =>
               a.run_id.localeCompare(b.run_id);
 
-            const received =
-              body?.data?.results?.completed?.runs ?? ([] as Array<any>);
+            const received = body?.data?.results?.completed?.runs ??
+              ([] as Array<any>);
             const expected = [
               {
                 result: {
@@ -318,12 +318,12 @@ export function concurrentWorkflowTestTemplate(
             assertEquals(
               received.sort(localSorter),
               expected.sort(localSorter),
-              `All three workflows have completed, including the aborted one (${backendName})`
+              `All three workflows have completed, including the aborted one (${backendName})`,
             );
           })
           .on(e);
       });
-    }
+    },
   );
 }
 
@@ -338,7 +338,7 @@ export function retrySaveTestTemplate(
     };
     secrets?: Record<string, string>;
   },
-  cleanup?: MetaTestCleanupFn
+  cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
@@ -381,7 +381,7 @@ export function retrySaveTestTemplate(
               assertExists(retryAbortMeId, "retry_abort_me runId");
             })
             .on(e);
-        }
+        },
       );
 
       await sleep(1000);
@@ -401,7 +401,7 @@ export function retrySaveTestTemplate(
               abort_retry: [retryAbortMeId],
             })
             .on(e);
-        }
+        },
       );
 
       // Waiting for the retry to finish
@@ -436,20 +436,20 @@ export function retrySaveTestTemplate(
               assertEquals(
                 body?.data?.results?.ongoing?.count,
                 0,
-                `0 workflow currently running (${backendName})`
+                `0 workflow currently running (${backendName})`,
               );
 
               assertEquals(
                 body?.data?.results?.completed?.count,
                 4,
-                `4 workflows completed (${backendName})`
+                `4 workflows completed (${backendName})`,
               );
 
               const localSorter = (a: any, b: any) =>
                 a.run_id.localeCompare(b.run_id);
 
-              const received =
-                body?.data?.results?.completed?.runs ?? ([] as Array<any>);
+              const received = body?.data?.results?.completed?.runs ??
+                ([] as Array<any>);
               const expected = [
                 {
                   result: {
@@ -484,13 +484,13 @@ export function retrySaveTestTemplate(
               assertEquals(
                 received.sort(localSorter),
                 expected.sort(localSorter),
-                `All workflows have completed (${backendName})`
+                `All workflows have completed (${backendName})`,
               );
             })
             .on(e);
-        }
+        },
       );
-    }
+    },
   );
 }
 
@@ -505,7 +505,7 @@ export function childWorkflowTestTemplate(
     };
     secrets?: Record<string, string>;
   },
-  cleanup?: MetaTestCleanupFn
+  cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
@@ -522,7 +522,7 @@ export function childWorkflowTestTemplate(
         "runtimes/substantial/substantial_child_workflow.py",
         {
           secrets,
-        }
+        },
       );
 
       const packages = [
@@ -543,7 +543,7 @@ export function childWorkflowTestTemplate(
             parentRunId = body.data?.start! as string;
             assertExists(
               parentRunId,
-              "Run id was not returned when workflow was started"
+              "Run id was not returned when workflow was started",
             );
           })
           .on(e);
@@ -610,7 +610,7 @@ export function childWorkflowTestTemplate(
           })
           .on(e);
       });
-    }
+    },
   );
 }
 
