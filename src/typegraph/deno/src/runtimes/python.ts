@@ -41,7 +41,7 @@ export class PythonRuntime extends Runtime {
   fromLambda<
     P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
     I extends t.Struct<P> = t.Struct<P>,
-    O extends t.Typedef = t.Typedef
+    O extends t.Typedef = t.Typedef,
   >(inp: I, out: O, { code }: { code: string }): t.Func {
     const matId = runtimes.fromPythonLambda(
       {
@@ -51,7 +51,7 @@ export class PythonRuntime extends Runtime {
       {
         fn: code, // not formatted
         runtime: this._id,
-      }
+      },
     );
 
     return t.func(inp, out, {
@@ -64,7 +64,7 @@ export class PythonRuntime extends Runtime {
   fromDef<
     P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
     I extends t.Struct<P> = t.Struct<P>,
-    O extends t.Typedef = t.Typedef
+    O extends t.Typedef = t.Typedef,
   >(inp: I, out: O, { code }: { code: string }): t.Func {
     const name = code.trim().match(/def\s+([A-Za-z0-9_]+)/)?.[1];
     if (name == undefined) {
@@ -79,7 +79,7 @@ export class PythonRuntime extends Runtime {
         name: name,
         fn: code,
         runtime: this._id,
-      }
+      },
     );
 
     return t.func(inp, out, {
@@ -92,7 +92,7 @@ export class PythonRuntime extends Runtime {
   import<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    { name, module, deps = [], effect = fx.read(), secrets = [] }: PythonImport
+    { name, module, deps = [], effect = fx.read(), secrets = [] }: PythonImport,
   ): t.Func<I, O, ImportMat> {
     const base = {
       runtime: this._id,

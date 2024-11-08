@@ -36,7 +36,7 @@ export class SubstantialRuntime extends Runtime {
 
   constructor(
     backend: SubstantialBackend,
-    fileDescriptions: Array<WorkflowFileDescription>
+    fileDescriptions: Array<WorkflowFileDescription>,
   ) {
     const id = runtimes.registerSubstantialRuntime({
       backend,
@@ -49,7 +49,7 @@ export class SubstantialRuntime extends Runtime {
   _genericSubstantialFunc(
     operation: SubstantialOperationType,
     funcArg?: Typedef,
-    funcOut?: Typedef
+    funcOut?: Typedef,
   ): Func<Typedef, Typedef, Materializer> {
     const data = {
       funcArg: funcArg?._id,
@@ -65,7 +65,7 @@ export class SubstantialRuntime extends Runtime {
       {
         tag: "start",
       },
-      kwargs
+      kwargs,
     );
   }
 
@@ -86,7 +86,7 @@ export class SubstantialRuntime extends Runtime {
       {
         tag: "send",
       },
-      payload
+      payload,
     );
   }
 
@@ -108,7 +108,7 @@ export class SubstantialRuntime extends Runtime {
         tag: "results",
       },
       undefined,
-      output
+      output,
     );
   }
 
@@ -141,7 +141,7 @@ export class WorkflowFile {
   private constructor(
     public readonly file: string,
     public readonly kind: WorkflowKind,
-    public deps: Array<string> = []
+    public deps: Array<string> = [],
   ) {}
 
   static deno(file: string, deps: Array<string> = []): WorkflowFile {

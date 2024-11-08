@@ -1,12 +1,12 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 // FIXME: DO NOT IMPORT any file that refers to Meta, this will be instantiated in a Worker
 // import { sleep } from "../../utils.ts"; // will silently fail??
 
 import { make_internal } from "../../worker_utils.ts";
 import { TaskContext } from "../deno/shared_types.ts";
-import { Interrupt, OperationEvent, Run, appendIfOngoing } from "./types.ts";
+import { appendIfOngoing, Interrupt, OperationEvent, Run } from "./types.ts";
 
 // const isTest = Deno.env.get("DENO_TESTING") === "true";
 const testBaseUrl = Deno.env.get("TEST_OVERRIDE_GQL_ORIGIN");
@@ -14,13 +14,13 @@ const testBaseUrl = Deno.env.get("TEST_OVERRIDE_GQL_ORIGIN");
 const additionalHeaders = { connection: "keep-alive" };
 
 export class Context {
-  private id: number = 0;
+  private id = 0;
   gql: ReturnType<typeof createGQLClient>;
 
   constructor(
     private run: Run,
     private kwargs: Record<string, unknown>,
-    private internal: TaskContext
+    private internal: TaskContext,
   ) {
     this.gql = createGQLClient(internal);
   }
@@ -86,7 +86,7 @@ export class Context {
         const strategy = new RetryStrategy(
           retry.maxRetries,
           retry.minBackoffMs,
-          retry.maxBackoffMs
+          retry.maxBackoffMs,
         );
 
         const retriesLeft = Math.max(retry.maxRetries - currRetryCount, 0);
@@ -170,7 +170,7 @@ export class Context {
 
   async handle(
     eventName: string,
-    fn: (received: unknown) => unknown | Promise<unknown>
+    fn: (received: unknown) => unknown | Promise<unknown>,
   ) {
     for (const { event } of this.run.operations) {
       if (event.type == "Send" && event.event_name == eventName) {
@@ -208,7 +208,7 @@ export class Context {
   createWorkflowHandle(handleDef: SerializableWorkflowHandle) {
     if (!handleDef.runId) {
       throw new Error(
-        "Cannot create handle from a definition that was not run"
+        "Cannot create handle from a definition that was not run",
       );
     }
     return new ChildWorkflowHandle(this, handleDef);
@@ -227,11 +227,11 @@ interface SerializableWorkflowHandle {
 export class ChildWorkflowHandle {
   constructor(
     private ctx: Context,
-    public handleDef: SerializableWorkflowHandle
+    public handleDef: SerializableWorkflowHandle,
   ) {}
 
   async start(): Promise<string> {
-    const { data } = await this.ctx.gql/**/ `
+    const { data } = await this.ctx.gql /**/`
       mutation ($name: String!, $kwargs: String!) {
         _sub_internal_start(name: $name, kwargs: $kwargs)
       }
@@ -243,7 +243,7 @@ export class ChildWorkflowHandle {
     this.handleDef.runId = (data as any)._sub_internal_start as string;
     this.#checkRunId();
 
-    const { data: _ } = await this.ctx.gql/**/ `
+    const { data: _ } = await this.ctx.gql /**/`
       mutation ($parent_run_id: String!, $child_run_id: String!) {
         _sub_internal_link_parent_child(parent_run_id: $parent_run_id, child_run_id: $child_run_id)
       }
@@ -258,7 +258,7 @@ export class ChildWorkflowHandle {
   async result<O>(): Promise<O> {
     this.#checkRunId();
 
-    const { data } = await this.ctx.gql/**/ `
+    const { data } = await this.ctx.gql /**/`
       query ($name: String!) {
         _sub_internal_results(name: $name) {
           completed {
@@ -292,7 +292,7 @@ export class ChildWorkflowHandle {
   async stop(): Promise<string> {
     this.#checkRunId();
 
-    const { data } = await this.ctx.gql/**/ `
+    const { data } = await this.ctx.gql /**/`
       mutation ($run_id: String!) {
         _sub_internal_stop(run_id: $run_id)
       }
@@ -306,7 +306,7 @@ export class ChildWorkflowHandle {
   async hasStopped(): Promise<boolean> {
     this.#checkRunId();
 
-    const { data } = await this.ctx.gql/**/ `
+    const { data } = await this.ctx.gql /**/`
       query {
         _sub_internal_results(name: $name) {
           completed {
@@ -329,7 +329,7 @@ export class ChildWorkflowHandle {
   #checkRunId() {
     if (!this.handleDef.runId) {
       throw new Error(
-        "Invalid state: run_id is not properly set, this could mean that the workflow was not started yet"
+        "Invalid state: run_id is not properly set, this could mean that the workflow was not started yet",
       );
     }
   }
@@ -371,7 +371,7 @@ class RetryStrategy {
   constructor(
     maxRetries: number,
     minBackoffMs?: number,
-    maxBackoffMs?: number
+    maxBackoffMs?: number,
   ) {
     this.maxRetries = maxRetries;
     this.minBackoffMs = minBackoffMs;

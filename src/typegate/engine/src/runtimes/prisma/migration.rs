@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/rpc.rs
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/api.rs

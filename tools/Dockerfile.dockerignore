@@ -2,7 +2,7 @@
 
 !tools/*.ts
 !tools/tasks/
-!tools/LICENSE-Elastic-2.0.md
+!tools/LICENSE-MPL-2.0.md
 
 !src/common
 !src/meta-cli/Cargo.toml
