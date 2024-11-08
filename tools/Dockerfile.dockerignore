@@ -8,8 +8,10 @@
 !src/meta-cli/Cargo.toml
 !src/metagen/Cargo.toml
 !src/metagen/src/fdk_rust/static/Cargo.toml
+!src/metagen/src/client_rs/static/Cargo.toml
 !src/mt_deno
 !src/pyrt_wit_wire
+!src/substantial/
 !src/typegate/
 !src/typegraph/core/
 !src/wit/

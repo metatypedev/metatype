@@ -59,9 +59,10 @@ RUN GHJK_INSTALL_EXE_DIR=/usr/bin \
 COPY tools/ tools/
 COPY ghjk.ts .
 ENV GHJK_ENV=oci
-SHELL ["/bin/sh", "-c", "source .ghjk/envs/$GHJK_ENV/activate.sh; sh -c $*", "sh"]
 ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
 RUN ghjk envs cook
+
+SHELL ["/bin/sh", "-c", ". .ghjk/envs/oci/activate.sh && sh -c \"$*\"", "sh"]
 
 COPY --from=plan /app/recipe.json recipe.json
 
