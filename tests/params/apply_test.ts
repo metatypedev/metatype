@@ -1,7 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { gql, Meta } from "../utils/mod.ts";
+import { randomPGConnStr } from "test-utils/database.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchemas, recreateMigrations } from "test-utils/migrations.ts";
+import { assertEquals } from "@std/assert/equals";
 
 Meta.test("(python (sdk): apply)", async (t) => {
   const e = await t.engine("params/apply.py", {
@@ -249,6 +252,69 @@ Meta.test("nested context access", async (t) => {
       })
       .expectData({
         optional: { optional: null },
+      })
+      .on(e);
+  });
+});
+
+Meta.test("apply with prisma generated types", async (t) => {
+  const { connStr, schema: _ } = randomPGConnStr();
+  const e = await t.engine("params/prisma_apply.py", {
+    secrets: {
+      "POSTGRES": connStr,
+    },
+  });
+  await dropSchemas(e);
+  await recreateMigrations(e);
+
+  let id: string = null!;
+
+  await t.should("create user", async () => {
+    await gql`
+      mutation {
+        createUser(
+          name: "Alice"
+          email: "alice@example.com"
+          age: 30
+          ) {
+            id
+            name
+            email
+            age
+          }
+        }
+      `
+      .expectBody((body) => {
+        id = body.data.createUser.id;
+        assertEquals(body.data.createUser, {
+          id: id,
+          name: "Alice",
+          email: "alice@example.com",
+          age: 30,
+        });
+      })
+      .on(e);
+  });
+
+  await t.should("find user by id", async () => {
+    await gql`
+      query Q($id: ID!) {
+        findUser(id: $id) {
+          id
+          name
+          email
+          age
+        }
+      }
+    `
+      .withVars({ id })
+      .expectData({
+        findUser: {
+          id,
+          name: "Alice",
+          email: "alice@example.com",
+          age: 30,
+        },
       })
       .on(e);
   });
