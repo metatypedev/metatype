@@ -28,7 +28,7 @@ self.onmessage = async function (event) {
 
       runCtx = new Context(run, kwargs, internal);
 
-      workflowFn(runCtx)
+      workflowFn(runCtx, internal)
         .then((wfResult: unknown) => {
           self.postMessage(
             Ok(

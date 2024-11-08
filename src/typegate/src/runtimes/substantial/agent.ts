@@ -18,6 +18,11 @@ import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
 
 const logger = getLogger();
 
+export interface StdKwargs {
+  taskContext: TaskContext;
+  kwargs: Record<string, string>;
+}
+
 export interface WorkflowDescription {
   name: string;
   path: string;
@@ -39,7 +44,6 @@ export class Agent {
     private backend: Backend,
     private queue: string,
     private config: AgentConfig,
-    private internalTCtx: TaskContext,
   ) {}
 
   async schedule(input: AddScheduleInput) {
@@ -247,6 +251,7 @@ export class Agent {
       return;
     }
 
+    const { taskContext, kwargs } = first.event.kwargs as unknown as StdKwargs;
     try {
       this.workerManager.triggerStart(
         workflow.name,
@@ -254,8 +259,8 @@ export class Agent {
         workflow.path,
         run,
         next.schedule_date,
-        first.event.kwargs,
-        this.internalTCtx,
+        kwargs,
+        taskContext,
       );
 
       this.workerManager.listen(
