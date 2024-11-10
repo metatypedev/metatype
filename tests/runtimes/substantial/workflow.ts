@@ -3,9 +3,12 @@ import {
   queryThatTakesAWhile,
   sendSubscriptionEmail,
   sleep,
+  Workflow,
 } from "./imports/common_types.ts";
 
-export async function eventsAndExceptionExample(ctx: Context) {
+export const eventsAndExceptionExample: Workflow<string> = async (
+  ctx: Context,
+) => {
   const { to } = ctx.kwargs;
   const messageDialog = await ctx.save(() => sendSubscriptionEmail(to));
 
@@ -17,7 +20,7 @@ export async function eventsAndExceptionExample(ctx: Context) {
   }
 
   return `${messageDialog}: confirmed!`;
-}
+};
 
 export async function saveAndSleepExample(ctx: Context) {
   const { a, b } = ctx.kwargs;
@@ -28,18 +31,18 @@ export async function saveAndSleepExample(ctx: Context) {
 
   const sum = await ctx.save(async () => {
     const remoteAdd = new Date().getTime();
-    const { data } = await ctx.gql/**/ `query { remote_add(a: $a, b: $b) }`.run(
+    const { data } = await ctx.gql /**/`query { remote_add(a: $a, b: $b) }`.run(
       {
         a: newA,
         b: newB,
-      }
+      },
     );
     const remoteAddEnd = new Date().getTime();
     console.log(
       "Remote add:",
       (remoteAddEnd - remoteAdd) / 1000,
       ", Response:",
-      data
+      data,
     );
 
     return (data as any)?.remote_add as number;
@@ -67,7 +70,7 @@ export async function retryExample(ctx: Context) {
         maxBackoffMs: 5000,
         maxRetries: 4,
       },
-    }
+    },
   );
 
   const timeoutRet = await ctx.save(
@@ -86,8 +89,19 @@ export async function retryExample(ctx: Context) {
         maxBackoffMs: 3000,
         maxRetries: 5,
       },
-    }
+    },
   );
 
   return [timeoutRet, retryRet].join(", ");
 }
+
+export const secretsExample: Workflow<void> = (_, { secrets }) => {
+  const { MY_SECRET, ...rest } = secrets;
+  if (!MY_SECRET) {
+    throw new Error("unable to read secret");
+  }
+  if (Object.keys(rest).length > 0) {
+    throw new Error("unexpected secrets found: ", rest);
+  }
+  return Promise.resolve();
+};

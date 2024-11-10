@@ -15,12 +15,11 @@ import { Backend } from "../../engine/runtime.js";
 import {
   Agent,
   AgentConfig,
+  type StdKwargs,
   WorkflowDescription,
 } from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
-import { TaskContext } from "./deno/shared_types.ts";
-import { globalConfig } from "../config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -68,6 +67,7 @@ export class SubstantialRuntime extends Runtime {
     queue: string,
     agent: Agent,
     typegate: Typegate,
+    private secrets: Record<string, string>,
   ) {
     super(typegraphName);
     this.logger = getLogger(`substantial:'${typegraphName}'`);
@@ -112,20 +112,7 @@ export class SubstantialRuntime extends Runtime {
       maxAcquirePerTick: typegate.config.base.substantial_max_acquire_per_tick,
     } satisfies AgentConfig;
 
-    // Note: required for ctx.gql()
-    const token = await InternalAuth.emit(typegate.cryptoKeys);
-    const internalTCtx = {
-      context: {},
-      secrets: {},
-      effect: null,
-      meta: {
-        url: `http://127.0.0.1:${globalConfig.tg_port}/${tgName}`,
-        token,
-      },
-      headers: {},
-    } satisfies TaskContext;
-
-    const agent = new Agent(backend, queue, agentConfig, internalTCtx);
+    const agent = new Agent(backend, queue, agentConfig);
 
     const wfDescriptions = await getWorkflowDescriptions(
       tgName,
@@ -144,6 +131,7 @@ export class SubstantialRuntime extends Runtime {
       queue,
       agent,
       typegate,
+      secrets,
     );
     await instance.#prepareWorkflowFiles(
       tg.meta.artifacts,
@@ -211,9 +199,9 @@ export class SubstantialRuntime extends Runtime {
 
     switch (matName) {
       case "start":
-        return this.#startResolver(false);
+        return this.#startResolver(mat, false);
       case "start_raw":
-        return this.#startResolver(true);
+        return this.#startResolver(mat, true);
       case "stop":
         return this.#stopResolver();
       case "send":
@@ -240,12 +228,40 @@ export class SubstantialRuntime extends Runtime {
     }
   }
 
-  #startResolver(enableGenerics: boolean): Resolver {
-    return async ({ name: workflowName, kwargs }) => {
+  #startResolver(mat: TypeMaterializer, enableGenerics: boolean): Resolver {
+    const secrets = ((mat.data.secrets as []) ?? []).reduce(
+      (agg, secretName) => ({ ...agg, [secretName]: this.secrets[secretName] }),
+      {},
+    );
+    return async ({
+      name: workflowName,
+      kwargs,
+      _: {
+        context,
+        parent,
+        info: { url, headers },
+      },
+    }) => {
       this.#checkWorkflowExistOrThrow(workflowName);
 
       const runId = Agent.nextId(workflowName);
       const schedule = new Date().toJSON();
+
+      const token = await InternalAuth.emit(this.typegate.cryptoKeys);
+      const stdKwargs = {
+        kwargs: enableGenerics ? JSON.parse(kwargs) : kwargs,
+        taskContext: {
+          parent,
+          context,
+          secrets,
+          effect: mat.effect.effect ?? null,
+          meta: {
+            url: `${url.protocol}//${url.host}/${this.typegraphName}`,
+            token,
+          },
+          headers,
+        },
+      } satisfies StdKwargs;
 
       logger.info(
         `Start request "${workflowName}" received: new run "${runId}" should be scheduled.`,
@@ -259,7 +275,7 @@ export class SubstantialRuntime extends Runtime {
           at: schedule,
           event: {
             type: "Start",
-            kwargs: enableGenerics ? JSON.parse(kwargs) : kwargs,
+            kwargs: stdKwargs,
           },
         },
       });

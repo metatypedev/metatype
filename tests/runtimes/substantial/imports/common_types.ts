@@ -1,7 +1,7 @@
 // TODO: include this as part of the metagen generated code
 
-// TODO:
-export type Workflow<O> = (ctx: Context) => Promise<O>;
+// TODO: merge these
+export type Workflow<O> = (ctx: Context, ctx2: TaskCtx) => Promise<O>;
 
 export interface SerializableWorkflowHandle {
   runId?: string;
@@ -44,6 +44,21 @@ export interface Context {
     handleDef: SerializableWorkflowHandle
   ): ChildWorkflowHandle;
 }
+
+export type TaskCtx = {
+  parent?: Record<string, unknown>;
+  /**
+   * Request context extracted by auth extractors.
+   */
+  context?: Record<string, unknown>;
+  secrets: Record<string, string>;
+  effect: "create" | "update" | "delete" | "read" | undefined | null;
+  meta: {
+    url: string;
+    token: string;
+  };
+  headers: Record<string, string>;
+};
 
 export interface SaveOption {
   timeoutMs?: number;

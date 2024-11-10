@@ -1,9 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-// FIXME: DO NOT IMPORT any file that refers to Meta, this will be instantiated in a Worker
-// import { sleep } from "../../utils.ts"; // will silently fail??
-
 import { make_internal } from "../../worker_utils.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import { appendIfOngoing, Interrupt, OperationEvent, Run } from "./types.ts";
