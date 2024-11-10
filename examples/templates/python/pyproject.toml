@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "example"
-version = "0.5.0-rc.5"
+version = "0.5.0-rc.6"
 description = ""
 authors = []
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-typegraph = "0.5.0-rc.5"
+typegraph = "0.5.0-rc.6"
 
 [build-system]
 requires = ["poetry-core"]
