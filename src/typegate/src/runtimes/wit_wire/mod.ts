@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import * as zod from "zod";
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
@@ -9,7 +9,7 @@ import { getLogger } from "../../log.ts";
 
 const logger = getLogger(import.meta);
 
-const METATYPE_VERSION = "0.5.0-rc.4";
+const METATYPE_VERSION = "0.5.0-rc.5";
 
 export class WitWireMessenger {
   static async init(

@@ -28,19 +28,19 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs,tests/metagen/typegraphs/sample/ts/client.ts && cd ../dev && deno fmt && cd ../typegraph/deno && deno fmt --ignore=node_modules,dist && cd ../../libs/metagen/src && deno fmt'
+        entry: bash -c 'cd src/typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs,tests/metagen/typegraphs/sample/ts/client.ts && cd ../../tools && deno fmt && cd ../src/typegraph/deno && deno fmt --ignore=node_modules,dist && cd ../../../src/metagen/src && deno fmt'
         pass_filenames: false
         types:
           - ts
-        files: ^(typegate|dev|typegraph/deno)/
+        files: ^(src/typegate|tools|src/typegraph/deno)/
       - id: deno-lint
         name: Deno lint
         language: system
-        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native,tmp,tests/e2e/nextjs && cd ../dev && deno lint && cd ../libs/metagen/src/ && deno lint'
+        entry: bash -c 'cd src/typegate && deno lint --rules-exclude=no-explicit-any --ignore=native,tmp,tests/e2e/nextjs && cd ../../tools && deno lint && cd ../src/metagen/src/ && deno lint'
         pass_filenames: false
         types:
           - ts
-        files: ^(typegate|dev)/
+        files: ^(src/typegate|tools)/
       - id: es-lint
         name: Eslint website
         language: system
@@ -100,17 +100,17 @@ repos:
         name: "License MPL-2.0 python"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-MPL-2.0.txt
+          - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=#"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - python
         files: ^typegraph/
       - id: insert-license
-        name: "License Elastic-2.0 rust"
+        name: "License MPL-2.0 rust"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-Elastic-2.0.txt
+          - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
           - "--skip-license-insertion-comment=@generated"
@@ -121,38 +121,38 @@ repos:
         name: "License MPL-2.0 rust"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-MPL-2.0.txt
+          - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - rust
         files: ^(meta-cli|typegraph|libs/metagen)/
       - id: insert-license
-        name: "License Elastic-2.0 deno"
+        name: "License MPL-2.0 deno"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-Elastic-2.0.txt
+          - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
           - "--skip-license-insertion-comment=@generated"
         types_or:
           - ts
-        files: ^(typegate|dev)/
+        files: ^(typegate|tools)/
       - id: insert-license
         name: "License MPL-2.0 deno"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-MPL-2.0.txt
+          - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - ts
         files: ^typegraph/
       - id: insert-license
-        name: "License Elastic-2.0 typescript"
+        name: "License MPL-2.0 typescript"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-Elastic-2.0.txt
+          - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:

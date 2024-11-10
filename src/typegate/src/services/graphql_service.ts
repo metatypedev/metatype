@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../log.ts";
 import { parse } from "graphql";
@@ -9,7 +9,10 @@ import {
   type Operations,
   parseRequest,
 } from "../transports/graphql/request_parser.ts";
-import { findOperation, type FragmentDefs } from "../transports/graphql/graphql.ts";
+import {
+  findOperation,
+  type FragmentDefs,
+} from "../transports/graphql/graphql.ts";
 import { forceAnyToOption } from "../utils.ts";
 import type { QueryEngine } from "../engine/query_engine.ts";
 import type * as ast from "graphql/ast";

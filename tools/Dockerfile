@@ -53,7 +53,7 @@ RUN set -eux; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
 ARG GHJK_VERSION=v0.2.1
-RUN GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash \
+RUN GHJK_INSTALL_EXE_DIR=/usr/bin \
     deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
 
 COPY tools/ tools/
@@ -62,33 +62,31 @@ ENV GHJK_ENV=oci
 ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
 RUN ghjk envs cook
 
+SHELL ["/bin/sh", "-c", ". .ghjk/envs/oci/activate.sh && sh -c \"$*\"", "sh"]
+
 COPY --from=plan /app/recipe.json recipe.json
 
 ARG CARGO_PROFILE=release
 
-RUN . "$GHJK_ACTIVATE" \
-    && cargo chef cook --recipe-path recipe.json --profile $CARGO_PROFILE --package typegate \
+RUN cargo chef cook --recipe-path recipe.json --profile $CARGO_PROFILE --package typegate \
     && rm recipe.json
 
 COPY . .
 
-RUN . "$GHJK_ACTIVATE" \
-    && cargo build --profile $CARGO_PROFILE --package typegate --locked \
+RUN cargo build --profile $CARGO_PROFILE --package typegate --locked \
     && ( \
-        [ $CARGO_PROFILE = 'release' ]  \
-            && cp target/release/typegate typegate-bin \
-            || cp target/debug/typegate typegate-bin \
+    [ $CARGO_PROFILE = 'release' ]  \
+    && cp target/release/typegate typegate-bin \
+    || cp target/debug/typegate typegate-bin \
     )
 
-RUN . "$GHJK_ACTIVATE" \
-    && deno run -A tools/update.ts --cache-only --src-only \
+RUN deno run -A tools/update.ts --cache-only --src-only \
     && mkdir -p .metatype
 
 #
 FROM builder AS dev
 
-RUN . "$GHJK_ACTIVATE" \
-    && mv target /tmp/target \
+RUN mv target /tmp/target \
     && rm -rf * \
     && mv /tmp/target .
 
@@ -100,8 +98,7 @@ ARG TARGETARCH
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH} /tini
 
-RUN . "$GHJK_ACTIVATE" \
-    && chmod +x /tini \
+RUN chmod +x /tini \
     && mkdir -p /lib/sym \
     && ln -s /lib/aarch64-linux-gnu /lib/sym/arm64 \
     && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64
@@ -131,7 +128,7 @@ COPY --from=builder /app/src/typegate/deno.jsonc ./src/typegate/
 COPY --from=builder /app/src/typegraph/deno/deno.json ./src/typegraph/deno/
 COPY --from=builder /app/tests/deno.jsonc ./tests/
 COPY --from=builder /app/examples/deno.jsonc ./examples/
-COPY tools/LICENSE-Elastic-2.0.md LICENSE.md
+COPY tools/LICENSE-MPL-2.0.md LICENSE.md
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir

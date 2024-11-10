@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { sharedConfigSchema } from "./types.ts";
 import { configOrExit } from "./loader.ts";
@@ -24,7 +24,7 @@ export const sharedConfig = await configOrExit(
     Object.fromEntries(
       envSharedWithWorkers
         .map((k) => [k.toLocaleLowerCase(), Deno.env.get(k)])
-        .filter(([_, v]) => v !== undefined)
+        .filter(([_, v]) => v !== undefined),
     ),
-  ]
+  ],
 );

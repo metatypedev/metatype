@@ -47,7 +47,10 @@ export function basicTestTemplate(
       cleanup && t.addCleanup(cleanup);
 
       const e = await t.engine("runtimes/substantial/substantial.py", {
-        secrets,
+        secrets: {
+          MY_SECRET: "Hello",
+          ...secrets,
+        },
       });
 
       let currentRunId: string | null = null;
@@ -173,7 +176,10 @@ export function concurrentWorkflowTestTemplate(
       cleanup && t.addCleanup(cleanup);
 
       const e = await t.engine("runtimes/substantial/substantial.py", {
-        secrets,
+        secrets: {
+          MY_SECRET: "Hello",
+          ...secrets,
+        },
       });
 
       const emails = [
@@ -349,7 +355,10 @@ export function retrySaveTestTemplate(
       cleanup && t.addCleanup(cleanup);
 
       const e = await t.engine("runtimes/substantial/substantial.py", {
-        secrets,
+        secrets: {
+          MY_SECRET: "Hello",
+          ...secrets,
+        },
       });
 
       let resolvedId: string,

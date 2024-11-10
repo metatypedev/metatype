@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 /*
 Lifted from https://github.com/clo4/deno_mock_fetch/blob/1ef9476b43b1b2b4cab0aaa576f713e8339f46b6/mod.ts
