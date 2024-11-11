@@ -60,8 +60,7 @@ class CliEnv:
 
         for key in _optional_cli_envs:
             env_name = "MCLI_" + key.upper()
-            d[key] = environ.get(env_name)
-
+            d[key] = environ.get(env_name) or None
         try:
             d["command"] = Command(d["command"])
         except ValueError as e:
