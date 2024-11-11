@@ -724,6 +724,55 @@
           "crateName": "cargo-udeps",
           "locked": true,
           "specifiedVersion": true
+        },
+        "bciqk32ytmretqjmmjadp4n5737sifnbyxdqkvkq6lvg3w5rxmsku57y": {
+          "version": "1.1.388",
+          "buildDepConfigs": {
+            "cpy_bs_ghrel": {
+              "version": "3.12.5",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                },
+                "zstd_aa": {
+                  "version": "v1.4.8,",
+                  "buildDepConfigs": {},
+                  "portRef": "zstd_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "cpy_bs_ghrel@0.1.0",
+              "releaseTag": "20240814",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "pipi_pypi@0.1.0",
+          "packageName": "pyright",
+          "specifiedVersion": true
+        },
+        "bciqon5lanvscx2pvfxplu3yftfwyqb2sc7d7ju7veqbfhraw2okw4xa": {
+          "version": "1.1.388",
+          "buildDepConfigs": {
+            "node_org": {
+              "version": "v20.8.0",
+              "buildDepConfigs": {
+                "tar_aa": {
+                  "version": "1.34",
+                  "buildDepConfigs": {},
+                  "portRef": "tar_aa@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "node_org@0.1.0",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "npmi_npm@0.1.0",
+          "packageName": "pyright",
+          "specifiedVersion": true
         }
       }
     },
@@ -770,6 +819,7 @@
                 "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
+                "bciqav4kugvq2ceed4xyic2urs5cg2ay5atiwx757u7yhx3cgauf7gqi",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy",
                 "bciqezep4ufkgwesldlm5etyfkgdsiickfudx7cosydcz6xtgeorn2hy",
                 "bciqaixkkacuuligsvtjcfdfgjgl65owtyspiiljb3vmutlgymecsiwq",
@@ -806,6 +856,7 @@
                 "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
+                "bciqav4kugvq2ceed4xyic2urs5cg2ay5atiwx757u7yhx3cgauf7gqi",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy",
                 "bciqezep4ufkgwesldlm5etyfkgdsiickfudx7cosydcz6xtgeorn2hy",
                 "bciqaixkkacuuligsvtjcfdfgjgl65owtyspiiljb3vmutlgymecsiwq",
@@ -830,6 +881,7 @@
               "installs": [
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
+                "bciqav4kugvq2ceed4xyic2urs5cg2ay5atiwx757u7yhx3cgauf7gqi",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy",
                 "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
               ],
@@ -870,6 +922,7 @@
                 "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
+                "bciqav4kugvq2ceed4xyic2urs5cg2ay5atiwx757u7yhx3cgauf7gqi",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
@@ -884,6 +937,7 @@
                 "bciqlt27ioikxnpkqq37hma7ibn5e5wpzfarbvoh77zwdkarwghtvzxa",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
+                "bciqav4kugvq2ceed4xyic2urs5cg2ay5atiwx757u7yhx3cgauf7gqi",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
@@ -898,6 +952,7 @@
                 "bciqlt27ioikxnpkqq37hma7ibn5e5wpzfarbvoh77zwdkarwghtvzxa",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
+                "bciqav4kugvq2ceed4xyic2urs5cg2ay5atiwx757u7yhx3cgauf7gqi",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
@@ -925,6 +980,7 @@
                 "bciqjme7csfq43oenkrsakdhaha34hgy6vdwkfffki2ank3kf6mjcguq",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
+                "bciqav4kugvq2ceed4xyic2urs5cg2ay5atiwx757u7yhx3cgauf7gqi",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
@@ -951,6 +1007,7 @@
                 "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
+                "bciqav4kugvq2ceed4xyic2urs5cg2ay5atiwx757u7yhx3cgauf7gqi",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
@@ -2797,6 +2854,41 @@
           "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/ports/pipi.ts"
         },
         "packageName": "ruff"
+      },
+      "bciqav4kugvq2ceed4xyic2urs5cg2ay5atiwx757u7yhx3cgauf7gqi": {
+        "version": "1.1.388",
+        "port": {
+          "ty": "denoWorker@v1",
+          "name": "npmi_npm",
+          "platforms": [
+            "x86_64-linux",
+            "aarch64-linux",
+            "x86_64-darwin",
+            "aarch64-darwin",
+            "x86_64-windows",
+            "aarch64-windows",
+            "x86_64-freebsd",
+            "aarch64-freebsd",
+            "x86_64-netbsd",
+            "aarch64-netbsd",
+            "x86_64-aix",
+            "aarch64-aix",
+            "x86_64-solaris",
+            "aarch64-solaris",
+            "x86_64-illumos",
+            "aarch64-illumos",
+            "x86_64-android",
+            "aarch64-android"
+          ],
+          "version": "0.1.0",
+          "buildDeps": [
+            {
+              "name": "node_org"
+            }
+          ],
+          "moduleSpecifier": "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/ports/npmi.ts"
+        },
+        "packageName": "pyright"
       },
       "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy": {
         "version": "1.8.3",

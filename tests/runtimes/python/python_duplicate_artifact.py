@@ -1,11 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+from typegraph import t, typegraph
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
 from typegraph.runtimes.python import PythonRuntime
-
-from typegraph import t, typegraph
 
 
 @typegraph()

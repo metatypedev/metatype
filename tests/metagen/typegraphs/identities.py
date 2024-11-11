@@ -1,10 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.runtimes.deno import DenoRuntime
 from typegraph.runtimes.python import PythonRuntime
 from typegraph.runtimes.wasm import WasmRuntime
-from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
@@ -28,7 +28,7 @@ def identities(g: Graph):
             "boolean": t.boolean(),
             # TODO: file upload support for fdk?
             # "file": t.file(),
-        }
+        },
     ).rename("primitives")
     composites = t.struct(
         {
@@ -37,7 +37,7 @@ def identities(g: Graph):
                 [
                     primitives,
                     t.struct({"branch2": t.string()}).rename("branch2"),
-                ]
+                ],
             ),
             "union": t.union(
                 [
@@ -45,10 +45,10 @@ def identities(g: Graph):
                     t.integer(),
                     t.string(),
                     t.email().rename("branch4again"),
-                ]
+                ],
             ),
             "list": t.list(t.string()),
-        }
+        },
     ).rename("composites")
     cycles1 = t.struct(
         {
@@ -57,14 +57,14 @@ def identities(g: Graph):
             "phantom1": t.string().optional(),
             "to2": g.ref("cycles2").optional(),
             "list3": t.list(g.ref("cycles3")).optional(),
-        }
+        },
     ).rename("cycles1")
 
     t.either(
         [
             g.ref("cycles3"),
             g.ref("cycles1"),
-        ]
+        ],
     ).rename("cycles2")
 
     t.union(
@@ -73,36 +73,36 @@ def identities(g: Graph):
                 {
                     "phantom3a": t.string().optional(),
                     "to1": g.ref("cycles1").optional(),
-                }
+                },
             ).rename("branch33A"),
             t.struct(
                 {
                     "phantom3b": t.string().optional(),
                     "to2": g.ref("cycles2").optional(),
-                }
+                },
             ).rename("branch33B"),
-        ]
+        ],
     ).rename("cycles3")
 
     simple_cycles_1 = t.struct(
         {
             "phantom1": t.string().optional(),
             "to2": g.ref("simple_cycles_2").optional(),
-        }
+        },
     ).rename("simple_cycles_1")
 
     t.struct(
         {
             "phantom2": t.string().optional(),
             "to3": g.ref("simple_cycles_3").optional(),
-        }
+        },
     ).rename("simple_cycles_2")
 
     t.struct(
         {
             "phantom3": t.string().optional(),
             "to1": g.ref("simple_cycles_1").optional(),
-        }
+        },
     ).rename("simple_cycles_3")
 
     python = PythonRuntime()

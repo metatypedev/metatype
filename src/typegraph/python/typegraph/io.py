@@ -1,13 +1,13 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Any, Optional, Dict
-from fileinput import FileInput
-from dataclasses import dataclass
-from typegraph.graph.shared_types import BasicAuth
-from typegraph.gen.exports.core import MigrationAction
 import json
+from dataclasses import dataclass
+from fileinput import FileInput
+from typing import Any, Dict, Optional
 
+from typegraph.gen.exports.core import MigrationAction
+from typegraph.graph.shared_types import BasicAuth
 
 _JSONRPC_VERSION = "2.0"
 
@@ -23,7 +23,7 @@ def rpc_notify(method: str, params: Any):
             "jsonrpc": _JSONRPC_VERSION,
             "method": method,
             "params": params,
-        }
+        },
     )
     write_rpc_message(message)
 
@@ -83,7 +83,7 @@ class _RpcResponseReader:
 
             if parsed.get("id") != rpc_id:
                 Log.error(
-                    f"rpc response: expected sequential requestests, unexpected rpc id {parsed.get('id')}"
+                    f"rpc response: expected sequential requestests, unexpected rpc id {parsed.get('id')}",
                 )
                 continue
 
@@ -104,7 +104,7 @@ class _RpcCall:
                 "id": rpc_id,
                 "method": method,
                 "params": params,
-            }
+            },
         )
 
         write_rpc_message(rpc_message)
@@ -162,7 +162,7 @@ class Rpc:
         return DeployData(
             secrets=res["secrets"],
             default_migration_action=migration_action_from_dict(
-                res["defaultMigrationAction"]
+                res["defaultMigrationAction"],
             ),
             migration_actions={
                 k: migration_action_from_dict(v)

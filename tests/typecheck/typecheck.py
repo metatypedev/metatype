@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, effects, Policy, t, Graph
+from typegraph import Graph, Policy, effects, t, typegraph
 from typegraph.runtimes.deno import DenoRuntime
 
 
@@ -46,18 +46,20 @@ def typecheck(g: Graph):
                     t.struct(
                         {
                             "content": t.either(
-                                [t.string(min=3), t.list(t.string(min=3), max=3)]
-                            )
-                        }
+                                [t.string(min=3), t.list(t.string(min=3), max=3)],
+                            ),
+                        },
                     ),
-                ]
+                ],
             ).optional(),
-        }
+        },
     )
 
     posts = deno.func(post_filter, t.list(post, max=20), code="() => []")
     find_post = deno.func(
-        t.struct({"id": t.uuid()}), post.optional(), code="() => null"
+        t.struct({"id": t.uuid()}),
+        post.optional(),
+        code="() => null",
     )
 
     create_post_code = "() => ({ title: 'Hello Metatype', content: 'Greeting from Metatype', authorId: 123})"
@@ -69,7 +71,7 @@ def typecheck(g: Graph):
                 "content": t.string(min=100),
                 "authorId": t.uuid(),
                 "tags": t.list(t.string(max=10), min=2).optional(),
-            }
+            },
         ),
         post,
         code=create_post_code,
@@ -90,7 +92,7 @@ def typecheck(g: Graph):
                     name="AvailableItem",
                 ),
             ),
-        }
+        },
     )
 
     product = t.struct(
@@ -98,7 +100,7 @@ def typecheck(g: Graph):
             "name": t.string(),
             "equivalent": t.list(g.ref("Product")).optional(),
             "score": t.either(
-                [t.string(enum=["bad", "decent", "good"]), t.integer()]
+                [t.string(enum=["bad", "decent", "good"]), t.integer()],
             ).optional(),
         },
         name="Product",

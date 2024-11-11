@@ -1,7 +1,11 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors
 from typegraph.runtimes.wasm import WasmRuntime
+
 # skip:end
 
 
@@ -18,7 +22,7 @@ def metagen_rs(g: Graph):
             "releaseTime": t.datetime(),
             "mp3Url": t.uri(),
             # explicit type names help when generating code
-        }
+        },
     ).rename("idv3")
 
     # the wire flavour is availible through a static

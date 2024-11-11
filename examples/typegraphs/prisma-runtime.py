@@ -1,3 +1,6 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
 from typegraph import Policy, t
 from typegraph.graph.params import Cors
@@ -41,7 +44,7 @@ def prisma_runtime(g: Graph):
                 {
                     "id": t.string(),
                     "term": t.string(),
-                }
+                },
             ),
             t.list(user),
         ),

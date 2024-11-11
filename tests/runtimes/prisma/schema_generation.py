@@ -1,11 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+from typegraph import Graph, t, typegraph
 from typegraph.effects import CREATE, UPDATE
 from typegraph.providers import PrismaRuntime
 from typegraph.runtimes import DenoRuntime
-
-from typegraph import Graph, t, typegraph
 
 
 @typegraph()
@@ -524,7 +523,7 @@ def multi_field_unique(g: Graph):
         {
             "id": t.uuid(as_id=True, config=["auto"]),
             "projects": t.list(g.ref("Project")),
-        }
+        },
     ).rename("Account")
 
     _project = t.struct(

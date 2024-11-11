@@ -1,5 +1,8 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
-from typegraph import typegraph, t, Graph
+from typegraph import Graph, t, typegraph
 from typegraph.graph.params import Cors
 
 
@@ -17,8 +20,8 @@ def types(g: Graph):
                     {
                         "model": t.string(),
                         "name": t.string().optional(),
-                    }
-                )
+                    },
+                ),
             ),
-        }
+        },
     )

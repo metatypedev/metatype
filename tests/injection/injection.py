@@ -1,11 +1,11 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, effects, Policy, t, Graph
+from typegraph import Graph, Policy, effects, t, typegraph
+from typegraph.effects import CREATE, DELETE, READ, UPDATE
 from typegraph.providers.prisma import PrismaRuntime
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.runtimes.graphql import GraphQLRuntime
-from typegraph.effects import CREATE, UPDATE, DELETE, READ
 
 
 @typegraph()
@@ -28,7 +28,7 @@ def injection(g: Graph):
             "alt_context_opt": t.string().optional().from_context("userId"),
             "alt_context_opt_missing": t.string().optional().from_context("userId"),
             "date": t.datetime().inject("now"),
-        }
+        },
     )
 
     operation = t.enum(["insert", "modify", "remove", "read"])
@@ -41,9 +41,9 @@ def injection(g: Graph):
                     UPDATE: "modify",
                     DELETE: "remove",
                     READ: "read",
-                }
-            )
-        }
+                },
+            ),
+        },
     )
     res2 = t.struct({"operation": operation})
 
@@ -83,9 +83,11 @@ def injection(g: Graph):
                 "graphql": gql.query(
                     t.struct({"id": t.integer().from_parent("a")}),
                     user,
-                    path=("user",),
+                    path=[
+                        "user",
+                    ],
                 ),
-            }
+            },
         ),
         effect_none=deno.identity(req2),
         effect_create=deno.func(req2, res2, code="(x) => x", effect=effects.create()),
@@ -97,17 +99,19 @@ def injection(g: Graph):
             user.extend(
                 {
                     "from_parent": deno.identity(t.struct({"email": t.email()})).reduce(
-                        {"email": g.inherit().from_parent("email")}
+                        {"email": g.inherit().from_parent("email")},
                     ),
                     "messagesSent": find_messages.reduce(
                         {
                             "where": {
                                 "senderId": g.inherit().from_parent("id"),
-                            }
-                        }
+                            },
+                        },
                     ),
-                }
+                },
             ),
-            path=("user",),
+            path=[
+                "user",
+            ],
         ),
     )

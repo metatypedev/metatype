@@ -3,7 +3,7 @@
 
 import re
 
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime
 
@@ -24,6 +24,8 @@ def policies_jwt(g: Graph):
             code="""() => "Hello World!" """,
         ).with_policy(some_policy),
         sayHelloRegexWorld=deno.func(
-            t.struct({}), t.string(), code="""() => "Hello World!" """
+            t.struct({}),
+            t.string(),
+            code="""() => "Hello World!" """,
         ).with_policy(regex_policy),
     )

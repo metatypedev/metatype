@@ -6,9 +6,9 @@ from re import Pattern
 from typing import List, Optional, Union
 
 from typegraph.gen.exports.core import (
+    ContextCheckNotNull,
     ContextCheckPattern,
     ContextCheckValue,
-    ContextCheckNotNull,
     Err,
     MaterializerId,
     PolicySpecPerEffect,
@@ -36,9 +36,7 @@ class Policy:
 
     @classmethod
     def public(cls):
-        """
-        Public access
-        """
+        """Public access"""
         res = core.get_public_policy(store)
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -52,7 +50,9 @@ class Policy:
             res = core.register_context_policy(store, key, ContextCheckValue(check))
         else:
             res = core.register_context_policy(
-                store, key, ContextCheckPattern(check.pattern)
+                store,
+                key,
+                ContextCheckPattern(check.pattern),
             )
 
         if isinstance(res, Err):
@@ -114,7 +114,7 @@ def get_policy_chain(policies: PolicySpec) -> List[WitPolicySpec]:
                 update=p.update and p.update.id,
                 delete=p.delete and p.delete.id,
                 read=p.read and p.read.id,
-            )
+            ),
         )
         for p in policies
     ]

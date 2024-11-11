@@ -47,7 +47,6 @@ repos:
           - tsx
           - json
           - yaml
-        files: ^(src/typegate|tools)/
       - id: es-lint
         name: Eslint website
         language: system
@@ -64,6 +63,13 @@ repos:
       #  pass_filenames: false
       #  types:
       #    - toml
+      # - id: pyright
+      #   name: Pyright type check
+      #   language: system
+      #   entry: bash -c 'pyright'
+      #   pass_filenames: false
+      #   types:
+      #     - python
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:

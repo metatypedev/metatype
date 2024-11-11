@@ -1,8 +1,9 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from .logic_types import Ctx
 import json
+
+from .logic_types import Ctx
 
 
 def remote_sum(inp: dict, ctx: Ctx) -> float:

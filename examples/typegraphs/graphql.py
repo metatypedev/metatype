@@ -1,5 +1,8 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors
 from typegraph.providers.prisma import PrismaRuntime
 
@@ -36,8 +39,8 @@ def graphql(g: Graph):
                 t.struct(
                     {
                         # highlight-next-line
-                        "id": t.string(as_id=True).from_parent("user_id")
-                    }
+                        "id": t.string(as_id=True).from_parent("user_id"),
+                    },
                 ),
                 t.optional(user),
             ),

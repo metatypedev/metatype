@@ -715,11 +715,12 @@ class _QueryGraphBase {
 
 // -------------------------------------------------- //
 
+
 const nodeMetas = {
   scalar() {
     return {};
   },
-
+  
   Post(): NodeMeta {
     return {
       subNodes: [
@@ -879,7 +880,7 @@ export class QueryGraph extends _QueryGraphBase {
       "user": "user!",
     });
   }
-
+    
   getUser(select: UserSelections) {
     const inner = _selectionToNodeSet(
       { "getUser": select },
@@ -920,10 +921,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new MutationNode(inner) as MutationNode<Post>;
   }
-  compositeArgs(
-    args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>,
-    select: PostSelections,
-  ) {
+  compositeArgs(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: PostSelections) {
     const inner = _selectionToNodeSet(
       { "compositeArgs": [args, select] },
       [["compositeArgs", nodeMetas.RootCompositeArgsFn]],
@@ -931,9 +929,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new MutationNode(inner) as MutationNode<Post>;
   }
-  scalarUnion(
-    args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>,
-  ) {
+  scalarUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>) {
     const inner = _selectionToNodeSet(
       { "scalarUnion": args },
       [["scalarUnion", nodeMetas.RootScalarUnionFn]],
@@ -941,10 +937,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner) as QueryNode<RootScalarUnionFnOutput>;
   }
-  compositeUnion(
-    args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>,
-    select: RootCompositeUnionFnOutputSelections,
-  ) {
+  compositeUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: RootCompositeUnionFnOutputSelections) {
     const inner = _selectionToNodeSet(
       { "compositeUnion": [args, select] },
       [["compositeUnion", nodeMetas.RootCompositeUnionFn]],
@@ -952,10 +945,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner) as QueryNode<RootCompositeUnionFnOutput>;
   }
-  mixedUnion(
-    args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>,
-    select: RootMixedUnionFnOutputSelections,
-  ) {
+  mixedUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: RootMixedUnionFnOutputSelections) {
     const inner = _selectionToNodeSet(
       { "mixedUnion": [args, select] },
       [["mixedUnion", nodeMetas.RootMixedUnionFn]],

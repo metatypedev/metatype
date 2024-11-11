@@ -1,3 +1,6 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
 from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Auth, Cors
@@ -24,7 +27,7 @@ def authentication(g: Graph):
         get_context=deno.identity(ctx).apply(
             {
                 "username": g.from_context("username"),
-            }
+            },
         ),
         get_full_context=deno.func(
             t.struct({}),

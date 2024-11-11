@@ -5,9 +5,9 @@ import importlib
 import importlib.abc
 import importlib.machinery
 import importlib.util
+import inspect
 import json
 import os
-import inspect
 import sys
 import traceback
 import types
@@ -45,7 +45,7 @@ HandlerFn = Callable[..., T]
 class Ctx:
     def gql(self, query: str, variables: str) -> Any:
         data = json.loads(
-            hostcall("gql", json=json.dumps({"query": query, "variables": variables}))
+            hostcall("gql", json=json.dumps({"query": query, "variables": variables})),
         )
         return data["data"]
 
@@ -60,24 +60,24 @@ class MatWire(wit_wire.exports.MatWire):
                 raise err
             except Exception as err:
                 traceback.print_exc()
-                raise Err(InitError_Other(str(err)))
+                raise Err(InitError_Other(str(err))) from err
         return InitResponse(ok=True)
 
     def handle(self, req: HandleReq):
         handler = handlers.get(req.op_name)
         if handler is None:
             print(
-                f"no handler found for {req.op_name}, registered handlers: {[op for op in handlers]}"
+                f"no handler found for {req.op_name}, registered handlers: {[op for op in handlers]}",
             )
             raise Err(HandleErr_NoHandler())
         try:
             return handler.handle(req)
         except json.JSONDecodeError as err:
             traceback.print_exc()
-            raise Err(HandleErr_InJsonErr(str(err)))
+            raise Err(HandleErr_InJsonErr(str(err))) from err
         except Exception as err:
             traceback.print_exc()
-            raise Err(HandleErr_HandlerErr(str(err)))
+            raise Err(HandleErr_HandlerErr(str(err))) from err
 
 
 class ErasedHandler:
@@ -106,19 +106,19 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
 
         modules_raw = data_parsed["sources"]
         finder = ThePathFinder(
-            {os.path.join(prefix, path): modules_raw[path] for path in modules_raw}
+            {os.path.join(prefix, path): modules_raw[path] for path in modules_raw},
         )
         sys.meta_path.append(finder)
 
         try:
             module = importlib.import_module(
                 ThePathFinder.path_to_module(
-                    os.path.join(prefix, data_parsed["root_src_path"])
-                )
+                    os.path.join(prefix, data_parsed["root_src_path"]),
+                ),
             )
         except Exception as err:
             finder.debug()
-            raise Err(InitError_Other(f"{err}"))
+            raise Err(InitError_Other(f"{err}")) from err
         return ErasedHandler(handler_fn=getattr(module, data_parsed["func_name"]))
     elif data_parsed["ty"] == "lambda":
         fn = eval(data_parsed["source"])
@@ -130,7 +130,7 @@ def op_to_handler(op: MatInfo) -> ErasedHandler:
 class ThePathFinder(importlib.abc.MetaPathFinder):
     @staticmethod
     def path_to_module(path: str):
-        return os.path.splitext((os.path.normpath(path)))[0].replace("/", ".")
+        return os.path.splitext(os.path.normpath(path))[0].replace("/", ".")
 
     def debug(self):
         print("= Loaded modules summary == == == ==")
@@ -168,7 +168,10 @@ class ThePathFinder(importlib.abc.MetaPathFinder):
                 # our fake loader will give out the raw module src
                 # when asked
                 FakeFileLoader(
-                    fullname, path, src=self._mods_raw[path], is_package=False
+                    fullname,
+                    path,
+                    src=self._mods_raw[path],
+                    is_package=False,
                 ),
             )
         # when one imports foo.bar.keg
@@ -180,7 +183,8 @@ class ThePathFinder(importlib.abc.MetaPathFinder):
         if fullname in self._pkg_names:
             path = self._pkg_names[fullname]
             return importlib.util.spec_from_loader(
-                fullname, FakeFileLoader(fullname, path, src="", is_package=True)
+                fullname,
+                FakeFileLoader(fullname, path, src="", is_package=True),
             )
 
 

@@ -1,11 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+from typegraph import t, typegraph
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
-
-from typegraph import t, typegraph
 from typegraph.runtimes.http import HttpRuntime
 
 
@@ -36,7 +35,9 @@ def http_py(g: Graph):
     )
 
     post_by_id = remote.get(
-        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g.ref("Post"))
+        "/posts/{id}",
+        t.struct({"id": t.integer()}),
+        t.optional(g.ref("Post")),
     ).with_policy(public)
 
     update_post = remote.patch(
@@ -53,11 +54,13 @@ def http_py(g: Graph):
     ).with_policy(public)
 
     get_posts = remote.get("/posts", t.struct({}), t.list(g.ref("Post"))).with_policy(
-        public
+        public,
     )
 
     get_posts_by_tags = remote.get(
-        "/posts", t.struct({"tags": t.list(t.string())}), t.list(g.ref("Post"))
+        "/posts",
+        t.struct({"tags": t.list(t.string())}),
+        t.list(g.ref("Post")),
     ).with_policy(public)
 
     delete_post = remote.delete(
@@ -67,7 +70,9 @@ def http_py(g: Graph):
     ).with_policy(public)
 
     get_comments = remote.get(
-        "/comments", t.struct({"postId": t.integer()}), t.list(g.ref("Comment"))
+        "/comments",
+        t.struct({"postId": t.integer()}),
+        t.list(g.ref("Comment")),
     ).with_policy(public)
 
     post_comment = remote.post(
@@ -84,7 +89,9 @@ def http_py(g: Graph):
     ).with_policy(public)
 
     delete_comment = remote.delete(
-        "/comments/{id}", t.struct({"id": t.integer()}), t.boolean()
+        "/comments/{id}",
+        t.struct({"id": t.integer()}),
+        t.boolean(),
     ).with_policy(public)
 
     g.expose(

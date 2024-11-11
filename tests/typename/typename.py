@@ -32,7 +32,7 @@ def typename(g: Graph):
             t.enum(["red", "green", "blue"]).rename("NamedColor"),
             t.string(pattern=r"^#[0-9a-f]{6}$").rename("HexColor"),
             t.struct({"r": u8, "g": u8, "b": u8}).rename("RgbColor"),
-        ]
+        ],
     )
 
     g.expose(
@@ -52,9 +52,9 @@ def typename(g: Graph):
                         "r": 255,
                         "g": 0,
                         "b": 0,
-                    }
-                )
-            }
+                    },
+                ),
+            },
         )
         .with_policy(public),
     )

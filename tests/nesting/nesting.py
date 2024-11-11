@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.runtimes.http import HttpRuntime
 
 
@@ -41,11 +41,15 @@ def nesting(g: Graph):
     )
 
     user_by_id = remote.get(
-        "/users/{id}", t.struct({"id": t.integer()}), t.optional(g.ref("User"))
+        "/users/{id}",
+        t.struct({"id": t.integer()}),
+        t.optional(g.ref("User")),
     )
 
     post_by_id = remote.get(
-        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g.ref("Post"))
+        "/posts/{id}",
+        t.struct({"id": t.integer()}),
+        t.optional(g.ref("Post")),
     )
 
     g.expose(

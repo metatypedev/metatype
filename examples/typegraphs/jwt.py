@@ -1,5 +1,8 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Auth, Cors
 from typegraph.runtimes.deno import DenoRuntime
 
@@ -23,7 +26,7 @@ def jwt_authentication(g: Graph):
         get_context=deno.identity(ctx).apply(
             {
                 "your_own_content": g.from_context("your_own_content"),
-            }
+            },
         ),
         default_policy=[public],
     )

@@ -4,24 +4,24 @@
 import inspect
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Union, Any
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 
-from typegraph.gen.exports.core import (
-    SerializeParams,
-    Rate,
-    TypegraphInitParams,
-)
+from typegraph.envs.cli import CLI_ENV
 from typegraph.gen.exports.core import (
     Cors as CoreCors,
+)
+from typegraph.gen.exports.core import (
+    Rate,
+    SerializeParams,
+    TypegraphInitParams,
 )
 from typegraph.gen.exports.utils import Auth
 from typegraph.gen.types import Err
 from typegraph.graph.params import Cors, RawAuth
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
-from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
-from typegraph.envs.cli import CLI_ENV
-from typegraph.wit import ErrorStack, core, store, wit_utils
 from typegraph.io import Log
+from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
+from typegraph.wit import Error, ErrorStack, core, store, wit_utils
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -69,7 +69,7 @@ class Typegraph:
     @classmethod
     def get_active(cls) -> Optional["Typegraph"]:
         if len(cls._context) == 0:
-            raise ErrorStack("No active typegraph")
+            raise ErrorStack(Error(["No active typegraph"]))
         return cls._context[-1]
 
     def __call__(self, **kwargs: ExposeItem):

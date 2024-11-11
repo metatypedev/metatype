@@ -1,12 +1,12 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-import typing
 import dataclasses as dc
-import json
-import urllib.request as request
-import urllib.error
 import http.client as http_c
+import json
+import typing
+import urllib.error
+from urllib import request
 
 
 def selection_to_nodes(
@@ -18,9 +18,9 @@ def selection_to_nodes(
     flags = selection.get("_")
     if flags is not None and not isinstance(flags, SelectionFlags):
         raise Exception(
-            f"selection field '_' should be of type SelectionFlags but found {type(flags)}"
+            f"selection field '_' should be of type SelectionFlags but found {type(flags)}",
         )
-    select_all = True if flags is not None and flags.select_all else False
+    select_all = flags is not None and flags.select_all
     found_nodes = set(selection.keys())
     for node_name, meta_fn in metas.items():
         found_nodes.discard(node_name)
@@ -48,7 +48,7 @@ def selection_to_nodes(
                 continue
             if isinstance(instance_selection, Alias):
                 raise Exception(
-                    f"nested Alias node discovered at {parent_path}.{instance_name}"
+                    f"nested Alias node discovered at {parent_path}.{instance_name}",
                 )
 
             instance_args: typing.Optional[NodeArgs] = None
@@ -63,7 +63,7 @@ def selection_to_nodes(
                     raise Exception(
                         f"node at {parent_path}.{instance_name} is a node that "
                         + "requires arguments "
-                        + f"but detected argument is typeof {type(arg)}"
+                        + f"but detected argument is typeof {type(arg)}",
                     )
 
                 # convert arg dict to NodeArgs
@@ -73,7 +73,7 @@ def selection_to_nodes(
                     ty_name = expected_args.pop(key)
                     if ty_name is None:
                         raise Exception(
-                            f"unexpected argument ${key} at {parent_path}.{instance_name}"
+                            f"unexpected argument ${key} at {parent_path}.{instance_name}",
                         )
                     instance_args[key] = NodeArgValue(ty_name, val)
 
@@ -88,7 +88,7 @@ def selection_to_nodes(
                         raise Exception(
                             f"node at {parent_path}.{instance_name} is a composite "
                             + "that requires an argument object "
-                            + f"but selection is typeof {type(sub_selections)}"
+                            + f"but selection is typeof {type(sub_selections)}",
                         )
                     sub_selections = sub_selections[1]
 
@@ -115,7 +115,7 @@ def selection_to_nodes(
                 if meta.sub_nodes is not None:
                     if meta.variants is not None:
                         raise Exception(
-                            "unreachable: union/either NodeMetas can't have subnodes"
+                            "unreachable: union/either NodeMetas can't have subnodes",
                         )
                     sub_nodes = selection_to_nodes(
                         typing.cast("SelectionErased", sub_selections),
@@ -151,7 +151,7 @@ def selection_to_nodes(
                                 instance_name="__typename",
                                 args=None,
                                 sub_nodes=None,
-                            )
+                            ),
                         )
 
                         union_selections[variant_ty] = nodes
@@ -262,8 +262,7 @@ class PreparedArgs:
 
 
 class Alias(typing.Generic[SelectionT]):
-    """
-    Request multiple instances of a single node under different
+    """Request multiple instances of a single node under different
     aliases.
     """
 
@@ -280,7 +279,10 @@ ScalarSelectArgs = typing.Union[
     None,
 ]
 CompositeSelectNoArgs = typing.Union[
-    SelectionT, Alias[SelectionT], typing.Literal[False], None
+    SelectionT,
+    Alias[SelectionT],
+    typing.Literal[False],
+    None,
 ]
 CompositeSelectArgs = typing.Union[
     typing.Tuple[typing.Union[ArgT, PlaceholderArgs], SelectionT],
@@ -370,7 +372,7 @@ def convert_query_node_gql(
             gql_ty = ty_to_gql_ty_map[variant_ty]
             if gql_ty is None:
                 raise Exception(
-                    f"unreachable: no graphql type found for variant {variant_ty}"
+                    f"unreachable: no graphql type found for variant {variant_ty}",
                 )
             gql_ty = gql_ty.strip("!")
 
@@ -383,9 +385,9 @@ def convert_query_node_gql(
         out += f" {{ {sub_node_list}}}"
     elif isinstance(node.sub_nodes, list):
         sub_node_list = ""
-        for node in node.sub_nodes:
+        for sub_node in node.sub_nodes:
             sub_node_list += (
-                f"{convert_query_node_gql(ty_to_gql_ty_map, node, variables)} "
+                f"{convert_query_node_gql(ty_to_gql_ty_map, sub_node, variables)} "
             )
         out += f" {{ {sub_node_list}}}"
     return out
@@ -405,7 +407,7 @@ class GraphQLTransportBase:
     def build_gql(
         self,
         query: typing.Mapping[str, SelectNode],
-        ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
+        ty: typing.Literal["query", "mutation"],
         name: str = "",
     ):
         variables: typing.Dict[str, NodeArgValue] = {}
@@ -439,7 +441,7 @@ class GraphQLTransportBase:
             {
                 "accept": "application/json",
                 "content-type": "application/json",
-            }
+            },
         )
         data = json.dumps({"query": doc, "variables": variables}).encode("utf-8")
         return GraphQLRequest(
@@ -471,8 +473,11 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         try:
             with request.urlopen(
                 request.Request(
-                    url=req.addr, method=req.method, headers=req.headers, data=req.body
-                )
+                    url=req.addr,
+                    method=req.method,
+                    headers=req.headers,
+                    data=req.body,
+                ),
             ) as res:
                 http_res: http_c.HTTPResponse = res
                 return self.handle_response(
@@ -481,7 +486,7 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
                         status=http_res.status,
                         body=http_res.read(),
                         headers={key: val for key, val in http_res.headers.items()},
-                    )
+                    ),
                 )
         except request.HTTPError as res:
             return self.handle_response(
@@ -490,10 +495,10 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
                     status=res.status or 599,
                     body=res.read(),
                     headers={key: val for key, val in res.headers.items()},
-                )
+                ),
             )
         except urllib.error.URLError as err:
-            raise Exception(f"URL error: {err.reason}")
+            raise Exception(f"URL error: {err.reason}") from err
 
     def query(
         self,
@@ -502,7 +507,9 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         name: str = "",
     ) -> typing.Dict[str, Out]:
         doc, variables = self.build_gql(
-            {key: val for key, val in inp.items()}, "query", name
+            {key: val for key, val in inp.items()},
+            "query",
+            name,
         )
         return self.fetch(doc, variables, opts)
 
@@ -513,7 +520,9 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         name: str = "",
     ) -> typing.Dict[str, Out]:
         doc, variables = self.build_gql(
-            {key: val for key, val in inp.items()}, "mutation", name
+            {key: val for key, val in inp.items()},
+            "mutation",
+            name,
         )
         return self.fetch(doc, variables, opts)
 
@@ -537,7 +546,7 @@ class PreparedRequestBase(typing.Generic[Out]):
         self,
         transport: GraphQLTransportBase,
         fun: typing.Callable[[PreparedArgs], typing.Mapping[str, SelectNode[Out]]],
-        ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
+        ty: typing.Literal["query", "mutation"],
         name: str = "",
     ):
         dry_run_node = fun(PreparedArgs())
@@ -567,7 +576,7 @@ class PreparedRequestUrlib(PreparedRequestBase[Out]):
         self,
         transport: GraphQLTransportUrlib,
         fun: typing.Callable[[PreparedArgs], typing.Mapping[str, SelectNode[Out]]],
-        ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
+        ty: typing.Literal["query", "mutation"],
         name: str = "",
     ):
         super().__init__(transport, fun, ty, name)
@@ -592,10 +601,14 @@ class QueryGraphBase:
         self.ty_to_gql_ty_map = ty_to_gql_ty_map
 
     def graphql_sync(
-        self, addr: str, opts: typing.Optional[GraphQLTransportOptions] = None
+        self,
+        addr: str,
+        opts: typing.Optional[GraphQLTransportOptions] = None,
     ):
         return GraphQLTransportUrlib(
-            addr, opts or GraphQLTransportOptions({}), self.ty_to_gql_ty_map
+            addr,
+            opts or GraphQLTransportOptions({}),
+            self.ty_to_gql_ty_map,
         )
 
 

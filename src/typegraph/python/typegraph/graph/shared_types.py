@@ -4,6 +4,7 @@
 from base64 import b64encode
 from dataclasses import dataclass
 from typing import Callable, List
+
 from typegraph.gen.exports.core import Artifact
 from typegraph.wit import SerializeParams
 
@@ -26,7 +27,7 @@ class BasicAuth:
     password: str
 
     def as_header_value(self):
-        payload = b64encode(f"{self.username}:{self.password}".encode("utf-8")).decode(
-            "utf-8"
+        payload = b64encode(f"{self.username}:{self.password}".encode()).decode(
+            "utf-8",
         )
         return f"Basic {payload}"

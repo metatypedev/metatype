@@ -13,21 +13,24 @@ from typegraph.wit import runtimes, store
 @typegraph()
 def introspection(g: Graph):
     resolver_mat_id = runtimes.register_typegraph_materializer(
-        store, TypegraphOperation.RESOLVER
+        store,
+        TypegraphOperation.RESOLVER,
     )
     if isinstance(resolver_mat_id, Err):
         raise Exception(resolver_mat_id.value)
     resolver_mat = Materializer(resolver_mat_id.value, effect=fx.read())
 
     type_mat_id = runtimes.register_typegraph_materializer(
-        store, TypegraphOperation.GET_TYPE
+        store,
+        TypegraphOperation.GET_TYPE,
     )
     if isinstance(type_mat_id, Err):
         raise Exception(type_mat_id.value)
     type_mat = Materializer(type_mat_id.value, effect=fx.read())
 
     schema_mat_id = runtimes.register_typegraph_materializer(
-        store, TypegraphOperation.GET_SCHEMA
+        store,
+        TypegraphOperation.GET_SCHEMA,
     )
     if isinstance(schema_mat_id, Err):
         raise Exception(schema_mat_id.value)
@@ -66,7 +69,7 @@ def introspection(g: Graph):
                         # injection test
                         # "fieldName": g.proxy("field", lambda x: x.name),
                         # "parent": g.proxy("type", lambda x: x.name),
-                    }
+                    },
                 ),
                 t.list(input_value),
                 resolver_mat,
@@ -163,7 +166,9 @@ def introspection(g: Graph):
     public = Policy.public()
 
     get_type = t.func(
-        t.struct({"name": t.string()}), type.optional(), type_mat
+        t.struct({"name": t.string()}),
+        type.optional(),
+        type_mat,
     ).with_policy(public)
     g.expose(__type=get_type)
 

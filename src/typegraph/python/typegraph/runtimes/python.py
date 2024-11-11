@@ -3,9 +3,10 @@
 import ast
 import inspect
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from astunparse import unparse
+
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
@@ -25,26 +26,30 @@ if TYPE_CHECKING:
 
 class PythonRuntime(Runtime):
     def __init__(self):
-        super().__init__(runtimes.register_python_runtime(store))
+        res = runtimes.register_python_runtime(store)
+        if isinstance(res, Err):
+            raise Exception("unexpected", res.value)
+        super().__init__(res.value)
 
     def from_lambda(
         self,
         inp: "t.struct",
         out: "t.typedef",
-        function: callable,
+        function: Callable,
         *,
-        effect: Effect = EffectRead(),
+        effect: Optional[Effect] = None,
         # secrets: Optional[List[str]] = None,
     ):
-        lambdas, _defs = DefinitionCollector.collect(function)
+        effect = effect or EffectRead()
+        lambdas, _ = DefinitionCollector.collect(function)
         assert len(lambdas) == 1
         fn = str(lambdas[0])
         if fn.startswith("(") and fn.endswith(")"):
             fn = fn[1:-1]
         mat_id = runtimes.from_python_lambda(
             store,
-            BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerPythonLambda(runtime=self.id.value, fn=fn),
+            BaseMaterializer(runtime=self.id, effect=effect),
+            MaterializerPythonLambda(runtime=self.id, fn=fn),
         )
 
         if isinstance(mat_id, Err):
@@ -62,18 +67,19 @@ class PythonRuntime(Runtime):
         self,
         inp: "t.struct",
         out: "t.typedef",
-        function: callable,
+        function: Callable,
         *,
-        effect: Effect = EffectRead(),
+        effect: Optional[Effect] = None,
     ):
-        _lambdas, defs = DefinitionCollector.collect(function)
+        effect = effect or EffectRead()
+        _, defs = DefinitionCollector.collect(function)
         assert len(defs) == 1
         name, fn = defs[0]
 
         mat_id = runtimes.from_python_def(
             store,
-            BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerPythonDef(runtime=self.id.value, name=name, fn=fn),
+            BaseMaterializer(runtime=self.id, effect=effect),
+            MaterializerPythonDef(runtime=self.id, name=name, fn=fn),
         )
 
         if isinstance(mat_id, Err):
@@ -94,21 +100,21 @@ class PythonRuntime(Runtime):
         *,
         module: str,
         name: str,
-        deps: List[str] = [],
+        deps: Optional[List[str]] = None,
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
         effect = effect or EffectRead()
         secrets = secrets or []
 
-        base = BaseMaterializer(runtime=self.id.value, effect=effect)
+        base = BaseMaterializer(runtime=self.id, effect=effect)
         mat_id = runtimes.from_python_module(
             store,
             base,
             MaterializerPythonModule(
                 file=module,
-                deps=deps,
-                runtime=self.id.value,
+                deps=deps or [],
+                runtime=self.id,
             ),
         )
 
@@ -119,7 +125,9 @@ class PythonRuntime(Runtime):
             store,
             base,
             MaterializerPythonImport(
-                module=mat_id.value, func_name=name, secrets=secrets
+                module=mat_id.value,
+                func_name=name,
+                secrets=secrets,
             ),
         )
 

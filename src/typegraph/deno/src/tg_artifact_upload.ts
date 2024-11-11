@@ -89,7 +89,7 @@ export class ArtifactUploader {
         body: new Uint8Array(content),
       } as RequestInit,
       `failed to upload artifact ${meta.relativePath}`,
-    );
+    ) as object;
 
     log.info("✓ artifact uploaded:", meta.relativePath);
     return res;

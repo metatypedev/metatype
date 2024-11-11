@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, effects, Policy, t, Graph
+from typegraph import Graph, Policy, effects, t, typegraph
 from typegraph.runtimes.graphql import GraphQLRuntime
 
 
@@ -20,7 +20,9 @@ def graphql_namespaces(g: Graph):
         {
             # operations under `user` namespace
             "find": gql.query(
-                t.struct({"id": user_id}), user_model, path=("findUser",)
+                t.struct({"id": user_id}),
+                user_model,
+                path=("findUser",),
             ).with_policy(public),
             "update": gql.mutation(
                 user_model,

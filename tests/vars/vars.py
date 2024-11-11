@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.runtimes.deno import DenoRuntime
 
 
@@ -15,7 +15,7 @@ def vars(g: Graph):
                 {
                     "first": t.integer(),
                     "second": t.integer(),
-                }
+                },
             ),
             t.integer(),
             code="({ first, second }) => first + second",
@@ -27,7 +27,7 @@ def vars(g: Graph):
         ).with_policy(Policy.public()),
         level2=deno.func(
             t.struct(
-                {"level1": t.struct({"level2": t.list(t.string())}, name="Level1")}
+                {"level1": t.struct({"level2": t.list(t.string())}, name="Level1")},
             ),
             t.string(),
             code="(arg) => arg.level1.level2[0]",

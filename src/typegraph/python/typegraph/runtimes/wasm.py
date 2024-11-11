@@ -3,19 +3,18 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from typegraph import t
 from typegraph.gen.exports.runtimes import (
     BaseMaterializer,
     Effect,
     EffectRead,
-    WasmRuntimeData,
     MaterializerWasmReflectedFunc,
     MaterializerWasmWireHandler,
+    WasmRuntimeData,
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.wit import runtimes, store
-
-from typegraph import t
 
 
 class WasmRuntime(Runtime):

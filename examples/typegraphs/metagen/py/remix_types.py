@@ -1,6 +1,9 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
+from dataclasses import asdict, dataclass, fields
 from types import NoneType
-from typing import Callable, List, Union, get_origin, ForwardRef, Any
-from dataclasses import dataclass, asdict, fields
+from typing import Any, Callable, ForwardRef, List, Union, get_origin
 
 FORWARD_REFS = {}
 

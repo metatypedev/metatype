@@ -1,4 +1,7 @@
-from .remix_types import typed_remix_track, Idv3
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
+from .remix_types import Idv3, typed_remix_track
 
 
 # the following decorator makes sure your function

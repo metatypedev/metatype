@@ -28,14 +28,14 @@ def prisma_apply(g: Graph):
                     "name": g.as_arg(),
                     "email": g.as_arg(),
                     "age": g.as_arg(),
-                }
-            }
+                },
+            },
         ),
         findUser=prisma.find_unique(user).apply(
             {
                 "where": {
                     "id": g.as_arg(),
-                }
-            }
+                },
+            },
         ),
     )

@@ -11,7 +11,11 @@ def apollo(g: Graph):
     public = Policy.public()
 
     s3 = S3Runtime(
-        "HOST", "REGION", "access_key", "secret_key", path_style_secret="PATH_STYLE"
+        "HOST",
+        "REGION",
+        "access_key",
+        "secret_key",
+        path_style_secret="PATH_STYLE",
     )
 
     g.expose(

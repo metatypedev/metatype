@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.runtimes.http import HttpRuntime
@@ -19,7 +19,8 @@ def auth(g: Graph):
     public = Policy.public()
     private = deno.policy("private", "(_args, { context }) => !!context.user1")
     with_token = deno.policy(
-        "with_token", "(_args, { context }) => { return !!context.accessToken; }"
+        "with_token",
+        "(_args, { context }) => { return !!context.accessToken; }",
     )
 
     x = t.struct({"x": t.integer()})
@@ -42,7 +43,7 @@ def auth(g: Graph):
                 lambda p: {"id": p["id"]},
             ),
             scopes="openid profile email",
-        )
+        ),
     )
 
     g.expose(
@@ -56,7 +57,7 @@ def auth(g: Graph):
                 {
                     "id": t.integer(),
                     "login": t.string(),
-                }
+                },
             ),
             auth_token_field="token",
         ).with_policy(public),

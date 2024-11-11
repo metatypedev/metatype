@@ -22,10 +22,7 @@ def serialize_config(config: Optional[ConfigSpec]) -> Optional[str]:
     if config is None:
         return None
 
-    if isinstance(config, list):
-        lst = config
-    else:
-        lst = [config]
+    lst = config if isinstance(config, list) else [config]
 
     if len(lst) == 0:
         return None
@@ -40,7 +37,7 @@ def serialize_config(config: Optional[ConfigSpec]) -> Optional[str]:
 
 def build_reduce_entries(node: Any, paths: List[ReduceEntry], curr_path: List[str]):
     if node is None:
-        raise Exception(f"unsupported value {str(node)} at {'.'.join(curr_path)},")
+        raise Exception(f"unsupported value {node!s} at {'.'.join(curr_path)},")
 
     if isinstance(node, InheritDef):
         if node.payload is None:
@@ -53,7 +50,7 @@ def build_reduce_entries(node: Any, paths: List[ReduceEntry], curr_path: List[st
             ReduceEntry(
                 path=curr_path,
                 injection_data=serialize_static_injection(node),
-            )
+            ),
         )
         return paths
 
@@ -62,12 +59,12 @@ def build_reduce_entries(node: Any, paths: List[ReduceEntry], curr_path: List[st
             build_reduce_entries(v, paths, curr_path + [k])
         return paths
 
-    if isinstance(node, int) or isinstance(node, str) or isinstance(node, bool):
+    if isinstance(node, (bool, int, str)):
         paths.append(
             ReduceEntry(
                 path=curr_path,
                 injection_data=serialize_static_injection(node),
-            )
+            ),
         )
         return paths
 
@@ -75,17 +72,19 @@ def build_reduce_entries(node: Any, paths: List[ReduceEntry], curr_path: List[st
 
 
 def unpack_tarb64(tar_b64: str, dest: str):
-    return wit_utils.unpack_tarb64(store, tar_b64, dest)
+    return wit_utils.unpack_tar_ba(store, tar_b64, dest)
 
 
 frozen_memo: Dict[str, FinalizationResult] = {}
 
 
 def freeze_tg_output(
-    config: SerializeParams, tg_output: TypegraphOutput
+    config: SerializeParams,
+    tg_output: TypegraphOutput,
 ) -> TypegraphOutput:
     if tg_output.name not in frozen_memo:
         frozen_memo[tg_output.name] = tg_output.serialize(config)
     return TypegraphOutput(
-        name=tg_output.name, serialize=lambda _: frozen_memo[tg_output.name]
+        name=tg_output.name,
+        serialize=lambda _: frozen_memo[tg_output.name],
     )

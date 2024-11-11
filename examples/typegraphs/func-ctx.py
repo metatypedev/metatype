@@ -1,7 +1,9 @@
-# skip:start
-from typegraph import typegraph, Policy, t, Graph
-from typegraph.graph.params import Cors, Rate
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
 
+# skip:start
+from typegraph import Graph, Policy, t, typegraph
+from typegraph.graph.params import Cors, Rate
 from typegraph.runtimes.deno import DenoRuntime
 
 
@@ -30,7 +32,7 @@ def func_ctx(g: Graph):
                             "url": t.string(),
                             # token for accessing host typegraph
                             "token": t.string(),
-                        }
+                        },
                     ),
                     # http headers
                     "headers": t.list(t.list(t.string())),
@@ -39,7 +41,7 @@ def func_ctx(g: Graph):
                     # FIXME: explanation
                     "parent": t.string(),
                     "context": t.string(),
-                }
+                },
             ),
             # modeling arbitrary associative arrays in
             # graphql is difficult so we return a listified format.

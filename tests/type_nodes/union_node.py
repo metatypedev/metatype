@@ -1,11 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+from typegraph import t, typegraph
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
-
-from typegraph import t, typegraph
 
 
 @typegraph()
@@ -63,8 +62,8 @@ def union_node(g: Graph):
                                                 {"i": t.integer(), "j": t.integer()},
                                                 name="A4",
                                             ),
-                                        ]
-                                    )
+                                        ],
+                                    ),
                                 },
                                 name="A2",
                             ),
@@ -96,9 +95,9 @@ def union_node(g: Graph):
                         [
                             t.struct({"e": t.string()}, name="Ue"),
                             t.struct({"f": t.string()}, name="Uf"),
-                        ]
+                        ],
                     ),
-                ]
+                ],
             ),
         ],
         name="MultilevelUnion",

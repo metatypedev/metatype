@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import t, typegraph, Graph, Policy
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.runtimes import DenoRuntime
 
 
@@ -16,14 +16,14 @@ def type_comparison(g: Graph):
             t.struct(
                 {
                     "parent_field": subtype,
-                }
-            )
+                },
+            ),
         ).extend(
             {
                 "injected": deno.identity(t.struct({"field": supertype})).reduce(
-                    {"field": g.inherit().from_parent("parent_field")}
-                )
-            }
+                    {"field": g.inherit().from_parent("parent_field")},
+                ),
+            },
         )
 
     case("boolean_ok_1", t.boolean(), t.boolean())
@@ -133,7 +133,9 @@ def type_comparison(g: Graph):
         t.struct({"field": t.integer()}),
     )
     case(
-        "struct_ok_3", t.struct({"field": t.integer()}), t.struct({"field": t.float()})
+        "struct_ok_3",
+        t.struct({"field": t.integer()}),
+        t.struct({"field": t.float()}),
     )
     case(
         "struct_ok_4",

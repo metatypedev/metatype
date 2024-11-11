@@ -1,11 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+from typegraph import t, typegraph
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
-
-from typegraph import t, typegraph
 
 
 @typegraph()
@@ -26,7 +25,8 @@ def circular(g: Graph):
             "friends": t.list(g.ref("User")).optional(),
             # Edgecase #4: optional object that holds a self-reference
             "paper": t.struct(
-                {"title": t.string(), "author": g.ref("User")}, name="Paper"
+                {"title": t.string(), "author": g.ref("User")},
+                name="Paper",
             ).optional(),
             # Edgecase #5: optional nested object with multiple references
             "root": t.struct(
@@ -43,7 +43,7 @@ def circular(g: Graph):
                 [
                     t.struct({"name": t.string()}, name="NamedAward"),
                     t.union([medals, stars]),
-                ]
+                ],
             ).optional(),
         },
         name="User",

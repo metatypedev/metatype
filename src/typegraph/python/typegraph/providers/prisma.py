@@ -1,18 +1,18 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Union, Optional
+from typing import Optional, Union
 
-from typegraph.runtimes.base import Runtime
-from typegraph.wit import ErrorStack, runtimes, store
-from typegraph.gen.types import Err
+from typegraph import t
 from typegraph.gen.exports.runtimes import (
     Effect,
-    PrismaRuntimeData,
     PrismaLinkData,
+    PrismaRuntimeData,
 )
-from typegraph import t
+from typegraph.gen.types import Err
 from typegraph.graph.typegraph import gen_ref
+from typegraph.runtimes.base import Runtime
+from typegraph.wit import ErrorStack, runtimes, store
 
 
 class PrismaRuntime(Runtime):
@@ -21,7 +21,8 @@ class PrismaRuntime(Runtime):
 
     def __init__(self, name: str, connection_string_secret: str):
         runtime_id = runtimes.register_prisma_runtime(
-            store, PrismaRuntimeData(name, connection_string_secret)
+            store,
+            PrismaRuntimeData(name, connection_string_secret),
         )
         if isinstance(runtime_id, Err):
             raise ErrorStack(runtime_id.value)
@@ -141,7 +142,10 @@ class PrismaRuntime(Runtime):
         return t.func.from_type_func(type.value)
 
     def query_raw(
-        self, query: str, parameters: Union[None, t.typedef], output: t.typedef
+        self,
+        query: str,
+        parameters: Union[None, t.typedef],
+        output: t.typedef,
     ) -> t.func:
         params_id = None if parameters is None else parameters._id
         type = runtimes.prisma_query_raw(store, self.id, query, params_id, output._id)
@@ -159,7 +163,11 @@ class PrismaRuntime(Runtime):
         unique: Optional[bool] = None,
     ):
         return prisma_link(
-            target_type, name=name, fkey=fkey, field=field, unique=unique
+            target_type,
+            name=name,
+            fkey=fkey,
+            field=field,
+            unique=unique,
         )
 
 

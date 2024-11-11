@@ -19,8 +19,9 @@ class RandomRuntime(Runtime):
     def __init__(self, seed: Optional[int] = None, reset: Optional[str] = ""):
         super().__init__(
             runtimes.register_random_runtime(
-                store, data=RandomRuntimeData(seed=seed, reset=reset)
-            )
+                store,
+                data=RandomRuntimeData(seed=seed, reset=reset),
+            ),
         )
 
     def gen(
