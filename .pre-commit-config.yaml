@@ -103,6 +103,7 @@ repos:
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - python
+        exclude: ^examples/
       - id: insert-license
         name: "License MPL-2.0 rust"
         args:
@@ -113,6 +114,7 @@ repos:
           - "--skip-license-insertion-comment=@generated"
         types_or:
           - rust
+        exclude: ^examples/
       - id: insert-license
         name: "License MPL-2.0 typescript"
         args:
@@ -123,6 +125,7 @@ repos:
         types_or:
           - ts
           - tsx
+        exclude: ^examples/
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.28.6
     hooks:

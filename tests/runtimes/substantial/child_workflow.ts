@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { Context } from "./imports/common_types.ts";
 
 function apply(pkg: string, oldVersion: string, newVersion: string) {

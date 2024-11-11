@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { assertEquals, assertExists } from "@std/assert";
 import { connect, parseURL } from "redis";
 import { gql, Meta, sleep } from "../../utils/mod.ts";

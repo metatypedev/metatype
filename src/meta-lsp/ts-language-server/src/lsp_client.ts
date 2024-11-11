@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import child_process from "node:child_process";
 import { JSONRPCEndpoint, LspClient } from "ts-lsp-client";
 
