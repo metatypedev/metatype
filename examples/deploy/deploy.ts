@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { Policy, t, typegraph } from "@typegraph/sdk";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python";
@@ -70,7 +73,7 @@ const artifactsConfig = {
 const baseUrl = "http://localhost:7890";
 const auth = new BasicAuth("admin", "password");
 
-const { response, serialized } = await tgDeploy(tg, {
+const { response, serialized: _ } = await tgDeploy(tg, {
   typegate: {
     url: baseUrl,
     auth,
@@ -80,8 +83,6 @@ const { response, serialized } = await tgDeploy(tg, {
   },
   typegraphPath: "./deploy.ts",
 });
-
-// console.log(serialized);
 
 const { migrations, messages } = response;
 

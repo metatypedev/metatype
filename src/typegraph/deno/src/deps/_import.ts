@@ -31,6 +31,7 @@ export interface Bind {
 
 export const up = 3;
 
+// deno-lint-ignore no-explicit-any
 export function caller(this: Bind | any, levelUp = up): string | undefined {
   const err = new Error();
   const stack = err.stack?.split("\n")[levelUp];
@@ -39,6 +40,7 @@ export function caller(this: Bind | any, levelUp = up): string | undefined {
   }
 }
 
+// deno-lint-ignore no-explicit-any
 export function getFile(this: Bind | any, stack: string): string {
   stack = stack.substr(stack.indexOf("at ") + 3);
   if (!stack.startsWith("file://")) {
@@ -48,7 +50,7 @@ export function getFile(this: Bind | any, stack: string): string {
   let file = `${path[0]}:${path[1]}`;
 
   if ((this as Bind)?.cb) {
-    const cb = (this as Bind).cb as any;
+    const cb = (this as Bind).cb!;
     file = cb(file);
   }
   return file;

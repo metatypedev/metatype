@@ -1,8 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+// jsr-private-module
+
 import { CREATE, DELETE, READ, UPDATE } from "../effects.ts";
-import { InjectionSource, InjectionValue } from "./type_utils.ts";
+import type { InjectionSource, InjectionValue } from "./type_utils.ts";
 import { stringifySymbol } from "./func_utils.ts";
 
 export function serializeInjection(
@@ -16,11 +18,13 @@ export function serializeInjection(
     const symbols = [UPDATE, DELETE, CREATE, READ];
     const noOtherType = Object.keys(value).length == 0;
     const isPerEffect = noOtherType &&
-      symbols.some((symbol) => (value as any)?.[symbol] !== undefined);
+      symbols.some((symbol) =>
+        (value as Record<symbol, unknown>)?.[symbol] !== undefined
+      );
 
     if (isPerEffect) {
       const dataEntries = symbols.map((symbol) => {
-        const valueGiven = (value as any)?.[symbol];
+        const valueGiven = (value as Record<symbol, unknown>)?.[symbol];
         return [stringifySymbol(symbol), valueGiven && valueMapper(valueGiven)];
       });
 
@@ -43,7 +47,7 @@ export function serializeInjection(
 export function serializeGenericInjection(
   source: InjectionSource,
   value: InjectionValue<unknown>,
-) {
+): string {
   const allowed: InjectionSource[] = ["dynamic", "context", "secret", "random"];
   if (allowed.includes(source)) {
     return serializeInjection(source, value);
@@ -55,7 +59,9 @@ export function serializeStaticInjection(value: InjectionValue<unknown>) {
   return serializeInjection("static", value, (x: unknown) => JSON.stringify(x));
 }
 
-export function serializeFromParentInjection(value: InjectionValue<string>) {
+export function serializeFromParentInjection(
+  value: InjectionValue<string>,
+): string {
   if (typeof value !== "string") {
     const isObject = typeof value === "object" && !Array.isArray(value) &&
       value !== null;
@@ -68,7 +74,9 @@ export function serializeFromParentInjection(value: InjectionValue<string>) {
     const symbols = [UPDATE, DELETE, CREATE, READ];
     const noOtherType = Object.keys(value).length == 0;
     const isPerEffect = noOtherType &&
-      symbols.some((symbol) => (value as any)?.[symbol] !== undefined);
+      symbols.some((symbol) =>
+        (value as Record<symbol, unknown>)?.[symbol] !== undefined
+      );
 
     if (!isPerEffect) {
       throw new Error("object keys should be of type EffectType");

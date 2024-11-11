@@ -5,7 +5,7 @@ import { Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../wit.ts";
 import { Typedef } from "../types.ts";
 import { t } from "../index.ts";
-import { Effect } from "../gen/typegraph_core.d.ts";
+import type { Effect } from "../gen/typegraph_core.d.ts";
 import { genRef } from "./../typegraph.ts";
 
 type PrismaLinkArg = {

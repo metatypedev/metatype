@@ -3,8 +3,8 @@
 
 import { Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../wit.ts";
-import { Func, Typedef } from "../types.ts";
-import {
+import { Func, type Typedef } from "../types.ts";
+import type {
   TemporalOperationData,
   TemporalOperationType,
 } from "../gen/typegraph_core.d.ts";
