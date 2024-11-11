@@ -28,11 +28,12 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd src/typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs,tests/metagen/typegraphs/sample/ts/client.ts && cd ../../tools && deno fmt && cd ../src/typegraph/deno && deno fmt --ignore=node_modules,dist && cd ../../../src/metagen/src && deno fmt'
+        entry: bash -c 'deno fmt'
         pass_filenames: false
         types:
           - ts
-        files: ^(src/typegate|tools|src/typegraph/deno)/
+          - tsx
+          - json
       - id: deno-lint
         name: Deno lint
         language: system

@@ -20,7 +20,7 @@ const tg = await typegraph(
         id: t.integer({}, { asId: true }),
         name: t.string(),
       },
-      { name: "Student" }
+      { name: "Student" },
     );
 
     g.expose(
@@ -38,7 +38,7 @@ const tg = await typegraph(
         sayHelloPyLambda: python.fromLambda(
           t.struct({ name: t.string() }),
           t.string(),
-          { code: `lambda obj: f"Hello {obj['name']} from python lambda"` }
+          { code: `lambda obj: f"Hello {obj['name']} from python lambda"` },
         ),
         sayHelloPyMod: python.import(
           t.struct({ name: t.string() }),
@@ -47,15 +47,15 @@ const tg = await typegraph(
             module: "scripts/python/say_hello.py",
             name: "sayHello",
             deps: ["scripts/python/import_.py"],
-          }
+          },
         ),
         // Prisma
         createStudent: prisma.create(student),
         findManyStudent: prisma.findMany(student),
       },
-      pub
+      pub,
     );
-  }
+  },
 );
 
 const artifactsConfig = {

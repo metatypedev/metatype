@@ -4,7 +4,7 @@ import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
 // skip:start
 function getEnvVariable(
   key: string,
-  defaultValue?: string
+  defaultValue?: string,
 ): string | undefined {
   const glob = globalThis as any;
   const value = glob?.process
@@ -41,7 +41,7 @@ typegraph(
           ? temporal.describeWorkflow().reduce({ workflow_id })
           : temporal.describeWorkflow(),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

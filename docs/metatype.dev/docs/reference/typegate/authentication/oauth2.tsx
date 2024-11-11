@@ -26,13 +26,15 @@ function OAuth2({ name, typegraph }) {
     }
   }, [setToken, tgUrl]);
 
-  const url = `${tgUrl}/${typegraph}/auth/${name}?redirect_uri=${encodeURIComponent(
-    window.location.href,
-  )}`;
+  const url = `${tgUrl}/${typegraph}/auth/${name}?redirect_uri=${
+    encodeURIComponent(
+      window.location.href,
+    )
+  }`;
   return (
     <p className="mb-6">
-      Start the flow via <Link href={url}>{url}</Link> and take token by
-      clicking{" "}
+      Start the flow via <Link href={url}>{url}</Link>{" "}
+      and take token by clicking{" "}
       <Link className="cursor-pointer" onClick={take}>
         here
       </Link>

@@ -3,7 +3,7 @@
 
 import Konva from "konva";
 import React, { useEffect, useRef, useState } from "react";
-import { Group, Arrow, Text } from "react-konva";
+import { Arrow, Group, Text } from "react-konva";
 import useFontFaceObserver from "use-font-face-observer";
 
 interface TextArrowP {
@@ -59,14 +59,12 @@ export function TextArrow({
       {t}
       {arrows.map(([px, py]) => {
         const vertical = px - x < py - my;
-        const sx =
-          px < x
-            ? x - (vertical ? 0 : width / 2 + 10)
-            : x + (vertical ? 0 : width / 2 + 10);
-        const sy =
-          py < y
-            ? y - (!vertical ? 0 : height / 2 + 10)
-            : y + (!vertical ? 0 : height / 2 + 10);
+        const sx = px < x
+          ? x - (vertical ? 0 : width / 2 + 10)
+          : x + (vertical ? 0 : width / 2 + 10);
+        const sy = py < y
+          ? y - (!vertical ? 0 : height / 2 + 10)
+          : y + (!vertical ? 0 : height / 2 + 10);
 
         return (
           <Arrow

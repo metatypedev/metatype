@@ -2,7 +2,7 @@ import { Context } from "./imports/common_types.ts";
 
 function apply(pkg: string, oldVersion: string, newVersion: string) {
   console.info(
-    `Updating ${pkg} v${oldVersion} => ${pkg} v${newVersion}: applied`
+    `Updating ${pkg} v${oldVersion} => ${pkg} v${newVersion}: applied`,
   );
 }
 

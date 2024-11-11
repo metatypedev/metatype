@@ -8,7 +8,7 @@ export type InputType = {
 };
 
 export abstract class Runtime {
-  protected constructor(public node: Parser.SyntaxNode) { }
+  protected constructor(public node: Parser.SyntaxNode) {}
 
   static analyze(
     node: Parser.SyntaxNode,

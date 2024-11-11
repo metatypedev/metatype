@@ -10,10 +10,22 @@
       "./examples/" // needed for published_test
     ]
   },
+  "fmt": {
+    "exclude": [
+      "target",
+      "src/typegraph/node",
+      "*.md",
+      "**/*.md",
+      ".ghjk/**",
+      ".git",
+      "vendor/**",
+      "node_modules",
+      "docs/metatype.dev/docusaurus.config.js"
+    ]
+  },
   "compilerOptions": {
     "allowJs": false,
     "strict": true,
-    "experimentalDecorators": true,
     "types": [
       "./src/typegate/engine/runtime.d.ts"
     ],

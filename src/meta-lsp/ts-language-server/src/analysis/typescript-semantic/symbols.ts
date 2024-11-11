@@ -9,7 +9,7 @@ export abstract class Symbol {
     public name: string,
     public node: Parser.SyntaxNode,
     private scopeManager: ScopeManager,
-  ) { }
+  ) {}
 }
 
 export class ImportSymbol extends Symbol {

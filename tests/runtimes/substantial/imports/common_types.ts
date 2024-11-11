@@ -24,7 +24,7 @@ export interface Context {
     ...args: unknown[]
   ) => {
     run: (
-      variables: Record<string, unknown>
+      variables: Record<string, unknown>,
     ) => Promise<Record<string, unknown>>;
   };
   sleep: (ms: number) => void;
@@ -32,16 +32,16 @@ export interface Context {
   receive<O>(eventName: string): O;
   handle<I, O>(
     eventName: string,
-    fn: (received: I) => O | Promise<O>
+    fn: (received: I) => O | Promise<O>,
   ): Promise<O>;
   ensure(conditionFn: () => boolean | Promise<boolean>): Promise<true>;
 
   startChildWorkflow<O>(
     workflow: Workflow<O>,
-    kwargs: unknown
+    kwargs: unknown,
   ): Promise<SerializableWorkflowHandle>;
   createWorkflowHandle(
-    handleDef: SerializableWorkflowHandle
+    handleDef: SerializableWorkflowHandle,
   ): ChildWorkflowHandle;
 }
 
