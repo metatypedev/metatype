@@ -21,7 +21,10 @@
       ".git",
       "vendor/**",
       "node_modules",
-      "docs/metatype.dev/docusaurus.config.js"
+      "docs/metatype.dev/docusaurus.config.js",
+      "docs/metatype.dev/**/*.js",
+      "docs/metatype.dev/**/*.ts",
+      "docs/metatype.dev/**/*.tsx"
     ]
   },
   "compilerOptions": {

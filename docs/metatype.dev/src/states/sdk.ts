@@ -15,8 +15,8 @@ const locationAtom = atomWithLocation();
 const sdkQueryAtom = atom(
   (get) => get(locationAtom).searchParams?.get(key) as SDK | null,
   (get, set, value: SDK) => {
-    const searchParams = get(locationAtom).searchParams ??
-      new URLSearchParams();
+    const searchParams =
+      get(locationAtom).searchParams ?? new URLSearchParams();
     searchParams.set(key, value);
     set(locationAtom, (prev) => ({
       ...prev,

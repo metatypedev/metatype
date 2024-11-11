@@ -60,8 +60,7 @@ export default function Newsletter() {
         type="email"
         className="px-2 py-2 font-sans bg-slate-100 border-none text-base"
         value={email}
-        onChange={(event) =>
-          setEmail(event.target.value)}
+        onChange={(event) => setEmail(event.target.value)}
       />
       <input
         type="submit"

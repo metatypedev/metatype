@@ -14,9 +14,9 @@ export default function Features(props: {
     | React.JSX.Element
     | FeatureDeets
     | {
-      content: string;
-      path: string;
-    }
+        content: string;
+        path: string;
+      }
   )[][];
 }): JSX.Element {
   return (
