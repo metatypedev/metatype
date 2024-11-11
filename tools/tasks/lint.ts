@@ -23,6 +23,11 @@ export default {
       const files = (await $.co(
         [
           Array.fromAsync(
+            $.workingDir.join("src/typegraph/deno").expandGlob("**/*.ts", {
+              exclude: [],
+            }),
+          ),
+          Array.fromAsync(
             $.workingDir.join("src/typegate/src").expandGlob("**/*.ts", {
               exclude: [],
             }),

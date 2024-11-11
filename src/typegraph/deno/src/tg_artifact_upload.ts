@@ -92,7 +92,7 @@ export class ArtifactUploader {
     );
 
     log.info("✓ artifact uploaded:", meta.relativePath);
-    return res;
+    return res as object;
   }
 
   private getMetas(artifacts: Artifact[]): UploadArtifactMeta[] {
