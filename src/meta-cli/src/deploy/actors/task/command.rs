@@ -102,6 +102,10 @@ impl CommandContext {
 
         command
             .current_dir(shared_config.working_dir.to_str().unwrap())
+            .env(
+                "MCLI_PREFIX",
+                shared_config.prefix.clone().unwrap_or_default(),
+            )
             .env("MCLI_VERSION", crate::build::PKG_VERSION)
             .env("MCLI_TYPEGRAPH_PATH", path.display().to_string())
             .env("MCLI_COMMAND", shared_config.command)

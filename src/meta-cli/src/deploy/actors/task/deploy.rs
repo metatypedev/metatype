@@ -61,10 +61,10 @@ impl DeployActionGenerator {
         destructive_migrations: bool, // TODO enum { Fail, Reset, Ask }
     ) -> Self {
         Self {
-            node,
             secrets,
             shared_config: SharedActionConfig {
                 command: "deploy",
+                prefix: node.prefix.clone(),
                 config_dir,
                 working_dir,
                 migrations_dir,
@@ -76,6 +76,7 @@ impl DeployActionGenerator {
                 artifact_resolution: true,
             }
             .into(),
+            node,
         }
     }
 }

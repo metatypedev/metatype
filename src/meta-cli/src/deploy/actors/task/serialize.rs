@@ -32,6 +32,7 @@ pub struct SerializeActionGenerator {
 
 impl SerializeActionGenerator {
     pub fn new(
+        prefix: Option<String>,
         config_dir: Arc<Path>,
         working_dir: Arc<Path>,
         migrations_dir: Arc<Path>,
@@ -40,6 +41,7 @@ impl SerializeActionGenerator {
         Self {
             shared_config: SharedActionConfig {
                 command: "serialize",
+                prefix,
                 config_dir,
                 working_dir,
                 migrations_dir,
