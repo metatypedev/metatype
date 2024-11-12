@@ -5,8 +5,8 @@ import type {
   AliasTypeDef,
   FuncDef,
   RecordTypeDef,
-  UnionTypeDef,
   TypeDefSource,
+  UnionTypeDef,
 } from "./base.ts";
 
 const typeMap = {
@@ -39,7 +39,9 @@ class RustLibCodeGenerator extends TypeDefProcessor {
 
     const imports = this.imports.map(
       ({ imports, source }) =>
-        `use super::${source}::${imports.length > 1 ? `{${imports.join(", ")}}` : imports};`,
+        `use super::${source}::${
+          imports.length > 1 ? `{${imports.join(", ")}}` : imports
+        };`,
     );
 
     return [baseImport, ...imports].filter(Boolean).join("\n");
@@ -67,7 +69,9 @@ ${props}
     const variants = def.variants
       .map(
         (v) =>
-          `    ${v.value ? `${toPascalCase(v.tag)}(${v.value})` : toPascalCase(v.tag)},`,
+          `    ${
+            v.value ? `${toPascalCase(v.tag)}(${v.value})` : toPascalCase(v.tag)
+          },`,
       )
       .join("\n");
 

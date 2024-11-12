@@ -166,7 +166,7 @@ pub enum RpcCall {
         typegraph: String,
     },
     #[serde(untagged)]
-    TypegraphCall(TypegraphRpcCall),
+    TypegraphCall(Box<TypegraphRpcCall>),
 }
 
 struct ResetDatabase(PrismaRuntimeId);

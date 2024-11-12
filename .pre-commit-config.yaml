@@ -88,6 +88,7 @@ repos:
             CHANGELOG.md|
             .*\.snap$|
             typegate/src/typegraphs/.*\.json|
+            src/typegraph/core/src/types/sdk/.*\.rs|
             website/docs/reference/|
             libs/pyrt_wit_wire/pyrt|
             migration_lock.toml|

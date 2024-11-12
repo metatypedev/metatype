@@ -23,6 +23,8 @@ import { Typegraph } from "@metatype/typegate/typegraph/types.ts";
 import { ArtifactUploader } from "@typegraph/sdk/tg_artifact_upload.ts";
 import { BasicAuth } from "@typegraph/sdk/tg_deploy.ts";
 import { exists } from "@std/fs/exists";
+import { metaCli } from "test-utils/meta.ts";
+import { $ } from "@david/dax";
 
 export interface ParseOptions {
   deploy?: boolean;
@@ -218,42 +220,32 @@ export class MetaTest {
   }
 
   async engine(path: string, opts: ParseOptions = {}) {
-    const args = ["serialize", "--file", path, "--quiet"];
-    const tgArgs = opts.typegraph ? ["--typegraph", opts.typegraph] : ["-1"];
-    const { code, stdout, stderr } = await this.meta(args.concat(tgArgs));
-
-    if (code !== 0) {
-      throw new Error(stderr);
+    console.log("t.engine", this.port, opts);
+    const secrets = opts.secrets ?? {};
+    const optSecrets = Object.entries(secrets).map(([name, value]) => {
+      return `--secret=${name}=${value}`;
+    });
+    const { stdout } = await metaCli(
+      "deploy",
+      "--target=dev",
+      `--gate=http://localhost:${this.port}`,
+      "--allow-dirty",
+      "--create-migration",
+      ...optSecrets,
+      `--file=${path}`,
+    );
+    console.log({ stdout: $.stripAnsi(stdout) });
+    const matches = stdout.match(/\((.*)\)/);
+    const typegraphs = matches?.[1].split(", ") ?? [];
+    if (typegraphs.length == 0) {
+      throw new Error("No typegraph");
     }
-
-    // FIXME: meta cli prints debug output to stdout
-    const output = stdout.trim();
-    const startIndex = output.search(/\{/);
-    const tgString = output.slice(startIndex);
-    const tg = await TypeGraph.parseJson(tgString);
-
-    // FIXME: hack waiting for MET-738 or a better way to create an engine
-    tg.meta.prefix = opts.prefix;
-
-    const artifacts = Object.values(tg.meta.artifacts);
-    const tgUrl = `http://localhost:${this.port}`;
-    const tgName = TypeGraph.formatName(tg);
-    const auth = new BasicAuth("username", "password");
-    const headers = new Headers();
-
-    if (artifacts.length > 0) {
-      const artifactUploader = new ArtifactUploader(
-        tgUrl,
-        artifacts,
-        tgName,
-        auth,
-        headers,
-        join(this.workingDir, path),
-      );
-      await artifactUploader.uploadArtifacts();
+    if (typegraphs.length > 1) {
+      throw new Error("Multiple typegraphs");
     }
-
-    return await this.#engineFromTypegraph(tg, opts.secrets ?? {});
+    const tgName = typegraphs[0];
+    const engine = this.typegate.register.get(tgName)!;
+    return engine;
   }
 
   async unregister(engine: QueryEngine) {
