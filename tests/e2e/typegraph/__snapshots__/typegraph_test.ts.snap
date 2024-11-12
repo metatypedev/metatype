@@ -654,8 +654,8 @@ snapshot[`typegraphs creation 3`] = `
       "artifacts": {
         "scripts/three.ts": {
           "path": "scripts/three.ts",
-          "hash": "564fe4792102c50aac9801faeb3c6402c49b1f7c7cbb22dc6d54886e45cfa3b2",
-          "size": 307
+          "hash": "16352d61551cb6d6a8c54efb8179858a4aadb1110517a8dbbf9932a5d71bb51a",
+          "size": 318
         }
       }
     }
@@ -1317,8 +1317,8 @@ snapshot[`typegraphs creation 6`] = `
       "artifacts": {
         "scripts/three.ts": {
           "path": "scripts/three.ts",
-          "hash": "564fe4792102c50aac9801faeb3c6402c49b1f7c7cbb22dc6d54886e45cfa3b2",
-          "size": 307
+          "hash": "16352d61551cb6d6a8c54efb8179858a4aadb1110517a8dbbf9932a5d71bb51a",
+          "size": 318
         }
       }
     }

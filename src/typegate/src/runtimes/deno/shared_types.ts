@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import type { Context } from "../../types.ts";
 import type { EffectType } from "../../typegraph/types.ts";
@@ -70,6 +70,6 @@ export interface TaskExec {
   (
     args: Record<string, unknown>,
     context: TaskContext,
-    helpers: Record<string, unknown>
+    helpers: Record<string, unknown>,
   ): unknown;
 }

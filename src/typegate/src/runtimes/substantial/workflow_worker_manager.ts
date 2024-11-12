@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { envSharedWithWorkers } from "../../config/shared.ts";
 import { getLogger } from "../../log.ts";
@@ -48,7 +48,7 @@ export class WorkflowRecorder {
     name: WorkflowName,
     runId: RunId,
     worker: WorkerRecord,
-    startedAt: Date
+    startedAt: Date,
   ) {
     if (!this.workflowRuns.has(name)) {
       this.workflowRuns.set(name, new Set());
@@ -83,7 +83,7 @@ export class WorkflowRecorder {
     if (this.workflowRuns.has(name)) {
       if (!record) {
         logger.warn(
-          `"${runId}" associated with "${name}" does not exist or has been already destroyed`
+          `"${runId}" associated with "${name}" does not exist or has been already destroyed`,
         );
         return false;
       }
@@ -140,7 +140,7 @@ export class WorkerManager {
         modulePath,
         worker,
       },
-      new Date()
+      new Date(),
     );
   }
 
@@ -151,10 +151,12 @@ export class WorkerManager {
   destroyAllWorkers() {
     this.recorder.destroyAllWorkers();
     logger.warn(
-      `Destroyed workers for ${this.recorder
-        .getRegisteredWorkflowNames()
-        .map((w) => `"${w}"`)
-        .join(", ")}`
+      `Destroyed workers for ${
+        this.recorder
+          .getRegisteredWorkflowNames()
+          .map((w) => `"${w}"`)
+          .join(", ")
+      }`,
     );
   }
 
@@ -181,7 +183,7 @@ export class WorkerManager {
     const rec = this.recorder.startedAtRecords.get(runId);
     if (!rec) {
       throw new Error(
-        `Invalid state: cannot find initial time for run "${runId}"`
+        `Invalid state: cannot find initial time for run "${runId}"`,
       );
     }
     return rec;
@@ -222,7 +224,7 @@ export class WorkerManager {
     storedRun: Run,
     schedule: string,
     kwargs: Record<string, unknown>,
-    internalTCtx: TaskContext
+    internalTCtx: TaskContext,
   ) {
     this.#createWorker(name, workflowModPath, runId);
     this.trigger("START", runId, {

@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 // FIXME: we can't use the import map in ghjk so we must
 // rely on a deps.ts

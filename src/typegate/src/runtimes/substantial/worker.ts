@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { errorToString } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
@@ -28,31 +28,38 @@ self.onmessage = async function (event) {
 
       runCtx = new Context(run, kwargs, internal);
 
-      workflowFn(runCtx)
+      workflowFn(runCtx, internal)
         .then((wfResult: unknown) => {
           self.postMessage(
             Ok(
-              Msg(type, {
-                kind: "SUCCESS",
-                result: wfResult,
-                run: runCtx!.getRun(),
-                schedule,
-              } satisfies WorkflowResult)
-            )
+              Msg(
+                type,
+                {
+                  kind: "SUCCESS",
+                  result: wfResult,
+                  run: runCtx!.getRun(),
+                  schedule,
+                } satisfies WorkflowResult,
+              ),
+            ),
           );
         })
         .catch((wfException: unknown) => {
           self.postMessage(
             Ok(
-              Msg(type, {
-                kind: "FAIL",
-                result: errorToString(wfException),
-                exception:
-                  wfException instanceof Error ? wfException : undefined,
-                run: runCtx!.getRun(),
-                schedule,
-              } satisfies WorkflowResult)
-            )
+              Msg(
+                type,
+                {
+                  kind: "FAIL",
+                  result: errorToString(wfException),
+                  exception: wfException instanceof Error
+                    ? wfException
+                    : undefined,
+                  run: runCtx!.getRun(),
+                  schedule,
+                } satisfies WorkflowResult,
+              ),
+            ),
           );
         });
       break;

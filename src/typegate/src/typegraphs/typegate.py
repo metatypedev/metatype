@@ -1,4 +1,5 @@
-# Copyright Metatype under the Elastic License 2.0.
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
 
 from typegraph import Graph, fx, t, typegraph
 from typegraph.gen.exports.runtimes import TypegateOperation

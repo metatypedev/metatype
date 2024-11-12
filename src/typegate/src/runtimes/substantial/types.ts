@@ -1,12 +1,12 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { Operation, Run } from "../../../engine/runtime.js";
 export type {
+  Backend,
   Operation,
   OperationEvent,
   Run,
-  Backend,
 } from "../../../engine/runtime.js";
 
 export type AnyString = string & Record<string | number | symbol, never>;

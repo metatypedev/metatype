@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { assertEquals } from "@std/assert";
 import { PrismaRuntime } from "@metatype/typegate/runtimes/prisma/prisma.ts";

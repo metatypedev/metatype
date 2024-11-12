@@ -19,7 +19,14 @@ def substantial(g: Graph):
 
     file = (
         WorkflowFile.deno(file="workflow.ts", deps=["imports/common_types.ts"])
-        .import_(["saveAndSleepExample", "eventsAndExceptionExample", "retryExample"])
+        .import_(
+            [
+                "saveAndSleepExample",
+                "eventsAndExceptionExample",
+                "retryExample",
+                "secretsExample",
+            ]
+        )
         .build()
     )
 
@@ -55,5 +62,9 @@ def substantial(g: Graph):
         start_retry=sub.start(
             t.struct({"fail": t.boolean(), "timeout": t.boolean()})
         ).reduce({"name": "retryExample"}),
+        # secret
+        start_secret=sub.start(t.struct({}), secrets=["MY_SECRET"]).reduce(
+            {"name": "secretsExample"}
+        ),
         **sub.internals(),
     )
