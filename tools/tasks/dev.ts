@@ -82,6 +82,7 @@ export default {
     vars: {
       PACKAGED: "false",
       LOG_LEVEL: "DEBUG",
+      SUBSTANTIAL_TRACE: "1",
       DEBUG: "true",
       REDIS_URL: "redis://:password@localhost:6379/0",
       TG_SECRET:

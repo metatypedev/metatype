@@ -100,6 +100,8 @@ export const typegateConfigBaseSchema = z.object({
   substantial_lease_lifespan_sec: z.coerce.number().positive().min(1),
   /** Maximum amount of new acquired replay requests per tick */
   substantial_max_acquire_per_tick: z.coerce.number().positive().min(1),
+  /** Enable/Disable debug traces for Substantial */
+  substantial_trace: z.coerce.number().min(0).max(1),
 });
 
 export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;

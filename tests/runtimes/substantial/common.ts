@@ -623,6 +623,118 @@ export function childWorkflowTestTemplate(
   );
 }
 
+export function inputMutationTemplate(
+  backendName: BackendName,
+  {
+    secrets,
+  }: {
+    secrets?: Record<string, string>;
+  },
+  cleanup?: MetaTestCleanupFn
+) {
+  Meta.test(
+    {
+      name: `kwargs input mutation after interrupts (${backendName})`,
+    },
+    async (t) => {
+      Deno.env.set("SUB_BACKEND", backendName);
+      Deno.env.set("TEST_OVERRIDE_GQL_ORIGIN", `http://localhost:${t.port}`);
+
+      cleanup && t.addCleanup(cleanup);
+
+      const e = await t.engine("runtimes/substantial/substantial.py", {
+        secrets: {
+          MY_SECRET: "Hello",
+          ...secrets,
+        },
+      });
+
+      const testItems = [
+        { pos: 1, innerField: "A" },
+        { pos: 2, innerField: "B" },
+        { pos: 3, innerField: "C" },
+      ];
+
+      let currentRunId: string | null = null;
+      await t.should(
+        `start accidentialInputMutation workflow and return its run id (${backendName})`,
+        async () => {
+          await gql`
+            mutation {
+              start_mut(kwargs: { items: $items })
+            }
+          `
+            .withVars({
+              items: testItems,
+            })
+            .expectBody((body) => {
+              currentRunId = body.data?.start_mut! as string;
+              assertExists(
+                currentRunId,
+                "Run id was not returned when workflow was started"
+              );
+            })
+            .on(e);
+        }
+      );
+
+      await sleep(15 * 1000);
+
+      await t.should(
+        `complete without overwriting original kwargs + save should not depend on external references mutation (${backendName})`,
+        async () => {
+          await gql`
+            query {
+              results_raw(name: "accidentialInputMutation") {
+                ongoing {
+                  count
+                  runs {
+                    run_id
+                  }
+                }
+                completed {
+                  count
+                  runs {
+                    run_id
+                    result {
+                      status
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          `
+            .expectData({
+              results_raw: {
+                ongoing: {
+                  count: 0,
+                  runs: [],
+                },
+                completed: {
+                  count: 1,
+                  runs: [
+                    {
+                      run_id: currentRunId,
+                      result: {
+                        status: "COMPLETED",
+                        value: JSON.stringify({
+                          copy: testItems,
+                          items: [],
+                        }),
+                      },
+                    },
+                  ],
+                },
+              },
+            })
+            .on(e);
+        }
+      );
+    }
+  );
+}
+
 // TODO:
 // mock a very basic http server in another process that counts the number of request made by a workflow
 // This will allow..

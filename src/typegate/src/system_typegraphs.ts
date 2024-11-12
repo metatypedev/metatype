@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { basename } from "@std/url";
+import { basename } from "@std/path";
 import { fromFileUrl, toFileUrl } from "@std/path";
 
 import type { Register } from "./typegate/register.ts";
@@ -35,17 +35,18 @@ export class SystemTypegraph {
   }
 
   static check(name: string) {
-    return SystemTypegraph.all.find((sg) => sg.name == name) !=
-      null;
+    return SystemTypegraph.all.find((sg) => sg.name == name) != null;
   }
 
   static async loadAll(typegate: Typegate, watch = false) {
     const reload = async (urls: string[]) => {
       for await (const url of urls) {
         logger.info(`reloading system graph ${basename(url)}`);
-        const json = (await import(url, {
-          with: { type: "json" },
-        })).default;
+        const json = (
+          await import(url, {
+            with: { type: "json" },
+          })
+        ).default;
         const tgString = JSON.stringify(json);
         const tgJson = await TypeGraph.parseJson(tgString);
         await typegate.pushTypegraph(

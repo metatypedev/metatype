@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { ConsoleHandler, type LevelName, Logger } from "@std/log";
-import { basename, dirname } from "@std/url";
-import { extname } from "@std/path";
+import { basename, dirname, extname } from "@std/path";
 import { sharedConfig } from "./config/shared.ts";
 
 // set rust log level is not explicit set

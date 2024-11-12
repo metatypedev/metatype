@@ -118,8 +118,6 @@ export class WorkerManager {
       type: "module",
       deno: {
         permissions: {
-          // overrideable default permissions
-          hrtime: false,
           net: true,
           // on request permissions
           read: "inherit", // default read permission
@@ -223,7 +221,6 @@ export class WorkerManager {
     workflowModPath: string,
     storedRun: Run,
     schedule: string,
-    kwargs: Record<string, unknown>,
     internalTCtx: TaskContext,
   ) {
     this.#createWorker(name, workflowModPath, runId);
@@ -231,7 +228,6 @@ export class WorkerManager {
       modulePath: workflowModPath,
       functionName: name,
       run: storedRun,
-      kwargs,
       schedule,
       internal: internalTCtx,
     });

@@ -25,6 +25,7 @@ def substantial(g: Graph):
                 "eventsAndExceptionExample",
                 "retryExample",
                 "secretsExample",
+                "accidentialInputMutation",
             ]
         )
         .build()
@@ -46,6 +47,7 @@ def substantial(g: Graph):
         results=sub.query_results(
             t.either([t.integer(), t.string()]).rename("ResultOrError")
         ),
+        results_raw=sub.query_results_raw(),
         workers=sub.query_resources(),
         # sleep
         start_sleep=sub.start(t.struct({"a": t.integer(), "b": t.integer()})).reduce(
@@ -66,5 +68,15 @@ def substantial(g: Graph):
         start_secret=sub.start(t.struct({}), secrets=["MY_SECRET"]).reduce(
             {"name": "secretsExample"}
         ),
+        # input mutation
+        start_mut=sub.start(
+            t.struct(
+                {
+                    "items": t.list(
+                        t.struct({"pos": t.integer(), "innerField": t.string()})
+                    )
+                }
+            )
+        ).reduce({"name": "accidentialInputMutation"}),
         **sub.internals(),
     )

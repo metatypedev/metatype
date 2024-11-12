@@ -12,14 +12,12 @@ const additionalHeaders = { connection: "keep-alive" };
 
 export class Context {
   private id = 0;
+  public kwargs = {};
   gql: ReturnType<typeof createGQLClient>;
 
-  constructor(
-    private run: Run,
-    private kwargs: Record<string, unknown>,
-    private internal: TaskContext,
-  ) {
+  constructor(private run: Run, private internal: TaskContext) {
     this.gql = createGQLClient(internal);
+    this.kwargs = getKwargsCopy(run);
   }
 
   #nextId() {
@@ -64,17 +62,18 @@ export class Context {
         result = await Promise.resolve(fn());
       }
 
+      const clonedResult = deepClone(result ?? null);
       this.#appendOp({
         type: "Save",
         id,
         value: {
           type: "Resolved",
-          payload: result ?? null,
+          payload: clonedResult,
         },
       });
 
-      return result;
-    } catch (err) {
+      return clonedResult;
+    } catch (err: any) {
       if (
         option?.retry?.maxRetries &&
         currRetryCount < option.retry.maxRetries
@@ -426,4 +425,25 @@ function createGQLClient(internal: TaskContext) {
 
   const meta = { ...internal.meta, url: tgLocal.toString() };
   return make_internal({ ...internal, meta }, additionalHeaders).gql;
+}
+
+function getKwargsCopy(run: Run): Record<string, unknown> {
+  const first = run.operations.at(0);
+  if (!first) {
+    throw new Error(
+      `Bad run "${run.run_id}": cannot retrieve kwargs on a run that has not yet started`,
+    );
+  }
+
+  if (first.event.type != "Start") {
+    throw new Error(
+      `Corrupted run "${run.run_id}": first operation is not a run, got ${first.event.type} instead`,
+    );
+  }
+
+  return deepClone(first.event.kwargs.kwargs) as Record<string, unknown>;
+}
+
+function deepClone<T>(clonableObject: T): T {
+  return JSON.parse(JSON.stringify(clonableObject));
 }
