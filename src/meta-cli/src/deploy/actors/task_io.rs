@@ -286,9 +286,9 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                             self_addr.do_send(message::SendRpcResponse(req.response(response)));
                         }
                         Err(err) => {
-                            //console.error(format!(
-                            //    "{scope} failed to handle jsonrpc call {req:?}: {err}"
-                            //));
+                            console.error(format!(
+                                "{scope} failed to handle jsonrpc call {req:?}: {err}"
+                            ));
                             self_addr.do_send(message::SendRpcResponse(req.error(err.to_string())));
                             // TODO fail task?
                         }

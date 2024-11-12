@@ -9,7 +9,15 @@ pub type Result<T, E = TgError> = std::result::Result<T, E>;
 
 impl std::fmt::Display for TgError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.stack.join("\n"))
+        write!(
+            f,
+            "{}",
+            self.stack
+                .iter()
+                .map(|err| format!("- {err}"))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
     }
 }
 

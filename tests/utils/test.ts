@@ -243,8 +243,13 @@ export class MetaTest {
     if (typegraphs.length > 1) {
       throw new Error("Multiple typegraphs");
     }
-    const tgName = typegraphs[0];
+    const tgName = opts.typegraph ?? typegraphs[0];
     const engine = this.typegate.register.get(tgName)!;
+
+    if (!engine) {
+      throw new Error(`Typegate engine '${tgName}' not found`);
+    }
+
     return engine;
   }
 
