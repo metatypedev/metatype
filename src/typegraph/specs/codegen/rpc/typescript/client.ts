@@ -68,7 +68,7 @@ function readResponse() {
   return decoder.decode(content);
 }
 
-function rpcRequest<R, P>(method: string, params?: P) {
+function rpcRequest<R, P>(method: string, params?: P, transform = true) {
   const request = {
     jsonrpc: "2.0",
     method,
@@ -89,7 +89,11 @@ function rpcRequest<R, P>(method: string, params?: P) {
     throw new Error(jsonResponse.error.message);
   }
 
-  return transformKeys(jsonResponse.result, toCamelCase) as R;
+  if (transform) {
+    return transformKeys(jsonResponse.result, toCamelCase) as R;
+  } else {
+    return jsonResponse.result as R;
+  }
 }
 
 export { rpcRequest };

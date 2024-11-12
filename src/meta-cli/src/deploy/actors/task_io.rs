@@ -59,7 +59,17 @@ impl RpcRequest {
         RpcResponse {
             jsonrpc: JsonRpcVersion::V2,
             id: self.id,
-            result,
+            body: RpcBody::Ok { result },
+        }
+    }
+
+    fn error(&self, message: String) -> RpcResponse {
+        RpcResponse {
+            jsonrpc: JsonRpcVersion::V2,
+            id: self.id,
+            body: RpcBody::Err {
+                error: RpcError { message },
+            },
         }
     }
 }
@@ -68,7 +78,21 @@ impl RpcRequest {
 struct RpcResponse {
     jsonrpc: JsonRpcVersion,
     id: u32,
-    result: serde_json::Value,
+    #[serde(flatten)]
+    body: RpcBody,
+}
+
+#[derive(Serialize, Debug)]
+#[serde(untagged)]
+enum RpcBody {
+    Ok { result: serde_json::Value },
+    Err { error: RpcError },
+}
+
+#[derive(Serialize, Debug)]
+struct RpcError {
+    //code: i32,
+    message: String,
 }
 
 pub(super) struct TaskIoActor<A: TaskAction + 'static> {
@@ -262,9 +286,10 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                             self_addr.do_send(message::SendRpcResponse(req.response(response)));
                         }
                         Err(err) => {
-                            console.error(format!(
-                                "{scope} failed to handle jsonrpc call {req:?}: {err}"
-                            ));
+                            //console.error(format!(
+                            //    "{scope} failed to handle jsonrpc call {req:?}: {err}"
+                            //));
+                            self_addr.do_send(message::SendRpcResponse(req.error(err.to_string())));
                             // TODO fail task?
                         }
                     }

@@ -76,7 +76,9 @@ export interface DeployData {
 export const rpc = {
   getDeployTarget: () => rpcCall("GetDeployTarget") as Promise<DeployTarget>,
   getDeployData: (typegraph: string) =>
-    rpcRequest<DeployData, { typegraph: string }>("GetDeployData", {
-      typegraph,
-    }),
+    rpcRequest<DeployData, { typegraph: string }>(
+      "GetDeployData",
+      { typegraph },
+      false, // Don't transform object keys
+    ),
 };

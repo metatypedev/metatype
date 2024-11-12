@@ -80,6 +80,7 @@ pub struct DeployOptions {
 
     /// FIXME: restructure the typegraph core to handle multiple threads
     /// maximum number of concurrent deployment tasks
+    #[allow(unused)]
     #[clap(skip = None)]
     pub threads: Option<usize>,
 
@@ -221,7 +222,7 @@ mod default_mode {
             deploy.options.allow_destructive,
         );
 
-        let mut init = TaskManagerInit::<DeployAction>::new(
+        let init = TaskManagerInit::<DeployAction>::new(
             deploy.config.clone(),
             action_generator,
             console.clone(),
@@ -234,11 +235,9 @@ mod default_mode {
         .retry(
             deploy.options.retry.unwrap_or(0),
             deploy.options.retry_interval_ms.map(Duration::from_millis),
-        );
+        )
+        .max_parallel_tasks(1); // FIXME: make the server work with multiple threads
 
-        if let Some(max_parallel_tasks) = deploy.options.threads {
-            init = init.max_parallel_tasks(max_parallel_tasks);
-        }
         let report = init.run().await;
 
         let summary = report.summary();
@@ -335,7 +334,7 @@ mod watch_mode {
             deploy.options.allow_destructive,
         );
 
-        let mut init = TaskManagerInit::<DeployAction>::new(
+        let init = TaskManagerInit::<DeployAction>::new(
             deploy.config.clone(),
             action_generator.clone(),
             console.clone(),
@@ -344,11 +343,9 @@ mod watch_mode {
         .retry(
             deploy.options.retry.unwrap_or(3),
             deploy.options.retry_interval_ms.map(Duration::from_millis),
-        );
+        )
+        .max_parallel_tasks(1); // FIXME: make the server work with multiple threads
 
-        if let Some(max_parallel_tasks) = deploy.options.threads {
-            init = init.max_parallel_tasks(max_parallel_tasks);
-        }
         let report = init.run().await;
 
         match report.stop_reason {

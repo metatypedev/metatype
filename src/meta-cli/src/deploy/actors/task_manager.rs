@@ -13,6 +13,7 @@ use signal_handler::set_stop_recipient;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
+use typegraph_core::Lib;
 
 pub mod report;
 pub use report::Report;
@@ -354,6 +355,9 @@ impl<A: TaskAction + 'static> Handler<NextTask> for TaskManager<A> {
             // nothing to do
             return;
         };
+
+        // FIXME: Temporary workaround until refactoring the global state in core
+        Lib::reset();
 
         if let Some(stop_reason) = &self.stop_reason {
             match stop_reason {

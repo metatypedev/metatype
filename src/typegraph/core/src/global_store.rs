@@ -150,6 +150,9 @@ impl Store {
             s.materializers.truncate(saved_state.materializers);
             s.policies.truncate(saved_state.policies);
             s.deno_modules.truncate(saved_state.deno_modules);
+            s.graphql_endpoints.clear();
+            s.auths.clear();
+            s.random_seed.take();
         })
     }
 
