@@ -1,9 +1,11 @@
-from typegraph import typegraph, Policy, t, Graph
-from typegraph.runtimes.deno import DenoRuntime
-from typegraph.graph.params import Auth
-from typegraph.providers.prisma import PrismaRuntime
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.gen.exports.runtimes import EffectUpdate
-from typegraph.graph.params import Cors
+from typegraph.graph.params import Auth, Cors
+from typegraph.providers.prisma import PrismaRuntime
+from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph(
@@ -70,8 +72,8 @@ def roadmap(g: Graph):
                     "authorEmail": g.inherit(),
                     "votes": g.inherit(),
                     "bucket": {"connect": g.inherit()},
-                }
-            }
+                },
+            },
         ),
         create_vote=db.create(vote),
         set_vote_importance=db.execute(
@@ -80,13 +82,13 @@ def roadmap(g: Graph):
                 {
                     "vote_id": t.uuid(),
                     "importance": t.enum(["medium", "important", "critical"]),
-                }
+                },
             ),
             EffectUpdate(True),
         ),
         get_context=deno.identity(t.struct({"username": t.string().optional()})).apply(
             {
                 "username": g.from_context("username"),
-            }
+            },
         ),
     )

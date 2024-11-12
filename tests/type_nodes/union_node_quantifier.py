@@ -1,11 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+from typegraph import t, typegraph
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
-
-from typegraph import t, typegraph
 
 
 @typegraph()
@@ -15,7 +14,7 @@ def union_node_quantifier(g: Graph):
             "label": t.string(),
             "content": t.string(),
             "source": t.string().optional(),
-        }
+        },
     )
 
     smartphone = t.struct(
@@ -53,7 +52,7 @@ def union_node_quantifier(g: Graph):
                 "message": t.string(),
                 "type": t.string(),
                 "phone": phone,
-            }
+            },
         ),
         module="ts/union/phone_register.ts",
         name="registerPhone",

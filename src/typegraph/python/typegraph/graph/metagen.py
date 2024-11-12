@@ -3,10 +3,11 @@
 
 import json
 from typing import List, Union
+
 from typegraph.gen.exports.core import (
     MigrationAction,
-    SerializeParams,
     PrismaMigrationConfig,
+    SerializeParams,
 )
 from typegraph.gen.exports.utils import FdkConfig, FdkOutput
 from typegraph.gen.types import Err
@@ -37,7 +38,9 @@ class Metagen:
                 migrations_dir="prisma-migrations",
                 migration_actions=[],
                 default_migration_action=MigrationAction(
-                    apply=False, create=False, reset=False
+                    apply=False,
+                    create=False,
+                    reset=False,
                 ),
             ),
             pretty=False,

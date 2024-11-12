@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.gen.exports.runtimes import EffectUpdate
 from typegraph.providers.prisma import PrismaRuntime
 
@@ -74,10 +74,10 @@ def full_prisma_mapping(g: Graph):
             {
                 "where": {
                     "comments": {
-                        "some": {"author": {"id": g.inherit().from_context("user_id")}}
-                    }
-                }
-            }
+                        "some": {"author": {"id": g.inherit().from_context("user_id")}},
+                    },
+                },
+            },
         ),
         findFirstPost=db.find_first(post),
         findFirstComment=db.find_first(comment),
@@ -93,7 +93,7 @@ def full_prisma_mapping(g: Graph):
         findFirstPostWithReduce=db.find_first(post).reduce(
             {
                 "where": {"id": 10007},
-            }
+            },
         ),
         testExecuteRaw=db.execute(
             'UPDATE "Post" SET title = ${replacement} WHERE title LIKE ${title}',
@@ -101,7 +101,7 @@ def full_prisma_mapping(g: Graph):
                 {
                     "title": t.string().set("%Title 2%"),
                     "replacement": t.string(),
-                }
+                },
             ),
             EffectUpdate(True),
         ),
@@ -120,7 +120,7 @@ def full_prisma_mapping(g: Graph):
                     "two": t.integer(),
                     "title": t.string(),
                     "idlist": t.list(t.integer()),
-                }
+                },
             ),
             t.list(
                 t.struct(
@@ -128,8 +128,8 @@ def full_prisma_mapping(g: Graph):
                         "id": t.integer(),
                         "title": t.string(),
                         "reactions": t.integer(),
-                    }
-                )
+                    },
+                ),
             ),
         ).reduce(
             {
@@ -137,6 +137,6 @@ def full_prisma_mapping(g: Graph):
                 "one": 10002,
                 "two": -1,
                 "idlist": [10003, 10002, 10007],
-            }
+            },
         ),
     )

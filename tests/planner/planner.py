@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, t, Graph, Policy
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.runtimes.deno import DenoRuntime
 
 
@@ -14,8 +14,8 @@ def planner(g: Graph):
                 [
                     t.struct({"c": t.integer()}, name="C1"),
                     t.struct({"c": t.string()}, name="C2"),
-                ]
-            )
+                ],
+            ),
         },
         name="B",
     )
@@ -35,7 +35,7 @@ def planner(g: Graph):
                     "first": t.string(),
                     "second": t.list(t.float()),
                     "third": t.boolean().optional(),
-                }
+                },
             ),
             "union1": union1,
             "union2": union2,
@@ -49,7 +49,7 @@ def planner(g: Graph):
                 t.integer(),
                 code=dummy_func,
             ),
-        }
+        },
     )
 
     registered_user = t.struct(
@@ -63,7 +63,7 @@ def planner(g: Graph):
                         "email": t.email(),
                         "displayName": t.string(),
                         "profilePic": t.string(),
-                    }
+                    },
                 ),
                 code=dummy_func,
             ),
@@ -84,7 +84,7 @@ def planner(g: Graph):
             "firstName": t.string(),
             "lastName": t.string(),
             "profilePic": t.string(),
-        }
+        },
     )
 
     public = Policy.public()
@@ -112,7 +112,7 @@ def planner(g: Graph):
                         t.string(),
                         code=dummy_func,
                     ),
-                }
+                },
             ),
             code=dummy_func,
         ),
@@ -122,7 +122,7 @@ def planner(g: Graph):
                 {
                     "id": t.integer(as_id=True),
                     "user": t.either([registered_user, guest_user]),
-                }
+                },
             ),
             code=dummy_func,
         ),

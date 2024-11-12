@@ -1,10 +1,13 @@
-from typegraph import typegraph, Policy, t, Graph
-from typegraph.runtimes.deno import DenoRuntime
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
+from typegraph import Graph, Policy, t, typegraph
 
 # skip:start
-from typegraph.graph.params import Auth
+from typegraph.graph.params import Auth, Cors
 from typegraph.providers.prisma import PrismaRuntime
-from typegraph.graph.params import Cors
+from typegraph.runtimes.deno import DenoRuntime
+
 # skip:end
 
 
@@ -75,8 +78,8 @@ def roadmap(g: Graph):
                     "authorEmail": g.inherit(),
                     "votes": g.inherit(),
                     "bucket": {"connect": g.inherit()},
-                }
-            }
+                },
+            },
         ),
         create_vote=db.create(vote),
         # skip:end
@@ -102,7 +105,7 @@ def roadmap(g: Graph):
                 }
             }
         }
-        """
+        """,
     )
 
     g.rest(
@@ -120,6 +123,6 @@ def roadmap(g: Graph):
                 }
             }
         }
-        """
+        """,
     )
     # skip:end

@@ -2,21 +2,22 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import os
-from os import path
 
 # skip:start
 import sys
+from os import path
+
+from typegraph import Graph, Policy, t, typegraph
 
 # skip:end
 from typegraph.gen.exports.core import MigrationAction
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_deploy import (
+    TypegateConnectionOptions,
     TypegraphDeployParams,
     tg_deploy,
-    TypegateConnectionOptions,
 )
 from typegraph.runtimes.deno import DenoRuntime
-from typegraph import Graph, Policy, t, typegraph
 
 
 # Your typegraph

@@ -1,4 +1,7 @@
-from typegraph import typegraph, Policy, t, Graph
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors
 from typegraph.runtimes import RandomRuntime
 
@@ -19,7 +22,7 @@ def first_typegraph(g: Graph):
             "id": t.integer(),
             "title": t.string(),
             "user_id": t.integer(),
-        }
+        },
     )
 
     # expose them with policies

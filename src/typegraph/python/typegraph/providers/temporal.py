@@ -1,23 +1,21 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Union, Optional
-
-from typegraph.runtimes.base import Runtime
-
-from typegraph.gen.exports.runtimes import (
-    TemporalOperationData,
-    TemporalRuntimeData,
-    TemporalOperationType,
-    TemporalOperationTypeStartWorkflow,
-    TemporalOperationTypeSignalWorkflow,
-    TemporalOperationTypeQueryWorkflow,
-    TemporalOperationTypeDescribeWorkflow,
-)
-from typegraph.gen.types import Err
-from typegraph.wit import runtimes, store
+from typing import Optional, Union
 
 from typegraph import t
+from typegraph.gen.exports.runtimes import (
+    TemporalOperationData,
+    TemporalOperationType,
+    TemporalOperationTypeDescribeWorkflow,
+    TemporalOperationTypeQueryWorkflow,
+    TemporalOperationTypeSignalWorkflow,
+    TemporalOperationTypeStartWorkflow,
+    TemporalRuntimeData,
+)
+from typegraph.gen.types import Err
+from typegraph.runtimes.base import Runtime
+from typegraph.wit import runtimes, store
 
 
 class TemporalRuntime(Runtime):
@@ -26,10 +24,16 @@ class TemporalRuntime(Runtime):
     namespace_secret: Optional[str]
 
     def __init__(
-        self, name: str, host_secret: str, *, namespace_secret: Optional[str] = None
+        self,
+        name: str,
+        host_secret: str,
+        *,
+        namespace_secret: Optional[str] = None,
     ):
         data = TemporalRuntimeData(
-            name=name, host_secret=host_secret, namespace_secret=namespace_secret
+            name=name,
+            host_secret=host_secret,
+            namespace_secret=namespace_secret,
         )
         runtime_id = runtimes.register_temporal_runtime(store, data)
         if isinstance(runtime_id, Err):
@@ -59,7 +63,9 @@ class TemporalRuntime(Runtime):
 
     def start_workflow(self, workflow_type: str, arg: t.typedef):
         return self._generic_temporal_func(
-            TemporalOperationTypeStartWorkflow(), workflow_type, arg
+            TemporalOperationTypeStartWorkflow(),
+            workflow_type,
+            arg,
         )
 
     def signal_workflow(self, signal_name: str, arg: t.typedef):
@@ -71,7 +77,10 @@ class TemporalRuntime(Runtime):
 
     def query_workflow(self, query_type: str, arg: t.typedef, out: t.typedef):
         return self._generic_temporal_func(
-            TemporalOperationTypeQueryWorkflow(), query_type, arg, out
+            TemporalOperationTypeQueryWorkflow(),
+            query_type,
+            arg,
+            out,
         )
 
     def describe_workflow(self):

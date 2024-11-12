@@ -11,9 +11,9 @@ from typegraph.gen.exports.core import (
 )
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_deploy import (
+    TypegateConnectionOptions,
     TypegraphDeployParams,
     tg_deploy,
-    TypegateConnectionOptions,
 )
 
 # get command args
@@ -40,7 +40,7 @@ if tg_name is None:
     tg_name = module_name.split(".")[0]
 if not hasattr(module, tg_name):
     raise Exception(
-        f"Script name {module_name} doesn't have the typegraph name: {tg_name}"
+        f"Script name {module_name} doesn't have the typegraph name: {tg_name}",
     )
 
 
@@ -73,7 +73,9 @@ deploy_result = tg_deploy(
         migrations_dir=migration_dir,
         migration_actions=None,
         default_migration_action=MigrationAction(
-            apply=True, reset=global_action_reset, create=global_action_create
+            apply=True,
+            reset=global_action_reset,
+            create=global_action_create,
         ),
     ),
 )

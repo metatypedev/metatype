@@ -70,9 +70,9 @@ prisma_query_batch = t.struct(
                         "repeatableread",
                         "snapshot",
                         "serializable",
-                    ]
+                    ],
                 ).optional(),
-            }
+            },
         ).optional(),
     },
     name="PrismaBatchQuery",
@@ -97,39 +97,45 @@ prisma_query = t.either([prisma_query_single, prisma_query_batch], name="PrismaQ
 def typegate(g: Graph):
     deno = DenoRuntime()
     admin_only = deno.policy(
-        "admin_only", code="(_args, { context }) => context.username === 'admin'"
+        "admin_only",
+        code="(_args, { context }) => context.username === 'admin'",
     )
 
     g.auth(Auth.basic(["admin"]))
 
     list_typegraphs_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.LIST_TYPEGRAPHS
+        store,
+        TypegateOperation.LIST_TYPEGRAPHS,
     )
     if isinstance(list_typegraphs_mat_id, Err):
         raise Exception(list_typegraphs_mat_id.value)
     list_typegraphs_mat = Materializer(list_typegraphs_mat_id.value, effect=fx.read())
 
     find_typegraph_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.FIND_TYPEGRAPH
+        store,
+        TypegateOperation.FIND_TYPEGRAPH,
     )
     if isinstance(find_typegraph_mat_id, Err):
         raise Exception(find_typegraph_mat_id.value)
     find_typegraph_mat = Materializer(find_typegraph_mat_id.value, effect=fx.read())
 
     add_typegraph_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.ADD_TYPEGRAPH
+        store,
+        TypegateOperation.ADD_TYPEGRAPH,
     )
     if isinstance(add_typegraph_mat_id, Err):
         raise Exception(add_typegraph_mat_id.value)
     add_typegraph_mat = Materializer(add_typegraph_mat_id.value, effect=fx.create(True))
 
     remove_typegraphs_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.REMOVE_TYPEGRAPHS
+        store,
+        TypegateOperation.REMOVE_TYPEGRAPHS,
     )
     if isinstance(remove_typegraphs_mat_id, Err):
         raise Exception(remove_typegraphs_mat_id.value)
     remove_typegraphs_mat = Materializer(
-        remove_typegraphs_mat_id.value, effect=fx.delete(True)
+        remove_typegraphs_mat_id.value,
+        effect=fx.delete(True),
     )
 
     serialized_typegraph_mat_id = runtimes.register_typegate_materializer(
@@ -139,7 +145,8 @@ def typegate(g: Graph):
     if isinstance(serialized_typegraph_mat_id, Err):
         raise Exception(serialized_typegraph_mat_id.value)
     serialized_typegraph_mat = Materializer(
-        serialized_typegraph_mat_id.value, effect=fx.read()
+        serialized_typegraph_mat_id.value,
+        effect=fx.read(),
     )
 
     arg_info_by_path_id = runtimes.register_typegate_materializer(
@@ -166,7 +173,7 @@ def typegate(g: Graph):
             "queryType": t.string(),
             "fn": t.string(),
             "argPaths": t.list(path),
-        }
+        },
     )
 
     shallow_type_info = t.struct(
@@ -185,16 +192,16 @@ def typegate(g: Graph):
     type_info = shallow_type_info.extend(
         {
             "fields": t.list(
-                t.struct({"subPath": path, "termNode": g.ref("TypeInfo")})
+                t.struct({"subPath": path, "termNode": g.ref("TypeInfo")}),
             ).optional(),
-        }
+        },
     ).rename("TypeInfo")
 
     operation_parameter = t.struct(
         {
             "name": t.string(),
             "type": type_info,
-        }
+        },
     )
 
     operation_info = t.struct(
@@ -215,7 +222,8 @@ def typegate(g: Graph):
     if isinstance(find_available_operations_mat_id, Err):
         raise Exception(find_available_operations_mat_id.value)
     find_list_queries_mat = Materializer(
-        find_available_operations_mat_id.value, effect=fx.read()
+        find_available_operations_mat_id.value,
+        effect=fx.read(),
     )
     find_available_operations = t.func(
         # TODO filters: query/mutation
@@ -235,8 +243,8 @@ def typegate(g: Graph):
                         "name": t.string(),
                         "as_id": t.boolean(),
                         "type": shallow_type_info,
-                    }
-                )
+                    },
+                ),
             ),
         },
         name="PrismaModelInfo",
@@ -249,7 +257,8 @@ def typegate(g: Graph):
     if isinstance(find_prisma_models_mat_id, Err):
         raise Exception(find_prisma_models_mat_id.value)
     find_prisma_models_mat = Materializer(
-        find_prisma_models_mat_id.value, effect=fx.read()
+        find_prisma_models_mat_id.value,
+        effect=fx.read(),
     )
     find_prisma_models = t.func(
         t.struct({"typegraph": t.string()}),
@@ -259,7 +268,8 @@ def typegate(g: Graph):
     )
 
     raw_prisma_read_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.RAW_PRISMA_READ
+        store,
+        TypegateOperation.RAW_PRISMA_READ,
     )
     if isinstance(raw_prisma_read_mat_id, Err):
         raise Exception(raw_prisma_read_mat_id.value)
@@ -269,7 +279,8 @@ def typegate(g: Graph):
     )
 
     raw_prisma_create_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.RAW_PRISMA_CREATE
+        store,
+        TypegateOperation.RAW_PRISMA_CREATE,
     )
     if isinstance(raw_prisma_create_mat_id, Err):
         raise Exception(raw_prisma_create_mat_id.value)
@@ -279,7 +290,8 @@ def typegate(g: Graph):
     )
 
     raw_prisma_update_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.RAW_PRISMA_UPDATE
+        store,
+        TypegateOperation.RAW_PRISMA_UPDATE,
     )
     if isinstance(raw_prisma_update_mat_id, Err):
         raise Exception(raw_prisma_update_mat_id.value)
@@ -289,7 +301,8 @@ def typegate(g: Graph):
     )
 
     raw_prisma_delete_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.RAW_PRISMA_DELETE
+        store,
+        TypegateOperation.RAW_PRISMA_DELETE,
     )
     if isinstance(raw_prisma_delete_mat_id, Err):
         raise Exception(raw_prisma_delete_mat_id.value)
@@ -305,12 +318,13 @@ def typegate(g: Graph):
             # prisma runtime name
             "runtime": t.string(),
             "query": prisma_query,
-        }
+        },
     )
     raw_prisma_op_out = t.json()
 
     query_prisma_model_mat_id = runtimes.register_typegate_materializer(
-        store, TypegateOperation.QUERY_PRISMA_MODEL
+        store,
+        TypegateOperation.QUERY_PRISMA_MODEL,
     )
     if isinstance(query_prisma_model_mat_id, Err):
         raise Exception(query_prisma_model_mat_id.value)
@@ -322,7 +336,7 @@ def typegate(g: Graph):
                 "model": t.string(),
                 "offset": t.integer(),
                 "limit": t.integer(),
-            }
+            },
         ),
         t.struct(
             {
@@ -332,12 +346,12 @@ def typegate(g: Graph):
                             "name": t.string(),
                             "as_id": t.boolean(),
                             "type": shallow_type_info,
-                        }
-                    )
+                        },
+                    ),
                 ),
                 "rowCount": t.integer(),
                 "data": t.list(t.json()),
-            }
+            },
         ),
         Materializer(query_prisma_model_mat_id.value, effect=fx.read()),
     )
@@ -362,7 +376,7 @@ def typegate(g: Graph):
                     "fromString": t.json(),
                     "secrets": t.json(),
                     "targetVersion": t.string(),
-                }
+                },
             ),
             t.struct(
                 {
@@ -372,19 +386,19 @@ def typegate(g: Graph):
                             {
                                 "type": t.enum(["info", "warning", "error"]),
                                 "text": t.string(),
-                            }
-                        )
+                            },
+                        ),
                     ),
                     "migrations": t.list(
                         t.struct(
                             {
                                 "runtime": t.string(),
                                 "migrations": t.string(),
-                            }
-                        )
+                            },
+                        ),
                     ),
                     "failure": t.json().optional(),
-                }
+                },
             ),
             add_typegraph_mat,
             rate_calls=True,
@@ -396,7 +410,10 @@ def typegate(g: Graph):
             rate_calls=True,
         ),
         argInfoByPath=t.func(
-            arg_info_inp, t.list(type_info), arg_info_by_path_mat, rate_calls=True
+            arg_info_inp,
+            t.list(type_info),
+            arg_info_by_path_mat,
+            rate_calls=True,
         ),
         findAvailableOperations=find_available_operations,
         findPrismaModels=find_prisma_models,

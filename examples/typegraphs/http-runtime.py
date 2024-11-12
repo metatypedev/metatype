@@ -1,5 +1,8 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors
 
 # skip:end
@@ -31,7 +34,7 @@ def http_runtime(g: Graph):
                     "source_url": t.string(),
                     "language": t.string(),
                     "permalink": t.string(),
-                }
+                },
             ),
         ),
         facts_as_text=facts.get(
@@ -40,7 +43,7 @@ def http_runtime(g: Graph):
                 {
                     "header_accept": t.string().set("text/plain"),
                     "language": t.enum(["en", "de"]),
-                }
+                },
             ),
             t.string(),
             header_prefix="header_",

@@ -1,3 +1,6 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 from os import path
 
 from typegraph import Graph, Policy, t, typegraph
@@ -80,16 +83,21 @@ res = tg_deploy(deploy_example_python, deploy_params)
 # print(res.serialized)
 if "errors" in res.response:
     print(res.response)
-    exit
+    exit()
+
+assert isinstance(res.response, dict)
 
 # migration status.. etc
 print("\n".join([msg["text"] for msg in res.response["messages"]]))
+
 
 migrations = res.response["migrations"] or []
 for item in migrations:
     # what to do with the migration files?
     base_dir = deploy_params.migrations_dir
-    # Convention, however if migration_dir is absolute then you might want to use that instead
+    assert base_dir
+    # Convention, however if migration_dir is absolute then
+    # you might want to use that instead
     # cwd + tg_name + runtime_name
     full_path = path.join(base_dir, item["runtime"])
     unpack_tarb64(item["migrations"], full_path)

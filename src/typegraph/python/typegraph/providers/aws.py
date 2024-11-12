@@ -13,7 +13,7 @@ from typegraph.gen.exports.aws import (
 from typegraph.gen.exports.runtimes import EffectCreate, EffectRead
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import aws, ErrorStack, store
+from typegraph.wit import ErrorStack, aws, store
 
 
 class S3Runtime(Runtime):
@@ -115,7 +115,7 @@ class S3Runtime(Runtime):
                 {
                     "keys": t.list(t.struct({"key": t.string(), "size": t.integer()})),
                     "prefix": t.list(t.string()),
-                }
+                },
             ),
             S3ListMat(mat_id.value, bucket=bucket, effect=EffectRead()),
         )
@@ -132,7 +132,7 @@ class S3Runtime(Runtime):
                 {
                     "file": file_type,
                     "path": t.string().optional(),
-                }
+                },
             ),
             t.boolean(),
             S3UploadMat(mat_id.value, bucket=bucket, effect=EffectCreate(True)),
@@ -150,7 +150,7 @@ class S3Runtime(Runtime):
                 {
                     "prefix": t.string().optional(""),
                     "files": t.list(file_type),
-                }
+                },
             ),
             t.boolean(),
             S3UploadAllMat(mat_id.value, bucket=bucket, effect=EffectCreate(True)),

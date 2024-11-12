@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, effects, Policy, t, Graph
+from typegraph import Graph, Policy, effects, t, typegraph
 from typegraph.runtimes.graphql import GraphQLRuntime
 
 
@@ -19,7 +19,7 @@ def graphql(g: Graph):
     )
 
     user_by_id = gql.query(t.struct({"id": t.integer()}), g.ref("User")).with_policy(
-        Policy.public()
+        Policy.public(),
     )
     update_user = gql.mutation(
         t.struct(
@@ -33,7 +33,7 @@ def graphql(g: Graph):
                     min=1,
                     name="UserUpdate",
                 ),
-            }
+            },
         ),
         g.ref("User"),
         effect=effects.update(idempotent=True),

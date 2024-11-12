@@ -48,8 +48,8 @@ class HostImpl(imports.HostHost):
 
     def read_file(self, path: str) -> Result[bytes, str]:
         try:
-            file = open(path, mode="rb")
-            return Ok(file.read())
+            with open(path, mode="rb") as file:
+                return Ok(file.read())
         except Exception as e:
             return Err(str(e))
 
@@ -57,9 +57,9 @@ class HostImpl(imports.HostHost):
         try:
             dirname = os.path.dirname(path)
             os.makedirs(dirname, exist_ok=True)
-            file = open(path, "wb")
-            file.write(data)
-            return Ok(None)
+            with open(path, "wb") as file:
+                file.write(data)
+                return Ok(None)
         except Exception as e:
             return Err(str(e))
 

@@ -1,10 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph.providers.prisma import PrismaRuntime
-from typegraph.runtimes.graphql import GraphQLRuntime
 
 from typegraph import Graph, Policy, effects, t, typegraph
+from typegraph.providers.prisma import PrismaRuntime
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 _user = t.struct(
     {"id": t.string(as_id=True), "name": t.string()},
@@ -55,7 +55,7 @@ def graphql(g: Graph):
             t.struct(
                 {
                     "input": create_user_input,
-                }
+                },
             ),
             _user,
             effects.create(False),

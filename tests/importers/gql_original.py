@@ -6,7 +6,6 @@ from pathlib import Path
 
 import respx
 from httpx import Response
-
 from typegraph import TypeGraph
 from typegraph import policies as p
 from typegraph.importers.graphql import GraphQLImporter

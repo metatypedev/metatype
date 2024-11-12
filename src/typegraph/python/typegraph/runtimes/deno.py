@@ -34,7 +34,9 @@ class DenoRuntime(Runtime):
         from typegraph import t
 
         mat_id = runtimes.register_deno_static(
-            store, MaterializerDenoStatic(json.dumps(value)), out._id
+            store,
+            MaterializerDenoStatic(json.dumps(value)),
+            out._id,
         )
 
         if isinstance(mat_id, Err):
@@ -73,7 +75,9 @@ class DenoRuntime(Runtime):
         from typegraph import t
 
         return t.func(
-            inp, out, FunMat(mat_id.value, code=code, secrets=secrets, effect=effect)
+            inp,
+            out,
+            FunMat(mat_id.value, code=code, secrets=secrets, effect=effect),
         )
 
     def import_(
@@ -83,7 +87,7 @@ class DenoRuntime(Runtime):
         *,
         module: str,
         name: str,
-        deps: List[str] = [],
+        deps: Optional[List[str]] = None,
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
@@ -92,7 +96,10 @@ class DenoRuntime(Runtime):
         mat_id = runtimes.import_deno_function(
             store,
             MaterializerDenoImport(
-                func_name=name, module=module, secrets=secrets, deps=deps
+                func_name=name,
+                module=module,
+                secrets=secrets,
+                deps=deps or [],
             ),
             effect,
         )
@@ -118,7 +125,8 @@ class DenoRuntime(Runtime):
         from typegraph import t
 
         res = runtimes.get_predefined_deno_func(
-            store, MaterializerDenoPredefined(name="identity")
+            store,
+            MaterializerDenoPredefined(name="identity"),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -130,7 +138,10 @@ class DenoRuntime(Runtime):
         )
 
     def policy(
-        self, name: str, code: str, secrets: Optional[List[str]] = None
+        self,
+        name: str,
+        code: str,
+        secrets: Optional[List[str]] = None,
     ) -> Policy:
         secrets = secrets or []
         mat_id = runtimes.register_deno_func(
@@ -159,7 +170,10 @@ class DenoRuntime(Runtime):
         res = runtimes.import_deno_function(
             store,
             MaterializerDenoImport(
-                func_name=func_name, module=module, secrets=secrets or [], deps=[]
+                func_name=func_name,
+                module=module,
+                secrets=secrets or [],
+                deps=[],
             ),
             EffectRead(),
         )

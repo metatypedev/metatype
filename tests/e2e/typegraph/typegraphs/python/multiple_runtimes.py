@@ -19,7 +19,7 @@ def test_multiple_runtimes(g: Graph):
                 {
                     "first": t.float(),
                     "second": t.float(),
-                }
+                },
             ),
             t.float(),
             lambda x: x["first"] + x["second"],

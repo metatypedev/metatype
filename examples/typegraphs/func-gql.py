@@ -1,9 +1,11 @@
-# skip:start
-from typegraph import typegraph, Policy, t, Graph, fx
-from typegraph.graph.params import Cors, Rate
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
 
-from typegraph.runtimes.deno import DenoRuntime
+# skip:start
+from typegraph import Graph, Policy, fx, t, typegraph
+from typegraph.graph.params import Cors, Rate
 from typegraph.providers.prisma import PrismaRuntime
+from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph(
@@ -45,7 +47,7 @@ def func_gql(g: Graph):
         createIdea=db.create(idea),
         createVote=deno.import_(
             t.struct({"ideaId": t.uuid(), "authorEmail": t.email()}).rename(
-                "CreateVoteInput"
+                "CreateVoteInput",
             ),
             t.struct(
                 {
@@ -59,9 +61,9 @@ def func_gql(g: Graph):
                             "where": {
                                 "id": g.inherit().from_parent("voteId"),
                             },
-                        }
+                        },
                     ),
-                }
+                },
             ).rename("CreateVoteOutput"),
             module="scripts/createVote.ts",
             name="handle",  # name the exported function to run

@@ -34,7 +34,9 @@ class KvRuntime(Runtime):
     def set(self):
         mat = self.__operation(KvMaterializer.SET, fx.update())
         return t.func(
-            t.struct({"key": t.string(), "value": t.string()}), t.string(), mat
+            t.struct({"key": t.string(), "value": t.string()}),
+            t.string(),
+            mat,
         )
 
     def delete(self):
@@ -44,7 +46,9 @@ class KvRuntime(Runtime):
     def keys(self):
         mat = self.__operation(KvMaterializer.KEYS, fx.read())
         return t.func(
-            t.struct({"filter": t.optional(t.string())}), t.list(t.string()), mat
+            t.struct({"filter": t.optional(t.string())}),
+            t.list(t.string()),
+            mat,
         )
 
     def values(self):
@@ -57,7 +61,9 @@ class KvRuntime(Runtime):
 
     def __operation(self, operation: KvMaterializer, effect: Effect):
         mat_id = runtimes.kv_operation(
-            store, BaseMaterializer(self.id, effect), operation
+            store,
+            BaseMaterializer(self.id, effect),
+            operation,
         )
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)

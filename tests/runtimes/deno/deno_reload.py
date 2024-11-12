@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import os
+
+from typegraph import t, typegraph
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
-
-from typegraph import t, typegraph
 
 
 @typegraph()

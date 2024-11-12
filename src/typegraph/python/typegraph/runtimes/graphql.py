@@ -32,7 +32,8 @@ class GraphQLRuntime(Runtime):
 
     def __init__(self, endpoint: str):
         runtime_id = runtimes.register_graphql_runtime(
-            store, GraphqlRuntimeData(endpoint=endpoint)
+            store,
+            GraphqlRuntimeData(endpoint=endpoint),
         )
         if isinstance(runtime_id, Err):
             raise Exception(runtime_id.value)
@@ -41,7 +42,11 @@ class GraphQLRuntime(Runtime):
         self.endpoint = endpoint
 
     def query(
-        self, inp: "t.struct", out: "t.typedef", *, path: Optional[List[str]] = None
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        path: Optional[List[str]] = None,
     ):
         mat_id = runtimes.graphql_query(
             store,

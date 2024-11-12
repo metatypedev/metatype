@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import Policy, t, typegraph, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.runtimes.deno import DenoRuntime
 
 
@@ -12,7 +12,7 @@ def array_of_optional(g: Graph):
             "a": t.string(),
             "b": t.integer(),
             "c": t.struct({"c1": t.string(), "inner": t.list(t.string().optional())}),
-        }
+        },
     )
 
     rec = t.struct(
@@ -24,9 +24,9 @@ def array_of_optional(g: Graph):
             # should we support null value for enum/union/either arrays ?
             "enum_array": t.list(t.enum(["A", "B"]).optional()).optional(),
             "union_array": t.list(
-                t.union([t.string(), t.integer()]).optional()
+                t.union([t.string(), t.integer()]).optional(),
             ).optional(),
-        }
+        },
     )
 
     rec_not_null = t.struct(
@@ -34,7 +34,7 @@ def array_of_optional(g: Graph):
             "struct_array": t.list(t.struct({"x": t.string()})).optional(),
             "string_array": t.list(t.string()).optional(),
             "integer_array": t.list(t.integer()).optional(),
-        }
+        },
     )
 
     deno = DenoRuntime()

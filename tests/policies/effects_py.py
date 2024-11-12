@@ -17,7 +17,7 @@ def effects_py(g: Graph):
             "id": t.integer(),
             "email": t.email(),
             "password_hash": t.string().with_policy(
-                deno.policy("deny_all", "() => false")
+                deno.policy("deny_all", "() => false"),
             ),
         },
         name="User",
@@ -44,7 +44,7 @@ def effects_py(g: Graph):
                         },
                         min=1,
                     ),
-                }
+                },
             ),
             user,
             code="({ id, set }) => ({ id, ...(set.email ? { email: set.email }: {}), ...(set.password ? { password_hash: 'xxx' }: {})})",

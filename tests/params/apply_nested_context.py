@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, t, Graph, Policy
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.runtimes import DenoRuntime
 
 
@@ -13,18 +13,18 @@ def apply_nested_context(g: Graph):
     g.expose(
         has_profile,
         simple=deno.identity(t.struct({"id": t.integer()})).apply(
-            {"id": g.from_context("profile.id")}
+            {"id": g.from_context("profile.id")},
         ),
         customKey=deno.identity(t.struct({"custom": t.string()})).apply(
-            {"custom": g.from_context('.profile["custom key"]')}
+            {"custom": g.from_context('.profile["custom key"]')},
         ),
         thirdProfileData=deno.identity(t.struct({"third": t.string()})).apply(
-            {"third": g.from_context("profile.data[2]")}
+            {"third": g.from_context("profile.data[2]")},
         ),
         deeplyNestedEntry=deno.identity(t.struct({"value": t.string()})).apply(
-            {"value": g.from_context('profile.deeply[0]["nested"][1].value')}
+            {"value": g.from_context('profile.deeply[0]["nested"][1].value')},
         ),
         optional=deno.identity(t.struct({"optional": t.email().optional()})).apply(
-            {"optional": g.from_context("profile.email")}
+            {"optional": g.from_context("profile.email")},
         ),
     )

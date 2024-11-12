@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from dataclasses import dataclass
-from typing import Optional, List
-from os import environ
 from enum import Enum
+from os import environ
+from typing import List, Optional
+
 from typegraph.io import Log
 
 _required_cli_envs = (
@@ -64,9 +65,11 @@ class CliEnv:
 
         try:
             d["command"] = Command(d["command"])
-        except ValueError as e:
+        except ValueError as err:
             variants = ", ".join(v.value for v in Command)
-            raise Exception(f"MCLI_COMMAND env value should be one of: {variants}; {e}")
+            raise Exception(
+                f"MCLI_COMMAND env value should be one of: {variants}; {err}"
+            ) from err
 
         raw_filter: str = d["filter"]
         if raw_filter == "all":

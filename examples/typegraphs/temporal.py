@@ -1,7 +1,11 @@
-from typegraph import t, typegraph, Policy, Graph
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
+import os
+
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors
 from typegraph.providers.temporal import TemporalRuntime
-import os
 
 
 @typegraph(

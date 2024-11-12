@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.runtimes.python import PythonRuntime
 
 
@@ -20,7 +20,7 @@ def example(g: Graph):
             "opt_union_flat": t.union([t.integer(), t.float()]).optional(),
             "reference": t.list(g.ref("Example")).optional(),
             "nested_ref": t.struct(
-                {"either": t.either([g.ref("Example"), references])}
+                {"either": t.either([g.ref("Example"), references])},
             ),
         },
         name="Example",

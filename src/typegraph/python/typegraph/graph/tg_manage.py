@@ -4,10 +4,11 @@
 import traceback
 from pathlib import Path
 
+from typegraph.envs.cli import CliEnv, Command, get_cli_env
 from typegraph.gen.exports.core import (
-    SerializeParams,
     MigrationAction,
     PrismaMigrationConfig,
+    SerializeParams,
 )
 from typegraph.graph.shared_types import TypegraphOutput
 from typegraph.graph.tg_deploy import (
@@ -15,10 +16,9 @@ from typegraph.graph.tg_deploy import (
     TypegraphDeployParams,
     tg_deploy,
 )
-from typegraph.wit import ErrorStack
-from typegraph.utils import freeze_tg_output
 from typegraph.io import Log, Rpc
-from typegraph.envs.cli import CliEnv, Command, get_cli_env
+from typegraph.utils import freeze_tg_output
+from typegraph.wit import ErrorStack
 
 
 class Manager:
@@ -129,7 +129,7 @@ class Manager:
                         "value": ret.serialized,
                     },
                     **response,
-                }
+                },
             )
         except Exception as err:
             Log.debug(traceback.format_exc())

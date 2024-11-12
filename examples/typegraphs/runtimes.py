@@ -1,5 +1,8 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
-from typegraph import typegraph, t, Graph
+from typegraph import Graph, t, typegraph
 from typegraph.graph.params import Cors
 from typegraph.runtimes import HttpRuntime
 
@@ -13,5 +16,7 @@ def runtimes(g: Graph):
 
     # same func as above
     http.get(
-        "/flip_coin", t.struct({}), t.enum(["head", "tail"])
+        "/flip_coin",
+        t.struct({}),
+        t.enum(["head", "tail"]),
     )  # implicitly attaches runtime to all types

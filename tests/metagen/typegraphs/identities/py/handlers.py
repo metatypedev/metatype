@@ -1,18 +1,18 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+from . import handlers_types as types
 from .handlers_types import (
     Composites,
-    typed_cycles,
-    Primitives,
-    typed_composites,
-    Cycles1,
-    typed_primitives,
-    SimpleCycles1,
-    typed_simple_cycles,
     Ctx,
+    Cycles1,
+    Primitives,
+    SimpleCycles1,
+    typed_composites,
+    typed_cycles,
+    typed_primitives,
+    typed_simple_cycles,
 )
-from . import handlers_types as types
 
 
 @typed_primitives

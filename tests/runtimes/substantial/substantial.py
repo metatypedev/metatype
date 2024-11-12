@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import os
-from typegraph import typegraph, t, Graph
+
+from typegraph import Graph, t, typegraph
 from typegraph.policy import Policy
 from typegraph.runtimes.deno import DenoRuntime
-from typegraph.runtimes.substantial import SubstantialRuntime, WorkflowFile
-from typegraph.runtimes.substantial import Backend
+from typegraph.runtimes.substantial import Backend, SubstantialRuntime, WorkflowFile
 
 
 @typegraph()
@@ -28,7 +28,7 @@ def substantial(g: Graph):
                 "eventsAndExceptionExample",
                 "retryExample",
                 "secretsExample",
-            ]
+            ],
         )
         .build()
     )
@@ -47,27 +47,27 @@ def substantial(g: Graph):
         # common
         stop=sub.stop(),
         results=sub.query_results(
-            t.either([t.integer(), t.string()]).rename("ResultOrError")
+            t.either([t.integer(), t.string()]).rename("ResultOrError"),
         ),
         workers=sub.query_resources(),
         # sleep
         start_sleep=sub.start(t.struct({"a": t.integer(), "b": t.integer()})).reduce(
-            {"name": "saveAndSleepExample"}
+            {"name": "saveAndSleepExample"},
         ),
         # email
         start_email=sub.start(t.struct({"to": t.string()})).reduce(
-            {"name": "eventsAndExceptionExample"}
+            {"name": "eventsAndExceptionExample"},
         ),
         send_confirmation=sub.send(t.boolean()).reduce(
-            {"event": {"name": "confirmation", "payload": g.inherit()}}
+            {"event": {"name": "confirmation", "payload": g.inherit()}},
         ),
         # retry
         start_retry=sub.start(
-            t.struct({"fail": t.boolean(), "timeout": t.boolean()})
+            t.struct({"fail": t.boolean(), "timeout": t.boolean()}),
         ).reduce({"name": "retryExample"}),
         # secret
         start_secret=sub.start(t.struct({}), secrets=["MY_SECRET"]).reduce(
-            {"name": "secretsExample"}
+            {"name": "secretsExample"},
         ),
         **sub.internals(),
     )

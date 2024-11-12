@@ -60,6 +60,10 @@ env("_python").install(
     packageName: "ruff",
     version: "0.4.7",
   })[0],
+  ports.npmi({
+    packageName: "pyright",
+    version: "1.1.388",
+  })[0],
   ports.pipi({
     packageName: "poetry",
     version: "1.8.3",

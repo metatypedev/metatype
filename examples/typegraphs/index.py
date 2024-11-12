@@ -1,3 +1,6 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
 import re
 
@@ -44,7 +47,7 @@ def homepage(g: Graph):
                 t.struct({"user": t.string().from_parent("login")}),
                 t.struct({"name": t.string().optional()}),
             ),
-        }
+        },
     )
 
     # out of the box authenfication support

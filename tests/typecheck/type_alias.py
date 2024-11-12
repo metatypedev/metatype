@@ -1,9 +1,9 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, Policy, t, Graph
-from typegraph.runtimes import RandomRuntime
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.providers import PrismaRuntime
+from typegraph.runtimes import RandomRuntime
 
 
 @typegraph()
@@ -16,7 +16,7 @@ def type_alias(g: Graph):
         {
             "label": t.string(),
             "content": t.string(),
-        }
+        },
     )
 
     message = t.struct(
@@ -25,7 +25,7 @@ def type_alias(g: Graph):
             "title": t.string(),
             "user_id": t.integer(),
             "info": t.list(infos),
-        }
+        },
     )
 
     user = t.struct(

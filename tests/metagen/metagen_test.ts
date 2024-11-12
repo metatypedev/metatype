@@ -152,9 +152,9 @@ Meta.test("Metagen within sdk", async (t) => {
     const command = new Deno.Command("python3", {
       args: [typegraphPath],
       env: {
-        workspace_path: workspace,
-        gen_config: JSON.stringify(genConfig),
-        target_name: targetName,
+        WORKSPACE_PATH: workspace,
+        GEN_CONFIG: JSON.stringify(genConfig),
+        TARGET_NAME: targetName,
       },
       stderr: "piped",
       stdout: "piped",
@@ -220,9 +220,9 @@ Meta.test("Metagen within sdk with custom template", async (t) => {
     const command = new Deno.Command("python3", {
       args: [typegraphPath],
       env: {
-        workspace_path: workspace,
-        gen_config: JSON.stringify(genConfig),
-        target_name: targetName,
+        WORKSPACE_PATH: workspace,
+        GEN_CONFIG: JSON.stringify(genConfig),
+        TARGET_NAME: targetName,
       },
       stderr: "piped",
       stdout: "piped",

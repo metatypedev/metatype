@@ -6,7 +6,8 @@ import os
 import sys
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
-from urllib import request, parse as Url
+from urllib import parse as Url
+from urllib import request
 from urllib.error import HTTPError
 
 from typegraph.gen.exports.core import Artifact
@@ -65,9 +66,9 @@ class ArtifactUploader:
 
         try:
             response = request.urlopen(req)
-        except HTTPError as e:
-            Log.error("error message:", e.fp.read().decode())
-            raise Exception(f"failed to get upload URLs: {e}")
+        except HTTPError as err:
+            Log.error("error message:", err.fp.read().decode())
+            raise Exception(f"failed to get upload URLs: {err}") from err
 
         if response.status != 200:
             raise Exception(f"failed to get upload URLs: {response}")
@@ -115,11 +116,11 @@ class ArtifactUploader:
         )
         try:
             response = request.urlopen(upload_req)
-        except HTTPError as e:
-            Log.error("failed to upload artifact", meta.relativePath, e)
-            errmsg = json.load(e.fp).get("error", None)
+        except HTTPError as err:
+            Log.error("failed to upload artifact", meta.relativePath, err)
+            errmsg = json.load(err.fp).get("error", None)
             Log.error("error message:", errmsg)
-            raise Exception(errmsg)
+            raise Exception(errmsg) from err
         if response.status != 201:
             raise Exception(f"failed to upload artifact {path} {response.status}")
 

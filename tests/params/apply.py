@@ -16,7 +16,7 @@ def apply(g: Graph):
             {
                 "a": g.as_arg("first"),
                 "b": g.as_arg("second"),
-            }
+            },
         ),
         flattened=deno.identity(
             t.struct(
@@ -25,7 +25,7 @@ def apply(g: Graph):
                         {
                             "a1": t.integer(),
                             "a2": t.integer(),
-                        }
+                        },
                     ),
                     "b": t.struct(
                         {
@@ -33,13 +33,13 @@ def apply(g: Graph):
                                 {
                                     "b11": t.integer(),
                                     "b12": t.integer(),
-                                }
+                                },
                             ),
                             "b2": t.integer(),
-                        }
+                        },
                     ),
-                }
-            )
+                },
+            ),
         ).apply(
             {
                 "a": {
@@ -53,7 +53,7 @@ def apply(g: Graph):
                     },
                     "b2": g.as_arg("b2"),
                 },
-            }
+            },
         ),
         withContext=deno.identity(t.struct({"a": t.integer(), "b": t.string()})).apply(
             {
@@ -65,7 +65,7 @@ def apply(g: Graph):
             {
                 "a": g.as_arg("first"),
                 "b": g.from_secret("MY_SECRET"),
-            }
+            },
         ),
         onOptional=deno.identity(
             t.struct(
@@ -73,16 +73,16 @@ def apply(g: Graph):
                     "a": t.struct(
                         {
                             "b": t.integer(),
-                        }
-                    ).optional()
-                }
-            )
+                        },
+                    ).optional(),
+                },
+            ),
         ).apply(
             {
                 "a": {
                     "b": g.set(12),
-                }
-            }
+                },
+            },
         ),
         withParent=deno.func(
             t.struct(),
@@ -90,14 +90,14 @@ def apply(g: Graph):
                 {
                     "a": t.integer(name="A"),
                     "b": deno.identity(
-                        t.struct({"b1": t.integer(), "b2": t.integer()})
+                        t.struct({"b1": t.integer(), "b2": t.integer()}),
                     ).apply(
                         {
                             "b1": g.as_arg("b1"),
                             "b2": g.from_parent("A"),
-                        }
+                        },
                     ),
-                }
+                },
             ),
             code="""() => ({ a: 1 })""",
         ),
@@ -105,49 +105,49 @@ def apply(g: Graph):
             t.struct(
                 {
                     "a": t.list(t.integer()),
-                }
-            )
+                },
+            ),
         ).apply(
             {
                 "a": [
                     g.as_arg("first"),
                     g.as_arg("second"),
-                ]
-            }
+                ],
+            },
         ),
         withNestedArrays=deno.identity(
             t.struct(
                 {
                     "a": t.list(t.list(t.integer())),
-                }
-            )
+                },
+            ),
         ).apply(
             {
                 "a": [
                     [g.as_arg("first")],
                     g.as_arg("second"),
-                ]
-            }
+                ],
+            },
         ),
         withArrayOfObjects=deno.identity(
             t.struct(
                 {
                     "a": t.list(t.struct({"b": t.integer()})),
-                }
-            )
+                },
+            ),
         ).apply(
             {
                 "a": [
                     {"b": g.as_arg("first")},
                     g.as_arg("second"),
-                ]
-            }
+                ],
+            },
         ),
         contextToUnionType=deno.identity(
             t.struct(
                 {
                     "a": t.union([t.integer(), t.string()]),
-                }
-            )
+                },
+            ),
         ).apply({"a": g.from_context("context_key")}),
     )

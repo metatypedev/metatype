@@ -12,7 +12,7 @@ rec = t.struct(
         "int": t.integer(),
         "str": t.string(),
         "email": t.email(),
-    }
+    },
 )
 
 users = t.struct(
@@ -26,15 +26,15 @@ users = t.struct(
                 "city": t.string(config={"gen": "city"}),
                 "postcode": t.string(config={"gen": "postcode"}),
                 "country": t.string(config={"gen": "country", "full": True}),
-            }
+            },
         ),
-    }
+    },
 )
 
 list = t.struct(
     {
         "array_of_array_of_names": t.list(t.list(t.string(config={"gen": "name"}))),
-    }
+    },
 )
 
 

@@ -1,13 +1,13 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from dataclasses import dataclass
 import json
-from typing import List, Optional, TYPE_CHECKING, Any
-from typegraph.gen.exports import utils
-from typegraph.wit import ErrorStack, store, wit_utils
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, List, Optional
 
+from typegraph.gen.exports import utils
 from typegraph.gen.types import Err
+from typegraph.wit import ErrorStack, store, wit_utils
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -65,26 +65,24 @@ class Cors:
     def __init__(
         self,
         *,
-        allow_origin: List[str] = [],
-        allow_headers: List[str] = [],
-        expose_headers: List[str] = [],
-        allow_methods: List[str] = [],
+        allow_origin: Optional[List[str]] = None,
+        allow_headers: Optional[List[str]] = None,
+        expose_headers: Optional[List[str]] = None,
+        allow_methods: Optional[List[str]] = None,
         allow_credentials: bool = True,
         max_age_sec: Optional[int] = None,
     ):
-        self.allow_origin = allow_origin
-        self.allow_headers = allow_headers
-        self.expose_headers = expose_headers
-        self.allow_methods = allow_methods
+        self.allow_origin = allow_origin or []
+        self.allow_headers = allow_headers or []
+        self.expose_headers = expose_headers or []
+        self.allow_methods = allow_methods or []
         self.allow_credentials = allow_credentials
         self.max_age_sec = max_age_sec
 
 
 class Auth:
     def jwt(name: str, format: str, algorithm: None) -> "utils.Auth":
-        """
-        [Documentation](http://localhost:3000/docs/guides/authentication#jwt-authentication)
-        """
+        """[Documentation](http://localhost:3000/docs/guides/authentication#jwt-authentication)"""
         if algorithm is None:
             algorithm = {}
 
@@ -125,72 +123,86 @@ class Auth:
         )
 
     def oauth2_digitalocean(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("digitalocean", scopes, profiler)
 
     def oauth2_discord(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("discord", scopes, profiler)
 
     def oauth2_dropbox(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("dropbox", scopes, profiler)
 
     def oauth2_facebook(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("facebook", scopes, profiler)
 
     def oauth2_github(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("github", scopes, profiler)
 
     def oauth2_gitlab(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("gitlab", scopes, profiler)
 
     def oauth2_google(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("google", scopes, profiler)
 
     def oauth2_instagram(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("instagram", scopes, profiler)
 
     def oauth2_linkedin(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("linkedin", scopes, profiler)
 
     def oauth2_microsoft(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("microsoft", scopes, profiler)
 
     def oauth2_reddit(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("reddit", scopes, profiler)
 
     def oauth2_slack(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("slack", scopes, profiler)
 
     def oauth2_stackexchange(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("stackexchange", scopes, profiler)
 
     def oauth2_twitter(
-        scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ) -> "utils.Auth":
         return RawAuth.from_std("twitter", scopes, profiler)
 
@@ -201,17 +213,26 @@ class RawAuth:
 
     @classmethod
     def from_std(
-        cls, service: str, scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        cls,
+        service: str,
+        scopes: str,
+        profiler: Optional[StdOauth2Profiler] = None,
     ):
         if isinstance(profiler, NoProfiler):
             res = wit_utils.oauth2_without_profiler(store, service, scopes)
         elif isinstance(profiler, ExtendedProfiler):
             res = wit_utils.oauth2_with_extended_profiler(
-                store, service, scopes, json.dumps(profiler.extension)
+                store,
+                service,
+                scopes,
+                json.dumps(profiler.extension),
             )
         elif isinstance(profiler, CustomProfiler):
             res = wit_utils.oauth2_with_custom_profiler(
-                store, service, scopes, profiler.func._id
+                store,
+                service,
+                scopes,
+                profiler.func._id,
             )
         else:  # default profiler
             res = wit_utils.oauth2(store, service, scopes)

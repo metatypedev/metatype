@@ -3,19 +3,19 @@
 
 import json
 from dataclasses import dataclass
+from platform import python_version
 from typing import Any, Dict, Optional, Union
 from urllib import request
-from platform import python_version
 
+from typegraph import version as sdk_version
+from typegraph.gen.exports.core import MigrationAction, PrismaMigrationConfig
 from typegraph.gen.exports.utils import QueryDeployParams
 from typegraph.gen.types import Err
-from typegraph.gen.exports.core import MigrationAction, PrismaMigrationConfig
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_artifact_upload import ArtifactUploader
 from typegraph.graph.typegraph import TypegraphOutput
-from typegraph.wit import ErrorStack, SerializeParams, store, wit_utils
-from typegraph import version as sdk_version
 from typegraph.io import Log
+from typegraph.wit import ErrorStack, SerializeParams, store, wit_utils
 
 
 @dataclass
@@ -177,12 +177,12 @@ def exec_request(req: Any):
         # Note: 400 status and such, the response body
         # is hidden within the exception and can be consumed through .read()
         return res
-    except Exception as e:
-        raise Exception(f"{e}: {req.full_url}")
+    except Exception as err:
+        raise Exception(f"{err}: {req.full_url}") from err
 
 
 def handle_response(res: Any, url=""):
     try:
         return json.loads(res)
-    except Exception as _:
-        raise Exception(f'Expected json object: got "{res}": {url}')
+    except Exception as err:
+        raise Exception(f'Expected json object: got "{res}": {url}') from err

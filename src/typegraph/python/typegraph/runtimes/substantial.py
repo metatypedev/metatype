@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from typing import List, Optional
+
 from typegraph import t
 from typegraph.gen.exports.runtimes import (
     RedisBackend,
@@ -56,13 +57,13 @@ class SubstantialRuntime(Runtime):
     def start(self, kwargs: "t.struct", *, secrets: Optional[List[str]] = None):
         return self._generic_substantial_func(
             SubstantialOperationDataStart(
-                SubstantialStartData(kwargs._id, secrets or [])
-            )
+                SubstantialStartData(kwargs._id, secrets or []),
+            ),
         )
 
     def start_raw(self, *, secrets: Optional[List[str]] = None):
         return self._generic_substantial_func(
-            SubstantialOperationDataStartRaw(SubstantialStartData(None, secrets or []))
+            SubstantialOperationDataStartRaw(SubstantialStartData(None, secrets or [])),
         )
 
     def stop(self):
@@ -79,7 +80,7 @@ class SubstantialRuntime(Runtime):
 
     def query_results(self, output: "t.typedef"):
         return self._generic_substantial_func(
-            SubstantialOperationDataResults(output._id)
+            SubstantialOperationDataResults(output._id),
         )
 
     def query_results_raw(self):
@@ -87,7 +88,7 @@ class SubstantialRuntime(Runtime):
 
     def _internal_link_parent_child(self):
         return self._generic_substantial_func(
-            SubstantialOperationDataInternalLinkParentChild()
+            SubstantialOperationDataInternalLinkParentChild(),
         )
 
     def internals(self):
@@ -115,16 +116,19 @@ class Backend:
 
 
 class WorkflowFile:
-    def __init__(self, file: str, kind: WorkflowKind, deps: List[str] = []):
+    def __init__(self, file: str, kind: WorkflowKind, deps: Optional[List[str]]):
+        deps = deps or []
         self.file = file
         self.kind = kind
         self.deps = deps
         self.workflows: List[str] = []
 
-    def deno(*, file: str, deps: List[str] = []):
+    def deno(*, file: str, deps: Optional[List[str]] = None):
+        deps = deps or []
         return WorkflowFile(file, WorkflowKind.DENO, deps)
 
-    def python(*, file: str, deps: List[str] = []):
+    def python(*, file: str, deps: Optional[List[str]] = None):
+        deps = deps or []
         return WorkflowFile(file, WorkflowKind.PYTHON, deps)
 
     def import_(self, names: List[str]):
@@ -133,5 +137,8 @@ class WorkflowFile:
 
     def build(self):
         return WorkflowFileDescription(
-            workflows=self.workflows, deps=self.deps, file=self.file, kind=self.kind
+            workflows=self.workflows,
+            deps=self.deps,
+            file=self.file,
+            kind=self.kind,
         )

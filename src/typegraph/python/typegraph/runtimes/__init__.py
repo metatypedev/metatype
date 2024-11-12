@@ -3,7 +3,7 @@
 
 from typegraph.runtimes.deno import DenoRuntime  # noqa
 from typegraph.runtimes.graphql import GraphQLRuntime  # noqa
-from typegraph.runtimes.random import RandomRuntime  # noqa
+from typegraph.runtimes.random import RandomRuntime
 from typegraph.runtimes.http import HttpRuntime  # noqa
 from typegraph.runtimes.python import PythonRuntime  # noqa
 from typegraph.runtimes.random import RandomRuntime  # noqa

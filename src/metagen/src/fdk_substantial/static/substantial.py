@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from datetime import timedelta
-from typing import Any, Callable, Optional
 from types import RetryStrategy
+from typing import Any, Callable, Optional
 
 
 class Context:

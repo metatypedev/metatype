@@ -1,8 +1,11 @@
-from typegraph import typegraph, Policy, t, Graph
-from typegraph.runtimes.deno import DenoRuntime
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
+from typegraph import Graph, Policy, t, typegraph
 
 # skip:start
 from typegraph.graph.params import Cors
+from typegraph.runtimes.deno import DenoRuntime
 
 # skip:end
 
@@ -22,7 +25,7 @@ def random_field(g: Graph):
         {
             "performance": t.integer(),
             "bonus": bonus_items.from_random(),  # this field is now generated randomly
-        }
+        },
     )
 
     # set a custom seed

@@ -37,6 +37,7 @@ class HttpRequestOptions:
     body_fields: Optional[List[str]] = None
     auth_token_field: Optional[str] = None
 
+    @staticmethod
     def from_kwargs(**kwargs: HttpRequestKwargs):
         return HttpRequestOptions(
             content_type=kwargs.get("content_type", None),
@@ -67,7 +68,8 @@ class HttpRuntime(Runtime):
         basic_auth_secret: Optional[str] = None,
     ):
         runtime_id = runtimes.register_http_runtime(
-            store, HttpRuntimeData(endpoint, cert_secret, basic_auth_secret)
+            store,
+            HttpRuntimeData(endpoint, cert_secret, basic_auth_secret),
         )
         if isinstance(runtime_id, Err):
             raise Exception(runtime_id.value)
@@ -140,7 +142,7 @@ class HttpRuntime(Runtime):
         inp: "t.struct",
         out: "t.typedef",
         *,
-        effect: Effect = fx.create(),
+        effect: Optional[Effect] = None,
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
@@ -148,7 +150,7 @@ class HttpRuntime(Runtime):
             path,
             inp,
             out,
-            effect,
+            effect or fx.create(),
             HttpRequestOptions.from_kwargs(**kwargs),
         )
 
@@ -158,7 +160,7 @@ class HttpRuntime(Runtime):
         inp: "t.struct",
         out: "t.typedef",
         *,
-        effect: Effect = fx.update(),
+        effect: Optional[Effect] = None,
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
@@ -166,7 +168,7 @@ class HttpRuntime(Runtime):
             path,
             inp,
             out,
-            effect,
+            effect or fx.update(),
             HttpRequestOptions.from_kwargs(**kwargs),
         )
 
@@ -176,7 +178,7 @@ class HttpRuntime(Runtime):
         inp: "t.struct",
         out: "t.typedef",
         *,
-        effect: Effect = fx.update(),
+        effect: Optional[Effect] = None,
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
@@ -184,7 +186,7 @@ class HttpRuntime(Runtime):
             path,
             inp,
             out,
-            effect,
+            effect or fx.update(),
             HttpRequestOptions.from_kwargs(**kwargs),
         )
 
@@ -194,7 +196,7 @@ class HttpRuntime(Runtime):
         inp: "t.struct",
         out: "t.typedef",
         *,
-        effect: Effect = fx.delete(),
+        effect: Optional[Effect] = None,
         **kwargs: HttpRequestKwargs,
     ):
         return self.__request(
@@ -202,6 +204,6 @@ class HttpRuntime(Runtime):
             path,
             inp,
             out,
-            effect,
+            effect or fx.delete(),
             HttpRequestOptions.from_kwargs(**kwargs),
         )

@@ -1,15 +1,16 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from client import (
-    QueryGraph,
-    PostSelections,
-    SelectionFlags,
-    UserSelections,
-    Alias,
-)
 import json
 import os
+
+from client import (
+    Alias,
+    PostSelections,
+    QueryGraph,
+    SelectionFlags,
+    UserSelections,
+)
 
 qg = QueryGraph()
 port = os.getenv("TG_PORT")
@@ -45,7 +46,7 @@ prepared_m = gql_client.prepare_mutation(
                 "id": args.get("id"),
                 "slug": args.get("slug"),
                 "title": args.get("title"),
-            }
+            },
         ),
         "compositeNoArgs": qg.composite_no_args({"_": SelectionFlags(select_all=True)}),
         "compositeArgs": qg.composite_args(
@@ -65,7 +66,7 @@ res2 = prepared_m.perform(
         "id": "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
         "slug": "s",
         "title": "t",
-    }
+    },
 )
 
 res3 = gql_client.query(
@@ -88,7 +89,7 @@ res3 = gql_client.query(
         ),
         "posts": qg.get_posts({"_": SelectionFlags(select_all=True)}),
         "scalarNoArgs": qg.scalar_no_args(),
-    }
+    },
 )
 
 res4 = gql_client.mutation(
@@ -98,7 +99,7 @@ res4 = gql_client.mutation(
                 "id": "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
                 "slug": "",
                 "title": "",
-            }
+            },
         ),
         "compositeNoArgs": qg.composite_no_args({"_": SelectionFlags(select_all=True)}),
         "compositeArgs": qg.composite_args(
@@ -107,7 +108,7 @@ res4 = gql_client.mutation(
             },
             {"_": SelectionFlags(select_all=True)},
         ),
-    }
+    },
 )
 
 res5 = gql_client.query(
@@ -115,7 +116,7 @@ res5 = gql_client.query(
         "scalarUnion": qg.scalar_union(
             {
                 "id": "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
-            }
+            },
         ),
         "compositeUnion1": qg.composite_union(
             {
@@ -138,7 +139,7 @@ res5 = gql_client.query(
                 "user": {"_": SelectionFlags(select_all=True)},
             },
         ),
-    }
+    },
 )
 
 print(json.dumps([res1, res1a, res2, res3, res4, res5]))

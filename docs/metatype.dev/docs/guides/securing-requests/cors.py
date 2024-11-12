@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 # skip:start
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors
 from typegraph.runtimes.random import RandomRuntime
 

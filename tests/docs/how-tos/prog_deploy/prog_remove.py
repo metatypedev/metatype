@@ -2,17 +2,17 @@
 # SPDX-License-Identifier: MPL-2.0
 
 # ..
+# skip:start
+import sys
+
+from typegraph import Graph, typegraph
+from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_deploy import (
     TypegateConnectionOptions,
     TypegraphRemoveParams,
     tg_remove,
 )
 
-from typegraph import Graph, typegraph
-from typegraph.graph.shared_types import BasicAuth
-
-# skip:start
-import sys
 # skip:end
 
 

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from enum import Enum
-from typing import Optional, Any
+from typing import Any, Optional
 
 from typegraph.python.typegraph.graph.shared_types import BasicAuth
 from typegraph.python.typegraph.io import DeployTarget

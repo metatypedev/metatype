@@ -1,9 +1,9 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-import json as JsonLib
-from typing import Any, Dict, List, Optional, Tuple, Union, Literal
 import copy
+import json as JsonLib
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from typing_extensions import Self
 
@@ -11,36 +11,38 @@ from typegraph.effects import EffectType
 from typegraph.gen.exports.core import (
     FuncParams,
     ParameterTransform,
-    TypeList,
     TypeEither,
     TypeFile,
     TypeFloat,
     TypeFunc,
     TypeInteger,
+    TypeList,
     TypeOptional,
     TypeString,
     TypeStruct,
     TypeUnion,
+)
+from typegraph.gen.exports.core import (
     PolicySpec as WitPolicySpec,
 )
 from typegraph.gen.exports.runtimes import EffectRead
 from typegraph.gen.types import Err
 from typegraph.graph.typegraph import (
-    ErrorStack,
-    core,
-    store,
     ApplyFromArg,
     ApplyFromContext,
     ApplyFromParent,
     ApplyFromSecret,
     ApplyFromStatic,
+    ErrorStack,
+    core,
+    store,
 )
-from typegraph.io import Log
 from typegraph.injection import (
     serialize_generic_injection,
     serialize_parent_injection,
     serialize_static_injection,
 )
+from typegraph.io import Log
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.runtimes.deno import Materializer
 from typegraph.utils import (
@@ -303,7 +305,10 @@ class float(typedef):
 
 class boolean(typedef):
     def __init__(
-        self, *, name: Optional[str] = None, config: Optional[ConfigSpec] = None
+        self,
+        *,
+        name: Optional[str] = None,
+        config: Optional[ConfigSpec] = None,
     ):
         res = core.booleanb(store)
         if isinstance(res, Err):
@@ -336,7 +341,11 @@ class string(typedef):
             enum_variants = og_list(JsonLib.dumps(variant) for variant in enum)
 
         data = TypeString(
-            min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
+            min=min,
+            max=max,
+            pattern=pattern,
+            format=format,
+            enumeration=enum_variants,
         )
 
         res = core.stringb(
@@ -566,7 +575,7 @@ class struct(typedef):
         if self.__class__ != struct:  # custom class
             if len(self.__class__.__bases__) > 1:
                 raise ErrorStack.from_str(
-                    "multiple inheritance is currently not supported"
+                    "multiple inheritance is currently not supported",
                 )
             (base,) = self.__class__.__bases__
             child_cls = self.__class__
@@ -590,7 +599,7 @@ class struct(typedef):
                 while curr_base != struct:
                     if len(curr_base.__bases__) > 1:
                         raise ErrorStack(
-                            "multiple inheritance is currently not supported"
+                            "multiple inheritance is currently not supported",
                         )
                     (curr_base,) = curr_base.__bases__
                     fields = set([i for i in vars(curr_base) if not i.startswith("__")])
@@ -630,7 +639,11 @@ class struct(typedef):
 ApplyParamObjectNode = Dict[str, "ApplyParamNode"]
 ApplyParamArrayNode = List["ApplyParamNode"]
 ApplyParamLeafNode = Union[
-    ApplyFromArg, ApplyFromStatic, ApplyFromContext, ApplyFromSecret, ApplyFromParent
+    ApplyFromArg,
+    ApplyFromStatic,
+    ApplyFromContext,
+    ApplyFromSecret,
+    ApplyFromParent,
 ]
 
 ApplyParamNode = Union[ApplyParamObjectNode, ApplyParamArrayNode, ApplyParamLeafNode]
@@ -713,7 +726,9 @@ class func(typedef):
 
     def extend(self, props: Dict[str, typedef]):
         res = core.extend_struct(
-            store, self.out._id, og_list((k, v._id) for k, v in props.items())
+            store,
+            self.out._id,
+            og_list((k, v._id) for k, v in props.items()),
         )
         if isinstance(res, Err):
             raise ErrorStack(res.value)
@@ -771,7 +786,9 @@ class func(typedef):
 
     @staticmethod
     def from_type_func(
-        data: FuncParams, rate_calls: bool = False, rate_weight: Optional[int] = None
+        data: FuncParams,
+        rate_calls: bool = False,
+        rate_weight: Optional[int] = None,
     ) -> "func":
         # Note: effect is a just placeholder
         # in the deno frontend, we do not have to fill the effect attribute on materializers

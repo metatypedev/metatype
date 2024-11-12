@@ -740,9 +740,12 @@ export type RootThreeFnHandler = Handler<RootOneFnInput, Student>;
     path: "./workspace/some/base/path/ts/fdk.ts",
   },
   {
-    content: "from datetime import timedelta
-from typing import Any, Callable, Optional
+    content: "# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
+from datetime import timedelta
 from types import RetryStrategy
+from typing import Any, Callable, Optional
 
 
 class Context:
@@ -1546,9 +1549,12 @@ export type RootThreeFnHandler = Handler<RootOneFnInput, Student>;
     path: "./workspace/some/base/path/ts/fdk.ts",
   },
   {
-    content: "from datetime import timedelta
-from typing import Any, Callable, Optional
+    content: "# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
+from datetime import timedelta
 from types import RetryStrategy
+from typing import Any, Callable, Optional
 
 
 class Context:

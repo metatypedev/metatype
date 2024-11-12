@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import typegraph, t, Graph, Policy
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime
 
@@ -28,7 +28,7 @@ def policies(g: Graph):
         pol_true=fn.with_policy(deno.policy("true", "() => true")),
         pol_false=fn.with_policy(deno.policy("false", "() => false")),
         pol_two=fn.with_policy(
-            deno.policy("eq_two", "(_args, { context }) => Number(context.a) === 2")
+            deno.policy("eq_two", "(_args, { context }) => Number(context.a) === 2"),
         ),
         ns=t.struct(
             {
@@ -36,8 +36,8 @@ def policies(g: Graph):
                     t.struct({}),
                     t.struct({"id": t.integer()}),
                     code="() => ({ id: 12 })",
-                )
-            }
+                ),
+            },
         ),
     )
 

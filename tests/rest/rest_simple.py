@@ -15,7 +15,7 @@ def rest_simple(g: Graph):
         query ping {
             ping
         }
-        """
+        """,
     )
 
     ping = deno.func(

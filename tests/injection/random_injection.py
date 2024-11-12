@@ -1,10 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph.policy import Policy
-from typegraph.runtimes.deno import DenoRuntime
 
 from typegraph import Graph, t, typegraph
+from typegraph.policy import Policy
+from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
@@ -30,32 +30,32 @@ def random_injection(g: Graph):
             "city": t.string(config={"gen": "city"}).from_random(),
             "postcode": t.string(config={"gen": "postcode"}).from_random(),
             "country": t.string(
-                config={"gen": "country", "full": "true"}
+                config={"gen": "country", "full": "true"},
             ).from_random(),
             "uri": t.uri().from_random(),
             "hostname": t.string(format="hostname").from_random(),
-        }
+        },
     )
 
     # test int, str, float enum
     test_enum_str = t.struct(
         {
             "educationLevel": t.enum(
-                ["primary", "secondary", "tertiary"]
+                ["primary", "secondary", "tertiary"],
             ).from_random(),
-        }
+        },
     )
 
     test_enum_int = t.struct(
         {
             "bits": t.integer(enum=[0, 1]).from_random(),
-        }
+        },
     )
 
     test_enum_float = t.struct(
         {
             "cents": t.float(enum=[0.25, 0.5, 1.0]).from_random(),
-        }
+        },
     )
 
     # test either
@@ -65,7 +65,7 @@ def random_injection(g: Graph):
     toy_struct = t.struct(
         {
             "toy": toy,
-        }
+        },
     )
 
     # test union
@@ -74,13 +74,13 @@ def random_injection(g: Graph):
     union_struct = t.struct(
         {
             "field": t.union([rgb, vec], name="UnionStruct").from_random(),
-        }
+        },
     )
 
     random_list = t.struct(
         {
             "names": t.list(t.string(config={"gen": "name"})).from_random(),
-        }
+        },
     )
     # Configure random injection seed value or the default will be used
     g.configure_random_injection(seed=1)

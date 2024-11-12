@@ -1,7 +1,11 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
-from typegraph import typegraph, Policy, t, Graph
-from typegraph.runtimes.python import PythonRuntime
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors
+from typegraph.runtimes.python import PythonRuntime
+
 # skip:end
 
 
@@ -17,7 +21,7 @@ def metagen_py(g: Graph):
             "artist": t.string(),
             "releaseTime": t.datetime(),
             "mp3Url": t.uri(),
-        }
+        },
     ).rename("idv3")
 
     python = PythonRuntime()

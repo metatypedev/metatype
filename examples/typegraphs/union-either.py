@@ -1,5 +1,8 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
-from typegraph import typegraph, Policy, t, Graph
+from typegraph import Graph, Policy, t, typegraph
 from typegraph.graph.params import Cors
 from typegraph.runtimes.deno import DenoRuntime
 
@@ -18,12 +21,12 @@ def union_either(g: Graph):
         t.struct(
             {
                 "field1": t.string(),
-            }
+            },
         ).rename("comp_1"),
         t.struct(
             {
                 "field2": t.string(),
-            }
+            },
         ).rename("comp_2"),
         t.list(t.string()).rename("scalar_list"),
         # # FIXME: list of composites is broken
@@ -44,7 +47,7 @@ def union_either(g: Graph):
                     "union": t.union(members),
                     "either": t.either(members),
                     "unionList": t.list(t.union(members)),
-                }
+                },
             ),
             code="""() => ({
                 either: {
