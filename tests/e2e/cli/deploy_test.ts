@@ -3,9 +3,8 @@
 
 import { gql, Meta } from "../../utils/mod.ts";
 import { TestModule } from "../../utils/test_module.ts";
-import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
 import { assertRejects, assertStringIncludes } from "@std/assert";
-import { randomPGConnStr, reset } from "test-utils/database.ts";
+import { dropSchema, randomPGConnStr, reset } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
@@ -212,14 +211,12 @@ Meta.test(
   async (t) => {
     const port = t.port!;
     const { connStr, schema } = randomPGConnStr();
+    await dropSchema(schema);
     const e = await t.engine("prisma.py", {
       secrets: {
         POSTGRES: connStr,
       },
     });
-
-    await dropSchemas(e);
-    await removeMigrations(e);
 
     const nodeConfigs = [
       "--target",
@@ -312,15 +309,13 @@ Meta.test(
   },
   async (t) => {
     const { connStr, schema } = randomPGConnStr();
+    await dropSchema(schema);
     const e = await t.engine("prisma.py", {
       secrets: {
         POSTGRES: connStr,
       },
       prefix: "pref-",
     });
-
-    await dropSchemas(e);
-    await removeMigrations(e);
 
     const nodeConfigs = [
       "-t",

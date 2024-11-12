@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Meta } from "../../utils/mod.ts";
-import { serialize } from "../../utils/meta.ts";
+import { Meta } from "test-utils/mod.ts";
+import { serialize } from "test-utils/meta.ts";
 import { SchemaGenerator } from "@metatype/typegate/runtimes/prisma/hooks/generate_schema.ts";
 import * as PrismaRT from "@metatype/typegate/runtimes/prisma/types.ts";
 import { assertEquals } from "@std/assert";

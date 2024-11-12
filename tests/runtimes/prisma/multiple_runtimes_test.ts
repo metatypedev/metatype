@@ -1,10 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { dropSchema } from "test-utils/database.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 
 Meta.test("prisma", async (t) => {
+  await dropSchema("prisma-multi-a");
+  await dropSchema("prisma-multi-b");
   const tgPath = "runtimes/prisma/multiple_runtimes.py";
   const e = await t.engine(tgPath, {
     secrets: {
@@ -14,9 +16,6 @@ Meta.test("prisma", async (t) => {
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-multi-b",
     },
   });
-
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   await t.should("succeed queries", async () => {
     await gql`

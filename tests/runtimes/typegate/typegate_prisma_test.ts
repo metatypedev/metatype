@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchema } from "test-utils/database.ts";
 
 const adminHeaders = {
   "Authorization": `Basic ${btoa("admin:password")}`,
@@ -11,15 +11,13 @@ const adminHeaders = {
 Meta.test({
   name: "typegate: find available operations",
 }, async (t) => {
-  const prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
+  await dropSchema("prisma_tg_test");
+  const _prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES:
-        "postgresql://postgres:password@localhost:5432/postgres?schema=prisma_tg_test",
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma_tg_test",
     },
   });
-
-  await dropSchemas(prismaEngine);
-  await recreateMigrations(prismaEngine);
 
   const e = t.getTypegraphEngine("typegate");
   if (e === undefined) {

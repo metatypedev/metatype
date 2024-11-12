@@ -3,19 +3,17 @@
 
 import { v4 } from "@std/uuid";
 import { assert } from "@std/assert";
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchema } from "test-utils/database.ts";
 
 Meta.test("GraphQL variables", async (t) => {
+  await dropSchema("prisma-vars");
   const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-vars",
     },
   });
-
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   await t.should("work with top-level variables", async () => {
     await gql`

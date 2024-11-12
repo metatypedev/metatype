@@ -1,19 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchema } from "test-utils/database.ts";
 
 Meta.test("prisma critical edgecases", async (t) => {
+  await dropSchema("prisma-edgecases");
   const e = await t.engine("runtimes/prisma/prisma_edgecases.py", {
     secrets: {
       POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-edgecases",
     },
   });
-
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   // create test data
   await t.should("insert a record with nested object", async () => {

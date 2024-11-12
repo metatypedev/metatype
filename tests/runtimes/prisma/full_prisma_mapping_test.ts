@@ -1,19 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { dropSchema } from "test-utils/database.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 
 Meta.test("prisma full mapping", async (t) => {
+  await dropSchema("prisma-full");
   const e = await t.engine("runtimes/prisma/full_prisma_mapping.py", {
     secrets: {
       POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-full",
     },
   });
-
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   // create test data
   await t.should("insert a record with nested object", async () => {

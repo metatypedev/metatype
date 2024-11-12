@@ -1,21 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { randomPGConnStr } from "../../utils/database.ts";
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchema, randomPGConnStr } from "test-utils/database.ts";
 
 function runTest(tgPath: string, name: string) {
   Meta.test(name, async (t) => {
-    const { connStr, schema: _ } = randomPGConnStr();
+    const { connStr, schema } = randomPGConnStr();
+    await dropSchema(schema);
     const e = await t.engine(tgPath, {
       secrets: {
         POSTGRES: connStr,
       },
     });
-
-    await dropSchemas(e);
-    await recreateMigrations(e);
 
     await t.should("insert a record with nested object", async () => {
       await gql`
