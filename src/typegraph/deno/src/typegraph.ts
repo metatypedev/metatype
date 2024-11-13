@@ -231,7 +231,7 @@ export async function typegraph(
     if (err.payload && !err.cause) {
       err.cause = err.payload;
     }
-    if (err.cause && "stack" in err.cause) {
+    if (("cause" in err) && ("stack" in err.cause)) {
       console.error(`Error in typegraph '${name}':`);
       for (const msg of err.cause.stack) {
         console.error(`- ${msg}`);
@@ -277,7 +277,7 @@ export async function typegraph(
         log.debug("exiting");
         process.exit(0);
       }
-    }, 250);
+    }, 100);
   }
 
   --counter;

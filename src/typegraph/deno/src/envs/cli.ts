@@ -78,7 +78,7 @@ export function loadCliEnv(): CliEnv | null {
   for (const key of optionalCliEnvs) {
     const name = `MCLI_${key.toLocaleUpperCase()}`;
     const envValue = env[name];
-    if (envValue != null) {
+    if (envValue) {
       record[key] = envValue;
     }
   }
