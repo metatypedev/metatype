@@ -5,7 +5,7 @@ import {
   ReadOrCloseScheduleInput,
   Run,
 } from "../../../engine/runtime.js";
-import { getLogger, Logger } from "../../log.ts";
+import { getLoggerByAddress, Logger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import {
   appendIfOngoing,
@@ -31,7 +31,6 @@ export interface AgentConfig {
   pollIntervalSec: number;
   leaseLifespanSec: number;
   maxAcquirePerTick: number;
-  debug?: boolean;
 }
 
 export class Agent {
@@ -45,7 +44,7 @@ export class Agent {
     private queue: string,
     private config: AgentConfig,
   ) {
-    this.logger = getLogger(import.meta, config.debug ? "DEBUG" : "ERROR");
+    this.logger = getLoggerByAddress(import.meta, "substantial");
   }
 
   async schedule(input: AddScheduleInput) {
@@ -461,12 +460,15 @@ export class Agent {
 }
 
 function checkIfRunHasStopped(run: Run) {
+  const logger = getLoggerByAddress(import.meta, "substantial");
+
   let life = 0;
   let hasStopped = false;
+
   for (const op of run.operations) {
     if (op.event.type == "Start") {
       if (life >= 1) {
-        this.logger.error(
+        logger.error(
           `bad logs: ${
             JSON.stringify(
               run.operations.map(({ event }) => event.type),
@@ -483,7 +485,7 @@ function checkIfRunHasStopped(run: Run) {
       hasStopped = false;
     } else if (op.event.type == "Stop") {
       if (life <= 0) {
-        this.logger.error(
+        logger.error(
           `bad logs: ${
             JSON.stringify(
               run.operations.map(({ event }) => event.type),

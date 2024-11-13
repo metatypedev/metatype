@@ -64,7 +64,6 @@ export const defaultTypegateConfigBase = {
   substantial_poll_interval_sec: 1,
   substantial_lease_lifespan_sec: 2,
   substantial_max_acquire_per_tick: 3,
-  substantial_trace: 0,
 };
 
 const SYNC_PREFIX = "sync_";

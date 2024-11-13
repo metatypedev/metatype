@@ -5,6 +5,7 @@ import { RefinementCtx, z } from "zod";
 import { decodeBase64 } from "@std/encoding/base64";
 import type { RedisConnectOptions } from "redis";
 import type { S3ClientConfig } from "aws-sdk/client-s3";
+import type { LevelName } from "@std/log";
 
 const zBooleanString = z.preprocess(
   (a: unknown) => z.coerce.string().parse(a) === "true",
@@ -100,8 +101,6 @@ export const typegateConfigBaseSchema = z.object({
   substantial_lease_lifespan_sec: z.coerce.number().positive().min(1),
   /** Maximum amount of new acquired replay requests per tick */
   substantial_max_acquire_per_tick: z.coerce.number().positive().min(1),
-  /** Enable/Disable debug traces for Substantial */
-  substantial_trace: z.coerce.number().min(0).max(1),
 });
 
 export type TypegateConfigBase = z.infer<typeof typegateConfigBaseSchema>;
@@ -129,12 +128,40 @@ export type TypegateConfig = {
   sync: SyncConfigX | null;
 };
 
+export const logLevelItemSchema = z.enum(
+  ["NOTSET", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"] as readonly [
+    LevelName,
+    ...LevelName[],
+  ],
+  {
+    description: "log_level item",
+  },
+);
+
+export const logLevelSchema = z.string().transform((value) => {
+  let defaultLevel: LevelName = "ERROR";
+  const loggerConfs: Record<string, LevelName> = {};
+  const confs = value.toUpperCase().split(",");
+
+  for (const confSection of confs) {
+    const [left, ...right] = confSection.split("=");
+    if (right.length == 0) {
+      defaultLevel = logLevelItemSchema.parse(left.trim());
+    } else {
+      loggerConfs[left.toLocaleLowerCase()] = logLevelItemSchema.parse(
+        right.join("=").trim(),
+      );
+    }
+  }
+
+  loggerConfs["default"] = defaultLevel;
+  return loggerConfs;
+});
+
 // Those envs are split from the config as only a subset of them are shared with the workers
 export const sharedConfigSchema = z.object({
   debug: zBooleanString,
-  log_level: z
-    .enum(["NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
-    .optional(),
+  log_level: logLevelSchema.optional(),
   rust_log: z.string().optional(),
   version: z.string(),
   deno_testing: zBooleanString,
