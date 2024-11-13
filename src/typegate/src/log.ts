@@ -15,7 +15,7 @@ if (!sharedConfig.rust_log) {
       break;
     case "DEBUG":
       set(
-        "info,native=trace,sql_schema_connector=warn,tracing=warn,schema_core=warn",
+        "info,native=trace,sql_schema_connector=warn,tracing=warn,schema_core=warn,quaint=warn",
       );
       break;
     case "WARNING":
@@ -27,7 +27,7 @@ if (!sharedConfig.rust_log) {
       break;
     case "INFO":
     default:
-      set("info");
+      set("info,quaint=warn");
       break;
   }
 }

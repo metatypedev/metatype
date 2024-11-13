@@ -63,15 +63,6 @@ export class PrismaRuntime extends Runtime {
     return t.Func.fromTypeFunc(type);
   }
 
-  /** create a function for a prisma `count` query */
-  count(model: string | Typedef): t.Func {
-    if (typeof model == "string") {
-      model = genRef(model);
-    }
-    const type = runtimes.prismaCount(this._id, model._id);
-    return t.Func.fromTypeFunc(type);
-  }
-
   /** create a function for a prisma `groupBy` query */
   groupBy(model: string | Typedef): t.Func {
     if (typeof model == "string") {
