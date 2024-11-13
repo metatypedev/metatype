@@ -3,7 +3,7 @@
 
 import { sharedConfigSchema } from "./types.ts";
 import { configOrExit } from "./loader.ts";
-import type { LevelName } from "@std/log/base-handler";
+import type { LevelName } from "@std/log";
 
 if (!Deno.env.has("VERSION")) {
   // set version for config and workers, only running in main engine

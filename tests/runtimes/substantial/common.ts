@@ -681,7 +681,7 @@ export function inputMutationTemplate(
       await sleep(15 * 1000);
 
       await t.should(
-        `complete without overwriting original kwargs + save should not depend on external references mutation (${backendName})`,
+        `complete without overwriting original kwargs or saved value (${backendName})`,
         async () => {
           await gql`
             query {
