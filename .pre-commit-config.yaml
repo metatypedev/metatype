@@ -101,9 +101,10 @@ repos:
           - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=#"
           - "--skip-license-insertion-comment=no-auto-license-header"
+          - "--skip-license-insertion-comment=@generated"
         types_or:
           - python
-        exclude: ^examples/
+        exclude: ^examples/|src/metagen/src/.*/static/.*
       - id: insert-license
         name: "License MPL-2.0 rust"
         args:
@@ -114,7 +115,7 @@ repos:
           - "--skip-license-insertion-comment=@generated"
         types_or:
           - rust
-        exclude: ^examples/
+        exclude: ^examples/|src/metagen/src/.*/static/.*
       - id: insert-license
         name: "License MPL-2.0 typescript"
         args:
@@ -122,10 +123,11 @@ repos:
           - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
+          - "--skip-license-insertion-comment=@generated"
         types_or:
           - ts
           - tsx
-        exclude: ^examples/
+        exclude: ^examples/|src/metagen/src/.*/static/.*
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.28.6
     hooks:

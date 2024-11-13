@@ -1,7 +1,4 @@
-// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-// SPDX-License-Identifier: MPL-2.0
-
-// no-auto-license-header
+// no-auto-license-header | @generated (pre-commit doesn't support two headers)
 
 /*
 Copyright (c) 2016 Tomasz Miąsko

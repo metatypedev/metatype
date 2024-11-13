@@ -1,6 +1,3 @@
-# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-# SPDX-License-Identifier: MPL-2.0
-
 from datetime import timedelta
 from typing import Any, Callable, Optional
 from types import RetryStrategy
@@ -13,20 +10,11 @@ class Context:
         *,
         timeout: Optional[timedelta] = None,
         retry_strategy: Optional[RetryStrategy] = None,
-    ):
-        pass
-
-    def handle(self, event_name: str, cb: Callable[[Any], Any]):
-        pass
-
-    async def ensure(self, f: Callable[[], bool]):
-        pass
-
-    async def sleep(self, duration: timedelta) -> Any:
-        pass
-
-    async def receive(name: str):
-        pass
+    ): ...
+    def handle(self, event_name: str, cb: Callable[[Any], Any]): ...
+    async def ensure(self, f: Callable[[], bool]): ...
+    async def sleep(self, duration: timedelta) -> Any: ...
+    async def receive(name: str): ...
 
 
 def workflow():

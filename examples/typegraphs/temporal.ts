@@ -3,7 +3,7 @@
 
 import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
 import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
-import process from "process";
+import process from "node:process";
 
 typegraph(
   {

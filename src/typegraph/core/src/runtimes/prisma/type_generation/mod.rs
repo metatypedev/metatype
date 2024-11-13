@@ -1,10 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-//
-// SPDX-License-Identifier: MPL-2.0
-
 //! This module is responsible for generating the types for prisma operations.
 //!
 //! Implementing the `TypeGen` trait will allow to generate and cache a type
