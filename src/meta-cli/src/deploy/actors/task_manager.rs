@@ -3,6 +3,7 @@
 use super::console::{Console, ConsoleActor};
 use super::discovery::DiscoveryActor;
 use super::task::action::{TaskAction, TaskActionGenerator};
+use super::task::deploy::TypegraphData;
 use super::task::{self, TaskActor, TaskFinishStatus};
 use super::watcher::{self, WatcherActor};
 use crate::{config::Config, interlude::*};
