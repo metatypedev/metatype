@@ -19,7 +19,7 @@ def rpc_request(method: str, params: Optional[Any] = None):
 
     json_request = json.dumps(request)
 
-    sys.stdout.write("jsonrpc: " + json_request + "\n")
+    sys.stdout.write("jsonrpc$: " + json_request + "\n")
     sys.stdout.flush()
     state["id"] += 1
 

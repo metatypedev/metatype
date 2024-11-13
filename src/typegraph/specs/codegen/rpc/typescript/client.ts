@@ -77,7 +77,7 @@ function rpcRequest<R, P>(method: string, params?: P, transform = true) {
   };
 
   const jsonRequest = JSON.stringify(request);
-  const message = encoder.encode("jsonrpc: " + jsonRequest + "\n");
+  const message = encoder.encode("jsonrpc$: " + jsonRequest + "\n");
 
   Deno.stdout.writeSync(message);
   state.id += 1;
