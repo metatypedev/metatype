@@ -4,7 +4,7 @@
 use crate::errors::{ErrorContext, Result, TgError};
 use crate::sdk::core::{ParameterTransform, TransformData};
 use crate::t::{self, TypeBuilder};
-use crate::types::{Type, TypeDef, TypeId};
+use crate::types::{AsTypeDefEx, TypeDef, TypeId};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Write;

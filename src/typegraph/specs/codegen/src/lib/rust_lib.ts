@@ -104,6 +104,13 @@ ${this.funcDefs.map((f) => `    ${this.formatFuncDef(f)}`).join("\n")}
 
     Deno.writeTextFileSync(path.join(outDir, "mod.rs"), imports);
 
+    const cmd = new Deno.Command("cargo", {
+      cwd: outDir,
+      args: ["fmt", "-p", "typegraph_core"],
+    });
+
+    cmd.outputSync();
+
     console.log("mod.rs was created");
   }
 }

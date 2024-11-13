@@ -186,22 +186,21 @@ type SubstantialRuntimeData = {
   file_descriptions: WorkflowFileDescription[];
 };
 
-type SubstantialOperationType =
-  | "start"
-  | "start_raw"
+type SubstantialStartData = {
+  func_arg?: TypeId;
+  secrets: string[];
+};
+
+type SubstantialOperationData =
+  | { start: SubstantialStartData }
+  | { start_raw: SubstantialStartData }
   | "stop"
-  | "send"
+  | { send: TypeId }
   | "send_raw"
   | "resources"
-  | "results"
+  | { results: TypeId }
   | "results_raw"
   | "internal_link_parent_child";
-
-type SubstantialOperationData = {
-  func_arg?: TypeId;
-  func_out?: TypeId;
-  operation: SubstantialOperationType;
-};
 
 type KvRuntimeData = {
   url: string;
@@ -415,7 +414,6 @@ export type {
   WorkflowKind,
   WorkflowFileDescription,
   SubstantialRuntimeData,
-  SubstantialOperationType,
   SubstantialOperationData,
   KvRuntimeData,
   KvMaterializer,

@@ -5,10 +5,7 @@ use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::sdk::core::FuncParams;
-use crate::sdk::{
-    core::RuntimeId, runtimes::Effect, runtimes::SubstantialOperationData,
-    runtimes::SubstantialOperationType,
-};
+use crate::sdk::{core::RuntimeId, runtimes::Effect, runtimes::SubstantialOperationData};
 use crate::t::{self, TypeBuilder};
 use crate::typegraph::TypegraphContext;
 use crate::types::WithRuntimeConfig;
@@ -83,7 +80,7 @@ pub fn substantial_operation(
             );
 
             (
-                WitEffect::Create(true),
+                Effect::Create(true),
                 SubstantialMaterializer::Start {
                     secrets: data.secrets,
                 },
@@ -95,7 +92,7 @@ pub fn substantial_operation(
             inp.prop("kwargs", t_json_string()?.into());
 
             (
-                WitEffect::Create(true),
+                Effect::Create(true),
                 SubstantialMaterializer::StartRaw {
                     secrets: data.secrets,
                 },
@@ -121,7 +118,7 @@ pub fn substantial_operation(
             inp.prop("event", event);
 
             (
-                WitEffect::Create(false),
+                Effect::Create(false),
                 SubstantialMaterializer::Send,
                 t::string().build()?,
             )
@@ -136,7 +133,7 @@ pub fn substantial_operation(
             inp.prop("event", event);
 
             (
-                WitEffect::Create(false),
+                Effect::Create(false),
                 SubstantialMaterializer::SendRaw,
                 t::string().build()?,
             )
@@ -163,7 +160,7 @@ pub fn substantial_operation(
         SubstantialOperationData::Results(data) => {
             inp.prop("name", t::string().build()?);
             (
-                WitEffect::Read,
+                Effect::Read,
                 SubstantialMaterializer::Results,
                 results_op_results_ty(data)?,
             )
@@ -171,7 +168,7 @@ pub fn substantial_operation(
         SubstantialOperationData::ResultsRaw => {
             inp.prop("name", t::string().build()?);
             (
-                WitEffect::Read,
+                Effect::Read,
                 SubstantialMaterializer::ResultsRaw,
                 results_op_results_ty(t_json_string()?)?,
             )

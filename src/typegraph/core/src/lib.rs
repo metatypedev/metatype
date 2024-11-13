@@ -41,23 +41,6 @@ use types::{
     WithRuntimeConfig as _,
 };
 
-use wit::core::{
-    Artifact, ContextCheck, Policy, PolicyId, PolicySpec, SerializeParams, TransformData,
-    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
-    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
-};
-use wit::runtimes::{Guest, MaterializerDenoFunc};
-
-pub mod wit {
-    wit_bindgen::generate!({
-
-        world: "typegraph"
-    });
-    use crate::Lib;
-    pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
-    export!(Lib);
-}
-
 pub struct Lib {}
 
 impl sdk::core::Handler for Lib {

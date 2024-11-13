@@ -99,6 +99,13 @@ ${sources.map(({ moduleName }) => `    ${toPascalCase(moduleName)}(${moduleName}
 
     Deno.writeTextFileSync(path.join(outDir, "mod.rs"), fileContent);
 
+    const cmd = new Deno.Command("cargo", {
+      cwd: outDir,
+      args: ["fmt", "-p", "meta-cli"],
+    });
+
+    cmd.outputSync();
+
     console.log("mod.rs was created");
   }
 }

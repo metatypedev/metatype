@@ -41,20 +41,14 @@ export class SubstantialRuntime extends Runtime {
     kwargs: Typedef,
     { secrets }: StartFunc = {},
   ): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc(
-      {
-        tag: "start",
-        val: { secrets: secrets ?? [], funcArg: kwargs._id },
-      },
-    );
+    return this._genericSubstantialFunc({
+      start: { secrets: secrets ?? [], funcArg: kwargs._id },
+    });
   }
 
-  startRaw(
-    { secrets }: StartFunc = {},
-  ): Func<Typedef, Typedef, Materializer> {
+  startRaw({ secrets }: StartFunc = {}): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc({
-      tag: "start-raw",
-      val: { secrets: secrets ?? [] },
+      startRaw: { secrets: secrets ?? [] },
     });
   }
 
@@ -63,12 +57,9 @@ export class SubstantialRuntime extends Runtime {
   }
 
   send(payload: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc(
-      {
-        tag: "send",
-        val: payload._id,
-      },
-    );
+    return this._genericSubstantialFunc({
+      send: payload._id,
+    });
   }
 
   sendRaw(): Func<Typedef, Typedef, Materializer> {
@@ -80,12 +71,9 @@ export class SubstantialRuntime extends Runtime {
   }
 
   queryResults(output: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc(
-      {
-        tag: "results",
-        val: output._id,
-      },
-    );
+    return this._genericSubstantialFunc({
+      results: output._id,
+    });
   }
 
   queryResultsRaw(): Func<Typedef, Typedef, Materializer> {
@@ -109,17 +97,16 @@ export class SubstantialRuntime extends Runtime {
 
 export class Backend {
   static devMemory(): SubstantialBackend {
-    return { tag: "memory" };
+    return "memory";
   }
 
   static devFs(): SubstantialBackend {
-    return { tag: "fs" };
+    return "fs";
   }
 
   static redis(connectionStringSecret: string): SubstantialBackend {
     return {
-      tag: "redis",
-      val: {
+      redis: {
         connectionStringSecret,
       },
     };

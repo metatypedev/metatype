@@ -39,7 +39,6 @@ export default {
     },
   },
   "build-tgraph-ts": {
-    dependsOn: "build-tgraph-core",
     inherit: ["build-tgraph-core", "_ecma"],
     async fn($) {
       const genPath = await $.removeIfExists(
@@ -47,6 +46,16 @@ export default {
       );
 
       await $`$TG_CODEGEN typescript ${genPath}`;
+    },
+  },
+  "build-tgraph-rpc": {
+    inherit: ["build-tgraph-core", "_rust"],
+    async fn($) {
+      const genPath = await $.removeIfExists(
+        $.workingDir.join("src/meta-cli/src/typegraph/rpc"),
+      );
+
+      await $`$TG_CODEGEN rust-rpc ${genPath}`;
     },
   },
   "build-tgraph-ts-node": {
@@ -62,7 +71,6 @@ export default {
     },
   },
   "build-tgraph-py": {
-    dependsOn: "build-tgraph-core",
     inherit: ["build-tgraph-core", "_python"],
     async fn($) {
       const genPath = await $.removeIfExists(
@@ -74,7 +82,12 @@ export default {
     },
   },
   "build-tgraph": {
-    dependsOn: ["build-tgraph-py", "build-tgraph-ts-node"],
+    dependsOn: [
+      "build-tgraph-core",
+      "build-tgraph-rpc",
+      "build-tgraph-py",
+      "build-tgraph-ts-node",
+    ],
   },
   "build-pyrt": {
     inherit: "_wasm",

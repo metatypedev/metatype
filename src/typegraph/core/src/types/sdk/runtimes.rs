@@ -244,24 +244,23 @@ pub struct SubstantialRuntimeData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum SubstantialOperationType {
-    Start,
-    StartRaw,
-    Stop,
-    Send,
-    SendRaw,
-    Resources,
-    Results,
-    ResultsRaw,
-    InternalLinkParentChild,
+pub struct SubstantialStartData {
+    pub func_arg: Option<TypeId>,
+    pub secrets: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SubstantialOperationData {
-    pub func_arg: Option<TypeId>,
-    pub func_out: Option<TypeId>,
-    pub operation: SubstantialOperationType,
+#[serde(rename_all = "snake_case")]
+pub enum SubstantialOperationData {
+    Start(SubstantialStartData),
+    StartRaw(SubstantialStartData),
+    Stop,
+    Send(TypeId),
+    SendRaw,
+    Resources,
+    Results(TypeId),
+    ResultsRaw,
+    InternalLinkParentChild,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
