@@ -185,6 +185,7 @@ async fn load_tg_at(
     let init = TaskManagerInit::<SerializeAction>::new(
         config.clone(),
         SerializeActionGenerator::new(
+            None,
             config_dir.clone(),
             dir.into(),
             config
