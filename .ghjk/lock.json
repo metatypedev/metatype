@@ -1092,25 +1092,25 @@
               "ty": "denoFile@v1",
               "key": "dev-gate6",
               "desc": "Launch the typegate from a locally found meta bin.",
-              "envKey": "bciqgfcifjqcsnr6bkqt6uns6bznczpncptw7cb6qeaafpp4h4tkuk2y"
+              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
             },
             "dev-gate5": {
               "ty": "denoFile@v1",
               "key": "dev-gate5",
               "desc": "Launch the typegate from the latests published image.",
-              "envKey": "bciqgfcifjqcsnr6bkqt6uns6bznczpncptw7cb6qeaafpp4h4tkuk2y"
+              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
             },
             "dev-gate4": {
               "ty": "denoFile@v1",
               "key": "dev-gate4",
               "desc": "Launch the typegate from the locally built typegate image.",
-              "envKey": "bciqgfcifjqcsnr6bkqt6uns6bznczpncptw7cb6qeaafpp4h4tkuk2y"
+              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
             },
             "dev-gate3": {
               "ty": "denoFile@v1",
               "key": "dev-gate3",
               "desc": "Launch the typegate from meta-cli cmd.",
-              "envKey": "bciqgfcifjqcsnr6bkqt6uns6bznczpncptw7cb6qeaafpp4h4tkuk2y"
+              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
             },
             "dev-gate2": {
               "ty": "denoFile@v1",
@@ -1122,7 +1122,7 @@
               "ty": "denoFile@v1",
               "key": "dev-gate1",
               "desc": "Launch the typegate in single-instance mode.",
-              "envKey": "bciqgfcifjqcsnr6bkqt6uns6bznczpncptw7cb6qeaafpp4h4tkuk2y"
+              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
             },
             "dev-eg-tgraphs": {
               "ty": "denoFile@v1",
@@ -1573,7 +1573,7 @@
                 }
               ]
             },
-            "bciqgfcifjqcsnr6bkqt6uns6bznczpncptw7cb6qeaafpp4h4tkuk2y": {
+            "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1633,7 +1633,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "TG_PORT",
-                  "val": "7890"
+                  "val": "7891"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
