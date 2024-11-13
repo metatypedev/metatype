@@ -5,6 +5,9 @@ import { file, ports, sedLock, semver, stdDeps } from "./tools/deps.ts";
 import installs from "./tools/installs.ts";
 import tasks from "./tools/tasks/mod.ts";
 
+//
+//
+
 const ghjk = file({
   defaultEnv: Deno.env.get("CI") ? "ci" : Deno.env.get("OCI") ? "oci" : "dev",
   tasks,
@@ -16,7 +19,7 @@ env("main")
   .install(installs.deno)
   .vars({
     RUST_LOG:
-      "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
+      "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,quaint=off",
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
     CROSS_CONFIG: "tools/Cross.toml",
