@@ -100,6 +100,8 @@ impl CommandContext {
             path,
         } = self;
 
+        let optional_envs = [("MCLI_PREFIX", shared_config.prefix.clone())];
+
         command
             .current_dir(shared_config.working_dir.to_str().unwrap())
             .env("MCLI_VERSION", crate::build::PKG_VERSION)
@@ -121,6 +123,11 @@ impl CommandContext {
             .env(
                 "MCLI_ARTIFACT_RESOLUTION",
                 shared_config.artifact_resolution.to_string(),
+            )
+            .envs(
+                optional_envs
+                    .into_iter()
+                    .filter_map(|(k, v)| v.map(|v| (k, v))),
             )
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
