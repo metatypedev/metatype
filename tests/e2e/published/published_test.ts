@@ -163,6 +163,7 @@ Meta.test(
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir,
         TG_PORT: port,
+        LOG_LEVEL: "DEBUG",
         // TODO should not be necessary
         VERSION: previousVersion,
         ...syncEnvs,
@@ -253,6 +254,7 @@ Meta.test(
           TG_ADMIN_PASSWORD: "password",
           TMP_DIR: typegateTempDir,
           TG_PORT: `${port}`,
+          LOG_LEVEL: "DEBUG",
           // TODO should not be necessary
           VERSION: previousVersion,
           ...syncEnvs,
@@ -320,6 +322,7 @@ Meta.test(
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir.toString(),
         TG_PORT: `${port}`,
+        LOG_LEVEL: "DEBUG",
         // TODO should not be necessary
         VERSION: previousVersion,
         DEBUG: "true",
