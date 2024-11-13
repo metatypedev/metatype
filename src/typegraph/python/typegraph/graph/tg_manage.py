@@ -114,7 +114,16 @@ class Manager:
 
             if not isinstance(response, dict):
                 raise Exception("unexpected")
-            Log.success({"typegraph": self.typegraph.name, **response})
+            Log.success(
+                {
+                    "typegraph": {
+                        "name": self.typegraph.name,
+                        "path": env.typegraph_path,
+                        "value": ret.serialized,
+                    },
+                    **response,
+                }
+            )
         except Exception as err:
             Log.debug(traceback.format_exc())
             Log.failure({"typegraph": self.typegraph.name, "errors": [str(err)]})

@@ -514,22 +514,23 @@ interface runtimes {
         file-descriptions: list<workflow-file-description>  
     }
 
-    variant substantial-operation-type {
-        start,
-        start-raw,
-        stop,
-        send,
-        send-raw,
-        resources,
-        results,
-        results-raw,
-        internal-link-parent-child
+    record substantial-start-data {
+        func-arg: option<type-id>,
+        secrets: list<string>,
     }
 
-    record substantial-operation-data {
-        func-arg: option<type-id>,
-        func-out: option<type-id>,
-        operation: substantial-operation-type,
+    variant substantial-operation-data {
+        start(substantial-start-data),
+        start-raw(substantial-start-data),
+        stop,
+        // type of send value
+        send(type-id),
+        send-raw,
+        resources,
+        // type of result
+        results(type-id),
+        results-raw,
+        internal-link-parent-child
     }
 
     register-substantial-runtime: func(data: substantial-runtime-data) -> result<runtime-id, error>;

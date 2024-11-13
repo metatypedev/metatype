@@ -2,6 +2,387 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.5.0-rc.5](https://github.com/metatypedev/metatype/releases/tag/v0.5.0-rc.5) - 2024-11-10
+
+### Bug Fixes
+
+<details >
+<summary>
+Meta dev does not exit properly upon `SIGTERM` (<a href="https://github.com/metatypedev/metatype/pull/895">#895</a>)
+</summary>
+
+#### Migration notes
+
+None
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Fix optional field filter in apply (<a href="https://github.com/metatypedev/metatype/pull/909">#909</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+- Fix the optional field filter on apply: resolve types before matching.
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+_No migrations needed._
+
+---
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Documentation
+
+<details >
+<summary>
+Grpc annoucement blog (<a href="https://github.com/metatypedev/metatype/pull/872">#872</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+-
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+-
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+
+...
+
+- [ ] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Features
+
+<details >
+<summary>
+(cli) Watch artifacts (<a href="https://github.com/metatypedev/metatype/pull/897">#897</a>)
+</summary>
+
+- Solve [MET
+710](https://linear.app/metatypedev/issue/MET-710/watch-artifacts).
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+- ...
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+
+---
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Substantial function secrets support (<a href="https://github.com/metatypedev/metatype/pull/908">#908</a>)
+</summary>
+
+- Add support for passing secrets to substantial workflows
+- Bump version to 0.5.0-rc5
+
+---
+
+- [x] The change comes with new or modified tests
+
+</details>
+
+
+### Miscellaneous Tasks
+
+<details open>
+<summary>
+License change to MPL Version 2.0 (<a href="https://github.com/metatypedev/metatype/pull/899">#899</a>)
+  - BREAKING: license change to MPL Version 2.0 (<a href="https://github.com/metatypedev/metatype/pull/899">#899</a>)
+</summary>
+
+#### Migration notes
+
+All license headers has changed to MPL 2.0.
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+
+
+## [v0.5.0-rc.4](https://github.com/metatypedev/metatype/releases/tag/v0.5.0-rc.4) - 2024-11-05
+
+### Bug Fixes
+
+<details >
+<summary>
+(typegraph) Send rpc message in chunks in the TS typegraph client  (<a href="https://github.com/metatypedev/metatype/pull/904">#904</a>)
+</summary>
+
+- Send the JSON-RPC message is chunks in the TypeScript typegraph client
+to prevent reaching the line size limit for stdout. Note: we could not
+reproduce the issue locally as it only occurs when using the published
+package for Node.js.
+- Use JSON-RPC notification for logging and report from the typegraph
+clients.
+- Other changes:
+  - Use relative paths for static task sources in the CLI;
+- Fix TODO in `meta gen`: pass the working directory on the
+`working_dir` param of `SerializeActionGenerator::new`.
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+_N/A_
+
+---
+
+- [ ] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Speculative fix for `typegate_prisma_test.ts` (<a href="https://github.com/metatypedev/metatype/pull/898">#898</a>)
+</summary>
+
+- Assigns special schemas for each test that relies on the
+`runtimes/prisma/prisma.py` typegraph.
+- Bumps version tag to 0.5.0-rc4
+- Fixes issues in release pipeline
+- Disables all but the `test-full` job when the test pipeline is run
+with tmate enabled.
+
+The flakeout of `typegate_prisma_test.ts` has proved difficult to
+recreate. Looking at the code and going from recent similar cases, I
+suspect it happens due to the old code reusing the same pg schema for
+multiple tests. Assigning special schemas for each tests should
+hopefully help.
+
+
+#### Migration notes
+
+N/A
+
+---
+
+- [x] The change comes with new or modified tests
+
+---------
+
+</details>
+
+
+## [v0.5.0-rc.3](https://github.com/metatypedev/metatype/releases/tag/v0.5.0-rc.3) - 2024-10-30
+
+### Bug Fixes
+
+<details >
+<summary>
+Update license file (<a href="https://github.com/metatypedev/metatype/pull/890">#890</a>)
+</summary>
+
+# PR Summary
+Commit d84e4ed6c3f88d52c95f1491a050daa924e14b87 moved the
+`LICENSE-MPL-2.0.md` file. This PR adjusts sources to changes.
+
+#### Migration notes
+
+- [ ] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+Minor bug fixes (<a href="https://github.com/metatypedev/metatype/pull/894">#894</a>)
+</summary>
+
+- Bug with typegraph context reset around deno_modules
+- Bug with typegate onPush hook error detection and typegraph parsing of
+such errors
+- Bug with artifact resolution when they're reused.
+- Bug with return type of the KvRuntime get functions
+- Bumps metatype to 0.5.0-rc.3
+
+#### Migration notes
+
+N/A
+
+---
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Documentation
+
+<details >
+<summary>
+Add substantial (<a href="https://github.com/metatypedev/metatype/pull/891">#891</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+- docs
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+- N/A
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration 
+
+N/A
+
+- [ ] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+## [v0.5.0-rc.2](https://github.com/metatypedev/metatype/releases/tag/v0.5.0-rc.2) - 2024-10-24
+
+### Bug Fixes
+
+<details >
+<summary>
+Fix `.apply` serialization error with optional structs (<a href="https://github.com/metatypedev/metatype/pull/886">#886</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+- Fix the error on `.apply` when the apply tree goes beyond an optional
+struct, mostly changing the implementation of `resolve_optional` method.
+- Improve the errors when we encounter an exception raise by
+`Result::Err` from typegraph_core.
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+
+...
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Features
+
+<details >
+<summary>
+Add GraphQL alias support for prisma runtime (<a href="https://github.com/metatypedev/metatype/pull/887">#887</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+- Add GraphQL alias support for prisma runtime
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+
+...
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
 ## [v0.5.0-rc.1](https://github.com/metatypedev/metatype/releases/tag/v0.5.0-rc.1) - 2024-10-22
 
 ### Bug Fixes
@@ -3279,267 +3660,8 @@ changes.
 
 ## [v0.4.0](https://github.com/metatypedev/metatype/releases/tag/v0.4.0) - 2024-05-09
 
-### Bug Fixes
-
-<details >
-<summary>
-(gh-tests) Fix local npm registry config (<a href="https://github.com/metatypedev/metatype/pull/692">#692</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog.
--->
-
-<!-- 1. Explain below WHAT the change is -->
-
-Fix the NPM registry config in the Github tests.
-
-<!-- 2. Explain below WHY the change cannot be made simpler -->
-
-<!-- 3. Explain below WHY the was made or link an issue number -->
-
-<!-- 4. Explain HOW users should update their code or remove that
-section -->
-
-#### Migration notes
-
-_N/A_
-
-<!-- 5. Readiness checklist
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
--->
-
-</details>
-<details >
-<summary>
-Website and headline (<a href="https://github.com/metatypedev/metatype/pull/691">#691</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog and understand when they need to update his code and
-how.
--->
-
-<!-- Explain WHAT the change is -->
-
-#### Motivation and context
-
-Fix the CSS issue introduced by docusaurus 3.2.0
-(https://github.com/facebook/docusaurus/issues/10005). 3.2.1 should fix
-it but the affected version maybe loaded by dependencies, so we will
-have to wait a bit more.
-
-<!-- Explain WHY the was made or link an issue number -->
-
-
-<!-- Explain HOW users should update their code when required -->
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----------
-
-</details>
-<details >
-<summary>
-Do not override log level when no verbosity flag is present (<a href="https://github.com/metatypedev/metatype/pull/694">#694</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog.
--->
-
-<!-- 1. Explain below WHAT the change is -->
-
-Remove log level override by the verbosity flag when no flag is present.
-It will default to the configured env_logger default level (or env
-variable).
-
-<!-- 2. Explain below WHY the change cannot be made simpler -->
-
-...
-
-<!-- 3. Explain below WHY the was made or link an issue number -->
-
-The default log level became "error" after #664, and `RUST_LOG`
-environment variable where ignored.
-
-<!-- 4. Explain HOW users should update their code or remove that
-section -->
-
-#### Migration notes
-
-_N/A_
-
-<!-- 5. Readiness checklist
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
--->
-
-</details>
-
-
 ### Documentation
 
-<details >
-<summary>
-Add  examples for each command (<a href="https://github.com/metatypedev/metatype/pull/684">#684</a>)
-</summary>
-
-#### Motivation and context
-
-Getting started with `meta` cli should be easy
-
-#### Migration notes
-
-None
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
-</details>
-<details >
-<summary>
-Improve `/tutorials/quick-start` section. (<a href="https://github.com/metatypedev/metatype/pull/681">#681</a>)
-</summary>
-
-- [x] Improve Layout
-- [x] Include a simple project.
-- [x] Add the result/outputs to running CLI commands.
-- [x] Remove Metatype cloud registration form.
-- [x] Separate the CLI commands to separate code blocks
-- [x] Add links to references and concepts.
-- [x] Add playground.
-
-#### Motivation and context
-
-[Docs
-Meta-task](https://linear.app/metatypedev/issue/MET-440/docs-meta-task)
-
-#### Migration notes
-
-_No Migration Needed_
-
-### Checklist
-
-- [x] Test the commands and the examples.
-- [ ] The change come with new or modified tests
-
-</details>
-<details >
-<summary>
-Improve `/docs/tutorials/metatype-basics` (<a href="https://github.com/metatypedev/metatype/pull/688">#688</a>)
-</summary>
-
-Improve `/docs/tutorials/metatype-basics`
-
-#### Motivation and context
-
-[Docs
-Meta-task](https://linear.app/metatypedev/issue/MET-440/docs-meta-task)
-
-#### Migration notes
-
-_No Migrations Needed_
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-
-</details>
-<details >
-<summary>
-Improve `/reference/runtimes/` (<a href="https://github.com/metatypedev/metatype/pull/676">#676</a>)
-</summary>
-
-#### Motivation and context
-
-Better documentation
-
-#### Migration notes
-
-N/A
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [x] End-user documentation is updated to reflect the change
-
-</details>
-<details >
-<summary>
-Improve `/guides/external-functions` (<a href="https://github.com/metatypedev/metatype/pull/677">#677</a>)
-</summary>
-
-- Improvements to the `/guides/external-functions` page.
-- Adds a configuration file for git-town
-
-#### Motivation and context
-
-_N/A_
-
-#### Migration notes
-
-_N/A_
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----------
-
-</details>
-<details >
-<summary>
-Improve `docs/reference/types` (<a href="https://github.com/metatypedev/metatype/pull/685">#685</a>)
-</summary>
-
-Improves `docs/reference/types`
-
-#### Motivation and context
-
-_N/A_
-
-#### Migration notes
-
-_N/A_
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [x] End-user documentation is updated to reflect the change
-
----------
-
-</details>
 <details >
 <summary>
 Add a comparison b/n metatype and other similar solutions/products. (<a href="https://github.com/metatypedev/metatype/pull/697">#697</a>)
@@ -3582,136 +3704,6 @@ _No Migration Needed_
 
 ### Features
 
-<details >
-<summary>
-(cli) Timeout loader process (<a href="https://github.com/metatypedev/metatype/pull/693">#693</a>)
-</summary>
-
-
-
-</details>
-<details >
-<summary>
-(cli,sdk) Better error messages (<a href="https://github.com/metatypedev/metatype/pull/689">#689</a>)
-</summary>
-
-#### Motivation and context
-
-Make it more clear where failures happen
-
-#### Migration notes
-
-None
-
-### Checklist
-
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
-</details>
-<details >
-<summary>
-Upload artifacts to s3 (<a href="https://github.com/metatypedev/metatype/pull/638">#638</a>)
-</summary>
-
-Upload artifacts to S3 when sync-mode is enabled
-
-#### Motivation and context
-
-Sharing artifacts between replicas without including it in the typegraph
-(and sync through redis)
-
-#### Migration notes
-
-No changes needed.
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----------
-
-</details>
-<details >
-<summary>
-Upload `PythonRuntime` artifacts and deps (<a href="https://github.com/metatypedev/metatype/pull/672">#672</a>)
-</summary>
-
-#### Motivation and context
-
-Track artifact/module dependencis for `PythonRuntime`
-
-
-#### Migration notes
-
-`python.import(...)` and `python.import_(...)` accept an optional parameter `deps` that accepts list of dependencies for the python module.
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----------
-
-</details>
-<details >
-<summary>
-Upload `DenoRuntime` artifacts and deps (<a href="https://github.com/metatypedev/metatype/pull/674">#674</a>)
-</summary>
-
-- [x] Track deno runtime artifacts(also dependencies)
-- [x] Upload artifacts during deploy to either local(single replica) or
-shared(s3)
-- [x] resolve artifacts(module and deps) upon typegate runtime.
-
-#### Motivation and context
-
-Persisting deno runtime artifacts to a local/shared storage.
-
-#### Migration notes
-
-`deno.import(...)` and `deno.import_(...)` accept an optional parameter
-that accepts list of dependencies for the deno/ts module.
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----------
-
-</details>
-<details >
-<summary>
-Enable batch prisma queries in the typegate runtime (<a href="https://github.com/metatypedev/metatype/pull/682">#682</a>)
-</summary>
-
-Enable batch prisma queries (and transaction) in the typegate runtime
-
-#### Motivation and context
-
-Console
-
-[MET-381](https://linear.app/metatypedev/issue/MET-381/console-collections)
-
-#### Migration notes
-
-<!-- Explain HOW users should update their code when required -->
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
-
----------
-
-</details>
 <details >
 <summary>
 Artifact removal (<a href="https://github.com/metatypedev/metatype/pull/668">#668</a>)
@@ -3807,14 +3799,6 @@ and stability with the new software version 0.4.0.
 ---------
 
 </details>
-<details >
-<summary>
-(sdk,gate) Bump wasmtime to 20.0.0 and wit-bindgen to 0.24.0 (<a href="https://github.com/metatypedev/metatype/pull/695">#695</a>)
-</summary>
-
-
-
-</details>
 
 
 ### Refactor
@@ -3844,3 +3828,6 @@ Make sure to sync `typegate/src/types.ts` when an update is made on the
 typegraph schema.
 
 </details>
+
+
+

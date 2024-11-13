@@ -17,8 +17,8 @@ use serde_json::json;
 
 #[derive(Debug)]
 pub enum SubstantialMaterializer {
-    Start,
-    StartRaw,
+    Start { secrets: Vec<String> },
+    StartRaw { secrets: Vec<String> },
     Stop,
     Send,
     SendRaw,
@@ -38,8 +38,15 @@ impl MaterializerConverter for SubstantialMaterializer {
         let runtime = c.register_runtime(runtime_id)?;
 
         let (name, data) = match self {
-            SubstantialMaterializer::Start => ("start".to_string(), json!({})),
-            SubstantialMaterializer::StartRaw => ("start_raw".to_string(), json!({})),
+            SubstantialMaterializer::Start { secrets } => {
+                ("start".to_string(), json!({ "secrets":secrets }))
+            }
+            SubstantialMaterializer::StartRaw { secrets } => (
+                "start_raw".to_string(),
+                json!({
+                    "secrets": secrets
+                }),
+            ),
             SubstantialMaterializer::Stop => ("stop".to_string(), json!({})),
             SubstantialMaterializer::Send => ("send".to_string(), json!({})),
             SubstantialMaterializer::SendRaw => ("send_raw".to_string(), json!({})),
@@ -65,23 +72,37 @@ pub fn substantial_operation(
     data: SubstantialOperationData,
 ) -> Result<FuncParams> {
     let mut inp = t::struct_();
-    let (effect, mat_data, out_ty) = match data.operation {
-        SubstantialOperationType::Start | SubstantialOperationType::StartRaw => {
-            let (mat, flag) = match data.operation {
-                SubstantialOperationType::Start => (SubstantialMaterializer::Start, true),
-                SubstantialOperationType::StartRaw => (SubstantialMaterializer::StartRaw, false),
-                _ => unreachable!(),
-            };
-
+    let (effect, mat_data, out_ty) = match data {
+        SubstantialOperationData::Start(data) => {
             inp.prop("name", t::string().build()?);
             inp.prop(
                 "kwargs",
-                use_arg_or_json_string(data.func_arg, flag)?.into(),
+                data.func_arg
+                    .ok_or("input or output shape is not defined on the typegraph".to_string())?
+                    .into(),
             );
 
-            (Effect::Create(true), mat, t::string().build()?)
+            (
+                WitEffect::Create(true),
+                SubstantialMaterializer::Start {
+                    secrets: data.secrets,
+                },
+                t::string().build()?,
+            )
         }
-        SubstantialOperationType::Stop => {
+        SubstantialOperationData::StartRaw(data) => {
+            inp.prop("name", t::string().build()?);
+            inp.prop("kwargs", t_json_string()?.into());
+
+            (
+                WitEffect::Create(true),
+                SubstantialMaterializer::StartRaw {
+                    secrets: data.secrets,
+                },
+                t::string().build()?,
+            )
+        }
+        SubstantialOperationData::Stop => {
             inp.prop("run_id", t::string().build()?);
 
             (
@@ -90,27 +111,37 @@ pub fn substantial_operation(
                 t::list(t::string().build()?).build()?,
             )
         }
-        SubstantialOperationType::Send | SubstantialOperationType::SendRaw => {
-            let (mat, flag) = match data.operation {
-                SubstantialOperationType::Send => (SubstantialMaterializer::Send, true),
-                SubstantialOperationType::SendRaw => (SubstantialMaterializer::SendRaw, false),
-                _ => unreachable!(),
-            };
-
+        SubstantialOperationData::Send(data) => {
             let event = t::struct_()
                 .prop("name", t::string().build()?)
-                .prop(
-                    "payload",
-                    use_arg_or_json_string(data.func_arg, flag)?.into(),
-                )
+                .prop("payload", data.into())
                 .build()?;
 
             inp.prop("run_id", t::string().build()?);
             inp.prop("event", event);
 
-            (Effect::Create(false), mat, t::string().build()?)
+            (
+                WitEffect::Create(false),
+                SubstantialMaterializer::Send,
+                t::string().build()?,
+            )
         }
-        SubstantialOperationType::Resources => {
+        SubstantialOperationData::SendRaw => {
+            let event = t::struct_()
+                .prop("name", t::string().build()?)
+                .prop("payload", t_json_string()?.into())
+                .build()?;
+
+            inp.prop("run_id", t::string().build()?);
+            inp.prop("event", event);
+
+            (
+                WitEffect::Create(false),
+                SubstantialMaterializer::SendRaw,
+                t::string().build()?,
+            )
+        }
+        SubstantialOperationData::Resources => {
             inp.prop("name", t::string().build()?);
 
             let row = t::struct_()
@@ -129,65 +160,23 @@ pub fn substantial_operation(
 
             (Effect::Read, SubstantialMaterializer::Resources, out)
         }
-        SubstantialOperationType::Results | SubstantialOperationType::ResultsRaw => {
-            let (mat, flag) = match data.operation {
-                SubstantialOperationType::Results => (SubstantialMaterializer::Results, true),
-                SubstantialOperationType::ResultsRaw => {
-                    (SubstantialMaterializer::ResultsRaw, false)
-                }
-                _ => unreachable!(),
-            };
-
+        SubstantialOperationData::Results(data) => {
             inp.prop("name", t::string().build()?);
-            let out = use_arg_or_json_string(data.func_out, flag)?;
-
-            let count = t::integer().build()?;
-
-            let result = t::struct_()
-                .prop("status", t::string().build()?)
-                .prop("value", t::optional(out.into()).build()?)
-                .build()?;
-
-            let ongoing_runs = t::list(
-                t::struct_()
-                    .prop("run_id", t::string().build()?)
-                    .prop("started_at", t::string().build()?)
-                    .build()?,
-            )
-            .build()?;
-
-            let completed_runs = t::list(
-                t::struct_()
-                    .prop("run_id", t::string().build()?)
-                    .prop("started_at", t::string().build()?)
-                    .prop("ended_at", t::string().build()?)
-                    .prop("result", result)
-                    .build()?,
-            )
-            .build()?;
-
             (
-                Effect::Read,
-                mat,
-                t::struct_()
-                    .prop(
-                        "ongoing",
-                        t::struct_()
-                            .prop("count", count)
-                            .prop("runs", ongoing_runs)
-                            .build()?,
-                    )
-                    .prop(
-                        "completed",
-                        t::struct_()
-                            .prop("count", count)
-                            .prop("runs", completed_runs)
-                            .build()?,
-                    )
-                    .build()?,
+                WitEffect::Read,
+                SubstantialMaterializer::Results,
+                results_op_results_ty(data)?,
             )
         }
-        SubstantialOperationType::InternalLinkParentChild => {
+        SubstantialOperationData::ResultsRaw => {
+            inp.prop("name", t::string().build()?);
+            (
+                WitEffect::Read,
+                SubstantialMaterializer::ResultsRaw,
+                results_op_results_ty(t_json_string()?)?,
+            )
+        }
+        SubstantialOperationData::InternalLinkParentChild => {
             inp.prop("parent_run_id", t::string().build()?);
             inp.prop("child_run_id", t::string().build()?);
 
@@ -208,12 +197,7 @@ pub fn substantial_operation(
     })
 }
 
-fn use_arg_or_json_string(arg: Option<u32>, flag: bool) -> Result<u32> {
-    if flag {
-        let arg = arg.ok_or("input or output shape is not defined on the typegraph".to_string())?;
-        return Ok(arg);
-    };
-
+fn t_json_string() -> Result<u32> {
     t::string()
         .build()
         .and_then(|r| {
@@ -222,4 +206,48 @@ fn use_arg_or_json_string(arg: Option<u32>, flag: bool) -> Result<u32> {
             }))
         })
         .map(|r| r.id().into())
+}
+
+fn results_op_results_ty(out: u32) -> Result<crate::types::TypeId> {
+    let count = t::integer().build()?;
+
+    let result = t::struct_()
+        .prop("status", t::string().build()?)
+        .prop("value", t::optional(out.into()).build()?)
+        .build()?;
+
+    let ongoing_runs = t::list(
+        t::struct_()
+            .prop("run_id", t::string().build()?)
+            .prop("started_at", t::string().build()?)
+            .build()?,
+    )
+    .build()?;
+
+    let completed_runs = t::list(
+        t::struct_()
+            .prop("run_id", t::string().build()?)
+            .prop("started_at", t::string().build()?)
+            .prop("ended_at", t::string().build()?)
+            .prop("result", result)
+            .build()?,
+    )
+    .build()?;
+
+    t::struct_()
+        .prop(
+            "ongoing",
+            t::struct_()
+                .prop("count", count)
+                .prop("runs", ongoing_runs)
+                .build()?,
+        )
+        .prop(
+            "completed",
+            t::struct_()
+                .prop("count", count)
+                .prop("runs", completed_runs)
+                .build()?,
+        )
+        .build()
 }

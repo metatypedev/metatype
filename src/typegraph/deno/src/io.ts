@@ -8,6 +8,38 @@ import { rpcRequest } from "./gen/client.ts";
  * see: module level documentation `meta-cli/src/deploy/actors/task.rs`
  */
 
+const JSONRPC_VERSION = "2.0";
+
+function writeRpcMessage(message: string) {
+  // split into 32-KiB chunks
+  const chunkSize = 32758; // 32 KiB - 10 bytes for "jsonrpc^: " or "jsonrpc$: "
+  for (let i = 0; i < message.length; i += chunkSize) {
+    const chunk = message.slice(i, i + chunkSize);
+    if (i + chunkSize < message.length) {
+      process.stdout.write(`jsonrpc^: ${chunk}\n`);
+      continue;
+    }
+    process.stdout.write(`jsonrpc$: ${message.slice(i, i + chunkSize)}\n`);
+  }
+}
+
+type RpcNotificationMethod =
+  | "Debug"
+  | "Info"
+  | "Warning"
+  | "Error"
+  | "Success"
+  | "Failure";
+
+const rpcNotify = (method: RpcNotificationMethod, params: any = null) => {
+  const message = JSON.stringify({
+    jsonrpc: JSONRPC_VERSION,
+    method,
+    params,
+  });
+  writeRpcMessage(message);
+};
+
 function getOutput(args: any[]) {
   return args
     .map((arg) => {
@@ -24,28 +56,27 @@ function getOutput(args: any[]) {
 
 export const log = {
   debug(...args: any[]) {
-    const output = getOutput(args);
-    process.stdout.write(`debug: ${output}\n`);
+    rpcNotify("Debug", { message: getOutput(args) });
   },
   info(...args: any[]) {
-    const output = getOutput(args);
-    process.stdout.write(`info: ${output}\n`);
+    rpcNotify("Info", { message: getOutput(args) });
   },
   warn(...args: any[]) {
-    const output = getOutput(args);
-    process.stdout.write(`warning: ${output}\n`);
+    rpcNotify("Warning", { message: getOutput(args) });
   },
   error(...args: any[]) {
-    const output = getOutput(args);
-    process.stdout.write(`error: ${output}\n`);
+    rpcNotify("Error", { message: getOutput(args) });
   },
 
   failure(data: any) {
-    process.stdout.write(`failure: ${JSON.stringify(data)}\n`);
+    rpcNotify("Failure", { data: data });
   },
   success(data: any, noEncode = false) {
-    const encoded = noEncode ? data : JSON.stringify(data);
-    process.stdout.write(`success: ${encoded}\n`);
+    if (noEncode) {
+      rpcNotify("Success", { data: JSON.parse(data) });
+    } else {
+      rpcNotify("Success", { data: data });
+    }
   },
 };
 

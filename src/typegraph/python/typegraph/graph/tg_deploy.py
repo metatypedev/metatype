@@ -121,17 +121,17 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     response = response.read().decode()
     response = handle_response(response)
 
-    if response.get("errors") is not None:
-        for err in response.errors:
-            Log.error(err.message)
+    if "errors" in response:
+        for err in response["errors"]:
+            Log.error(err["message"])
         raise Exception(f"failed to deploy typegraph {tg.name}")
 
     add_typegraph = response.get("data").get("addTypegraph")
 
     """ 
       # FIXME: read comments in similar section of typescript
-      if add_typegraph.get("failure") is not None:
-        Log.error(add_typegraph.failure)
+      if "failure" in add_typegraph:
+        Log.error(add_typegraph["failure"])
         raise Exception(f"failed to deploy typegraph {tg.name}") """
 
     return DeployResult(serialized=tg_json, response=add_typegraph)

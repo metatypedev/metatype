@@ -114,6 +114,7 @@ color-eyre.workspace = true
 # os
 num_cpus.workspace = true
 ctrlc.workspace = true
+signal-hook.workspace = true
 rand.workspace = true
 process-wrap = { workspace = true, features = ["tokio1"] }
 nix = { workspace = true, features = ["signal"] }

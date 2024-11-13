@@ -139,7 +139,7 @@ class DenoRuntime(Runtime):
 
         res = runtimes.import_deno_function(
             MaterializerDenoImport(
-                func_name=func_name, module=module, secrets=secrets or []
+                func_name=func_name, module=module, secrets=secrets or [], deps=[]
             ),
             "read",
         )

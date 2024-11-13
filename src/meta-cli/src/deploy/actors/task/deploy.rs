@@ -9,13 +9,14 @@ use super::action::{
 };
 use super::command::build_task_command;
 use crate::deploy::actors::console::Console;
-use crate::deploy::actors::task_manager::TaskRef;
+use crate::deploy::actors::task_manager::{self, TaskRef};
 use crate::interlude::*;
 use crate::secrets::Secrets;
 use crate::typegraph::rpc::{RpcCall as TypegraphRpcCall, RpcDispatch};
 use color_eyre::owo_colors::OwoColorize;
 use common::node::Node;
-use serde::Deserialize;
+use common::typegraph::Typegraph;
+use serde::{Deserialize, Deserializer};
 use std::{path::Path, sync::Arc};
 use tokio::process::Command;
 
@@ -114,9 +115,27 @@ pub struct Migration {
     pub archive: String,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+pub struct TypegraphData {
+    pub name: String,
+    pub path: PathBuf,
+    #[serde(deserialize_with = "deserialize_typegraph")]
+    pub value: Arc<Typegraph>,
+}
+
+fn deserialize_typegraph<'de, D>(deserializer: D) -> Result<Arc<Typegraph>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let serialized = String::deserialize(deserializer)?;
+    let typegraph =
+        serde_json::from_str(&serialized).map_err(|e| serde::de::Error::custom(e.to_string()))?;
+    Ok(Arc::new(typegraph))
+}
+
 #[derive(Deserialize, Debug)]
 pub struct DeploySuccess {
-    pub typegraph: String,
+    pub typegraph: TypegraphData,
     pub messages: Vec<MessageEntry>,
     pub migrations: Vec<Migration>,
     pub failure: Option<String>,
@@ -130,7 +149,7 @@ pub struct DeployError {
 
 impl OutputData for DeploySuccess {
     fn get_typegraph_name(&self) -> String {
-        self.typegraph.clone()
+        self.typegraph.name.clone()
     }
 
     fn is_success(&self) -> bool {
@@ -272,6 +291,10 @@ impl TaskAction for DeployAction {
                         }))
                     }
                     None => {
+                        ctx.task_manager
+                            .do_send(task_manager::message::TypegraphDeployed(
+                                data.typegraph.clone(),
+                            ));
                         ctx.console.info(format!(
                             "{icon} successfully deployed typegraph {name} from {path}",
                             icon = "✓".green(),

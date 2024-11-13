@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { connect, parseURL, type Redis } from "redis";
 import { ComputeStage } from "../engine/query_engine.ts";
@@ -9,8 +9,6 @@ import type { KvRuntimeData } from "../typegraph/types.ts";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
 import { registerRuntime } from "./mod.ts";
 import { Runtime } from "./Runtime.ts";
-
-const logger = getLogger(import.meta);
 
 @registerRuntime("kv")
 export class KvRuntime extends Runtime {
