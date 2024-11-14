@@ -81,7 +81,7 @@ export default {
     inherit: "_rust",
     vars: {
       PACKAGED: "false",
-      LOG_LEVEL: "DEBUG",
+      LOG_LEVEL: "DEBUG,substantial=ERROR",
       DEBUG: "true",
       REDIS_URL: "redis://:password@localhost:6379/0",
       TG_SECRET:

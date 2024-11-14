@@ -6,7 +6,7 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
 import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
-import { getLogger, Logger } from "../log.ts";
+import { getLogger, getLoggerByAddress, Logger } from "../log.ts";
 import * as ast from "graphql/ast";
 import { path } from "compress/deps.ts";
 import { Artifact } from "../typegraph/types.ts";
@@ -70,7 +70,7 @@ export class SubstantialRuntime extends Runtime {
     private secrets: Record<string, string>,
   ) {
     super(typegraphName);
-    this.logger = getLogger(`substantial:'${typegraphName}'`);
+    this.logger = getLoggerByAddress(import.meta, "substantial");
     this.backend = backend;
     this.queue = queue;
     this.agent = agent;

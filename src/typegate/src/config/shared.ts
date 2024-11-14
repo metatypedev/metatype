@@ -3,12 +3,16 @@
 
 import { sharedConfigSchema } from "./types.ts";
 import { configOrExit } from "./loader.ts";
+import type { LevelName } from "@std/log";
 
 if (!Deno.env.has("VERSION")) {
   // set version for config and workers, only running in main engine
   const { get_version } = await import("native");
   Deno.env.set("VERSION", get_version());
 }
+
+export const MAIN_DEFAULT_LEVEL = "INFO" satisfies LevelName;
+export const ADDRESSED_DEFAULT_LEVEL = "ERROR" satisfies LevelName;
 
 export const envSharedWithWorkers = [
   "TEST_OVERRIDE_GQL_ORIGIN",
@@ -18,7 +22,7 @@ export const envSharedWithWorkers = [
 export const sharedConfig = await configOrExit(
   sharedConfigSchema,
   {
-    log_level: "INFO",
+    log_level: MAIN_DEFAULT_LEVEL,
   },
   [
     Object.fromEntries(

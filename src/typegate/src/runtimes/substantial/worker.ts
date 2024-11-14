@@ -12,8 +12,7 @@ self.onmessage = async function (event) {
   const { type, data } = event.data as WorkerData;
   switch (type) {
     case "START": {
-      const { modulePath, functionName, run, schedule, kwargs, internal } =
-        data;
+      const { modulePath, functionName, run, schedule, internal } = data;
       // FIXME: handle case when script is missing and notify WorkerManager so it cleans up
       // its registry.
       const module = await import(toFileUrl(modulePath).toString());
@@ -27,7 +26,7 @@ self.onmessage = async function (event) {
         return;
       }
 
-      runCtx = new Context(run, kwargs, internal);
+      runCtx = new Context(run, internal);
 
       workflowFn(runCtx, internal)
         .then((wfResult: unknown) => {
