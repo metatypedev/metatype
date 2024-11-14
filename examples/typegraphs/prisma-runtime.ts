@@ -29,7 +29,7 @@ typegraph(
         email: t.email(),
         firstname: t.string({ min: 2, max: 2000 }, {}),
       },
-      { name: "user" }
+      { name: "user" },
     );
 
     g.expose(
@@ -42,10 +42,10 @@ typegraph(
             id: t.string(),
             term: t.string(),
           }),
-          t.list(user)
+          t.list(user),
         ),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

@@ -9,7 +9,6 @@ import {
   parseArgs,
   resolve,
   udd,
-  type WalkEntry,
 } from "./deps.ts";
 import { projectDir, runOrExit } from "./utils.ts";
 
@@ -82,7 +81,7 @@ const tsFiles = [
       ],
     },
   ),
-].map((f: WalkEntry) => f.path);
+].map((f: any) => f.path);
 
 await runOrExit([
   Deno.execPath(),

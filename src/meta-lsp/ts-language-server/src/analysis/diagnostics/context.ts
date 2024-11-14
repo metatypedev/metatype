@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { ScopeManager } from "../typescript-semantic/scope.ts";
 import {

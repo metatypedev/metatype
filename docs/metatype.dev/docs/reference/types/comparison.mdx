@@ -18,42 +18,43 @@ If `A` is a subtype of `B`, then `A` and `B` are either both scalar types or bot
 ### Scalar types
 
 1. If `A` is a scalar type and `A` is a subtype of `B` then
-    `B` is a scalar type or a union type with at least one variant that is a supertype of `A`.
+   `B` is a scalar type or a union type with at least one variant that is a supertype of `A`.
 
-    Note that this is stricter than it should be because we _currently_ only check individually on each union variant.
+   Note that this is stricter than it should be because we _currently_ only check individually on each union variant.
 
 1. If `A` is a subtype of `B` and `B` is a scalar type then
-    `A` is a scalar type of a union type in which any variant is a subtype of `B`.
+   `A` is a scalar type of a union type in which any variant is a subtype of `B`.
 
 1. Suppose that `A` and `B` are scalar types.
 
-    Then `A` is subtype of `B` if and only if the following conditions hold:
+   Then `A` is subtype of `B` if and only if the following conditions hold:
 
-    - `A` and `B` are the same type or `A` is a `t.integer()` and `B` is a `t.float()`;
+   - `A` and `B` are the same type or `A` is a `t.integer()` and `B` is a `t.float()`;
 
-    - [Type constraints](/docs/reference/types) defined on `B` are all defined on `A` and satisfy:
+   - [Type constraints](/docs/reference/types) defined on `B` are all defined on `A` and satisfy:
 
-        | Type | Type Constraint | Condition |
-        | ---- | --------------- | --------- |
-        | `t.integer()`, `t.float()` | `min` | `A.min >= B.min` |
-        | `t.integer()`, `t.float()` | `x_min` | `A.x_min >= B.x_min` |
-        | `t.integer()`, `t.float()` | `max` | `A.max <= B.max` |
-        | `t.integer()`, `t.float()` | `x_max` | `A.x_max <= B.x_max` |
-        | `t.integer()`, `t.float()` | `multiple_of` | `A.multiple_of` is a multiple of `B.multiple_of` |
-        | `t.string()` | `min` | `A.min >= B.min` |
-        | `t.string()` | `max` | `A.max <= B.max` |
-        | `t.string()` | `pattern` | `A.pattern == B.pattern`[^pat] |
-        | `t.string()` | `format` | `A.format == B.format` |
-        | `t.file()` | `min` | `A.min >= B.min` |
-        | `t.file()` | `max` | `A.max <= B.max` |
-        | `t.file()` | `allow` | `A.allow` is a subset of `B.allow` |
+     | Type                       | Type Constraint | Condition                                        |
+     | -------------------------- | --------------- | ------------------------------------------------ |
+     | `t.integer()`, `t.float()` | `min`           | `A.min >= B.min`                                 |
+     | `t.integer()`, `t.float()` | `x_min`         | `A.x_min >= B.x_min`                             |
+     | `t.integer()`, `t.float()` | `max`           | `A.max <= B.max`                                 |
+     | `t.integer()`, `t.float()` | `x_max`         | `A.x_max <= B.x_max`                             |
+     | `t.integer()`, `t.float()` | `multiple_of`   | `A.multiple_of` is a multiple of `B.multiple_of` |
+     | `t.string()`               | `min`           | `A.min >= B.min`                                 |
+     | `t.string()`               | `max`           | `A.max <= B.max`                                 |
+     | `t.string()`               | `pattern`       | `A.pattern == B.pattern`[^pat]                   |
+     | `t.string()`               | `format`        | `A.format == B.format`                           |
+     | `t.file()`                 | `min`           | `A.min >= B.min`                                 |
+     | `t.file()`                 | `max`           | `A.max <= B.max`                                 |
+     | `t.file()`                 | `allow`         | `A.allow` is a subset of `B.allow`               |
 
-        [^pat]: The patterns are required to be exactly the same
-        because we currently do not have any other comparison semantic for regular expressions.
+     [^pat]:
+         The patterns are required to be exactly the same
+         because we currently do not have any other comparison semantic for regular expressions.
 
-        Note that type constraints defined on `A` are not required to be defined on `B`.
+     Note that type constraints defined on `A` are not required to be defined on `B`.
 
-    - If `B` is an enum, then `A` is an enum and all enumeration values defined for `A` are defined for `B`.
+   - If `B` is an enum, then `A` is an enum and all enumeration values defined for `A` are defined for `B`.
 
 ### Optionals
 
@@ -66,20 +67,19 @@ If `A` is a subtype of `B`, then `A` and `B` are either both scalar types or bot
 ### Lists
 
 1. Suppose that `A` and `B` are non-optional types and `A` is a subtype of `B`.
-    If `A` is a list then `B` is a list and vice-versa.
+   If `A` is a list then `B` is a list and vice-versa.
 
 2. Let `X` a list type whose item type is `A`, and `Y` a list type whose item type is `B`.
-   `X` is a subtype of `Y` if and only if 
-    - `A` is a subtype of `B`,
-    - Type constraints defined on `X` are all defined on `Y` and satisfy:
-        | Type constraint | Condition |
-        | --------------- | --------- |
-        | `min` | `X.min >= Y.min` |
-        | `max` | `X.max <= Y.max` |
-        | `unique_items` | `X.unique_items == Y.unique_items` |
+   `X` is a subtype of `Y` if and only if
+   - `A` is a subtype of `B`,
+   - Type constraints defined on `X` are all defined on `Y` and satisfy:
+     | Type constraint | Condition |
+     | --------------- | --------- |
+     | `min` | `X.min >= Y.min` |
+     | `max` | `X.max <= Y.max` |
+     | `unique_items` | `X.unique_items == Y.unique_items` |
 
-  Note that the type constraints defined on `X` are not required to be defined on `Y`.
-
+Note that the type constraints defined on `X` are not required to be defined on `Y`.
 
 ### Objects: `t.struct()`
 
@@ -87,32 +87,32 @@ If `A` is a subtype of `B`, then `A` and `B` are either both scalar types or bot
    If `A` is an object type then `B` is an object type, and vice-versa.
 
 2. If `A` and `B` are object types, then
-  `A` is a subtype of `B` if and only if
-    - All field key defined in `A` is defined in `B`,
-    - For all field defined in `B` with key _K_,
-      either the field is optional on `B`
-      or `A` has a field with key _K_ whose type is a subtype of the one in `B`;
-    - Type constraints defined on `B` are all defined on `A` and satisfy:
-        | Type constraint | Condition |
-        | --------------- | --------- |
-        | `min` | `A.min >= B.min` |
-        | `max` | `A.max <= B.max` |
+   `A` is a subtype of `B` if and only if
+   - All field key defined in `A` is defined in `B`,
+   - For all field defined in `B` with key _K_,
+     either the field is optional on `B`
+     or `A` has a field with key _K_ whose type is a subtype of the one in `B`;
+   - Type constraints defined on `B` are all defined on `A` and satisfy:
+     | Type constraint | Condition |
+     | --------------- | --------- |
+     | `min` | `A.min >= B.min` |
+     | `max` | `A.max <= B.max` |
 
 ### Unions: `t.union()` and `t.either()`
 
 1. If `A` is a type and `V` a list of types then
-    `A` is a subtype of `t.union(V)` if and only if
-    there is a type `B` in `V` such that `A` is a subtype of `B`.
+   `A` is a subtype of `t.union(V)` if and only if
+   there is a type `B` in `V` such that `A` is a subtype of `B`.
 
 2. If `A` is a type and `V` a list of types then
-    `A` is a subtype of `t.either(V)` if and only if
-    there is a unique type `B` in `V` such that `A` is a subtype of `B`.
+   `A` is a subtype of `t.either(V)` if and only if
+   there is a unique type `B` in `V` such that `A` is a subtype of `B`.
 
 3. If `U` is a list of types and `B` a type then
    - `t.union(U)` is a subtype of `B` if and only if
-    each type `A` in `U` is a subtype of `B`;
+     each type `A` in `U` is a subtype of `B`;
    - `t.either(U)` is a subtype of `B` if and only if
-    each type `A` in `U` is a subtype of `B`.
+     each type `A` in `U` is a subtype of `B`.
 
 ## Examples
 

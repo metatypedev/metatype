@@ -8,13 +8,12 @@ import { randomSchema, reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "@david/dax";
 import {
-  termProcess,
-  Lines,
-  LineWriter,
+  ctrlcProcess,
   enumerateAllChildUNIX,
   isPIDAliveUNIX,
-  killProcess,
-  ctrlcProcess,
+  Lines,
+  LineWriter,
+  termProcess,
 } from "../../utils/process.ts";
 import { workspaceDir } from "../../utils/dir.ts";
 
@@ -32,7 +31,7 @@ const tgName = `migration-failure-test-${testCode}`;
 
 async function writeTypegraph(
   version: number | null,
-  target = `migration_${testCode}.py`
+  target = `migration_${testCode}.py`,
 ) {
   if (version == null) {
     await m.shell([
@@ -95,7 +94,7 @@ Meta.test(
     await stderr.readWhile((line) => {
       // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
-        `successfully deployed typegraph ${tgName} from migration.py`
+        `successfully deployed typegraph ${tgName} from migration.py`,
       );
     });
 
@@ -132,7 +131,7 @@ Meta.test(
     await stderr.readWhile((line) => {
       // console.log("meta dev>", line);
       return !$.stripAnsi(line).includes(
-        `successfully deployed typegraph ${tgName}`
+        `successfully deployed typegraph ${tgName}`,
       );
     });
 
@@ -154,7 +153,7 @@ Meta.test(
         })
         .on(e);
     });
-  }
+  },
 );
 
 async function listSubdirs(path: string): Promise<string[]> {
@@ -216,7 +215,7 @@ Meta.test(
     await stderr.readWhile((line) => {
       console.log("line:", line);
       return !$.stripAnsi(line).includes(
-        `successfully deployed typegraph ${tgName}`
+        `successfully deployed typegraph ${tgName}`,
       );
     });
 
@@ -247,7 +246,7 @@ Meta.test(
     const migrationsDir = resolve(
       t.workingDir,
       "prisma-migrations",
-      `${tgName}/main`
+      `${tgName}/main`,
     );
     console.log("Typegate migration dir", migrationsDir);
 
@@ -271,10 +270,58 @@ Meta.test(
     await t.should("have removed latest migration", async () => {
       assert((await listSubdirs(migrationsDir)).length === 1);
     });
-  }
+  },
 );
 
 const examplesDir = $.path(workspaceDir).join("examples");
+
+const skipDeployed = new Set(["play.ts"]);
+
+const expectedDeployed = [
+  ["authentication.ts", "authentication"],
+  ["backend-for-frontend.ts", "backend-for-frontend"],
+  ["basic.ts", "basic-authentication"],
+  ["cors.ts", "cors"],
+  ["database.ts", "database"],
+  ["deno.ts", "deno"],
+  ["example_rest.ts", "example-rest"],
+  ["execute.ts", "roadmap-execute"],
+  ["faas-runner.ts", "faas-runner"],
+  ["files-upload.ts", "files-upload"],
+  ["first-typegraph.ts", "first-typegraph"],
+  ["func-ctx.ts", "func-ctx"],
+  ["func-gql.ts", "func-gql"],
+  ["func.ts", "roadmap-func"],
+  ["graphql-server.ts", "graphql-server"],
+  ["graphql.ts", "graphql"],
+  ["grpc.ts", "grpc"],
+  ["http-runtime.ts", "http-runtime"],
+  ["iam-provider.ts", "iam-provider"],
+  ["index.ts", "homepage"],
+  ["injections.ts", "injection-example"],
+  ["jwt.ts", "jwt-authentication"],
+  ["math.ts", "math"],
+  ["metagen-deno.ts", "metagen-deno"],
+  ["metagen-py.ts", "metagen-py"],
+  ["metagen-rs.ts", "metagen-rs"],
+  ["metagen-sdk.ts", "metagen-sdk"],
+  ["microservice-orchestration.ts", "team-a"],
+  ["microservice-orchestration.ts", "team-b"],
+  ["oauth2.ts", "oauth2-authentication"],
+  ["policies.ts", "policies"],
+  ["prisma-runtime.ts", "prisma-runtime"],
+  ["prisma.ts", "roadmap-prisma"],
+  ["programmable-api-gateway.ts", "programmable-api-gateway"],
+  ["quick-start-project.ts", "quick-start-project"],
+  ["random-field.ts", "random-field"],
+  ["rate.ts", "rate"],
+  ["reduce.ts", "roadmap-reduce"],
+  ["rest.ts", "roadmap-rest"],
+  ["roadmap-policies.ts", "roadmap-policies"],
+  ["roadmap-random.ts", "roadmap-random"],
+  ["triggers.ts", "triggers"],
+  ["union-either.ts", "union-either"],
+];
 
 Meta.test(
   {
@@ -312,70 +359,30 @@ Meta.test(
     }, null);
 
     await stderr.readWhile((rawLine) => {
+      console.log("meta-full dev[E]>", rawLine);
       const line = $.stripAnsi(rawLine);
-      console.log("meta-full dev[E]>", line);
       if (line.match(/failed to deploy/i)) {
         throw new Error("error detected on line: " + rawLine);
       }
       const match = line.match(
-        /successfully deployed typegraph ([\w_-]+) from (.+)$/
+        /successfully deployed typegraph ([\w_-]+) from (.+)$/,
       );
       if (match) {
         const prefix = "typegraphs/";
         if (!match[2].startsWith(prefix)) {
           throw new Error("unexpected");
         }
-        deployed.push([match[2].slice(prefix.length), match[1]]);
+        const file = match[2].slice(prefix.length);
+        if (!skipDeployed.has(file)) {
+          deployed.push([file, match[1]]);
+        }
       }
-      return deployed.length < 42;
+      return deployed.length != expectedDeployed.length;
     }, 3 * 60 * 1000);
 
     await t.should("have deployed all the typegraphs", () => {
       // TODO use `meta list`
-      assertEquals(deployed.sort(), [
-        ["authentication.ts", "authentication"],
-        ["backend-for-frontend.ts", "backend-for-frontend"],
-        ["basic.ts", "basic-authentication"],
-        ["cors.ts", "cors"],
-        ["database.ts", "database"],
-        ["deno.ts", "deno"],
-        ["example_rest.ts", "example-rest"],
-        ["execute.ts", "roadmap-execute"],
-        ["faas-runner.ts", "faas-runner"],
-        ["files-upload.ts", "files-upload"],
-        ["first-typegraph.ts", "first-typegraph"],
-        ["func-ctx.ts", "func-ctx"],
-        ["func-gql.ts", "func-gql"],
-        ["func.ts", "roadmap-func"],
-        ["graphql-server.ts", "graphql-server"],
-        ["graphql.ts", "graphql"],
-        ["grpc.ts", "grpc"],
-        ["http-runtime.ts", "http-runtime"],
-        ["iam-provider.ts", "iam-provider"],
-        ["index.ts", "homepage"],
-        ["injections.ts", "injection-example"],
-        ["jwt.ts", "jwt-authentication"],
-        ["math.ts", "math"],
-        ["metagen-deno.ts", "metagen-deno"],
-        ["metagen-py.ts", "metagen-py"],
-        ["metagen-rs.ts", "metagen-rs"],
-        ["metagen-sdk.ts", "metagen-sdk"],
-        ["microservice-orchestration.ts", "team-a"],
-        ["microservice-orchestration.ts", "team-b"],
-        ["oauth2.ts", "oauth2-authentication"],
-        ["policies.ts", "policies"],
-        ["prisma-runtime.ts", "prisma-runtime"],
-        ["prisma.ts", "roadmap-prisma"],
-        ["programmable-api-gateway.ts", "programmable-api-gateway"],
-        ["quick-start-project.ts", "quick-start-project"],
-        ["random-field.ts", "random-field"],
-        ["rate.ts", "rate"],
-        ["reduce.ts", "roadmap-reduce"],
-        ["rest.ts", "roadmap-rest"],
-        ["roadmap-policies.ts", "roadmap-policies"],
-        ["roadmap-random.ts", "roadmap-random"],
-        ["triggers.ts", "triggers"],
-      ]);
+      assertEquals(deployed.sort(), expectedDeployed);
     });
 
     await t.should("kill meta-full process", async () => {
@@ -401,15 +408,15 @@ Meta.test(
       await sleep(10000);
       assert(
         (await isPIDAliveUNIX(parentPID)) == false,
-        `Parent ${parentPID} should be cleaned up`
+        `Parent ${parentPID} should be cleaned up`,
       );
 
       for (const child of childrenPIDs) {
         assert(
           (await isPIDAliveUNIX(child)) == false,
-          `Child PID ${child} should be cleaned up`
+          `Child PID ${child} should be cleaned up`,
         );
       }
     });
-  }
+  },
 );

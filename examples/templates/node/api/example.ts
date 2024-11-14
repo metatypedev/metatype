@@ -12,7 +12,7 @@ typegraph("example", (g) => {
       .fromLambda(
         t.struct({ first: t.float(), second: t.float() }),
         t.float(),
-        { code: "lambda x: x['first'] + x['second']" }
+        { code: "lambda x: x['first'] + x['second']" },
       )
       .withPolicy(pub),
     multiply: deno

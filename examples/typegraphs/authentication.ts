@@ -32,9 +32,9 @@ await typegraph(
           code: "(_: any, ctx: any) => Deno.inspect(ctx.context)",
         }),
       },
-      Policy.public()
+      Policy.public(),
     );
     // skip:start
-  }
+  },
 );
 // skip:end

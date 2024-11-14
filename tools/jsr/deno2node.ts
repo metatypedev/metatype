@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { dnt, expandGlobSync, join } from "../deps.ts";
-import { copyFilesAt, removeExtension } from "..//utils.ts";
+import { copyFilesAt, removeExtension } from "../utils.ts";
 import { METATYPE_VERSION, SDK_PACKAGE_NAME_TS, TAGLINE } from "../consts.ts";
 import { fromRoot, outDir } from "./common.ts";
 import { srcDir } from "./common.ts";

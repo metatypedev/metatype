@@ -4,21 +4,21 @@ Metatype's different language runtimes are nice, but integrating one is an entir
 
 ## Why?
 
-You have probably heard of "Function as a Service" or FaaS. 
-In simple terms, FaaS are platforms that allow users to run code in response to events without the hassle of managing the underlying infrastructure. 
+You have probably heard of "Function as a Service" or FaaS.
+In simple terms, FaaS are platforms that allow users to run code in response to events without the hassle of managing the underlying infrastructure.
 Users submit their programs and the platform takes care of the rest including, usually, scaling, availability, and configuration.
 AWS Lambda is one such example and FaaS as a whole are a popular implementation of the serverless model.
 
-Metatype has this model at heart with applications composed of small functions that respond to events like http requests and authorization checks. 
-This is achieved through runtimes like the [`DenoRuntime`](/docs/reference/runtimes/deno) which implements a way to execute functions authored in Typescript using Web Workers as implemented by [Deno](https://docs.deno.com/runtime/manual/runtime/workers/) (not based on Deno Deploy). 
+Metatype has this model at heart with applications composed of small functions that respond to events like http requests and authorization checks.
+This is achieved through runtimes like the [`DenoRuntime`](/docs/reference/runtimes/deno) which implements a way to execute functions authored in Typescript using Web Workers as implemented by [Deno](https://docs.deno.com/runtime/manual/runtime/workers/) (not based on Deno Deploy).
 
 :::note
-Metatype supports running multiple apps or typegraphs on a single deployed cluster but we're still in the kitchen on a hosted cloud solution. 
+Metatype supports running multiple apps or typegraphs on a single deployed cluster but we're still in the kitchen on a hosted cloud solution.
 Subscribe to the [blog](https://metatype.dev/blog/rss.xml) or the [Github](https://github.com/metatypedev/metatype) repository for updates.
 :::
 
 Implementing the `DenoRuntime` was a very straightforward affair as the Typegate (the engine at the heart of Metatype) is primarily written in Typescript and runs on a slightly modified version of the Deno runtime.
-What's more, JavaScript has single threaded and asynchronous semantics and the v8 engine that it commonly runs on is of very high-quality by all regards. 
+What's more, JavaScript has single threaded and asynchronous semantics and the v8 engine that it commonly runs on is of very high-quality by all regards.
 These qualities lend themselves very well to the requirements of running a serverless platform like security (good sandboxing) and performance (low start-up latencies).
 This fact is reflected in the dominance of JavaScript in the serverless market though it doesn't hurt that it's also the most popular language in use today.
 
@@ -34,23 +34,23 @@ There are a number of Python runtimes available but a set of extra factors limit
 3. **User-friendliness**: functionalities provided in any of the languages supported by Metatype should, within reason, mirror each other and maintain a degree of uniformity. We support inline code snippets and external file references for `DenoRuntime` and this should be the case for Python as well.
 4. **Interoperability**: functions running in Python will need to have access to other parts of the app running on the Typegate like being able to invoke other functions.
 
-The Typegate is a TypeScript program with a bit of Rust sprinkled in. 
-It runs as a traditional POSIX process. 
-Think Linux containers. 
+The Typegate is a TypeScript program with a bit of Rust sprinkled in.
+It runs as a traditional POSIX process.
+Think Linux containers.
 This fact renders multi-processing, one of the readily apparent approaches, undesirable as it would require investing is robust worker process management and distribution schemes.
 It'd be great if we could keep everything inside the Typegate process.
 
 One solution that presents itself here is the [PyO3](https://pyo3.rs/) project which provide Rust bindings to different Python runtimes like CPython and PyPy.
-It'd not only allow us to run Python code in-process but it also provide an easy way to expose the functions written in Rust to Python and vice-versa. 
+It'd not only allow us to run Python code in-process but it also provide an easy way to expose the functions written in Rust to Python and vice-versa.
 A good solution for the bidirectional communication needed for our interoperability requirements.
 
 Unfortunately, PyO3 doesn't have any provisions for sandboxing which is critical for our use case.
-This is where WebAssembly enters into the picture. 
-WebAssembly or Wasm for short is a executable bytecode format that originates from the web world and is designed for applications that run inside web-browsers. 
+This is where WebAssembly enters into the picture.
+WebAssembly or Wasm for short is a executable bytecode format that originates from the web world and is designed for applications that run inside web-browsers.
 This use case shares most of our requirements and the Wasm world promises excellent sandboxing properties that should be perfect for our use case.
 We just have to find a way to run Python inside of it.
 
-## An aside on WASI 
+## An aside on WASI
 
 WebAssembly System Interface (WASI) is an additional spec for the bytecode format that formalizes how Wasm programs access their host environment.
 A lot like POSIX, this generally means OS capabilities such as file system access and networking but also, in it's latest iteration extends to any custom host defined functionality.
@@ -74,7 +74,7 @@ This approach is well described as the [Reactor pattern](https://wasmcloud.com/b
 ### File system access
 
 Since the PyO3 project doesn't support [statically linking](https://github.com/PyO3/pyo3/issues/416) the Python runtime, we'll need to find a way dynamically link `libpython`.
-Thankfully, Wasm does support [dynamic linking](https://github.com/WebAssembly/design/blob/main/DynamicLinking.md) and wasm builds of [`libpython`](https://github.com/vmware-labs/webassembly-language-runtimes/tree/main/python) are available curtsy of the WebAssembly Language Runtimes project. 
+Thankfully, Wasm does support [dynamic linking](https://github.com/WebAssembly/design/blob/main/DynamicLinking.md) and wasm builds of [`libpython`](https://github.com/vmware-labs/webassembly-language-runtimes/tree/main/python) are available curtsy of the WebAssembly Language Runtimes project.
 Bringing all of this together isn't as simple though as PyO3's tries to load `libpython` from certain _paths_, a concept that isn't exactly clearly defined in Wasm's post POSIX webtopia.
 
 Our first solution was to use [wasi-vfs](https://github.com/kateinoigakukun/wasi-vfs), a tool which allows you to embed a virtual file system, accessible through preview1 APIs, directly into your wasm binaries.
@@ -118,7 +118,7 @@ The solution described above worked well to an extent but the limitations of pre
 This was exactly what we did after the Bytecode Alliance finalized [WASI 0.2](https://bytecodealliance.org/articles/WASI-0.2) back in January 2024 and with it, a slew of new opportunuties.
 
 WASI 0.2 introduces a whole new concept of components, wasm modules that come with pre-specifed interfaces using the [Wit](https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md) format and based on a whole new [ABI](https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md) to boot.
-These new capabilities suggest that it should possible to replace our PyO3 based glue code with the WASI based layer. 
+These new capabilities suggest that it should possible to replace our PyO3 based glue code with the WASI based layer.
 Let's see how.
 
 We first used the new found WASI powers to implement support for Wasm based functions through the [`WasmRuntime`](/docs/reference/runtimes/wasm).
@@ -196,7 +196,7 @@ In the case of the [`PythonRuntime`](/docs/reference/runtimes/python), this woul
 Now that we have the `wit_wire` implementation taking care of bidirectional communication, we have little reason to keep the PyO3 based glue code around.
 This glue was doing a bit more than acting as a boundary though.
 It was also responsible for setting up the operating environment for the Python code.
-For example, we'd need some kind of initialization to execute the user's Python snippets which are in free standing `lambda` form. 
+For example, we'd need some kind of initialization to execute the user's Python snippets which are in free standing `lambda` form.
 How does one create components out of Python anyways?
 
 [componentize-py](https://github.com/bytecodealliance/componentize-py) is a tool authored by the Bytecode Alliance that allows you to produce WASI components that are authored in Python.
