@@ -48,11 +48,11 @@ await typegraph(
               headers: Object.entries(ctx.headers),
               secrets: Object.entries(ctx.secrets),
             }),
-          }
+          },
         ),
       },
-      Policy.public()
+      Policy.public(),
     );
     // skip:start
-  }
+  },
 );

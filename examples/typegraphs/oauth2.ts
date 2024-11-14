@@ -27,7 +27,7 @@ typegraph(
           exp: g.fromContext("exp"),
         }),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

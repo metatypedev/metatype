@@ -13,7 +13,7 @@ import {
   WorkerEventHandler,
 } from "./types.ts";
 
-const logger = getLogger();
+const logger = getLogger(import.meta, "WARN");
 
 export type WorkerRecord = {
   worker: Worker;

@@ -25,8 +25,8 @@ export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
     const indent = "    ".repeat(path.edges.length);
     const edge = cyan(`${path.edges[path.edges.length - 1] ?? "[root]"}`);
     const idxStr = green(`${idx}`);
-    const injection = type.injection
-      ? ` (injection ${type.injection.source})`
+    const injection = "injection" in type
+      ? ` (injection ${(type.injection as any).source})`
       : "";
     console.log(
       `${indent}${edge} → ${idxStr} ${type.type}:${type.title}${injection}`,

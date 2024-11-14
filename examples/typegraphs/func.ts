@@ -27,7 +27,7 @@ await typegraph(
         name: t.string(),
         ideas: t.list(g.ref("idea")),
       },
-      { name: "bucket" }
+      { name: "bucket" },
     );
 
     const idea = t.struct(
@@ -38,7 +38,7 @@ await typegraph(
         votes: t.list(g.ref("vote")),
         bucket: g.ref("bucket"),
       },
-      { name: "idea" }
+      { name: "idea" },
     );
 
     const vote = t.struct(
@@ -49,14 +49,14 @@ await typegraph(
         desc: t.string().optional(),
         idea: g.ref("idea"),
       },
-      { name: "vote" }
+      { name: "vote" },
     );
 
     g.auth(Auth.basic(["andim"]));
 
     const admins = deno.policy(
       "admins",
-      "(_args, { context }) => !!context.username"
+      "(_args, { context }) => !!context.username",
     );
     // skip:end
 
@@ -82,7 +82,7 @@ await typegraph(
           name: "parse",
         }),
       },
-      pub
+      pub,
     );
 
     // skip:start
@@ -99,7 +99,7 @@ await typegraph(
                 }
             }
         }
-        `
+        `,
     );
 
     g.rest(
@@ -117,8 +117,8 @@ await typegraph(
                 }
             }
         }
-        `
+        `,
     );
     // skip:end
-  }
+  },
 );

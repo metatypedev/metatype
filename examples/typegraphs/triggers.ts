@@ -7,6 +7,7 @@ import { HttpRuntime } from "@typegraph/sdk/runtimes/http.ts";
 typegraph(
   {
     name: "triggers",
+    // skip:next-line
     cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
   },
   (g) => {
@@ -21,7 +22,7 @@ typegraph(
           path: "/flip_coin",
         }),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

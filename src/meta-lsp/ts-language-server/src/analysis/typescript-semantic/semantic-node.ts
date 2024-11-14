@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { Parser } from "../../parser.ts";
 import { ModuleDiagnosticsContext } from "../diagnostics/context.ts";
 import { asMethodCall } from "./utils/mod.ts";
@@ -28,7 +31,7 @@ export type TgTypeName =
 // ];
 
 export abstract class SemanticNode {
-  protected constructor(public node: Parser.SyntaxNode) { }
+  protected constructor(public node: Parser.SyntaxNode) {}
 
   asType(): TgType | null {
     if (this instanceof TgType) {
@@ -54,9 +57,10 @@ export abstract class TgType extends SemanticNode {
   }
 
   toString(): string {
-    return `TgType(${this.type}${this.children
-      .map((c) => `, ${c.key} => ${c.type.toString()}`)
-      .join("")
+    return `TgType(${this.type}${
+      this.children
+        .map((c) => `, ${c.key} => ${c.type.toString()}`)
+        .join("")
     })`;
   }
 

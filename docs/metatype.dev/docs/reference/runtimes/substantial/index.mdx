@@ -31,7 +31,6 @@ export async function sendEmail(ctx: Context) {
 
   return `${to} confirmed (${info})`;
 }
-
 ```
 
 Additionally, if we were to shut down the Typegate node executing it and then restart it, the state **will be preserved**. This means that if the subscription email was already sent, upon relaunch, it will not be sent again, same thing for the value of `timeSent`.
@@ -52,10 +51,9 @@ When a workflow is started, a run is created and Substantial will provide you a 
 
 You can send an event or abort an ongoing run from its `run_id`.
 
-
 ## Child workflows
 
-Child workflows are like any other workflows, they are just run by another workflow (parent). 
+Child workflows are like any other workflows, they are just run by another workflow (parent).
 
 If a workflow parent is explicitly stopped or aborted, all of its descendants will also be aborted.
 
@@ -64,7 +62,11 @@ For example, suppose you want to write a workflow that sends a subscription requ
 You can easily translate that logic as if you were writing generic sequential code using Substantial workflows.
 
 ```typescript
-import { nextTimeWhenAdminIsAvailable, sendSubscriptionEmail, notifyAdmin } from "./utils.ts";
+import {
+  nextTimeWhenAdminIsAvailable,
+  sendSubscriptionEmail,
+  notifyAdmin,
+} from "./utils.ts";
 
 export async function sendEmail(ctx: Context) {
   // 1. A workflow can receive parameters whose type is defined on the typegraph
@@ -81,7 +83,9 @@ export async function sendEmail(ctx: Context) {
 
   // 3. In this scenario, we use a durable sleep to wait until the admin
   // is available
-  const duration = await ctx.save(() => nextTimeWhenAdminIsAvailable(new Date()));
+  const duration = await ctx.save(() =>
+    nextTimeWhenAdminIsAvailable(new Date()),
+  );
   ctx.sleep(duration);
 
   const _ = await ctx.save(() => notifyAdmin(info), {
@@ -89,7 +93,7 @@ export async function sendEmail(ctx: Context) {
       minBackoffMs: 1000,
       maxBackoffMs: 5000,
       maxRetries: 4,
-    }
+    },
   });
 
   return `${to} confirmed`;
@@ -216,9 +220,9 @@ typegraph(
         workers: sub.queryResources(),
         ...sub.internals(), // Required for child workflows
       },
-      pub
+      pub,
     );
-  }
+  },
 );
 ```
 

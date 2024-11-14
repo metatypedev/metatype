@@ -25,7 +25,7 @@ await typegraph(
         // input → output via runtime function
         get_message: random.gen(message),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

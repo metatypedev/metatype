@@ -14,7 +14,7 @@ export class GrpcRuntime extends Runtime {
     super(id);
   }
 
-  call(method: string) {
+  call(method: string): Func {
     const funcData = runtimes.callGrpcMethod(this._id, { method: method });
     return Func.fromTypeFunc(funcData);
   }

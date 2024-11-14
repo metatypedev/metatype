@@ -1,14 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+// jsr-private-module
+
 import {
   InheritDef,
-  TgFinalizationResult,
-  TypegraphOutput,
+  type TgFinalizationResult,
+  type TypegraphOutput,
 } from "../typegraph.ts";
-import { ReduceEntry } from "../gen/typegraph_core.d.ts";
+import type { ReduceEntry } from "../gen/typegraph_core.d.ts";
 import { serializeStaticInjection } from "./injection_utils.ts";
-import { SerializeParams } from "../gen/typegraph_core.d.ts";
+import type { SerializeParams } from "../gen/typegraph_core.d.ts";
 import { log } from "../io.ts";
 import { core } from "../wit.ts";
 
@@ -123,22 +125,6 @@ export function buildReduceEntries(
     return entries;
   }
   throw new Error(`unsupported type "${typeof node}" at ${currPath.join(".")}`);
-}
-
-export function getEnvVariable(
-  key: string,
-  defaultValue?: string,
-): string | undefined {
-  const glob = globalThis as any;
-  const value = glob?.process
-    ? glob?.process.env?.[key]
-    : glob?.Deno.env.get(key);
-  return value ?? defaultValue;
-}
-
-export function getAllEnvVariables(): any {
-  const glob = globalThis as any;
-  return glob?.process ? glob?.process.env : glob?.Deno.env.toObject();
 }
 
 const frozenMemo: Record<string, TgFinalizationResult> = {};

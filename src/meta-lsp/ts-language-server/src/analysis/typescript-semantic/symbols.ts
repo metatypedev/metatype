@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { ScopeManager } from "./scope.ts";
 import { SemanticNode } from "./semantic-node.ts";
 
@@ -9,7 +12,7 @@ export abstract class Symbol {
     public name: string,
     public node: Parser.SyntaxNode,
     private scopeManager: ScopeManager,
-  ) { }
+  ) {}
 }
 
 export class ImportSymbol extends Symbol {

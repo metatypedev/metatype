@@ -19,11 +19,11 @@ typegraph(
     const admin_only = deno.policy(
       "admin_only",
       // note: policies either return true | false | null
-      "(args, { context }) => context.username ? context.username === 'admin' : null"
+      "(args, { context }) => context.username ? context.username === 'admin' : null",
     );
     const user_only = deno.policy(
       "user_only",
-      "(args, { context }) => context.username ? context.username === 'user' : null"
+      "(args, { context }) => context.username ? context.username === 'user' : null",
     );
 
     g.auth(Auth.basic(["admin", "user"]));
@@ -37,9 +37,9 @@ typegraph(
         both: random.gen(t.string()).withPolicy([user_only, admin_only]),
         // set default policy for the exposed functions
       },
-      pub
+      pub,
     );
     // skip:start
-  }
+  },
 );
 // skip:end
