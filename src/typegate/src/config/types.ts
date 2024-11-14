@@ -148,7 +148,7 @@ export const logLevelSchema = z.string().transform((value) => {
     if (right.length == 0) {
       defaultLevel = logLevelItemSchema.parse(left.trim());
     } else {
-      loggerConfs[left.toLocaleLowerCase()] = logLevelItemSchema.parse(
+      loggerConfs[left.toLowerCase()] = logLevelItemSchema.parse(
         right.join("=").trim(),
       );
     }

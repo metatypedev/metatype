@@ -118,8 +118,6 @@ export class Agent {
   }
 
   async #nextIteration() {
-    this.logger.warn("POLL");
-
     // Note: in multiple agents/typegate scenario, a single node may acquire all runs for itself within a tick span
     // To account for that, keep this reasonable
     const acquireMaxForThisAgent = this.config.maxAcquirePerTick;
@@ -170,7 +168,7 @@ export class Agent {
       lease_seconds: this.config.leaseLifespanSec,
     });
 
-    this.logger.info(`Active leases: ${activeRunIds.join(",  ")}`);
+    this.logger.debug(`Active leases: ${activeRunIds.join(",  ")}`);
 
     const next = await Meta.substantial.agentNextRun({
       backend: this.backend,

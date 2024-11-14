@@ -437,7 +437,7 @@ function getKwargsCopy(run: Run): Record<string, unknown> {
 
   if (first.event.type != "Start") {
     throw new Error(
-      `Corrupted run "${run.run_id}": first operation is not a run, got ${first.event.type} instead`,
+      `Corrupted run "${run.run_id}": first operation is not a Start, got ${first.event.type} instead`,
     );
   }
 
