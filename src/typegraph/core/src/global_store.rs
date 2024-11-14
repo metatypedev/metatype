@@ -122,14 +122,6 @@ pub fn get_sdk_version() -> String {
     SDK_VERSION.with(|v| v.clone())
 }
 
-#[cfg(test)]
-impl Store {
-    pub fn reset() {
-        let _ = crate::typegraph::serialize(Default::default());
-        with_store_mut(|s| *s = Store::new());
-    }
-}
-
 impl Store {
     pub fn save() -> SavedState {
         with_store(|s| SavedState {
@@ -154,6 +146,10 @@ impl Store {
             s.auths.clear();
             s.random_seed.take();
         })
+    }
+
+    pub fn reset() {
+        with_store_mut(|s| *s = Store::new());
     }
 
     pub fn get_type_by_name(name: &str) -> Option<NamedTypeRef> {

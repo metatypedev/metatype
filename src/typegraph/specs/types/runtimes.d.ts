@@ -310,8 +310,6 @@ type prisma_find_first = (runtime: RuntimeId, model: TypeId) => FuncParams;
 
 type prisma_aggregate = (runtime: RuntimeId, model: TypeId) => FuncParams;
 
-type prisma_count = (runtime: RuntimeId, model: TypeId) => FuncParams;
-
 type prisma_group_by = (runtime: RuntimeId, model: TypeId) => FuncParams;
 
 type prisma_create_one = (runtime: RuntimeId, model: TypeId) => FuncParams;
@@ -445,7 +443,6 @@ export type {
   prisma_find_many,
   prisma_find_first,
   prisma_aggregate,
-  prisma_count,
   prisma_group_by,
   prisma_create_one,
   prisma_create_many,

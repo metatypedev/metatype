@@ -225,7 +225,7 @@ export class MetaTest {
     const optSecrets = Object.entries(secrets).map(([name, value]) => {
       return `--secret=${name}=${value}`;
     });
-    const { stdout } = await metaCli(
+    const args = [
       "deploy",
       "--target=dev",
       `--gate=http://localhost:${this.port}`,
@@ -233,7 +233,13 @@ export class MetaTest {
       "--create-migration",
       ...optSecrets,
       `--file=${path}`,
-    );
+    ];
+
+    if (opts.prefix) {
+      args.push("--prefix", opts.prefix);
+    }
+
+    const { stdout } = await metaCli(...args);
     console.log({ stdout: $.stripAnsi(stdout) });
     const matches = stdout.match(/\((.*)\)/);
     const typegraphs = matches?.[1].split(", ") ?? [];

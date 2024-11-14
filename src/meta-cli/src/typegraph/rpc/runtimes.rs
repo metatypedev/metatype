@@ -99,10 +99,6 @@ pub enum RpcCall {
         runtime: RuntimeId,
         model: TypeId,
     },
-    PrismaCount {
-        runtime: RuntimeId,
-        model: TypeId,
-    },
     PrismaGroupBy {
         runtime: RuntimeId,
         model: TypeId,
@@ -265,9 +261,6 @@ impl super::RpcDispatch for RpcCall {
             }
             Self::PrismaAggregate { runtime, model } => {
                 Lib::prisma_aggregate(runtime, model).map(|res| serde_json::to_value(res).unwrap())
-            }
-            Self::PrismaCount { runtime, model } => {
-                Lib::prisma_count(runtime, model).map(|res| serde_json::to_value(res).unwrap())
             }
             Self::PrismaGroupBy { runtime, model } => {
                 Lib::prisma_group_by(runtime, model).map(|res| serde_json::to_value(res).unwrap())

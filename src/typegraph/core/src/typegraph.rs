@@ -518,8 +518,7 @@ pub fn current_typegraph_dir() -> Result<PathBuf> {
 
 pub fn reset() {
     TG.with_borrow_mut(|tg| {
-        if let Some(ctx) = tg.take() {
-            Store::restore(ctx.saved_store_state.unwrap());
-        }
+        tg.take();
+        Store::reset();
     });
 }
