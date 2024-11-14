@@ -33,14 +33,14 @@ await typegraph(
                 };
             }
         `,
-      }
+      },
     );
 
     g.expose(
       {
         compute_fib: fib,
       },
-      pub
+      pub,
     );
-  }
+  },
 );

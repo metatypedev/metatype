@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Effect } from "../gen/typegraph_core.d.ts";
+import type { Effect } from "../gen/typegraph_core.d.ts";
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
-import { Materializer, Runtime } from "./mod.ts";
+import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 
 export class GraphQLRuntime extends Runtime {

@@ -30,5 +30,5 @@ await typegraph(
         })
         .withPolicy(pub),
     });
-  }
+  },
 );

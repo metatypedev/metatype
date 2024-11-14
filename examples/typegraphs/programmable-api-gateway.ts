@@ -17,7 +17,7 @@ typegraph(
     const pub = Policy.public();
     const roulette_access = deno.policy(
       "roulette",
-      "() => Math.random() < 0.5"
+      "() => Math.random() < 0.5",
     );
 
     // skip:next-line
@@ -34,8 +34,8 @@ typegraph(
             foo: static_vals["foo"],
           }),
         },
-        policy
+        policy,
       );
     }
-  }
+  },
 );

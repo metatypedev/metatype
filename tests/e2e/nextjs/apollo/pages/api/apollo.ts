@@ -4,7 +4,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client/index";
 import createUploadLink from "apollo-upload-client/createUploadLink.mjs";
-import process from "process";
+import process from "node:process";
 
 type ResponseData = {
   message: string;

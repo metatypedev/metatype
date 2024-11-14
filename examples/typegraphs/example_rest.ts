@@ -19,7 +19,7 @@ await typegraph(
         id: t.integer(),
         author: user,
       },
-      { name: "Post" }
+      { name: "Post" },
     );
     //  skip:end
 
@@ -41,9 +41,9 @@ await typegraph(
                 }
             }
         }
-    `
+    `,
     );
     // highlight-end
     // skip:start
-  }
+  },
 );

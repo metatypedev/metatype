@@ -1,3 +1,6 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 # skip:start
 from typegraph import typegraph, Policy, t, Graph
 from typegraph.graph.params import Cors

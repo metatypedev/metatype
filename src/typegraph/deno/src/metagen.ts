@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import {
+import type {
   FdkConfig,
   FdkOutput,
   SerializeParams,
 } from "./gen/typegraph_core.d.ts";
-import { TypegraphOutput } from "./typegraph.ts";
+import type { TypegraphOutput } from "./typegraph.ts";
 import { wit_utils } from "./wit.ts";
 import { freezeTgOutput } from "./utils/func_utils.ts";
 
@@ -46,7 +46,7 @@ export class Metagen {
     overwrite?: false,
   ): Array<FdkOutput> {
     const fdkConfig = this.getFdkConfig(tgOutput, targetName);
-    return wit_utils.metagenExec(fdkConfig).map((value: any) => ({
+    return wit_utils.metagenExec(fdkConfig).map((value) => ({
       ...value,
       overwrite: overwrite ?? value.overwrite,
     })) as Array<FdkOutput>;

@@ -68,7 +68,9 @@ export class SecretManager {
     const value = this.secretOrNull(name);
     ensure(
       value != null,
-      `cannot find secret "${name}" for "${this.typegraphName}"`,
+      `cannot find secret "${name}" for "${this.typegraphName}". Availaible secrets include: [${
+        Object.keys(this.secrets)
+      }]`,
     );
     return value as string;
   }

@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { RawAuth } from "./typegraph.ts";
-import { Auth as Auth_, wit_utils } from "./wit.ts";
-import * as t from "./types.ts";
+import { type Auth as Auth_, wit_utils } from "./wit.ts";
+import type * as t from "./types.ts";
 
 export type StdOauth2Profiler =
   | { profiler: "default" }
   | { profiler: "none" }
+  // deno-lint-ignore no-explicit-any
   | { profiler: "extended"; extension: any }
   | { profiler: "custom"; id: number };
 
@@ -19,6 +20,7 @@ export function defaultProfiler(): StdOauth2Profiler {
   return { profiler: "default" };
 }
 
+// deno-lint-ignore no-explicit-any
 export function extendedProfiler(extension: any): StdOauth2Profiler {
   return { profiler: "extended", extension };
 }
@@ -28,13 +30,13 @@ export function customProfiler(func: t.Typedef): StdOauth2Profiler {
 }
 
 export class Auth {
-  static jwt(name: string, format: string, algorithm?: any): Auth_ {
-    if (!algorithm) {
-      algorithm = {};
+  static jwt(name: string, format: string, algorithmParams?: object): Auth_ {
+    if (!algorithmParams) {
+      algorithmParams = {};
     }
     const authData = [
       ["format", JSON.stringify(format)],
-      ["algorithm", JSON.stringify(algorithm)],
+      ["algorithm", JSON.stringify(algorithmParams)],
     ] as [string, string][];
 
     return {

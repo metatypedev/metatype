@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Materializer, Runtime } from "./mod.ts";
+import { type Materializer, Runtime } from "./mod.ts";
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
-import { Effect, KvMaterializer } from "../gen/typegraph_core.d.ts";
+import type { Effect, KvMaterializer } from "../gen/typegraph_core.d.ts";
 
 import { fx } from "../index.ts";
 
@@ -34,7 +34,11 @@ export class KvRuntime extends Runtime {
     return new KvOperationMat(mad_id, operation);
   }
 
-  set() {
+  set(): t.Func<
+    t.Struct<{ key: t.String; value: t.String }>,
+    t.String,
+    KvOperationMat
+  > {
     const mat = this.#operation("set", fx.update());
     return t.func(
       t.struct({ "key": t.string(), "value": t.string() }),
@@ -43,18 +47,18 @@ export class KvRuntime extends Runtime {
     );
   }
 
-  get() {
+  get(): t.Func<t.Struct<{ key: t.String }>, t.Optional, KvOperationMat> {
     const mat = this.#operation("get", fx.read());
     // FIXME: consolidate response type construction inside tg_core
     return t.func(t.struct({ "key": t.string() }), t.string().optional(), mat);
   }
 
-  delete() {
+  delete(): t.Func<t.Struct<{ key: t.String }>, t.Integer, KvOperationMat> {
     const mat = this.#operation("delete", fx.delete_());
     return t.func(t.struct({ "key": t.string() }), t.integer(), mat);
   }
 
-  keys() {
+  keys(): t.Func<t.Struct<{ filter: t.Optional }>, t.List, KvOperationMat> {
     const mat = this.#operation("keys", fx.read());
     return t.func(
       t.struct({ "filter": t.string().optional() }),
@@ -63,7 +67,7 @@ export class KvRuntime extends Runtime {
     );
   }
 
-  values() {
+  values(): t.Func<t.Struct<{ filter: t.Optional }>, t.List, KvOperationMat> {
     const mat = this.#operation("values", fx.read());
     return t.func(
       t.struct({ "filter": t.string().optional() }),

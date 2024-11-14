@@ -1,3 +1,6 @@
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
+
 from typegraph import typegraph, t, Graph, Policy
 from typegraph.graph.params import Auth
 from typegraph.runtimes.deno import DenoRuntime

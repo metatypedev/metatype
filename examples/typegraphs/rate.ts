@@ -39,7 +39,7 @@ typegraph(
           .gen(t.list(t.string()))
           .rate({ calls: false, weight: 2 }), // increment by # of results returned
       },
-      pub
+      pub,
     );
-  }
+  },
 );

@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { Policy, t, typegraph } from "@typegraph/sdk";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python";
@@ -20,7 +23,7 @@ const tg = await typegraph(
         id: t.integer({}, { asId: true }),
         name: t.string(),
       },
-      { name: "Student" }
+      { name: "Student" },
     );
 
     g.expose(
@@ -38,7 +41,7 @@ const tg = await typegraph(
         sayHelloPyLambda: python.fromLambda(
           t.struct({ name: t.string() }),
           t.string(),
-          { code: `lambda obj: f"Hello {obj['name']} from python lambda"` }
+          { code: `lambda obj: f"Hello {obj['name']} from python lambda"` },
         ),
         sayHelloPyMod: python.import(
           t.struct({ name: t.string() }),
@@ -47,15 +50,15 @@ const tg = await typegraph(
             module: "scripts/python/say_hello.py",
             name: "sayHello",
             deps: ["scripts/python/import_.py"],
-          }
+          },
         ),
         // Prisma
         createStudent: prisma.create(student),
         findManyStudent: prisma.findMany(student),
       },
-      pub
+      pub,
     );
-  }
+  },
 );
 
 const artifactsConfig = {
@@ -70,7 +73,7 @@ const artifactsConfig = {
 const baseUrl = "http://localhost:7890";
 const auth = new BasicAuth("admin", "password");
 
-const { response, serialized } = await tgDeploy(tg, {
+const { response, serialized: _ } = await tgDeploy(tg, {
   typegate: {
     url: baseUrl,
     auth,
@@ -80,8 +83,6 @@ const { response, serialized } = await tgDeploy(tg, {
   },
   typegraphPath: "./deploy.ts",
 });
-
-// console.log(serialized);
 
 const { migrations, messages } = response;
 
