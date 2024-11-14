@@ -409,7 +409,6 @@ interface runtimes {
     prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
     prisma-find-first: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
     prisma-aggregate: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
-    prisma-count: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
     prisma-group-by: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
     prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;
     prisma-create-many: func(runtime: runtime-id, model: type-id) -> result<func-params, error>;

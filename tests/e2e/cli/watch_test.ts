@@ -46,7 +46,7 @@ Meta.test({ name: "meta dev: watch artifacts" }, async (t) => {
 
   await t.should("deploy typegraph", async () => {
     await stderr.readWhile(
-      (line) => !line.includes("successfully deployed typegraph")
+      (line) => !line.includes("successfully deployed typegraph"),
     );
   });
 
@@ -64,7 +64,7 @@ Meta.test({ name: "meta dev: watch artifacts" }, async (t) => {
 
   await t.should("re-deploy typegraph", async () => {
     await stderr.readWhile(
-      (line) => !line.includes("successfully deployed typegraph")
+      (line) => !line.includes("successfully deployed typegraph"),
     );
   });
 

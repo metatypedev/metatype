@@ -11,6 +11,7 @@ const projectName = "metatype";
 const config = {
   title: "Metatype",
   // prettier-ignore
+  // eslint-ignore
   tagline: "Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.",
   url: "https://metatype.dev",
   baseUrl: "/",
@@ -25,8 +26,7 @@ const config = {
   },
   stylesheets: [
     {
-      href:
-        "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
       type: "text/css",
     },
   ],

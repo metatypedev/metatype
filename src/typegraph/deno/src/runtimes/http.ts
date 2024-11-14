@@ -2,19 +2,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "../types.ts";
-import {
+import type {
   Effect,
   HttpMethod,
   MaterializerHttpRequest,
 } from "../gen/runtimes.ts";
 import { runtimes } from "../sdk.ts";
-import { Materializer, Runtime } from "./mod.ts";
+import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 
-type HttpRequestMat<M extends string> =
-  & Materializer
-  & Omit<MaterializerHttpRequest, "method">
-  & {
+type HttpRequestMat<M extends string> = Materializer &
+  Omit<MaterializerHttpRequest, "method"> & {
     method: M;
   };
 

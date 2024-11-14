@@ -31,6 +31,7 @@ type RpcNotificationMethod =
   | "Success"
   | "Failure";
 
+// deno-lint-ignore no-explicit-any
 const rpcNotify = (method: RpcNotificationMethod, params: any = null) => {
   const message = JSON.stringify({
     jsonrpc: JSONRPC_VERSION,
@@ -40,6 +41,7 @@ const rpcNotify = (method: RpcNotificationMethod, params: any = null) => {
   writeRpcMessage(message);
 };
 
+// deno-lint-ignore no-explicit-any
 function getOutput(args: any[]) {
   return args
     .map((arg) => {
@@ -54,24 +56,36 @@ function getOutput(args: any[]) {
     .join(" ");
 }
 
-export const log = {
-  debug(...args: any[]) {
+export const log: {
+  // deno-lint-ignore no-explicit-any
+  debug(...args: any[]): void;
+  // deno-lint-ignore no-explicit-any
+  info(...args: any[]): void;
+  // deno-lint-ignore no-explicit-any
+  warn(...args: any[]): void;
+  // deno-lint-ignore no-explicit-any
+  error(...args: any[]): void;
+  // deno-lint-ignore no-explicit-any
+  failure(data: any): void;
+  // deno-lint-ignore no-explicit-any
+  success(data: any, noEncode?: boolean): void;
+} = {
+  debug(...args): void {
     rpcNotify("Debug", { message: getOutput(args) });
   },
-  info(...args: any[]) {
+  info(...args): void {
     rpcNotify("Info", { message: getOutput(args) });
   },
-  warn(...args: any[]) {
+  warn(...args): void {
     rpcNotify("Warning", { message: getOutput(args) });
   },
-  error(...args: any[]) {
+  error(...args): void {
     rpcNotify("Error", { message: getOutput(args) });
   },
-
-  failure(data: any) {
+  failure(data): void {
     rpcNotify("Failure", { data: data });
   },
-  success(data: any, noEncode = false) {
+  success(data, noEncode = false): void {
     if (noEncode) {
       rpcNotify("Success", { data: JSON.parse(data) });
     } else {
@@ -79,10 +93,6 @@ export const log = {
     }
   },
 };
-
-const rpcCall = (() => {
-  return (method: string, params: any = null) => rpcRequest(method, params);
-})();
 
 export interface DeployTarget {
   baseUrl: string;
@@ -105,7 +115,7 @@ export interface DeployData {
 }
 
 export const rpc = {
-  getDeployTarget: () => rpcCall("GetDeployTarget") as Promise<DeployTarget>,
+  getDeployTarget: () => rpcRequest("GetDeployTarget") as DeployTarget,
   getDeployData: (typegraph: string) =>
     rpcRequest<DeployData, { typegraph: string }>(
       "GetDeployData",

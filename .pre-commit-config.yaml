@@ -28,37 +28,35 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd src/typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs,tests/metagen/typegraphs/sample/ts/client.ts && cd ../../tools && deno fmt && cd ../src/typegraph/deno && deno fmt --ignore=node_modules,dist && cd ../../../src/metagen/src && deno fmt'
+        entry: bash -c 'deno fmt'
         pass_filenames: false
         types:
+          - javascript
           - ts
-        files: ^(src/typegate|tools|src/typegraph/deno)/
+          - tsx
+          - json
+          - yaml
       - id: deno-lint
         name: Deno lint
         language: system
-        entry: bash -c 'cd src/typegate && deno lint --rules-exclude=no-explicit-any --ignore=native,tmp,tests/e2e/nextjs && cd ../../tools && deno lint && cd ../src/metagen/src/ && deno lint'
+        entry: bash -c 'deno lint && ghjk x lint-deno'
         pass_filenames: false
         types:
+          - javascript
           - ts
+          - tsx
+          - json
+          - yaml
         files: ^(src/typegate|tools)/
       - id: es-lint
         name: Eslint website
         language: system
-        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint && pnpm prettier'
+        entry: bash -c 'cd ./docs/metatype.dev/ && [ -f node_modules/.bin/eslint ] && pnpm lint && pnpm prettier'
         pass_filenames: false
         types_or:
           - ts
           - tsx
-        files: ^website/
-        exclude: ^website/typegraphs/
-      - id: devtools-lint
-        name: ESLint meta-lsp
-        language: system
-        entry: bash -c 'cd meta-lsp && pnpm lint'
-        pass_filenames: false
-        types:
-          - ts
-        files: ^meta-lsp/
+        files: ^docs/metatype.dev
       #- id: cargo-udeps
       #  name: Check for unused cargo dependencies
       #  language: system
@@ -87,10 +85,9 @@ repos:
             .*deno.lock|
             CHANGELOG.md|
             .*\.snap$|
-            typegate/src/typegraphs/.*\.json|
-            src/typegraph/core/src/types/sdk/.*\.rs|
-            website/docs/reference/|
-            libs/pyrt_wit_wire/pyrt|
+            src/typegate/src/typegraphs/.*\.json|
+            docs/metatype.dev/reference/|
+            src/pyrt_wit_wire/pyrt|
             migration_lock.toml|
             tests/metagen/typegraphs/sample/[rs|ts|py]/client\.[rs|ts|py]
           )
@@ -104,9 +101,10 @@ repos:
           - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=#"
           - "--skip-license-insertion-comment=no-auto-license-header"
+          - "--skip-license-insertion-comment=@generated"
         types_or:
           - python
-        files: ^typegraph/
+        exclude: ^examples/|src/metagen/src/.*/static/.*
       - id: insert-license
         name: "License MPL-2.0 rust"
         args:
@@ -117,38 +115,7 @@ repos:
           - "--skip-license-insertion-comment=@generated"
         types_or:
           - rust
-        files: ^(typegate|libs!(/metagen/.*))/
-      - id: insert-license
-        name: "License MPL-2.0 rust"
-        args:
-          #- --remove-header
-          - --license-filepath=tools/license-header-MPL-2.0.txt
-          - "--comment-style=//"
-          - "--skip-license-insertion-comment=no-auto-license-header"
-        types_or:
-          - rust
-        files: ^(meta-cli|typegraph|libs/metagen)/
-      - id: insert-license
-        name: "License MPL-2.0 deno"
-        args:
-          #- --remove-header
-          - --license-filepath=tools/license-header-MPL-2.0.txt
-          - "--comment-style=//"
-          - "--skip-license-insertion-comment=no-auto-license-header"
-          - "--skip-license-insertion-comment=@generated"
-        types_or:
-          - ts
-        files: ^(typegate|tools)/
-      - id: insert-license
-        name: "License MPL-2.0 deno"
-        args:
-          #- --remove-header
-          - --license-filepath=tools/license-header-MPL-2.0.txt
-          - "--comment-style=//"
-          - "--skip-license-insertion-comment=no-auto-license-header"
-        types_or:
-          - ts
-        files: ^typegraph/
+        exclude: ^examples/|src/metagen/src/.*/static/.*
       - id: insert-license
         name: "License MPL-2.0 typescript"
         args:
@@ -156,11 +123,11 @@ repos:
           - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
+          - "--skip-license-insertion-comment=@generated"
         types_or:
           - ts
           - tsx
-        files: ^website/
-        exclude: website/typegraphs
+        exclude: ^examples/|src/metagen/src/.*/static/.*
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.28.6
     hooks:

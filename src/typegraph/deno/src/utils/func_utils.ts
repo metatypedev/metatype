@@ -1,14 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+// jsr-private-module
+
 import {
   InheritDef,
-  TgFinalizationResult,
-  TypegraphOutput,
+  type TgFinalizationResult,
+  type TypegraphOutput,
 } from "../typegraph.ts";
-import { ReduceEntry } from "../gen/utils.ts";
+import type { ReduceEntry } from "../gen/utils.ts";
 import { serializeStaticInjection } from "./injection_utils.ts";
-import { SerializeParams } from "../gen/core.ts";
+import type { SerializeParams } from "../gen/core.ts";
 import { log } from "../io.ts";
 import { core } from "../sdk.ts";
 
@@ -130,22 +132,6 @@ export function buildReduceEntries(
   throw new Error(`unsupported type "${typeof node}" at ${currPath.join(".")}`);
 }
 
-export function getEnvVariable(
-  key: string,
-  defaultValue?: string,
-): string | undefined {
-  const glob = globalThis as any;
-  const value = glob?.process
-    ? glob?.process.env?.[key]
-    : glob?.Deno.env.get(key);
-  return value ?? defaultValue;
-}
-
-export function getAllEnvVariables(): any {
-  const glob = globalThis as any;
-  return glob?.process ? glob?.process.env : glob?.Deno.env.toObject();
-}
-
 const frozenMemo: Record<string, TgFinalizationResult> = {};
 
 /** Create a reusable version of a `TypegraphOutput` */
@@ -153,8 +139,8 @@ export function freezeTgOutput(
   config: SerializeParams,
   tgOutput: TypegraphOutput,
 ): TypegraphOutput {
-  frozenMemo[tgOutput.name] = frozenMemo[tgOutput.name] ??
-    tgOutput.serialize(config);
+  frozenMemo[tgOutput.name] =
+    frozenMemo[tgOutput.name] ?? tgOutput.serialize(config);
   return {
     ...tgOutput,
     serialize: () => frozenMemo[tgOutput.name],

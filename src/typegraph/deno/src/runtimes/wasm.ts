@@ -4,7 +4,7 @@
 import * as t from "../types.ts";
 import { runtimes } from "../sdk.ts";
 import { Effect } from "../gen/runtimes.ts";
-import { Materializer, Runtime } from "./mod.ts";
+import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 
 export class WasmRuntime extends Runtime {

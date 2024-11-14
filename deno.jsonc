@@ -11,10 +11,26 @@
       "./examples/" // needed for published_test
     ]
   },
+  "fmt": {
+    "exclude": [
+      "target",
+      "src/typegraph/deno/src/gen",
+      "src/typegraph/node",
+      "*.md",
+      "**/*.md",
+      ".ghjk/**",
+      ".git",
+      "vendor/**",
+      "node_modules",
+      "docs/metatype.dev/docusaurus.config.js",
+      "docs/metatype.dev/**/*.js",
+      "docs/metatype.dev/**/*.ts",
+      "docs/metatype.dev/**/*.tsx"
+    ]
+  },
   "compilerOptions": {
     "allowJs": false,
     "strict": true,
-    "experimentalDecorators": true,
     "types": [
       "./src/typegate/engine/runtime.d.ts"
     ],
@@ -27,13 +43,22 @@
   "nodeModulesDir": false,
   "lock": "deno.lock",
   "lint": {
+    "exclude": [
+      ".git",
+      "node_modules",
+      "./src/typegraph/deno/src/gen",
+      "./docs/metatype.dev",
+      "./src/typegraph/node",
+      "./src/meta-lsp",
+      "target"
+    ],
     "rules": {
       "include": [
         "no-sync-fn-in-async-fn",
-        "no-external-import",
         "no-inferrable-types",
         "no-self-compare",
         "no-throw-literal"
+        // "no-external-import",
         // "verbatim-module-syntax"
         // "no-await-in-loop"
         // "ban-untagged-todo"

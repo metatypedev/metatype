@@ -445,10 +445,6 @@ impl crate::sdk::runtimes::Handler for crate::Lib {
         prisma_op!(runtime, model, Aggregate, "aggregate")
     }
 
-    fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams> {
-        prisma_op!(runtime, model, Count, "count")
-    }
-
     fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<FuncParams> {
         prisma_op!(runtime, model, GroupBy, "groupBy")
     }

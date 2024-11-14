@@ -12,6 +12,7 @@ use tokio::process::Command;
 #[derive(Debug, Clone)]
 pub struct SharedActionConfig {
     pub command: &'static str,
+    pub prefix: Option<String>,
     pub config_dir: Arc<Path>,
     pub working_dir: Arc<Path>,
     pub migrations_dir: Arc<Path>,

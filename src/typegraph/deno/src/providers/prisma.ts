@@ -5,7 +5,7 @@ import { Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../sdk.ts";
 import { Typedef } from "../types.ts";
 import { t } from "../index.ts";
-import { Effect } from "../gen/runtimes.ts";
+import type { Effect } from "../gen/runtimes.ts";
 import { genRef } from "./../typegraph.ts";
 
 type PrismaLinkArg = {
@@ -60,15 +60,6 @@ export class PrismaRuntime extends Runtime {
       model = genRef(model);
     }
     const type = runtimes.prismaAggregate(this._id, model._id);
-    return t.Func.fromTypeFunc(type);
-  }
-
-  /** create a function for a prisma `count` query */
-  count(model: string | Typedef): t.Func {
-    if (typeof model == "string") {
-      model = genRef(model);
-    }
-    const type = runtimes.prismaCount(this._id, model._id);
     return t.Func.fromTypeFunc(type);
   }
 

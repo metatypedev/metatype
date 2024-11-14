@@ -27,7 +27,7 @@ typegraph(
           your_own_content: g.fromContext("your_own_content"),
         }),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

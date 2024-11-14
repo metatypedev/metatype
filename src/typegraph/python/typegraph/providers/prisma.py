@@ -51,12 +51,6 @@ class PrismaRuntime(Runtime):
         type = runtimes.prisma_aggregate(self.id, model._id)
         return t.func.from_type_func(type)
 
-    def count(self, model: Union[str, t.typedef]) -> t.func:
-        if isinstance(model, str):
-            model = gen_ref(model)
-        type = runtimes.prisma_count(self.id, model._id)
-        return t.func.from_type_func(type)
-
     def group_by(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = gen_ref(model)

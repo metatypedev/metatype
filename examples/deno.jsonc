@@ -1,5 +1,12 @@
 {
   "imports": {
     "@typegraph/sdk/": "../src/typegraph/deno/src/"
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-explicit-any"
+      ]
+    }
   }
 }

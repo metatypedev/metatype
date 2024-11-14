@@ -4,6 +4,13 @@
   "publish": {
     "exclude": ["!src/gen", "!LICENSE.md", "!README.md"]
   },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-external-import"
+      ]
+    }
+  },
   "exports": {
     "./deps/_import.ts": "./src/deps/_import.ts",
     "./deps/mod.ts": "./src/deps/mod.ts",
@@ -19,6 +26,7 @@
     "./providers/temporal.ts": "./src/providers/temporal.ts",
     "./runtimes/deno.ts": "./src/runtimes/deno.ts",
     "./runtimes/graphql.ts": "./src/runtimes/graphql.ts",
+    "./runtimes/grpc.ts": "./src/runtimes/grpc.ts",
     "./runtimes/http.ts": "./src/runtimes/http.ts",
     "./runtimes/kv.ts": "./src/runtimes/kv.ts",
     "./runtimes/mod.ts": "./src/runtimes/mod.ts",

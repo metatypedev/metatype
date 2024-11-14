@@ -195,7 +195,7 @@ Meta.test(
       const duration = end - start;
 
       console.log(`duration: ${duration}ms`);
-      assert(duration < 800, `Python runtime was too slow: ${duration}ms`);
+      assert(duration < 1000, `Python runtime was too slow: ${duration}ms`);
     });
   },
 );

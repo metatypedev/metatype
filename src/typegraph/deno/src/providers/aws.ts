@@ -3,7 +3,7 @@
 
 import { Materializer, Runtime } from "../runtimes/mod.ts";
 import { aws } from "../sdk.ts";
-import {
+import type {
   S3PresignGetParams,
   S3PresignPutParams,
   S3RuntimeData,

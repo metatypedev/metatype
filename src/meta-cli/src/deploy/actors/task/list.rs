@@ -31,6 +31,7 @@ pub struct ListActionGenerator {
 
 impl ListActionGenerator {
     pub fn new(
+        prefix: Option<String>,
         config_dir: Arc<Path>,
         working_dir: Arc<Path>,
         migrations_dir: Arc<Path>,
@@ -39,6 +40,7 @@ impl ListActionGenerator {
         Self {
             shared_config: SharedActionConfig {
                 command: "list",
+                prefix,
                 config_dir,
                 working_dir,
                 migrations_dir,

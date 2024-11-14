@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 // skip:start
 import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
 import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
@@ -38,6 +41,7 @@ const tg = await typegraph(
   },
 );
 
+// deno-lint-ignore no-constant-condition
 if (false) {
   const myPath = import.meta.url.replace("file://", "");
   const metagen = new Metagen(

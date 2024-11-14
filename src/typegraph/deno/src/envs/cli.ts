@@ -43,7 +43,7 @@ export function loadCliEnv(): CliEnv | null {
     } else {
       switch (key) {
         case "command":
-          if (!COMMANDS.includes(envValue as any)) {
+          if (!(COMMANDS as readonly string[]).includes(envValue)) {
             throw new Error(
               `${name} env value should be one of: serialize, deploy`,
             );
@@ -78,7 +78,7 @@ export function loadCliEnv(): CliEnv | null {
   for (const key of optionalCliEnvs) {
     const name = `MCLI_${key.toLocaleUpperCase()}`;
     const envValue = env[name];
-    if (envValue != null) {
+    if (envValue) {
       record[key] = envValue;
     }
   }
@@ -93,7 +93,7 @@ export function loadCliEnv(): CliEnv | null {
   return record as CliEnv;
 }
 
-export const CLI_ENV = loadCliEnv();
+export const CLI_ENV: CliEnv | null = loadCliEnv();
 
 /** check if running in the meta cli */
 export function hasCliEnv(): boolean {

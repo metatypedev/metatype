@@ -56,6 +56,7 @@ const list = [
   "roadmap-random",
   "temporal",
   "triggers",
+  "union-either",
 ] as const;
 
 // files that does not have 2 versions -- TODO why?
@@ -66,6 +67,7 @@ const skip = [
   "runtimes",
   "typecheck",
   "types",
+  "play",
 ];
 
 const prepare = {

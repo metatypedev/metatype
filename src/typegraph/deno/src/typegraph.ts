@@ -4,15 +4,20 @@
 import * as t from "./types.ts";
 import { core } from "./sdk.ts";
 import { caller, dirname, fromFileUrl } from "./deps/mod.ts";
-import { InjectionValue } from "./utils/type_utils.ts";
+import type { InjectionValue } from "./utils/type_utils.ts";
 import {
   serializeFromParentInjection,
   serializeGenericInjection,
   serializeStaticInjection,
 } from "./utils/injection_utils.ts";
-import { Auth, Cors as CoreCors, Rate, sdkUtils } from "./sdk.ts";
+import {
+  type Auth,
+  type Cors as CoreCors,
+  type Rate,
+  sdkUtils,
+} from "./sdk.ts";
 import { getPolicyChain } from "./types.ts";
-import { Artifact, SerializeParams } from "./gen/core.ts";
+import type { Artifact, SerializeParams } from "./gen/core.ts";
 import { Manager } from "./tg_manage.ts";
 import { log } from "./io.ts";
 import { hasCliEnv } from "./envs/cli.ts";
@@ -41,6 +46,7 @@ export class ApplyFromArg {
 }
 
 export class ApplyFromStatic {
+  // deno-lint-ignore no-explicit-any
   constructor(public value: any) {}
 }
 
@@ -62,6 +68,7 @@ export class ApplyFromParent {
 const InjectionSource = {
   asArg: (name?: string, type?: t.Typedef): ApplyFromArg =>
     new ApplyFromArg(name ?? null, type?._id ?? null),
+  // deno-lint-ignore no-explicit-any
   set: (value: any): ApplyFromStatic => new ApplyFromStatic(value),
   fromSecret: (key: string): ApplyFromSecret => new ApplyFromSecret(key),
   fromContext: (key: string, type?: t.Typedef): ApplyFromContext =>
@@ -156,14 +163,12 @@ export async function typegraph(
   maybeBuilder?: TypegraphBuilder,
 ): Promise<TypegraphOutput> {
   ++counter;
-  const args = typeof nameOrArgs === "string"
-    ? { name: nameOrArgs }
-    : nameOrArgs;
+  const args =
+    typeof nameOrArgs === "string" ? { name: nameOrArgs } : nameOrArgs;
 
   const { name, dynamic, cors, prefix, rate, secrets } = args;
-  const builder = "builder" in args
-    ? (args.builder as TypegraphBuilder)
-    : maybeBuilder!;
+  const builder =
+    "builder" in args ? (args.builder as TypegraphBuilder) : maybeBuilder!;
 
   const file = caller();
   if (!file) {
@@ -225,11 +230,12 @@ export async function typegraph(
 
   try {
     builder(g);
+    // deno-lint-ignore no-explicit-any
   } catch (err: any) {
     if (err.payload && !err.cause) {
       err.cause = err.payload;
     }
-    if (err.cause && "stack" in err.cause) {
+    if ("cause" in err && "stack" in err.cause) {
       console.error(`Error in typegraph '${name}':`);
       for (const msg of err.cause.stack) {
         console.error(`- ${msg}`);
@@ -245,14 +251,16 @@ export async function typegraph(
       try {
         const [tgJson, ref_artifacts] = core.serializeTypegraph(
           config,
-        ) as Array<any>; // FIXME: bad typing?
+          // deno-lint-ignore no-explicit-any
+        ) as Array<any>;
         const result: TgFinalizationResult = {
           tgJson: tgJson,
           ref_artifacts: ref_artifacts,
         };
         return result;
-      } catch (err) {
-        const stack = (err as any)?.payload?.stack;
+        // deno-lint-ignore no-explicit-any
+      } catch (err: any) {
+        const stack = err?.payload?.stack;
         if (stack) {
           // FIXME: jco generated code throws new Error(object) => prints [Object object]
           throw new Error(stack.join("\n"));
@@ -273,7 +281,7 @@ export async function typegraph(
         log.debug("exiting");
         process.exit(0);
       }
-    }, 10);
+    }, 100);
   }
 
   --counter;

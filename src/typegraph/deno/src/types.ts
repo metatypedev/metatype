@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { core, sdkUtils } from "./sdk.ts";
-import {
+import type {
   ParameterTransform,
-  PolicyPerEffect,
   PolicySpec as WitPolicySpec,
   TypeEither,
   TypeFile,
@@ -15,14 +14,14 @@ import {
   TypeString,
   TypeUnion,
 } from "./gen/core.ts";
-import { FuncParams } from "./gen/core.ts";
-import { Materializer } from "./runtimes/mod.ts";
+import type { FuncParams } from "./gen/core.ts";
+import type { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps/mod.ts";
 import Policy, { PolicyPerEffectObject } from "./policy.ts";
 import {
-  AsIdField,
-  Base,
-  BaseEx,
+  type AsIdField,
+  type Base,
+  type BaseEx,
   buildReduceEntries,
   withBase,
 } from "./utils/func_utils.ts";
@@ -31,14 +30,14 @@ import {
   serializeGenericInjection,
   serializeStaticInjection,
 } from "./utils/injection_utils.ts";
-import { InjectionValue } from "./utils/type_utils.ts";
+import type { InjectionValue } from "./utils/type_utils.ts";
 import {
   ApplyFromArg,
   ApplyFromContext,
   ApplyFromParent,
   ApplyFromSecret,
   ApplyFromStatic,
-  InheritDef,
+  type InheritDef,
 } from "./typegraph.ts";
 import { log } from "./io.ts";
 
@@ -46,20 +45,18 @@ export type PolicySpec =
   | Policy
   | PolicyPerEffectObject
   | {
-    none: Policy;
-    create: Policy;
-    update: Policy;
-    delete: Policy;
-  };
+      none: Policy;
+      create: Policy;
+      update: Policy;
+      delete: Policy;
+    };
 
 export type Simplified<T> = Omit<T, "of">;
 
-export type SimplifiedNumericData<T> =
-  & { enumeration?: number[] }
-  & Omit<
-    T,
-    "enumeration"
-  >;
+export type SimplifiedNumericData<T> = { enumeration?: number[] } & Omit<
+  T,
+  "enumeration"
+>;
 
 export function getPolicyChain(
   policy: PolicySpec[] | PolicySpec,
@@ -73,8 +70,8 @@ export function getPolicyChain(
     return {
       perEffect: mapValues(
         p instanceof PolicyPerEffectObject ? p.value : p,
-        (v: any) => v._id,
-      ) as unknown as PolicyPerEffect,
+        (v) => v?._id,
+      ),
     } as const;
   });
 }
@@ -192,7 +189,7 @@ export function boolean(base: Base = {}): Boolean {
   return new Boolean(withBase(core.booleanb(), base));
 }
 
-class Integer extends Typedef implements Readonly<TypeInteger> {
+export class Integer extends Typedef implements Readonly<TypeInteger> {
   readonly min?: number;
   readonly max?: number;
   readonly exclusiveMinimum?: number;
@@ -259,7 +256,7 @@ export function float(
   return new Float(withBase(core.floatb(completeData), base), completeData);
 }
 
-class StringT extends Typedef implements Readonly<TypeString> {
+export class String extends Typedef implements Readonly<TypeString> {
   readonly min?: number;
   readonly max?: number;
   readonly format?: string;
@@ -282,58 +279,58 @@ class StringT extends Typedef implements Readonly<TypeString> {
 }
 
 /** string type */
-export function string(data: TypeString = {}, base: BaseEx = {}): StringT {
-  return new StringT(withBase(core.stringb(data), base), data);
+export function string(data: TypeString = {}, base: BaseEx = {}): String {
+  return new String(withBase(core.stringb(data), base), data);
 }
 
 /** uuid type */
-export function uuid(base: BaseEx = {}): StringT {
+export function uuid(base: BaseEx = {}): String {
   return string({ format: "uuid" }, base);
 }
 
 /** email type */
-export function email(): StringT {
+export function email(): String {
   return string({ format: "email" });
 }
 
 /** uri type */
-export function uri(): StringT {
+export function uri(): String {
   return string({ format: "uri" });
 }
 
 /** ean type */
-export function ean(): StringT {
+export function ean(): String {
   return string({ format: "ean" });
 }
 
 /** path type */
-export function path(): StringT {
+export function path(): String {
   return string({ format: "path" });
 }
 
 /** datetime type */
-export function datetime(): StringT {
+export function datetime(): String {
   return string({ format: "date-time" });
 }
 
 /** json type */
-export function json(): StringT {
+export function json(): String {
   return string({ format: "json" });
 }
 
 /** hostname type */
-export function hostname(): StringT {
+export function hostname(): String {
   return string({ format: "hostname" });
 }
 
 /** phone number type */
-export function phone(): StringT {
+export function phone(): String {
   return string({ format: "phone" });
 }
 
 // Note: enum is a reserved word
 /** string enum type */
-export function enum_(variants: string[], base: Base = {}): StringT {
+export function enum_(variants: string[], base: Base = {}): String {
   return string(
     {
       enumeration: variants.map((variant) => JSON.stringify(variant)),
@@ -360,7 +357,7 @@ export function file(data: Simplified<TypeFile> = {}, base: Base = {}): File {
   return new File(withBase(core.fileb(data), base), data);
 }
 
-class List extends Typedef {
+export class List extends Typedef {
   readonly min?: number;
   readonly max?: number;
   readonly items?: number;
@@ -388,7 +385,7 @@ export function list(
   return new List(withBase(core.listb(completeData), base), completeData);
 }
 
-class Optional extends Typedef {
+export class Optional extends Typedef {
   readonly item?: number;
   readonly defaultItem?: string;
 

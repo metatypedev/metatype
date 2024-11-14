@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { BasicAuth } from "./tg_deploy.ts";
-import { Artifact } from "./gen/core.ts";
+import type { BasicAuth } from "./tg_deploy.ts";
+import type { Artifact } from "./gen/core.ts";
 import { dirname, join } from "node:path";
 import * as fsp from "node:fs/promises";
 import { log } from "./io.ts";
@@ -49,8 +49,7 @@ export class ArtifactUploader {
 
     // const uploadUrls: Array<string | null> = await response.json();
     if (uploadUrls.length !== artifactMetas.length) {
-      const diff =
-        `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
+      const diff = `array length mismatch: ${uploadUrls.length} !== ${artifactMetas.length}`;
       throw new Error(`Failed to get upload URLs for all artifacts: ${diff}`);
     }
 
@@ -60,7 +59,7 @@ export class ArtifactUploader {
   private async upload(
     token: string | null,
     meta: UploadArtifactMeta,
-  ): Promise<any> {
+  ): Promise<object | undefined> {
     const uploadHeaders = new Headers({
       "Content-Type": "application/octet-stream",
     });
@@ -92,7 +91,7 @@ export class ArtifactUploader {
     );
 
     log.info("✓ artifact uploaded:", meta.relativePath);
-    return res;
+    return res as object;
   }
 
   private getMetas(artifacts: Artifact[]): UploadArtifactMeta[] {
@@ -107,7 +106,7 @@ export class ArtifactUploader {
   }
 
   private handleUploadErrors(
-    results: PromiseSettledResult<any>[],
+    results: PromiseSettledResult<object | undefined>[],
     artifactMetas: UploadArtifactMeta[],
   ) {
     let errors = 0;

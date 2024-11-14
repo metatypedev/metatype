@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 #[cfg(test)]
 mod tests {
     use std::{collections::HashMap, fmt::Debug, path::PathBuf, thread::sleep, time::Duration};

@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { SerializeParams } from "./gen/core.ts";
+import type { SerializeParams } from "./gen/core.ts";
 import { TypegraphOutput } from "./typegraph.ts";
 import { sdkUtils } from "./sdk.ts";
 import { freezeTgOutput } from "./utils/func_utils.ts";
-import { FdkConfig, FdkOutput } from "./gen/utils.ts";
+import type { FdkConfig, FdkOutput } from "./gen/utils.ts";
 
 export class Metagen {
   constructor(

@@ -4,7 +4,7 @@
 import { Runtime } from "../runtimes/mod.ts";
 import { runtimes } from "../sdk.ts";
 import { Func, Typedef } from "../types.ts";
-import {
+import type {
   TemporalOperationData,
   TemporalOperationType,
 } from "../gen/runtimes.ts";

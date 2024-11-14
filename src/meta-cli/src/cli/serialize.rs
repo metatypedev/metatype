@@ -67,6 +67,7 @@ impl Action for Serialize {
         let console = ConsoleActor::new(Arc::clone(&config)).start();
 
         let action_generator = SerializeActionGenerator::new(
+            self.prefix.clone(),
             config.dir().unwrap_or_log().into(),
             dir.into(),
             config

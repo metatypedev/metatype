@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { MigrationAction, SerializeParams } from "./gen/core.ts";
+import type { MigrationAction, SerializeParams } from "./gen/core.ts";
 import { ArtifactUploader } from "./tg_artifact_upload.ts";
-import { TypegraphOutput } from "./typegraph.ts";
+import type { TypegraphOutput } from "./typegraph.ts";
 import { sdkUtils } from "./sdk.ts";
 import { execRequest } from "./utils/func_utils.ts";
 import { log } from "./io.ts";
@@ -39,10 +39,12 @@ export interface TypegraphRemoveParams {
 
 export interface DeployResult {
   serialized: string;
+  // deno-lint-ignore no-explicit-any
   response: Record<string, any>;
 }
 
 export interface RemoveResult {
+  // deno-lint-ignore no-explicit-any
   typegate: Record<string, any> | string;
 }
 
@@ -111,6 +113,7 @@ export async function tgDeploy(
       }),
     },
     `tgDeploy failed to deploy typegraph ${typegraph.name}`,
+    // deno-lint-ignore no-explicit-any
   )) as Record<string, any>;
 
   if (response.errors) {
@@ -157,6 +160,7 @@ export async function tgRemove(
       body: sdkUtils.gqlRemoveQuery([typegraphName.toString()]),
     },
     `tgRemove failed to remove typegraph ${typegraphName}`,
+    // deno-lint-ignore no-explicit-any
   )) as Record<string, any> | string;
 
   return { typegate: response };

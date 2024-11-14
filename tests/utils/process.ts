@@ -22,12 +22,11 @@ export class Lines {
   // return true if the stream is exhausted
   async readWhile(
     check: Consumer,
-    timeoutMs: number | null = 30_000
+    timeoutMs: number | null = 30_000,
   ): Promise<boolean> {
-    const next =
-      timeoutMs == null
-        ? () => this.#reader.read()
-        : () => deadline(this.#reader.read(), timeoutMs);
+    const next = timeoutMs == null
+      ? () => this.#reader.read()
+      : () => deadline(this.#reader.read(), timeoutMs);
     let shouldContinue = true;
     while (shouldContinue) {
       const { value: line, done } = await next();

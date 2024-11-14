@@ -1,15 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { ContextCheck, MaterializerId } from "./gen/core.ts";
+import type { ContextCheck, MaterializerId } from "./gen/core.ts";
 import { core } from "./sdk.ts";
 
-interface PolicyPerEffectAlt {
+type PolicyPerEffectAlt = {
   update?: Policy;
   delete?: Policy;
   create?: Policy;
   read?: Policy;
-}
+};
 
 export class PolicyPerEffectObject {
   constructor(public readonly value: PolicyPerEffectAlt) {}

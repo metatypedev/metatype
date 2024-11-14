@@ -3,7 +3,7 @@
 
 import Konva from "konva";
 import React, { useEffect, useRef, useState } from "react";
-import { Group, Arrow, Text } from "react-konva";
+import { Arrow, Group, Text } from "react-konva";
 import useFontFaceObserver from "use-font-face-observer";
 
 interface TextArrowP {
