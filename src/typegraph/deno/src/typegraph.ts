@@ -156,12 +156,14 @@ export async function typegraph(
   maybeBuilder?: TypegraphBuilder,
 ): Promise<TypegraphOutput> {
   ++counter;
-  const args =
-    typeof nameOrArgs === "string" ? { name: nameOrArgs } : nameOrArgs;
+  const args = typeof nameOrArgs === "string"
+    ? { name: nameOrArgs }
+    : nameOrArgs;
 
   const { name, dynamic, cors, prefix, rate, secrets } = args;
-  const builder =
-    "builder" in args ? (args.builder as TypegraphBuilder) : maybeBuilder!;
+  const builder = "builder" in args
+    ? (args.builder as TypegraphBuilder)
+    : maybeBuilder!;
 
   const file = caller();
   if (!file) {

@@ -14,7 +14,7 @@ def rpc_request(method: str, params: Optional[Any] = None):
         "id": state["id"],
     }
 
-    if params != None:
+    if params is not None:
         request["params"] = params
 
     json_request = json.dumps(request)

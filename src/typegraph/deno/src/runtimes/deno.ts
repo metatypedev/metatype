@@ -130,10 +130,9 @@ export class DenoRuntime extends Runtime {
   policy(name: string, _code: string): Policy;
   policy(name: string, data: Omit<DenoFunc, "effect">): Policy;
   policy(name: string, data: string | Omit<DenoFunc, "effect">): Policy {
-    const params =
-      typeof data === "string"
-        ? { code: data, secrets: [] }
-        : { secrets: [], ...data };
+    const params = typeof data === "string"
+      ? { code: data, secrets: [] }
+      : { secrets: [], ...data };
 
     return Policy.create(
       name,
@@ -145,8 +144,7 @@ export class DenoRuntime extends Runtime {
   }
 
   importPolicy(data: Omit<DenoImport, "effect">, name?: string): Policy {
-    const policyName =
-      name ??
+    const policyName = name ??
       `__imp_${data.module}_${data.name}`.replace(/[^a-zA-Z0-9_]/g, "_");
     return Policy.create(
       policyName,

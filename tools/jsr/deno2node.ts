@@ -15,11 +15,13 @@ console.log("deno2node");
 await dnt.emptyDir(outDir);
 
 const entryPoints: dnt.BuildOptions["entryPoints"] = [join(srcDir, "index.ts")];
-for (const { name, path } of expandGlobSync("./**/*.*", {
-  root: srcDir,
-  includeDirs: false,
-  globstar: true,
-})) {
+for (
+  const { name, path } of expandGlobSync("./**/*.*", {
+    root: srcDir,
+    includeDirs: false,
+    globstar: true,
+  })
+) {
   if (path.endsWith(".d.ts")) {
     continue;
   }

@@ -99,7 +99,7 @@ ${this.funcDefs.map((f) => `    ${this.formatFuncDef(f)}`).join("\n")}
   override postGenerate(sources: TypeDefSource[], outDir: string) {
     const imports = sources
       .map(({ moduleName }) => `pub mod ${moduleName};`)
-      .concat("pub use core::Error;")
+      .concat("pub use self::core::Error;\n")
       .join("\n");
 
     Deno.writeTextFileSync(path.join(outDir, "mod.rs"), imports);
