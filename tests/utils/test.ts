@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { SystemTypegraph } from "@metatype/typegate/system_typegraphs.ts";
-import { basename, dirname, extname, join } from "@std/path";
+import { dirname, join } from "@std/path";
 import { newTempDir, testDir } from "./dir.ts";
 import { shell, ShellOptions } from "./shell.ts";
 import { assertSnapshot } from "@std/testing/snapshot";
@@ -11,7 +11,6 @@ import { assertEquals, assertNotEquals } from "@std/assert";
 import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { Typegate } from "@metatype/typegate/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
-import { TypeGraph } from "@metatype/typegate/typegraph/mod.ts";
 import {
   defaultTypegateConfigBase,
   getTypegateConfig,
@@ -20,9 +19,6 @@ import {
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
 import { Typegraph } from "@metatype/typegate/typegraph/types.ts";
-import { ArtifactUploader } from "@typegraph/sdk/tg_artifact_upload.ts";
-import { BasicAuth } from "@typegraph/sdk/tg_deploy.ts";
-import { exists } from "@std/fs/exists";
 import { metaCli } from "test-utils/meta.ts";
 import { $ } from "@david/dax";
 
@@ -231,12 +227,13 @@ export class MetaTest {
       `--gate=http://localhost:${this.port}`,
       "--allow-dirty",
       "--create-migration",
+      //"--allow-destructive",
       ...optSecrets,
       `--file=${path}`,
     ];
 
     if (opts.prefix) {
-      args.push("--prefix", opts.prefix);
+      args.push(`--prefix=${opts.prefix}`);
     }
 
     const { stdout } = await metaCli(...args);
@@ -246,11 +243,9 @@ export class MetaTest {
     if (typegraphs.length == 0) {
       throw new Error("No typegraph");
     }
-    if (typegraphs.length > 1) {
-      throw new Error("Multiple typegraphs");
-    }
     const tgName = opts.typegraph ?? typegraphs[0];
-    const engine = this.typegate.register.get(tgName)!;
+    const typegate = this.typegate;
+    const engine = typegate.register.get(tgName)!;
 
     if (!engine) {
       throw new Error(`Typegate engine '${tgName}' not found`);
@@ -328,22 +323,6 @@ export class MetaTest {
       );
     }
   }
-}
-
-function extractJsonFromStdout(stdout: string): string | null {
-  let jsonStart = null;
-  let inJson = false;
-
-  for (const line of stdout.split("\n")) {
-    if (inJson) {
-      jsonStart += "\n" + line;
-    } else if (line.startsWith("{")) {
-      jsonStart = line;
-      inJson = true;
-    }
-  }
-
-  return jsonStart;
 }
 
 interface TempGitRepo {

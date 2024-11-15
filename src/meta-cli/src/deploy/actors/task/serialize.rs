@@ -162,7 +162,7 @@ impl TaskAction for SerializeAction {
                     path = self.task_ref.path.display().yellow(),
                 ));
                 for err in output.errors.iter() {
-                    ctx.console.error(format!("- {err}"));
+                    ctx.console.error(err.to_string());
                 }
             }
         }

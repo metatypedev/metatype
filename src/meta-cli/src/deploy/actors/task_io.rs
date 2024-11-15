@@ -221,8 +221,7 @@ impl<A: TaskAction + 'static> Handler<message::OutputLine> for TaskIoActor<A> {
             None => {
                 // a log message that were not outputted with the log library
                 // on the typegraph client
-                // --> as a debug message
-                console.debug(format!("{scope}$>{line}"));
+                console.info(format!("{scope}$>{line}"));
             }
         }
     }
@@ -340,7 +339,8 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                             self_addr.do_send(message::SendRpcResponse(req.response(response)));
                         }
                         Err(err) => {
-                            console.error(format!(
+                            // Handle error on the client side
+                            console.debug(format!(
                                 "{scope} failed to handle jsonrpc call {req:?}: {err}"
                             ));
                             self_addr.do_send(message::SendRpcResponse(req.error(err.to_string())));
