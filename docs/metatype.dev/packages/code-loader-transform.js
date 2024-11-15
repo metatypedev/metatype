@@ -83,10 +83,8 @@ module.exports = async function (source) {
   const transformation = postTransformations[ext] ?? ((src) => src);
   const content = transformation(deindent(ret.join("\n"))).trim();
 
-  return `module.exports = ${
-    JSON.stringify({
-      content,
-      path: relPath,
-    })
-  };`;
+  return `module.exports = ${JSON.stringify({
+    content,
+    path: relPath,
+  })};`;
 };

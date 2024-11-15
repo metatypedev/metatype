@@ -62,14 +62,6 @@ class PrismaRuntime(Runtime):
             raise ErrorStack(type.value)
         return t.func.from_type_func(type.value)
 
-    def count(self, model: Union[str, t.typedef]) -> t.func:
-        if isinstance(model, str):
-            model = gen_ref(model)
-        type = runtimes.prisma_count(store, self.id, model._id)
-        if isinstance(type, Err):
-            raise ErrorStack(type.value)
-        return t.func.from_type_func(type.value)
-
     def group_by(self, model: Union[str, t.typedef]) -> t.func:
         if isinstance(model, str):
             model = gen_ref(model)

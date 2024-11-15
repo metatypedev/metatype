@@ -24,7 +24,7 @@ await typegraph(
       {
         catch_me_if_you_can: random.gen(t.string()),
       },
-      Policy.public()
+      Policy.public(),
     );
-  }
+  },
 );

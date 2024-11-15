@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import {
   AddScheduleInput,
   Backend,
@@ -16,7 +19,7 @@ import {
 } from "./types.ts";
 import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
 
-const logger = getLogger();
+const logger = getLogger(import.meta, "WARN");
 
 export interface StdKwargs {
   taskContext: TaskContext;
@@ -117,8 +120,6 @@ export class Agent {
   }
 
   async #nextIteration() {
-    logger.warn("POLL");
-
     // Note: in multiple agents/typegate scenario, a single node may acquire all runs for itself within a tick span
     // To account for that, keep this reasonable
     const acquireMaxForThisAgent = this.config.maxAcquirePerTick;
@@ -169,7 +170,7 @@ export class Agent {
       lease_seconds: this.config.leaseLifespanSec,
     });
 
-    logger.info(`Active leases: ${activeRunIds.join(",  ")}`);
+    logger.debug(`Active leases: ${activeRunIds.join(",  ")}`);
 
     const next = await Meta.substantial.agentNextRun({
       backend: this.backend,
@@ -342,7 +343,7 @@ export class Agent {
   ) {
     this.workerManager.destroyWorker(workflowName, runId); // !
 
-    logger.warn(`Interrupt "${workflowName}": ${result}"`);
+    logger.debug(`Interrupt "${workflowName}": ${result}"`);
 
     // TODO: make all of these transactional
 

@@ -32,7 +32,7 @@ await typegraph(
           })
           .rename("remix_track"), // explicit names help
       },
-      Policy.public()
+      Policy.public(),
     );
-  }
+  },
 );

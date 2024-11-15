@@ -1,4 +1,3 @@
-// no-auto-license-header | @generated (pre-commit doesn't support two headers)
 // gen-start
 #![allow(dead_code)]
 

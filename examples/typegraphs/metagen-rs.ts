@@ -32,13 +32,13 @@ await typegraph(
             idv3,
             {
               name: "remix_track",
-            }
+            },
             // the traits will map to the name of the materializer
             // and also the the name of the handler mentioned above
           )
           .rename("remix_track"),
       },
-      Policy.public()
+      Policy.public(),
     );
-  }
+  },
 );

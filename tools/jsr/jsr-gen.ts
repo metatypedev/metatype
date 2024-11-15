@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { METATYPE_VERSION, SDK_PACKAGE_NAME_TS } from "../consts.ts";
-import { existsSync, expandGlobSync, join } from "../deps.ts";
+import { $, existsSync, expandGlob, join } from "../deps.ts";
 import { copyFilesAt } from "../utils.ts";
 import { removeExtension } from "../utils.ts";
 import { denoSdkDir, fromRoot, srcDir } from "./common.ts";
@@ -21,14 +21,19 @@ copyFilesAt(
 
 // Prepare jsr export map
 const jsrExports = {} as Record<string, string>;
-for (
-  const { path } of expandGlobSync("./**/*.*", {
+for await (
+  const { path } of expandGlob("./**/*.*", {
     root: srcDir,
     includeDirs: false,
     globstar: true,
   })
 ) {
   if (/\.(ts|js|mjs)$/.test(path)) {
+    const text = await $.path(path).readText();
+    if (/jsr-private-module/.test(text)) {
+      $.logLight("skipping private module", path);
+      continue;
+    }
     const hintFile = `${removeExtension(path)}.d.ts`;
     const sourcePath = existsSync(hintFile) ? hintFile : path;
     const canonRelPath = sourcePath.replace(denoSdkDir, ".");

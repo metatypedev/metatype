@@ -26,6 +26,7 @@ interface PredefinedFuncMat extends Materializer {
 }
 
 export interface DenoFunc {
+  // deno-lint-ignore no-explicit-any
   code: string | ((...args: any[]) => any);
   secrets?: Array<string>;
   effect?: Effect;
@@ -39,6 +40,7 @@ export interface DenoImport {
   effect?: Effect;
 }
 
+// deno-lint-ignore no-explicit-any
 function stringifyFn(code: string | ((...any: []) => any)) {
   if (typeof code == "function") {
     const source = code.toString();
@@ -115,6 +117,7 @@ export class DenoRuntime extends Runtime {
   }
 
   /** use a static function already registered on the typegate */
+  // deno-lint-ignore no-explicit-any
   static<P extends t.Typedef>(out: P, value: any): t.Func {
     const mat = {
       _id: runtimes.registerDenoStatic(

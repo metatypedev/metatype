@@ -3,6 +3,7 @@
 
 import { errorToString } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
+import { toFileUrl } from "@std/path/to-file-url";
 import { Err, Msg, Ok, WorkerData, WorkflowResult } from "./types.ts";
 
 let runCtx: Context | undefined;
@@ -15,7 +16,7 @@ self.onmessage = async function (event) {
         data;
       // FIXME: handle case when script is missing and notify WorkerManager so it cleans up
       // its registry.
-      const module = await import(modulePath);
+      const module = await import(toFileUrl(modulePath).toString());
 
       // TODO: for python use the same strategy but instead call from native
       const workflowFn = module[functionName];

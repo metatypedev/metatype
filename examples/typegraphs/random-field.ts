@@ -27,7 +27,7 @@ typegraph(
             `Daily bonus: ${(performance > 100 ? bonus : ["none"]).join(", ")}`,
         }),
       },
-      pub
+      pub,
     );
-  }
+  },
 );
