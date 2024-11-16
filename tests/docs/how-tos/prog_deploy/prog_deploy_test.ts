@@ -55,7 +55,7 @@ Meta.test(
     name: "Programmatic deployment test - TS SDK",
   },
   async (t: MetaTest) => {
-    throw new Error("Unimplemented");
+    // FIXME: Uncomment after implementing mode B (MET-754)
     //const port = t.port;
     //const scriptsPath = path.join(t.workingDir, "docs/how-tos/prog_deploy");
     //

@@ -205,7 +205,6 @@ Meta.test(
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",
         "metatype.yml": "metatype.yml",
-        "utils/tg_deploy_script.py": "utils/tg_deploy_script.py",
       },
     },
   },
@@ -306,7 +305,6 @@ Meta.test(
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",
         "metatype.yml": "metatype.yml",
-        "utils/tg_deploy_script.py": "utils/tg_deploy_script.py",
       },
     },
   },
