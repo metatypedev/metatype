@@ -1,6 +1,0 @@
-*
-*/
-!ts-language-server/{package.json,pnpm-lock.yaml,out/}
-!vscode-metatype-support/out/
-!LICENSE.md
-!logo.png

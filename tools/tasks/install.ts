@@ -70,11 +70,6 @@ export default {
     fn: ($) => $`pnpm install -C ./docs/metatype.dev/`,
   },
 
-  "install-lsp": {
-    inherit: "_ecma",
-    fn: ($) => $`pnpm install -C ./src/meta-lsp/ --frozen-lockfile --recursive`,
-  },
-
   // this is used somewhere in a test build.sh file
   "install-wasi-adapter": {
     fn: async ($) => {

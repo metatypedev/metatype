@@ -94,7 +94,6 @@ jobs:
 
           ghjk x install-ts
           ghjk x install-website
-          ghjk x install-lsp
           ghjk x fetch-deno
 
           # pre-resolve everything to disable resolutions
@@ -320,20 +319,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov
           fail_ci_if_error: true
-
-  test-lsp:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - shell: bash
-        run: |
-          ghjk x install-lsp
-          ghjk x test-lsp
-          # node --test --import=tsx --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov tests/*.test.ts
-
-      # - uses: codecov/codecov-action@v4
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     files: ./meta-lsp/ts-language-server/coverage.lcov
-      #     fail_ci_if_error: true

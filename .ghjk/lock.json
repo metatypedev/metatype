@@ -985,11 +985,6 @@
               "desc": "Print $METATYPE_VERSION",
               "envKey": "bciqkxvhlk6wifuxken6emvhj2cki7tw5ygccar6qq4vbartg776akqa"
             },
-            "test-lsp": {
-              "ty": "denoFile@v1",
-              "key": "test-lsp",
-              "envKey": "bciqcqqs4e5l7nqt57e4bku3gjdxs2iruhfdl2ocayrkkcs4otx7ig7a"
-            },
             "test-rust": {
               "ty": "denoFile@v1",
               "key": "test-rust",
@@ -1028,11 +1023,6 @@
               "ty": "denoFile@v1",
               "key": "install-wasi-adapter",
               "envKey": "bciqkxvhlk6wifuxken6emvhj2cki7tw5ygccar6qq4vbartg776akqa"
-            },
-            "install-lsp": {
-              "ty": "denoFile@v1",
-              "key": "install-lsp",
-              "envKey": "bciqcqqs4e5l7nqt57e4bku3gjdxs2iruhfdl2ocayrkkcs4otx7ig7a"
             },
             "install-website": {
               "ty": "denoFile@v1",
@@ -1196,7 +1186,6 @@
             "clean-rust",
             "version-bump",
             "version-print",
-            "test-lsp",
             "test-rust",
             "test-website",
             "test-e2e",
@@ -1204,7 +1193,6 @@
             "lint-deno",
             "lint-udeps",
             "install-wasi-adapter",
-            "install-lsp",
             "install-website",
             "install-ts",
             "install-py",
