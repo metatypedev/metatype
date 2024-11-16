@@ -21,6 +21,7 @@ import { AsyncDisposableStack } from "dispose";
 import { Typegraph } from "@metatype/typegate/typegraph/types.ts";
 import { metaCli } from "test-utils/meta.ts";
 import { $ } from "@david/dax";
+import { sleep } from "test-utils/mod.ts";
 
 export interface ParseOptions {
   deploy?: boolean;
@@ -30,6 +31,8 @@ export interface ParseOptions {
   autoSecretName?: boolean;
   prefix?: string;
   pretty?: boolean;
+  createMigration?: boolean;
+  syncMode?: boolean;
 }
 
 export enum SDKLangugage {
@@ -226,8 +229,6 @@ export class MetaTest {
       "--target=dev",
       `--gate=http://localhost:${this.port}`,
       "--allow-dirty",
-      "--create-migration",
-      //"--allow-destructive",
       ...optSecrets,
       `--file=${path}`,
     ];
@@ -236,16 +237,29 @@ export class MetaTest {
       args.push(`--prefix=${opts.prefix}`);
     }
 
+    if (opts.createMigration === false) {
+      args.push("--no-migration");
+    } else {
+      args.push("--create-migration");
+    }
+
     const { stdout } = await metaCli(...args);
     console.log({ stdout: $.stripAnsi(stdout) });
     const matches = stdout.match(/\((.*)\)/);
     const typegraphs = matches?.[1].split(", ") ?? [];
+
     if (typegraphs.length == 0) {
       throw new Error("No typegraph");
     }
+
+    if (opts.syncMode) {
+      await sleep(1000);
+    }
+
+    const prefix = opts.prefix ?? "";
     const tgName = opts.typegraph ?? typegraphs[0];
     const typegate = this.typegate;
-    const engine = typegate.register.get(tgName)!;
+    const engine = typegate.register.get(prefix + tgName)!;
 
     if (!engine) {
       throw new Error(`Typegate engine '${tgName}' not found`);

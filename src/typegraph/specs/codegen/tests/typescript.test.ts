@@ -22,7 +22,7 @@ Deno.test("TypeScript struct codegen", () => {
   const expected = `export type RecordLike = {
   num: number
   key: string
-  str_arr: string[]
+  strArr: string[]
   tup: [number, number]
   opt?: boolean
   comp?: [number, Something][]
@@ -40,7 +40,7 @@ Deno.test("TypeScript union codegen", () => {
   const expected = `export type EnumLike =
   | "simple"
   | { composite: Something }
-  | { snake_case: boolean };`;
+  | { snakeCase: boolean };`;
 
   assertEquals(result, expected);
 });

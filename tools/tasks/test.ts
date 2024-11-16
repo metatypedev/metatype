@@ -9,7 +9,7 @@ export default {
     inherit: "ci",
     desc: "Shorthand for `tools/test.ts`",
     fn: async ($) => {
-      if (await testE2eCli($.argv) != 0) {
+      if ((await testE2eCli($.argv)) != 0) {
         throw new Error("tests failed");
       }
     },
@@ -35,6 +35,13 @@ export default {
       // typegraph_core tests need to be run separately
       // without --tests, the --doc is causing a link error "syntax error in VERSION script"
       await $`cargo test --locked --package typegraph_core --tests`;
+    },
+  },
+  "test-codegen": {
+    inherit: "ci",
+    workingDir: "./src/typegraph/specs/codegen",
+    async fn($) {
+      await $`deno task test`;
     },
   },
 } satisfies Record<string, DenoTaskDefArgs>;

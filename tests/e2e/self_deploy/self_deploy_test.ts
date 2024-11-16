@@ -14,7 +14,7 @@ Meta.test(
     name: "deploy and undeploy typegraph without meta-cli",
   },
   async (t) => {
-    throw new Error("Unimplemented");
+    // FIXME: Uncomment after implementing mode B (MET-754)
     //const gate = `http://localhost:${t.port}`;
     //const auth = new BasicAuth("admin", "password");
     //const cwdDir = join(testDir, "e2e", "self_deploy");

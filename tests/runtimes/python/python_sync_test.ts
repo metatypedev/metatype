@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { gql, Meta, sleep } from "../../utils/mod.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
@@ -214,9 +214,7 @@ Meta.test(
   },
   async (t) => {
     const testMultipleReplica = async (instanceNumber: number) => {
-      const e = await t.engine("runtimes/python/python.py");
-
-      await sleep(5_000);
+      const e = await t.engine("runtimes/python/python.py", { syncMode: true });
 
       await t.should(
         `work on the typgate instance #${instanceNumber}`,

@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "codegen": "deno run --allow-env --allow-write --allow-read --allow-ffi --allow-run ./src/scripts/main.ts",
-    "test": "deno test --allow-env --allow-read --allow-ffi --allow-run",
-  },
+    "codegen": "deno run --allow-env --allow-write --allow-read --allow-ffi --allow-run ./src/cmd/main.ts",
+    "test": "deno test --allow-env --allow-read --allow-ffi --allow-run"
+  }
 }

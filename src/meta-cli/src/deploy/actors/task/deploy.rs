@@ -58,8 +58,7 @@ impl DeployActionGenerator {
         config_dir: Arc<Path>,
         working_dir: Arc<Path>,
         migrations_dir: Arc<Path>,
-        create_migrations: bool,
-        destructive_migrations: bool, // TODO enum { Fail, Reset, Ask }
+        default_migration_action: MigrationAction,
     ) -> Self {
         Self {
             secrets,
@@ -69,11 +68,7 @@ impl DeployActionGenerator {
                 config_dir,
                 working_dir,
                 migrations_dir,
-                default_migration_action: MigrationAction {
-                    apply: true,
-                    create: create_migrations,
-                    reset: destructive_migrations,
-                },
+                default_migration_action,
                 artifact_resolution: true,
             }
             .into(),

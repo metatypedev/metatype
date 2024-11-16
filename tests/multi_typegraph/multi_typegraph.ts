@@ -13,32 +13,33 @@ function randomFunc() {
 
 export const notTg = randomFunc();
 
-await typegraph("temporal", (g: any) => {
-  const pub = Policy.public();
-  const temporal = new TemporalRuntime({
-    name: "test",
-    hostSecret: "HOST",
-    namespaceSecret: "NAMESPACE",
-  });
-  g.expose({
-    startKv: temporal
-      .startWorkflow("keyValueStore", t.struct({}))
-      .withPolicy(pub),
-
-    query: temporal
-      .queryWorkflow("getValue", t.string(), t.string().optional())
-      .withPolicy(pub),
-
-    signal: temporal
-      .signalWorkflow(
-        "setValue",
-        t.struct({ key: t.string(), value: t.string() }),
-      )
-      .withPolicy(pub),
-
-    describe: temporal.describeWorkflow().withPolicy(pub),
-  });
-});
+// FIXME: Uncomment after it becomes possible to deploy a specific typegraph
+// await typegraph("temporal", (g: any) => {
+//   const pub = Policy.public();
+//   const temporal = new TemporalRuntime({
+//     name: "test",
+//     hostSecret: "HOST",
+//     namespaceSecret: "NAMESPACE",
+//   });
+//   g.expose({
+//     startKv: temporal
+//       .startWorkflow("keyValueStore", t.struct({}))
+//       .withPolicy(pub),
+//
+//     query: temporal
+//       .queryWorkflow("getValue", t.string(), t.string().optional())
+//       .withPolicy(pub),
+//
+//     signal: temporal
+//       .signalWorkflow(
+//         "setValue",
+//         t.struct({ key: t.string(), value: t.string() }),
+//       )
+//       .withPolicy(pub),
+//
+//     describe: temporal.describeWorkflow().withPolicy(pub),
+//   });
+// });
 
 const tpe = t.struct({
   a: t.string(),

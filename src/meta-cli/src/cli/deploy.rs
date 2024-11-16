@@ -197,6 +197,7 @@ mod default_mode {
 
     use std::time::Duration;
 
+    use actors::task::deploy::MigrationAction;
     use task_manager::{TaskManagerInit, TaskSource};
 
     use crate::config::PathOption;
@@ -209,6 +210,11 @@ mod default_mode {
         let mut secrets = deploy.secrets.clone();
         secrets.apply_overrides(&deploy.options.secrets)?;
 
+        let default_migration_action = MigrationAction {
+            apply: !deploy.options.no_migration,
+            create: deploy.options.create_migration,
+            reset: deploy.options.allow_destructive,
+        };
         let action_generator = DeployActionGenerator::new(
             deploy.node.into(),
             secrets.into(),
@@ -218,8 +224,7 @@ mod default_mode {
                 .config
                 .prisma_migrations_base_dir(PathOption::Absolute)
                 .into(),
-            deploy.options.create_migration,
-            deploy.options.allow_destructive,
+            default_migration_action,
         );
 
         let init = TaskManagerInit::<DeployAction>::new(
@@ -273,6 +278,7 @@ mod default_mode {
 mod watch_mode {
     use std::time::Duration;
 
+    use actors::task::deploy::MigrationAction;
     use task_manager::{TaskManagerInit, TaskSource};
 
     use crate::config::PathOption;
@@ -317,6 +323,11 @@ mod watch_mode {
             deploy_node
         };
 
+        let default_migration_action = MigrationAction {
+            apply: !deploy.options.no_migration,
+            create: deploy.options.create_migration,
+            reset: deploy.options.allow_destructive,
+        };
         let action_generator = DeployActionGenerator::new(
             deploy_node.into(),
             secrets.into(),
@@ -326,8 +337,7 @@ mod watch_mode {
                 .config
                 .prisma_migrations_base_dir(PathOption::Absolute)
                 .into(),
-            deploy.options.create_migration,
-            deploy.options.allow_destructive,
+            default_migration_action,
         );
 
         let init = TaskManagerInit::<DeployAction>::new(

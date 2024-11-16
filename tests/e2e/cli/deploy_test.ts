@@ -3,6 +3,7 @@
 
 import { gql, Meta } from "../../utils/mod.ts";
 import { TestModule } from "../../utils/test_module.ts";
+import * as path from "@std/path";
 import { assertRejects, assertStringIncludes } from "@std/assert";
 import { dropSchema, randomPGConnStr, reset } from "test-utils/database.ts";
 
@@ -212,10 +213,12 @@ Meta.test(
     const port = t.port!;
     const { connStr, schema } = randomPGConnStr();
     await dropSchema(schema);
-    const e = await t.engine("prisma.py", {
+    const tgPath = path.join(t.workingDir, "prisma.py");
+    const e = await t.engine(tgPath, {
       secrets: {
         POSTGRES: connStr,
       },
+      createMigration: false,
     });
 
     const nodeConfigs = [
@@ -242,7 +245,7 @@ Meta.test(
     await t.should("fail on dirty repo", async () => {
       await t.shell(["bash", "-c", "touch README.md"]);
       await assertRejects(() =>
-        t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"])
+        t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"]),
       );
     });
 
@@ -310,11 +313,13 @@ Meta.test(
   async (t) => {
     const { connStr, schema } = randomPGConnStr();
     await dropSchema(schema);
-    const e = await t.engine("prisma.py", {
+    const tgPath = path.join(t.workingDir, "prisma.py");
+    const e = await t.engine(tgPath, {
       secrets: {
         POSTGRES: connStr,
       },
       prefix: "pref-",
+      createMigration: false,
     });
 
     const nodeConfigs = [

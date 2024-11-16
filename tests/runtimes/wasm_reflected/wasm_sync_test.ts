@@ -61,6 +61,7 @@ Meta.test(
     await metaTest.should("work after deploying artifact to S3", async () => {
       const engine = await metaTest.engine(
         "runtimes/wasm_reflected/wasm_reflected.ts",
+        { syncMode: true },
       );
       const s3 = new S3Client(syncConfig.s3);
       assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 2);
