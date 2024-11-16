@@ -2,6 +2,158 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.5.0-rc.6](https://github.com/metatypedev/metatype/releases/tag/v0.5.0-rc.6) - 2024-11-14
+
+### Bug Fixes
+
+<details >
+<summary>
+(cli) Implement `--prefix` argument (<a href="https://github.com/metatypedev/metatype/pull/913">#913</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+- Fixes
+[MET-738](https://linear.app/metatypedev/issue/MET-738/implement-prefix-in-meta-serialize).
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+
+---
+
+- [ ] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+(cli) Deployment after reloading config (<a href="https://github.com/metatypedev/metatype/pull/917">#917</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+- Fixes typegraph deployment bug using `meta dev` after changing
+`metatype.yml` and added more watcher tests.
+
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+
+---
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+<details >
+<summary>
+(subs) Disable save/kwargs mutation + better `LOG_LEVEL`  (<a href="https://github.com/metatypedev/metatype/pull/915">#915</a>)
+</summary>
+
+Tackles
+[MET-724](https://linear.app/metatypedev/issue/MET-724/subs-bug-disable-user-ability-to-mutate-input)
+and
+[MET-730](https://linear.app/metatypedev/issue/MET-730/quiet-down-substantial-logging)
+.
+
+* A reference to `run.kwargs` should not be exposed directly, the
+`kwargs` used by the user should be a deep copy.
+* save now returns a deep copy of the returned value
+*  noisy debug logs on substantial agent (disabled by default)
+
+
+#### Migration notes
+
+`save` will always refer to a deep clone of a value throughout the
+initial run/replay.
+```ts
+const example = await ctx.save(() => someRef);
+someRef.field = "changed!"; // will not affect example
+```
+
+
+- [x] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [x] End-user documentation is updated to reflect the change
+
+---------
+
+</details>
+<details >
+<summary>
+Remove prisma count (<a href="https://github.com/metatypedev/metatype/pull/916">#916</a>)
+</summary>
+
+<!--
+Pull requests are squashed and merged using:
+- their title as the commit message
+- their description as the commit body
+
+Having a good title and description is important for the users to get
+readable changelog.
+-->
+
+<!-- 1. Explain WHAT the change is about -->
+
+- Remove prisma count operation: it does not work, making it work like
+on the prisma client would complicate the prisma runtime (until we have
+output transformations...); Use aggregate instead.
+- Increase the delay before exiting the process on the nodejs typegraph
+client to give the CLI time to process all the output.
+- Remove `quaint` logs on the typegate (too verbose).
+
+<!-- 2. Explain WHY the change cannot be made simpler -->
+
+
+<!-- 3. Explain HOW users should update their code -->
+
+#### Migration notes
+
+---
+
+- [ ] The change comes with new or modified tests
+- [ ] Hard-to-understand functions have explanatory comments
+- [ ] End-user documentation is updated to reflect the change
+
+</details>
+
+
+### Documentation
+
+<details >
+<summary>
+`/docs/reference/graphql` (<a href="https://github.com/metatypedev/metatype/pull/875">#875</a>)
+</summary>
+
+- Adds page `/docs/reference/graphql`
+
+---------
+
+</details>
+
+
 ## [v0.5.0-rc.5](https://github.com/metatypedev/metatype/releases/tag/v0.5.0-rc.5) - 2024-11-10
 
 ### Bug Fixes
@@ -3575,43 +3727,6 @@ functionality across multiple files.
 
 <details >
 <summary>
-(docs) Final polish to comparison table. (<a href="https://github.com/metatypedev/metatype/pull/709">#709</a>)
-</summary>
-
-some changes to comparison table(docs)
-
-#### Migration notes
-
-_No Migrations Needed_
-
-<!-- 5. Readiness checklist
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
--->
-
-
-<!-- This is an auto-generated comment: release notes by coderabbit.ai
--->
-## Summary by CodeRabbit
-
-
-- **Documentation**
-- Introduced a new section on Artifact Tracking Protocol in the
-architecture documentation, explaining artifact classification and
-tracking modes in Metatype.
-- Updated comparisons documentation with additional platforms, criteria
-for choosing Metatype, and detailed feature comparison tables.
-- Renamed project directory for clarity and consistency in project setup
-documentation.
-- **Bug Fixes**
-  - Removed outdated `TODO` comment in installation documentation.
-
-<!-- end of auto-generated comment: release notes by coderabbit.ai -->
-
-</details>
-<details >
-<summary>
 Bump to version 0.4.1-0 (<a href="https://github.com/metatypedev/metatype/pull/713">#713</a>)
 </summary>
 
@@ -3654,178 +3769,6 @@ changes.
 <!-- end of auto-generated comment: release notes by coderabbit.ai -->
 
 ---------
-
-</details>
-
-
-## [v0.4.0](https://github.com/metatypedev/metatype/releases/tag/v0.4.0) - 2024-05-09
-
-### Documentation
-
-<details >
-<summary>
-Add a comparison b/n metatype and other similar solutions/products. (<a href="https://github.com/metatypedev/metatype/pull/697">#697</a>)
-</summary>
-
-<!--
-Pull requests are squash merged using:
-- their title as the commit message
-- their description as the commit body
-
-Having a good title and description is important for the users to get
-readable changelog.
--->
-
-<!-- 1. Explain below WHAT the change is -->
-- Adds a comparison table between metatype and other similar services.
-- Add artifact upload protocol to `Architecture` section in docs.
-
-<!-- 2. Explain below WHY the change cannot be made simpler -->
-
-
-<!-- 3. Explain below WHY the was made or link an issue number -->
-
-[MET-443](https://linear.app/metatypedev/issue/MET-443/include-comparisons-with-other-products-similar-to-metatype)
-
-<!-- 4. Explain HOW users should update their code or remove that
-section -->
-
-#### Migration notes
-_No Migration Needed_
-
-<!-- 5. Readiness checklist
-- [ ] The change come with new or modified tests
-- [ ] Hard-to-understand functions have explanatory comments
-- [ ] End-user documentation is updated to reflect the change
--->
-
-</details>
-
-
-### Features
-
-<details >
-<summary>
-Artifact removal (<a href="https://github.com/metatypedev/metatype/pull/668">#668</a>)
-</summary>
-
-- Add GC: remove artifacts when unreferenced by any deployed typegraph
-- Improve resource management: use `AsyncDisposable` and
-`AsyncDisposableStack`
-- Improve testability (for parallel testing): always read the tmpDir
-config from the `Typegate` object
-
-#### Motivation and context
-
-[MET-433](https://linear.app/metatypedev/issue/MET-433/file-removal)
-
-#### Migration notes
-
-_N/A_
-
-### Checklist
-
-- [x] The change come with new or modified tests
-- [x] Hard-to-understand functions have explanatory comments
-- [x] End-user documentation is updated to reflect the change
-
-
-<!-- This is an auto-generated comment: release notes by coderabbit.ai
--->
-## Summary by CodeRabbit
-
-- **New Features**
-  - Enhanced search functionality with the addition of a new search bar.
-  - Introduced new test configurations to improve script execution.
-- Updated artifact storage documentation to clarify management
-processes.
-  - Added new extensions to support improved code commenting.
-
-- **Bug Fixes**
-- Removed outdated Deno import mapping settings to streamline
-development environment setup.
-
-- **Documentation**
-- Expanded documentation on artifact tracking and management, including
-reference counting and garbage collection mechanisms.
-
-- **Refactor**
-- Implemented interface changes in `QueryEngine` for better async
-disposal management.
-- Code restructuring in artifact management for enhanced performance and
-maintainability.
-
-- **Chores**
-- Adjusted settings and configurations in the development environment to
-align with current best practices.
-
-- **Tests**
-- Introduced new test cases for artifact upload and management
-functionalities.
-<!-- end of auto-generated comment: release notes by coderabbit.ai -->
-
----------
-
-</details>
-
-
-### Miscellaneous Tasks
-
-<details >
-<summary>
-(release) Prepare 0.4.0 (<a href="https://github.com/metatypedev/metatype/pull/710">#710</a>)
-</summary>
-
-Bumps version to release 0.4.0.
-
-<!-- This is an auto-generated comment: release notes by coderabbit.ai
--->
-## Summary by CodeRabbit
-
-
-- **New Features**
-- Updated the software across various components to version 0.4.0,
-enhancing functionality and potentially introducing new features or
-fixes.
-- **Documentation**
-- Updated version documentation in multiple configuration files to
-reflect new version 0.4.0.
-- **Bug Fixes**
-- Adjusted version constants and dependencies to ensure compatibility
-and stability with the new software version 0.4.0.
-
-<!-- end of auto-generated comment: release notes by coderabbit.ai -->
-
----------
-
-</details>
-
-
-### Refactor
-
-<details >
-<summary>
-(gate) Wasi 0.2 pyrt (<a href="https://github.com/metatypedev/metatype/pull/687">#687</a>)
-</summary>
-
-- Rewrites the PythonRuntime host using a `componentize-py` based
-component.
-- Leaf through this
-[memo](https://hackmd.io/@SC-qT-WXTROceKYdNA-Lpg/ryyAXiQlC/edit) for a
-mental model.
-
-</details>
-<details >
-<summary>
-(libs/xtask,gate) Remove xtask/codegen (<a href="https://github.com/metatypedev/metatype/pull/700">#700</a>)
-</summary>
-
-Faster build time
-
-#### Migration notes
-
-Make sure to sync `typegate/src/types.ts` when an update is made on the
-typegraph schema.
 
 </details>
 
