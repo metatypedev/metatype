@@ -37,11 +37,11 @@ export async function listObjects(client: S3Client, bucket: string) {
     });
     const res = await client.send(listCommand);
     return res.Contents ?? [];
-  } catch (e) {
-    if (e.name === "NoSuchBucket") {
+  } catch (err: any) {
+    if (err.name === "NoSuchBucket") {
       return null;
     }
-    throw e;
+    throw err;
   }
 }
 
@@ -55,11 +55,11 @@ export async function hasObject(client: S3Client, bucket: string, key: string) {
     const headCommand = new HeadObjectCommand({ Bucket: bucket, Key: key });
     await client.send(headCommand);
     return true;
-  } catch (e) {
-    if (e.name === "NotFound") {
+  } catch (err: any) {
+    if (err.name === "NotFound") {
       return false;
     }
-    throw e;
+    throw err;
   }
 }
 

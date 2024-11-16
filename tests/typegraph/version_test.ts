@@ -5,7 +5,9 @@ import { expandGlob } from "@std/fs/expand-glob";
 import { Meta } from "../utils/mod.ts";
 import { join } from "@std/path";
 import { JSONSchemaFaker } from "json-schema-faker";
-import Ajv from "ajv";
+import _Ajv from "ajv";
+// workaround for https://github.com/denoland/deno/issues/24769
+const Ajv = _Ajv as any as typeof _Ajv.default;
 import { assertNotStrictEquals } from "@std/assert";
 import { upgradeTypegraph } from "@metatype/typegate/typegraph/versions.ts";
 import { testDir } from "../utils/dir.ts";
@@ -53,8 +55,8 @@ Meta.test("typegraphs creation", async (t) => {
     */
 
       for (let j = 0; j < 100; j += 1) {
-        const fromData = JSONSchemaFaker.generate(fromJson);
-        fromData.meta.version = fromVersion;
+        const fromData = JSONSchemaFaker.generate(fromJson) as any;
+        fromData!.meta.version = fromVersion;
         /*
         const fromCheck = fromValidate(fromData);
         assertEquals(

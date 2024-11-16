@@ -34,7 +34,7 @@ export class ArtifactService {
       let metaList: Array<ArtifactMeta>;
       try {
         metaList = prepareUploadBodySchema.parse(await request.json());
-      } catch (error) {
+      } catch (error: any) {
         logger.error("Failed to parse data: {}", error);
         return new Response(
           JSON.stringify({ error: `Invalid Request Body: ${error.message}` }),
@@ -106,11 +106,11 @@ export class ArtifactService {
     let meta: ArtifactMeta;
     try {
       meta = await this.store.takeArtifactMeta(token);
-    } catch (e) {
-      if (e instanceof BaseError) {
-        return e.toResponse();
+    } catch (err: any) {
+      if (err instanceof BaseError) {
+        return err.toResponse();
       }
-      return new Response(JSON.stringify({ error: e.message }), {
+      return new Response(JSON.stringify({ error: err.message ?? err }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });

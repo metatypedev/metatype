@@ -1434,7 +1434,9 @@ pub mod graphql {
         nodes_len: usize,
     ) -> Result<Vec<serde_json::Value>, GraphQLRequestError> {
         if !response.status.is_success() {
-            return Err(GraphQLRequestError::RequestFailed { response });
+            return Err(GraphQLRequestError::RequestFailed {
+                response: Box::new(response),
+            });
         }
         #[derive(Debug, Deserialize)]
         struct Response {
@@ -1482,7 +1484,7 @@ pub mod graphql {
         },
         /// Http error codes recieived
         RequestFailed {
-            response: GraphQLResponse,
+            response: Box<GraphQLResponse>,
         },
         /// Unable to deserialize body
         BodyError {
