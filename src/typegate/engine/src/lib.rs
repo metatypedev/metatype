@@ -160,12 +160,11 @@ pub async fn launch_typegate_deno(
         tokio::fs::write(gitignore, "*").await?;
     }
 
-    let permissions = deno_runtime::deno_permissions::PermissionsOptions {
+    let permissions = mt_deno::deno::args::PermissionFlags {
         allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
         allow_sys: Some(vec![]),
         allow_env: Some(vec![]),
-        allow_hrtime: true,
-        allow_write: Some(vec![tmp_dir.clone()]),
+        allow_write: Some(vec![format!("{}", tmp_dir.display())]),
         allow_ffi: Some(vec![]),
         allow_read: Some(
             // we allow read for the whole fs
@@ -175,6 +174,20 @@ pub async fn launch_typegate_deno(
             vec![],
         ),
         allow_net: Some(vec![]),
+        allow_import: Some(
+            // based on deno cli defaults
+            [
+                "deno.land:443",
+                "jsr.io:443",
+                "esm.sh:443",
+                "cdn.jsdelivr.net:443",
+                "raw.githubusercontent.com:443",
+                "user.githubusercontent.com:443",
+            ]
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+        ),
         ..Default::default()
     };
 
@@ -197,8 +210,6 @@ fn op_get_version() -> &'static str {
 mod tests {
     use crate::interlude::*;
 
-    use deno_runtime::deno_permissions::PermissionsOptions;
-
     #[test]
     #[ignore]
     fn run_typegate() -> Result<()> {
@@ -208,20 +219,28 @@ mod tests {
             error!("{info} {}:{}", std::file!(), std::line!());
             std::process::exit(1);
         }));
-        let permissions = PermissionsOptions {
+        let permissions = mt_deno::deno::args::PermissionFlags {
             allow_run: Some(["hostname"].into_iter().map(str::to_owned).collect()),
             allow_sys: Some(vec![]),
             allow_env: Some(vec![]),
-            allow_hrtime: true,
-            allow_write: Some(
-                ["tmp"]
-                    .into_iter()
-                    .map(std::str::FromStr::from_str)
-                    .collect::<Result<_, _>>()?,
-            ),
+            allow_write: Some(["tmp"].into_iter().map(str::to_owned).collect()),
             allow_ffi: Some(vec![]),
             // allow_read: Some(vec![]),
             allow_net: Some(vec![]),
+            allow_import: Some(
+                // based on deno cli defaults
+                [
+                    "deno.land:443",
+                    "jsr.io:443",
+                    "esm.sh:443",
+                    "cdn.jsdelivr.net:443",
+                    "raw.githubusercontent.com:443",
+                    "user.githubusercontent.com:443",
+                ]
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+            ),
             ..Default::default()
         };
         mt_deno::run_sync(

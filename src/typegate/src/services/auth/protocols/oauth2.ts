@@ -164,7 +164,7 @@ export class OAuth2Auth extends Protocol {
     super(typegraphName);
   }
 
-  async authMiddleware(request: Request): Promise<Response> {
+  override async authMiddleware(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const base = `${url.protocol}//${url.host}`;
     const typegraphPath = `/${this.typegraphName}`;

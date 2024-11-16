@@ -15,18 +15,20 @@
  */
 
 import { cyan, green, parseArgs } from "./deps.ts";
-// FIXME: import from @metatype/typegate
-import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
+import type {
+  Injection,
+  Typegraph,
+} from "../src/typegate/src/typegraph/types.ts";
 import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
 import { projectDir } from "./utils.ts";
 
-export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
+export function treeView(tg: Typegraph, rootIdx = 0, depth = 4) {
   visitType(tg, rootIdx, ({ type, idx, path }) => {
     const indent = "    ".repeat(path.edges.length);
     const edge = cyan(`${path.edges[path.edges.length - 1] ?? "[root]"}`);
     const idxStr = green(`${idx}`);
     const injection = "injection" in type
-      ? ` (injection ${(type.injection as any).source})`
+      ? ` (injection ${(type.injection as Injection).source})`
       : "";
     console.log(
       `${indent}${edge} → ${idxStr} ${type.type}:${type.title}${injection}`,
@@ -67,7 +69,7 @@ const { stdout } = await new Deno.Command(cmd[0], {
   stderr: "inherit",
 }).output();
 
-const tgs: TypeGraphDS[] = JSON.parse(
+const tgs: Typegraph[] = JSON.parse(
   new TextDecoder().decode(stdout),
 );
 

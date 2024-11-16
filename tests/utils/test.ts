@@ -354,7 +354,7 @@ export class MetaTest {
   ): Promise<void> {
     try {
       fn();
-    } catch (e) {
+    } catch (e: any) {
       return await this.assertSnapshot(e.message, options);
     }
     throw new Error("Assertion failure: function did not throw");

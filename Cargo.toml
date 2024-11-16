@@ -38,8 +38,8 @@ metagen-client = { path = "src/metagen-client-rs" }
 typegate_engine = { path = "src/typegate/engine" }
 
 # cli
-clap = "=4.5.13"
-clap_complete = "=4.5.12"
+clap = "=4.5.16"
+clap_complete = "=4.5.24"
 clap-verbosity-flag = "2.2.2"
 colored = "2.1.0"
 dialoguer = "0.11.0"
@@ -59,7 +59,7 @@ shadow-rs = "0.35.1"
 # encoding
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
-serde_yaml = "0.9.34"                                  # FIXME: deprecated, be on the lookout for alternatives
+serde_yaml = "0.9.34"  # FIXME: deprecated, be on the lookout for alternatives
 serde_with = "3.11.0"
 flate2 = "1.0.34"
 tar = "0.4"
@@ -132,8 +132,8 @@ wit-bindgen = "0.34.0"
 
 # deno
 # deno = { path =  "../deno/cli" }
-deno = { git = "https://github.com/metatypedev/deno", branch = "v1.46.3-embeddable" }
-deno_core = { version = "=0.307.0" }
+deno = { git = "https://github.com/metatypedev/deno", branch = "v2.0.6-embeddable" }
+deno_core = { version = "=0.318.0" }
 
 # logging
 env_logger = "=0.11.0"

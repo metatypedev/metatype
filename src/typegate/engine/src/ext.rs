@@ -88,7 +88,6 @@ deno_core::extension!(
 pub mod tests {
     #[rustfmt::skip]
     use deno_core as deno_core; // necessary for re-exported macros to work
-    use deno_runtime::deno_permissions::PermissionsContainer;
     use std::sync::Arc;
 
     use super::*;
@@ -138,13 +137,13 @@ pub mod tests {
         .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;
-        let permissions = PermissionsContainer::allow_all();
+        // let desc_parser = deno_runtime::permissions::RuntimePermissionDescriptorParser::new(
+        //     std::sync::Arc::new(deno_runtime::deno_fs::RealFs),
+        // );
+        // let desc_parser = std::sync::Arc::new(desc_parser);
+        // let permissions = PermissionsContainer::allow_all(desc_parser.);
         let mut worker = worker_factory
-            .create_main_worker(
-                deno_runtime::WorkerExecutionMode::Run,
-                main_module,
-                permissions,
-            )
+            .create_main_worker(deno_runtime::WorkerExecutionMode::Run, main_module)
             .await?;
         worker.execute_script_static(
             deno_core::located_script_name!(),

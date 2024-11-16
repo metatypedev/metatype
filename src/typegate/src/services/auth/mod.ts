@@ -72,9 +72,9 @@ export async function ensureJWT(
     return [{}, headers];
   }
 
-  let auth: Protocol | null = null;
+  let auth: Protocol | undefined;
   if (kind.toLowerCase() === "basic") {
-    auth = engine.tg.auths.get("basic") ?? null;
+    auth = engine.tg.auths.get("basic");
   } else {
     try {
       const { provider } = await unsafeExtractJWT(token);
@@ -82,7 +82,7 @@ export async function ensureJWT(
         // defaulting to first auth
         auth = engine.tg.auths.values().next().value;
       } else {
-        auth = engine.tg.auths.get(provider as string) ?? null;
+        auth = engine.tg.auths.get(provider as string);
       }
     } catch (e) {
       logger.warn(`malformed jwt: ${e}`);

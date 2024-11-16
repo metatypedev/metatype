@@ -52,11 +52,11 @@ export async function handleGraphQL(
   let content: Operations | null = null;
   try {
     content = await parseRequest(request);
-  } catch (e) {
-    if (e instanceof BaseError) {
-      return e.toResponse(headers);
+  } catch (err: any) {
+    if (err instanceof BaseError) {
+      return err.toResponse(headers);
     }
-    return badRequest(e.message);
+    return badRequest(err.message);
   }
   const { query, operationName: operationNameRaw, variables } = content;
   const operationName = forceAnyToOption(operationNameRaw);
@@ -120,29 +120,29 @@ export async function handleGraphQL(
     }
 
     return jsonOk(res, headers);
-  } catch (e) {
+  } catch (err: any) {
     // throw e;
-    if (e instanceof BaseError) {
-      return e.toResponse(headers);
+    if (err instanceof BaseError) {
+      return err.toResponse(headers);
     }
-    if (e instanceof ResolverError) {
-      logger.error(`field err: ${e.message}`);
-      return jsonError(e.message, headers, 502);
-    } else if (e instanceof BadContext) {
-      logger.error(`context err: ${e.message}`);
+    if (err instanceof ResolverError) {
+      logger.error(`field err: ${err.message}`);
+      return jsonError(err.message, headers, 502);
+    } else if (err instanceof BadContext) {
+      logger.error(`context err: ${err.message}`);
       return jsonError(
-        e.message,
+        err.message,
         headers,
         Object.keys(context).length === 0 ? 401 : 403,
       );
     } else {
-      logger.error(`request err: ${Deno.inspect(e)}`);
-      if (e.cause) {
+      logger.error(`request err: ${Deno.inspect(err)}`);
+      if (err.cause) {
         logger.error(
-          Deno.inspect(e.cause, { strAbbreviateSize: 1024, depth: 10 }),
+          Deno.inspect(err.cause, { strAbbreviateSize: 1024, depth: 10 }),
         );
       }
-      return jsonError(e.message, headers, 400);
+      return jsonError(err.message, headers, 400);
     }
   }
 }

@@ -49,7 +49,7 @@ export class InternalAuth extends Protocol {
           error: null,
         };
       }
-    } catch (e) {
+    } catch (e: any) {
       logger.error(`failed to verify the token: ${e.message ?? e}`);
       return {
         claims: {},
