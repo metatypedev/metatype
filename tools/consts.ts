@@ -22,15 +22,6 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     ['(  GHJK_VERSION: ").+(")', GHJK_VERSION],
     [/([\s-]+uses:\s+metatypedev\/setup-ghjk@).+()/, GHJK_ACTION_VERSION],
   ],
-  "src/meta-lsp/package.json": [
-    [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
-  ],
-  "src/meta-lsp/ts-language-server/package.json": [
-    [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
-  ],
-  "src/meta-lsp/vscode-metatype-support/package.json": [
-    [/(\s*"version"\s*:\s*").+(",?)/, METATYPE_VERSION],
-  ],
   "tests/**/*.snap": [
     [/(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)/, METATYPE_VERSION],
   ],

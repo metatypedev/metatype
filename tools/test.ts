@@ -81,9 +81,7 @@ async function listTestFiles(filesArg: string[]): Promise<string[]> {
     // run all the tests
     return (
       await Array.fromAsync(
-        wd
-          .join("tests")
-          .expandGlob("**/*_test.ts", { globstar: true }),
+        wd.join("tests").expandGlob("**/*_test.ts", { globstar: true }),
       )
     ).map((ent) => ent.path.toString());
   }
@@ -138,7 +136,7 @@ export async function testE2e(args: {
     RUST_SPANTRACE: "1",
     // "RUST_BACKTRACE": "short",
     RUST_MIN_STACK: "8388608",
-    LOG_LEVEL: "DEBUG",
+    LOG_LEVEL: "DEBUG,substantial=DEBUG",
     // "NO_COLOR": "1",
     DEBUG: "true",
     PACKAGED: "false",
@@ -215,8 +213,9 @@ export async function testE2e(args: {
   $.logStep(`${prefix} Building xtask and meta-cli...`);
   await $`cargo build -p meta-cli -F typegate --profile ${buildProfile}
           && mv target/${profile}/meta target/${profile}/meta-full
-          && cargo build -p xtask -p meta-cli --profile ${buildProfile}`
-    .cwd(wd);
+          && cargo build -p xtask -p meta-cli --profile ${buildProfile}`.cwd(
+    wd,
+  );
 
   $.logStep(`Discovered ${queue.length} test files to run`);
 

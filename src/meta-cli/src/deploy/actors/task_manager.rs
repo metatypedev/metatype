@@ -285,16 +285,14 @@ impl<A: TaskAction + 'static> Actor for TaskManager<A> {
 
     fn stopping(&mut self, ctx: &mut Self::Context) -> Running {
         match &self.stop_reason {
-            Some(reason) => {
-                if matches!(reason, StopReason::Restart) {
-                    self.watcher_addr = self
-                        .init_params
-                        .start_source(ctx.address(), self.task_generator.clone());
-                    Running::Continue
-                } else {
-                    Running::Stop
-                }
+            Some(StopReason::Restart) => {
+                self.stop_reason.take();
+                self.watcher_addr = self
+                    .init_params
+                    .start_source(ctx.address(), self.task_generator.clone());
+                Running::Continue
             }
+            Some(_) => Running::Stop,
             None => Running::Continue,
         }
     }

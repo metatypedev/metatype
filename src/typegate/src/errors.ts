@@ -1,8 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { basename, dirname } from "@std/url";
-import { extname } from "@std/path";
+import { basename, dirname, extname } from "@std/path";
 import { getLogger } from "./log.ts";
 import { globalConfig } from "./config.ts";
 
@@ -55,10 +54,7 @@ export class BaseError extends Error {
     return this;
   }
 
-  toResponse(
-    headers: Headers = new Headers(),
-    graphqlFormat = true,
-  ): Response {
+  toResponse(headers: Headers = new Headers(), graphqlFormat = true): Response {
     const type = this.#type ?? this.constructor.name;
     logger.error(
       "{}[{}:{}]: {}",

@@ -49,7 +49,6 @@
       "./src/typegraph/deno/src/gen",
       "./docs/metatype.dev",
       "./src/typegraph/node",
-      "./src/meta-lsp",
       "target"
     ],
     "rules": {
