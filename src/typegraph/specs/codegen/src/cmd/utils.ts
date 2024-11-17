@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import * as path from "@std/path";
 import TypeScriptCodeGenerator from "../lib/typescript.ts";
 import RustLibCodeGenerator from "../lib/rust_lib.ts";

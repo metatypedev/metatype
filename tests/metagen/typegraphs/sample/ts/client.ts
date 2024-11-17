@@ -951,4 +951,3 @@ export class QueryGraph extends _QueryGraphBase {
     return new QueryNode(inner) as QueryNode<RootMixedUnionFnOutput>;
   }
 }
-

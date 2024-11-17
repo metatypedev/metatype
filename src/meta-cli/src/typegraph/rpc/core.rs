@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use typegraph_core::sdk::core::*;

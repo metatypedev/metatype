@@ -1,5 +1,8 @@
-use serde::{Serialize, Deserialize};
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use super::core::{FuncParams, MaterializerId, RuntimeId, TypeId};
+use serde::{Deserialize, Serialize};
 
 pub type Idempotency = bool;
 
@@ -291,26 +294,67 @@ pub struct GrpcData {
 
 pub trait Handler {
     fn get_deno_runtime() -> Result<RuntimeId, super::Error>;
-    fn register_deno_func(data: MaterializerDenoFunc, effect: Effect) -> Result<MaterializerId, super::Error>;
-    fn register_deno_static(data: MaterializerDenoStatic, type_id: TypeId) -> Result<MaterializerId, super::Error>;
-    fn get_predefined_deno_func(data: MaterializerDenoPredefined) -> Result<MaterializerId, super::Error>;
-    fn import_deno_function(data: MaterializerDenoImport, effect: Effect) -> Result<MaterializerId, super::Error>;
+    fn register_deno_func(
+        data: MaterializerDenoFunc,
+        effect: Effect,
+    ) -> Result<MaterializerId, super::Error>;
+    fn register_deno_static(
+        data: MaterializerDenoStatic,
+        type_id: TypeId,
+    ) -> Result<MaterializerId, super::Error>;
+    fn get_predefined_deno_func(
+        data: MaterializerDenoPredefined,
+    ) -> Result<MaterializerId, super::Error>;
+    fn import_deno_function(
+        data: MaterializerDenoImport,
+        effect: Effect,
+    ) -> Result<MaterializerId, super::Error>;
     fn register_graphql_runtime(data: GraphqlRuntimeData) -> Result<RuntimeId, super::Error>;
-    fn graphql_query(base: BaseMaterializer, data: MaterializerGraphqlQuery) -> Result<MaterializerId, super::Error>;
-    fn graphql_mutation(base: BaseMaterializer, data: MaterializerGraphqlQuery) -> Result<MaterializerId, super::Error>;
+    fn graphql_query(
+        base: BaseMaterializer,
+        data: MaterializerGraphqlQuery,
+    ) -> Result<MaterializerId, super::Error>;
+    fn graphql_mutation(
+        base: BaseMaterializer,
+        data: MaterializerGraphqlQuery,
+    ) -> Result<MaterializerId, super::Error>;
     fn register_http_runtime(data: HttpRuntimeData) -> Result<RuntimeId, super::Error>;
-    fn http_request(base: BaseMaterializer, data: MaterializerHttpRequest) -> Result<MaterializerId, super::Error>;
+    fn http_request(
+        base: BaseMaterializer,
+        data: MaterializerHttpRequest,
+    ) -> Result<MaterializerId, super::Error>;
     fn register_python_runtime() -> Result<RuntimeId, super::Error>;
-    fn from_python_lambda(base: BaseMaterializer, data: MaterializerPythonLambda) -> Result<MaterializerId, super::Error>;
-    fn from_python_def(base: BaseMaterializer, data: MaterializerPythonDef) -> Result<MaterializerId, super::Error>;
-    fn from_python_module(base: BaseMaterializer, data: MaterializerPythonModule) -> Result<MaterializerId, super::Error>;
-    fn from_python_import(base: BaseMaterializer, data: MaterializerPythonImport) -> Result<MaterializerId, super::Error>;
+    fn from_python_lambda(
+        base: BaseMaterializer,
+        data: MaterializerPythonLambda,
+    ) -> Result<MaterializerId, super::Error>;
+    fn from_python_def(
+        base: BaseMaterializer,
+        data: MaterializerPythonDef,
+    ) -> Result<MaterializerId, super::Error>;
+    fn from_python_module(
+        base: BaseMaterializer,
+        data: MaterializerPythonModule,
+    ) -> Result<MaterializerId, super::Error>;
+    fn from_python_import(
+        base: BaseMaterializer,
+        data: MaterializerPythonImport,
+    ) -> Result<MaterializerId, super::Error>;
     fn register_random_runtime(data: RandomRuntimeData) -> Result<MaterializerId, super::Error>;
-    fn create_random_mat(base: BaseMaterializer, data: MaterializerRandom) -> Result<MaterializerId, super::Error>;
+    fn create_random_mat(
+        base: BaseMaterializer,
+        data: MaterializerRandom,
+    ) -> Result<MaterializerId, super::Error>;
     fn register_wasm_reflected_runtime(data: WasmRuntimeData) -> Result<RuntimeId, super::Error>;
-    fn from_wasm_reflected_func(base: BaseMaterializer, data: MaterializerWasmReflectedFunc) -> Result<MaterializerId, super::Error>;
+    fn from_wasm_reflected_func(
+        base: BaseMaterializer,
+        data: MaterializerWasmReflectedFunc,
+    ) -> Result<MaterializerId, super::Error>;
     fn register_wasm_wire_runtime(data: WasmRuntimeData) -> Result<RuntimeId, super::Error>;
-    fn from_wasm_wire_handler(base: BaseMaterializer, data: MaterializerWasmWireHandler) -> Result<MaterializerId, super::Error>;
+    fn from_wasm_wire_handler(
+        base: BaseMaterializer,
+        data: MaterializerWasmWireHandler,
+    ) -> Result<MaterializerId, super::Error>;
     fn register_prisma_runtime(data: PrismaRuntimeData) -> Result<RuntimeId, super::Error>;
     fn prisma_find_unique(runtime: RuntimeId, model: TypeId) -> Result<FuncParams, super::Error>;
     fn prisma_find_many(runtime: RuntimeId, model: TypeId) -> Result<FuncParams, super::Error>;
@@ -324,18 +368,43 @@ pub trait Handler {
     fn prisma_upsert_one(runtime: RuntimeId, model: TypeId) -> Result<FuncParams, super::Error>;
     fn prisma_delete_one(runtime: RuntimeId, model: TypeId) -> Result<FuncParams, super::Error>;
     fn prisma_delete_many(runtime: RuntimeId, model: TypeId) -> Result<FuncParams, super::Error>;
-    fn prisma_execute(runtime: RuntimeId, query: String, param: TypeId, effect: Effect) -> Result<FuncParams, super::Error>;
-    fn prisma_query_raw(runtime: RuntimeId, query: String, out: TypeId, param: Option<TypeId>) -> Result<FuncParams, super::Error>;
+    fn prisma_execute(
+        runtime: RuntimeId,
+        query: String,
+        param: TypeId,
+        effect: Effect,
+    ) -> Result<FuncParams, super::Error>;
+    fn prisma_query_raw(
+        runtime: RuntimeId,
+        query: String,
+        out: TypeId,
+        param: Option<TypeId>,
+    ) -> Result<FuncParams, super::Error>;
     fn prisma_link(data: PrismaLinkData) -> Result<TypeId, super::Error>;
     fn prisma_migration(operation: PrismaMigrationOperation) -> Result<FuncParams, super::Error>;
     fn register_temporal_runtime(data: TemporalRuntimeData) -> Result<RuntimeId, super::Error>;
-    fn generate_temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Result<FuncParams, super::Error>;
-    fn register_typegate_materializer(operation: TypegateOperation) -> Result<MaterializerId, super::Error>;
-    fn register_typegraph_materializer(operation: TypegraphOperation) -> Result<MaterializerId, super::Error>;
-    fn register_substantial_runtime(data: SubstantialRuntimeData) -> Result<RuntimeId, super::Error>;
-    fn generate_substantial_operation(runtime: RuntimeId, data: SubstantialOperationData) -> Result<FuncParams, super::Error>;
+    fn generate_temporal_operation(
+        runtime: RuntimeId,
+        data: TemporalOperationData,
+    ) -> Result<FuncParams, super::Error>;
+    fn register_typegate_materializer(
+        operation: TypegateOperation,
+    ) -> Result<MaterializerId, super::Error>;
+    fn register_typegraph_materializer(
+        operation: TypegraphOperation,
+    ) -> Result<MaterializerId, super::Error>;
+    fn register_substantial_runtime(
+        data: SubstantialRuntimeData,
+    ) -> Result<RuntimeId, super::Error>;
+    fn generate_substantial_operation(
+        runtime: RuntimeId,
+        data: SubstantialOperationData,
+    ) -> Result<FuncParams, super::Error>;
     fn register_kv_runtime(data: KvRuntimeData) -> Result<RuntimeId, super::Error>;
-    fn kv_operation(base: BaseMaterializer, data: KvMaterializer) -> Result<MaterializerId, super::Error>;
+    fn kv_operation(
+        base: BaseMaterializer,
+        data: KvMaterializer,
+    ) -> Result<MaterializerId, super::Error>;
     fn register_grpc_runtime(data: GrpcRuntimeData) -> Result<RuntimeId, super::Error>;
     fn call_grpc_method(runtime: RuntimeId, data: GrpcData) -> Result<FuncParams, super::Error>;
 }
