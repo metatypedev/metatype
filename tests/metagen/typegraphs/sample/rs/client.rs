@@ -2522,3 +2522,4 @@ impl QueryGraph {
         }
     }
 }
+

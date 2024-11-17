@@ -47,7 +47,6 @@ mod utils;
 use crate::interlude::*;
 
 pub use config::*;
-use futures_concurrency::future::FutureGroup;
 pub use shared::FdkTemplate;
 
 pub use fdk_python::DEFAULT_TEMPLATE as FDK_PYTHON_DEFAULT_TEMPLATE;
@@ -216,20 +215,19 @@ impl GeneratorRunner {
     }
 }
 
+// FIXME: Bring FutureGroup back after multithreading support for typegraph core (MET-755)
 pub async fn generate_target(
     config: &config::Config,
     target_name: &str,
     workspace_path: PathBuf,
     resolver: impl InputResolver + Send + Sync + Clone + 'static,
 ) -> anyhow::Result<GeneratorOutput> {
-    use futures_lite::StreamExt;
-
     let target_conf = config
         .targets
         .get(target_name)
         .with_context(|| format!("target {target_name:?} not found in config"))?;
 
-    let mut group = FutureGroup::new();
+    let mut group = Vec::new();
     for config in &target_conf.0 {
         let gen_name = &config.generator_name;
         let config = config.other.to_owned();
@@ -239,28 +237,20 @@ pub async fn generate_target(
         let gen_impl = get_gen_op.exec(&workspace_path, config)?;
         let bill = gen_impl.bill_of_inputs();
 
-        let mut resolve_group = FutureGroup::new();
+        let mut resolved = Vec::new();
         for (name, order) in bill.into_iter() {
             let resolver = resolver.clone();
-            resolve_group.insert(Box::pin(async move {
-                anyhow::Ok((name, resolver.resolve(order).await?))
-            }));
+            let result = resolver.resolve(order).await?;
+            resolved.push((name, result));
         }
 
         let gen_name: Arc<str> = gen_name[..].into();
-        group.insert(Box::pin(async move {
-            let mut inputs = IndexMap::new();
-            while let Some(res) = resolve_group.next().await {
-                let (name, input) = res?;
-                inputs.insert(name, input);
-            }
-            let out = gen_impl.generate(inputs)?;
-            anyhow::Ok((gen_name, out))
-        }));
+        let inputs = IndexMap::from_iter(resolved);
+        let out = gen_impl.generate(inputs)?;
+        group.push((gen_name, out));
     }
     let mut out = IndexMap::new();
-    while let Some(res) = group.next().await {
-        let (gen_name, files) = res?;
+    for (gen_name, files) in group.into_iter() {
         for (path, buf) in files.0 {
             if let Some((src, _)) = out.get(&path) {
                 anyhow::bail!("generators \"{src}\" and \"{gen_name}\" clashed at \"{path:?}\"");

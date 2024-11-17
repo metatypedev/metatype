@@ -890,3 +890,4 @@ class QueryGraph(QueryGraphBase):
             "$q"
         )[0]
         return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes)
+

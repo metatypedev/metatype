@@ -41,7 +41,7 @@ export default {
     inherit: "ci",
     workingDir: "./src/typegraph/specs/codegen",
     async fn($) {
-      await $`deno task test`;
+      await $`bash -c "deno task test"`;
     },
   },
 } satisfies Record<string, DenoTaskDefArgs>;

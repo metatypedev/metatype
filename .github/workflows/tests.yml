@@ -293,6 +293,7 @@ jobs:
           ghjk x dev update --cache-only
 
           ghjk x test-rust
+          ghjk x test-codegen
 
           ghjk x test-e2e -- --coverage=coverage
 

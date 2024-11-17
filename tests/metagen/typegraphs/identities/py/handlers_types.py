@@ -12,7 +12,6 @@ class Ctx:
     def gql(self, query: str, variables: str) -> Any:
         pass
 
-
 class Struct:
     def repr(self):
         return asdict(self)
@@ -211,10 +210,12 @@ class SimpleCycles3(Struct):
 FORWARD_REFS["SimpleCycles3"] = SimpleCycles3
 
 
+
 def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value
+
 
 
 def typed_primitives(user_fn: Callable[[PrimitivesArgs, Ctx], Primitives]):
@@ -259,3 +260,5 @@ def typed_simple_cycles(user_fn: Callable[[SimpleCycles1Args, Ctx], SimpleCycles
         return __repr(out)
 
     return exported_wrapper
+
+

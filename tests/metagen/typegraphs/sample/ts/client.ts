@@ -353,7 +353,7 @@ function convertQueryNodeGql(
     : `${node.instanceName}: ${node.nodeName}`;
 
   const args = node.args;
-  if (args) {
+  if (args && Object.keys(args).length > 0) {
     out = `${out} (${
       Object.entries(args)
         .map(([key, val]) => {
@@ -951,3 +951,4 @@ export class QueryGraph extends _QueryGraphBase {
     return new QueryNode(inner) as QueryNode<RootMixedUnionFnOutput>;
   }
 }
+

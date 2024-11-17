@@ -18,7 +18,6 @@ import {
 } from "@metatype/typegate/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
-import { Typegraph } from "@metatype/typegate/typegraph/types.ts";
 import { metaCli } from "test-utils/meta.ts";
 import { $ } from "@david/dax";
 import { sleep } from "test-utils/mod.ts";
@@ -200,24 +199,6 @@ export class MetaTest {
     await this.typegates.next().removeTypegraph(tgName);
   }
 
-  async #engineFromTypegraph(
-    tg: Typegraph,
-    secrets: Record<string, string>,
-  ): Promise<QueryEngine> {
-    const { engine, response } = await this.typegate.pushTypegraph(
-      tg,
-      secrets,
-      this.introspection,
-    );
-
-    if (engine == null) {
-      throw response.failure!;
-    }
-
-    this.addCleanup(() => engine[Symbol.asyncDispose]());
-    return engine;
-  }
-
   async engine(path: string, opts: ParseOptions = {}) {
     console.log("t.engine", this.port, opts);
     const secrets = opts.secrets ?? {};
@@ -253,7 +234,7 @@ export class MetaTest {
     }
 
     if (opts.syncMode) {
-      await sleep(1000);
+      await sleep(5000);
     }
 
     const prefix = opts.prefix ?? "";
