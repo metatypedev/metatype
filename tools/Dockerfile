@@ -126,6 +126,7 @@ COPY --from=builder /app/src/typegate/engine/*.js /app/src/typegate/engine/*.ts 
 COPY --from=builder /app/src/typegate/src ./src/typegate/src/
 COPY --from=builder /app/src/typegate/deno.jsonc ./src/typegate/
 COPY --from=builder /app/src/typegraph/deno/deno.json ./src/typegraph/deno/
+COPY --from=builder /app/src/typegraph/specs/codegen/deno.json ./src/typegraph/specs/codegen/
 COPY --from=builder /app/tests/deno.jsonc ./tests/
 COPY --from=builder /app/examples/deno.jsonc ./examples/
 COPY tools/LICENSE-MPL-2.0.md LICENSE.md
