@@ -83,9 +83,9 @@ async function deploy({
         `-- deploy STDERR start --\n${out.stderr}-- deploy STDERR end --`,
       );
     }
-  } catch (e) {
-    console.log(e.toString());
-    throw e;
+  } catch (err: any) {
+    console.log(err.toString());
+    throw err;
   }
 }
 
@@ -139,9 +139,9 @@ Meta.test(
     try {
       await reset(tgName, schema);
       await deploy({ port, secrets });
-    } catch (e) {
+    } catch (err: any) {
       assertStringIncludes(
-        e.message,
+        err.message,
         // 'column "age" of relation "Record" contains null values: set a default value:',
         'column "age" of relation "Record" contains null values',
       );

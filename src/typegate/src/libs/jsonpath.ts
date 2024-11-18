@@ -200,7 +200,7 @@ export class QueryFunction {
     return (val: unknown) => {
       try {
         return inner(val);
-      } catch (e) {
+      } catch (e: any) {
         throw new JsonPathQueryError(e.message, val, this.code);
       }
     };

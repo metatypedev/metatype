@@ -52,7 +52,7 @@ export type {} from "jsr:@std/path@^1.0.2";
 export * as semver from "jsr:@std/semver@^1.0.1";
 // https://github.com/hayd/deno-udd/pull/108
 // export { udd } from "https://deno.land/x/udd@0.8.2/mod.ts";
-export { udd } from "https://github.com/levibostian/deno-udd/raw/ignore-prerelease/mod.ts";
+export { udd } from "https://raw.githubusercontent.com/levibostian/deno-udd/ignore-prerelease/mod.ts";
 export * as dnt from "https://deno.land/x/dnt@0.38.1/mod.ts";
 // @deno-types="https://deno.land/x/fuse@v6.4.1/dist/fuse.d.ts"
 import Fuse from "https://deno.land/x/fuse@v6.4.1/dist/fuse.esm.min.js";

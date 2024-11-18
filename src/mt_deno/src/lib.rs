@@ -41,7 +41,7 @@ fn spawn_subcommand<F: Future<Output = ()> + 'static>(f: F) -> JoinHandle<()> {
 pub fn run_sync(
     main_mod: ModuleSpecifier,
     import_map_url: Option<String>,
-    permissions: PermissionsOptions,
+    permissions: args::PermissionFlags,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) {
     new_thread_builder()
@@ -64,7 +64,7 @@ pub fn run_sync(
 pub async fn run(
     main_module: ModuleSpecifier,
     import_map_url: Option<String>,
-    permissions: PermissionsOptions,
+    permissions: args::PermissionFlags,
     custom_extensions: Arc<worker::CustomExtensionsCb>,
 ) -> anyhow::Result<()> {
     deno::util::v8::init_v8_flags(&[], &[], deno::util::v8::get_v8_flags_from_env());
@@ -77,6 +77,7 @@ pub async fn run(
     // NOTE: avoid using the Run subcommand
     // as it breaks our custom_extensions patch for some reason
     let flags = args::Flags {
+        permissions,
         import_map_path: import_map_url,
         unstable_config: args::UnstableConfig {
             features: DEFAULT_UNSTABLE_FLAGS
@@ -100,15 +101,9 @@ pub async fn run(
     let cli_factory = factory::CliFactory::from_flags(flags).with_custom_ext_cb(custom_extensions);
 
     let worker_factory = cli_factory.create_cli_main_worker_factory().await?;
-    let permissions = deno_permissions::PermissionsContainer::new(
-        deno_permissions::Permissions::from_options(&permissions)?,
-    );
+
     let mut worker = worker_factory
-        .create_main_worker(
-            deno_runtime::WorkerExecutionMode::Run,
-            main_module,
-            permissions,
-        )
+        .create_main_worker(deno_runtime::WorkerExecutionMode::Run, main_module)
         .await?;
     tracing::info!("running worker");
     let exit_code = worker.run().await?;
@@ -227,11 +222,6 @@ pub async fn test(
     let members_with_test_opts = options.resolve_test_options_for_members(&test_flags)?;
     let file_fetcher = cli_factory.file_fetcher()?;
 
-    // Various test files should not share the same permissions in terms of
-    // `PermissionsContainer` - otherwise granting/revoking permissions in one
-    // file would have impact on other files, which is undesirable.
-    let permissions = deno_permissions::Permissions::from_options(&permissions)?;
-
     let specifiers_with_mode = fetch_specifiers_with_test_mode(
         options.as_ref(),
         file_fetcher,
@@ -242,18 +232,24 @@ pub async fn test(
     )
     .await?;
 
-    if !test_options.allow_none && specifiers_with_mode.is_empty() {
+    if !test_options.permit_no_files && specifiers_with_mode.is_empty() {
         return Err(deno_core::error::generic_error("No test modules found"));
+    }
+    let doc_tests = get_doc_tests(&specifiers_with_mode, file_fetcher).await?;
+    let specifiers_for_typecheck_and_test = get_target_specifiers(specifiers_with_mode, &doc_tests);
+    for doc_test in doc_tests {
+        file_fetcher.insert_memory_files(doc_test);
     }
 
     let main_graph_container = cli_factory.main_module_graph_container().await?;
 
-    check_specifiers(
-        file_fetcher,
-        main_graph_container,
-        specifiers_with_mode.clone(),
-    )
-    .await?;
+    // type check
+    main_graph_container
+        .check_specifiers(
+            &specifiers_for_typecheck_and_test,
+            options.ext_flag().as_ref(),
+        )
+        .await?;
 
     if test_options.no_run {
         return Ok(());
@@ -262,16 +258,19 @@ pub async fn test(
     let worker_factory = cli_factory.create_cli_main_worker_factory().await?;
     let worker_factory = Arc::new(worker_factory);
 
+    // Various test files should not share the same permissions in terms of
+    // `PermissionsContainer` - otherwise granting/revoking permissions in one
+    // file would have impact on other files, which is undesirable.
+    let desc_parser = &cli_factory.permission_desc_parser()?;
+    let permissions =
+        deno_permissions::Permissions::from_options(desc_parser.as_ref(), &permissions)?;
+
+    // run tests
     test_specifiers(
         worker_factory,
         &permissions,
-        specifiers_with_mode
-            .into_iter()
-            .filter_map(|(s, m)| match m {
-                TestMode::Documentation => None,
-                _ => Some(s),
-            })
-            .collect(),
+        desc_parser,
+        specifiers_for_typecheck_and_test,
         TestSpecifiersOptions {
             cwd: deno_core::url::Url::from_directory_path(options.initial_cwd()).map_err(|_| {
                 anyhow::format_err!(

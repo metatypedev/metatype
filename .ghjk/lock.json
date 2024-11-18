@@ -724,6 +724,12 @@
           "crateName": "cargo-udeps",
           "locked": true,
           "specifiedVersion": true
+        },
+        "bciqg5gzspxjw7zvrubuyyqskh2244x6mkoxfwugnrx3clyadlegvidi": {
+          "version": "v2.0.6",
+          "buildDepConfigs": {},
+          "portRef": "deno_ghrel@0.1.0",
+          "specifiedVersion": true
         }
       }
     },
@@ -742,7 +748,7 @@
           "sets": {
             "ghjkEnvProvInstSet___main": {
               "installs": [
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
@@ -750,7 +756,7 @@
               "installs": [
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
@@ -767,7 +773,7 @@
                 "bciqe33uhsuaesrjk6luzxrbbimwg5ydt6x2lrieelwbr7aft4g2qwsy",
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy",
@@ -786,7 +792,7 @@
                 "bciqbx637744bfiyvprs77xdnvdt7uuwmtlntfjpwmkda672gklkbpmi",
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
                 "bciqcnbruy2q6trpvia52n2yis4t27taoz4mxkeguqz5aif7ex6rp26y",
                 "bciqpu7gxs3zm7i4gwp3m3cfdxwz27ixvsykdnbxrl5m5mt3xbb3b4la",
@@ -803,7 +809,7 @@
                 "bciqe33uhsuaesrjk6luzxrbbimwg5ydt6x2lrieelwbr7aft4g2qwsy",
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy",
@@ -822,7 +828,7 @@
                 "bciqezep4ufkgwesldlm5etyfkgdsiickfudx7cosydcz6xtgeorn2hy",
                 "bciqaixkkacuuligsvtjcfdfgjgl65owtyspiiljb3vmutlgymecsiwq",
                 "bciqlt27ioikxnpkqq37hma7ibn5e5wpzfarbvoh77zwdkarwghtvzxa",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
@@ -831,7 +837,7 @@
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
@@ -841,7 +847,7 @@
                 "bciqcnbruy2q6trpvia52n2yis4t27taoz4mxkeguqz5aif7ex6rp26y",
                 "bciqpu7gxs3zm7i4gwp3m3cfdxwz27ixvsykdnbxrl5m5mt3xbb3b4la",
                 "bciqjme7csfq43oenkrsakdhaha34hgy6vdwkfffki2ank3kf6mjcguq",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
@@ -850,7 +856,7 @@
                 "bciqm2rvnfe77sj6jekrm65oayuywt5lbrw33qezqjcg5rzaioc6uszy",
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
@@ -858,7 +864,7 @@
               "installs": [
                 "bciqezkigmtx5tweeflmn27yofgwybmgbat7g6jg4xmxamomsdpvenay",
                 "bciqiknd2vbwhxng2oy5d7qjpor7jq74pulaeijfrywyggv4mw3wngsi",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
@@ -867,7 +873,7 @@
                 "bciqezep4ufkgwesldlm5etyfkgdsiickfudx7cosydcz6xtgeorn2hy",
                 "bciqaixkkacuuligsvtjcfdfgjgl65owtyspiiljb3vmutlgymecsiwq",
                 "bciqlt27ioikxnpkqq37hma7ibn5e5wpzfarbvoh77zwdkarwghtvzxa",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy"
@@ -878,7 +884,7 @@
               "installs": [
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqezep4ufkgwesldlm5etyfkgdsiickfudx7cosydcz6xtgeorn2hy",
                 "bciqaixkkacuuligsvtjcfdfgjgl65owtyspiiljb3vmutlgymecsiwq",
                 "bciqlt27ioikxnpkqq37hma7ibn5e5wpzfarbvoh77zwdkarwghtvzxa",
@@ -892,7 +898,7 @@
               "installs": [
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqezep4ufkgwesldlm5etyfkgdsiickfudx7cosydcz6xtgeorn2hy",
                 "bciqaixkkacuuligsvtjcfdfgjgl65owtyspiiljb3vmutlgymecsiwq",
                 "bciqlt27ioikxnpkqq37hma7ibn5e5wpzfarbvoh77zwdkarwghtvzxa",
@@ -906,7 +912,7 @@
               "installs": [
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
                 "bciqcnbruy2q6trpvia52n2yis4t27taoz4mxkeguqz5aif7ex6rp26y",
                 "bciqpu7gxs3zm7i4gwp3m3cfdxwz27ixvsykdnbxrl5m5mt3xbb3b4la",
@@ -918,7 +924,7 @@
               "installs": [
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
                 "bciqcnbruy2q6trpvia52n2yis4t27taoz4mxkeguqz5aif7ex6rp26y",
                 "bciqpu7gxs3zm7i4gwp3m3cfdxwz27ixvsykdnbxrl5m5mt3xbb3b4la",
@@ -933,7 +939,7 @@
               "installs": [
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
                 "bciqcnbruy2q6trpvia52n2yis4t27taoz4mxkeguqz5aif7ex6rp26y",
                 "bciqpu7gxs3zm7i4gwp3m3cfdxwz27ixvsykdnbxrl5m5mt3xbb3b4la",
@@ -948,7 +954,7 @@
               "installs": [
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
+                "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy"
@@ -1082,37 +1088,37 @@
               "ty": "denoFile@v1",
               "key": "dev-gate6",
               "desc": "Launch the typegate from a locally found meta bin.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-gate5": {
               "ty": "denoFile@v1",
               "key": "dev-gate5",
               "desc": "Launch the typegate from the latests published image.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-gate4": {
               "ty": "denoFile@v1",
               "key": "dev-gate4",
               "desc": "Launch the typegate from the locally built typegate image.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-gate3": {
               "ty": "denoFile@v1",
               "key": "dev-gate3",
               "desc": "Launch the typegate from meta-cli cmd.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-gate2": {
               "ty": "denoFile@v1",
               "key": "dev-gate2",
               "desc": "Launch the typegate in sync mode.",
-              "envKey": "bciqgfe63ayh7e7kzg4f47bmaleew7jcdukchs3cg45tvdiwoxotxzfy"
+              "envKey": "bciqe4fan2davv7bngzw6aygwwbrd7vjviea4rylpwikafl4kqyaxyuq"
             },
             "dev-gate1": {
               "ty": "denoFile@v1",
               "key": "dev-gate1",
               "desc": "Launch the typegate in single-instance mode.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-eg-tgraphs": {
               "ty": "denoFile@v1",
@@ -1561,7 +1567,7 @@
                 }
               ]
             },
-            "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy": {
+            "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1596,7 +1602,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "LOG_LEVEL",
-                  "val": "DEBUG"
+                  "val": "DEBUG,substantial=ERROR"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1629,7 +1635,7 @@
                 }
               ]
             },
-            "bciqgfe63ayh7e7kzg4f47bmaleew7jcdukchs3cg45tvdiwoxotxzfy": {
+            "bciqe4fan2davv7bngzw6aygwwbrd7vjviea4rylpwikafl4kqyaxyuq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1664,7 +1670,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "LOG_LEVEL",
-                  "val": "DEBUG"
+                  "val": "DEBUG,substantial=ERROR"
                 },
                 {
                   "ty": "posix.envVar",
@@ -2032,8 +2038,8 @@
       }
     ],
     "blackboard": {
-      "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a": {
-        "version": "1.46.3",
+      "bciqpkjcyijuk6r4gi7zgswpgbflcfqsvi3u3bq6ldnxtkyowbdvth4y": {
+        "version": "2.0.6",
         "port": {
           "ty": "denoWorker@v1",
           "name": "deno_ghrel",

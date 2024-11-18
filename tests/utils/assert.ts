@@ -20,8 +20,8 @@ export async function lazyAssert(
     try {
       await fn();
       return;
-    } catch (e) {
-      error = e;
+    } catch (err: any) {
+      error = err;
       await new Promise((r) => setTimeout(r, intervalMs));
     }
   }
