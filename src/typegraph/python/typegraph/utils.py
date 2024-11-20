@@ -73,11 +73,6 @@ def build_reduce_entries(node: Any, paths: List[ReduceEntry], curr_path: List[st
     raise Exception(f"unsupported type {type(node)} at {'.'.join(curr_path)}")
 
 
-# FIXME: What is this?
-# def unpack_tarb64(tar_b64: str, dest: str):
-#     return sdk_utils.unpack_tarb64(tar_b64, dest)
-
-
 frozen_memo: Dict[str, FinalizationResult] = {}
 
 
