@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { type DenoTaskDefArgs, std_url } from "../deps.ts";
 import { WASMTIME_VERSION } from "../consts.ts";
@@ -68,11 +68,6 @@ export default {
   "install-website": {
     inherit: "_ecma",
     fn: ($) => $`pnpm install -C ./docs/metatype.dev/`,
-  },
-
-  "install-lsp": {
-    inherit: "_ecma",
-    fn: ($) => $`pnpm install -C ./src/meta-lsp/ --frozen-lockfile --recursive`,
   },
 
   // this is used somewhere in a test build.sh file

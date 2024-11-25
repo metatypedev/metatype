@@ -158,7 +158,7 @@ impl InputResolver for MetagenCtx {
                     .join(path)
                     .canonicalize()
                     .wrap_err("unable to canonicalize typegraph path, make sure it exists")?;
-                let raw = load_tg_at(config, path, name.as_deref()).await?;
+                let raw = load_tg_at(config, path, name.as_deref(), &self.dir).await?;
                 GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
             GeneratorInputOrder::LoadFdkTemplate {
@@ -177,6 +177,7 @@ async fn load_tg_at(
     config: Arc<Config>,
     path: PathBuf,
     name: Option<&str>,
+    dir: &Path,
 ) -> anyhow::Result<Box<Typegraph>> {
     let console = ConsoleActor::new(Arc::clone(&config)).start();
 
@@ -184,8 +185,9 @@ async fn load_tg_at(
     let init = TaskManagerInit::<SerializeAction>::new(
         config.clone(),
         SerializeActionGenerator::new(
+            None,
             config_dir.clone(),
-            config_dir, // TODO cwd
+            dir.into(),
             config
                 .prisma_migrations_base_dir(PathOption::Absolute)
                 .into(),
@@ -200,7 +202,7 @@ async fn load_tg_at(
     let mut tgs = report.into_typegraphs()?;
 
     if tgs.is_empty() {
-        bail!("not typegraphs loaded from path at {path:?}")
+        bail!("no typegraphs loaded from path at {path:?}")
     }
     let tg = if let Some(tg_name) = name {
         if let Some(idx) = tgs.iter().position(|tg| tg.name().unwrap() == tg_name) {

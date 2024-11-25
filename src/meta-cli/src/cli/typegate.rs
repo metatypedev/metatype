@@ -43,8 +43,7 @@ pub fn command(_cmd: Typegate, _gen_args: ConfigArgs) -> Result<()> {
 }
 
 #[cfg(feature = "typegate")]
-fn run_typegate(cmd: Typegate) -> Result<()> {
-    let runtime = typegate_engine::runtime();
+async fn run_typegate_async(cmd: Typegate) -> Result<()> {
     const BASE_URL: &str = "https://raw.githubusercontent.com/metatypedev/metatype/";
     let main_url = cmd.main_url.unwrap_or_else(|| {
         BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/src/typegate/src/main.ts"
@@ -53,15 +52,25 @@ fn run_typegate(cmd: Typegate) -> Result<()> {
         .import_map_url
         .unwrap_or_else(|| BASE_URL.to_owned() + crate::build::COMMIT_HASH + "/import_map.json");
 
-    runtime
-        .block_on(typegate_engine::launch_typegate_deno(
-            // typegate_core::resolve_url_or_path(
-            //     "",
-            //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
-            // )?,
-            typegate_engine::resolve_url(&main_url)?,
-            Some(import_map_url),
-        ))
-        .map_err(anyhow_to_eyre!())?;
+    typegate_engine::launch_typegate_deno(
+        // typegate_core::resolve_url_or_path(
+        //     "",
+        //     &std::env::current_dir()?.join("./typegate/src/main.ts"),
+        // )?,
+        typegate_engine::resolve_url(&main_url)?,
+        Some(import_map_url),
+    )
+    .await
+    .map_err(anyhow_to_eyre!())
+}
+
+#[cfg(feature = "typegate")]
+fn run_typegate(cmd: Typegate) -> Result<()> {
+    use crate::deploy::actors::task_manager::signal_handler::listen_signals_in_the_background;
+
+    let runtime = typegate_engine::runtime();
+    listen_signals_in_the_background();
+    runtime.block_on(async { run_typegate_async(cmd).await })?;
+
     Ok(())
 }

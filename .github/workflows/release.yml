@@ -1,3 +1,5 @@
+name: release jobs
+run-name: release jobs for ${{  github.ref }}
 on:
   workflow_dispatch:
     inputs:
@@ -287,49 +289,6 @@ jobs:
           docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ steps.latest-tag.outputs.tag }} --tag ${{ env.REGISTRY_IMAGE }}:latest $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:latest
 
-  pub-vscode-extension:
-    needs:
-      - check-bump
-    if: |
-      always()
-      && (
-        needs.check-bump.result == 'success'
-        || github.event_name == 'workflow_dispatch'
-      )
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
-        id: latest-tag
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - shell: bash
-        run: |
-          cd src/meta-lsp
-          pnpm install --frozen-lockfile
-          cd ts-language-server
-          pnpm install --frozen-lockfile
-          cd ../vscode-metatype-support
-          pnpm install --frozen-lockfile
-          cd ..
-          pnpm compile:ts-server
-          pnpm compile:vscode
-          pnpm vscode:package
-
-          # avoid publishing pre-release versions as they don't
-          # support it
-          [[ "$(ghjk x version-print)" != *-* ]] \
-            && ([ ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }} == 'true' ] \
-              && pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }} --skip-duplicate \
-              || pnpm run vscode:publish -p ${{ secrets.AZURE_DEVOPS_TOKEN }})
-      - uses: svenstaro/upload-release-action@v2
-        with:
-          tag: ${{ steps.latest-tag.outputs.tag }}
-          file: "src/meta-lsp/*.vsix"
-          file_glob: true
-          overwrite: ${{ inputs.ovewriteArtifacts }}
-
   bump:
     needs:
       - pub-meta-cli
@@ -352,7 +311,10 @@ jobs:
           ghjk x version-bump prerelease
           echo "version=$(ghjk x version-print)" >> $GITHUB_OUTPUT
           git cliff --output CHANGELOG.md
-      - uses: peter-evans/create-pull-request@v6
+          # exclude .ghjk from the changeset to avoid modifying
+          # the lockfile
+          git checkout -- .ghjk
+      - uses: peter-evans/create-pull-request@v7
         with:
           branch: bump-${{ steps.bump.outputs.version }}
           delete-branch: true
@@ -364,4 +326,4 @@ jobs:
           # on them, we create it as a draft PR 
           # the actions will then run when it's readied for review
           # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
-          draft: always-true
+          draft: "always-true"

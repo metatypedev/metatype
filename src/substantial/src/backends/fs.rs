@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use super::key_value::{Item, KeyValueBackend, KeyValueLike};
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};

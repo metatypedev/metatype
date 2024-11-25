@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
@@ -10,7 +10,7 @@ Meta.test({
   const prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES:
-        "postgresql://postgres:password@localhost:5432/postgres?schema=prisma",
+        "postgresql://postgres:password@localhost:5432/postgres?schema=prisma_rt_test",
     },
   });
 
@@ -29,7 +29,6 @@ Meta.test({
         title
         type
         enum
-        config
         default
         format
       }

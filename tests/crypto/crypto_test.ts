@@ -1,11 +1,14 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import {
   defaultTypegateConfigBase,
   getTypegateConfig,
 } from "@metatype/typegate/config.ts";
-import { TypegateCryptoKeys, unsafeExtractJWT } from "@metatype/typegate/crypto.ts";
+import {
+  TypegateCryptoKeys,
+  unsafeExtractJWT,
+} from "@metatype/typegate/crypto.ts";
 import { assertEquals } from "@std/assert";
 
 const gateConfig = getTypegateConfig({

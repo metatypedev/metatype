@@ -350,7 +350,7 @@ function convertQueryNodeGql(
     : `${node.instanceName}: ${node.nodeName}`;
 
   const args = node.args;
-  if (args) {
+  if (args && Object.keys(args).length > 0) {
     out = `${out} (${
       Object.entries(args)
         .map(([key, val]) => {

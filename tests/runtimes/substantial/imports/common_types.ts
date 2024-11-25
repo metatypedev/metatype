@@ -1,7 +1,10 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 // TODO: include this as part of the metagen generated code
 
-// TODO:
-export type Workflow<O> = (ctx: Context) => Promise<O>;
+// TODO: merge these
+export type Workflow<O> = (ctx: Context, ctx2: TaskCtx) => Promise<O>;
 
 export interface SerializableWorkflowHandle {
   runId?: string;
@@ -24,7 +27,7 @@ export interface Context {
     ...args: unknown[]
   ) => {
     run: (
-      variables: Record<string, unknown>
+      variables: Record<string, unknown>,
     ) => Promise<Record<string, unknown>>;
   };
   sleep: (ms: number) => void;
@@ -32,18 +35,33 @@ export interface Context {
   receive<O>(eventName: string): O;
   handle<I, O>(
     eventName: string,
-    fn: (received: I) => O | Promise<O>
+    fn: (received: I) => O | Promise<O>,
   ): Promise<O>;
   ensure(conditionFn: () => boolean | Promise<boolean>): Promise<true>;
 
   startChildWorkflow<O>(
     workflow: Workflow<O>,
-    kwargs: unknown
+    kwargs: unknown,
   ): Promise<SerializableWorkflowHandle>;
   createWorkflowHandle(
-    handleDef: SerializableWorkflowHandle
+    handleDef: SerializableWorkflowHandle,
   ): ChildWorkflowHandle;
 }
+
+export type TaskCtx = {
+  parent?: Record<string, unknown>;
+  /**
+   * Request context extracted by auth extractors.
+   */
+  context?: Record<string, unknown>;
+  secrets: Record<string, string>;
+  effect: "create" | "update" | "delete" | "read" | undefined | null;
+  meta: {
+    url: string;
+    token: string;
+  };
+  headers: Record<string, string>;
+};
 
 export interface SaveOption {
   timeoutMs?: number;

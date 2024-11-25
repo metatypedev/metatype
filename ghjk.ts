@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 // @ts-nocheck: Deno file
 
 import { METATYPE_VERSION, PUBLISHED_VERSION } from "./tools/consts.ts";
@@ -16,7 +19,7 @@ env("main")
   .install(installs.deno)
   .vars({
     RUST_LOG:
-      "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
+      "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,quaint=off",
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
     CROSS_CONFIG: "tools/Cross.toml",
@@ -42,6 +45,7 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
   });
   env("dev").install(mold);
   env("oci").install(mold);
+  env("ci").install(mold);
 }
 
 env("_ecma").install(
@@ -176,4 +180,23 @@ task(
       $`cargo clean`.cwd("./examples/typegraphs/metagen/"),
     ]),
   { inherit: "_rust", desc: "Clean cache of all cargo workspaces in repo." },
+);
+
+task(
+  "clean-node",
+  ($) =>
+    $.co([
+      $.path("./docs/metatype.dev/node_modules"),
+      $.path("./docs/metatype.dev/build"),
+      $.path("./tests/e2e/nextjs/apollo/node_modules"),
+      $.path("./tests/runtimes/temporal/worker/node_modules"),
+    ].map(async (path) => {
+      if (await path.exists()) {
+        await path.remove({ recursive: true });
+      }
+    })),
+  {
+    inherit: "_ecma",
+    desc: "Remove all node_modules directories in tree and other js artifacts.",
+  },
 );

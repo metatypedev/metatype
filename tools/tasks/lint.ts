@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { type DenoTaskDefArgs, ports } from "../deps.ts";
 import installs from "../installs.ts";
@@ -22,6 +22,11 @@ export default {
     async fn($) {
       const files = (await $.co(
         [
+          Array.fromAsync(
+            $.workingDir.join("src/typegraph/deno").expandGlob("**/*.ts", {
+              exclude: [],
+            }),
+          ),
           Array.fromAsync(
             $.workingDir.join("src/typegate/src").expandGlob("**/*.ts", {
               exclude: [],

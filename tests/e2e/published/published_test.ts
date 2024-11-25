@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { Meta } from "test-utils/mod.ts";
 import { projectDir } from "@local/tools/utils.ts";
@@ -43,14 +43,10 @@ const syncConfig = transformSyncConfig({
   s3_bucket: syncEnvs.SYNC_S3_BUCKET,
   s3_path_style: true,
 });
-console.log(syncConfig);
 
-// TODO remove after the next release
-// The build.rs script now uses a META_CMD env var allowing us
-// to use meta-old
-const disabled = [
-  "metagen-rs.ts",
-];
+// put here typegraphs that are to be excluded
+// from the test
+const disabled = [] as string[];
 
 async function checkMetaBin(path: typeof tempDir, version: string) {
   try {
@@ -167,6 +163,7 @@ Meta.test(
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir,
         TG_PORT: port,
+        LOG_LEVEL: "DEBUG",
         // TODO should not be necessary
         VERSION: previousVersion,
         ...syncEnvs,
@@ -257,6 +254,7 @@ Meta.test(
           TG_ADMIN_PASSWORD: "password",
           TMP_DIR: typegateTempDir,
           TG_PORT: `${port}`,
+          LOG_LEVEL: "DEBUG",
           // TODO should not be necessary
           VERSION: previousVersion,
           ...syncEnvs,
@@ -324,6 +322,7 @@ Meta.test(
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir.toString(),
         TG_PORT: `${port}`,
+        LOG_LEVEL: "DEBUG",
         // TODO should not be necessary
         VERSION: previousVersion,
         DEBUG: "true",
@@ -410,7 +409,6 @@ typegraphs:
       await $`bash -c ${command}`
         .cwd(denoJsrDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        // FIXME: rename to deno.jsonc on bump 0.4.9
         .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`)
         .env("RUST_LOG", "trace");
     });

@@ -6,8 +6,10 @@ use tokio::sync::Mutex;
 use crate::config::NodeConfig;
 use crate::interlude::*;
 
-lazy_static::lazy_static! {
-    static ref CACHED_SECRETS: Mutex<HashMap<String, HashMap<String, String>>> = Mutex::new(HashMap::new());
+#[derive(Debug, Clone, Default)]
+pub struct HydratedSecrets {
+    by_typegraph: HashMap<String, HashMap<String, String>>,
+    overrides: Option<HashMap<String, String>>,
 }
 
 // tg_name -> key -> value
@@ -16,6 +18,7 @@ pub struct Secrets {
     by_typegraph: HashMap<String, HashMap<String, String>>,
     overrides: HashMap<String, String>,
     path: PathBuf,
+    cache: Arc<Mutex<HydratedSecrets>>,
 }
 
 pub type RawSecrets = Secrets;
@@ -60,6 +63,7 @@ impl Secrets {
             by_typegraph: node_config.secrets.clone(),
             overrides: HashMap::new(),
             path,
+            cache: Default::default(),
         }
     }
 
@@ -88,32 +92,37 @@ impl Secrets {
     }
 
     pub async fn get(&self, tg_name: &str) -> Result<HashMap<String, String>> {
-        let mut cache = CACHED_SECRETS.lock().await;
-        if let Some(cached_result) = cache.get(tg_name) {
+        let mut cache = self.cache.lock().await;
+        if let Some(cached_result) = cache.by_typegraph.get(tg_name) {
             return Ok(cached_result.clone());
         }
 
-        let mut secrets = self.by_typegraph.get(tg_name).cloned().unwrap_or_default();
+        let secrets = self.by_typegraph.get(tg_name).cloned().unwrap_or_default();
 
-        lade_sdk::hydrate(secrets.clone(), self.path.clone())
+        let mut secrets = lade_sdk::hydrate(secrets.clone(), self.path.clone())
             .await
             .map_err(anyhow_to_eyre!())
             .with_context(|| format!("error hydrating secrets for {tg_name}"))?;
 
-        if !cache.contains_key("overrides") {
-            let hydrated_overrides = lade_sdk::hydrate(self.overrides.clone(), self.path.clone())
-                .await
-                .map_err(|err| ferr!("error hydrating secrets overrides: {err}"))?;
-            cache.insert("overrides".to_string(), hydrated_overrides);
-        }
+        if !self.overrides.is_empty() {
+            if cache.overrides.is_none() {
+                let hydrated_overrides =
+                    lade_sdk::hydrate(self.overrides.clone(), self.path.clone())
+                        .await
+                        .map_err(|err| ferr!("error hydrating secrets overrides: {err}"))?;
+                cache.overrides = Some(hydrated_overrides);
+            }
 
-        if let Some(overrides) = cache.get("overrides") {
-            for (key, value) in overrides {
-                secrets.insert(key.clone(), value.clone());
+            if let Some(overrides) = cache.overrides.as_ref() {
+                for (key, value) in overrides.iter() {
+                    secrets.insert(key.to_string(), value.to_string());
+                }
             }
         }
 
-        cache.insert(tg_name.to_string(), secrets.clone());
+        cache
+            .by_typegraph
+            .insert(tg_name.to_string(), secrets.clone());
 
         Ok(secrets)
     }

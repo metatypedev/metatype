@@ -3,7 +3,7 @@
 
 use crate::errors::{ErrorContext, Result, TgError};
 use crate::t::{self, TypeBuilder};
-use crate::types::{Type, TypeDef, TypeId};
+use crate::types::{AsTypeDefEx as _, TypeDef, TypeId};
 use crate::wit::core::{ParameterTransform, TransformData};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -307,18 +307,22 @@ impl TransformDataBuildContext {
             .filter_map(|(&k, &type_id)| {
                 TypeId(type_id)
                     .as_type()
-                    .map(|ty| {
-                        if !matches!(ty, Type::Def(TypeDef::Optional(_))) {
-                            Some(k)
-                        } else {
-                            None
-                        }
-                    })
                     .with_context(|| {
                         format!(
                             "Error while resolving type #{type_id} at the field {k:?} at {path:?}",
                             path = stringify_path(&self.path).unwrap()
                         )
+                    })
+                    .and_then(|ty| {
+                        ty.as_xdef()
+                            .with_context(|| format!("resolving type: {}", ty.id().repr().unwrap()))
+                    })
+                    .map(|ty| {
+                        if !matches!(ty.type_def, TypeDef::Optional(_)) {
+                            Some(k)
+                        } else {
+                            None
+                        }
                     })
                     .transpose()
             })
@@ -326,7 +330,7 @@ impl TransformDataBuildContext {
 
         if !non_optional_fields.is_empty() {
             Err(format!(
-                "Missing non-optional fields {non_optional_fields:?} at {path:?}",
+                "missing non-optional fields {non_optional_fields:?} at {path:?}",
                 path = stringify_path(&self.path).unwrap()
             )
             .into())

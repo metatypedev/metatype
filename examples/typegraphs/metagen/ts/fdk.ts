@@ -42,5 +42,4 @@ export type Idv3 = {
   mp3Url: StringUri;
 };
 
-
 export type RemixTrackHandler = Handler<Idv3, Idv3>;

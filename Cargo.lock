@@ -1605,7 +1605,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6897,7 +6897,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 dependencies = [
  "actix",
  "assert_cmd",
@@ -6948,6 +6948,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "shadow-rs",
+ "signal-hook",
  "strip-ansi-escapes",
  "tabled",
  "tar",
@@ -6963,7 +6964,7 @@ dependencies = [
 
 [[package]]
 name = "metagen"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 dependencies = [
  "color-eyre",
  "common",
@@ -7322,7 +7323,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 dependencies = [
  "anyhow",
  "deno",
@@ -11286,7 +11287,7 @@ dependencies = [
 
 [[package]]
 name = "substantial"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -12774,7 +12775,7 @@ dependencies = [
 
 [[package]]
 name = "typegate"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 dependencies = [
  "colored",
  "env_logger 0.11.0",
@@ -12787,7 +12788,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_engine"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -12832,7 +12833,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 dependencies = [
  "anyhow",
  "color-eyre",
@@ -14598,7 +14599,7 @@ checksum = "791978798f0597cfc70478424c2b4fdc2b7a8024aaff78497ef00f24ef674193"
 
 [[package]]
 name = "xtask"
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 dependencies = [
  "anyhow",
  "clap",

@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import React from "react";
 
@@ -360,16 +360,16 @@ export function StableCastle() {
                   [
                     col3 - size - 10,
                     topMargin +
-                    blockMargin * 1 +
-                    blockHeight(size, 2) * 0.5 -
-                    5,
+                      blockMargin * 1 +
+                      blockHeight(size, 2) * 0.5 -
+                      5,
                   ],
                   [
                     col3 - size - 10,
                     topMargin +
-                    blockMargin * 2 +
-                    blockHeight(size, 2) * 1.5 -
-                    10,
+                      blockMargin * 2 +
+                      blockHeight(size, 2) * 1.5 -
+                      10,
                   ],
                 ]}
               />

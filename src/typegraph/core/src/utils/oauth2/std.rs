@@ -296,12 +296,12 @@ impl StdOauth2Provider for Google {
     }
 
     fn default_profiler(&self) -> Result<OAuth2Profiler> {
-        let inp = t::struct_().propx("localId", t::string())?.build()?;
+        let inp = t::struct_().propx("sub", t::string())?.build()?;
         let out = t::struct_().propx("id", t::string())?.build()?;
         Ok(OAuth2Profiler {
             input: inp,
             output: out,
-            js_code: "(p) => ({id: p.localId})".to_string(),
+            js_code: "(p) => ({id: p.sub})".to_string(),
         })
     }
 }

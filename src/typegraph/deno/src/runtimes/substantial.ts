@@ -7,28 +7,12 @@ import { Func, type Typedef } from "../types.ts";
 import type {
   SubstantialBackend,
   SubstantialOperationData,
-  SubstantialOperationType,
   WorkflowFileDescription,
   WorkflowKind,
 } from "../gen/typegraph_core.d.ts";
 
-export class Backend {
-  static devMemory(): SubstantialBackend {
-    return { tag: "memory" };
-  }
-
-  static devFs(): SubstantialBackend {
-    return { tag: "fs" };
-  }
-
-  static redis(connectionStringSecret: string): SubstantialBackend {
-    return {
-      tag: "redis",
-      val: {
-        connectionStringSecret,
-      },
-    };
-  }
+interface StartFunc {
+  secrets?: string[];
 }
 
 export class SubstantialRuntime extends Runtime {
@@ -36,7 +20,7 @@ export class SubstantialRuntime extends Runtime {
 
   constructor(
     backend: SubstantialBackend,
-    fileDescriptions: Array<WorkflowFileDescription>
+    fileDescriptions: Array<WorkflowFileDescription>,
   ) {
     const id = runtimes.registerSubstantialRuntime({
       backend,
@@ -47,31 +31,30 @@ export class SubstantialRuntime extends Runtime {
   }
 
   _genericSubstantialFunc(
-    operation: SubstantialOperationType,
-    funcArg?: Typedef,
-    funcOut?: Typedef
+    data: SubstantialOperationData,
   ): Func<Typedef, Typedef, Materializer> {
-    const data = {
-      funcArg: funcArg?._id,
-      funcOut: funcOut?._id,
-      operation,
-    } as SubstantialOperationData;
     const funcData = runtimes.generateSubstantialOperation(this._id, data);
     return Func.fromTypeFunc(funcData);
   }
 
-  start(kwargs: Typedef): Func<Typedef, Typedef, Materializer> {
+  start(
+    kwargs: Typedef,
+    { secrets }: StartFunc = {},
+  ): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc(
       {
         tag: "start",
+        val: { secrets: secrets ?? [], funcArg: kwargs._id },
       },
-      kwargs
     );
   }
 
-  startRaw(): Func<Typedef, Typedef, Materializer> {
+  startRaw(
+    { secrets }: StartFunc = {},
+  ): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc({
       tag: "start-raw",
+      val: { secrets: secrets ?? [] },
     });
   }
 
@@ -85,8 +68,8 @@ export class SubstantialRuntime extends Runtime {
     return this._genericSubstantialFunc(
       {
         tag: "send",
+        val: payload._id,
       },
-      payload
     );
   }
 
@@ -106,9 +89,8 @@ export class SubstantialRuntime extends Runtime {
     return this._genericSubstantialFunc(
       {
         tag: "results",
+        val: output._id,
       },
-      undefined,
-      output
     );
   }
 
@@ -135,13 +117,32 @@ export class SubstantialRuntime extends Runtime {
   }
 }
 
+export class Backend {
+  static devMemory(): SubstantialBackend {
+    return { tag: "memory" };
+  }
+
+  static devFs(): SubstantialBackend {
+    return { tag: "fs" };
+  }
+
+  static redis(connectionStringSecret: string): SubstantialBackend {
+    return {
+      tag: "redis",
+      val: {
+        connectionStringSecret,
+      },
+    };
+  }
+}
+
 export class WorkflowFile {
   private workflows: Array<string> = [];
 
   private constructor(
     public readonly file: string,
     public readonly kind: WorkflowKind,
-    public deps: Array<string> = []
+    public deps: Array<string> = [],
   ) {}
 
   static deno(file: string, deps: Array<string> = []): WorkflowFile {

@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { resolve } from "@std/path/resolve";
 import { HashTransformStream } from "../../utils/hash.ts";
@@ -60,7 +60,7 @@ export class LocalArtifactPersistence implements ArtifactPersistence {
     await Deno.remove(this.dirs.artifacts, { recursive: true });
   }
 
-  async save(stream: ReadableStream, size: number): Promise<string> {
+  async save(stream: ReadableStream, _size: number): Promise<string> {
     const tmpFile = await Deno.makeTempFile({ dir: this.dirs.temp });
     const file = await Deno.open(tmpFile, { write: true, truncate: true });
     const hasher = createHash("sha256");

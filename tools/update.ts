@@ -1,7 +1,7 @@
 #!/bin/env -S ghjk deno run -A --config=typegate/deno.jsonc
 
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import {
   $,
@@ -9,7 +9,6 @@ import {
   parseArgs,
   resolve,
   udd,
-  type WalkEntry,
 } from "./deps.ts";
 import { projectDir, runOrExit } from "./utils.ts";
 
@@ -82,7 +81,7 @@ const tsFiles = [
       ],
     },
   ),
-].map((f: WalkEntry) => f.path);
+].map((f: any) => f.path);
 
 await runOrExit([
   Deno.execPath(),

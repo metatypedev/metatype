@@ -23,7 +23,7 @@ exclude = [
 ]
 
 [workspace.package]
-version = "0.5.0-rc.3"
+version = "0.5.0-rc.6"
 edition = "2021"
 
 [workspace.dependencies]
@@ -88,6 +88,7 @@ paste = "1.0.15"
 
 # os
 ctrlc = "3.4.5"
+signal-hook = "0.3.17"
 rand = "0.8.5"
 # FIXME: go back to published crate when deno move to 1.37
 process-wrap = { git = "https://github.com/metatypedev/process-wrap", branch = "fix/decrement-tokio-version" }

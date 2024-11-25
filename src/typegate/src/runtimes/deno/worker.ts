@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 // bring the unstable WorkerOptions api into scope
 /// <reference lib="deno.worker" />
@@ -43,7 +43,7 @@ async function import_func(op: number, task: ImportFuncTask) {
     return await mod[name](
       args,
       internals,
-      make_internal(internals, additionalHeaders)
+      make_internal(internals, additionalHeaders),
     );
   }
   throw new Error(`"${name}" is not a valid method`);
@@ -75,7 +75,7 @@ function register_func(_: null, task: RegisterFuncTask) {
 
   registry.set(
     op,
-    new Function(`"use strict"; ${fnCode}; return _my_lambda;`)()
+    new Function(`"use strict"; ${fnCode}; return _my_lambda;`)(),
   );
 }
 

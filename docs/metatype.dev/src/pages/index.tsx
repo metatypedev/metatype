@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 
@@ -39,11 +39,9 @@ function Header() {
           platform
         </Heading>
         <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[880px]">
-          Build <strong>backend components</strong> with <strong>WASM</strong>,
-          {" "}
-          <strong>Typescript</strong> and{" "}
-          <strong>Python</strong>, no matter where and how your (legacy) systems
-          are.
+          Build <strong>backend components</strong> with <strong>WASM</strong>,{" "}
+          <strong>Typescript</strong> and <strong>Python</strong>, no matter
+          where and how your (legacy) systems are.
         </p>
         <div className="md:flex md:px-32 justify-center">
           <Link
@@ -86,10 +84,9 @@ function Intro({
           <span className="text-metared">castle</span> building
         </Heading>
         <p>
-          And castle building is{" "}
-          <strong>hard</strong>. Even the best teams can struggle to build
-          according to the plans, especially with the ever evolving needs and
-          the tech landscape complexities.
+          And castle building is <strong>hard</strong>. Even the best teams can
+          struggle to build according to the plans, especially with the ever
+          evolving needs and the tech landscape complexities.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -111,9 +108,9 @@ function Stability(): JSX.Element {
           <span className="text-metared">typegraphs</span>
         </Heading>
         <p>
-          Typegraphs are programmable <strong>virtual graphs</strong>{" "}
-          describing all the components of your stack. They enable you to
-          compose APIs, storage and business logic in a type safe manner.
+          Typegraphs are programmable <strong>virtual graphs</strong> describing
+          all the components of your stack. They enable you to compose APIs,
+          storage and business logic in a type safe manner.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -135,8 +132,8 @@ function Modularity(): JSX.Element {
           <span className="text-metared">typegate</span>
         </Heading>
         <p>
-          Typegate is a GraphQL/REST <strong>composition engine</strong>{" "}
-          that compiles, optimizes, runs and caches queries over typegraphs. It
+          Typegate is a GraphQL/REST <strong>composition engine</strong> that
+          compiles, optimizes, runs and caches queries over typegraphs. It
           enforces authentication, authorization and security for you.
         </p>
       </div>
@@ -159,10 +156,9 @@ function Reusability(): JSX.Element {
           <span className="text-metared">Metatype</span>
         </Heading>
         <p>
-          Install third parties as <strong>dependencies</strong>{" "}
-          and start reusing components. The Meta CLI offers you live reloading
-          and one-command deployment to Metatype cloud or your self-hosted
-          instance.
+          Install third parties as <strong>dependencies</strong> and start
+          reusing components. The Meta CLI offers you live reloading and
+          one-command deployment to Metatype cloud or your self-hosted instance.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -283,12 +279,8 @@ function TryIt(): JSX.Element {
       </div>
       <div className="w-full">
         <TGExample
-          python={require(
-            "!!code-loader!../../../../examples/typegraphs/index.py",
-          )}
-          typescript={require(
-            "!!code-loader!../../../../examples/typegraphs/index.ts",
-          )}
+          python={require("!!code-loader!../../../../examples/typegraphs/index.py")}
+          typescript={require("!!code-loader!../../../../examples/typegraphs/index.ts")}
           typegraph="homepage"
           variables={{ email: "fill-me", message: "Great tool!" }}
           noTool={true}
@@ -394,9 +386,9 @@ function DemoVideo(): JSX.Element {
           <span className="text-metared">in hours</span>
         </Heading>
         <p>
-          Watch the <strong>3 minutes introduction</strong>{" "}
-          of the Metatype platform and start designing your own typegraph. Once
-          you have understood the basics, you already feel productive.
+          Watch the <strong>3 minutes introduction</strong> of the Metatype
+          platform and start designing your own typegraph. Once you have
+          understood the basics, you already feel productive.
         </p>
       </div>
       <div className="flex justify-center">

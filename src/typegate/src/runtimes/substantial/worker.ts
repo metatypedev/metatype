@@ -1,8 +1,9 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { errorToString } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
+import { toFileUrl } from "@std/path/to-file-url";
 import { Err, Msg, Ok, WorkerData, WorkflowResult } from "./types.ts";
 
 let runCtx: Context | undefined;
@@ -11,11 +12,10 @@ self.onmessage = async function (event) {
   const { type, data } = event.data as WorkerData;
   switch (type) {
     case "START": {
-      const { modulePath, functionName, run, schedule, kwargs, internal } =
-        data;
+      const { modulePath, functionName, run, schedule, internal } = data;
       // FIXME: handle case when script is missing and notify WorkerManager so it cleans up
       // its registry.
-      const module = await import(modulePath);
+      const module = await import(toFileUrl(modulePath).toString());
 
       // TODO: for python use the same strategy but instead call from native
       const workflowFn = module[functionName];
@@ -26,33 +26,40 @@ self.onmessage = async function (event) {
         return;
       }
 
-      runCtx = new Context(run, kwargs, internal);
+      runCtx = new Context(run, internal);
 
-      workflowFn(runCtx)
+      workflowFn(runCtx, internal)
         .then((wfResult: unknown) => {
           self.postMessage(
             Ok(
-              Msg(type, {
-                kind: "SUCCESS",
-                result: wfResult,
-                run: runCtx!.getRun(),
-                schedule,
-              } satisfies WorkflowResult)
-            )
+              Msg(
+                type,
+                {
+                  kind: "SUCCESS",
+                  result: wfResult,
+                  run: runCtx!.getRun(),
+                  schedule,
+                } satisfies WorkflowResult,
+              ),
+            ),
           );
         })
         .catch((wfException: unknown) => {
           self.postMessage(
             Ok(
-              Msg(type, {
-                kind: "FAIL",
-                result: errorToString(wfException),
-                exception:
-                  wfException instanceof Error ? wfException : undefined,
-                run: runCtx!.getRun(),
-                schedule,
-              } satisfies WorkflowResult)
-            )
+              Msg(
+                type,
+                {
+                  kind: "FAIL",
+                  result: errorToString(wfException),
+                  exception: wfException instanceof Error
+                    ? wfException
+                    : undefined,
+                  run: runCtx!.getRun(),
+                  schedule,
+                } satisfies WorkflowResult,
+              ),
+            ),
           );
         });
       break;

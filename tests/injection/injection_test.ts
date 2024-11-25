@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { gql, Meta } from "../utils/mod.ts";
 import { assertRejects } from "@std/assert";
@@ -28,7 +28,7 @@ const schema = buildSchema(`
 `);
 
 const POSTGRES =
-  "postgresql://postgres:password@localhost:5432/db?schema=prisma";
+  "postgresql://postgres:password@localhost:5432/db?schema=injection_test_prisma";
 
 Meta.test("Injected values", async (t) => {
   const e = await t.engine("injection/injection.py", {

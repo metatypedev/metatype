@@ -42,6 +42,7 @@ use wit::runtimes::{Guest, MaterializerDenoFunc};
 
 pub mod wit {
     wit_bindgen::generate!({
+
         world: "typegraph"
     });
     use crate::Lib;
