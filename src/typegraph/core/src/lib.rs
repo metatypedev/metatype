@@ -6,7 +6,6 @@ pub use types::sdk;
 
 mod conversion;
 mod global_store;
-mod logger;
 mod params;
 mod runtimes;
 mod t;
