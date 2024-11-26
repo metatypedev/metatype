@@ -15,9 +15,9 @@ pub struct TypePath(pub Vec<Cow<'static, str>>);
 
 fn serialize_path_segment(seg: &PathSegment) -> Result<Cow<'static, str>> {
     match &seg.edge {
-        Edge::ObjectProp(key) => Ok(format!(".{key}").into()),
-        Edge::ArrayItem => Ok("[]".into()),
-        Edge::OptionalItem => Ok("?".into()),
+        Edge::ObjectProp(key) => Ok(format!("TypePathSegment::ObjectProp({key:?})").into()),
+        Edge::ArrayItem => Ok("TypePathSegment::ArrayItem".into()),
+        Edge::OptionalItem => Ok("TypePathSegment::Optional".into()),
         Edge::UnionVariant(_) => bail!("file input is not supported in polymorphic types"),
         _ => bail!("unexpected path segment in input type: {:?}", seg),
     }

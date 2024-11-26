@@ -2,16 +2,22 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::interlude::*;
+#[derive(Debug, Clone)]
+pub enum TypePathSegment {
+    Optional,
+    ArrayItem,
+    ObjectProp(&'static str),
+}
 
 #[derive(Debug, Clone)]
-pub struct TypePath(pub &'static [&'static str]);
+pub struct TypePath(pub &'static [TypePathSegment]);
 
 // fn path_segment_as_prop(segment: &str) -> Option<&str> {
 //     segment.strip_prefix('.')
 // }
 //
 #[derive(Debug, Clone)]
-pub struct PathToInputFiles(pub &'static [&'static [&'static str]]);
+pub struct PathToInputFiles(pub &'static [TypePath]);
 
 #[derive(Debug)]
 pub enum ValuePathSegment {
@@ -220,17 +226,18 @@ impl FileExtractor {
             self.output.insert(self.format_path(), file_id);
             return Ok(());
         }
-        let segment = self.path.0[cursor];
+        let segment = &self.path.0[cursor];
+        use TypePathSegment as TPSeg;
         use ValuePathSegment as VPSeg;
         match segment {
-            "?" => {
+            TPSeg::Optional => {
                 if !value.is_null() {
                     self.current_path.0.push(VPSeg::Optional);
                     self.extract_from_value(value)?;
                     self.current_path.0.pop();
                 }
             }
-            "[]" => {
+            TPSeg::ArrayItem => {
                 let items = value
                     .as_array_mut()
                     .ok_or_else(|| format!("expected an array at {:?}", self.format_path()))?;
@@ -240,18 +247,16 @@ impl FileExtractor {
                     self.current_path.0.pop();
                 }
             }
-            x if x.starts_with('.') => {
-                let key = &x[1..];
+            TPSeg::ObjectProp(key) => {
                 let object = value
                     .as_object_mut()
                     .ok_or_else(|| format!("expected an object at {:?}", self.format_path()))?;
                 let mut null = serde_json::Value::Null;
-                let value = object.get_mut(key).unwrap_or(&mut null);
+                let value = object.get_mut(*key).unwrap_or(&mut null);
                 self.current_path.0.push(VPSeg::Prop(key));
                 self.extract_from_value(value)?;
                 self.current_path.0.pop();
             }
-            _ => unreachable!(),
         }
 
         Ok(())

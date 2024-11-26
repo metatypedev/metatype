@@ -50,7 +50,9 @@ mod node_metas {
                 ]
                 .into(),
             ),
-            input_files: Some(PathToInputFiles(&[&[".file"]])),
+            input_files: Some(PathToInputFiles(&[TypePath(&[
+                TypePathSegment::ObjectProp("file"),
+            ])])),
             ..scalar()
         }
     }
@@ -69,7 +71,10 @@ mod node_metas {
                 ]
                 .into(),
             ),
-            input_files: Some(PathToInputFiles(&[&[".files", "[]"]])),
+            input_files: Some(PathToInputFiles(&[TypePath(&[
+                TypePathSegment::ObjectProp("files"),
+                TypePathSegment::ArrayItem,
+            ])])),
             ..scalar()
         }
     }

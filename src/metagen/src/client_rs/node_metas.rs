@@ -198,16 +198,18 @@ impl RenderType for RsNodeMetasRenderer {
                     .map(|files| {
                         files
                             .iter()
-                            .map(|path| {
-                                path.0
-                                    .iter()
-                                    .map(|s| serde_json::to_string(&s).unwrap())
-                                    .collect::<Vec<_>>()
-                            })
-                            .map(|path| format!("&[{}]", path.join(", ")))
+                            // .map(|path| {
+                            //     path.0
+                            //         .iter()
+                            //         .map(|s| serde_json::to_string(&s).unwrap())
+                            //         .collect::<Vec<_>>()
+                            // })
+                            .map(|path| format!("&[{}]", path.0.join(", ")))
                             .collect::<Vec<_>>()
                     })
-                    .map(|files| (!files.is_empty()).then(|| format!("[{}]", files.join(", "))))
+                    .map(|files| {
+                        (!files.is_empty()).then(|| format!("[TypePath({})]", files.join(", ")))
+                    })
                     .unwrap_or_default();
                 self.render_for_func(renderer, &ty_name, &return_ty_name, props, input_files)?;
                 ty_name

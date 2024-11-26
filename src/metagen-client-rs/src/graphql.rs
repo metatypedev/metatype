@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::args::{NodeArgsMerged, PlaceholderValue, PreparedArgs};
-use crate::files::{File, FileExtractor, PathToInputFiles, TypePath};
+use crate::files::{File, FileExtractor, PathToInputFiles, TypePath, TypePathSegment};
 use crate::interlude::*;
 use crate::nodes::{SelectNodeErased, SubNodes, ToMutationDoc, ToQueryDoc, ToSelectDoc};
 use std::sync::Arc;
@@ -52,12 +52,13 @@ impl<'a> GqlRequestBuilder<'a> {
             .0
             .iter()
             .filter_map(|path| {
-                let first = path[0];
-                if first.starts_with('.') && &first[1..] == key {
-                    Some(TypePath(&path[1..]))
-                } else {
-                    None
+                let first = &path.0[0];
+                if let TypePathSegment::ObjectProp(prop_key) = first {
+                    if *prop_key == key {
+                        return Some(TypePath(&path.0[1..]));
+                    }
                 }
+                None
             })
             .collect::<Vec<_>>();
         self.path_to_files.insert(name, path_to_files);
