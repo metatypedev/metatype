@@ -156,8 +156,6 @@ repos:
           - "--locked"
           - "--all-features"
           - "--all-targets"
-          - "--exclude"
-          - "client_rs_static"
           - "--"
           - "--deny"
           - "warnings"
