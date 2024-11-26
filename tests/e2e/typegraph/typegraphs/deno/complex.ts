@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
-import { Auth } from "@typegraph/sdk/params.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
+import { Auth } from "@typegraph/sdk/params";
 
 typegraph(
   {

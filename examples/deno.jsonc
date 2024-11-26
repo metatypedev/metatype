@@ -1,6 +1,31 @@
 {
   "imports": {
-    "@typegraph/sdk/": "../src/typegraph/deno/src/"
+    "@typegraph/sdk/effects": "../src/typegraph/deno/src/effects.ts",
+    "@typegraph/sdk/envs/cli": "../src/typegraph/deno/src/envs/cli.ts",
+    "@typegraph/sdk": "../src/typegraph/deno/src/index.ts",
+    "@typegraph/sdk/io": "../src/typegraph/deno/src/io.ts",
+    "@typegraph/sdk/metagen": "../src/typegraph/deno/src/metagen.ts",
+    "@typegraph/sdk/params": "../src/typegraph/deno/src/params.ts",
+    "@typegraph/sdk/policy": "../src/typegraph/deno/src/policy.ts",
+    "@typegraph/sdk/providers/aws": "../src/typegraph/deno/src/providers/aws.ts",
+    "@typegraph/sdk/providers/prisma": "../src/typegraph/deno/src/providers/prisma.ts",
+    "@typegraph/sdk/providers/temporal": "../src/typegraph/deno/src/providers/temporal.ts",
+    "@typegraph/sdk/runtimes/deno": "../src/typegraph/deno/src/runtimes/deno.ts",
+    "@typegraph/sdk/runtimes/graphql": "../src/typegraph/deno/src/runtimes/graphql.ts",
+    "@typegraph/sdk/runtimes/grpc": "../src/typegraph/deno/src/runtimes/grpc.ts",
+    "@typegraph/sdk/runtimes/http": "../src/typegraph/deno/src/runtimes/http.ts",
+    "@typegraph/sdk/runtimes/kv": "../src/typegraph/deno/src/runtimes/kv.ts",
+    "@typegraph/sdk/runtimes/mod": "../src/typegraph/deno/src/runtimes/mod.ts",
+    "@typegraph/sdk/runtimes/python": "../src/typegraph/deno/src/runtimes/python.ts",
+    "@typegraph/sdk/runtimes/random": "../src/typegraph/deno/src/runtimes/random.ts",
+    "@typegraph/sdk/runtimes/substantial": "../src/typegraph/deno/src/runtimes/substantial.ts",
+    "@typegraph/sdk/runtimes/wasm": "../src/typegraph/deno/src/runtimes/wasm.ts",
+    "@typegraph/sdk/tg_artifact_upload": "../src/typegraph/deno/src/tg_artifact_upload.ts",
+    "@typegraph/sdk/tg_deploy": "../src/typegraph/deno/src/tg_deploy.ts",
+    "@typegraph/sdk/tg_manage": "../src/typegraph/deno/src/tg_manage.ts",
+    "@typegraph/sdk/typegraph": "../src/typegraph/deno/src/typegraph.ts",
+    "@typegraph/sdk/types": "../src/typegraph/deno/src/types.ts",
+    "@typegraph/sdk/wit": "../src/typegraph/deno/src/wit.ts",
   },
   "lint": {
     "rules": {
