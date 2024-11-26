@@ -430,37 +430,43 @@ impl NameMapper {
 
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let crate_name = crate_name.unwrap_or("client_rs_static");
+
     #[cfg(debug_assertions)]
-    let (client_path, additional_deps) =
-        if let Some("1") = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() {
-            let package_root_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-            let client_path = package_root_dir
-                .join("../metagen-client-rs")
-                .normalize()
-                .unwrap();
-            let client_path = client_path.as_path().to_str().unwrap().to_string();
-            let additional_deps = r#"
-tokio = { version = "1.0", features = ["rt-multi-thread"] }
-    "#;
-            (Some(client_path), additional_deps)
-        } else {
-            (None, "")
-        };
-    #[cfg(not(debug_assertions))]
-    let (client_path, additional_deps) = (None, "");
-    let bin_path = std::env::var("METAGEN_BIN_PATH").ok();
-    let dependency = if let Some(client_path) = client_path {
-        format!(r#"metagen-client = {{ path = "{client_path}" }}"#)
+    let is_test = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() == Some("1");
+
+    #[cfg(debug_assertions)]
+    let dependency = if is_test {
+        let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../metagen-client-rs")
+            .normalize()
+            .unwrap();
+        format!(
+            r#"metagen-client = {{ path = "{client_path}" }}"#,
+            client_path = client_path.as_path().to_str().unwrap()
+        )
     } else {
-        #[cfg(debug_assertions)]
-        let dep = "metagen-client.workspace = true".to_string();
-        #[cfg(not(debug_assertions))]
-        let dep = format!(
-            "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", branch = \"{version}\" }}",
-            version = env!("CARGO_PKG_VERSION")
-        );
-        dep
+        "metagen-client.workspace = true".to_string()
     };
+
+    #[cfg(not(debug_assertions))]
+    let dependency = format!(
+        "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", tag = \"{version}\" }}",
+        version = env!("CARGO_PKG_VERSION")
+    );
+
+    #[cfg(debug_assertions)]
+    let additional_deps = if is_test {
+        r#"
+tokio = { version = "1.0", features = ["rt-multi-thread"] }
+    "#
+    } else {
+        ""
+    };
+
+    #[cfg(not(debug_assertions))]
+    let additional_deps = "";
+
+    let bin_path = std::env::var("METAGEN_BIN_PATH").ok();
 
     let exec = if let Some(bin_path) = bin_path {
         format!(
