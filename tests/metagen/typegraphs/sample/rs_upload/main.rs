@@ -5,6 +5,7 @@
 
 mod client;
 use client::*;
+use metagen_client::prelude::*;
 
 fn main() -> Result<(), BoxErr> {
     let port = std::env::var("TG_PORT")?;

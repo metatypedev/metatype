@@ -292,7 +292,7 @@ impl QueryGraph {{
 /// Render the common sections like the transports
 fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
     let client_rs = include_str!("static/client.rs");
-    writeln!(dest, "{}", client_rs)?;
+    write!(dest, "{}", client_rs)?;
     Ok(())
 }
 
@@ -428,13 +428,32 @@ impl NameMapper {
 }
 
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
-    let cargo_toml = include_str!("static/Cargo.toml");
-    if let Some(crate_name) = crate_name {
-        const DEF_CRATE_NAME: &str = "client_rs_static";
-        cargo_toml.replace(DEF_CRATE_NAME, crate_name)
-    } else {
-        cargo_toml.to_string()
-    }
+    let crate_name = crate_name.unwrap_or("client_rs_static");
+    #[cfg(debug_assertions)]
+    let dependency = "metagen-client.workspace = true";
+    #[cfg(not(debug_assertions))]
+    let dependency = format!(
+        "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", branch = \"{version}\" }}",
+        version = env!("CARGO_PKG_VERSION")
+    );
+    format!(
+        r#"[package]
+name = "{crate_name}"
+edition = "2021"
+version = "0.0.1"
+
+[dependencies]
+{dependency}
+serde = {{ version = "1.0", features = ["derive"] }}
+serde_json = "1.0"
+
+# The options after here are configured for crates intended to be
+# wasm artifacts. Remove them if your usage is different
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib", "rlib"]
+"#
+    )
 }
 
 pub fn gen_lib_rs() -> String {
