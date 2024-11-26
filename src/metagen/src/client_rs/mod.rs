@@ -17,6 +17,7 @@ use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
 use crate::utils::GenDestBuf;
+use normpath::PathExt;
 use utils::normalize_type_title;
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
@@ -430,12 +431,55 @@ impl NameMapper {
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let crate_name = crate_name.unwrap_or("client_rs_static");
     #[cfg(debug_assertions)]
-    let dependency = "metagen-client.workspace = true";
+    let (client_path, additional_deps) =
+        if let Some("1") = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() {
+            let package_root_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+            let client_path = package_root_dir
+                .join("../metagen-client-rs")
+                .normalize()
+                .unwrap();
+            let client_path = client_path.as_path().to_str().unwrap().to_string();
+            let additional_deps = r#"
+tokio = { version = "1.0", features = ["rt-multi-thread"] }
+    "#;
+            (Some(client_path), additional_deps)
+        } else {
+            (None, "")
+        };
     #[cfg(not(debug_assertions))]
-    let dependency = format!(
-        "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", branch = \"{version}\" }}",
-        version = env!("CARGO_PKG_VERSION")
-    );
+    let (client_path, additional_deps) = (None, "");
+    let bin_path = std::env::var("METAGEN_BIN_PATH").ok();
+    let dependency = if let Some(client_path) = client_path {
+        format!(r#"metagen-client = {{ path = "{client_path}" }}"#)
+    } else {
+        #[cfg(debug_assertions)]
+        let dep = "metagen-client.workspace = true".to_string();
+        #[cfg(not(debug_assertions))]
+        let dep = format!(
+            "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", branch = \"{version}\" }}",
+            version = env!("CARGO_PKG_VERSION")
+        );
+        dep
+    };
+
+    let exec = if let Some(bin_path) = bin_path {
+        format!(
+            r#"
+[[bin]]
+name = "metagen"
+path = "{bin_path}"
+"#
+        )
+    } else {
+        r#"
+# The options after here are configured for crates intended to be
+# wasm artifacts. Remove them if your usage is different
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib", "rlib"]
+        "#
+        .to_string()
+    };
     format!(
         r#"[package]
 name = "{crate_name}"
@@ -446,12 +490,9 @@ version = "0.0.1"
 {dependency}
 serde = {{ version = "1.0", features = ["derive"] }}
 serde_json = "1.0"
+{additional_deps}
 
-# The options after here are configured for crates intended to be
-# wasm artifacts. Remove them if your usage is different
-[lib]
-path = "lib.rs"
-crate-type = ["cdylib", "rlib"]
+{exec}
 "#
     )
 }

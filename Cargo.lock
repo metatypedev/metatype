@@ -6960,6 +6960,7 @@ dependencies = [
  "heck 0.5.0",
  "indexmap 2.6.0",
  "log",
+ "normpath",
  "once_cell",
  "pretty_assertions",
  "regex",
