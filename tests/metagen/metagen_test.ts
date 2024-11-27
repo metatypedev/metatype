@@ -138,7 +138,7 @@ Meta.test("Metagen within sdk", async (t) => {
 
   await t.should("Run metagen within typescript", async () => {
     const { tg } = await import("./typegraphs/metagen.ts");
-    const { Metagen } = await import("@typegraph/sdk/metagen.ts");
+    const { Metagen } = await import("@typegraph/sdk/metagen");
     const metagen = new Metagen(workspace, genConfig);
     const generated = metagen.dryRun(tg, targetName);
     const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
@@ -206,7 +206,7 @@ Meta.test("Metagen within sdk with custom template", async (t) => {
 
   await t.should("Run metagen within typescript", async () => {
     const { tg } = await import("./typegraphs/metagen.ts");
-    const { Metagen } = await import("@typegraph/sdk/metagen.ts");
+    const { Metagen } = await import("@typegraph/sdk/metagen");
     const metagen = new Metagen(workspace, genConfig);
     const generated = metagen.dryRun(tg, targetName);
     const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
