@@ -25,7 +25,7 @@
     "@typegraph/sdk/tg_manage": "../src/typegraph/deno/src/tg_manage.ts",
     "@typegraph/sdk/typegraph": "../src/typegraph/deno/src/typegraph.ts",
     "@typegraph/sdk/types": "../src/typegraph/deno/src/types.ts",
-    "@typegraph/sdk/wit": "../src/typegraph/deno/src/wit.ts",
+    "@typegraph/sdk/wit": "../src/typegraph/deno/src/wit.ts"
   },
   "lint": {
     "rules": {
