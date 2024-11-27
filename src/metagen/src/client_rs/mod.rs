@@ -17,6 +17,7 @@ use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
 use crate::utils::GenDestBuf;
+use normpath::PathExt;
 use utils::normalize_type_title;
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
@@ -292,7 +293,7 @@ impl QueryGraph {{
 /// Render the common sections like the transports
 fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
     let client_rs = include_str!("static/client.rs");
-    writeln!(dest, "{}", client_rs)?;
+    write!(dest, "{}", client_rs)?;
     Ok(())
 }
 
@@ -373,6 +374,7 @@ fn render_node_metas(
         Rc::new(node_metas::RsNodeMetasRenderer {
             name_mapper,
             named_types: named_types.clone(),
+            input_files: manifest.input_files.clone(),
         }),
     );
     for &id in &manifest.node_metas {
@@ -390,6 +392,7 @@ mod node_metas {{
             arg_types: None,
             sub_nodes: None,
             variants: None,
+            input_files: None,
         }}
     }}"#
     )?;
@@ -426,13 +429,78 @@ impl NameMapper {
 }
 
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
-    let cargo_toml = include_str!("static/Cargo.toml");
-    if let Some(crate_name) = crate_name {
-        const DEF_CRATE_NAME: &str = "client_rs_static";
-        cargo_toml.replace(DEF_CRATE_NAME, crate_name)
+    let crate_name = crate_name.unwrap_or("client_rs_static");
+
+    #[cfg(debug_assertions)]
+    let is_test = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() == Some("1");
+
+    #[cfg(debug_assertions)]
+    let dependency = if is_test {
+        let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../metagen-client-rs")
+            .normalize()
+            .unwrap();
+        format!(
+            r#"metagen-client = {{ path = "{client_path}" }}"#,
+            client_path = client_path.as_path().to_str().unwrap()
+        )
     } else {
-        cargo_toml.to_string()
-    }
+        "metagen-client.workspace = true".to_string()
+    };
+
+    #[cfg(not(debug_assertions))]
+    let dependency = format!(
+        "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", tag = \"{version}\" }}",
+        version = env!("CARGO_PKG_VERSION")
+    );
+
+    #[cfg(debug_assertions)]
+    let additional_deps = if is_test {
+        r#"
+tokio = { version = "1.0", features = ["rt-multi-thread"] }
+    "#
+    } else {
+        ""
+    };
+
+    #[cfg(not(debug_assertions))]
+    let additional_deps = "";
+
+    let bin_path = std::env::var("METAGEN_BIN_PATH").ok();
+
+    let exec = if let Some(bin_path) = bin_path {
+        format!(
+            r#"
+[[bin]]
+name = "metagen"
+path = "{bin_path}"
+"#
+        )
+    } else {
+        r#"
+# The options after here are configured for crates intended to be
+# wasm artifacts. Remove them if your usage is different
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib", "rlib"]
+        "#
+        .to_string()
+    };
+    format!(
+        r#"[package]
+name = "{crate_name}"
+edition = "2021"
+version = "0.0.1"
+
+[dependencies]
+{dependency}
+serde = {{ version = "1.0", features = ["derive"] }}
+serde_json = "1.0"
+{additional_deps}
+
+{exec}
+"#
+    )
 }
 
 pub fn gen_lib_rs() -> String {

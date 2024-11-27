@@ -1082,37 +1082,37 @@
               "ty": "denoFile@v1",
               "key": "dev-gate6",
               "desc": "Launch the typegate from a locally found meta bin.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-gate5": {
               "ty": "denoFile@v1",
               "key": "dev-gate5",
               "desc": "Launch the typegate from the latests published image.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-gate4": {
               "ty": "denoFile@v1",
               "key": "dev-gate4",
               "desc": "Launch the typegate from the locally built typegate image.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-gate3": {
               "ty": "denoFile@v1",
               "key": "dev-gate3",
               "desc": "Launch the typegate from meta-cli cmd.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-gate2": {
               "ty": "denoFile@v1",
               "key": "dev-gate2",
               "desc": "Launch the typegate in sync mode.",
-              "envKey": "bciqgfe63ayh7e7kzg4f47bmaleew7jcdukchs3cg45tvdiwoxotxzfy"
+              "envKey": "bciqe4fan2davv7bngzw6aygwwbrd7vjviea4rylpwikafl4kqyaxyuq"
             },
             "dev-gate1": {
               "ty": "denoFile@v1",
               "key": "dev-gate1",
               "desc": "Launch the typegate in single-instance mode.",
-              "envKey": "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy"
+              "envKey": "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq"
             },
             "dev-eg-tgraphs": {
               "ty": "denoFile@v1",
@@ -1561,7 +1561,7 @@
                 }
               ]
             },
-            "bciqcljozrbuwh7aum6v6soif6qr2nvpwr7gbyxrmob3ybh4bsxpqfyy": {
+            "bciqk7rioqxzcpzf572poq2vwefpcmqnboofojgkgonvpih3q6wwyldq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1596,7 +1596,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "LOG_LEVEL",
-                  "val": "DEBUG"
+                  "val": "DEBUG,substantial=ERROR"
                 },
                 {
                   "ty": "posix.envVar",
@@ -1629,7 +1629,7 @@
                 }
               ]
             },
-            "bciqgfe63ayh7e7kzg4f47bmaleew7jcdukchs3cg45tvdiwoxotxzfy": {
+            "bciqe4fan2davv7bngzw6aygwwbrd7vjviea4rylpwikafl4kqyaxyuq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1664,7 +1664,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "LOG_LEVEL",
-                  "val": "DEBUG"
+                  "val": "DEBUG,substantial=ERROR"
                 },
                 {
                   "ty": "posix.envVar",
