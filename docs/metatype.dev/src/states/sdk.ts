@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { atom, useAtom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
@@ -15,8 +15,8 @@ const locationAtom = atomWithLocation();
 const sdkQueryAtom = atom(
   (get) => get(locationAtom).searchParams?.get(key) as SDK | null,
   (get, set, value: SDK) => {
-    const searchParams = get(locationAtom).searchParams ??
-      new URLSearchParams();
+    const searchParams =
+      get(locationAtom).searchParams ?? new URLSearchParams();
     searchParams.set(key, value);
     set(locationAtom, (prev) => ({
       ...prev,

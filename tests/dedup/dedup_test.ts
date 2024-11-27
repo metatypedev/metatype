@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { Meta } from "test-utils/mod.ts";
 import { Typegraph } from "@metatype/typegate/typegraph/types.ts";
 import { assert, assertEquals } from "@std/assert";

@@ -1,6 +1,9 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
+import { $ } from "@david/dax";
+import { killProcess, Lines } from "./process.ts";
+import { MetaTest } from "./test.ts";
 import { shell, ShellOptions, ShellOutput } from "./shell.ts";
 
 // added to path in dev/test.ts
@@ -15,10 +18,9 @@ export async function metaCli(
   first: string | ShellOptions,
   ...input: string[]
 ): Promise<ShellOutput> {
-  const res =
-    await (typeof first === "string"
-      ? shell([metaCliExe, first, ...input])
-      : shell([metaCliExe, ...input], first));
+  const res = await (typeof first === "string"
+    ? shell([metaCliExe, first, ...input])
+    : shell([metaCliExe, ...input], first));
 
   return res;
 }
@@ -52,4 +54,32 @@ export async function serialize(
 
   const res = await shell(cmd);
   return res.stdout;
+}
+
+export function makeMetaCliTest(t: MetaTest, cwd: string, args: string[]) {
+  const meta = new Deno.Command("meta", {
+    cwd,
+    args,
+    stdout: "piped",
+    stderr: "piped",
+  }).spawn();
+
+  const stdout = new Lines(meta.stdout);
+  const stderr = new Lines(meta.stderr);
+
+  const expectStdout = async (str: string) => {
+    await stdout.readWhile((line) => !$.stripAnsi(line).includes(str));
+  };
+
+  const expectStderr = async (str: string) => {
+    await stderr.readWhile((line) => !$.stripAnsi(line).includes(str));
+  };
+
+  t.addCleanup(async () => {
+    await stdout.close();
+    await stderr.close();
+    await killProcess(meta);
+  });
+
+  return { meta, stdout, stderr, expectStdout, expectStderr };
 }

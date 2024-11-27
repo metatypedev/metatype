@@ -1,0 +1,33 @@
+{
+  outer {
+    # scalar 1 and 2 don't need
+    # type inline fragments
+    unionList {
+      ... on comp_1 {
+        field1
+      }
+      ... on comp_2 {
+        field2
+      }
+    }
+    # we must include fragments
+    # for all composites or it will fail
+    union {
+      ... on comp_1 {
+        field1
+      }
+      ... on comp_2 {
+        field2
+      }
+    }
+    # rules are the same between unions and eithers
+    either {
+      ... on comp_1 {
+        field1
+      }
+      ... on comp_2 {
+        field2
+      }
+    }
+  }
+}

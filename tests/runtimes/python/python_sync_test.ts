@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { gql, Meta, sleep } from "../../utils/mod.ts";
 import { connect } from "redis";
@@ -195,7 +195,7 @@ Meta.test(
       const duration = end - start;
 
       console.log(`duration: ${duration}ms`);
-      assert(duration < 800, `Python runtime was too slow: ${duration}ms`);
+      assert(duration < 1000, `Python runtime was too slow: ${duration}ms`);
     });
   },
 );

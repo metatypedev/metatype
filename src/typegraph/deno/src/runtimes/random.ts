@@ -3,8 +3,8 @@
 
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
-import { RandomRuntimeData } from "../gen/typegraph_core.d.ts";
-import { Materializer, Runtime } from "./mod.ts";
+import type { RandomRuntimeData } from "../gen/typegraph_core.d.ts";
+import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 
 interface RandomMat extends Materializer {

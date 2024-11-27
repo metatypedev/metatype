@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { SerializeParams } from "./gen/typegraph_core.d.ts";
+import type { SerializeParams } from "./gen/typegraph_core.d.ts";
 import { BasicAuth, tgDeploy } from "./tg_deploy.ts";
-import { TgFinalizationResult, TypegraphOutput } from "./typegraph.ts";
+import type { TgFinalizationResult, TypegraphOutput } from "./typegraph.ts";
 import { freezeTgOutput } from "./utils/func_utils.ts";
 import { log, rpc } from "./io.ts";
-import { CliEnv, getCliEnv } from "./envs/cli.ts";
+import { type CliEnv, getCliEnv } from "./envs/cli.ts";
 import * as path from "node:path";
 
 export class Manager {
@@ -27,7 +27,7 @@ export class Manager {
         await this.#deploy();
         break;
       case "list":
-        await this.#list();
+        this.#list();
         break;
       default:
         throw new Error(
@@ -61,7 +61,7 @@ export class Manager {
         pretty: false,
       });
       log.success(finalizationResult.tgJson, true);
-    } catch (err: any) {
+    } catch (err) {
       log.failure({
         typegraph: this.#typegraph.name,
         errors: getErrorStack(err, "failed to serialize typegraph"),
@@ -102,7 +102,7 @@ export class Manager {
       let frozenSerialized: TgFinalizationResult;
       try {
         frozenSerialized = frozenOut.serialize(params);
-      } catch (err: any) {
+      } catch (err) {
         log.failure({
           typegraph: this.#typegraph.name,
           errors: getErrorStack(err, "failed to serialize typegraph"),
@@ -115,7 +115,7 @@ export class Manager {
       } as TypegraphOutput;
 
       const deployTarget = await rpc.getDeployTarget();
-      const { response } = await tgDeploy(reusableTgOutput, {
+      const { response, serialized } = await tgDeploy(reusableTgOutput, {
         typegate: {
           url: deployTarget.baseUrl,
           auth: new BasicAuth(
@@ -131,8 +131,15 @@ export class Manager {
         defaultMigrationAction: deployData.defaultMigrationAction,
       });
 
-      log.success({ typegraph: this.#typegraph.name, ...response });
-    } catch (err: any) {
+      log.success({
+        typegraph: {
+          name: this.#typegraph.name,
+          path: env.typegraph_path,
+          value: serialized,
+        },
+        ...response,
+      });
+    } catch (err) {
       log.failure({
         typegraph: this.#typegraph.name,
         errors: getErrorStack(err, "failed to deploy typegraph"),
@@ -141,11 +148,12 @@ export class Manager {
     }
   }
 
-  async #list(): Promise<void> {
+  #list() {
     log.success({ typegraph: this.#typegraph.name });
   }
 }
 
+// deno-lint-ignore no-explicit-any
 function getErrorStack(err: any, defaultErr: string): string[] {
   if (err instanceof Error) {
     log.debug(err);

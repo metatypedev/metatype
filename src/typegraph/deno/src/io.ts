@@ -7,6 +7,40 @@ import process from "node:process";
  * see: module level documentation `meta-cli/src/deploy/actors/task.rs`
  */
 
+const JSONRPC_VERSION = "2.0";
+
+function writeRpcMessage(message: string) {
+  // split into 32-KiB chunks
+  const chunkSize = 32758; // 32 KiB - 10 bytes for "jsonrpc^: " or "jsonrpc$: "
+  for (let i = 0; i < message.length; i += chunkSize) {
+    const chunk = message.slice(i, i + chunkSize);
+    if (i + chunkSize < message.length) {
+      process.stdout.write(`jsonrpc^: ${chunk}\n`);
+      continue;
+    }
+    process.stdout.write(`jsonrpc$: ${message.slice(i, i + chunkSize)}\n`);
+  }
+}
+
+type RpcNotificationMethod =
+  | "Debug"
+  | "Info"
+  | "Warning"
+  | "Error"
+  | "Success"
+  | "Failure";
+
+// deno-lint-ignore no-explicit-any
+const rpcNotify = (method: RpcNotificationMethod, params: any = null) => {
+  const message = JSON.stringify({
+    jsonrpc: JSONRPC_VERSION,
+    method,
+    params,
+  });
+  writeRpcMessage(message);
+};
+
+// deno-lint-ignore no-explicit-any
 function getOutput(args: any[]) {
   return args
     .map((arg) => {
@@ -21,35 +55,46 @@ function getOutput(args: any[]) {
     .join(" ");
 }
 
-export const log = {
-  debug(...args: any[]) {
-    const output = getOutput(args);
-    process.stdout.write(`debug: ${output}\n`);
+export const log: {
+  // deno-lint-ignore no-explicit-any
+  debug(...args: any[]): void;
+  // deno-lint-ignore no-explicit-any
+  info(...args: any[]): void;
+  // deno-lint-ignore no-explicit-any
+  warn(...args: any[]): void;
+  // deno-lint-ignore no-explicit-any
+  error(...args: any[]): void;
+  // deno-lint-ignore no-explicit-any
+  failure(data: any): void;
+  // deno-lint-ignore no-explicit-any
+  success(data: any, noEncode?: boolean): void;
+} = {
+  debug(...args): void {
+    rpcNotify("Debug", { message: getOutput(args) });
   },
-  info(...args: any[]) {
-    const output = getOutput(args);
-    process.stdout.write(`info: ${output}\n`);
+  info(...args): void {
+    rpcNotify("Info", { message: getOutput(args) });
   },
-  warn(...args: any[]) {
-    const output = getOutput(args);
-    process.stdout.write(`warning: ${output}\n`);
+  warn(...args): void {
+    rpcNotify("Warning", { message: getOutput(args) });
   },
-  error(...args: any[]) {
-    const output = getOutput(args);
-    process.stdout.write(`error: ${output}\n`);
+  error(...args): void {
+    rpcNotify("Error", { message: getOutput(args) });
   },
-
-  failure(data: any) {
-    process.stdout.write(`failure: ${JSON.stringify(data)}\n`);
+  failure(data): void {
+    rpcNotify("Failure", { data: data });
   },
-  success(data: any, noEncode = false) {
-    const encoded = noEncode ? data : JSON.stringify(data);
-    process.stdout.write(`success: ${encoded}\n`);
+  success(data, noEncode = false): void {
+    if (noEncode) {
+      rpcNotify("Success", { data: JSON.parse(data) });
+    } else {
+      rpcNotify("Success", { data: data });
+    }
   },
 };
 
 class RpcResponseReader {
-  private buffer: string = "";
+  private buffer = "";
 
   constructor() {
     process.stdin.setEncoding("utf-8");
@@ -78,7 +123,7 @@ class RpcResponseReader {
               resolve(message.result);
               break;
             }
-          } catch (e) {
+          } catch {
             reject("invalid message");
           }
         }
@@ -89,12 +134,11 @@ class RpcResponseReader {
   }
 }
 
-const JSONRPC_VERSION = "2.0";
-
 const rpcCall = (() => {
   const responseReader = new RpcResponseReader();
   let latestRpcId = 0;
 
+  // deno-lint-ignore no-explicit-any
   return (method: string, params: any = null) => {
     const rpcId = latestRpcId++;
     const rpcMessage = JSON.stringify({
@@ -104,7 +148,7 @@ const rpcCall = (() => {
       params,
     });
 
-    process.stdout.write(`jsonrpc: ${rpcMessage}\n`);
+    writeRpcMessage(rpcMessage);
     return responseReader.read(rpcId);
   };
 })();

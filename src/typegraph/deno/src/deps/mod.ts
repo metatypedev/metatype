@@ -2,13 +2,16 @@
 // SPDX-License-Identifier: MPL-2.0
 export { caller } from "./_import.ts";
 
-export function mapValues(
-  object: object,
-  fn: (value: any, key: string, object: object) => any,
-): any {
+export function mapValues<
+  O extends Record<string | number | symbol, unknown>,
+  T,
+>(
+  object: O,
+  fn: (value: O[keyof O], key: keyof O, object: O) => T,
+): Record<keyof O, T> {
   const newEntries = Object.entries(object).map(([k, v]) => [
     k,
-    fn(v, k, object),
+    fn(v as O[keyof O], k, object),
   ]);
   return Object.fromEntries(newEntries);
 }

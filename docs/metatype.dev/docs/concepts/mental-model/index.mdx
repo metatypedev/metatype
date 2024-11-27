@@ -77,7 +77,10 @@ Every type and function have a runtime associated to it. This runtime describes 
 In practice, function types are often not explicitly used and the usage of runtime sugar syntax is preferred.
 
 <CodeBlock language="python">
-  {require("!!code-loader!../../../../../examples/typegraphs/runtimes.py").content}
+  {
+    require("!!code-loader!../../../../../examples/typegraphs/runtimes.py")
+      .content
+  }
 </CodeBlock>
 
 **Analogy in SQL**: a runtime is similar to a database instance running some requests.
@@ -106,7 +109,10 @@ The policy decision can be:
 Triggers are events launching the execution of one or multiple functions. They fire when a GraphQL request is received for the specific typegraph.
 
 <CodeBlock language="python">
-  {require("!!code-loader!../../../../../examples/typegraphs/triggers.py").content}
+  {
+    require("!!code-loader!../../../../../examples/typegraphs/triggers.py")
+      .content
+  }
 </CodeBlock>
 
 **Analogy in SQL**: a trigger is similar to receiving a new query.

@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { PerEffect } from "../effects.ts";
+// jsr-private-module
+
+import type { PerEffect } from "../effects.ts";
 
 type RequiredKeys<T> = {
   [K in keyof T]-?: object extends { [P in K]: T[K] } ? never : K;

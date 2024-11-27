@@ -50,6 +50,7 @@ impl Action for List {
         let console = ConsoleActor::new(Arc::clone(&config)).start();
 
         let action_generator = ListActionGenerator::new(
+            node.prefix.clone(),
             config.dir().unwrap_or_log().into(),
             dir.clone().into(),
             config

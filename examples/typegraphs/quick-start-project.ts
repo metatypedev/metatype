@@ -24,19 +24,19 @@ typegraph(
         title: t.string(),
         body: t.string(),
       },
-      { name: "message" } // the name of our type
+      { name: "message" }, // the name of our type
     );
 
     // custom functions
     const add = deno.func(
       t.struct({ first: t.float(), second: t.float() }),
       t.float(),
-      { code: "({first, second}) => first + second" }
+      { code: "({first, second}) => first + second" },
     );
     const hello = python.fromLambda(
       t.struct({ world: t.string() }),
       t.string(),
-      { code: `lambda x: f"Hello {x['world']}!"` }
+      { code: `lambda x: f"Hello {x['world']}!"` },
     );
 
     g.expose(
@@ -46,7 +46,7 @@ typegraph(
         create_message: db.create(message),
         list_messages: db.findMany(message),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

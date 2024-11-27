@@ -26,10 +26,11 @@ typegraph(
           code: `lambda inp: sum(range(inp['n']))`,
         }),
         tscumsum: deno.func(inp, out, {
-          code: "({n}) => Array.from(Array(5).keys()).reduce((sum, e) => sum + e, 0)",
+          code:
+            "({n}) => Array.from(Array(5).keys()).reduce((sum, e) => sum + e, 0)",
         }),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

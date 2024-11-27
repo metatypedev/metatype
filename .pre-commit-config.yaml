@@ -28,37 +28,35 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp,tests/e2e/nextjs,tests/metagen/typegraphs/sample/ts/client.ts && cd ../dev && deno fmt && cd ../typegraph/deno && deno fmt --ignore=node_modules,dist && cd ../../libs/metagen/src && deno fmt'
+        entry: bash -c 'deno fmt'
         pass_filenames: false
         types:
+          - javascript
           - ts
-        files: ^(typegate|dev|typegraph/deno)/
+          - tsx
+          - json
+          - yaml
       - id: deno-lint
         name: Deno lint
         language: system
-        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native,tmp,tests/e2e/nextjs && cd ../dev && deno lint && cd ../libs/metagen/src/ && deno lint'
+        entry: bash -c 'deno lint && ghjk x lint-deno'
         pass_filenames: false
         types:
+          - javascript
           - ts
-        files: ^(typegate|dev)/
+          - tsx
+          - json
+          - yaml
+        files: ^(src/typegate|tools)/
       - id: es-lint
         name: Eslint website
         language: system
-        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint && pnpm prettier'
+        entry: bash -c 'cd ./docs/metatype.dev/ && [ -f node_modules/.bin/eslint ] && pnpm lint && pnpm prettier'
         pass_filenames: false
         types_or:
           - ts
           - tsx
-        files: ^website/
-        exclude: ^website/typegraphs/
-      - id: devtools-lint
-        name: ESLint meta-lsp
-        language: system
-        entry: bash -c 'cd meta-lsp && pnpm lint'
-        pass_filenames: false
-        types:
-          - ts
-        files: ^meta-lsp/
+        files: ^docs/metatype.dev
       #- id: cargo-udeps
       #  name: Check for unused cargo dependencies
       #  language: system
@@ -87,9 +85,9 @@ repos:
             .*deno.lock|
             CHANGELOG.md|
             .*\.snap$|
-            typegate/src/typegraphs/.*\.json|
-            website/docs/reference/|
-            libs/pyrt_wit_wire/pyrt|
+            src/typegate/src/typegraphs/.*\.json|
+            docs/metatype.dev/reference/|
+            src/pyrt_wit_wire/pyrt|
             migration_lock.toml|
             tests/metagen/typegraphs/sample/[rs|ts|py]/client\.[rs|ts|py]
           )
@@ -100,66 +98,36 @@ repos:
         name: "License MPL-2.0 python"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-MPL-2.0.txt
+          - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=#"
-          - "--skip-license-insertion-comment=no-auto-license-header"
-        types_or:
-          - python
-        files: ^typegraph/
-      - id: insert-license
-        name: "License Elastic-2.0 rust"
-        args:
-          #- --remove-header
-          - --license-filepath=dev/license-header-Elastic-2.0.txt
-          - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
           - "--skip-license-insertion-comment=@generated"
         types_or:
-          - rust
-        files: ^(typegate|libs!(/metagen/.*))/
+          - python
+        exclude: ^examples/|src/metagen/src/.*/static/.*
       - id: insert-license
         name: "License MPL-2.0 rust"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-MPL-2.0.txt
+          - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
+          - "--skip-license-insertion-comment=@generated"
         types_or:
           - rust
-        files: ^(meta-cli|typegraph|libs/metagen)/
+        exclude: ^examples/|src/metagen/src/.*/static/.*
       - id: insert-license
-        name: "License Elastic-2.0 deno"
+        name: "License MPL-2.0 typescript"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header-Elastic-2.0.txt
+          - --license-filepath=tools/license-header-MPL-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
           - "--skip-license-insertion-comment=@generated"
         types_or:
           - ts
-        files: ^(typegate|dev)/
-      - id: insert-license
-        name: "License MPL-2.0 deno"
-        args:
-          #- --remove-header
-          - --license-filepath=dev/license-header-MPL-2.0.txt
-          - "--comment-style=//"
-          - "--skip-license-insertion-comment=no-auto-license-header"
-        types_or:
-          - ts
-        files: ^typegraph/
-      - id: insert-license
-        name: "License Elastic-2.0 typescript"
-        args:
-          #- --remove-header
-          - --license-filepath=dev/license-header-Elastic-2.0.txt
-          - "--comment-style=//"
-          - "--skip-license-insertion-comment=no-auto-license-header"
-        types_or:
-          - ts
           - tsx
-        files: ^website/
-        exclude: website/typegraphs
+        exclude: ^examples/|src/metagen/src/.*/static/.*
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.28.6
     hooks:

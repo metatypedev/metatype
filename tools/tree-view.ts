@@ -1,7 +1,7 @@
 #!/bin/env -S ghjk deno run -A
 
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * Usage:
@@ -25,8 +25,8 @@ export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
     const indent = "    ".repeat(path.edges.length);
     const edge = cyan(`${path.edges[path.edges.length - 1] ?? "[root]"}`);
     const idxStr = green(`${idx}`);
-    const injection = type.injection
-      ? ` (injection ${type.injection.source})`
+    const injection = "injection" in type
+      ? ` (injection ${(type.injection as any).source})`
       : "";
     console.log(
       `${indent}${edge} → ${idxStr} ${type.type}:${type.title}${injection}`,

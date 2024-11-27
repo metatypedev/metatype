@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { testE2eCli } from "../test.ts";
 import type { DenoTaskDefArgs } from "../deps.ts";
@@ -36,11 +36,5 @@ export default {
       // without --tests, the --doc is causing a link error "syntax error in VERSION script"
       await $`cargo test --locked --package typegraph_core --tests`;
     },
-  },
-  "test-lsp": {
-    inherit: "_ecma",
-    fn: ($) =>
-      $`bash -sx`.stdinText("node --test --import=tsx tests/*.test.ts")
-        .cwd("src/meta-lsp/ts-language-server"),
   },
 } satisfies Record<string, DenoTaskDefArgs>;

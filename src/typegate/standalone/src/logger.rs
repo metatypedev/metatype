@@ -1,6 +1,3 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
-
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
@@ -18,7 +15,10 @@ fn optional_module_path(path: &str) -> String {
 
 pub fn init() {
     if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "info,swc_ecma_codegen=off,tracing::span=off");
+        std::env::set_var(
+            "RUST_LOG",
+            "info,swc_ecma_codegen=off,tracing::span=off,quaint=off",
+        );
     }
     let mut builder = env_logger::Builder::from_default_env();
     builder

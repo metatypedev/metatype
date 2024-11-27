@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 // @ts-nocheck: Deno file
 
 import { METATYPE_VERSION, PUBLISHED_VERSION } from "./tools/consts.ts";
@@ -16,7 +19,7 @@ env("main")
   .install(installs.deno)
   .vars({
     RUST_LOG:
-      "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
+      "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,quaint=off",
     TYPEGRAPH_VERSION: "0.0.3",
     CLICOLOR_FORCE: "1",
     CROSS_CONFIG: "tools/Cross.toml",

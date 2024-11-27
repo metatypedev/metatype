@@ -1,10 +1,10 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client/index";
 import createUploadLink from "apollo-upload-client/createUploadLink.mjs";
-import process from "process";
+import process from "node:process";
 
 type ResponseData = {
   message: string;

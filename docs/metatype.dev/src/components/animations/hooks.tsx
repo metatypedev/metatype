@@ -1,8 +1,8 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
-import { useSpring, SpringValue, useSpringValue } from "@react-spring/konva";
+import { SpringValue, useSpring, useSpringValue } from "@react-spring/konva";
 import { each } from "@react-spring/shared";
 
 export function useGifScroll(delta = 0.01, saveDelay = 100) {

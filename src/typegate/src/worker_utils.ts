@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 // WARNING: Assume any content or state in this file will run inside a Web Worker
 
@@ -7,7 +7,7 @@ import { TaskContext } from "./runtimes/deno/shared_types.ts";
 
 export function make_internal(
   { meta: { url, token } }: TaskContext,
-  additionalHeaders: Record<string, string>
+  additionalHeaders: Record<string, string>,
 ) {
   const gql = (query: readonly string[], ...args: unknown[]) => {
     if (args.length > 0) {
@@ -16,7 +16,7 @@ export function make_internal(
     // console.log(query);
     return {
       run: async (
-        variables: Record<string, unknown>
+        variables: Record<string, unknown>,
       ): Promise<Record<string, unknown>> => {
         const res = await fetch(url, {
           method: "POST",

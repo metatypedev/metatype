@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { connect, type Redis, type RedisConnectOptions } from "redis";
 import { getLogger } from "../../log.ts";
@@ -53,14 +53,19 @@ class SharedArtifactPersistence implements ArtifactPersistence {
   ): Promise<SharedArtifactPersistence> {
     const localShadow = await LocalArtifactPersistence.init(baseDir);
     const s3 = new S3(syncConfig.s3);
-    return new SharedArtifactPersistence(localShadow, s3, syncConfig.s3Bucket, syncConfig);
+    return new SharedArtifactPersistence(
+      localShadow,
+      s3,
+      syncConfig.s3Bucket,
+      syncConfig,
+    );
   }
 
   constructor(
     private localShadow: LocalArtifactPersistence,
     private s3: S3,
     private s3Bucket: string,
-    private syncConfig: SyncConfig
+    private syncConfig: SyncConfig,
   ) {}
 
   get dirs() {
@@ -76,12 +81,13 @@ class SharedArtifactPersistence implements ArtifactPersistence {
     const hasher = createHash("sha256");
 
     const stream2 = stream.pipeThrough(new HashTransformStream(hasher));
-    
+
     // temporary key is needed as we won't be able to get the hash sum of the file,
     // which we use as the key of the object,
     // before going through whole stream.
-    // so we create a temporary key to store the file/object and then copy the object after we have computed the hash. 
-    const tempKey = resolveS3Key(this.s3Bucket, 
+    // so we create a temporary key to store the file/object and then copy the object after we have computed the hash.
+    const tempKey = resolveS3Key(
+      this.s3Bucket,
       `tmp/${Math.random().toString(36).substring(2)}`,
     );
 
@@ -94,23 +100,23 @@ class SharedArtifactPersistence implements ArtifactPersistence {
         ContentLength: size,
       },
     });
-  
+
     const _ = await upload.done();
-    
+
     const hash = hasher.digest("hex");
     logger.info(`persisting artifact to S3: ${hash}`);
-    
+
     await this.s3.copyObject({
       Bucket: this.s3Bucket,
       CopySource: `${this.s3Bucket}/${tempKey}`,
       Key: resolveS3Key(this.s3Bucket, hash),
     });
-    
+
     await this.s3.deleteObject({
       Bucket: this.s3Bucket,
       Key: tempKey,
     });
-    
+
     return hash;
   }
 

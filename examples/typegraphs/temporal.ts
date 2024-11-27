@@ -1,18 +1,9 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
 import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
-
-// skip:start
-function getEnvVariable(
-  key: string,
-  defaultValue?: string
-): string | undefined {
-  const glob = globalThis as any;
-  const value = glob?.process
-    ? glob?.process.env?.[key]
-    : glob?.Deno.env.get(key);
-  return value ?? defaultValue;
-}
-// skip:end
+import process from "node:process";
 
 typegraph(
   {
@@ -29,7 +20,7 @@ typegraph(
       namespaceSecret: "NAMESPACE",
     });
 
-    const workflow_id = getEnvVariable("ID_FROM_ENV");
+    const workflow_id = process.env["ID_FROM_ENV"];
     const arg = t.struct({ some_field: t.string() });
 
     g.expose(
@@ -41,7 +32,7 @@ typegraph(
           ? temporal.describeWorkflow().reduce({ workflow_id })
           : temporal.describeWorkflow(),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

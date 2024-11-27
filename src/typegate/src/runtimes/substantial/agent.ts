@@ -1,22 +1,28 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import {
   AddScheduleInput,
   Backend,
   NextRun,
-  Run,
   ReadOrCloseScheduleInput,
+  Run,
 } from "../../../engine/runtime.js";
-import { getLogger } from "../../log.ts";
+import { getLoggerByAddress, Logger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import {
+  appendIfOngoing,
   Interrupt,
   Result,
   WorkerData,
   WorkflowResult,
-  appendIfOngoing,
 } from "./types.ts";
 import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
 
-const logger = getLogger();
+export interface StdKwargs {
+  taskContext: TaskContext;
+  kwargs: Record<string, string>;
+}
 
 export interface WorkflowDescription {
   name: string;
@@ -34,13 +40,15 @@ export class Agent {
   workerManager = new WorkerManager();
   workflows: Array<WorkflowDescription> = [];
   pollIntervalHandle?: number;
+  logger: Logger;
 
   constructor(
     private backend: Backend,
     private queue: string,
-    private config: AgentConfig,
-    private internalTCtx: TaskContext
-  ) {}
+    private config: AgentConfig
+  ) {
+    this.logger = getLoggerByAddress(import.meta, "substantial");
+  }
 
   async schedule(input: AddScheduleInput) {
     await Meta.substantial.storeAddSchedule(input);
@@ -55,7 +63,7 @@ export class Agent {
         content,
       });
     } catch (err) {
-      logger.warn(
+      this.logger.warn(
         `Failed writing log metadata for schedule "${schedule}" (${runId}), skipping it: ${err}`
       );
     }
@@ -88,7 +96,7 @@ export class Agent {
   start(workflows: Array<WorkflowDescription>) {
     this.workflows = workflows;
 
-    logger.warn(
+    this.logger.warn(
       `Initializing agent to handle ${workflows
         .map(({ name }) => name)
         .join(", ")}`
@@ -98,7 +106,7 @@ export class Agent {
       try {
         await this.#nextIteration();
       } catch (err) {
-        logger.error(err);
+        this.logger.error(err);
       }
     }, 1000 * this.config.pollIntervalSec);
   }
@@ -111,8 +119,6 @@ export class Agent {
   }
 
   async #nextIteration() {
-    logger.warn("POLL");
-
     // Note: in multiple agents/typegate scenario, a single node may acquire all runs for itself within a tick span
     // To account for that, keep this reasonable
     const acquireMaxForThisAgent = this.config.maxAcquirePerTick;
@@ -136,16 +142,16 @@ export class Agent {
       );
 
       while (requests.length > 0) {
-        // logger.warn(`Run workflow ${JSON.stringify(next)}`);
+        // this.logger.warn(`Run workflow ${JSON.stringify(next)}`);
         const next = requests.shift();
         if (next) {
           try {
             await this.#replay(next, workflow);
           } catch (err) {
-            logger.error(
+            this.logger.error(
               `Replay failed for ${workflow.name} => ${JSON.stringify(next)}`
             );
-            logger.error(err);
+            this.logger.error(err);
           } finally {
             await this.log(next.run_id, next.schedule_date, {
               message: "Replaying workflow",
@@ -163,7 +169,7 @@ export class Agent {
       lease_seconds: this.config.leaseLifespanSec,
     });
 
-    logger.info(`Active leases: ${activeRunIds.join(",  ")}`);
+    this.logger.debug(`Active leases: ${activeRunIds.join(",  ")}`);
 
     const next = await Meta.substantial.agentNextRun({
       backend: this.backend,
@@ -188,7 +194,7 @@ export class Agent {
     // Leases are for abstracting ongoing runs, and at a given tick, does not
     // necessarily represent the state of what is actually running on the current typegate node
     if (this.workerManager.isOngoing(next.run_id)) {
-      logger.warn(
+      this.logger.warn(
         `skip triggering ${next.run_id} for the current tick as it is still ongoing`
       );
 
@@ -215,7 +221,9 @@ export class Agent {
     if (checkIfRunHasStopped(run)) {
       // This may occur if an event is sent but the underlying run already completed
       // Or does not exist.
-      logger.warn(`Run ${next.run_id} has already stopped, closing schedule`);
+      this.logger.warn(
+        `Run ${next.run_id} has already stopped, closing schedule`
+      );
       await Meta.substantial.storeCloseSchedule(schedDef);
       return;
     }
@@ -233,7 +241,7 @@ export class Agent {
     if (first.event.type != "Start") {
       // A consequence of the above, a workflow is always triggered by gql { start(..) }
       // This can also occur if an event is sent from gql under a runId that is not valid (e.g. due to typo)
-      logger.warn(
+      this.logger.warn(
         `First item in the operation list is not a Start, got "${JSON.stringify(
           first
         )}" instead. Closing the underlying schedule.`
@@ -243,6 +251,7 @@ export class Agent {
       return;
     }
 
+    const { taskContext } = first.event.kwargs as unknown as StdKwargs;
     try {
       this.workerManager.triggerStart(
         workflow.name,
@@ -250,8 +259,7 @@ export class Agent {
         workflow.path,
         run,
         next.schedule_date,
-        first.event.kwargs,
-        this.internalTCtx
+        taskContext
       );
 
       this.workerManager.listen(
@@ -264,7 +272,7 @@ export class Agent {
       if (run.operations.length == 1) {
         // Make sure it is already visible on the ongoing list
         // without waiting for interrupts to store the first run
-        logger.info(`Persist first run "${next.run_id}"`);
+        this.logger.info(`Persist first run "${next.run_id}"`);
         await Meta.substantial.storePersistRun({
           backend: this.backend,
           run,
@@ -278,14 +286,16 @@ export class Agent {
       if (result.error) {
         // All Worker/Runner non-user issue should fall here
         // Note: Should never throw (typegate will panic), this will run in a worker
-        logger.error(
+        this.logger.error(
           `result error for "${runId}": ${JSON.stringify(result.payload)}`
         );
         return;
       }
 
       const answer = result.payload as WorkerData;
-      logger.info(`"${runId}" answered: type ${JSON.stringify(answer.type)}`);
+      this.logger.info(
+        `"${runId}" answered: type ${JSON.stringify(answer.type)}`
+      );
 
       const startedAt = this.workerManager.getInitialTimeStartedAt(runId);
 
@@ -317,7 +327,7 @@ export class Agent {
           break;
         }
         default:
-          logger.error(
+          this.logger.error(
             `Fatal: invalid type ${
               answer.type
             } sent by "${runId}": ${JSON.stringify(answer.data)}`
@@ -333,18 +343,18 @@ export class Agent {
   ) {
     this.workerManager.destroyWorker(workflowName, runId); // !
 
-    logger.warn(`Interrupt "${workflowName}": ${result}"`);
+    this.logger.debug(`Interrupt "${workflowName}": ${result}"`);
 
     // TODO: make all of these transactional
 
-    logger.info(`Persist records for "${workflowName}": ${result}"`);
+    this.logger.info(`Persist records for "${workflowName}": ${result}"`);
     const _run = await Meta.substantial.storePersistRun({
       backend: this.backend,
       run,
     });
 
     try {
-      logger.info(`Trying to close old schedule ${runId} at ${schedule}`);
+      this.logger.info(`Trying to close old schedule ${runId} at ${schedule}`);
       await Meta.substantial.storeCloseSchedule({
         backend: this.backend,
         queue: this.queue,
@@ -354,11 +364,11 @@ export class Agent {
     } catch (err) {
       // Note: underlying schedule may have been closed already
       // This could occur if multiple events were sent at the exact same time
-      logger.warn(err);
+      this.logger.warn(err);
     }
 
     const newSchedule = new Date().toJSON();
-    logger.info(`Add back to schedule ${runId} at ${newSchedule}`);
+    this.logger.info(`Add back to schedule ${runId} at ${newSchedule}`);
     await Meta.substantial.storeAddSchedule({
       backend: this.backend,
       queue: this.queue,
@@ -366,7 +376,7 @@ export class Agent {
       schedule: newSchedule,
     });
 
-    logger.info(`Renew lease ${runId}`);
+    this.logger.info(`Renew lease ${runId}`);
     await Meta.substantial.agentRenewLease({
       backend: this.backend,
       lease_seconds: this.config.leaseLifespanSec,
@@ -382,13 +392,13 @@ export class Agent {
   ) {
     this.workerManager.destroyWorker(workflowName, runId);
 
-    logger.info(
+    this.logger.info(
       `gracefull completion of "${runId}" (${kind}): ${JSON.stringify(
         result
       )} started at "${startedAt}"`
     );
 
-    logger.info(`Append Stop ${runId}`);
+    this.logger.info(`Append Stop ${runId}`);
     const rustResult = kind == "FAIL" ? "Err" : "Ok";
 
     // Note: run is a one-time value, thus can be mutated
@@ -403,7 +413,7 @@ export class Agent {
       },
     });
 
-    logger.info(
+    this.logger.info(
       `Persist finalized records for "${workflowName}": ${result}" and closing everything..`
     );
 
@@ -445,8 +455,11 @@ export class Agent {
 }
 
 function checkIfRunHasStopped(run: Run) {
+  const logger = getLoggerByAddress(import.meta, "substantial");
+
   let life = 0;
   let hasStopped = false;
+
   for (const op of run.operations) {
     if (op.event.type == "Start") {
       if (life >= 1) {

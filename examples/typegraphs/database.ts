@@ -24,7 +24,7 @@ await typegraph(
         body: t.string(),
       },
       // highlight-next-line
-      { name: "message" }
+      { name: "message" },
     );
 
     g.expose(
@@ -33,7 +33,7 @@ await typegraph(
         create_message: db.create(message),
         list_messages: db.findMany(message),
       },
-      pub
+      pub,
     );
-  }
+  },
 );

@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { Meta } from "../../utils/mod.ts";
 import {
@@ -186,12 +186,15 @@ class NextJsServer {
 
   async status() {
     // return this.process.status;
-    const [_, __, s] = await Promise.all([
+    const [_, __, s] = await Promise.allSettled([
       this.stdout.cancellableReader.cancel(),
       this.stderr.cancellableReader.cancel(),
       this.process.status,
     ]);
-    return s;
+    if (s.status == "rejected") {
+      throw s.reason;
+    }
+    return s.value;
   }
 
   ready(): Promise<{ port: number }> {
@@ -278,6 +281,9 @@ async function undeployTypegraph(port: number) {
 Meta.test({
   name: "apollo client",
   introspection: true,
+  // FIXME: this has started leaking stdout from the CancellableReader
+  sanitizeOps: false,
+  sanitizeResources: false,
 }, async (t) => {
   await initBucket();
   await deployTypegraph(t.port!);

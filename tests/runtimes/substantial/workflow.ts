@@ -1,11 +1,17 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import {
   Context,
   queryThatTakesAWhile,
   sendSubscriptionEmail,
   sleep,
+  Workflow,
 } from "./imports/common_types.ts";
 
-export async function eventsAndExceptionExample(ctx: Context) {
+export const eventsAndExceptionExample: Workflow<string> = async (
+  ctx: Context
+) => {
   const { to } = ctx.kwargs;
   const messageDialog = await ctx.save(() => sendSubscriptionEmail(to));
 
@@ -17,7 +23,7 @@ export async function eventsAndExceptionExample(ctx: Context) {
   }
 
   return `${messageDialog}: confirmed!`;
-}
+};
 
 export async function saveAndSleepExample(ctx: Context) {
   const { a, b } = ctx.kwargs;
@@ -90,4 +96,46 @@ export async function retryExample(ctx: Context) {
   );
 
   return [timeoutRet, retryRet].join(", ");
+}
+
+export const secretsExample: Workflow<void> = (_, { secrets }) => {
+  const { MY_SECRET, ...rest } = secrets;
+  if (!MY_SECRET) {
+    throw new Error("unable to read secret");
+  }
+  if (Object.keys(rest).length > 0) {
+    throw new Error("unexpected secrets found: ", rest);
+  }
+  return Promise.resolve();
+};
+
+export async function accidentialInputMutation(ctx: Context) {
+  const { items } = ctx.kwargs;
+
+  const copy = [];
+
+  const mutValue = "MODIFIED";
+
+  while (items.length >= 1) {
+    const front = items.shift();
+
+    if (front.innerField == mutValue) {
+      // Should throw on shallow clones
+      throw new Error(
+        `actual kwargs was mutated after interrupts: copy ${JSON.stringify(
+          copy
+        )}, ${mutValue}`
+      );
+    }
+
+    copy.push(await ctx.save(() => front));
+    console.log("PUSHED", front);
+
+    front!.innerField = mutValue;
+
+    ctx.sleep(10); // force replay
+  }
+
+  console.log("FINAL copy", copy);
+  return { copy, items };
 }

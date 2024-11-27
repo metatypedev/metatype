@@ -1,5 +1,5 @@
-// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
-// SPDX-License-Identifier: Elastic-2.0
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 import { Meta } from "test-utils/mod.ts";
 import { projectDir } from "@local/tools/utils.ts";
@@ -163,6 +163,7 @@ Meta.test(
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir,
         TG_PORT: port,
+        LOG_LEVEL: "DEBUG",
         // TODO should not be necessary
         VERSION: previousVersion,
         ...syncEnvs,
@@ -253,6 +254,7 @@ Meta.test(
           TG_ADMIN_PASSWORD: "password",
           TMP_DIR: typegateTempDir,
           TG_PORT: `${port}`,
+          LOG_LEVEL: "DEBUG",
           // TODO should not be necessary
           VERSION: previousVersion,
           ...syncEnvs,
@@ -320,6 +322,7 @@ Meta.test(
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir.toString(),
         TG_PORT: `${port}`,
+        LOG_LEVEL: "DEBUG",
         // TODO should not be necessary
         VERSION: previousVersion,
         DEBUG: "true",

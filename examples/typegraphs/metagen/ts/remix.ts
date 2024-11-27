@@ -1,4 +1,4 @@
-import type { RemixTrackHandler, Ctx, Idv3 } from "./fdk.ts";
+import type { Ctx, Idv3, RemixTrackHandler } from "./fdk.ts";
 
 // the name of the export must match the one referred int he typegraph
 export const remix_track: RemixTrackHandler = (inp, cx: Ctx) => {
