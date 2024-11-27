@@ -52,7 +52,8 @@ const issues = fileAdditions.flatMap(({ fileName, additions }) =>
   additions
     .map(({ addition, line }) => {
       const [_, type, desc] = addition.match(/(TODO|FIXME):? (.+)/) ?? [];
-      const [__, match] = desc ? (desc.match(/MET-(\d+)/) ?? []) : [];
+      const matches = desc ? (desc.match(/(MET-(\d+))|#(\d+)/) ?? []) : [];
+      const match = matches[2] ?? matches[3];
       const ticket = match && parseInt(match);
       return { file: fileName, type, desc, line, ticket, source: addition };
     })
