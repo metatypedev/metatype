@@ -35,9 +35,8 @@ export const cacheModules: PushHandler = async (
         depMetas,
       );
 
-      logger.info("Caching deno imports");
-
       try {
+        logger.info(`Caching deno imports for ${title} (${entryPoint.path})`);
         await import(entryModulePath);
       } catch (error) {
         console.error(error.stack);
