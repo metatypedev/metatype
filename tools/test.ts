@@ -168,9 +168,6 @@ export async function testE2e(args: {
     await tmpDir.join(cache.name).remove({ recursive: true });
   }
 
-  const prefix = "[dev/test.ts]";
-  $.logStep(`${prefix} Testing with ${threads} threads`);
-
   const xtask = wd.join(`target/${profile}/xtask`);
   const denoConfig = wd.join("tests/deno.jsonc");
 
@@ -210,6 +207,8 @@ export async function testE2e(args: {
 
   const buildProfile = profile == "debug" ? "dev" : profile;
 
+  const prefix = "[dev/test.ts]";
+
   $.logStep(`${prefix} Building xtask and meta-cli...`);
   await $`cargo build -p meta-cli -F typegate --profile ${buildProfile}
           && mv target/${profile}/meta target/${profile}/meta-full
@@ -220,6 +219,9 @@ export async function testE2e(args: {
   $.logStep(`Discovered ${queue.length} test files to run`);
 
   const threadCount = Math.min(threads, queue.length);
+  if (threadCount !== 1) {
+    $.logStep(`${prefix} Testing with ${threadCount} threads`);
+  }
 
   const outputOptions: OutputOptions = {
     streamed: threadCount === 1,
