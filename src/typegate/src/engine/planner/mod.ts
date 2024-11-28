@@ -26,8 +26,15 @@ import { getLogger } from "../../log.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "@std/collections/map-values";
 import { DependencyResolver } from "./dependency_resolver.ts";
+import { Runtime } from "../../runtimes/Runtime.ts";
 
 const logger = getLogger(import.meta);
+
+interface Scope {
+  runtime: Runtime;
+  fnIdx: number | null;
+  path: string[];
+}
 
 interface Node {
   name: string;
@@ -37,6 +44,7 @@ interface Node {
   typeIdx: number;
   parent?: Node;
   parentStage?: ComputeStage;
+  scope?: Scope;
 }
 
 export interface Plan {
@@ -281,6 +289,18 @@ export class Planner {
     ) {
       throw this.unexpectedFieldError(node, name);
     }
+    const fieldType = this.tg.type(fieldIdx);
+    const scope: Scope | undefined = (fieldType.type === Type.FUNCTION)
+      ? {
+        runtime: this.tg
+          .runtimeReferences[
+            this.tg.materializer(fieldType.materializer).runtime
+          ],
+        fnIdx: node.typeIdx,
+        path: [],
+      }
+      : node.scope;
+
     return {
       parent: node,
       name,
@@ -289,6 +309,7 @@ export class Planner {
       args: args ?? [],
       typeIdx: props[name],
       parentStage,
+      scope,
     };
   }
 
@@ -392,11 +413,8 @@ export class Planner {
       );
     }
 
-    const runtime = (schema.type === Type.FUNCTION)
-      ? this.tg
-        .runtimeReferences[(this.tg.materializer(schema.materializer)).runtime]
-      : node.parentStage?.props.runtime ??
-        this.tg.runtimeReferences[this.tg.denoRuntimeIdx];
+    const runtime = node.scope?.runtime ??
+      this.tg.runtimeReferences[this.tg.denoRuntimeIdx];
 
     const stage = this.createComputeStage(node, {
       dependencies: node.parentStage ? [node.parentStage.id()] : [],
