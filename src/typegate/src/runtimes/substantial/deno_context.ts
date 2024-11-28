@@ -14,10 +14,12 @@ export class Context {
   private id = 0;
   public kwargs = {};
   gql: ReturnType<typeof createGQLClient>;
+  logger: SubLogger;
 
   constructor(private run: Run, private internal: TaskContext) {
     this.gql = createGQLClient(internal);
     this.kwargs = getKwargsCopy(run);
+    this.logger = new SubLogger(this);
   }
 
   #nextId() {
@@ -411,6 +413,53 @@ class RetryStrategy {
 
     const dt = (this.maxBackoffMs ?? 0) - (this.minBackoffMs ?? 0);
     return Math.floor(((this.maxRetries - retriesLeft) * dt) / this.maxRetries);
+  }
+}
+
+
+class SubLogger {
+  constructor(private ctx: Context) {}
+
+  async #log(kind: "warn" | "error" | "info", ...args: unknown[]) {
+    await this.ctx.save(() => {
+      const prefix = `[${kind.toUpperCase()}: ${this.ctx.getRun().run_id}]`;
+      switch(kind) {
+        case "warn": {
+          console.warn(prefix, ...args);
+          break;
+        }
+        case "error": {
+          console.error(prefix,...args);
+          break;
+        }
+        default: {
+          console.info(prefix, ...args);
+          break;
+        }
+      }
+
+      const message = args.map((arg) => {
+        try {
+          return JSON.stringify(arg);
+        } catch(_) {
+          return String(arg);
+        }
+      }).join(" ");
+
+      return `${prefix}: ${message}`;
+    });
+  }
+
+  async warn(...payload: unknown[]) {
+    await this.#log("warn", ...payload);
+  }
+
+  async info(...payload: unknown[]) {
+    await this.#log("info", ...payload);
+  }
+
+  async error(...payload: unknown[]) {
+    await this.#log("error", ...payload);
   }
 }
 
