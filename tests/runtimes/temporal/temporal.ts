@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { TemporalRuntime } from "@typegraph/sdk/providers/temporal";
 
 export const tg = await typegraph("temporal", (g: any) => {
   const pub = Policy.public();

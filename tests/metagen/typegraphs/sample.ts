@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
-import { RandomRuntime } from "@typegraph/sdk/runtimes/random.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
+import { RandomRuntime } from "@typegraph/sdk/runtimes/random";
 
 const genPost = () => ({
   id: "69099108-e48b-43c9-ad02-c6514eaad6e3",

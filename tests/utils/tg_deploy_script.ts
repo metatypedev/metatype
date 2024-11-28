@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.ts";
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy";
 import * as path from "@std/path";
 
 const cwd = Deno.args[0];

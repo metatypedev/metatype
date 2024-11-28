@@ -1,7 +1,7 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { Auth } from "@typegraph/sdk/params.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { Auth } from "@typegraph/sdk/params";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 

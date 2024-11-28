@@ -1,7 +1,7 @@
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { Auth } from "@typegraph/sdk/params.ts";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { Auth } from "@typegraph/sdk/params";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 
 typegraph(
   {
