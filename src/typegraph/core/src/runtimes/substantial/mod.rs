@@ -6,13 +6,14 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::t::{self, TypeBuilder};
 use crate::typegraph::TypegraphContext;
-use crate::types::WithRuntimeConfig;
 use crate::wit::core::FuncParams;
 use crate::wit::{
     core::RuntimeId, runtimes::Effect as WitEffect, runtimes::SubstantialOperationData,
 };
 use common::typegraph::Materializer;
 use serde_json::json;
+
+mod type_utils;
 
 #[derive(Debug)]
 pub enum SubstantialMaterializer {
@@ -25,6 +26,7 @@ pub enum SubstantialMaterializer {
     Results,
     ResultsRaw,
     InternalLinkParentChild,
+    AdvancedFilters,
 }
 
 impl MaterializerConverter for SubstantialMaterializer {
@@ -55,6 +57,7 @@ impl MaterializerConverter for SubstantialMaterializer {
             SubstantialMaterializer::InternalLinkParentChild => {
                 ("internal_link_parent_child".to_string(), json!({}))
             }
+            SubstantialMaterializer::AdvancedFilters => ("advanced_filters".to_string(), json!({})),
         };
 
         Ok(Materializer {
@@ -70,9 +73,9 @@ pub fn substantial_operation(
     runtime: RuntimeId,
     data: SubstantialOperationData,
 ) -> Result<FuncParams> {
-    let mut inp = t::struct_();
-    let (effect, mat_data, out_ty) = match data {
+    let (effect, mat_data, inp_ty, out_ty) = match data {
         SubstantialOperationData::Start(data) => {
+            let mut inp = t::struct_();
             inp.prop("name", t::string().build()?);
             inp.prop(
                 "kwargs",
@@ -86,27 +89,32 @@ pub fn substantial_operation(
                 SubstantialMaterializer::Start {
                     secrets: data.secrets,
                 },
+                inp.build()?,
                 t::string().build()?,
             )
         }
         SubstantialOperationData::StartRaw(data) => {
+            let mut inp = t::struct_();
             inp.prop("name", t::string().build()?);
-            inp.prop("kwargs", t_json_string()?.into());
+            inp.prop("kwargs", t::json_str()?);
 
             (
                 WitEffect::Create(true),
                 SubstantialMaterializer::StartRaw {
                     secrets: data.secrets,
                 },
+                inp.build()?,
                 t::string().build()?,
             )
         }
         SubstantialOperationData::Stop => {
+            let mut inp = t::struct_();
             inp.prop("run_id", t::string().build()?);
 
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::Stop,
+                inp.build()?,
                 t::list(t::string().build()?).build()?,
             )
         }
@@ -116,31 +124,36 @@ pub fn substantial_operation(
                 .prop("payload", data.into())
                 .build()?;
 
+            let mut inp = t::struct_();
             inp.prop("run_id", t::string().build()?);
             inp.prop("event", event);
 
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::Send,
+                inp.build()?,
                 t::string().build()?,
             )
         }
         SubstantialOperationData::SendRaw => {
             let event = t::struct_()
                 .prop("name", t::string().build()?)
-                .prop("payload", t_json_string()?.into())
+                .prop("payload", t::json_str()?)
                 .build()?;
 
+            let mut inp = t::struct_();
             inp.prop("run_id", t::string().build()?);
             inp.prop("event", event);
 
             (
                 WitEffect::Create(false),
                 SubstantialMaterializer::SendRaw,
+                inp.build()?,
                 t::string().build()?,
             )
         }
         SubstantialOperationData::Resources => {
+            let mut inp = t::struct_();
             inp.prop("name", t::string().build()?);
 
             let row = t::struct_()
@@ -157,96 +170,58 @@ pub fn substantial_operation(
                 .prop("running", t::list(row).build()?)
                 .build()?;
 
-            (WitEffect::Read, SubstantialMaterializer::Resources, out)
+            (
+                WitEffect::Read,
+                SubstantialMaterializer::Resources,
+                inp.build()?,
+                out,
+            )
         }
         SubstantialOperationData::Results(data) => {
+            let mut inp = t::struct_();
             inp.prop("name", t::string().build()?);
             (
                 WitEffect::Read,
                 SubstantialMaterializer::Results,
-                results_op_results_ty(data)?,
+                inp.build()?,
+                type_utils::results_op_results_ty(data)?,
             )
         }
         SubstantialOperationData::ResultsRaw => {
+            let mut inp = t::struct_();
             inp.prop("name", t::string().build()?);
             (
                 WitEffect::Read,
                 SubstantialMaterializer::ResultsRaw,
-                results_op_results_ty(t_json_string()?)?,
+                inp.build()?,
+                type_utils::results_op_results_ty(t::json_str()?.into())?,
             )
         }
         SubstantialOperationData::InternalLinkParentChild => {
+            let mut inp = t::struct_();
             inp.prop("parent_run_id", t::string().build()?);
             inp.prop("child_run_id", t::string().build()?);
 
             (
                 WitEffect::Create(true),
                 SubstantialMaterializer::InternalLinkParentChild,
+                inp.build()?,
                 t::boolean().build()?,
             )
         }
+        SubstantialOperationData::AdvancedFilters => (
+            WitEffect::Read,
+            SubstantialMaterializer::AdvancedFilters,
+            type_utils::filter_expr_ty()?,
+            type_utils::search_results_ty()?,
+        ),
     };
 
     let mat = super::Materializer::substantial(runtime, mat_data, effect);
     let mat_id = Store::register_materializer(mat);
     Ok(FuncParams {
-        inp: inp.build()?.into(),
+        inp: inp_ty.into(),
         out: out_ty.into(),
         mat: mat_id,
     })
-}
-
-fn t_json_string() -> Result<u32> {
-    t::string()
-        .build()
-        .and_then(|r| {
-            r.with_config(json!({
-                "format": "json"
-            }))
-        })
-        .map(|r| r.id().into())
-}
-
-fn results_op_results_ty(out: u32) -> Result<crate::types::TypeId> {
-    let count = t::integer().build()?;
-
-    let result = t::struct_()
-        .prop("status", t::string().build()?)
-        .prop("value", t::optional(out.into()).build()?)
-        .build()?;
-
-    let ongoing_runs = t::list(
-        t::struct_()
-            .prop("run_id", t::string().build()?)
-            .prop("started_at", t::string().build()?)
-            .build()?,
-    )
-    .build()?;
-
-    let completed_runs = t::list(
-        t::struct_()
-            .prop("run_id", t::string().build()?)
-            .prop("started_at", t::string().build()?)
-            .prop("ended_at", t::string().build()?)
-            .prop("result", result)
-            .build()?,
-    )
-    .build()?;
-
-    t::struct_()
-        .prop(
-            "ongoing",
-            t::struct_()
-                .prop("count", count)
-                .prop("runs", ongoing_runs)
-                .build()?,
-        )
-        .prop(
-            "completed",
-            t::struct_()
-                .prop("count", count)
-                .prop("runs", completed_runs)
-                .build()?,
-        )
-        .build()
 }

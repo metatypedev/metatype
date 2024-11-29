@@ -218,9 +218,11 @@ export class SubstantialRuntime extends Runtime {
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
-        return this.#resultsResover(false);
+        return this.#resultsResolver(false);
       case "results_raw":
-        return this.#resultsResover(true);
+        return this.#resultsResolver(true);
+      case "advanced_filters":
+        return this.#advancedFiltersResolver();
       case "internal_link_parent_child":
         return this.#linkerResolver();
       default:
@@ -285,7 +287,7 @@ export class SubstantialRuntime extends Runtime {
     };
   }
 
-  #resultsResover(enableGenerics: boolean): Resolver {
+  #resultsResolver(enableGenerics: boolean): Resolver {
     return async ({ name: workflowName }) => {
       this.#checkWorkflowExistOrThrow(workflowName);
 
@@ -404,6 +406,24 @@ export class SubstantialRuntime extends Runtime {
       });
 
       return run_id;
+    };
+  }
+
+  #advancedFiltersResolver(): Resolver {
+    return ({ filter }) => {
+      console.log("Filter", filter);
+
+      const dummySearchResult = {
+        run_id: "fake",
+        started_at: new Date().toJSON(),
+        ended_at: new Date().toJSON(),
+        status: "COMPLETED",
+        value: JSON.stringify(filter)
+      };
+ 
+      return [
+        dummySearchResult
+      ];
     };
   }
 

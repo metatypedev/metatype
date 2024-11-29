@@ -440,7 +440,10 @@ class SubLogger {
 
       const message = args.map((arg) => {
         try {
-          return JSON.stringify(arg);
+          const json = JSON.stringify(arg);
+          // Functions are omitted,
+          // For example, JSON.stringify(() => 1234) => undefined (no throw)
+          return json === undefined ? String(arg) : json;
         } catch(_) {
           return String(arg);
         }
