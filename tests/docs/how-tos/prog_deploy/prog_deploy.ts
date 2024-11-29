@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: MPL-2.0
 // skip:end
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 // deno-lint-ignore no-external-import
 import * as path from "node:path";
-import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy.ts";
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy";
 
 // Your typegraph
 export const tg = await typegraph("example", (g) => {

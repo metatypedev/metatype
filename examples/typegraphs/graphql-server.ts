@@ -1,6 +1,6 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { HttpRuntime } from "@typegraph/sdk/runtimes/http.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { HttpRuntime } from "@typegraph/sdk/runtimes/http";
 
 // skip:end
 

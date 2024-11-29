@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.ts";
-import * as effects from "@typegraph/sdk/effects.ts";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql";
+import * as effects from "@typegraph/sdk/effects";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
 
 const user = t.struct(
   {

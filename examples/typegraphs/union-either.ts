@@ -1,6 +1,6 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 
 // skip:end
 typegraph(

@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 // skip:end
-import { Metagen } from "@typegraph/sdk/metagen.ts";
+import { Metagen } from "@typegraph/sdk/metagen";
 
 // get typegraph desc here
 const tg = await typegraph(

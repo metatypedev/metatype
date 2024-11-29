@@ -45,7 +45,7 @@ const install = {
     ) {
       const content = await Deno.readTextFile(path);
       const rewrite = content.replace(
-        /"(jsr:@typegraph\/sdk@[0-9]+\.[0-9]+\.[0-9]+)(-[a-z.0-9]+)?(.+)";/g,
+        /"(jsr:@typegraph\/sdk@[0-9]+\.[0-9]+\.[0-9]+)(-[a-z.0-9]+)?(.*)";/g,
         (_m, _pref, _, mod) => `"@typegraph/sdk${mod}"`,
       );
       await Deno.writeTextFile(path, rewrite);

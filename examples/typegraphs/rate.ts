@@ -1,6 +1,6 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { RandomRuntime } from "@typegraph/sdk/runtimes/random.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { RandomRuntime } from "@typegraph/sdk/runtimes/random";
 
 // skip:end
 

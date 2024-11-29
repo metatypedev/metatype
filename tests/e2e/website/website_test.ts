@@ -112,6 +112,7 @@ for (const name of list) {
   Meta.test(
     {
       name: `serialize typegraphs: ${name}`,
+      // only: name === "authentication",
     },
     async (t) => {
       const prepareFn = prepare[name];

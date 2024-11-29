@@ -1,6 +1,6 @@
 // skip:start
-import { Policy, typegraph } from "@typegraph/sdk/index.ts";
-import { KvRuntime } from "@typegraph/sdk/runtimes/kv.ts";
+import { Policy, typegraph } from "@typegraph/sdk";
+import { KvRuntime } from "@typegraph/sdk/runtimes/kv";
 
 // skip:end
 
