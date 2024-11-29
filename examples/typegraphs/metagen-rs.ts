@@ -1,6 +1,6 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm";
 // skip:end
 
 await typegraph(

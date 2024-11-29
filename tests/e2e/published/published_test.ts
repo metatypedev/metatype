@@ -20,6 +20,8 @@ const previousVersion = PUBLISHED_VERSION;
 
 const tempDir = $.path(projectDir).join("tmp");
 
+type Path = typeof tempDir;
+
 function getAssetName(version: string) {
   return `meta-cli-v${version}-${Deno.build.target}`;
 }
@@ -110,6 +112,38 @@ export async function downloadAndExtractCli(version: string) {
   return metaBin.toString();
 }
 
+type CopyCodeParams = {
+  branch: string;
+  destDir: Path;
+  files: (string | [string, string])[];
+};
+
+async function copyCode({ branch, files, destDir: dest }: CopyCodeParams) {
+  const destDir = $.path(dest);
+  console.log("copyCode", { branch, files, destDir });
+  const repoDir = $.path(`.metatype/old/${branch}`);
+  if (!(await repoDir.exists())) {
+    await $`git clone https://github.com/metatypedev/metatype.git ${repoDir} --depth 1 --branch ${branch}`
+      .stdout("inherit")
+      .stderr("inherit")
+      .printCommand();
+  }
+
+  await $.co(
+    files.map((file) => {
+      const [source, dest] = Array.isArray(file) ? file : [file, file];
+      // if (dest.endsWith("/")) {
+      //   return $.path(repoDir).join(source).copyToDir(destDir.join(dest), {
+      //     overwrite: true,
+      //   });
+      // }
+      return $.path(repoDir).join(source).copy(destDir.join(dest), {
+        overwrite: true,
+      });
+    }),
+  );
+}
+
 // This also tests the published NPM version of the SDK
 Meta.test(
   {
@@ -176,16 +210,12 @@ Meta.test(
       async () => {
         const tag = `v${previousVersion}`;
 
-        // FIXME: cache across test runs
-        await $`git clone https://github.com/metatypedev/metatype.git --depth 1 --branch ${tag}`
-          .cwd(repoDir)
-          .stdout("piped")
-          .stderr("piped")
-          .printCommand();
-
-        await $.path(repoDir).join("metatype/examples").copy(examplesDir, {
-          overwrite: true,
+        await copyCode({
+          branch: tag,
+          files: ["examples"],
+          destDir: examplesDir,
         });
+
         const typegraphsDir = examplesDir.join("typegraphs");
         for await (const entry of typegraphsDir.readDir()) {
           const path = typegraphsDir.relative(entry.path);
@@ -370,10 +400,16 @@ typegraphs:
         .cwd(
           npmJsrDir,
         );
+      await copyCode({
+        branch: `v${previousVersion}`,
+        destDir: npmJsrDir,
+        files: [
+          ["examples/typegraphs/func.ts", "tg.ts"],
+          ["examples/typegraphs/scripts", "scripts"],
+          ["examples/templates/node/tsconfig.json", "tsconfig.json"],
+        ],
+      });
       await $.co([
-        $.path("examples/typegraphs/func.ts").copy(npmJsrDir.join("tg.ts")),
-        $.path("examples/typegraphs/scripts").copyToDir(npmJsrDir),
-        $.path("examples/templates/node/tsconfig.json").copyToDir(npmJsrDir),
         npmJsrDir
           .join("package.json")
           .readJson()
@@ -399,10 +435,14 @@ typegraphs:
       await $`bash -c 'deno add @typegraph/sdk@${PUBLISHED_VERSION}'`.cwd(
         denoJsrDir,
       );
-      await $.co([
-        $.path("examples/typegraphs/func.ts").copy(denoJsrDir.join("tg.ts")),
-        $.path("examples/typegraphs/scripts").copyToDir(denoJsrDir),
-      ]);
+      await copyCode({
+        branch: `v${previousVersion}`,
+        files: [
+          ["examples/typegraphs/func.ts", "tg.ts"],
+          ["examples/typegraphs/scripts", "scripts"],
+        ],
+        destDir: denoJsrDir,
+      });
 
       const command =
         `meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;

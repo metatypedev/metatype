@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { RandomRuntime } from "@typegraph/sdk/runtimes/random.ts";
-import { PythonRuntime } from "@typegraph/sdk/runtimes/python.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { RandomRuntime } from "@typegraph/sdk/runtimes/random";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python";
 import outdent from "outdent";
-import { TemporalRuntime } from "@typegraph/sdk/providers/temporal.ts";
+import { TemporalRuntime } from "@typegraph/sdk/providers/temporal";
 
 function randomFunc() {
   return { data: null };

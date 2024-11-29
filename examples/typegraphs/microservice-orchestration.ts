@@ -1,8 +1,8 @@
 // skip:start
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
-import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
+import { GraphQLRuntime } from "@typegraph/sdk/runtimes/graphql";
 
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 

@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm";
 
 export const tg = await typegraph("wasm-reflected-ts", (g: any) => {
   const entity = t.struct({
