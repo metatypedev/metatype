@@ -19,7 +19,7 @@ import { type PushHandler, PushResponse } from "../typegate/hooks.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../transports/graphql/typegraph.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
-import * as DenoHooks from "../runtimes/deno/hooks.ts";
+import * as DenoHooks from "../runtimes/deno/hooks/mod.ts";
 import {
   type RuntimeResolver,
   SecretManager,
@@ -32,7 +32,7 @@ import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
 import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
-import { DenoFailure } from "../runtimes/deno/hooks.ts";
+import { DenoFailure } from "../runtimes/deno/hooks/mod.ts";
 import introspectionJson from "../typegraphs/introspection.json" with { type: "json" };
 import { ArtifactService } from "../services/artifact_service.ts";
 import type { ArtifactStore } from "./artifacts/mod.ts";
