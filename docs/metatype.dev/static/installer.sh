@@ -8,7 +8,7 @@ EXT=tar.gz
 NAME=meta-cli
 EXE=meta
 
-INSTALLER_URL="https://raw.githubusercontent.com/$ORG/$REPO/main/installer.sh"
+INSTALLER_URL="https://metatype.dev/install.sh"
 RELEASE_URL="https://github.com/$ORG/$REPO/releases"
 
 LATEST_VERSION=$(curl "$RELEASE_URL/latest" -s -L -I -o /dev/null -w '%{url_effective}')
