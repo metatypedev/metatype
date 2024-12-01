@@ -204,7 +204,7 @@ impl RenderType for RsNodeMetasRenderer {
                             //         .map(|s| serde_json::to_string(&s).unwrap())
                             //         .collect::<Vec<_>>()
                             // })
-                            .map(|path| format!("&[{}]", path.0.join(", ")))
+                            .map(|path| path.serialize_rs())
                             .collect::<Vec<_>>()
                     })
                     .map(|files| {
