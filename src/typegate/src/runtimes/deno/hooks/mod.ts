@@ -62,8 +62,8 @@ export const cacheModules: PushHandler = async (
 
       try {
         logger.info(`Caching deno imports for ${title} (${entryPoint.path})`);
-
         await sandboxImport(entryModulePath);
+        logger.info(`'${entryPoint.path}' was cached`);
       } catch (error) {
         console.error(error.stack);
 
