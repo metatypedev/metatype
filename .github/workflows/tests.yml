@@ -86,7 +86,7 @@ jobs:
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - shell: bash
         run: |
@@ -129,7 +129,7 @@ jobs:
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
       - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
         with:
           # temporary fix
@@ -245,7 +245,7 @@ jobs:
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: mozilla-actions/sccache-action@v0.0.5
+        uses: mozilla-actions/sccache-action@v0.0.6
       # - name: Cache deno dir
       #  uses: actions/cache@v4
       #  with:
@@ -314,7 +314,7 @@ jobs:
       # we need secrets for coverage so we skip if not avail
       # this applies to dedpendabot PRs for example
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov
