@@ -797,285 +797,98 @@ class NodeDescs:
     @staticmethod
     def scalar():
         return NodeMeta()
-    
-    @staticmethod
-    def Post():
-        return NodeMeta(
-            sub_nodes={
-                "id": NodeDescs.scalar,
-                "slug": NodeDescs.scalar,
-                "title": NodeDescs.scalar,
-            },
-        )
 
     @staticmethod
-    def User():
-        return NodeMeta(
-            sub_nodes={
-                "id": NodeDescs.scalar,
-                "email": NodeDescs.scalar,
-                "posts": NodeDescs.Post,
-            },
-        )
-
-    @staticmethod
-    def RootGetUserFn():
-        return_node = NodeDescs.User()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
-    def RootGetPostsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
-    def RootScalarNoArgsFn():
-        return_node = NodeDescs.scalar()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
-    def RootScalarArgsFn():
+    def RootUploadFn():
         return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "id": "UserIdStringUuid",
-                "slug": "PostSlugString",
-                "title": "PostSlugString",
+                "file": "RootUploadFnInputFileFile",
+                "path": "RootUploadFnInputPathRootUploadFnInputPathStringOptional",
             },
+            input_files=[[".file"]],
         )
 
     @staticmethod
-    def RootCompositeNoArgsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-        )
-
-    @staticmethod
-    def RootCompositeArgsFn():
-        return_node = NodeDescs.Post()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "PostSlugString",
-            },
-        )
-
-    @staticmethod
-    def RootScalarUnionFn():
+    def RootUploadManyFn():
         return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "id": "PostSlugString",
+                "prefix": "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
+                "files": "RootUploadManyFnInputFilesRootUploadFnInputFileFileList",
             },
+            input_files=[[".files", "[]"]],
         )
 
-    @staticmethod
-    def RootCompositeUnionFnOutput():
-        return NodeMeta(
-            variants={
-                "post": NodeDescs.Post,
-                "user": NodeDescs.User,
-            },
-        )
 
-    @staticmethod
-    def RootCompositeUnionFn():
-        return_node = NodeDescs.RootCompositeUnionFnOutput()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "PostSlugString",
-            },
-        )
+RootUploadFnInputFileFile = File
 
-    @staticmethod
-    def RootMixedUnionFnOutput():
-        return NodeMeta(
-            variants={
-                "post": NodeDescs.Post,
-                "user": NodeDescs.User,
-            },
-        )
+RootUploadFnInputPathString = str
 
-    @staticmethod
-    def RootMixedUnionFn():
-        return_node = NodeDescs.RootMixedUnionFnOutput()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "id": "PostSlugString",
-            },
-        )
-
-UserIdStringUuid = str
-
-PostSlugString = str
-
-Post = typing.TypedDict("Post", {
-    "id": UserIdStringUuid,
-    "slug": PostSlugString,
-    "title": PostSlugString,
-}, total=False)
-
-RootCompositeArgsFnInput = typing.TypedDict("RootCompositeArgsFnInput", {
-    "id": PostSlugString,
-}, total=False)
-
-UserEmailStringEmail = str
-
-UserPostsPostList = typing.List[Post]
-
-User = typing.TypedDict("User", {
-    "id": UserIdStringUuid,
-    "email": UserEmailStringEmail,
-    "posts": UserPostsPostList,
-}, total=False)
-
-RootScalarUnionFnOutputT1Integer = int
-
-RootScalarUnionFnOutput = typing.Union[
-    PostSlugString,
-    RootScalarUnionFnOutputT1Integer,
+RootUploadFnInputPathRootUploadFnInputPathStringOptional = typing.Union[
+    RootUploadFnInputPathString, None
 ]
 
+RootUploadFnInput = typing.TypedDict(
+    "RootUploadFnInput",
+    {
+        "file": RootUploadFnInputFileFile,
+        "path": RootUploadFnInputPathRootUploadFnInputPathStringOptional,
+    },
+    total=False,
+)
 
-RootCompositeUnionFnOutput = typing.Union[
-    Post,
-    User,
+RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = typing.Union[
+    RootUploadFnInputPathString, None
 ]
 
-
-RootMixedUnionFnOutput = typing.Union[
-    Post,
-    User,
-    PostSlugString,
-    RootScalarUnionFnOutputT1Integer,
+RootUploadManyFnInputFilesRootUploadFnInputFileFileList = typing.List[
+    RootUploadFnInputFileFile
 ]
 
+RootUploadManyFnInput = typing.TypedDict(
+    "RootUploadManyFnInput",
+    {
+        "prefix": RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
+        "files": RootUploadManyFnInputFilesRootUploadFnInputFileFileList,
+    },
+    total=False,
+)
 
-
-PostSelections = typing.TypedDict("PostSelections", {
-    "_": SelectionFlags,
-    "id": ScalarSelectNoArgs,
-    "slug": ScalarSelectNoArgs,
-    "title": ScalarSelectNoArgs,
-}, total=False)
-
-UserSelections = typing.TypedDict("UserSelections", {
-    "_": SelectionFlags,
-    "id": ScalarSelectNoArgs,
-    "email": ScalarSelectNoArgs,
-    "posts": CompositeSelectNoArgs["PostSelections"],
-}, total=False)
-
-RootCompositeUnionFnOutputSelections = typing.TypedDict("RootCompositeUnionFnOutputSelections", {
-    "_": SelectionFlags,
-    "post": CompositeSelectNoArgs["PostSelections"],
-    "user": CompositeSelectNoArgs["UserSelections"],
-}, total=False)
-
-RootMixedUnionFnOutputSelections = typing.TypedDict("RootMixedUnionFnOutputSelections", {
-    "_": SelectionFlags,
-    "post": CompositeSelectNoArgs["PostSelections"],
-    "user": CompositeSelectNoArgs["UserSelections"],
-}, total=False)
+RootUploadFnOutput = bool
 
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
-        super().__init__({
-            "UserIdStringUuid": "String!",
-            "PostSlugString": "String!",
-            "post": "post!",
-            "user": "user!",
-        })
-    
-    def get_user(self, select: UserSelections) -> QueryNode[User]:
-        node = selection_to_nodes(
-            {"getUser": select}, 
-            {"getUser": NodeDescs.RootGetUserFn}, 
-            "$q"
-        )[0]
-        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
+        super().__init__(
+            {
+                "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
+                "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
+                "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
+                "RootUploadManyFnInputFilesRootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
+            }
+        )
 
-    def get_posts(self, select: PostSelections) -> QueryNode[Post]:
+    def upload(
+        self, args: typing.Union[RootUploadFnInput, PlaceholderArgs]
+    ) -> MutationNode[RootUploadFnOutput]:
         node = selection_to_nodes(
-            {"getPosts": select}, 
-            {"getPosts": NodeDescs.RootGetPostsFn}, 
-            "$q"
+            {"upload": args}, {"upload": NodeDescs.RootUploadFn}, "$q"
         )[0]
-        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
+        return MutationNode(
+            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
+        )
 
-    def scalar_no_args(self) -> QueryNode[PostSlugString]:
+    def upload_many(
+        self, args: typing.Union[RootUploadManyFnInput, PlaceholderArgs]
+    ) -> MutationNode[RootUploadFnOutput]:
         node = selection_to_nodes(
-            {"scalarNoArgs": True}, 
-            {"scalarNoArgs": NodeDescs.RootScalarNoArgsFn}, 
-            "$q"
+            {"uploadMany": args}, {"uploadMany": NodeDescs.RootUploadManyFn}, "$q"
         )[0]
-        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
-
-    def scalar_args(self, args: typing.Union[Post, PlaceholderArgs]) -> MutationNode[PostSlugString]:
-        node = selection_to_nodes(
-            {"scalarArgs": args}, 
-            {"scalarArgs": NodeDescs.RootScalarArgsFn}, 
-            "$q"
-        )[0]
-        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
-
-    def composite_no_args(self, select: PostSelections) -> MutationNode[Post]:
-        node = selection_to_nodes(
-            {"compositeNoArgs": select}, 
-            {"compositeNoArgs": NodeDescs.RootCompositeNoArgsFn}, 
-            "$q"
-        )[0]
-        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
-
-    def composite_args(self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs], select: PostSelections) -> MutationNode[Post]:
-        node = selection_to_nodes(
-            {"compositeArgs": (args, select)}, 
-            {"compositeArgs": NodeDescs.RootCompositeArgsFn}, 
-            "$q"
-        )[0]
-        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
-
-    def scalar_union(self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs]) -> QueryNode[RootScalarUnionFnOutput]:
-        node = selection_to_nodes(
-            {"scalarUnion": args}, 
-            {"scalarUnion": NodeDescs.RootScalarUnionFn}, 
-            "$q"
-        )[0]
-        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
-
-    def composite_union(self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs], select: RootCompositeUnionFnOutputSelections) -> QueryNode[RootCompositeUnionFnOutput]:
-        node = selection_to_nodes(
-            {"compositeUnion": (args, select)}, 
-            {"compositeUnion": NodeDescs.RootCompositeUnionFn}, 
-            "$q"
-        )[0]
-        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
-
-    def mixed_union(self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs], select: RootMixedUnionFnOutputSelections) -> QueryNode[RootMixedUnionFnOutput]:
-        node = selection_to_nodes(
-            {"mixedUnion": (args, select)}, 
-            {"mixedUnion": NodeDescs.RootMixedUnionFn}, 
-            "$q"
-        )[0]
-        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
+        return MutationNode(
+            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
+        )

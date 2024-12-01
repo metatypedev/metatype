@@ -213,8 +213,9 @@ Meta.test("Metagen within sdk", async (t) => {
 });
 
 Meta.test("Metagen within sdk with custom template", async (t) => {
-  const workspace = join(import.meta.dirname!, "typegraphs")
-    .slice(workspaceDir.length);
+  const workspace = join(import.meta.dirname!, "typegraphs").slice(
+    workspaceDir.length,
+  );
 
   const targetName = "my_target";
   const genConfig = {
@@ -542,158 +543,169 @@ Meta.test("fdk table suite", async (metaTest) => {
   }
 });
 
-Meta.test({
-  name: "client table suite",
-}, async (metaTest) => {
-  const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
+Meta.test(
+  {
+    name: "client table suite",
+  },
+  async (metaTest) => {
+    const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
 
-  assertEquals(
-    (
-      await Meta.cli(
-        {
-          env: {
-            // RUST_BACKTRACE: "1",
+    assertEquals(
+      (
+        await Meta.cli(
+          {
+            env: {
+              // RUST_BACKTRACE: "1",
+            },
           },
-        },
-        ...`-C ${scriptsPath} gen`.split(" "),
-      )
-    ).code,
-    0,
-  );
+          ...`-C ${scriptsPath} gen`.split(" "),
+        )
+      ).code,
+      0,
+    );
 
-  const postSchema = zod.object({
-    id: zod.string(),
-    slug: zod.string(),
-    title: zod.string(),
-  });
-  const userSchema = zod.object({
-    id: zod.string(),
-    email: zod.string(),
-  });
-  const expectedSchemaQ = zod.object({
-    user: userSchema.extend({
-      post1: postSchema.array(),
-      post2: zod.object({
-        // NOTE: no id
-        slug: zod.string(),
-        title: zod.string(),
-      }).array(),
-    }),
-    posts: postSchema,
-    scalarNoArgs: zod.string(),
-  });
-  const expectedSchemaM = zod.object({
-    scalarArgs: zod.string(),
-    compositeNoArgs: postSchema,
-    compositeArgs: postSchema,
-  });
-  const expectedSchema = zod.tuple([
-    expectedSchemaQ,
-    expectedSchemaQ,
-    expectedSchemaM,
-    expectedSchemaQ,
-    expectedSchemaM,
-    zod.object({
-      scalarUnion: zod.string(),
-      compositeUnion1: postSchema,
-      compositeUnion2: zod.object({}),
-      mixedUnion: zod.string(),
-    }),
-  ]);
-  const cases = [
-    {
-      skip: false,
-      name: "client_rs",
-      command: $`cargo run`.cwd(
-        join(scriptsPath, "rs"),
-      ),
-      expected: expectedSchema,
-    },
-    {
-      name: "client_ts",
-      // NOTE: dax replaces commands to deno with
-      // commands to xtask so we go through bah
-      command: $`bash -c "deno run -A main.ts"`.cwd(
-        join(scriptsPath, "ts"),
-      ),
-      expected: expectedSchema,
-    },
-    {
-      name: "client_py",
-      command: $`python3 main.py`.cwd(
-        join(scriptsPath, "py"),
-      ),
-      expected: expectedSchema,
-    },
-  ];
-
-  await using _engine = await metaTest.engine(
-    "metagen/typegraphs/sample.ts",
-  );
-  for (const { name, command, expected, skip } of cases) {
-    if (skip) {
-      continue;
-    }
-    await metaTest.should(name, async () => {
-      // const res = await command
-      //   .env({ "TG_PORT": metaTest.port.toString() });
-      const res = await command
-        .env({ "TG_PORT": metaTest.port.toString() }).text();
-      expected.parse(JSON.parse(res));
+    const postSchema = zod.object({
+      id: zod.string(),
+      slug: zod.string(),
+      title: zod.string(),
     });
-  }
-});
-
-Meta.test({
-  name: "client table suite for file upload",
-}, async (t) => {
-  const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
-  const res = await Meta.cli({}, ...`-C ${scriptsPath} gen`.split(" "));
-  // console.log("--- >>> --- >>> STDERR");
-  // console.log(res.stderr);
-  // console.log("--- >>> --- >>> STDERR end");
-  assertEquals(res.code, 0);
-
-  const expectedSchemaU1 = zod.object({
-    upload: zod.boolean(),
-  });
-  const expectedSchemaUn = zod.object({
-    uploadMany: zod.boolean(),
-  });
-
-  const expectedSchema = zod.tuple([
-    expectedSchemaU1,
-    // expectedSchemaU1,
-    expectedSchemaUn,
-    expectedSchemaU1,
-    expectedSchemaUn,
-  ]);
-
-  const cases = [
-    {
-      name: "client_rs_upload",
-      skip: false,
-      command: $`cargo run`.cwd(join(scriptsPath, "rs_upload")),
-      expected: expectedSchema,
-    },
-  ];
-
-  await using _engine2 = await t.engine(
-    "metagen/typegraphs/file_upload_sample.ts",
-    { secrets: { ...s3Secrets } },
-  );
-
-  await prepareBucket();
-
-  for (const { name, command, expected, skip } of cases) {
-    if (skip) {
-      continue;
-    }
-
-    await t.should(name, async () => {
-      const res = await command
-        .env({ "TG_PORT": t.port.toString() }).stderr("inherit").text();
-      expected.parse(JSON.parse(res));
+    const userSchema = zod.object({
+      id: zod.string(),
+      email: zod.string(),
     });
-  }
-});
+    const expectedSchemaQ = zod.object({
+      user: userSchema.extend({
+        post1: postSchema.array(),
+        post2: zod
+          .object({
+            // NOTE: no id
+            slug: zod.string(),
+            title: zod.string(),
+          })
+          .array(),
+      }),
+      posts: postSchema,
+      scalarNoArgs: zod.string(),
+    });
+    const expectedSchemaM = zod.object({
+      scalarArgs: zod.string(),
+      compositeNoArgs: postSchema,
+      compositeArgs: postSchema,
+    });
+    const expectedSchema = zod.tuple([
+      expectedSchemaQ,
+      expectedSchemaQ,
+      expectedSchemaM,
+      expectedSchemaQ,
+      expectedSchemaM,
+      zod.object({
+        scalarUnion: zod.string(),
+        compositeUnion1: postSchema,
+        compositeUnion2: zod.object({}),
+        mixedUnion: zod.string(),
+      }),
+    ]);
+    const cases = [
+      {
+        skip: false,
+        name: "client_rs",
+        command: $`cargo run`.cwd(join(scriptsPath, "rs")),
+        expected: expectedSchema,
+      },
+      {
+        name: "client_ts",
+        // NOTE: dax replaces commands to deno with
+        // commands to xtask so we go through bah
+        command: $`bash -c "deno run -A main.ts"`.cwd(join(scriptsPath, "ts")),
+        expected: expectedSchema,
+      },
+      {
+        name: "client_py",
+        command: $`python3 main.py`.cwd(join(scriptsPath, "py")),
+        expected: expectedSchema,
+      },
+    ];
+
+    await using _engine = await metaTest.engine("metagen/typegraphs/sample.ts");
+    for (const { name, command, expected, skip } of cases) {
+      if (skip) {
+        continue;
+      }
+      await metaTest.should(name, async () => {
+        // const res = await command
+        //   .env({ "TG_PORT": metaTest.port.toString() });
+        const res = await command
+          .env({ TG_PORT: metaTest.port.toString() })
+          .text();
+        expected.parse(JSON.parse(res));
+      });
+    }
+  },
+);
+
+Meta.test(
+  {
+    name: "client table suite for file upload",
+  },
+  async (t) => {
+    const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
+    const res = await Meta.cli({}, ...`-C ${scriptsPath} gen`.split(" "));
+    // console.log("--- >>> --- >>> STDERR");
+    // console.log(res.stderr);
+    // console.log("--- >>> --- >>> STDERR end");
+    assertEquals(res.code, 0);
+
+    const expectedSchemaU1 = zod.object({
+      upload: zod.boolean(),
+    });
+    const expectedSchemaUn = zod.object({
+      uploadMany: zod.boolean(),
+    });
+
+    const expectedSchema = zod.tuple([
+      expectedSchemaU1,
+      // expectedSchemaU1,
+      expectedSchemaUn,
+      expectedSchemaU1,
+      expectedSchemaUn,
+    ]);
+
+    const cases = [
+      {
+        name: "client_rs_upload",
+        skip: false,
+        command: $`cargo run`.cwd(join(scriptsPath, "rs_upload")),
+        expected: expectedSchema,
+      },
+      {
+        name: "client_py_upload",
+        skip: false,
+        command: $`bash -c "python main.py"`.cwd(
+          join(scriptsPath, "py_upload"),
+        ),
+        expected: zod.tuple([expectedSchemaU1, expectedSchemaUn]),
+      },
+    ];
+
+    await using _engine2 = await t.engine(
+      "metagen/typegraphs/file_upload_sample.ts",
+      { secrets: { ...s3Secrets } },
+    );
+
+    await prepareBucket();
+
+    for (const { name, command, expected, skip } of cases) {
+      if (skip) {
+        continue;
+      }
+
+      await t.should(name, async () => {
+        const res = await command
+          .env({ TG_PORT: t.port.toString() })
+          .stderr("inherit")
+          .text();
+        expected.parse(JSON.parse(res));
+      });
+    }
+  },
+);
