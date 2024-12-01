@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
 
 export const tg = await typegraph("prisma_normal", (g: any) => {
   const db = new PrismaRuntime("prisma", "POSTGRES");

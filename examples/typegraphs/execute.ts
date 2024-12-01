@@ -1,8 +1,8 @@
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
-import { Auth } from "@typegraph/sdk/params.ts";
-import * as effects from "@typegraph/sdk/effects.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
+import { Auth } from "@typegraph/sdk/params";
+import * as effects from "@typegraph/sdk/effects";
 
 await typegraph(
   {

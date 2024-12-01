@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm.ts";
-import { RandomRuntime } from "@typegraph/sdk/runtimes/random.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { WasmRuntime } from "@typegraph/sdk/runtimes/wasm";
+import { RandomRuntime } from "@typegraph/sdk/runtimes/random";
 
 export const tg = await typegraph("wasm-wire-ts", (g: any) => {
   const entity = t

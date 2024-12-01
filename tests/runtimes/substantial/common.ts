@@ -633,7 +633,7 @@ export function inputMutationTemplate(
   }: {
     secrets?: Record<string, string>;
   },
-  cleanup?: MetaTestCleanupFn
+  cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
@@ -674,11 +674,11 @@ export function inputMutationTemplate(
               currentRunId = body.data?.start_mut! as string;
               assertExists(
                 currentRunId,
-                "Run id was not returned when workflow was started"
+                "Run id was not returned when workflow was started",
               );
             })
             .on(e);
-        }
+        },
       );
 
       await sleep(15 * 1000);
@@ -732,9 +732,9 @@ export function inputMutationTemplate(
               },
             })
             .on(e);
-        }
+        },
       );
-    }
+    },
   );
 }
 

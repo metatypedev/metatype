@@ -1,6 +1,6 @@
 // skip:start
-import { Policy, typegraph } from "@typegraph/sdk/index.ts";
-import { GrpcRuntime } from "@typegraph/sdk/runtimes/grpc.ts";
+import { Policy, typegraph } from "@typegraph/sdk";
+import { GrpcRuntime } from "@typegraph/sdk/runtimes/grpc";
 
 // skip:end
 
