@@ -523,7 +523,10 @@ export class TypeGraphRuntime extends Runtime {
           entries = entries.sort((a, b) => b[1] - a[1]);
           return entries
             .map((entry) =>
-              this.formatInputFields(entry, type.injections[entry[0]] ?? null)
+              this.formatInputFields(
+                entry,
+                (type.injections ?? {})[entry[0]] ?? null,
+              )
             )
             .filter((f) => f !== null);
         },

@@ -335,19 +335,25 @@ export class TypeGraph implements AsyncDisposable {
   getRandom(
     schema: TypeNode,
     generator: GeneratorNode | null,
-  ): number | string | null {
-    const tgTypes: TypeNode[] = this.tg.types;
+  ) {
+    return TypeGraph.getRandomStatic(this.tg, schema, generator);
+  }
+  static getRandomStatic(
+    tg: TypeGraphDS,
+    schema: TypeNode,
+    generator: GeneratorNode | null,
+  ) {
     let seed = 12; // default seed
     if (
-      this.tg.meta.randomSeed !== undefined &&
-      this.tg.meta.randomSeed !== null
+      tg.meta.randomSeed !== undefined &&
+      tg.meta.randomSeed !== null
     ) {
-      seed = this.tg.meta.randomSeed;
+      seed = tg.meta.randomSeed;
     }
     const chance: typeof Chance = new Chance(seed);
 
     try {
-      const result = randomizeRecursively(schema, chance, tgTypes, generator);
+      const result = randomizeRecursively(schema, chance, tg.types, generator);
 
       return result;
     } catch (_) {

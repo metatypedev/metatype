@@ -41,6 +41,7 @@
       "jsr:@std/yaml@^1.0.4": "jsr:@std/yaml@1.0.5",
       "npm:@noble/hashes@1.4.0": "npm:@noble/hashes@1.4.0",
       "npm:@sentry/node@7.70.0": "npm:@sentry/node@7.70.0",
+      "npm:@sinonjs/fake-timers@13.0.5": "npm:@sinonjs/fake-timers@13.0.5",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:chance@1.1.11": "npm:chance@1.1.11",
       "npm:graphql@16.8.1": "npm:graphql@16.8.1",
@@ -228,6 +229,18 @@
           "tslib": "tslib@2.7.0"
         }
       },
+      "@sinonjs/commons@3.0.1": {
+        "integrity": "sha512-K3mCHKQ9sVh8o1C9cxkwxaOmXoAMlDxC1mYyHrjqOWEcBjYr76t96zL2zlj5dUGZ3HSw240X1qgH3Mjf1yJWpQ==",
+        "dependencies": {
+          "type-detect": "type-detect@4.0.8"
+        }
+      },
+      "@sinonjs/fake-timers@13.0.5": {
+        "integrity": "sha512-36/hTbH2uaWuGVERyC6da9YwGWnzUZXuPro/F2LfsdOsLnCojz/iSH8MxUt/FD2S5XBSVPhmArFUXcpCQ2Hkiw==",
+        "dependencies": {
+          "@sinonjs/commons": "@sinonjs/commons@3.0.1"
+        }
+      },
       "@types/node@18.16.19": {
         "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
         "dependencies": {}
@@ -281,6 +294,10 @@
       },
       "tslib@2.7.0": {
         "integrity": "sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==",
+        "dependencies": {}
+      },
+      "type-detect@4.0.8": {
+        "integrity": "sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==",
         "dependencies": {}
       },
       "validator@13.12.0": {

@@ -120,6 +120,14 @@ impl InjectionTree {
             }
         }
     }
+
+    pub fn get_secrets(&self) -> Result<Vec<String>> {
+        let mut collector = Vec::new();
+        for node in self.0.values() {
+            node.collect_secrets_into(&mut collector)?;
+        }
+        Ok(collector)
+    }
 }
 
 impl Hash for InjectionTree {

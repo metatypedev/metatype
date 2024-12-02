@@ -2,17 +2,28 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { ComputeStage } from "../../engine/query_engine.ts";
-import type { TypeGraphDS, TypeMaterializer } from "../../typegraph/mod.ts";
+import {
+  TypeGraph,
+  type TypeGraphDS,
+  type TypeMaterializer,
+} from "../../typegraph/mod.ts";
 import type { Typegate } from "../../typegate/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import type { Resolver, RuntimeInitParams } from "../../types.ts";
-import type { DenoRuntimeData } from "../../typegraph/types.ts";
+import type {
+  DenoRuntimeData,
+  Injection,
+  InjectionData,
+  TypeNode,
+} from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import type { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
+import { getInjectionValues } from "../../engine/planner/injection_utils.ts";
+import DynamicInjection from "../../engine/injection/dynamic.ts";
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => args,
@@ -54,9 +65,18 @@ export class DenoRuntime extends Runtime {
 
     const secrets: Record<string, string> = {};
     for (const m of materializers) {
+      let secrets = m.data.secrets as string[] ?? [];
+      if (m.name === "outjection") {
+        secrets = m.data.source === "secret"
+          ? [...getInjectionValues(m.data)]
+          : [];
+      }
       for (const secretName of (m.data.secrets as []) ?? []) {
         secrets[secretName] = secretManager.secretOrFail(secretName);
       }
+    }
+    for (const secretName of tg.meta.outjectionSecrets ?? []) {
+      secrets[secretName] = secretManager.secretOrFail(secretName);
     }
 
     // maps from the module code to the op number/id
@@ -188,9 +208,17 @@ export class DenoRuntime extends Runtime {
       return [stage.withResolver(() => typename)];
     }
 
-    if (stage.props.materializer != null) {
+    const mat = stage.props.materializer;
+    if (mat != null) {
+      if (mat.name === "outjection") {
+        return [
+          stage.withResolver(
+            this.outject(stage.props.outType, mat.data as Injection),
+          ),
+        ];
+      }
       return [
-        stage.withResolver(this.delegate(stage.props.materializer, verbose)),
+        stage.withResolver(this.delegate(mat, verbose)),
       ];
     }
 
@@ -311,4 +339,51 @@ export class DenoRuntime extends Runtime {
 
     throw new Error(`unsupported materializer ${mat.name}`);
   }
+
+  outject(typeNode: TypeNode, outjection: Injection): Resolver {
+    switch (outjection.source) {
+      case "static": {
+        const value = JSON.parse(getInjectionData(outjection.data) as string);
+        return () => value;
+      }
+      case "context": {
+        const key = getInjectionData(outjection.data) as string;
+        // TODO error if null
+        return ({ _: { context } }) => context[key] ?? null;
+      }
+      case "secret": {
+        const key = getInjectionData(outjection.data) as string;
+        return () => this.secrets[key] ?? null;
+      }
+      case "random": {
+        return () => TypeGraph.getRandomStatic(this.tg, typeNode, null);
+      }
+      case "dynamic": {
+        const gen = getInjectionData(
+          outjection.data,
+        ) as keyof typeof DynamicInjection;
+        return DynamicInjection[gen];
+      }
+      case "parent": {
+        return ({ _: { parent } }) => {
+          console.log({ parent, outjection });
+          return null;
+        };
+      }
+      default: {
+        console.error(
+          ">>> unsupported outjection source",
+          (outjection as any).source,
+        );
+        return () => null;
+      }
+    }
+  }
+}
+
+function getInjectionData(d: InjectionData) {
+  if ("value" in d) {
+    return d.value;
+  }
+  return d["none"] ?? null;
 }
