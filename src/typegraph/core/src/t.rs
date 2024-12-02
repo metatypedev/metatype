@@ -5,7 +5,6 @@ use crate::errors::Result;
 use crate::errors::TgError;
 use crate::types::RefAttr;
 use crate::types::TypeRefBuilder;
-use crate::types::WithRuntimeConfig;
 use crate::types::{Named as _, TypeId, TypeRef};
 
 use crate::wit::core::{
@@ -335,7 +334,6 @@ macro_rules! unionx {
         crate::t::unionx![$($ty),*]
     };
 }
-use serde_json::json;
 pub(crate) use unionx;
 
 #[derive(Default)]
@@ -391,17 +389,6 @@ impl Default for TypeStruct {
 
 pub fn struct_() -> StructBuilder {
     Default::default()
-}
-
-pub fn json_str() -> Result<TypeId> {
-    string()
-        .build()
-        .and_then(|r| {
-            r.with_config(json!({
-                "format": "json"
-            }))
-        })
-        .map(|r| r.id())
 }
 
 pub fn struct_extends(ty: TypeId) -> Result<StructBuilder> {

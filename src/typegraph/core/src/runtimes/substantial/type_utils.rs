@@ -79,13 +79,13 @@ fn save(
     })
 }
 
-/// Term `{ op: value } | { special: { op: value } }`
+/// Term: `{ op: value } | { special: { op: value } }`
 /// * op: "eq", "lt", "contains", ..
 /// * special: "started_at", "status", ..
 fn filter_term_variants() -> Result<Vec<crate::types::TypeId>> {
     // FIXME: a generic json would have been helpful here vs json string
     // let any = t::eitherx!(t::integer(), t::string(), t::boolean(), ...).build_named("AnyValue")?;
-    let value_to_comp_against = t::json_str()?;
+    let value_to_comp_against = t::string().format("json").build()?;
     let ops = ["eq", "lt", "lte", "gt", "gte", "in", "contains"]
         .into_iter()
         .map(|op| {
@@ -109,14 +109,18 @@ fn filter_term_variants() -> Result<Vec<crate::types::TypeId>> {
     Ok(variants)
 }
 
-/// Expr `{ op: [...] }`
+/// Expr: `{ op: [...] } | Term`
 /// * op: "and" or "or"
 /// * ...: may contain itself, or a term
 pub fn filter_expr_ty() -> Result<crate::types::TypeId> {
-    let mut op_term_variants = filter_term_variants()?;
-    op_term_variants.extend([loc_ref("and_expr")?, loc_ref("or_expr")?]);
+    let mut op_expr_variants = filter_term_variants()?;
+    op_expr_variants.extend([
+        loc_ref("and_expr")?,
+        loc_ref("or_expr")?,
+        loc_ref("not_expr")?,
+    ]);
 
-    let expr = save("expr", |n| t::either(op_term_variants).build_named(n))?;
+    let expr = save("expr", |n| t::either(op_expr_variants).build_named(n))?;
     let expr_list = save("list_expr", |n| t::listx(expr).build_named(n))?;
 
     let _and = save("and_expr", |n| {
@@ -127,7 +131,12 @@ pub fn filter_expr_ty() -> Result<crate::types::TypeId> {
         t::struct_().prop("or", expr_list).build_named(n)
     })?;
 
+    let _not = save("not_expr", |n| {
+        t::struct_().prop("not", expr).build_named(n)
+    })?;
+
     t::struct_()
+        .prop("name", t::string().build()?)
         .prop(
             "filter", expr,
             // save("Filter", |n| t::unionx!(and, or, expr).build_named(n))?,
@@ -139,10 +148,10 @@ pub fn search_results_ty() -> Result<crate::types::TypeId> {
     t::list(
         t::struct_()
             .prop("run_id", t::string().build()?)
-            .prop("started_at", t::string().build()?)
-            .prop("ended_at", t::string().build()?)
             .prop("status", t::string().build()?)
-            .prop("value", t::json_str()?)
+            .prop("started_at", t::string().optional().build()?)
+            .prop("ended_at", t::string().optional().build()?)
+            .prop("value", t::string().format("json").optional().build()?)
             .build()?,
     )
     .build()

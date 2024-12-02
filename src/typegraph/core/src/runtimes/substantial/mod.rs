@@ -96,7 +96,7 @@ pub fn substantial_operation(
         SubstantialOperationData::StartRaw(data) => {
             let mut inp = t::struct_();
             inp.prop("name", t::string().build()?);
-            inp.prop("kwargs", t::json_str()?);
+            inp.prop("kwargs", t::string().format("json").build()?);
 
             (
                 WitEffect::Create(true),
@@ -138,7 +138,7 @@ pub fn substantial_operation(
         SubstantialOperationData::SendRaw => {
             let event = t::struct_()
                 .prop("name", t::string().build()?)
-                .prop("payload", t::json_str()?)
+                .prop("payload", t::string().format("json").build()?)
                 .build()?;
 
             let mut inp = t::struct_();
@@ -194,7 +194,7 @@ pub fn substantial_operation(
                 WitEffect::Read,
                 SubstantialMaterializer::ResultsRaw,
                 inp.build()?,
-                type_utils::results_op_results_ty(t::json_str()?.into())?,
+                type_utils::results_op_results_ty(t::string().format("json").build()?.into())?,
             )
         }
         SubstantialOperationData::InternalLinkParentChild => {

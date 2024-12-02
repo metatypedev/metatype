@@ -20,15 +20,18 @@ import {
 } from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
+import { applyFilter, Expr } from "./substantial/filter_utils.ts";
 
 const logger = getLogger(import.meta);
+
+export type ExecutionStatus = "COMPLETED" | "COMPLETED_WITH_ERROR" | "ONGOING" | "UNKNOWN";
 
 interface QueryCompletedWorkflowResult {
   run_id: string;
   started_at: string;
   ended_at: string;
   result: {
-    status: "COMPLETED" | "COMPLETED_WITH_ERROR" | "UNKNOWN";
+    status: ExecutionStatus;
     value: unknown; // hinted by the user
   };
 }
@@ -410,20 +413,10 @@ export class SubstantialRuntime extends Runtime {
   }
 
   #advancedFiltersResolver(): Resolver {
-    return ({ filter }) => {
-      console.log("Filter", filter);
-
-      const dummySearchResult = {
-        run_id: "fake",
-        started_at: new Date().toJSON(),
-        ended_at: new Date().toJSON(),
-        status: "COMPLETED",
-        value: JSON.stringify(filter)
-      };
- 
-      return [
-        dummySearchResult
-      ];
+    return async ({ name: workflowName, filter }) => {
+      this.#checkWorkflowExistOrThrow(workflowName);
+      // console.log("workflow", workflowName, "Filter", filter);
+      return await applyFilter(workflowName, this.agent, filter as Expr);
     };
   }
 
