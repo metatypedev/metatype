@@ -1,6 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::cell::RefCell;
+
+use indexmap::IndexSet;
+
 use crate::errors::Result;
 use crate::t::{self, TypeBuilder};
 
@@ -48,6 +52,33 @@ pub fn results_op_results_ty(out: u32) -> Result<crate::types::TypeId> {
         .build()
 }
 
+thread_local! {
+    static RECORDER: RefCell<IndexSet<String>> = Default::default();
+}
+
+fn loc_ref(name: &str) -> Result<crate::types::TypeId> {
+    let name = format!("s_{name}").to_lowercase();
+    t::ref_(name, Default::default()).build()
+}
+
+fn save(
+    name: &str,
+    builder: impl FnOnce(&str) -> Result<crate::types::TypeId>,
+) -> Result<crate::types::TypeId> {
+    let name = format!("s_{name}").to_lowercase();
+
+    let has_name = RECORDER.with_borrow(|cache| cache.contains(&name));
+    if has_name {
+        return t::ref_(name, Default::default()).build();
+    }
+
+    RECORDER.with_borrow_mut(|cache| {
+        let id = builder(&name)?;
+        cache.insert(name.to_string());
+        Ok(id)
+    })
+}
+
 /// Term `{ op: value } | { special: { op: value } }`
 /// * op: "eq", "lt", "contains", ..
 /// * special: "started_at", "status", ..
@@ -57,13 +88,18 @@ fn filter_term_variants() -> Result<Vec<crate::types::TypeId>> {
     let value_to_comp_against = t::json_str()?;
     let ops = ["eq", "lt", "lte", "gt", "gte", "in", "contains"]
         .into_iter()
-        .map(|op| t::struct_().prop(op, value_to_comp_against).build())
+        .map(|op| {
+            save(op, |n| {
+                t::struct_().prop(op, value_to_comp_against).build_named(n)
+            })
+        })
         .collect::<Result<Vec<_>>>()?;
 
-    let op_value = t::either(ops.clone().into_iter()).build()?;
+    let op_value = save("Op", |n| t::either(ops.clone().into_iter()).build_named(n))?;
+
     let special = ["started_at", "ended_at", "status"]
         .into_iter()
-        .map(|sp| t::struct_().prop(sp, op_value).build())
+        .map(|sp| save(sp, |n| t::struct_().prop(sp, op_value).build_named(n)))
         .collect::<Result<Vec<_>>>()?;
 
     let mut variants = vec![];
@@ -77,44 +113,25 @@ fn filter_term_variants() -> Result<Vec<crate::types::TypeId>> {
 /// * op: "and" or "or"
 /// * ...: may contain itself, or a term
 pub fn filter_expr_ty() -> Result<crate::types::TypeId> {
-    let mut and = t::struct_();
-    let mut or = t::struct_();
+    let mut op_term_variants = filter_term_variants()?;
+    op_term_variants.extend([loc_ref("and_expr")?, loc_ref("or_expr")?]);
 
-    let op_term_variants = filter_term_variants()?;
+    let expr = save("expr", |n| t::either(op_term_variants).build_named(n))?;
+    let expr_list = save("list_expr", |n| t::listx(expr).build_named(n))?;
 
-    let mut expr = t::eitherx!(and, or);
-    expr.data
-        .variants
-        .extend(op_term_variants.into_iter().map(|ty| {
-            let id: u32 = ty.into();
-            id
-        }));
+    let _and = save("and_expr", |n| {
+        t::struct_().prop("and", expr_list).build_named(n)
+    })?;
 
-    let expr_id = expr.build()?;
+    let _or = save("or_expr", |n| {
+        t::struct_().prop("or", expr_list).build_named(n)
+    })?;
 
-    and.prop("and", t::listx(expr_id).build()?);
-    or.prop("or", t::listx(expr_id).build()?);
-
-    /*
-         query {
-      search(filter:{
-          and: [
-            { started_at: { eq: "a" } },
-            { status: { contains: "STO" } },
-            { in: "abc" }
-            # { or: []} # FIXME: broken ref
-          ]
-      }) {
-        started_at
-        ended_at
-        status
-        value
-      }
-    }
-
-    */
     t::struct_()
-        .prop("filter", t::eitherx!(expr_id, and, or).build()?)
+        .prop(
+            "filter", expr,
+            // save("Filter", |n| t::unionx!(and, or, expr).build_named(n))?,
+        )
         .build()
 }
 
