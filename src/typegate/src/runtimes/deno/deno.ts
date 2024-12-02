@@ -13,6 +13,7 @@ import { DenoMessenger } from "./deno_messenger.ts";
 import type { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
+import { createArtifactMeta } from "../utils/deno.ts";
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => args,
@@ -81,23 +82,10 @@ export class DenoRuntime extends Runtime {
       } else if (mat.name === "module") {
         const matData = mat.data;
         const entryPoint = artifacts[matData.entryPoint as string];
-        const deps = (matData.deps as string[]).map((dep) => artifacts[dep]);
-
-        const moduleMeta = {
-          typegraphName: typegraphName,
-          relativePath: entryPoint.path,
-          hash: entryPoint.hash,
-          sizeInBytes: entryPoint.size,
-        };
-
-        const depMetas = deps.map((dep) => {
-          return {
-            typegraphName: typegraphName,
-            relativePath: dep.path,
-            hash: dep.hash,
-            sizeInBytes: dep.size,
-          };
-        });
+        const depMetas = (matData.deps as string[]).map((dep) =>
+          createArtifactMeta(typegraphName, artifacts[dep]),
+        );
+        const moduleMeta = createArtifactMeta(typegraphName, entryPoint);
 
         // Note:
         // Worker destruction seems to have no effect on the import cache? (deinit() => stop(worker))

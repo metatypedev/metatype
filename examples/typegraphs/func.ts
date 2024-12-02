@@ -78,7 +78,7 @@ await typegraph(
         create_vote: db.create(vote),
         // skip:end
         parse_markdown: deno.import(t.struct({ raw: t.string() }), t.string(), {
-          module: "scripts/md2html.ts.src",
+          module: "scripts/md2html.ts",
           name: "parse",
         }),
       },
