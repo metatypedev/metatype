@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy.ts";
+import { BasicAuth, tgDeploy, tgRemove } from "@typegraph/sdk/tg_deploy";
 
 import { Meta } from "test-utils/mod.ts";
 import { tg } from "./self_deploy.ts";

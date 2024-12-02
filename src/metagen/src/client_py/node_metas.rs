@@ -1,16 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::fmt::Write;
+use std::{collections::HashMap, fmt::Write, ops::Not};
 
 use common::typegraph::*;
 
 use super::utils::normalize_type_title;
-use crate::{interlude::*, shared::types::*};
+use crate::{
+    interlude::*,
+    shared::{files::TypePath, types::*},
+};
 
 pub struct PyNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
     pub named_types: Rc<std::sync::Mutex<IndexSet<u32>>>,
+    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
 }
 
 impl PyNodeMetasRenderer {
@@ -52,6 +56,7 @@ impl PyNodeMetasRenderer {
         ty_name: &str,
         return_node: &str,
         argument_fields: Option<IndexMap<String, Rc<str>>>,
+        input_files: Option<String>,
     ) -> std::fmt::Result {
         write!(
             dest,
@@ -82,6 +87,13 @@ impl PyNodeMetasRenderer {
                 dest,
                 r#"
             }},"#
+            )?;
+        }
+        if let Some(input_files) = input_files {
+            write!(
+                dest,
+                r#"
+            input_files={input_files},"#
             )?;
         }
         write!(
@@ -172,7 +184,22 @@ impl RenderType for PyNodeMetasRenderer {
                 };
                 let node_name = &base.title;
                 let ty_name = normalize_type_title(node_name).to_pascal_case();
-                self.render_for_func(renderer, &ty_name, &return_ty_name, props)?;
+                let input_files = self
+                    .input_files
+                    .get(&cursor.id)
+                    .map(|files| {
+                        files
+                            .iter()
+                            .map(|path| path.to_vec_str())
+                            .collect::<Vec<_>>()
+                    })
+                    .and_then(|files| {
+                        files
+                            .is_empty()
+                            .not()
+                            .then_some(serde_json::to_string(&files).unwrap())
+                    });
+                self.render_for_func(renderer, &ty_name, &return_ty_name, props, input_files)?;
                 ty_name
             }
             TypeNode::Object { data, base } => {

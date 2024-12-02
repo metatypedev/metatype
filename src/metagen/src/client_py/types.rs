@@ -164,7 +164,7 @@ impl RenderType for PyTypeRenderer {
             TypeNode::String { .. } => "str".into(),
             TypeNode::File { base, .. } if body_required => {
                 let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "bytes")?;
+                self.render_alias(renderer, &ty_name, "File")?;
                 ty_name
             }
             TypeNode::File { .. } => "bytes".into(),

@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: MPL-2.0
 // skip:end
 
-import { typegraph } from "@typegraph/sdk/index.ts";
-import { BasicAuth, tgRemove } from "@typegraph/sdk/tg_deploy.ts";
+import { typegraph } from "@typegraph/sdk";
+import { BasicAuth, tgRemove } from "@typegraph/sdk/tg_deploy";
 
 // Your typegraph
 const tg = await typegraph("example", (_g) => {

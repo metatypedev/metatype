@@ -1,7 +1,7 @@
 // skip:start
-import { fx, Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { fx, Policy, t, typegraph } from "@typegraph/sdk";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 
 await typegraph(
   {

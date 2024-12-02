@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { S3Runtime } from "@typegraph/sdk/providers/aws.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { S3Runtime } from "@typegraph/sdk/providers/aws";
 
 export const tg = await typegraph({
   name: "sample",
