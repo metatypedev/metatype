@@ -3,6 +3,7 @@
 
 import type { MessageEntry, Migrations } from "../typegate/register.ts";
 import type { SecretManager, TypeGraphDS } from "../typegraph/mod.ts";
+import { ArtifactStore } from "./artifacts/mod.ts";
 
 const Message = {
   INFO: "info",
@@ -10,20 +11,27 @@ const Message = {
   ERROR: "error",
 } as const;
 
-export type PushFailure = {
-  reason: "DatabaseResetRequired";
-  message: string;
-  runtimeName: string;
-} | {
-  reason: "NullConstraintViolation";
-  message: string;
-  runtimeName: string;
-  column: string;
-  table: string;
-} | {
-  reason: "Unknown";
-  message: string;
-};
+export type PushFailure =
+  | {
+      reason: "DatabaseResetRequired";
+      message: string;
+      runtimeName: string;
+    }
+  | {
+      reason: "NullConstraintViolation";
+      message: string;
+      runtimeName: string;
+      column: string;
+      table: string;
+    }
+  | {
+      reason: "DenoImportError";
+      message: string;
+    }
+  | {
+      reason: "Unknown";
+      message: string;
+    };
 
 export class PushResponse {
   tgName?: string;
@@ -74,5 +82,6 @@ export interface PushHandler {
     tg: TypeGraphDS,
     secretManager: SecretManager,
     response: PushResponse,
+    artifactStore: ArtifactStore,
   ): Promise<TypeGraphDS>;
 }

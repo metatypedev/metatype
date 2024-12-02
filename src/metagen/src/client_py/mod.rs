@@ -210,7 +210,7 @@ class QueryGraph(QueryGraphBase):
             {{"{node_name}": NodeDescs.{meta_method}}}, 
             "$q"
         )[0]
-        return {node_type}(node.node_name, node.instance_name, node.args, node.sub_nodes)
+        return {node_type}(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 "#
         )?;
     }
@@ -280,6 +280,7 @@ fn render_node_metas(
         Rc::new(node_metas::PyNodeMetasRenderer {
             name_mapper,
             named_types: named_types.clone(),
+            input_files: manifest.input_files.clone(),
         }),
     );
     for &id in &manifest.node_metas {
