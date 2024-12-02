@@ -4,12 +4,13 @@
 import { QueryGraph } from "./client.ts";
 
 const port = Deno.env.get("TG_PORT");
+
 const qg = new QueryGraph();
 const gql = qg.graphql(`http://localhost:${port}/sample`);
 
 const res1 = await gql.mutation({
   upload: qg.upload({
-    file: new File(["hello world"], "hello.txt", { type: "text/plain" }),
+    file: new File(["Hello"], "hello.txt", { type: "text/plain" }),
     path: "deno/hello.txt",
   }),
 });
@@ -17,8 +18,7 @@ const res1 = await gql.mutation({
 const res2 = await gql.mutation({
   uploadMany: qg.uploadMany({
     files: [1, 2, 3, 4].map(
-      (i) =>
-        new File([`hello #${i}`], `hello-${i}.txt`, { type: "text/plain" }),
+      (i) => new File([`Hello`], `${i}`, { type: "text/plain" }),
     ),
     prefix: "deno/",
   }),

@@ -216,15 +216,17 @@ class FileExtractor {
   #currentPath: ValuePath = [];
   #files: Map<string, File> = new Map();
 
-  static extractFrom(object: unknown, paths: TypePath[]) {
+  static extractFrom(key: string, object: unknown, paths: TypePath[]) {
     const extractor = new FileExtractor();
     if (!object || typeof object !== "object") {
       throw new Error("expected object");
     }
     for (const path of paths) {
-      extractor.#currentPath = [];
-      extractor.#path = path;
-      extractor.#extractFromValue(object);
+      if (path[0] && path[0].startsWith("." + key)) {
+        extractor.#currentPath = [];
+        extractor.#path = path;
+        extractor.#extractFromValue(object);
+      }
     }
     return extractor.#files;
   }
@@ -451,7 +453,7 @@ function convertQueryNodeGql(
       const obj = { [key]: val.value };
 
       if (node.files && node.files.length > 0) {
-        const extractedFiles = FileExtractor.extractFrom(obj, node.files);
+        const extractedFiles = FileExtractor.extractFrom(key, obj, node.files);
 
         for (const [path, file] of extractedFiles) {
           const pathInVariables = path.replace(/^\.[^\.\[]+/, `.${name}`);
@@ -464,7 +466,7 @@ function convertQueryNodeGql(
       argsRow.push(`${key}: $${name}`);
     }
 
-    out = argsRow.join(", ");
+    out = `${out} (${argsRow.join(", ")})`;
   }
 
   const subNodes = node.subNodes;
@@ -572,6 +574,7 @@ async function fetchGql(
     method: "POST",
     headers: {
       accept: "application/json",
+      ...additionalHeaders,
       ...(options.headers ?? {}),
     },
     body,
