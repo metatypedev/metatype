@@ -20,11 +20,9 @@ import {
 } from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
-import { applyFilter, Expr } from "./substantial/filter_utils.ts";
+import { applyFilter, type Expr, type ExecutionStatus } from "./substantial/filter_utils.ts";
 
 const logger = getLogger(import.meta);
-
-export type ExecutionStatus = "COMPLETED" | "COMPLETED_WITH_ERROR" | "ONGOING" | "UNKNOWN";
 
 interface QueryCompletedWorkflowResult {
   run_id: string;

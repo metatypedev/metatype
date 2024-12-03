@@ -1,8 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { ExecutionStatus } from "../substantial.ts";
 import { Agent } from "./agent.ts";
+
+export type ExecutionStatus =
+  | "COMPLETED"
+  | "COMPLETED_WITH_ERROR"
+  | "ONGOING"
+  | "UNKNOWN";
 
 type KVHelper<T extends string[], V> = {
   // should be a union type but it is not very helpful with autocomplete
@@ -64,7 +69,7 @@ export async function buildSearchableItems(
 
     const isOk = "Ok" in result;
     const kind = isOk ? "Ok" : "Err";
-    const stoppedStatus = isOk ? "COMPLETED_WITH_ERROR" : "COMPLETED";
+    const stoppedStatus = isOk ? "COMPLETED" : "COMPLETED_WITH_ERROR";
 
     searchList.push(
       new SearchItem(
@@ -96,52 +101,64 @@ export async function applyFilter(
   return searchResults;
 }
 
-function evalExpr(sResult: SearchItem, filter: Expr, path: Array<string>) {
-  for (const k in filter) {
-    const op = k as unknown as keyof Expr;
-    const newPath = [...path, op];
-    switch (op) {
-      // Expr
-      case "and":
-      case "or": {
-        const exprList = filter[op];
-        if (!Array.isArray(exprList)) {
-          // should be unreachable since filter is validated at push
-          throw new Error(`Fatal: array expected at ${path.join(".")}`);
-        }
-        const fn = op == "or" ? "some" : "every";
-        if (
-          !exprList[fn]((subFilter) => evalExpr(sResult, subFilter, newPath))
-        ) {
-          return false;
-        }
-        break;
-      }
-      case "not": {
-        if (evalExpr(sResult, filter["not"]!, newPath)) {
-          return false;
-        }
-        break;
-      }
-      // special
-      case "status":
-      case "started_at":
-      case "ended_at": {
-        const discriminator = sResult[op];
-        const repr = new SearchItem(
-          sResult.run_id,
-          sResult.started_at,
-          sResult.ended_at,
-          sResult.status,
-          discriminator,
+
+export function evalExpr(
+  sResult: SearchItem,
+  filter: Expr,
+  path: Array<string>,
+) {
+  const keys = Object.keys(filter) as Array<keyof Expr>;
+  if (keys.length != 1) {
+    throw new Error(`Invalid expression at ${path.join(".")}`);
+  }
+  const op = keys[0];
+  const newPath = [...path, op];
+
+  switch (op) {
+    // Expr
+    case "and":
+    case "or": {
+      const exprList = filter[op];
+      if (!Array.isArray(exprList)) {
+        // should be unreachable since filter is validated at push
+        throw new Error(
+          `Fatal: array expected at ${path.join(".")}`,
         );
-        return evalTerm(repr, filter[op]!, newPath);
       }
-      // Term
-      default: {
-        if (!evalTerm(sResult, filter, newPath)) {
-          return false;
-        }
+      const fn = op == "or" ? "some" : "every";
+      if (
+        !exprList[fn]((subFilter, index) =>
+          evalExpr(sResult, subFilter, [...newPath, `#${index}`])
+        )
+      ) {
+        return false;
+      }
+      break;
+    }
+    case "not": {
+      if (evalExpr(sResult, filter["not"]!, newPath)) {
+        return false;
+      }
+      break;
+    }
+    // Special
+    case "status":
+    case "started_at":
+    case "ended_at": {
+      const discriminator = sResult[op];
+      const repr = new SearchItem(
+        sResult.run_id,
+        null,
+        null,
+        sResult.status,
+        discriminator,
+      );
+      return evalTerm(repr, filter[op]!, newPath);
+    }
+    // Term
+    default: {
+      if (!evalTerm(sResult, filter, path)) {
+        return false;
       }
     }
   }
@@ -151,43 +168,67 @@ function evalExpr(sResult: SearchItem, filter: Expr, path: Array<string>) {
 
 function evalTerm(sResult: SearchItem, terms: Terms, path: Array<string>) {
   const value = sResult.value;
+  const keys = Object.keys(terms) as Array<keyof Terms>;
+  if (keys.length != 1) {
+    throw new Error(`Invalid expression at ${path.join(".")}`);
+  }
 
-  for (const k in terms) {
-    const op = k as unknown as keyof Terms;
-    const term = JSON.parse(terms[op] ?? "null"); // TODO: impl generic JSON on typegate
-    const newPath = [...path, op];
-    switch (op) {
-      case "eq": {
-        if (value != term) {
-          return false;
-        }
-        break;
+  const op = keys[0];
+  const newPath = [...path, op];
+  switch (op) {
+    case "eq": {
+      // term can never compare (null at worst)
+      if (value === undefined) {
+        return false;
       }
-      case "lt":
-      case "lte":
-      case "gt":
-      case "gte": {
-        if (!ord(value, term, op, newPath)) {
-          return false;
-        }
-        break;
+
+      if (!testCompare(value,  toJS(terms[op]))) {
+        return false;
       }
-      case "contains":
-      case "in": {
-        if (
-          !inclusion(value, term, op, newPath)
-        ) {
-          return false;
-        }
-        break;
+
+      break;
+    }
+    case "lt":
+    case "lte":
+    case "gt":
+    case "gte": {
+      if (!ord(value, toJS(terms[op]), op, newPath)) {
+        return false;
       }
-      default: {
-        throw new Error(`Unknown operator at ${newPath.join(".")}`);
+      break;
+    }
+    case "contains":
+    case "in": {
+      if (
+        !inclusion(value, toJS(terms[op]), op, newPath)
+      ) {
+        return false;
       }
+      break;
+    }
+    default: {
+      throw new Error(
+        `Unknown operator "${op}" at ${path.join(".")}`,
+      );
     }
   }
 
   return true;
+}
+
+function toJS(val: string | undefined) {
+  // TODO: impl generic JSON on typegate
+  // ideally this should be an identity fn
+  return JSON.parse(val ?? "null");
+}
+
+function testCompare(value: unknown, testValue: unknown) {
+  const easy = ["number", "boolean", "string"];
+  if (easy.includes(typeof value)) {
+    return value === testValue;
+  }
+
+  return JSON.stringify(value) == JSON.stringify(testValue);
 }
 
 function comparable(a: unknown, b: unknown) {
@@ -229,13 +270,12 @@ function inclusion(
   cp: keyof INCL,
   _newPath: Array<string>,
 ) {
-  if (!comparable(l, r)) {
-    return false;
-  }
-
   const [left, right] = cp == "in" ? [l, r] : [r, l];
   if (Array.isArray(right)) {
-    // FIXME: does not work with [ [[1]] ].includes([[1]])
+    // Note: Array.prototype.includes compare inner references
+    const leftComp = JSON.stringify(left);
+    return right.some((inner) => JSON.stringify(inner) === leftComp);
+  } else if (typeof left == "string" && typeof right == "string") {
     return right.includes(left);
   } else if (
     typeof left == typeof right && typeof left == "object" && left != null
