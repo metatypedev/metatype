@@ -272,7 +272,7 @@ function inclusion(
 ) {
   const [left, right] = cp == "in" ? [l, r] : [r, l];
   if (Array.isArray(right)) {
-    // Note: Array.prototype.includes compare inner references
+    // Note: Array.prototype.includes compare item references, not the values
     const leftComp = JSON.stringify(left);
     return right.some((inner) => JSON.stringify(inner) === leftComp);
   } else if (typeof left == "string" && typeof right == "string") {
@@ -280,11 +280,11 @@ function inclusion(
   } else if (
     typeof left == typeof right && typeof left == "object" && left != null
   ) {
-    // { a: { b: 1 } } in { a: { b: 1 }, c: 2 } := true
+    // Example: { a: { b: 1 } } in { a: { b: 1 }, c: 2 } => true
     const rightV = (right ?? {}) as Record<string, unknown>;
     for (const [k, leftVal] of Object.entries(left)) {
       const rightVal = rightV[k];
-      if (leftVal != rightVal) {
+      if (!testCompare(leftVal, rightVal)) {
         return false;
       }
     }

@@ -7,7 +7,7 @@ import {
   sendSubscriptionEmail,
   sleep,
   Workflow,
-} from "./imports/common_types.ts";
+} from "../imports/common_types.ts";
 
 export const eventsAndExceptionExample: Workflow<string> = async (
   ctx: Context
@@ -112,7 +112,7 @@ export const secretsExample: Workflow<void> = (_, { secrets }) => {
   return Promise.resolve();
 };
 
-export async function accidentialInputMutation(ctx: Context) {
+export async function accidentalInputMutation(ctx: Context) {
   const { items } = ctx.kwargs;
 
   const copy = [];

@@ -84,7 +84,11 @@ fn save(
 /// * special: "started_at", "status", ..
 fn filter_term_variants() -> Result<Vec<crate::types::TypeId>> {
     // FIXME: a generic json would have been helpful here vs json string
-    // let any = t::eitherx!(t::integer(), t::string(), t::boolean(), ...).build_named("AnyValue")?;
+    // let any_scalar = save("any_scalar", |n| {
+    //     t::eitherx!(t::integer(), t::string(), t::boolean(), t::struct_()).build_named(n)
+    // })?;
+    // let value_to_comp_against = t::eitherx!(any_scalar, t::listx(any_scalar)).build()?;
+
     let value_to_comp_against = t::string().format("json").build()?;
     let ops = ["eq", "lt", "lte", "gt", "gte", "in", "contains"]
         .into_iter()
@@ -95,7 +99,7 @@ fn filter_term_variants() -> Result<Vec<crate::types::TypeId>> {
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let op_value = save("Op", |n| t::either(ops.clone().into_iter()).build_named(n))?;
+    let op_value = save("op", |n| t::either(ops.clone().into_iter()).build_named(n))?;
 
     let special = ["started_at", "ended_at", "status"]
         .into_iter()

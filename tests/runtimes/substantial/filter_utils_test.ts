@@ -80,17 +80,17 @@ Meta.test("base filter logic", async (t) => {
   };
 
   // ------------------
-  await testShould("be able discriminate truthy values and 1)", {
+  await testShould("be able to discriminate truthy values and 1", {
     filter: { eq: val(1) },
     expected: [
-        {
+      {
         ended_at: "2024-01-06T00:00:00.000Z",
         run_id: "fakeUUID#7",
         started_at: "2024-01-05T00:00:00.000Z",
         status: "COMPLETED",
         value: "1",
-        },
-    ]
+      },
+    ],
   });
 
   await testShould('work with null and special values (e.g. "status")', {
@@ -115,13 +115,13 @@ Meta.test("base filter logic", async (t) => {
         status: "ONGOING",
         value: undefined,
       },
-    {
+      {
         ended_at: "2024-01-05T00:00:00.000Z",
         run_id: "fakeUUID#6",
         started_at: "2024-01-04T00:00:00.000Z",
         status: "COMPLETED",
         value: "null",
-    }
+      },
     ],
   });
 
@@ -134,7 +134,7 @@ Meta.test("base filter logic", async (t) => {
             { contains: val(["three"]) },
           ],
         },
-        { contains: val({ nested: { object: 1234 } })},
+        { contains: val({ nested: { object: 1234 } }) },
         { in: val("Fatal: error+ some other string") },
       ],
     },
@@ -152,6 +152,13 @@ Meta.test("base filter logic", async (t) => {
         ended_at: "2024-01-04T00:00:00.000Z",
         status: "COMPLETED",
         value: '[1,2,["three"]]',
+      },
+      {
+        ended_at: "2024-01-05T00:00:00.000Z",
+        run_id: "fakeUUID#5",
+        started_at: "2024-01-04T00:00:00.000Z",
+        status: "COMPLETED_WITH_ERROR",
+        value: '{"nested":{"object":1234},"b":4}',
       },
     ],
   });
@@ -196,3 +203,10 @@ Meta.test("base filter logic", async (t) => {
     },
   );
 });
+
+// TODO: bench?
+// Each case should be relatively close as we traverse from start to end without any back and forth
+// 1. benchmark(listTrasersal, bigNoopExpr, items=100000)
+// 2. benchmark(arrayWithNegFilter, bigNoopExpr, items=100000)
+
+// then avg unit overhead := [time(bigNoopExpr) - time(listTrasersal)] / 100000

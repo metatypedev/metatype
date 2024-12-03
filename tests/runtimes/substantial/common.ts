@@ -5,6 +5,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import { connect, parseURL } from "redis";
 import { gql, Meta, sleep } from "../../utils/mod.ts";
 import { MetaTestCleanupFn } from "test-utils/test.ts";
+import { Expr } from "@metatype/typegate/runtimes/substantial/filter_utils.ts";
 
 export type BackendName = "fs" | "memory" | "redis";
 
@@ -563,7 +564,7 @@ export function childWorkflowTestTemplate(
 
       await sleep(delays.awaitCompleteSec * 1000);
 
-      t.should(`complete parent and all child workflows`, async () => {
+      await t.should(`complete parent and all child workflows`, async () => {
         await gql`
           query {
             children: results_raw(name: "bumpPackage") {
@@ -622,6 +623,40 @@ export function childWorkflowTestTemplate(
           })
           .on(e);
       });
+
+
+      await t.should(`filter the runs given a nested expr (${backendName})`, async () => {
+        await gql`
+          query {
+            search(name: "bumpPackage", filter: $filter) {
+              # started_at
+              # ended_at
+              status
+              value
+            }
+          }
+        `
+        .withVars({
+          filter: {
+            or: [
+              {
+                and: [
+                  { status: { contains: JSON.stringify("COMPL") }},
+                  { contains: JSON.stringify("substantial") }
+                ]
+              },
+              { not: { not: { eq: JSON.stringify("Bump typegraph v3 => v4") } } }
+            ]
+          } satisfies Expr
+        })
+          .expectData({
+            search: [
+              { status: "COMPLETED", value: '"Bump typegraph v3 => v4"' },
+              { status: "COMPLETED", value: '"Bump substantial v2 => v3"' }
+            ]
+          })
+          .on(e);
+      });
     },
   );
 }
@@ -660,7 +695,7 @@ export function inputMutationTemplate(
 
       let currentRunId: string | null = null;
       await t.should(
-        `start accidentialInputMutation workflow and return its run id (${backendName})`,
+        `start accidentalInputMutation workflow and return its run id (${backendName})`,
         async () => {
           await gql`
             mutation {
@@ -688,7 +723,7 @@ export function inputMutationTemplate(
         async () => {
           await gql`
             query {
-              results_raw(name: "accidentialInputMutation") {
+              results_raw(name: "accidentalInputMutation") {
                 ongoing {
                   count
                   runs {
