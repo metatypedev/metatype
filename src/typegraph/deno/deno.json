@@ -6,9 +6,7 @@
   },
   "lint": {
     "rules": {
-      "exclude": [
-        "no-external-import"
-      ]
+      "exclude": ["no-external-import"]
     }
   },
   "exports": {
@@ -16,6 +14,10 @@
     "./deps/mod.ts": "./src/deps/mod.ts",
     "./effects.ts": "./src/effects.ts",
     "./envs/cli.ts": "./src/envs/cli.ts",
+    "./gen/core.ts": "./src/gen/core.ts",
+    "./gen/runtimes.ts": "./src/gen/runtimes.ts",
+    "./gen/aws.ts": "./src/gen/aws.ts",
+    "./gen/utils.ts": "./src/gen/utils.ts",
     "./index.ts": "./src/index.ts",
     "./io.ts": "./src/io.ts",
     "./metagen.ts": "./src/metagen.ts",
