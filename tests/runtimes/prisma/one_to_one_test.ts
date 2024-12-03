@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
-import { randomPGConnStr } from "../../utils/database.ts";
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
-import { MetaTest } from "../../utils/test.ts";
+import { dropSchema, randomPGConnStr } from "test-utils/database.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { MetaTest } from "test-utils/test.ts";
 
 async function runCommonTestSteps(t: MetaTest, e: QueryEngine) {
   await t.should("create a record with a nested object", async () => {
@@ -52,14 +51,13 @@ Meta.test("required 1-1 relationships", async (t) => {
   ];
 
   for (const tg of typegraphs) {
-    const { connStr, schema: _ } = randomPGConnStr();
+    const { connStr, schema } = randomPGConnStr();
+    await dropSchema(schema);
     const e = await t.engine(tg.file, {
       secrets: {
         POSTGRES: connStr,
       },
     });
-    await dropSchemas(e);
-    await recreateMigrations(e);
 
     await runCommonTestSteps(t, e);
 
@@ -81,14 +79,13 @@ Meta.test("required 1-1 relationships", async (t) => {
 });
 
 Meta.test("optional 1-1 relationships", async (t) => {
+  await dropSchema("prisma-1-1");
   const e = await t.engine("runtimes/prisma/optional_1_1.py", {
     secrets: {
       POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
     },
   });
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   await runCommonTestSteps(t, e);
 

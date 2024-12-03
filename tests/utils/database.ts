@@ -10,7 +10,7 @@ export async function dropSchema(schema: string) {
     connectionString: "postgresql://postgres:password@localhost:5432/db",
   });
   await client.connect();
-  await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
+  await client.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
   await client.end();
 }
 

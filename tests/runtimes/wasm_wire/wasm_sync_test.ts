@@ -65,7 +65,7 @@ Meta.test(
 
       const s3Objects = await listObjects(s3, syncConfig.s3Bucket);
       // two objects, the artifact and the typegraph
-      assertEquals(s3Objects?.length, 3);
+      assertEquals(s3Objects?.length, 2);
 
       await gql`
         query {
@@ -85,7 +85,7 @@ Meta.test(
     await metaTest.should("work with multiple typegate instances", async () => {
       const s3 = new S3Client(syncConfig.s3);
 
-      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 3);
+      assertEquals((await listObjects(s3, syncConfig.s3Bucket))?.length, 2);
 
       const engine = await metaTest.engine("runtimes/wasm_wire/wasm_wire.ts");
 

@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
-import { removeMigrations } from "../../utils/migrations.ts";
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { removeMigrations } from "test-utils/migrations.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchema } from "test-utils/database.ts";
 
 const PYTHON_TG_PATH = "runtimes/graphql/typegraphs/python/graphql.py";
 const TS_TG_PATH = "runtimes/graphql/typegraphs/deno/graphql.ts";
@@ -169,13 +169,12 @@ Meta.test(
     const connStr =
       `postgresql://postgres:password@localhost:5432/db?schema=${schema}`;
 
+    await dropSchema(schema);
     const engine = await t.engine(PYTHON_TG_PATH, {
       secrets: {
         POSTGRES: connStr,
       },
     });
-    await dropSchemas(engine);
-    await recreateMigrations(engine);
 
     await t.should(
       "work when fetching data using GraphQL Runtime",
@@ -195,13 +194,12 @@ Meta.test(
     const schema = "graphql-ts";
     const connStr =
       `postgresql://postgres:password@localhost:5432/db?schema=${schema}`;
+    await dropSchema(schema);
     const engine = await t.engine(TS_TG_PATH, {
       secrets: {
         POSTGRES: connStr,
       },
     });
-    await dropSchemas(engine);
-    await recreateMigrations(engine);
 
     await t.should(
       "work when fetching data through graphql request",

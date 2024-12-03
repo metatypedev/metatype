@@ -12,6 +12,7 @@ use crate::deploy::actors::console::Console;
 use crate::deploy::actors::task_manager::{self, TaskRef};
 use crate::interlude::*;
 use crate::secrets::Secrets;
+use crate::typegraph::rpc::{RpcCall as TypegraphRpcCall, RpcDispatch};
 use color_eyre::owo_colors::OwoColorize;
 use common::node::Node;
 use common::typegraph::Typegraph;
@@ -57,8 +58,7 @@ impl DeployActionGenerator {
         config_dir: Arc<Path>,
         working_dir: Arc<Path>,
         migrations_dir: Arc<Path>,
-        create_migrations: bool,
-        destructive_migrations: bool, // TODO enum { Fail, Reset, Ask }
+        default_migration_action: MigrationAction,
     ) -> Self {
         Self {
             secrets,
@@ -68,11 +68,7 @@ impl DeployActionGenerator {
                 config_dir,
                 working_dir,
                 migrations_dir,
-                default_migration_action: MigrationAction {
-                    apply: true,
-                    create: create_migrations,
-                    reset: destructive_migrations,
-                },
+                default_migration_action,
                 artifact_resolution: true,
             }
             .into(),
@@ -181,7 +177,11 @@ pub enum MigrationActionOverride {
 #[serde(tag = "method", content = "params")]
 pub enum RpcCall {
     GetDeployTarget,
-    GetDeployData { typegraph: String },
+    GetDeployData {
+        typegraph: String,
+    },
+    #[serde(untagged)]
+    TypegraphCall(Box<TypegraphRpcCall>),
 }
 
 struct ResetDatabase(PrismaRuntimeId);
@@ -321,14 +321,15 @@ impl TaskAction for DeployAction {
         &self.task_ref
     }
 
-    async fn get_rpc_response(&self, call: &RpcCall) -> Result<serde_json::Value> {
+    async fn get_rpc_response(&self, call: RpcCall) -> Result<serde_json::Value> {
         match call {
             RpcCall::GetDeployTarget => {
                 let deploy_target: &Node = &self.deploy_target;
                 Ok(serde_json::to_value(deploy_target)?)
             }
 
-            RpcCall::GetDeployData { typegraph } => Ok(self.get_deploy_data(typegraph).await?),
+            RpcCall::GetDeployData { typegraph } => Ok(self.get_deploy_data(&typegraph).await?),
+            RpcCall::TypegraphCall(call) => Ok(call.dispatch()?),
         }
     }
 }

@@ -10,7 +10,7 @@ use crate::{
     types::TypeId,
 };
 
-pub use crate::wit::core::Error as TgError;
+pub use crate::sdk::core::Error as TgError;
 
 pub struct OAuth2Profiler {
     pub input: TypeId,
@@ -22,11 +22,11 @@ impl TryInto<TypeId> for OAuth2Profiler {
     type Error = TgError;
 
     fn try_into(self) -> Result<TypeId, Self::Error> {
-        let deno_mat = DenoMaterializer::Inline(crate::wit::runtimes::MaterializerDenoFunc {
+        let deno_mat = DenoMaterializer::Inline(crate::sdk::runtimes::MaterializerDenoFunc {
             code: self.js_code,
             secrets: vec![],
         });
-        let mat = Materializer::deno(deno_mat, crate::wit::runtimes::Effect::Read);
+        let mat = Materializer::deno(deno_mat, crate::sdk::runtimes::Effect::Read);
         t::func(self.input, self.output, Store::register_materializer(mat))
     }
 }

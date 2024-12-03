@@ -54,20 +54,31 @@ impl<A: TaskAction> ReportEntry<A> {
                 let success = results
                     .iter()
                     .filter(|(_, res)| res.as_ref().ok().map(|r| r.is_success()).unwrap_or(false))
-                    .count();
+                    .map(|(name, _)| name.clone())
+                    .collect::<Vec<_>>();
                 let total = results.len();
+                let success_count = success.len();
                 let mut res = String::new();
-                if success > 0 {
-                    res.push_str(&format!("{}/{} success", success, total).green().to_string());
+                if success_count > 0 {
+                    res.push_str(
+                        &format!("{}/{} success", success_count, total)
+                            .green()
+                            .to_string(),
+                    );
+                    res.push_str(&format!(" ({})", success.join(", ")));
                 }
-                let failure = total - success;
-                if failure > 0 {
-                    if success > 0 {
+                let failure_count = total - success_count;
+                if failure_count > 0 {
+                    if success_count > 0 {
                         res.push_str("  ");
                     }
-                    res.push_str(&format!("{}/{} failure", failure, total).red().to_string());
+                    res.push_str(
+                        &format!("{}/{} failure", failure_count, total)
+                            .red()
+                            .to_string(),
+                    );
                 }
-                Some((res, success == total))
+                Some((res, success_count == total))
             }
             TaskFinishStatus::<A>::Error => Some(("failed".to_string(), false)),
             TaskFinishStatus::<A>::Cancelled => Some(("cancelled".to_string(), true)),

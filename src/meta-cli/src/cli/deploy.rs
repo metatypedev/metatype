@@ -78,8 +78,10 @@ pub struct DeployOptions {
     #[clap(skip = None)]
     pub typegate_options: Option<super::typegate::Typegate>,
 
+    /// FIXME: restructure the typegraph core to handle multiple threads
     /// maximum number of concurrent deployment tasks
-    #[clap(long)]
+    #[allow(unused)]
+    #[clap(skip = None)]
     pub threads: Option<usize>,
 
     /// max retry count
@@ -195,6 +197,7 @@ mod default_mode {
 
     use std::time::Duration;
 
+    use actors::task::deploy::MigrationAction;
     use task_manager::{TaskManagerInit, TaskSource};
 
     use crate::config::PathOption;
@@ -207,6 +210,11 @@ mod default_mode {
         let mut secrets = deploy.secrets.clone();
         secrets.apply_overrides(&deploy.options.secrets)?;
 
+        let default_migration_action = MigrationAction {
+            apply: !deploy.options.no_migration,
+            create: deploy.options.create_migration,
+            reset: deploy.options.allow_destructive,
+        };
         let action_generator = DeployActionGenerator::new(
             deploy.node.into(),
             secrets.into(),
@@ -216,11 +224,10 @@ mod default_mode {
                 .config
                 .prisma_migrations_base_dir(PathOption::Absolute)
                 .into(),
-            deploy.options.create_migration,
-            deploy.options.allow_destructive,
+            default_migration_action,
         );
 
-        let mut init = TaskManagerInit::<DeployAction>::new(
+        let init = TaskManagerInit::<DeployAction>::new(
             deploy.config.clone(),
             action_generator,
             console.clone(),
@@ -233,11 +240,9 @@ mod default_mode {
         .retry(
             deploy.options.retry.unwrap_or(0),
             deploy.options.retry_interval_ms.map(Duration::from_millis),
-        );
+        )
+        .max_parallel_tasks(1); // FIXME: make the server work with multiple threads
 
-        if let Some(max_parallel_tasks) = deploy.options.threads {
-            init = init.max_parallel_tasks(max_parallel_tasks);
-        }
         let report = init.run().await;
 
         let summary = report.summary();
@@ -273,6 +278,7 @@ mod default_mode {
 mod watch_mode {
     use std::time::Duration;
 
+    use actors::task::deploy::MigrationAction;
     use task_manager::{TaskManagerInit, TaskSource};
 
     use crate::config::PathOption;
@@ -317,6 +323,11 @@ mod watch_mode {
             deploy_node
         };
 
+        let default_migration_action = MigrationAction {
+            apply: !deploy.options.no_migration,
+            create: deploy.options.create_migration,
+            reset: deploy.options.allow_destructive,
+        };
         let action_generator = DeployActionGenerator::new(
             deploy_node.into(),
             secrets.into(),
@@ -326,11 +337,10 @@ mod watch_mode {
                 .config
                 .prisma_migrations_base_dir(PathOption::Absolute)
                 .into(),
-            deploy.options.create_migration,
-            deploy.options.allow_destructive,
+            default_migration_action,
         );
 
-        let mut init = TaskManagerInit::<DeployAction>::new(
+        let init = TaskManagerInit::<DeployAction>::new(
             deploy.config.clone(),
             action_generator.clone(),
             console.clone(),
@@ -339,11 +349,9 @@ mod watch_mode {
         .retry(
             deploy.options.retry.unwrap_or(3),
             deploy.options.retry_interval_ms.map(Duration::from_millis),
-        );
+        )
+        .max_parallel_tasks(1); // FIXME: make the server work with multiple threads
 
-        if let Some(max_parallel_tasks) = deploy.options.threads {
-            init = init.max_parallel_tasks(max_parallel_tasks);
-        }
         let report = init.run().await;
 
         match report.stop_reason {

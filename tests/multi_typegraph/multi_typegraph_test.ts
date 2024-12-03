@@ -19,7 +19,7 @@ const ALL_POSTS = [1, 2, 4, 7, 12, 34, 67].map(generatePost);
 
 const tsTgPath = "multi_typegraph/multi_typegraph.ts";
 Meta.test("Deno: Multi-typegraph file - Random typegraph", async (t) => {
-  const e = await t.engine(tsTgPath, { typegraph: "randomTg" });
+  const e = await t.engine(tsTgPath, { typegraph: "random" });
 
   await t.should("work on enum, union, and either types", async () => {
     await gql`
@@ -121,7 +121,7 @@ Meta.test(
   },
   async (metaTest) => {
     const engine = await metaTest.engine("multi_typegraph/multi_typegraph.py", {
-      typegraph: "http_py",
+      typegraph: "http-py",
     });
     mf.mock("GET@/api/posts", (req) => {
       const tags = new URL(req.url).searchParams.getAll("tags");

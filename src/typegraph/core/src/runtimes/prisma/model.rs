@@ -132,7 +132,7 @@ pub struct Model {
 }
 
 impl TryFrom<TypeId> for Model {
-    type Error = crate::wit::core::Error;
+    type Error = crate::sdk::core::Error;
 
     fn try_from(type_id: TypeId) -> Result<Self> {
         let model_type = ModelType::try_from(type_id)?;

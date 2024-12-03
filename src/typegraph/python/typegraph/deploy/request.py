@@ -4,8 +4,8 @@
 from enum import Enum
 from typing import Optional, Any
 
-from typegraph.python.typegraph.graph.shared_types import BasicAuth
-from typegraph.python.typegraph.io import DeployTarget
+from typegraph.graph.shared_types import BasicAuth
+from typegraph.io import DeployTarget
 
 
 class Encoding(Enum):

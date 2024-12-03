@@ -51,7 +51,17 @@ impl RpcRequest {
         RpcResponse {
             jsonrpc: JsonRpcVersion::V2,
             id: self.id,
-            result,
+            body: RpcBody::Ok { result },
+        }
+    }
+
+    fn error(&self, message: String) -> RpcResponse {
+        RpcResponse {
+            jsonrpc: JsonRpcVersion::V2,
+            id: self.id,
+            body: RpcBody::Err {
+                error: RpcError { message },
+            },
         }
     }
 }
@@ -60,7 +70,21 @@ impl RpcRequest {
 struct RpcResponse {
     jsonrpc: JsonRpcVersion,
     id: u32,
-    result: serde_json::Value,
+    #[serde(flatten)]
+    body: RpcBody,
+}
+
+#[derive(Serialize, Debug)]
+#[serde(untagged)]
+enum RpcBody {
+    Ok { result: serde_json::Value },
+    Err { error: RpcError },
+}
+
+#[derive(Serialize, Debug)]
+struct RpcError {
+    //code: i32,
+    message: String,
 }
 
 pub(super) struct TaskIoActor<A: TaskAction + 'static> {
@@ -197,8 +221,7 @@ impl<A: TaskAction + 'static> Handler<message::OutputLine> for TaskIoActor<A> {
             None => {
                 // a log message that were not outputted with the log library
                 // on the typegraph client
-                // --> as a debug message
-                console.debug(format!("{scope}$>{line}"));
+                console.info(format!("{scope}$>{line}"));
             }
         }
     }
@@ -311,14 +334,16 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
                 let scope = self.get_console_scope();
 
                 let fut = async move {
-                    match action.get_rpc_response(&rpc_call).await {
+                    match action.get_rpc_response(rpc_call).await {
                         Ok(response) => {
                             self_addr.do_send(message::SendRpcResponse(req.response(response)));
                         }
                         Err(err) => {
-                            console.error(format!(
+                            // Handle error on the client side
+                            console.debug(format!(
                                 "{scope} failed to handle jsonrpc call {req:?}: {err}"
                             ));
+                            self_addr.do_send(message::SendRpcResponse(req.error(err.to_string())));
                             // TODO fail task?
                         }
                     }

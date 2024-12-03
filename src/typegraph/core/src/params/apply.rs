@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::{ErrorContext, Result, TgError};
+use crate::sdk::core::{ParameterTransform, TransformData};
 use crate::t::{self, TypeBuilder};
-use crate::types::{AsTypeDefEx as _, TypeDef, TypeId};
-use crate::wit::core::{ParameterTransform, TransformData};
+use crate::types::{AsTypeDefEx, TypeDef, TypeId};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Write;

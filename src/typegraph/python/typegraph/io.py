@@ -5,7 +5,7 @@ from typing import Any, Optional, Dict
 from fileinput import FileInput
 from dataclasses import dataclass
 from typegraph.graph.shared_types import BasicAuth
-from typegraph.gen.exports.core import MigrationAction
+from typegraph.gen.core import MigrationAction
 import json
 
 

@@ -6,12 +6,10 @@ use std::rc::Rc;
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
 use crate::global_store::Store;
+use crate::sdk::aws::{S3PresignGetParams, S3PresignPutParams, S3RuntimeData};
+use crate::sdk::core::{MaterializerId, RuntimeId};
+use crate::sdk::runtimes::Effect;
 use crate::typegraph::TypegraphContext;
-use crate::wit::aws::{
-    MaterializerId, RuntimeId, S3PresignGetParams, S3PresignPutParams, S3RuntimeData,
-};
-use crate::wit::runtimes::Effect as WitEffect;
-use crate::wit::runtimes::Effect;
 use serde::Serialize;
 
 use super::{Materializer, Runtime};
@@ -49,7 +47,7 @@ impl From<S3PresignPutParams> for S3PresignPutMat {
 }
 
 impl Materializer {
-    fn s3(runtime_id: RuntimeId, data: S3Materializer, effect: WitEffect) -> Self {
+    fn s3(runtime_id: RuntimeId, data: S3Materializer, effect: Effect) -> Self {
         Self {
             runtime_id,
             data: Rc::new(data).into(),
@@ -120,7 +118,7 @@ impl MaterializerConverter for S3Materializer {
     }
 }
 
-impl crate::wit::aws::Guest for crate::Lib {
+impl crate::sdk::aws::Handler for crate::Lib {
     fn register_s3_runtime(data: S3RuntimeData) -> Result<RuntimeId> {
         Ok(Store::register_runtime(Runtime::S3(data.into())))
     }
@@ -129,7 +127,7 @@ impl crate::wit::aws::Guest for crate::Lib {
         let mat = Materializer::s3(
             runtime,
             S3Materializer::PresignGet(params.into()),
-            WitEffect::Read,
+            Effect::Read,
         );
         Ok(Store::register_materializer(mat))
     }
@@ -138,7 +136,7 @@ impl crate::wit::aws::Guest for crate::Lib {
         let mat = Materializer::s3(
             runtime,
             S3Materializer::PresignPut(params.into()),
-            WitEffect::Read,
+            Effect::Read,
         );
         Ok(Store::register_materializer(mat))
     }
@@ -147,7 +145,7 @@ impl crate::wit::aws::Guest for crate::Lib {
         let mat = Materializer::s3(
             runtime,
             S3Materializer::List(S3ListItemsMat { bucket }),
-            WitEffect::Read,
+            Effect::Read,
         );
         Ok(Store::register_materializer(mat))
     }
@@ -156,7 +154,7 @@ impl crate::wit::aws::Guest for crate::Lib {
         let mat = Materializer::s3(
             runtime,
             S3Materializer::Upload(S3UploadMat { bucket }),
-            WitEffect::Create(true),
+            Effect::Create(true),
         );
         Ok(Store::register_materializer(mat))
     }
@@ -165,7 +163,7 @@ impl crate::wit::aws::Guest for crate::Lib {
         let mat = Materializer::s3(
             runtime,
             S3Materializer::UploadAll(S3UploadMat { bucket }),
-            WitEffect::Create(true),
+            Effect::Create(true),
         );
         Ok(Store::register_materializer(mat))
     }

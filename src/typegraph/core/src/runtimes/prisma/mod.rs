@@ -21,8 +21,11 @@ use indexmap::IndexMap;
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
 use crate::global_store::Store;
+use crate::sdk::{
+    core::RuntimeId,
+    runtimes::{self as sdk},
+};
 use crate::typegraph::TypegraphContext;
-use crate::wit::runtimes::{self as wit, RuntimeId};
 
 use self::context::PrismaContext;
 use self::relationship::Cardinality;
@@ -48,7 +51,7 @@ impl MaterializerConverter for PrismaMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: wit::Effect,
+        effect: sdk::Effect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
         let mut data = IndexMap::new();

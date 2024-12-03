@@ -3,9 +3,25 @@
 
 use std::convert::Infallible;
 
-pub use crate::wit::core::Error as TgError;
+pub use crate::sdk::core::Error as TgError;
 
 pub type Result<T, E = TgError> = std::result::Result<T, E>;
+
+impl std::fmt::Display for TgError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.stack
+                .iter()
+                .map(|err| format!("- {err}"))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    }
+}
+
+impl std::error::Error for TgError {}
 
 impl From<Infallible> for TgError {
     fn from(_: Infallible) -> Self {
@@ -27,6 +43,14 @@ impl From<Vec<String>> for TgError {
 
 impl From<anyhow::Error> for TgError {
     fn from(e: anyhow::Error) -> Self {
+        Self {
+            stack: vec![e.to_string()],
+        }
+    }
+}
+
+impl From<std::io::Error> for TgError {
+    fn from(e: std::io::Error) -> Self {
         Self {
             stack: vec![e.to_string()],
         }

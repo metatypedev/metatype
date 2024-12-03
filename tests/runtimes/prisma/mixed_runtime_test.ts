@@ -1,22 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { dropSchema } from "test-utils/database.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 import * as mf from "test/mock_fetch";
 
 mf.install();
 
 Meta.test("prisma mixed runtime", async (t) => {
+  await dropSchema("prisma-mixed");
   const e = await t.engine("runtimes/prisma/mixed_runtime.py", {
     secrets: {
       POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-mixed",
     },
   });
-
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   await t.should(
     "insert a record without considering fields owned by other runtimes",

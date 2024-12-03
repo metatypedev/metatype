@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::pathlib::PathLib;
-use crate::wit::metatype::typegraph::host::{
-    expand_path as expand_path_host, path_exists as path_exists_host, read_file as read_file_host,
-    write_file as write_file_host,
-};
-use crate::{errors::Result, wit::core::Error as TgError};
+use crate::errors::{Result, TgError};
+use regex::Regex;
 use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeSet,
+    fs,
     path::{Path, PathBuf},
 };
 
@@ -26,9 +24,7 @@ impl FsContext {
     }
 
     pub fn exists(&self, path: &Path) -> Result<bool> {
-        Ok(path_exists_host(
-            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
-        )?)
+        Ok(self.pathlib.get_base_dir().join(path).exists())
     }
 
     pub fn expand_path(&self, path: &Path, exclude_globs: &[String]) -> Result<Vec<PathBuf>> {
@@ -57,13 +53,10 @@ impl FsContext {
             })
             .collect::<Vec<_>>();
 
-        expand_path_host(
-            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
-            &exclude_as_regex,
-        )?
-        .iter()
-        .map(|p| self.pathlib.relative(Path::new(p)))
-        .collect::<Result<Vec<_>, _>>()
+        self.expand_path_re(self.pathlib.get_base_dir().join(path), &exclude_as_regex)?
+            .iter()
+            .map(|p| self.pathlib.relative(Path::new(p)))
+            .collect::<Result<Vec<_>, _>>()
     }
 
     fn extract_glob_dirname(path: &str) -> PathBuf {
@@ -117,9 +110,7 @@ impl FsContext {
     }
 
     pub fn read_file(&self, path: &Path) -> Result<Vec<u8>> {
-        Ok(read_file_host(
-            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
-        )?)
+        Ok(fs::read(self.pathlib.get_base_dir().join(path))?)
     }
 
     pub fn read_text_file(&self, path: &Path) -> Result<String> {
@@ -128,10 +119,7 @@ impl FsContext {
     }
 
     pub fn write_file(&self, path: &Path, bytes: &[u8]) -> Result<()> {
-        Ok(write_file_host(
-            &self.pathlib.get_base_dir().join(path).to_string_lossy(),
-            bytes,
-        )?)
+        Ok(fs::write(self.pathlib.get_base_dir().join(path), bytes)?)
     }
 
     pub fn write_text_file(&self, path: &Path, text: String) -> Result<()> {
@@ -145,5 +133,48 @@ impl FsContext {
         let size = bytes.len() as u32;
         sha256.update(bytes);
         Ok((format!("{:x}", sha256.finalize()), size))
+    }
+
+    fn expand_path_re(&self, root: PathBuf, exclude: &[String]) -> Result<Vec<String>> {
+        let mut results = Vec::new();
+
+        let exclude = exclude
+            .iter()
+            .flat_map(|pat| Regex::new(pat))
+            .collect::<Vec<_>>();
+
+        if root.is_file() {
+            let path_buf = root.to_path_buf();
+            let path_str = path_buf.to_string_lossy().to_string();
+            results.push(path_str);
+        } else {
+            self.expand_path_helper(root, &exclude, &mut results)?;
+        }
+
+        Ok(results)
+    }
+
+    fn expand_path_helper(
+        &self,
+        path: PathBuf,
+        exclude: &[Regex],
+        results: &mut Vec<String>,
+    ) -> Result<()> {
+        for entry in fs::read_dir(path)? {
+            let path = entry?.path();
+            let path_str = path.to_string_lossy();
+
+            if path.is_file() && !self.match_path(&path_str, exclude) {
+                results.push(path_str.to_string());
+            } else if path.is_dir() {
+                self.expand_path_helper(path, exclude, results)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn match_path(&self, path: &str, patterns: &[Regex]) -> bool {
+        patterns.iter().any(|pat| pat.is_match(path))
     }
 }

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import type { SerializeParams } from "./gen/typegraph_core.d.ts";
+import type { SerializeParams } from "./gen/core.ts";
 import { BasicAuth, tgDeploy } from "./tg_deploy.ts";
 import type { TgFinalizationResult, TypegraphOutput } from "./typegraph.ts";
 import { freezeTgOutput } from "./utils/func_utils.ts";
@@ -71,7 +71,7 @@ export class Manager {
 
   async #deploy(): Promise<void> {
     try {
-      const deployData = await rpc.getDeployData(this.#typegraph.name);
+      const deployData = rpc.getDeployData(this.#typegraph.name);
 
       const env = this.#env;
       if (!env.artifact_resolution) {

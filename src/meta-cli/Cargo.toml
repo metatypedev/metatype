@@ -31,6 +31,7 @@ typegate = ["dep:typegate_engine"]
 [dependencies]
 
 # internal
+typegraph_core.workspace = true
 typegate_engine = { workspace = true, optional = true }
 common.workspace = true
 metagen.workspace = true

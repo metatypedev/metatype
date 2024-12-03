@@ -1,27 +1,22 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import type {
-  EffectCreate,
-  EffectDelete,
-  EffectRead,
-  EffectUpdate,
-} from "./gen/typegraph_core.d.ts";
+import type { Effect } from "./gen/runtimes.ts";
 
-export function read(): EffectRead {
-  return { tag: "read" };
+export function read(): Effect {
+  return "read";
 }
 
-export function create(idempotent = false): EffectCreate {
-  return { tag: "create", val: idempotent };
+export function create(idempotent = false): Effect {
+  return { create: idempotent };
 }
 
-export function delete_(idempotent = true): EffectDelete {
-  return { tag: "delete", val: idempotent };
+export function delete_(idempotent = true): Effect {
+  return { delete: idempotent };
 }
 
-export function update(idempotent = false): EffectUpdate {
-  return { tag: "update", val: idempotent };
+export function update(idempotent = false): Effect {
+  return { update: idempotent };
 }
 
 export const UPDATE = Symbol("update");

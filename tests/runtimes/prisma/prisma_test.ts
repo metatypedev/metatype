@@ -3,19 +3,17 @@
 
 import { v4 } from "@std/uuid";
 import { assert } from "@std/assert";
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
-import { randomPGConnStr } from "../../utils/database.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchema, randomPGConnStr } from "test-utils/database.ts";
 
 Meta.test("prisma", async (t) => {
-  const { connStr, schema: _ } = randomPGConnStr();
+  const { connStr, schema } = randomPGConnStr();
+  await dropSchema(schema);
   const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES: connStr,
     },
   });
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   await t.should("return null for findUnique for invalid key", async () => {
     await gql`

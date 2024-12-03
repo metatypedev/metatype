@@ -76,8 +76,6 @@ await dnt.build({
       {
         [fromRoot("README.md")]: "README.md",
         [fromRoot("tools/LICENSE-MPL-2.0.md")]: "LICENSE.md",
-        [fromRoot("./src/typegraph/deno/src/gen/typegraph_core.core.wasm")]:
-          "./esm/gen/typegraph_core.core.wasm",
       },
     );
   },

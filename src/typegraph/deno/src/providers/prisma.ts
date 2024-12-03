@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Runtime } from "../runtimes/mod.ts";
-import { runtimes } from "../wit.ts";
+import { runtimes } from "../sdk.ts";
 import { Typedef } from "../types.ts";
 import { t } from "../index.ts";
-import type { Effect } from "../gen/typegraph_core.d.ts";
+import type { Effect } from "../gen/runtimes.ts";
 import { genRef } from "./../typegraph.ts";
 
 type PrismaLinkArg = {
@@ -151,8 +151,8 @@ export class PrismaRuntime extends Runtime {
     const type = runtimes.prismaQueryRaw(
       this._id,
       query,
-      parameters ? parameters._id : undefined,
       output._id,
+      parameters ? parameters._id : undefined,
     );
     return t.Func.fromTypeFunc(type);
   }
