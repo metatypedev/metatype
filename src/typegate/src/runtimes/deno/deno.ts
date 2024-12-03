@@ -22,6 +22,12 @@ import { DenoMessenger } from "./deno_messenger.ts";
 import type { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
+import { createArtifactMeta } from "../utils/deno.ts";
+import { getInjectionValues } from "../../engine/planner/injection_utils.ts";
+import DynamicInjection from "../../engine/injection/dynamic.ts";
+import { getLogger } from "../../log.ts";
+
+const logger = getLogger(import.meta);
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => args,
@@ -38,7 +44,7 @@ export class DenoRuntime extends Runtime {
     private typegate: Typegate,
     private w: DenoMessenger,
     private registry: Map<string, number>,
-    private secrets: Record<string, string>
+    private secrets: Record<string, string>,
   ) {
     super(typegraphName, uuid);
   }
@@ -57,7 +63,7 @@ export class DenoRuntime extends Runtime {
     const { worker: name } = args as unknown as DenoRuntimeData;
     if (name == null) {
       throw new Error(
-        `Cannot create deno runtime: worker name required, got ${name}`
+        `Cannot create deno runtime: worker name required, got ${name}`,
       );
     }
 
@@ -65,8 +71,9 @@ export class DenoRuntime extends Runtime {
     for (const m of materializers) {
       let secrets = (m.data.secrets as string[]) ?? [];
       if (m.name === "outjection") {
-        secrets =
-          m.data.source === "secret" ? [...getInjectionValues(m.data)] : [];
+        secrets = m.data.source === "secret"
+          ? [...getInjectionValues(m.data)]
+          : [];
       }
       for (const secretName of (m.data.secrets as []) ?? []) {
         secrets[secretName] = secretManager.secretOrFail(secretName);
@@ -108,7 +115,7 @@ export class DenoRuntime extends Runtime {
         // hence the use of contentHash
         const entryModulePath = await typegate.artifactStore.getLocalPath(
           moduleMeta,
-          depMetas
+          depMetas,
         );
 
         // Note:
@@ -135,7 +142,7 @@ export class DenoRuntime extends Runtime {
       } as Deno.PermissionOptionsObject,
       false,
       ops,
-      typegate.config.base
+      typegate.config.base,
     );
 
     if (Deno.env.get("DENO_TESTING") === "true") {
@@ -149,7 +156,7 @@ export class DenoRuntime extends Runtime {
       typegate,
       w,
       registry,
-      secrets
+      secrets,
     );
 
     return rt;
@@ -162,7 +169,7 @@ export class DenoRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     _waitlist: ComputeStage[],
-    verbose: boolean
+    verbose: boolean,
   ): ComputeStage[] {
     if (stage.props.node === "__typename") {
       const getTypename = () => {
@@ -175,7 +182,7 @@ export class DenoRuntime extends Runtime {
               return "Mutation";
             default:
               throw new Error(
-                `Unsupported operation type '${stage.props.operationType}'`
+                `Unsupported operation type '${stage.props.operationType}'`,
               );
           }
         }
@@ -197,7 +204,7 @@ export class DenoRuntime extends Runtime {
       if (mat.name === "outjection") {
         return [
           stage.withResolver(
-            this.outject(stage.props.outType, mat.data as Injection)
+            this.outject(stage.props.outType, mat.data as Injection),
           ),
         ];
       }
@@ -223,7 +230,7 @@ export class DenoRuntime extends Runtime {
   delegate(
     mat: TypeMaterializer,
     verbose: boolean,
-    pulseCount?: number
+    pulseCount?: number,
   ): Resolver {
     if (mat.name === "predefined_function") {
       const func = predefinedFuncs[mat.data.name as string];
@@ -239,7 +246,7 @@ export class DenoRuntime extends Runtime {
 
     const secrets = ((mat.data.secrets as []) ?? []).reduce(
       (agg, secretName) => ({ ...agg, [secretName]: this.secrets[secretName] }),
-      {}
+      {},
     );
 
     if (mat.name === "import_function") {
@@ -278,7 +285,7 @@ export class DenoRuntime extends Runtime {
             verbose,
           },
           [],
-          pulseCount
+          pulseCount,
         );
       };
     }
@@ -314,7 +321,7 @@ export class DenoRuntime extends Runtime {
             verbose,
           },
           [],
-          pulseCount
+          pulseCount,
         );
       };
     }
@@ -342,22 +349,13 @@ export class DenoRuntime extends Runtime {
       }
       case "dynamic": {
         const gen = getInjectionData(
-          outjection.data
+          outjection.data,
         ) as keyof typeof DynamicInjection;
         return DynamicInjection[gen];
       }
-      case "parent": {
-        return ({ _: { parent } }) => {
-          console.log({ parent, outjection });
-          return null;
-        };
-      }
       default: {
-        console.error(
-          ">>> unsupported outjection source",
-          (outjection as any).source
-        );
-        return () => null;
+        logger.error(`unsupported outjection source '${outjection.source}'`);
+        throw new Error(`unsupported outjection source '${outjection.source}'`);
       }
     }
   }
