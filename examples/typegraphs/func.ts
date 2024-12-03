@@ -1,9 +1,9 @@
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 
 // skip:start
-import { Auth } from "@typegraph/sdk/params.ts";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
+import { Auth } from "@typegraph/sdk/params";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
 // skip:end
 
 await typegraph(
@@ -78,7 +78,7 @@ await typegraph(
         create_vote: db.create(vote),
         // skip:end
         parse_markdown: deno.import(t.struct({ raw: t.string() }), t.string(), {
-          module: "scripts/md2html.ts.src",
+          module: "scripts/md2html.ts",
           name: "parse",
         }),
       },

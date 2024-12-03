@@ -31,6 +31,7 @@ tera = { workspace = true, default-features = false }
 garde = { workspace = true, features = ["derive"] }
 once_cell.workspace = true
 color-eyre.workspace = true
+normpath.workspace = true
 
 # test
 pretty_assertions.workspace = true

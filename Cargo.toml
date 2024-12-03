@@ -5,24 +5,26 @@ members = [
   "src/meta-cli",
   "src/metagen",
   "src/metagen/src/fdk_rust/static",
-  "src/metagen/src/client_rs/static",
   "src/mt_deno",
   "src/typegate/engine",
   "src/typegate/standalone",
   "src/typegraph/core",
   "src/xtask",
-  "src/substantial"
-]
+  "src/substantial",
+  "src/metagen-client-rs",
+  "tests/metagen/typegraphs/sample/rs",
+  "tests/metagen/typegraphs/sample/rs_upload",
+  ]
 
 exclude = [
   "tests/runtimes/wasm_reflected/rust",
   "tests/runtimes/wasm_wire/rust",
-  "tests/metagen/typegraphs/sample/rs",
+  "tests/metagen/typegraphs/sample/rs_upload",
   "src/pyrt_wit_wire",
 ]
 
 [workspace.package]
-version = "0.5.0-rc.6"
+version = "0.5.0-rc.7"
 edition = "2021"
 
 [workspace.dependencies]
@@ -32,6 +34,7 @@ mt_deno = { path = "src/mt_deno/" }
 common = { path = "src/common/" }
 substantial = { path = "src/substantial/" }
 metagen = { path = "src/metagen/" }
+metagen-client = { path = "src/metagen-client-rs" }
 typegate_engine = { path = "src/typegate/engine" }
 typegraph_core = { path = "src/typegraph/core" }
 

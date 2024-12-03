@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { CREATE, DELETE, READ, UPDATE } from "@typegraph/sdk/effects.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { CREATE, DELETE, READ, UPDATE } from "@typegraph/sdk/effects";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 
 const tpe = t.struct({
   a: t.integer({}, { name: "A" }),

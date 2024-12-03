@@ -1,9 +1,14 @@
+import io
+import re
+import uuid
 import typing
 import dataclasses as dc
 import json
+import urllib
 import urllib.request as request
 import urllib.error
 import http.client as http_c
+import mimetypes
 
 
 def selection_to_nodes(
@@ -148,6 +153,7 @@ def selection_to_nodes(
                                 instance_name="__typename",
                                 args=None,
                                 sub_nodes=None,
+                                files=None,
                             )
                         )
 
@@ -161,7 +167,9 @@ def selection_to_nodes(
                         )
                     sub_nodes = union_selections
 
-            node = SelectNode(node_name, instance_name, instance_args, sub_nodes)
+            node = SelectNode(
+                node_name, instance_name, instance_args, sub_nodes, meta.input_files
+            )
             out.append(node)
 
     found_nodes.discard("_")
@@ -184,6 +192,13 @@ ArgT = typing.TypeVar("ArgT", bound=typing.Mapping[str, typing.Any])
 SelectionT = typing.TypeVar("SelectionT")
 
 
+@dc.dataclass
+class File:
+    content: bytes
+    name: str
+    mimetype: typing.Optional[str] = None
+
+
 #
 # --- --- Graph node types --- --- #
 #
@@ -197,6 +212,9 @@ SubNodes = typing.Union[
     typing.Dict[str, typing.List["SelectNode"]],
 ]
 
+TypePath = typing.List[typing.Union[typing.Literal["?"], typing.Literal["[]"], str]]
+ValuePath = typing.List[typing.Union[typing.Literal[""], str]]
+
 
 @dc.dataclass
 class SelectNode(typing.Generic[Out]):
@@ -204,6 +222,7 @@ class SelectNode(typing.Generic[Out]):
     instance_name: str
     args: typing.Optional["NodeArgs"]
     sub_nodes: SubNodes
+    files: typing.Optional[typing.List[TypePath]]
 
 
 @dc.dataclass
@@ -224,6 +243,92 @@ class NodeMeta:
     sub_nodes: typing.Optional[typing.Dict[str, NodeMetaFn]] = None
     variants: typing.Optional[typing.Dict[str, NodeMetaFn]] = None
     arg_types: typing.Optional[typing.Dict[str, str]] = None
+    input_files: typing.Optional[typing.List[TypePath]] = None
+
+
+class FileExtractor:
+    def __init__(self):
+        self.path: TypePath = []
+        self.current_path: ValuePath = []
+        self.result: typing.Dict[str, File] = {}
+
+    def extract_from_value(self, value: typing.Any):
+        next_segment = self.path[len(self.current_path)]
+
+        if next_segment == "?":
+            if value is None:
+                return
+            self.current_path.append("")
+            self.extract_from_value(value)
+            self.current_path.pop()
+            return
+
+        if next_segment == "[]":
+            if not isinstance(value, list):
+                raise Exception(f"Expected array at {self.format_path()}")
+
+            for idx in range(len(value)):
+                self.current_path.append(f"[{idx}]")
+                self.extract_from_array(value, idx)
+                self.current_path.pop()
+            return
+
+        if next_segment.startswith("."):
+            if not isinstance(value, dict):
+                raise Exception(f"Expected dictionary at {self.format_path()}")
+
+            self.current_path.append(next_segment)
+            self.extract_from_object(value, next_segment[1:])
+            self.current_path.pop()
+            return
+
+    def extract_from_array(self, parent: typing.List[typing.Any], idx: int):
+        value = parent[idx]
+
+        if len(self.current_path) == len(self.path):
+            if isinstance(value, File):
+                self.result[self.format_path()] = value
+                parent[idx] = None
+                return
+
+            raise Exception(f"Expected File at {self.format_path()}")
+
+        self.extract_from_value(value)
+
+    def extract_from_object(self, parent: typing.Dict[str, typing.Any], key: str):
+        value = parent.get(key)
+
+        if len(self.current_path) == len(self.path):
+            if isinstance(value, File):
+                self.result[self.format_path()] = value
+                parent[key] = None
+                return
+
+            raise Exception(f"Expected File at {self.format_path()}")
+
+        self.extract_from_value(value)
+
+    def format_path(self):
+        res = ""
+
+        for path in self.current_path:
+            res += f".{path[1:-1]}" if path.startswith("[") else path
+
+        return res
+
+
+def extract_files(
+    key: str, obj: typing.Dict[str, typing.Any], paths: typing.List[TypePath]
+):
+    extractor = FileExtractor()
+
+    for path in paths:
+        if path[0] and path[0].startswith("." + key):
+            extractor.current_path = []
+            extractor.path = path
+            extractor.extract_from_value(obj)
+
+    return extractor.result
 
 
 #
@@ -343,6 +448,7 @@ def convert_query_node_gql(
     ty_to_gql_ty_map: typing.Dict[str, str],
     node: SelectNode,
     variables: typing.Dict[str, NodeArgValue],
+    files: typing.Dict[str, File],
 ):
     out = (
         f"{node.instance_name}: {node.node_name}"
@@ -353,6 +459,16 @@ def convert_query_node_gql(
         arg_row = ""
         for key, val in node.args.items():
             name = f"in{len(variables)}"
+            obj = {key: val.value}
+
+            if node.files is not None and len(node.files) > 0:
+                extracted_files = extract_files(key, obj, node.files)
+
+                for path, file in extracted_files.items():
+                    path_in_variables = re.sub(r"^\.[^.\[]+", f".{name}", path)
+                    files[path_in_variables] = file
+
+            val.value = obj[key]
             variables[name] = val
             arg_row += f"{key}: ${name}, "
         if len(arg_row):
@@ -373,19 +489,73 @@ def convert_query_node_gql(
 
             sub_node_list += f"... on {gql_ty} {{ "
             for node in sub_nodes:
-                sub_node_list += (
-                    f"{convert_query_node_gql(ty_to_gql_ty_map, node, variables)} "
-                )
+                sub_node_list += f"{convert_query_node_gql(ty_to_gql_ty_map, node, variables, files)} "
             sub_node_list += "}"
         out += f" {{ {sub_node_list}}}"
     elif isinstance(node.sub_nodes, list):
         sub_node_list = ""
         for node in node.sub_nodes:
             sub_node_list += (
-                f"{convert_query_node_gql(ty_to_gql_ty_map, node, variables)} "
+                f"{convert_query_node_gql(ty_to_gql_ty_map, node, variables, files)} "
             )
         out += f" {{ {sub_node_list}}}"
     return out
+
+
+class MultiPartForm:
+    def __init__(self):
+        self.form_fields: typing.List[typing.Tuple[str, str]] = []
+        self.files: typing.List[typing.Tuple[str, File]] = []
+        self.boundary = uuid.uuid4().hex.encode("utf-8")
+
+    def add_field(self, name: str, value: str):
+        self.form_fields.append((name, value))
+
+    def add_file(self, key, file: File):
+        self.files.append((key, file))
+
+    def get_content_type(self):
+        return f"multipart/form-data; boundary={self.boundary.decode('utf-8')}"
+
+    def _form_data(self, name):
+        return f'Content-Disposition: form-data; name="{name}"\r\n'.encode("utf-8")
+
+    def _attached_file(self, name, filename):
+        return f'Content-Disposition: file; name="{name}"; filename="{filename}"\r\n'.encode(
+            "utf-8"
+        )
+
+    def _content_type(self, ct):
+        return f"Content-Type: {ct}\r\n".encode("utf-8")
+
+    def __bytes__(self):
+        buffer = io.BytesIO()
+        boundary = b"--" + self.boundary + b"\r\n"
+
+        for name, value in self.form_fields:
+            buffer.write(boundary)
+            buffer.write(self._form_data(name))
+            buffer.write(b"\r\n")
+            buffer.write(value.encode("utf-8"))
+            buffer.write(b"\r\n")
+
+        for key, file in self.files:
+            mimetype = (
+                file.mimetype
+                or mimetypes.guess_type(file.name)[0]
+                or "application/octet-stream"
+            )
+
+            buffer.write(boundary)
+            buffer.write(self._attached_file(key, file.name))
+            buffer.write(self._content_type(mimetype))
+            buffer.write(b"\r\n")
+            buffer.write(file.content)
+            buffer.write(b"\r\n")
+
+        buffer.write(b"--" + self.boundary + b"--\r\n")
+
+        return buffer.getvalue()
 
 
 class GraphQLTransportBase:
@@ -406,10 +576,13 @@ class GraphQLTransportBase:
         name: str = "",
     ):
         variables: typing.Dict[str, NodeArgValue] = {}
+        files: typing.Dict[str, File] = {}
         root_nodes = ""
         for key, node in query.items():
-            fixed_node = SelectNode(node.node_name, key, node.args, node.sub_nodes)
-            root_nodes += f"  {convert_query_node_gql(self.ty_to_gql_ty_map, fixed_node, variables)}\n"
+            fixed_node = SelectNode(
+                node.node_name, key, node.args, node.sub_nodes, node.files
+            )
+            root_nodes += f"  {convert_query_node_gql(self.ty_to_gql_ty_map, fixed_node, variables, files)}\n"
         args_row = ""
         for key, val in variables.items():
             args_row += f"${key}: {self.ty_to_gql_ty_map[val.type_name]}, "
@@ -420,30 +593,44 @@ class GraphQLTransportBase:
         doc = f"{ty} {name}{args_row} {{\n{root_nodes}}}"
         variables = {key: val.value for key, val in variables.items()}
         # print(doc, variables)
-        return (doc, variables)
+        return (doc, variables, files)
 
     def build_req(
         self,
         doc: str,
         variables: typing.Dict[str, typing.Any],
         opts: typing.Optional[GraphQLTransportOptions] = None,
+        files: typing.Dict[str, File] = {},
     ):
         headers = {}
         headers.update(self.opts.headers)
         if opts:
             headers.update(opts.headers)
-        headers.update(
-            {
-                "accept": "application/json",
-                "content-type": "application/json",
-            }
-        )
-        data = json.dumps({"query": doc, "variables": variables}).encode("utf-8")
+        headers.update({"accept": "application/json"})
+
+        body = json.dumps({"query": doc, "variables": variables})
+
+        if len(files) > 0:
+            form_data = MultiPartForm()
+            form_data.add_field("operations", body)
+            map = {}
+
+            for idx, (path, file) in enumerate(files.items()):
+                map[idx] = ["variables" + path]
+                form_data.add_file(f"{idx}", file)
+
+            form_data.add_field("map", json.dumps(map))
+            headers.update({"Content-type": form_data.get_content_type()})
+            body = bytes(form_data)
+        else:
+            headers.update({"Content-type": "application/json"})
+            body = body.encode("utf-8")
+
         return GraphQLRequest(
             addr=self.addr,
             method="POST",
             headers=headers,
-            body=data,
+            body=body,
         )
 
     def handle_response(self, res: GraphQLResponse):
@@ -463,8 +650,9 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         doc: str,
         variables: typing.Dict[str, typing.Any],
         opts: typing.Optional[GraphQLTransportOptions],
+        files: typing.Dict[str, File] = {},
     ):
-        req = self.build_req(doc, variables, opts)
+        req = self.build_req(doc, variables, opts, files)
         try:
             with request.urlopen(
                 request.Request(
@@ -498,7 +686,7 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         opts: typing.Optional[GraphQLTransportOptions] = None,
         name: str = "",
     ) -> typing.Dict[str, Out]:
-        doc, variables = self.build_gql(
+        doc, variables, _ = self.build_gql(
             {key: val for key, val in inp.items()}, "query", name
         )
         return self.fetch(doc, variables, opts)
@@ -509,10 +697,10 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         opts: typing.Optional[GraphQLTransportOptions] = None,
         name: str = "",
     ) -> typing.Dict[str, Out]:
-        doc, variables = self.build_gql(
+        doc, variables, files = self.build_gql(
             {key: val for key, val in inp.items()}, "mutation", name
         )
-        return self.fetch(doc, variables, opts)
+        return self.fetch(doc, variables, opts, files)
 
     def prepare_query(
         self,
@@ -538,10 +726,11 @@ class PreparedRequestBase(typing.Generic[Out]):
         name: str = "",
     ):
         dry_run_node = fun(PreparedArgs())
-        doc, variables = transport.build_gql(dry_run_node, ty, name)
+        doc, variables, files = transport.build_gql(dry_run_node, ty, name)
         self.doc = doc
         self._mapping = variables
         self.transport = transport
+        self.files = files
 
     def resolve_vars(
         self,

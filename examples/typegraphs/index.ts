@@ -1,9 +1,9 @@
 // skip:start
 
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { Auth } from "@typegraph/sdk/params.ts";
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
-import { HttpRuntime } from "@typegraph/sdk/runtimes/http.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { Auth } from "@typegraph/sdk/params";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
+import { HttpRuntime } from "@typegraph/sdk/runtimes/http";
 
 // skip:end
 

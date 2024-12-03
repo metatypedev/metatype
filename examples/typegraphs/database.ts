@@ -1,10 +1,10 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
 
 // isort: off
 // skip:end
 // highlight-next-line
-import { PrismaRuntime } from "@typegraph/sdk/providers/prisma.ts";
+import { PrismaRuntime } from "@typegraph/sdk/providers/prisma";
 
 await typegraph(
   {

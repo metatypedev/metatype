@@ -65,6 +65,7 @@ async fn load_fdk_template(
     Ok(FdkTemplate { entries })
 }
 
+#[derive(Debug)]
 pub struct BuildArgs {
     pub path: PathBuf,
 }
@@ -101,6 +102,10 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
         let test_cx = TestCtx {
             typegraphs: typegraphs.clone(),
         };
+        unsafe {
+            std::env::set_var("METAGEN_CLIENT_RS_TEST", "1");
+            std::env::set_var("METAGEN_BIN_PATH", "main.rs");
+        }
         let files =
             crate::generate_target(&case.config, &case.target, tmp_dir.clone(), test_cx).await?;
         for (path, buf) in files.0 {
@@ -109,6 +114,10 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
             if buf.overwrite || !tokio::fs::try_exists(&path).await? {
                 tokio::fs::write(path, buf.contents).await?;
             }
+        }
+        unsafe {
+            std::env::remove_var("METAGEN_CLIENT_RS_TEST");
+            std::env::remove_var("METAGEN_BIN_PATH");
         }
         // compile
         (case.build_fn)(BuildArgs {

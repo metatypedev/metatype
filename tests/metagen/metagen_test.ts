@@ -11,9 +11,37 @@ import { testDir } from "test-utils/dir.ts";
 import $ from "@david/dax";
 import { z as zod } from "zod";
 import { workspaceDir } from "test-utils/dir.ts";
-import { FdkOutput } from "@typegraph/sdk/gen/utils.ts";
+import { FdkOutput } from "@typegraph/sdk/gen/typegraph_core.d.ts";
+import { createBucket } from "test-utils/s3.ts";
+import { S3Client } from "aws-sdk/client-s3";
 
 const denoJson = resolve(testDir, "./deno.jsonc");
+
+const s3Secrets = {
+  S3_HOST: "http://localhost:9000",
+  S3_REGION: "local",
+  S3_ACCESS_KEY: "minio",
+  S3_SECRET_KEY: "password",
+  S3_PATH_STYLE: "true",
+};
+
+async function prepareBucket() {
+  const client = new S3Client({
+    endpoint: s3Secrets.S3_HOST,
+    region: s3Secrets.S3_REGION,
+    credentials: {
+      accessKeyId: s3Secrets.S3_ACCESS_KEY,
+      secretAccessKey: s3Secrets.S3_SECRET_KEY,
+    },
+    forcePathStyle: Boolean(s3Secrets.S3_PATH_STYLE),
+  });
+
+  try {
+    await createBucket(client, "metagen-test-bucket");
+  } catch (_e) {
+    //
+  }
+}
 
 Meta.test("metagen rust builds", async (t) => {
   const tmpDir = t.tempDir;
@@ -185,74 +213,123 @@ metagen:
 //  }
 //});
 
-// FIXME: Uncomment after implementing mode B (MET-754)
-//Meta.test("Metagen within sdk with custom template", async (t) => {
-//  const workspace = join(import.meta.dirname!, "typegraphs").slice(
-//    workspaceDir.length,
-//  );
-//
-//  const targetName = "my_target";
-//  const genConfig = {
-//    targets: {
-//      my_target: [
-//        {
-//          generator: "fdk_python",
-//          typegraph: "example-metagen",
-//          path: "some/base/path/python",
-//          template_dir: "./fdk_py_templates",
-//        },
-//      ],
-//    },
-//  };
-//
-//  const sdkResults = [] as Array<string>;
-//
-//  await t.should("Run metagen within typescript", async () => {
-//    const { tg } = await import("./typegraphs/metagen.ts");
-//    const { Metagen } = await import("@typegraph/sdk/metagen.ts");
-//    const metagen = new Metagen(workspace, genConfig);
-//    const generated = metagen.dryRun(tg, targetName);
-//    const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
-//    await t.assertSnapshot(sorted);
-//
-//    sdkResults.push(JSON.stringify(sorted, null, 2));
-//  });
-//
-//  await t.should("Run metagen within python", async () => {
-//    const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.py");
-//    const command = new Deno.Command("python3", {
-//      args: [typegraphPath],
-//      env: {
-//        workspace_path: workspace,
-//        gen_config: JSON.stringify(genConfig),
-//        target_name: targetName,
-//      },
-//      stderr: "piped",
-//      stdout: "piped",
-//    });
-//
-//    const child = command.spawn();
-//    const output = await child.output();
-//    if (output.success) {
-//      const stdout = new TextDecoder().decode(output.stdout);
-//      const generated = JSON.parse(stdout) as Array<FdkOutput>;
-//      const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
-//      await t.assertSnapshot(sorted);
-//
-//      sdkResults.push(JSON.stringify(sorted, null, 2));
-//    } else {
-//      const err = new TextDecoder().decode(output.stderr);
-//      throw new Error(`metagen python: ${err}`);
-//    }
-//  });
-//
-//  if (sdkResults.length > 0) {
-//    await t.should("SDKs should produce same metagen output", () => {
-//      const [fromTs, fromPy] = sdkResults;
-//      assertEquals(fromTs, fromPy);
-//    });
-//  }
-//});
+  const sdkResults = [] as Array<string>;
+
+  await t.should("Run metagen within typescript", async () => {
+    const { tg } = await import("./typegraphs/metagen.ts");
+    const { Metagen } = await import("@typegraph/sdk/metagen");
+    const metagen = new Metagen(workspace, genConfig);
+    const generated = metagen.dryRun(tg, targetName);
+    const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
+    await t.assertSnapshot(sorted);
+
+    sdkResults.push(JSON.stringify(sorted, null, 2));
+  });
+
+  await t.should("Run metagen within python", async () => {
+    const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.py");
+    const command = new Deno.Command("python3", {
+      args: [typegraphPath],
+      env: {
+        workspace_path: workspace,
+        gen_config: JSON.stringify(genConfig),
+        target_name: targetName,
+      },
+      stderr: "piped",
+      stdout: "piped",
+    });
+
+    const child = command.spawn();
+    const output = await child.output();
+    if (output.success) {
+      const stdout = new TextDecoder().decode(output.stdout);
+      const generated = JSON.parse(stdout) as Array<FdkOutput>;
+      const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
+
+      await t.assertSnapshot(sorted);
+
+      sdkResults.push(JSON.stringify(sorted, null, 2));
+    } else {
+      const err = new TextDecoder().decode(output.stderr);
+      throw new Error(`metagen python: ${err}`);
+    }
+  });
+
+  if (sdkResults.length > 0) {
+    await t.should("SDKs should produce same metagen output", () => {
+      const [fromTs, fromPy] = sdkResults;
+      assertEquals(fromTs, fromPy);
+    });
+  }
+});
+
+Meta.test("Metagen within sdk with custom template", async (t) => {
+  const workspace = join(import.meta.dirname!, "typegraphs").slice(
+    workspaceDir.length,
+  );
+
+  const targetName = "my_target";
+  const genConfig = {
+    targets: {
+      my_target: [
+        {
+          generator: "fdk_python",
+          typegraph: "example-metagen",
+          path: "some/base/path/python",
+          template_dir: "./fdk_py_templates",
+        },
+      ],
+    },
+  };
+
+  const sdkResults = [] as Array<string>;
+
+  await t.should("Run metagen within typescript", async () => {
+    const { tg } = await import("./typegraphs/metagen.ts");
+    const { Metagen } = await import("@typegraph/sdk/metagen");
+    const metagen = new Metagen(workspace, genConfig);
+    const generated = metagen.dryRun(tg, targetName);
+    const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
+    await t.assertSnapshot(sorted);
+
+    sdkResults.push(JSON.stringify(sorted, null, 2));
+  });
+
+  await t.should("Run metagen within python", async () => {
+    const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.py");
+    const command = new Deno.Command("python3", {
+      args: [typegraphPath],
+      env: {
+        workspace_path: workspace,
+        gen_config: JSON.stringify(genConfig),
+        target_name: targetName,
+      },
+      stderr: "piped",
+      stdout: "piped",
+    });
+
+    const child = command.spawn();
+    const output = await child.output();
+    if (output.success) {
+      const stdout = new TextDecoder().decode(output.stdout);
+      const generated = JSON.parse(stdout) as Array<FdkOutput>;
+      const sorted = generated.sort((a, b) => a.path.localeCompare(b.path));
+      await t.assertSnapshot(sorted);
+
+      sdkResults.push(JSON.stringify(sorted, null, 2));
+    } else {
+      const err = new TextDecoder().decode(output.stderr);
+      throw new Error(`metagen python: ${err}`);
+    }
+  });
+
+  if (sdkResults.length > 0) {
+    await t.should("SDKs should produce same metagen output", () => {
+      const [fromTs, fromPy] = sdkResults;
+      assertEquals(fromTs, fromPy);
+    });
+  }
+});
 
 Meta.test("fdk table suite", async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/identities");
@@ -610,6 +687,73 @@ Meta.test(
         //   .env({ "TG_PORT": metaTest.port.toString() });
         const res = await command
           .env({ TG_PORT: metaTest.port.toString() })
+          .text();
+        expected.parse(JSON.parse(res));
+      });
+    }
+  },
+);
+
+Meta.test(
+  {
+    name: "client table suite for file upload",
+  },
+  async (t) => {
+    const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
+    const res = await Meta.cli({}, ...`-C ${scriptsPath} gen`.split(" "));
+    // console.log("--- >>> --- >>> STDERR");
+    // console.log(res.stderr);
+    // console.log("--- >>> --- >>> STDERR end");
+    assertEquals(res.code, 0);
+
+    const expectedSchemaU1 = zod.object({
+      upload: zod.boolean(),
+    });
+    const expectedSchemaUn = zod.object({
+      uploadMany: zod.boolean(),
+    });
+
+    const expectedSchema = zod.tuple([
+      expectedSchemaU1,
+      // expectedSchemaU1,
+      expectedSchemaUn,
+      expectedSchemaU1,
+      expectedSchemaUn,
+    ]);
+
+    const cases = [
+      {
+        name: "client_rs_upload",
+        skip: false,
+        command: $`cargo run`.cwd(join(scriptsPath, "rs_upload")),
+        expected: expectedSchema,
+      },
+      {
+        name: "client_py_upload",
+        skip: false,
+        command: $`bash -c "python main.py"`.cwd(
+          join(scriptsPath, "py_upload"),
+        ),
+        expected: zod.tuple([expectedSchemaU1, expectedSchemaUn]),
+      },
+    ];
+
+    await using _engine2 = await t.engine(
+      "metagen/typegraphs/file_upload_sample.ts",
+      { secrets: { ...s3Secrets } },
+    );
+
+    await prepareBucket();
+
+    for (const { name, command, expected, skip } of cases) {
+      if (skip) {
+        continue;
+      }
+
+      await t.should(name, async () => {
+        const res = await command
+          .env({ TG_PORT: t.port.toString() })
+          .stderr("inherit")
           .text();
         expected.parse(JSON.parse(res));
       });

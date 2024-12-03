@@ -1,10 +1,10 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
 
 // isort: off
 // skip:end
 // highlight-next-line
-import { HttpRuntime } from "@typegraph/sdk/runtimes/http.ts";
+import { HttpRuntime } from "@typegraph/sdk/runtimes/http";
 
 await typegraph(
   {

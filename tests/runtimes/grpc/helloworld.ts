@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Policy, typegraph } from "@typegraph/sdk/index.ts";
-import { GrpcRuntime } from "@typegraph/sdk/runtimes/grpc.ts";
+import { Policy, typegraph } from "@typegraph/sdk";
+import { GrpcRuntime } from "@typegraph/sdk/runtimes/grpc";
 
 export const tg = await typegraph("helloworld", (g) => {
   const endpoint = "tcp://localhost:4770";

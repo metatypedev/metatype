@@ -31,7 +31,8 @@ export default {
                 --exclude typegate
                 --exclude typegate_engine
                 --exclude typegraph_core
-                --exclude metagen_fdk_rust_static`;
+                --exclude metagen_fdk_rust_static
+                --exclude client_rs_static`;
       // typegraph_core tests need to be run separately
       // without --tests, the --doc is causing a link error "syntax error in VERSION script"
       await $`cargo test --locked --package typegraph_core --tests`;

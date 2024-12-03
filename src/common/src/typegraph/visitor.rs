@@ -55,6 +55,7 @@ impl Typegraph {
         visitor: V,
         context: &'a V::Context,
         layer: L,
+        root_type_idx: u32,
     ) -> Option<V::Return>
     where
         V: TypeVisitor<'a> + Sized + 'a,
@@ -71,7 +72,7 @@ impl Typegraph {
             layer,
         };
         traversal
-            .visit_type(0, context)
+            .visit_type(root_type_idx, context)
             .or_else(|| traversal.visitor.take_result())
     }
 }

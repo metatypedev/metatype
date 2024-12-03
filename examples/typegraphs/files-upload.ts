@@ -1,5 +1,5 @@
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { S3Runtime } from "@typegraph/sdk/providers/aws.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { S3Runtime } from "@typegraph/sdk/providers/aws";
 
 await typegraph(
   {

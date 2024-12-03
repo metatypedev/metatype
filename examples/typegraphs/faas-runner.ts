@@ -1,7 +1,7 @@
 // skip:start
-import { Policy, t, typegraph } from "@typegraph/sdk/index.ts";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno.ts";
-import { PythonRuntime } from "@typegraph/sdk/runtimes/python.ts";
+import { Policy, t, typegraph } from "@typegraph/sdk";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
+import { PythonRuntime } from "@typegraph/sdk/runtimes/python";
 
 // skip:end
 

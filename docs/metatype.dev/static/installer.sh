@@ -8,7 +8,7 @@ EXT=tar.gz
 NAME=meta-cli
 EXE=meta
 
-INSTALLER_URL="https://raw.githubusercontent.com/$ORG/$REPO/main/installer.sh"
+INSTALLER_URL="https://metatype.dev/install.sh"
 RELEASE_URL="https://github.com/$ORG/$REPO/releases"
 
 LATEST_VERSION=$(curl "$RELEASE_URL/latest" -s -L -I -o /dev/null -w '%{url_effective}')
@@ -72,7 +72,7 @@ fi
 DOWNLOAD_URL="$RELEASE_URL/download/v$VERSION/$ASSET.$EXT"
 echo $DOWNLOAD_URL
 
-if curl --fail --silent --location --output "$TMP_DIR/$ASSET.$EXT" "$DOWNLOAD_URL"; then
+if curl --fail --location --progress-bar --output "$TMP_DIR/$ASSET.$EXT" "$DOWNLOAD_URL"; then
   printf "Downloaded successfully: %s\n" "$ASSET.$EXT"
 else
   cat >&2 <<EOF

@@ -19,6 +19,7 @@ import { type PushHandler, PushResponse } from "../typegate/hooks.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../transports/graphql/typegraph.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
+import * as DenoHooks from "../runtimes/deno/hooks/mod.ts";
 import {
   type RuntimeResolver,
   SecretManager,
@@ -31,9 +32,8 @@ import { resolveIdentifier } from "../services/middlewares.ts";
 import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
 import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
-import introspectionJson from "../typegraphs/introspection.json" with {
-  type: "json",
-};
+import { DenoFailure } from "../runtimes/deno/hooks/mod.ts";
+import introspectionJson from "../typegraphs/introspection.json" with { type: "json" };
 import { ArtifactService } from "../services/artifact_service.ts";
 import type { ArtifactStore } from "./artifacts/mod.ts";
 // TODO move from tests (MET-497)
@@ -170,6 +170,7 @@ export class Typegate implements AsyncDisposable {
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
     this.#onPush(PrismaHooks.generateSchema);
     this.#onPush(PrismaHooks.runMigrations);
+    this.#onPush(DenoHooks.cacheModules);
     this.#artifactService = new ArtifactService(artifactStore);
   }
 
@@ -192,13 +193,15 @@ export class Typegate implements AsyncDisposable {
 
     for (const handler of this.#onPushHooks) {
       try {
-        res = await handler(res, secretManager, response);
+        res = await handler(res, secretManager, response, this.artifactStore);
       } catch (e) {
         logger.error(`Error in onPush hook: ${e}`);
         // FIXME: MigrationFailur err message parser doesn't support all errors like
         // can't reach database errs
         if (e instanceof MigrationFailure && e.errors[0]) {
           response.setFailure(e.errors[0]);
+        } else if (e instanceof DenoFailure) {
+          response.setFailure(e.failure);
         } else {
           response.setFailure({
             reason: "Unknown",
@@ -399,14 +402,14 @@ export class Typegate implements AsyncDisposable {
 
     const introspection = enableIntrospection
       ? await TypeGraph.init(
-        this,
-        introspectionDef,
-        new SecretManager(introspectionDef, {}),
-        {
-          typegraph: TypeGraphRuntime.init(tgDS, [], {}),
-        },
-        null,
-      )
+          this,
+          introspectionDef,
+          new SecretManager(introspectionDef, {}),
+          {
+            typegraph: TypeGraphRuntime.init(tgDS, [], {}),
+          },
+          null,
+        )
       : null;
 
     const tg = await TypeGraph.init(
