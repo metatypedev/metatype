@@ -27,6 +27,7 @@ mod interlude {
 
 pub use deno_core::{resolve_url, resolve_url_or_path};
 pub use ext::extensions;
+pub use mt_deno;
 pub use mt_deno::new_thread_builder;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
@@ -175,18 +176,17 @@ pub async fn launch_typegate_deno(
         ),
         allow_net: Some(vec![]),
         allow_import: Some(
-            // based on deno cli defaults
-            [
-                "deno.land:443",
-                "jsr.io:443",
-                "esm.sh:443",
-                "cdn.jsdelivr.net:443",
-                "raw.githubusercontent.com:443",
-                "user.githubusercontent.com:443",
-            ]
-            .into_iter()
-            .map(str::to_owned)
-            .collect(),
+            vec![
+                //// based on deno cli defaults
+                //"deno.land:443",
+                //"jsr.io:443",
+                //"esm.sh:443",
+                //"cdn.jsdelivr.net:443",
+                //"raw.githubusercontent.com:443",
+                //"user.githubusercontent.com:443",
+            ], //.into_iter()
+               //.map(str::to_owned)
+               //.collect(),
         ),
         ..Default::default()
     };
@@ -228,18 +228,17 @@ mod tests {
             // allow_read: Some(vec![]),
             allow_net: Some(vec![]),
             allow_import: Some(
-                // based on deno cli defaults
-                [
-                    "deno.land:443",
-                    "jsr.io:443",
-                    "esm.sh:443",
-                    "cdn.jsdelivr.net:443",
-                    "raw.githubusercontent.com:443",
-                    "user.githubusercontent.com:443",
-                ]
-                .into_iter()
-                .map(str::to_owned)
-                .collect(),
+                vec![
+                //// based on deno cli defaults
+                //    "deno.land:443",
+                //    "jsr.io:443",
+                //    "esm.sh:443",
+                //    "cdn.jsdelivr.net:443",
+                //    "raw.githubusercontent.com:443",
+                //    "user.githubusercontent.com:443",
+                ], //.into_iter()
+                   //.map(str::to_owned)
+                   //.collect(),
             ),
             ..Default::default()
         };

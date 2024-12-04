@@ -41,6 +41,12 @@ fn main() {
 }
 
 fn main_main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+    typegate_engine::mt_deno::deno::util::v8::init_v8_flags(
+        &[],
+        &[],
+        typegate_engine::mt_deno::deno::util::v8::get_v8_flags_from_env(),
+    );
+
     let config = Config::init_from_env()?;
 
     let _sentry_guard = init_sentry(&config);

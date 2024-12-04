@@ -106,9 +106,6 @@ env("ci")
 
 env("dev")
   .inherit("ci")
-  // debug v8 to fix MET-633: segementation fault bug with custom deno rt
-  // doesn't appear in CI so only dev envs get it
-  .var("V8_FORCE_DEBUG", "true")
   .install(
     ports.act(),
     ports.cargobi({ crateName: "whiz", locked: true }),

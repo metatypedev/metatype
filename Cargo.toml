@@ -51,7 +51,7 @@ git2 = { version = "0.19.0", default-features = false }
 # http
 reqwest = "0.12"
 # pinned due to deno
-url = "=2.4.1"
+url = "2.5"
 
 # build
 shadow-rs = "0.35.1"
@@ -132,8 +132,8 @@ wit-bindgen = "0.34.0"
 
 # deno
 # deno = { path =  "../deno/cli" }
-deno = { git = "https://github.com/metatypedev/deno", branch = "v2.0.6-embeddable" }
-deno_core = { version = "=0.318.0" }
+deno = { git = "https://github.com/metatypedev/deno", branch = "v2.1.2-embeddable" }
+deno_core = { version = "=0.323.0" }
 
 # logging
 env_logger = "=0.11.0"
