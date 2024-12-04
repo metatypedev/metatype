@@ -29,6 +29,7 @@ concurrency:
 
 env:
   GHJK_VERSION: "v0.2.1"
+  GHJK_LOG: "debug"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir

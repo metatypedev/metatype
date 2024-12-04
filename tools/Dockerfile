@@ -1,6 +1,6 @@
 # disable SHELL cmd down below if switching to non-debug
 ARG RUST_VERSION=1.82.0
-ARG DENO_VERSION=2.0.6
+ARG DENO_VERSION=2.1.2
 ARG DISTROLESS_TAG=debug-nonroot
 
 #
@@ -53,8 +53,8 @@ RUN set -eux; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
 ARG GHJK_VERSION=v0.2.1
-RUN GHJK_INSTALL_EXE_DIR=/usr/bin \
-    deno run -A https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.ts
+RUN curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
+    | GHJK_INSTALL_EXE_DIR=/usr/bin sh
 
 COPY tools/ tools/
 COPY ghjk.ts .
