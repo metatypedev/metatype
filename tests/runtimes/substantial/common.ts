@@ -649,12 +649,15 @@ export function childWorkflowTestTemplate(
             ]
           } satisfies Expr
         })
-          .expectData({
-            search: [
-              { status: "COMPLETED", value: '"Bump typegraph v3 => v4"' },
-              { status: "COMPLETED", value: '"Bump substantial v2 => v3"' }
+        .expectBody((body) => {
+          const sorted = body.data.search.sort((a: any, b: any) => a.value.localeCompare(b.value));
+          assertEquals(sorted, 
+            [
+              { status: "COMPLETED", value: '"Bump substantial v2 => v3"' },
+              { status: "COMPLETED", value: '"Bump typegraph v3 => v4"' }
             ]
-          })
+          );
+        })
           .on(e);
       });
     },
