@@ -292,17 +292,18 @@ export class Planner {
     ) {
       throw this.unexpectedFieldError(node, name);
     }
-    const fieldType = this.tg.type(fieldIdx);
-    const scope: Scope | undefined = (fieldType.type === Type.FUNCTION)
-      ? {
-        runtime: this.tg
-          .runtimeReferences[
-            this.tg.materializer(fieldType.materializer).runtime
-          ],
-        fnIdx: fieldIdx,
-        path: [],
-      }
-      : node.scope && { ...node.scope, path: [...node.scope.path, name] };
+    const fieldType = fieldIdx == null ? null : this.tg.type(fieldIdx);
+    const scope: Scope | undefined =
+      (fieldType && fieldType.type === Type.FUNCTION)
+        ? {
+          runtime: this.tg
+            .runtimeReferences[
+              this.tg.materializer(fieldType.materializer).runtime
+            ],
+          fnIdx: fieldIdx,
+          path: [],
+        }
+        : node.scope && { ...node.scope, path: [...node.scope.path, name] };
 
     return {
       parent: node,
