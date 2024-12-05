@@ -554,15 +554,30 @@ async function fetchGql(
 
   if (files && files.size > 0) {
     const data = new FormData();
-    data.set("operations", body);
+    const fileMap = new Map<File, string[]>();
     const map: Record<string, string[]> = {};
-    for (const [i, [path, file]] of [...(files?.entries() ?? [])].entries()) {
-      const key = `${i}`;
-      // TODO single file on multiple paths
-      map[key] = ["variables" + path];
-      data.set(key, file);
+
+    for (const [path, file] of files) {
+      const array = fileMap.get(file);
+      const variable = "variables" + path;
+      if (array) {
+        array.push(variable);
+      } else {
+        fileMap.set(file, [variable]);
+      }
     }
+
+    let index = 0;
+    for (const [file, variables] of fileMap) {
+      const key = index.toString();
+      map[key] = variables;
+      data.set(key, file);
+      index += 1;
+    }
+
+    data.set("operations", body);
     data.set("map", JSON.stringify(map));
+
     body = data;
   } else {
     additionalHeaders["content-type"] = "application/json";
