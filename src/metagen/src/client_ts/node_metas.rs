@@ -1,16 +1,23 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::fmt::Write;
+use std::{collections::HashMap, fmt::Write};
 
 use common::typegraph::*;
 
 use super::utils::normalize_type_title;
-use crate::{interlude::*, shared::types::*};
+use crate::{
+    interlude::*,
+    shared::{
+        files::{serialize_typepaths_json, TypePath},
+        types::*,
+    },
+};
 
 pub struct TsNodeMetasRenderer {
     pub name_mapper: Rc<super::NameMapper>,
     pub named_types: Rc<std::sync::Mutex<IndexSet<u32>>>,
+    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
 }
 
 impl TsNodeMetasRenderer {
@@ -51,6 +58,7 @@ impl TsNodeMetasRenderer {
         ty_name: &str,
         return_node: &str,
         argument_fields: Option<IndexMap<String, Rc<str>>>,
+        input_files: Option<String>,
     ) -> std::fmt::Result {
         write!(
             dest,
@@ -78,6 +86,13 @@ impl TsNodeMetasRenderer {
                 dest,
                 r#"
       }},"#
+            )?;
+        }
+        if let Some(input_files) = input_files {
+            write!(
+                dest,
+                r#"
+      inputFiles: {input_files},"#
             )?;
         }
         write!(
@@ -167,7 +182,11 @@ impl RenderType for TsNodeMetasRenderer {
                 };
                 let node_name = &base.title;
                 let ty_name = normalize_type_title(node_name).to_pascal_case();
-                self.render_for_func(renderer, &ty_name, &return_ty_name, props)?;
+                let input_files = self
+                    .input_files
+                    .get(&cursor.id)
+                    .and_then(|files| serialize_typepaths_json(files));
+                self.render_for_func(renderer, &ty_name, &return_ty_name, props, input_files)?;
                 ty_name
             }
             TypeNode::Object { data, base } => {
