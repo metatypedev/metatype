@@ -20,7 +20,9 @@ def substantial_child_workflow(g: Graph):
             backend = Backend.redis("SUB_REDIS")
 
     file = (
-        WorkflowFile.deno(file="child_workflow.ts", deps=["imports/common_types.ts"])
+        WorkflowFile.deno(
+            file="workflows/child_workflow.ts", deps=["imports/common_types.ts"]
+        )
         .import_(["bumpPackage", "bumpAll"])
         .build()
     )
@@ -38,5 +40,6 @@ def substantial_child_workflow(g: Graph):
         start=sub.start(t.struct({"packages": t.list(package)})).reduce(
             {"name": "bumpAll"}
         ),
+        search=sub.advanced_filters(),
         **sub.internals(),
     )

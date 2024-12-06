@@ -46,6 +46,14 @@ export interface Context {
   createWorkflowHandle(
     handleDef: SerializableWorkflowHandle,
   ): ChildWorkflowHandle;
+
+  logger: SubLogger
+}
+
+interface SubLogger {
+  warn: (...args: unknown[]) => Promise<void>;
+  info: (...args: unknown[]) => Promise<void>;
+  error: (...args: unknown[]) => Promise<void>;
 }
 
 export type TaskCtx = {

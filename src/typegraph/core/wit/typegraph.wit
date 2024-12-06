@@ -529,7 +529,9 @@ interface runtimes {
         // type of result
         results(type-id),
         results-raw,
-        internal-link-parent-child
+        internal-link-parent-child,
+        // filters
+        advanced-filters
     }
 
     register-substantial-runtime: func(data: substantial-runtime-data) -> result<runtime-id, error>;
