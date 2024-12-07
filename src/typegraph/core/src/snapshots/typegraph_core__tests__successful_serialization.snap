@@ -22,7 +22,6 @@ expression: typegraph.0
       "policies": [],
       "input": 2,
       "output": 4,
-      "injections": {},
       "runtimeConfig": null,
       "materializer": 0,
       "rate_weight": null,

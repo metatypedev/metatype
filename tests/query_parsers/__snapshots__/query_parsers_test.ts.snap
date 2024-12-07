@@ -30,7 +30,6 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
-    injections: {},
     input: 3,
     materializer: 1,
     output: 5,
@@ -79,7 +78,6 @@ snapshot[`GraphQL parser 1`] = `
     type: "string",
   },
   {
-    injections: {},
     input: 5,
     materializer: 2,
     output: 5,
@@ -104,7 +102,6 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
-    injections: {},
     input: 3,
     materializer: 3,
     output: 10,
@@ -137,7 +134,6 @@ snapshot[`GraphQL parser 1`] = `
     type: "string",
   },
   {
-    injections: {},
     input: 10,
     materializer: 4,
     output: 10,

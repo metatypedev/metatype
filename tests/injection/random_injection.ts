@@ -28,6 +28,28 @@ const user = t.struct({
   hostname: t.string({ format: "hostname" }).fromRandom(),
 });
 
+const userOut = t.struct({
+  id: t.uuid(),
+  ean: t.ean(),
+  name: t.string(),
+  age: t.integer(),
+  married: t.boolean(),
+  email: t.string({ format: "email" }),
+  birthday: t.datetime(),
+  friends: t.list(t.string()),
+  phone: t.string(),
+  gender: t.string(),
+  firstname: t.string(),
+  lastname: t.string(),
+  occupation: t.string(),
+  street: t.string(),
+  city: t.string(),
+  postcode: t.string(),
+  country: t.string(),
+  uri: t.string({ format: "uri" }),
+  hostname: t.string({ format: "hostname" }),
+});
+
 export const tg = await typegraph("random_injection", (g: any) => {
   const pub = Policy.public();
   const deno = new DenoRuntime();
@@ -36,6 +58,7 @@ export const tg = await typegraph("random_injection", (g: any) => {
   g.configureRandomInjection({ seed: 1 });
 
   g.expose({
-    randomUser: deno.identity(user).withPolicy(pub),
+    // randomUser: deno.identity(user).withPolicy(pub),
+    randomUser: deno.func(user, userOut, { code: "x => x" }).withPolicy(pub),
   });
 });

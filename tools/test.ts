@@ -6,10 +6,11 @@
 /**
  * A utility script to run tests.
  *
- * Usage: deno run -A test.ts <test-spec>... [-- <test-arg>...]
+ * Usage: ghjk x test-e2e <test-spec>... [-- <test-arg>...]
  *
  * <test-spec>:
  *    test directory name or a file name, relative to the `tests` directory.
+ *    You can omit the extension or the `_test.ts` suffix.
  *    These paths specifies which tests to run.
  *    An empty list will run all the tests.
  *
@@ -17,7 +18,7 @@
  *    arguments to path to the `deno test` command.
  *
  * Example:
- *   $ deno run -A test.ts policies prisma/one_to_many_test.ts -- -q
+ *   $ ghjk x test-e2e policies prisma/one_to_many_test.ts -- -q
  *    > run all the tests under tests/policies and the test file tests/prisma/one_to_many_test.ts,
  * with the -q flag.
  */
@@ -53,7 +54,25 @@ async function listTestFiles(filesArg: string[]): Promise<string[]> {
           path = wd.resolve("tests", inPath);
           stat = await path.stat();
           if (!stat) {
-            throw new Error(`unable to resolve test files under "${inPath}"`);
+            const pathStr = path.toString();
+            if (!pathStr.endsWith("_test.ts")) {
+              let suffixedPath: typeof path;
+              if (pathStr.endsWith("_test")) {
+                suffixedPath = $.path(pathStr + ".ts");
+              } else {
+                suffixedPath = $.path(pathStr + "_test.ts");
+              }
+              const stat2 = await suffixedPath.stat();
+              if (!stat2) {
+                throw new Error(
+                  `unable to resolve test files under "${inPath}", nor "${suffixedPath.toString()}"`,
+                );
+              }
+              path = suffixedPath;
+              stat = stat2;
+            } else {
+              throw new Error(`unable to resolve test files under "${inPath}"`);
+            }
           }
         }
         if (stat.isDirectory) {
