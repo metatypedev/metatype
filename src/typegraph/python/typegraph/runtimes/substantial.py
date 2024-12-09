@@ -19,6 +19,7 @@ from typegraph.gen.exports.runtimes import (
     SubstantialOperationDataStart,
     SubstantialOperationDataStartRaw,
     SubstantialOperationDataStop,
+    SubstantialOperationDataAdvancedFilters,
     SubstantialRuntimeData,
     SubstantialStartData,
     WorkflowFileDescription,
@@ -84,6 +85,9 @@ class SubstantialRuntime(Runtime):
 
     def query_results_raw(self):
         return self._generic_substantial_func(SubstantialOperationDataResultsRaw())
+
+    def advanced_filters(self):
+        return self._generic_substantial_func(SubstantialOperationDataAdvancedFilters())
 
     def _internal_link_parent_child(self):
         return self._generic_substantial_func(

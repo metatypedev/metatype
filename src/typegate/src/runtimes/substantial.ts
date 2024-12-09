@@ -20,6 +20,7 @@ import {
 } from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
+import { applyFilter, type Expr, type ExecutionStatus } from "./substantial/filter_utils.ts";
 
 const logger = getLogger(import.meta);
 
@@ -28,7 +29,7 @@ interface QueryCompletedWorkflowResult {
   started_at: string;
   ended_at: string;
   result: {
-    status: "COMPLETED" | "COMPLETED_WITH_ERROR" | "UNKNOWN";
+    status: ExecutionStatus;
     value: unknown; // hinted by the user
   };
 }
@@ -218,9 +219,11 @@ export class SubstantialRuntime extends Runtime {
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
-        return this.#resultsResover(false);
+        return this.#resultsResolver(false);
       case "results_raw":
-        return this.#resultsResover(true);
+        return this.#resultsResolver(true);
+      case "advanced_filters":
+        return this.#advancedFiltersResolver();
       case "internal_link_parent_child":
         return this.#linkerResolver();
       default:
@@ -285,7 +288,7 @@ export class SubstantialRuntime extends Runtime {
     };
   }
 
-  #resultsResover(enableGenerics: boolean): Resolver {
+  #resultsResolver(enableGenerics: boolean): Resolver {
     return async ({ name: workflowName }) => {
       this.#checkWorkflowExistOrThrow(workflowName);
 
@@ -404,6 +407,14 @@ export class SubstantialRuntime extends Runtime {
       });
 
       return run_id;
+    };
+  }
+
+  #advancedFiltersResolver(): Resolver {
+    return async ({ name: workflowName, filter }) => {
+      this.#checkWorkflowExistOrThrow(workflowName);
+      // console.log("workflow", workflowName, "Filter", filter);
+      return await applyFilter(workflowName, this.agent, filter as Expr);
     };
   }
 

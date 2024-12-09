@@ -21,14 +21,16 @@ def substantial(g: Graph):
             backend = Backend.redis("SUB_REDIS")
 
     file = (
-        WorkflowFile.deno(file="workflow.ts", deps=["imports/common_types.ts"])
+        WorkflowFile.deno(
+            file="workflows/workflow.ts", deps=["imports/common_types.ts"]
+        )
         .import_(
             [
                 "saveAndSleepExample",
                 "eventsAndExceptionExample",
                 "retryExample",
                 "secretsExample",
-                "accidentialInputMutation",
+                "accidentalInputMutation",
             ]
         )
         .build()
@@ -80,6 +82,6 @@ def substantial(g: Graph):
                     )
                 }
             )
-        ).reduce({"name": "accidentialInputMutation"}),
+        ).reduce({"name": "accidentalInputMutation"}),
         **sub.internals(),
     )
