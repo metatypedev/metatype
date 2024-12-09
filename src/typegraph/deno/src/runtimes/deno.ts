@@ -130,6 +130,16 @@ export class DenoRuntime extends Runtime {
     return t.func(t.struct({}), out, mat);
   }
 
+  /** Utility for fetching the current request context */
+  fetchContext<C extends t.Typedef>(outputShape?: C): t.Func {
+    const returnValue = outputShape ? `context` : "JSON.stringify(context)";
+    return this.func(
+      t.struct({}), 
+      outputShape ?? t.json(),
+      { code: `(_, { context }) => ${returnValue}` }
+    );
+  }
+
   policy(name: string, _code: string): Policy;
   policy(name: string, data: Omit<DenoFunc, "effect">): Policy;
   policy(name: string, data: string | Omit<DenoFunc, "effect">): Policy {

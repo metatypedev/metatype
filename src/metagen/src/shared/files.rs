@@ -81,6 +81,19 @@ impl TypePath {
     }
 }
 
+pub fn serialize_typepaths_json(typepaths: &[TypePath]) -> Option<String> {
+    let paths = typepaths
+        .iter()
+        .map(|path| path.to_vec_str())
+        .collect::<Vec<_>>();
+
+    if paths.is_empty() {
+        None
+    } else {
+        Some(serde_json::to_string(&paths).unwrap())
+    }
+}
+
 pub fn get_path_to_files(tg: &Typegraph, root: u32) -> Result<HashMap<u32, Vec<TypePath>>> {
     visitor2::traverse_types(
         tg,

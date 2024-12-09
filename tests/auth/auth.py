@@ -60,4 +60,21 @@ def auth(g: Graph):
             ),
             auth_token_field="token",
         ).with_policy(public),
+        # context_raw=deno.fetch_context().with_policy(public) # no args if shape is unknown
+        context=deno.fetch_context(
+            t.struct(
+                {
+                    "provider": t.string(),
+                    "accessToken": t.string(),
+                    "refreshAt": t.integer(),
+                    "profile": t.struct(
+                        {
+                            "id": t.integer(),
+                        }
+                    ),
+                    "exp": t.integer(),
+                    "iat": t.integer(),
+                }
+            )
+        ).with_policy(public),
     )

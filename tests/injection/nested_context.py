@@ -12,17 +12,25 @@ def nested_context(g: Graph):
 
     g.expose(
         has_profile,
-        injectedId=deno.identity(
+        injectedId=deno.func(
             # TODO validate the path against the profiler result??
-            t.struct({"id": t.integer().from_context("profile.id")})
+            t.struct({"id": t.integer().from_context("profile.id")}),
+            t.struct({"id": t.integer()}),
+            code="x => x",
         ),
-        secondProfileData=deno.identity(
-            t.struct({"second": t.integer().from_context("profile.data[1]")})
+        secondProfileData=deno.func(
+            t.struct({"second": t.integer().from_context("profile.data[1]")}),
+            t.struct({"second": t.integer()}),
+            code="x => x",
         ),
-        customKey=deno.identity(
-            t.struct({"custom": t.integer().from_context('profile["custom key"]')})
+        customKey=deno.func(
+            t.struct({"custom": t.integer().from_context('profile["custom key"]')}),
+            t.struct({"custom": t.integer()}),
+            code="x => x",
         ),
-        optional=deno.identity(
-            t.struct({"optional": t.email().optional().from_context("profile.email")})
+        optional=deno.func(
+            t.struct({"optional": t.email().optional().from_context("profile.email")}),
+            t.struct({"optional": t.email().optional()}),
+            code="x => x",
         ),
     )

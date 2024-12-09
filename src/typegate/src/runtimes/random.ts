@@ -69,7 +69,7 @@ export type GeneratorNode =
 
 export default function randomizeRecursively(
   typ: TypeNode,
-  chance: typeof Chance,
+  chance: Chance,
   tgTypes: TypeNode[],
   generatorNode: GeneratorNode | null,
 ): any {

@@ -26,3 +26,6 @@ metagen:
       - generator: client_py
         path: ./py_upload/
         typegraph_path: ../file_upload_sample.ts
+      - generator: client_ts
+        path: ./ts_upload/
+        typegraph_path: ../file_upload_sample.ts

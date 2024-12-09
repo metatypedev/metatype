@@ -685,6 +685,14 @@ Meta.test(
         ),
         expected: zod.tuple([expectedSchemaU1, expectedSchemaUn]),
       },
+      {
+        name: "client_ts_upload",
+        skip: false,
+        command: $`bash -c "deno run -A main.ts"`.cwd(
+          join(scriptsPath, "ts_upload"),
+        ),
+        expected: zod.tuple([expectedSchemaU1, expectedSchemaUn]),
+      },
     ];
 
     await using _engine2 = await t.engine(

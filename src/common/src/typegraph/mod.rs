@@ -87,6 +87,9 @@ pub struct Queries {
 pub struct TypeMeta {
     pub prefix: Option<String>,
     pub secrets: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
+    pub outjection_secrets: Vec<String>,
     pub queries: Queries,
     pub cors: Cors,
     pub auths: Vec<Auth>,

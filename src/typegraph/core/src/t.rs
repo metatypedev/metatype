@@ -338,7 +338,7 @@ pub(crate) use unionx;
 
 #[derive(Default)]
 pub struct EitherBuilder {
-    data: TypeEither,
+    pub data: TypeEither,
 }
 
 #[allow(clippy::derivable_impls)]

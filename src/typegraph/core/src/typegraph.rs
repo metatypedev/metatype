@@ -51,7 +51,7 @@ struct RuntimeContexts {
 pub struct TypegraphContext {
     name: String,
     path: Option<Rc<Path>>,
-    meta: TypeMeta,
+    pub(crate) meta: TypeMeta,
     types: Vec<Option<TypeNode>>,
     runtimes: Vec<TGRuntime>,
     materializers: Vec<Option<Materializer>>,
@@ -113,6 +113,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             prefix: params.prefix,
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
+            outjection_secrets: vec![],
             random_seed: Default::default(),
             artifacts: Default::default(),
         },

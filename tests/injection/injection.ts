@@ -26,11 +26,29 @@ const tpe = t.struct({
   date: t.datetime().inject("now"),
 });
 
+const out = t.struct({
+  a: t.integer(),
+  raw_int: t.integer(),
+  raw_str: t.string(),
+  secret: t.integer(),
+  context: t.string(),
+  optional_context: t.string().optional(),
+  raw_obj: t.struct({ in: t.integer() }),
+  alt_raw: t.string(),
+  alt_secret: t.string(),
+  alt_context: t.string(),
+  alt_context_opt: t.string().optional(),
+  alt_context_opt_missing: t.string().optional(),
+  date: t.datetime(),
+});
+
 export const tg = await typegraph("injection", (g: any) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
 
   g.expose({
-    test: deno.identity(t.struct({ input: tpe })).withPolicy(pub),
+    test: deno.func(t.struct({ input: tpe }), t.struct({ input: out }), {
+      code: "x => x",
+    }).withPolicy(pub),
   });
 });

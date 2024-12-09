@@ -97,7 +97,8 @@ export type FunctionNode = {
   description?: string | null;
   enum?: string[] | null;
   input: number;
-  injections: Record<string, InjectionNode>;
+  injections?: Record<string, InjectionNode>;
+  outjections?: Record<string, InjectionNode>;
   parameterTransform?: FunctionParameterTransform | null;
   output: number;
   runtimeConfig: unknown;
@@ -433,6 +434,7 @@ export interface Policy {
 export interface TypeMeta {
   prefix?: string | null;
   secrets: string[];
+  outjectionSecrets?: string[];
   queries: Queries;
   cors: Cors;
   auths: Auth[];

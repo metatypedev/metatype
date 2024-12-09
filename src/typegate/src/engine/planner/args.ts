@@ -43,6 +43,7 @@ import {
 import { QueryFunction as JsonPathQuery } from "../../libs/jsonpath.ts";
 import { getInjection } from "../../typegraph/utils.ts";
 import { GeneratorNode } from "../../runtimes/random.ts";
+import DynamicInjection from "../injection/dynamic.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -104,7 +105,7 @@ export function collectArgs(
     stageId,
     effect,
     parentProps,
-    injectionTree,
+    injectionTree ?? {},
   );
   const argTypeNode = typegraph.type(typeIdx, Type.OBJECT);
   for (const argName of Object.keys(astNodes)) {
@@ -168,11 +169,6 @@ export function collectArgs(
     policies,
   };
 }
-
-const GENERATORS = {
-  "now": () => new Date().toISOString(),
-  // "uuid": () =>
-} as const;
 
 interface Dependencies {
   context: Set<string>;
@@ -814,7 +810,8 @@ class ArgumentCollector {
         if (generatorName == null) {
           return null;
         }
-        const generator = GENERATORS[generatorName as keyof typeof GENERATORS];
+        const generator =
+          DynamicInjection[generatorName as keyof typeof DynamicInjection];
         if (generator == null) {
           throw new Error(
             `Unknown generator '${generatorName}' for dynamic injection`,

@@ -97,7 +97,6 @@ snapshot[`planner 2`] = `
 {
   one: {
     funcType: {
-      injections: {},
       input: 2,
       materializer: 0,
       output: 3,

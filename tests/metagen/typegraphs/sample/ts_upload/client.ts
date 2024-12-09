@@ -872,236 +872,67 @@ const nodeMetas = {
     return {};
   },
   
-  Post(): NodeMeta {
-    return {
-      subNodes: [
-        ["id", nodeMetas.scalar],
-        ["slug", nodeMetas.scalar],
-        ["title", nodeMetas.scalar],
-      ],
-    };
-  },
-  User(): NodeMeta {
-    return {
-      subNodes: [
-        ["id", nodeMetas.scalar],
-        ["email", nodeMetas.scalar],
-        ["posts", nodeMetas.Post],
-      ],
-    };
-  },
-  RootGetUserFn(): NodeMeta {
-    return {
-      ...nodeMetas.User(),
-    };
-  },
-  RootGetPostsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-  RootScalarNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
-  RootScalarArgsFn(): NodeMeta {
+  RootUploadFn(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        id: "UserIdStringUuid",
-        slug: "PostSlugString",
-        title: "PostSlugString",
+        file: "RootUploadFnInputFileFile",
+        path: "RootUploadFnInputPathRootUploadFnInputPathStringOptional",
       },
+      inputFiles: [[".file"]],
     };
   },
-  RootCompositeNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-  RootCompositeArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "PostSlugString",
-      },
-    };
-  },
-  RootScalarUnionFn(): NodeMeta {
+  RootUploadManyFn(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        id: "PostSlugString",
+        prefix: "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
+        files: "RootUploadManyFnInputFilesRootUploadFnInputFileFileList",
       },
-    };
-  },
-  RootCompositeUnionFnOutput(): NodeMeta {
-    return {
-      variants: [
-        ["post", nodeMetas.Post],
-        ["user", nodeMetas.User],
-      ],
-    };
-  },
-  RootCompositeUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.RootCompositeUnionFnOutput(),
-      argumentTypes: {
-        id: "PostSlugString",
-      },
-    };
-  },
-  RootMixedUnionFnOutput(): NodeMeta {
-    return {
-      variants: [
-        ["post", nodeMetas.Post],
-        ["user", nodeMetas.User],
-      ],
-    };
-  },
-  RootMixedUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.RootMixedUnionFnOutput(),
-      argumentTypes: {
-        id: "PostSlugString",
-      },
+      inputFiles: [[".files","[]"]],
     };
   },
 };
-export type UserIdStringUuid = string;
-export type PostSlugString = string;
-export type Post = {
-  id: UserIdStringUuid;
-  slug: PostSlugString;
-  title: PostSlugString;
+export type RootUploadFnInputFileFile = File;
+export type RootUploadFnInputPathString = string;
+export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
+export type RootUploadFnInput = {
+  file: RootUploadFnInputFileFile;
+  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
 };
-export type RootCompositeArgsFnInput = {
-  id: PostSlugString;
+export type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
+export type RootUploadManyFnInputFilesRootUploadFnInputFileFileList = Array<RootUploadFnInputFileFile>;
+export type RootUploadManyFnInput = {
+  prefix?: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional;
+  files: RootUploadManyFnInputFilesRootUploadFnInputFileFileList;
 };
-export type UserEmailStringEmail = string;
-export type UserPostsPostList = Array<Post>;
-export type User = {
-  id: UserIdStringUuid;
-  email: UserEmailStringEmail;
-  posts: UserPostsPostList;
-};
-export type RootScalarUnionFnOutputT1Integer = number;
-export type RootScalarUnionFnOutput =
-  | (PostSlugString)
-  | (RootScalarUnionFnOutputT1Integer);
-export type RootCompositeUnionFnOutput =
-  | (Post)
-  | (User);
-export type RootMixedUnionFnOutput =
-  | (Post)
-  | (User)
-  | (PostSlugString)
-  | (RootScalarUnionFnOutputT1Integer);
+export type RootUploadFnOutput = boolean;
 
-export type PostSelections = {
-  _?: SelectionFlags;
-  id?: ScalarSelectNoArgs;
-  slug?: ScalarSelectNoArgs;
-  title?: ScalarSelectNoArgs;
-};
-export type UserSelections = {
-  _?: SelectionFlags;
-  id?: ScalarSelectNoArgs;
-  email?: ScalarSelectNoArgs;
-  posts?: CompositeSelectNoArgs<PostSelections>;
-};
-export type RootCompositeUnionFnOutputSelections = {
-  _?: SelectionFlags;
-  "post"?: CompositeSelectNoArgs<PostSelections>;
-  "user"?: CompositeSelectNoArgs<UserSelections>;
-};
-export type RootMixedUnionFnOutputSelections = {
-  _?: SelectionFlags;
-  "post"?: CompositeSelectNoArgs<PostSelections>;
-  "user"?: CompositeSelectNoArgs<UserSelections>;
-};
 
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
-      "UserIdStringUuid": "String!",
-      "PostSlugString": "String!",
-      "post": "post!",
-      "user": "user!",
+      "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
+      "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
+      "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
+      "RootUploadManyFnInputFilesRootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
     });
   }
     
-  getUser(select: UserSelections) {
+  upload(args: RootUploadFnInput | PlaceholderArgs<RootUploadFnInput>) {
     const inner = _selectionToNodeSet(
-      { "getUser": select },
-      [["getUser", nodeMetas.RootGetUserFn]],
+      { "upload": args },
+      [["upload", nodeMetas.RootUploadFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<User>;
+    return new MutationNode(inner) as MutationNode<RootUploadFnOutput>;
   }
-  getPosts(select: PostSelections) {
+  uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>) {
     const inner = _selectionToNodeSet(
-      { "getPosts": select },
-      [["getPosts", nodeMetas.RootGetPostsFn]],
+      { "uploadMany": args },
+      [["uploadMany", nodeMetas.RootUploadManyFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<Post>;
-  }
-  scalarNoArgs() {
-    const inner = _selectionToNodeSet(
-      { "scalarNoArgs": true },
-      [["scalarNoArgs", nodeMetas.RootScalarNoArgsFn]],
-      "$q",
-    )[0];
-    return new QueryNode(inner) as QueryNode<PostSlugString>;
-  }
-  scalarArgs(args: Post | PlaceholderArgs<Post>) {
-    const inner = _selectionToNodeSet(
-      { "scalarArgs": args },
-      [["scalarArgs", nodeMetas.RootScalarArgsFn]],
-      "$q",
-    )[0];
-    return new MutationNode(inner) as MutationNode<PostSlugString>;
-  }
-  compositeNoArgs(select: PostSelections) {
-    const inner = _selectionToNodeSet(
-      { "compositeNoArgs": select },
-      [["compositeNoArgs", nodeMetas.RootCompositeNoArgsFn]],
-      "$q",
-    )[0];
-    return new MutationNode(inner) as MutationNode<Post>;
-  }
-  compositeArgs(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: PostSelections) {
-    const inner = _selectionToNodeSet(
-      { "compositeArgs": [args, select] },
-      [["compositeArgs", nodeMetas.RootCompositeArgsFn]],
-      "$q",
-    )[0];
-    return new MutationNode(inner) as MutationNode<Post>;
-  }
-  scalarUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>) {
-    const inner = _selectionToNodeSet(
-      { "scalarUnion": args },
-      [["scalarUnion", nodeMetas.RootScalarUnionFn]],
-      "$q",
-    )[0];
-    return new QueryNode(inner) as QueryNode<RootScalarUnionFnOutput>;
-  }
-  compositeUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: RootCompositeUnionFnOutputSelections) {
-    const inner = _selectionToNodeSet(
-      { "compositeUnion": [args, select] },
-      [["compositeUnion", nodeMetas.RootCompositeUnionFn]],
-      "$q",
-    )[0];
-    return new QueryNode(inner) as QueryNode<RootCompositeUnionFnOutput>;
-  }
-  mixedUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: RootMixedUnionFnOutputSelections) {
-    const inner = _selectionToNodeSet(
-      { "mixedUnion": [args, select] },
-      [["mixedUnion", nodeMetas.RootMixedUnionFn]],
-      "$q",
-    )[0];
-    return new QueryNode(inner) as QueryNode<RootMixedUnionFnOutput>;
+    return new MutationNode(inner) as MutationNode<RootUploadFnOutput>;
   }
 }
