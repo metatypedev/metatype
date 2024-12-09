@@ -20,7 +20,7 @@ env("main")
   .vars({
     RUST_LOG:
       "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,quaint=off",
-    TYPEGRAPH_VERSION: "0.0.3",
+    TYPEGRAPH_VERSION: "0.0.4",
     CLICOLOR_FORCE: "1",
     CROSS_CONFIG: "tools/Cross.toml",
     GIT_CLIFF_CONFIG: "tools/cliff.toml",
@@ -164,6 +164,7 @@ task("version-bump", async ($) => {
     lines: {
       "./tools/consts.ts": lines,
     },
+    ignores: [".metatype/**/*"],
   });
   await $`ghjk x lock-sed`;
 });
