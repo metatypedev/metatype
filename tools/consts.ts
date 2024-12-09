@@ -9,7 +9,7 @@ export const RUST_VERSION = "1.80.1";
 export const DENO_VERSION = "1.46.3";
 export const WASMTIME_VERSION = "25.0.2";
 export const WASMTIME_PY_VERSION = "25.0.0";
-export const TYPEGRAPH_VERSION = "0.0.3";
+export const TYPEGRAPH_VERSION = "0.0.4";
 export const PRISMA_VERSION = "5.20.0";
 export const SDK_PACKAGE_NAME_TS = "@typegraph/sdk";
 export const PYTHON_VERSION = "3.9.19";
@@ -68,6 +68,9 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "whiz.yaml": [
     ['(  TYPEGRAPH_VERSION: ").+(")', TYPEGRAPH_VERSION],
     ['(    GHJK_VERSION: ").+(")', GHJK_VERSION],
+  ],
+  "ghjk.ts": [
+    ['(    TYPEGRAPH_VERSION: ").+(",)', TYPEGRAPH_VERSION],
   ],
   "docs/metatype.dev/docusaurus.config.js": [['(  tagline: ").+(",)', TAGLINE]],
   "**/pyproject.toml": [

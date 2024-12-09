@@ -16,11 +16,10 @@ import { transformSyncConfig } from "@metatype/typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
 import { assertEquals } from "@std/assert";
 
-const previousVersion = PUBLISHED_VERSION;
+// const previousVersion = PUBLISHED_VERSION;
+const previousVersion = "0.4.10";
 
 const tempDir = $.path(projectDir).join("tmp");
-
-type Path = typeof tempDir;
 
 function getAssetName(version: string) {
   return `meta-cli-v${version}-${Deno.build.target}`;
@@ -45,10 +44,14 @@ const syncConfig = transformSyncConfig({
   s3_bucket: syncEnvs.SYNC_S3_BUCKET,
   s3_path_style: true,
 });
+console.log(syncConfig);
 
-// put here typegraphs that are to be excluded
-// from the test
-const disabled = [] as string[];
+// TODO remove after the next release
+// The build.rs script now uses a META_CMD env var allowing us
+// to use meta-old
+const disabled = [
+  "metagen-rs.ts",
+];
 
 async function checkMetaBin(path: typeof tempDir, version: string) {
   try {
@@ -112,40 +115,8 @@ export async function downloadAndExtractCli(version: string) {
   return metaBin.toString();
 }
 
-type CopyCodeParams = {
-  branch: string;
-  destDir: Path;
-  files: (string | [string, string])[];
-};
-
-async function copyCode({ branch, files, destDir: dest }: CopyCodeParams) {
-  const destDir = $.path(dest);
-  console.log("copyCode", { branch, files, destDir });
-  const repoDir = $.path(`.metatype/old/${branch}`);
-  if (!(await repoDir.exists())) {
-    await $`git clone https://github.com/metatypedev/metatype.git ${repoDir} --depth 1 --branch ${branch}`
-      .stdout("inherit")
-      .stderr("inherit")
-      .printCommand();
-  }
-
-  await $.co(
-    files.map((file) => {
-      const [source, dest] = Array.isArray(file) ? file : [file, file];
-      // if (dest.endsWith("/")) {
-      //   return $.path(repoDir).join(source).copyToDir(destDir.join(dest), {
-      //     overwrite: true,
-      //   });
-      // }
-      return $.path(repoDir).join(source).copy(destDir.join(dest), {
-        overwrite: true,
-      });
-    }),
-  );
-}
-
 // This also tests the published NPM version of the SDK
-Meta.test(
+Meta.test.only(
   {
     name: "typegate upgrade",
     async setup() {
@@ -155,10 +126,6 @@ Meta.test(
     async teardown() {
       await clearSyncData(syncConfig);
     },
-    // FIXME temporarily disabled, will be re-enabled the next related
-    // PR with a typegraph migration script
-    // - at `src/typegate/src/typegraph/version.ts`
-    ignore: true,
   },
   async (t) => {
     let publishedBin = "";
@@ -192,12 +159,12 @@ Meta.test(
       args: ["typegate"],
       env: {
         ...Deno.env.toObject(),
+        LOG_LEVEL: "DEBUG",
         PATH: `${metaBinDir}:${Deno.env.get("PATH")}`,
         TG_SECRET: tgSecret,
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir,
         TG_PORT: port,
-        LOG_LEVEL: "DEBUG",
         // TODO should not be necessary
         VERSION: previousVersion,
         ...syncEnvs,
@@ -210,12 +177,16 @@ Meta.test(
       async () => {
         const tag = `v${previousVersion}`;
 
-        await copyCode({
-          branch: tag,
-          files: ["examples"],
-          destDir: examplesDir,
-        });
+        // FIXME: cache across test runs
+        await $`git clone https://github.com/metatypedev/metatype.git --depth 1 --branch ${tag}`
+          .cwd(repoDir)
+          .stdout("piped")
+          .stderr("piped")
+          .printCommand();
 
+        await $.path(repoDir).join("metatype/examples").copy(examplesDir, {
+          overwrite: true,
+        });
         const typegraphsDir = examplesDir.join("typegraphs");
         for await (const entry of typegraphsDir.readDir()) {
           const path = typegraphsDir.relative(entry.path);
@@ -241,7 +212,7 @@ Meta.test(
     const stdout = new Lines(proc.stdout);
     await stdout.readWhile((line) => {
       console.log(`typegate>`, line);
-      return !line.includes(`typegate ready on :${port}`);
+      return !line.includes(`typegate ready on ${port}`);
     });
     stdout.readWhile((line) => {
       const match = line.match(/Initializing engine '(.+)'/);
@@ -254,7 +225,7 @@ Meta.test(
 
     await t.should("successfully deploy on the published version", async () => {
       const command =
-        `meta-old deploy --target dev --threads=4 --allow-dirty --gate http://localhost:${port} -vvv`;
+        `meta-old deploy --target dev --threads=4 --allow-dirty --gate http://localhost:${port} -vvv -f func.ts`;
       const res = await $`bash -c ${command}`
         .cwd(examplesDir.join("typegraphs"))
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`);
@@ -284,7 +255,6 @@ Meta.test(
           TG_ADMIN_PASSWORD: "password",
           TMP_DIR: typegateTempDir,
           TG_PORT: `${port}`,
-          LOG_LEVEL: "DEBUG",
           // TODO should not be necessary
           VERSION: previousVersion,
           ...syncEnvs,
@@ -308,6 +278,8 @@ Meta.test(
       const status = await proc.status;
       console.log({ status });
     });
+
+    console.log({ typegraphs: typegraphs.sort() });
 
     await t.should("have the same typegraphs", () => {
       assertEquals(typegraphs.sort(), typegraphs2.sort());
@@ -352,7 +324,6 @@ Meta.test(
         TG_ADMIN_PASSWORD: "password",
         TMP_DIR: typegateTempDir.toString(),
         TG_PORT: `${port}`,
-        LOG_LEVEL: "DEBUG",
         // TODO should not be necessary
         VERSION: previousVersion,
         DEBUG: "true",
@@ -367,7 +338,7 @@ Meta.test(
 
     await stdout.readWhile((line) => {
       console.error("typegate>", line);
-      return !line.includes(`typegate ready on :${port}`);
+      return !line.includes(`typegate ready on ${port}`);
     });
 
     const tgsDir = $.path(
@@ -401,16 +372,10 @@ typegraphs:
         .cwd(
           npmJsrDir,
         );
-      await copyCode({
-        branch: `v${previousVersion}`,
-        destDir: npmJsrDir,
-        files: [
-          ["examples/typegraphs/func.ts", "tg.ts"],
-          ["examples/typegraphs/scripts", "scripts"],
-          ["examples/templates/node/tsconfig.json", "tsconfig.json"],
-        ],
-      });
       await $.co([
+        $.path("examples/typegraphs/func.ts").copy(npmJsrDir.join("tg.ts")),
+        $.path("examples/typegraphs/scripts").copyToDir(npmJsrDir),
+        $.path("examples/templates/node/tsconfig.json").copyToDir(npmJsrDir),
         npmJsrDir
           .join("package.json")
           .readJson()
@@ -436,20 +401,17 @@ typegraphs:
       await $`bash -c 'deno add @typegraph/sdk@${PUBLISHED_VERSION}'`.cwd(
         denoJsrDir,
       );
-      await copyCode({
-        branch: `v${previousVersion}`,
-        files: [
-          ["examples/typegraphs/func.ts", "tg.ts"],
-          ["examples/typegraphs/scripts", "scripts"],
-        ],
-        destDir: denoJsrDir,
-      });
+      await $.co([
+        $.path("examples/typegraphs/func.ts").copy(denoJsrDir.join("tg.ts")),
+        $.path("examples/typegraphs/scripts").copyToDir(denoJsrDir),
+      ]);
 
       const command =
         `meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;
       await $`bash -c ${command}`
         .cwd(denoJsrDir)
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
+        // FIXME: rename to deno.jsonc on bump 0.4.9
         .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`)
         .env("RUST_LOG", "trace");
     }); */

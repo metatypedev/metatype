@@ -67,7 +67,7 @@ thread_local! {
     static TG: RefCell<Option<TypegraphContext>> = const { RefCell::new(None) };
 }
 
-static TYPEGRAPH_VERSION: &str = "0.0.3";
+static TYPEGRAPH_VERSION: &str = "0.0.4";
 
 pub fn with_tg<T>(f: impl FnOnce(&TypegraphContext) -> T) -> Result<T> {
     TG.with(|tg| {
