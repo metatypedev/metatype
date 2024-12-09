@@ -7,18 +7,21 @@ import {
   sendSubscriptionEmail,
   sleep,
   Workflow,
-} from "./imports/common_types.ts";
+} from "../imports/common_types.ts";
 
 export const eventsAndExceptionExample: Workflow<string> = async (
   ctx: Context
 ) => {
   const { to } = ctx.kwargs;
   const messageDialog = await ctx.save(() => sendSubscriptionEmail(to));
+  await ctx.logger.info("Will send to", to);
+  await ctx.logger.warn("Will now wait on an event");
 
   // This will wait until a `confirmation` event is sent to THIS workflow
   const confirmation = ctx.receive<boolean>("confirmation");
 
   if (!confirmation) {
+    await ctx.logger.error("Denial", to);
     throw new Error(`${to} has denied the subscription`);
   }
 
@@ -109,7 +112,7 @@ export const secretsExample: Workflow<void> = (_, { secrets }) => {
   return Promise.resolve();
 };
 
-export async function accidentialInputMutation(ctx: Context) {
+export async function accidentalInputMutation(ctx: Context) {
   const { items } = ctx.kwargs;
 
   const copy = [];
