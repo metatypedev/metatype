@@ -331,6 +331,12 @@ Meta.test("Auth", async (t) => {
         token(x: 1) {
           x
         }
+        context {
+          provider
+          profile {
+            id
+          }
+        }
       }
     `
       .withHeaders({ authorization: `bearer ${jwt}` })
@@ -347,6 +353,12 @@ Meta.test("Auth", async (t) => {
         token: {
           x: 1,
         },
+        context: {
+          provider: "github",
+          profile: {
+            id: 123
+          }
+        }
       })
       .on(e);
   });
