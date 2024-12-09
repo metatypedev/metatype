@@ -37,6 +37,29 @@ def random_injection(g: Graph):
         }
     )
 
+    user_out = t.struct(
+        {
+            "id": t.uuid(),
+            "ean": t.ean(),
+            "name": t.string(),
+            "age": t.integer(),
+            "married": t.boolean(),
+            "birthday": t.datetime(),
+            "friends": t.list(t.string()),
+            "phone": t.string(),
+            "gender": t.string(),
+            "firstname": t.string(),
+            "lastname": t.string(),
+            "occupation": t.string(),
+            "street": t.string(),
+            "city": t.string(),
+            "postcode": t.string(),
+            "country": t.string(),
+            "uri": t.uri(),
+            "hostname": t.string(),
+        }
+    )
+
     # test int, str, float enum
     test_enum_str = t.struct(
         {
@@ -45,10 +68,20 @@ def random_injection(g: Graph):
             ).from_random(),
         }
     )
+    test_enum_str_out = t.struct(
+        {
+            "educationLevel": t.string(),
+        }
+    )
 
     test_enum_int = t.struct(
         {
             "bits": t.integer(enum=[0, 1]).from_random(),
+        }
+    )
+    test_enum_int_out = t.struct(
+        {
+            "bits": t.integer(),
         }
     )
 
@@ -57,12 +90,22 @@ def random_injection(g: Graph):
             "cents": t.float(enum=[0.25, 0.5, 1.0]).from_random(),
         }
     )
+    test_enum_float_out = t.struct(
+        {
+            "cents": t.float(),
+        }
+    )
 
     # test either
     rubix_cube = t.struct({"name": t.string(), "size": t.integer()}, name="Rubix")
     toygun = t.struct({"color": t.string()}, name="Toygun")
-    toy = t.either([rubix_cube, toygun], name="Toy").from_random()
+    toy = t.either([rubix_cube, toygun], name="Toy")
     toy_struct = t.struct(
+        {
+            "toy": toy.from_random(),
+        }
+    )
+    toy_struct_out = t.struct(
         {
             "toy": toy,
         }
@@ -76,21 +119,31 @@ def random_injection(g: Graph):
             "field": t.union([rgb, vec], name="UnionStruct").from_random(),
         }
     )
+    union_struct_out = t.struct(
+        {
+            "field": t.union([rgb, vec]),
+        }
+    )
 
     random_list = t.struct(
         {
             "names": t.list(t.string(config={"gen": "name"})).from_random(),
         }
     )
+    random_list_out = t.struct(
+        {
+            "names": t.list(t.string()),
+        },
+    )
     # Configure random injection seed value or the default will be used
     g.configure_random_injection(seed=1)
     g.expose(
         pub,
-        randomUser=deno.identity(user),
-        randomList=deno.identity(random_list),
-        testEnumStr=deno.identity(test_enum_str),
-        testEnumInt=deno.identity(test_enum_int),
-        testEnumFloat=deno.identity(test_enum_float),
-        testEither=deno.identity(toy_struct),
-        testUnion=deno.identity(union_struct),
+        randomUser=deno.func(user, user_out, code="(x) => x"),
+        randomList=deno.func(random_list, random_list_out, code="(x) => x"),
+        testEnumStr=deno.func(test_enum_str, test_enum_str_out, code="(x) => x"),
+        testEnumInt=deno.func(test_enum_int, test_enum_int_out, code="(x) => x"),
+        testEnumFloat=deno.func(test_enum_float, test_enum_float_out, code="(x) => x"),
+        testEither=deno.func(toy_struct, toy_struct_out, code="(x) => x"),
+        testUnion=deno.func(union_struct, union_struct_out, code="(x) => x"),
     )

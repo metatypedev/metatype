@@ -57,7 +57,6 @@ Deno.test("typegraphValidate", () => {
         ],
         "input": 2,
         "output": 4,
-        "injections": {},
         "runtimeConfig": null,
         "materializer": 0,
         "rate_weight": null,
@@ -116,10 +115,13 @@ Deno.test("typegraphValidate", () => {
       "artifacts": {},
     },
   };
-  const str = JSON.stringify(json);
-  assertEquals(JSON.stringify(JSON.parse(Meta.typegraphValidate(str))), str);
+  const str = JSON.stringify(json, null, 2);
+  assertEquals(
+    JSON.stringify(JSON.parse(Meta.typegraphValidate(str)), null, 2),
+    str,
+  );
 
   const out = typegraph_validate({ json: str });
   assert("Valid" in out);
-  assertEquals(JSON.stringify(JSON.parse(out.Valid.json)), str);
+  assertEquals(JSON.stringify(JSON.parse(out.Valid.json), null, 2), str);
 });
