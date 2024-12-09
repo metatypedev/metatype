@@ -192,11 +192,13 @@ ArgT = typing.TypeVar("ArgT", bound=typing.Mapping[str, typing.Any])
 SelectionT = typing.TypeVar("SelectionT")
 
 
-@dc.dataclass
 class File:
-    content: bytes
-    name: str
-    mimetype: typing.Optional[str] = None
+    def __init__(
+        self, content: bytes, name: str, mimetype: typing.Optional[str] = None
+    ):
+        self.content = content
+        self.name = name
+        self.mimetype = mimetype
 
 
 #
@@ -613,11 +615,21 @@ class GraphQLTransportBase:
         if len(files) > 0:
             form_data = MultiPartForm()
             form_data.add_field("operations", body)
+            file_map = {}
             map = {}
 
-            for idx, (path, file) in enumerate(files.items()):
-                map[idx] = ["variables" + path]
-                form_data.add_file(f"{idx}", file)
+            for path, file in files.items():
+                array = file_map.get(file)
+                variable = "variables" + path
+                if array is not None:
+                    array.append(variable)
+                else:
+                    file_map[file] = [variable]
+
+            for idx, (file, variables) in enumerate(file_map.items()):
+                key = str(idx)
+                map[key] = variables
+                form_data.add_file(key, file)
 
             form_data.add_field("map", json.dumps(map))
             headers.update({"Content-type": form_data.get_content_type()})
