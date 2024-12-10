@@ -181,6 +181,24 @@ pub enum InjectionNode {
     },
 }
 
+impl InjectionNode {
+    pub fn collect_secrets_into(&self, collector: &mut Vec<String>) -> Result<()> {
+        match self {
+            InjectionNode::Leaf { injection } => {
+                if let Injection::Secret(d) = injection {
+                    collector.extend(d.values::<String>()?);
+                }
+            }
+            InjectionNode::Parent { children } => {
+                for child in children.values() {
+                    child.collect_secrets_into(collector)?;
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionTypeData<Id = TypeId> {
@@ -188,7 +206,12 @@ pub struct FunctionTypeData<Id = TypeId> {
     #[serde(rename = "parameterTransform")]
     pub parameter_transform: Option<FunctionParameterTransform>,
     pub output: Id,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    #[serde(default)]
     pub injections: IndexMap<String, InjectionNode>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    #[serde(default)]
+    pub outjections: IndexMap<String, InjectionNode>,
     #[serde(rename = "runtimeConfig")]
     pub runtime_config: serde_json::Value,
     pub materializer: u32,
