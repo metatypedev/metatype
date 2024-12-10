@@ -36,4 +36,13 @@ res2 = gql.mutation(
     }
 )
 
-print(json.dumps([res1, res2]))
+file = File(b"Hello", "reusable.txt")
+
+res3 = gql.mutation(
+    {
+        "uploadFirst": api.upload({"file": file, "path": "python/first.txt"}),
+        "uploadSecond": api.upload({"file": file, "path": "python/second.txt"}),
+    }
+)
+
+print(json.dumps([res1, res2, res3]))
