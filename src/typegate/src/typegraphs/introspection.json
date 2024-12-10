@@ -582,7 +582,7 @@
         "idempotent": true
       },
       "data": {
-        "name": "true"
+        "name": "pass"
       }
     },
     {

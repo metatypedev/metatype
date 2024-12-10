@@ -97,7 +97,8 @@ prisma_query = t.either([prisma_query_single, prisma_query_batch], name="PrismaQ
 def typegate(g: Graph):
     deno = DenoRuntime()
     admin_only = deno.policy(
-        "admin_only", code="(_args, { context }) => context.username === 'admin'"
+        "admin_only",
+        code="(_args, { context }) => context.username === 'admin' ? 'ALLOW' : 'DENY' ",
     )
 
     g.auth(Auth.basic(["admin"]))

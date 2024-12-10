@@ -88,7 +88,7 @@ impl Store {
                 effect: Effect::Read,
                 data: MaterializerData::Deno(Rc::new(DenoMaterializer::Predefined(
                     crate::wit::runtimes::MaterializerDenoPredefined {
-                        name: "true".to_string(),
+                        name: "pass".to_string(),
                     },
                 ))),
             }],

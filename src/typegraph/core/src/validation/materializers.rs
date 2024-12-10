@@ -48,6 +48,18 @@ impl Materializer {
                             };
                         }
                     }
+
+                    "allow" | "deny" | "pass" => {
+                        if let Ok(xdef) = TypeId(func.out).as_xdef() {
+                            let TypeDef::String(_) = xdef.type_def else {
+                                return Err(errors::invalid_output_type_predefined(
+                                    &predef.name,
+                                    "string",
+                                    &TypeId(func.out).repr()?,
+                                ));
+                            };
+                        }
+                    }
                     _ => {
                         return Err(errors::unknown_predefined_function(&predef.name));
                     }

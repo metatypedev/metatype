@@ -507,30 +507,32 @@ export class Planner {
     stages.push(stage);
 
     this.policiesBuilder.push(stage.id(), node.typeIdx, collected.policies);
-    const types = this.policiesBuilder.setReferencedTypes(
-      stage.id(),
-      node.typeIdx,
-      outputIdx,
-      inputIdx,
-    );
-
-    // nested quantifiers
-    let wrappedTypeIdx = outputIdx;
-    let wrappedType = this.tg.type(wrappedTypeIdx);
-    while (isQuantifier(wrappedType)) {
-      wrappedTypeIdx = getWrappedType(wrappedType);
-      wrappedType = this.tg.type(wrappedTypeIdx);
-      types.push(wrappedTypeIdx);
+    {
+      const types = this.policiesBuilder.setReferencedTypes(
+        stage.id(),
+        node.typeIdx,
+        outputIdx,
+        inputIdx,
+      );
+  
+      // nested quantifiers
+      let wrappedTypeIdx = outputIdx;
+      let wrappedType = this.tg.type(wrappedTypeIdx);
+      while (isQuantifier(wrappedType)) {
+        wrappedTypeIdx = getWrappedType(wrappedType);
+        wrappedType = this.tg.type(wrappedTypeIdx);
+        types.push(wrappedTypeIdx);
+      }
+  
+      stages.push(
+        ...this.traverse(
+          { ...node, typeIdx: wrappedTypeIdx, parentStage: stage },
+          stage,
+        ),
+      );
     }
-
-    stages.push(
-      ...this.traverse(
-        { ...node, typeIdx: wrappedTypeIdx, parentStage: stage },
-        stage,
-      ),
-    );
-
     this.policiesBuilder.pop(stage.id());
+
     return stages;
   }
 

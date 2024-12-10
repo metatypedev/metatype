@@ -14,12 +14,16 @@ import type { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
 import { createArtifactMeta } from "../utils/deno.ts";
+import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => args,
   true: () => true,
   false: () => false,
-  internal_policy: ({ _: { context } }) => context.provider === "internal",
+  allow: () => "ALLOW" as PolicyResolverOutput,
+  deny: () => "DENY" as PolicyResolverOutput,
+  pass: () => "PASS" as PolicyResolverOutput,
+  internal_policy: ({ _: { context } }) => context.provider === "internal" ? "ALLOW" : "DENY" as PolicyResolverOutput,
 };
 
 export class DenoRuntime extends Runtime {
