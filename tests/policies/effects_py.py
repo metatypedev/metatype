@@ -11,14 +11,13 @@ def effects_py(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
     admin_only = Policy.context("role", "admin")
+    deny_all = deno.policy("deny_all", "() => 'DENY'")
 
     user = t.struct(
         {
             "id": t.integer(),
             "email": t.email(),
-            "password_hash": t.string().with_policy(
-                deno.policy("deny_all", "() => false")
-            ),
+            "password_hash": t.string().with_policy(deny_all),
         },
         name="User",
     ).with_policy(Policy.on(read=public, update=admin_only, delete=admin_only))

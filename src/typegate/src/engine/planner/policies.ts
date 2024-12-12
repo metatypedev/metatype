@@ -54,7 +54,6 @@ export class OperationPolicies {
     config: OperationPoliciesConfig,
   ) {
     this.functions = builder.subtrees;
-    console.log("functions", this.functions);
 
     this.policiesForType = new Map();
     for (const [stageId, subtreeData] of this.functions.entries()) {
@@ -92,6 +91,7 @@ export class OperationPolicies {
     }
 
     this.resolvers = new Map();
+
     const policies = new Set([...this.policiesForType.values()].flat());
     for (const idx of policies) {
       for (const polIdx of iterIndices(idx)) {
@@ -163,18 +163,9 @@ export class OperationPolicies {
       const effect = this.tg.materializer(
         this.tg.type(subtree.funcTypeIdx, Type.FUNCTION).materializer,
       ).effect.effect ?? "read";
-
-
-      // await this.authorizeArgs(
-      //   subtree.argPolicies,
-      //   effect,
-      //   getResolverResult,
-      //   authorizedTypes[effect],
-      // );
-
       const req = {
-        authorizedTypes,
         effect,
+        authorizedTypesOnEffect: authorizedTypes[effect],
         getResolverResult
       };
 
@@ -189,7 +180,7 @@ export class OperationPolicies {
           }
         }
 
-        await this.#checkPolicyForStage(stageId, refTypes, req); 
+        await this.#checkPolicyForStage(stageId, refTypes, req);
       }
     }
   }
@@ -211,31 +202,6 @@ export class OperationPolicies {
     return `Authorization failed for ${details.join(";  ")}`;
   }
 
-  // TODO: rm??? checkTypePolicies assumes the policy appear on the **selected** output either way
-  // private async authorizeArgs(
-  //   argPolicies: ArgPolicies,
-  //   effect: EffectType,
-  //   getResolverResult: GetResolverResult,
-  //   authorizedTypes: Set<TypeIdx>,
-  // ) {
-  //   for (const [typeIdx, { argDetails, policyIndices }] of argPolicies) {
-  //     if (authorizedTypes.has(typeIdx)) {
-  //       continue;
-  //     }
-  //     authorizedTypes.add(typeIdx);
-
-  //     const res = await this.#checkTypePolicies(
-  //       policyIndices,
-  //       effect,
-  //       getResolverResult,
-  //     );
-  //     if (!res.authorized) {
-  //       // unauthorized or no decision
-  //       throw new Error(`Unexpected argument ${argDetails}`);
-  //     }
-  //   }
-  // }
-
   /** 
    * A single type may hold multiple policies
    * 
@@ -255,6 +221,7 @@ export class OperationPolicies {
     const deniersIdx = [];
     for (const policyIdx of policies) {
       const res = await getResolverResult(policyIdx, effect);
+      
       switch(res) {
         case "ALLOW": {
           operands.push(true);
@@ -293,14 +260,15 @@ export class OperationPolicies {
     referencedTypes: Array<number>,
     req: {
       effect: EffectType,
-      authorizedTypes: Record<EffectType, Set<TypeIdx>>,
+      authorizedTypesOnEffect: Set<TypeIdx>,
         getResolverResult: GetResolverResult
     }
   ) {
     for (const typeIdx of referencedTypes) {
-      if (req.authorizedTypes[req.effect].has(typeIdx)) {
+      if (req.authorizedTypesOnEffect.has(typeIdx)) {
         continue;
       }
+
 
       const allPolicies = this.policiesForType.get(typeIdx) ?? [];
       const policies = allPolicies.map((p) =>
@@ -312,18 +280,16 @@ export class OperationPolicies {
           this.getRejectionReason(stageId, typeIdx, req.effect, ["__deny"]),
         );
       }
-
       const res = await this.#composePolicies(
       policies as number[],
         req.effect,
         req.getResolverResult,
       );
 
-      console.log("verdict for", this.tg.type(typeIdx).title, res.authorized);
-
       switch(res.authorized) {
         case "ALLOW": {
           this.#resolvedPolicyCachePerStage.set(stageId, "ALLOW");
+          req.authorizedTypesOnEffect.add(typeIdx);
           return;
         }
         case "PASS": {

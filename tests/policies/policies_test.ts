@@ -29,13 +29,13 @@ Meta.test("Policies", async (t) => {
   await t.should("have public access", async () => {
     await gql`
       query {
-        pol_true(a: 1) {
+        pol_pass(a: 1) {
           a
         }
       }
     `
       .expectData({
-        pol_true: {
+        pol_pass: {
           a: 1,
         },
       })
@@ -45,7 +45,7 @@ Meta.test("Policies", async (t) => {
   await t.should("have no access", async () => {
     await gql`
       query {
-        pol_false(a: 1) {
+        pol_deny(a: 1) {
           a
         }
       }
