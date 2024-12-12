@@ -3,7 +3,6 @@
     {
       "type": "object",
       "title": "typegate/prisma_migration",
-      "policies": [],
       "properties": {
         "diff": 1,
         "apply": 8,
@@ -18,17 +17,30 @@
         "create",
         "deploy",
         "reset"
-      ]
+      ],
+      "policies": {
+        "diff": [
+          0
+        ],
+        "apply": [
+          0
+        ],
+        "create": [
+          0
+        ],
+        "deploy": [
+          0
+        ],
+        "reset": [
+          0
+        ]
+      }
     },
     {
       "type": "function",
       "title": "root_diff_fn",
-      "policies": [
-        0
-      ],
       "input": 2,
       "output": 6,
-      "injections": {},
       "runtimeConfig": null,
       "materializer": 0,
       "rate_weight": null,
@@ -37,59 +49,58 @@
     {
       "type": "object",
       "title": "root_diff_fn_input",
-      "policies": [],
       "properties": {
         "typegraph": 3,
         "runtime": 4,
         "script": 5
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "typegraph": [],
+        "runtime": [],
+        "script": []
+      }
     },
     {
       "type": "string",
-      "title": "root_diff_fn_input_typegraph_string",
-      "policies": []
+      "title": "root_diff_fn_input_typegraph_string"
     },
     {
       "type": "optional",
       "title": "root_diff_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     },
     {
       "type": "boolean",
-      "title": "root_diff_fn_input_script_boolean",
-      "policies": []
+      "title": "root_diff_fn_input_script_boolean"
     },
     {
       "type": "object",
       "title": "root_diff_fn_output",
-      "policies": [],
       "properties": {
         "diff": 7,
         "runtimeName": 3
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "diff": [],
+        "runtimeName": []
+      }
     },
     {
       "type": "optional",
       "title": "root_diff_fn_output_diff_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     },
     {
       "type": "function",
       "title": "root_apply_fn",
-      "policies": [
-        0
-      ],
       "input": 9,
       "output": 12,
-      "injections": {},
       "runtimeConfig": null,
       "materializer": 2,
       "rate_weight": null,
@@ -98,7 +109,6 @@
     {
       "type": "object",
       "title": "root_apply_fn_input",
-      "policies": [],
       "properties": {
         "typegraph": 3,
         "runtime": 10,
@@ -106,48 +116,50 @@
         "resetDatabase": 5
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "typegraph": [],
+        "runtime": [],
+        "migrations": [],
+        "resetDatabase": []
+      }
     },
     {
       "type": "optional",
       "title": "root_apply_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "root_apply_fn_input_migrations_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     },
     {
       "type": "object",
       "title": "root_apply_fn_output",
-      "policies": [],
       "properties": {
         "databaseReset": 5,
         "appliedMigrations": 13
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "databaseReset": [],
+        "appliedMigrations": []
+      }
     },
     {
       "type": "list",
       "title": "root_apply_fn_output_appliedMigrations_root_diff_fn_input_typegraph_string_list",
-      "policies": [],
       "items": 3
     },
     {
       "type": "function",
       "title": "root_create_fn",
-      "policies": [
-        0
-      ],
       "input": 15,
       "output": 18,
-      "injections": {},
       "runtimeConfig": null,
       "materializer": 3,
       "rate_weight": null,
@@ -156,7 +168,6 @@
     {
       "type": "object",
       "title": "root_create_fn_input",
-      "policies": [],
       "properties": {
         "typegraph": 3,
         "runtime": 16,
@@ -165,26 +176,30 @@
         "migrations": 17
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "typegraph": [],
+        "runtime": [],
+        "name": [],
+        "apply": [],
+        "migrations": []
+      }
     },
     {
       "type": "optional",
       "title": "root_create_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "root_create_fn_input_migrations_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     },
     {
       "type": "object",
       "title": "root_create_fn_output",
-      "policies": [],
       "properties": {
         "createdMigrationName": 3,
         "applyError": 19,
@@ -192,31 +207,31 @@
         "runtimeName": 3
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "createdMigrationName": [],
+        "applyError": [],
+        "migrations": [],
+        "runtimeName": []
+      }
     },
     {
       "type": "optional",
       "title": "root_create_fn_output_applyError_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     },
     {
       "type": "optional",
       "title": "root_create_fn_output_migrations_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     },
     {
       "type": "function",
       "title": "root_deploy_fn",
-      "policies": [
-        0
-      ],
       "input": 22,
       "output": 24,
-      "injections": {},
       "runtimeConfig": null,
       "materializer": 4,
       "rate_weight": null,
@@ -225,53 +240,53 @@
     {
       "type": "object",
       "title": "root_deploy_fn_input",
-      "policies": [],
       "properties": {
         "typegraph": 3,
         "runtime": 23,
         "migrations": 3
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "typegraph": [],
+        "runtime": [],
+        "migrations": []
+      }
     },
     {
       "type": "optional",
       "title": "root_deploy_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     },
     {
       "type": "object",
       "title": "root_deploy_fn_output",
-      "policies": [],
       "properties": {
         "migrationCount": 25,
         "appliedMigrations": 26
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "migrationCount": [],
+        "appliedMigrations": []
+      }
     },
     {
       "type": "integer",
-      "title": "root_deploy_fn_output_migrationCount_integer",
-      "policies": []
+      "title": "root_deploy_fn_output_migrationCount_integer"
     },
     {
       "type": "list",
       "title": "root_deploy_fn_output_appliedMigrations_root_diff_fn_input_typegraph_string_list",
-      "policies": [],
       "items": 3
     },
     {
       "type": "function",
       "title": "root_reset_fn",
-      "policies": [
-        0
-      ],
       "input": 28,
       "output": 5,
-      "injections": {},
       "runtimeConfig": null,
       "materializer": 5,
       "rate_weight": null,
@@ -280,18 +295,20 @@
     {
       "type": "object",
       "title": "root_reset_fn_input",
-      "policies": [],
       "properties": {
         "typegraph": 3,
         "runtime": 29
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "typegraph": [],
+        "runtime": []
+      }
     },
     {
       "type": "optional",
       "title": "root_reset_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
-      "policies": [],
       "item": 3,
       "default_value": null
     }

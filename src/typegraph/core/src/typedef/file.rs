@@ -9,7 +9,7 @@ use crate::conversion::hash::Hashable;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::types::{ExtendedTypeDef, File, FindAttribute as _, TypeDefData};
+use crate::types::{ExtendedTypeDef, File, TypeDefData};
 use crate::wit::core::TypeFile;
 
 impl TypeDefData for TypeFile {
@@ -49,15 +49,13 @@ impl Hashable for TypeFile {
 }
 
 impl TypeConversion for File {
-    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
+    fn convert(&self, _ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::File {
             // TODO should `as_id` be supported?
             base: BaseBuilderInit {
-                ctx,
                 base_name: "file",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .build()?,

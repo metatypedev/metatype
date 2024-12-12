@@ -44,7 +44,7 @@ export type OperationPoliciesConfig = {
 export class OperationPolicies {
   // should be private -- but would not be testable
   functions: Map<StageId, SubtreeData>;
-  private policyLists: Map<TypeIdx, PolicyList>;
+  private policyLists: Map<StageId, PolicyList>;
   private resolvers: Map<PolicyIdx, Resolver>;
 
   constructor(
@@ -56,27 +56,11 @@ export class OperationPolicies {
 
     this.policyLists = new Map();
     for (const [stageId, subtree] of this.functions.entries()) {
-      const { funcTypeIdx, topLevel, referencedTypes } = subtree;
-      ensure(
-        referencedTypes.has(stageId) &&
-          referencedTypes.get(stageId)!.includes(funcTypeIdx),
-        "unexpected",
-      );
-      for (const types of referencedTypes.values()) {
-        // set policyLists
-        for (const typeIdx of types) {
-          if (this.policyLists.has(typeIdx)) {
-            continue;
-          }
-          const policies = this.tg.type(typeIdx).policies;
-          if (policies.length > 0) {
-            this.policyLists.set(typeIdx, policies);
-          }
-        }
-      }
+      const { funcTypeIdx, topLevel, policies } = subtree;
+      this.policyLists.set(stageId, policies);
 
       // top-level functions must have policies
-      if (topLevel && !this.policyLists.has(funcTypeIdx)) {
+      if (topLevel && policies.length === 0) {
         const details = [
           `top-level function '${this.tg.type(funcTypeIdx).title}'`,
           `at '${stageId}'`,
@@ -155,7 +139,7 @@ export class OperationPolicies {
     };
 
     // TODO refactor: too much indentation
-    for (const [_stageId, subtree] of this.functions) {
+    for (const [stageId, subtree] of this.functions) {
       const effect = this.tg.materializer(
         this.tg.type(subtree.funcTypeIdx, Type.FUNCTION).materializer,
       ).effect.effect ?? "read";
@@ -167,58 +151,48 @@ export class OperationPolicies {
         authorizedTypes[effect],
       );
 
-      for (const [stageId, types] of subtree.referencedTypes) {
-        for (const typeIdx of types) {
-          if (authorizedTypes[effect].has(typeIdx)) {
-            continue;
-          }
-          const policies = (this.policyLists.get(typeIdx) ?? []).map((p) =>
-            typeof p === "number" ? p : p[effect] ?? null
-          );
-
-          if (policies.some((idx) => idx == null)) {
-            throw new BadContext(
-              this.getRejectionReason(stageId, typeIdx, effect, "__deny"),
-            );
-          }
-
-          const res = await this.checkTypePolicies(
-            policies as number[],
-            effect,
-            getResolverResult,
-          );
-
-          if (res.authorized) {
-            continue;
-          }
-
-          if (res.policyIdx == null) {
-            const typ = this.tg.type(typeIdx);
-            throw new Error(
-              `No policy took decision on type '${typ.title}' ('${typ.type}') at '<root>.${stageId}'`,
-            );
-          }
-
-          const policyName = this.tg.policy(res.policyIdx).name;
-          throw new BadContext(
-            this.getRejectionReason(stageId, typeIdx, effect, policyName),
-          );
+      const policies = subtree.policies.map((p) => {
+        if (typeof p === "number") {
+          return p;
         }
+        return p[effect] ?? null;
+      });
+
+      if (policies.some((idx) => idx == null)) {
+        throw new BadContext(
+          this.getRejectionReason(stageId, effect, "__deny"),
+        );
       }
+
+      const res = await this.checkTypePolicies(
+        policies as number[],
+        effect,
+        getResolverResult,
+      );
+
+      if (res.authorized) {
+        continue;
+      }
+
+      if (res.policyIdx == null) {
+        throw new Error(`No policy took decision at '<root>.${stageId}'`);
+      }
+
+      const policyName = this.tg.policy(res.policyIdx).name;
+      throw new BadContext(
+        this.getRejectionReason(stageId, effect, policyName),
+      );
     }
   }
 
   getRejectionReason(
     stageId: StageId,
-    typeIdx: TypeIdx,
     effect: EffectType,
     policyName: string,
   ): string {
-    const typ = this.tg.type(typeIdx);
     const details = [
       `policy '${policyName}'`,
       `with effect '${effect}'`,
-      `on type '${typ.title}' ('${typ.type}')`,
       `at '<root>.${stageId}'`,
     ].join(" ");
     return `Authorization failed for ${details}`;
@@ -276,9 +250,10 @@ export class OperationPolicies {
 interface SubtreeData {
   stageId: StageId;
   funcTypeIdx: TypeIdx;
+  // TODO inputPolicies: Map<String, PolicyIndices[]>
   argPolicies: ArgPolicies;
+  policies: PolicyIndices[];
   topLevel: boolean;
-  referencedTypes: Map<StageId, TypeIdx[]>;
 }
 
 export class OperationPoliciesBuilder {
@@ -293,13 +268,18 @@ export class OperationPoliciesBuilder {
   ) {}
 
   // set current function stage
-  push(stageId: StageId, funcTypeIdx: TypeIdx, argPolicies: ArgPolicies) {
+  push(
+    stageId: StageId,
+    funcTypeIdx: TypeIdx,
+    argPolicies: ArgPolicies,
+    policies: PolicyIndices[],
+  ) {
     const subtreeData = {
       stageId,
       funcTypeIdx,
       argPolicies,
+      policies,
       topLevel: this.stack.length === 0,
-      referencedTypes: new Map(),
     };
     this.current = subtreeData;
     this.stack.push(subtreeData);
@@ -316,21 +296,6 @@ export class OperationPoliciesBuilder {
       this.stack.push(top);
       this.current = top;
     }
-  }
-
-  #isNamespace(typeIdx: TypeIdx): boolean {
-    return this.tg.tg.meta.namespaces!.includes(typeIdx);
-  }
-
-  setReferencedTypes(stageId: StageId, ...types: TypeIdx[]): TypeIdx[] {
-    if (this.current == null) {
-      if (this.tg.tg.meta.namespaces!.includes(types[0])) {
-        return types;
-      }
-      throw new Error("unexpected state");
-    }
-    this.current.referencedTypes.set(stageId, types);
-    return types;
   }
 
   build(): OperationPolicies {
