@@ -246,16 +246,7 @@ impl Store {
             })?;
         }
 
-        let type_id: TypeId = id.into();
-        match type_def {
-            TypeDef::List(_) | TypeDef::Optional(_) => {
-                let variant = type_def.variant_name();
-                let placeholder_name = format!("{variant}_{id}{PLACEHOLDER_TYPE_SUFFIX}");
-                let type_ref = TypeRef::named(placeholder_name, Type::Def(type_def)).register()?;
-                Ok(type_ref.id())
-            }
-            _ => Ok(type_id),
-        }
+        Ok(id.into())
     }
 
     pub fn register_type_name(

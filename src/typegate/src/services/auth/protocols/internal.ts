@@ -20,7 +20,8 @@ export class InternalAuth extends Protocol {
     const claims = {
       provider: "internal",
     };
-    return cryptoKeys.signJWT(claims, 30);
+    // FIXME: this breaks substantial
+    return cryptoKeys.signJWT(claims, 60 * 10);
   }
 
   private constructor(

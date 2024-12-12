@@ -43,10 +43,7 @@ mod node_metas {
             arg_types: Some(
                 [
                     ("file".into(), "RootUploadFnInputFileFile".into()),
-                    (
-                        "path".into(),
-                        "RootUploadFnInputPathRootUploadFnInputPathStringOptional".into(),
-                    ),
+                    ("path".into(), "RootUploadFnInputPathOptional".into()),
                 ]
                 .into(),
             ),
@@ -62,12 +59,9 @@ mod node_metas {
                 [
                     (
                         "prefix".into(),
-                        "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional".into(),
+                        "RootUploadManyFnInputPrefixOptional".into(),
                     ),
-                    (
-                        "files".into(),
-                        "RootUploadManyFnInputFilesRootUploadFnInputFileFileList".into(),
-                    ),
+                    ("files".into(), "RootUploadManyFnInputFilesList".into()),
                 ]
                 .into(),
             ),
@@ -83,21 +77,18 @@ use types::*;
 pub mod types {
     pub type RootUploadFnInputFileFile = super::FileId;
     pub type RootUploadFnInputPathString = String;
-    pub type RootUploadFnInputPathRootUploadFnInputPathStringOptional =
-        Option<RootUploadFnInputPathString>;
+    pub type RootUploadFnInputPathOptional = Option<RootUploadFnInputPathString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadFnInputPartial {
         pub file: Option<RootUploadFnInputFileFile>,
-        pub path: RootUploadFnInputPathRootUploadFnInputPathStringOptional,
+        pub path: RootUploadFnInputPathOptional,
     }
-    pub type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional =
-        Option<RootUploadFnInputPathString>;
-    pub type RootUploadManyFnInputFilesRootUploadFnInputFileFileList =
-        Vec<RootUploadFnInputFileFile>;
+    pub type RootUploadManyFnInputPrefixOptional = Option<RootUploadFnInputPathString>;
+    pub type RootUploadManyFnInputFilesList = Vec<RootUploadFnInputFileFile>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadManyFnInputPartial {
-        pub prefix: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
-        pub files: Option<RootUploadManyFnInputFilesRootUploadFnInputFileFileList>,
+        pub prefix: RootUploadManyFnInputPrefixOptional,
+        pub files: Option<RootUploadManyFnInputFilesList>,
     }
     pub type RootUploadFnOutput = bool;
 }
@@ -112,16 +103,13 @@ impl QueryGraph {
                         "RootUploadFnInputFileFile".into(),
                         "root_upload_fn_input_file_file!".into(),
                     ),
+                    ("RootUploadFnInputPathOptional".into(), "String".into()),
                     (
-                        "RootUploadFnInputPathRootUploadFnInputPathStringOptional".into(),
+                        "RootUploadManyFnInputPrefixOptional".into(),
                         "String".into(),
                     ),
                     (
-                        "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional".into(),
-                        "String".into(),
-                    ),
-                    (
-                        "RootUploadManyFnInputFilesRootUploadFnInputFileFileList".into(),
+                        "RootUploadManyFnInputFilesList".into(),
                         "[root_upload_fn_input_file_file]!".into(),
                     ),
                 ]

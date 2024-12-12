@@ -818,7 +818,7 @@ class NodeDescs:
             variants=return_node.variants,
             arg_types={
                 "file": "RootUploadFnInputFileFile",
-                "path": "RootUploadFnInputPathRootUploadFnInputPathStringOptional",
+                "path": "RootUploadFnInputPathOptional",
             },
             input_files=[[".file"]],
         )
@@ -830,8 +830,8 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "prefix": "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
-                "files": "RootUploadManyFnInputFilesRootUploadFnInputFileFileList",
+                "prefix": "RootUploadManyFnInputPrefixOptional",
+                "files": "RootUploadManyFnInputFilesList",
             },
             input_files=[[".files", "[]"]],
         )
@@ -841,32 +841,26 @@ RootUploadFnInputFileFile = File
 
 RootUploadFnInputPathString = str
 
-RootUploadFnInputPathRootUploadFnInputPathStringOptional = typing.Union[
-    RootUploadFnInputPathString, None
-]
+RootUploadFnInputPathOptional = typing.Union[RootUploadFnInputPathString, None]
 
 RootUploadFnInput = typing.TypedDict(
     "RootUploadFnInput",
     {
         "file": RootUploadFnInputFileFile,
-        "path": RootUploadFnInputPathRootUploadFnInputPathStringOptional,
+        "path": RootUploadFnInputPathOptional,
     },
     total=False,
 )
 
-RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = typing.Union[
-    RootUploadFnInputPathString, None
-]
+RootUploadManyFnInputPrefixOptional = typing.Union[RootUploadFnInputPathString, None]
 
-RootUploadManyFnInputFilesRootUploadFnInputFileFileList = typing.List[
-    RootUploadFnInputFileFile
-]
+RootUploadManyFnInputFilesList = typing.List[RootUploadFnInputFileFile]
 
 RootUploadManyFnInput = typing.TypedDict(
     "RootUploadManyFnInput",
     {
-        "prefix": RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
-        "files": RootUploadManyFnInputFilesRootUploadFnInputFileFileList,
+        "prefix": RootUploadManyFnInputPrefixOptional,
+        "files": RootUploadManyFnInputFilesList,
     },
     total=False,
 )
@@ -879,9 +873,9 @@ class QueryGraph(QueryGraphBase):
         super().__init__(
             {
                 "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
-                "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
-                "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
-                "RootUploadManyFnInputFilesRootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
+                "RootUploadFnInputPathOptional": "String",
+                "RootUploadManyFnInputPrefixOptional": "String",
+                "RootUploadManyFnInputFilesList": "[root_upload_fn_input_file_file]!",
             }
         )
 

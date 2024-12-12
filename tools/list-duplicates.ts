@@ -5,41 +5,47 @@
 
 /**
  * Usage:
- *   deno run -A tools/tree-view.ts [<options>] <file.py>
+ *   deno run -A tools/list-duplicates.ts [<options>] <file.py>
  *
  * Options:
- *    --depth <N>   The depth of the tree
- *                  Default: 6
  *    --root <N>    The index of the root type
  *                  Default: 0
  */
 
-import { cyan, green, parseArgs } from "./deps.ts";
+import { cyan, green, objectHash, parseArgs } from "./deps.ts";
 // FIXME: import from @metatype/typegate
 import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
 import { projectDir } from "./utils.ts";
+import { TypeNode } from "../src/typegate/src/typegraph/type_node.ts";
 
-export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
-  visitType(tg, rootIdx, ({ type, idx, path }) => {
-    const indent = "    ".repeat(path.edges.length);
-    const edge = cyan(`${path.edges[path.edges.length - 1] ?? "[root]"}`);
-    const idxStr = green(`${idx}`);
-    const injection = "injection" in type
-      ? ` (injection ${(type.injection as any).source})`
-      : "";
-    console.log(
-      `${indent}${edge} → ${idxStr} ${type.type}:${type.title}${injection}`,
-    );
-    return path.edges.length < depth;
-  }, { allowCircular: true });
+export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
+  const bins = new Map<string, readonly [number, TypeNode][]>();
+  visitType(tg, rootIdx, ({ type, idx }) => {
+    const { title: _title, description: _description, ...structure } = type;
+    const hash = objectHash(structure as any);
+    bins.set(hash, [...bins.get(hash) ?? [], [idx, type] as const]);
+    return true;
+  }, { allowCircular: false });
+  for (const [hash, bin] of bins.entries()) {
+    if (bin.length > 1) {
+      console.log(`${cyan(hash)}`);
+      for (const [idx, type] of bin) {
+        const injection = "injection" in type
+          ? ` (injection ${(type.injection as any).source})`
+          : "";
+        console.log(
+          `    ${green(idx.toString())} ${type.type}:${type.title}${injection}`,
+        );
+      }
+    }
+  }
 }
 
 const args = parseArgs(Deno.args, {
-  string: ["depth", "root"],
+  string: ["root"],
 });
 
-const depth = argToInt(args.depth, 6);
 const rootIdx = argToInt(args.root, 0);
 
 const files = args._ as string[];
@@ -72,7 +78,7 @@ const tgs: TypeGraphDS[] = JSON.parse(
 );
 
 for (const tg of tgs) {
-  treeView(tg, rootIdx, depth);
+  listDuplicates(tg, rootIdx);
 }
 
 function argToInt(arg: string | undefined, defaultValue: number): number {

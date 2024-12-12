@@ -953,12 +953,12 @@ RootCompositeArgsFnInput = typing.TypedDict("RootCompositeArgsFnInput", {
 
 UserEmailStringEmail = str
 
-UserPostsPostList = typing.List[Post]
+UserPostsList = typing.List[Post]
 
 User = typing.TypedDict("User", {
     "id": UserIdStringUuid,
     "email": UserEmailStringEmail,
-    "posts": UserPostsPostList,
+    "posts": UserPostsList,
 }, total=False)
 
 RootScalarUnionFnOutputT1Integer = int

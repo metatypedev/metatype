@@ -348,6 +348,7 @@ impl TypegraphContext {
             let xdef = type_id.as_xdef()?;
             xdef.hash_type(&mut hasher, self)?;
             let hash = hasher.finish();
+            // crate::logger::warning!("done hashing {:?}: {hash}", xdef.name);
             self.mapping.types_to_hash.insert(type_id.into(), hash);
             Ok(hash)
         }

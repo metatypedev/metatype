@@ -42,7 +42,7 @@ mod with_nested_count;
 
 trait TypeGen {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId>;
-    fn name(&self) -> String;
+    fn name(&self, context: &PrismaContext) -> Result<String>;
 }
 
 pub struct OperationTypes {
@@ -89,7 +89,7 @@ pub fn replace_variables_to_indices(query: String, input_id: TypeId) -> Result<F
 
 impl PrismaContext {
     fn generate(&self, generator: &impl TypeGen) -> Result<TypeId> {
-        let type_name = generator.name();
+        let type_name = generator.name(self)?;
 
         let cached = {
             let cache = self.typegen_cache.get_or_init(|| {

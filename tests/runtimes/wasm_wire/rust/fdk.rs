@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.0-rc.3";
+        static MT_VERSION: &str = "0.5.0-rc.7";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -226,27 +226,26 @@ pub mod types {
         pub b: AddArgsAFloat,
     }
     pub type AddOutput = i64;
-    pub type RangeArgsAAddOutputOptional = Option<AddOutput>;
+    pub type AddOutputOptional = Option<AddOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RangeArgs {
-        pub a: RangeArgsAAddOutputOptional,
+        pub a: AddOutputOptional,
         pub b: AddOutput,
     }
-    pub type RangeOutput = Vec<AddOutput>;
+    pub type AddOutputList = Vec<AddOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RecordCreationInput {
     }
     pub type EntityNameString = String;
-    pub type EntityAgeAddOutputOptional = Option<AddOutput>;
     pub type ProfileLevelStringEnum = String;
     pub type ProfileAttributesStringEnum = String;
-    pub type ProfileAttributesProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
+    pub type ProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
     pub type ProfileCategoryStructTagStringEnum = String;
-    pub type ProfileCategoryStructValueEntityNameStringOptional = Option<EntityNameString>;
+    pub type EntityNameStringOptional = Option<EntityNameString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct ProfileCategoryStruct {
         pub tag: ProfileCategoryStructTagStringEnum,
-        pub value: ProfileCategoryStructValueEntityNameStringOptional,
+        pub value: EntityNameStringOptional,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
@@ -254,23 +253,22 @@ pub mod types {
         EntityNameString(EntityNameString),
         AddArgsAFloat(AddArgsAFloat),
     }
-    pub type ProfileMetadatasProfileMetadatasEitherList = Vec<ProfileMetadatasEither>;
-    pub type ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList = Vec<ProfileMetadatasProfileMetadatasEitherList>;
+    pub type ProfileMetadatasEitherList = Vec<ProfileMetadatasEither>;
+    pub type ProfileMetadatasEitherListList = Vec<ProfileMetadatasEitherList>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Profile {
         pub level: ProfileLevelStringEnum,
-        pub attributes: ProfileAttributesProfileAttributesStringEnumList,
+        pub attributes: ProfileAttributesStringEnumList,
         pub category: ProfileCategoryStruct,
-        pub metadatas: ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList,
+        pub metadatas: ProfileMetadatasEitherListList,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Entity {
         pub name: EntityNameString,
-        pub age: EntityAgeAddOutputOptional,
+        pub age: AddOutputOptional,
         pub profile: Profile,
     }
-    pub type RecordCreationOutput = Vec<Entity>;
-    pub type HundredRandomOutput = Vec<Entity>;
+    pub type EntityList = Vec<Entity>;
 }
 pub mod stubs {
     use super::*;
@@ -312,7 +310,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RangeArgs, cx: Ctx) -> anyhow::Result<RangeOutput>;
+        fn handle(&self, input: RangeArgs, cx: Ctx) -> anyhow::Result<AddOutputList>;
     }
     pub trait RecordCreation: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -332,7 +330,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<RecordCreationOutput>;
+        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<EntityList>;
     }
     pub trait Identity: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -372,7 +370,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<HundredRandomOutput>;
+        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<EntityList>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {

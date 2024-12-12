@@ -877,7 +877,7 @@ const nodeMetas = {
       ...nodeMetas.scalar(),
       argumentTypes: {
         file: "RootUploadFnInputFileFile",
-        path: "RootUploadFnInputPathRootUploadFnInputPathStringOptional",
+        path: "RootUploadFnInputPathOptional",
       },
       inputFiles: [[".file"]],
     };
@@ -886,8 +886,8 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        prefix: "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
-        files: "RootUploadManyFnInputFilesRootUploadFnInputFileFileList",
+        prefix: "RootUploadManyFnInputPrefixOptional",
+        files: "RootUploadManyFnInputFilesList",
       },
       inputFiles: [[".files","[]"]],
     };
@@ -895,16 +895,16 @@ const nodeMetas = {
 };
 export type RootUploadFnInputFileFile = File;
 export type RootUploadFnInputPathString = string;
-export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
+export type RootUploadFnInputPathOptional = RootUploadFnInputPathString | null | undefined;
 export type RootUploadFnInput = {
   file: RootUploadFnInputFileFile;
-  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
+  path?: RootUploadFnInputPathOptional;
 };
-export type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
-export type RootUploadManyFnInputFilesRootUploadFnInputFileFileList = Array<RootUploadFnInputFileFile>;
+export type RootUploadManyFnInputPrefixOptional = RootUploadFnInputPathString | null | undefined;
+export type RootUploadManyFnInputFilesList = Array<RootUploadFnInputFileFile>;
 export type RootUploadManyFnInput = {
-  prefix?: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional;
-  files: RootUploadManyFnInputFilesRootUploadFnInputFileFileList;
+  prefix?: RootUploadManyFnInputPrefixOptional;
+  files: RootUploadManyFnInputFilesList;
 };
 export type RootUploadFnOutput = boolean;
 
@@ -913,9 +913,9 @@ export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
       "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
-      "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
-      "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
-      "RootUploadManyFnInputFilesRootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
+      "RootUploadFnInputPathOptional": "String",
+      "RootUploadManyFnInputPrefixOptional": "String",
+      "RootUploadManyFnInputFilesList": "[root_upload_fn_input_file_file]!",
     });
   }
     

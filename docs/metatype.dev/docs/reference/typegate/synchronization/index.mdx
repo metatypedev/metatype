@@ -57,16 +57,18 @@ Synchronization variable names start with `SYNC_`.
 
 :::
 
+<!-- FIXME: what is with the weird formatting? -->
+
 | Variable                          | Description                                                  |
 | --------------------------------- | ------------------------------------------------------------ |
-| SYNC*REDIS_URL (\_Required*)      | URL to the Redis database. Must include the database number. |
-| SYNC*REDIS_PASSWORD (\_Optional*) | Redis database password, can be included in SYNC_REDIS_URL;  |
-| SYNC*S3_HOST (\_Required*)        | Hostname of the S3 store;                                    |
-| SYNC*S3_REGION (\_Required*)      | S3 region;                                                   |
-| SYNC*S3_ACCESS_KEY (\_Required*)  | Access key for the S3 store credentials;                     |
-| SYNC*S3_SECRET_KEY (\_Required*)  | Access key secret for the S3 store credentials;              |
-| SYNC*S3_PATH_STYLE (\_Optional*)  | `true` or `false`, force path style if `true`.               |
-| SYNC*S3_BUCKET (\_Required*)      | The bucket to be used for the system (dedicated).            |
+| SYNC_*REDIS_URL (\_Required*)      | URL to the Redis database. Must include the database number. |
+| SYNC_*REDIS_PASSWORD (\_Optional*) | Redis database password, can be included in SYNC_REDIS_URL;  |
+| SYNC_*S3_HOST (\_Required*)        | Hostname of the S3 store;                                    |
+| SYNC_*S3_REGION (\_Required*)      | S3 region;                                                   |
+| SYNC_*S3_ACCESS_KEY (\_Required*)  | Access key for the S3 store credentials;                     |
+| SYNC_*S3_SECRET_KEY (\_Required*)  | Access key secret for the S3 store credentials;              |
+| SYNC_*S3_PATH_STYLE (\_Optional*)  | `true` or `false`, force path style if `true`.               |
+| SYNC_*S3_BUCKET (\_Required*)      | The bucket to be used for the system (dedicated).            |
 
 ## Synchronized mode features
 

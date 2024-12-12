@@ -25,7 +25,7 @@ snapshot[`Rest queries in Deno 1`] = `
             type: "string",
           },
           e: {
-            title: "ComplexType_e_ComplexType_e_ComplexType_e_either_list_optional",
+            title: "ComplexType_e_optional",
             type: [
               "null",
               "array",
@@ -56,30 +56,6 @@ snapshot[`Rest queries in Deno 1`] = `
         title: "ComplexType_d_string_email",
         type: "string",
       },
-      ComplexType_e_ComplexType_e_ComplexType_e_either_list_optional: {
-        title: "ComplexType_e_ComplexType_e_ComplexType_e_either_list_optional",
-        type: [
-          "null",
-          "array",
-        ],
-      },
-      ComplexType_e_ComplexType_e_either_list: {
-        items: {
-          oneOf: [
-            {
-              title: "ComplexType_e_either_t0_string",
-              type: "string",
-            },
-            {
-              title: "User_id_integer",
-              type: "integer",
-            },
-          ],
-          title: "ComplexType_e_either",
-        },
-        title: "ComplexType_e_ComplexType_e_either_list",
-        type: "array",
-      },
       ComplexType_e_either: {
         oneOf: [
           {
@@ -96,6 +72,30 @@ snapshot[`Rest queries in Deno 1`] = `
       ComplexType_e_either_t0_string: {
         title: "ComplexType_e_either_t0_string",
         type: "string",
+      },
+      ComplexType_e_list: {
+        items: {
+          oneOf: [
+            {
+              title: "ComplexType_e_either_t0_string",
+              type: "string",
+            },
+            {
+              title: "User_id_integer",
+              type: "integer",
+            },
+          ],
+          title: "ComplexType_e_either",
+        },
+        title: "ComplexType_e_list",
+        type: "array",
+      },
+      ComplexType_e_optional: {
+        title: "ComplexType_e_optional",
+        type: [
+          "null",
+          "array",
+        ],
       },
       ComplexType_f_float: {
         enum: [
@@ -226,7 +226,7 @@ snapshot[`Rest queries in Deno 1`] = `
                           type: "string",
                         },
                         e: {
-                          title: "ComplexType_e_ComplexType_e_ComplexType_e_either_list_optional",
+                          title: "ComplexType_e_optional",
                           type: [
                             "null",
                             "array",

@@ -103,14 +103,14 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "optional",
-        "title": "ComplexType_nested_ComplexType_nested_ComplexType_nested_either_list_optional",
+        "title": "ComplexType_nested_optional",
         "policies": [],
         "item": 11,
         "default_value": null
       },
       {
         "type": "list",
-        "title": "ComplexType_nested_ComplexType_nested_either_list",
+        "title": "ComplexType_nested_list",
         "policies": [],
         "items": 12
       },
@@ -148,7 +148,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "optional",
-        "title": "SomeType_two_SomeType_optional",
+        "title": "SomeType_two_optional",
         "policies": [],
         "item": 14,
         "default_value": null
@@ -760,14 +760,14 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "optional",
-        "title": "ComplexType_nested_ComplexType_nested_ComplexType_nested_either_list_optional",
+        "title": "ComplexType_nested_optional",
         "policies": [],
         "item": 11,
         "default_value": null
       },
       {
         "type": "list",
-        "title": "ComplexType_nested_ComplexType_nested_either_list",
+        "title": "ComplexType_nested_list",
         "policies": [],
         "items": 12
       },
@@ -805,7 +805,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "optional",
-        "title": "SomeType_two_SomeType_optional",
+        "title": "SomeType_two_optional",
         "policies": [],
         "item": 14,
         "default_value": null

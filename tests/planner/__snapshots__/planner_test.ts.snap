@@ -73,7 +73,7 @@ snapshot[`planner 1`] = `
       "second",
     ],
     type: {
-      title: "root_one_fn_output_nested_struct_second_root_one_fn_output_nested_struct_second_float_list",
+      title: "root_one_fn_output_nested_struct_second_list",
       type: "list",
     },
   },
@@ -86,7 +86,7 @@ snapshot[`planner 1`] = `
       "third",
     ],
     type: {
-      title: "root_one_fn_output_nested_struct_third_root_one_fn_output_nested_struct_third_boolean_optional",
+      title: "root_one_fn_output_nested_struct_third_optional",
       type: "optional",
     },
   },
@@ -136,7 +136,7 @@ snapshot[`planner 2`] = `
       ],
       "one.nested.second": [
         {
-          title: "root_one_fn_output_nested_struct_second_root_one_fn_output_nested_struct_second_float_list",
+          title: "root_one_fn_output_nested_struct_second_list",
           type: "list",
         },
         {
@@ -146,7 +146,7 @@ snapshot[`planner 2`] = `
       ],
       "one.nested.third": [
         {
-          title: "root_one_fn_output_nested_struct_third_root_one_fn_output_nested_struct_third_boolean_optional",
+          title: "root_one_fn_output_nested_struct_third_optional",
           type: "optional",
         },
         {
