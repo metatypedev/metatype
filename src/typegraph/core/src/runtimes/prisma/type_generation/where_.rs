@@ -33,8 +33,6 @@ impl Where {
     fn nested(&self, name: &str, model_id: TypeId) -> Self {
         let mut skip_models = self.skip_models.clone();
         skip_models.insert(self.model_id, name.to_string());
-        // let model_name = self.model_id.name().unwrap().unwrap();
-        // skip_models.insert(self.model_id, model_name);
         Self {
             model_id,
             skip_models,
@@ -129,8 +127,6 @@ impl TypeGen for Where {
                 "_where"
             };
 
-            // let model = context.model(self.model_id)?;
-            // let model = model.borrow();
             format!(
                 "_excluding_{}",
                 self.skip_models
@@ -140,14 +136,6 @@ impl TypeGen for Where {
                         .strip_suffix(nested_suffix)
                         .map(|str| str.to_owned())
                         .unwrap_or(name))
-                    // model
-                    //     .iter_props()
-                    //     .filter_map(|(key, prop)| match prop {
-                    //         Property::Model(prop)
-                    //             if self.skip_models.contains_key(&prop.model_type.type_id) =>
-                    //             Some(key.as_str()),
-                    //         _ => None,
-                    //     })
                     .collect::<Vec<_>>()
                     .join("_and_")
             )
