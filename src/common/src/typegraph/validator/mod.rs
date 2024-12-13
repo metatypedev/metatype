@@ -170,6 +170,26 @@ impl<'a> TypeVisitor<'a> for Validator {
                 );
                 path.pop();
             }
+            // TODO validate outjection
+            // if !data.outjections.is_empty() {
+            //     let outj_cx = InjectionValidationContext {
+            //         fn_path: current_node.path.to_vec(),
+            //         fn_idx: current_node.type_idx,
+            //         input_idx: data.output,
+            //         parent_object,
+            //         validator: context,
+            //     };
+            //     for (k, outj) in data.outjections.iter() {
+            //         path.push(k.clone());
+            //         self.validate_injection(
+            //             &mut path,
+            //             *parent_object.properties.get(k).unwrap(),
+            //             outj,
+            //             &outj_cx,
+            //         );
+            //         path.pop();
+            //     }
+            // }
         } else if let TypeNode::Either { data, .. } = type_node {
             let variants = data.one_of.clone();
             for i in 0..variants.len() {

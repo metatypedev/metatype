@@ -17,7 +17,6 @@ use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
 use crate::utils::GenDestBuf;
-use normpath::PathExt;
 use utils::normalize_type_title;
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
@@ -436,6 +435,7 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
 
     #[cfg(debug_assertions)]
     let dependency = if is_test {
+        use normpath::PathExt;
         let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../metagen-client-rs")
             .normalize()

@@ -26,8 +26,18 @@ import { getLogger } from "../../log.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "@std/collections/map-values";
 import { DependencyResolver } from "./dependency_resolver.ts";
+import { Runtime } from "../../runtimes/Runtime.ts";
+import { getInjection } from "../../typegraph/utils.ts";
+import { Injection } from "../../typegraph/types.ts";
+import { getInjectionValues } from "./injection_utils.ts";
 
 const logger = getLogger(import.meta);
+
+interface Scope {
+  runtime: Runtime;
+  fnIdx: number;
+  path: string[];
+}
 
 interface Node {
   name: string;
@@ -37,6 +47,7 @@ interface Node {
   typeIdx: number;
   parent?: Node;
   parentStage?: ComputeStage;
+  scope?: Scope;
 }
 
 export interface Plan {
@@ -281,6 +292,19 @@ export class Planner {
     ) {
       throw this.unexpectedFieldError(node, name);
     }
+    const fieldType = fieldIdx == null ? null : this.tg.type(fieldIdx);
+    const scope: Scope | undefined =
+      (fieldType && fieldType.type === Type.FUNCTION)
+        ? {
+          runtime: this.tg
+            .runtimeReferences[
+              this.tg.materializer(fieldType.materializer).runtime
+            ],
+          fnIdx: fieldIdx,
+          path: [],
+        }
+        : node.scope && { ...node.scope, path: [...node.scope.path, name] };
+
     return {
       parent: node,
       name,
@@ -289,7 +313,15 @@ export class Planner {
       args: args ?? [],
       typeIdx: props[name],
       parentStage,
+      scope,
     };
+  }
+
+  #getOutjection(scope: Scope): Injection | null {
+    const outjectionTree =
+      this.tg.type(scope.fnIdx, Type.FUNCTION).outjections ??
+        {};
+    return getInjection(outjectionTree, scope.path);
   }
 
   /**
@@ -374,6 +406,25 @@ export class Planner {
     return stages;
   }
 
+  #createOutjectionStage(node: Node, outjection: Injection): ComputeStage {
+    return this.createComputeStage(node, {
+      // TODO parent if from parent
+      dependencies: [],
+      args: null,
+      effect: null,
+      runtime: this.tg.runtimeReferences[this.tg.denoRuntimeIdx],
+      batcher: this.tg.nextBatcher(this.tg.type(node.typeIdx)),
+      rateCalls: true,
+      rateWeight: 0,
+      materializer: {
+        runtime: this.tg.denoRuntimeIdx,
+        name: "outjection",
+        data: outjection,
+        effect: { effect: null, idempotent: true },
+      },
+    });
+  }
+
   /**
    * Create `ComputeStage`s for `node` and its child nodes,
    * where `node` corresponds to a selection field for a value (non-function type).
@@ -381,6 +432,12 @@ export class Planner {
    * @param policies
    */
   private traverseValueField(node: Node): ComputeStage[] {
+    const outjection = node.scope && this.#getOutjection(node.scope!);
+    if (outjection) {
+      return [
+        this.#createOutjectionStage(node, outjection),
+      ];
+    }
     const stages: ComputeStage[] = [];
     const schema = this.tg.type(node.typeIdx);
 
@@ -392,11 +449,8 @@ export class Planner {
       );
     }
 
-    const runtime = (schema.type === Type.FUNCTION)
-      ? this.tg
-        .runtimeReferences[(this.tg.materializer(schema.materializer)).runtime]
-      : node.parentStage?.props.runtime ??
-        this.tg.runtimeReferences[this.tg.denoRuntimeIdx];
+    const runtime = node.scope?.runtime ??
+      this.tg.runtimeReferences[this.tg.denoRuntimeIdx];
 
     const stage = this.createComputeStage(node, {
       dependencies: node.parentStage ? [node.parentStage.id()] : [],
