@@ -67,6 +67,7 @@ tonic.workspace = true
 bytes.workspace = true
 protobuf.workspace = true
 protobuf-json-mapping.workspace = true
+rustpython-parser = "0.4.0"
 
 [dev-dependencies]
 env_logger.workspace = true

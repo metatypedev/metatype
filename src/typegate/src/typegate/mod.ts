@@ -20,6 +20,7 @@ import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../transports/graphql/typegraph.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
 import * as DenoHooks from "../runtimes/deno/hooks/mod.ts";
+import * as PythonHooks from "../runtimes/python/hooks/mod.ts";
 import {
   type RuntimeResolver,
   SecretManager,
@@ -171,6 +172,7 @@ export class Typegate implements AsyncDisposable {
     this.#onPush(PrismaHooks.generateSchema);
     this.#onPush(PrismaHooks.runMigrations);
     this.#onPush(DenoHooks.cacheModules);
+    this.#onPush(PythonHooks.codeValidations);
     this.#artifactService = new ArtifactService(artifactStore);
   }
 

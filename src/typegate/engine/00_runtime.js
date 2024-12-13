@@ -85,6 +85,9 @@ const Meta = {
     unregister: getOp("op_grpc_unregister"),
     callGrpcMethod: getOp("op_call_grpc_method"),
   },
+  py_validaton: {
+    validate: getOp("op_validate"),
+  },
 };
 
 globalThis.Meta = Meta;
