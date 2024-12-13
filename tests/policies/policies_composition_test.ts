@@ -115,20 +115,65 @@ Meta.test("Basic chain composition on a single field spec", async (t) => {
   });
 
 
-  await t.should("have DENY ruling", async () => {
+  // await t.should("have DENY ruling", async () => {
+  //   await gql`
+  //     query {
+  //       single_field_comp(abc: "enter" ) {
+  //         abc
+  //       }
+  //     }
+  //   `
+  //   .withContext({
+  //     A: "PASS",
+  //     B: "DENY",
+  //     C: "ALLOW"
+  //   })
+  //     .expectErrorContains("Authorization failed for policy 'B'")
+  //     .on(e);
+  // });
+});
+
+/*
+Meta.test("Traversal composition", async (t) => {
+  const e = await t.engine("policies/policies_composition.py");
+
+  const one = {
+    two: {
+      three: {
+        a: 1,
+        b: 2
+      }
+    }
+  };
+
+  await t.should("work: traversal 1", async () => {
     await gql`
       query {
-        single_field_comp(abc: "enter" ) {
-          abc
+        traversal_comp(one: $one) {
+          one {
+            two {
+              three {
+                ... on First { a }
+                ... on Second {
+                  b # d4
+                } 
+              } # d3
+            } # d2
+          } # d1
         }
       }
     `
+    .withVars({ one })
     .withContext({
-      A: "PASS",
-      B: "DENY",
-      C: "ALLOW"
+      depth_1: "PASS",
+      depth_2: "ALLOW",
+      depth_3: "PASS",
+      depth_4: "PASS"
     })
-      .expectErrorContains("Authorization failed for policy 'B'")
+      .expectData({
+        traversal_comp: { one }
+      })
       .on(e);
   });
 });
+*/

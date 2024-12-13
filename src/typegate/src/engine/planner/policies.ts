@@ -242,6 +242,9 @@ export class OperationPolicies {
       }
     }
 
+    console.log("got operands", operands);
+    console.log("got deniers", deniersIdx);
+
     if (operands.length == 0) {
       return { authorized: "PASS" };
     } else {
@@ -280,6 +283,8 @@ export class OperationPolicies {
           this.getRejectionReason(stageId, typeIdx, req.effect, ["__deny"]),
         );
       }
+
+      console.log("type", this.tg.type(typeIdx).title, policies)
       const res = await this.#composePolicies(
       policies as number[],
         req.effect,

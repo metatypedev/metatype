@@ -16,18 +16,6 @@ def policies_composition(g: Graph):
     allow = deno.policy("allowAll", code="() => 'ALLOW' ")
     pass_through = deno.policy("passThrough", code="() => 'PASS' ")  # alt public
 
-    a = t.struct(
-        {
-            "a": t.string(),
-            "b": t.string().with_policy(deny),
-        }
-    ).rename("A")
-    b = t.struct(
-        {
-            "b": t.string().with_policy(allow),
-        }
-    ).rename("B")
-
     g.expose(
         simple_traversal_comp=deno.identity(
             t.struct(
@@ -54,23 +42,32 @@ def policies_composition(g: Graph):
                 }
             )
         ).with_policy(pass_through),
-        identity=deno.identity(
+        traversal_comp=deno.identity(
             t.struct(
                 {
-                    "zero": t.string().rename("Zero"),
-                    "one": t.string()
-                    .rename("One")
-                    .with_policy(pass_through, ctxread("D"))
-                    .with_policy(allow),
-                    "two": t.struct(
+                    "one": t.struct(
                         {
-                            "three": t.either([a, b])
-                            .rename("Three")
-                            .with_policy(allow),
-                            "four": t.string().rename("Four"),
+                            "two": t.struct(
+                                {
+                                    "three": t.either(
+                                        [
+                                            t.struct({"a": t.integer()}).rename(
+                                                "First"
+                                            ),
+                                            t.struct(
+                                                {
+                                                    "b": t.integer()
+                                                    .rename("Second")
+                                                    .with_policy(ctxread("depth_4"))
+                                                }
+                                            ),
+                                        ]
+                                    ).with_policy(ctxread("depth_3"))
+                                }
+                            ).with_policy(ctxread("depth_2"))
                         }
-                    ).with_policy(pass_through),
+                    ).with_policy(ctxread("depth_1"))
                 }
-            ),
+            )
         ).with_policy(pass_through),
     )
