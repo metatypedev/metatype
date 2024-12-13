@@ -13,7 +13,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{ExtendedTypeDef, FindAttribute as _, Optional, TypeDefData, TypeId},
+    types::{ExtendedTypeDef, Optional, TypeDefData, TypeId},
     wit::core::TypeOptional,
 };
 
@@ -29,11 +29,9 @@ impl TypeConversion for Optional {
 
         Ok(TypeNode::Optional {
             base: BaseBuilderInit {
-                ctx,
                 base_name: "optional",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .build()?,

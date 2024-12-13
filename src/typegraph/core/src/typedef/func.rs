@@ -75,11 +75,9 @@ impl TypeConversion for Func {
 
         Ok(TypeNode::Function {
             base: BaseBuilderInit {
-                ctx,
                 base_name: "func",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .build()?,
