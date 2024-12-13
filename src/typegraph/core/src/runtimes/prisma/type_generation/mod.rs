@@ -41,7 +41,7 @@ mod where_;
 mod with_nested_count;
 
 trait TypeGen {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()>;
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId>;
     fn name(&self, context: &PrismaContext) -> Result<String>;
 }
 
@@ -106,17 +106,20 @@ impl PrismaContext {
         if let Some(type_id) = cached {
             Ok(type_id)
         } else {
-            let type_id = crate::global_store::Store::preallocate_type_id()?;
             {
                 let cache = self.typegen_cache.get().unwrap();
                 let cache = cache
                     .upgrade()
                     .ok_or_else(|| "Typegen cache not available".to_string())?;
                 let mut cache = cache.borrow_mut();
-                cache.insert(type_name.clone(), type_id);
+
+                cache.insert(
+                    type_name.clone(),
+                    t::ref_(&type_name, Default::default()).build()?,
+                );
             }
 
-            generator.generate(self, type_id)?;
+            let type_id = generator.generate(self)?;
 
             // name validation
             let name = type_id

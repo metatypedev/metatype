@@ -45,7 +45,7 @@ pub struct SavedState {
 #[derive(Default)]
 pub struct Store {
     // type ids can be pre-allocated
-    pub types: Vec<Option<Type>>,
+    pub types: Vec<Type>,
     // the bool indicates weather the name was from
     // user or generated placeholder (false)
     pub type_by_names: IndexMap<Rc<str>, (NamedTypeRef, bool)>,
@@ -158,8 +158,9 @@ impl Store {
         with_store(|s| s.type_by_names.get(name).map(|id| id.0.clone()))
     }
 
-    pub fn assign_type_ref(id: TypeId, builder: TypeRefBuilder) -> Result<TypeRef> {
-        let type_ref = builder.with_id(id);
+    pub fn register_type_ref(builder: TypeRefBuilder) -> Result<TypeRef> {
+        let id = with_store_mut(|s| s.types.len()) as u32;
+        let type_ref = builder.with_id(id.into());
         let res = type_ref.clone();
 
         // very hacky solution where we keep track of
@@ -192,10 +193,7 @@ impl Store {
                     };
                 let res = type_ref.clone();
                 with_store_mut(move |s| -> Result<()> {
-                    if s.types.len() < id.0 as usize {
-                        return Err("assign_type_ref for unassigned id".into());
-                    }
-                    s.types[id.0 as usize] = Some(Type::Ref(type_ref));
+                    s.types.push(Type::Ref(type_ref));
                     Ok(())
                 })?;
                 Self::register_type_name(name, name_ref, user_named)?;
@@ -203,10 +201,7 @@ impl Store {
             }
             _ => {
                 with_store_mut(move |s| -> Result<()> {
-                    if s.types.len() < id.0 as usize {
-                        return Err("assign_type_ref for unassigned id".into());
-                    }
-                    s.types[id.0 as usize] = Some(Type::Ref(type_ref));
+                    s.types.push(Type::Ref(type_ref));
                     Ok(())
                 })?;
                 Ok(res)
@@ -214,45 +209,16 @@ impl Store {
         }
     }
 
-    pub fn register_type_ref(builder: TypeRefBuilder) -> Result<TypeRef> {
-        let id = with_store_mut(|s| {
-            let id = s.types.len();
-            s.types.push(None);
-            id
-        }) as u32;
-        Self::assign_type_ref(id.into(), builder)
-    }
+    pub fn register_type_def(build: impl FnOnce(TypeId) -> Result<TypeDef>) -> Result<TypeId> {
+        // this works since the store is thread local
+        let id = with_store_mut(|s| s.types.len()) as u32;
+        let type_def = build(id.into())?;
 
-    pub fn preallocate_type_id() -> Result<TypeId> {
-        let id = with_store(|s| s.types.len()) as u32;
         with_store_mut(move |s| -> Result<()> {
-            s.types.push(None);
+            s.types.push(type_def.into());
             Ok(())
         })?;
         Ok(id.into())
-    }
-
-    pub fn replace_at_type_id(id: TypeId, def: impl Into<Type>) -> Result<TypeId> {
-        with_store_mut(move |s| -> Result<()> {
-            if s.types.len() < id.0 as usize {
-                return Err("replace_at_type_id replace for unassigned id".into());
-            }
-            s.types[id.0 as usize] = Some(def.into());
-            Ok(())
-        })?;
-        Ok(id)
-    }
-
-    pub fn register_type_def(build: impl FnOnce(TypeId) -> Result<TypeDef>) -> Result<TypeId> {
-        // this works since the store is thread local
-        let id = with_store_mut(|s| {
-            let id = s.types.len();
-            s.types.push(None);
-            id
-        }) as u32;
-        let type_def = build(id.into())?;
-
-        Self::replace_at_type_id(id.into(), type_def)
 
         // // very hacky solution where we keep track of
         // // explicitly named types in user_named_types
@@ -509,7 +475,6 @@ impl TypeId {
                 .get(self.0 as usize)
                 .cloned()
                 .ok_or_else(|| errors::object_not_found("type", self.0))
-                .and_then(|opt| opt.ok_or_else(|| "uninitialized type access".into()))
         })
     }
 

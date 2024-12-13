@@ -50,7 +50,7 @@ impl Where {
 
 // TODO merge with with filters??
 impl TypeGen for Where {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
 
         let name = self.name(context)?;
@@ -108,7 +108,7 @@ impl TypeGen for Where {
             }
         }
 
-        builder.build_preallocated_named(type_id, name)
+        builder.build_named(name)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

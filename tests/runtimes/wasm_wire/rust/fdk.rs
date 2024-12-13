@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.0-rc.7";
+        static MT_VERSION: &str = "0.5.0-rc.8";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -232,14 +232,14 @@ pub mod types {
         pub a: RangeArgsAAddOutputOptional,
         pub b: AddOutput,
     }
-    pub type AddOutputList = Vec<AddOutput>;
+    pub type RangeOutput = Vec<AddOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RecordCreationInput {
     }
     pub type EntityNameString = String;
     pub type ProfileLevelStringEnum = String;
     pub type ProfileAttributesStringEnum = String;
-    pub type ProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
+    pub type ProfileAttributesProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
     pub type ProfileCategoryStructTagStringEnum = String;
     pub type ProfileCategoryStructValueEntityNameStringOptional = Option<EntityNameString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -253,14 +253,14 @@ pub mod types {
         EntityNameString(EntityNameString),
         AddArgsAFloat(AddArgsAFloat),
     }
-    pub type ProfileMetadatasEitherList = Vec<ProfileMetadatasEither>;
-    pub type ProfileMetadatasEitherListList = Vec<ProfileMetadatasEitherList>;
+    pub type ProfileMetadatasProfileMetadatasEitherList = Vec<ProfileMetadatasEither>;
+    pub type ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList = Vec<ProfileMetadatasProfileMetadatasEitherList>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Profile {
         pub level: ProfileLevelStringEnum,
-        pub attributes: ProfileAttributesStringEnumList,
+        pub attributes: ProfileAttributesProfileAttributesStringEnumList,
         pub category: ProfileCategoryStruct,
-        pub metadatas: ProfileMetadatasEitherListList,
+        pub metadatas: ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Entity {
@@ -310,7 +310,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RangeArgs, cx: Ctx) -> anyhow::Result<AddOutputList>;
+        fn handle(&self, input: RangeArgs, cx: Ctx) -> anyhow::Result<RangeOutput>;
     }
     pub trait RecordCreation: Sized + 'static {
         fn erased(self) -> ErasedHandler {

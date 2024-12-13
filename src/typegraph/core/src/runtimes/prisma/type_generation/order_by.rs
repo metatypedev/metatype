@@ -40,7 +40,7 @@ impl OrderBy {
 }
 
 impl TypeGen for OrderBy {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = if self.aggregates {
             t::struct_extends(context.generate(&AggregateSorting::new(self.model_id))?)?
         } else {
@@ -91,7 +91,7 @@ impl TypeGen for OrderBy {
             }
         }
 
-        t::listx(builder)?.build_preallocated_named(type_id, self.name(context)?)
+        t::listx(builder)?.build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -114,10 +114,10 @@ impl TypeGen for OrderBy {
 struct SortOrder;
 
 impl TypeGen for SortOrder {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["asc".to_string(), "desc".to_string()])
-            .build_preallocated_named(type_id, self.name(context)?)
+            .build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -128,10 +128,10 @@ impl TypeGen for SortOrder {
 struct NullsOrder;
 
 impl TypeGen for NullsOrder {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["first".to_string(), "last".to_string()])
-            .build_preallocated_named(type_id, self.name(context)?)
+            .build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -144,7 +144,7 @@ struct Sort {
 }
 
 impl TypeGen for Sort {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let sort_order = context.generate(&SortOrder)?;
         let nulls_order = context.generate(&NullsOrder)?;
         let mut builder = t::struct_();
@@ -153,8 +153,7 @@ impl TypeGen for Sort {
             builder.prop("nulls", nulls_order);
         }
 
-        t::optionalx(t::unionx![builder, sort_order])?
-            .build_preallocated_named(type_id, self.name(context)?)
+        t::optionalx(t::unionx![builder, sort_order])?.build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -166,7 +165,7 @@ impl TypeGen for Sort {
 struct SortByAggregates;
 
 impl TypeGen for SortByAggregates {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let sort = context.generate(&Sort { nullable: false })?;
         builder.prop("_count", sort);
@@ -175,7 +174,7 @@ impl TypeGen for SortByAggregates {
         builder.prop("_min", sort);
         builder.prop("_max", sort);
 
-        t::optionalx(builder)?.build_preallocated_named(type_id, self.name(context)?)
+        t::optionalx(builder)?.build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -194,7 +193,7 @@ impl AggregateSorting {
 }
 
 impl TypeGen for AggregateSorting {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let model = context.model(self.model_id)?;
         let model = model.borrow();
 
@@ -245,7 +244,7 @@ impl TypeGen for AggregateSorting {
             .prop("_sum", others)
             .prop("_min", others)
             .prop("_max", others)
-            .build_preallocated_named(type_id, self.name(context)?)
+            .build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

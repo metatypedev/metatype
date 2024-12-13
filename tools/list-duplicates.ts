@@ -12,7 +12,7 @@
  *                  Default: 0
  */
 
-import { cyan, green, objectHash, parseArgs } from "./deps.ts";
+import { cyan, green, red, objectHash, parseArgs } from "./deps.ts";
 // FIXME: import from @metatype/typegate
 import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
@@ -21,15 +21,30 @@ import { TypeNode } from "../src/typegate/src/typegraph/type_node.ts";
 
 export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
   const bins = new Map<string, readonly [number, TypeNode][]>();
+  const duplicateNameBins = new Map<string, readonly [number, TypeNode][]>();
   visitType(tg, rootIdx, ({ type, idx }) => {
-    const { title: _title, description: _description, ...structure } = type;
+    const { title, description: _description, ...structure } = type;
     const hash = objectHash(structure as any);
     bins.set(hash, [...bins.get(hash) ?? [], [idx, type] as const]);
+    duplicateNameBins.set(title, [...duplicateNameBins.get(name) ?? [], [idx, type] as const]);
     return true;
   }, { allowCircular: false });
   for (const [hash, bin] of bins.entries()) {
     if (bin.length > 1) {
       console.log(`${cyan(hash)}`);
+      for (const [idx, type] of bin) {
+        const injection = "injection" in type
+          ? ` (injection ${(type.injection as any).source})`
+          : "";
+        console.log(
+          `    ${green(idx.toString())} ${type.type}:${type.title}${injection}`,
+        );
+      }
+    }
+  }
+  for (const [hash, bin] of duplicateNameBins.entries()) {
+    if (bin.length > 1) {
+      console.log(`${red(hash)}`);
       for (const [idx, type] of bin) {
         const injection = "injection" in type
           ? ` (injection ${(type.injection as any).source})`

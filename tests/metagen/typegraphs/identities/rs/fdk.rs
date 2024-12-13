@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.0-rc.7";
+        static MT_VERSION: &str = "0.5.0-rc.8";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -263,23 +263,23 @@ pub mod types {
         Branch2(Branch2),
     }
     pub type CompositesUnionUnionT0StringEnum = String;
-    pub type CompositesUnionUnionT0StringEnumList = Vec<CompositesUnionUnionT0StringEnum>;
+    pub type Branch4 = Vec<CompositesUnionUnionT0StringEnum>;
     pub type Branch4again = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
     pub enum CompositesUnionUnion {
-        CompositesUnionUnionT0StringEnumList(CompositesUnionUnionT0StringEnumList),
+        Branch4(Branch4),
         PrimitivesIntInteger(PrimitivesIntInteger),
         PrimitivesStrString(PrimitivesStrString),
         Branch4again(Branch4again),
     }
-    pub type PrimitivesStrStringList = Vec<PrimitivesStrString>;
+    pub type CompositesListPrimitivesStrStringList = Vec<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Composites {
         pub opt: CompositesOptPrimitivesStrStringOptional,
         pub either: CompositesEitherEither,
         pub union: CompositesUnionUnion,
-        pub list: PrimitivesStrStringList,
+        pub list: CompositesListPrimitivesStrStringList,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct CompositesArgs {

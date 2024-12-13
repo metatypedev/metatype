@@ -43,7 +43,7 @@ impl InputType {
 }
 
 impl TypeGen for InputType {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut builder = t::struct_();
         let model = context.model(self.model_id)?;
         let model = model.borrow();
@@ -210,7 +210,7 @@ impl TypeGen for InputType {
             }
         }
 
-        builder.build_preallocated_named(type_id, self.name(context)?)
+        builder.build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

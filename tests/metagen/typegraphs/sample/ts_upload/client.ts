@@ -887,7 +887,7 @@ const nodeMetas = {
       ...nodeMetas.scalar(),
       argumentTypes: {
         prefix: "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
-        files: "RootUploadFnInputFileFileList",
+        files: "RootUploadManyFnInputFilesRootUploadFnInputFileFileList",
       },
       inputFiles: [[".files","[]"]],
     };
@@ -901,10 +901,10 @@ export type RootUploadFnInput = {
   path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
 };
 export type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
-export type RootUploadFnInputFileFileList = Array<RootUploadFnInputFileFile>;
+export type RootUploadManyFnInputFilesRootUploadFnInputFileFileList = Array<RootUploadFnInputFileFile>;
 export type RootUploadManyFnInput = {
   prefix?: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional;
-  files: RootUploadFnInputFileFileList;
+  files: RootUploadManyFnInputFilesRootUploadFnInputFileFileList;
 };
 export type RootUploadFnOutput = boolean;
 
@@ -915,7 +915,7 @@ export class QueryGraph extends _QueryGraphBase {
       "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
       "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
       "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
-      "RootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
+      "RootUploadManyFnInputFilesRootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
     });
   }
     

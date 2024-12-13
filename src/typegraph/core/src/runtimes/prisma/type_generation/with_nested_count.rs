@@ -26,7 +26,7 @@ impl WithNestedCount {
 }
 
 impl TypeGen for WithNestedCount {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let mut countable = vec![];
         let mut builder = t::struct_();
 
@@ -92,7 +92,7 @@ impl TypeGen for WithNestedCount {
             builder.propx("_count", count)?;
         }
 
-        builder.build_preallocated_named(type_id, self.name(context)?)
+        builder.build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

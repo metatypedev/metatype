@@ -71,7 +71,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "list",
-      "title": "root_listObjects_fn_output_keys_struct_list",
+      "title": "root_listObjects_fn_output_keys_root_listObjects_fn_output_keys_struct_list",
       "policies": [],
       "items": 7
     },
@@ -93,7 +93,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "list",
-      "title": "root_listObjects_fn_input_path_string_list",
+      "title": "root_listObjects_fn_output_prefix_root_listObjects_fn_input_path_string_list",
       "policies": [],
       "items": 4
     },
@@ -220,7 +220,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "list",
-      "title": "root_uploadMany_fn_input_files_file_list",
+      "title": "root_uploadMany_fn_input_files_root_uploadMany_fn_input_files_file_list",
       "policies": [],
       "items": 23
     },

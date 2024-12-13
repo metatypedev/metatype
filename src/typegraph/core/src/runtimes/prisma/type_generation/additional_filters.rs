@@ -4,6 +4,7 @@
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::Property;
 use crate::t::{self, TypeBuilder};
+use crate::types::Named as _;
 use crate::{errors::Result, types::TypeId};
 
 use super::TypeGen;
@@ -11,11 +12,12 @@ use super::TypeGen;
 pub struct Take;
 
 impl TypeGen for Take {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         t::integer()
             .x_min(0)
-            .build_preallocated_named(type_id, self.name(context)?)?;
-        Ok(())
+            .build()?
+            .named(self.name(context)?)
+            .map(|t| t.id())
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -26,11 +28,8 @@ impl TypeGen for Take {
 pub struct Skip;
 
 impl TypeGen for Skip {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
-        t::integer()
-            .min(0)
-            .build_preallocated_named(type_id, self.name(context)?)?;
-        Ok(())
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+        t::integer().min(0).build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -41,7 +40,7 @@ impl TypeGen for Skip {
 pub struct Distinct(pub TypeId);
 
 impl TypeGen for Distinct {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let model = context.model(self.0)?;
         let model = model.borrow();
 
@@ -53,7 +52,7 @@ impl TypeGen for Distinct {
             })
             .collect();
 
-        t::listx(t::string().enum_(cols)).build_preallocated_named(type_id, self.name(context)?)
+        t::listx(t::string().enum_(cols)).build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -73,7 +72,7 @@ impl Cursor {
 }
 
 impl TypeGen for Cursor {
-    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         let model = context.model(self.model_id)?;
         let model = model.borrow();
 
@@ -90,7 +89,7 @@ impl TypeGen for Cursor {
             let variant = t::struct_().prop(k, id).build()?;
             variants.push(variant)
         }
-        t::union(variants).build_preallocated_named(type_id, self.name(context)?)
+        t::union(variants).build_named(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

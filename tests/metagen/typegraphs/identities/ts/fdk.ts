@@ -70,19 +70,19 @@ export type CompositesEitherEither =
   | (Primitives)
   | (Branch2);
 export type CompositesUnionUnionT0StringEnum = "grey" | "beige";
-export type CompositesUnionUnionT0StringEnumList = Array<CompositesUnionUnionT0StringEnum>;
+export type Branch4 = Array<CompositesUnionUnionT0StringEnum>;
 export type Branch4again = string;
 export type CompositesUnionUnion =
-  | (CompositesUnionUnionT0StringEnumList)
+  | (Branch4)
   | (PrimitivesIntInteger)
   | (PrimitivesStrString)
   | (Branch4again);
-export type PrimitivesStrStringList = Array<PrimitivesStrString>;
+export type CompositesListPrimitivesStrStringList = Array<PrimitivesStrString>;
 export type Composites = {
   opt?: CompositesOptPrimitivesStrStringOptional;
   either: CompositesEitherEither;
   union: CompositesUnionUnion;
-  list: PrimitivesStrStringList;
+  list: CompositesListPrimitivesStrStringList;
 };
 export type CompositesArgs = {
   data: Composites;

@@ -103,14 +103,14 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "optional",
-        "title": "ComplexType_nested_ComplexType_nested_either_list_optional",
+        "title": "ComplexType_nested_ComplexType_nested_ComplexType_nested_either_list_optional",
         "policies": [],
         "item": 11,
         "default_value": null
       },
       {
         "type": "list",
-        "title": "ComplexType_nested_either_list",
+        "title": "ComplexType_nested_ComplexType_nested_either_list",
         "policies": [],
         "items": 12
       },
@@ -141,7 +141,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "list",
-        "title": "ComplexType_nested_either_t1_integer_list",
+        "title": "Two",
         "policies": [],
         "items": 13,
         "minItems": 3
@@ -760,14 +760,14 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "optional",
-        "title": "ComplexType_nested_ComplexType_nested_either_list_optional",
+        "title": "ComplexType_nested_ComplexType_nested_ComplexType_nested_either_list_optional",
         "policies": [],
         "item": 11,
         "default_value": null
       },
       {
         "type": "list",
-        "title": "ComplexType_nested_either_list",
+        "title": "ComplexType_nested_ComplexType_nested_either_list",
         "policies": [],
         "items": 12
       },
@@ -798,7 +798,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "list",
-        "title": "ComplexType_nested_either_t1_integer_list",
+        "title": "Two",
         "policies": [],
         "items": 13,
         "minItems": 3

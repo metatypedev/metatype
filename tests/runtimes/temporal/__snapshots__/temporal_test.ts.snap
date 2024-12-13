@@ -54,7 +54,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "list",
-        "title": "root_start_fn_input_args_struct_list",
+        "title": "root_start_fn_input_args_root_start_fn_input_args_struct_list",
         "policies": [],
         "items": 5
       },
@@ -327,7 +327,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "root_startKv_fn_input_args_struct_list",
+        "title": "root_startKv_fn_input_args_root_startKv_fn_input_args_struct_list",
         "policies": [],
         "items": 5
       },
@@ -366,7 +366,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "root_startKv_fn_input_workflow_id_string_list",
+        "title": "root_query_fn_input_args_root_startKv_fn_input_workflow_id_string_list",
         "policies": [],
         "items": 3
       },
@@ -404,7 +404,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "root_signal_fn_input_args_struct_list",
+        "title": "root_signal_fn_input_args_root_signal_fn_input_args_struct_list",
         "policies": [],
         "items": 13
       },

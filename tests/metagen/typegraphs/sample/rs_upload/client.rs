@@ -64,7 +64,10 @@ mod node_metas {
                         "prefix".into(),
                         "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional".into(),
                     ),
-                    ("files".into(), "RootUploadFnInputFileFileList".into()),
+                    (
+                        "files".into(),
+                        "RootUploadManyFnInputFilesRootUploadFnInputFileFileList".into(),
+                    ),
                 ]
                 .into(),
             ),
@@ -89,11 +92,12 @@ pub mod types {
     }
     pub type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional =
         Option<RootUploadFnInputPathString>;
-    pub type RootUploadFnInputFileFileList = Vec<RootUploadFnInputFileFile>;
+    pub type RootUploadManyFnInputFilesRootUploadFnInputFileFileList =
+        Vec<RootUploadFnInputFileFile>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadManyFnInputPartial {
         pub prefix: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
-        pub files: Option<RootUploadFnInputFileFileList>,
+        pub files: Option<RootUploadManyFnInputFilesRootUploadFnInputFileFileList>,
     }
     pub type RootUploadFnOutput = bool;
 }
@@ -117,7 +121,7 @@ impl QueryGraph {
                         "String".into(),
                     ),
                     (
-                        "RootUploadFnInputFileFileList".into(),
+                        "RootUploadManyFnInputFilesRootUploadFnInputFileFileList".into(),
                         "[root_upload_fn_input_file_file]!".into(),
                     ),
                 ]

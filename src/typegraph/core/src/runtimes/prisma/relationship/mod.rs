@@ -119,33 +119,23 @@ impl PrismaLink {
         self
     }
 
-    fn build_link(&self, type_id: Option<TypeId>) -> Result<TypeId> {
+    fn build_link(&self) -> Result<TypeId> {
         let attr = RefAttr::runtime(
             "prisma",
             serde_json::to_value(PrismaRefData::from(self)).unwrap(),
         );
-        let tref = match &self.target {
+        match &self.target {
             PrismaLinkTarget::Direct(t) => TypeRef::from_type(t.clone(), attr),
             PrismaLinkTarget::Indirect(n) => TypeRef::indirect(n, Some(attr)),
-        };
-        match type_id {
-            Some(id) => {
-                tref.register_under_id(id)?;
-                Ok(id)
-            }
-            None => tref.register().map(|t| t.id()),
         }
+        .register()
+        .map(|t| t.id())
     }
 }
 
 impl TypeBuilder for PrismaLink {
     fn build(&self) -> Result<TypeId> {
-        self.build_link(None)
-    }
-
-    fn build_preallocated(&self, type_id: TypeId) -> Result<()> {
-        self.build_link(Some(type_id))?;
-        Ok(())
+        self.build_link()
     }
 }
 
