@@ -77,7 +77,6 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
     let node = &cx.tg.types[id as usize];
     let name = match node {
         TypeNode::Optional { data, .. } => {
-            let name = gen_name(cx, acc, id, "optional");
             acc.path.push((
                 PathSegment {
                     from: id,
@@ -85,14 +84,13 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
                 },
                 Rc::from("placeholder"),
             ));
-            _ = visit_type(cx, acc, data.item)?;
+            let _inner_name = visit_type(cx, acc, data.item)?;
             acc.path.pop();
-            name
-            // gen_name(cx, acc, id, &format!("{inner_name}_optional"))
+            // gen_name(cx, acc, id, "optional")
+            gen_name(cx, acc, id, &format!("{_inner_name}_optional"))
             // format!("{inner_name}_optional").into()
         }
         TypeNode::List { data, .. } => {
-            let name = gen_name(cx, acc, id, "list");
             acc.path.push((
                 PathSegment {
                     from: id,
@@ -100,14 +98,14 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
                 },
                 Rc::from("placeholder"),
             ));
-            _ = visit_type(cx, acc, data.items)?;
+            let _inner_name = visit_type(cx, acc, data.items)?;
             acc.path.pop();
-            name
-            /* if cx.user_named.contains(&data.items) {
-                gen_name(cx, acc, id, &format!("{inner_name}_list"))
+            // gen_name(cx, acc, id, "list")
+            if cx.user_named.contains(&data.items) {
+                gen_name(cx, acc, id, &format!("{_inner_name}_list"))
             } else {
-                format!("{inner_name}_list").into()
-            } */
+                format!("{_inner_name}_list").into()
+            }
             // format!("{inner_name}_list").into()
         }
         TypeNode::Object { data, .. } => {

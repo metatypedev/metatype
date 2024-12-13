@@ -226,10 +226,10 @@ pub mod types {
         pub b: AddArgsAFloat,
     }
     pub type AddOutput = i64;
-    pub type AddOutputOptional = Option<AddOutput>;
+    pub type RangeArgsAAddOutputOptional = Option<AddOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RangeArgs {
-        pub a: AddOutputOptional,
+        pub a: RangeArgsAAddOutputOptional,
         pub b: AddOutput,
     }
     pub type AddOutputList = Vec<AddOutput>;
@@ -241,11 +241,11 @@ pub mod types {
     pub type ProfileAttributesStringEnum = String;
     pub type ProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
     pub type ProfileCategoryStructTagStringEnum = String;
-    pub type EntityNameStringOptional = Option<EntityNameString>;
+    pub type ProfileCategoryStructValueEntityNameStringOptional = Option<EntityNameString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct ProfileCategoryStruct {
         pub tag: ProfileCategoryStructTagStringEnum,
-        pub value: EntityNameStringOptional,
+        pub value: ProfileCategoryStructValueEntityNameStringOptional,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
@@ -265,10 +265,10 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Entity {
         pub name: EntityNameString,
-        pub age: AddOutputOptional,
+        pub age: RangeArgsAAddOutputOptional,
         pub profile: Profile,
     }
-    pub type EntityList = Vec<Entity>;
+    pub type RecordCreationOutput = Vec<Entity>;
 }
 pub mod stubs {
     use super::*;
@@ -330,7 +330,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<EntityList>;
+        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<RecordCreationOutput>;
     }
     pub trait Identity: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -370,7 +370,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<EntityList>;
+        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<RecordCreationOutput>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {

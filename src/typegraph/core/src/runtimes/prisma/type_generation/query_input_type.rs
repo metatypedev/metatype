@@ -31,7 +31,7 @@ impl QueryInputType {
 }
 
 impl TypeGen for QueryInputType {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
         let mut builder = t::struct_();
         let order_by = {
             let order_by = OrderBy::new(self.model_id);
@@ -69,7 +69,7 @@ impl TypeGen for QueryInputType {
             )?;
         }
 
-        builder.build_named(self.name(context)?)
+        builder.build_preallocated_named(type_id, self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

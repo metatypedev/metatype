@@ -20,7 +20,7 @@ impl CountOutput {
 }
 
 impl TypeGen for CountOutput {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
         let mut builder = t::struct_();
         let opt_int = t::optionalx(t::integer())?.build()?;
         builder.prop("_all", opt_int);
@@ -38,7 +38,7 @@ impl TypeGen for CountOutput {
         }
 
         // TODO union
-        builder.build_named(self.name(context)?)
+        builder.build_preallocated_named(type_id, self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -59,7 +59,7 @@ impl NumberAggregateOutput {
 }
 
 impl TypeGen for NumberAggregateOutput {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
         let mut builder = t::struct_();
 
         let opt_float = t::optionalx(t::float())?.build()?;
@@ -88,7 +88,7 @@ impl TypeGen for NumberAggregateOutput {
             }
         }
 
-        builder.build_named(self.name(context)?)
+        builder.build_preallocated_named(type_id, self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

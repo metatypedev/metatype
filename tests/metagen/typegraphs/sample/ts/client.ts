@@ -980,11 +980,11 @@ export type RootCompositeArgsFnInput = {
   id: PostSlugString;
 };
 export type UserEmailStringEmail = string;
-export type UserPostsList = Array<Post>;
+export type UserPostsPostList = Array<Post>;
 export type User = {
   id: UserIdStringUuid;
   email: UserEmailStringEmail;
-  posts: UserPostsList;
+  posts: UserPostsPostList;
 };
 export type RootScalarUnionFnOutputT1Integer = number;
 export type RootScalarUnionFnOutput =

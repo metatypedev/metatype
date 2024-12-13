@@ -126,7 +126,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "list",
-        "title": "root_keys_fn_output",
+        "title": "root_get_fn_input_key_string_list",
         "policies": [],
         "items": 3
       },
@@ -374,7 +374,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "list",
-        "title": "root_keys_fn_output",
+        "title": "root_get_fn_input_key_string_list",
         "policies": [],
         "items": 3
       },

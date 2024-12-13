@@ -30,11 +30,11 @@ impl Where {
         }
     }
 
-    fn nested(&self, model_id: TypeId) -> Self {
+    fn nested(&self, name: &str, model_id: TypeId) -> Self {
         let mut skip_models = self.skip_models.clone();
-        // skip_models.insert(self.model_id, name.to_string());
-        let model_name = self.model_id.name().unwrap().unwrap();
-        skip_models.insert(self.model_id, model_name);
+        skip_models.insert(self.model_id, name.to_string());
+        // let model_name = self.model_id.name().unwrap().unwrap();
+        // skip_models.insert(self.model_id, model_name);
         Self {
             model_id,
             skip_models,
@@ -52,8 +52,10 @@ impl Where {
 
 // TODO merge with with filters??
 impl TypeGen for Where {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
         let mut builder = t::struct_();
+
+        let name = self.name(context)?;
 
         let model = context.model(self.model_id)?;
         let model = model.borrow();
@@ -63,7 +65,7 @@ impl TypeGen for Where {
                 Property::Model(prop) => {
                     let inner = match self.skip_models.get(&prop.model_type.type_id) {
                         Some(name) => t::ref_(name.clone(), Default::default()).build()?,
-                        None => context.generate(&self.nested(prop.model_type.type_id))?,
+                        None => context.generate(&self.nested(&name, prop.model_type.type_id))?,
                     };
                     match prop.quantifier {
                         Cardinality::Many => {
@@ -108,7 +110,7 @@ impl TypeGen for Where {
             }
         }
 
-        builder.build_named(self.name(context)?)
+        builder.build_preallocated_named(type_id, name)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -132,8 +134,12 @@ impl TypeGen for Where {
             format!(
                 "_excluding_{}",
                 self.skip_models
-                    .values()
-                    .map(|name| name.strip_suffix(nested_suffix).unwrap_or(name.as_str()))
+                    .keys()
+                    .map(|id| id.name().unwrap().unwrap())
+                    .map(|name| name
+                        .strip_suffix(nested_suffix)
+                        .map(|str| str.to_owned())
+                        .unwrap_or(name))
                     // model
                     //     .iter_props()
                     //     .filter_map(|(key, prop)| match prop {

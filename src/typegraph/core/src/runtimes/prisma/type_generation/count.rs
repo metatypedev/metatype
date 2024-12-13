@@ -13,8 +13,8 @@ use super::TypeGen;
 pub struct Count;
 
 impl TypeGen for Count {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        t::optionalx(t::integer()).build_named(self.name(context)?)
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
+        t::optionalx(t::integer()).build_preallocated_named(type_id, self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

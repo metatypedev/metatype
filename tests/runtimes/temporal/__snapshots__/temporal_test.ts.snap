@@ -11,8 +11,8 @@ snapshot[`Typegraph using temporal 1`] = `
         "properties": {
           "start": 1,
           "query": 6,
-          "signal": 9,
-          "describe": 13
+          "signal": 8,
+          "describe": 10
         },
         "id": [],
         "required": [
@@ -54,7 +54,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "list",
-        "title": "root_start_fn_input_args_root_start_fn_input_args_struct_list",
+        "title": "root_start_fn_input_args_struct_list",
         "policies": [],
         "items": 5
       },
@@ -88,16 +88,10 @@ snapshot[`Typegraph using temporal 1`] = `
         "properties": {
           "workflow_id": 3,
           "run_id": 3,
-          "args": 8
+          "args": 4
         },
         "id": [],
         "required": []
-      },
-      {
-        "type": "list",
-        "title": "root_query_fn_input_args_root_start_fn_input_args_struct_list",
-        "policies": [],
-        "items": 5
       },
       {
         "type": "function",
@@ -105,8 +99,8 @@ snapshot[`Typegraph using temporal 1`] = `
         "policies": [
           0
         ],
-        "input": 10,
-        "output": 12,
+        "input": 7,
+        "output": 9,
         "injections": {
           "workflow_id": {
             "injection": {
@@ -123,24 +117,6 @@ snapshot[`Typegraph using temporal 1`] = `
         "rate_calls": false
       },
       {
-        "type": "object",
-        "title": "root_signal_fn_input",
-        "policies": [],
-        "properties": {
-          "workflow_id": 3,
-          "run_id": 3,
-          "args": 11
-        },
-        "id": [],
-        "required": []
-      },
-      {
-        "type": "list",
-        "title": "root_signal_fn_input_args_root_start_fn_input_args_struct_list",
-        "policies": [],
-        "items": 5
-      },
-      {
         "type": "boolean",
         "title": "root_signal_fn_output",
         "policies": []
@@ -151,8 +127,8 @@ snapshot[`Typegraph using temporal 1`] = `
         "policies": [
           0
         ],
-        "input": 14,
-        "output": 15,
+        "input": 11,
+        "output": 12,
         "runtimeConfig": null,
         "materializer": 4,
         "rate_weight": null,
@@ -174,9 +150,9 @@ snapshot[`Typegraph using temporal 1`] = `
         "title": "root_describe_fn_output",
         "policies": [],
         "properties": {
-          "start_time": 16,
-          "close_time": 18,
-          "state": 19
+          "start_time": 13,
+          "close_time": 13,
+          "state": 13
         },
         "id": [],
         "required": []
@@ -185,27 +161,13 @@ snapshot[`Typegraph using temporal 1`] = `
         "type": "optional",
         "title": "root_describe_fn_output_start_time_root_describe_fn_output_start_time_integer_optional",
         "policies": [],
-        "item": 17,
+        "item": 14,
         "default_value": null
       },
       {
         "type": "integer",
         "title": "root_describe_fn_output_start_time_integer",
         "policies": []
-      },
-      {
-        "type": "optional",
-        "title": "root_describe_fn_output_close_time_root_describe_fn_output_start_time_integer_optional",
-        "policies": [],
-        "item": 17,
-        "default_value": null
-      },
-      {
-        "type": "optional",
-        "title": "root_describe_fn_output_state_root_describe_fn_output_start_time_integer_optional",
-        "policies": [],
-        "item": 17,
-        "default_value": null
       }
     ],
     "materializers": [
@@ -365,7 +327,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "root_startKv_fn_input_args_root_startKv_fn_input_args_struct_list",
+        "title": "root_startKv_fn_input_args_struct_list",
         "policies": [],
         "items": 5
       },
@@ -404,7 +366,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "root_query_fn_input_args_root_startKv_fn_input_workflow_id_string_list",
+        "title": "root_startKv_fn_input_workflow_id_string_list",
         "policies": [],
         "items": 3
       },
@@ -442,7 +404,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "root_signal_fn_input_args_root_signal_fn_input_args_struct_list",
+        "title": "root_signal_fn_input_args_struct_list",
         "policies": [],
         "items": 13
       },
@@ -492,8 +454,8 @@ snapshot[`Typegraph using temporal 2`] = `
         "policies": [],
         "properties": {
           "start_time": 18,
-          "close_time": 20,
-          "state": 21
+          "close_time": 18,
+          "state": 18
         },
         "id": [],
         "required": []
@@ -509,20 +471,6 @@ snapshot[`Typegraph using temporal 2`] = `
         "type": "integer",
         "title": "root_describe_fn_output_start_time_integer",
         "policies": []
-      },
-      {
-        "type": "optional",
-        "title": "root_describe_fn_output_close_time_root_describe_fn_output_start_time_integer_optional",
-        "policies": [],
-        "item": 19,
-        "default_value": null
-      },
-      {
-        "type": "optional",
-        "title": "root_describe_fn_output_state_root_describe_fn_output_start_time_integer_optional",
-        "policies": [],
-        "item": 19,
-        "default_value": null
       }
     ],
     "materializers": [

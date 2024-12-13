@@ -21,7 +21,7 @@ impl GroupingFields {
 }
 
 impl TypeGen for GroupingFields {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
         let model = context.model(self.model_id)?;
         let model = model.borrow();
 
@@ -33,7 +33,7 @@ impl TypeGen for GroupingFields {
             })
             .collect();
 
-        t::listx(t::string().enum_(fields))?.build_named(self.name(context)?)
+        t::listx(t::string().enum_(fields))?.build_preallocated_named(type_id, self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -53,7 +53,7 @@ impl Having {
 }
 
 impl TypeGen for Having {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
         // TODO relations??
         let where_type = context.generate(&Where::new(self.model_id).with_aggregates())?;
 
@@ -66,7 +66,7 @@ impl TypeGen for Having {
             t::struct_().propx("OR", t::list(self_ref))?,
             t::struct_().prop("NOT", self_ref)
         ]
-        .build_named(name)
+        .build_preallocated_named(type_id, name)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -86,7 +86,7 @@ impl GroupByResult {
 }
 
 impl TypeGen for GroupByResult {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
         let model_id = self.model_id;
         t::list(
             t::struct_extends(model_id)?
@@ -112,7 +112,7 @@ impl TypeGen for GroupByResult {
                 )
                 .build()?,
         )
-        .build_named(self.name(context)?)
+        .build_preallocated_named(type_id, self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -136,7 +136,7 @@ impl SelectNumbers {
 }
 
 impl TypeGen for SelectNumbers {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
         let mut builder = t::struct_();
         let opt_float = t::optional(t::float().build()?).build()?;
         let for_int = if self.promote_to_float {
@@ -164,7 +164,7 @@ impl TypeGen for SelectNumbers {
             }
         }
 
-        builder.build_named(self.name(context)?)
+        builder.build_preallocated_named(type_id, self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

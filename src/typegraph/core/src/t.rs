@@ -3,6 +3,7 @@
 
 use crate::errors::Result;
 use crate::errors::TgError;
+use crate::global_store::Store;
 use crate::types::RefAttr;
 use crate::types::TypeRefBuilder;
 use crate::types::{Named as _, TypeId, TypeRef};
@@ -23,6 +24,13 @@ pub trait TypeBuilder {
 
     fn build_named(&self, name: impl Into<String>) -> Result<TypeId> {
         Ok(self.build()?.named(name)?.id())
+    }
+
+    fn build_preallocated(&self, type_id: TypeId) -> Result<()>;
+
+    fn build_preallocated_named(&self, id: TypeId, name: impl Into<String>) -> Result<()> {
+        self.build()?.named_under_id(id, name)?;
+        Ok(())
     }
 
     #[cfg(test)]
@@ -67,17 +75,28 @@ where
     fn build(&self) -> Result<TypeId> {
         (**self).build()
     }
+
+    fn build_preallocated(&self, type_id: TypeId) -> Result<()> {
+        (**self).build_preallocated(type_id)
+    }
 }
 
 impl TypeBuilder for TypeId {
     fn build(&self) -> Result<TypeId> {
         Ok(*self)
     }
+
+    fn build_preallocated(&self, _type_id: TypeId) -> Result<()> {
+        Err("build_preallocated build on raw TypeId".into())
+    }
 }
 
 impl TypeBuilder for TypeRef {
     fn build(&self) -> Result<TypeId> {
         Ok(self.id())
+    }
+    fn build_preallocated(&self, _type_id: TypeId) -> Result<()> {
+        Err("build_preallocated build on raw TypeRef".into())
     }
 }
 
@@ -87,6 +106,11 @@ where
 {
     fn build(&self) -> Result<TypeId, TgError> {
         self.as_ref().map_err(|e| e.clone())?.build()
+    }
+    fn build_preallocated(&self, type_id: TypeId) -> Result<()> {
+        self.as_ref()
+            .map_err(|e| e.clone())?
+            .build_preallocated(type_id)
     }
 }
 
@@ -478,20 +502,33 @@ pub fn ref_(name: impl Into<String>, attribute: Option<RefAttr>) -> RefBuilder {
 }
 
 macro_rules! impl_type_builder {
-    ( $ty:ty, $build:ident ) => {
+    ( $ty:ty, $build:ident, $def_build:ident ) => {
         impl TypeBuilder for $ty {
             fn build(&self) -> Result<TypeId> {
                 let res = $crate::Lib::$build(self.data.clone())?;
                 Ok(res.into())
             }
+
+            fn build_preallocated(&self, id: TypeId) -> Result<()> {
+                let def = $crate::$def_build(self.data.clone(), id)?;
+                Store::replace_at_type_id(id, def)?;
+                Ok(())
+            }
         }
     };
 
-    ( $ty:ty, $build:ident, true ) => {
+    ( $ty:ty, $build:ident, $def_build:ident, true ) => {
         impl TypeBuilder for $ty {
             fn build(&self) -> Result<TypeId> {
                 let builder = self.clone();
                 Ok($crate::Lib::$build(builder.data.clone())?.into())
+            }
+
+            fn build_preallocated(&self, id: TypeId) -> Result<()> {
+                let builder = self.clone();
+                let def = $crate::$def_build(builder.data.clone(), id)?;
+                Store::replace_at_type_id(id, def)?;
+                Ok(())
             }
         }
     };
@@ -501,17 +538,23 @@ impl TypeBuilder for BooleanBuilder {
         let res = crate::Lib::booleanb()?;
         Ok(res.into())
     }
+
+    fn build_preallocated(&self, id: TypeId) -> Result<()> {
+        let def = crate::boolean_def(id)?;
+        Store::replace_at_type_id(id, def)?;
+        Ok(())
+    }
 }
 
-impl_type_builder!(IntegerBuilder, integerb);
-impl_type_builder!(FloatBuilder, floatb);
-impl_type_builder!(OptionalBuilder, optionalb);
-impl_type_builder!(StringBuilder, stringb);
-impl_type_builder!(ListBuilder, listb);
-impl_type_builder!(UnionBuilder, unionb);
-impl_type_builder!(EitherBuilder, eitherb);
-impl_type_builder!(StructBuilder, structb);
-impl_type_builder!(FuncBuilder, funcb, true);
+impl_type_builder!(IntegerBuilder, integerb, integer_def);
+impl_type_builder!(FloatBuilder, floatb, float_def);
+impl_type_builder!(OptionalBuilder, optionalb, optional_def);
+impl_type_builder!(StringBuilder, stringb, string_def);
+impl_type_builder!(ListBuilder, listb, list_def);
+impl_type_builder!(UnionBuilder, unionb, union_def);
+impl_type_builder!(EitherBuilder, eitherb, either_def);
+impl_type_builder!(StructBuilder, structb, struct_def);
+impl_type_builder!(FuncBuilder, funcb, func_def, true);
 
 impl TypeBuilder for RefBuilder {
     fn build(&self) -> Result<TypeId> {
@@ -523,10 +566,27 @@ impl TypeBuilder for RefBuilder {
         )?
         .into())
     }
+
+    fn build_preallocated(&self, type_id: TypeId) -> Result<()> {
+        Store::assign_type_ref(
+            type_id,
+            crate::ref_def(
+                self.name.clone(),
+                self.attribute
+                    .as_ref()
+                    .map(|attr| serde_json::to_string(&attr).unwrap()),
+            )?,
+        )?;
+        Ok(())
+    }
 }
 
 impl TypeBuilder for TypeRefBuilder {
     fn build(&self) -> Result<TypeId> {
         (*self).clone().register().map(|r| r.id())
+    }
+    fn build_preallocated(&self, type_id: TypeId) -> Result<()> {
+        (*self).clone().register_under_id(type_id)?;
+        Ok(())
     }
 }

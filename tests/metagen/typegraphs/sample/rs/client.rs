@@ -181,12 +181,12 @@ pub mod types {
         pub id: Option<PostSlugString>,
     }
     pub type UserEmailStringEmail = String;
-    pub type UserPostsList = Vec<PostPartial>;
+    pub type UserPostsPostList = Vec<PostPartial>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct UserPartial {
         pub id: Option<UserIdStringUuid>,
         pub email: Option<UserEmailStringEmail>,
-        pub posts: Option<UserPostsList>,
+        pub posts: Option<UserPostsPostList>,
     }
     pub type RootScalarUnionFnOutputT1Integer = i64;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]

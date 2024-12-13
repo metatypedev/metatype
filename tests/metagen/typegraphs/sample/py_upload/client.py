@@ -818,7 +818,7 @@ class NodeDescs:
             variants=return_node.variants,
             arg_types={
                 "file": "RootUploadFnInputFileFile",
-                "path": "RootUploadFnInputPathOptional",
+                "path": "RootUploadFnInputPathRootUploadFnInputPathStringOptional",
             },
             input_files=[[".file"]],
         )
@@ -830,8 +830,8 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "prefix": "RootUploadManyFnInputPrefixOptional",
-                "files": "RootUploadManyFnInputFilesList",
+                "prefix": "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
+                "files": "RootUploadFnInputFileFileList",
             },
             input_files=[[".files", "[]"]],
         )
@@ -841,26 +841,30 @@ RootUploadFnInputFileFile = File
 
 RootUploadFnInputPathString = str
 
-RootUploadFnInputPathOptional = typing.Union[RootUploadFnInputPathString, None]
+RootUploadFnInputPathRootUploadFnInputPathStringOptional = typing.Union[
+    RootUploadFnInputPathString, None
+]
 
 RootUploadFnInput = typing.TypedDict(
     "RootUploadFnInput",
     {
         "file": RootUploadFnInputFileFile,
-        "path": RootUploadFnInputPathOptional,
+        "path": RootUploadFnInputPathRootUploadFnInputPathStringOptional,
     },
     total=False,
 )
 
-RootUploadManyFnInputPrefixOptional = typing.Union[RootUploadFnInputPathString, None]
+RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = typing.Union[
+    RootUploadFnInputPathString, None
+]
 
-RootUploadManyFnInputFilesList = typing.List[RootUploadFnInputFileFile]
+RootUploadFnInputFileFileList = typing.List[RootUploadFnInputFileFile]
 
 RootUploadManyFnInput = typing.TypedDict(
     "RootUploadManyFnInput",
     {
-        "prefix": RootUploadManyFnInputPrefixOptional,
-        "files": RootUploadManyFnInputFilesList,
+        "prefix": RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
+        "files": RootUploadFnInputFileFileList,
     },
     total=False,
 )
@@ -873,9 +877,9 @@ class QueryGraph(QueryGraphBase):
         super().__init__(
             {
                 "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
-                "RootUploadFnInputPathOptional": "String",
-                "RootUploadManyFnInputPrefixOptional": "String",
-                "RootUploadManyFnInputFilesList": "[root_upload_fn_input_file_file]!",
+                "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
+                "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
+                "RootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
             }
         )
 

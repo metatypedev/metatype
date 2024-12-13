@@ -38,7 +38,7 @@ impl QueryWhereExpr {
 // ```
 
 impl TypeGen for QueryWhereExpr {
-    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext, type_id: TypeId) -> Result<()> {
         let where_type = context.generate(&Where::new(self.model_id))?;
 
         let props = where_type.as_struct().unwrap().data.props.to_vec();
@@ -55,7 +55,7 @@ impl TypeGen for QueryWhereExpr {
         builder.prop("OR", and);
         builder.propx("NOT", t::optional(self_ref))?;
 
-        builder.build_named(name)
+        builder.build_preallocated_named(type_id, name)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

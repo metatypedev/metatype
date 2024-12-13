@@ -877,7 +877,7 @@ const nodeMetas = {
       ...nodeMetas.scalar(),
       argumentTypes: {
         file: "RootUploadFnInputFileFile",
-        path: "RootUploadFnInputPathOptional",
+        path: "RootUploadFnInputPathRootUploadFnInputPathStringOptional",
       },
       inputFiles: [[".file"]],
     };
@@ -886,8 +886,8 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        prefix: "RootUploadManyFnInputPrefixOptional",
-        files: "RootUploadManyFnInputFilesList",
+        prefix: "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
+        files: "RootUploadFnInputFileFileList",
       },
       inputFiles: [[".files","[]"]],
     };
@@ -895,16 +895,16 @@ const nodeMetas = {
 };
 export type RootUploadFnInputFileFile = File;
 export type RootUploadFnInputPathString = string;
-export type RootUploadFnInputPathOptional = RootUploadFnInputPathString | null | undefined;
+export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
 export type RootUploadFnInput = {
   file: RootUploadFnInputFileFile;
-  path?: RootUploadFnInputPathOptional;
+  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
 };
-export type RootUploadManyFnInputPrefixOptional = RootUploadFnInputPathString | null | undefined;
-export type RootUploadManyFnInputFilesList = Array<RootUploadFnInputFileFile>;
+export type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
+export type RootUploadFnInputFileFileList = Array<RootUploadFnInputFileFile>;
 export type RootUploadManyFnInput = {
-  prefix?: RootUploadManyFnInputPrefixOptional;
-  files: RootUploadManyFnInputFilesList;
+  prefix?: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional;
+  files: RootUploadFnInputFileFileList;
 };
 export type RootUploadFnOutput = boolean;
 
@@ -913,9 +913,9 @@ export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
       "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
-      "RootUploadFnInputPathOptional": "String",
-      "RootUploadManyFnInputPrefixOptional": "String",
-      "RootUploadManyFnInputFilesList": "[root_upload_fn_input_file_file]!",
+      "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
+      "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
+      "RootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
     });
   }
     

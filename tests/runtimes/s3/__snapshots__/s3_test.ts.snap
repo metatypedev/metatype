@@ -12,7 +12,7 @@ snapshot[`s3 typegraphs 1`] = `
         "getDownloadUrl": 10,
         "signTextUploadUrl": 13,
         "upload": 15,
-        "uploadMany": 20
+        "uploadMany": 19
       },
       "id": [],
       "required": [
@@ -71,7 +71,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "list",
-      "title": "root_listObjects_fn_output_keys_root_listObjects_fn_output_keys_struct_list",
+      "title": "root_listObjects_fn_output_keys_struct_list",
       "policies": [],
       "items": 7
     },
@@ -93,7 +93,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "list",
-      "title": "root_listObjects_fn_output_prefix_root_listObjects_fn_input_path_string_list",
+      "title": "root_listObjects_fn_input_path_string_list",
       "policies": [],
       "items": 4
     },
@@ -157,7 +157,7 @@ snapshot[`s3 typegraphs 1`] = `
         0
       ],
       "input": 16,
-      "output": 19,
+      "output": 18,
       "runtimeConfig": null,
       "materializer": 4,
       "rate_weight": null,
@@ -169,7 +169,7 @@ snapshot[`s3 typegraphs 1`] = `
       "policies": [],
       "properties": {
         "file": 17,
-        "path": 18
+        "path": 3
       },
       "id": [],
       "required": []
@@ -183,13 +183,6 @@ snapshot[`s3 typegraphs 1`] = `
       ]
     },
     {
-      "type": "optional",
-      "title": "root_upload_fn_input_path_root_listObjects_fn_input_path_string_optional",
-      "policies": [],
-      "item": 4,
-      "default_value": null
-    },
-    {
       "type": "boolean",
       "title": "root_upload_fn_output",
       "policies": []
@@ -200,8 +193,8 @@ snapshot[`s3 typegraphs 1`] = `
       "policies": [
         0
       ],
-      "input": 21,
-      "output": 19,
+      "input": 20,
+      "output": 18,
       "runtimeConfig": null,
       "materializer": 5,
       "rate_weight": null,
@@ -212,8 +205,8 @@ snapshot[`s3 typegraphs 1`] = `
       "title": "root_uploadMany_fn_input",
       "policies": [],
       "properties": {
-        "prefix": 22,
-        "files": 23
+        "prefix": 21,
+        "files": 22
       },
       "id": [],
       "required": []
@@ -227,9 +220,9 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "list",
-      "title": "root_uploadMany_fn_input_files_root_uploadMany_fn_input_files_file_list",
+      "title": "root_uploadMany_fn_input_files_file_list",
       "policies": [],
-      "items": 24
+      "items": 23
     },
     {
       "type": "file",

@@ -570,12 +570,12 @@ pub mod types {
         pub name: RootOneFnInputNameString,
     }
     pub type StudentIdInteger = i64;
-    pub type StudentPeersOptional = Option<RootOneFnOutput>;
+    pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
         pub id: StudentIdInteger,
         pub name: RootOneFnInputNameString,
-        pub peers: StudentPeersOptional,
+        pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -724,11 +724,11 @@ export type RootOneFnInput = {
   name: RootOneFnInputNameString;
 };
 export type StudentIdInteger = number;
-export type StudentPeersOptional = RootOneFnOutput | null | undefined;
+export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
   id: StudentIdInteger;
   name: RootOneFnInputNameString;
-  peers?: StudentPeersOptional;
+  peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {
@@ -1371,12 +1371,12 @@ pub mod types {
         pub name: RootOneFnInputNameString,
     }
     pub type StudentIdInteger = i64;
-    pub type StudentPeersOptional = Option<RootOneFnOutput>;
+    pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
         pub id: StudentIdInteger,
         pub name: RootOneFnInputNameString,
-        pub peers: StudentPeersOptional,
+        pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -1525,11 +1525,11 @@ export type RootOneFnInput = {
   name: RootOneFnInputNameString;
 };
 export type StudentIdInteger = number;
-export type StudentPeersOptional = RootOneFnOutput | null | undefined;
+export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
   id: StudentIdInteger;
   name: RootOneFnInputNameString;
-  peers?: StudentPeersOptional;
+  peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {

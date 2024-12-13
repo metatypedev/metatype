@@ -245,6 +245,9 @@ impl TypeRefBuilder {
     pub fn register(self) -> Result<TypeRef> {
         Store::register_type_ref(self)
     }
+    pub fn register_under_id(self, id: TypeId) -> Result<TypeRef> {
+        Store::assign_type_ref(id, self)
+    }
 }
 
 pub type RefAttrs = Vec<Rc<RefAttr>>;
@@ -371,6 +374,7 @@ impl FindAttribute for RefAttrs {
 
 pub trait Named {
     fn named(self, name: impl Into<String>) -> Result<TypeRef>;
+    fn named_under_id(self, id: TypeId, name: impl Into<String>) -> Result<TypeRef>;
 }
 
 impl<T> Named for T
@@ -380,5 +384,9 @@ where
 {
     fn named(self, name: impl Into<String>) -> Result<TypeRef> {
         TypeRef::named(name, self.try_into()?).register()
+    }
+
+    fn named_under_id(self, id: TypeId, name: impl Into<String>) -> Result<TypeRef> {
+        TypeRef::named(name, self.try_into()?).register_under_id(id)
     }
 }

@@ -99,7 +99,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "list",
-      "title": "root_users_fn_output_data_list",
+      "title": "root_users_fn_output_data_User_list",
       "policies": [],
       "items": 4
     },
@@ -223,7 +223,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_create_input_id_optional",
+      "title": "message_create_input_id_message_create_input_id_integer_optional",
       "policies": [],
       "item": 14,
       "default_value": null
@@ -273,7 +273,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_query_input_where_optional",
+      "title": "message_query_input_where_message_query_where_input_optional",
       "policies": [],
       "item": 24,
       "default_value": null
@@ -295,7 +295,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_query_where_input_id_optional",
+      "title": "message_query_where_input_id__prisma_integer_filter_ex_optional",
       "policies": [],
       "item": 26,
       "default_value": null
@@ -374,7 +374,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "list",
-      "title": "_prisma_integer_filter_t4_struct_in_list",
+      "title": "message_create_input_id_integer_list",
       "policies": [],
       "items": 14
     },
@@ -400,7 +400,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_query_where_input_title_optional",
+      "title": "message_query_where_input_title__prisma_string_filter_ex_optional",
       "policies": [],
       "item": 37,
       "default_value": null
@@ -468,7 +468,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "list",
-      "title": "_prisma_string_filter_t3_struct_in_list",
+      "title": "root_user_fn_input_id_string_list",
       "policies": [],
       "items": 3
     },
@@ -495,7 +495,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "_prisma_string_filter_t5_struct_mode_optional",
+      "title": "_prisma_string_filter_t5_struct_mode__prisma_string_filter_t5_struct_mode_string_enum_optional",
       "policies": [],
       "item": 47,
       "default_value": null
@@ -531,7 +531,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "_prisma_string_filter_t7_struct_startsWith_optional",
+      "title": "_prisma_string_filter_t7_struct_startsWith_root_user_fn_input_id_string_optional",
       "policies": [],
       "item": 3,
       "default_value": null
@@ -548,27 +548,27 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_query_where_input_AND_optional",
+      "title": "message_query_where_input_AND_message_query_where_input_AND_message_query_where_input_list_optional",
       "policies": [],
       "item": 53,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "message_query_where_input_AND_list",
+      "title": "message_query_where_input_AND_message_query_where_input_list",
       "policies": [],
       "items": 24
     },
     {
       "type": "optional",
-      "title": "message_query_input_orderBy_optional",
+      "title": "message_query_input_orderBy_message_query_input_orderBy_struct_list_optional",
       "policies": [],
       "item": 55,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "message_order_by",
+      "title": "message_query_input_orderBy_struct_list",
       "policies": [],
       "items": 56
     },
@@ -621,7 +621,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_query_input_take_optional",
+      "title": "message_query_input_take__take_optional",
       "policies": [],
       "item": 62,
       "default_value": null
@@ -634,7 +634,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_query_input_skip_optional",
+      "title": "message_query_input_skip__skip_optional",
       "policies": [],
       "item": 64,
       "default_value": null
@@ -647,7 +647,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_query_input_cursor_optional",
+      "title": "message_query_input_cursor_message_cursor_optional",
       "policies": [],
       "item": 66,
       "default_value": null
@@ -696,14 +696,14 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_query_input_distinct_optional",
+      "title": "message_query_input_distinct_message_query_input_distinct_string_enum_list_optional",
       "policies": [],
       "item": 71,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "message_keys_union",
+      "title": "message_query_input_distinct_string_enum_list",
       "policies": [],
       "items": 72
     },
