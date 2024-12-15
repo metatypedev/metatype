@@ -393,7 +393,8 @@ typegraphs:
     prisma:
       migrations_path: "migrations"
 `);
-    await t.should("work with JSR npm", async () => {
+    // FIXME: enable after 0.5.0.-rc.8 releases
+    /* await t.should("work with JSR npm", async () => {
       const npmJsrDir = await tgsDir.join("npm_jsr").ensureDir();
       await $`pnpm init`.cwd(npmJsrDir);
       await $`pnpm --package=jsr dlx jsr add @typegraph/sdk@${PUBLISHED_VERSION}`
@@ -451,7 +452,7 @@ typegraphs:
         .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
         .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`)
         .env("RUST_LOG", "trace");
-    });
+    }); */
 
     await t.should("work with pypa", async () => {
       const pypaDir = await tgsDir.join("pypa").ensureDir();
@@ -462,7 +463,12 @@ typegraphs:
         );
       await $.co([
         pypaDir.join("README.md").ensureFile(),
-        $`bash -c 'python3 -m venv .venv && source .venv/bin/activate && poetry install --no-root'`
+        $`bash -sx`
+          .stdinText([
+            `python3 -m venv .venv`,
+            `source .venv/bin/activate`,
+            `poetry install --no-root`,
+          ].join("\n"))
           .cwd(
             pypaDir,
           ),

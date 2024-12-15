@@ -16,13 +16,15 @@
     }
   },
   "exports": {
+    ".": "./src/index.ts",
     "./deps/_import.ts": "./src/deps/_import.ts",
     "./deps/mod.ts": "./src/deps/mod.ts",
     "./effects": "./src/effects.ts",
     "./envs/cli": "./src/envs/cli.ts",
     "./gen/typegraph_core.d.ts": "./src/gen/typegraph_core.d.ts",
+    "./gen/typegraph_core": "./src/gen/typegraph_core.d.ts",
     "./host/host.d.ts": "./src/host/host.d.ts",
-    ".": "./src/index.ts",
+    "./host/host": "./src/host/host.d.ts",
     "./io": "./src/io.ts",
     "./metagen": "./src/metagen.ts",
     "./params": "./src/params.ts",
