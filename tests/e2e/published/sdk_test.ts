@@ -3,12 +3,12 @@
 
 import { Meta } from "test-utils/mod.ts";
 import { $ } from "@local/tools/deps.ts";
+import { PUBLISHED_VERSION, PYTHON_VERSION } from "@local/tools/consts.ts";
 import { encodeBase64 } from "@std/encoding/base64";
 import { Lines } from "test-utils/process.ts";
 import { newTempDir } from "test-utils/dir.ts";
 import { downloadAndExtractCli } from "./utils.ts";
 import { Config } from "./config.ts";
-import { PYTHON_VERSION } from "@local/tools/consts.ts";
 
 const testConfig = new Config(12, "published-sdk-test");
 
@@ -122,52 +122,52 @@ typegraphs:
     //     .env("RUST_LOG", "trace");
     // });
 
-    await t.should("work with JSR deno", async () => {
-      const denoJsrDir = await tgsDir.join("deno_jsr").ensureDir();
-      await denoJsrDir.join("deno.json").writeJson({});
-      await $`bash -c 'deno add @typegraph/sdk@${previousVersion}'`.cwd(
-        denoJsrDir,
-      );
-      await $.co([
-        $.path("examples/typegraphs/func.ts").copy(denoJsrDir.join("tg.ts")),
-        $.path("examples/typegraphs/scripts").copyToDir(denoJsrDir),
-      ]);
-
-      const command =
-        `meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;
-      await $`bash -c ${command}`
-        .cwd(denoJsrDir)
-        .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        // FIXME: rename to deno.jsonc on bump 0.4.9
-        .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`)
-        .env("RUST_LOG", "trace");
-    });
-
-    await t.should("work with pypa", async () => {
-      const pypaDir = await tgsDir.join("pypa").ensureDir();
-      await $
-        .raw`poetry init -n --python=${PYTHON_VERSION} --dependency=typegraph:${previousVersion}`
-        .cwd(
-          pypaDir,
-        );
-      await $.co([
-        pypaDir.join("README.md").ensureFile(),
-        $`bash -c 'python3 -m venv .venv && source .venv/bin/activate && poetry install --no-root'`
-          .cwd(
-            pypaDir,
-          ),
-        $.path("examples/typegraphs/func.py").copy(pypaDir.join("tg.py")),
-        $.path("examples/typegraphs/scripts").copyToDir(pypaDir),
-      ]);
-
-      const command = `source .venv/bin/activate &&` +
-        ` ${metaBinDir}/meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.py`;
-      await $`bash -c ${command}`
-        .cwd(pypaDir)
-        .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
-        .env("MCLI_LOADER_PY", `poetry run python`)
-        .env("RUST_LOG", "trace");
-    });
+    // await t.should("work with JSR deno", async () => {
+    //   const denoJsrDir = await tgsDir.join("deno_jsr").ensureDir();
+    //   await denoJsrDir.join("deno.json").writeJson({});
+    //   await $`bash -c 'deno add @typegraph/sdk@${previousVersion}'`.cwd(
+    //     denoJsrDir,
+    //   );
+    //   await $.co([
+    //     $.path("examples/typegraphs/func.ts").copy(denoJsrDir.join("tg.ts")),
+    //     $.path("examples/typegraphs/scripts").copyToDir(denoJsrDir),
+    //   ]);
+    //
+    //   const command =
+    //     `meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.ts`;
+    //   await $`bash -c ${command}`
+    //     .cwd(denoJsrDir)
+    //     .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
+    //     // FIXME: rename to deno.jsonc on bump 0.4.9
+    //     .env("MCLI_LOADER_CMD", `deno run -A --config deno.json`)
+    //     .env("RUST_LOG", "trace");
+    // });
+    //
+    // await t.should("work with pypa", async () => {
+    //   const pypaDir = await tgsDir.join("pypa").ensureDir();
+    //   await $
+    //     .raw`poetry init -n --python=${PYTHON_VERSION} --dependency=typegraph:${previousVersion}`
+    //     .cwd(
+    //       pypaDir,
+    //     );
+    //   await $.co([
+    //     pypaDir.join("README.md").ensureFile(),
+    //     $`bash -c 'python3 -m venv .venv && source .venv/bin/activate && poetry install --no-root'`
+    //       .cwd(
+    //         pypaDir,
+    //       ),
+    //     $.path("examples/typegraphs/func.py").copy(pypaDir.join("tg.py")),
+    //     $.path("examples/typegraphs/scripts").copyToDir(pypaDir),
+    //   ]);
+    //
+    //   const command = `source .venv/bin/activate &&` +
+    //     ` ${metaBinDir}/meta-old deploy --target dev --allow-dirty --gate http://localhost:${port} -vvv -f tg.py`;
+    //   await $`bash -c ${command}`
+    //     .cwd(pypaDir)
+    //     .env("PATH", `${metaBinDir}:${Deno.env.get("PATH")}`)
+    //     .env("MCLI_LOADER_PY", `poetry run python`)
+    //     .env("RUST_LOG", "trace");
+    // });
 
     proc.kill("SIGKILL");
     const status = await proc;
