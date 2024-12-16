@@ -66,7 +66,7 @@ thread_local! {
     static TG: RefCell<Option<TypegraphContext>> = const { RefCell::new(None) };
 }
 
-static TYPEGRAPH_VERSION: &str = "0.0.3";
+static TYPEGRAPH_VERSION: &str = "0.0.4";
 
 pub fn with_tg<T>(f: impl FnOnce(&TypegraphContext) -> T) -> Result<T> {
     TG.with(|tg| {
@@ -107,7 +107,6 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
                 dynamic: params.dynamic.unwrap_or(true),
                 endpoints: vec![],
             },
-
             cors: params.cors.into(),
             auths: vec![],
             prefix: params.prefix,
@@ -116,6 +115,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             outjection_secrets: vec![],
             random_seed: Default::default(),
             artifacts: Default::default(),
+            namespaces: Default::default(),
         },
         types: vec![],
         saved_store_state: Some(Store::save()),
