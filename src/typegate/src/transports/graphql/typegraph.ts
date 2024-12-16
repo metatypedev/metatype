@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { TypeGraphDS } from "../../typegraph/mod.ts";
-import type { ObjectNode } from "../../typegraph/type_node.ts";
+import { type ObjectNode, Type } from "../../typegraph/type_node.ts";
 import { addNode } from "./utils.ts";
 
 type PropertiesTable = Record<string, number>;
@@ -122,4 +122,27 @@ export function parseGraphQLTypeGraph(tgOrig: TypeGraphDS): TypeGraphDS {
   }
 
   return typegraph;
+}
+
+// TEMPORARY
+export function setNamespaces(tg: TypeGraphDS) {
+  if (tg.meta.namespaces != null) {
+    return;
+  }
+  const namespaces: number[] = [];
+
+  const rootNode = tg.types[0] as ObjectNode;
+
+  const addNamespacesFrom = (node: ObjectNode, nodeIdx: number) => {
+    namespaces.push(nodeIdx);
+    for (const [, typeIdx] of Object.entries(node.properties)) {
+      const childNode = tg.types[typeIdx];
+      if (childNode.type === Type.OBJECT) {
+        addNamespacesFrom(childNode, typeIdx);
+      }
+    }
+  };
+
+  addNamespacesFrom(rootNode, 0);
+  tg.meta.namespaces = namespaces;
 }
