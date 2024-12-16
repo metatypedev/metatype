@@ -46,7 +46,7 @@ Meta.test("Basic composition through traversal spec", async (t) => {
     .withContext({
       control_value: "PASS"
     })
-      .expectErrorContains("('either') at '<root>.simple_traversal_comp.one.two'")
+      .expectErrorContains("<root>.simple_traversal_comp.one.two")
       .on(e);
   });
 
@@ -65,7 +65,7 @@ Meta.test("Basic composition through traversal spec", async (t) => {
     .withContext({
       control_value: "DENY"
     })
-      .expectErrorContains("('object') at '<root>.simple_traversal_comp.one'")
+      .expectErrorContains("<root>.simple_traversal_comp.one")
       .on(e);
   });
 });
@@ -115,38 +115,36 @@ Meta.test("Basic chain composition on a single field spec", async (t) => {
   });
 
 
-  // await t.should("have DENY ruling", async () => {
-  //   await gql`
-  //     query {
-  //       single_field_comp(abc: "enter" ) {
-  //         abc
-  //       }
-  //     }
-  //   `
-  //   .withContext({
-  //     A: "PASS",
-  //     B: "DENY",
-  //     C: "ALLOW"
-  //   })
-  //     .expectErrorContains("Authorization failed for policy 'B'")
-  //     .on(e);
-  // });
+  await t.should("have DENY ruling", async () => {
+    await gql`
+      query {
+        single_field_comp(abc: "enter" ) {
+          abc
+        }
+      }
+    `
+    .withContext({
+      A: "PASS",
+      B: "DENY",
+      C: "ALLOW"
+    })
+      .expectErrorContains("Authorization failed for policy 'B'")
+      .on(e);
+  });
 });
 
-/*
+
 Meta.test("Traversal composition", async (t) => {
   const e = await t.engine("policies/policies_composition.py");
 
-  const one = {
+  const noopInput = {
     two: {
       three: {
         a: 1,
-        b: 2
       }
     }
   };
-
-  await t.should("work: traversal 1", async () => {
+  await t.should("have PASS acting as a no-op upon traversal (version 1)", async () => {
     await gql`
       query {
         traversal_comp(one: $one) {
@@ -155,15 +153,15 @@ Meta.test("Traversal composition", async (t) => {
               three {
                 ... on First { a }
                 ... on Second {
-                  b # d4
-                } 
+                  b  # d4
+                }
               } # d3
             } # d2
           } # d1
         }
       }
     `
-    .withVars({ one })
+    .withVars({ one: noopInput })
     .withContext({
       depth_1: "PASS",
       depth_2: "ALLOW",
@@ -171,9 +169,38 @@ Meta.test("Traversal composition", async (t) => {
       depth_4: "PASS"
     })
       .expectData({
-        traversal_comp: { one }
+        traversal_comp: {
+          one: noopInput
+        }
       })
       .on(e);
   });
+
+  await t.should("have PASS acting as a no-op upon traversal (version 1)", async () => {
+    await gql`
+      query {
+        traversal_comp(one: $one) {
+          one {
+            two {
+              three {
+                ... on First { a }
+                ... on Second {
+                  b  # d4
+                }
+              } # d3
+            } # d2
+          } # d1
+        }
+      }
+    `
+    .withVars({ one: noopInput })
+    .withContext({
+      depth_1: "PASS", 
+      depth_2: "DENY", // stop!
+      depth_3: "ALLOW",
+      depth_4: "ALLOW"
+    })
+      .expectErrorContains("<root>.traversal_comp.one.two")
+      .on(e);
+  });
 });
-*/

@@ -56,11 +56,11 @@ def policies_composition(g: Graph):
                                             ),
                                             t.struct(
                                                 {
-                                                    "b": t.integer()
-                                                    .rename("Second")
-                                                    .with_policy(ctxread("depth_4"))
+                                                    "b": t.integer().with_policy(
+                                                        ctxread("depth_4")
+                                                    )
                                                 }
-                                            ),
+                                            ).rename("Second"),
                                         ]
                                     ).with_policy(ctxread("depth_3"))
                                 }

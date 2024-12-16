@@ -18,18 +18,14 @@ import {
 } from "../../typegraph/type_node.ts";
 import { closestWord, unparse } from "../../utils.ts";
 import { collectArgs, type ComputeArg } from "./args.ts";
-import {
-  type OperationPolicies,
-  OperationPoliciesBuilder,
-} from "./policies.ts";
+import { OperationPolicies, StageMetadata } from "./policies.ts";
 import { getLogger } from "../../log.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "@std/collections/map-values";
 import { DependencyResolver } from "./dependency_resolver.ts";
 import { Runtime } from "../../runtimes/Runtime.ts";
 import { getInjection } from "../../typegraph/utils.ts";
-import { Injection, PolicyIndices } from "../../typegraph/types.ts";
-import { getInjectionValues } from "./injection_utils.ts";
+import { Injection } from "../../typegraph/types.ts";
 
 const logger = getLogger(import.meta);
 
@@ -70,7 +66,6 @@ export interface Plan {
  */
 export class Planner {
   rawArgs: Record<string, ComputeArg> = {};
-  policiesBuilder: OperationPoliciesBuilder;
 
   constructor(
     readonly operation: ast.OperationDefinitionNode,
@@ -78,10 +73,6 @@ export class Planner {
     private readonly tg: TypeGraph,
     private readonly verbose: boolean,
   ) {
-    const { timer_policy_eval_retries } = tg.typegate.config.base;
-    this.policiesBuilder = new OperationPoliciesBuilder(tg, {
-      timer_policy_eval_retries,
-    });
   }
 
   getPlan(): Plan {
@@ -112,13 +103,25 @@ export class Planner {
       {} as Record<string, string>,
     );
 
+    const orderedStageMetadata = [] as Array<StageMetadata>;
     for (const stage of stages) {
       stage.varTypes = varTypes;
+
+      orderedStageMetadata.push({
+        stageId: stage.id(),
+        typeIdx: stage.props.typeIdx,
+        isTopLevel: stage.props.parent ? false : true
+      });
     }
+
+    const { timer_policy_eval_retries } = this.tg.typegate.config.base;
+    const operationPolicies =  new OperationPolicies(this.tg, orderedStageMetadata, {
+      timer_policy_eval_retries
+    });
 
     return {
       stages,
-      policies: this.policiesBuilder.build(),
+      policies: operationPolicies,
     };
   }
 
@@ -398,18 +401,11 @@ export class Planner {
     }
 
     const fieldType = this.tg.type(node.typeIdx);
-    // TODO CHECK does this work with aliases
-    // TODO array or null??
-    const policies =
-      (this.tg.type(parent.typeIdx, Type.OBJECT).policies ?? {})[node.name] ??
-        [];
-
     const stages = fieldType.type !== Type.FUNCTION
-      ? this.traverseValueField(node, policies)
+      ? this.traverseValueField(node)
       : this.traverseFuncField(
         node,
         this.tg.type(parent.typeIdx, Type.OBJECT).properties,
-        policies,
       );
 
     return stages;
@@ -441,7 +437,6 @@ export class Planner {
    */
   private traverseValueField(
     node: Node,
-    policies: PolicyIndices[],
   ): ComputeStage[] {
     const outjection = node.scope && this.#getOutjection(node.scope!);
     if (outjection) {
@@ -495,7 +490,6 @@ export class Planner {
   private traverseFuncField(
     node: Node,
     parentProps: Record<string, number>,
-    policies: PolicyIndices[],
   ): ComputeStage[] {
     const stages: ComputeStage[] = [];
     const deps = [];
@@ -567,31 +561,21 @@ export class Planner {
     });
     stages.push(stage);
 
-    this.policiesBuilder.push(
-      stage.id(),
-      node.typeIdx,
-      collected.policies,
-      policies,
-    );
-
-    {
-      // nested quantifiers
-      let wrappedTypeIdx = outputIdx;
-      let wrappedType = this.tg.type(wrappedTypeIdx);
-      while (isQuantifier(wrappedType)) {
-        wrappedTypeIdx = getWrappedType(wrappedType);
-        wrappedType = this.tg.type(wrappedTypeIdx);
-      }
-
-      stages.push(
-        ...this.traverse(
-          { ...node, typeIdx: wrappedTypeIdx, parentStage: stage },
-          stage,
-        ),
-      );
+    // nested quantifiers
+    let wrappedOutputIdx = outputIdx;
+    let wrappedType = this.tg.type(wrappedOutputIdx);
+    while (isQuantifier(wrappedType)) {
+      wrappedOutputIdx = getWrappedType(wrappedType);
+      wrappedType = this.tg.type(wrappedOutputIdx);
     }
 
-    this.policiesBuilder.pop(stage.id());
+    stages.push(
+      ...this.traverse(
+        { ...node, typeIdx: wrappedOutputIdx, parentStage: stage },
+        stage,
+      ),
+    );
+
     return stages;
   }
 
