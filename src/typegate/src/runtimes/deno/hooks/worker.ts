@@ -13,5 +13,3 @@ self.onmessage = async ({ data }: MessageEvent<{ import: string }>) => {
 
   self.close();
 };
-
-
