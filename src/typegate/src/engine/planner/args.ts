@@ -790,7 +790,7 @@ class ArgumentCollector {
         return ({ context }) => {
           try {
             return queryContext(context) ?? null;
-          } catch (e) {
+          } catch (e: any) {
             const msg = e.message;
             throw new BadContext("Error while querying context: " + msg);
           }

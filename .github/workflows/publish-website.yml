@@ -29,7 +29,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - run: curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
+      - run: echo "~/.local/bin" >> $GITHUB_PATH
+      - run: ghjk envs cook
+
       - uses: actions/cache@v4
         with:
           path: .venv

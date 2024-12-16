@@ -33,7 +33,9 @@ import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
 import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import { DenoFailure } from "../runtimes/deno/hooks/mod.ts";
-import introspectionJson from "../typegraphs/introspection.json" with { type: "json" };
+import introspectionJson from "../typegraphs/introspection.json" with {
+  type: "json",
+};
 import { ArtifactService } from "../services/artifact_service.ts";
 import type { ArtifactStore } from "./artifacts/mod.ts";
 // TODO move from tests (MET-497)
@@ -194,18 +196,18 @@ export class Typegate implements AsyncDisposable {
     for (const handler of this.#onPushHooks) {
       try {
         res = await handler(res, secretManager, response, this.artifactStore);
-      } catch (e) {
-        logger.error(`Error in onPush hook: ${e}`);
+      } catch (err: any) {
+        logger.error(`Error in onPush hook: ${err}`);
         // FIXME: MigrationFailur err message parser doesn't support all errors like
         // can't reach database errs
-        if (e instanceof MigrationFailure && e.errors[0]) {
-          response.setFailure(e.errors[0]);
-        } else if (e instanceof DenoFailure) {
-          response.setFailure(e.failure);
+        if (err instanceof MigrationFailure && err.errors[0]) {
+          response.setFailure(err.errors[0]);
+        } else if (err instanceof DenoFailure) {
+          response.setFailure(err.failure);
         } else {
           response.setFailure({
             reason: "Unknown",
-            message: e.toString(),
+            message: err.toString(),
           });
         }
       }
@@ -402,14 +404,14 @@ export class Typegate implements AsyncDisposable {
 
     const introspection = enableIntrospection
       ? await TypeGraph.init(
-          this,
-          introspectionDef,
-          new SecretManager(introspectionDef, {}),
-          {
-            typegraph: TypeGraphRuntime.init(tgDS, [], {}),
-          },
-          null,
-        )
+        this,
+        introspectionDef,
+        new SecretManager(introspectionDef, {}),
+        {
+          typegraph: TypeGraphRuntime.init(tgDS, [], {}),
+        },
+        null,
+      )
       : null;
 
     const tg = await TypeGraph.init(

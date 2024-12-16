@@ -25,7 +25,6 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
             namespace: false,
             permissions: {
               // overrideable default permissions
-              hrtime: false,
               net: true,
               // on request permissions
               read: false, // default read permission

@@ -28,7 +28,6 @@
     ]
   },
   "compilerOptions": {
-    "allowJs": false,
     "strict": true,
     "types": [
       "./src/typegate/engine/runtime.d.ts"
@@ -39,7 +38,7 @@
       "deno.worker"
     ]
   },
-  "nodeModulesDir": false,
+  "nodeModulesDir": "none",
   "lock": "deno.lock",
   "lint": {
     "exclude": [
