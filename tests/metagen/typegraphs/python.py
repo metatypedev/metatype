@@ -18,6 +18,7 @@ def example(g: Graph):
             "email": t.email().optional(),
             "list_integer": t.list(t.integer()),
             "opt_union_flat": t.union([t.integer(), t.float()]).optional(),
+            "file": t.file().optional(),
             "reference": t.list(g.ref("Example")).optional(),
             "nested_ref": t.struct(
                 {"either": t.either([g.ref("Example"), references])}

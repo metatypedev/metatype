@@ -90,8 +90,15 @@ fn traverse_types_with_path<'tg, A, V, E>(
 where
     V: Fn(VisitorContext<'tg>, &mut A) -> Result<VisitNext, E>,
 {
+    let cyclic = path.borrow().iter().any(|segment| segment.from == type_idx);
+    if cyclic {
+        return Ok(TraverseOutput {
+            accumulator,
+            stop: false,
+        });
+    }
+
     let type_node = &tg.types[type_idx as usize];
-    // TODO check for cycles
 
     // visit current
     {
