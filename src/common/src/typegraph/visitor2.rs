@@ -92,7 +92,6 @@ where
     V: Fn(VisitorContext<'tg>, &mut A) -> Result<VisitNext, E>,
 {
     let type_node = &tg.types[type_idx as usize];
-    // TODO check for cycles
 
     // visit current
     {

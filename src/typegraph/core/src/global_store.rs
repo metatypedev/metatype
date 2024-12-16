@@ -159,7 +159,7 @@ impl Store {
     }
 
     pub fn register_type_ref(builder: TypeRefBuilder) -> Result<TypeRef> {
-        let id = with_store_mut(|s| s.types.len()) as u32;
+        let id = with_store(|s| s.types.len()) as u32;
         let type_ref = builder.with_id(id.into());
         let res = type_ref.clone();
 
