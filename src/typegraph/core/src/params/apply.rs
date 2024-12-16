@@ -558,7 +558,7 @@ mod test {
         assert_eq!(
             print_options.print(transform_data.query_input.into()),
             indoc::indoc! {"
-                root: struct #6
+                root: struct #5
                     [a]: string #0
                     [first]: string #1
                     [second]: string #1

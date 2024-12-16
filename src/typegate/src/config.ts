@@ -19,6 +19,10 @@ import type { TypegateConfig } from "./config/types.ts";
 export type { SyncConfigX as SyncConfig, TypegateConfig, TypegateConfigBase };
 
 async function getHostname() {
+  const envHostname = Deno.env.get("HOSTNAME")
+  if (envHostname) {
+    return envHostname;
+  }
   try {
     const { stdout } = await new Deno.Command("hostname", {
       stdout: "piped",
@@ -26,9 +30,9 @@ async function getHostname() {
     return new TextDecoder().decode(stdout).trim();
   } catch (_e) {
     console.debug(
-      `Not hostname binary found, falling back to env var HOSTNAME`,
+      `Not hostname binary found, unable to resolve hostname`,
     );
-    return Deno.env.get("HOSTNAME") ?? "UNKNOWN_HOSTNAME";
+    return "UNKNOWN_HOSTNAME";
   }
 }
 
