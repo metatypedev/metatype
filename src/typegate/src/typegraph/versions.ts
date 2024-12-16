@@ -56,7 +56,7 @@ const typegraphChangelog: Record<
               const prop = x.types[typeIdx];
               if ("injection" in prop) {
                 console.log({ injection: prop.injection, path });
-                throw new Error("injection");
+                // throw new Error("injection");
               }
               if (prop.type === Type.OBJECT) {
                 traverse(prop);

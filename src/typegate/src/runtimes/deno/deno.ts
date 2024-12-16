@@ -215,6 +215,7 @@ export class DenoRuntime extends Runtime {
       return [stage.withResolver(this.delegate(mat, verbose))];
     }
 
+    console.log("root type", this.tg.types[0]);
     if (this.tg.meta.namespaces!.includes(stage.props.typeIdx)) {
       return [stage.withResolver(() => ({}))];
     }

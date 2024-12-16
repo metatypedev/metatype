@@ -988,7 +988,7 @@
             "version-print": {
               "ty": "denoFile@v1",
               "key": "version-print",
-              "desc": "Print $METATYPE_VERSION",
+              "desc": "Print $CURRENT_VERSION",
               "envKey": "bciqori26ml2iqph3izifvvfsf4b2ar3yddr344utbfstyk2v33ot3mq"
             },
             "test-rust": {

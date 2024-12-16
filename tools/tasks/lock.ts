@@ -1,13 +1,22 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { copyLock, type DenoTaskDefArgs, parseArgs, sedLock } from "../deps.ts";
+import {
+  assert,
+  copyLock,
+  type DenoTaskDefArgs,
+  parseArgs,
+  sedLock,
+  semver,
+} from "../deps.ts";
 import * as consts from "../consts.ts";
 
 export default {
   "lock-sed": {
     desc: "Update versions",
     fn: async ($) => {
+      validateVersions();
+
       const args = parseArgs(Deno.args, {
         boolean: ["check"],
         default: { version: false, check: false },
@@ -50,3 +59,30 @@ export default {
     },
   },
 } satisfies Record<string, DenoTaskDefArgs>;
+
+export function validateVersions() {
+  const currentVersion = semver.parse(consts.CURRENT_VERSION);
+  const latestRelease = semver.parse(consts.LATEST_RELEASE_VERSION);
+  const latestPreRelease = consts.LATEST_PRE_RELEASE_VERSION == null
+    ? null
+    : semver.parse(consts.LATEST_PRE_RELEASE_VERSION);
+
+  const prerelease = currentVersion.prerelease ?? [];
+  const isPreRelease = prerelease.length > 0;
+
+  if (!isPreRelease || (isPreRelease && prerelease[1] == 0)) {
+    assert(latestPreRelease == null, "expected no latest pre-release version");
+  }
+
+  if (isPreRelease) {
+    assert(
+      semver.greaterThan(currentVersion, latestPreRelease!),
+      "expected current version to be greater than latest pre-release version",
+    );
+  }
+
+  assert(
+    semver.greaterThan(currentVersion, latestRelease),
+    "expected current version to be greater than latest release version",
+  );
+}

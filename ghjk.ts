@@ -3,8 +3,13 @@
 
 // @ts-nocheck: Deno file
 
-import { METATYPE_VERSION, PUBLISHED_VERSION } from "./tools/consts.ts";
+import {
+  CURRENT_VERSION,
+  LATEST_PRE_RELEASE_VERSION,
+  LATEST_RELEASE_VERSION,
+} from "./tools/consts.ts";
 import { file, ports, sedLock, semver, stdDeps } from "./tools/deps.ts";
+import { validateVersions } from "./tools/tasks/lock.ts";
 import installs from "./tools/installs.ts";
 import tasks from "./tools/tasks/mod.ts";
 
@@ -116,11 +121,12 @@ env("dev")
     ports.cargobi({ crateName: "git-cliff", locked: true }),
   );
 
-task("version-print", () => console.log(METATYPE_VERSION), {
-  desc: "Print $METATYPE_VERSION",
+task("version-print", () => console.log(CURRENT_VERSION), {
+  desc: "Print $CURRENT_VERSION",
 });
 
 task("version-bump", async ($) => {
+  validateVersions();
   const bumps = [
     "major",
     "premajor",
@@ -140,7 +146,7 @@ task("version-bump", async ($) => {
 
   const newVersion = semver.format(
     semver.increment(
-      semver.parse(METATYPE_VERSION),
+      semver.parse(CURRENT_VERSION),
       bump as semver.ReleaseType,
       {
         prerelease: "rc",
@@ -148,15 +154,17 @@ task("version-bump", async ($) => {
     ),
   );
 
-  $.logStep(`Bumping ${METATYPE_VERSION} → ${newVersion}`);
-  const lines = [[/^(export const METATYPE_VERSION = ").*(";)$/, newVersion]];
+  $.logStep(`Bumping ${CURRENT_VERSION} → ${newVersion}`);
+  const lines = [[/^(export const CURRENT_VERSION = ").*(";)$/, newVersion]];
   if (bump === "prerelease") {
     $.logStep(
-      `Bumping published version ${PUBLISHED_VERSION} → ${METATYPE_VERSION}`,
+      `Bumping published version ${
+        LATEST_PRE_RELEASE_VERSION || LATEST_RELEASE_VERSION
+      } → ${CURRENT_VERSION}`,
     );
     lines.push([
       /^(export const PUBLISHED_VERSION = ").*(";)$/,
-      METATYPE_VERSION,
+      CURRENT_VERSION,
     ]);
   }
 

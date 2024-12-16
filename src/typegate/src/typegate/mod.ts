@@ -33,7 +33,9 @@ import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
 import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import { DenoFailure } from "../runtimes/deno/hooks/mod.ts";
-import introspectionJson from "../typegraphs/introspection.json" with { type: "json" };
+import introspectionJson from "../typegraphs/introspection.json" with {
+  type: "json",
+};
 import { ArtifactService } from "../services/artifact_service.ts";
 import type { ArtifactStore } from "./artifacts/mod.ts";
 // TODO move from tests (MET-497)
@@ -360,6 +362,7 @@ export class Typegate implements AsyncDisposable {
     );
 
     logger.info(`Registering engine '${name}'`);
+    logger.info("registering {}", this.register.constructor.name);
     await this.register.add(engine);
 
     const newArtifacts = new Set(
@@ -402,14 +405,14 @@ export class Typegate implements AsyncDisposable {
 
     const introspection = enableIntrospection
       ? await TypeGraph.init(
-          this,
-          introspectionDef,
-          new SecretManager(introspectionDef, {}),
-          {
-            typegraph: TypeGraphRuntime.init(tgDS, [], {}),
-          },
-          null,
-        )
+        this,
+        introspectionDef,
+        new SecretManager(introspectionDef, {}),
+        {
+          typegraph: TypeGraphRuntime.init(tgDS, [], {}),
+        },
+        null,
+      )
       : null;
 
     const tg = await TypeGraph.init(
