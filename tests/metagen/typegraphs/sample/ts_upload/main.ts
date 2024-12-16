@@ -24,4 +24,11 @@ const res2 = await gql.mutation({
   }),
 });
 
-console.log(JSON.stringify([res1, res2]));
+const file = new File(["Hello"], "reusable.txt", { type: "text/plain" });
+
+const res3 = await gql.mutation({
+  uploadFirst: qg.upload({ file, path: "deno/first.txt" }),
+  uploadSecond: qg.upload({ file, path: "deno/second.txt" }),
+});
+
+console.log(JSON.stringify([res1, res2, res3]));
