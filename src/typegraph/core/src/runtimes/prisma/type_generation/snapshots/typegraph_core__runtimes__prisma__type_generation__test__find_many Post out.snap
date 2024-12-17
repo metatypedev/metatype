@@ -2,8 +2,8 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list 'list_309' #310
-└─ item: struct 'Post_with_nested_count' #308
-   ├─ [author]: &User #131
-   ├─ [id]: integer #127
-   └─ [title]: string #130
+root: list #266
+└─ item: struct 'Post_with_nested_count' #265
+   ├─ [author]: &User #121
+   ├─ [id]: integer #117
+   └─ [title]: string #120

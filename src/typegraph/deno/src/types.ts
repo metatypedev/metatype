@@ -627,7 +627,6 @@ export class Func<
       throw new Error("Invalid apply value: root must be an object");
     }
     const transformTree = JSON.stringify(serialized.fields);
-    log.info("transform tree", transformTree);
     const transformData = core.getTransformData(this.inp._id, transformTree);
 
     return func(

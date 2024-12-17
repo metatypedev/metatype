@@ -38,12 +38,12 @@ impl TypeGen for CountOutput {
         }
 
         // TODO union
-        builder.build_named(self.name())
+        builder.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("{}_count_aggregate", model_name)
+        Ok(format!("{}_count_aggregate", model_name))
     }
 }
 
@@ -88,15 +88,15 @@ impl TypeGen for NumberAggregateOutput {
             }
         }
 
-        builder.build_named(self.name())
+        builder.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
-        if self.avg {
+        Ok(if self.avg {
             format!("{}_avg_aggregate", model_name)
         } else {
             format!("{}_number_aggregate", model_name)
-        }
+        })
     }
 }
