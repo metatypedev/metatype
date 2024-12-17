@@ -157,12 +157,18 @@ pub fn extend_policy_chain(chain: &mut Vec<PolicySpec>, type_id: TypeId) -> Resu
         }
         TypeDef::Union(inner) => {
             for tpe_id in inner.data.variants.iter() {
-                extend_policy_chain(chain, TypeId(*tpe_id))?;
+                let tpe = TypeId(*tpe_id);
+                if !tpe.is_struct()? {
+                    extend_policy_chain(chain, tpe)?;
+                }
             }
         }
         TypeDef::Either(inner) => {
             for tpe_id in inner.data.variants.iter() {
-                extend_policy_chain(chain, TypeId(*tpe_id))?;
+                let tpe = TypeId(*tpe_id);
+                if !tpe.is_struct()? {
+                    extend_policy_chain(chain, tpe)?;
+                }
             }
         }
         TypeDef::Func(inner) => {

@@ -106,9 +106,14 @@ export class Planner {
     const orderedStageMetadata = [] as Array<StageMetadata>;
     for (const stage of stages) {
       stage.varTypes = varTypes;
+      const stageId = stage.id();
+      if (stageId.startsWith("__schema")) {
+        // TODO: allow and reuse previous stage policy?
+        continue;
+      }
 
       orderedStageMetadata.push({
-        stageId: stage.id(),
+        stageId,
         typeIdx: stage.props.typeIdx,
         isTopLevel: stage.props.parent ? false : true
       });

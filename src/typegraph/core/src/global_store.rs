@@ -485,6 +485,10 @@ impl TypeId {
         Ok(matches!(self.as_xdef()?.type_def, TypeDef::Func(_)))
     }
 
+    pub fn is_struct(&self) -> Result<bool> {
+        Ok(matches!(self.as_xdef()?.type_def, TypeDef::Struct(_)))
+    }
+
     pub fn resolve_quant(&self) -> Result<TypeId> {
         let type_id = *self;
         match type_id.as_xdef()?.type_def {

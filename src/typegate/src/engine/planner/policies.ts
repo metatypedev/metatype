@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { type Logger } from "@std/log";
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";
 import type { TypeGraph } from "../../typegraph/mod.ts";
 import type {
@@ -14,19 +15,27 @@ import type {
 import type { EffectType, PolicyIndices } from "../../typegraph/types.ts";
 import { ensure } from "../../utils.ts";
 import { getLogger } from "../../log.ts";
-import { getWrappedType, isFunction, isQuantifier, Type } from "../../typegraph/type_node.ts";
+import {
+  getWrappedType,
+  isEither,
+  isFunction,
+  isQuantifier,
+  isUnion,
+  Type,
+} from "../../typegraph/type_node.ts";
 import { BadContext } from "../../errors.ts";
 
 export type PolicyResolverOutput = "DENY" | "ALLOW" | "PASS" | (unknown & {});
-type GetResolverResult = (polIdx: PolicyIdx, effect: EffectType) => Promise<PolicyResolverOutput | undefined>;
-
+type GetResolverResult = (
+  polIdx: PolicyIdx,
+  effect: EffectType,
+) => Promise<PolicyResolverOutput | undefined>;
 
 export interface StageMetadata {
   stageId: string;
   typeIdx: TypeIdx;
   isTopLevel: boolean;
 }
-
 
 interface ComposePolicyOperand {
   canonFieldName: string;
@@ -48,9 +57,12 @@ export type OperationPoliciesConfig = {
 interface PolicyForStage {
   canonFieldName: string;
   /** Each item is either a PolicyIndicesByEffect or a number */
-  indices: Array<PolicyIndices>
+  indices: Array<PolicyIndices>;
 }
 
+// This is arbitrary, but must be unique in such a way that the user produced
+// stages do not share the same id.
+const EXPOSE_STAGE_ID = "<root>";
 
 export class OperationPolicies {
   #stageToPolicies: Map<StageId, Array<PolicyForStage>> = new Map();
@@ -61,32 +73,44 @@ export class OperationPolicies {
     private orderedStageMetadata: Array<StageMetadata>,
     private config: OperationPoliciesConfig,
   ) {
-
     this.#prepareStageToPolicies();
     this.#preallocateResolvers();
   }
 
-
   #prepareStageToPolicies() {
     this.#stageToPolicies = new Map();
-    for (const { stageId, typeIdx: rawIdx } of this.orderedStageMetadata) {
-      const policies = this.#getPolicies(rawIdx);
+
+    // Note: policies for exposed functions are hoisted on the root struct (index 0)
+    // If a function has a policy it overrides the definition on the root
+    const exposePolicies = this.#getPolicies(0);
+    const exposePolicyCount = exposePolicies.reduce(
+      (total, { indices }) => total + indices.length,
+      0,
+    );
+    this.#stageToPolicies.set(EXPOSE_STAGE_ID, exposePolicies);
+
+    for (
+      const { stageId, typeIdx: maybeWrappedIdx } of this.orderedStageMetadata
+    ) {
+      const policies = this.#getPolicies(maybeWrappedIdx);
       this.#stageToPolicies.set(stageId, policies);
       console.log("> found", stageId, policies);
 
       // top-level functions must have policies
       const isTopLevel = stageId.split(".").length == 1;
-      const policyCount = policies.reduce((total, { indices }) => total + indices.length, 0);
-      // FIXME: policy on function not collected?
-      // if (isTopLevel && policyCount === 0) {
-      //   const details = [
-      //     `top-level function '${this.tg.type(rawIdx).title}'`,
-      //     `at '${stageId}'`,
-      //   ].join(" ");
-      //   throw new Error(
-      //     `No authorization policy took decision for ${details}'`,
-      //   );
-      // }
+      const policyCount = policies.reduce(
+        (total, { indices }) => total + indices.length,
+        exposePolicyCount,
+      );
+      if (isTopLevel && policyCount === 0) {
+        const details = [
+          `top-level function '${this.tg.type(maybeWrappedIdx).title}'`,
+          `at '${stageId}'`,
+        ].join(" ");
+        throw new Error(
+          `No authorization policy took decision for ${details}'`,
+        );
+      }
     }
   }
 
@@ -94,7 +118,7 @@ export class OperationPolicies {
     this.#resolvers = new Map();
     const policyIndicesWithDup = Array.from(this.#stageToPolicies.values())
       .map((policyPerName) => {
-        const indices = policyPerName.map((({ indices }) => indices));
+        const indices = policyPerName.map(({ indices }) => indices);
         return indices.flat();
       })
       .flat();
@@ -126,11 +150,113 @@ export class OperationPolicies {
     }
   }
 
+  /**
+   * Evaluate each stage policy in traversal order
+   *
+   * - `PASS`: continue further, same as no policies
+   * - `ALLOW`: stops evaluation for parent, and skip any child stage
+   * - `DENY`: throw an error and stopping everything
+   */
   public async authorize(context: Context, info: Info, verbose: boolean) {
     const logger = getLogger("policies");
-    const cache = new Map<PolicyIdx, PolicyResolverOutput>();
 
-    const getResolverResult = async (
+    const outputCache = new Map<PolicyIdx, PolicyResolverOutput>();
+    const getResolverResult = this.#createPolicyEvaluator(
+      { context, info },
+      outputCache,
+      verbose,
+      logger,
+    );
+
+    const resolvedPolicyCachePerStage: Map<string, PolicyResolverOutput> =
+      new Map();
+
+    const fakeStageMeta = {
+      isTopLevel: true,
+      stageId: EXPOSE_STAGE_ID,
+      typeIdx: 0, // unused, but worth to keep around
+    } as StageMetadata;
+    const stageMetaList = [fakeStageMeta, ...this.orderedStageMetadata];
+
+    outerIter: for (const stageMeta of stageMetaList) {
+      const { stageId } = stageMeta;
+
+      for (
+        const [priorStageId, verdict] of resolvedPolicyCachePerStage.entries()
+      ) {
+        const globalAllows = priorStageId == EXPOSE_STAGE_ID &&
+          verdict == "ALLOW";
+        if (globalAllows) {
+          break outerIter;
+        }
+
+        console.log("  > check prior", priorStageId, "vs", stageId, verdict);
+        const parentAllows = stageId.startsWith(priorStageId) &&
+          verdict == "ALLOW";
+        if (parentAllows) {
+          continue outerIter;
+        } // elif deny => already thrown
+      }
+
+      const { effect, res } = await this.#checkStageAuthorization(
+        stageMeta,
+        getResolverResult,
+      );
+
+      switch (res.authorized) {
+        case "ALLOW": {
+          resolvedPolicyCachePerStage.set(stageId, "ALLOW");
+          continue;
+        }
+        case "PASS": {
+          resolvedPolicyCachePerStage.set(stageId, "PASS");
+          continue;
+        }
+        default: {
+          resolvedPolicyCachePerStage.set(stageId, res.authorized);
+          const policyNames = res.policiesFailed.map((operand) => ({
+            name: this.tg.policy(operand.index).name,
+            concernedField: operand.canonFieldName,
+          }));
+
+          throw new BadContext(
+            this.getRejectionReason(stageId, effect, policyNames),
+          );
+        }
+      }
+    }
+  }
+
+  getRejectionReason(
+    stageId: StageId,
+    effect: EffectType,
+    policiesData: Array<{ name: string; concernedField: string }>,
+  ): string {
+    const getPath = (concernedField: string) => {
+      if (stageId == EXPOSE_STAGE_ID) {
+        return [EXPOSE_STAGE_ID, concernedField].join(".");
+      }
+      return [EXPOSE_STAGE_ID, stageId, concernedField].join(".");
+    };
+
+    const detailsPerPolicy = policiesData
+      .map(({ name, concernedField }) =>
+        [
+          `policy '${name}'`,
+          `with effect '${effect}'`,
+          `at '${getPath(concernedField)}'`,
+        ].join(" ")
+      );
+    return `Authorization failed for ${detailsPerPolicy.join(";  ")}`;
+  }
+
+  #createPolicyEvaluator(
+    partialResolverInput: { context: Context; info: Info },
+    outputCache: Map<PolicyIdx, PolicyResolverOutput>,
+    verbose: boolean,
+    logger: Logger,
+  ): GetResolverResult {
+    return async (
       polIdx: PolicyIdx,
       effect: EffectType,
     ): Promise<PolicyResolverOutput | undefined> => {
@@ -140,8 +266,8 @@ export class OperationPolicies {
             this.tg.policy(polIdx).name
           }'[${polIdx}] with effect '${effect}'...`,
         );
-      if (cache.has(polIdx)) {
-        return cache.get(polIdx);
+      if (outputCache.has(polIdx)) {
+        return outputCache.get(polIdx);
       }
 
       const resolver = this.#resolvers.get(polIdx);
@@ -155,80 +281,28 @@ export class OperationPolicies {
       const res = (await resolver!({
         _: {
           parent: {},
-          context,
-          info,
+          context: partialResolverInput.context,
+          info: partialResolverInput.info,
           variables: {},
           effect: effect === "read" ? null : effect,
         },
       })) as PolicyResolverOutput;
-      cache.set(polIdx, res);
+      outputCache.set(polIdx, res);
       verbose && logger.info(`> authorize: ${res}`);
       return res;
     };
-
-    const resolvedPolicyCachePerStage: Map<string, PolicyResolverOutput> = new Map();
-
-    outerIter: for (const stageMeta of this.orderedStageMetadata) {
-      const { stageId } = stageMeta;
-
-      console.log("verdict for", stageId);
-
-      for (const [priorStageId, verdict] of resolvedPolicyCachePerStage.entries()) {
-        if (stageId.startsWith(priorStageId) && verdict == "ALLOW") {
-          continue outerIter;
-        } // elif deny => already thrown
-      }
-
-      const { effect, res } = await this.#checkStageAuthorization(stageMeta, getResolverResult);
-      
-      switch(res.authorized) {
-        case "ALLOW": {
-          resolvedPolicyCachePerStage.set(stageId, "ALLOW");
-          continue;
-        }
-        case "PASS": {
-          resolvedPolicyCachePerStage.set(stageId, "PASS");
-          continue;
-        }
-        default: {
-          resolvedPolicyCachePerStage.set(stageId, res.authorized);
-          const policyNames = res.policiesFailed.map((operand) => ({
-            name: this.tg.policy(operand.index).name,
-            concernedField: operand.canonFieldName
-          }));
-
-          throw new BadContext(
-            this.getRejectionReason(stageId,  effect, policyNames),
-          );
-        }
-      }
-    }
   }
 
-  getRejectionReason(
-    stageId: StageId,
-    effect: EffectType,
-    policiesData: Array<{ name: string, concernedField: string }>,
-  ): string {
-    const details = policiesData
-      .map(({ name, concernedField }) => [
-        `policy '${name}'`,
-        `with effect '${effect}'`,
-        `at '<root>.${stageId}.${concernedField}'`,
-      ].join(" "));
-    return `Authorization failed for ${details.join(";  ")}`;
-  }
-
-  /** 
+  /**
    * A single type may hold multiple policies
-   * 
-   * * `ALLOW`: ALLOW & P = P
-   * * `DENY`: DENY & P = DENY
-   * 
+   *
+   * - `ALLOW`: ALLOW & P = P
+   * - `DENY`: DENY & P = DENY
+   *
    * DENY and ALLOW combine just like booleans with the AND gate
-   * 
+   *
    * PASS does not participate.
-   **/
+   */
   async #composePolicies(
     policies: Array<ComposePolicyOperand>,
     effect: EffectType,
@@ -236,24 +310,31 @@ export class OperationPolicies {
   ): Promise<CheckResult> {
     const operands = [];
     const deniersIdx = [];
-    for (const operand of policies) {
-      const res = await getResolverResult(operand.index, effect);
-      
-      switch(res) {
+    for (const policyOperand of policies) {
+      const res = await getResolverResult(policyOperand.index, effect);
+
+      switch (res) {
         case "ALLOW": {
           operands.push(true);
           break;
         }
         case "DENY": {
+          // We can fail fast here with a throw
+          // but we can assume policies are reused accross
+          // types (so high cache hit)
           operands.push(false);
-          deniersIdx.push(operand);
+          deniersIdx.push(policyOperand);
           break;
         }
         case "PASS": {
           continue;
         }
         default: {
-          throw new Error(`Could not take decision on value: ${JSON.stringify(res)}, policy must return either "ALLOW", "DENY" or "PASS"`)
+          throw new Error(
+            `Could not take decision on value: ${
+              JSON.stringify(res)
+            }, policy must return either "ALLOW", "DENY" or "PASS"`,
+          );
         }
       }
     }
@@ -264,7 +345,7 @@ export class OperationPolicies {
       if (operands.every((_bool) => _bool)) {
         return { authorized: "ALLOW" };
       } else {
-        return { authorized: "DENY", policiesFailed: deniersIdx }
+        return { authorized: "DENY", policiesFailed: deniersIdx };
       }
     }
   }
@@ -284,15 +365,24 @@ export class OperationPolicies {
       nestedSchema = this.tg.type(nestedTypeIdx);
     }
 
+    if (isEither(nestedSchema) || isUnion(nestedSchema)) {
+      const variantIndices = isEither(nestedSchema)
+        ? nestedSchema.oneOf
+        : nestedSchema.anyOf;
+      const policies = variantIndices.map((idx) => this.#getPolicies(idx))
+        .flat();
+      return policies;
+    }
+
     let out: Record<string, Array<PolicyIndices>> = {};
-    if(nestedSchema.type == "object") {
+    if (nestedSchema.type == "object") {
       out = nestedSchema.policies ?? {};
     }
 
     return Object.entries(out).map(([k, v]) => ({
       canonFieldName: k,
-      indices: v
-    }))
+      indices: v,
+    }));
   }
 
   #getEffectOrDefault(typeIdx: number) {
@@ -306,10 +396,9 @@ export class OperationPolicies {
     return effect;
   }
 
-
   async #checkStageAuthorization(
-    { stageId, typeIdx }: StageMetadata, 
-    getResolverResult: GetResolverResult
+    { stageId, typeIdx }: StageMetadata,
+    getResolverResult: GetResolverResult,
   ) {
     const effect = this.#getEffectOrDefault(typeIdx);
 
@@ -317,23 +406,20 @@ export class OperationPolicies {
     const policies = [];
     for (const { canonFieldName, indices } of policiesForStage) {
       for (const index of indices) {
-
         if (typeof index == "number") {
-          policies.push({ canonFieldName, index })
+          policies.push({ canonFieldName, index });
         } else {
           const actualIndex = index[effect] ?? null;
           if (actualIndex == null) {
             throw new BadContext(
               this.getRejectionReason(stageId, effect, [{
                 name: "__deny",
-                concernedField: canonFieldName
+                concernedField: canonFieldName,
               }]),
             );
           }
 
-          
-
-          policies.push({ canonFieldName, index: actualIndex })
+          policies.push({ canonFieldName, index: actualIndex });
         }
       }
     }
@@ -344,7 +430,7 @@ export class OperationPolicies {
         policies,
         effect,
         getResolverResult,
-      )
+      ),
     };
   }
 }

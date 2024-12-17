@@ -49,6 +49,9 @@ def policies_composition(g: Graph):
                         {
                             "two": t.struct(
                                 {
+                                    # Note:
+                                    # The policy on each variant is not hoisted
+                                    # on the parent struct
                                     "three": t.either(
                                         [
                                             t.struct({"a": t.integer()}).rename(
@@ -56,8 +59,12 @@ def policies_composition(g: Graph):
                                             ),
                                             t.struct(
                                                 {
-                                                    "b": t.integer().with_policy(
-                                                        ctxread("depth_4")
+                                                    "b": t.struct(
+                                                        {
+                                                            "c": t.integer().with_policy(
+                                                                ctxread("depth_4")
+                                                            )
+                                                        }
                                                     )
                                                 }
                                             ).rename("Second"),
