@@ -563,18 +563,20 @@ function walkPath(
     format: format ?? null,
     fields: node.type == "object" ? collectObjectFields(tg, parent) : null,
     // TODO enum type on typegraph typegate.py
-    policies: node.policies.map((policy) => {
-      if (typeof policy === "number") {
-        return JSON.stringify(tg.policy(policy).name);
-      }
-      return JSON.stringify(
-        mapValues(policy as Record<string, number>, (value: number) => {
-          if (value === null) {
-            return null;
-          }
-          return tg.policy(value).name;
-        }),
-      );
-    }),
+    // FIXME
+    policies: [],
+    // policies: node.policies.map((policy) => {
+    //   if (typeof policy === "number") {
+    //     return JSON.stringify(tg.policy(policy).name);
+    //   }
+    //   return JSON.stringify(
+    //     mapValues(policy as Record<string, number>, (value: number) => {
+    //       if (value === null) {
+    //         return null;
+    //       }
+    //       return tg.policy(value).name;
+    //     }),
+    //   );
+    // }),
   };
 }

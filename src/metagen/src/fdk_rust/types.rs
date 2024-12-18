@@ -438,6 +438,7 @@ mod test {
                             ]
                             .into_iter()
                             .collect(),
+                            policies: Default::default(),
                             id: vec![],
                             // FIXME: remove required
                             required: vec![],
@@ -615,6 +616,7 @@ pub enum MyUnion {
                             properties: [("obj_b".to_string(), 1)].into_iter().collect(),
                             id: vec![],
                             required: ["obj_b"].into_iter().map(Into::into).collect(),
+                            policies: Default::default(),
                         },
                         base: TypeNodeBase {
                             title: "ObjA".into(),
@@ -624,6 +626,7 @@ pub enum MyUnion {
                     TypeNode::Object {
                         data: ObjectTypeData {
                             properties: [("obj_c".to_string(), 2)].into_iter().collect(),
+                            policies: Default::default(),
                             id: vec![],
                             required: ["obj_c"].into_iter().map(Into::into).collect(),
                         },
@@ -635,6 +638,7 @@ pub enum MyUnion {
                     TypeNode::Object {
                         data: ObjectTypeData {
                             properties: [("obj_a".to_string(), 0)].into_iter().collect(),
+                            policies: Default::default(),
                             id: vec![],
                             required: ["obj_a"].into_iter().map(Into::into).collect(),
                         },
@@ -665,6 +669,7 @@ pub struct ObjC {
                     TypeNode::Object {
                         data: ObjectTypeData {
                             properties: [("obj_b".to_string(), 1)].into_iter().collect(),
+                            policies: Default::default(),
                             id: vec![],
                             required: ["obj_b"].into_iter().map(Into::into).collect(),
                         },
@@ -676,6 +681,7 @@ pub struct ObjC {
                     TypeNode::Object {
                         data: ObjectTypeData {
                             properties: [("union_c".to_string(), 2)].into_iter().collect(),
+                            policies: Default::default(),
                             id: vec![],
                             required: ["union_c"].into_iter().map(Into::into).collect(),
                         },
@@ -714,6 +720,7 @@ pub enum CUnion {
                     TypeNode::Object {
                         data: ObjectTypeData {
                             properties: [("obj_b".to_string(), 1)].into_iter().collect(),
+                            policies: Default::default(),
                             id: vec![],
                             required: ["obj_b"].into_iter().map(Into::into).collect(),
                         },
@@ -725,6 +732,7 @@ pub enum CUnion {
                     TypeNode::Object {
                         data: ObjectTypeData {
                             properties: [("either_c".to_string(), 2)].into_iter().collect(),
+                            policies: Default::default(),
                             id: vec![],
                             required: ["either_c"].into_iter().map(Into::into).collect(),
                         },

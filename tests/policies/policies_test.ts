@@ -29,13 +29,13 @@ Meta.test("Policies", async (t) => {
   await t.should("have public access", async () => {
     await gql`
       query {
-        pol_true(a: 1) {
+        pol_pass(a: 1) {
           a
         }
       }
     `
       .expectData({
-        pol_true: {
+        pol_pass: {
           a: 1,
         },
       })
@@ -45,7 +45,7 @@ Meta.test("Policies", async (t) => {
   await t.should("have no access", async () => {
     await gql`
       query {
-        pol_false(a: 1) {
+        pol_deny(a: 1) {
           a
         }
       }
@@ -226,7 +226,7 @@ Meta.test("Policies for effects", async (t) => {
     secrets: await genSecretKey(config),
   });
 
-  await t.should("succeeed", async () => {
+  await t.should("succeed", async () => {
     await gql`
       query {
         findUser(id: 12) {
@@ -250,6 +250,7 @@ Meta.test("Policies for effects", async (t) => {
         updateUser(id: 12, set: { email: "john.doe@example.com" }) {
           id
           email
+          password_hash # deny if role!=admin (here undefined) on effect update
         }
       }
     `
@@ -261,7 +262,7 @@ Meta.test("Policies for effects", async (t) => {
         findUser(id: 12) {
           id
           email
-          password_hash
+          password_hash # deny on effect read
         }
       }
     `
@@ -285,18 +286,6 @@ Meta.test("Policies for effects", async (t) => {
         },
       })
       .withContext({ role: "admin" })
-      .on(e);
-
-    await gql`
-      query {
-        findUser(id: 12) {
-          id
-          email
-          password_hash
-        }
-      }
-    `
-      .expectErrorContains("Authorization failed")
       .on(e);
   });
 });

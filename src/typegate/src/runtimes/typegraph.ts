@@ -58,6 +58,12 @@ function generateCustomScalar(type: TypeNode, idx: number) {
   throw `"${type.title}" of type "${type.type}" is not a scalar`;
 }
 
+type FieldInfo = {
+  name: string;
+  typeIdx: number;
+  policies: PolicyIndices[];
+};
+
 export class TypeGraphRuntime extends Runtime {
   tg: TypeGraphDS;
   private scalarIndex = new Map<string, number>();
@@ -400,7 +406,13 @@ export class TypeGraphRuntime extends Runtime {
           name: () => `${type.title}Inp`,
           description: () => `${type.title} input type`,
           inputFields: () => {
-            return Object.entries(type.properties).map(this.formatField(true));
+            return Object.entries(type.properties).map(([name, typeIdx]) =>
+              this.formatField(true)({
+                name,
+                typeIdx,
+                policies: type.policies?.[name] ?? [],
+              })
+            );
           },
           interfaces: () => [],
         };
@@ -413,7 +425,13 @@ export class TypeGraphRuntime extends Runtime {
           fields: () => {
             let entries = Object.entries(type.properties);
             entries = entries.sort((a, b) => b[1] - a[1]);
-            return entries.map(this.formatField(false));
+            return entries.map(([name, typeIdx]) =>
+              this.formatField(false)({
+                name,
+                typeIdx,
+                policies: type.policies?.[name] ?? [],
+              })
+            );
           },
           interfaces: () => [],
         };
@@ -477,7 +495,7 @@ export class TypeGraphRuntime extends Runtime {
     // enum: enumValues
   };
 
-  policyDescription(type: TypeNode): string {
+  policyDescription(policies: PolicyIndices[]): string {
     const describeOne = (p: number) => this.tg.policies[p].name;
     const describe = (p: PolicyIndices) => {
       if (typeof p === "number") {
@@ -487,12 +505,12 @@ export class TypeGraphRuntime extends Runtime {
         .map(([eff, polIdx]) => `${eff}:${describeOne(polIdx)}`)
         .join("; ");
     };
-    const policies = type.policies.map(describe);
+    const policyNames = policies.map(describe);
 
     let ret = "\n\nPolicies:\n";
 
-    if (policies.length > 0) {
-      ret += policies.map((p: string) => `- ${p}`).join("\n");
+    if (policyNames.length > 0) {
+      ret += policyNames.map((p: string) => `- ${p}`).join("\n");
     } else {
       ret += "- inherit";
     }
@@ -500,51 +518,52 @@ export class TypeGraphRuntime extends Runtime {
     return ret;
   }
 
-  formatField = (asInput: boolean) => ([name, typeIdx]: [string, number]) => {
-    const type = this.tg.types[typeIdx];
-    const common = {
-      // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L329
-      name: () => name,
-      description: () => `${name} field${this.policyDescription(type)}`,
-      isDeprecated: () => false,
-      deprecationReason: () => null,
-    };
+  formatField =
+    (asInput: boolean) => ({ name, typeIdx, policies }: FieldInfo) => {
+      const type = this.tg.types[typeIdx];
+      const common = {
+        // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L329
+        name: () => name,
+        description: () => `${name} field${this.policyDescription(policies)}`,
+        isDeprecated: () => false,
+        deprecationReason: () => null,
+      };
 
-    if (isFunction(type)) {
+      if (isFunction(type)) {
+        return {
+          ...common,
+          args: (_: DeprecatedArg = {}) => {
+            const inp = this.tg.types[type.input as number];
+            ensure(
+              isObject(inp),
+              `${type} cannot be an input field, require struct`,
+            );
+            let entries = Object.entries((inp as ObjectNode).properties);
+            entries = entries.sort((a, b) => b[1] - a[1]);
+            return entries
+              .map((entry) =>
+                this.formatInputFields(
+                  entry,
+                  (type.injections ?? {})[entry[0]] ?? null,
+                )
+              )
+              .filter((f) => f !== null);
+          },
+          type: () => {
+            const output = this.tg.types[type.output as number];
+            return this.formatType(output, true, false);
+          },
+        };
+      }
+
       return {
         ...common,
-        args: (_: DeprecatedArg = {}) => {
-          const inp = this.tg.types[type.input as number];
-          ensure(
-            isObject(inp),
-            `${type} cannot be an input field, require struct`,
-          );
-          let entries = Object.entries((inp as ObjectNode).properties);
-          entries = entries.sort((a, b) => b[1] - a[1]);
-          return entries
-            .map((entry) =>
-              this.formatInputFields(
-                entry,
-                (type.injections ?? {})[entry[0]] ?? null,
-              )
-            )
-            .filter((f) => f !== null);
-        },
+        args: () => [],
         type: () => {
-          const output = this.tg.types[type.output as number];
-          return this.formatType(output, true, false);
+          return this.formatType(type, true, asInput);
         },
       };
-    }
-
-    return {
-      ...common,
-      args: () => [],
-      type: () => {
-        return this.formatType(type, true, asInput);
-      },
     };
-  };
 }
 
 function emptyObjectScalar() {
