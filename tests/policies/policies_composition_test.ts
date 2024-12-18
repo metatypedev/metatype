@@ -134,7 +134,7 @@ Meta.test("Basic chain composition on a single field spec", async (t) => {
 });
 
 
-Meta.test("Traversal composition", async (t) => {
+Meta.test("Traversal composition on a per effect policy setup", async (t) => {
   const e = await t.engine("policies/policies_composition.py");
 
   const inputA = {
@@ -157,7 +157,7 @@ Meta.test("Traversal composition", async (t) => {
 
   await t.should("have PASS acting as a no-op upon traversal (version 1)", async () => {
     await gql`
-      query {
+      mutation {
         traversal_comp(one: $one) {
           one {
             two {
@@ -191,7 +191,7 @@ Meta.test("Traversal composition", async (t) => {
 
   await t.should("have PASS acting as a no-op upon traversal (version 2)", async () => {
     await gql`
-      query {
+      mutation {
         traversal_comp(one: $one) {
           one {
             two {
@@ -222,7 +222,7 @@ Meta.test("Traversal composition", async (t) => {
 
   await t.should("DENY when a protected field on a either variant is encountered", async () => {
     await gql`
-      query {
+      mutation {
         traversal_comp(one: $one) {
           one {
             two {

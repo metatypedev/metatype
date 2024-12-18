@@ -115,7 +115,8 @@ export class Planner {
       orderedStageMetadata.push({
         stageId,
         typeIdx: stage.props.typeIdx,
-        isTopLevel: stage.props.parent ? false : true
+        isTopLevel: stage.props.parent ? false : true,
+        node: stage.props.node // actual non aliased name
       });
     }
 

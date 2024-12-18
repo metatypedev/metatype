@@ -35,6 +35,7 @@ export interface StageMetadata {
   stageId: string;
   typeIdx: TypeIdx;
   isTopLevel: boolean;
+  node: string;
 }
 
 interface ComposePolicyOperand {
@@ -83,26 +84,23 @@ export class OperationPolicies {
     // Note: policies for exposed functions are hoisted on the root struct (index 0)
     // If a function has a policy it overrides the definition on the root
     const exposePolicies = this.#getPolicies(0);
-    const exposePolicyCount = exposePolicies.reduce(
-      (total, { indices }) => total + indices.length,
-      0,
-    );
+    const funcWithPolicies = exposePolicies
+      .filter(({ indices }) => indices.length > 0)
+      .map(({ canonFieldName }) => canonFieldName);
+
     this.#stageToPolicies.set(EXPOSE_STAGE_ID, exposePolicies);
 
     for (
-      const { stageId, typeIdx: maybeWrappedIdx } of this.orderedStageMetadata
+      const { stageId, typeIdx: maybeWrappedIdx, node } of this
+        .orderedStageMetadata
     ) {
       const policies = this.#getPolicies(maybeWrappedIdx);
       this.#stageToPolicies.set(stageId, policies);
-      console.log("> found", stageId, policies);
+      // console.log("> found", stageId, policies, node, this.#findSelectedFields(stageId));
 
       // top-level functions must have policies
       const isTopLevel = stageId.split(".").length == 1;
-      const policyCount = policies.reduce(
-        (total, { indices }) => total + indices.length,
-        exposePolicyCount,
-      );
-      if (isTopLevel && policyCount === 0) {
+      if (isTopLevel && !funcWithPolicies.includes(node)) {
         const details = [
           `top-level function '${this.tg.type(maybeWrappedIdx).title}'`,
           `at '${stageId}'`,
@@ -174,12 +172,21 @@ export class OperationPolicies {
     const fakeStageMeta = {
       isTopLevel: true,
       stageId: EXPOSE_STAGE_ID,
-      typeIdx: 0, // unused, but worth to keep around
+      typeIdx: 0,
     } as StageMetadata;
     const stageMetaList = [fakeStageMeta, ...this.orderedStageMetadata];
 
-    outerIter: for (const stageMeta of stageMetaList) {
-      const { stageId } = stageMeta;
+    let activeEffect = this.#getEffectOrNull(fakeStageMeta.typeIdx) ?? "read"; // root
+
+    outerIter: for (const { stageId, typeIdx } of stageMetaList) {
+      const newEffect = this.#getEffectOrNull(typeIdx);
+      if (newEffect != null) {
+        activeEffect = newEffect;
+      }
+      console.log(
+        `  > stage ${stageId} :: ${activeEffect}`,
+        resolvedPolicyCachePerStage.get(stageId) ?? "<not yet>",
+      );
 
       for (
         const [priorStageId, verdict] of resolvedPolicyCachePerStage.entries()
@@ -190,7 +197,6 @@ export class OperationPolicies {
           break outerIter;
         }
 
-        console.log("  > check prior", priorStageId, "vs", stageId, verdict);
         const parentAllows = stageId.startsWith(priorStageId) &&
           verdict == "ALLOW";
         if (parentAllows) {
@@ -198,8 +204,9 @@ export class OperationPolicies {
         } // elif deny => already thrown
       }
 
-      const { effect, res } = await this.#checkStageAuthorization(
-        stageMeta,
+      const res = await this.#checkStageAuthorization(
+        stageId,
+        activeEffect,
         getResolverResult,
       );
 
@@ -220,7 +227,7 @@ export class OperationPolicies {
           }));
 
           throw new BadContext(
-            this.getRejectionReason(stageId, effect, policyNames),
+            this.getRejectionReason(stageId, activeEffect, policyNames),
           );
         }
       }
@@ -339,6 +346,12 @@ export class OperationPolicies {
       }
     }
 
+    // console.info(
+    //   "Composing",
+    //   effect,
+    //   policies.map((p) => [p.canonFieldName, p.index]),
+    // );
+
     if (operands.length == 0) {
       return { authorized: "PASS" };
     } else {
@@ -385,8 +398,8 @@ export class OperationPolicies {
     }));
   }
 
-  #getEffectOrDefault(typeIdx: number) {
-    let effect = "read" as EffectType;
+  #getEffectOrNull(typeIdx: number) {
+    let effect = null;
     const node = this.tg.type(typeIdx);
     if (isFunction(node)) {
       const matIdx = this.tg.type(typeIdx, Type.FUNCTION).materializer;
@@ -397,14 +410,20 @@ export class OperationPolicies {
   }
 
   async #checkStageAuthorization(
-    { stageId, typeIdx }: StageMetadata,
+    stageId: string,
+    effect: EffectType,
     getResolverResult: GetResolverResult,
   ) {
-    const effect = this.#getEffectOrDefault(typeIdx);
+    const selectedFields = this.#findSelectedFields(stageId);
 
     const policiesForStage = this.#stageToPolicies.get(stageId) ?? [];
     const policies = [];
     for (const { canonFieldName, indices } of policiesForStage) {
+      // Note: canonFieldName is the field on the type (but not the alias if any!)
+      if (!selectedFields.includes(canonFieldName)) {
+        continue;
+      }
+
       for (const index of indices) {
         if (typeof index == "number") {
           policies.push({ canonFieldName, index });
@@ -424,13 +443,22 @@ export class OperationPolicies {
       }
     }
 
-    return {
+    return await this.#composePolicies(
+      policies,
       effect,
-      res: await this.#composePolicies(
-        policies,
-        effect,
-        getResolverResult,
-      ),
-    };
+      getResolverResult,
+    );
+  }
+
+  #findSelectedFields(targetStageId: string) {
+    return this.orderedStageMetadata.map(({ stageId, node }) => {
+      const chunks = stageId.split(".");
+      const parent = chunks.slice(0, -1).join(".");
+      if (parent == "" && targetStageId == EXPOSE_STAGE_ID) {
+        return node;
+      }
+
+      return targetStageId == parent ? node : null;
+    }).filter((name) => name != null);
   }
 }
