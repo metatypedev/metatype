@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use common::typegraph::runtimes::deno::PredefinedFunctionMatData;
+
 use crate::wit::runtimes as wit;
 
 #[derive(Debug)]
@@ -25,7 +27,7 @@ pub struct MaterializerDenoStatic {
 pub enum DenoMaterializer {
     Static(MaterializerDenoStatic),
     Inline(wit::MaterializerDenoFunc),
-    Predefined(wit::MaterializerDenoPredefined),
+    Predefined(PredefinedFunctionMatData),
     Module(MaterializerDenoModule),
     Import(MaterializerDenoImport),
 }
