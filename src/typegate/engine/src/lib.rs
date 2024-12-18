@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 mod ext;
+mod py_validation;
 mod runtimes;
 // mod snapshot;
 mod typegraph;

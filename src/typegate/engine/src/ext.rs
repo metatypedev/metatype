@@ -3,6 +3,7 @@
 
 use crate::interlude::*;
 use crate::{
+    py_validation,
     runtimes::{grpc, prisma, substantial, temporal, wasm, wit_wire},
     typegraph,
 };
@@ -59,6 +60,7 @@ deno_core::extension!(
         substantial::op_sub_metadata_write_workflow_link,
         substantial::op_sub_metadata_write_parent_child_link,
         substantial::op_sub_metadata_enumerate_all_children,
+        py_validation::op_validate,
 
         // FIXME(yohe): this test broke and has proven difficult to fix
         // #[cfg(test)]
