@@ -56,17 +56,10 @@ snapshot[`Typegraph using grpc 1`] = `
         "title": "root_greet_fn_output",
         "policies": [],
         "properties": {
-          "message": 6
+          "message": 3
         },
         "id": [],
         "required": []
-      },
-      {
-        "type": "optional",
-        "title": "root_greet_fn_output_message_root_greet_fn_input_name_string_optional",
-        "policies": [],
-        "item": 4,
-        "default_value": null
       }
     ],
     "materializers": [
@@ -196,17 +189,10 @@ snapshot[`Typegraph using grpc 2`] = `
         "title": "root_greet_fn_output",
         "policies": [],
         "properties": {
-          "message": 6
+          "message": 3
         },
         "id": [],
         "required": []
-      },
-      {
-        "type": "optional",
-        "title": "root_greet_fn_output_message_root_greet_fn_input_name_string_optional",
-        "policies": [],
-        "item": 4,
-        "default_value": null
       }
     ],
     "materializers": [

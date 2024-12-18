@@ -14,6 +14,7 @@ use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
+use common::typegraph::runtimes::deno::PredefinedFunctionMatData;
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::rc::Rc;
@@ -44,6 +45,7 @@ pub struct SavedState {
 
 #[derive(Default)]
 pub struct Store {
+    // type ids can be pre-allocated
     pub types: Vec<Type>,
     // the bool indicates weather the name was from
     // user or generated placeholder (false)
@@ -54,7 +56,7 @@ pub struct Store {
     pub policies: Vec<Policy>,
 
     deno_runtime: RuntimeId,
-    predefined_deno_functions: HashMap<String, MaterializerId>,
+    predefined_deno_functions: HashMap<PredefinedFunctionMatData, MaterializerId>,
     deno_modules: IndexMap<String, MaterializerId>,
 
     public_policy_id: PolicyId,
@@ -87,9 +89,7 @@ impl Store {
                 runtime_id: deno_runtime,
                 effect: Effect::Read,
                 data: MaterializerData::Deno(Rc::new(DenoMaterializer::Predefined(
-                    crate::wit::runtimes::MaterializerDenoPredefined {
-                        name: "true".to_string(),
-                    },
+                    PredefinedFunctionMatData::True,
                 ))),
             }],
 
@@ -103,11 +103,9 @@ impl Store {
     }
 }
 
-const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity", "true"];
-
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
-    pub static SDK_VERSION: String = "0.5.0-rc.7".to_owned();
+    pub static SDK_VERSION: String = "0.5.0-rc.8".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
@@ -208,10 +206,16 @@ impl Store {
         }
     }
 
-    pub fn register_type_def(build: impl FnOnce(TypeId) -> TypeDef) -> Result<TypeId> {
+    pub fn register_type_def(build: impl FnOnce(TypeId) -> Result<TypeDef>) -> Result<TypeId> {
         // this works since the store is thread local
-        let id = with_store(|s| s.types.len()) as u32;
-        let type_def = build(id.into());
+        let id = with_store_mut(|s| s.types.len()) as u32;
+        let type_def = build(id.into())?;
+
+        with_store_mut(move |s| -> Result<()> {
+            s.types.push(type_def.into());
+            Ok(())
+        })?;
+        Ok(id.into())
 
         // // very hacky solution where we keep track of
         // // explicitly named types in user_named_types
@@ -237,25 +241,6 @@ impl Store {
         //         }
         //     }
         // }
-
-        {
-            let type_def = type_def.clone();
-            with_store_mut(move |s| -> Result<()> {
-                s.types.push(Type::Def(type_def));
-                Ok(())
-            })?;
-        }
-
-        let type_id: TypeId = id.into();
-        match type_def {
-            TypeDef::List(_) | TypeDef::Optional(_) => {
-                let variant = type_def.variant_name();
-                let placeholder_name = format!("{variant}_{id}{PLACEHOLDER_TYPE_SUFFIX}");
-                let type_ref = TypeRef::named(placeholder_name, Type::Def(type_def)).register()?;
-                Ok(type_ref.id())
-            }
-            _ => Ok(type_id),
-        }
     }
 
     pub fn register_type_name(
@@ -362,25 +347,24 @@ impl Store {
         with_store(|s| s.public_policy_id)
     }
 
-    pub fn get_predefined_deno_function(name: String) -> Result<MaterializerId> {
-        if let Some(mat) = with_store(|s| s.predefined_deno_functions.get(&name).cloned()) {
-            Ok(mat)
-        } else if !PREDEFINED_DENO_FUNCTIONS.iter().any(|n| n == &name) {
-            Err(errors::unknown_predefined_function(&name, "deno"))
+    pub fn get_predefined_deno_function(
+        name: String,
+        param: Option<String>,
+    ) -> Result<MaterializerId> {
+        let mat = PredefinedFunctionMatData::from_raw(name, param)?;
+        if let Some(mat_id) = with_store(|s| s.predefined_deno_functions.get(&mat).cloned()) {
+            Ok(mat_id)
         } else {
             let runtime_id = Store::get_deno_runtime();
-            let mat = Store::register_materializer(Materializer {
+            let mat_id = Store::register_materializer(Materializer {
                 runtime_id,
                 effect: Effect::Read,
-                data: Rc::new(DenoMaterializer::Predefined(MaterializerDenoPredefined {
-                    name: name.clone(),
-                }))
-                .into(),
+                data: Rc::new(DenoMaterializer::Predefined(mat.clone())).into(),
             });
             with_store_mut(|s| {
-                s.predefined_deno_functions.insert(name, mat);
+                s.predefined_deno_functions.insert(mat, mat_id);
             });
-            Ok(mat)
+            Ok(mat_id)
         }
     }
 

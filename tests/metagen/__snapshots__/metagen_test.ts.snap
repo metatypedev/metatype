@@ -454,7 +454,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.0-rc.7";
+        static MT_VERSION: &str = "0.5.0-rc.8";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -570,13 +570,12 @@ pub mod types {
         pub name: RootOneFnInputNameString,
     }
     pub type StudentIdInteger = i64;
-    pub type StudentPeersStudentList = Vec<Student>;
-    pub type StudentPeersStudentPeersStudentListOptional = Option<StudentPeersStudentList>;
+    pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
         pub id: StudentIdInteger,
         pub name: RootOneFnInputNameString,
-        pub peers: StudentPeersStudentPeersStudentListOptional,
+        pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -725,12 +724,11 @@ export type RootOneFnInput = {
   name: RootOneFnInputNameString;
 };
 export type StudentIdInteger = number;
-export type StudentPeersStudentList = Array<Student>;
-export type StudentPeersStudentPeersStudentListOptional = StudentPeersStudentList | null | undefined;
+export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
   id: StudentIdInteger;
   name: RootOneFnInputNameString;
-  peers?: StudentPeersStudentPeersStudentListOptional;
+  peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {
@@ -1257,7 +1255,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.0-rc.7";
+        static MT_VERSION: &str = "0.5.0-rc.8";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -1373,13 +1371,12 @@ pub mod types {
         pub name: RootOneFnInputNameString,
     }
     pub type StudentIdInteger = i64;
-    pub type StudentPeersStudentList = Vec<Student>;
-    pub type StudentPeersStudentPeersStudentListOptional = Option<StudentPeersStudentList>;
+    pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
         pub id: StudentIdInteger,
         pub name: RootOneFnInputNameString,
-        pub peers: StudentPeersStudentPeersStudentListOptional,
+        pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -1528,12 +1525,11 @@ export type RootOneFnInput = {
   name: RootOneFnInputNameString;
 };
 export type StudentIdInteger = number;
-export type StudentPeersStudentList = Array<Student>;
-export type StudentPeersStudentPeersStudentListOptional = StudentPeersStudentList | null | undefined;
+export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
   id: StudentIdInteger;
   name: RootOneFnInputNameString;
-  peers?: StudentPeersStudentPeersStudentListOptional;
+  peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {

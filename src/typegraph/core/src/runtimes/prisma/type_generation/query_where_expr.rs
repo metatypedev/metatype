@@ -43,7 +43,7 @@ impl TypeGen for QueryWhereExpr {
 
         let props = where_type.as_struct().unwrap().data.props.to_vec();
 
-        let name = self.name();
+        let name = self.name(context)?;
         let self_ref = t::ref_(&name, Default::default()).build()?;
         let and = t::optionalx(t::list(self_ref))?.build()?;
 
@@ -58,12 +58,12 @@ impl TypeGen for QueryWhereExpr {
         builder.build_named(name)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let unique = if self.unique { "_unique" } else { "" };
-        format!(
+        Ok(format!(
             "{}_query_where{unique}_input",
             self.model_id.name().unwrap().unwrap()
-        )
+        ))
     }
 }
 

@@ -70,16 +70,16 @@ impl TypeGen for OutType {
             }
         }
 
-        builder.build_named(self.name())
+        builder.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             String::new()
         } else {
             format!("_excluding_{}", self.skip_rel.join("_and_"))
         };
-        format!("{model_name}_output{suffix}")
+        Ok(format!("{model_name}_output{suffix}"))
     }
 }

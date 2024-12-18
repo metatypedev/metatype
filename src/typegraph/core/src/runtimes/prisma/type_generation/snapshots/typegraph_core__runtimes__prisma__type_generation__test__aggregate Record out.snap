@@ -2,27 +2,23 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: struct #29
-├─ [_avg]: struct 'Record_avg_aggregate' #20
-│  └─ [age]: optional 'optional_17' #18
+root: struct #27
+├─ [_avg]: struct 'Record_avg_aggregate' #19
+│  └─ [age]: optional #17
 │     └─ item: float #16
-├─ [_count]: struct 'Record_count_aggregate' #15
-│  ├─ [_all]: optional 'optional_12' #13
+├─ [_count]: struct 'Record_count_aggregate' #14
+│  ├─ [_all]: optional #12
 │  │  └─ item: integer #11
-│  ├─ [age]: optional 'optional_12' #13
+│  ├─ [age]: optional #12
 │  │  └─ item: integer #11
-│  ├─ [created_at]: optional 'optional_12' #13
+│  ├─ [created_at]: optional #12
 │  │  └─ item: integer #11
-│  ├─ [id]: optional 'optional_12' #13
+│  ├─ [id]: optional #12
 │  │  └─ item: integer #11
-│  └─ [name]: optional 'optional_12' #13
+│  └─ [name]: optional #12
 │     └─ item: integer #11
-├─ [_max]: struct 'Record_number_aggregate' #28
-│  └─ [age]: optional 'optional_25' #26
-│     └─ item: integer #24
-├─ [_min]: struct 'Record_number_aggregate' #28
-│  └─ [age]: optional 'optional_25' #26
-│     └─ item: integer #24
-└─ [_sum]: struct 'Record_number_aggregate' #28
-   └─ [age]: optional 'optional_25' #26
-      └─ item: integer #24
+├─ [_max]: &Record_number_aggregate #20
+├─ [_min]: &Record_number_aggregate #20
+└─ [_sum]: struct 'Record_number_aggregate' #26
+   └─ [age]: optional #24
+      └─ item: integer #23

@@ -210,10 +210,10 @@ impl TypeGen for InputType {
             }
         }
 
-        builder.build_named(self.name())
+        builder.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
@@ -224,6 +224,6 @@ impl TypeGen for InputType {
             Operation::Create => "create",
             Operation::Update => "update",
         };
-        format!("{model_name}_{op}_input{suffix}")
+        Ok(format!("{model_name}_{op}_input{suffix}"))
     }
 }

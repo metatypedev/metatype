@@ -7,7 +7,7 @@ use crate::types::AsTypeDefEx as _;
 use crate::wit::core::TypeId as CoreTypeId;
 use std::fmt::Debug;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TypeId(pub CoreTypeId);
 
 impl Debug for TypeId {

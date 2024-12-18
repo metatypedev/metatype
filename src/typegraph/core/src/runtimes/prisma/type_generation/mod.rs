@@ -42,7 +42,7 @@ mod with_nested_count;
 
 trait TypeGen {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId>;
-    fn name(&self) -> String;
+    fn name(&self, context: &PrismaContext) -> Result<String>;
 }
 
 pub struct OperationTypes {
@@ -89,7 +89,7 @@ pub fn replace_variables_to_indices(query: String, input_id: TypeId) -> Result<F
 
 impl PrismaContext {
     fn generate(&self, generator: &impl TypeGen) -> Result<TypeId> {
-        let type_name = generator.name();
+        let type_name = generator.name(self)?;
 
         let cached = {
             let cache = self.typegen_cache.get_or_init(|| {
@@ -106,6 +106,19 @@ impl PrismaContext {
         if let Some(type_id) = cached {
             Ok(type_id)
         } else {
+            {
+                let cache = self.typegen_cache.get().unwrap();
+                let cache = cache
+                    .upgrade()
+                    .ok_or_else(|| "Typegen cache not available".to_string())?;
+                let mut cache = cache.borrow_mut();
+
+                cache.insert(
+                    type_name.clone(),
+                    t::ref_(&type_name, Default::default()).build()?,
+                );
+            }
+
             let type_id = generator.generate(self)?;
 
             // name validation
@@ -120,14 +133,6 @@ impl PrismaContext {
                 )
                 .into());
             }
-
-            // insert new entry into cache
-            let cache = self.typegen_cache.get().unwrap();
-            let cache = cache
-                .upgrade()
-                .ok_or_else(|| "Typegen cache not available".to_string())?;
-            let mut cache = cache.borrow_mut();
-            cache.insert(type_name, type_id);
             Ok(type_id)
         }
     }

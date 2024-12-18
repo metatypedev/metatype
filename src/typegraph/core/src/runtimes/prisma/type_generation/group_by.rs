@@ -33,12 +33,12 @@ impl TypeGen for GroupingFields {
             })
             .collect();
 
-        t::listx(t::string().enum_(fields))?.build_named(self.name())
+        t::listx(t::string().enum_(fields))?.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("{}_group_by", model_name)
+        Ok(format!("{}_group_by", model_name))
     }
 }
 
@@ -57,7 +57,7 @@ impl TypeGen for Having {
         // TODO relations??
         let where_type = context.generate(&Where::new(self.model_id).with_aggregates())?;
 
-        let name = self.name();
+        let name = self.name(context)?;
         let self_ref = t::ref_(&name, Default::default()).build()?;
 
         t::unionx![
@@ -69,9 +69,9 @@ impl TypeGen for Having {
         .build_named(name)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("{}_having", model_name)
+        Ok(format!("{}_having", model_name))
     }
 }
 
@@ -112,12 +112,12 @@ impl TypeGen for GroupByResult {
                 )
                 .build()?,
         )
-        .build_named(self.name())
+        .build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("{}_group", model_name)
+        Ok(format!("{}_group", model_name))
     }
 }
 
@@ -164,12 +164,12 @@ impl TypeGen for SelectNumbers {
             }
         }
 
-        builder.build_named(self.name())
+        builder.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
         let suffix = if self.promote_to_float { "_float" } else { "" };
-        format!("{model_name}_number_fields{suffix}")
+        Ok(format!("{model_name}_number_fields{suffix}"))
     }
 }

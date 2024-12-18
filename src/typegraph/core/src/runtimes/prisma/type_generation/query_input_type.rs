@@ -69,12 +69,12 @@ impl TypeGen for QueryInputType {
             )?;
         }
 
-        builder.build_named(self.name())
+        builder.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
         let infix = if self.is_group_by { "_group_by" } else { "" };
-        format!("{model_name}{infix}_query_input")
+        Ok(format!("{model_name}{infix}_query_input"))
     }
 }

@@ -35,7 +35,7 @@ where
     Rc<NonRefType<T>>: Into<TypeDef>,
 {
     pub fn type_with_data(&self, data: T) -> Result<TypeId> {
-        Store::register_type_def(|type_id| Rc::new(Self { id: type_id, data }).into())
+        Store::register_type_def(|type_id| Ok(Rc::new(Self { id: type_id, data }).into()))
     }
 }
 

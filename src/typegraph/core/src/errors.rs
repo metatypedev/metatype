@@ -143,10 +143,6 @@ pub fn object_not_found(kind: &str, id: u32) -> TgError {
 //     .into()
 // }
 
-pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {
-    format!("unknown predefined function {name} for runtime {runtime}").into()
-}
-
 pub fn duplicate_policy_name(name: &str) -> TgError {
     format!("duplicate policy name '{name}'").into()
 }

@@ -5,7 +5,7 @@
 
 /**
  * Usage:
- *   deno run -A dev/tree-view.ts [<options>] <file.py>
+ *   deno run -A tools/tree-view.ts [<options>] <file.py>
  *
  * Options:
  *    --depth <N>   The depth of the tree

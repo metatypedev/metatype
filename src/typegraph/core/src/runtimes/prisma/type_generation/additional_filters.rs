@@ -12,28 +12,28 @@ use super::TypeGen;
 pub struct Take;
 
 impl TypeGen for Take {
-    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         t::integer()
             .x_min(0)
             .build()?
-            .named(self.name())
+            .named(self.name(context)?)
             .map(|t| t.id())
     }
 
-    fn name(&self) -> String {
-        "_take".to_string()
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
+        Ok("_take".to_string())
     }
 }
 
 pub struct Skip;
 
 impl TypeGen for Skip {
-    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
-        t::integer().min(0).build_named(self.name())
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+        t::integer().min(0).build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
-        "_skip".to_string()
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
+        Ok("_skip".to_string())
     }
 }
 
@@ -52,12 +52,12 @@ impl TypeGen for Distinct {
             })
             .collect();
 
-        t::listx(t::string().enum_(cols)).build_named(self.name())
+        t::listx(t::string().enum_(cols)).build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.0.name().unwrap().unwrap();
-        format!("{model_name}_keys_union")
+        Ok(format!("{model_name}_keys_union"))
     }
 }
 
@@ -89,11 +89,11 @@ impl TypeGen for Cursor {
             let variant = t::struct_().prop(k, id).build()?;
             variants.push(variant)
         }
-        t::union(variants).build_named(self.name())
+        t::union(variants).build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("{}_cursor", model_name)
+        Ok(format!("{}_cursor", model_name))
     }
 }

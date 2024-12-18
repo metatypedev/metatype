@@ -1,5 +1,7 @@
 // no-auto-license-header | @generated (pre-commit doesn't support two headers)
 
+// jsr-private-module
+
 /*
 The MIT License (MIT)
 

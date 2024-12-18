@@ -91,10 +91,10 @@ impl TypeGen for OrderBy {
             }
         }
 
-        t::listx(builder)?.build_named(self.name())
+        t::listx(builder)?.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let name = self.model_id.name().unwrap().unwrap();
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
@@ -107,35 +107,35 @@ impl TypeGen for OrderBy {
         } else {
             ""
         };
-        format!("{}_order_by{suffix}{suffix2}", name)
+        Ok(format!("{}_order_by{suffix}{suffix2}", name))
     }
 }
 
 struct SortOrder;
 
 impl TypeGen for SortOrder {
-    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["asc".to_string(), "desc".to_string()])
-            .build_named(self.name())
+            .build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
-        "_prisma_sort_order".to_string()
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
+        Ok("_prisma_sort_order".to_string())
     }
 }
 
 struct NullsOrder;
 
 impl TypeGen for NullsOrder {
-    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["first".to_string(), "last".to_string()])
-            .build_named(self.name())
+            .build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
-        "_prisma_nulls_order".to_string()
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
+        Ok("_prisma_nulls_order".to_string())
     }
 }
 
@@ -153,12 +153,12 @@ impl TypeGen for Sort {
             builder.prop("nulls", nulls_order);
         }
 
-        t::optionalx(t::unionx![builder, sort_order])?.build_named(self.name())
+        t::optionalx(t::unionx![builder, sort_order])?.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let nullable = if self.nullable { "_nullable" } else { "" };
-        format!("_prisma_sort{}", nullable)
+        Ok(format!("_prisma_sort{}", nullable))
     }
 }
 
@@ -174,11 +174,11 @@ impl TypeGen for SortByAggregates {
         builder.prop("_min", sort);
         builder.prop("_max", sort);
 
-        t::optionalx(builder)?.build_named(self.name())
+        t::optionalx(builder)?.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
-        "_prisma_sort_by_aggregates".to_string()
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
+        Ok("_prisma_sort_by_aggregates".to_string())
     }
 }
 
@@ -244,11 +244,11 @@ impl TypeGen for AggregateSorting {
             .prop("_sum", others)
             .prop("_min", others)
             .prop("_max", others)
-            .build_named(self.name())
+            .build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
-        format!("{model_name}_aggregate_sorting")
+        Ok(format!("{model_name}_aggregate_sorting"))
     }
 }
