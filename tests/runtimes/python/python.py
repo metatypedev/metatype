@@ -76,4 +76,11 @@ def python(g: Graph):
             t.boolean(),
             infinite_loop,
         ).with_policy(public),
+        testValidation=python.import_(
+            t.struct({"name": t.string()}),
+            t.string(),
+            module="py/hello_fail.py.py",
+            deps=["py/nested/dep_fail.py"],
+            name="sayHello",
+        ).with_policy(public),
     )

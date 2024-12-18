@@ -45,9 +45,9 @@ export const codeValidations: PushHandler = async (
         Meta.py_validation.validate(entryModulePath);
 
         for (const dep of depMetas) {
-          const depsPath = await artifactStore.getLocalPath(dep);
-          logger.info(`Validating Python code for dependency: ${dep.path}`);
-          Meta.py_validation.validate(depsPath);
+          const depPath = await artifactStore.getLocalPath(dep);
+          logger.info(`Validating Python code for dependency: ${depPath}`);
+          Meta.py_validation.validate(depPath);
         }
 
         logger.info(

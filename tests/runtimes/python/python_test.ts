@@ -478,3 +478,24 @@ Meta.test(
     );
   },
 );
+
+Meta.test(
+  {
+    name: "Python code validation on deploy",
+  },
+  async (t) => {
+    const e = await t.engine(
+      "runtimes/python/python.py",
+    );
+
+    await t.should("fail on validation", async () => {
+      await gql`
+        query {
+          testValidation(name: "Loyd")
+        }
+      `
+        .expectErrorContains("Python code validation error")
+        .on(e);
+    });
+  },
+);
