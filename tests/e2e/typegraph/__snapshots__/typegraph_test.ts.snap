@@ -413,7 +413,7 @@ snapshot[`typegraphs creation 2`] = `
 `;
 
 snapshot[`typegraphs creation 3`] = `
-'[
+\`[
   {
     "types": [
       {
@@ -574,7 +574,7 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda = () => false",
+          "script": "var _my_lambda = () => 'DENY'",
           "secrets": []
         }
       },
@@ -666,7 +666,7 @@ snapshot[`typegraphs creation 3`] = `
       }
     }
   }
-]'
+]\`
 `;
 
 snapshot[`typegraphs creation 4`] = `
@@ -1082,7 +1082,7 @@ snapshot[`typegraphs creation 5`] = `
 `;
 
 snapshot[`typegraphs creation 6`] = `
-'[
+\`[
   {
     "types": [
       {
@@ -1243,7 +1243,7 @@ snapshot[`typegraphs creation 6`] = `
           "idempotent": true
         },
         "data": {
-          "script": "var _my_lambda = () => false",
+          "script": "var _my_lambda = () => 'DENY'",
           "secrets": []
         }
       },
@@ -1335,5 +1335,5 @@ snapshot[`typegraphs creation 6`] = `
       }
     }
   }
-]'
+]\`
 `;

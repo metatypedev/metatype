@@ -29,7 +29,6 @@ Policies are hierarchical in the sense that the request starts with a denial, an
   query={require("./policies.graphql")}
 />
 
-
 ## Composition rules
 
 ### Traversal order
@@ -48,12 +47,13 @@ The evaluation is as follows:
 - `PASS` does not participate.
 
 Or more concretely:
+
 - `ALLOW` & Other -> Other
 - `DENY` & Other -> `DENY`
 - `PASS` & Other -> Other (`PASS` is a no-op)
 
-
 Examples:
+
 - `[DENY, DENY, ALLOW]` -> `DENY`
 - `[ALLOW, PASS]` -> `ALLOW`
 - `[PASS, PASS, PASS]` -> `PASS`
