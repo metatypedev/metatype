@@ -9,13 +9,13 @@
         "addTypegraph": 12,
         "removeTypegraphs": 22,
         "argInfoByPath": 26,
-        "findAvailableOperations": 37,
-        "findPrismaModels": 45,
-        "execRawPrismaRead": 51,
-        "execRawPrismaCreate": 62,
-        "execRawPrismaUpdate": 63,
-        "execRawPrismaDelete": 64,
-        "queryPrismaModel": 65
+        "findAvailableOperations": 39,
+        "findPrismaModels": 47,
+        "execRawPrismaRead": 53,
+        "execRawPrismaCreate": 64,
+        "execRawPrismaUpdate": 65,
+        "execRawPrismaDelete": 66,
+        "queryPrismaModel": 67
       },
       "id": [],
       "required": [
@@ -351,8 +351,8 @@
         "enum": 31,
         "default": 21,
         "format": 33,
-        "policies": 24,
-        "fields": 34
+        "policies": 34,
+        "fields": 36
       },
       "id": [],
       "required": [],
@@ -385,15 +385,34 @@
       "default_value": null
     },
     {
+      "type": "list",
+      "title": "TypeInfo_policies_TypeInfo_policies_struct_list",
+      "items": 35
+    },
+    {
+      "type": "object",
+      "title": "TypeInfo_policies_struct",
+      "properties": {
+        "fieldName": 5,
+        "policies": 14
+      },
+      "id": [],
+      "required": [],
+      "policies": {
+        "fieldName": [],
+        "policies": []
+      }
+    },
+    {
       "type": "optional",
       "title": "TypeInfo_fields_TypeInfo_fields_TypeInfo_fields_struct_list_optional",
-      "item": 35,
+      "item": 37,
       "default_value": null
     },
     {
       "type": "list",
       "title": "TypeInfo_fields_TypeInfo_fields_struct_list",
-      "items": 36
+      "items": 38
     },
     {
       "type": "object",
@@ -412,8 +431,8 @@
     {
       "type": "function",
       "title": "root_findAvailableOperations_fn",
-      "input": 38,
-      "output": 39,
+      "input": 40,
+      "output": 41,
       "runtimeConfig": null,
       "materializer": 7,
       "rate_weight": null,
@@ -434,17 +453,17 @@
     {
       "type": "list",
       "title": "root_findAvailableOperations_fn_output",
-      "items": 40
+      "items": 42
     },
     {
       "type": "object",
       "title": "OperationInfo",
       "properties": {
         "name": 5,
-        "type": 41,
-        "inputs": 42,
+        "type": 43,
+        "inputs": 44,
         "output": 30,
-        "outputItem": 44
+        "outputItem": 46
       },
       "id": [],
       "required": [],
@@ -467,7 +486,7 @@
     {
       "type": "list",
       "title": "OperationInfo_inputs_OperationInfo_inputs_struct_list",
-      "items": 43
+      "items": 45
     },
     {
       "type": "object",
@@ -492,8 +511,8 @@
     {
       "type": "function",
       "title": "root_findPrismaModels_fn",
-      "input": 38,
-      "output": 46,
+      "input": 40,
+      "output": 48,
       "runtimeConfig": null,
       "materializer": 8,
       "rate_weight": null,
@@ -502,7 +521,7 @@
     {
       "type": "list",
       "title": "root_findPrismaModels_fn_output",
-      "items": 47
+      "items": 49
     },
     {
       "type": "object",
@@ -510,7 +529,7 @@
       "properties": {
         "name": 5,
         "runtime": 5,
-        "fields": 48
+        "fields": 50
       },
       "id": [],
       "required": [],
@@ -523,7 +542,7 @@
     {
       "type": "list",
       "title": "PrismaModelInfo_fields_PrismaModelInfo_fields_struct_list",
-      "items": 49
+      "items": 51
     },
     {
       "type": "object",
@@ -531,7 +550,7 @@
       "properties": {
         "name": 5,
         "as_id": 25,
-        "type": 50
+        "type": 52
       },
       "id": [],
       "required": [],
@@ -551,7 +570,7 @@
         "enum": 31,
         "default": 21,
         "format": 33,
-        "policies": 24
+        "policies": 34
       },
       "id": [],
       "required": [],
@@ -568,7 +587,7 @@
     {
       "type": "function",
       "title": "root_execRawPrismaRead_fn",
-      "input": 52,
+      "input": 54,
       "output": 14,
       "runtimeConfig": null,
       "materializer": 9,
@@ -581,7 +600,7 @@
       "properties": {
         "typegraph": 5,
         "runtime": 5,
-        "query": 53
+        "query": 55
       },
       "id": [],
       "required": [],
@@ -595,8 +614,8 @@
       "type": "either",
       "title": "PrismaQuery",
       "oneOf": [
-        54,
-        56
+        56,
+        58
       ]
     },
     {
@@ -604,7 +623,7 @@
       "title": "PrismaSingleQuery",
       "properties": {
         "modelName": 33,
-        "action": 55,
+        "action": 57,
         "query": 14
       },
       "id": [],
@@ -643,8 +662,8 @@
       "type": "object",
       "title": "PrismaBatchQuery",
       "properties": {
-        "batch": 57,
-        "transaction": 58
+        "batch": 59,
+        "transaction": 60
       },
       "id": [],
       "required": [],
@@ -656,19 +675,19 @@
     {
       "type": "list",
       "title": "PrismaBatchQuery_batch_PrismaSingleQuery_list",
-      "items": 54
+      "items": 56
     },
     {
       "type": "optional",
       "title": "PrismaBatchQuery_transaction_PrismaBatchQuery_transaction_struct_optional",
-      "item": 59,
+      "item": 61,
       "default_value": null
     },
     {
       "type": "object",
       "title": "PrismaBatchQuery_transaction_struct",
       "properties": {
-        "isolationLevel": 60
+        "isolationLevel": 62
       },
       "id": [],
       "required": [],
@@ -679,7 +698,7 @@
     {
       "type": "optional",
       "title": "PrismaBatchQuery_transaction_struct_isolationLevel_PrismaBatchQuery_transaction_struct_isolationLevel_string_enum_optional",
-      "item": 61,
+      "item": 63,
       "default_value": null
     },
     {
@@ -699,7 +718,7 @@
     {
       "type": "function",
       "title": "root_execRawPrismaCreate_fn",
-      "input": 52,
+      "input": 54,
       "output": 14,
       "runtimeConfig": null,
       "materializer": 10,
@@ -709,7 +728,7 @@
     {
       "type": "function",
       "title": "root_execRawPrismaUpdate_fn",
-      "input": 52,
+      "input": 54,
       "output": 14,
       "runtimeConfig": null,
       "materializer": 11,
@@ -719,7 +738,7 @@
     {
       "type": "function",
       "title": "root_execRawPrismaDelete_fn",
-      "input": 52,
+      "input": 54,
       "output": 14,
       "runtimeConfig": null,
       "materializer": 12,
@@ -729,8 +748,8 @@
     {
       "type": "function",
       "title": "root_queryPrismaModel_fn",
-      "input": 66,
-      "output": 68,
+      "input": 68,
+      "output": 70,
       "runtimeConfig": null,
       "materializer": 13,
       "rate_weight": null,
@@ -743,8 +762,8 @@
         "typegraph": 5,
         "runtime": 5,
         "model": 5,
-        "offset": 67,
-        "limit": 67
+        "offset": 69,
+        "limit": 69
       },
       "id": [],
       "required": [],
@@ -764,8 +783,8 @@
       "type": "object",
       "title": "root_queryPrismaModel_fn_output",
       "properties": {
-        "fields": 48,
-        "rowCount": 67,
+        "fields": 50,
+        "rowCount": 69,
         "data": 32
       },
       "id": [],

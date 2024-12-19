@@ -178,7 +178,9 @@ def typegate(g: Graph):
             "enum": t.list(t.json()).optional(),
             "default": t.json().optional(),
             "format": t.string().optional(),
-            "policies": t.list(t.string()),
+            "policies": t.list(
+                t.struct({"fieldName": t.string(), "policies": t.json()})
+            ),
         },
         name="ShallowTypeInfo",
     )

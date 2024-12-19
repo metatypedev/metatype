@@ -244,7 +244,28 @@ snapshot[`typegate: find available operations 1`] = `
               enum: null,
               format: null,
               optional: false,
-              policies: [],
+              policies: [
+                {
+                  fieldName: "id",
+                  policies: "[]",
+                },
+                {
+                  fieldName: "identities",
+                  policies: "[]",
+                },
+                {
+                  fieldName: "email",
+                  policies: "[]",
+                },
+                {
+                  fieldName: "name",
+                  policies: "[]",
+                },
+                {
+                  fieldName: "messages",
+                  policies: "[]",
+                },
+              ],
               title: "users",
               type: "object",
             },
@@ -302,7 +323,28 @@ snapshot[`typegate: find available operations 1`] = `
               enum: null,
               format: null,
               optional: false,
-              policies: [],
+              policies: [
+                {
+                  fieldName: "id",
+                  policies: "[]",
+                },
+                {
+                  fieldName: "identities",
+                  policies: "[]",
+                },
+                {
+                  fieldName: "email",
+                  policies: "[]",
+                },
+                {
+                  fieldName: "name",
+                  policies: "[]",
+                },
+                {
+                  fieldName: "messages",
+                  policies: "[]",
+                },
+              ],
               title: "users",
               type: "object",
             },

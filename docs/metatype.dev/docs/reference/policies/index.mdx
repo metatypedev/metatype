@@ -43,7 +43,7 @@ If you have `foo.with_policy(A, B).with_policy(C)` for example, it will be merge
 
 The evaluation is as follows:
 
-- `ALLOW` and `DENY` compose the same as `true` and `false`
+- `ALLOW` and `DENY` compose the same as `true` and `false` under the logical `AND` operator.
 - `PASS` does not participate.
 
 Or more concretely:
@@ -54,7 +54,7 @@ Or more concretely:
 
 Examples:
 
-- `[DENY, DENY, ALLOW]` -> `DENY`
+- `[DENY, DENY, PASS, ALLOW]` -> `DENY`
 - `[ALLOW, PASS]` -> `ALLOW`
 - `[PASS, PASS, PASS]` -> `PASS`
-- `[]` -> `PASS`
+- `[]` -> `PASS` (no policies)
