@@ -3,9 +3,21 @@
 
 import type { TypeGraphDS } from "../../typegraph/mod.ts";
 import type { ObjectNode } from "../../typegraph/type_node.ts";
+import { PolicyIndices } from "../../typegraph/types.ts";
 import { addNode } from "./utils.ts";
 
 type PropertiesTable = Record<string, number>;
+
+type SplitResult = {
+  queries: {
+    properties: PropertiesTable;
+    policies: Record<string, PolicyIndices[]>;
+  };
+  mutations: {
+    properties: PropertiesTable;
+    policies: Record<string, PolicyIndices[]>;
+  };
+};
 
 /**
  * Splits a TypeGraph into GraphQL `queries` and `mutations`
@@ -13,9 +25,11 @@ type PropertiesTable = Record<string, number>;
 function splitGraphQLOperations(
   typegraph: TypeGraphDS,
   node: ObjectNode,
-): [PropertiesTable, PropertiesTable] {
-  const queryProperties: PropertiesTable = {};
-  const mutationProperties: PropertiesTable = {};
+): SplitResult {
+  const res: SplitResult = {
+    queries: { properties: {}, policies: {} },
+    mutations: { properties: {}, policies: {} },
+  };
 
   if (typegraph.meta.namespaces == null) {
     typegraph.meta.namespaces = [];
@@ -25,37 +39,38 @@ function splitGraphQLOperations(
   for (const [propertyName, typeIndex] of Object.entries(node.properties)) {
     const childNode = typegraph.types[typeIndex];
 
-    // if the leaf node of a path its a function
-    // with a materializer that has an effect,
+    // if the leaf node of a path is a function
+    // with a materializer that has an effect other than `read`,
     // classify the root node of this path as a `mutation`
     // otherwise as a `query`
     switch (childNode.type) {
       case "object": {
-        const [childQueryProperties, childMutationProperties] =
-          splitGraphQLOperations(
-            typegraph,
-            childNode,
-          );
+        const child = splitGraphQLOperations(
+          typegraph,
+          childNode,
+        );
 
-        if (Object.keys(childQueryProperties).length === 0) {
-          mutationProperties[propertyName] = typeIndex;
+        if (Object.keys(child.queries.properties).length === 0) {
+          res.mutations.properties[propertyName] = typeIndex;
           namespaces.push(typeIndex);
-        } else if (Object.keys(childMutationProperties).length === 0) {
-          queryProperties[propertyName] = typeIndex;
+        } else if (Object.keys(child.mutations.properties).length === 0) {
+          res.queries.properties[propertyName] = typeIndex;
           namespaces.push(typeIndex);
         } else {
-          queryProperties[propertyName] = addNode(typegraph, {
+          res.queries.properties[propertyName] = addNode(typegraph, {
             ...node,
             title: `${node.title}_q`,
-            properties: childQueryProperties,
+            properties: child.queries.properties,
+            policies: child.queries.policies,
           });
-          namespaces.push(queryProperties[propertyName]);
-          mutationProperties[propertyName] = addNode(typegraph, {
+          namespaces.push(res.queries.properties[propertyName]);
+          res.mutations.properties[propertyName] = addNode(typegraph, {
             ...node,
             title: `${node.title}_m`,
-            properties: childMutationProperties,
+            properties: child.mutations.properties,
+            policies: child.mutations.policies,
           });
-          namespaces.push(mutationProperties[propertyName]);
+          namespaces.push(res.mutations.properties[propertyName]);
         }
         break;
       }
@@ -69,10 +84,16 @@ function splitGraphQLOperations(
           childMaterializer.effect.effect === null ||
           childMaterializer.effect.effect === "read"
         ) {
-          queryProperties[propertyName] = typeIndex;
+          res.queries.properties[propertyName] = typeIndex;
+          if (propertyName in (node.policies ?? {})) {
+            res.queries.policies[propertyName] = node.policies![propertyName];
+          }
           // TODO additional checks
         } else {
-          mutationProperties[propertyName] = typeIndex;
+          res.mutations.properties[propertyName] = typeIndex;
+          if (propertyName in (node.policies ?? {})) {
+            res.mutations.policies[propertyName] = node.policies![propertyName];
+          }
           // TODO additional checks
         }
 
@@ -81,7 +102,7 @@ function splitGraphQLOperations(
     }
   }
 
-  return [queryProperties, mutationProperties];
+  return res;
 }
 
 export function parseGraphQLTypeGraph(tgOrig: TypeGraphDS): TypeGraphDS {
@@ -94,7 +115,7 @@ export function parseGraphQLTypeGraph(tgOrig: TypeGraphDS): TypeGraphDS {
     types: [...tgOrig.types],
   };
 
-  const [queryProperties, mutationProperties] = splitGraphQLOperations(
+  const { queries, mutations } = splitGraphQLOperations(
     typegraph,
     rootNode,
   );
@@ -106,16 +127,16 @@ export function parseGraphQLTypeGraph(tgOrig: TypeGraphDS): TypeGraphDS {
   const queryIndex = addNode(typegraph, {
     ...rootNode,
     title: "Query",
-    properties: queryProperties,
+    ...queries,
   });
   typegraph.meta.namespaces!.push(queryIndex);
   rootNode.properties.query = queryIndex;
 
-  if (Object.keys(mutationProperties).length > 0) {
+  if (Object.keys(mutations.properties).length > 0) {
     const mutationIndex = addNode(typegraph, {
       ...rootNode,
       title: "Mutation",
-      properties: mutationProperties,
+      ...mutations,
     });
     typegraph.meta.namespaces!.push(mutationIndex);
     rootNode.properties.mutation = mutationIndex;

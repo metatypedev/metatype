@@ -3,8 +3,8 @@
 
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::types::{ExtendedTypeDef, PolicySpec, TypeId};
-use common::typegraph::{PolicyIndices, TypeNode, TypeNodeBase};
+use crate::types::{ExtendedTypeDef, TypeId};
+use common::typegraph::{TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
 use std::rc::Rc;
 
@@ -20,25 +20,20 @@ impl<T: TypeConversion> TypeConversion for Rc<T> {
     }
 }
 
-pub struct BaseBuilderInit<'a, 'b> {
-    pub ctx: &'a mut TypegraphContext,
+pub struct BaseBuilderInit {
     pub base_name: &'static str,
     pub type_id: TypeId,
     pub name: Option<String>,
-    pub policies: &'b [PolicySpec],
 }
 
 pub struct BaseBuilder {
     name: String,
-    policies: Vec<PolicyIndices>,
     // optional features
     enumeration: Option<Vec<String>>,
 }
 
-impl<'a, 'b> BaseBuilderInit<'a, 'b> {
+impl BaseBuilderInit {
     pub fn init_builder(self) -> Result<BaseBuilder> {
-        let policies = self.ctx.register_policy_chain(self.policies)?;
-
         let name = match self.name {
             Some(name) => name,
             None => format!("{}_{}_placeholder", self.base_name, self.type_id.0),
@@ -46,7 +41,6 @@ impl<'a, 'b> BaseBuilderInit<'a, 'b> {
 
         Ok(BaseBuilder {
             name,
-            policies,
             enumeration: None,
         })
     }
@@ -57,7 +51,6 @@ impl BaseBuilder {
         Ok(TypeNodeBase {
             description: None,
             enumeration: self.enumeration,
-            policies: self.policies,
             title: self.name,
         })
     }

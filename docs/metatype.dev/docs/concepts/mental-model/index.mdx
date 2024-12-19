@@ -91,9 +91,9 @@ Policies are a special type of function `t.func(t.struct({...}), t.boolean().opt
 
 The policy decision can be:
 
-- `true`: the access is authorized
-- `false`: the access is denied
-- `null`: the access in inherited from the parent types
+- `ALLOW`: Grants access to the current type and all its descendants.
+- `DENY`: Restricts access to the current type and all its descendants.
+- `PASS`: Grants access to the current type while requiring individual checks for all its descendants (similar to the absence of policies).
 
 <CodeBlock language="python">
   {

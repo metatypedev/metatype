@@ -41,7 +41,7 @@ typegraph("test-types", (g: any) => {
       .func(user, post, {
         code: "(user) => ({ id: 12, user })",
       })
-      .withPolicy(deno.policy("deny", "() => false")),
+      .withPolicy(deno.policy("deny", "() => 'DENY'")),
     three: deno
       .import(s1, s1, { name: "three", module: "scripts/three.ts" })
       .withPolicy(pub),

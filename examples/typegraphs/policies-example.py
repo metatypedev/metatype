@@ -10,5 +10,8 @@ from typegraph.runtimes.deno import DenoRuntime
 def policies_example(g):
     # skip:end
     deno = DenoRuntime()
-    public = deno.policy("public", "() => true")  # noqa
-    team_only = deno.policy("team", "(ctx) => ctx.user.role === 'admin'")  # noqa
+    public = deno.policy("public", "() => 'PASS'")  # noqa
+    allow_all = deno.policy("allow_all", "() => 'ALLOW'")  # noqa
+    team_only = deno.policy(  # noqa
+        "team", "(ctx) => ctx.user.role === 'admin' ? 'ALLOW' : 'DENY' "
+    )

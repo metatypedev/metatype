@@ -554,6 +554,33 @@ function walkPath(
   );
   node = resNode;
 
+  const getPolicies = (node: TypeNode) => {
+    const fieldToPolicies = node.type == "object"
+      ? Object.entries(node.policies ?? [])
+      : [];
+    const ret = [];
+    for (const [fieldName, indices] of fieldToPolicies) {
+      const fmtedIndices = indices.map((index) => {
+        if (typeof index === "number") {
+          return tg.policy(index).name;
+        }
+
+        return mapValues(index as Record<string, number>, (value: number) => {
+          if (value === null) {
+            return null;
+          }
+          return tg.policy(value).name;
+        });
+      });
+
+      ret.push(
+        { fieldName, policies: JSON.stringify(fmtedIndices) },
+      );
+    }
+
+    return ret;
+  };
+
   return {
     optional: isOptional,
     title: node.title,
@@ -563,18 +590,6 @@ function walkPath(
     format: format ?? null,
     fields: node.type == "object" ? collectObjectFields(tg, parent) : null,
     // TODO enum type on typegraph typegate.py
-    policies: node.policies.map((policy) => {
-      if (typeof policy === "number") {
-        return JSON.stringify(tg.policy(policy).name);
-      }
-      return JSON.stringify(
-        mapValues(policy as Record<string, number>, (value: number) => {
-          if (value === null) {
-            return null;
-          }
-          return tg.policy(value).name;
-        }),
-      );
-    }),
+    policies: getPolicies(node),
   };
 }

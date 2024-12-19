@@ -7,7 +7,6 @@ snapshot[`Typegraph using kv 1`] = `
       {
         "type": "object",
         "title": "kv",
-        "policies": [],
         "properties": {
           "get": 1,
           "set": 5,
@@ -22,14 +21,28 @@ snapshot[`Typegraph using kv 1`] = `
           "delete",
           "keys",
           "values"
-        ]
+        ],
+        "policies": {
+          "get": [
+            0
+          ],
+          "set": [
+            0
+          ],
+          "delete": [
+            0
+          ],
+          "keys": [
+            0
+          ],
+          "values": [
+            0
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_get_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 4,
         "runtimeConfig": null,
@@ -40,31 +53,28 @@ snapshot[`Typegraph using kv 1`] = `
       {
         "type": "object",
         "title": "root_get_fn_input",
-        "policies": [],
         "properties": {
           "key": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "key": []
+        }
       },
       {
         "type": "string",
-        "title": "root_get_fn_input_key_string",
-        "policies": []
+        "title": "root_get_fn_input_key_string"
       },
       {
         "type": "optional",
         "title": "root_get_fn_output",
-        "policies": [],
         "item": 3,
         "default_value": null
       },
       {
         "type": "function",
         "title": "root_set_fn",
-        "policies": [
-          0
-        ],
         "input": 6,
         "output": 3,
         "runtimeConfig": null,
@@ -75,20 +85,20 @@ snapshot[`Typegraph using kv 1`] = `
       {
         "type": "object",
         "title": "root_set_fn_input",
-        "policies": [],
         "properties": {
           "key": 3,
           "value": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "key": [],
+          "value": []
+        }
       },
       {
         "type": "function",
         "title": "root_delete_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 8,
         "runtimeConfig": null,
@@ -98,15 +108,11 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "integer",
-        "title": "root_delete_fn_output",
-        "policies": []
+        "title": "root_delete_fn_output"
       },
       {
         "type": "function",
         "title": "root_keys_fn",
-        "policies": [
-          0
-        ],
         "input": 10,
         "output": 11,
         "runtimeConfig": null,
@@ -117,25 +123,23 @@ snapshot[`Typegraph using kv 1`] = `
       {
         "type": "object",
         "title": "root_keys_fn_input",
-        "policies": [],
         "properties": {
           "filter": 4
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "filter": []
+        }
       },
       {
         "type": "list",
         "title": "root_keys_fn_output",
-        "policies": [],
         "items": 3
       },
       {
         "type": "function",
         "title": "root_values_fn",
-        "policies": [
-          0
-        ],
         "input": 10,
         "output": 11,
         "runtimeConfig": null,
@@ -162,7 +166,7 @@ snapshot[`Typegraph using kv 1`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       },
       {
@@ -255,7 +259,6 @@ snapshot[`Typegraph using kv 2`] = `
       {
         "type": "object",
         "title": "kv",
-        "policies": [],
         "properties": {
           "get": 1,
           "set": 5,
@@ -270,14 +273,28 @@ snapshot[`Typegraph using kv 2`] = `
           "delete",
           "keys",
           "values"
-        ]
+        ],
+        "policies": {
+          "get": [
+            0
+          ],
+          "set": [
+            0
+          ],
+          "delete": [
+            0
+          ],
+          "keys": [
+            0
+          ],
+          "values": [
+            0
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_get_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 4,
         "runtimeConfig": null,
@@ -288,31 +305,28 @@ snapshot[`Typegraph using kv 2`] = `
       {
         "type": "object",
         "title": "root_get_fn_input",
-        "policies": [],
         "properties": {
           "key": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "key": []
+        }
       },
       {
         "type": "string",
-        "title": "root_get_fn_input_key_string",
-        "policies": []
+        "title": "root_get_fn_input_key_string"
       },
       {
         "type": "optional",
         "title": "root_get_fn_output",
-        "policies": [],
         "item": 3,
         "default_value": null
       },
       {
         "type": "function",
         "title": "root_set_fn",
-        "policies": [
-          0
-        ],
         "input": 6,
         "output": 3,
         "runtimeConfig": null,
@@ -323,20 +337,20 @@ snapshot[`Typegraph using kv 2`] = `
       {
         "type": "object",
         "title": "root_set_fn_input",
-        "policies": [],
         "properties": {
           "key": 3,
           "value": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "key": [],
+          "value": []
+        }
       },
       {
         "type": "function",
         "title": "root_delete_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 8,
         "runtimeConfig": null,
@@ -346,15 +360,11 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "integer",
-        "title": "root_delete_fn_output",
-        "policies": []
+        "title": "root_delete_fn_output"
       },
       {
         "type": "function",
         "title": "root_keys_fn",
-        "policies": [
-          0
-        ],
         "input": 10,
         "output": 11,
         "runtimeConfig": null,
@@ -365,25 +375,23 @@ snapshot[`Typegraph using kv 2`] = `
       {
         "type": "object",
         "title": "root_keys_fn_input",
-        "policies": [],
         "properties": {
           "filter": 4
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "filter": []
+        }
       },
       {
         "type": "list",
         "title": "root_keys_fn_output",
-        "policies": [],
         "items": 3
       },
       {
         "type": "function",
         "title": "root_values_fn",
-        "policies": [
-          0
-        ],
         "input": 10,
         "output": 11,
         "runtimeConfig": null,
@@ -410,7 +418,7 @@ snapshot[`Typegraph using kv 2`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       },
       {

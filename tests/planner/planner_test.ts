@@ -36,22 +36,8 @@ Meta.test("planner", async (t) => {
   });
 
   await t.should("generate the right policy tree", async () => {
-    const fns = Object.fromEntries(plan.policies.functions);
-    await t.assertSnapshot(
-      mapValues(fns, (subtree) => {
-        const funcType = e.tg.type(subtree.funcTypeIdx);
-        return {
-          funcType,
-          referencedTypes: mapValues(
-            Object.fromEntries(subtree.referencedTypes),
-            (types) =>
-              types.map((idx) =>
-                filterKeys(e.tg.type(idx), (k) => ["type", "title"].includes(k))
-              ),
-          ),
-        };
-      }),
-    );
+    const stageToPolicies = Object.fromEntries(plan.policies.stageToPolicies);
+    await t.assertSnapshot(stageToPolicies);
   });
 
   await t.should("fail when required selections are missing", async () => {
