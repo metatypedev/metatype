@@ -4,6 +4,7 @@
 import { make_internal } from "../../worker_utils.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import { appendIfOngoing, Interrupt, OperationEvent, Run } from "./types.ts";
+import { randomUUID } from "../../crypto.ts";
 
 // const isTest = Deno.env.get("DENO_TESTING") === "true";
 const testBaseUrl = Deno.env.get("TEST_OVERRIDE_GQL_ORIGIN");
@@ -15,11 +16,14 @@ export class Context {
   public kwargs = {};
   gql: ReturnType<typeof createGQLClient>;
   logger: SubLogger;
+  utils: Utils;
+  compensationStack: (() => any | Promise<any>)[] = [];
 
   constructor(private run: Run, private internal: TaskContext) {
     this.gql = createGQLClient(internal);
     this.kwargs = getKwargsCopy(run);
     this.logger = new SubLogger(this);
+    this.utils = new Utils(this);
   }
 
   #nextId() {
@@ -33,7 +37,14 @@ export class Context {
     appendIfOngoing(this.run, { at: new Date().toJSON(), event: op });
   }
 
-  async save<T>(fn: () => T | Promise<T>, option?: SaveOption) {
+  async save<T>(
+    fn: () => T | Promise<T>,
+    option?: SaveOption,
+    compensateWith?: () => T | Promise<T>,
+  ) {
+    if (compensateWith) {
+      this.compensationStack.push(compensateWith!);
+    }
     const id = this.#nextId();
 
     let currRetryCount = 1;
@@ -76,6 +87,10 @@ export class Context {
 
       return clonedResult;
     } catch (err: any) {
+      if (option?.retry?.compensationOnfristFail) {
+        await this.#triggerCompensation(id, err);
+        throw err;
+      }
       if (
         option?.retry?.maxRetries &&
         currRetryCount < option.retry.maxRetries
@@ -103,6 +118,7 @@ export class Context {
 
         throw Interrupt.Variant("SAVE_RETRY");
       } else {
+        await this.#triggerCompensation(id, err);
         this.#appendOp({
           type: "Save",
           id,
@@ -117,6 +133,23 @@ export class Context {
       }
 
       throw err;
+    }
+  }
+
+  async #triggerCompensation(save_id: number, error: string) {
+    const compensationStack = this.compensationStack;
+    if (compensationStack && compensationStack.length) {
+      compensationStack.reverse();
+      for (const compensationFn of compensationStack) {
+        const result = await Promise.resolve(compensationFn());
+        const clonedResult = deepClone(result ?? null);
+        this.#appendOp({
+          type: "Compensate",
+          save_id,
+          error,
+          compensation_result: clonedResult,
+        });
+      }
     }
   }
 
@@ -350,6 +383,7 @@ interface SaveOption {
     minBackoffMs: number;
     maxBackoffMs: number;
     maxRetries: number;
+    compensationOnfristFail: boolean;
   };
 }
 
@@ -416,20 +450,19 @@ class RetryStrategy {
   }
 }
 
-
 class SubLogger {
   constructor(private ctx: Context) {}
 
   async #log(kind: "warn" | "error" | "info", ...args: unknown[]) {
     await this.ctx.save(() => {
       const prefix = `[${kind.toUpperCase()}: ${this.ctx.getRun().run_id}]`;
-      switch(kind) {
+      switch (kind) {
         case "warn": {
           console.warn(prefix, ...args);
           break;
         }
         case "error": {
-          console.error(prefix,...args);
+          console.error(prefix, ...args);
           break;
         }
         default: {
@@ -444,7 +477,7 @@ class SubLogger {
           // Functions are omitted,
           // For example, JSON.stringify(() => 1234) => undefined (no throw)
           return json === undefined ? String(arg) : json;
-        } catch(_) {
+        } catch (_) {
           return String(arg);
         }
       }).join(" ");
@@ -463,6 +496,24 @@ class SubLogger {
 
   async error(...payload: unknown[]) {
     await this.#log("error", ...payload);
+  }
+}
+
+class Utils {
+  constructor(private ctx: Context) {}
+
+  async now() {
+    return await this.ctx.save(() => Date.now());
+  }
+
+  async random(a: number, b: number) {
+    return await this.ctx.save(() =>
+      Math.floor(Math.random() * (b - a + 1)) + a
+    );
+  }
+
+  async uuid4() {
+    return await this.ctx.save(() => randomUUID());
   }
 }
 
