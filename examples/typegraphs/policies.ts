@@ -13,17 +13,17 @@ typegraph(
     // skip:end
     const deno = new DenoRuntime();
     const random = new RandomRuntime({ seed: 0 });
-    // `public` is sugar for `(_args, _ctx) => true`
+    // `public` is sugar for `(_args, _ctx) => "PASS"`
     const pub = Policy.public();
 
     const admin_only = deno.policy(
       "admin_only",
-      // note: policies either return true | false | null
-      "(args, { context }) => context.username ? context.username === 'admin' : null",
+      // note: policies either return "ALLOW" | "DENY" | "PASS"
+      "(args, { context }) => context?.username === 'admin' ? 'ALLOW' : 'DENY'",
     );
     const user_only = deno.policy(
       "user_only",
-      "(args, { context }) => context.username ? context.username === 'user' : null",
+      "(args, { context }) => context?.username === 'user' ? 'ALLOW' : 'DENY'",
     );
 
     g.auth(Auth.basic(["admin", "user"]));

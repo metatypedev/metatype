@@ -39,7 +39,9 @@ export interface StageMetadata {
 }
 
 interface ComposePolicyOperand {
+  /** Field name according to the underlying struct on the typegraph */
   canonFieldName: string;
+  /** The actual policy index selected against a given effect */
   index: PolicyIdx;
 }
 
@@ -56,6 +58,7 @@ export type OperationPoliciesConfig = {
 };
 
 interface PolicyForStage {
+  /** Field name according to the underlying struct on the typegraph */
   canonFieldName: string;
   /** Each item is either a PolicyIndicesByEffect or a number */
   indices: Array<PolicyIndices>;
@@ -178,15 +181,11 @@ export class OperationPolicies {
 
     let activeEffect = this.#getEffectOrNull(fakeStageMeta.typeIdx) ?? "read"; // root
 
-    outerIter: for (const { stageId, typeIdx } of stageMetaList) {
+    traversal: for (const { stageId, typeIdx } of stageMetaList) {
       const newEffect = this.#getEffectOrNull(typeIdx);
       if (newEffect != null) {
         activeEffect = newEffect;
       }
-      console.log(
-        `  > stage ${stageId} :: ${activeEffect}`,
-        resolvedPolicyCachePerStage.get(stageId) ?? "<not yet>",
-      );
 
       for (
         const [priorStageId, verdict] of resolvedPolicyCachePerStage.entries()
@@ -194,13 +193,13 @@ export class OperationPolicies {
         const globalAllows = priorStageId == EXPOSE_STAGE_ID &&
           verdict == "ALLOW";
         if (globalAllows) {
-          break outerIter;
+          break traversal;
         }
 
         const parentAllows = stageId.startsWith(priorStageId) &&
           verdict == "ALLOW";
         if (parentAllows) {
-          continue outerIter;
+          continue traversal;
         } // elif deny => already thrown
       }
 
@@ -227,14 +226,14 @@ export class OperationPolicies {
           }));
 
           throw new BadContext(
-            this.getRejectionReason(stageId, activeEffect, policyNames),
+            this.#getRejectionReason(stageId, activeEffect, policyNames),
           );
         }
       }
     }
   }
 
-  getRejectionReason(
+  #getRejectionReason(
     stageId: StageId,
     effect: EffectType,
     policiesData: Array<{ name: string; concernedField: string }>,
@@ -346,12 +345,6 @@ export class OperationPolicies {
       }
     }
 
-    // console.info(
-    //   "Composing",
-    //   effect,
-    //   policies.map((p) => [p.canonFieldName, p.index]),
-    // );
-
     if (operands.length == 0) {
       return { authorized: "PASS" };
     } else {
@@ -368,7 +361,6 @@ export class OperationPolicies {
     let nestedSchema = this.tg.type(nestedTypeIdx);
 
     if (isFunction(nestedSchema)) {
-      // TODO: collect the policies on the function as part of the oeprands
       nestedTypeIdx = nestedSchema.output;
       nestedSchema = this.tg.type(nestedTypeIdx);
     }
@@ -431,7 +423,7 @@ export class OperationPolicies {
           const actualIndex = index[effect] ?? null;
           if (actualIndex == null) {
             throw new BadContext(
-              this.getRejectionReason(stageId, effect, [{
+              this.#getRejectionReason(stageId, effect, [{
                 name: "__deny",
                 concernedField: canonFieldName,
               }]),
@@ -460,5 +452,10 @@ export class OperationPolicies {
 
       return targetStageId == parent ? node : null;
     }).filter((name) => name != null);
+  }
+
+  // for testing
+  get stageToPolicies() {
+    return this.#stageToPolicies;
   }
 }

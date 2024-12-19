@@ -53,9 +53,7 @@ snapshot[`typegate: find available operations 1`] = `
               enum: null,
               format: "date-time",
               optional: false,
-              policies: [
-                '{"create":"__public"}',
-              ],
+              policies: [],
               title: "record_cursor_t3_struct_createdAt_string_datetime",
               type: "string",
             },
@@ -113,9 +111,7 @@ snapshot[`typegate: find available operations 1`] = `
               enum: null,
               format: "date-time",
               optional: false,
-              policies: [
-                '{"create":"__public"}',
-              ],
+              policies: [],
               title: "record_cursor_t3_struct_createdAt_string_datetime",
               type: "string",
             },

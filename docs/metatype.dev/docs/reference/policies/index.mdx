@@ -17,8 +17,8 @@ The Deno runtime enable to understand the last abstraction. Policies are a way t
 
 Metatype comes with some built-in policies, but you can use the Deno runtime to define your own:
 
-- `policies.public()` is an alias for `Policy(PureFunMat("() => true"))` providing everyone open access.
-- `policies.ctx("role_value", "role_field")` is a companion policy for the authentication strategy you learned in the previous section. It will verify the context and give adequate access to the user.
+- `policies.public()` is an alias for `deno.policy("public", "() => 'PASS'")` providing everyone open access while still allowing field level custom access.
+- `Policy.context("role_value", "role_field")` is a companion policy for the authentication strategy you learned in the previous section. It will verify the context and give adequate access to the user.
 
 Policies are hierarchical in the sense that the request starts with a denial, and the root functions must explicitly provide an access or not. Once access granted, any further types can either inherit or override the access. Policies evaluate in order in case multiple ones are defined.
 
@@ -28,3 +28,33 @@ Policies are hierarchical in the sense that the request starts with a denial, an
   typescript={require("!!code-loader!../../../../../examples/typegraphs/policies.ts")}
   query={require("./policies.graphql")}
 />
+
+
+## Composition rules
+
+### Traversal order
+
+- `ALLOW`: Allows access to the parent and all its descendants, disregarding inner policies.
+- `DENY`: Denies access to the parent and all its descendants, disregarding inner policies.
+- `PASS`: Allows access to the parent, each descendant will still be evaluated individually (equivalent to having no policies set).
+
+### Inline chain
+
+If you have `foo.with_policy(A, B).with_policy(C)` for example, it will be merged into a single chain `[A, B, C]`.
+
+The evaluation is as follows:
+
+- `ALLOW` and `DENY` compose the same as `true` and `false`
+- `PASS` does not participate.
+
+Or more concretely:
+- `ALLOW` & Other -> Other
+- `DENY` & Other -> `DENY`
+- `PASS` & Other -> Other (`PASS` is a no-op)
+
+
+Examples:
+- `[DENY, DENY, ALLOW]` -> `DENY`
+- `[ALLOW, PASS]` -> `ALLOW`
+- `[PASS, PASS, PASS]` -> `PASS`
+- `[]` -> `PASS`

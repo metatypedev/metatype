@@ -7,21 +7,22 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "object",
         "title": "test-complex-types",
-        "policies": [],
         "properties": {
           "test": 1
         },
         "id": [],
         "required": [
           "test"
-        ]
+        ],
+        "policies": {
+          "test": [
+            0
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_test_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 18,
         "runtimeConfig": null,
@@ -32,7 +33,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "object",
         "title": "ComplexType",
-        "policies": [],
         "properties": {
           "a_string": 3,
           "a_float": 4,
@@ -45,24 +45,32 @@ snapshot[`typegraphs creation 1`] = `
           "an_email": 17
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "a_string": [],
+          "a_float": [],
+          "an_enum": [],
+          "an_integer_enum": [],
+          "a_float_enum": [],
+          "a_struct": [],
+          "nested": [],
+          "nested_with_ref": [],
+          "an_email": []
+        }
       },
       {
         "type": "string",
-        "title": "ComplexType_a_string_string",
-        "policies": []
+        "title": "ComplexType_a_string_string"
       },
       {
         "type": "float",
         "title": "ComplexType_a_float_float",
-        "policies": [],
         "minimum": 1.0,
         "multipleOf": 2.0
       },
       {
         "type": "string",
         "title": "ComplexType_an_enum_string_enum",
-        "policies": [],
         "enum": [
           "\\\\"one\\\\"",
           "\\\\"two\\\\""
@@ -71,7 +79,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "integer",
         "title": "ComplexType_an_integer_enum_integer_enum",
-        "policies": [],
         "enum": [
           "1",
           "2"
@@ -80,7 +87,6 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "float",
         "title": "ComplexType_a_float_enum_float",
-        "policies": [],
         "enum": [
           "1.5",
           "2.5"
@@ -89,35 +95,33 @@ snapshot[`typegraphs creation 1`] = `
       {
         "type": "object",
         "title": "ComplexType_a_struct_struct",
-        "policies": [],
         "properties": {
           "value": 9
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "value": []
+        }
       },
       {
         "type": "float",
-        "title": "ComplexType_a_struct_struct_value_float",
-        "policies": []
+        "title": "ComplexType_a_struct_struct_value_float"
       },
       {
         "type": "optional",
         "title": "ComplexType_nested_ComplexType_nested_ComplexType_nested_either_list_optional",
-        "policies": [],
         "item": 11,
         "default_value": null
       },
       {
         "type": "list",
         "title": "ComplexType_nested_ComplexType_nested_either_list",
-        "policies": [],
         "items": 12
       },
       {
         "type": "either",
         "title": "ComplexType_nested_either",
-        "policies": [],
         "oneOf": [
           3,
           13
@@ -125,44 +129,42 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "integer",
-        "title": "ComplexType_nested_either_t1_integer",
-        "policies": []
+        "title": "ComplexType_nested_either_t1_integer"
       },
       {
         "type": "object",
         "title": "SomeType",
-        "policies": [],
         "properties": {
           "one": 15,
           "two": 16
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "one": [],
+          "two": []
+        }
       },
       {
         "type": "list",
         "title": "Two",
-        "policies": [],
         "items": 13,
         "minItems": 3
       },
       {
         "type": "optional",
         "title": "SomeType_two_SomeType_optional",
-        "policies": [],
         "item": 14,
         "default_value": null
       },
       {
         "type": "string",
         "title": "ComplexType_an_email_string_email",
-        "policies": [],
         "format": "email"
       },
       {
         "type": "boolean",
-        "title": "root_test_fn_output",
-        "policies": []
+        "title": "root_test_fn_output"
       }
     ],
     "materializers": [
@@ -186,7 +188,7 @@ snapshot[`typegraphs creation 1`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       }
     ],
@@ -270,7 +272,6 @@ snapshot[`typegraphs creation 2`] = `
       {
         "type": "object",
         "title": "test-multiple-runtimes",
-        "policies": [],
         "properties": {
           "add": 1,
           "multiply": 4
@@ -279,14 +280,19 @@ snapshot[`typegraphs creation 2`] = `
         "required": [
           "add",
           "multiply"
-        ]
+        ],
+        "policies": {
+          "add": [
+            0
+          ],
+          "multiply": [
+            0
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_add_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 3,
         "runtimeConfig": null,
@@ -297,25 +303,24 @@ snapshot[`typegraphs creation 2`] = `
       {
         "type": "object",
         "title": "root_add_fn_input",
-        "policies": [],
         "properties": {
           "first": 3,
           "second": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "first": [],
+          "second": []
+        }
       },
       {
         "type": "float",
-        "title": "root_add_fn_input_first_float",
-        "policies": []
+        "title": "root_add_fn_input_first_float"
       },
       {
         "type": "function",
         "title": "root_multiply_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 3,
         "runtimeConfig": null,
@@ -345,7 +350,7 @@ snapshot[`typegraphs creation 2`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       },
       {
@@ -414,7 +419,6 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "object",
         "title": "test-types",
-        "policies": [],
         "properties": {
           "one": 1,
           "two": 6,
@@ -425,14 +429,22 @@ snapshot[`typegraphs creation 3`] = `
           "one",
           "two",
           "three"
-        ]
+        ],
+        "policies": {
+          "one": [
+            0
+          ],
+          "two": [
+            1
+          ],
+          "three": [
+            2
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_one_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 5,
         "runtimeConfig": null,
@@ -443,38 +455,35 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "object",
         "title": "root_one_fn_input",
-        "policies": [],
         "properties": {
           "a": 3,
           "b": 4
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "a": [],
+          "b": []
+        }
       },
       {
         "type": "integer",
-        "title": "root_one_fn_input_a_integer",
-        "policies": []
+        "title": "root_one_fn_input_a_integer"
       },
       {
         "type": "integer",
         "title": "root_one_fn_input_b_integer",
-        "policies": [],
         "minimum": 12
       },
       {
         "type": "integer",
         "title": "root_one_fn_output",
-        "policies": [],
         "minimum": 12,
         "maximum": 43
       },
       {
         "type": "function",
         "title": "root_two_fn",
-        "policies": [
-          1
-        ],
         "input": 7,
         "output": 8,
         "runtimeConfig": null,
@@ -485,31 +494,34 @@ snapshot[`typegraphs creation 3`] = `
       {
         "type": "object",
         "title": "User",
-        "policies": [],
         "properties": {
           "id": 3,
           "post": 8
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "id": [],
+          "post": []
+        }
       },
       {
         "type": "object",
         "title": "Post",
-        "policies": [],
         "properties": {
           "id": 3,
           "author": 7
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "id": [],
+          "author": []
+        }
       },
       {
         "type": "function",
         "title": "root_three_fn",
-        "policies": [
-          2
-        ],
         "input": 2,
         "output": 2,
         "runtimeConfig": null,
@@ -599,7 +611,7 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       }
     ],
@@ -664,21 +676,22 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "object",
         "title": "test-complex-types",
-        "policies": [],
         "properties": {
           "test": 1
         },
         "id": [],
         "required": [
           "test"
-        ]
+        ],
+        "policies": {
+          "test": [
+            0
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_test_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 18,
         "runtimeConfig": null,
@@ -689,7 +702,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "object",
         "title": "ComplexType",
-        "policies": [],
         "properties": {
           "a_string": 3,
           "a_float": 4,
@@ -702,24 +714,32 @@ snapshot[`typegraphs creation 4`] = `
           "an_email": 17
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "a_string": [],
+          "a_float": [],
+          "an_enum": [],
+          "an_integer_enum": [],
+          "a_float_enum": [],
+          "a_struct": [],
+          "nested": [],
+          "nested_with_ref": [],
+          "an_email": []
+        }
       },
       {
         "type": "string",
-        "title": "ComplexType_a_string_string",
-        "policies": []
+        "title": "ComplexType_a_string_string"
       },
       {
         "type": "float",
         "title": "ComplexType_a_float_float",
-        "policies": [],
         "minimum": 1.0,
         "multipleOf": 2.0
       },
       {
         "type": "string",
         "title": "ComplexType_an_enum_string_enum",
-        "policies": [],
         "enum": [
           "\\\\"one\\\\"",
           "\\\\"two\\\\""
@@ -728,7 +748,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "integer",
         "title": "ComplexType_an_integer_enum_integer_enum",
-        "policies": [],
         "enum": [
           "1",
           "2"
@@ -737,7 +756,6 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "float",
         "title": "ComplexType_a_float_enum_float",
-        "policies": [],
         "enum": [
           "1.5",
           "2.5"
@@ -746,35 +764,33 @@ snapshot[`typegraphs creation 4`] = `
       {
         "type": "object",
         "title": "ComplexType_a_struct_struct",
-        "policies": [],
         "properties": {
           "value": 9
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "value": []
+        }
       },
       {
         "type": "float",
-        "title": "ComplexType_a_struct_struct_value_float",
-        "policies": []
+        "title": "ComplexType_a_struct_struct_value_float"
       },
       {
         "type": "optional",
         "title": "ComplexType_nested_ComplexType_nested_ComplexType_nested_either_list_optional",
-        "policies": [],
         "item": 11,
         "default_value": null
       },
       {
         "type": "list",
         "title": "ComplexType_nested_ComplexType_nested_either_list",
-        "policies": [],
         "items": 12
       },
       {
         "type": "either",
         "title": "ComplexType_nested_either",
-        "policies": [],
         "oneOf": [
           3,
           13
@@ -782,44 +798,42 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "integer",
-        "title": "ComplexType_nested_either_t1_integer",
-        "policies": []
+        "title": "ComplexType_nested_either_t1_integer"
       },
       {
         "type": "object",
         "title": "SomeType",
-        "policies": [],
         "properties": {
           "one": 15,
           "two": 16
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "one": [],
+          "two": []
+        }
       },
       {
         "type": "list",
         "title": "Two",
-        "policies": [],
         "items": 13,
         "minItems": 3
       },
       {
         "type": "optional",
         "title": "SomeType_two_SomeType_optional",
-        "policies": [],
         "item": 14,
         "default_value": null
       },
       {
         "type": "string",
         "title": "ComplexType_an_email_string_email",
-        "policies": [],
         "format": "email"
       },
       {
         "type": "boolean",
-        "title": "root_test_fn_output",
-        "policies": []
+        "title": "root_test_fn_output"
       }
     ],
     "materializers": [
@@ -843,7 +857,7 @@ snapshot[`typegraphs creation 4`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       }
     ],
@@ -927,7 +941,6 @@ snapshot[`typegraphs creation 5`] = `
       {
         "type": "object",
         "title": "test-multiple-runtimes",
-        "policies": [],
         "properties": {
           "add": 1,
           "multiply": 4
@@ -936,14 +949,19 @@ snapshot[`typegraphs creation 5`] = `
         "required": [
           "add",
           "multiply"
-        ]
+        ],
+        "policies": {
+          "add": [
+            0
+          ],
+          "multiply": [
+            0
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_add_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 3,
         "runtimeConfig": null,
@@ -954,25 +972,24 @@ snapshot[`typegraphs creation 5`] = `
       {
         "type": "object",
         "title": "root_add_fn_input",
-        "policies": [],
         "properties": {
           "first": 3,
           "second": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "first": [],
+          "second": []
+        }
       },
       {
         "type": "float",
-        "title": "root_add_fn_input_first_float",
-        "policies": []
+        "title": "root_add_fn_input_first_float"
       },
       {
         "type": "function",
         "title": "root_multiply_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 3,
         "runtimeConfig": null,
@@ -1002,7 +1019,7 @@ snapshot[`typegraphs creation 5`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       },
       {
@@ -1071,7 +1088,6 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "object",
         "title": "test-types",
-        "policies": [],
         "properties": {
           "one": 1,
           "two": 6,
@@ -1082,14 +1098,22 @@ snapshot[`typegraphs creation 6`] = `
           "one",
           "two",
           "three"
-        ]
+        ],
+        "policies": {
+          "one": [
+            0
+          ],
+          "two": [
+            1
+          ],
+          "three": [
+            2
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_one_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 5,
         "runtimeConfig": null,
@@ -1100,38 +1124,35 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "object",
         "title": "root_one_fn_input",
-        "policies": [],
         "properties": {
           "a": 3,
           "b": 4
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "a": [],
+          "b": []
+        }
       },
       {
         "type": "integer",
-        "title": "root_one_fn_input_a_integer",
-        "policies": []
+        "title": "root_one_fn_input_a_integer"
       },
       {
         "type": "integer",
         "title": "root_one_fn_input_b_integer",
-        "policies": [],
         "minimum": 12
       },
       {
         "type": "integer",
         "title": "root_one_fn_output",
-        "policies": [],
         "minimum": 12,
         "maximum": 43
       },
       {
         "type": "function",
         "title": "root_two_fn",
-        "policies": [
-          1
-        ],
         "input": 7,
         "output": 8,
         "runtimeConfig": null,
@@ -1142,31 +1163,34 @@ snapshot[`typegraphs creation 6`] = `
       {
         "type": "object",
         "title": "User",
-        "policies": [],
         "properties": {
           "id": 3,
           "post": 8
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "id": [],
+          "post": []
+        }
       },
       {
         "type": "object",
         "title": "Post",
-        "policies": [],
         "properties": {
           "id": 3,
           "author": 7
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "id": [],
+          "author": []
+        }
       },
       {
         "type": "function",
         "title": "root_three_fn",
-        "policies": [
-          2
-        ],
         "input": 2,
         "output": 2,
         "runtimeConfig": null,
@@ -1256,7 +1280,7 @@ snapshot[`typegraphs creation 6`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       }
     ],

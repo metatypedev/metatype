@@ -17,9 +17,12 @@ def auth(g: Graph):
     remote = HttpRuntime("https://api.github.com")
 
     public = Policy.public()
-    private = deno.policy("private", "(_args, { context }) => !!context.user1")
+    private = deno.policy(
+        "private", "(_args, { context }) => !!context.user1 ? 'ALLOW' : 'DENY'"
+    )
     with_token = deno.policy(
-        "with_token", "(_args, { context }) => { return !!context.accessToken; }"
+        "with_token",
+        "(_args, { context }) => { return !!context.accessToken ? 'ALLOW' : 'DENY'; }",
     )
 
     x = t.struct({"x": t.integer()})

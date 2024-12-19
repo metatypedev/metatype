@@ -15,17 +15,17 @@ def policies(g: Graph):
     deno = DenoRuntime()
     random = RandomRuntime(seed=0, reset=None)
 
-    # `public` is sugar for to `() => true`
+    # `public` is sugar for to `(_args, _ctx) => "PASS"`
     public = Policy.public()
 
     admin_only = deno.policy(
         "admin_only",
-        # note: policies either return true | false | null
-        "(args, { context }) => context.username ? context.username === 'admin' : null",
+        # note: policies either return "ALLOW" | "DENY" | "PASS"
+        "(args, { context }) => context?.username === 'admin' ? 'ALLOW' : 'DENY'",
     )
     user_only = deno.policy(
         "user_only",
-        "(args, { context }) => context.username ? context.username === 'user' : null",
+        "(args, { context }) => context?.username === 'user' ? 'ALLOW' : 'DENY'",
     )
 
     g.auth(Auth.basic(["admin", "user"]))

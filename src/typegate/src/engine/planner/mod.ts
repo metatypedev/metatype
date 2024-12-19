@@ -107,7 +107,7 @@ export class Planner {
     for (const stage of stages) {
       stage.varTypes = varTypes;
       const stageId = stage.id();
-      if (stageId.startsWith("__schema")) {
+      if (stageId.startsWith("__")) {
         // TODO: allow and reuse previous stage policy?
         continue;
       }
