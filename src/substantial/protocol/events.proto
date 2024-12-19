@@ -31,6 +31,12 @@ message Save {
   }
 }
 
+message Compensation {
+  uint32 save_id = 1;
+  string error = 2;
+  bytes compensation_result = 3;
+}
+
 message Sleep {
   uint32 id = 1;
   google.protobuf.Timestamp start = 2;
@@ -58,6 +64,7 @@ message Event {
     Send send = 13;
     Stop stop = 14;
   }
+  Compensation compensation = 15;
 };
 
 message Records {

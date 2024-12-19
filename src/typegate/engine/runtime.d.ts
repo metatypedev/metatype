@@ -318,7 +318,12 @@ export type OperationEvent =
   | { type: "Send"; event_name: string; value: unknown }
   | { type: "Stop"; result: unknown }
   | { type: "Start"; kwargs: Record<string, unknown> }
-  | { type: "Compensate" };
+  | {
+    type: "Compensate";
+    save_id: number;
+    error: string;
+    compensation_result: any;
+  };
 
 export type Operation = { at: string; event: OperationEvent };
 
