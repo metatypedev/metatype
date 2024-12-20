@@ -17,7 +17,7 @@ typegraph(
     const pub = Policy.public();
     const roulette_access = deno.policy(
       "roulette",
-      "() => Math.random() < 0.5 ? 'ALLOW' : 'DENY'",
+      "() => Math.random() < 0.5 ? 'PASS' : 'DENY'",
     );
 
     // skip:next-line

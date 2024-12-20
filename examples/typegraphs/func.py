@@ -58,7 +58,7 @@ def roadmap(g: Graph):
 
     admins = deno.policy(
         "admins",
-        "(_args, { context }) => !!context.username ? 'ALLOW' : 'DENY'",
+        "(_args, { context }) => !!context.username ? 'PASS' : 'DENY'",
     )
     # skip:end
 

@@ -25,7 +25,7 @@ def policies(g: Graph):
     )
     user_only = deno.policy(
         "user_only",
-        "(args, { context }) => context?.username === 'user' ? 'ALLOW' : 'DENY'",
+        "(args, { context }) => context?.username === 'user' ? 'PASS' : 'DENY'",
     )
 
     g.auth(Auth.basic(["admin", "user"]))

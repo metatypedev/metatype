@@ -214,16 +214,16 @@ impl wit::core::Guest for Lib {
             .to_string();
 
         let check = match check {
-            ContextCheck::NotNull => "value != null ? 'ALLOW' : 'DENY'".to_string(),
+            ContextCheck::NotNull => "value != null ? 'PASS' : 'DENY'".to_string(),
             ContextCheck::Value(val) => {
                 format!(
-                    "value === {} ?  'ALLOW' : 'DENY'",
+                    "value === {} ?  'PASS' : 'DENY'",
                     serde_json::to_string(&val).unwrap()
                 )
             }
             ContextCheck::Pattern(pattern) => {
                 format!(
-                    "new RegExp({}).test(value) ? 'ALLOW' : 'DENY' ",
+                    "new RegExp({}).test(value) ? 'PASS' : 'DENY' ",
                     serde_json::to_string(&pattern).unwrap()
                 )
             }

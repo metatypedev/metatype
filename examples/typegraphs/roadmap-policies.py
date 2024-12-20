@@ -56,7 +56,7 @@ def roadmap(g: Graph):
     # highlight-start
     admins = deno.policy(
         "admins",
-        "(_args, { context }) => !!context.username ? 'ALLOW' : 'DENY'",
+        "(_args, { context }) => !!context.username ? 'PASS' : 'DENY'",
     )
     # highlight-end
 

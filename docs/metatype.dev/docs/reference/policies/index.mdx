@@ -37,24 +37,8 @@ Policies are hierarchical in the sense that the request starts with a denial, an
 - `DENY`: Denies access to the parent and all its descendants, disregarding inner policies.
 - `PASS`: Allows access to the parent, each descendant will still be evaluated individually (equivalent to having no policies set).
 
-### Inline chain
+### Chaining policies
 
-If you have `foo.with_policy(A, B).with_policy(C)` for example, it will be merged into a single chain `[A, B, C]`.
+If you have `foo.with_policy(A, B).with_policy(C)` for example, it will evaluated in batch as `[A, B, C]`.
 
-The evaluation is as follows:
-
-- `ALLOW` and `DENY` compose the same as `true` and `false` under the logical `AND` operator.
-- `PASS` does not participate.
-
-Or more concretely:
-
-- `ALLOW` & Other -> Other
-- `DENY` & Other -> `DENY`
-- `PASS` & Other -> Other (`PASS` is a no-op)
-
-Examples:
-
-- `[DENY, DENY, PASS, ALLOW]` -> `DENY`
-- `[ALLOW, PASS]` -> `ALLOW`
-- `[PASS, PASS, PASS]` -> `PASS`
-- `[]` -> `PASS` (no policies)
+If one or more policies fail (`DENY`), the type will be inaccessible.

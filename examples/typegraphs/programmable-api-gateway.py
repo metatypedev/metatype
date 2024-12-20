@@ -18,7 +18,7 @@ def programmable_api_gateway(g: Graph):
 
     public = Policy.public()
     roulette_access = deno.policy(
-        "roulette", "() => Math.random() < 0.5 ? 'ALLOW' : 'DENY'"
+        "roulette", "() => Math.random() < 0.5 ? 'PASS' : 'DENY'"
     )
 
     my_api_format = """
