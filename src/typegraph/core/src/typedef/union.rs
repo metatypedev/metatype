@@ -13,7 +13,7 @@ use crate::{
     },
     errors,
     typegraph::TypegraphContext,
-    types::{ExtendedTypeDef, FindAttribute as _, TypeDefData, TypeId, Union},
+    types::{ExtendedTypeDef, TypeDefData, TypeId, Union},
     wit::core::TypeUnion,
 };
 
@@ -21,11 +21,9 @@ impl TypeConversion for Union {
     fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::Union {
             base: BaseBuilderInit {
-                ctx,
                 base_name: "union",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .build()?,

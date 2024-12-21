@@ -26,7 +26,8 @@ from typegraph.wit import runtimes, store
 def prisma_migration(g: Graph):
     deno = DenoRuntime()
     admin_only = deno.policy(
-        "admin_only", code="(_args, { context }) => context.username === 'admin'"
+        "admin_only",
+        code="(_args, { context }) => context.username === 'admin' ? 'ALLOW' : 'DENY'",
     )
 
     g.auth(Auth.basic(["admin"]))
