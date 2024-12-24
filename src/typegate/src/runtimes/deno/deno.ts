@@ -37,7 +37,7 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   allow: () => "ALLOW" as PolicyResolverOutput,
   deny: () => "DENY" as PolicyResolverOutput,
   pass: () => "PASS" as PolicyResolverOutput,
-  internal_policy: ({ _: { context } }) => context.provider === "internal" ? "ALLOW" : "DENY" as PolicyResolverOutput,
+  internal_policy: ({ _: { context } }) => context.provider === "internal" ? "ALLOW" : "PASS" as PolicyResolverOutput,
 };
 
 export class DenoRuntime extends Runtime {
@@ -73,9 +73,9 @@ export class DenoRuntime extends Runtime {
 
     const secrets: Record<string, string> = {};
     for (const m of materializers) {
-      let secrets = (m.data.secrets as string[]) ?? [];
+      let matSecrets = (m.data.secrets as string[]) ?? [];
       if (m.name === "outjection") {
-        secrets = m.data.source === "secret"
+        matSecrets = m.data.source === "secret"
           ? [...getInjectionValues(m.data)]
           : [];
       }

@@ -36,6 +36,13 @@ def deno(g: Graph):
             name="counter",
             effect=effects.update(),
         ),
+        secrets=deno.import_(
+            t.struct(),
+            t.struct({"ok": t.boolean()}),
+            module="ts/deno.ts",
+            name="secrets",
+            secrets=["DENO_SECRET"],
+        ),
         min=deno.import_(number_input, t.float(), module="ts/math.ts", name="min"),
         max=deno.import_(number_input, t.float(), module="ts/math.ts", name="maxAsync"),
         log=deno.import_(
