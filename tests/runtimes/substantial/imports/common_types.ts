@@ -31,7 +31,7 @@ export interface Context {
     ) => Promise<Record<string, unknown>>;
   };
   sleep: (ms: number) => void;
-  save<T>(fn: () => T | Promise<T>, option?: SaveOption): Promise<T>;
+  save<T>(fn: () => T | Promise<T>, option?: SaveOption, compensateWith?: () => T | Promise<T>): Promise<T>;
   receive<O>(eventName: string): O;
   handle<I, O>(
     eventName: string,
@@ -48,6 +48,7 @@ export interface Context {
   ): ChildWorkflowHandle;
 
   logger: SubLogger
+  utils: Utils;
 }
 
 interface SubLogger {
@@ -79,6 +80,12 @@ export interface SaveOption {
     maxBackoffMs: number;
     maxRetries: number;
   };
+}
+
+export interface Utils {
+  now: () => Promise<Date>;
+  random: (a: number, b: number) => Promise<number>;
+  uuid4: () => Promise<string>;
 }
 
 export async function queryThatTakesAWhile<T>(input: T): Promise<T> {
