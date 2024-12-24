@@ -81,7 +81,11 @@ for (const { mode, ...options } of variants) {
       ...options,
     },
     async (t) => {
-      const e = await t.engine("runtimes/deno/deno.py");
+      const e = await t.engine("runtimes/deno/deno.py", {
+        secrets: {
+          DENO_SECRET: "deno_secret",
+        },
+      });
       const artifacts = e.tg.tg.meta.artifacts;
 
       await t.should("have uploaded artifacts on deploy", async () => {
@@ -120,7 +124,11 @@ for (const { mode, ...options } of variants) {
       ...options,
     },
     async (t) => {
-      const e = await t.engine("runtimes/deno/deno.py");
+      const e = await t.engine("runtimes/deno/deno.py", {
+        secrets: {
+          DENO_SECRET: "deno_secret",
+        },
+      });
       const artifacts = e.tg.tg.meta.artifacts;
 
       await t.should("have uploaded artifacts on deploy", async () => {
@@ -149,7 +157,11 @@ for (const { mode, ...options } of variants) {
       ...options,
     },
     async (t) => {
-      const engine = await t.engine("runtimes/deno/deno.py");
+      const engine = await t.engine("runtimes/deno/deno.py", {
+        secrets: {
+          DENO_SECRET: "deno_secret",
+        },
+      });
       const artifacts = engine.tg.tg.meta.artifacts;
 
       const enginePartial = await t.engine("runtimes/deno/deno_partial.py");

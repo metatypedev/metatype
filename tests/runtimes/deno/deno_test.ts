@@ -9,7 +9,11 @@ Meta.test(
     name: "Deno runtime",
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
+    const e = await t.engine("runtimes/deno/deno.py", {
+      secrets: {
+        DENO_SECRET: "deno_secret",
+      },
+    });
 
     await t.should("work on the default worker", async () => {
       await gql`
@@ -84,6 +88,22 @@ Meta.test(
         })
         .on(e);
     });
+
+    await t.should("support secret injection", async () => {
+      await gql`
+        query {
+          secrets {
+            ok
+          }
+        }
+      `
+        .expectData({
+          secrets: {
+            ok: true,
+          },
+        })
+        .on(e);
+    });
   },
 );
 
@@ -92,7 +112,11 @@ Meta.test(
     name: "Deno runtime: file name reloading",
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
+    const e = await t.engine("runtimes/deno/deno.py", {
+      secrets: {
+        DENO_SECRET: "deno_secret",
+      },
+    });
 
     await t.should("success for allowed network access", async () => {
       await gql`
@@ -281,7 +305,11 @@ Meta.test(
     sanitizeOps: false,
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
+    const e = await t.engine("runtimes/deno/deno.py", {
+      secrets: {
+        DENO_SECRET: "deno_secret",
+      },
+    });
 
     await t.should("safely fail upon stack overflow", async () => {
       await gql`
