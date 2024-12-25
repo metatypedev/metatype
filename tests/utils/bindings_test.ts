@@ -38,23 +38,27 @@ Deno.test("typegraphValidate", () => {
       {
         "type": "object",
         "title": "introspection",
-        "policies": [],
         "properties": {
           "__type": 1,
-          "__schema": 64,
+          "__schema": 26
         },
         "id": [],
         "required": [
           "__type",
-          "__schema",
+          "__schema"
         ],
+        "policies": {
+          "__type": [
+            0
+          ],
+          "__schema": [
+            0
+          ]
+        }
       },
       {
         "type": "function",
         "title": "func_79",
-        "policies": [
-          0,
-        ],
         "input": 2,
         "output": 4,
         "runtimeConfig": null,

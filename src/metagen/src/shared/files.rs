@@ -100,6 +100,9 @@ pub fn get_path_to_files(tg: &Typegraph, root: u32) -> Result<HashMap<u32, Vec<T
         root,
         Default::default(),
         |cx, acc| -> Result<VisitNext, anyhow::Error> {
+            if cx.current_node.in_cycle {
+                return Ok(visitor2::VisitNext::Stop);
+            }
             match cx.current_node.type_node {
                 TypeNode::File { .. } => {
                     let nearest_fn = cx.current_node.nearest_function();

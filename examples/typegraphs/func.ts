@@ -56,7 +56,7 @@ await typegraph(
 
     const admins = deno.policy(
       "admins",
-      "(_args, { context }) => !!context.username",
+      "(_args, { context }) => !!context.username ? 'PASS' : 'DENY'",
     );
     // skip:end
 

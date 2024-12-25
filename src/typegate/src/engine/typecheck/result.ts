@@ -108,7 +108,6 @@ export class ResultValidationCompiler {
         cg.generateStringValidator({
           type: "string",
           title: "__TypeName",
-          policies: [],
         });
       } else if (isScalar(typeNode)) {
         if (entry.selectionSet != null) {

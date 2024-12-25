@@ -97,7 +97,8 @@ prisma_query = t.either([prisma_query_single, prisma_query_batch], name="PrismaQ
 def typegate(g: Graph):
     deno = DenoRuntime()
     admin_only = deno.policy(
-        "admin_only", code="(_args, { context }) => context.username === 'admin'"
+        "admin_only",
+        code="(_args, { context }) => context.username === 'admin' ? 'ALLOW' : 'DENY' ",
     )
 
     g.auth(Auth.basic(["admin"]))
@@ -177,7 +178,9 @@ def typegate(g: Graph):
             "enum": t.list(t.json()).optional(),
             "default": t.json().optional(),
             "format": t.string().optional(),
-            "policies": t.list(t.string()),
+            "policies": t.list(
+                t.struct({"fieldName": t.string(), "policies": t.json()})
+            ),
         },
         name="ShallowTypeInfo",
     )

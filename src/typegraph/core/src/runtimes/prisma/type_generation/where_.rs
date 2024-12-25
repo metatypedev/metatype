@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use common::typegraph::runtimes::prisma::ScalarType;
-use indexmap::IndexMap;
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
@@ -18,7 +17,7 @@ use super::TypeGen;
 
 pub struct Where {
     model_id: TypeId,
-    skip_models: IndexMap<TypeId, String>,
+    skip_models: std::collections::BTreeMap<TypeId, String>,
     aggregates: bool,
 }
 
@@ -52,8 +51,9 @@ impl Where {
 // TODO merge with with filters??
 impl TypeGen for Where {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        let name = self.name();
         let mut builder = t::struct_();
+
+        let name = self.name(context)?;
 
         let model = context.model(self.model_id)?;
         let model = model.borrow();
@@ -108,10 +108,10 @@ impl TypeGen for Where {
             }
         }
 
-        builder.build_named(self.name())
+        builder.build_named(name)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
 
         let suffix1 = if self.aggregates {
@@ -126,18 +126,23 @@ impl TypeGen for Where {
             } else {
                 "_where"
             };
+
             format!(
                 "_excluding_{}",
                 self.skip_models
-                    .iter()
-                    .map(|(_, name)| name.strip_suffix(nested_suffix).unwrap_or(name.as_str()))
+                    .keys()
+                    .map(|id| id.name().unwrap().unwrap())
+                    .map(|name| name
+                        .strip_suffix(nested_suffix)
+                        .map(|str| str.to_owned())
+                        .unwrap_or(name))
                     .collect::<Vec<_>>()
                     .join("_and_")
             )
         } else {
             "".to_string()
         };
-        format!("{model_name}_where{suffix1}{suffix2}")
+        Ok(format!("{model_name}_where{suffix1}{suffix2}"))
     }
 }
 

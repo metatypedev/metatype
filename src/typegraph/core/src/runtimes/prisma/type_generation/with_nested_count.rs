@@ -92,16 +92,16 @@ impl TypeGen for WithNestedCount {
             builder.propx("_count", count)?;
         }
 
-        builder.build_named(self.name())
+        builder.build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
         let suffix = if self.skip.is_empty() {
             "".to_string()
         } else {
             format!("_excluding_{}", self.skip.join("_and_"))
         };
-        format!("{model_name}_with_nested_count{suffix}")
+        Ok(format!("{model_name}_with_nested_count{suffix}"))
     }
 }

@@ -15,6 +15,7 @@ export default {
 
       const ignores = [
         "tools/tasks-lock.ts",
+        ".metatype",
         ...(await $.workingDir.resolve(".gitignore").readText())
           .split("\n")
           .map((l) => l.trim())

@@ -478,7 +478,7 @@ pub fn ref_(name: impl Into<String>, attribute: Option<RefAttr>) -> RefBuilder {
 }
 
 macro_rules! impl_type_builder {
-    ( $ty:ty, $build:ident ) => {
+    ( $ty:ty, $build:ident) => {
         impl TypeBuilder for $ty {
             fn build(&self) -> Result<TypeId> {
                 let res = $crate::Lib::$build(self.data.clone())?;

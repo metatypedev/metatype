@@ -62,67 +62,23 @@ impl wit::core::Guest for Lib {
     }
 
     fn refb(name: String, attr: Option<String>) -> Result<CoreTypeId> {
-        Ok(TypeRef::indirect(
-            name,
-            attr.map(|attr| {
-                serde_json::from_str(&attr)
-                    .map_err(|e| format!("Could not parse ref attributes: {e:?}"))
-            })
-            .transpose()?,
-        )
-        .register()?
-        .id()
-        .0)
+        Ok(ref_def(name, attr)?.register()?.id().0)
     }
 
     fn integerb(data: TypeInteger) -> Result<CoreTypeId> {
-        if let (Some(min), Some(max)) = (data.min, data.max) {
-            if min >= max {
-                return Err(errors::invalid_max_value());
-            }
-        }
-        if let (Some(min), Some(max)) = (data.exclusive_minimum, data.exclusive_maximum) {
-            if min >= max {
-                return Err(errors::invalid_max_value());
-            }
-        }
-        Ok(Store::register_type_def(|id| TypeDef::Integer(Integer { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| integer_def(data, id))?.into())
     }
 
     fn floatb(data: TypeFloat) -> Result<CoreTypeId> {
-        if let (Some(min), Some(max)) = (data.min, data.max) {
-            if min >= max {
-                return Err(errors::invalid_max_value());
-            }
-        }
-        if let (Some(min), Some(max)) = (data.exclusive_minimum, data.exclusive_maximum) {
-            if min >= max {
-                return Err(errors::invalid_max_value());
-            }
-        }
-        Ok(Store::register_type_def(|id| TypeDef::Float(Float { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| float_def(data, id))?.into())
     }
 
     fn booleanb() -> Result<CoreTypeId> {
-        Ok(Store::register_type_def(|id| {
-            TypeDef::Boolean(
-                Boolean {
-                    id,
-                    data: TypeBoolean,
-                }
-                .into(),
-            )
-        })?
-        .into())
+        Ok(Store::register_type_def(boolean_def)?.into())
     }
 
     fn stringb(data: TypeString) -> Result<CoreTypeId> {
-        if let (Some(min), Some(max)) = (data.min, data.max) {
-            if min >= max {
-                return Err(errors::invalid_max_value());
-            }
-        }
-        Ok(Store::register_type_def(|id| TypeDef::String(StringT { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| string_def(data, id))?.into())
     }
 
     fn as_id(type_id: CoreTypeId, composite: bool) -> Result<CoreTypeId> {
@@ -133,49 +89,27 @@ impl wit::core::Guest for Lib {
     }
 
     fn fileb(data: TypeFile) -> Result<CoreTypeId> {
-        if let (Some(min), Some(max)) = (data.min, data.max) {
-            if min >= max {
-                return Err(errors::invalid_max_value());
-            }
-        }
-        Ok(Store::register_type_def(|id| TypeDef::File(File { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| file_def(data, id))?.into())
     }
 
     fn listb(data: TypeList) -> Result<CoreTypeId> {
-        if let (Some(min), Some(max)) = (data.min, data.max) {
-            if min > max {
-                return Err(errors::invalid_max_value());
-            }
-        }
-        Ok(Store::register_type_def(|id| TypeDef::List(List { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| list_def(data, id))?.into())
     }
 
     fn optionalb(data: TypeOptional) -> Result<CoreTypeId> {
-        /* let inner_name = match base.name {
-            Some(_) => None,
-            None => TypeId(data.of).name()?,
-        }; */
-        Ok(Store::register_type_def(|id| TypeDef::Optional(Optional { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| optional_def(data, id))?.into())
     }
 
     fn unionb(data: TypeUnion) -> Result<CoreTypeId> {
-        Ok(Store::register_type_def(|id| TypeDef::Union(Union { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| union_def(data, id))?.into())
     }
 
     fn eitherb(data: TypeEither) -> Result<CoreTypeId> {
-        Ok(Store::register_type_def(|id| TypeDef::Either(Either { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| either_def(data, id))?.into())
     }
 
     fn structb(data: TypeStruct) -> Result<CoreTypeId> {
-        let mut prop_names = HashSet::new();
-        for (name, _) in data.props.iter() {
-            if prop_names.contains(name) {
-                return Err(errors::duplicate_key(name));
-            }
-            prop_names.insert(name.clone());
-        }
-
-        Ok(Store::register_type_def(|id| TypeDef::Struct(Struct { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| struct_def(data, id))?.into())
     }
 
     fn extend_struct(
@@ -187,7 +121,7 @@ impl wit::core::Guest for Lib {
         props.extend(new_props);
 
         Ok(Store::register_type_def(|id| {
-            TypeDef::Struct(
+            Ok(TypeDef::Struct(
                 Struct {
                     id,
                     data: TypeStruct {
@@ -196,18 +130,13 @@ impl wit::core::Guest for Lib {
                     },
                 }
                 .into(),
-            )
+            ))
         })?
         .into())
     }
 
     fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
-        let wrapper_type = TypeId(data.inp);
-        if !matches!(&wrapper_type.as_xdef()?.type_def, TypeDef::Struct(_)) {
-            return Err(errors::invalid_input_type(&wrapper_type.repr()?));
-        }
-
-        Ok(Store::register_type_def(|id| TypeDef::Func(Func { id, data }.into()))?.into())
+        Ok(Store::register_type_def(|id| func_def(data, id))?.into())
     }
 
     fn get_transform_data(
@@ -285,13 +214,16 @@ impl wit::core::Guest for Lib {
             .to_string();
 
         let check = match check {
-            ContextCheck::NotNull => "value != null".to_string(),
+            ContextCheck::NotNull => "value != null ? 'PASS' : 'DENY'".to_string(),
             ContextCheck::Value(val) => {
-                format!("value === {}", serde_json::to_string(&val).unwrap())
+                format!(
+                    "value === {} ?  'PASS' : 'DENY'",
+                    serde_json::to_string(&val).unwrap()
+                )
             }
             ContextCheck::Pattern(pattern) => {
                 format!(
-                    "new RegExp({}).test(value)",
+                    "new RegExp({}).test(value) ? 'PASS' : 'DENY' ",
                     serde_json::to_string(&pattern).unwrap()
                 )
             }
@@ -346,6 +278,119 @@ impl wit::core::Guest for Lib {
     fn set_seed(seed: Option<u32>) -> Result<()> {
         typegraph::set_seed(seed)
     }
+}
+
+pub fn ref_def(name: String, attr: Option<String>) -> Result<types::TypeRefBuilder> {
+    Ok(TypeRef::indirect(
+        name,
+        attr.map(|attr| {
+            serde_json::from_str(&attr)
+                .map_err(|e| format!("Could not parse ref attributes: {e:?}"))
+        })
+        .transpose()?,
+    ))
+}
+
+pub fn integer_def(data: TypeInteger, id: TypeId) -> Result<TypeDef> {
+    if let (Some(min), Some(max)) = (data.min, data.max) {
+        if min >= max {
+            return Err(errors::invalid_max_value());
+        }
+    }
+    if let (Some(min), Some(max)) = (data.exclusive_minimum, data.exclusive_maximum) {
+        if min >= max {
+            return Err(errors::invalid_max_value());
+        }
+    }
+    Ok(TypeDef::Integer(Integer { id, data }.into()))
+}
+
+pub fn float_def(data: TypeFloat, id: TypeId) -> Result<TypeDef> {
+    if let (Some(min), Some(max)) = (data.min, data.max) {
+        if min >= max {
+            return Err(errors::invalid_max_value());
+        }
+    }
+    if let (Some(min), Some(max)) = (data.exclusive_minimum, data.exclusive_maximum) {
+        if min >= max {
+            return Err(errors::invalid_max_value());
+        }
+    }
+    Ok(TypeDef::Float(Float { id, data }.into()))
+}
+
+pub fn boolean_def(id: TypeId) -> Result<TypeDef> {
+    Ok(TypeDef::Boolean(
+        Boolean {
+            id,
+            data: TypeBoolean,
+        }
+        .into(),
+    ))
+}
+
+pub fn string_def(data: TypeString, id: TypeId) -> Result<TypeDef> {
+    if let (Some(min), Some(max)) = (data.min, data.max) {
+        if min >= max {
+            return Err(errors::invalid_max_value());
+        }
+    }
+    Ok(TypeDef::String(StringT { id, data }.into()))
+}
+
+fn file_def(data: TypeFile, id: TypeId) -> Result<TypeDef> {
+    if let (Some(min), Some(max)) = (data.min, data.max) {
+        if min >= max {
+            return Err(errors::invalid_max_value());
+        }
+    }
+    Ok(TypeDef::File(File { id, data }.into()))
+}
+
+fn list_def(data: TypeList, id: TypeId) -> Result<TypeDef> {
+    if let (Some(min), Some(max)) = (data.min, data.max) {
+        if min > max {
+            return Err(errors::invalid_max_value());
+        }
+    }
+    Ok(TypeDef::List(List { id, data }.into()))
+}
+
+fn optional_def(data: TypeOptional, id: TypeId) -> Result<TypeDef> {
+    /* let inner_name = match base.name {
+        Some(_) => None,
+        None => TypeId(data.of).name()?,
+    }; */
+    Ok(TypeDef::Optional(Optional { id, data }.into()))
+}
+
+fn union_def(data: TypeUnion, id: TypeId) -> Result<TypeDef> {
+    Ok(TypeDef::Union(Union { id, data }.into()))
+}
+
+fn either_def(data: TypeEither, id: TypeId) -> Result<TypeDef> {
+    Ok(TypeDef::Either(Either { id, data }.into()))
+}
+
+fn struct_def(data: TypeStruct, id: TypeId) -> Result<TypeDef> {
+    let mut prop_names = HashSet::new();
+    for (name, _) in data.props.iter() {
+        if prop_names.contains(name) {
+            return Err(errors::duplicate_key(name));
+        }
+        prop_names.insert(name.clone());
+    }
+
+    Ok(TypeDef::Struct(Struct { id, data }.into()))
+}
+
+fn func_def(data: TypeFunc, id: TypeId) -> Result<TypeDef> {
+    let wrapper_type = TypeId(data.inp);
+    if !matches!(&wrapper_type.as_xdef()?.type_def, TypeDef::Struct(_)) {
+        return Err(errors::invalid_input_type(&wrapper_type.repr()?));
+    }
+
+    Ok(TypeDef::Func(Func { id, data }.into()))
 }
 
 #[macro_export]
