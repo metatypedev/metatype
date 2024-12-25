@@ -18,8 +18,8 @@ def python(g: Graph):
             python.import_(
                 t.struct({"name": t.string()}),
                 t.string(),
-                module="py/hello_fail.py",
-                deps=["py/nested/dep_fail.py"],
+                module="py_fail/hello_fail.py",
+                deps=["py_fail/dep_fail.py"],
                 name="sayHello",
             ).with_policy(public),
         )
