@@ -18,11 +18,7 @@ fn read_file(path: &str) -> Result<String> {
 
 #[deno_core::op2(fast)]
 pub fn op_validate(#[string] input: String) -> Result<()> {
-    if let Some(file_name) = input.split(".").last() {
-        if file_name == "py" {
-            let python_source = read_file(&input)?;
-            ast::Suite::parse(&python_source, "<embedded>")?;
-        }
-    }
+    let python_source = read_file(&input)?;
+    ast::Suite::parse(&python_source, "<embedded>")?;
     Ok(())
 }

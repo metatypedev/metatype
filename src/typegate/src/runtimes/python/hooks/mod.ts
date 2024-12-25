@@ -38,26 +38,28 @@ export const codeValidations: PushHandler = async (
         depMetas,
       );
 
-      try {
-        logger.info(
-          `Validating Python code at entry point: ${entryPoint.path}`,
-        );
-        Meta.py_validation.validate(entryModulePath);
+      if (entryModulePath.split(".").slice(-1)[0] == "py") {
+        try {
+          logger.info(
+            `Validating Python code at entry point: ${entryPoint.path}`,
+          );
+          Meta.py_validation.validate(entryModulePath);
 
-        for (const dep of depMetas) {
-          const depPath = await artifactStore.getLocalPath(dep);
-          logger.info(`Validating Python code for dependency: ${depPath}`);
-          Meta.py_validation.validate(depPath);
+          for (const dep of depMetas) {
+            const depPath = await artifactStore.getLocalPath(dep);
+            logger.info(`Validating Python code for dependency: ${depPath}`);
+            Meta.py_validation.validate(depPath);
+          }
+
+          logger.info(
+            `Successfully validated Python code at entry point: ${entryPoint.path}`,
+          );
+        } catch (err) {
+          console.error({ err });
+          throw new ValidationFailure(
+            `Python code validation error at entry point '${entryPoint.path}': ${err.message}`,
+          );
         }
-
-        logger.info(
-          `Successfully validated Python code at entry point: ${entryPoint.path}`,
-        );
-      } catch (err) {
-        console.error({ err });
-        throw new ValidationFailure(
-          `Python code validation error at entry point '${entryPoint.path}': ${err.message}`,
-        );
       }
     }
   }
