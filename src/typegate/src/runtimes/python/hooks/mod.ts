@@ -26,30 +26,41 @@ export const codeValidations: PushHandler = async (
   const { artifacts } = typegraph.meta;
 
   for (const mat of typegraph.materializers) {
-    if (mat.name == "import_function") {
+    if (mat.name === "import_function") {
       const pyModMat = typegraph.materializers[mat.data.mod as number];
       const entryPoint = artifacts[pyModMat.data.entryPoint as string];
       const moduleMeta = createArtifactMeta(title, entryPoint);
       const depMetas = (pyModMat.data.deps as string[]).map((dep) =>
-        createArtifactMeta(title, artifacts[dep]),
+        createArtifactMeta(title, artifacts[dep])
       );
       const entryModulePath = await artifactStore.getLocalPath(
         moduleMeta,
         depMetas,
       );
 
-      console.log({ entryModulePath });
-
       try {
+        logger.info(
+          `Validating Python code at entry point: ${entryPoint.path}`,
+        );
         Meta.py_validation.validate(entryModulePath);
-        logger.info(`${entryPoint.path} was validate`);
+
+        for (const dep of depMetas) {
+          const depPath = await artifactStore.getLocalPath(dep);
+          logger.info(`Validating Python code for dependency: ${depPath}`);
+          Meta.py_validation.validate(depPath);
+        }
+
+        logger.info(
+          `Successfully validated Python code at entry point: ${entryPoint.path}`,
+        );
       } catch (err) {
-        console.error(err);
+        console.error({ err });
         throw new ValidationFailure(
-          `Python code validation error '${entryPoint.path}'`,
+          `Python code validation error at entry point '${entryPoint.path}': ${err.message}`,
         );
       }
     }
   }
+
   return typegraph;
 };

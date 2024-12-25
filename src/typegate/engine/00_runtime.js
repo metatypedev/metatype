@@ -85,7 +85,7 @@ const Meta = {
     unregister: getOp("op_grpc_unregister"),
     callGrpcMethod: getOp("op_call_grpc_method"),
   },
-  py_validaton: {
+  py_validation: {
     validate: getOp("op_validate"),
   },
 };
