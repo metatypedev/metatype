@@ -16,7 +16,7 @@ import {
 const logger = getLogger(import.meta, "WARN");
 
 export type WorkerRecord = {
-  worker: Worker;
+  worker: BaseWorker;
   modulePath: string;
 };
 export type RunId = string;
@@ -88,7 +88,7 @@ export class WorkflowRecorder {
         return false;
       }
 
-      record!.worker.terminate(); // !
+      record!.worker.destroy(); // !
 
       this.workflowRuns.get(name)!.delete(runId);
       this.workers.delete(runId);
@@ -102,18 +102,18 @@ export class WorkflowRecorder {
   }
 }
 
-/**
- * - A workflow file can contain multiple workflows (functions)
- * - A workflow can be run as many times as a START event is triggered (with a run_id)
- * - The completion of a workflow is run async, it is entirely up to the event listeners to act upon the results
- */
-export class WorkerManager {
-  private recorder: WorkflowRecorder = new WorkflowRecorder();
+export abstract class BaseWorker {
+  abstract listen(handlerFn: WorkerEventHandler): void;
+  abstract trigger(type: WorkerEvent, data: unknown): void;
+  abstract destroy(): void;
+  abstract get id(): RunId;
+}
 
-  constructor() {}
-
-  #createWorker(name: string, modulePath: string, runId: RunId) {
-    const worker = new Worker(import.meta.resolve("./worker.ts"), {
+class DenoWorker {
+  #worker: Worker;
+  #runId: RunId;
+  constructor(runId: RunId, workerPath: string) {
+    this.#worker = new Worker(workerPath, {
       name: runId,
       type: "module",
       deno: {
@@ -130,6 +130,63 @@ export class WorkerManager {
         },
       },
     });
+    this.#runId = runId;
+  }
+
+  listen(handlerFn: WorkerEventHandler) {
+    this.#worker.onmessage = async (message) => {
+      if (message.data.error) {
+        // worker level failure
+        await handlerFn(Err(message.data.error));
+      } else {
+        // logic level Result (Ok | Err)
+        await handlerFn(message.data as Result<unknown>);
+      }
+    };
+
+    this.#worker.onerror = /*async*/ (event) => handlerFn(Err(event));
+  }
+
+  trigger(type: WorkerEvent, data: unknown) {
+    this.#worker.postMessage(Msg(type, data));
+  }
+
+  destroy() {
+    this.#worker.terminate();
+  }
+
+  get id() {
+    return this.#runId;
+  }
+}
+
+export class BaseWorkerManager {
+  #workerFactory: (runId: RunId) => BaseWorker;
+  protected constructor(workerFactory: (runId: RunId) => BaseWorker) {
+    this.#workerFactory = workerFactory;
+  }
+
+  get workerFactory() {
+    return this.#workerFactory;
+  }
+}
+
+/**
+ * - A workflow file can contain multiple workflows (functions)
+ * - A workflow can be run as many times as a START event is triggered (with a run_id)
+ * - The completion of a workflow is run async, it is entirely up to the event listeners to act upon the results
+ */
+export class WorkerManager extends BaseWorkerManager {
+  private recorder: WorkflowRecorder = new WorkflowRecorder();
+
+  constructor() {
+    super((runId: RunId) => {
+      return new DenoWorker(runId, import.meta.resolve("./worker.ts"));
+    });
+  }
+
+  #createWorker(name: string, modulePath: string, runId: RunId) {
+    const worker = this.workerFactory(runId);
 
     this.recorder.addWorker(
       name,
@@ -196,22 +253,12 @@ export class WorkerManager {
 
     const { worker } = this.recorder.getWorkerRecord(runId);
 
-    worker.onmessage = async (message) => {
-      if (message.data.error) {
-        // worker level failure
-        await handlerFn(Err(message.data.error));
-      } else {
-        // logic level Result (Ok | Err)
-        await handlerFn(message.data as Result<unknown>);
-      }
-    };
-
-    worker.onerror = /*async*/ (event) => handlerFn(Err(event));
+    worker.listen(handlerFn);
   }
 
   trigger(type: WorkerEvent, runId: RunId, data: unknown) {
     const { worker } = this.recorder.getWorkerRecord(runId);
-    worker.postMessage(Msg(type, data));
+    worker.trigger(type, data);
     logger.info(`trigger ${type} for ${runId}`);
   }
 
