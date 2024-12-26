@@ -99,7 +99,7 @@ def apply(g: Graph):
                     ),
                 }
             ),
-            code="""() => ({ a: 1 })""",
+            code="""() => {console.log("xxx xxxx"); return ({ a: 1 })}""",
         ),
         withArray=deno.identity(
             t.struct(

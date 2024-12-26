@@ -3,6 +3,7 @@
 
 import { envSharedWithWorkers } from "../../config/shared.ts";
 import { getLogger } from "../../log.ts";
+import { BaseWorkerManager, TaskId } from "../agent/worker_manager.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import {
   Err,
@@ -224,6 +225,35 @@ export class WorkerManager {
     internalTCtx: TaskContext,
   ) {
     this.#createWorker(name, workflowModPath, runId);
+    this.trigger("START", runId, {
+      modulePath: workflowModPath,
+      functionName: name,
+      run: storedRun,
+      schedule,
+      internal: internalTCtx,
+    });
+  }
+}
+
+class SubstantialWorkerManager extends BaseWorkerManager<"START"> {
+  constructor() {
+    super(import.meta.resolve("./worker.ts"));
+  }
+
+  triggerStart(
+    name: string,
+    runId: TaskId,
+    workflowModPath: string,
+    storedRun: Run,
+    schedule: string,
+    internalTCtx: TaskContext,
+  ) {
+    this.createWorker({
+      id: runId,
+      name,
+      modulePath: workflowModPath,
+      functionName: name,
+    });
     this.trigger("START", runId, {
       modulePath: workflowModPath,
       functionName: name,

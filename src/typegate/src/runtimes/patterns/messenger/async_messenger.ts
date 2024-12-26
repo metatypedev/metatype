@@ -54,7 +54,7 @@ export class AsyncMessenger<Broker, M, A> {
     this.#start = start;
     this.#send = send;
     this.#stop = stop;
-    this.#timeoutSecs = config.timer_max_timeout_ms / 1000;
+    this.#timeoutSecs = 2 * config.timer_max_timeout_ms / 1000;
     // init broker
     this.broker = start(this.receive.bind(this));
     this.initTimer();
@@ -76,6 +76,7 @@ export class AsyncMessenger<Broker, M, A> {
         let shouldStop = false;
         for (const item of currentQueue) {
           if (this.#tasks.has(item.id)) {
+            console.log({ itemId: item.id });
             if (
               item.remainingPulseCount !== undefined &&
               item.remainingPulseCount > 0
@@ -109,12 +110,14 @@ export class AsyncMessenger<Broker, M, A> {
     hooks: Array<() => Promise<void>> = [],
     pulseCount = 0,
   ): Promise<unknown> {
+    console.log({ tasks: this.#tasks });
     const id = this.nextId();
     const promise = Promise.withResolvers<unknown>();
     this.#tasks.set(id, { promise, hooks });
 
     const message = { id, op, data, remainingPulseCount: pulseCount };
     this.#operationQueues[this.#queueIndex].push(message);
+    console.log({ queues: this.#operationQueues });
     void this.#send(this.broker, message);
     return promise.promise;
   }

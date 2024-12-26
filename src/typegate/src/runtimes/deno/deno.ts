@@ -26,6 +26,8 @@ import { createArtifactMeta } from "../utils/deno.ts";
 import { getInjectionValues } from "../../engine/planner/injection_utils.ts";
 import DynamicInjection from "../../engine/injection/dynamic.ts";
 import { getLogger } from "../../log.ts";
+import { TaskBase } from "../agent/worker_manager.ts";
+import { envSharedWithWorkers } from "../../config/shared.ts";
 
 const logger = getLogger(import.meta);
 
@@ -51,7 +53,7 @@ const predefinedFuncs: Record<
         check = (v) => new RegExp(value.value).test(v);
         break;
       default:
-        throw new Error("unreachable");
+        throw new Error(`unreachable: ${value}`);
     }
     const path = key.split(".");
     return ({ _: { context } }) => {
@@ -64,13 +66,94 @@ const predefinedFuncs: Record<
   },
 };
 
+interface Task extends TaskBase {
+  module: string;
+  functionName: string;
+}
+
+class DenoWorker extends BaseWorker<{}, {}> {
+  #id: string;
+  #worker: Worker;
+
+  constructor(id: string) {
+    super();
+    this.#id = id;
+    this.#worker = new Worker(import.meta.resolve("./worker.ts"), {
+      name: id,
+      type: "module",
+      deno: {
+        permissions: {
+          net: true,
+          read: "inherit",
+          sys: "inherit", // what?
+          run: false,
+          write: false,
+          ffi: false,
+          env: envSharedWithWorkers,
+        },
+      },
+    });
+  }
+
+  sendMessage(m: {}) {
+    // TODO
+    this.#worker.postMessage(m);
+  }
+
+  listen(handler: (m: {}) => void) {
+    // TODO
+    this.#worker.onmessage = (e) => handler(e.data);
+  }
+
+  destroy() {
+    this.#worker.terminate();
+  }
+}
+
+class WorkerManager extends BaseWorkerManager<Task, {}, {}> {
+  constructor() {
+    super((id: string) => new DenoWorker(id));
+  }
+
+  async handleEvent(
+    event: WorkerEvent<Event>,
+    worker: Worker,
+  ): Promise<Result> {
+    switch (event.type) {
+      case "IMPORT": {
+        const { op, task } = event.data;
+        if (!registry.has(op)) {
+          throw new Error(`no module registered with id ${op}`);
+        }
+
+        const mod = registry.get(op)! as TaskModule;
+        if (task.name in mod && typeof mod[task.name] === "function") {
+          return await mod[task.name](task.args, task.internals);
+        }
+        throw new Error(`"${task.name}" is not a valid method`);
+      }
+      case "RUN_INLINE": {
+        const { op, task } = event.data;
+        if (!registry.has(op)) {
+          throw new Error(`no function registered with id ${op}`);
+        }
+
+        const fn = registry.get(op)! as TaskExec;
+        return await fn(task.args, task.internals);
+      }
+      default:
+        throw new Error(`unsupported event type ${event.type}`);
+    }
+  }
+}
+
 export class DenoRuntime extends Runtime {
   private constructor(
     typegraphName: string,
     uuid: string,
     private tg: TypeGraphDS,
     private typegate: Typegate,
-    private w: DenoMessenger,
+    private workerManager: WorkerManager,
     private registry: Map<string, number>,
     private secrets: Record<string, string>,
   ) {
@@ -328,7 +411,9 @@ export class DenoRuntime extends Runtime {
         },
         ...args
       }) => {
+        console.log(">> executing function", mat.data.script);
         const token = await InternalAuth.emit(this.typegate.cryptoKeys);
+        console.log({ internalToken: token });
 
         return await this.w.execute(
           op,

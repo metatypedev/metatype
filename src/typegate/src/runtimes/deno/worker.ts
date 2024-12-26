@@ -91,6 +91,7 @@ function answer<T>(res: Answer<T>) {
 }
 
 self.onmessage = async (event: MessageEvent<Message<Task>>) => {
+  console.log({ event });
   if (initData == null) {
     initData = event.data as typeof initData;
     logger = getLogger(`worker (${initData.name})`);
