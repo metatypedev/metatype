@@ -71,6 +71,7 @@ repos:
         args:
           - --maxkb=768
       - id: check-ast
+        exclude: tests/runtimes/python/py_fail/.*\.py
       - id: check-json
         exclude: .vscode/.*\.json
       - id: check-toml
@@ -137,8 +138,12 @@ repos:
     rev: "v0.5.1"
     hooks:
       - id: ruff
+        exclude: tests/runtimes/python/py_fail/.*\.py
       - id: ruff-format
-        exclude: "tests/metagen/typegraphs/sample/py/client.py"
+        exclude: (?x)(
+            tests/metagen/typegraphs/sample/py/client.py"|
+            tests/runtimes/python/py_fail/.*\.py
+          )
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v3.27.0
     hooks:

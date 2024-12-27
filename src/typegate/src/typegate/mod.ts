@@ -20,6 +20,7 @@ import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../transports/graphql/typegraph.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
 import * as DenoHooks from "../runtimes/deno/hooks/mod.ts";
+import * as PythonHooks from "../runtimes/python/hooks/mod.ts";
 import {
   type RuntimeResolver,
   SecretManager,
@@ -33,7 +34,10 @@ import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
 import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import { DenoFailure } from "../runtimes/deno/hooks/mod.ts";
-import introspectionJson from "../typegraphs/introspection.json" with { type: "json" };
+import { ValidationFailure } from "../runtimes/python/hooks/mod.ts";
+import introspectionJson from "../typegraphs/introspection.json" with {
+  type: "json",
+};
 import { ArtifactService } from "../services/artifact_service.ts";
 import type { ArtifactStore } from "./artifacts/mod.ts";
 // TODO move from tests (MET-497)
@@ -171,6 +175,7 @@ export class Typegate implements AsyncDisposable {
     this.#onPush(PrismaHooks.generateSchema);
     this.#onPush(PrismaHooks.runMigrations);
     this.#onPush(DenoHooks.cacheModules);
+    this.#onPush(PythonHooks.codeValidations);
     this.#artifactService = new ArtifactService(artifactStore);
   }
 
@@ -201,6 +206,8 @@ export class Typegate implements AsyncDisposable {
         if (e instanceof MigrationFailure && e.errors[0]) {
           response.setFailure(e.errors[0]);
         } else if (e instanceof DenoFailure) {
+          response.setFailure(e.failure);
+        } else if (e instanceof ValidationFailure) {
           response.setFailure(e.failure);
         } else {
           response.setFailure({
@@ -402,14 +409,14 @@ export class Typegate implements AsyncDisposable {
 
     const introspection = enableIntrospection
       ? await TypeGraph.init(
-          this,
-          introspectionDef,
-          new SecretManager(introspectionDef, {}),
-          {
-            typegraph: TypeGraphRuntime.init(tgDS, [], {}),
-          },
-          null,
-        )
+        this,
+        introspectionDef,
+        new SecretManager(introspectionDef, {}),
+        {
+          typegraph: TypeGraphRuntime.init(tgDS, [], {}),
+        },
+        null,
+      )
       : null;
 
     const tg = await TypeGraph.init(
