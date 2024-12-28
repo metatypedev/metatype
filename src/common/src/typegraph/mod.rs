@@ -97,6 +97,9 @@ pub struct TypeMeta {
     pub version: String,
     pub random_seed: Option<u32>,
     pub artifacts: BTreeMap<PathBuf, Artifact>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
+    pub namespaces: Vec<u32>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]

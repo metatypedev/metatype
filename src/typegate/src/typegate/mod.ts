@@ -367,6 +367,7 @@ export class Typegate implements AsyncDisposable {
     );
 
     logger.info(`Registering engine '${name}'`);
+    logger.info("registering {}", this.register.constructor.name);
     await this.register.add(engine);
 
     const newArtifacts = new Set(

@@ -68,7 +68,7 @@ export type ObjectNode = {
     [k: string]: number;
   };
   required?: string[];
-  id: string[];
+  id?: string[];
 };
 export type ListNode = {
   type: "list";

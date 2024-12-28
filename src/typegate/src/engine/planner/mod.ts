@@ -545,12 +545,13 @@ export class Planner {
     const inputType = this.tg.type(inputIdx, Type.OBJECT);
     const argumentTypes = mapValues(
       inputType.properties,
-      (idx, key) =>
-        this.tg.getGraphQLType(
+      (idx, key) => {
+        return this.tg.getGraphQLType(
           this.tg.type(idx),
           false,
-          inputType.id.includes(key),
-        ),
+          inputType.id?.includes(key) ?? false,
+        );
+      },
     );
 
     const stage = this.createComputeStage(node, {
