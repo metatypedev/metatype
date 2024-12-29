@@ -31,6 +31,7 @@ def substantial(g: Graph):
                 "retryExample",
                 "secretsExample",
                 "accidentalInputMutation",
+                "compensation",
             ]
         )
         .build()
@@ -84,4 +85,12 @@ def substantial(g: Graph):
             )
         ).reduce({"name": "accidentalInputMutation"}),
         **sub.internals(),
+        # compensation
+        start_compensation=sub.start(
+            t.struct(
+                {
+                    "account": t.integer(),
+                }
+            )
+        ).reduce({"name": "compensation"}),
     )

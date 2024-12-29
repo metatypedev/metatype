@@ -154,6 +154,22 @@ export function basicTestTemplate(
             .on(e);
         },
       );
+
+      const account_balance = 1000;
+
+      await t.should("compensate account balance", async () => {
+        await gql`
+          mutation {
+            start_compensation(kwargs: { account: $account_balance })
+          }
+        `
+          .withVars({ account_balance })
+          .expectBody((body) => {
+            const account = body.data?.start_compensation! as number;
+            assertEquals(account, account_balance);
+          })
+          .on(e);
+      });
     },
   );
 }
@@ -299,8 +315,8 @@ export function concurrentWorkflowTestTemplate(
             const localSorter = (a: any, b: any) =>
               a.run_id.localeCompare(b.run_id);
 
-            const received = body?.data?.results?.completed?.runs ??
-              ([] as Array<any>);
+            const received =
+              body?.data?.results?.completed?.runs ?? ([] as Array<any>);
             const expected = [
               {
                 result: {
@@ -461,8 +477,8 @@ export function retrySaveTestTemplate(
               const localSorter = (a: any, b: any) =>
                 a.run_id.localeCompare(b.run_id);
 
-              const received = body?.data?.results?.completed?.runs ??
-                ([] as Array<any>);
+              const received =
+                body?.data?.results?.completed?.runs ?? ([] as Array<any>);
               const expected = [
                 {
                   result: {
@@ -624,42 +640,48 @@ export function childWorkflowTestTemplate(
           .on(e);
       });
 
-
-      await t.should(`filter the runs given a nested expr (${backendName})`, async () => {
-        await gql`
-          query {
-            search(name: "bumpPackage", filter: $filter) {
-              # started_at
-              # ended_at
-              status
-              value
+      await t.should(
+        `filter the runs given a nested expr (${backendName})`,
+        async () => {
+          await gql`
+            query {
+              search(name: "bumpPackage", filter: $filter) {
+                # started_at
+                # ended_at
+                status
+                value
+              }
             }
-          }
-        `
-        .withVars({
-          filter: {
-            or: [
-              {
-                and: [
-                  { status: { contains: JSON.stringify("COMPL") }},
-                  { contains: JSON.stringify("substantial") }
-                ]
-              },
-              { not: { not: { eq: JSON.stringify("Bump typegraph v3 => v4") } } }
-            ]
-          } satisfies Expr
-        })
-        .expectBody((body) => {
-          const sorted = body.data.search.sort((a: any, b: any) => a.value.localeCompare(b.value));
-          assertEquals(sorted, 
-            [
-              { status: "COMPLETED", value: '"Bump substantial v2 => v3"' },
-              { status: "COMPLETED", value: '"Bump typegraph v3 => v4"' }
-            ]
-          );
-        })
-          .on(e);
-      });
+          `
+            .withVars({
+              filter: {
+                or: [
+                  {
+                    and: [
+                      { status: { contains: JSON.stringify("COMPL") } },
+                      { contains: JSON.stringify("substantial") },
+                    ],
+                  },
+                  {
+                    not: {
+                      not: { eq: JSON.stringify("Bump typegraph v3 => v4") },
+                    },
+                  },
+                ],
+              } satisfies Expr,
+            })
+            .expectBody((body) => {
+              const sorted = body.data.search.sort((a: any, b: any) =>
+                a.value.localeCompare(b.value),
+              );
+              assertEquals(sorted, [
+                { status: "COMPLETED", value: '"Bump substantial v2 => v3"' },
+                { status: "COMPLETED", value: '"Bump typegraph v3 => v4"' },
+              ]);
+            })
+            .on(e);
+        },
+      );
     },
   );
 }

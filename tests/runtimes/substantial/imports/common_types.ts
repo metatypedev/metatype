@@ -48,6 +48,7 @@ export interface Context {
   ): ChildWorkflowHandle;
 
   logger: SubLogger
+  utils: Utils;
 }
 
 interface SubLogger {
@@ -79,6 +80,13 @@ export interface SaveOption {
     maxBackoffMs: number;
     maxRetries: number;
   };
+  compensateWith?: () => any | Promise<any>
+}
+
+export interface Utils {
+  now: () => Promise<Date>;
+  random: (a: number, b: number) => Promise<number>;
+  uuid4: () => Promise<string>;
 }
 
 export async function queryThatTakesAWhile<T>(input: T): Promise<T> {
