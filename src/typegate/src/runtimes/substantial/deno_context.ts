@@ -40,10 +40,9 @@ export class Context {
   async save<T>(
     fn: () => T | Promise<T>,
     option?: SaveOption,
-    compensateWith?: () => T | Promise<T>,
   ) {
-    if (compensateWith) {
-      this.compensationStack.push(compensateWith!);
+    if (option?.compensateWith) {
+      this.compensationStack.push(option?.compensateWith);
     }
     const id = this.#nextId();
 
@@ -259,7 +258,7 @@ export class ChildWorkflowHandle {
   constructor(
     private ctx: Context,
     public handleDef: SerializableWorkflowHandle,
-  ) {}
+  ) { }
 
   async start(): Promise<string> {
     const { data } = await this.ctx.gql /**/`
@@ -385,6 +384,7 @@ interface SaveOption {
     maxRetries: number;
     compensationOnfristFail: boolean;
   };
+  compensateWith?: () => any | Promise<any>
 }
 
 function failAfter(ms: number): Promise<never> {
@@ -451,7 +451,7 @@ class RetryStrategy {
 }
 
 class SubLogger {
-  constructor(private ctx: Context) {}
+  constructor(private ctx: Context) { }
 
   async #log(kind: "warn" | "error" | "info", ...args: unknown[]) {
     await this.ctx.save(() => {
@@ -500,7 +500,7 @@ class SubLogger {
 }
 
 class Utils {
-  constructor(private ctx: Context) {}
+  constructor(private ctx: Context) { }
 
   async now() {
     return await this.ctx.save(() => Date.now());

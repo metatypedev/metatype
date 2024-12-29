@@ -31,7 +31,7 @@ export interface Context {
     ) => Promise<Record<string, unknown>>;
   };
   sleep: (ms: number) => void;
-  save<T>(fn: () => T | Promise<T>, option?: SaveOption, compensateWith?: () => T | Promise<T>): Promise<T>;
+  save<T>(fn: () => T | Promise<T>, option?: SaveOption): Promise<T>;
   receive<O>(eventName: string): O;
   handle<I, O>(
     eventName: string,
@@ -80,6 +80,7 @@ export interface SaveOption {
     maxBackoffMs: number;
     maxRetries: number;
   };
+  compensateWith?: () => any | Promise<any>
 }
 
 export interface Utils {
