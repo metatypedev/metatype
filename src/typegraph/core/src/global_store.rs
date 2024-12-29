@@ -89,7 +89,7 @@ impl Store {
                 effect: Effect::Read,
                 data: MaterializerData::Deno(Rc::new(DenoMaterializer::Predefined(
                     crate::wit::runtimes::MaterializerDenoPredefined {
-                        name: "true".to_string(),
+                        name: "pass".to_string(),
                     },
                 ))),
             }],
@@ -108,7 +108,7 @@ const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity", "true"];
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
-    pub static SDK_VERSION: String = "0.5.0-rc.8".to_owned();
+    pub static SDK_VERSION: String = "0.5.0-rc.9".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
@@ -483,6 +483,10 @@ impl TypeId {
 
     pub fn is_func(&self) -> Result<bool> {
         Ok(matches!(self.as_xdef()?.type_def, TypeDef::Func(_)))
+    }
+
+    pub fn is_struct(&self) -> Result<bool> {
+        Ok(matches!(self.as_xdef()?.type_def, TypeDef::Struct(_)))
     }
 
     pub fn resolve_quant(&self) -> Result<TypeId> {

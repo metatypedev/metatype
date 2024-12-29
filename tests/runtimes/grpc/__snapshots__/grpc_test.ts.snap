@@ -7,21 +7,22 @@ snapshot[`Typegraph using grpc 1`] = `
       {
         "type": "object",
         "title": "helloworld",
-        "policies": [],
         "properties": {
           "greet": 1
         },
         "id": [],
         "required": [
           "greet"
-        ]
+        ],
+        "policies": {
+          "greet": [
+            0
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_greet_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 5,
         "runtimeConfig": null,
@@ -32,34 +33,36 @@ snapshot[`Typegraph using grpc 1`] = `
       {
         "type": "object",
         "title": "root_greet_fn_input",
-        "policies": [],
         "properties": {
           "name": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "name": []
+        }
       },
       {
         "type": "optional",
         "title": "root_greet_fn_input_name_root_greet_fn_input_name_string_optional",
-        "policies": [],
         "item": 4,
         "default_value": null
       },
       {
         "type": "string",
-        "title": "root_greet_fn_input_name_string",
-        "policies": []
+        "title": "root_greet_fn_input_name_string"
       },
       {
         "type": "object",
         "title": "root_greet_fn_output",
-        "policies": [],
         "properties": {
           "message": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "message": []
+        }
       }
     ],
     "materializers": [
@@ -82,7 +85,7 @@ snapshot[`Typegraph using grpc 1`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       }
     ],
@@ -140,21 +143,22 @@ snapshot[`Typegraph using grpc 2`] = `
       {
         "type": "object",
         "title": "helloworld",
-        "policies": [],
         "properties": {
           "greet": 1
         },
         "id": [],
         "required": [
           "greet"
-        ]
+        ],
+        "policies": {
+          "greet": [
+            0
+          ]
+        }
       },
       {
         "type": "function",
         "title": "root_greet_fn",
-        "policies": [
-          0
-        ],
         "input": 2,
         "output": 5,
         "runtimeConfig": null,
@@ -165,34 +169,36 @@ snapshot[`Typegraph using grpc 2`] = `
       {
         "type": "object",
         "title": "root_greet_fn_input",
-        "policies": [],
         "properties": {
           "name": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "name": []
+        }
       },
       {
         "type": "optional",
         "title": "root_greet_fn_input_name_root_greet_fn_input_name_string_optional",
-        "policies": [],
         "item": 4,
         "default_value": null
       },
       {
         "type": "string",
-        "title": "root_greet_fn_input_name_string",
-        "policies": []
+        "title": "root_greet_fn_input_name_string"
       },
       {
         "type": "object",
         "title": "root_greet_fn_output",
-        "policies": [],
         "properties": {
           "message": 3
         },
         "id": [],
-        "required": []
+        "required": [],
+        "policies": {
+          "message": []
+        }
       }
     ],
     "materializers": [
@@ -215,7 +221,7 @@ snapshot[`Typegraph using grpc 2`] = `
           "idempotent": true
         },
         "data": {
-          "name": "true"
+          "name": "pass"
         }
       }
     ],

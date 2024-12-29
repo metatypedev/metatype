@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertRejects } from "@std/assert";
 import { gql, Meta } from "test-utils/mod.ts";
 import { WitWireMessenger } from "@metatype/typegate/runtimes/wit_wire/mod.ts";
 import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
@@ -476,5 +476,19 @@ Meta.test(
           .on(e);
       },
     );
+  },
+);
+
+Meta.test(
+  {
+    name: "Python code validation on deploy",
+  },
+  async (t) => {
+    await t.should("fail on validation", async () => {
+      await assertRejects(
+        async () => await t.engine("runtimes/python/python_validation.py"),
+        "ValidationError",
+      );
+    });
   },
 );

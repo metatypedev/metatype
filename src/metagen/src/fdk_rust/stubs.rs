@@ -113,6 +113,7 @@ mod test {
                 TypeNode::Object {
                     data: ObjectTypeData {
                         properties: Default::default(),
+                        policies: Default::default(),
                         id: vec![],
                         required: vec![],
                     },

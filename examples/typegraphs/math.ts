@@ -24,7 +24,7 @@ await typegraph(
     // the policy implementation is based on functions itself
     const restrict_referer = deno.policy(
       "restrict_referer_policy",
-      '(_, context) => context.headers.referer && ["localhost", "metatype.dev"].includes(new URL(context.headers.referer).hostname)',
+      '(_, context) => context.headers.referer && ["localhost", "metatype.dev"].includes(new URL(context.headers.referer).hostname) ? "ALLOW" : "DENY"',
     );
 
     // or we can point to a local file that's accessible to the meta-cli
