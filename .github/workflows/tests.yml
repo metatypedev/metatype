@@ -88,9 +88,11 @@ jobs:
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
         uses: mozilla-actions/sccache-action@v0.0.6
+
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - run: curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
-      - run: echo "~/.local/bin" >> $GITHUB_PATH
+      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
       - run: ghjk envs cook
 
       - shell: bash
@@ -135,12 +137,14 @@ jobs:
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
         uses: mozilla-actions/sccache-action@v0.0.6
+
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       #   with:
       #     # temporary fix
       #     cache-key-prefix: ${{ matrix.os }}
       - run: curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
-      - run: echo "~/.local/bin" >> $GITHUB_PATH
+      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
       - run: ghjk envs cook
 
       - if: ${{ matrix.cross }}
@@ -166,9 +170,11 @@ jobs:
       #   with:
       #     path: ${{ env.DENO_DIR }}
       #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
+      
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - run: curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
       - run: echo "~/.local/bin" >> $GITHUB_PATH
+      - run: echo "BASH_ENV=~/.local/share/ghjk/env.sh" >> $GITHUB_ENV
       - run: ghjk envs cook
 
       - name: Cache .venv dir
@@ -275,11 +281,13 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
+      
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       #   with:
       #     cache-disable: true
       - run: curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
       - run: echo "~/.local/bin" >> $GITHUB_PATH
+      - run: echo "BASH_ENV=~/.local/share/ghjk/env.sh" >> $GITHUB_ENV
       - run: ghjk envs cook
 
       - shell: bash
