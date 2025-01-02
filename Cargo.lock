@@ -7068,7 +7068,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "metagen_fdk_rust_static"
+name = "metagen_fdk_rs_static"
 version = "0.0.1"
 dependencies = [
  "anyhow",

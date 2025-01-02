@@ -52,7 +52,7 @@ if (false) {
       targets: {
         main: [
           {
-            generator: "fdk_typescript",
+            generator: "fdk_ts",
             typegraph_path: myPath,
             path: "funcs/",
           },

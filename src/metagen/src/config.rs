@@ -4,7 +4,7 @@
 //!  Sample yaml:
 //!  ```yaml
 //!  generators: # this section only required when we support external generators
-//!     - fdk_rust
+//!     - fdk_rs
 //!     - fdk_ts
 //!     - xgraph_ts
 //!     - name: my_custom
@@ -12,7 +12,7 @@
 //!  targets:
 //!     default:
 //!         # config for any configured generatour under this name
-//!         generator: fdk_rust
+//!         generator: fdk_rs
 //!         typegraph: console
 //!         path: ./mats/gen
 //!         annotate_debug: true

@@ -208,8 +208,8 @@ fn e2e() -> anyhow::Result<()> {
             "default".to_string(),
             config::Target(
                 [GeneratorConfig {
-                    generator_name: "fdk_typescript".to_string(),
-                    other: serde_json::to_value(fdk_typescript::FdkTypescriptGenConfig {
+                    generator_name: "fdk_ts".to_string(),
+                    other: serde_json::to_value(fdk_ts::FdkTypescriptGenConfig {
                         stubbed_runtimes: Some(vec!["deno".into()]),
                         base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),

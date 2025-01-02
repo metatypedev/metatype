@@ -12,7 +12,7 @@ use shared::get_gql_type;
 use crate::interlude::*;
 use crate::*;
 
-use crate::fdk_typescript::utils;
+use crate::fdk_ts::utils;
 use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
@@ -239,7 +239,7 @@ fn render_data_types(
 ) -> anyhow::Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(fdk_typescript::types::TypescriptTypeRenderer {}),
+        Rc::new(fdk_ts::types::TypescriptTypeRenderer {}),
     );
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;

@@ -36,13 +36,13 @@ metagen:
   targets:
     main:
       # generator to use
-      - generator: fdk_rust
+      - generator: fdk_rs
         # path to generate to
         path: ./bff/
         # typegraph path to use
         typegraph_path: ./typegraphs/svc-bff.ts
         # we can have multiple generators per target
-      - generator: fdk_rust
+      - generator: fdk_rs
         path: ./telemetry/
         typegraph_path: ./typegraphs/svc-telemetry.ts
         # generators might have custom keys
@@ -118,7 +118,7 @@ This generator supports:
 
 Refer to the [client reference](/docs/reference/typegraph/client/) for usage guidelines and examples.
 
-### `fdk_typescript`
+### `fdk_ts`
 
 This generator supports:
 
@@ -163,14 +163,14 @@ It supports the following extra configuration keys.
 | ------------------ | ---------- | ---------- | ------------------------------------------ |
 | `stubbed_runtimes` | `string[]` | `["deno"]` | Runtimes for which to generate stub types. |
 
-### `fdk_python`
+### `fdk_py`
 
 This generator supports:
 
 - Python classes that map to typegraph types
 - Decorators for custom functions implementors that require adherance to typegraph function types.
   - By default, all functions from the `PythonRuntime` get stub types.
-  - TODO: `stubbed_runtimes` for `fdk_python`
+  - TODO: `stubbed_runtimes` for `fdk_py`
 - TODO: types for interacting with the typegate from within custom functions.
 
 If the referenced module for the custom function is not found, the generator will also output stub implementation (in addition to the types) at the given type. It will not replace our code on a second run.
@@ -202,7 +202,7 @@ Custom function:
   />
 </details>
 
-### `fdk_rust`
+### `fdk_rs`
 
 This generator generates types, serializers and bindings needed to implement custom functions in Rust. Rust implementations will need to be compiled to wasm components to be executed on the metatype platform and the generator assumes such usage.
 

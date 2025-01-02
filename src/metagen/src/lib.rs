@@ -31,10 +31,10 @@ mod macros;
 // used by the NamingPostProcessor
 pub mod shared;
 
-mod fdk_python;
-mod fdk_rust;
+mod fdk_py;
+mod fdk_rs;
 mod fdk_substantial;
-mod fdk_typescript;
+mod fdk_ts;
 
 mod client_py;
 mod client_rs;
@@ -50,9 +50,9 @@ pub use config::*;
 use futures_concurrency::future::FutureGroup;
 pub use shared::FdkTemplate;
 
-pub use fdk_python::DEFAULT_TEMPLATE as FDK_PYTHON_DEFAULT_TEMPLATE;
-pub use fdk_rust::DEFAULT_TEMPLATE as FDK_RUST_DEFAULT_TEMPLATE;
-pub use fdk_typescript::DEFAULT_TEMPLATE as FDK_TYPESCRIPT_DEFAULT_TEMPLATE;
+pub use fdk_py::DEFAULT_TEMPLATE as FDK_PY_DEFAULT_TEMPLATE;
+pub use fdk_rs::DEFAULT_TEMPLATE as FDK_RS_DEFAULT_TEMPLATE;
+pub use fdk_ts::DEFAULT_TEMPLATE as FDK_TS_DEFAULT_TEMPLATE;
 
 /// This implements a command object pattern API for generator
 /// implementations to access the external world. See [InputResolver].
@@ -140,21 +140,21 @@ impl GeneratorRunner {
             static GENERATORS: IndexMap<String, GeneratorRunner> = IndexMap::from([
                 // builtin generatorsFdkPythonGenConfig
                 (
-                    "fdk_rust".to_string(),
+                    "fdk_rs".to_string(),
                     GeneratorRunner {
                         op: |workspace_path: &Path, val| {
-                            let config = fdk_rust::FdkRustGenConfig::from_json(val, workspace_path)?;
-                            let generator = fdk_rust::Generator::new(config)?;
+                            let config = fdk_rs::FdkRustGenConfig::from_json(val, workspace_path)?;
+                            let generator = fdk_rs::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },
                 ),
                 (
-                    "fdk_python".to_string(),
+                    "fdk_py".to_string(),
                     GeneratorRunner {
                         op: |workspace_path: &Path, val| {
-                            let config = fdk_python::FdkPythonGenConfig::from_json(val, workspace_path)?;
-                            let generator = fdk_python::Generator::new(config)?;
+                            let config = fdk_py::FdkPythonGenConfig::from_json(val, workspace_path)?;
+                            let generator = fdk_py::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },
@@ -170,11 +170,11 @@ impl GeneratorRunner {
                     },
                 ),
                 (
-                    "fdk_typescript".to_string(),
+                    "fdk_ts".to_string(),
                     GeneratorRunner {
                         op: |workspace_path: &Path, val| {
-                            let config = fdk_typescript::FdkTypescriptGenConfig::from_json(val, workspace_path)?;
-                            let generator = fdk_typescript::Generator::new(config)?;
+                            let config = fdk_ts::FdkTypescriptGenConfig::from_json(val, workspace_path)?;
+                            let generator = fdk_ts::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },
