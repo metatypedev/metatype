@@ -45,7 +45,7 @@ if __name__ == "__main__" and False:
             "targets": {
                 "main": [
                     {
-                        "generator": "fdk_typescript",
+                        "generator": "fdk_ts",
                         "typegraph_path": __file__,
                         "path": "funcs/",
                     },

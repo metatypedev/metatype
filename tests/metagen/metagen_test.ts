@@ -61,7 +61,7 @@ typegates:
 metagen:
   targets:
     main:
-      - generator: fdk_rust
+      - generator: fdk_rs
         path: ${genCratePath}
         typegraph_path: ${typegraphPath}
         stubbed_runtimes: ["python"]
@@ -118,7 +118,7 @@ typegates:
 metagen:
   targets:
     my_target:
-      - generator: fdk_python
+      - generator: fdk_py
         path: ${basePath}
         typegraph_path: ${typegraphPath}
 `,
@@ -137,18 +137,18 @@ Meta.test("Metagen within sdk", async (t) => {
     targets: {
       my_target: [
         {
-          generator: "fdk_rust",
+          generator: "fdk_rs",
           typegraph: "example-metagen",
           path: "some/base/path/rust",
           stubbed_runtimes: ["python"],
         },
         {
-          generator: "fdk_python",
+          generator: "fdk_py",
           typegraph: "example-metagen",
           path: "some/base/path/python",
         },
         {
-          generator: "fdk_typescript",
+          generator: "fdk_ts",
           typegraph: "example-metagen",
           path: "some/base/path/ts",
           stubbed_runtimes: ["python"],
