@@ -14,7 +14,7 @@ members = [
   "src/metagen-client-rs",
   "tests/metagen/typegraphs/sample/rs",
   "tests/metagen/typegraphs/sample/rs_upload",
-  ]
+]
 
 exclude = [
   "tests/runtimes/wasm_reflected/rust",
@@ -24,7 +24,7 @@ exclude = [
 ]
 
 [workspace.package]
-version = "0.5.0-rc.7"
+version = "0.5.0-rc.9"
 edition = "2021"
 
 [workspace.dependencies]
@@ -72,19 +72,19 @@ sha2 = "0.10.8"
 seahash = "4.1.0"
 
 # patterns
-anyhow = "1.0.89"            # FIXME: replace anyhow with eyre
+anyhow = "1.0.89"                                    # FIXME: replace anyhow with eyre
 color-eyre = "0.6.3"
-eyre = "0.6.12"              # NOTE: keep in sync with verison used by color-eyre
+eyre = "0.6.12"                                      # NOTE: keep in sync with verison used by color-eyre
 thiserror = "1.0.64"
 indoc = "2.0.5"
 unindent = "0.2.3"
 itertools = "0.13.0"
-lazy_static = "1.5.0"        # FIXME: replace with Lazy Cell
+lazy_static = "1.5.0"                                # FIXME: replace with Lazy Cell
 crossbeam-channel = "0.5.13"
 enum_dispatch = "0.3.13"
 tap = "1.0.1"
 derive_more = { version = "1", features = ["from"] }
-cached = "0.53.1"            # FIXME: replace usage with a Lazy Cell + dashmap
+cached = "0.53.1"                                    # FIXME: replace usage with a Lazy Cell + dashmap
 garde = "0.20"
 paste = "1.0.15"
 
@@ -119,11 +119,12 @@ indexmap = { version = "2.6.0", features = ["serde"] }
 semver = "1.0.23"
 dashmap = "6.1.0"
 connection-string = "0.2.0"
-chrono =  { version = "0.4.38", features = ["serde"] }
+chrono = { version = "0.4.38", features = ["serde"] }
 tera = { version = "1.20", default-features = false }
 ordered-float = "4.3.0"
 graphql-parser = "0.4.0"
 uuid = "1.10.0"
+rustpython-parser = "0.4.0"
 
 # wasm
 wasmtime = "25.0.2"
@@ -153,7 +154,7 @@ tracing-unwrap = { version = "1.0.1", features = ["log-location"] }
 tracing-appender = "0.2.3"
 
 # async
-futures = "=0.3.30" # pinned due to bug with .31 with zeromq (deno)
+futures = "=0.3.30"                                   # pinned due to bug with .31 with zeromq (deno)
 futures-concurrency = "7.6"
 futures-lite = "2.3"
 tokio = { version = "1", features = ["parking_lot"] }
@@ -167,7 +168,9 @@ temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core", rev
 # prisma
 query-core = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
 query-connector = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
-request-handlers = { git = "https://github.com/metatypedev/prisma-engines", features = ["all"], branch = "fix/version-compat" }
+request-handlers = { git = "https://github.com/metatypedev/prisma-engines", features = [
+  "all",
+], branch = "fix/version-compat" }
 datamodel-renderer = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
 user-facing-errors = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }
 query-engine-metrics = { git = "https://github.com/metatypedev/prisma-engines", branch = "fix/version-compat" }

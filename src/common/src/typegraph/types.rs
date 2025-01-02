@@ -63,7 +63,6 @@ pub enum Injection {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TypeNodeBase {
     pub title: String,
-    pub policies: Vec<PolicyIndices>,
     #[serde(default)]
     pub description: Option<String>,
     #[serde(default, rename = "enum")]
@@ -158,6 +157,9 @@ pub struct ObjectTypeData<Id = TypeId> {
     pub id: Vec<String>,
     #[serde(default)]
     pub required: Vec<String>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    #[serde(default)]
+    pub policies: IndexMap<String, Vec<PolicyIndices>>,
 }
 
 #[skip_serializing_none]

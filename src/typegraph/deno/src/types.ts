@@ -39,7 +39,6 @@ import {
   ApplyFromStatic,
   type InheritDef,
 } from "./typegraph.ts";
-import { log } from "./io.ts";
 
 export type PolicySpec =
   | Policy
@@ -81,7 +80,7 @@ export function getPolicyChain(
 
 export class Typedef {
   readonly name?: string;
-  policy: Policy[] | null = null;
+  policy: WitPolicySpec[] | null = null;
 
   constructor(public readonly _id: number) {}
 
@@ -90,15 +89,16 @@ export class Typedef {
   }
 
   withPolicy(policy: PolicySpec[] | PolicySpec): this {
-    const id = core.withPolicy(this._id, getPolicyChain(policy));
+    const chain = getPolicyChain(policy);
+    const newChain = [...(this.policy ?? []), ...chain];
+    const id = core.withPolicy(this._id, newChain);
 
-    const chain = Array.isArray(policy) ? policy : [policy];
     return new Proxy(this, {
       get(target, prop, receiver) {
         if (prop === "_id") {
           return id;
         } else if (prop === "policy") {
-          return chain;
+          return newChain;
         } else {
           return Reflect.get(target, prop, receiver);
         }
@@ -626,7 +626,6 @@ export class Func<
       throw new Error("Invalid apply value: root must be an object");
     }
     const transformTree = JSON.stringify(serialized.fields);
-    log.info("transform tree", transformTree);
     const transformData = core.getTransformData(this.inp._id, transformTree);
 
     return func(

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { METATYPE_VERSION, SDK_PACKAGE_NAME_TS } from "../consts.ts";
-import { $, existsSync, expandGlob, join } from "../deps.ts";
+import { $, expandGlob, join } from "../deps.ts";
 import { copyFilesAt } from "../utils.ts";
 import { removeExtension } from "../utils.ts";
 import { denoSdkDir, fromRoot, srcDir } from "./common.ts";
@@ -20,12 +20,19 @@ copyFilesAt(
 );
 
 // Prepare jsr export map
-const jsrExports = {} as Record<string, string>;
+const jsrExports = {
+  ".": "./src/index.ts",
+  "./deps/_import.ts": "./src/deps/_import.ts",
+  "./deps/mod.ts": "./src/deps/mod.ts",
+} as Record<string, string>;
 for await (
   const { path } of expandGlob("./**/*.*", {
     root: srcDir,
     includeDirs: false,
     globstar: true,
+    exclude: [
+      "index.ts",
+    ],
   })
 ) {
   if (/\.(ts|js|mjs)$/.test(path)) {
@@ -35,9 +42,12 @@ for await (
       continue;
     }
     const hintFile = `${removeExtension(path)}.d.ts`;
-    const sourcePath = existsSync(hintFile) ? hintFile : path;
+    const sourcePath = await $.path(hintFile).exists() ? hintFile : path;
     const canonRelPath = sourcePath.replace(denoSdkDir, ".");
-    const usrRelPath = sourcePath.replace(srcDir, ".");
+    const relPath = sourcePath.replace(srcDir, ".");
+    const usrRelPath = path.endsWith(".d.ts")
+      ? relPath
+      : removeExtension(relPath);
     jsrExports[usrRelPath] = canonRelPath;
   }
 }
@@ -52,6 +62,13 @@ Deno.writeTextFileSync(
       // https://jsr.io/docs/troubleshooting#excluded-module-error
       publish: {
         exclude: ["!src/gen", "!LICENSE.md", "!README.md"],
+      },
+      lint: {
+        rules: {
+          exclude: [
+            "no-external-import",
+          ],
+        },
       },
       exports: jsrExports,
     },

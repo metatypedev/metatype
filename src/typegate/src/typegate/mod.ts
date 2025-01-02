@@ -20,6 +20,7 @@ import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../transports/graphql/typegraph.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
 import * as DenoHooks from "../runtimes/deno/hooks/mod.ts";
+import * as PythonHooks from "../runtimes/python/hooks/mod.ts";
 import {
   type RuntimeResolver,
   SecretManager,
@@ -33,6 +34,7 @@ import { handleGraphQL } from "../services/graphql_service.ts";
 import { getLogger } from "../log.ts";
 import { MigrationFailure } from "../runtimes/prisma/hooks/run_migrations.ts";
 import { DenoFailure } from "../runtimes/deno/hooks/mod.ts";
+import { ValidationFailure } from "../runtimes/python/hooks/mod.ts";
 import introspectionJson from "../typegraphs/introspection.json" with {
   type: "json",
 };
@@ -173,6 +175,7 @@ export class Typegate implements AsyncDisposable {
     this.#onPush(PrismaHooks.generateSchema);
     this.#onPush(PrismaHooks.runMigrations);
     this.#onPush(DenoHooks.cacheModules);
+    this.#onPush(PythonHooks.codeValidations);
     this.#artifactService = new ArtifactService(artifactStore);
   }
 
@@ -203,6 +206,8 @@ export class Typegate implements AsyncDisposable {
         if (err instanceof MigrationFailure && err.errors[0]) {
           response.setFailure(err.errors[0]);
         } else if (err instanceof DenoFailure) {
+          response.setFailure(err.failure);
+        } else if (err instanceof ValidationFailure) {
           response.setFailure(err.failure);
         } else {
           response.setFailure({

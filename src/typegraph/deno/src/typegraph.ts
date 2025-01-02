@@ -277,7 +277,7 @@ export async function typegraph(
         log.debug("exiting");
         process.exit(0);
       }
-    }, 100);
+    }, 1000);
   }
 
   --counter;

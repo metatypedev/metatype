@@ -15,7 +15,7 @@ export {
   copyLock,
   sedLock,
 } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/std.ts";
-export { downloadFile } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/utils/mod.ts";
+export { downloadFile,objectHash } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/utils/mod.ts";
 // export * from "../../ghjk/mod.ts";
 // export * as ports from "../../ghjk/ports/mod.ts";
 // export * as utils from "../../ghjk/utils/mod.ts";
@@ -60,3 +60,37 @@ export { Fuse };
 import bytes from "https://deno.land/x/convert_bytes@v2.1.1/mod.ts";
 export { bytes };
 export * as ctrlc from "https://deno.land/x/ctrlc@0.2.1/mod.ts";
+
+
+export type OrRetOf<T> = T extends () => infer Inner ? Inner : T;
+// FIXME: move with `$.switchMap` once ghjk 0.3 lands
+/**
+ * This tries to emulate a rust `match` statement but in a typesafe
+ * way. This is a WIP function.
+ * ```ts
+ * const pick: 2 = switchMap(
+ *   "hello",
+ *   {
+ *     hey: () => 1,
+ *     hello: () => 2,
+ *     hi: 3,
+ *     holla: 4,
+ *   },
+ * );
+ * ```
+ */
+export function switchMap<
+  K extends string | number | symbol,
+  All extends {
+    [Key in K]?: All[K];
+  },
+> // D = undefined,
+(
+  val: K,
+  branches: All,
+  // def?: (val: K) => D,
+): K extends keyof All ? OrRetOf<All[K]>
+  : OrRetOf<All[keyof All]> | undefined {
+  const branch = branches[val];
+  return typeof branch == "function" ? branch() : branch;
+}

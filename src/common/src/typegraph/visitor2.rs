@@ -78,6 +78,7 @@ pub struct CurrentNode<'tg> {
     pub type_node: &'tg TypeNode,
     pub type_idx: u32,
     pub path: SharedPath,
+    pub in_cycle: bool,
 }
 
 fn traverse_types_with_path<'tg, A, V, E>(
@@ -91,7 +92,6 @@ where
     V: Fn(VisitorContext<'tg>, &mut A) -> Result<VisitNext, E>,
 {
     let type_node = &tg.types[type_idx as usize];
-    // TODO check for cycles
 
     // visit current
     {
@@ -99,6 +99,7 @@ where
             type_node,
             type_idx,
             path: path.clone(),
+            in_cycle: path.borrow().iter().any(|seg| seg.from == type_idx),
         };
         let cx = VisitorContext { tg, current_node };
         match visit_fn(cx, &mut accumulator)? {
