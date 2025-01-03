@@ -12,13 +12,12 @@ members = [
   "src/xtask",
   "src/substantial",
   "src/metagen-client-rs",
-  "tests/metagen/typegraphs/sample/rs",
-  "tests/metagen/typegraphs/sample/rs_upload",
 ]
 
 exclude = [
   "tests/runtimes/wasm_reflected/rust",
   "tests/runtimes/wasm_wire/rust",
+  "tests/metagen/typegraphs/sample/rs",
   "tests/metagen/typegraphs/sample/rs_upload",
   "src/pyrt_wit_wire",
 ]
