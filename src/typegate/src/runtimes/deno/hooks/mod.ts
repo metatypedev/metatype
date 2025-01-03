@@ -53,7 +53,7 @@ export const cacheModules: PushHandler = async (
       const entryPoint = artifacts[matData.entryPoint as string];
       const moduleMeta = createArtifactMeta(title, entryPoint);
       const depMetas = (matData.deps as string[]).map((dep) =>
-        createArtifactMeta(title, artifacts[dep]),
+        createArtifactMeta(title, artifacts[dep])
       );
       const entryModulePath = await artifactStore.getLocalPath(
         moduleMeta,
@@ -64,7 +64,7 @@ export const cacheModules: PushHandler = async (
         logger.info(`Caching deno imports for ${title} (${entryPoint.path})`);
         await sandboxImport(entryModulePath);
         logger.info(`'${entryPoint.path}' was cached`);
-      } catch (error) {
+      } catch (error: any) {
         console.error(error.stack);
 
         throw new DenoFailure(

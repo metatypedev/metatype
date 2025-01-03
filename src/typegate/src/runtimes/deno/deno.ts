@@ -79,7 +79,7 @@ export class DenoRuntime extends Runtime {
           ? [...getInjectionValues(m.data)]
           : [];
       }
-      for (const secretName of (m.data.secrets as []) ?? []) {
+      for (const secretName of matSecrets) {
         secrets[secretName] = secretManager.secretOrFail(secretName);
       }
     }

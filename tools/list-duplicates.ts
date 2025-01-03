@@ -12,7 +12,7 @@
  *                  Default: 0
  */
 
-import { cyan, green, red, objectHash, parseArgs } from "./deps.ts";
+import { cyan, green, objectHash, parseArgs, red } from "./deps.ts";
 // FIXME: import from @metatype/typegate
 import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
@@ -24,9 +24,13 @@ export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
   const duplicateNameBins = new Map<string, readonly [number, TypeNode][]>();
   visitType(tg, rootIdx, ({ type, idx }) => {
     const { title, description: _description, ...structure } = type;
+    // deno-lint-ignore no-explicit-any
     const hash = objectHash(structure as any);
     bins.set(hash, [...bins.get(hash) ?? [], [idx, type] as const]);
-    duplicateNameBins.set(title, [...duplicateNameBins.get(name) ?? [], [idx, type] as const]);
+    duplicateNameBins.set(title, [
+      ...duplicateNameBins.get(title) ?? [],
+      [idx, type] as const,
+    ]);
     return true;
   }, { allowCircular: false });
   for (const [hash, bin] of bins.entries()) {
@@ -34,6 +38,7 @@ export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
       console.log(`${cyan(hash)}`);
       for (const [idx, type] of bin) {
         const injection = "injection" in type
+          // deno-lint-ignore no-explicit-any
           ? ` (injection ${(type.injection as any).source})`
           : "";
         console.log(
@@ -47,6 +52,7 @@ export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
       console.log(`${red(hash)}`);
       for (const [idx, type] of bin) {
         const injection = "injection" in type
+          // deno-lint-ignore no-explicit-any
           ? ` (injection ${(type.injection as any).source})`
           : "";
         console.log(

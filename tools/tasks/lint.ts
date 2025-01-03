@@ -47,6 +47,7 @@ export default {
         .flat()
         .map((ref) => ref.path.toString());
       await $`bash -c "deno check ${files}"`;
+      await $`bash -c "deno lint"`;
     },
   },
 } satisfies Record<string, DenoTaskDefArgs>;
