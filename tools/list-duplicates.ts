@@ -28,7 +28,7 @@ export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
     const hash = objectHash(structure as any);
     bins.set(hash, [...bins.get(hash) ?? [], [idx, type] as const]);
     duplicateNameBins.set(title, [
-      ...duplicateNameBins.get(name) ?? [],
+      ...duplicateNameBins.get(title) ?? [],
       [idx, type] as const,
     ]);
     return true;

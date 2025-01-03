@@ -90,7 +90,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.6
 
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
+      - run: curl -fsSL "https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
       - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
       - run: ghjk envs cook
@@ -142,7 +142,7 @@ jobs:
       #   with:
       #     # temporary fix
       #     cache-key-prefix: ${{ matrix.os }}
-      - run: curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
+      - run: curl -fsSL "https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
       - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
       - run: ghjk envs cook
@@ -172,7 +172,7 @@ jobs:
       #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
       
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
+      - run: curl -fsSL "https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
       - run: echo "~/.local/bin" >> $GITHUB_PATH
       - run: echo "BASH_ENV=~/.local/share/ghjk/env.sh" >> $GITHUB_ENV
       - run: ghjk envs cook
@@ -285,7 +285,7 @@ jobs:
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       #   with:
       #     cache-disable: true
-      - run: curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
+      - run: curl -fsSL "https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
       - run: echo "~/.local/bin" >> $GITHUB_PATH
       - run: echo "BASH_ENV=~/.local/share/ghjk/env.sh" >> $GITHUB_ENV
       - run: ghjk envs cook

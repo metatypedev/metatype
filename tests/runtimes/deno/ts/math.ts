@@ -1,17 +1,31 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+// Modified from https://github.com/axetroy/deno_math/blob/1597f1872f975d099f079ec9a71d9408dd2b8b72/
+
 // deno-lint-ignore no-external-import
-import * as MathLib from "https://deno.land/x/math@v1.1.0/mod.ts";
+import Big from "npm:big.js@6.2.2";
 
 interface MinInput {
   numbers: Array<number>;
 }
 
-export function min({ numbers }: MinInput): number {
-  return Number(MathLib.min(numbers));
+export function min({ numbers: values }: MinInput): number {
+  let minValue = new Big(values[0]);
+  for (const value of values) {
+    if ((new Big(value)).lt(minValue)) {
+      minValue = value;
+    }
+  }
+  return Number(minValue);
 }
 
-export function maxAsync({ numbers }: MinInput): Promise<number> {
-  return Promise.resolve(Number(MathLib.max(numbers)));
+export function maxAsync({ numbers: values }: MinInput): Promise<number> {
+  let maxValue = new Big(values[0]);
+  for (const value of values) {
+    if ((new Big(value)).gt(maxValue)) {
+      maxValue = value;
+    }
+  }
+  return Promise.resolve(Number(maxValue));
 }
