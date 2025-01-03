@@ -222,7 +222,7 @@ Meta.test("Metagen within sdk with custom template", async (t) => {
     targets: {
       my_target: [
         {
-          generator: "fdk_python",
+          generator: "fdk_py",
           typegraph: "example-metagen",
           path: "some/base/path/python",
           template_dir: "./fdk_py_templates",

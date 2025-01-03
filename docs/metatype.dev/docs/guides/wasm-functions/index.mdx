@@ -69,7 +69,7 @@ This should give us the following files:
 └──  fdk.rs
 ```
 
-By default, the `fdk_rust` generator outputs all the necessary files required to build our wasm file. This includes the `Cargo.toml` manifest for our Rust crate.
+By default, the `fdk_rs` generator outputs all the necessary files required to build our wasm file. This includes the `Cargo.toml` manifest for our Rust crate.
 
 <CodeBlock language="toml">
   {
@@ -78,7 +78,7 @@ By default, the `fdk_rust` generator outputs all the necessary files required to
   }
 </CodeBlock>
 
-`fdk_rust` will not overwrite a `Cargo.toml` file discovered at generation path so you can add other dependencies if need be.
+`fdk_rs` will not overwrite a `Cargo.toml` file discovered at generation path so you can add other dependencies if need be.
 
 The `fdk.rs` file contains all the glue code including the typegraph types.
 
