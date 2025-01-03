@@ -141,4 +141,31 @@ res5 = gql_client.query(
     }
 )
 
-print(json.dumps([res1, res1a, res2, res3, res4, res5]))
+res6 = gql_client.query(
+    {
+        "scalarOnly": qg.nested_composite({"_": SelectionFlags(select_all=True)}),
+        "withStruct": qg.nested_composite(
+            {
+                "_": SelectionFlags(select_all=True),
+                "composite": {"_": SelectionFlags(select_all=True)},
+            }
+        ),
+        "withStructNested": qg.nested_composite(
+            {
+                "_": SelectionFlags(select_all=True),
+                "composite": {
+                    "_": SelectionFlags(select_all=True),
+                    "nested": {"_": SelectionFlags(select_all=True)},
+                },
+            }
+        ),
+        "withList": qg.nested_composite(
+            {
+                "_": SelectionFlags(select_all=True),
+                "list": {"_": SelectionFlags(select_all=True)},
+            }
+        ),
+    },
+)
+
+print(json.dumps([res1, res1a, res2, res3, res4, res5, res6]))

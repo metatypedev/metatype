@@ -592,6 +592,24 @@ Meta.test(
       compositeNoArgs: postSchema,
       compositeArgs: postSchema,
     });
+    const expectedSchemaC = zod.object({
+      scalarOnly: zod.object({ scalar: zod.number() }),
+      withStruct: zod.object({
+        scalar: zod.number(),
+        composite: zod.object({ value: zod.number() }),
+      }),
+      withStructNested: zod.object({
+        scalar: zod.number(),
+        composite: zod.object({
+          value: zod.number(),
+          nested: zod.object({ inner: zod.number() }),
+        }),
+      }),
+      withList: zod.object({
+        scalar: zod.number(),
+        list: zod.array(zod.object({ value: zod.number() })),
+      }),
+    });
     const expectedSchema = zod.tuple([
       expectedSchemaQ,
       expectedSchemaQ,
@@ -604,6 +622,7 @@ Meta.test(
         compositeUnion2: zod.object({}),
         mixedUnion: zod.string(),
       }),
+      expectedSchemaC,
     ]);
     const cases = [
       {

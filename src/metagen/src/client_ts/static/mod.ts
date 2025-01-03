@@ -107,6 +107,12 @@ function _selectionToNodeSet(
               "unreachable: union/either NodeMetas can't have subnodes",
             );
           }
+
+          // skip non explicit composite selection when using selectAll
+          if (subSelections?._ === "selectAll" && !instanceSelection) {
+            continue;
+          }
+
           node.subNodes = _selectionToNodeSet(
             // assume it's a Selection. If it's an argument
             // object, mismatch between the node desc should hopefully

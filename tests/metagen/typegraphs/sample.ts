@@ -22,21 +22,38 @@ export const tg = await typegraph({
     const random = new RandomRuntime({ seed: 0 });
     const deno = new DenoRuntime();
 
-    const post = t.struct({
-      id: t.uuid({ asId: true, config: { auto: true } }),
-      slug: t.string(),
-      title: t.string(),
-    }, { name: "post" });
+    const post = t.struct(
+      {
+        id: t.uuid({ asId: true, config: { auto: true } }),
+        slug: t.string(),
+        title: t.string(),
+      },
+      { name: "post" },
+    );
 
-    const user = t.struct({
-      id: t.uuid({ asId: true, config: { auto: true } }),
-      email: t.email(),
-      posts: t.list(g.ref("post")),
-    }, { name: "user" });
+    const user = t.struct(
+      {
+        id: t.uuid({ asId: true, config: { auto: true } }),
+        email: t.email(),
+        posts: t.list(g.ref("post")),
+      },
+      { name: "user" },
+    );
 
     const compositeUnion = t.union([post, user]);
     const scalarUnion = t.union([t.string(), t.integer()]);
     const mixedUnion = t.union([post, user, t.string(), t.integer()]);
+
+    const nestedComposite = t.struct({
+      scalar: t.integer(),
+      composite: t.struct({
+        value: t.integer(),
+        nested: t.struct({
+          inner: t.integer(),
+        }),
+      }),
+      list: t.list(t.struct({ value: t.integer() })),
+    });
 
     g.expose(
       {
@@ -44,33 +61,21 @@ export const tg = await typegraph({
         getPosts: random.gen(post),
 
         scalarNoArgs: random.gen(t.string()),
-        scalarArgs: deno.func(
-          post,
-          t.string(),
-          {
-            code: () => "hello",
-            effect: fx.update(),
-          },
-        ),
+        scalarArgs: deno.func(post, t.string(), {
+          code: () => "hello",
+          effect: fx.update(),
+        }),
         compositeNoArgs: deno.func(t.struct({}), post, {
           code: genPost,
           effect: fx.update(),
         }),
-        compositeArgs: deno.func(
-          t.struct({ id: t.string() }),
-          post,
-          {
-            code: genPost,
-            effect: fx.update(),
-          },
-        ),
-        scalarUnion: deno.func(
-          t.struct({ id: t.string() }),
-          scalarUnion,
-          {
-            code: () => "hello",
-          },
-        ),
+        compositeArgs: deno.func(t.struct({ id: t.string() }), post, {
+          code: genPost,
+          effect: fx.update(),
+        }),
+        scalarUnion: deno.func(t.struct({ id: t.string() }), scalarUnion, {
+          code: () => "hello",
+        }),
         compositeUnion: deno.func(
           t.struct({ id: t.string() }),
           compositeUnion,
@@ -78,13 +83,16 @@ export const tg = await typegraph({
             code: genPost,
           },
         ),
-        mixedUnion: deno.func(
-          t.struct({ id: t.string() }),
-          mixedUnion,
-          {
-            code: () => "hello",
-          },
-        ),
+        mixedUnion: deno.func(t.struct({ id: t.string() }), mixedUnion, {
+          code: () => "hello",
+        }),
+        nestedComposite: deno.func(t.struct({}), nestedComposite, {
+          code: () => ({
+            scalar: 0,
+            composite: { value: 1, nested: { inner: 2 } },
+            list: [{ value: 3 }],
+          }),
+        }),
       },
       Policy.public(),
     );
