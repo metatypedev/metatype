@@ -5,7 +5,7 @@
 
 /**
  * Usage:
- *   deno run -A tools/list-duplicates.ts [<options>] <file.py>
+ *   meta serialize -f my_tg.py | deno run -A tools/list-duplicates.ts [<options>]
  *
  * Options:
  *    --root <N>    The index of the root type
@@ -19,6 +19,9 @@ import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
 import { projectDir } from "./utils.ts";
 import { TypeNode } from "../src/typegate/src/typegraph/type_node.ts";
 
+let whereTypeCount = 0;
+let optionalTypeCount = 0;
+
 export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
   const bins = new Map<string, readonly [number, TypeNode][]>();
   const duplicateNameBins = new Map<string, readonly [number, TypeNode][]>();
@@ -31,6 +34,12 @@ export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
       ...duplicateNameBins.get(title) ?? [],
       [idx, type] as const,
     ]);
+    if (title.match(/_where_/)) {
+      whereTypeCount++;
+    }
+    if (type.type == "optional") {
+      optionalTypeCount++;
+    }
     return true;
   }, { allowCircular: false });
   for (const [hash, bin] of bins.entries()) {
@@ -69,7 +78,7 @@ const args = parseArgs(Deno.args, {
 
 const rootIdx = argToInt(args.root, 0);
 
-const files = args._ as string[];
+/* const files = args._ as string[];
 if (files.length === 0) {
   throw new Error("Path to typegraph definition module is required.");
 }
@@ -92,15 +101,21 @@ const { stdout } = await new Deno.Command(cmd[0], {
   args: cmd.slice(1),
   stdout: "piped",
   stderr: "inherit",
-}).output();
+}).output(); */
 
-const tgs: TypeGraphDS[] = JSON.parse(
-  new TextDecoder().decode(stdout),
-);
+const decoder = new TextDecoder();
+let raw = "";
+for await (const chunk of Deno.stdin.readable) {
+  raw += decoder.decode(chunk);
+}
+
+const tgs: TypeGraphDS[] = JSON.parse(raw);
 
 for (const tg of tgs) {
   listDuplicates(tg, rootIdx);
 }
+
+console.log({ whereTypeCount, optionalTypeCount });
 
 function argToInt(arg: string | undefined, defaultValue: number): number {
   const parsed = parseInt(arg ?? `${defaultValue}`);
