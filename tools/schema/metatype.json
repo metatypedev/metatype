@@ -1,0 +1,260 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemastore.org/metatype.json",
+  "additionalProperties": false,
+  "type": "object",
+  "definitions": {
+    "path": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "typegraphLoaderConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include": {
+          "$ref": "#/definitions/path"
+        },
+        "exclude": {
+          "$ref": "#/definitions/path"
+        }
+      }
+    },
+    "generatorConfigBase": {
+      "type": "object",
+      "properties": {
+        "typegraph_name": {
+          "type": "string"
+        },
+        "typegraph_path": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "template_dir": {
+          "type": "string"
+        }
+      }
+    },
+    "rustGeneratorConfigBase": {
+      "type": "object",
+      "properties": {
+        "skip_cargo_toml": {
+          "type": "boolean"
+        },
+        "skip_lib_rs": {
+          "type": "boolean"
+        },
+        "crate_name": {
+          "type": "string"
+        }
+      }
+    },
+    "clientTsGeneratorConfig": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "const": "client_ts"
+        }
+      }
+    },
+    "clientPyGeneratorConfig": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "const": "client_py"
+        }
+      }
+    },
+    "clientRsGeneratorConfig": {
+      "allOf": [
+        {
+          "type": "object",
+          "properties": {
+            "generator": {
+              "const": "client_rs"
+            }
+          }
+        },
+        {
+          "$ref": "#/definitions/rustGeneratorConfigBase"
+        }
+      ]
+    },
+    "fdkTsGeneratorConfig": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "const": "fdk_typescript"
+        },
+        "stubbed_runtimes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "fdkPyGeneratorConfig": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "const": "fdk_python"
+        }
+      }
+    },
+    "fdkRsGeneratorConfig": {
+      "allOf": [
+        {
+          "type": "object",
+          "properties": {
+            "generator": {
+              "const": "fdk_rust"
+            },
+            "stubbed_runtimes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "$ref": "#/definitions/rustGeneratorConfigBase"
+        }
+      ]
+    },
+    "fdkSubGeneratorConfig": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "const": "fdk_substantial"
+        }
+      }
+    },
+    "generatorConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/generatorConfigBase"
+        },
+        {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/clientTsGeneratorConfig"
+            },
+            {
+              "$ref": "#/definitions/clientPyGeneratorConfig"
+            },
+            {
+              "$ref": "#/definitions/clientRsGeneratorConfig"
+            },
+            {
+              "$ref": "#/definitions/fdkTsGeneratorConfig"
+            },
+            {
+              "$ref": "#/definitions/fdkPyGeneratorConfig"
+            },
+            {
+              "$ref": "#/definitions/fdkRsGeneratorConfig"
+            },
+            {
+              "$ref": "#/definitions/fdkSubGeneratorConfig"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "properties": {
+    "typegates": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "prefix": {
+            "type": ["string", "null"]
+          },
+          "username": {
+            "type": ["string", "null"]
+          },
+          "password": {
+            "type": ["string", "null"]
+          },
+          "env": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "secrets": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "typegraphs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "python": {
+          "$ref": "#/definitions/typegraphLoaderConfig"
+        },
+        "javascript": {
+          "$ref": "#/definitions/typegraphLoaderConfig"
+        },
+        "typescript": {
+          "$ref": "#/definitions/typegraphLoaderConfig"
+        },
+        "materializers": {
+          "type": "object",
+          "properties": {
+            "prisma": {
+              "type": "object",
+              "properties": {
+                "migration_path": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metagen": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "targets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/generatorConfig"
+            }
+          }
+        }
+      }
+    }
+  }
+}
