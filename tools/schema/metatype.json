@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemastore.org/metatype.json",
+  "title": "Metatype configuration file schema",
   "additionalProperties": false,
   "type": "object",
   "definitions": {
@@ -22,27 +23,34 @@
       "additionalProperties": false,
       "properties": {
         "include": {
-          "$ref": "#/definitions/path"
+          "$ref": "#/definitions/path",
+          "description": "A pattern or array of patterns to include."
         },
         "exclude": {
-          "$ref": "#/definitions/path"
+          "$ref": "#/definitions/path",
+          "description": "A pattern or array of patterns to exclude."
         }
-      }
+      },
+      "description": "Configuration for loading typegraph files."
     },
     "generatorConfigBase": {
       "type": "object",
       "properties": {
         "typegraph_name": {
-          "type": "string"
+          "type": "string",
+          "description": "The name of the typegraph."
         },
         "typegraph_path": {
-          "type": "string"
+          "type": "string",
+          "description": "The target typegraph file path."
         },
         "path": {
-          "type": "string"
+          "type": "string",
+          "description": "The directory for the generated files."
         },
         "template_dir": {
-          "type": "string"
+          "type": "string",
+          "description": "The directory containing template files."
         }
       }
     },
@@ -50,13 +58,16 @@
       "type": "object",
       "properties": {
         "skip_cargo_toml": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Whether to skip generating the `Cargo.toml` file."
         },
         "skip_lib_rs": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Whether to skip generating the `lib.rs` file."
         },
         "crate_name": {
-          "type": "string"
+          "type": "string",
+          "description": "Generated crate name."
         }
       }
     },
@@ -178,31 +189,39 @@
   "properties": {
     "typegates": {
       "type": "object",
+      "description": "Configuration for typegate nodes. See: <https://metatype.dev/docs/reference/meta-cli/configuration-file#typegate-configuration>.",
       "additionalProperties": {
         "type": "object",
+        "description": "Individual typegate node configuration.",
         "additionalProperties": false,
         "properties": {
           "url": {
             "type": "string",
-            "format": "uri"
+            "format": "uri",
+            "description": "The base URL of the typegate server, example: <http://localhost:7890>."
           },
           "prefix": {
-            "type": ["string", "null"]
+            "type": "string",
+            "description": "A prefix for typegraphs."
           },
           "username": {
-            "type": ["string", "null"]
+            "type": "string",
+            "description": "Administrator username for the typegate."
           },
           "password": {
-            "type": ["string", "null"]
+            "type": "string",
+            "description": "Administrator password for the typegate."
           },
           "env": {
             "type": "object",
+            "description": "Environment variables for the typegate.",
             "additionalProperties": {
               "type": "string"
             }
           },
           "secrets": {
             "type": "object",
+            "description": "Secrets used for configuring runtimes within the typegraphs. See: <https://metatype.dev/docs/reference/meta-cli/configuration-file#named-secrets>.",
             "additionalProperties": {
               "type": "object",
               "additionalProperties": {
@@ -216,24 +235,33 @@
     "typegraphs": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Typegraph deployment configurations. See: <https://metatype.dev/docs/concepts/features-overview#typegraph>.",
       "properties": {
         "python": {
-          "$ref": "#/definitions/typegraphLoaderConfig"
+          "$ref": "#/definitions/typegraphLoaderConfig",
+          "description": "Configuration for Python typegraphs."
         },
         "javascript": {
-          "$ref": "#/definitions/typegraphLoaderConfig"
+          "$ref": "#/definitions/typegraphLoaderConfig",
+          "description": "Configuration for JavaScript typegraphs."
         },
         "typescript": {
-          "$ref": "#/definitions/typegraphLoaderConfig"
+          "$ref": "#/definitions/typegraphLoaderConfig",
+          "description": "Configuration for TypeScript typegraphs."
         },
         "materializers": {
           "type": "object",
+          "additionalProperties": false,
+          "description": "Materializer configurations for typegraphs.",
           "properties": {
             "prisma": {
               "type": "object",
+              "additionalProperties": false,
+              "description": "Prisma materializer configuration.",
               "properties": {
-                "migration_path": {
-                  "type": "string"
+                "migrations_path": {
+                  "type": "string",
+                  "description": "The directory for storing Prisma migration files."
                 }
               }
             }
@@ -244,9 +272,11 @@
     "metagen": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Metagen configurations. See: <https://metatype.dev/docs/guides/external-functions#generating-types>.",
       "properties": {
         "targets": {
           "type": "object",
+          "description": "Code generation target configurations.",
           "additionalProperties": {
             "type": "array",
             "items": {
