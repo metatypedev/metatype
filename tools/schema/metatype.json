@@ -75,7 +75,8 @@
       "type": "object",
       "properties": {
         "generator": {
-          "const": "client_ts"
+          "const": "client_ts",
+          "description": "See: <https://metatype.dev/docs/reference/metagen#client_ts>."
         }
       }
     },
@@ -83,7 +84,8 @@
       "type": "object",
       "properties": {
         "generator": {
-          "const": "client_py"
+          "const": "client_py",
+          "description": "See: <https://metatype.dev/docs/reference/metagen#client_py>."
         }
       }
     },
@@ -93,7 +95,8 @@
           "type": "object",
           "properties": {
             "generator": {
-              "const": "client_rs"
+              "const": "client_rs",
+              "description": "See: <https://metatype.dev/docs/reference/metagen#client_rs>."
             }
           }
         },
@@ -106,7 +109,8 @@
       "type": "object",
       "properties": {
         "generator": {
-          "const": "fdk_typescript"
+          "const": "fdk_typescript",
+          "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_typescript>."
         },
         "stubbed_runtimes": {
           "type": "array",
@@ -120,7 +124,8 @@
       "type": "object",
       "properties": {
         "generator": {
-          "const": "fdk_python"
+          "const": "fdk_python",
+          "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_python>."
         }
       }
     },
@@ -130,7 +135,8 @@
           "type": "object",
           "properties": {
             "generator": {
-              "const": "fdk_rust"
+              "const": "fdk_rust",
+              "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_rust>."
             },
             "stubbed_runtimes": {
               "type": "array",
@@ -235,7 +241,7 @@
     "typegraphs": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Typegraph deployment configurations. See: <https://metatype.dev/docs/concepts/features-overview#typegraph>.",
+      "description": "Typegraph deployment configurations. See: <https://metatype.dev/docs/reference/typegraph>.",
       "properties": {
         "python": {
           "$ref": "#/definitions/typegraphLoaderConfig",
@@ -272,7 +278,7 @@
     "metagen": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Metagen configurations. See: <https://metatype.dev/docs/guides/external-functions#generating-types>.",
+      "description": "Metagen configurations. See: <https://metatype.dev/docs/reference/metagen>.",
       "properties": {
         "targets": {
           "type": "object",
