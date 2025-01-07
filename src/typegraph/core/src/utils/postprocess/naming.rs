@@ -10,6 +10,7 @@ use common::typegraph::{
     visitor::{Edge, PathSegment},
     StringFormat, TypeNode, Typegraph,
 };
+use indexmap::IndexSet;
 
 use crate::errors::TgError;
 
@@ -25,16 +26,25 @@ impl super::PostProcessor for NamingProcessor {
             tg,
             user_named: self.user_named,
         };
-        let mut acc = VisitCollector {
-            named_types: Default::default(),
-            path: vec![],
-        };
 
         let TypeNode::Object {
             data: root_data, ..
         } = &tg.types[0]
         else {
             panic!("first item must be root object")
+        };
+
+        let mut ref_counters = TypeRefCount {
+            counts: Default::default(),
+        };
+        for (_, &ty_id) in &root_data.properties {
+            collect_ref_info(&cx, &mut ref_counters, ty_id)?;
+        }
+
+        let mut acc = VisitCollector {
+            named_types: Default::default(),
+            path: vec![],
+            counts: ref_counters.counts,
         };
         for (key, &ty_id) in &root_data.properties {
             acc.path.push((
@@ -61,7 +71,33 @@ struct VisitContext<'a> {
 }
 struct VisitCollector {
     named_types: HashMap<u32, Rc<str>>,
+    counts: HashMap<u32, IndexSet<u32>>,
     path: Vec<(PathSegment, Rc<str>)>,
+}
+
+struct TypeRefCount {
+    pub counts: HashMap<u32, IndexSet<u32>>,
+}
+
+impl TypeRefCount {
+    pub fn new_hit(&mut self, id: u32, referer: u32) {
+        self.counts
+            .entry(id)
+            .and_modify(|counter| {
+                counter.insert(referer);
+            })
+            .or_insert(IndexSet::from([referer]));
+    }
+}
+
+impl VisitCollector {
+    pub fn has_more_than_one_referer(&self, id: u32) -> bool {
+        if let Some(referers) = self.counts.get(&id) {
+            return referers.len() > 1;
+        }
+
+        false
+    }
 }
 
 fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::Result<Rc<str>> {
@@ -215,14 +251,75 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
     };
 
     acc.named_types.insert(id, name.clone());
+
     Ok(name)
 }
 
+fn collect_ref_info(cx: &VisitContext, acc: &mut TypeRefCount, id: u32) -> anyhow::Result<()> {
+    let node = &cx.tg.types[id as usize];
+    match node {
+        TypeNode::Boolean { .. }
+        | TypeNode::Float { .. }
+        | TypeNode::Integer { .. }
+        | TypeNode::String { .. }
+        | TypeNode::File { .. }
+        | TypeNode::Any { .. } => {
+            // base case
+        }
+        TypeNode::Optional { data, .. } => {
+            acc.new_hit(data.item, id);
+            collect_ref_info(cx, acc, data.item)?;
+        }
+        TypeNode::Object { data, .. } => {
+            for (_, key_id) in &data.properties {
+                acc.new_hit(*key_id, id);
+                collect_ref_info(cx, acc, *key_id)?;
+            }
+        }
+        TypeNode::Function { data, .. } => {
+            acc.new_hit(data.input, id);
+            acc.new_hit(data.output, id);
+
+            collect_ref_info(cx, acc, data.input)?;
+            collect_ref_info(cx, acc, data.output)?;
+        }
+        TypeNode::List { data, .. } => {
+            acc.new_hit(data.items, id);
+            collect_ref_info(cx, acc, data.items)?;
+        }
+        TypeNode::Union { data, .. } => {
+            for variant in &data.any_of {
+                acc.new_hit(*variant, id);
+                collect_ref_info(cx, acc, *variant)?;
+            }
+        }
+        TypeNode::Either { data, .. } => {
+            for variant in &data.one_of {
+                acc.new_hit(*variant, id);
+                collect_ref_info(cx, acc, *variant)?;
+            }
+        }
+    };
+
+    Ok(())
+}
+
 fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str) -> Rc<str> {
+    let node = &cx.tg.types[id as usize];
     let name: Rc<str> = if cx.user_named.contains(&id) {
-        let node = &cx.tg.types[id as usize];
         node.base().title.clone().into()
+    } else if node.is_scalar() {
+        format!("scalar_{ty_name}").into()
     } else {
+        let use_if_ok = |default: String| {
+            if acc.has_more_than_one_referer(id) {
+                // Cannot be opinionated on the prefix path if shared (confusing)
+                format!("{ty_name}_shared_t{id}")
+            } else {
+                default
+            }
+        };
+
         let title;
         let mut last = acc.path.len();
         loop {
@@ -232,11 +329,11 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
                 // we don't include optional and list nodes in
                 // generated names (useless but also, they might be placeholders)
                 Edge::OptionalItem | Edge::ArrayItem => continue,
-                Edge::FunctionInput => format!("{last_name}_input"),
-                Edge::FunctionOutput => format!("{last_name}_output"),
-                Edge::ObjectProp(key) => format!("{last_name}_{key}_{ty_name}"),
+                Edge::FunctionInput => use_if_ok(format!("{last_name}_input")),
+                Edge::FunctionOutput => use_if_ok(format!("{last_name}_output")),
+                Edge::ObjectProp(key) => use_if_ok(format!("{last_name}_{key}_{ty_name}")),
                 Edge::EitherVariant(idx) | Edge::UnionVariant(idx) => {
-                    format!("{last_name}_t{idx}_{ty_name}")
+                    use_if_ok(format!("{last_name}_t{idx}_{ty_name}"))
                 }
             };
             break;
