@@ -1,5 +1,8 @@
-use serde::{Serialize, Deserialize};
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use super::core::TypeId;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReduceEntry {
@@ -49,11 +52,25 @@ pub trait Handler {
     fn add_auth(data: Auth) -> Result<u32, super::Error>;
     fn add_raw_auth(data: String) -> Result<u32, super::Error>;
     fn oauth2(service_name: String, scopes: String) -> Result<String, super::Error>;
-    fn oauth2_without_profiler(service_name: String, scopes: String) -> Result<String, super::Error>;
-    fn oauth2_with_extended_profiler(service_name: String, scopes: String, extension: String) -> Result<String, super::Error>;
-    fn oauth2_with_custom_profiler(service_name: String, scopes: String, profiler: TypeId) -> Result<String, super::Error>;
+    fn oauth2_without_profiler(
+        service_name: String,
+        scopes: String,
+    ) -> Result<String, super::Error>;
+    fn oauth2_with_extended_profiler(
+        service_name: String,
+        scopes: String,
+        extension: String,
+    ) -> Result<String, super::Error>;
+    fn oauth2_with_custom_profiler(
+        service_name: String,
+        scopes: String,
+        profiler: TypeId,
+    ) -> Result<String, super::Error>;
     fn gql_deploy_query(params: QueryDeployParams) -> Result<String, super::Error>;
     fn gql_remove_query(tg_name: Vec<String>) -> Result<String, super::Error>;
     fn metagen_exec(config: FdkConfig) -> Result<Vec<FdkOutput>, super::Error>;
-    fn metagen_write_files(items: Vec<FdkOutput>, typegraph_dir: String) -> Result<(), super::Error>;
+    fn metagen_write_files(
+        items: Vec<FdkOutput>,
+        typegraph_dir: String,
+    ) -> Result<(), super::Error>;
 }
