@@ -38,7 +38,7 @@ impl super::PostProcessor for NamingProcessor {
             counts: Default::default(),
         };
         for (_, &ty_id) in &root_data.properties {
-            collect_ref_info(&cx, &mut ref_counters, ty_id)?;
+            collect_ref_info(&cx, &mut ref_counters, ty_id, &mut HashSet::new())?;
         }
 
         let mut acc = VisitCollector {
@@ -80,20 +80,20 @@ struct TypeRefCount {
 }
 
 impl TypeRefCount {
-    pub fn new_hit(&mut self, id: u32, referer: u32) {
+    pub fn new_hit(&mut self, id: u32, referrer: u32) {
         self.counts
             .entry(id)
             .and_modify(|counter| {
-                counter.insert(referer);
+                counter.insert(referrer);
             })
-            .or_insert(IndexSet::from([referer]));
+            .or_insert(IndexSet::from([referrer]));
     }
 }
 
 impl VisitCollector {
-    pub fn has_more_than_one_referer(&self, id: u32) -> bool {
-        if let Some(referers) = self.counts.get(&id) {
-            return referers.len() > 1;
+    pub fn has_more_than_one_referrer(&self, id: u32) -> bool {
+        if let Some(referrers) = self.counts.get(&id) {
+            return referrers.len() > 1;
         }
 
         false
@@ -255,7 +255,16 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
     Ok(name)
 }
 
-fn collect_ref_info(cx: &VisitContext, acc: &mut TypeRefCount, id: u32) -> anyhow::Result<()> {
+fn collect_ref_info(
+    cx: &VisitContext,
+    acc: &mut TypeRefCount,
+    id: u32,
+    visited: &mut HashSet<u32>,
+) -> anyhow::Result<()> {
+    if !visited.insert(id) {
+        return Ok(());
+    }
+
     let node = &cx.tg.types[id as usize];
     match node {
         TypeNode::Boolean { .. }
@@ -268,38 +277,40 @@ fn collect_ref_info(cx: &VisitContext, acc: &mut TypeRefCount, id: u32) -> anyho
         }
         TypeNode::Optional { data, .. } => {
             acc.new_hit(data.item, id);
-            collect_ref_info(cx, acc, data.item)?;
+            collect_ref_info(cx, acc, data.item, visited)?;
         }
         TypeNode::Object { data, .. } => {
             for (_, key_id) in &data.properties {
                 acc.new_hit(*key_id, id);
-                collect_ref_info(cx, acc, *key_id)?;
+                collect_ref_info(cx, acc, *key_id, visited)?;
             }
         }
         TypeNode::Function { data, .. } => {
             acc.new_hit(data.input, id);
             acc.new_hit(data.output, id);
 
-            collect_ref_info(cx, acc, data.input)?;
-            collect_ref_info(cx, acc, data.output)?;
+            collect_ref_info(cx, acc, data.input, visited)?;
+            collect_ref_info(cx, acc, data.output, visited)?;
         }
         TypeNode::List { data, .. } => {
             acc.new_hit(data.items, id);
-            collect_ref_info(cx, acc, data.items)?;
+            collect_ref_info(cx, acc, data.items, visited)?;
         }
         TypeNode::Union { data, .. } => {
             for variant in &data.any_of {
                 acc.new_hit(*variant, id);
-                collect_ref_info(cx, acc, *variant)?;
+                collect_ref_info(cx, acc, *variant, visited)?;
             }
         }
         TypeNode::Either { data, .. } => {
             for variant in &data.one_of {
                 acc.new_hit(*variant, id);
-                collect_ref_info(cx, acc, *variant)?;
+                collect_ref_info(cx, acc, *variant, visited)?;
             }
         }
     };
+
+    visited.remove(&id);
 
     Ok(())
 }
@@ -312,7 +323,7 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
         format!("scalar_{ty_name}").into()
     } else {
         let use_if_ok = |default: String| {
-            if acc.has_more_than_one_referer(id) {
+            if acc.has_more_than_one_referrer(id) {
                 // Cannot be opinionated on the prefix path if shared (confusing)
                 format!("{ty_name}_shared_t{id}")
             } else {
