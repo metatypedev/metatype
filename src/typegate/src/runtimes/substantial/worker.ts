@@ -4,12 +4,12 @@
 import { errorToString } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
 import { toFileUrl } from "@std/path/to-file-url";
-import { Err, Ok, WorkflowResult } from "./types.ts";
+import { Err, Ok, WorkflowMessage, WorkflowResult } from "./types.ts";
 
 let runCtx: Context | undefined;
 
 self.onmessage = async function (event) {
-  const { type, data } = event.data as { type: string; data: any };
+  const { type, data } = event.data as WorkflowMessage;
   switch (type) {
     case "START": {
       const { modulePath, functionName, run, schedule, internal } = data;

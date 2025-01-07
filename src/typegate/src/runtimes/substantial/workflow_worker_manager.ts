@@ -8,7 +8,7 @@ import {
   DenoWorker,
   TaskId,
 } from "../utils/worker_manager.ts";
-import { Run, WorkerEventHandler } from "./types.ts";
+import { Run, WorkerEventHandler, WorkflowMessage } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
 
@@ -16,17 +16,13 @@ export type WorkflowSpec = {
   modulePath: string;
 };
 
-type Message = {
-  type: "START";
-  data: unknown;
-};
-
 /**
  * - A workflow file can contain multiple workflows (functions)
  * - A workflow can be run as many times as a START event is triggered (with a run_id)
  * - The completion of a workflow is run async, it is entirely up to the event listeners to act upon the results
  */
-export class WorkerManager extends BaseWorkerManager<WorkflowSpec, Message> {
+export class WorkerManager
+  extends BaseWorkerManager<WorkflowSpec, WorkflowMessage> {
   constructor() {
     super((taskId: TaskId) => {
       return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
@@ -93,7 +89,7 @@ export class WorkerManager extends BaseWorkerManager<WorkflowSpec, Message> {
     worker.listen(handlerFn);
   }
 
-  sendMessage(runId: TaskId, msg: Message) {
+  sendMessage(runId: TaskId, msg: WorkflowMessage) {
     const { worker } = this.getTask(runId);
     worker.send(msg);
     logger.info(`trigger ${msg.type} for ${runId}`);

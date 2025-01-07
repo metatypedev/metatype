@@ -2,12 +2,24 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Operation, Run } from "../../../engine/runtime.js";
+import { TaskContext } from "../deno/shared_types.ts";
 export type {
   Backend,
   Operation,
   OperationEvent,
   Run,
 } from "../../../engine/runtime.js";
+
+export type WorkflowMessage = {
+  type: "START";
+  data: {
+    modulePath: string;
+    functionName: string;
+    run: Run;
+    schedule: string;
+    internal: TaskContext;
+  };
+};
 
 export type WorkerEventHandler = (message: Result<unknown>) => Promise<void>;
 
