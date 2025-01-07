@@ -13,25 +13,29 @@ const Message = {
 
 export type PushFailure =
   | {
-      reason: "DatabaseResetRequired";
-      message: string;
-      runtimeName: string;
-    }
+    reason: "DatabaseResetRequired";
+    message: string;
+    runtimeName: string;
+  }
   | {
-      reason: "NullConstraintViolation";
-      message: string;
-      runtimeName: string;
-      column: string;
-      table: string;
-    }
+    reason: "NullConstraintViolation";
+    message: string;
+    runtimeName: string;
+    column: string;
+    table: string;
+  }
   | {
-      reason: "DenoImportError";
-      message: string;
-    }
+    reason: "DenoImportError";
+    message: string;
+  }
   | {
-      reason: "Unknown";
-      message: string;
-    };
+    reason: "ValidationError";
+    message: string;
+  }
+  | {
+    reason: "Unknown";
+    message: string;
+  };
 
 export class PushResponse {
   tgName?: string;

@@ -110,6 +110,12 @@ function _selectionToNodeSet(
               "unreachable: union/either NodeMetas can't have subnodes",
             );
           }
+
+          // skip non explicit composite selection when using selectAll
+          if (subSelections?._ === "selectAll" && !instanceSelection) {
+            continue;
+          }
+
           node.subNodes = _selectionToNodeSet(
             // assume it's a Selection. If it's an argument
             // object, mismatch between the node desc should hopefully
@@ -968,6 +974,42 @@ const nodeMetas = {
       },
     };
   },
+  RootNestedCompositeFnOutputCompositeStructNestedStruct(): NodeMeta {
+    return {
+      subNodes: [
+        ["inner", nodeMetas.scalar],
+      ],
+    };
+  },
+  RootNestedCompositeFnOutputCompositeStruct(): NodeMeta {
+    return {
+      subNodes: [
+        ["value", nodeMetas.scalar],
+        ["nested", nodeMetas.RootNestedCompositeFnOutputCompositeStructNestedStruct],
+      ],
+    };
+  },
+  RootNestedCompositeFnOutputListStruct(): NodeMeta {
+    return {
+      subNodes: [
+        ["value", nodeMetas.scalar],
+      ],
+    };
+  },
+  RootNestedCompositeFnOutput(): NodeMeta {
+    return {
+      subNodes: [
+        ["scalar", nodeMetas.scalar],
+        ["composite", nodeMetas.RootNestedCompositeFnOutputCompositeStruct],
+        ["list", nodeMetas.RootNestedCompositeFnOutputListStruct],
+      ],
+    };
+  },
+  RootNestedCompositeFn(): NodeMeta {
+    return {
+      ...nodeMetas.RootNestedCompositeFnOutput(),
+    };
+  },
 };
 export type UserIdStringUuid = string;
 export type PostSlugString = string;
@@ -998,6 +1040,22 @@ export type RootMixedUnionFnOutput =
   | (User)
   | (PostSlugString)
   | (RootScalarUnionFnOutputT1Integer);
+export type RootNestedCompositeFnOutputCompositeStructNestedStruct = {
+  inner: RootScalarUnionFnOutputT1Integer;
+};
+export type RootNestedCompositeFnOutputCompositeStruct = {
+  value: RootScalarUnionFnOutputT1Integer;
+  nested: RootNestedCompositeFnOutputCompositeStructNestedStruct;
+};
+export type RootNestedCompositeFnOutputListStruct = {
+  value: RootScalarUnionFnOutputT1Integer;
+};
+export type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Array<RootNestedCompositeFnOutputListStruct>;
+export type RootNestedCompositeFnOutput = {
+  scalar: RootScalarUnionFnOutputT1Integer;
+  composite: RootNestedCompositeFnOutputCompositeStruct;
+  list: RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList;
+};
 
 export type PostSelections = {
   _?: SelectionFlags;
@@ -1020,6 +1078,25 @@ export type RootMixedUnionFnOutputSelections = {
   _?: SelectionFlags;
   "post"?: CompositeSelectNoArgs<PostSelections>;
   "user"?: CompositeSelectNoArgs<UserSelections>;
+};
+export type RootNestedCompositeFnOutputCompositeStructNestedStructSelections = {
+  _?: SelectionFlags;
+  inner?: ScalarSelectNoArgs;
+};
+export type RootNestedCompositeFnOutputCompositeStructSelections = {
+  _?: SelectionFlags;
+  value?: ScalarSelectNoArgs;
+  nested?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructNestedStructSelections>;
+};
+export type RootNestedCompositeFnOutputListStructSelections = {
+  _?: SelectionFlags;
+  value?: ScalarSelectNoArgs;
+};
+export type RootNestedCompositeFnOutputSelections = {
+  _?: SelectionFlags;
+  scalar?: ScalarSelectNoArgs;
+  composite?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructSelections>;
+  list?: CompositeSelectNoArgs<RootNestedCompositeFnOutputListStructSelections>;
 };
 
 export class QueryGraph extends _QueryGraphBase {
@@ -1103,5 +1180,13 @@ export class QueryGraph extends _QueryGraphBase {
       "$q",
     )[0];
     return new QueryNode(inner) as QueryNode<RootMixedUnionFnOutput>;
+  }
+  nestedComposite(select: RootNestedCompositeFnOutputSelections) {
+    const inner = _selectionToNodeSet(
+      { "nestedComposite": select },
+      [["nestedComposite", nodeMetas.RootNestedCompositeFn]],
+      "$q",
+    )[0];
+    return new QueryNode(inner) as QueryNode<RootNestedCompositeFnOutput>;
   }
 }
