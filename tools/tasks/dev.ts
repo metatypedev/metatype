@@ -51,12 +51,12 @@ export default {
       }
 
       if (on.size > 0) {
-        await $.raw`${DOCKER_CMD}-compose ${[...on].flatMap((file) => [
+        await $.raw`${DOCKER_CMD} compose ${[...on].flatMap((file) => [
           "-f",
           file,
         ])} up -d --remove-orphans`;
       } else {
-        await $.raw`${DOCKER_CMD}-compose ${Object.values(files).flatMap(
+        await $.raw`${DOCKER_CMD} compose ${Object.values(files).flatMap(
           (file) => ["-f", file],
         )} down --remove-orphans --volumes`;
       }

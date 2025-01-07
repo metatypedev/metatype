@@ -81,9 +81,7 @@ export class SubstantialRuntime extends Runtime {
   }
 
   advancedFilters(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "advanced-filters"
-    });
+    return this._genericSubstantialFunc("advanced_filters");
   }
 
   #internalLinkParentChild(): Func<Typedef, Typedef, Materializer> {
