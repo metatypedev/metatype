@@ -8,106 +8,25 @@ import {
   DenoWorker,
   TaskId,
 } from "../utils/worker_manager.ts";
-import { Run, WorkerEvent, WorkerEventHandler } from "./types.ts";
+import { Run, WorkerEventHandler } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
 
-// export type WorkerRecord = {
-//   worker: BaseWorker;
-//   modulePath: string;
-// };
 export type WorkflowSpec = {
   modulePath: string;
 };
-// export type RunId = string;
-// export type WorkflowName = string;
 
-// export class WorkflowRecorder {
-//   workflowRuns: Map<WorkflowName, Set<RunId>> = new Map();
-//   workers: Map<RunId, WorkerRecord> = new Map();
-//   startedAtRecords: Map<RunId, Date> = new Map();
-//
-//   getRegisteredWorkflowNames() {
-//     return Array.from(this.workflowRuns.keys());
-//   }
-//
-//   hasRun(runId: RunId) {
-//     return this.workers.has(runId);
-//   }
-//
-//   getWorkerRecord(runId: RunId) {
-//     const record = this.workers.get(runId);
-//     if (!record) {
-//       throw new Error(`Run "${runId}" does not exist or has been completed`);
-//     }
-//
-//     return record!;
-//   }
-//
-//   addWorker(
-//     name: WorkflowName,
-//     runId: RunId,
-//     worker: WorkerRecord,
-//     startedAt: Date,
-//   ) {
-//     if (!this.workflowRuns.has(name)) {
-//       this.workflowRuns.set(name, new Set());
-//     }
-//
-//     this.workflowRuns.get(name)!.add(runId);
-//     this.workers.set(runId, worker);
-//     if (!this.startedAtRecords.has(runId)) {
-//       this.startedAtRecords.set(runId, startedAt);
-//     }
-//   }
-//
-//   destroyAllWorkers() {
-//     for (const name of this.getRegisteredWorkflowNames()) {
-//       this.destroyRelatedWorkers(name);
-//     }
-//   }
-//
-//   destroyRelatedWorkers(name: WorkflowName) {
-//     if (this.workflowRuns.has(name)) {
-//       const runIds = this.workflowRuns.get(name)!.values();
-//       for (const runId of runIds) {
-//         this.destroyWorker(name, runId);
-//       }
-//       return true;
-//     }
-//     return false;
-//   }
-//
-//   destroyWorker(name: WorkflowName, runId: RunId) {
-//     const record = this.workers.get(runId);
-//     if (this.workflowRuns.has(name)) {
-//       if (!record) {
-//         logger.warn(
-//           `"${runId}" associated with "${name}" does not exist or has been already destroyed`,
-//         );
-//         return false;
-//       }
-//
-//       record!.worker.destroy(); // !
-//
-//       this.workflowRuns.get(name)!.delete(runId);
-//       this.workers.delete(runId);
-//
-//       // Let it alive throughout typegate lifetime
-//       // x this.startedAtRecords.delete(runId);
-//       return true;
-//     }
-//
-//     return false;
-//   }
-// }
+type Message = {
+  type: "START";
+  data: unknown;
+};
 
 /**
  * - A workflow file can contain multiple workflows (functions)
  * - A workflow can be run as many times as a START event is triggered (with a run_id)
  * - The completion of a workflow is run async, it is entirely up to the event listeners to act upon the results
  */
-export class WorkerManager extends BaseWorkerManager<WorkflowSpec> {
+export class WorkerManager extends BaseWorkerManager<WorkflowSpec, Message> {
   constructor() {
     super((taskId: TaskId) => {
       return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
@@ -174,10 +93,10 @@ export class WorkerManager extends BaseWorkerManager<WorkflowSpec> {
     worker.listen(handlerFn);
   }
 
-  trigger(type: WorkerEvent, runId: TaskId, data: unknown) {
+  sendMessage(runId: TaskId, msg: Message) {
     const { worker } = this.getTask(runId);
-    worker.trigger(type, data);
-    logger.info(`trigger ${type} for ${runId}`);
+    worker.send(msg);
+    logger.info(`trigger ${msg.type} for ${runId}`);
   }
 
   triggerStart(
@@ -189,12 +108,15 @@ export class WorkerManager extends BaseWorkerManager<WorkflowSpec> {
     internalTCtx: TaskContext,
   ) {
     this.#createWorker(name, workflowModPath, runId);
-    this.trigger("START", runId, {
-      modulePath: workflowModPath,
-      functionName: name,
-      run: storedRun,
-      schedule,
-      internal: internalTCtx,
+    this.sendMessage(runId, {
+      type: "START",
+      data: {
+        modulePath: workflowModPath,
+        functionName: name,
+        run: storedRun,
+        schedule,
+        internal: internalTCtx,
+      },
     });
   }
 }

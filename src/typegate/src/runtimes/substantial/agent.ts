@@ -11,13 +11,7 @@ import {
 import { getLoggerByAddress, Logger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import { TaskId } from "../utils/worker_manager.ts";
-import {
-  appendIfOngoing,
-  Interrupt,
-  Result,
-  WorkerData,
-  WorkflowResult,
-} from "./types.ts";
+import { appendIfOngoing, Interrupt, Result, WorkflowResult } from "./types.ts";
 import { WorkerManager } from "./workflow_worker_manager.ts";
 
 export interface StdKwargs {
@@ -297,7 +291,8 @@ export class Agent {
         return;
       }
 
-      const answer = result.payload as WorkerData;
+      // TODO generic event type on BaseWorker
+      const answer = result.payload as { type: string; data: unknown };
       this.logger.info(
         `"${runId}" answered: type ${JSON.stringify(answer.type)}`,
       );

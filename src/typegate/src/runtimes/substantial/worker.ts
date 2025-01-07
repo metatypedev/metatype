@@ -4,12 +4,12 @@
 import { errorToString } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
 import { toFileUrl } from "@std/path/to-file-url";
-import { Err, Msg, Ok, WorkerData, WorkflowResult } from "./types.ts";
+import { Err, Ok, WorkflowResult } from "./types.ts";
 
 let runCtx: Context | undefined;
 
 self.onmessage = async function (event) {
-  const { type, data } = event.data as WorkerData;
+  const { type, data } = event.data as { type: string; data: any };
   switch (type) {
     case "START": {
       const { modulePath, functionName, run, schedule, internal } = data;
@@ -32,24 +32,24 @@ self.onmessage = async function (event) {
         .then((wfResult: unknown) => {
           self.postMessage(
             Ok(
-              Msg(
+              {
                 type,
-                {
+                data: {
                   kind: "SUCCESS",
                   result: wfResult,
                   run: runCtx!.getRun(),
                   schedule,
                 } satisfies WorkflowResult,
-              ),
+              },
             ),
           );
         })
         .catch((wfException: unknown) => {
           self.postMessage(
             Ok(
-              Msg(
+              {
                 type,
-                {
+                data: {
                   kind: "FAIL",
                   result: errorToString(wfException),
                   exception: wfException instanceof Error
@@ -58,13 +58,13 @@ self.onmessage = async function (event) {
                   run: runCtx!.getRun(),
                   schedule,
                 } satisfies WorkflowResult,
-              ),
+              },
             ),
           );
         });
       break;
     }
     default:
-      self.postMessage(Err(Msg(type, `Unknown command ${type}`)));
+      self.postMessage(Err({ type, data: `Unknown command ${type}` }));
   }
 };

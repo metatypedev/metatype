@@ -28,18 +28,18 @@ export type WorkerData = {
   data: any;
 };
 
-export function Msg(type: WorkerEvent, data: unknown): WorkerData {
-  return { type, data };
+export interface BaseMessage {
+  type: string;
 }
 
-export abstract class BaseWorker {
+export abstract class BaseWorker<M extends BaseMessage> {
   abstract listen(handlerFn: WorkerEventHandler): void;
-  abstract trigger(type: WorkerEvent, data: unknown): void;
+  abstract send(msg: M): void;
   abstract destroy(): void;
   abstract get id(): TaskId;
 }
 
-export class DenoWorker extends BaseWorker {
+export class DenoWorker<M extends BaseMessage> extends BaseWorker<M> {
   #worker: Worker;
   #taskId: TaskId;
   constructor(taskId: TaskId, workerPath: string) {
@@ -78,8 +78,8 @@ export class DenoWorker extends BaseWorker {
     this.#worker.onerror = /*async*/ (event) => handlerFn(Err(event));
   }
 
-  trigger(type: WorkerEvent, data: unknown) {
-    this.#worker.postMessage(Msg(type, data));
+  send(msg: M) {
+    this.#worker.postMessage(msg);
   }
 
   destroy() {
@@ -91,16 +91,16 @@ export class DenoWorker extends BaseWorker {
   }
 }
 
-export class BaseWorkerManager<T> {
+export class BaseWorkerManager<T, M extends BaseMessage> {
   #activeTasks: Map<TaskId, {
-    worker: BaseWorker;
+    worker: BaseWorker<M>;
     taskSpec: T;
   }> = new Map();
   #tasksByName: Map<string, Set<TaskId>> = new Map();
   #startedAt: Map<TaskId, Date> = new Map();
 
-  #workerFactory: (taskId: TaskId) => BaseWorker;
-  protected constructor(workerFactory: (taskId: TaskId) => BaseWorker) {
+  #workerFactory: (taskId: TaskId) => BaseWorker<M>;
+  protected constructor(workerFactory: (taskId: TaskId) => BaseWorker<M>) {
     this.#workerFactory = workerFactory;
   }
 
@@ -141,7 +141,7 @@ export class BaseWorkerManager<T> {
   protected addWorker(
     name: string,
     taskId: TaskId,
-    worker: BaseWorker,
+    worker: BaseWorker<M>,
     taskSpec: T,
     startedAt: Date,
   ) {

@@ -9,15 +9,6 @@ export type {
   Run,
 } from "../../../engine/runtime.js";
 
-export type AnyString = string & Record<string | number | symbol, never>;
-
-export type WorkerEvent = "START" | AnyString;
-
-export type WorkerData = {
-  type: WorkerEvent;
-  data: any;
-};
-
 export type WorkerEventHandler = (message: Result<unknown>) => Promise<void>;
 
 export type Result<T> = {
@@ -31,10 +22,6 @@ export function Ok<R>(payload: R): Result<R> {
 
 export function Err<E>(payload: E): Result<E> {
   return { error: true, payload };
-}
-
-export function Msg(type: WorkerEvent, data: unknown): WorkerData {
-  return { type, data };
 }
 
 export type ExecutionResultKind = "SUCCESS" | "FAIL";
