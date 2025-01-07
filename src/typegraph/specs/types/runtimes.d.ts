@@ -203,7 +203,8 @@ type SubstantialOperationData =
   | "resources"
   | { results: TypeId }
   | "results_raw"
-  | "internal_link_parent_child";
+  | "internal_link_parent_child"
+  | "advanced_filters";
 
 type KvRuntimeData = {
   url: string;

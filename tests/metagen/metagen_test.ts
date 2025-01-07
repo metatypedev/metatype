@@ -593,6 +593,24 @@ Meta.test(
       compositeNoArgs: postSchema,
       compositeArgs: postSchema,
     });
+    const expectedSchemaC = zod.object({
+      scalarOnly: zod.object({ scalar: zod.number() }),
+      withStruct: zod.object({
+        scalar: zod.number(),
+        composite: zod.object({ value: zod.number() }),
+      }),
+      withStructNested: zod.object({
+        scalar: zod.number(),
+        composite: zod.object({
+          value: zod.number(),
+          nested: zod.object({ inner: zod.number() }),
+        }),
+      }),
+      withList: zod.object({
+        scalar: zod.number(),
+        list: zod.array(zod.object({ value: zod.number() })),
+      }),
+    });
     const expectedSchema = zod.tuple([
       expectedSchemaQ,
       expectedSchemaQ,
@@ -605,6 +623,7 @@ Meta.test(
         compositeUnion2: zod.object({}),
         mixedUnion: zod.string(),
       }),
+      expectedSchemaC,
     ]);
     const cases = [
       {
@@ -657,26 +676,28 @@ Meta.test(
     assertEquals(res.code, 0);
 
     const expectedSchemaU1 = zod.object({
-      upload: zod.boolean(),
+      upload: zod.literal(true),
+    });
+    const expectedSchemaU2 = zod.object({
+      uploadFirst: zod.literal(true),
+      uploadSecond: zod.literal(true),
     });
     const expectedSchemaUn = zod.object({
-      uploadMany: zod.boolean(),
+      uploadMany: zod.literal(true),
     });
-
-    const expectedSchema = zod.tuple([
-      expectedSchemaU1,
-      // expectedSchemaU1,
-      expectedSchemaUn,
-      expectedSchemaU1,
-      expectedSchemaUn,
-    ]);
 
     const cases = [
       {
         name: "client_rs_upload",
         skip: false,
         command: $`cargo run`.cwd(join(scriptsPath, "rs_upload")),
-        expected: expectedSchema,
+        expected: zod.tuple([
+          expectedSchemaU1,
+          // expectedSchemaU1,
+          expectedSchemaUn,
+          expectedSchemaU1,
+          expectedSchemaUn,
+        ]),
       },
       {
         name: "client_py_upload",
@@ -684,7 +705,23 @@ Meta.test(
         command: $`bash -c "python main.py"`.cwd(
           join(scriptsPath, "py_upload"),
         ),
-        expected: zod.tuple([expectedSchemaU1, expectedSchemaUn]),
+        expected: zod.tuple([
+          expectedSchemaU1,
+          expectedSchemaUn,
+          expectedSchemaU2,
+        ]),
+      },
+      {
+        name: "client_ts_upload",
+        skip: false,
+        command: $`bash -c "deno run -A main.ts"`.cwd(
+          join(scriptsPath, "ts_upload"),
+        ),
+        expected: zod.tuple([
+          expectedSchemaU1,
+          expectedSchemaUn,
+          expectedSchemaU2,
+        ]),
       },
     ];
 

@@ -14,18 +14,16 @@ use crate::{
     errors,
     sdk::core::TypeEither,
     typegraph::TypegraphContext,
-    types::{Either, ExtendedTypeDef, FindAttribute as _, TypeDefData, TypeId},
+    types::{Either, ExtendedTypeDef, TypeDefData, TypeId},
 };
 
 impl TypeConversion for Either {
     fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::Either {
             base: BaseBuilderInit {
-                ctx,
                 base_name: "either",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .build()?,

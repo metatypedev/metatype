@@ -4,10 +4,11 @@
 use crate::conversion::hash::Hashable;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::types::{
-    AsTypeDefEx as _, ExtendedTypeDef, FindAttribute as _, IdKind, Struct, TypeDefData, TypeId,
+    AsTypeDefEx as _, ExtendedTypeDef, FindAttribute as _, IdKind, PolicySpec, Struct, TypeDef,
+    TypeDefData, TypeId,
 };
 use crate::{errors, sdk::core::TypeStruct, typegraph::TypegraphContext};
-use common::typegraph::{ObjectTypeData, TypeNode};
+use common::typegraph::{ObjectTypeData, PolicyIndices, TypeNode};
 use errors::Result;
 use indexmap::IndexMap;
 use std::hash::Hash as _;
@@ -63,11 +64,9 @@ impl TypeConversion for Struct {
     fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::Object {
             base: BaseBuilderInit {
-                ctx,
                 base_name: "object",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())
@@ -81,6 +80,7 @@ impl TypeConversion for Struct {
                     .collect::<Result<IndexMap<_, _>>>()?,
                 id: self.data.find_id_fields()?,
                 required: Vec::new(),
+                policies: self.data.collect_policies(ctx)?,
             },
         })
     }
@@ -125,4 +125,66 @@ impl TypeStruct {
             .iter()
             .find_map(|(n, t)| if n == name { Some(t.into()) } else { None })
     }
+}
+
+impl TypeStruct {
+    fn collect_policies(
+        &self,
+        ctx: &mut TypegraphContext,
+    ) -> Result<IndexMap<String, Vec<PolicyIndices>>> {
+        let mut res = IndexMap::new();
+        for (name, tpe_id) in &self.props {
+            let mut chain = vec![];
+            extend_policy_chain(&mut chain, TypeId(*tpe_id))?;
+
+            res.insert(name.clone(), ctx.register_policy_chain(&chain)?);
+        }
+        Ok(res)
+    }
+}
+
+pub fn extend_policy_chain(chain: &mut Vec<PolicySpec>, type_id: TypeId) -> Result<()> {
+    let xdef = type_id.as_xdef()?;
+    let policies = xdef.attributes.find_policy().unwrap_or(&[]);
+    chain.extend(policies.iter().cloned());
+
+    match xdef.type_def {
+        TypeDef::Optional(inner) => {
+            extend_policy_chain(chain, TypeId(inner.data.of))?;
+        }
+        TypeDef::List(inner) => {
+            extend_policy_chain(chain, TypeId(inner.data.of))?;
+        }
+        TypeDef::Union(inner) => {
+            for tpe_id in inner.data.variants.iter() {
+                let tpe = TypeId(*tpe_id);
+                if !tpe.is_struct()? {
+                    extend_policy_chain(chain, tpe)?;
+                }
+            }
+        }
+        TypeDef::Either(inner) => {
+            for tpe_id in inner.data.variants.iter() {
+                let tpe = TypeId(*tpe_id);
+                if !tpe.is_struct()? {
+                    extend_policy_chain(chain, tpe)?;
+                }
+            }
+        }
+        TypeDef::Func(inner) => {
+            extend_policy_chain(chain, TypeId(inner.data.out))?;
+        }
+        TypeDef::Struct(_) => {
+            // noop
+            // struct is the boundary
+        }
+        // scalar types
+        TypeDef::Integer(_)
+        | TypeDef::Float(_)
+        | TypeDef::Boolean(_)
+        | TypeDef::String(_)
+        | TypeDef::File(_) => {}
+    }
+
+    Ok(())
 }

@@ -55,6 +55,7 @@ pub fn test_typegraph_2() -> Typegraph {
             TypeNode::Object {
                 data: ObjectTypeData {
                     properties: Default::default(),
+                    policies: Default::default(),
                     id: vec![],
                     required: vec![],
                 },
@@ -80,6 +81,7 @@ pub fn test_typegraph_2() -> Typegraph {
                     input: 1,
                     output: 1,
                     injections: Default::default(),
+                    outjections: Default::default(),
                     runtime_config: Default::default(),
                     rate_calls: false,
                     rate_weight: None,
@@ -98,7 +100,6 @@ pub fn test_typegraph_2() -> Typegraph {
 pub fn default_type_node_base() -> TypeNodeBase {
     TypeNodeBase {
         title: String::new(),
-        policies: vec![],
         description: None,
         enumeration: None,
     }

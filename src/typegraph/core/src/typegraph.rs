@@ -5,6 +5,7 @@ use crate::conversion::hash::Hasher;
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::TypeConversion as _;
 use crate::global_store::SavedState;
+use crate::typedef::struct_::extend_policy_chain;
 use crate::types::{
     AsTypeDefEx as _, FindAttribute as _, PolicySpec, TypeDef, TypeDefExt, TypeId, WithPolicy,
 };
@@ -51,7 +52,7 @@ struct RuntimeContexts {
 pub struct TypegraphContext {
     name: String,
     path: Option<Rc<Path>>,
-    meta: TypeMeta,
+    pub(crate) meta: TypeMeta,
     types: Vec<Option<TypeNode>>,
     runtimes: Vec<TGRuntime>,
     materializers: Vec<Option<Materializer>>,
@@ -113,6 +114,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             prefix: params.prefix,
             rate: params.rate.map(|v| v.into()),
             secrets: vec![],
+            outjection_secrets: vec![],
             random_seed: Default::default(),
             artifacts: Default::default(),
         },
@@ -128,11 +130,11 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
         base: TypeNodeBase {
             description: None,
             enumeration: None,
-            policies: Default::default(),
             title: params.name,
         },
         data: ObjectTypeData {
             properties: IndexMap::new(),
+            policies: Default::default(),
             id: vec![],
             required: vec![],
         },
@@ -319,9 +321,16 @@ pub fn expose(
                     return Err(errors::duplicate_export_name(&key));
                 }
                 ensure_valid_export(key.clone(), type_id)?;
+                let mut policy_chain = vec![];
+                extend_policy_chain(&mut policy_chain, type_id)?;
 
                 let type_idx = ctx.register_type(type_id)?;
                 root_data.properties.insert(key.clone(), type_idx.into());
+                if !policy_chain.is_empty() {
+                    root_data
+                        .policies
+                        .insert(key.clone(), ctx.register_policy_chain(&policy_chain)?);
+                }
                 root_data.required.push(key);
                 Ok(())
             })
@@ -347,6 +356,7 @@ impl TypegraphContext {
             let xdef = type_id.as_xdef()?;
             xdef.hash_type(&mut hasher, self)?;
             let hash = hasher.finish();
+            // crate::logger::warning!("done hashing {:?}: {hash}", xdef.name);
             self.mapping.types_to_hash.insert(type_id.into(), hash);
             Ok(hash)
         }

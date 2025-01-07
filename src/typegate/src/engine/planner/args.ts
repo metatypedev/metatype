@@ -29,6 +29,7 @@ import type {
   FunctionNode,
   Injection,
   InjectionNode,
+  PolicyIndices,
 } from "../../typegraph/types.ts";
 
 import { getChildTypes, visitTypes } from "../../typegraph/visitor.ts";
@@ -43,6 +44,7 @@ import {
 import { QueryFunction as JsonPathQuery } from "../../libs/jsonpath.ts";
 import { getInjection } from "../../typegraph/utils.ts";
 import { GeneratorNode } from "../../runtimes/random.ts";
+import DynamicInjection from "../injection/dynamic.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -81,6 +83,7 @@ interface CollectNode {
   path: string[];
   astNode: ast.ArgumentNode | ast.ObjectFieldNode | undefined;
   typeIdx: number;
+  policies: PolicyIndices[];
 }
 
 interface CollectedArgs {
@@ -104,7 +107,7 @@ export function collectArgs(
     stageId,
     effect,
     parentProps,
-    injectionTree,
+    injectionTree ?? {},
   );
   const argTypeNode = typegraph.type(typeIdx, Type.OBJECT);
   for (const argName of Object.keys(astNodes)) {
@@ -119,6 +122,7 @@ export function collectArgs(
       path: [argName],
       astNode: astNodes[argName],
       typeIdx: argTypeIdx,
+      policies: argTypeNode.policies?.[argName] ?? [],
     });
   }
 
@@ -168,11 +172,6 @@ export function collectArgs(
     policies,
   };
 }
-
-const GENERATORS = {
-  "now": () => new Date().toISOString(),
-  // "uuid": () =>
-} as const;
 
 interface Dependencies {
   context: Set<string>;
@@ -302,7 +301,7 @@ class ArgumentCollector {
 
     const typ: TypeNode = this.tg.type(typeIdx);
 
-    this.addPoliciesFrom(typeIdx);
+    this.addPoliciesFrom(typeIdx, node.policies);
 
     const injection = this.#getInjection(node.path);
     if (injection != null) {
@@ -323,7 +322,6 @@ class ArgumentCollector {
     // try to get a default value for it, else throw an error
     if (astNode == null) {
       if (typ.type === Type.OPTIONAL) {
-        this.addPoliciesFrom(typ.item);
         const itemType = this.tg.type(typ.item);
         const { default_value: defaultValue } = typ;
         if (defaultValue != null) {
@@ -336,6 +334,7 @@ class ArgumentCollector {
                 this.collectDefaults(
                   itemType.properties,
                   node.path,
+                  itemType.policies ?? {},
                 ),
                 true,
               );
@@ -353,6 +352,7 @@ class ArgumentCollector {
                     this.collectDefaults(
                       variantType.properties,
                       node.path,
+                      variantType.policies ?? {},
                     ),
                     true,
                   );
@@ -376,6 +376,7 @@ class ArgumentCollector {
                   compute = this.collectDefaults(
                     variantType.properties,
                     node.path,
+                    variantType.policies ?? {},
                   );
                   break;
                 } catch (_e) {
@@ -394,7 +395,7 @@ class ArgumentCollector {
 
       if (typ.type === Type.OBJECT) {
         const props = typ.properties;
-        return this.collectDefaults(props, node.path);
+        return this.collectDefaults(props, node.path, typ.policies ?? {});
       }
 
       throw new MandatoryArgumentError(this.currentNodeDetails);
@@ -693,12 +694,14 @@ class ArgumentCollector {
   private collectDefaults(
     props: Record<string, number>,
     path: string[],
+    policies: Record<string, PolicyIndices[]>,
   ): ComputeArg<Record<string, unknown>> {
     const computes: Record<string, ComputeArg> = {};
 
     for (const [name, idx] of Object.entries(props)) {
       path.push(name);
       computes[name] = this.collectDefault(idx, path);
+      this.addPoliciesFrom(idx, policies[name] ?? []);
       path.pop();
     }
 
@@ -727,7 +730,6 @@ class ArgumentCollector {
     path: string[],
   ): ComputeArg {
     const typ = this.tg.type(typeIdx);
-    this.addPoliciesFrom(typeIdx);
 
     const injection = this.#getInjection(path);
     if (injection != null) {
@@ -741,13 +743,12 @@ class ArgumentCollector {
 
     switch (typ.type) {
       case Type.OPTIONAL: {
-        this.addPoliciesFrom(typ.item);
         const { default_value: defaultValue = null } = typ;
         return () => defaultValue;
       }
 
       case Type.OBJECT: {
-        return this.collectDefaults(typ.properties, path);
+        return this.collectDefaults(typ.properties, path, typ.policies ?? {});
       }
 
       default:
@@ -760,8 +761,12 @@ class ArgumentCollector {
     typ: TypeNode,
     injection: Injection,
   ): ComputeArg | null {
-    visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
-      this.addPoliciesFrom(node.idx);
+    visitTypes(this.tg.tg, getChildTypes(typ), ({ type: typeNode }) => {
+      if (typeNode.type === Type.OBJECT) {
+        for (const [name, idx] of Object.entries(typeNode.properties)) {
+          this.addPoliciesFrom(idx, typeNode.policies?.[name] ?? []);
+        }
+      }
       return true;
     });
 
@@ -814,7 +819,8 @@ class ArgumentCollector {
         if (generatorName == null) {
           return null;
         }
-        const generator = GENERATORS[generatorName as keyof typeof GENERATORS];
+        const generator =
+          DynamicInjection[generatorName as keyof typeof DynamicInjection];
         if (generator == null) {
           throw new Error(
             `Unknown generator '${generatorName}' for dynamic injection`,
@@ -843,8 +849,12 @@ class ArgumentCollector {
     }
 
     this.deps.parent.add(key);
-    visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
-      this.addPoliciesFrom(node.idx);
+    visitTypes(this.tg.tg, getChildTypes(typ), ({ type: typeNode }) => {
+      if (typeNode.type === Type.OBJECT) {
+        for (const [name, idx] of Object.entries(typeNode.properties)) {
+          this.addPoliciesFrom(idx, typeNode.policies?.[name] ?? []);
+        }
+      }
       return true;
     });
 
@@ -866,11 +876,14 @@ class ArgumentCollector {
     };
   }
 
-  private addPoliciesFrom(typeIdx: TypeIdx) {
-    const typ = this.tg.type(typeIdx);
+  private addPoliciesFrom(typeIdx: TypeIdx, policies: PolicyIndices[]) {
+    if (policies.length === 0) {
+      return;
+    }
+    // TODO we might have to check for duplicate indices
     this.policies.set(typeIdx, {
       argDetails: this.currentNodeDetails,
-      policyIndices: typ.policies.map((p) => {
+      policyIndices: policies.map((p) => {
         if (typeof p === "number") {
           return p;
         }

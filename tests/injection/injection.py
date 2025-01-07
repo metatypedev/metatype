@@ -31,6 +31,24 @@ def injection(g: Graph):
         }
     )
 
+    req_out = t.struct(
+        {
+            "a": t.integer(),
+            "raw_int": t.integer(),
+            "raw_str": t.string(),
+            "secret": t.integer(),
+            "context": t.string(),
+            "optional_context": t.string().optional(),
+            "raw_obj": t.struct({"in": t.integer()}),
+            "alt_raw": t.string(),
+            "alt_secret": t.string(),
+            "alt_context": t.string(),
+            "alt_context_opt": t.string().optional(),
+            "alt_context_opt_missing": t.string().optional(),
+            "date": t.datetime(),
+        }
+    )
+
     operation = t.enum(["insert", "modify", "remove", "read"])
 
     req2 = t.struct(
@@ -48,6 +66,7 @@ def injection(g: Graph):
     res2 = t.struct({"operation": operation})
 
     copy = t.struct({"a2": t.integer().from_parent("a")})
+    copy_out = t.struct({"a2": t.integer()})
 
     user = t.struct(
         {
@@ -75,11 +94,15 @@ def injection(g: Graph):
 
     find_messages = messages_db.find_many(message)
 
+    union = t.union([t.string(), t.integer()])
+    either = t.either([t.string(), t.integer()])
+    identity1 = deno.func(req, req_out, code="(x) => x")
+
     g.expose(
         Policy.public(),
-        test=deno.identity(req).extend(
+        test=identity1.extend(
             {
-                "parent": deno.identity(copy),
+                "parent": deno.func(copy, copy_out, code="(x) => x"),
                 "graphql": gql.query(
                     t.struct({"id": t.integer().from_parent("a")}),
                     user,
@@ -87,7 +110,7 @@ def injection(g: Graph):
                 ),
             }
         ),
-        effect_none=deno.identity(req2),
+        effect_none=deno.func(req2, res2, code="(x) => x"),
         effect_create=deno.func(req2, res2, code="(x) => x", effect=effects.create()),
         effect_delete=deno.func(req2, res2, code="(x) => x", effect=effects.delete()),
         effect_update=deno.func(req2, res2, code="(x) => x", effect=effects.update()),
@@ -109,5 +132,35 @@ def injection(g: Graph):
                 }
             ),
             path=("user",),
+        ),
+        union=deno.identity(
+            t.struct(
+                {
+                    "integer": t.integer(),
+                    "string": t.string(),
+                }
+            )
+        ).extend(
+            {
+                "injected": deno.func(
+                    t.struct(
+                        {
+                            "union1": union.from_parent("integer"),
+                            "union2": union.from_parent("string"),
+                            "either1": either.from_parent("integer"),
+                            "either2": either.from_parent("string"),
+                        }
+                    ),
+                    t.struct(
+                        {
+                            "union1": union,
+                            "union2": union,
+                            "either1": either,
+                            "either2": either,
+                        }
+                    ),
+                    code="x => x",
+                )
+            }
         ),
     )

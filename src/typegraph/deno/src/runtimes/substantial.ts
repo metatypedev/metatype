@@ -80,6 +80,12 @@ export class SubstantialRuntime extends Runtime {
     return this._genericSubstantialFunc("results_raw");
   }
 
+  advancedFilters(): Func<Typedef, Typedef, Materializer> {
+    return this._genericSubstantialFunc({
+      tag: "advanced-filters"
+    });
+  }
+
   #internalLinkParentChild(): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc("internal_link_parent_child");
   }

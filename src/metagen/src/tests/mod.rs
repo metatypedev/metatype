@@ -102,6 +102,7 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
         let test_cx = TestCtx {
             typegraphs: typegraphs.clone(),
         };
+        // SAFETY: this only runs in tests
         unsafe {
             std::env::set_var("METAGEN_CLIENT_RS_TEST", "1");
             std::env::set_var("METAGEN_BIN_PATH", "main.rs");

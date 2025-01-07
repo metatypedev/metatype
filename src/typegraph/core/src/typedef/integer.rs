@@ -14,18 +14,16 @@ use crate::{
     errors,
     sdk::core::TypeInteger,
     typegraph::TypegraphContext,
-    types::{ExtendedTypeDef, FindAttribute as _, Integer, TypeDefData},
+    types::{ExtendedTypeDef, Integer, TypeDefData},
 };
 
 impl TypeConversion for Integer {
-    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
+    fn convert(&self, _ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::Integer {
             base: BaseBuilderInit {
-                ctx,
                 base_name: "integer",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())

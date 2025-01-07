@@ -133,6 +133,36 @@ Meta.test("Injected values", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("inject into union", async () => {
+    await gql`
+      query {
+        union(integer: 12, string: "hello") {
+          integer
+          string
+          injected {
+            union1
+            union2
+            either1
+            either2
+          }
+        }
+      }
+    `
+      .expectData({
+        union: {
+          integer: 12,
+          string: "hello",
+          injected: {
+            union1: 12,
+            union2: "hello",
+            either1: 12,
+            either2: "hello",
+          },
+        },
+      })
+      .on(e);
+  });
 });
 
 mf.install();

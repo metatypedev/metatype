@@ -581,7 +581,7 @@ typegraph("roadmap", (g) => {
   const admins = deno.policy(
     "admins",
     `
-  (_args, { context }) => !!context.username
+  (_args, { context }) => !!context.username ? 'ALLOW' : 'DENY'
 `,
   );
 
@@ -619,7 +619,7 @@ def roadmap(g: Graph):
     # the username value is only available if the basic
     # extractor was successful
     admins = deno.policy("admins", """
-  (_args, { context }) => !!context.username
+  (_args, { context }) => !!context.username ? 'ALLOW' : 'DENY'
 """)
 
     g.expose(

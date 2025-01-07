@@ -88,7 +88,7 @@ export class GraphQLRuntime extends Runtime {
 
     verbose &&
       logger.debug(
-        "remote graphql:",
+        "remote graphql: {}",
         typeof query === "string" ? query : " with inlined vars",
       );
 

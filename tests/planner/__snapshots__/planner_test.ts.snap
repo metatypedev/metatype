@@ -95,82 +95,75 @@ snapshot[`planner 1`] = `
 
 snapshot[`planner 2`] = `
 {
-  one: {
-    funcType: {
-      injections: {},
-      input: 2,
-      materializer: 0,
-      output: 3,
-      policies: [
+  "<root>": [
+    {
+      canonFieldName: "one",
+      indices: [
         0,
       ],
-      rate_calls: false,
-      rate_weight: null,
-      runtimeConfig: null,
-      title: "root_one_fn",
-      type: "function",
     },
-    referencedTypes: {
-      "one.email": [
-        {
-          title: "root_one_fn_output_email_string_email",
-          type: "string",
-        },
-      ],
-      "one.id": [
-        {
-          title: "root_one_fn_output_id_string_uuid",
-          type: "string",
-        },
-      ],
-      "one.nested": [
-        {
-          title: "root_one_fn_output_nested_struct",
-          type: "object",
-        },
-      ],
-      "one.nested.first": [
-        {
-          title: "root_one_fn_output_nested_struct_first_string",
-          type: "string",
-        },
-      ],
-      "one.nested.second": [
-        {
-          title: "root_one_fn_output_nested_struct_second_root_one_fn_output_nested_struct_second_float_list",
-          type: "list",
-        },
-        {
-          title: "root_one_fn_output_nested_struct_second_float",
-          type: "float",
-        },
-      ],
-      "one.nested.third": [
-        {
-          title: "root_one_fn_output_nested_struct_third_root_one_fn_output_nested_struct_third_boolean_optional",
-          type: "optional",
-        },
-        {
-          title: "root_one_fn_output_nested_struct_third_boolean",
-          type: "boolean",
-        },
-      ],
-      one: [
-        {
-          title: "root_one_fn",
-          type: "function",
-        },
-        {
-          title: "root_one_fn_output",
-          type: "object",
-        },
-        {
-          title: "root_one_fn_input",
-          type: "object",
-        },
+    {
+      canonFieldName: "two",
+      indices: [
+        0,
       ],
     },
-  },
+    {
+      canonFieldName: "three",
+      indices: [
+        0,
+      ],
+    },
+  ],
+  "one.email": [],
+  "one.id": [],
+  "one.nested": [
+    {
+      canonFieldName: "first",
+      indices: [],
+    },
+    {
+      canonFieldName: "second",
+      indices: [],
+    },
+    {
+      canonFieldName: "third",
+      indices: [],
+    },
+  ],
+  "one.nested.first": [],
+  "one.nested.second": [],
+  "one.nested.third": [],
+  one: [
+    {
+      canonFieldName: "id",
+      indices: [],
+    },
+    {
+      canonFieldName: "email",
+      indices: [],
+    },
+    {
+      canonFieldName: "nested",
+      indices: [],
+    },
+    {
+      canonFieldName: "union1",
+      indices: [],
+    },
+    {
+      canonFieldName: "union2",
+      indices: [],
+    },
+    {
+      canonFieldName: "from_union1",
+      indices: [],
+    },
+    {
+      canonFieldName: "from_union2",
+      indices: [],
+    },
+  ],
 }
 `;
 

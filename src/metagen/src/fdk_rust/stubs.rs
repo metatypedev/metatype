@@ -113,6 +113,7 @@ mod test {
                 TypeNode::Object {
                     data: ObjectTypeData {
                         properties: Default::default(),
+                        policies: Default::default(),
                         id: vec![],
                         required: vec![],
                     },
@@ -138,6 +139,7 @@ mod test {
                         input: 1,
                         output: 1,
                         injections: Default::default(),
+                        outjections: Default::default(),
                         runtime_config: Default::default(),
                         rate_calls: false,
                         rate_weight: None,

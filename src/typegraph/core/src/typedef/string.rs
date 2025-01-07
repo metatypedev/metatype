@@ -14,11 +14,11 @@ use crate::{
     errors,
     sdk::core::TypeString,
     typegraph::TypegraphContext,
-    types::{ExtendedTypeDef, FindAttribute as _, StringT, TypeDefData},
+    types::{ExtendedTypeDef, StringT, TypeDefData},
 };
 
 impl TypeConversion for StringT {
-    fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
+    fn convert(&self, _ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         let format: Option<StringFormat> = match self.data.format.clone() {
             Some(format) => {
                 let ret =
@@ -30,11 +30,9 @@ impl TypeConversion for StringT {
 
         Ok(TypeNode::String {
             base: BaseBuilderInit {
-                ctx,
                 base_name: "string",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .enum_(self.data.enumeration.as_deref())

@@ -4,7 +4,7 @@
 import json
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 from typegraph.gen.runtimes import (
     Effect,
@@ -112,6 +112,21 @@ class DenoRuntime(Runtime):
             inp,
             inp,
             PredefinedFunMat(id=res, name="identity", effect="read"),
+        )
+
+    def fetch_context(self, output_shape: Union["t.struct", None] = None):
+        """
+        Utility for fetching the current request context
+        """
+        return_value = (
+            "context" if output_shape is not None else "JSON.stringify(context)"
+        )
+        from typegraph import t
+
+        return self.func(
+            inp=t.struct(),
+            out=output_shape or t.json(),
+            code=f"(_, {{ context }}) => {return_value}",
         )
 
     def policy(

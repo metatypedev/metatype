@@ -4,7 +4,11 @@ snapshot[`GraphQL parser 1`] = `
 [
   {
     id: [],
-    policies: [],
+    policies: {
+      user: [
+        0,
+      ],
+    },
     properties: {
       mutation: 18,
       query: 17,
@@ -17,9 +21,15 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     id: [],
-    policies: [
-      0,
-    ],
+    policies: {
+      find: [
+        0,
+      ],
+      profile: [],
+      update: [
+        0,
+      ],
+    },
     properties: {
       find: 2,
       profile: 8,
@@ -30,13 +40,9 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
-    injections: {},
     input: 3,
-    materializer: 1,
+    materializer: 0,
     output: 5,
-    policies: [
-      0,
-    ],
     rate_calls: false,
     rate_weight: null,
     runtimeConfig: null,
@@ -47,7 +53,9 @@ snapshot[`GraphQL parser 1`] = `
     id: [
       "id",
     ],
-    policies: [],
+    policies: {
+      id: [],
+    },
     properties: {
       id: 4,
     },
@@ -56,7 +64,6 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
-    policies: [],
     title: "UserId",
     type: "string",
   },
@@ -64,7 +71,10 @@ snapshot[`GraphQL parser 1`] = `
     id: [
       "id",
     ],
-    policies: [],
+    policies: {
+      id: [],
+      name: [],
+    },
     properties: {
       id: 4,
       name: 6,
@@ -74,18 +84,13 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
-    policies: [],
     title: "User_name_string",
     type: "string",
   },
   {
-    injections: {},
     input: 5,
-    materializer: 2,
+    materializer: 1,
     output: 5,
-    policies: [
-      0,
-    ],
     rate_calls: false,
     rate_weight: null,
     runtimeConfig: null,
@@ -94,7 +99,14 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     id: [],
-    policies: [],
+    policies: {
+      picture: [
+        0,
+      ],
+      setPicture: [
+        0,
+      ],
+    },
     properties: {
       picture: 9,
       setPicture: 12,
@@ -104,13 +116,9 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
-    injections: {},
     input: 3,
-    materializer: 3,
+    materializer: 2,
     output: 10,
-    policies: [
-      0,
-    ],
     rate_calls: false,
     rate_weight: null,
     runtimeConfig: null,
@@ -121,7 +129,10 @@ snapshot[`GraphQL parser 1`] = `
     id: [
       "id",
     ],
-    policies: [],
+    policies: {
+      id: [],
+      url: [],
+    },
     properties: {
       id: 4,
       url: 11,
@@ -132,18 +143,13 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     format: "uri",
-    policies: [],
     title: "Picture_url_string_uri",
     type: "string",
   },
   {
-    injections: {},
     input: 10,
-    materializer: 4,
+    materializer: 3,
     output: 10,
-    policies: [
-      0,
-    ],
     rate_calls: false,
     rate_weight: null,
     runtimeConfig: null,
@@ -152,9 +158,11 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     id: [],
-    policies: [
-      0,
-    ],
+    policies: {
+      picture: [
+        0,
+      ],
+    },
     properties: {
       picture: 9,
     },
@@ -164,9 +172,11 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     id: [],
-    policies: [
-      0,
-    ],
+    policies: {
+      setPicture: [
+        0,
+      ],
+    },
     properties: {
       setPicture: 12,
     },
@@ -176,7 +186,11 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     id: [],
-    policies: [],
+    policies: {
+      find: [
+        0,
+      ],
+    },
     properties: {
       find: 2,
       profile: 13,
@@ -189,7 +203,11 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     id: [],
-    policies: [],
+    policies: {
+      update: [
+        0,
+      ],
+    },
     properties: {
       profile: 14,
       update: 7,
@@ -202,7 +220,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     id: [],
-    policies: [],
+    policies: {},
     properties: {
       user: 15,
     },
@@ -214,7 +232,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     id: [],
-    policies: [],
+    policies: {},
     properties: {
       user: 16,
     },

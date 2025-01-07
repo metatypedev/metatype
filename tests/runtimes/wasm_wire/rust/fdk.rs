@@ -109,7 +109,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.0-rc.7";
+        static MT_VERSION: &str = "0.5.0-rc.8";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -237,7 +237,6 @@ pub mod types {
     pub struct RecordCreationInput {
     }
     pub type EntityNameString = String;
-    pub type EntityAgeAddOutputOptional = Option<AddOutput>;
     pub type ProfileLevelStringEnum = String;
     pub type ProfileAttributesStringEnum = String;
     pub type ProfileAttributesProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
@@ -266,11 +265,10 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Entity {
         pub name: EntityNameString,
-        pub age: EntityAgeAddOutputOptional,
+        pub age: RangeArgsAAddOutputOptional,
         pub profile: Profile,
     }
     pub type RecordCreationOutput = Vec<Entity>;
-    pub type HundredRandomOutput = Vec<Entity>;
 }
 pub mod stubs {
     use super::*;
@@ -372,7 +370,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<HundredRandomOutput>;
+        fn handle(&self, input: RecordCreationInput, cx: Ctx) -> anyhow::Result<RecordCreationOutput>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {

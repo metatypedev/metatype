@@ -7,6 +7,17 @@ from typegraph.gen.runtimes import (
     RedisBackend,
     SubstantialBackend,
     SubstantialOperationData,
+    SubstantialOperationDataInternalLinkParentChild,
+    SubstantialOperationDataResources,
+    SubstantialOperationDataResults,
+    SubstantialOperationDataResultsRaw,
+    SubstantialOperationDataSend,
+    SubstantialOperationDataSendRaw,
+    SubstantialOperationDataStart,
+    SubstantialOperationDataStartRaw,
+    SubstantialOperationDataStop,
+    SubstantialOperationDataAdvancedFilters,
+    SubstantialRuntimeData,
     SubstantialStartData,
     SubstantialRuntimeData,
     WorkflowFileDescription,
@@ -62,6 +73,9 @@ class SubstantialRuntime(Runtime):
 
     def query_results_raw(self):
         return self._generic_substantial_func("results_raw")
+
+    def advanced_filters(self):
+        return self._generic_substantial_func(SubstantialOperationDataAdvancedFilters())
 
     def _internal_link_parent_child(self):
         return self._generic_substantial_func("internal_link_parent_child")

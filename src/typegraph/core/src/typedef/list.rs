@@ -13,18 +13,16 @@ use crate::{
     errors::Result,
     sdk::core::TypeList,
     typegraph::TypegraphContext,
-    types::{ExtendedTypeDef, FindAttribute as _, List, TypeDefData, TypeId},
+    types::{ExtendedTypeDef, List, TypeDefData, TypeId},
 };
 
 impl TypeConversion for List {
     fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {
         Ok(TypeNode::List {
             base: BaseBuilderInit {
-                ctx,
                 base_name: "list",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .build()?,

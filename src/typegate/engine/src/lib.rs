@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 mod ext;
+mod py_validation;
 mod runtimes;
 // mod snapshot;
 mod typegraph;
@@ -27,6 +28,7 @@ mod interlude {
 
 pub use deno_core::{resolve_url, resolve_url_or_path};
 pub use ext::extensions;
+pub use mt_deno;
 pub use mt_deno::new_thread_builder;
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work

@@ -26,6 +26,9 @@ import {
   type Validator,
   type ValidatorFn,
 } from "./common.ts";
+import { getLogger } from "../../log.ts";
+
+const logger = getLogger(import.meta);
 
 export function generateValidator(
   tg: TypeGraph,
@@ -42,6 +45,8 @@ export function generateValidator(
       const messages = errors
         .map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
+      logger.error("Validation failed: value={}", value);
+      logger.error("Validation errors:\n{}", messages);
       throw new Error(`Validation errors:\n${messages}`);
     }
   };
@@ -103,7 +108,6 @@ export class ResultValidationCompiler {
         cg.generateStringValidator({
           type: "string",
           title: "__TypeName",
-          policies: [],
         });
       } else if (isScalar(typeNode)) {
         if (entry.selectionSet != null) {

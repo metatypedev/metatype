@@ -12,9 +12,7 @@ function _selectionToNodeSet(
   // check at the end
   const foundNodes = new Set(Object.keys(selection));
 
-  for (
-    const [nodeName, metaFn] of metas
-  ) {
+  for (const [nodeName, metaFn] of metas) {
     foundNodes.delete(nodeName);
 
     const nodeSelection = selection[nodeName];
@@ -23,15 +21,16 @@ function _selectionToNodeSet(
       continue;
     }
 
-    const { argumentTypes, subNodes, variants } = metaFn();
+    const { argumentTypes, subNodes, variants, inputFiles } = metaFn();
 
-    const nodeInstances = nodeSelection instanceof Alias
-      ? nodeSelection.aliases()
-      : { [nodeName]: nodeSelection };
+    const nodeInstances =
+      nodeSelection instanceof Alias
+        ? nodeSelection.aliases()
+        : { [nodeName]: nodeSelection };
 
-    for (
-      const [instanceName, instanceSelection] of Object.entries(nodeInstances)
-    ) {
+    for (const [instanceName, instanceSelection] of Object.entries(
+      nodeInstances,
+    )) {
       if (!instanceSelection && !selectAll) {
         continue;
       }
@@ -40,7 +39,7 @@ function _selectionToNodeSet(
           `nested Alias discovered at ${parentPath}.${instanceName}`,
         );
       }
-      const node: SelectNode = { instanceName, nodeName };
+      const node: SelectNode = { instanceName, nodeName, files: inputFiles };
 
       if (argumentTypes) {
         // make sure the arg is of the expected form
@@ -111,6 +110,12 @@ function _selectionToNodeSet(
               "unreachable: union/either NodeMetas can't have subnodes",
             );
           }
+
+          // skip non explicit composite selection when using selectAll
+          if (subSelections?._ === "selectAll" && !instanceSelection) {
+            continue;
+          }
+
           node.subNodes = _selectionToNodeSet(
             // assume it's a Selection. If it's an argument
             // object, mismatch between the node desc should hopefully
@@ -132,10 +137,10 @@ function _selectionToNodeSet(
             const variant_select = subSelections[variantTy];
             const nodes = variant_select
               ? _selectionToNodeSet(
-                variant_select as Selection,
-                variant_meta.subNodes,
-                `${parentPath}.${instanceName}.variant(${variantTy})`,
-              )
+                  variant_select as Selection,
+                  variant_meta.subNodes,
+                  `${parentPath}.${instanceName}.variant(${variantTy})`,
+                )
               : [];
             nodes.push({
               nodeName: "__typename",
@@ -177,13 +182,12 @@ type SelectNode<_Out = unknown> = {
   instanceName: string;
   args?: NodeArgs;
   subNodes?: SubNodes;
+  files?: TypePath[];
 };
 
 export class QueryNode<Out> {
   #inner: SelectNode<Out>;
-  constructor(
-    inner: SelectNode<Out>,
-  ) {
+  constructor(inner: SelectNode<Out>) {
     this.#inner = inner;
   }
 
@@ -194,9 +198,7 @@ export class QueryNode<Out> {
 
 export class MutationNode<Out> {
   #inner: SelectNode<Out>;
-  constructor(
-    inner: SelectNode<Out>,
-  ) {
+  constructor(inner: SelectNode<Out>) {
     this.#inner = inner;
   }
 
@@ -205,19 +207,122 @@ export class MutationNode<Out> {
   }
 }
 
-type SelectNodeOut<T> = T extends (QueryNode<infer O> | MutationNode<infer O>)
+type SelectNodeOut<T> = T extends QueryNode<infer O> | MutationNode<infer O>
   ? O
   : never;
-type QueryDocOut<T> = T extends
-  Record<string, QueryNode<unknown> | MutationNode<unknown>> ? {
-    [K in keyof T]: SelectNodeOut<T[K]>;
+type QueryDocOut<T> =
+  T extends Record<string, QueryNode<unknown> | MutationNode<unknown>>
+    ? {
+        [K in keyof T]: SelectNodeOut<T[K]>;
+      }
+    : never;
+
+type TypePath = ("?" | "[]" | `.${string}`)[];
+type ValuePath = ("" | `[${number}]` | `.${string}`)[];
+
+class FileExtractor {
+  #path: TypePath = [];
+  #currentPath: ValuePath = [];
+  #files: Map<string, File> = new Map();
+
+  static extractFrom(key: string, object: unknown, paths: TypePath[]) {
+    const extractor = new FileExtractor();
+    if (!object || typeof object !== "object") {
+      throw new Error("expected object");
+    }
+    for (const path of paths) {
+      if (path[0] && path[0].startsWith("." + key)) {
+        extractor.#currentPath = [];
+        extractor.#path = path;
+        extractor.#extractFromValue(object);
+      }
+    }
+    return extractor.#files;
   }
-  : never;
+
+  #extractFromValue(value: unknown) {
+    const nextSegment = this.#path[this.#currentPath.length];
+    if (nextSegment === "?") {
+      if (value === null || value === undefined) {
+        return;
+      }
+      this.#currentPath.push("");
+      this.#extractFromValue(value);
+      this.#currentPath.pop();
+      return;
+    }
+
+    if (nextSegment === "[]") {
+      if (!Array.isArray(value)) {
+        throw new Error(`Expected array at ${this.#formatPath()}`);
+      }
+      for (let i = 0; i < value.length; i++) {
+        this.#currentPath.push(`[${i}]`);
+        this.#extractFromArray(value, i);
+        this.#currentPath.pop();
+      }
+      return;
+    }
+
+    if (nextSegment.startsWith(".")) {
+      if (typeof value !== "object" || value === null) {
+        throw new Error(`Expected non-null object at ${this.#formatPath()}`);
+      }
+      this.#currentPath.push(nextSegment);
+      this.#extractFromObject(
+        value as Record<string, unknown>,
+        nextSegment.slice(1),
+      );
+      this.#currentPath.pop();
+      return;
+    }
+  }
+
+  #extractFromObject(parent: Record<string, unknown>, key: string) {
+    const value = parent[key];
+    if (this.#currentPath.length == this.#path.length) {
+      if (value instanceof File) {
+        this.#files.set(this.#formatPath(), value);
+        parent[key] = null;
+        return;
+      }
+      throw new Error(`Expected File at ${this.#formatPath()}`);
+    }
+
+    this.#extractFromValue(value);
+  }
+
+  #extractFromArray(parent: unknown[], idx: number) {
+    const value = parent[idx];
+    if (this.#currentPath.length == this.#path.length) {
+      if (value instanceof File) {
+        this.#files.set(this.#formatPath(), value);
+        parent[idx] = null;
+        return;
+      }
+      throw new Error(`Expected File at ${this.#formatPath()}`);
+    }
+
+    this.#extractFromValue(value);
+  }
+
+  #formatPath() {
+    return this.#currentPath
+      .map((seg) => {
+        if (seg.startsWith("[")) {
+          return `.${seg.slice(1, -1)}`;
+        }
+        return seg;
+      })
+      .join("");
+  }
+}
 
 type NodeMeta = {
   subNodes?: [string, () => NodeMeta][];
   variants?: [string, () => NodeMeta][];
   argumentTypes?: { [name: string]: string };
+  inputFiles?: TypePath[];
 };
 
 /* Selection types section */
@@ -235,11 +340,7 @@ type Selection = {
     | Selection;
 };
 
-type ScalarSelectNoArgs =
-  | boolean
-  | Alias<true>
-  | null
-  | undefined;
+type ScalarSelectNoArgs = boolean | Alias<true> | null | undefined;
 
 type ScalarSelectArgs<ArgT extends Record<string, unknown>> =
   | ArgT
@@ -270,9 +371,7 @@ type CompositeSelectArgs<ArgT extends Record<string, unknown>, SelectionT> =
  */
 export class Alias<T> {
   #aliases: Record<string, T>;
-  constructor(
-    aliases: Record<string, T>,
-  ) {
+  constructor(aliases: Record<string, T>) {
     this.#aliases = aliases;
   }
   aliases() {
@@ -347,35 +446,49 @@ function convertQueryNodeGql(
   typeToGqlTypeMap: Record<string, string>,
   node: SelectNode,
   variables: Map<string, NodeArgValue>,
+  files: Map<string, File>,
 ) {
-  let out = node.nodeName == node.instanceName
-    ? node.nodeName
-    : `${node.instanceName}: ${node.nodeName}`;
+  let out =
+    node.nodeName == node.instanceName
+      ? node.nodeName
+      : `${node.instanceName}: ${node.nodeName}`;
 
   const args = node.args;
   if (args && Object.keys(args).length > 0) {
-    out = `${out} (${
-      Object.entries(args)
-        .map(([key, val]) => {
-          const name = `in${variables.size}`;
-          variables.set(name, val);
-          return `${key}: $${name}`;
-        })
-        .join(", ")
-    })`;
+    const argsRow = [];
+
+    for (const [key, val] of Object.entries(args)) {
+      const name = `in${variables.size}`;
+      const obj = { [key]: val.value };
+
+      if (node.files && node.files.length > 0) {
+        const extractedFiles = FileExtractor.extractFrom(key, obj, node.files);
+
+        for (const [path, file] of extractedFiles) {
+          const pathInVariables = path.replace(/^\.[^\.\[]+/, `.${name}`);
+          files.set(pathInVariables, file);
+        }
+      }
+
+      val.value = obj[key];
+      variables.set(name, val);
+      argsRow.push(`${key}: $${name}`);
+    }
+
+    out = `${out} (${argsRow.join(", ")})`;
   }
 
   const subNodes = node.subNodes;
   if (subNodes) {
     if (Array.isArray(subNodes)) {
-      out = `${out} { ${
-        subNodes.map((node) =>
-          convertQueryNodeGql(typeToGqlTypeMap, node, variables)
-        ).join(" ")
-      } }`;
+      out = `${out} { ${subNodes
+        .map((node) =>
+          convertQueryNodeGql(typeToGqlTypeMap, node, variables, files),
+        )
+        .join(" ")} }`;
     } else {
-      out = `${out} { ${
-        Object.entries(subNodes).map(([variantTy, subNodes]) => {
+      out = `${out} { ${Object.entries(subNodes)
+        .map(([variantTy, subNodes]) => {
           let gqlTy = typeToGqlTypeMap[variantTy];
           if (!gqlTy) {
             throw new Error(
@@ -384,13 +497,13 @@ function convertQueryNodeGql(
           }
           gqlTy = gqlTy.replace(/[!]+$/, "");
 
-          return `... on ${gqlTy} {${
-            subNodes.map((node) =>
-              convertQueryNodeGql(typeToGqlTypeMap, node, variables)
-            ).join(" ")
-          }}`;
-        }).join(" ")
-      } }`;
+          return `... on ${gqlTy} {${subNodes
+            .map((node) =>
+              convertQueryNodeGql(typeToGqlTypeMap, node, variables, files),
+            )
+            .join(" ")}}`;
+        })
+        .join(" ")} }`;
     }
   }
   return out;
@@ -404,12 +517,12 @@ function buildGql(
   name: string = "",
 ) {
   const variables = new Map<string, NodeArgValue>();
+  const files = new Map<string, File>();
 
-  const rootNodes = Object
-    .entries(query)
+  const rootNodes = Object.entries(query)
     .map(([key, node]) => {
       const fixedNode = { ...node, instanceName: key };
-      return convertQueryNodeGql(typeToGqlTypeMap, fixedNode, variables);
+      return convertQueryNodeGql(typeToGqlTypeMap, fixedNode, variables, files);
     })
     .join("\n  ");
 
@@ -428,9 +541,9 @@ function buildGql(
   return {
     doc,
     variables: Object.fromEntries(
-      [...variables.entries()]
-        .map(([key, val]) => [key, val.value]),
+      [...variables.entries()].map(([key, val]) => [key, val.value]),
     ),
+    files,
   };
 }
 
@@ -439,22 +552,58 @@ async function fetchGql(
   doc: string,
   variables: Record<string, unknown>,
   options: GraphQlTransportOptions,
+  files?: Map<string, File>,
 ) {
-  // console.log(doc, variables);
+  let body: FormData | string = JSON.stringify({
+    query: doc,
+    variables,
+  });
+
+  const additionalHeaders: HeadersInit = {};
+
+  if (files && files.size > 0) {
+    const data = new FormData();
+    const fileMap = new Map<File, string[]>();
+    const map: Record<string, string[]> = {};
+
+    for (const [path, file] of files) {
+      const array = fileMap.get(file);
+      const variable = "variables" + path;
+      if (array) {
+        array.push(variable);
+      } else {
+        fileMap.set(file, [variable]);
+      }
+    }
+
+    let index = 0;
+    for (const [file, variables] of fileMap) {
+      const key = index.toString();
+      map[key] = variables;
+      data.set(key, file);
+      index += 1;
+    }
+
+    data.set("operations", body);
+    data.set("map", JSON.stringify(map));
+
+    body = data;
+  } else {
+    additionalHeaders["content-type"] = "application/json";
+  }
+
   const fetchImpl = options.fetch ?? fetch;
   const res = await fetchImpl(addr, {
     ...options,
     method: "POST",
     headers: {
       accept: "application/json",
-      "content-type": "application/json",
-      ...options.headers ?? {},
+      ...additionalHeaders,
+      ...(options.headers ?? {}),
     },
-    body: JSON.stringify({
-      query: doc,
-      variables,
-    }),
+    body,
   });
+
   if (!res.ok) {
     const body = await res.text().catch((err) => `error reading body: ${err} `);
     throw new (Error as ErrorPolyfill)(
@@ -468,17 +617,14 @@ async function fetchGql(
     );
   }
   if (res.headers.get("content-type") != "application/json") {
-    throw new (Error as ErrorPolyfill)(
-      "unexpected content type in response",
-      {
-        cause: {
-          response: res,
-          body: await res.text().catch((err) => `error reading body: ${err} `),
-        },
+    throw new (Error as ErrorPolyfill)("unexpected content type in response", {
+      cause: {
+        response: res,
+        body: await res.text().catch((err) => `error reading body: ${err} `),
       },
-    );
+    });
   }
-  return await res.json() as { data: unknown; errors?: object[] };
+  return (await res.json()) as { data: unknown; errors?: object[] };
 }
 
 /**
@@ -489,18 +635,21 @@ export class GraphQLTransport {
     public address: URL,
     public options: GraphQlTransportOptions,
     private typeToGqlTypeMap: Record<string, string>,
-  ) {
-  }
+  ) {}
 
   async #request(
     doc: string,
     variables: Record<string, unknown>,
-    options?: GraphQlTransportOptions,
+    options: GraphQlTransportOptions,
+    files?: Map<string, File>,
   ) {
-    const res = await fetchGql(this.address, doc, variables, {
-      ...this.options,
-      ...options,
-    });
+    const res = await fetchGql(
+      this.address,
+      doc,
+      variables,
+      { ...this.options, ...options },
+      files,
+    );
     if ("errors" in res) {
       throw new (Error as ErrorPolyfill)("graphql errors on response", {
         cause: res.errors,
@@ -514,7 +663,10 @@ export class GraphQLTransport {
    */
   async query<Doc extends Record<string, QueryNode<unknown>>>(
     query: Doc,
-    { options, name = "" }: {
+    {
+      options,
+      name = "",
+    }: {
       options?: GraphQlTransportOptions;
       name?: string;
     } = {},
@@ -522,14 +674,19 @@ export class GraphQLTransport {
     const { variables, doc } = buildGql(
       this.typeToGqlTypeMap,
       Object.fromEntries(
-        Object.entries(query).map((
-          [key, val],
-        ) => [key, (val as QueryNode<unknown>).inner()]),
+        Object.entries(query).map(([key, val]) => [
+          key,
+          (val as QueryNode<unknown>).inner(),
+        ]),
       ),
       "query",
       name,
     );
-    return await this.#request(doc, variables, options) as QueryDocOut<Doc>;
+    return (await this.#request(
+      doc,
+      variables,
+      options ?? {},
+    )) as QueryDocOut<Doc>;
   }
 
   /**
@@ -537,22 +694,31 @@ export class GraphQLTransport {
    */
   async mutation<Doc extends Record<string, MutationNode<unknown>>>(
     query: Doc,
-    { options, name = "" }: {
+    {
+      options,
+      name = "",
+    }: {
       options?: GraphQlTransportOptions;
       name?: string;
     } = {},
   ): Promise<QueryDocOut<Doc>> {
-    const { variables, doc } = buildGql(
+    const { variables, doc, files } = buildGql(
       this.typeToGqlTypeMap,
       Object.fromEntries(
-        Object.entries(query).map((
-          [key, val],
-        ) => [key, (val as MutationNode<unknown>).inner()]),
+        Object.entries(query).map(([key, val]) => [
+          key,
+          (val as MutationNode<unknown>).inner(),
+        ]),
       ),
       "mutation",
       name,
     );
-    return await this.#request(doc, variables, options) as QueryDocOut<Doc>;
+    return (await this.#request(
+      doc,
+      variables,
+      options ?? {},
+      files,
+    )) as QueryDocOut<Doc>;
   }
 
   /**
@@ -621,9 +787,10 @@ export class PreparedRequest<
     const { doc, variables } = buildGql(
       typeToGqlTypeMap,
       Object.fromEntries(
-        Object.entries(dryRunNode).map((
-          [key, val],
-        ) => [key, (val as MutationNode<unknown>).inner()]),
+        Object.entries(dryRunNode).map(([key, val]) => [
+          key,
+          (val as MutationNode<unknown>).inner(),
+        ]),
       ),
       ty,
       name,
@@ -632,10 +799,7 @@ export class PreparedRequest<
     this.#mappings = variables;
   }
 
-  resolveVariables(
-    args: T,
-    mappings: Record<string, unknown>,
-  ) {
+  resolveVariables(args: T, mappings: Record<string, unknown>) {
     const resolvedVariables = {} as Record<string, unknown>;
     for (const [key, val] of Object.entries(mappings)) {
       if (val instanceof PlaceholderValue) {
@@ -652,25 +816,21 @@ export class PreparedRequest<
   /**
    * Execute the prepared request.
    */
-  async perform(args: T, opts?: GraphQlTransportOptions): Promise<
-    {
-      [K in keyof Doc]: SelectNodeOut<Doc[K]>;
-    }
-  > {
+  async perform(
+    args: T,
+    opts?: GraphQlTransportOptions,
+  ): Promise<{
+    [K in keyof Doc]: SelectNodeOut<Doc[K]>;
+  }> {
     const resolvedVariables = this.resolveVariables(args, this.#mappings);
     // console.log(this.doc, {
     //   resolvedVariables,
     //   mapping: this.#mappings,
     // });
-    const res = await fetchGql(
-      this.address,
-      this.doc,
-      resolvedVariables,
-      {
-        ...this.options,
-        ...opts,
-      },
-    );
+    const res = await fetchGql(this.address, this.doc, resolvedVariables, {
+      ...this.options,
+      ...opts,
+    });
     if ("errors" in res) {
       throw new (Error as ErrorPolyfill)("graphql errors on response", {
         cause: res.errors,
@@ -814,6 +974,42 @@ const nodeMetas = {
       },
     };
   },
+  RootNestedCompositeFnOutputCompositeStructNestedStruct(): NodeMeta {
+    return {
+      subNodes: [
+        ["inner", nodeMetas.scalar],
+      ],
+    };
+  },
+  RootNestedCompositeFnOutputCompositeStruct(): NodeMeta {
+    return {
+      subNodes: [
+        ["value", nodeMetas.scalar],
+        ["nested", nodeMetas.RootNestedCompositeFnOutputCompositeStructNestedStruct],
+      ],
+    };
+  },
+  RootNestedCompositeFnOutputListStruct(): NodeMeta {
+    return {
+      subNodes: [
+        ["value", nodeMetas.scalar],
+      ],
+    };
+  },
+  RootNestedCompositeFnOutput(): NodeMeta {
+    return {
+      subNodes: [
+        ["scalar", nodeMetas.scalar],
+        ["composite", nodeMetas.RootNestedCompositeFnOutputCompositeStruct],
+        ["list", nodeMetas.RootNestedCompositeFnOutputListStruct],
+      ],
+    };
+  },
+  RootNestedCompositeFn(): NodeMeta {
+    return {
+      ...nodeMetas.RootNestedCompositeFnOutput(),
+    };
+  },
 };
 export type UserIdStringUuid = string;
 export type PostSlugString = string;
@@ -844,6 +1040,22 @@ export type RootMixedUnionFnOutput =
   | (User)
   | (PostSlugString)
   | (RootScalarUnionFnOutputT1Integer);
+export type RootNestedCompositeFnOutputCompositeStructNestedStruct = {
+  inner: RootScalarUnionFnOutputT1Integer;
+};
+export type RootNestedCompositeFnOutputCompositeStruct = {
+  value: RootScalarUnionFnOutputT1Integer;
+  nested: RootNestedCompositeFnOutputCompositeStructNestedStruct;
+};
+export type RootNestedCompositeFnOutputListStruct = {
+  value: RootScalarUnionFnOutputT1Integer;
+};
+export type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Array<RootNestedCompositeFnOutputListStruct>;
+export type RootNestedCompositeFnOutput = {
+  scalar: RootScalarUnionFnOutputT1Integer;
+  composite: RootNestedCompositeFnOutputCompositeStruct;
+  list: RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList;
+};
 
 export type PostSelections = {
   _?: SelectionFlags;
@@ -866,6 +1078,25 @@ export type RootMixedUnionFnOutputSelections = {
   _?: SelectionFlags;
   "post"?: CompositeSelectNoArgs<PostSelections>;
   "user"?: CompositeSelectNoArgs<UserSelections>;
+};
+export type RootNestedCompositeFnOutputCompositeStructNestedStructSelections = {
+  _?: SelectionFlags;
+  inner?: ScalarSelectNoArgs;
+};
+export type RootNestedCompositeFnOutputCompositeStructSelections = {
+  _?: SelectionFlags;
+  value?: ScalarSelectNoArgs;
+  nested?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructNestedStructSelections>;
+};
+export type RootNestedCompositeFnOutputListStructSelections = {
+  _?: SelectionFlags;
+  value?: ScalarSelectNoArgs;
+};
+export type RootNestedCompositeFnOutputSelections = {
+  _?: SelectionFlags;
+  scalar?: ScalarSelectNoArgs;
+  composite?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructSelections>;
+  list?: CompositeSelectNoArgs<RootNestedCompositeFnOutputListStructSelections>;
 };
 
 export class QueryGraph extends _QueryGraphBase {
@@ -949,5 +1180,13 @@ export class QueryGraph extends _QueryGraphBase {
       "$q",
     )[0];
     return new QueryNode(inner) as QueryNode<RootMixedUnionFnOutput>;
+  }
+  nestedComposite(select: RootNestedCompositeFnOutputSelections) {
+    const inner = _selectionToNodeSet(
+      { "nestedComposite": select },
+      [["nestedComposite", nodeMetas.RootNestedCompositeFn]],
+      "$q",
+    )[0];
+    return new QueryNode(inner) as QueryNode<RootNestedCompositeFnOutput>;
   }
 }

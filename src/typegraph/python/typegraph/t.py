@@ -68,10 +68,10 @@ class typedef:
 
     def with_policy(self, *policies: Optional[PolicySpec]) -> Self:
         policy_chain = get_policy_chain(policies)
-        res = core.with_policy(self._id, policy_chain)
+        new_policy_chain = (self.policy_chain or []) + policy_chain
         ret = copy.copy(self)
-        ret._id = res
-        ret.policy_chain = policy_chain
+        ret._id = core.with_policy(self._id, new_policy_chain)
+        ret.policy_chain = new_policy_chain
         return ret
 
     def rename(self, name: str) -> Self:

@@ -40,7 +40,10 @@ Meta.test({
               enum
               default
               format
-              policies
+              policies {
+                fieldName
+                policies
+              }
             }
           }
         }

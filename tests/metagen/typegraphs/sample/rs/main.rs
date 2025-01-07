@@ -136,6 +136,35 @@ fn main() -> Result<(), BoxErr> {
                     }),
                 ))
                 .await?;
+
+            let res6 = gql
+                .query((
+                    api1.nested_composite().select(all()),
+                    api1.nested_composite()
+                        .select(RootNestedCompositeFnOutputSelections {
+                            composite: select(all()),
+                            ..all()
+                        }),
+                    api1.nested_composite()
+                        .select(RootNestedCompositeFnOutputSelections {
+                        composite: select(RootNestedCompositeFnOutputCompositeStructSelections {
+                            nested: select(
+                                RootNestedCompositeFnOutputCompositeStructNestedStructSelections {
+                                    ..all()
+                                },
+                            ),
+                            ..all()
+                        }),
+                        ..all()
+                    }),
+                    api1.nested_composite()
+                        .select(RootNestedCompositeFnOutputSelections {
+                            list: select(all()),
+                            ..all()
+                        }),
+                ))
+                .await?;
+
             println!(
                 "{}",
                 serde_json::to_string_pretty(&serde_json::json!([
@@ -169,6 +198,12 @@ fn main() -> Result<(), BoxErr> {
                         "compositeUnion1": res5.1,
                         "compositeUnion2": res5.2,
                         "mixedUnion": res5.3
+                    },
+                    {
+                        "scalarOnly": res6.0,
+                        "withStruct": res6.1,
+                        "withStructNested": res6.2,
+                        "withList": res6.3
                     }
                 ]))?
             );

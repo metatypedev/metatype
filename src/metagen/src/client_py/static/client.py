@@ -17,12 +17,12 @@ def selection_to_nodes(
     parent_path: str,
 ) -> typing.List["SelectNode[typing.Any]"]:
     out = []
-    flags = selection.get("_")
-    if flags is not None and not isinstance(flags, SelectionFlags):
+    sub_flags = selection.get("_")
+    if sub_flags is not None and not isinstance(sub_flags, SelectionFlags):
         raise Exception(
-            f"selection field '_' should be of type SelectionFlags but found {type(flags)}"
+            f"selection field '_' should be of type SelectionFlags but found {type(sub_flags)}"
         )
-    select_all = True if flags is not None and flags.select_all else False
+    select_all = True if sub_flags is not None and sub_flags.select_all else False
     found_nodes = set(selection.keys())
     for node_name, meta_fn in metas.items():
         found_nodes.discard(node_name)
@@ -104,7 +104,7 @@ def selection_to_nodes(
 
                 # flags are recursive for any subnode that's not specified
                 if sub_selections is None:
-                    sub_selections = {"_": flags}
+                    sub_selections = {"_": sub_flags}
 
                 # selection types are always TypedDicts as well
                 if not isinstance(sub_selections, dict):
@@ -119,6 +119,17 @@ def selection_to_nodes(
                         raise Exception(
                             "unreachable: union/either NodeMetas can't have subnodes"
                         )
+
+                    # skip non explicit composite selection when using select_all
+                    sub_flags = sub_selections.get("_")
+
+                    if (
+                        isinstance(sub_flags, SelectionFlags)
+                        and sub_flags.select_all
+                        and instance_selection is None
+                    ):
+                        continue
+
                     sub_nodes = selection_to_nodes(
                         typing.cast("SelectionErased", sub_selections),
                         meta.sub_nodes,
@@ -192,11 +203,13 @@ ArgT = typing.TypeVar("ArgT", bound=typing.Mapping[str, typing.Any])
 SelectionT = typing.TypeVar("SelectionT")
 
 
-@dc.dataclass
 class File:
-    content: bytes
-    name: str
-    mimetype: typing.Optional[str] = None
+    def __init__(
+        self, content: bytes, name: str, mimetype: typing.Optional[str] = None
+    ):
+        self.content = content
+        self.name = name
+        self.mimetype = mimetype
 
 
 #
@@ -613,11 +626,21 @@ class GraphQLTransportBase:
         if len(files) > 0:
             form_data = MultiPartForm()
             form_data.add_field("operations", body)
+            file_map = {}
             map = {}
 
-            for idx, (path, file) in enumerate(files.items()):
-                map[idx] = ["variables" + path]
-                form_data.add_file(f"{idx}", file)
+            for path, file in files.items():
+                array = file_map.get(file)
+                variable = "variables" + path
+                if array is not None:
+                    array.append(variable)
+                else:
+                    file_map[file] = [variable]
+
+            for idx, (file, variables) in enumerate(file_map.items()):
+                key = str(idx)
+                map[key] = variables
+                form_data.add_file(key, file)
 
             form_data.add_field("map", json.dumps(map))
             headers.update({"Content-type": form_data.get_content_type()})

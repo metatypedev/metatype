@@ -393,8 +393,7 @@ where
     SelT: Selection + Into<CompositeSelection>,
 {
     fn all() -> Self {
-        let sel = SelT::all();
-        Self::Get(sel.into(), PhantomData)
+        Self::Skip
     }
 }
 impl<ArgT, SelT, ATy> Selection for CompositeSelectArgs<ArgT, SelT, ATy>

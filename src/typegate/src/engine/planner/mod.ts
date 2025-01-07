@@ -18,16 +18,22 @@ import {
 } from "../../typegraph/type_node.ts";
 import { closestWord, unparse } from "../../utils.ts";
 import { collectArgs, type ComputeArg } from "./args.ts";
-import {
-  type OperationPolicies,
-  OperationPoliciesBuilder,
-} from "./policies.ts";
+import { OperationPolicies, StageMetadata } from "./policies.ts";
 import { getLogger } from "../../log.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "@std/collections/map-values";
 import { DependencyResolver } from "./dependency_resolver.ts";
+import { Runtime } from "../../runtimes/Runtime.ts";
+import { getInjection } from "../../typegraph/utils.ts";
+import { Injection } from "../../typegraph/types.ts";
 
 const logger = getLogger(import.meta);
+
+interface Scope {
+  runtime: Runtime;
+  fnIdx: number;
+  path: string[];
+}
 
 interface Node {
   name: string;
@@ -37,6 +43,7 @@ interface Node {
   typeIdx: number;
   parent?: Node;
   parentStage?: ComputeStage;
+  scope?: Scope;
 }
 
 export interface Plan {
@@ -59,7 +66,6 @@ export interface Plan {
  */
 export class Planner {
   rawArgs: Record<string, ComputeArg> = {};
-  policiesBuilder: OperationPoliciesBuilder;
 
   constructor(
     readonly operation: ast.OperationDefinitionNode,
@@ -67,10 +73,6 @@ export class Planner {
     private readonly tg: TypeGraph,
     private readonly verbose: boolean,
   ) {
-    const { timer_policy_eval_retries } = tg.typegate.config.base;
-    this.policiesBuilder = new OperationPoliciesBuilder(tg, {
-      timer_policy_eval_retries,
-    });
   }
 
   getPlan(): Plan {
@@ -101,13 +103,31 @@ export class Planner {
       {} as Record<string, string>,
     );
 
+    const orderedStageMetadata = [] as Array<StageMetadata>;
     for (const stage of stages) {
       stage.varTypes = varTypes;
+      const stageId = stage.id();
+      if (stageId.startsWith("__")) {
+        // TODO: allow and reuse previous stage policy?
+        continue;
+      }
+
+      orderedStageMetadata.push({
+        stageId,
+        typeIdx: stage.props.typeIdx,
+        isTopLevel: stage.props.parent ? false : true,
+        node: stage.props.node // actual non aliased name
+      });
     }
+
+    const { timer_policy_eval_retries } = this.tg.typegate.config.base;
+    const operationPolicies =  new OperationPolicies(this.tg, orderedStageMetadata, {
+      timer_policy_eval_retries
+    });
 
     return {
       stages,
-      policies: this.policiesBuilder.build(),
+      policies: operationPolicies,
     };
   }
 
@@ -281,6 +301,19 @@ export class Planner {
     ) {
       throw this.unexpectedFieldError(node, name);
     }
+    const fieldType = fieldIdx == null ? null : this.tg.type(fieldIdx);
+    const scope: Scope | undefined =
+      (fieldType && fieldType.type === Type.FUNCTION)
+        ? {
+          runtime: this.tg
+            .runtimeReferences[
+              this.tg.materializer(fieldType.materializer).runtime
+            ],
+          fnIdx: fieldIdx,
+          path: [],
+        }
+        : node.scope && { ...node.scope, path: [...node.scope.path, name] };
+
     return {
       parent: node,
       name,
@@ -289,7 +322,15 @@ export class Planner {
       args: args ?? [],
       typeIdx: props[name],
       parentStage,
+      scope,
     };
+  }
+
+  #getOutjection(scope: Scope): Injection | null {
+    const outjectionTree =
+      this.tg.type(scope.fnIdx, Type.FUNCTION).outjections ??
+        {};
+    return getInjection(outjectionTree, scope.path);
   }
 
   /**
@@ -297,7 +338,10 @@ export class Planner {
    * @param field {FieldNode} The selection field for node
    * @param node
    */
-  private traverseField(node: Node, field: ast.FieldNode): ComputeStage[] {
+  private traverseField(
+    node: Node,
+    field: ast.FieldNode,
+  ): ComputeStage[] {
     const { parent, path, name } = node;
 
     if (parent == null) {
@@ -363,7 +407,6 @@ export class Planner {
     }
 
     const fieldType = this.tg.type(node.typeIdx);
-
     const stages = fieldType.type !== Type.FUNCTION
       ? this.traverseValueField(node)
       : this.traverseFuncField(
@@ -374,13 +417,39 @@ export class Planner {
     return stages;
   }
 
+  #createOutjectionStage(node: Node, outjection: Injection): ComputeStage {
+    return this.createComputeStage(node, {
+      // TODO parent if from parent
+      dependencies: [],
+      args: null,
+      effect: null,
+      runtime: this.tg.runtimeReferences[this.tg.denoRuntimeIdx],
+      batcher: this.tg.nextBatcher(this.tg.type(node.typeIdx)),
+      rateCalls: true,
+      rateWeight: 0,
+      materializer: {
+        runtime: this.tg.denoRuntimeIdx,
+        name: "outjection",
+        data: outjection,
+        effect: { effect: null, idempotent: true },
+      },
+    });
+  }
+
   /**
    * Create `ComputeStage`s for `node` and its child nodes,
    * where `node` corresponds to a selection field for a value (non-function type).
    * @param node
-   * @param policies
    */
-  private traverseValueField(node: Node): ComputeStage[] {
+  private traverseValueField(
+    node: Node,
+  ): ComputeStage[] {
+    const outjection = node.scope && this.#getOutjection(node.scope!);
+    if (outjection) {
+      return [
+        this.#createOutjectionStage(node, outjection),
+      ];
+    }
     const stages: ComputeStage[] = [];
     const schema = this.tg.type(node.typeIdx);
 
@@ -392,11 +461,8 @@ export class Planner {
       );
     }
 
-    const runtime = (schema.type === Type.FUNCTION)
-      ? this.tg
-        .runtimeReferences[(this.tg.materializer(schema.materializer)).runtime]
-      : node.parentStage?.props.runtime ??
-        this.tg.runtimeReferences[this.tg.denoRuntimeIdx];
+    const runtime = node.scope?.runtime ??
+      this.tg.runtimeReferences[this.tg.denoRuntimeIdx];
 
     const stage = this.createComputeStage(node, {
       dependencies: node.parentStage ? [node.parentStage.id()] : [],
@@ -407,10 +473,6 @@ export class Planner {
       rateCalls: true,
       rateWeight: 0,
     });
-    const types = this.policiesBuilder.setReferencedTypes(
-      stage.id(),
-      node.typeIdx,
-    );
 
     stages.push(stage);
 
@@ -420,7 +482,6 @@ export class Planner {
     while (isQuantifier(nestedSchema)) {
       nestedTypeIdx = getWrappedType(nestedSchema);
       nestedSchema = this.tg.type(nestedTypeIdx);
-      types.push(nestedTypeIdx);
     }
 
     stages.push(...this.traverse({ ...node, typeIdx: nestedTypeIdx }, stage));
@@ -506,31 +567,21 @@ export class Planner {
     });
     stages.push(stage);
 
-    this.policiesBuilder.push(stage.id(), node.typeIdx, collected.policies);
-    const types = this.policiesBuilder.setReferencedTypes(
-      stage.id(),
-      node.typeIdx,
-      outputIdx,
-      inputIdx,
-    );
-
     // nested quantifiers
-    let wrappedTypeIdx = outputIdx;
-    let wrappedType = this.tg.type(wrappedTypeIdx);
+    let wrappedOutputIdx = outputIdx;
+    let wrappedType = this.tg.type(wrappedOutputIdx);
     while (isQuantifier(wrappedType)) {
-      wrappedTypeIdx = getWrappedType(wrappedType);
-      wrappedType = this.tg.type(wrappedTypeIdx);
-      types.push(wrappedTypeIdx);
+      wrappedOutputIdx = getWrappedType(wrappedType);
+      wrappedType = this.tg.type(wrappedOutputIdx);
     }
 
     stages.push(
       ...this.traverse(
-        { ...node, typeIdx: wrappedTypeIdx, parentStage: stage },
+        { ...node, typeIdx: wrappedOutputIdx, parentStage: stage },
         stage,
       ),
     );
 
-    this.policiesBuilder.pop(stage.id());
     return stages;
   }
 

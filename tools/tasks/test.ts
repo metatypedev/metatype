@@ -25,6 +25,9 @@ export default {
   "test-rust": {
     inherit: ["_rust", "_ecma", "_python"],
     async fn($) {
+      // typegraph_core tests need to be run separately
+      // without --tests, the --doc is causing a link error "syntax error in VERSION script"
+      await $`cargo test --locked --package typegraph_core --tests`;
       await $`cargo test --locked --package meta-cli`;
       await $`cargo test --locked --workspace
                 --exclude meta-cli
@@ -33,9 +36,6 @@ export default {
                 --exclude typegraph_core
                 --exclude metagen_fdk_rust_static
                 --exclude client_rs_static`;
-      // typegraph_core tests need to be run separately
-      // without --tests, the --doc is causing a link error "syntax error in VERSION script"
-      await $`cargo test --locked --package typegraph_core --tests`;
     },
   },
   "test-codegen": {

@@ -6,13 +6,12 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "s3",
-      "policies": [],
       "properties": {
         "listObjects": 1,
         "getDownloadUrl": 10,
         "signTextUploadUrl": 13,
         "upload": 15,
-        "uploadMany": 20
+        "uploadMany": 19
       },
       "id": [],
       "required": [
@@ -21,17 +20,30 @@ snapshot[`s3 typegraphs 1`] = `
         "signTextUploadUrl",
         "upload",
         "uploadMany"
-      ]
+      ],
+      "policies": {
+        "listObjects": [
+          0
+        ],
+        "getDownloadUrl": [
+          0
+        ],
+        "signTextUploadUrl": [
+          0
+        ],
+        "upload": [
+          0
+        ],
+        "uploadMany": [
+          0
+        ]
+      }
     },
     {
       "type": "function",
       "title": "root_listObjects_fn",
-      "policies": [
-        0
-      ],
       "input": 2,
       "output": 5,
-      "injections": {},
       "runtimeConfig": null,
       "materializer": 0,
       "rate_weight": null,
@@ -40,73 +52,72 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_listObjects_fn_input",
-      "policies": [],
       "properties": {
         "path": 3
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "path": []
+      }
     },
     {
       "type": "optional",
       "title": "root_listObjects_fn_input_path_root_listObjects_fn_input_path_string_optional",
-      "policies": [],
       "item": 4,
       "default_value": null
     },
     {
       "type": "string",
-      "title": "root_listObjects_fn_input_path_string",
-      "policies": []
+      "title": "root_listObjects_fn_input_path_string"
     },
     {
       "type": "object",
       "title": "root_listObjects_fn_output",
-      "policies": [],
       "properties": {
         "keys": 6,
         "prefix": 9
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "keys": [],
+        "prefix": []
+      }
     },
     {
       "type": "list",
       "title": "root_listObjects_fn_output_keys_root_listObjects_fn_output_keys_struct_list",
-      "policies": [],
       "items": 7
     },
     {
       "type": "object",
       "title": "root_listObjects_fn_output_keys_struct",
-      "policies": [],
       "properties": {
         "key": 4,
         "size": 8
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "key": [],
+        "size": []
+      }
     },
     {
       "type": "integer",
-      "title": "root_listObjects_fn_output_keys_struct_size_integer",
-      "policies": []
+      "title": "root_listObjects_fn_output_keys_struct_size_integer"
     },
     {
       "type": "list",
       "title": "root_listObjects_fn_output_prefix_root_listObjects_fn_input_path_string_list",
-      "policies": [],
       "items": 4
     },
     {
       "type": "function",
       "title": "root_getDownloadUrl_fn",
-      "policies": [
-        0
-      ],
       "input": 11,
       "output": 12,
-      "injections": {},
       "runtimeConfig": null,
       "materializer": 2,
       "rate_weight": null,
@@ -115,28 +126,25 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_getDownloadUrl_fn_input",
-      "policies": [],
       "properties": {
         "path": 4
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "path": []
+      }
     },
     {
       "type": "string",
       "title": "root_getDownloadUrl_fn_output",
-      "policies": [],
       "format": "uri"
     },
     {
       "type": "function",
       "title": "root_signTextUploadUrl_fn",
-      "policies": [
-        0
-      ],
       "input": 14,
       "output": 12,
-      "injections": {},
       "runtimeConfig": null,
       "materializer": 3,
       "rate_weight": null,
@@ -145,23 +153,22 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_signTextUploadUrl_fn_input",
-      "policies": [],
       "properties": {
         "length": 8,
         "path": 4
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "length": [],
+        "path": []
+      }
     },
     {
       "type": "function",
       "title": "root_upload_fn",
-      "policies": [
-        0
-      ],
       "input": 16,
-      "output": 19,
-      "injections": {},
+      "output": 18,
       "runtimeConfig": null,
       "materializer": 4,
       "rate_weight": null,
@@ -170,43 +177,33 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_upload_fn_input",
-      "policies": [],
       "properties": {
         "file": 17,
-        "path": 18
+        "path": 3
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "file": [],
+        "path": []
+      }
     },
     {
       "type": "file",
       "title": "root_upload_fn_input_file_file",
-      "policies": [],
       "mimeTypes": [
         "text/plain"
       ]
     },
     {
-      "type": "optional",
-      "title": "root_upload_fn_input_path_root_listObjects_fn_input_path_string_optional",
-      "policies": [],
-      "item": 4,
-      "default_value": null
-    },
-    {
       "type": "boolean",
-      "title": "root_upload_fn_output",
-      "policies": []
+      "title": "root_upload_fn_output"
     },
     {
       "type": "function",
       "title": "root_uploadMany_fn",
-      "policies": [
-        0
-      ],
-      "input": 21,
-      "output": 19,
-      "injections": {},
+      "input": 20,
+      "output": 18,
       "runtimeConfig": null,
       "materializer": 5,
       "rate_weight": null,
@@ -215,31 +212,31 @@ snapshot[`s3 typegraphs 1`] = `
     {
       "type": "object",
       "title": "root_uploadMany_fn_input",
-      "policies": [],
       "properties": {
-        "prefix": 22,
-        "files": 23
+        "prefix": 21,
+        "files": 22
       },
       "id": [],
-      "required": []
+      "required": [],
+      "policies": {
+        "prefix": [],
+        "files": []
+      }
     },
     {
       "type": "optional",
       "title": "root_uploadMany_fn_input_prefix_root_listObjects_fn_input_path_string_optional",
-      "policies": [],
       "item": 4,
       "default_value": ""
     },
     {
       "type": "list",
       "title": "root_uploadMany_fn_input_files_root_uploadMany_fn_input_files_file_list",
-      "policies": [],
-      "items": 24
+      "items": 23
     },
     {
       "type": "file",
-      "title": "root_uploadMany_fn_input_files_file",
-      "policies": []
+      "title": "root_uploadMany_fn_input_files_file"
     }
   ],
   "materializers": [
@@ -262,7 +259,7 @@ snapshot[`s3 typegraphs 1`] = `
         "idempotent": true
       },
       "data": {
-        "name": "true"
+        "name": "pass"
       }
     },
     {

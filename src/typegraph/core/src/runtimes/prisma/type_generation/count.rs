@@ -13,11 +13,11 @@ use super::TypeGen;
 pub struct Count;
 
 impl TypeGen for Count {
-    fn generate(&self, _context: &PrismaContext) -> Result<TypeId> {
-        t::optionalx(t::integer()).build_named(self.name())
+    fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
+        t::optionalx(t::integer()).build_named(self.name(context)?)
     }
 
-    fn name(&self) -> String {
-        "_count".to_string()
+    fn name(&self, _context: &PrismaContext) -> Result<String> {
+        Ok("_count".to_string())
     }
 }

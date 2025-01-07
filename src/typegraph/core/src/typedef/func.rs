@@ -37,7 +37,15 @@ impl TypeConversion for Func {
             _ => return Err(errors::invalid_input_type(&inp_id.repr()?)),
         };
 
-        let output = ctx.register_type(TypeId(self.data.out))?.into();
+        let out_id = TypeId(self.data.out);
+        let output = ctx.register_type(out_id)?.into();
+        let outjection_tree = match out_id.as_xdef()?.type_def {
+            TypeDef::Struct(s) => collect_injections(s, Default::default())?,
+            _ => Default::default(),
+        };
+
+        let outjection_secrets = outjection_tree.get_secrets()?;
+        ctx.meta.outjection_secrets.extend(outjection_secrets);
 
         let parameter_transform = self
             .data
@@ -67,11 +75,9 @@ impl TypeConversion for Func {
 
         Ok(TypeNode::Function {
             base: BaseBuilderInit {
-                ctx,
                 base_name: "func",
                 type_id: self.id,
                 name: xdef.get_owned_name(),
-                policies: xdef.attributes.find_policy().unwrap_or(&[]),
             }
             .init_builder()?
             .build()?,
@@ -80,6 +86,7 @@ impl TypeConversion for Func {
                 parameter_transform,
                 output,
                 injections: injection_tree.0,
+                outjections: outjection_tree.0,
                 runtime_config: self.collect_runtime_config(ctx)?,
                 materializer: mat_id,
                 rate_calls: self.data.rate_calls,

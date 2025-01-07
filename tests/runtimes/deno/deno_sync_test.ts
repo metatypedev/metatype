@@ -37,7 +37,11 @@ Meta.test(
     },
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
+    const e = await t.engine("runtimes/deno/deno.py", {
+      secrets: {
+        DENO_SECRET: "deno_secret",
+      },
+    });
 
     await t.should("work on the default worker", async () => {
       await gql`
@@ -128,7 +132,11 @@ Meta.test(
     },
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
+    const e = await t.engine("runtimes/deno/deno.py", {
+      secrets: {
+        DENO_SECRET: "deno_secret",
+      },
+    });
 
     await t.should("success for allowed network access", async () => {
       await gql`
@@ -368,7 +376,11 @@ Meta.test(
     },
   },
   async (t) => {
-    const e = await t.engine("runtimes/deno/deno.py");
+    const e = await t.engine("runtimes/deno/deno.py", {
+      secrets: {
+        DENO_SECRET: "deno_secret",
+      },
+    });
 
     await t.should("safely fail upon stack overflow", async () => {
       await gql`

@@ -6,7 +6,6 @@
 export type OptionalNode = {
   type: "optional";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
   item: number;
@@ -15,14 +14,12 @@ export type OptionalNode = {
 export type BooleanNode = {
   type: "boolean";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
 };
 export type FloatNode = {
   type: "float";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
   minimum?: number | null;
@@ -34,7 +31,6 @@ export type FloatNode = {
 export type IntegerNode = {
   type: "integer";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
   minimum?: number | null;
@@ -46,7 +42,6 @@ export type IntegerNode = {
 export type StringNode = {
   type: "string";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
   minLength?: number | null;
@@ -57,7 +52,6 @@ export type StringNode = {
 export type FileNode = {
   type: "file";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
   minSize?: number | null;
@@ -67,7 +61,7 @@ export type FileNode = {
 export type ObjectNode = {
   type: "object";
   title: string;
-  policies: PolicyIndices[];
+  policies?: Record<string, PolicyIndices[]>;
   description?: string | null;
   enum?: string[] | null;
   properties: {
@@ -79,7 +73,6 @@ export type ObjectNode = {
 export type ListNode = {
   type: "list";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
   items: number;
@@ -93,11 +86,11 @@ export type InjectionNode =
 export type FunctionNode = {
   type: "function";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
   input: number;
-  injections: Record<string, InjectionNode>;
+  injections?: Record<string, InjectionNode>;
+  outjections?: Record<string, InjectionNode>;
   parameterTransform?: FunctionParameterTransform | null;
   output: number;
   runtimeConfig: unknown;
@@ -108,7 +101,6 @@ export type FunctionNode = {
 export type UnionNode = {
   type: "union";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
   anyOf: number[];
@@ -116,7 +108,6 @@ export type UnionNode = {
 export type EitherNode = {
   type: "either";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
   oneOf: number[];
@@ -124,7 +115,6 @@ export type EitherNode = {
 export type AnyNode = {
   type: "any";
   title: string;
-  policies: PolicyIndices[];
   description?: string | null;
   enum?: string[] | null;
 };
@@ -433,6 +423,7 @@ export interface Policy {
 export interface TypeMeta {
   prefix?: string | null;
   secrets: string[];
+  outjectionSecrets?: string[];
   queries: Queries;
   cors: Cors;
   auths: Auth[];
