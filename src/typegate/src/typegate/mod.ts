@@ -397,6 +397,12 @@ export class Typegate implements AsyncDisposable {
     await this.artifactStore.runArtifactGC();
   }
 
+  async forceRemoveAllTypegraphs() {
+    for (const engine of this.register.list()) {
+      await this.removeTypegraph(engine.name);
+    }
+  }
+
   async initQueryEngine(
     tgDS: TypeGraphDS,
     secretManager: SecretManager,

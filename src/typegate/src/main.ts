@@ -53,6 +53,10 @@ try {
     base: defaultTypegateConfigBase,
   });
   const typegate = await Typegate.init(config);
+  if (config.sync?.forceRemove) {
+    logger.warn("Force removal of typegraphs at boot");
+    await typegate.forceRemoveAllTypegraphs();
+  }
 
   await SystemTypegraph.loadAll(typegate, !globalConfig.packaged);
 

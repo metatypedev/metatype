@@ -115,12 +115,14 @@ export const syncConfigSchema = z.object({
   s3_access_key: refineEnvVar("SYNC_S3_ACCESS_KEY"),
   s3_secret_key: refineEnvVar("SYNC_S3_SECRET_KEY"),
   s3_path_style: zBooleanString.default(false),
+  force_remove: zBooleanString.default(false),
 });
 export type SyncConfig = z.infer<typeof syncConfigSchema>;
 export type SyncConfigX = {
   redis: RedisConnectOptions;
   s3: S3ClientConfig;
   s3Bucket: string;
+  forceRemove: boolean
 };
 
 export type TypegateConfig = {
