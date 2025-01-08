@@ -164,10 +164,6 @@ export function basicTestTemplate(
           }
         `
           .withVars({ account_balance })
-          .expectBody((body) => {
-            const account = body.data?.start_compensation! as number;
-            assertEquals(account, account_balance);
-          })
           .on(e);
       });
     },
@@ -315,8 +311,8 @@ export function concurrentWorkflowTestTemplate(
             const localSorter = (a: any, b: any) =>
               a.run_id.localeCompare(b.run_id);
 
-            const received =
-              body?.data?.results?.completed?.runs ?? ([] as Array<any>);
+            const received = body?.data?.results?.completed?.runs ??
+              ([] as Array<any>);
             const expected = [
               {
                 result: {
@@ -477,8 +473,8 @@ export function retrySaveTestTemplate(
               const localSorter = (a: any, b: any) =>
                 a.run_id.localeCompare(b.run_id);
 
-              const received =
-                body?.data?.results?.completed?.runs ?? ([] as Array<any>);
+              const received = body?.data?.results?.completed?.runs ??
+                ([] as Array<any>);
               const expected = [
                 {
                   result: {
@@ -672,7 +668,7 @@ export function childWorkflowTestTemplate(
             })
             .expectBody((body) => {
               const sorted = body.data.search.sort((a: any, b: any) =>
-                a.value.localeCompare(b.value),
+                a.value.localeCompare(b.value)
               );
               assertEquals(sorted, [
                 { status: "COMPLETED", value: '"Bump substantial v2 => v3"' },

@@ -9,6 +9,8 @@ import {
   Workflow,
 } from "../imports/common_types.ts";
 
+import { assertEquals } from "@std/assert";
+
 export const eventsAndExceptionExample: Workflow<string> = async (
   ctx: Context,
 ) => {
@@ -128,9 +130,10 @@ export async function accidentalInputMutation(ctx: Context) {
     if (front.innerField == mutValue) {
       // Should throw on shallow clones
       throw new Error(
-        `actual kwargs was mutated after interrupts: copy ${JSON.stringify(
-          copy,
-        )
+        `actual kwargs was mutated after interrupts: copy ${
+          JSON.stringify(
+            copy,
+          )
         }, ${mutValue}`,
       );
     }
@@ -163,11 +166,13 @@ export async function compensation(ctx: Context) {
   };
 
   await ctx.save(() => debitAccount(4), {
-    compensateWith: () => creditAccount(4),
+    compensateWith: () => [creditAccount(4), assertEquals(account, 1000)],
   });
+
   await ctx.save(() => debitAccount(10), {
     compensateWith: () => creditAccount(10),
   });
+
   await ctx.save(() => {
     debitAccount(2);
     risky_transaction();
@@ -178,6 +183,4 @@ export async function compensation(ctx: Context) {
   await ctx.save(() => debitAccount(100), {
     compensateWith: () => creditAccount(100),
   });
-
-  return account;
 }
