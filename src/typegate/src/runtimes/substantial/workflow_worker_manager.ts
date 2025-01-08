@@ -6,9 +6,10 @@ import { TaskContext } from "../deno/shared_types.ts";
 import {
   BaseWorkerManager,
   DenoWorker,
+  EventHandler,
   TaskId,
 } from "../utils/worker_manager.ts";
-import { Run, WorkerEventHandler, WorkflowMessage } from "./types.ts";
+import { Run, WorkflowEvent, WorkflowMessage } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
 
@@ -22,7 +23,7 @@ export type WorkflowSpec = {
  * - The completion of a workflow is run async, it is entirely up to the event listeners to act upon the results
  */
 export class WorkerManager
-  extends BaseWorkerManager<WorkflowSpec, WorkflowMessage> {
+  extends BaseWorkerManager<WorkflowSpec, WorkflowMessage, WorkflowEvent> {
   constructor() {
     super((taskId: TaskId) => {
       return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
@@ -77,7 +78,7 @@ export class WorkerManager
     };
   }
 
-  listen(runId: TaskId, handlerFn: WorkerEventHandler) {
+  listen(runId: TaskId, handlerFn: EventHandler<WorkflowEvent>) {
     if (!this.hasTask(runId)) {
       // Note: never throw on worker events, this will make typegate panic!
       logger.warn(`Attempt listening on missing ${runId}`);

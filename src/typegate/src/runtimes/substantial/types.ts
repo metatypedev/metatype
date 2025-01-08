@@ -3,6 +3,7 @@
 
 import { Operation, Run } from "../../../engine/runtime.js";
 import { TaskContext } from "../deno/shared_types.ts";
+import type { WorkerError } from "../utils/worker_manager.ts";
 export type {
   Backend,
   Operation,
@@ -21,30 +22,43 @@ export type WorkflowMessage = {
   };
 };
 
-export type WorkerEventHandler = (message: Result<unknown>) => Promise<void>;
+export type WorkflowCompletionEvent =
+  | {
+    type: "SUCCESS";
+    result: unknown;
+    run: Run;
+    schedule: string;
+  }
+  | {
+    type: "FAIL";
+    error: string;
+    exception: Error | undefined;
+    run: Run;
+    schedule: string;
+  };
+
+export type InterruptEvent = {
+  type: "INTERRUPT";
+  interrupt: InterruptType;
+  schedule: string;
+  run: Run;
+};
+
+export type WorkflowEvent =
+  | WorkflowCompletionEvent
+  | InterruptEvent
+  | {
+    type: "ERROR";
+    error: string;
+  }
+  | WorkerError;
 
 export type Result<T> = {
   error: boolean;
   payload: T;
 };
 
-export function Ok<R>(payload: R): Result<R> {
-  return { error: false, payload };
-}
-
-export function Err<E>(payload: E): Result<E> {
-  return { error: true, payload };
-}
-
 export type ExecutionResultKind = "SUCCESS" | "FAIL";
-
-export type WorkflowResult = {
-  kind: ExecutionResultKind;
-  result: unknown;
-  exception?: Error;
-  schedule: string;
-  run: Run;
-};
 
 // TODO: convert python exceptions into these
 // by using prefixes on the exception message for example

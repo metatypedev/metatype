@@ -10,8 +10,14 @@ import {
 } from "../../../engine/runtime.js";
 import { getLoggerByAddress, Logger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
-import { TaskId } from "../utils/worker_manager.ts";
-import { appendIfOngoing, Interrupt, Result, WorkflowResult } from "./types.ts";
+import { EventHandler, TaskId } from "../utils/worker_manager.ts";
+import {
+  appendIfOngoing,
+  Interrupt,
+  InterruptEvent,
+  WorkflowCompletionEvent,
+  WorkflowEvent,
+} from "./types.ts";
 import { WorkerManager } from "./workflow_worker_manager.ts";
 
 export interface StdKwargs {
@@ -280,74 +286,52 @@ export class Agent {
     }
   }
 
-  #eventResultHandlerFor(workflowName: string, runId: string) {
-    return async (result: Result<unknown>) => {
-      if (result.error) {
-        // All Worker/Runner non-user issue should fall here
-        // Note: Should never throw (typegate will panic), this will run in a worker
-        this.logger.error(
-          `result error for "${runId}": ${JSON.stringify(result.payload)}`,
-        );
-        return;
-      }
-
-      // TODO generic event type on BaseWorker
-      const answer = result.payload as { type: string; data: unknown };
-      this.logger.info(
-        `"${runId}" answered: type ${JSON.stringify(answer.type)}`,
-      );
-
+  #eventResultHandlerFor(
+    workflowName: string,
+    runId: string,
+  ): EventHandler<WorkflowEvent> {
+    return async (e) => {
       const startedAt = this.workerManager.getInitialTimeStartedAt(runId);
 
-      switch (answer.type) {
-        case "START": {
-          const ret = answer.data as WorkflowResult;
-          const interrupt = Interrupt.getTypeOf(ret.exception);
-          switch (interrupt) {
-            case "SAVE_RETRY":
-            case "SLEEP":
-            case "WAIT_ENSURE_VALUE":
-            case "WAIT_HANDLE_EVENT":
-            case "WAIT_RECEIVE_EVENT": {
-              await this.#workflowHandleInterrupts(workflowName, runId, ret);
-              break;
-            }
-            case null: {
-              await this.#workflowHandleGracefullCompletion(
-                startedAt,
-                workflowName,
-                runId,
-                ret,
-              );
-              break;
-            }
-            default:
-              throw new Error(`Unknown interrupt "${interrupt}"`);
-          }
-          break;
-        }
-        default:
-          this.logger.error(
-            `Fatal: invalid type ${answer.type} sent by "${runId}": ${
-              JSON.stringify(answer.data)
-            }`,
+      switch (e.type) {
+        case "SUCCESS":
+        case "FAIL":
+          await this.#workflowHandleGracefullCompletion(
+            startedAt,
+            workflowName,
+            runId,
+            e,
           );
+          break;
+        case "ERROR":
+          this.logger.error(
+            `Result error for "${runId}": ${JSON.stringify(e.error)}`,
+          );
+          return;
+        case "INTERRUPT":
+          // TODO unknown interrupt
+          await this.#workflowHandleInterrupts(workflowName, runId, e);
+          break;
       }
+
+      // this.logger.info(
+      //   `"${runId}" answered: type ${JSON.stringify(answer.type)}`,
+      // );
     };
   }
 
   async #workflowHandleInterrupts(
     workflowName: string,
     runId: string,
-    { result, schedule, run }: WorkflowResult,
+    { interrupt, schedule, run }: InterruptEvent,
   ) {
     this.workerManager.destroyWorker(workflowName, runId); // !
 
-    this.logger.debug(`Interrupt "${workflowName}": ${result}"`);
+    this.logger.debug(`Interrupt "${workflowName}": ${interrupt}"`);
 
     // TODO: make all of these transactional
 
-    this.logger.info(`Persist records for "${workflowName}": ${result}"`);
+    this.logger.info(`Persist records for "${workflowName}": ${interrupt}"`);
     const _run = await Meta.substantial.storePersistRun({
       backend: this.backend,
       run,
@@ -388,29 +372,32 @@ export class Agent {
     startedAt: Date,
     workflowName: string,
     runId: string,
-    { result, kind, schedule, run }: WorkflowResult,
+    event: WorkflowCompletionEvent,
   ) {
     this.workerManager.destroyWorker(workflowName, runId);
+    console.log({ event });
+
+    const result = event.type == "SUCCESS" ? event.result : undefined;
 
     this.logger.info(
-      `gracefull completion of "${runId}" (${kind}): ${
+      `gracefull completion of "${runId}" (${event.type}): ${
         JSON.stringify(
-          result,
+          "result" in event ? event.result : event.error,
         )
       } started at "${startedAt}"`,
     );
 
     this.logger.info(`Append Stop ${runId}`);
-    const rustResult = kind == "FAIL" ? "Err" : "Ok";
+    const rustResult = event.type == "FAIL" ? "Err" : "Ok";
 
     // Note: run is a one-time value, thus can be mutated
 
-    appendIfOngoing(run, {
+    appendIfOngoing(event.run, {
       at: new Date().toJSON(),
       event: {
         type: "Stop",
         result: {
-          [rustResult]: result ?? null,
+          [rustResult]: result,
         } as unknown,
       },
     });
@@ -421,7 +408,7 @@ export class Agent {
 
     const _run = await Meta.substantial.storePersistRun({
       backend: this.backend,
-      run,
+      run: event.run,
     });
 
     // console.log("Persisted", run);
@@ -430,7 +417,7 @@ export class Agent {
       backend: this.backend,
       queue: this.queue,
       run_id: runId,
-      schedule,
+      schedule: event.schedule,
     });
 
     await Meta.substantial.agentRemoveLease({

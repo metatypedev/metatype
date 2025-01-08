@@ -7,10 +7,6 @@ import { getLogger } from "../../log.ts";
 const logger = getLogger(import.meta, "WARN");
 
 export type TaskId = string;
-export type WorkerEventHandler = (message: Result<unknown>) => Promise<void>;
-export type AnyString = string & Record<string | number | symbol, never>;
-// TODO generic event
-export type WorkerEvent = "START" | AnyString;
 export type Result<T> = {
   error: boolean;
   payload: T;
@@ -23,23 +19,35 @@ export function Err<E>(payload: E): Result<E> {
   return { error: true, payload };
 }
 
-export type WorkerData = {
-  type: WorkerEvent;
-  data: any;
-};
-
 export interface BaseMessage {
   type: string;
 }
 
-export abstract class BaseWorker<M extends BaseMessage> {
-  abstract listen(handlerFn: WorkerEventHandler): void;
+export interface WorkerError extends BaseMessage {
+  type: "WORKER_ERROR";
+  event: ErrorEvent;
+}
+
+export type BaseDenoWorkerMessage = BaseMessage | WorkerError;
+
+// TODO failure as message type instead of result
+export type EventHandler<E extends BaseMessage> = (
+  message: E,
+) => void | Promise<void>;
+
+/**
+ * `M` is the message type that the worker will receive;
+ * `E` is the message type that the worker will send back (event).
+ */
+export abstract class BaseWorker<M extends BaseMessage, E extends BaseMessage> {
+  abstract listen(handlerFn: EventHandler<E>): void;
   abstract send(msg: M): void;
   abstract destroy(): void;
   abstract get id(): TaskId;
 }
 
-export class DenoWorker<M extends BaseMessage> extends BaseWorker<M> {
+export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
+  extends BaseWorker<M, E> {
   #worker: Worker;
   #taskId: TaskId;
   constructor(taskId: TaskId, workerPath: string) {
@@ -64,18 +72,18 @@ export class DenoWorker<M extends BaseMessage> extends BaseWorker<M> {
     this.#taskId = taskId;
   }
 
-  listen(handlerFn: WorkerEventHandler) {
+  listen(handlerFn: EventHandler<E>) {
     this.#worker.onmessage = async (message) => {
-      if (message.data.error) {
-        // worker level failure
-        await handlerFn(Err(message.data.error));
-      } else {
-        // logic level Result (Ok | Err)
-        await handlerFn(message.data as Result<unknown>);
-      }
+      await handlerFn(message.data as E);
     };
 
-    this.#worker.onerror = /*async*/ (event) => handlerFn(Err(event));
+    this.#worker.onerror = /*async*/ (event) =>
+      handlerFn(
+        {
+          type: "WORKER_ERROR",
+          event,
+        } as E,
+      );
   }
 
   send(msg: M) {
@@ -91,16 +99,20 @@ export class DenoWorker<M extends BaseMessage> extends BaseWorker<M> {
   }
 }
 
-export class BaseWorkerManager<T, M extends BaseMessage> {
+export class BaseWorkerManager<
+  T,
+  M extends BaseMessage,
+  E extends BaseMessage,
+> {
   #activeTasks: Map<TaskId, {
-    worker: BaseWorker<M>;
+    worker: BaseWorker<M, E>;
     taskSpec: T;
   }> = new Map();
   #tasksByName: Map<string, Set<TaskId>> = new Map();
   #startedAt: Map<TaskId, Date> = new Map();
 
-  #workerFactory: (taskId: TaskId) => BaseWorker<M>;
-  protected constructor(workerFactory: (taskId: TaskId) => BaseWorker<M>) {
+  #workerFactory: (taskId: TaskId) => BaseWorker<M, E>;
+  protected constructor(workerFactory: (taskId: TaskId) => BaseWorker<M, E>) {
     this.#workerFactory = workerFactory;
   }
 
@@ -141,7 +153,7 @@ export class BaseWorkerManager<T, M extends BaseMessage> {
   protected addWorker(
     name: string,
     taskId: TaskId,
-    worker: BaseWorker<M>,
+    worker: BaseWorker<M, E>,
     taskSpec: T,
     startedAt: Date,
   ) {
