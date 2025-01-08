@@ -3,7 +3,7 @@
 
 import { Operation, Run } from "../../../engine/runtime.js";
 import { TaskContext } from "../deno/shared_types.ts";
-import type { WorkerError } from "../utils/worker_manager.ts";
+import { DenoWorkerError } from "../utils/workers/deno.ts";
 export type {
   Backend,
   Operation,
@@ -51,7 +51,7 @@ export type WorkflowEvent =
     type: "ERROR";
     error: string;
   }
-  | WorkerError;
+  | DenoWorkerError;
 
 export type Result<T> = {
   error: boolean;

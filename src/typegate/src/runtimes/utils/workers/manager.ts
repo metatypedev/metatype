@@ -1,39 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { envSharedWithWorkers } from "../../config/shared.ts";
-import { getLogger } from "../../log.ts";
+import { envSharedWithWorkers } from "../../../config/shared.ts";
+import { getLogger } from "../../../log.ts";
+import { BaseDenoWorkerMessage } from "./deno.ts";
+import { BaseMessage, EventHandler, TaskId } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
-
-export type TaskId = string;
-export type Result<T> = {
-  error: boolean;
-  payload: T;
-};
-export function Ok<R>(payload: R): Result<R> {
-  return { error: false, payload };
-}
-
-export function Err<E>(payload: E): Result<E> {
-  return { error: true, payload };
-}
-
-export interface BaseMessage {
-  type: string;
-}
-
-export interface WorkerError extends BaseMessage {
-  type: "WORKER_ERROR";
-  event: ErrorEvent;
-}
-
-export type BaseDenoWorkerMessage = BaseMessage | WorkerError;
-
-// TODO failure as message type instead of result
-export type EventHandler<E extends BaseMessage> = (
-  message: E,
-) => void | Promise<void>;
 
 /**
  * `M` is the message type that the worker will receive;
