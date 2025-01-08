@@ -10,6 +10,6 @@ serde.workspace = true
 serde_json.workspace = true
 uuid.workspace = true
 
-protobuf = "3.6.0"
+protobuf = "3.7.1"
 # pinned due to url
 redis = "=0.25.4"
