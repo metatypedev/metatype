@@ -34,7 +34,7 @@ message Save {
 message Compensation {
   uint32 save_id = 1;
   string error = 2;
-  bytes compensation_result = 3;
+  string compensation_result = 3;
 }
 
 message Sleep {
