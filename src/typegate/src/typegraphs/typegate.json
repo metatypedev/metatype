@@ -83,7 +83,7 @@
     },
     {
       "type": "object",
-      "title": "root_typegraphs_fn_input",
+      "title": "scalar_struct_shared_1",
       "properties": {},
       "id": [],
       "required": []
@@ -109,11 +109,11 @@
     },
     {
       "type": "string",
-      "title": "Typegraph_name_string"
+      "title": "scalar_string_1"
     },
     {
       "type": "string",
-      "title": "Typegraph_url_string_uri",
+      "title": "scalar_string_uri_1",
       "format": "uri"
     },
     {
@@ -198,7 +198,7 @@
     },
     {
       "type": "string",
-      "title": "root_addTypegraph_fn_input_fromString_string_json",
+      "title": "scalar_string_json_1",
       "format": "json"
     },
     {
@@ -240,7 +240,7 @@
     },
     {
       "type": "string",
-      "title": "root_addTypegraph_fn_output_messages_struct_type_string_enum",
+      "title": "scalar_string_enum_1",
       "enum": [
         "\"info\"",
         "\"warning\"",
@@ -268,7 +268,7 @@
     },
     {
       "type": "optional",
-      "title": "root_addTypegraph_fn_output_failure_root_addTypegraph_fn_input_fromString_string_json_optional",
+      "title": "root_addTypegraph_fn_output_failure_scalar_string_json_1_optional",
       "item": 14,
       "default_value": null
     },
@@ -296,12 +296,12 @@
     },
     {
       "type": "list",
-      "title": "root_removeTypegraphs_fn_input_names_Typegraph_name_string_list",
+      "title": "scalar_scalar_string_1_list_shared_1",
       "items": 5
     },
     {
       "type": "boolean",
-      "title": "root_removeTypegraphs_fn_output"
+      "title": "scalar_boolean_1"
     },
     {
       "type": "function",
@@ -333,7 +333,7 @@
     },
     {
       "type": "list",
-      "title": "root_argInfoByPath_fn_input_argPaths_root_removeTypegraphs_fn_input_names_Typegraph_name_string_list_list",
+      "title": "root_argInfoByPath_fn_input_argPaths_scalar_scalar_string_1_list_shared_1_list",
       "items": 24
     },
     {
@@ -369,18 +369,18 @@
     },
     {
       "type": "optional",
-      "title": "TypeInfo_enum_TypeInfo_enum_root_addTypegraph_fn_input_fromString_string_json_list_optional",
+      "title": "TypeInfo_enum_TypeInfo_enum_scalar_string_json_1_list_optional",
       "item": 32,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "TypeInfo_enum_root_addTypegraph_fn_input_fromString_string_json_list",
+      "title": "TypeInfo_enum_scalar_string_json_1_list",
       "items": 14
     },
     {
       "type": "optional",
-      "title": "TypeInfo_format_Typegraph_name_string_optional",
+      "title": "TypeInfo_format_scalar_string_1_optional",
       "item": 5,
       "default_value": null
     },
@@ -440,7 +440,7 @@
     },
     {
       "type": "object",
-      "title": "root_findAvailableOperations_fn_input",
+      "title": "scalar_struct_shared_2",
       "properties": {
         "typegraph": 5
       },
@@ -477,7 +477,7 @@
     },
     {
       "type": "string",
-      "title": "OperationInfo_type_string_enum",
+      "title": "scalar_string_enum_2",
       "enum": [
         "\"query\"",
         "\"mutation\""
@@ -596,7 +596,7 @@
     },
     {
       "type": "object",
-      "title": "root_execRawPrismaRead_fn_input",
+      "title": "scalar_struct_shared_3",
       "properties": {
         "typegraph": 5,
         "runtime": 5,
@@ -697,13 +697,13 @@
     },
     {
       "type": "optional",
-      "title": "PrismaBatchQuery_transaction_struct_isolationLevel_PrismaBatchQuery_transaction_struct_isolationLevel_string_enum_optional",
+      "title": "PrismaBatchQuery_transaction_struct_isolationLevel_scalar_string_enum_3_optional",
       "item": 63,
       "default_value": null
     },
     {
       "type": "string",
-      "title": "PrismaBatchQuery_transaction_struct_isolationLevel_string_enum",
+      "title": "scalar_string_enum_3",
       "enum": [
         "\"read uncommitted\"",
         "\"readuncommitted\"",
@@ -777,7 +777,7 @@
     },
     {
       "type": "integer",
-      "title": "root_queryPrismaModel_fn_input_offset_integer"
+      "title": "scalar_integer_1"
     },
     {
       "type": "object",

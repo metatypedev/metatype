@@ -882,8 +882,8 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        file: "RootUploadFnInputFileFile",
-        path: "RootUploadFnInputPathRootUploadFnInputPathStringOptional",
+        file: "ScalarFileShared1",
+        path: "RootUploadFnInputPathScalarString1Optional",
       },
       inputFiles: [[".file"]],
     };
@@ -892,36 +892,36 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        prefix: "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
-        files: "RootUploadManyFnInputFilesRootUploadFnInputFileFileList",
+        prefix: "RootUploadManyFnInputPrefixScalarString1Optional",
+        files: "RootUploadManyFnInputFilesScalarFileShared1List",
       },
       inputFiles: [[".files","[]"]],
     };
   },
 };
-export type RootUploadFnInputFileFile = File;
-export type RootUploadFnInputPathString = string;
-export type RootUploadFnInputPathRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
+export type ScalarFileShared1 = File;
+export type ScalarString1 = string;
+export type RootUploadFnInputPathScalarString1Optional = ScalarString1 | null | undefined;
 export type RootUploadFnInput = {
-  file: RootUploadFnInputFileFile;
-  path?: RootUploadFnInputPathRootUploadFnInputPathStringOptional;
+  file: ScalarFileShared1;
+  path?: RootUploadFnInputPathScalarString1Optional;
 };
-export type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = RootUploadFnInputPathString | null | undefined;
-export type RootUploadManyFnInputFilesRootUploadFnInputFileFileList = Array<RootUploadFnInputFileFile>;
+export type RootUploadManyFnInputPrefixScalarString1Optional = ScalarString1 | null | undefined;
+export type RootUploadManyFnInputFilesScalarFileShared1List = Array<ScalarFileShared1>;
 export type RootUploadManyFnInput = {
-  prefix?: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional;
-  files: RootUploadManyFnInputFilesRootUploadFnInputFileFileList;
+  prefix?: RootUploadManyFnInputPrefixScalarString1Optional;
+  files: RootUploadManyFnInputFilesScalarFileShared1List;
 };
-export type RootUploadFnOutput = boolean;
+export type ScalarBoolean1 = boolean;
 
 
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
-      "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
-      "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
-      "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
-      "RootUploadManyFnInputFilesRootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
+      "ScalarFileShared1": "scalar_file_shared_1!",
+      "RootUploadFnInputPathScalarString1Optional": "String",
+      "RootUploadManyFnInputPrefixScalarString1Optional": "String",
+      "RootUploadManyFnInputFilesScalarFileShared1List": "[scalar_file_shared_1]!",
     });
   }
     
@@ -931,7 +931,7 @@ export class QueryGraph extends _QueryGraphBase {
       [["upload", nodeMetas.RootUploadFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<RootUploadFnOutput>;
+    return new MutationNode(inner) as MutationNode<ScalarBoolean1>;
   }
   uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>) {
     const inner = _selectionToNodeSet(
@@ -939,6 +939,6 @@ export class QueryGraph extends _QueryGraphBase {
       [["uploadMany", nodeMetas.RootUploadManyFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<RootUploadFnOutput>;
+    return new MutationNode(inner) as MutationNode<ScalarBoolean1>;
   }
 }

@@ -915,9 +915,9 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        id: "UserIdStringUuid",
-        slug: "PostSlugString",
-        title: "PostSlugString",
+        id: "ScalarStringUuid1",
+        slug: "ScalarString1",
+        title: "ScalarString1",
       },
     };
   },
@@ -930,7 +930,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.Post(),
       argumentTypes: {
-        id: "PostSlugString",
+        id: "ScalarString1",
       },
     };
   },
@@ -938,7 +938,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        id: "PostSlugString",
+        id: "ScalarString1",
       },
     };
   },
@@ -954,7 +954,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.RootCompositeUnionFnOutput(),
       argumentTypes: {
-        id: "PostSlugString",
+        id: "ScalarString1",
       },
     };
   },
@@ -970,7 +970,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.RootMixedUnionFnOutput(),
       argumentTypes: {
-        id: "PostSlugString",
+        id: "ScalarString1",
       },
     };
   },
@@ -1011,48 +1011,48 @@ const nodeMetas = {
     };
   },
 };
-export type UserIdStringUuid = string;
-export type PostSlugString = string;
+export type ScalarStringUuid1 = string;
+export type ScalarString1 = string;
 export type Post = {
-  id: UserIdStringUuid;
-  slug: PostSlugString;
-  title: PostSlugString;
+  id: ScalarStringUuid1;
+  slug: ScalarString1;
+  title: ScalarString1;
 };
-export type RootCompositeArgsFnInput = {
-  id: PostSlugString;
+export type ScalarStructShared2 = {
+  id: ScalarString1;
 };
-export type UserEmailStringEmail = string;
+export type ScalarStringEmail1 = string;
 export type UserPostsPostList = Array<Post>;
 export type User = {
-  id: UserIdStringUuid;
-  email: UserEmailStringEmail;
+  id: ScalarStringUuid1;
+  email: ScalarStringEmail1;
   posts: UserPostsPostList;
 };
-export type RootScalarUnionFnOutputT1Integer = number;
+export type ScalarInteger1 = number;
 export type RootScalarUnionFnOutput =
-  | (PostSlugString)
-  | (RootScalarUnionFnOutputT1Integer);
+  | (ScalarString1)
+  | (ScalarInteger1);
 export type RootCompositeUnionFnOutput =
   | (Post)
   | (User);
 export type RootMixedUnionFnOutput =
   | (Post)
   | (User)
-  | (PostSlugString)
-  | (RootScalarUnionFnOutputT1Integer);
+  | (ScalarString1)
+  | (ScalarInteger1);
 export type RootNestedCompositeFnOutputCompositeStructNestedStruct = {
-  inner: RootScalarUnionFnOutputT1Integer;
+  inner: ScalarInteger1;
 };
 export type RootNestedCompositeFnOutputCompositeStruct = {
-  value: RootScalarUnionFnOutputT1Integer;
+  value: ScalarInteger1;
   nested: RootNestedCompositeFnOutputCompositeStructNestedStruct;
 };
 export type RootNestedCompositeFnOutputListStruct = {
-  value: RootScalarUnionFnOutputT1Integer;
+  value: ScalarInteger1;
 };
 export type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Array<RootNestedCompositeFnOutputListStruct>;
 export type RootNestedCompositeFnOutput = {
-  scalar: RootScalarUnionFnOutputT1Integer;
+  scalar: ScalarInteger1;
   composite: RootNestedCompositeFnOutputCompositeStruct;
   list: RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList;
 };
@@ -1102,8 +1102,8 @@ export type RootNestedCompositeFnOutputSelections = {
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
-      "UserIdStringUuid": "String!",
-      "PostSlugString": "String!",
+      "ScalarStringUuid1": "String!",
+      "ScalarString1": "String!",
       "post": "post!",
       "user": "user!",
     });
@@ -1131,7 +1131,7 @@ export class QueryGraph extends _QueryGraphBase {
       [["scalarNoArgs", nodeMetas.RootScalarNoArgsFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<PostSlugString>;
+    return new QueryNode(inner) as QueryNode<ScalarString1>;
   }
   scalarArgs(args: Post | PlaceholderArgs<Post>) {
     const inner = _selectionToNodeSet(
@@ -1139,7 +1139,7 @@ export class QueryGraph extends _QueryGraphBase {
       [["scalarArgs", nodeMetas.RootScalarArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<PostSlugString>;
+    return new MutationNode(inner) as MutationNode<ScalarString1>;
   }
   compositeNoArgs(select: PostSelections) {
     const inner = _selectionToNodeSet(
@@ -1149,7 +1149,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new MutationNode(inner) as MutationNode<Post>;
   }
-  compositeArgs(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: PostSelections) {
+  compositeArgs(args: ScalarStructShared2 | PlaceholderArgs<ScalarStructShared2>, select: PostSelections) {
     const inner = _selectionToNodeSet(
       { "compositeArgs": [args, select] },
       [["compositeArgs", nodeMetas.RootCompositeArgsFn]],
@@ -1157,7 +1157,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new MutationNode(inner) as MutationNode<Post>;
   }
-  scalarUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>) {
+  scalarUnion(args: ScalarStructShared2 | PlaceholderArgs<ScalarStructShared2>) {
     const inner = _selectionToNodeSet(
       { "scalarUnion": args },
       [["scalarUnion", nodeMetas.RootScalarUnionFn]],
@@ -1165,7 +1165,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner) as QueryNode<RootScalarUnionFnOutput>;
   }
-  compositeUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: RootCompositeUnionFnOutputSelections) {
+  compositeUnion(args: ScalarStructShared2 | PlaceholderArgs<ScalarStructShared2>, select: RootCompositeUnionFnOutputSelections) {
     const inner = _selectionToNodeSet(
       { "compositeUnion": [args, select] },
       [["compositeUnion", nodeMetas.RootCompositeUnionFn]],
@@ -1173,7 +1173,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner) as QueryNode<RootCompositeUnionFnOutput>;
   }
-  mixedUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: RootMixedUnionFnOutputSelections) {
+  mixedUnion(args: ScalarStructShared2 | PlaceholderArgs<ScalarStructShared2>, select: RootMixedUnionFnOutputSelections) {
     const inner = _selectionToNodeSet(
       { "mixedUnion": [args, select] },
       [["mixedUnion", nodeMetas.RootMixedUnionFn]],

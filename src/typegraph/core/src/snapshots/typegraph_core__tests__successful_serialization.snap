@@ -43,28 +43,28 @@ expression: typegraph.0
     },
     {
       "type": "integer",
-      "title": "root_one_fn_input_one_integer"
+      "title": "scalar_integer_1"
     },
     {
       "type": "integer",
-      "title": "root_one_fn_input_two_integer",
+      "title": "scalar_integer_2",
       "minimum": 12,
       "maximum": 44
     },
     {
       "type": "optional",
-      "title": "root_one_fn_input_three_root_one_fn_input_three_root_one_fn_input_three_float_list_optional",
+      "title": "root_one_fn_input_three_root_one_fn_input_three_scalar_float_1_list_optional",
       "item": 6,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "root_one_fn_input_three_root_one_fn_input_three_float_list",
+      "title": "root_one_fn_input_three_scalar_float_1_list",
       "items": 7
     },
     {
       "type": "float",
-      "title": "root_one_fn_input_three_float"
+      "title": "scalar_float_1"
     }
   ],
   "materializers": [

@@ -45,7 +45,7 @@
     },
     {
       "type": "string",
-      "title": "root___type_fn_input_name_string"
+      "title": "scalar_string_1"
     },
     {
       "type": "optional",
@@ -99,7 +99,7 @@
     },
     {
       "type": "optional",
-      "title": "type_name_root___type_fn_input_name_string_optional",
+      "title": "type_name_scalar_string_1_optional",
       "item": 3,
       "default_value": null
     },
@@ -127,13 +127,13 @@
     },
     {
       "type": "optional",
-      "title": "type_fields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
+      "title": "type_fields_fn_input_includeDeprecated_scalar_boolean_1_optional",
       "item": 11,
       "default_value": null
     },
     {
       "type": "boolean",
-      "title": "type_fields_fn_input_includeDeprecated_boolean"
+      "title": "scalar_boolean_1"
     },
     {
       "type": "optional",

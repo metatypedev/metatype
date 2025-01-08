@@ -91,11 +91,11 @@ class Struct:
 
 
 @dataclass
-class RootOneFnInput(Struct):
+class ScalarStructShared1(Struct):
     name: str
 
 
-FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
+FORWARD_REFS["ScalarStructShared1"] = ScalarStructShared1
 
 
 @dataclass
@@ -116,9 +116,9 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
+def typed_three(user_fn: Callable[[ScalarStructShared1, Ctx], Student]):
     def exported_wrapper(raw_inp, ctx):
-        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
+        inp: ScalarStructShared1 = Struct.new(ScalarStructShared1, raw_inp)
         out: Student = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -136,11 +136,11 @@ def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .other_types import RootOneFnInput, Student, typed_three
+from .other_types import ScalarStructShared1, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput, ctx: Ctx) -> Student:
+def three(inp: ScalarStructShared1, ctx: Ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -237,11 +237,11 @@ class Struct:
 
 
 @dataclass
-class RootOneFnInput(Struct):
+class ScalarStructShared1(Struct):
     name: str
 
 
-FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
+FORWARD_REFS["ScalarStructShared1"] = ScalarStructShared1
 
 
 @dataclass
@@ -263,7 +263,7 @@ FORWARD_REFS["TwoInput"] = TwoInput
 
 
 TypeRootOneFnOutput = List["Student"]
-TypeRootOneFnInputNameString = str
+TypeScalarString1 = str
 
 def __repr(value: Any):
     if isinstance(value, Struct):
@@ -272,9 +272,9 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[ScalarStructShared1, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp, ctx):
-        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
+        inp: ScalarStructShared1 = Struct.new(ScalarStructShared1, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -283,10 +283,10 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeScalarString1]):
     def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
+        out: TypeScalarString1 = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -303,16 +303,16 @@ def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameString, TypeRootOneFnOutput, typed_fnOne, typed_fnTwo
+from .same_hit_types import ScalarStructShared1, TwoInput, TypeRootOneFnOutput, TypeScalarString1, typed_fnOne, typed_fnTwo
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput, ctx: Ctx) -> TypeRootOneFnOutput:
+def fnOne(inp: ScalarStructShared1, ctx: Ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeScalarString1:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
@@ -564,23 +564,23 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    pub type RootOneFnInputNameString = String;
+    pub type ScalarString1 = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootOneFnInput {
-        pub name: RootOneFnInputNameString,
+    pub struct ScalarStructShared1 {
+        pub name: ScalarString1,
     }
-    pub type StudentIdInteger = i64;
+    pub type ScalarInteger1 = i64;
     pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
-        pub id: StudentIdInteger,
-        pub name: RootOneFnInputNameString,
+        pub id: ScalarInteger1,
+        pub name: ScalarString1,
         pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct TwoInput {
-        pub name: RootOneFnInputNameString,
+        pub name: ScalarString1,
     }
 }
 pub mod stubs {
@@ -603,7 +603,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RootOneFnInput, cx: Ctx) -> anyhow::Result<RootOneFnOutput>;
+        fn handle(&self, input: ScalarStructShared1, cx: Ctx) -> anyhow::Result<RootOneFnOutput>;
     }
     pub trait RootTwoFn: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -623,7 +623,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: TwoInput, cx: Ctx) -> anyhow::Result<RootOneFnInputNameString>;
+        fn handle(&self, input: TwoInput, cx: Ctx) -> anyhow::Result<ScalarString1>;
     }
     pub trait RootThreeFn: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -643,7 +643,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RootOneFnInput, cx: Ctx) -> anyhow::Result<Student>;
+        fn handle(&self, input: ScalarStructShared1, cx: Ctx) -> anyhow::Result<Student>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
@@ -719,26 +719,26 @@ export type Handler<In, Out> = (
   tg: Deployment,
 ) => Out | Promise<Out>;
 
-export type RootOneFnInputNameString = string;
-export type RootOneFnInput = {
-  name: RootOneFnInputNameString;
+export type ScalarString1 = string;
+export type ScalarStructShared1 = {
+  name: ScalarString1;
 };
-export type StudentIdInteger = number;
+export type ScalarInteger1 = number;
 export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
-  id: StudentIdInteger;
-  name: RootOneFnInputNameString;
+  id: ScalarInteger1;
+  name: ScalarString1;
   peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {
-  name: RootOneFnInputNameString;
+  name: ScalarString1;
 };
 
 
-export type RootOneFnHandler = Handler<RootOneFnInput, RootOneFnOutput>;
-export type RootTwoFnHandler = Handler<TwoInput, RootOneFnInputNameString>;
-export type RootThreeFnHandler = Handler<RootOneFnInput, Student>;
+export type RootOneFnHandler = Handler<ScalarStructShared1, RootOneFnOutput>;
+export type RootTwoFnHandler = Handler<TwoInput, ScalarString1>;
+export type RootThreeFnHandler = Handler<ScalarStructShared1, Student>;
 ',
     overwrite: true,
     path: "./workspace/some/base/path/ts/fdk.ts",
@@ -892,11 +892,11 @@ class Struct:
 
 
 @dataclass
-class RootOneFnInput(Struct):
+class ScalarStructShared1(Struct):
     name: str
 
 
-FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
+FORWARD_REFS["ScalarStructShared1"] = ScalarStructShared1
 
 
 @dataclass
@@ -917,9 +917,9 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
+def typed_three(user_fn: Callable[[ScalarStructShared1, Ctx], Student]):
     def exported_wrapper(raw_inp, ctx):
-        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
+        inp: ScalarStructShared1 = Struct.new(ScalarStructShared1, raw_inp)
         out: Student = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -937,11 +937,11 @@ def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .other_types import RootOneFnInput, Student, typed_three
+from .other_types import ScalarStructShared1, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput, ctx: Ctx) -> Student:
+def three(inp: ScalarStructShared1, ctx: Ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -1038,11 +1038,11 @@ class Struct:
 
 
 @dataclass
-class RootOneFnInput(Struct):
+class ScalarStructShared1(Struct):
     name: str
 
 
-FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
+FORWARD_REFS["ScalarStructShared1"] = ScalarStructShared1
 
 
 @dataclass
@@ -1064,7 +1064,7 @@ FORWARD_REFS["TwoInput"] = TwoInput
 
 
 TypeRootOneFnOutput = List["Student"]
-TypeRootOneFnInputNameString = str
+TypeScalarString1 = str
 
 def __repr(value: Any):
     if isinstance(value, Struct):
@@ -1073,9 +1073,9 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[ScalarStructShared1, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp, ctx):
-        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
+        inp: ScalarStructShared1 = Struct.new(ScalarStructShared1, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -1084,10 +1084,10 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeScalarString1]):
     def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
+        out: TypeScalarString1 = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -1104,16 +1104,16 @@ def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameString, TypeRootOneFnOutput, typed_fnOne, typed_fnTwo
+from .same_hit_types import ScalarStructShared1, TwoInput, TypeRootOneFnOutput, TypeScalarString1, typed_fnOne, typed_fnTwo
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput, ctx: Ctx) -> TypeRootOneFnOutput:
+def fnOne(inp: ScalarStructShared1, ctx: Ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeScalarString1:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
@@ -1365,23 +1365,23 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    pub type RootOneFnInputNameString = String;
+    pub type ScalarString1 = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootOneFnInput {
-        pub name: RootOneFnInputNameString,
+    pub struct ScalarStructShared1 {
+        pub name: ScalarString1,
     }
-    pub type StudentIdInteger = i64;
+    pub type ScalarInteger1 = i64;
     pub type StudentPeersPlaceholderOptional = Option<RootOneFnOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Student {
-        pub id: StudentIdInteger,
-        pub name: RootOneFnInputNameString,
+        pub id: ScalarInteger1,
+        pub name: ScalarString1,
         pub peers: StudentPeersPlaceholderOptional,
     }
     pub type RootOneFnOutput = Vec<Student>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct TwoInput {
-        pub name: RootOneFnInputNameString,
+        pub name: ScalarString1,
     }
 }
 pub mod stubs {
@@ -1404,7 +1404,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RootOneFnInput, cx: Ctx) -> anyhow::Result<RootOneFnOutput>;
+        fn handle(&self, input: ScalarStructShared1, cx: Ctx) -> anyhow::Result<RootOneFnOutput>;
     }
     pub trait RootTwoFn: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -1424,7 +1424,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: TwoInput, cx: Ctx) -> anyhow::Result<RootOneFnInputNameString>;
+        fn handle(&self, input: TwoInput, cx: Ctx) -> anyhow::Result<ScalarString1>;
     }
     pub trait RootThreeFn: Sized + 'static {
         fn erased(self) -> ErasedHandler {
@@ -1444,7 +1444,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: RootOneFnInput, cx: Ctx) -> anyhow::Result<Student>;
+        fn handle(&self, input: ScalarStructShared1, cx: Ctx) -> anyhow::Result<Student>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
@@ -1520,26 +1520,26 @@ export type Handler<In, Out> = (
   tg: Deployment,
 ) => Out | Promise<Out>;
 
-export type RootOneFnInputNameString = string;
-export type RootOneFnInput = {
-  name: RootOneFnInputNameString;
+export type ScalarString1 = string;
+export type ScalarStructShared1 = {
+  name: ScalarString1;
 };
-export type StudentIdInteger = number;
+export type ScalarInteger1 = number;
 export type StudentPeersPlaceholderOptional = RootOneFnOutput | null | undefined;
 export type Student = {
-  id: StudentIdInteger;
-  name: RootOneFnInputNameString;
+  id: ScalarInteger1;
+  name: ScalarString1;
   peers?: StudentPeersPlaceholderOptional;
 };
 export type RootOneFnOutput = Array<Student>;
 export type TwoInput = {
-  name: RootOneFnInputNameString;
+  name: ScalarString1;
 };
 
 
-export type RootOneFnHandler = Handler<RootOneFnInput, RootOneFnOutput>;
-export type RootTwoFnHandler = Handler<TwoInput, RootOneFnInputNameString>;
-export type RootThreeFnHandler = Handler<RootOneFnInput, Student>;
+export type RootOneFnHandler = Handler<ScalarStructShared1, RootOneFnOutput>;
+export type RootTwoFnHandler = Handler<TwoInput, ScalarString1>;
+export type RootThreeFnHandler = Handler<ScalarStructShared1, Student>;
 ',
     overwrite: true,
     path: "./workspace/some/base/path/ts/fdk.ts",
@@ -1693,11 +1693,11 @@ class Struct:
 
 
 @dataclass
-class MyNamespaceRootOneFnInput(Struct):
+class MyNamespaceScalarStructShared1(Struct):
     name: str
 
 
-FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
+FORWARD_REFS["ScalarStructShared1"] = ScalarStructShared1
 
 
 @dataclass
@@ -1718,9 +1718,9 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
+def typed_three(user_fn: Callable[[ScalarStructShared1, Ctx], Student]):
     def exported_wrapper(raw_inp, ctx):
-        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
+        inp: ScalarStructShared1 = Struct.new(ScalarStructShared1, raw_inp)
         out: Student = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -1738,11 +1738,11 @@ def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .other_types import RootOneFnInput, Student, typed_three
+from .other_types import ScalarStructShared1, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput, ctx: Ctx) -> Student:
+def three(inp: ScalarStructShared1, ctx: Ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -1839,11 +1839,11 @@ class Struct:
 
 
 @dataclass
-class MyNamespaceRootOneFnInput(Struct):
+class MyNamespaceScalarStructShared1(Struct):
     name: str
 
 
-FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
+FORWARD_REFS["ScalarStructShared1"] = ScalarStructShared1
 
 
 @dataclass
@@ -1865,7 +1865,7 @@ FORWARD_REFS["TwoInput"] = TwoInput
 
 
 TypeRootOneFnOutput = List["Student"]
-TypeRootOneFnInputNameString = str
+TypeScalarString1 = str
 
 def __repr(value: Any):
     if isinstance(value, Struct):
@@ -1874,9 +1874,9 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[ScalarStructShared1, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp, ctx):
-        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
+        inp: ScalarStructShared1 = Struct.new(ScalarStructShared1, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -1885,10 +1885,10 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeScalarString1]):
     def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
+        out: TypeScalarString1 = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -1905,16 +1905,16 @@ def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameString, TypeRootOneFnOutput, typed_fnOne, typed_fnTwo
+from .same_hit_types import ScalarStructShared1, TwoInput, TypeRootOneFnOutput, TypeScalarString1, typed_fnOne, typed_fnTwo
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput, ctx: Ctx) -> TypeRootOneFnOutput:
+def fnOne(inp: ScalarStructShared1, ctx: Ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeScalarString1:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 
@@ -2016,11 +2016,11 @@ class Struct:
 
 
 @dataclass
-class MyNamespaceRootOneFnInput(Struct):
+class MyNamespaceScalarStructShared1(Struct):
     name: str
 
 
-FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
+FORWARD_REFS["ScalarStructShared1"] = ScalarStructShared1
 
 
 @dataclass
@@ -2041,9 +2041,9 @@ def __repr(value: Any):
 
 
 
-def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
+def typed_three(user_fn: Callable[[ScalarStructShared1, Ctx], Student]):
     def exported_wrapper(raw_inp, ctx):
-        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
+        inp: ScalarStructShared1 = Struct.new(ScalarStructShared1, raw_inp)
         out: Student = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -2061,11 +2061,11 @@ def typed_three(user_fn: Callable[[RootOneFnInput, Ctx], Student]):
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .other_types import RootOneFnInput, Student, typed_three
+from .other_types import ScalarStructShared1, Student, typed_three
 
 
 @typed_three
-def three(inp: RootOneFnInput, ctx: Ctx) -> Student:
+def three(inp: ScalarStructShared1, ctx: Ctx) -> Student:
     # TODO: write your logic here
     raise Exception("three not implemented")
 
@@ -2162,11 +2162,11 @@ class Struct:
 
 
 @dataclass
-class MyNamespaceRootOneFnInput(Struct):
+class MyNamespaceScalarStructShared1(Struct):
     name: str
 
 
-FORWARD_REFS["RootOneFnInput"] = RootOneFnInput
+FORWARD_REFS["ScalarStructShared1"] = ScalarStructShared1
 
 
 @dataclass
@@ -2188,7 +2188,7 @@ FORWARD_REFS["TwoInput"] = TwoInput
 
 
 TypeRootOneFnOutput = List["Student"]
-TypeRootOneFnInputNameString = str
+TypeScalarString1 = str
 
 def __repr(value: Any):
     if isinstance(value, Struct):
@@ -2197,9 +2197,9 @@ def __repr(value: Any):
 
 
 
-def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
+def typed_fnOne(user_fn: Callable[[ScalarStructShared1, Ctx], TypeRootOneFnOutput]):
     def exported_wrapper(raw_inp, ctx):
-        inp: RootOneFnInput = Struct.new(RootOneFnInput, raw_inp)
+        inp: ScalarStructShared1 = Struct.new(ScalarStructShared1, raw_inp)
         out: TypeRootOneFnOutput = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
@@ -2208,10 +2208,10 @@ def typed_fnOne(user_fn: Callable[[RootOneFnInput, Ctx], TypeRootOneFnOutput]):
     return exported_wrapper
 
 
-def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]):
+def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeScalarString1]):
     def exported_wrapper(raw_inp, ctx):
         inp: TwoInput = Struct.new(TwoInput, raw_inp)
-        out: TypeRootOneFnInputNameString = user_fn(inp, ctx)
+        out: TypeScalarString1 = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)
@@ -2228,16 +2228,16 @@ def typed_fnTwo(user_fn: Callable[[TwoInput, Ctx], TypeRootOneFnInputNameString]
 #   are supported. I.e. prefixed by \`.\` or \`..\`
 # - Make sure to include any module imports in the \`deps\`
 #   array when using external modules with PythonRuntime 
-from .same_hit_types import RootOneFnInput, TwoInput, TypeRootOneFnInputNameString, TypeRootOneFnOutput, typed_fnOne, typed_fnTwo
+from .same_hit_types import ScalarStructShared1, TwoInput, TypeRootOneFnOutput, TypeScalarString1, typed_fnOne, typed_fnTwo
 
 
 @typed_fnOne
-def fnOne(inp: RootOneFnInput, ctx: Ctx) -> TypeRootOneFnOutput:
+def fnOne(inp: ScalarStructShared1, ctx: Ctx) -> TypeRootOneFnOutput:
     # TODO: write your logic here
     raise Exception("fnOne not implemented")
 
 @typed_fnTwo
-def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeRootOneFnInputNameString:
+def fnTwo(inp: TwoInput, ctx: Ctx) -> TypeScalarString1:
     # TODO: write your logic here
     raise Exception("fnTwo not implemented")
 

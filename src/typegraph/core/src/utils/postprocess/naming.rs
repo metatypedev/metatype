@@ -44,7 +44,9 @@ impl super::PostProcessor for NamingProcessor {
         let mut acc = VisitCollector {
             named_types: Default::default(),
             path: vec![],
+            // ref related
             counts: ref_counters.counts,
+            name_occurences: Default::default(),
         };
         for (key, &ty_id) in &root_data.properties {
             acc.path.push((
@@ -71,8 +73,10 @@ struct VisitContext<'a> {
 }
 struct VisitCollector {
     named_types: HashMap<u32, Rc<str>>,
-    counts: HashMap<u32, IndexSet<u32>>,
     path: Vec<(PathSegment, Rc<str>)>,
+    // ref related
+    counts: HashMap<u32, IndexSet<u32>>,
+    name_occurences: HashMap<String, u32>,
 }
 
 struct TypeRefCount {
@@ -97,6 +101,19 @@ impl VisitCollector {
         }
 
         false
+    }
+
+    pub fn next_name(&mut self, name: String) -> String {
+        // Hopefully more stable than ids on snapshots
+        format!(
+            "scalar_{name}_{}",
+            self.name_occurences
+                .entry(name.clone())
+                .and_modify(|counter| {
+                    *counter += 1;
+                })
+                .or_insert(1)
+        )
     }
 }
 
@@ -261,9 +278,11 @@ fn collect_ref_info(
     id: u32,
     visited: &mut HashSet<u32>,
 ) -> anyhow::Result<()> {
-    if !visited.insert(id) {
+    if cx.user_named.contains(&id) || visited.contains(&id) {
         return Ok(());
     }
+
+    visited.insert(id);
 
     let node = &cx.tg.types[id as usize];
     match node {
@@ -320,16 +339,18 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
     let name: Rc<str> = if cx.user_named.contains(&id) {
         node.base().title.clone().into()
     } else if node.is_scalar() {
-        format!("scalar_{ty_name}").into()
+        acc.next_name(ty_name.to_string()).into()
     } else {
-        let use_if_ok = |default: String| {
-            if acc.has_more_than_one_referrer(id) {
-                // Cannot be opinionated on the prefix path if shared (confusing)
-                format!("{ty_name}_shared_t{id}")
-            } else {
-                default
-            }
-        };
+        macro_rules! use_if_ok {
+            ($default:expr) => {
+                if acc.has_more_than_one_referrer(id) {
+                    // Cannot be opinionated on the prefix path if shared (confusing)
+                    acc.next_name(format!("{ty_name}_shared")).into()
+                } else {
+                    $default
+                }
+            };
+        }
 
         let title;
         let mut last = acc.path.len();
@@ -340,11 +361,11 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
                 // we don't include optional and list nodes in
                 // generated names (useless but also, they might be placeholders)
                 Edge::OptionalItem | Edge::ArrayItem => continue,
-                Edge::FunctionInput => use_if_ok(format!("{last_name}_input")),
-                Edge::FunctionOutput => use_if_ok(format!("{last_name}_output")),
-                Edge::ObjectProp(key) => use_if_ok(format!("{last_name}_{key}_{ty_name}")),
+                Edge::FunctionInput => use_if_ok!(format!("{last_name}_input")),
+                Edge::FunctionOutput => use_if_ok!(format!("{last_name}_output")),
+                Edge::ObjectProp(key) => use_if_ok!(format!("{last_name}_{key}_{ty_name}")),
                 Edge::EitherVariant(idx) | Edge::UnionVariant(idx) => {
-                    use_if_ok(format!("{last_name}_t{idx}_{ty_name}"))
+                    use_if_ok!(format!("{last_name}_t{idx}_{ty_name}"))
                 }
             };
             break;

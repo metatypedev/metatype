@@ -38,7 +38,7 @@ fn main() -> Result<(), BoxErr> {
                 api1.scalar_args(args.get("post", |val: types::PostPartial| val)),
                 api1.composite_no_args().select(all()),
                 api1.composite_args(args.get("id", |id: String| {
-                    types::RootCompositeArgsFnInputPartial { id: Some(id) }
+                    types::ScalarStructShared2Partial { id: Some(id) }
                 }))
                 .select(all()),
             )
@@ -98,7 +98,7 @@ fn main() -> Result<(), BoxErr> {
                         title: Some("".into()),
                     }),
                     api1.composite_no_args().select(all()),
-                    api1.composite_args(types::RootCompositeArgsFnInputPartial {
+                    api1.composite_args(types::ScalarStructShared2Partial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     })
                     .select(all()),
@@ -107,11 +107,11 @@ fn main() -> Result<(), BoxErr> {
 
             let res5 = gql
                 .query((
-                    api1.scalar_union(types::RootCompositeArgsFnInputPartial {
+                    api1.scalar_union(types::ScalarStructShared2Partial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     }),
                     // allows ignoring some members
-                    api1.composite_union(types::RootCompositeArgsFnInputPartial {
+                    api1.composite_union(types::ScalarStructShared2Partial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     })
                     .select(RootCompositeUnionFnOutputSelections {
@@ -120,14 +120,14 @@ fn main() -> Result<(), BoxErr> {
                     }),
                     // returns empty if returned type wasn't selected
                     // in union member
-                    api1.composite_union(types::RootCompositeArgsFnInputPartial {
+                    api1.composite_union(types::ScalarStructShared2Partial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     })
                     .select(RootCompositeUnionFnOutputSelections {
                         user: select(all()),
                         ..default()
                     }),
-                    api1.mixed_union(types::RootCompositeArgsFnInputPartial {
+                    api1.mixed_union(types::ScalarStructShared2Partial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     })
                     .select(RootMixedUnionFnOutputSelections {

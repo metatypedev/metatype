@@ -63,11 +63,11 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "string",
-        "title": "root_start_fn_input_workflow_id_string"
+        "title": "scalar_string_1"
       },
       {
         "type": "list",
-        "title": "root_start_fn_input_args_root_start_fn_input_args_struct_list",
+        "title": "scalar_root_start_fn_input_args_struct_list_shared_1",
         "items": 5
       },
       {
@@ -94,7 +94,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "object",
-        "title": "root_query_fn_input",
+        "title": "scalar_struct_shared_1",
         "properties": {
           "workflow_id": 3,
           "run_id": 3,
@@ -130,7 +130,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "boolean",
-        "title": "root_signal_fn_output"
+        "title": "scalar_boolean_1"
       },
       {
         "type": "function",
@@ -174,13 +174,13 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "optional",
-        "title": "root_describe_fn_output_start_time_root_describe_fn_output_start_time_integer_optional",
+        "title": "root_describe_fn_output_start_time_scalar_integer_1_optional",
         "item": 14,
         "default_value": null
       },
       {
         "type": "integer",
-        "title": "root_describe_fn_output_start_time_integer"
+        "title": "scalar_integer_1"
       }
     ],
     "materializers": [
@@ -349,7 +349,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "string",
-        "title": "root_startKv_fn_input_workflow_id_string"
+        "title": "scalar_string_1"
       },
       {
         "type": "list",
@@ -391,7 +391,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "root_query_fn_input_args_root_startKv_fn_input_workflow_id_string_list",
+        "title": "root_query_fn_input_args_scalar_string_1_list",
         "items": 3
       },
       {
@@ -447,7 +447,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "boolean",
-        "title": "root_signal_fn_output"
+        "title": "scalar_boolean_1"
       },
       {
         "type": "function",
@@ -491,13 +491,13 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "optional",
-        "title": "root_describe_fn_output_start_time_root_describe_fn_output_start_time_integer_optional",
+        "title": "root_describe_fn_output_start_time_scalar_integer_1_optional",
         "item": 19,
         "default_value": null
       },
       {
         "type": "integer",
-        "title": "root_describe_fn_output_start_time_integer"
+        "title": "scalar_integer_1"
       }
     ],
     "materializers": [
