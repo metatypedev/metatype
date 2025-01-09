@@ -3,9 +3,8 @@
 
 import { Meta } from "test-utils/mod.ts";
 import { projectDir } from "@local/tools/utils.ts";
-import { $ } from "@local/tools/deps.ts";
+import { $, downloadFile } from "@local/tools/deps.ts";
 import { PUBLISHED_VERSION, PYTHON_VERSION } from "@local/tools/consts.ts";
-import { download } from "download";
 import { Untar } from "@std/archive/untar";
 import { copy } from "@std/io/copy";
 import { readerFromStreamReader } from "@std/io/reader-from-stream-reader";
@@ -80,9 +79,11 @@ export async function downloadAndExtractCli(version: string) {
     `https://github.com/metatypedev/metatype/releases/download/v${version}/${name}.tar.gz`;
   console.log("Downloading from", url);
   const archiveName = `${name}.tar.gz`;
-  const _fileObj = await download(url, {
-    file: archiveName,
-    dir: tempDir.toString(),
+  const _fileObj = await downloadFile({
+    url,
+    name: archiveName,
+    downloadPath: tempDir.toString(),
+    tmpDirPath: tempDir.toString(),
   });
   const archivePath = tempDir.join(archiveName);
   using file = await Deno.open(archivePath.toString());
@@ -342,6 +343,7 @@ Meta.test(
     );
 
     const typegateTempDir = await tmpDir.join(".metatype").ensureDir();
+    await tmpDir.join("deno.jsonc").writeText(`{ "workspace": []}`)
 
     const port = String(t.port - 10);
 
@@ -359,16 +361,22 @@ Meta.test(
         ...syncEnvs,
       })
       .stdout("piped")
+      .cwd(tmpDir)
       .noThrow()
       .spawn();
 
     const stdout = new Lines(proc.stdout());
     console.log("waiting on typegate to be ready");
 
-    await stdout.readWhile((line) => {
+    const ready = await stdout.readWhile((line) => {
       console.error("typegate>", line);
       return !line.includes(`typegate ready on :${port}`);
     });
+    if (!ready) {
+      const result = await proc;
+      console.log(result, result.combined);
+      throw new Error("typegate premature death");
+    }
 
     const tgsDir = $.path(
       await newTempDir({

@@ -30,10 +30,10 @@ export class Lines {
     let shouldContinue = true;
     while (shouldContinue) {
       const { value: line, done } = await next();
-      if (done) return true;
+      if (done) return false;
       shouldContinue = await check(line);
     }
-    return false;
+    return true;
   }
 
   async close() {

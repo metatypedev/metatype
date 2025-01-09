@@ -20,12 +20,12 @@ def selection_to_nodes(
     parent_path: str,
 ) -> typing.List["SelectNode[typing.Any]"]:
     out = []
-    flags = selection.get("_")
-    if flags is not None and not isinstance(flags, SelectionFlags):
+    sub_flags = selection.get("_")
+    if sub_flags is not None and not isinstance(sub_flags, SelectionFlags):
         raise Exception(
-            f"selection field '_' should be of type SelectionFlags but found {type(flags)}"
+            f"selection field '_' should be of type SelectionFlags but found {type(sub_flags)}"
         )
-    select_all = True if flags is not None and flags.select_all else False
+    select_all = True if sub_flags is not None and sub_flags.select_all else False
     found_nodes = set(selection.keys())
     for node_name, meta_fn in metas.items():
         found_nodes.discard(node_name)
@@ -107,7 +107,7 @@ def selection_to_nodes(
 
                 # flags are recursive for any subnode that's not specified
                 if sub_selections is None:
-                    sub_selections = {"_": flags}
+                    sub_selections = {"_": sub_flags}
 
                 # selection types are always TypedDicts as well
                 if not isinstance(sub_selections, dict):
@@ -122,6 +122,17 @@ def selection_to_nodes(
                         raise Exception(
                             "unreachable: union/either NodeMetas can't have subnodes"
                         )
+
+                    # skip non explicit composite selection when using select_all
+                    sub_flags = sub_selections.get("_")
+
+                    if (
+                        isinstance(sub_flags, SelectionFlags)
+                        and sub_flags.select_all
+                        and instance_selection is None
+                    ):
+                        continue
+
                     sub_nodes = selection_to_nodes(
                         typing.cast("SelectionErased", sub_selections),
                         meta.sub_nodes,
@@ -937,6 +948,49 @@ class NodeDescs:
             },
         )
 
+    @staticmethod
+    def RootNestedCompositeFnOutputCompositeStructNestedStruct():
+        return NodeMeta(
+            sub_nodes={
+                "inner": NodeDescs.scalar,
+            },
+        )
+
+    @staticmethod
+    def RootNestedCompositeFnOutputCompositeStruct():
+        return NodeMeta(
+            sub_nodes={
+                "value": NodeDescs.scalar,
+                "nested": NodeDescs.RootNestedCompositeFnOutputCompositeStructNestedStruct,
+            },
+        )
+
+    @staticmethod
+    def RootNestedCompositeFnOutputListStruct():
+        return NodeMeta(
+            sub_nodes={
+                "value": NodeDescs.scalar,
+            },
+        )
+
+    @staticmethod
+    def RootNestedCompositeFnOutput():
+        return NodeMeta(
+            sub_nodes={
+                "scalar": NodeDescs.scalar,
+                "composite": NodeDescs.RootNestedCompositeFnOutputCompositeStruct,
+                "list": NodeDescs.RootNestedCompositeFnOutputListStruct,
+            },
+        )
+
+    @staticmethod
+    def RootNestedCompositeFn():
+        return_node = NodeDescs.RootNestedCompositeFnOutput()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+        )
+
 
 UserIdStringUuid = str
 
@@ -996,6 +1050,46 @@ RootMixedUnionFnOutput = typing.Union[
 ]
 
 
+RootNestedCompositeFnOutputCompositeStructNestedStruct = typing.TypedDict(
+    "RootNestedCompositeFnOutputCompositeStructNestedStruct",
+    {
+        "inner": RootScalarUnionFnOutputT1Integer,
+    },
+    total=False,
+)
+
+RootNestedCompositeFnOutputCompositeStruct = typing.TypedDict(
+    "RootNestedCompositeFnOutputCompositeStruct",
+    {
+        "value": RootScalarUnionFnOutputT1Integer,
+        "nested": RootNestedCompositeFnOutputCompositeStructNestedStruct,
+    },
+    total=False,
+)
+
+RootNestedCompositeFnOutputListStruct = typing.TypedDict(
+    "RootNestedCompositeFnOutputListStruct",
+    {
+        "value": RootScalarUnionFnOutputT1Integer,
+    },
+    total=False,
+)
+
+RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = typing.List[
+    RootNestedCompositeFnOutputListStruct
+]
+
+RootNestedCompositeFnOutput = typing.TypedDict(
+    "RootNestedCompositeFnOutput",
+    {
+        "scalar": RootScalarUnionFnOutputT1Integer,
+        "composite": RootNestedCompositeFnOutputCompositeStruct,
+        "list": RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList,
+    },
+    total=False,
+)
+
+
 PostSelections = typing.TypedDict(
     "PostSelections",
     {
@@ -1034,6 +1128,51 @@ RootMixedUnionFnOutputSelections = typing.TypedDict(
         "_": SelectionFlags,
         "post": CompositeSelectNoArgs["PostSelections"],
         "user": CompositeSelectNoArgs["UserSelections"],
+    },
+    total=False,
+)
+
+RootNestedCompositeFnOutputCompositeStructNestedStructSelections = typing.TypedDict(
+    "RootNestedCompositeFnOutputCompositeStructNestedStructSelections",
+    {
+        "_": SelectionFlags,
+        "inner": ScalarSelectNoArgs,
+    },
+    total=False,
+)
+
+RootNestedCompositeFnOutputCompositeStructSelections = typing.TypedDict(
+    "RootNestedCompositeFnOutputCompositeStructSelections",
+    {
+        "_": SelectionFlags,
+        "value": ScalarSelectNoArgs,
+        "nested": CompositeSelectNoArgs[
+            "RootNestedCompositeFnOutputCompositeStructNestedStructSelections"
+        ],
+    },
+    total=False,
+)
+
+RootNestedCompositeFnOutputListStructSelections = typing.TypedDict(
+    "RootNestedCompositeFnOutputListStructSelections",
+    {
+        "_": SelectionFlags,
+        "value": ScalarSelectNoArgs,
+    },
+    total=False,
+)
+
+RootNestedCompositeFnOutputSelections = typing.TypedDict(
+    "RootNestedCompositeFnOutputSelections",
+    {
+        "_": SelectionFlags,
+        "scalar": ScalarSelectNoArgs,
+        "composite": CompositeSelectNoArgs[
+            "RootNestedCompositeFnOutputCompositeStructSelections"
+        ],
+        "list": CompositeSelectNoArgs[
+            "RootNestedCompositeFnOutputListStructSelections"
+        ],
     },
     total=False,
 )
@@ -1140,6 +1279,18 @@ class QueryGraph(QueryGraphBase):
         node = selection_to_nodes(
             {"mixedUnion": (args, select)},
             {"mixedUnion": NodeDescs.RootMixedUnionFn},
+            "$q",
+        )[0]
+        return QueryNode(
+            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
+        )
+
+    def nested_composite(
+        self, select: RootNestedCompositeFnOutputSelections
+    ) -> QueryNode[RootNestedCompositeFnOutput]:
+        node = selection_to_nodes(
+            {"nestedComposite": select},
+            {"nestedComposite": NodeDescs.RootNestedCompositeFn},
             "$q",
         )[0]
         return QueryNode(
