@@ -152,7 +152,9 @@ export class DenoRuntime extends Runtime {
       typegate.config.base,
     );
 
-    const workerManager = new WorkerManager();
+    const workerManager = new WorkerManager({
+      timeout_ms: typegate.config.base.timer_max_timeout_ms,
+    });
 
     if (Deno.env.get("DENO_TESTING") === "true") {
       w.disableLazyness();

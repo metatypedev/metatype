@@ -7,12 +7,17 @@ import { BaseWorkerManager, createTaskId } from "../utils/workers/manager.ts";
 import { TaskId } from "../utils/workers/types.ts";
 import { TaskContext } from "./shared_types.ts";
 import { DenoEvent, DenoMessage, TaskSpec } from "./types.ts";
+import { delay } from "@std/async/delay";
 
 const logger = getLogger(import.meta, "WARN");
 
+export type WorkerManagerConfig = {
+  timeout_ms: number;
+};
+
 export class WorkerManager
   extends BaseWorkerManager<TaskSpec, DenoMessage, DenoEvent> {
-  constructor() {
+  constructor(private config: WorkerManagerConfig) {
     super(
       (taskId: TaskId) => {
         return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
@@ -41,13 +46,20 @@ export class WorkerManager
     });
 
     return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.destroyWorker(name, taskId);
+        reject(new Error(`${this.config.timeout_ms}ms timeout exceeded`));
+      }, this.config.timeout_ms);
+
       const handler: (event: DenoEvent) => void = (event) => {
+        clearTimeout(timeoutId);
+        this.destroyWorker(name, taskId);
         switch (event.type) {
           case "SUCCESS":
             resolve(event.result);
             break;
           case "FAILURE":
-            reject(event.error);
+            reject(event.exception ?? event.error);
             break;
         }
       };

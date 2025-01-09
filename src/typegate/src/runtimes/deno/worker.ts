@@ -15,7 +15,6 @@ self.onmessage = async function (event: MessageEvent<DenoMessage>) {
   const { type, modulePath, functionName, args, internals } = event.data;
   switch (type) {
     case "CALL": {
-      console.log({ modulePath, functionName, args, internals });
       const module = await import(toFileUrl(modulePath).toString());
       const fn = module[functionName];
 
