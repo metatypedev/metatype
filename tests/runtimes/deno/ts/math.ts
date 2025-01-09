@@ -14,7 +14,7 @@ export function min({ numbers: values }: MinInput): number {
   let minValue = new Big(values[0]);
   for (const value of values) {
     if ((new Big(value)).lt(minValue)) {
-      minValue = value;
+      minValue = new Big(value);
     }
   }
   return Number(minValue);
@@ -24,7 +24,7 @@ export function maxAsync({ numbers: values }: MinInput): Promise<number> {
   let maxValue = new Big(values[0]);
   for (const value of values) {
     if ((new Big(value)).gt(maxValue)) {
-      maxValue = value;
+      maxValue = new Big(value);
     }
   }
   return Promise.resolve(Number(maxValue));
