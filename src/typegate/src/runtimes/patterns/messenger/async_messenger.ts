@@ -52,7 +52,7 @@ export class AsyncMessenger<Broker, M, A> {
     await Promise.all(
       [...this.#tasks.values()].map((t) => {
         clearTimeout(t.timeoutId);
-        t.promise;
+        return t.promise;
       }),
     );
     logger.info(`close worker ${this.constructor.name}`);
