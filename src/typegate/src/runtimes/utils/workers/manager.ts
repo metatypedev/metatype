@@ -70,6 +70,13 @@ export class BaseWorkerManager<
     return startedAt;
   }
 
+  // allocate worker?
+  protected createWorker(name: string, taskId: TaskId, taskSpec: T) {
+    const worker = this.#workerFactory(taskId);
+    // TODO inline
+    this.addWorker(name, taskId, worker, taskSpec, new Date());
+  }
+
   protected addWorker(
     name: string,
     taskId: TaskId,
@@ -124,6 +131,16 @@ export class BaseWorkerManager<
     }
 
     return false;
+  }
+
+  logMessage(_taskId: TaskId, _msg: M) {
+    // default implementation is empty
+  }
+
+  sendMessage(taskId: TaskId, msg: M) {
+    const { worker } = this.getTask(taskId);
+    worker.send(msg);
+    this.logMessage(taskId, msg);
   }
 }
 

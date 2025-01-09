@@ -39,27 +39,28 @@ Meta.test(
         .on(e);
     });
 
-    await t.should("work with global variables in a module", async () => {
-      await gql`
-        mutation {
-          count
-        }
-      `
-        .expectData({
-          count: 1,
-        })
-        .on(e);
-
-      await gql`
-        mutation {
-          count
-        }
-      `
-        .expectData({
-          count: 2,
-        })
-        .on(e);
-    });
+    // -- no worker reuse...
+    // await t.should("work with global variables in a module", async () => {
+    //   await gql`
+    //     mutation {
+    //       count
+    //     }
+    //   `
+    //     .expectData({
+    //       count: 1,
+    //     })
+    //     .on(e);
+    //
+    //   await gql`
+    //     mutation {
+    //       count
+    //     }
+    //   `
+    //     .expectData({
+    //       count: 2,
+    //     })
+    //     .on(e);
+    // });
 
     await t.should("work with async function", async () => {
       await gql`

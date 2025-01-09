@@ -27,6 +27,7 @@ import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
 import { getInjectionValues } from "../../engine/planner/injection_utils.ts";
 import DynamicInjection from "../../engine/injection/dynamic.ts";
 import { getLogger } from "../../log.ts";
+import { WorkerManager } from "./deno_worker_manager.ts";
 
 const logger = getLogger(import.meta);
 
@@ -37,7 +38,8 @@ const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   allow: () => "ALLOW" as PolicyResolverOutput,
   deny: () => "DENY" as PolicyResolverOutput,
   pass: () => "PASS" as PolicyResolverOutput,
-  internal_policy: ({ _: { context } }) => context.provider === "internal" ? "ALLOW" : "PASS" as PolicyResolverOutput,
+  internal_policy: ({ _: { context } }) =>
+    context.provider === "internal" ? "ALLOW" : "PASS" as PolicyResolverOutput,
 };
 
 export class DenoRuntime extends Runtime {
@@ -47,6 +49,7 @@ export class DenoRuntime extends Runtime {
     private tg: TypeGraphDS,
     private typegate: Typegate,
     private w: DenoMessenger,
+    private workerManager: WorkerManager,
     private registry: Map<string, number>,
     private secrets: Record<string, string>,
   ) {
@@ -149,6 +152,8 @@ export class DenoRuntime extends Runtime {
       typegate.config.base,
     );
 
+    const workerManager = new WorkerManager();
+
     if (Deno.env.get("DENO_TESTING") === "true") {
       w.disableLazyness();
     }
@@ -159,6 +164,7 @@ export class DenoRuntime extends Runtime {
       tg,
       typegate,
       w,
+      workerManager,
       registry,
       secrets,
     );
@@ -257,7 +263,10 @@ export class DenoRuntime extends Runtime {
       const modMat = this.tg.materializers[mat.data.mod as number];
       const entryPoint =
         this.tg.meta.artifacts[modMat.data.entryPoint as string];
-      const op = this.registry.get(entryPoint.hash)!;
+      const depMetas = (modMat.data.deps as string[]).map((dep) =>
+        createArtifactMeta(this.typegraphName, this.tg.meta.artifacts[dep])
+      );
+      const moduleMeta = createArtifactMeta(this.typegraphName, entryPoint);
 
       return async ({
         _: {
@@ -269,27 +278,28 @@ export class DenoRuntime extends Runtime {
       }) => {
         const token = await InternalAuth.emit(this.typegate.cryptoKeys);
 
-        return await this.w.execute(
-          op,
+        // TODO cache??
+        const entryModulePath = await this.typegate.artifactStore.getLocalPath(
+          moduleMeta,
+          depMetas,
+        );
+
+        return await this.workerManager.callFunction(
+          mat.data.name as string,
+          entryModulePath,
+          entryPoint.path,
+          args,
           {
-            type: "import_func",
-            args,
-            internals: {
-              parent,
-              context,
-              secrets,
-              effect: mat.effect.effect ?? null,
-              meta: {
-                url: `${url.protocol}//${url.host}/${this.typegraphName}`,
-                token,
-              },
-              headers,
+            parent,
+            context,
+            secrets,
+            effect: mat.effect.effect ?? null,
+            meta: {
+              url: `${url.protocol}//${url.host}/${this.typegraphName}`,
+              token,
             },
-            name: mat.data.name as string,
-            verbose,
+            headers,
           },
-          [],
-          pulseCount,
         );
       };
     }

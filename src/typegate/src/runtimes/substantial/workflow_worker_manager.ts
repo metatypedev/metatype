@@ -27,20 +27,6 @@ export class WorkerManager
     });
   }
 
-  #createWorker(name: string, modulePath: string, runId: TaskId) {
-    const worker = this.workerFactory(runId);
-
-    this.addWorker(
-      name,
-      runId,
-      worker,
-      {
-        modulePath,
-      },
-      new Date(),
-    );
-  }
-
   destroyWorker(name: string, runId: string) {
     return super.destroyWorker(name, runId);
   }
@@ -87,9 +73,7 @@ export class WorkerManager
     worker.listen(handlerFn);
   }
 
-  sendMessage(runId: TaskId, msg: WorkflowMessage) {
-    const { worker } = this.getTask(runId);
-    worker.send(msg);
+  override logMessage(runId: TaskId, msg: WorkflowMessage) {
     logger.info(`trigger ${msg.type} for ${runId}`);
   }
 
@@ -101,7 +85,9 @@ export class WorkerManager
     schedule: string,
     internalTCtx: TaskContext,
   ) {
-    this.#createWorker(name, workflowModPath, runId);
+    this.createWorker(name, runId, {
+      modulePath: workflowModPath,
+    });
     this.sendMessage(runId, {
       type: "START",
       data: {

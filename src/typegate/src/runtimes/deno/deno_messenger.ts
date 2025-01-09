@@ -19,7 +19,7 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
   ) {
     super(
       (receive) => {
-        const worker = new Worker(import.meta.resolve("./worker.ts"), {
+        const worker = new Worker(import.meta.resolve("./worker_old.ts"), {
           type: "module",
           deno: {
             namespace: false,
