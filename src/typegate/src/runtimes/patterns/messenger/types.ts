@@ -11,10 +11,11 @@ export interface Message<T> {
 type PromiseWithResolvers<T> = ReturnType<typeof Promise.withResolvers<T>>;
 
 export type Answer<T> =
-  | ({ id: number; data: T; error?: never })
-  | ({ id: number; data?: never; error: string });
+  | { id: number; data: T; error?: never }
+  | { id: number; data?: never; error: string };
 
 export interface TaskData {
   promise: PromiseWithResolvers<unknown>;
   hooks: Array<() => void | Promise<void>>;
+  timeoutId: number;
 }

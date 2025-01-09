@@ -20,11 +20,7 @@ export type MessengerSend<Broker, M> = (
 export type MessengerStop<Broker> = (broker: Broker) => Promise<void> | void;
 
 export type AsyncMessengerConfig = Readonly<
-  Pick<
-    TypegateConfigBase,
-    | "timer_max_timeout_ms"
-    | "timer_destroy_resources"
-  >
+  Pick<TypegateConfigBase, "timer_max_timeout_ms" | "timer_destroy_resources">
 >;
 
 export class AsyncMessenger<Broker, M, A> {
@@ -36,13 +32,6 @@ export class AsyncMessenger<Broker, M, A> {
   #stop: MessengerStop<Broker>;
 
   #timer?: ReturnType<typeof setInterval>;
-
-  #operationQueues: Array<Array<Message<M>>> = [
-    [],
-    [],
-  ];
-  #queueIndex = 0;
-
   #timeoutSecs: number;
 
   protected constructor(
@@ -57,50 +46,18 @@ export class AsyncMessenger<Broker, M, A> {
     this.#timeoutSecs = config.timer_max_timeout_ms / 1000;
     // init broker
     this.broker = start(this.receive.bind(this));
-    this.initTimer();
   }
 
   async terminate(): Promise<void> {
-    await Promise.all([...this.#tasks.values()].map((t) => t.promise));
+    await Promise.all(
+      [...this.#tasks.values()].map((t) => {
+        clearTimeout(t.timeoutId);
+        t.promise;
+      }),
+    );
     logger.info(`close worker ${this.constructor.name}`);
     await this.#stop(this.broker);
     clearInterval(this.#timer);
-  }
-
-  initTimer() {
-    if (this.#timer === undefined) {
-      this.#timer = setInterval(() => {
-        const currentQueue = this.#operationQueues[this.#queueIndex];
-        this.#queueIndex = 1 - this.#queueIndex;
-
-        let shouldStop = false;
-        for (const item of currentQueue) {
-          if (this.#tasks.has(item.id)) {
-            if (
-              item.remainingPulseCount !== undefined &&
-              item.remainingPulseCount > 0
-            ) {
-              // check again next time if unterminated
-              item.remainingPulseCount -= 1;
-              continue;
-            }
-            // default behavior or 0 pulse left
-            const data = JSON.stringify(item, null, 2);
-            this.receive({
-              id: item.id,
-              error: `${this.#timeoutSecs}s timeout exceeded: ${data}`,
-            });
-            shouldStop = true;
-          }
-        }
-
-        if (shouldStop && this.config.timer_destroy_resources) {
-          this.#stop(this.broker);
-          logger.info("reset broker after timeout");
-          this.broker = this.#start(this.receive.bind(this));
-        }
-      }, this.config.timer_max_timeout_ms);
-    }
   }
 
   execute(
@@ -111,10 +68,11 @@ export class AsyncMessenger<Broker, M, A> {
   ): Promise<unknown> {
     const id = this.nextId();
     const promise = Promise.withResolvers<unknown>();
-    this.#tasks.set(id, { promise, hooks });
-
     const message = { id, op, data, remainingPulseCount: pulseCount };
-    this.#operationQueues[this.#queueIndex].push(message);
+    const timeoutId = this.startTaskTimer(message);
+
+    this.#tasks.set(id, { promise, hooks, timeoutId });
+
     void this.#send(this.broker, message);
     return promise.promise;
   }
@@ -129,6 +87,33 @@ export class AsyncMessenger<Broker, M, A> {
     }
     await Promise.all(hooks.map((h) => h()));
     this.#tasks.delete(id);
+  }
+
+  private startTaskTimer(task: Message<M>) {
+    return setTimeout(() => {
+      if (this.#tasks.has(task.id)) {
+        if (
+          task.remainingPulseCount !== undefined &&
+          task.remainingPulseCount > 0
+        ) {
+          // check again next time if unterminated
+          task.remainingPulseCount -= 1;
+          return this.startTaskTimer(task);
+        }
+        // default behavior or 0 pulse left
+        const data = JSON.stringify(task, null, 2);
+        this.receive({
+          id: task.id,
+          error: `${this.#timeoutSecs}s timeout exceeded: ${data}`,
+        });
+
+        if (this.config.timer_destroy_resources) {
+          this.#stop(this.broker);
+          logger.info("reset broker after timeout");
+          this.broker = this.#start(this.receive.bind(this));
+        }
+      }
+    }, this.config.timer_max_timeout_ms);
   }
 
   private nextId(): number {
