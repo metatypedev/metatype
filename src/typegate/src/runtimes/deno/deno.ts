@@ -305,7 +305,6 @@ export class DenoRuntime extends Runtime {
     }
 
     if (mat.name === "function") {
-      const op = this.registry.get(mat.data.script as string)!;
       return async ({
         _: {
           context,
@@ -316,26 +315,29 @@ export class DenoRuntime extends Runtime {
       }) => {
         const token = await InternalAuth.emit(this.typegate.cryptoKeys);
 
-        return await this.w.execute(
-          op,
+        const modulePath = await this.typegate.artifactStore.getInlineArtifact(
+          this.typegraphName,
+          mat.data.script as string,
+          ".ts",
+          exportInlineFunction("inlineFunction"),
+        );
+
+        return await this.workerManager.callFunction(
+          "inlineFunction",
+          modulePath,
+          "inline", // TODO
+          args,
           {
-            type: "func",
-            args,
-            internals: {
-              parent,
-              context,
-              secrets,
-              effect: mat.effect.effect ?? null,
-              meta: {
-                url: `${url.protocol}//${url.host}/${this.typegraphName}`,
-                token,
-              },
-              headers,
+            parent,
+            context,
+            secrets,
+            effect: mat.effect.effect ?? null,
+            meta: {
+              url: `${url.protocol}//${url.host}/${this.typegraphName}`,
+              token,
             },
-            verbose,
+            headers,
           },
-          [],
-          pulseCount,
         );
       };
     }
@@ -373,6 +375,12 @@ export class DenoRuntime extends Runtime {
       }
     }
   }
+}
+
+function exportInlineFunction(name = "fn", symbol = "_my_lambda") {
+  return (code: string) => {
+    return `${code}\nexport const ${name} = ${symbol};`;
+  };
 }
 
 function getInjectionData(d: InjectionData) {
