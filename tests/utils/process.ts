@@ -19,7 +19,8 @@ export class Lines {
     this.#reader = this.#stream.getReader();
   }
 
-  // return true if the stream is exhausted
+  /// returns false if the stream is exhausted
+  // before condition is met
   async readWhile(
     check: Consumer,
     timeoutMs: number | null = 30_000,
