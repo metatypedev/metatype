@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../../log.ts";
-import { DenoWorker } from "../utils/workers/deno.ts";
-import { BaseWorkerManager, createTaskId } from "../utils/workers/manager.ts";
-import { TaskId } from "../utils/workers/types.ts";
+import { DenoWorker } from "../patterns/worker_manager/deno.ts";
+import {
+  BaseWorkerManager,
+  createTaskId,
+} from "../patterns/worker_manager/mod.ts";
+import { TaskId } from "../patterns/worker_manager/types.ts";
 import { TaskContext } from "./shared_types.ts";
 import { DenoEvent, DenoMessage, TaskSpec } from "./types.ts";
-import { delay } from "@std/async/delay";
 
 const logger = getLogger(import.meta, "WARN");
 

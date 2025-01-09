@@ -10,8 +10,8 @@ import {
 } from "../../../engine/runtime.js";
 import { getLoggerByAddress, Logger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
-import { getTaskNameFromId } from "../utils/workers/manager.ts";
-import { EventHandler, TaskId } from "../utils/workers/types.ts";
+import { getTaskNameFromId } from "../patterns/worker_manager/mod.ts";
+import { EventHandler } from "../patterns/worker_manager/types.ts";
 import {
   appendIfOngoing,
   InterruptEvent,

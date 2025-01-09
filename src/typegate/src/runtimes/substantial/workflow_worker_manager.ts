@@ -3,9 +3,9 @@
 
 import { getLogger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
-import { DenoWorker } from "../utils/workers/deno.ts";
-import { BaseWorkerManager } from "../utils/workers/manager.ts";
-import { EventHandler, TaskId } from "../utils/workers/types.ts";
+import { DenoWorker } from "../patterns/worker_manager/deno.ts";
+import { BaseWorkerManager } from "../patterns/worker_manager/mod.ts";
+import { EventHandler, TaskId } from "../patterns/worker_manager/types.ts";
 import { Run, WorkflowEvent, WorkflowMessage } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");

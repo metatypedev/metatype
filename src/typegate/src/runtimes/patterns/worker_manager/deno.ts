@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { envSharedWithWorkers } from "../../../config/shared.ts";
-import { BaseWorker } from "./manager.ts";
+import { BaseWorker } from "./mod.ts";
 import { BaseMessage, EventHandler, TaskId } from "./types.ts";
 
 export interface DenoWorkerError extends BaseMessage {

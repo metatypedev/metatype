@@ -3,7 +3,7 @@
 
 import { Operation, Run } from "../../../engine/runtime.js";
 import { TaskContext } from "../deno/shared_types.ts";
-import { DenoWorkerError } from "../utils/workers/deno.ts";
+import { DenoWorkerError } from "../patterns/worker_manager/deno.ts";
 export type {
   Backend,
   Operation,

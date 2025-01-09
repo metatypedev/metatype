@@ -25,7 +25,7 @@ import {
   type ExecutionStatus,
   type Expr,
 } from "./substantial/filter_utils.ts";
-import { createTaskId } from "./utils/workers/manager.ts";
+import { createTaskId } from "./patterns/worker_manager/mod.ts";
 
 const logger = getLogger(import.meta);
 

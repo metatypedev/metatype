@@ -1,9 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { envSharedWithWorkers } from "../../../config/shared.ts";
 import { getLogger } from "../../../log.ts";
-import { BaseDenoWorkerMessage } from "./deno.ts";
 import { BaseMessage, EventHandler, TaskId } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");

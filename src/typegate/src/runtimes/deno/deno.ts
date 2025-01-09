@@ -18,7 +18,6 @@ import type {
 } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
-import { DenoMessenger } from "./deno_messenger.ts";
 import type { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
@@ -27,7 +26,7 @@ import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
 import { getInjectionValues } from "../../engine/planner/injection_utils.ts";
 import DynamicInjection from "../../engine/injection/dynamic.ts";
 import { getLogger } from "../../log.ts";
-import { WorkerManager } from "./deno_worker_manager.ts";
+import { WorkerManager } from "./worker_manager.ts";
 
 const logger = getLogger(import.meta);
 
@@ -48,9 +47,7 @@ export class DenoRuntime extends Runtime {
     uuid: string,
     private tg: TypeGraphDS,
     private typegate: Typegate,
-    private w: DenoMessenger,
     private workerManager: WorkerManager,
-    private registry: Map<string, number>,
     private secrets: Record<string, string>,
   ) {
     super(typegraphName, uuid);
@@ -141,33 +138,16 @@ export class DenoRuntime extends Runtime {
       }
     }
 
-    const w = new DenoMessenger(
-      name,
-      {
-        ...(args.permissions ?? {}),
-        read: [basePath],
-      } as Deno.PermissionOptionsObject,
-      false,
-      ops,
-      typegate.config.base,
-    );
-
     const workerManager = new WorkerManager({
       timeout_ms: typegate.config.base.timer_max_timeout_ms,
     });
-
-    if (Deno.env.get("DENO_TESTING") === "true") {
-      w.disableLazyness();
-    }
 
     const rt = new DenoRuntime(
       typegraphName,
       uuid,
       tg,
       typegate,
-      w,
       workerManager,
-      registry,
       secrets,
     );
 
@@ -175,7 +155,7 @@ export class DenoRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
-    await this.w.terminate();
+    // await this.workerManager.deinit();
   }
 
   materialize(
