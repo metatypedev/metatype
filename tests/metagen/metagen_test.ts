@@ -39,9 +39,10 @@ async function prepareBucket() {
 
   try {
     await createBucket(client, "metagen-test-bucket");
-  } catch (err) {
-    console.log("error creating bucket", { err });
-    //
+  } catch (err: any) {
+    if (err?.Code != "BucketAlreadyOwnedByYou") {
+      throw err;
+    }
   }
 }
 

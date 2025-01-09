@@ -12,6 +12,7 @@ class Ctx:
     def gql(self, query: str, variables: str) -> Any:
         pass
 
+
 class Struct:
     def repr(self):
         return asdict(self)
@@ -96,14 +97,16 @@ FORWARD_REFS["RootSumFnInput"] = RootSumFnInput
 
 TypeRootSumFnInputFirstFloat = float
 
+
 def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value
 
 
-
-def typed_remote_sum(user_fn: Callable[[RootSumFnInput, Ctx], TypeRootSumFnInputFirstFloat]):
+def typed_remote_sum(
+    user_fn: Callable[[RootSumFnInput, Ctx], TypeRootSumFnInputFirstFloat],
+):
     def exported_wrapper(raw_inp, ctx):
         inp: RootSumFnInput = Struct.new(RootSumFnInput, raw_inp)
         out: TypeRootSumFnInputFirstFloat = user_fn(inp, ctx)
@@ -112,5 +115,3 @@ def typed_remote_sum(user_fn: Callable[[RootSumFnInput, Ctx], TypeRootSumFnInput
         return __repr(out)
 
     return exported_wrapper
-
-
