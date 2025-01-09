@@ -79,39 +79,47 @@ export class AsyncMessenger<Broker, M, A> {
 
   async receive(answer: Answer<A>): Promise<void> {
     const { id } = answer;
-    const { promise, hooks } = this.#tasks.get(id)!;
+    const { promise, hooks, timeoutId } = this.#tasks.get(id)!;
+
+    clearTimeout(timeoutId);
+
     if (answer.error) {
       promise.reject(new Error(answer.error));
     } else {
       promise.resolve(answer.data);
     }
+
     await Promise.all(hooks.map((h) => h()));
     this.#tasks.delete(id);
   }
 
-  private startTaskTimer(task: Message<M>) {
+  private startTaskTimer(message: Message<M>) {
     return setTimeout(() => {
-      if (this.#tasks.has(task.id)) {
-        if (
-          task.remainingPulseCount !== undefined &&
-          task.remainingPulseCount > 0
-        ) {
-          // check again next time if unterminated
-          task.remainingPulseCount -= 1;
-          return this.startTaskTimer(task);
-        }
-        // default behavior or 0 pulse left
-        const data = JSON.stringify(task, null, 2);
-        this.receive({
-          id: task.id,
-          error: `${this.#timeoutSecs}s timeout exceeded: ${data}`,
-        });
+      const task = this.#tasks.get(message.id);
 
-        if (this.config.timer_destroy_resources) {
-          this.#stop(this.broker);
-          logger.info("reset broker after timeout");
-          this.broker = this.#start(this.receive.bind(this));
-        }
+      if (!task) return;
+
+      if (
+        message.remainingPulseCount !== undefined &&
+        message.remainingPulseCount > 0
+      ) {
+        // check again next time if unterminated
+        message.remainingPulseCount -= 1;
+        task.timeoutId = this.startTaskTimer(message);
+        return;
+      }
+
+      // default behavior or 0 pulse left
+      const data = JSON.stringify(message, null, 2);
+      this.receive({
+        id: message.id,
+        error: `${this.#timeoutSecs}s timeout exceeded: ${data}`,
+      });
+
+      if (this.config.timer_destroy_resources) {
+        this.#stop(this.broker);
+        logger.info("reset broker after timeout");
+        this.broker = this.#start(this.receive.bind(this));
       }
     }, this.config.timer_max_timeout_ms);
   }
