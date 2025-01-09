@@ -31,7 +31,6 @@ export class AsyncMessenger<Broker, M, A> {
   #send: MessengerSend<Broker, M>;
   #stop: MessengerStop<Broker>;
 
-  #timer?: ReturnType<typeof setInterval>;
   #timeoutSecs: number;
 
   protected constructor(
@@ -57,7 +56,6 @@ export class AsyncMessenger<Broker, M, A> {
     );
     logger.info(`close worker ${this.constructor.name}`);
     await this.#stop(this.broker);
-    clearInterval(this.#timer);
   }
 
   execute(
