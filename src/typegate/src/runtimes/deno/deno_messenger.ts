@@ -34,6 +34,7 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
               write: false,
               ffi: false,
               env: envSharedWithWorkers, // use secrets on the materializer instead
+              import: true,
             },
           },
         } as WorkerOptions);

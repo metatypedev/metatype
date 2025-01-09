@@ -4,6 +4,7 @@
 import { getLogger } from "../../../log.ts";
 import { PushFailure, PushHandler } from "../../../typegate/hooks.ts";
 import { createArtifactMeta } from "../../utils/deno.ts";
+import * as path from "@std/path";
 
 const logger = getLogger("typegate");
 
@@ -16,10 +17,19 @@ export class DenoFailure extends Error {
   }
 }
 
-function sandboxImport(modulePath: string) {
+function sandboxImport(modulePath: string, readRootPath: string) {
   return new Promise<void>((resolve, reject) => {
     const worker = new Worker(new URL("./worker.ts", import.meta.url).href, {
       type: "module",
+      deno: {
+        permissions: {
+          import: true,
+          read: [readRootPath],
+          run: false,
+          write: false,
+          ffi: false,
+        },
+      },
     });
 
     worker.postMessage({ import: modulePath });
@@ -43,10 +53,12 @@ export const cacheModules: PushHandler = async (
   _secretManager,
   _response,
   artifactStore,
+  typegate,
 ) => {
   const { title } = typegraph.types[0];
   const { artifacts } = typegraph.meta;
 
+  const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
   for (const mat of typegraph.materializers) {
     if (mat.name === "module") {
       const matData = mat.data;
@@ -62,7 +74,7 @@ export const cacheModules: PushHandler = async (
 
       try {
         logger.info(`Caching deno imports for ${title} (${entryPoint.path})`);
-        await sandboxImport(entryModulePath);
+        await sandboxImport(entryModulePath, basePath);
         logger.info(`'${entryPoint.path}' was cached`);
       } catch (error: any) {
         console.error(error.stack);

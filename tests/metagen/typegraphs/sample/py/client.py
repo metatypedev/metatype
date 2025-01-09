@@ -809,7 +809,7 @@ class NodeDescs:
     @staticmethod
     def scalar():
         return NodeMeta()
-
+    
     @staticmethod
     def Post():
         return NodeMeta(
@@ -937,42 +937,29 @@ class NodeDescs:
             },
         )
 
-
 UserIdStringUuid = str
 
 PostSlugString = str
 
-Post = typing.TypedDict(
-    "Post",
-    {
-        "id": UserIdStringUuid,
-        "slug": PostSlugString,
-        "title": PostSlugString,
-    },
-    total=False,
-)
+Post = typing.TypedDict("Post", {
+    "id": UserIdStringUuid,
+    "slug": PostSlugString,
+    "title": PostSlugString,
+}, total=False)
 
-RootCompositeArgsFnInput = typing.TypedDict(
-    "RootCompositeArgsFnInput",
-    {
-        "id": PostSlugString,
-    },
-    total=False,
-)
+RootCompositeArgsFnInput = typing.TypedDict("RootCompositeArgsFnInput", {
+    "id": PostSlugString,
+}, total=False)
 
 UserEmailStringEmail = str
 
 UserPostsPostList = typing.List[Post]
 
-User = typing.TypedDict(
-    "User",
-    {
-        "id": UserIdStringUuid,
-        "email": UserEmailStringEmail,
-        "posts": UserPostsPostList,
-    },
-    total=False,
-)
+User = typing.TypedDict("User", {
+    "id": UserIdStringUuid,
+    "email": UserEmailStringEmail,
+    "posts": UserPostsPostList,
+}, total=False)
 
 RootScalarUnionFnOutputT1Integer = int
 
@@ -996,152 +983,112 @@ RootMixedUnionFnOutput = typing.Union[
 ]
 
 
-PostSelections = typing.TypedDict(
-    "PostSelections",
-    {
-        "_": SelectionFlags,
-        "id": ScalarSelectNoArgs,
-        "slug": ScalarSelectNoArgs,
-        "title": ScalarSelectNoArgs,
-    },
-    total=False,
-)
 
-UserSelections = typing.TypedDict(
-    "UserSelections",
-    {
-        "_": SelectionFlags,
-        "id": ScalarSelectNoArgs,
-        "email": ScalarSelectNoArgs,
-        "posts": CompositeSelectNoArgs["PostSelections"],
-    },
-    total=False,
-)
+PostSelections = typing.TypedDict("PostSelections", {
+    "_": SelectionFlags,
+    "id": ScalarSelectNoArgs,
+    "slug": ScalarSelectNoArgs,
+    "title": ScalarSelectNoArgs,
+}, total=False)
 
-RootCompositeUnionFnOutputSelections = typing.TypedDict(
-    "RootCompositeUnionFnOutputSelections",
-    {
-        "_": SelectionFlags,
-        "post": CompositeSelectNoArgs["PostSelections"],
-        "user": CompositeSelectNoArgs["UserSelections"],
-    },
-    total=False,
-)
+UserSelections = typing.TypedDict("UserSelections", {
+    "_": SelectionFlags,
+    "id": ScalarSelectNoArgs,
+    "email": ScalarSelectNoArgs,
+    "posts": CompositeSelectNoArgs["PostSelections"],
+}, total=False)
 
-RootMixedUnionFnOutputSelections = typing.TypedDict(
-    "RootMixedUnionFnOutputSelections",
-    {
-        "_": SelectionFlags,
-        "post": CompositeSelectNoArgs["PostSelections"],
-        "user": CompositeSelectNoArgs["UserSelections"],
-    },
-    total=False,
-)
+RootCompositeUnionFnOutputSelections = typing.TypedDict("RootCompositeUnionFnOutputSelections", {
+    "_": SelectionFlags,
+    "post": CompositeSelectNoArgs["PostSelections"],
+    "user": CompositeSelectNoArgs["UserSelections"],
+}, total=False)
+
+RootMixedUnionFnOutputSelections = typing.TypedDict("RootMixedUnionFnOutputSelections", {
+    "_": SelectionFlags,
+    "post": CompositeSelectNoArgs["PostSelections"],
+    "user": CompositeSelectNoArgs["UserSelections"],
+}, total=False)
 
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
-        super().__init__(
-            {
-                "UserIdStringUuid": "String!",
-                "PostSlugString": "String!",
-                "post": "post!",
-                "user": "user!",
-            }
-        )
-
+        super().__init__({
+            "UserIdStringUuid": "String!",
+            "PostSlugString": "String!",
+            "post": "post!",
+            "user": "user!",
+        })
+    
     def get_user(self, select: UserSelections) -> QueryNode[User]:
         node = selection_to_nodes(
-            {"getUser": select}, {"getUser": NodeDescs.RootGetUserFn}, "$q"
+            {"getUser": select}, 
+            {"getUser": NodeDescs.RootGetUserFn}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
     def get_posts(self, select: PostSelections) -> QueryNode[Post]:
         node = selection_to_nodes(
-            {"getPosts": select}, {"getPosts": NodeDescs.RootGetPostsFn}, "$q"
+            {"getPosts": select}, 
+            {"getPosts": NodeDescs.RootGetPostsFn}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
     def scalar_no_args(self) -> QueryNode[PostSlugString]:
         node = selection_to_nodes(
-            {"scalarNoArgs": True}, {"scalarNoArgs": NodeDescs.RootScalarNoArgsFn}, "$q"
+            {"scalarNoArgs": True}, 
+            {"scalarNoArgs": NodeDescs.RootScalarNoArgsFn}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def scalar_args(
-        self, args: typing.Union[Post, PlaceholderArgs]
-    ) -> MutationNode[PostSlugString]:
+    def scalar_args(self, args: typing.Union[Post, PlaceholderArgs]) -> MutationNode[PostSlugString]:
         node = selection_to_nodes(
-            {"scalarArgs": args}, {"scalarArgs": NodeDescs.RootScalarArgsFn}, "$q"
+            {"scalarArgs": args}, 
+            {"scalarArgs": NodeDescs.RootScalarArgsFn}, 
+            "$q"
         )[0]
-        return MutationNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
     def composite_no_args(self, select: PostSelections) -> MutationNode[Post]:
         node = selection_to_nodes(
-            {"compositeNoArgs": select},
-            {"compositeNoArgs": NodeDescs.RootCompositeNoArgsFn},
-            "$q",
+            {"compositeNoArgs": select}, 
+            {"compositeNoArgs": NodeDescs.RootCompositeNoArgsFn}, 
+            "$q"
         )[0]
-        return MutationNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def composite_args(
-        self,
-        args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs],
-        select: PostSelections,
-    ) -> MutationNode[Post]:
+    def composite_args(self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs], select: PostSelections) -> MutationNode[Post]:
         node = selection_to_nodes(
-            {"compositeArgs": (args, select)},
-            {"compositeArgs": NodeDescs.RootCompositeArgsFn},
-            "$q",
+            {"compositeArgs": (args, select)}, 
+            {"compositeArgs": NodeDescs.RootCompositeArgsFn}, 
+            "$q"
         )[0]
-        return MutationNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def scalar_union(
-        self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs]
-    ) -> QueryNode[RootScalarUnionFnOutput]:
+    def scalar_union(self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs]) -> QueryNode[RootScalarUnionFnOutput]:
         node = selection_to_nodes(
-            {"scalarUnion": args}, {"scalarUnion": NodeDescs.RootScalarUnionFn}, "$q"
+            {"scalarUnion": args}, 
+            {"scalarUnion": NodeDescs.RootScalarUnionFn}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def composite_union(
-        self,
-        args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs],
-        select: RootCompositeUnionFnOutputSelections,
-    ) -> QueryNode[RootCompositeUnionFnOutput]:
+    def composite_union(self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs], select: RootCompositeUnionFnOutputSelections) -> QueryNode[RootCompositeUnionFnOutput]:
         node = selection_to_nodes(
-            {"compositeUnion": (args, select)},
-            {"compositeUnion": NodeDescs.RootCompositeUnionFn},
-            "$q",
+            {"compositeUnion": (args, select)}, 
+            {"compositeUnion": NodeDescs.RootCompositeUnionFn}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def mixed_union(
-        self,
-        args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs],
-        select: RootMixedUnionFnOutputSelections,
-    ) -> QueryNode[RootMixedUnionFnOutput]:
+    def mixed_union(self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs], select: RootMixedUnionFnOutputSelections) -> QueryNode[RootMixedUnionFnOutput]:
         node = selection_to_nodes(
-            {"mixedUnion": (args, select)},
-            {"mixedUnion": NodeDescs.RootMixedUnionFn},
-            "$q",
+            {"mixedUnion": (args, select)}, 
+            {"mixedUnion": NodeDescs.RootMixedUnionFn}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
+

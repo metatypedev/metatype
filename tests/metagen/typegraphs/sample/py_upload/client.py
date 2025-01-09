@@ -809,7 +809,7 @@ class NodeDescs:
     @staticmethod
     def scalar():
         return NodeMeta()
-
+    
     @staticmethod
     def RootUploadFn():
         return_node = NodeDescs.scalar()
@@ -833,74 +833,55 @@ class NodeDescs:
                 "prefix": "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
                 "files": "RootUploadManyFnInputFilesRootUploadFnInputFileFileList",
             },
-            input_files=[[".files", "[]"]],
+            input_files=[[".files","[]"]],
         )
-
 
 RootUploadFnInputFileFile = File
 
 RootUploadFnInputPathString = str
 
-RootUploadFnInputPathRootUploadFnInputPathStringOptional = typing.Union[
-    RootUploadFnInputPathString, None
-]
+RootUploadFnInputPathRootUploadFnInputPathStringOptional = typing.Union[RootUploadFnInputPathString, None]
 
-RootUploadFnInput = typing.TypedDict(
-    "RootUploadFnInput",
-    {
-        "file": RootUploadFnInputFileFile,
-        "path": RootUploadFnInputPathRootUploadFnInputPathStringOptional,
-    },
-    total=False,
-)
+RootUploadFnInput = typing.TypedDict("RootUploadFnInput", {
+    "file": RootUploadFnInputFileFile,
+    "path": RootUploadFnInputPathRootUploadFnInputPathStringOptional,
+}, total=False)
 
-RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = typing.Union[
-    RootUploadFnInputPathString, None
-]
+RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = typing.Union[RootUploadFnInputPathString, None]
 
-RootUploadManyFnInputFilesRootUploadFnInputFileFileList = typing.List[
-    RootUploadFnInputFileFile
-]
+RootUploadManyFnInputFilesRootUploadFnInputFileFileList = typing.List[RootUploadFnInputFileFile]
 
-RootUploadManyFnInput = typing.TypedDict(
-    "RootUploadManyFnInput",
-    {
-        "prefix": RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
-        "files": RootUploadManyFnInputFilesRootUploadFnInputFileFileList,
-    },
-    total=False,
-)
+RootUploadManyFnInput = typing.TypedDict("RootUploadManyFnInput", {
+    "prefix": RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
+    "files": RootUploadManyFnInputFilesRootUploadFnInputFileFileList,
+}, total=False)
 
 RootUploadFnOutput = bool
 
 
+
 class QueryGraph(QueryGraphBase):
     def __init__(self):
-        super().__init__(
-            {
-                "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
-                "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
-                "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
-                "RootUploadManyFnInputFilesRootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
-            }
-        )
-
-    def upload(
-        self, args: typing.Union[RootUploadFnInput, PlaceholderArgs]
-    ) -> MutationNode[RootUploadFnOutput]:
+        super().__init__({
+            "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
+            "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
+            "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
+            "RootUploadManyFnInputFilesRootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
+        })
+    
+    def upload(self, args: typing.Union[RootUploadFnInput, PlaceholderArgs]) -> MutationNode[RootUploadFnOutput]:
         node = selection_to_nodes(
-            {"upload": args}, {"upload": NodeDescs.RootUploadFn}, "$q"
+            {"upload": args}, 
+            {"upload": NodeDescs.RootUploadFn}, 
+            "$q"
         )[0]
-        return MutationNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def upload_many(
-        self, args: typing.Union[RootUploadManyFnInput, PlaceholderArgs]
-    ) -> MutationNode[RootUploadFnOutput]:
+    def upload_many(self, args: typing.Union[RootUploadManyFnInput, PlaceholderArgs]) -> MutationNode[RootUploadFnOutput]:
         node = selection_to_nodes(
-            {"uploadMany": args}, {"uploadMany": NodeDescs.RootUploadManyFn}, "$q"
+            {"uploadMany": args}, 
+            {"uploadMany": NodeDescs.RootUploadManyFn}, 
+            "$q"
         )[0]
-        return MutationNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return MutationNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
+

@@ -127,6 +127,7 @@ export class WorkerManager {
           write: false,
           ffi: false,
           env: envSharedWithWorkers,
+          import: true,
         },
       },
     });

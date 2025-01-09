@@ -198,7 +198,13 @@ export class Typegate implements AsyncDisposable {
 
     for (const handler of this.#onPushHooks) {
       try {
-        res = await handler(res, secretManager, response, this.artifactStore);
+        res = await handler(
+          res,
+          secretManager,
+          response,
+          this.artifactStore,
+          this,
+        );
       } catch (err: any) {
         logger.error(`Error in onPush hook: ${err}`);
         // FIXME: MigrationFailur err message parser doesn't support all errors like
