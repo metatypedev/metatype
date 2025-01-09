@@ -122,7 +122,7 @@ export type SyncConfigX = {
   redis: RedisConnectOptions;
   s3: S3ClientConfig;
   s3Bucket: string;
-  forceRemove: boolean
+  forceRemove?: boolean
 };
 
 export type TypegateConfig = {

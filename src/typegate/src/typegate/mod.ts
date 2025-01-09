@@ -156,7 +156,12 @@ export class Typegate implements AsyncDisposable {
         logger.warn("Force removal at boot enabled");
         const history = await register.replicatedMap.getAllHistory();
         for (const { name, payload } of history) {
-          await typegate.forceRemove(name, payload, typegraphStore);
+          try {
+            await typegate.forceRemove(name, payload, typegraphStore);
+          } catch (e) {
+            logger.error(`Failed to force remove typegraph "${name}": ${e}`);
+            Sentry.captureException(e);
+          }
         }
       }
 
