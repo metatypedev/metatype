@@ -19,59 +19,6 @@ export abstract class BaseWorker<M extends BaseMessage, E extends BaseMessage> {
   abstract get id(): TaskId;
 }
 
-export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
-  extends BaseWorker<M, E> {
-  #worker: Worker;
-  #taskId: TaskId;
-  constructor(taskId: TaskId, workerPath: string) {
-    super();
-    this.#worker = new Worker(workerPath, {
-      name: taskId,
-      type: "module",
-      deno: {
-        permissions: {
-          net: true,
-          // on request permissions
-          read: "inherit", // default read permission
-          sys: "inherit",
-          // non-overridable permissions (security between typegraphs)
-          run: false,
-          write: false,
-          ffi: false,
-          env: envSharedWithWorkers,
-        },
-      },
-    });
-    this.#taskId = taskId;
-  }
-
-  listen(handlerFn: EventHandler<E>) {
-    this.#worker.onmessage = async (message) => {
-      await handlerFn(message.data as E);
-    };
-
-    this.#worker.onerror = /*async*/ (event) =>
-      handlerFn(
-        {
-          type: "WORKER_ERROR",
-          event,
-        } as E,
-      );
-  }
-
-  send(msg: M) {
-    this.#worker.postMessage(msg);
-  }
-
-  destroy() {
-    this.#worker.terminate();
-  }
-
-  get id() {
-    return this.#taskId;
-  }
-}
-
 export class BaseWorkerManager<
   T,
   M extends BaseMessage,
@@ -178,4 +125,19 @@ export class BaseWorkerManager<
 
     return false;
   }
+}
+
+export function createTaskId(name: string) {
+  const uuid = crypto.randomUUID();
+  return `${name}_::_${uuid}`;
+}
+
+export function getTaskNameFromId(taskId: TaskId) {
+  const [name, uuid] = taskId.split("_::_");
+  if (!name || !uuid) {
+    // unreachable
+    throw new Error(`Fatal: task ID ${taskId} does not respect the convention`);
+  }
+
+  return name;
 }

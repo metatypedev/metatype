@@ -3,7 +3,8 @@
 
 import { getLogger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
-import { BaseWorkerManager, DenoWorker } from "../utils/workers/manager.ts";
+import { DenoWorker } from "../utils/workers/deno.ts";
+import { BaseWorkerManager } from "../utils/workers/manager.ts";
 import { EventHandler, TaskId } from "../utils/workers/types.ts";
 import { Run, WorkflowEvent, WorkflowMessage } from "./types.ts";
 

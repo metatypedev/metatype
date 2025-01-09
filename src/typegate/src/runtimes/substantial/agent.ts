@@ -10,6 +10,7 @@ import {
 } from "../../../engine/runtime.js";
 import { getLoggerByAddress, Logger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
+import { getTaskNameFromId } from "../utils/workers/manager.ts";
 import { EventHandler, TaskId } from "../utils/workers/types.ts";
 import {
   appendIfOngoing,
@@ -140,7 +141,7 @@ export class Agent {
 
     for (const workflow of this.workflows) {
       const requests = replayRequests.filter(
-        ({ run_id }) => Agent.parseWorkflowName(run_id) == workflow.name,
+        ({ run_id }) => getTaskNameFromId(run_id) == workflow.name,
       );
 
       while (requests.length > 0) {
@@ -376,13 +377,11 @@ export class Agent {
     this.workerManager.destroyWorker(workflowName, runId);
     console.log({ event });
 
-    const result = event.type == "SUCCESS" ? event.result : undefined;
+    const result = event.type == "SUCCESS" ? event.result : event.error;
 
     this.logger.info(
       `gracefull completion of "${runId}" (${event.type}): ${
-        JSON.stringify(
-          "result" in event ? event.result : event.error,
-        )
+        JSON.stringify(result)
       } started at "${startedAt}"`,
     );
 
@@ -424,21 +423,6 @@ export class Agent {
       run_id: runId,
       lease_seconds: this.config.leaseLifespanSec,
     });
-  }
-
-  static nextId(name: string): TaskId {
-    const uuid = crypto.randomUUID();
-    return `${name}_::_${uuid}`;
-  }
-
-  static parseWorkflowName(runId: string) {
-    const [name, uuid] = runId.split("_::_");
-    if (!name && !uuid) {
-      // Impossible since it must be produced from nextId upon a Start event
-      throw new Error(`Fatal: ${runId} does not respect the convention`);
-    }
-
-    return name;
   }
 }
 

@@ -20,7 +20,12 @@ import {
 } from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
-import { applyFilter, type Expr, type ExecutionStatus } from "./substantial/filter_utils.ts";
+import {
+  applyFilter,
+  type ExecutionStatus,
+  type Expr,
+} from "./substantial/filter_utils.ts";
+import { createTaskId } from "./utils/workers/manager.ts";
 
 const logger = getLogger(import.meta);
 
@@ -247,7 +252,7 @@ export class SubstantialRuntime extends Runtime {
     }) => {
       this.#checkWorkflowExistOrThrow(workflowName);
 
-      const runId = Agent.nextId(workflowName);
+      const runId = createTaskId(workflowName);
       const schedule = new Date().toJSON();
 
       const token = await InternalAuth.emit(this.typegate.cryptoKeys);
