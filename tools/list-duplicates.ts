@@ -19,8 +19,6 @@ import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
 import { projectDir } from "./utils.ts";
 import { TypeNode } from "../src/typegate/src/typegraph/type_node.ts";
 
-<<<<<<< Updated upstream
-=======
 export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
   // to <- from
   const reducedSetMap = new Map<number, number[]>();
@@ -49,8 +47,7 @@ export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
       let idx = -1;
       /* visitType(tg, rootIdx, ({ type, idx }) => {
     }, { allowCircular: false }); */
-      for (const type of tg.types) {
-        idx += 1;
+      for (const type of tg.types) { idx += 1;
         if (reducedSet.has(idx)) {
           continue;
         }
@@ -261,7 +258,6 @@ export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
     optionalTypeCount,
   });
 }
->>>>>>> Stashed changes
 export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
   const bins = new Map<string, readonly [number, TypeNode][]>();
   const duplicateNameBins = new Map<string, readonly [number, TypeNode][]>();
@@ -269,14 +265,10 @@ export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
     const { title, description: _description, ...structure } = type;
     const hash = objectHash(structure as any);
     bins.set(hash, [...bins.get(hash) ?? [], [idx, type] as const]);
-<<<<<<< Updated upstream
-    duplicateNameBins.set(title, [...duplicateNameBins.get(name) ?? [], [idx, type] as const]);
-=======
     duplicateNameBins.set(title, [
       ...duplicateNameBins.get(title) ?? [],
       [idx, type] as const,
     ]);
->>>>>>> Stashed changes
     return true;
   }, { allowCircular: false });
   let dupesBinsFound = 0;
