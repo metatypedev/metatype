@@ -307,7 +307,7 @@ export class DenoRuntime extends Runtime {
         return await this.workerManager.callFunction(
           "inlineFunction",
           modulePath,
-          "inline", // TODO
+          "tg",
           args,
           {
             parent,
@@ -360,6 +360,12 @@ export class DenoRuntime extends Runtime {
 }
 
 function exportInlineFunction(name = "fn", symbol = "_my_lambda") {
+  if (!name.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/)) {
+    throw new Error(`Invalid identifier: ${name}`);
+  }
+  if (!symbol.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/)) {
+    throw new Error(`Invalid identifier: ${symbol}`);
+  }
   return (code: string) => {
     return `${code}\nexport const ${name} = ${symbol};`;
   };

@@ -32,15 +32,15 @@ export class WorkerManager
   }
 
   destroyAllWorkers() {
-    super.destroyAllWorkers();
     logger.warn(
-      `Destroyed workers for ${
+      `Destroying workers for ${
         this
           .getActiveTaskNames()
           .map((w) => `"${w}"`)
           .join(", ")
       }`,
     );
+    super.destroyAllWorkers();
   }
 
   isOngoing(runId: TaskId) {

@@ -144,7 +144,8 @@ export class BaseWorkerManager<
 
 export function createTaskId(name: string) {
   const uuid = crypto.randomUUID();
-  return `${name}_::_${uuid}`;
+  const sanitizedName = name.replace(/_::_/g, "__");
+  return `${sanitizedName}_::_${uuid}`;
 }
 
 export function getTaskNameFromId(taskId: TaskId) {

@@ -19,8 +19,11 @@ self.onmessage = async function (event: MessageEvent<DenoMessage>) {
       const fn = module[functionName];
 
       if (typeof fn !== "function") {
-        // TODO post message??
-        throw new Error(`Function "${functionName}" not found`);
+        postMessage({
+          type: "FAILURE",
+          error: `Function "${functionName}" not found`,
+        });
+        return;
       }
 
       try {
