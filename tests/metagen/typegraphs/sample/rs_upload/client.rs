@@ -42,10 +42,10 @@ mod node_metas {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("file".into(), "ScalarFileShared1".into()),
+                    ("file".into(), "FileBf9b7".into()),
                     (
                         "path".into(),
-                        "RootUploadFnInputPathScalarString1Optional".into(),
+                        "RootUploadFnInputPathString25e51Optional".into(),
                     ),
                 ]
                 .into(),
@@ -62,11 +62,11 @@ mod node_metas {
                 [
                     (
                         "prefix".into(),
-                        "RootUploadManyFnInputPrefixScalarString1Optional".into(),
+                        "RootUploadManyFnInputPrefixString25e51Optional".into(),
                     ),
                     (
                         "files".into(),
-                        "RootUploadManyFnInputFilesScalarFileShared1List".into(),
+                        "RootUploadManyFnInputFilesFileBf9b7List".into(),
                     ),
                 ]
                 .into(),
@@ -81,22 +81,20 @@ mod node_metas {
 }
 use types::*;
 pub mod types {
-    pub type ScalarFileShared1 = super::FileId;
-    pub type ScalarString1 = String;
-    pub type RootUploadFnInputPathScalarString1Optional = Option<ScalarString1>;
+    pub type FileBf9b7 = super::FileId;
+    pub type RootUploadFnInputPathString25e51Optional = Option<String>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadFnInputPartial {
-        pub file: Option<ScalarFileShared1>,
-        pub path: RootUploadFnInputPathScalarString1Optional,
+        pub file: Option<FileBf9b7>,
+        pub path: RootUploadFnInputPathString25e51Optional,
     }
-    pub type RootUploadManyFnInputPrefixScalarString1Optional = Option<ScalarString1>;
-    pub type RootUploadManyFnInputFilesScalarFileShared1List = Vec<ScalarFileShared1>;
+    pub type RootUploadManyFnInputPrefixString25e51Optional = Option<String>;
+    pub type RootUploadManyFnInputFilesFileBf9b7List = Vec<FileBf9b7>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadManyFnInputPartial {
-        pub prefix: RootUploadManyFnInputPrefixScalarString1Optional,
-        pub files: Option<RootUploadManyFnInputFilesScalarFileShared1List>,
+        pub prefix: RootUploadManyFnInputPrefixString25e51Optional,
+        pub files: Option<RootUploadManyFnInputFilesFileBf9b7List>,
     }
-    pub type ScalarBoolean1 = bool;
 }
 
 impl QueryGraph {
@@ -105,18 +103,18 @@ impl QueryGraph {
             addr,
             ty_to_gql_ty_map: std::sync::Arc::new(
                 [
-                    ("ScalarFileShared1".into(), "scalar_file_shared_1!".into()),
+                    ("FileBf9b7".into(), "file_bf9b7!".into()),
                     (
-                        "RootUploadFnInputPathScalarString1Optional".into(),
+                        "RootUploadFnInputPathString25e51Optional".into(),
                         "String".into(),
                     ),
                     (
-                        "RootUploadManyFnInputPrefixScalarString1Optional".into(),
+                        "RootUploadManyFnInputPrefixString25e51Optional".into(),
                         "String".into(),
                     ),
                     (
-                        "RootUploadManyFnInputFilesScalarFileShared1List".into(),
-                        "[scalar_file_shared_1]!".into(),
+                        "RootUploadManyFnInputFilesFileBf9b7List".into(),
+                        "[file_bf9b7]!".into(),
                     ),
                 ]
                 .into(),
@@ -127,7 +125,7 @@ impl QueryGraph {
     pub fn upload(
         &self,
         args: impl Into<NodeArgs<RootUploadFnInputPartial>>,
-    ) -> MutationNode<ScalarBoolean1> {
+    ) -> MutationNode<bool> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -145,7 +143,7 @@ impl QueryGraph {
     pub fn upload_many(
         &self,
         args: impl Into<NodeArgs<RootUploadManyFnInputPartial>>,
-    ) -> MutationNode<ScalarBoolean1> {
+    ) -> MutationNode<bool> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(

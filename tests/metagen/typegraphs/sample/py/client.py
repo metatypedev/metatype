@@ -872,9 +872,9 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "id": "ScalarStringUuid1",
-                "slug": "ScalarString1",
-                "title": "ScalarString1",
+                "id": "UserIdStringUuid",
+                "slug": "StringE1a43",
+                "title": "StringE1a43",
             },
         )
 
@@ -893,7 +893,7 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "id": "ScalarString1",
+                "id": "StringE1a43",
             },
         )
 
@@ -904,7 +904,7 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "id": "ScalarString1",
+                "id": "StringE1a43",
             },
         )
 
@@ -924,7 +924,7 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "id": "ScalarString1",
+                "id": "StringE1a43",
             },
         )
 
@@ -944,7 +944,7 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "id": "ScalarString1",
+                "id": "StringE1a43",
             },
         )
 
@@ -992,47 +992,43 @@ class NodeDescs:
         )
 
 
-ScalarStringUuid1 = str
-
-ScalarString1 = str
+UserIdStringUuid = str
 
 Post = typing.TypedDict(
     "Post",
     {
-        "id": ScalarStringUuid1,
-        "slug": ScalarString1,
-        "title": ScalarString1,
+        "id": UserIdStringUuid,
+        "slug": str,
+        "title": str,
     },
     total=False,
 )
 
-ScalarStructShared2 = typing.TypedDict(
-    "ScalarStructShared2",
+StructC339c = typing.TypedDict(
+    "StructC339c",
     {
-        "id": ScalarString1,
+        "id": str,
     },
     total=False,
 )
 
-ScalarStringEmail1 = str
+UserEmailStringEmail = str
 
 UserPostsPostList = typing.List[Post]
 
 User = typing.TypedDict(
     "User",
     {
-        "id": ScalarStringUuid1,
-        "email": ScalarStringEmail1,
+        "id": UserIdStringUuid,
+        "email": UserEmailStringEmail,
         "posts": UserPostsPostList,
     },
     total=False,
 )
 
-ScalarInteger1 = int
-
 RootScalarUnionFnOutput = typing.Union[
-    ScalarString1,
-    ScalarInteger1,
+    str,
+    int,
 ]
 
 
@@ -1045,15 +1041,15 @@ RootCompositeUnionFnOutput = typing.Union[
 RootMixedUnionFnOutput = typing.Union[
     Post,
     User,
-    ScalarString1,
-    ScalarInteger1,
+    str,
+    int,
 ]
 
 
 RootNestedCompositeFnOutputCompositeStructNestedStruct = typing.TypedDict(
     "RootNestedCompositeFnOutputCompositeStructNestedStruct",
     {
-        "inner": ScalarInteger1,
+        "inner": int,
     },
     total=False,
 )
@@ -1061,7 +1057,7 @@ RootNestedCompositeFnOutputCompositeStructNestedStruct = typing.TypedDict(
 RootNestedCompositeFnOutputCompositeStruct = typing.TypedDict(
     "RootNestedCompositeFnOutputCompositeStruct",
     {
-        "value": ScalarInteger1,
+        "value": int,
         "nested": RootNestedCompositeFnOutputCompositeStructNestedStruct,
     },
     total=False,
@@ -1070,7 +1066,7 @@ RootNestedCompositeFnOutputCompositeStruct = typing.TypedDict(
 RootNestedCompositeFnOutputListStruct = typing.TypedDict(
     "RootNestedCompositeFnOutputListStruct",
     {
-        "value": ScalarInteger1,
+        "value": int,
     },
     total=False,
 )
@@ -1082,7 +1078,7 @@ RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = typin
 RootNestedCompositeFnOutput = typing.TypedDict(
     "RootNestedCompositeFnOutput",
     {
-        "scalar": ScalarInteger1,
+        "scalar": int,
         "composite": RootNestedCompositeFnOutputCompositeStruct,
         "list": RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList,
     },
@@ -1182,8 +1178,8 @@ class QueryGraph(QueryGraphBase):
     def __init__(self):
         super().__init__(
             {
-                "ScalarStringUuid1": "String!",
-                "ScalarString1": "String!",
+                "UserIdStringUuid": "String!",
+                "StringE1a43": "String!",
                 "post": "post!",
                 "user": "user!",
             }
@@ -1205,7 +1201,7 @@ class QueryGraph(QueryGraphBase):
             node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
         )
 
-    def scalar_no_args(self) -> QueryNode[ScalarString1]:
+    def scalar_no_args(self) -> QueryNode[str]:
         node = selection_to_nodes(
             {"scalarNoArgs": True}, {"scalarNoArgs": NodeDescs.RootScalarNoArgsFn}, "$q"
         )[0]
@@ -1215,7 +1211,7 @@ class QueryGraph(QueryGraphBase):
 
     def scalar_args(
         self, args: typing.Union[Post, PlaceholderArgs]
-    ) -> MutationNode[ScalarString1]:
+    ) -> MutationNode[str]:
         node = selection_to_nodes(
             {"scalarArgs": args}, {"scalarArgs": NodeDescs.RootScalarArgsFn}, "$q"
         )[0]
@@ -1234,9 +1230,7 @@ class QueryGraph(QueryGraphBase):
         )
 
     def composite_args(
-        self,
-        args: typing.Union[ScalarStructShared2, PlaceholderArgs],
-        select: PostSelections,
+        self, args: typing.Union[StructC339c, PlaceholderArgs], select: PostSelections
     ) -> MutationNode[Post]:
         node = selection_to_nodes(
             {"compositeArgs": (args, select)},
@@ -1248,7 +1242,7 @@ class QueryGraph(QueryGraphBase):
         )
 
     def scalar_union(
-        self, args: typing.Union[ScalarStructShared2, PlaceholderArgs]
+        self, args: typing.Union[StructC339c, PlaceholderArgs]
     ) -> QueryNode[RootScalarUnionFnOutput]:
         node = selection_to_nodes(
             {"scalarUnion": args}, {"scalarUnion": NodeDescs.RootScalarUnionFn}, "$q"
@@ -1259,7 +1253,7 @@ class QueryGraph(QueryGraphBase):
 
     def composite_union(
         self,
-        args: typing.Union[ScalarStructShared2, PlaceholderArgs],
+        args: typing.Union[StructC339c, PlaceholderArgs],
         select: RootCompositeUnionFnOutputSelections,
     ) -> QueryNode[RootCompositeUnionFnOutput]:
         node = selection_to_nodes(
@@ -1273,7 +1267,7 @@ class QueryGraph(QueryGraphBase):
 
     def mixed_union(
         self,
-        args: typing.Union[ScalarStructShared2, PlaceholderArgs],
+        args: typing.Union[StructC339c, PlaceholderArgs],
         select: RootMixedUnionFnOutputSelections,
     ) -> QueryNode[RootMixedUnionFnOutput]:
         node = selection_to_nodes(

@@ -828,8 +828,8 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "file": "ScalarFileShared1",
-                "path": "RootUploadFnInputPathScalarString1Optional",
+                "file": "FileBf9b7",
+                "path": "RootUploadFnInputPathString25e51Optional",
             },
             input_files=[[".file"]],
         )
@@ -841,58 +841,54 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "prefix": "RootUploadManyFnInputPrefixScalarString1Optional",
-                "files": "RootUploadManyFnInputFilesScalarFileShared1List",
+                "prefix": "RootUploadManyFnInputPrefixString25e51Optional",
+                "files": "RootUploadManyFnInputFilesFileBf9b7List",
             },
             input_files=[[".files", "[]"]],
         )
 
 
-ScalarFileShared1 = File
+FileBf9b7 = File
 
-ScalarString1 = str
-
-RootUploadFnInputPathScalarString1Optional = typing.Union[ScalarString1, None]
+RootUploadFnInputPathString25e51Optional = typing.Union[str, None]
 
 RootUploadFnInput = typing.TypedDict(
     "RootUploadFnInput",
     {
-        "file": ScalarFileShared1,
-        "path": RootUploadFnInputPathScalarString1Optional,
+        "file": FileBf9b7,
+        "path": RootUploadFnInputPathString25e51Optional,
     },
     total=False,
 )
 
-RootUploadManyFnInputPrefixScalarString1Optional = typing.Union[ScalarString1, None]
+RootUploadManyFnInputPrefixString25e51Optional = typing.Union[str, None]
 
-RootUploadManyFnInputFilesScalarFileShared1List = typing.List[ScalarFileShared1]
+RootUploadManyFnInputFilesFileBf9b7List = typing.List[FileBf9b7]
 
 RootUploadManyFnInput = typing.TypedDict(
     "RootUploadManyFnInput",
     {
-        "prefix": RootUploadManyFnInputPrefixScalarString1Optional,
-        "files": RootUploadManyFnInputFilesScalarFileShared1List,
+        "prefix": RootUploadManyFnInputPrefixString25e51Optional,
+        "files": RootUploadManyFnInputFilesFileBf9b7List,
     },
     total=False,
 )
-
-ScalarBoolean1 = bool
 
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
         super().__init__(
             {
-                "ScalarFileShared1": "scalar_file_shared_1!",
-                "RootUploadFnInputPathScalarString1Optional": "String",
-                "RootUploadManyFnInputPrefixScalarString1Optional": "String",
-                "RootUploadManyFnInputFilesScalarFileShared1List": "[scalar_file_shared_1]!",
+                "FileBf9b7": "file_bf9b7!",
+                "RootUploadFnInputPathString25e51Optional": "String",
+                "RootUploadManyFnInputPrefixString25e51Optional": "String",
+                "RootUploadManyFnInputFilesFileBf9b7List": "[file_bf9b7]!",
             }
         )
 
     def upload(
         self, args: typing.Union[RootUploadFnInput, PlaceholderArgs]
-    ) -> MutationNode[ScalarBoolean1]:
+    ) -> MutationNode[bool]:
         node = selection_to_nodes(
             {"upload": args}, {"upload": NodeDescs.RootUploadFn}, "$q"
         )[0]
@@ -902,7 +898,7 @@ class QueryGraph(QueryGraphBase):
 
     def upload_many(
         self, args: typing.Union[RootUploadManyFnInput, PlaceholderArgs]
-    ) -> MutationNode[ScalarBoolean1]:
+    ) -> MutationNode[bool]:
         node = selection_to_nodes(
             {"uploadMany": args}, {"uploadMany": NodeDescs.RootUploadManyFn}, "$q"
         )[0]

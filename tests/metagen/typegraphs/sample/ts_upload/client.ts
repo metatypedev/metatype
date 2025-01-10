@@ -882,8 +882,8 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        file: "ScalarFileShared1",
-        path: "RootUploadFnInputPathScalarString1Optional",
+        file: "FileBf9b7",
+        path: "RootUploadFnInputPathString25e51Optional",
       },
       inputFiles: [[".file"]],
     };
@@ -892,36 +892,34 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        prefix: "RootUploadManyFnInputPrefixScalarString1Optional",
-        files: "RootUploadManyFnInputFilesScalarFileShared1List",
+        prefix: "RootUploadManyFnInputPrefixString25e51Optional",
+        files: "RootUploadManyFnInputFilesFileBf9b7List",
       },
       inputFiles: [[".files","[]"]],
     };
   },
 };
-export type ScalarFileShared1 = File;
-export type ScalarString1 = string;
-export type RootUploadFnInputPathScalarString1Optional = ScalarString1 | null | undefined;
+export type FileBf9b7 = File;
+export type RootUploadFnInputPathString25e51Optional = string | null | undefined;
 export type RootUploadFnInput = {
-  file: ScalarFileShared1;
-  path?: RootUploadFnInputPathScalarString1Optional;
+  file: FileBf9b7;
+  path?: RootUploadFnInputPathString25e51Optional;
 };
-export type RootUploadManyFnInputPrefixScalarString1Optional = ScalarString1 | null | undefined;
-export type RootUploadManyFnInputFilesScalarFileShared1List = Array<ScalarFileShared1>;
+export type RootUploadManyFnInputPrefixString25e51Optional = string | null | undefined;
+export type RootUploadManyFnInputFilesFileBf9b7List = Array<FileBf9b7>;
 export type RootUploadManyFnInput = {
-  prefix?: RootUploadManyFnInputPrefixScalarString1Optional;
-  files: RootUploadManyFnInputFilesScalarFileShared1List;
+  prefix?: RootUploadManyFnInputPrefixString25e51Optional;
+  files: RootUploadManyFnInputFilesFileBf9b7List;
 };
-export type ScalarBoolean1 = boolean;
 
 
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
-      "ScalarFileShared1": "scalar_file_shared_1!",
-      "RootUploadFnInputPathScalarString1Optional": "String",
-      "RootUploadManyFnInputPrefixScalarString1Optional": "String",
-      "RootUploadManyFnInputFilesScalarFileShared1List": "[scalar_file_shared_1]!",
+      "FileBf9b7": "file_bf9b7!",
+      "RootUploadFnInputPathString25e51Optional": "String",
+      "RootUploadManyFnInputPrefixString25e51Optional": "String",
+      "RootUploadManyFnInputFilesFileBf9b7List": "[file_bf9b7]!",
     });
   }
     
@@ -931,7 +929,7 @@ export class QueryGraph extends _QueryGraphBase {
       [["upload", nodeMetas.RootUploadFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<ScalarBoolean1>;
+    return new MutationNode(inner) as MutationNode<boolean>;
   }
   uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>) {
     const inner = _selectionToNodeSet(
@@ -939,6 +937,6 @@ export class QueryGraph extends _QueryGraphBase {
       [["uploadMany", nodeMetas.RootUploadManyFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<ScalarBoolean1>;
+    return new MutationNode(inner) as MutationNode<boolean>;
   }
 }

@@ -65,7 +65,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "string",
-      "title": "scalar_string_1"
+      "title": "root_user_fn_input_id_string"
     },
     {
       "type": "object",
@@ -187,7 +187,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "integer",
-      "title": "scalar_integer_1"
+      "title": "message_create_input_id_integer"
     },
     {
       "type": "function",
@@ -245,7 +245,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "message_create_input_id_scalar_integer_1_optional",
+      "title": "message_create_input_id_message_create_input_id_integer_optional",
       "item": 14,
       "default_value": null
     },
@@ -417,7 +417,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "list",
-      "title": "_prisma_integer_filter_t4_struct_in_scalar_integer_1_list",
+      "title": "_prisma_integer_filter_t4_struct_in_message_create_input_id_integer_list",
       "items": 14
     },
     {
@@ -516,7 +516,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "list",
-      "title": "_prisma_string_filter_t3_struct_in_scalar_string_1_list",
+      "title": "_prisma_string_filter_t3_struct_in_root_user_fn_input_id_string_list",
       "items": 3
     },
     {
@@ -547,13 +547,13 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "_prisma_string_filter_t5_struct_mode_scalar_string_enum_1_optional",
+      "title": "_prisma_string_filter_t5_struct_mode__prisma_string_filter_t5_struct_mode_string_enum_optional",
       "item": 47,
       "default_value": null
     },
     {
       "type": "string",
-      "title": "scalar_string_enum_1",
+      "title": "_prisma_string_filter_t5_struct_mode_string_enum",
       "enum": [
         "\\\\"insensitive\\\\""
       ]
@@ -586,7 +586,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "optional",
-      "title": "_prisma_string_filter_t7_struct_startsWith_scalar_string_1_optional",
+      "title": "_prisma_string_filter_t7_struct_startsWith_root_user_fn_input_id_string_optional",
       "item": 3,
       "default_value": null
     },
@@ -762,7 +762,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "string",
-      "title": "scalar_string_enum_2",
+      "title": "message_query_input_distinct_string_enum",
       "enum": [
         "\\\\"id\\\\"",
         "\\\\"title\\\\"",

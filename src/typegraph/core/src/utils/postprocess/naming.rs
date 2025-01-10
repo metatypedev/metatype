@@ -11,6 +11,7 @@ use common::typegraph::{
     StringFormat, TypeNode, Typegraph,
 };
 use indexmap::IndexSet;
+use sha2::{Digest, Sha256};
 
 use crate::errors::TgError;
 
@@ -46,7 +47,6 @@ impl super::PostProcessor for NamingProcessor {
             path: vec![],
             // ref related
             counts: ref_counters.counts,
-            name_occurences: Default::default(),
         };
         for (key, &ty_id) in &root_data.properties {
             acc.path.push((
@@ -76,7 +76,6 @@ struct VisitCollector {
     path: Vec<(PathSegment, Rc<str>)>,
     // ref related
     counts: HashMap<u32, IndexSet<u32>>,
-    name_occurences: HashMap<String, u32>,
 }
 
 struct TypeRefCount {
@@ -103,17 +102,12 @@ impl VisitCollector {
         false
     }
 
-    pub fn next_name(&mut self, name: String) -> String {
-        // Hopefully more stable than ids on snapshots
-        format!(
-            "scalar_{name}_{}",
-            self.name_occurences
-                .entry(name.clone())
-                .and_modify(|counter| {
-                    *counter += 1;
-                })
-                .or_insert(1)
-        )
+    pub fn next_name(&mut self, name: String, hash_input: String) -> String {
+        let mut sha256 = Sha256::new();
+        sha256.update(hash_input.bytes().collect::<Vec<_>>());
+        let hash = format!("{:x}", sha256.finalize());
+
+        format!("{name}_{}", hash.chars().take(5).collect::<String>())
     }
 }
 
@@ -338,16 +332,15 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
     let node = &cx.tg.types[id as usize];
     let name: Rc<str> = if cx.user_named.contains(&id) {
         node.base().title.clone().into()
-    } else if node.is_scalar() {
-        acc.next_name(ty_name.to_string()).into()
     } else {
-        macro_rules! use_if_ok {
-            ($default:expr) => {
+        macro_rules! join_if_ok {
+            ($prefix:expr, $default:expr) => {
                 if acc.has_more_than_one_referrer(id) {
                     // Cannot be opinionated on the prefix path if shared (confusing)
-                    acc.next_name(format!("{ty_name}_shared")).into()
+                    let hash_input = $prefix;
+                    acc.next_name(ty_name.to_string(), hash_input)
                 } else {
-                    $default
+                    format!("{}_{}", $prefix, $default)
                 }
             };
         }
@@ -361,11 +354,13 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
                 // we don't include optional and list nodes in
                 // generated names (useless but also, they might be placeholders)
                 Edge::OptionalItem | Edge::ArrayItem => continue,
-                Edge::FunctionInput => use_if_ok!(format!("{last_name}_input")),
-                Edge::FunctionOutput => use_if_ok!(format!("{last_name}_output")),
-                Edge::ObjectProp(key) => use_if_ok!(format!("{last_name}_{key}_{ty_name}")),
+                Edge::FunctionInput => join_if_ok!(last_name.to_string(), "input"),
+                Edge::FunctionOutput => join_if_ok!(last_name.to_string(), "output"),
+                Edge::ObjectProp(key) => {
+                    join_if_ok!(format!("{last_name}_{key}"), ty_name)
+                }
                 Edge::EitherVariant(idx) | Edge::UnionVariant(idx) => {
-                    use_if_ok!(format!("{last_name}_t{idx}_{ty_name}"))
+                    join_if_ok!(format!("{last_name}_t{idx}"), ty_name)
                 }
             };
             break;

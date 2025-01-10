@@ -33,67 +33,67 @@ export type Handler<In, Out> = (
   tg: Deployment,
 ) => Out | Promise<Out>;
 
-export type ScalarString1 = string;
-export type ScalarStringEnum1 = "wan" | "tew" | "tree";
-export type ScalarStringUuid1 = string;
-export type ScalarStringEmail1 = string;
-export type ScalarStringEan1 = string;
-export type ScalarStringJson1 = string;
-export type ScalarStringUri1 = string;
-export type ScalarStringDate1 = string;
-export type ScalarStringDatetime1 = string;
-export type ScalarInteger1 = number;
-export type ScalarFloat1 = number;
-export type ScalarBoolean1 = boolean;
+export type PrimitivesStrString = string;
+export type PrimitivesEnumStringEnum = "wan" | "tew" | "tree";
+export type PrimitivesUuidStringUuid = string;
+export type PrimitivesEmailStringEmail = string;
+export type PrimitivesEanStringEan = string;
+export type PrimitivesJsonStringJson = string;
+export type PrimitivesUriStringUri = string;
+export type PrimitivesDateStringDate = string;
+export type PrimitivesDatetimeStringDatetime = string;
+export type PrimitivesIntInteger = number;
+export type PrimitivesFloatFloat = number;
+export type PrimitivesBooleanBoolean = boolean;
 export type Primitives = {
-  str: ScalarString1;
-  "enum": ScalarStringEnum1;
-  uuid: ScalarStringUuid1;
-  email: ScalarStringEmail1;
-  ean: ScalarStringEan1;
-  json: ScalarStringJson1;
-  uri: ScalarStringUri1;
-  date: ScalarStringDate1;
-  datetime: ScalarStringDatetime1;
-  int: ScalarInteger1;
-  float: ScalarFloat1;
-  "boolean": ScalarBoolean1;
+  str: PrimitivesStrString;
+  "enum": PrimitivesEnumStringEnum;
+  uuid: PrimitivesUuidStringUuid;
+  email: PrimitivesEmailStringEmail;
+  ean: PrimitivesEanStringEan;
+  json: PrimitivesJsonStringJson;
+  uri: PrimitivesUriStringUri;
+  date: PrimitivesDateStringDate;
+  datetime: PrimitivesDatetimeStringDatetime;
+  int: PrimitivesIntInteger;
+  float: PrimitivesFloatFloat;
+  "boolean": PrimitivesBooleanBoolean;
 };
 export type PrimitivesArgs = {
   data: Primitives;
 };
-export type CompositesOptScalarString1Optional = ScalarString1 | null | undefined;
+export type CompositesOptPrimitivesStrStringOptional = PrimitivesStrString | null | undefined;
 export type Branch2 = {
-  branch2: ScalarString1;
+  branch2: PrimitivesStrString;
 };
 export type CompositesEitherEither =
   | (Primitives)
   | (Branch2);
-export type ScalarStringEnum2 = "grey" | "beige";
-export type Branch4 = Array<ScalarStringEnum2>;
+export type CompositesUnionUnionT0StringEnum = "grey" | "beige";
+export type Branch4 = Array<CompositesUnionUnionT0StringEnum>;
 export type Branch4again = string;
 export type CompositesUnionUnion =
   | (Branch4)
-  | (ScalarInteger1)
-  | (ScalarString1)
+  | (PrimitivesIntInteger)
+  | (PrimitivesStrString)
   | (Branch4again);
-export type CompositesListScalarString1List = Array<ScalarString1>;
+export type CompositesListPrimitivesStrStringList = Array<PrimitivesStrString>;
 export type Composites = {
-  opt?: CompositesOptScalarString1Optional;
+  opt?: CompositesOptPrimitivesStrStringOptional;
   either: CompositesEitherEither;
   union: CompositesUnionUnion;
-  list: CompositesListScalarString1List;
+  list: CompositesListPrimitivesStrStringList;
 };
 export type CompositesArgs = {
   data: Composites;
 };
 export type Branch33ATo1Cycles1Optional = Cycles1 | null | undefined;
 export type Branch33A = {
-  phantom3a?: CompositesOptScalarString1Optional;
+  phantom3a?: CompositesOptPrimitivesStrStringOptional;
   to1?: Branch33ATo1Cycles1Optional;
 };
 export type Branch33B = {
-  phantom3b?: CompositesOptScalarString1Optional;
+  phantom3b?: CompositesOptPrimitivesStrStringOptional;
   to2?: Cycles1To2Cycles2Optional;
 };
 export type Cycles3 =
@@ -106,7 +106,7 @@ export type Cycles1To2Cycles2Optional = Cycles2 | null | undefined;
 export type Cycles1List3Cycles3List = Array<Cycles3>;
 export type Cycles1List3Cycles1List3Cycles3ListOptional = Cycles1List3Cycles3List | null | undefined;
 export type Cycles1 = {
-  phantom1?: CompositesOptScalarString1Optional;
+  phantom1?: CompositesOptPrimitivesStrStringOptional;
   to2?: Cycles1To2Cycles2Optional;
   list3?: Cycles1List3Cycles1List3Cycles3ListOptional;
 };
@@ -115,17 +115,17 @@ export type Cycles1Args = {
 };
 export type SimpleCycles3To1SimpleCycles1Optional = SimpleCycles1 | null | undefined;
 export type SimpleCycles3 = {
-  phantom3?: CompositesOptScalarString1Optional;
+  phantom3?: CompositesOptPrimitivesStrStringOptional;
   to1?: SimpleCycles3To1SimpleCycles1Optional;
 };
 export type SimpleCycles2To3SimpleCycles3Optional = SimpleCycles3 | null | undefined;
 export type SimpleCycles2 = {
-  phantom2?: CompositesOptScalarString1Optional;
+  phantom2?: CompositesOptPrimitivesStrStringOptional;
   to3?: SimpleCycles2To3SimpleCycles3Optional;
 };
 export type SimpleCycles1To2SimpleCycles2Optional = SimpleCycles2 | null | undefined;
 export type SimpleCycles1 = {
-  phantom1?: CompositesOptScalarString1Optional;
+  phantom1?: CompositesOptPrimitivesStrStringOptional;
   to2?: SimpleCycles1To2SimpleCycles2Optional;
 };
 export type SimpleCycles1Args = {

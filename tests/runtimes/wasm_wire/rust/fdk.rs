@@ -219,53 +219,53 @@ macro_rules! init_mat {
 // gen-static-end
 use types::*;
 pub mod types {
-    pub type ScalarFloat1 = f64;
+    pub type AddArgsAFloat = f64;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct AddArgs {
-        pub a: ScalarFloat1,
-        pub b: ScalarFloat1,
+        pub a: AddArgsAFloat,
+        pub b: AddArgsAFloat,
     }
-    pub type ScalarInteger1 = i64;
-    pub type RangeArgsAScalarInteger1Optional = Option<ScalarInteger1>;
+    pub type AddOutput = i64;
+    pub type RangeArgsAAddOutputOptional = Option<AddOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RangeArgs {
-        pub a: RangeArgsAScalarInteger1Optional,
-        pub b: ScalarInteger1,
+        pub a: RangeArgsAAddOutputOptional,
+        pub b: AddOutput,
     }
-    pub type RangeOutput = Vec<ScalarInteger1>;
+    pub type RangeOutput = Vec<AddOutput>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RecordCreationInput {
     }
-    pub type ScalarString1 = String;
-    pub type ScalarStringEnum1 = String;
-    pub type ScalarStringEnum2 = String;
-    pub type ProfileAttributesScalarStringEnum2List = Vec<ScalarStringEnum2>;
-    pub type ScalarStringEnum3 = String;
-    pub type ProfileCategoryStructValueScalarString1Optional = Option<ScalarString1>;
+    pub type EntityNameString = String;
+    pub type ProfileLevelStringEnum = String;
+    pub type ProfileAttributesStringEnum = String;
+    pub type ProfileAttributesProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
+    pub type ProfileCategoryStructTagStringEnum = String;
+    pub type ProfileCategoryStructValueEntityNameStringOptional = Option<EntityNameString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct ProfileCategoryStruct {
-        pub tag: ScalarStringEnum3,
-        pub value: ProfileCategoryStructValueScalarString1Optional,
+        pub tag: ProfileCategoryStructTagStringEnum,
+        pub value: ProfileCategoryStructValueEntityNameStringOptional,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
     pub enum ProfileMetadatasEither {
-        ScalarString1(ScalarString1),
-        ScalarFloat1(ScalarFloat1),
+        EntityNameString(EntityNameString),
+        AddArgsAFloat(AddArgsAFloat),
     }
     pub type ProfileMetadatasProfileMetadatasEitherList = Vec<ProfileMetadatasEither>;
     pub type ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList = Vec<ProfileMetadatasProfileMetadatasEitherList>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Profile {
-        pub level: ScalarStringEnum1,
-        pub attributes: ProfileAttributesScalarStringEnum2List,
+        pub level: ProfileLevelStringEnum,
+        pub attributes: ProfileAttributesProfileAttributesStringEnumList,
         pub category: ProfileCategoryStruct,
         pub metadatas: ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Entity {
-        pub name: ScalarString1,
-        pub age: RangeArgsAScalarInteger1Optional,
+        pub name: EntityNameString,
+        pub age: RangeArgsAAddOutputOptional,
         pub profile: Profile,
     }
     pub type RecordCreationOutput = Vec<Entity>;
@@ -290,7 +290,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: AddArgs, cx: Ctx) -> anyhow::Result<ScalarInteger1>;
+        fn handle(&self, input: AddArgs, cx: Ctx) -> anyhow::Result<AddOutput>;
     }
     pub trait Range: Sized + 'static {
         fn erased(self) -> ErasedHandler {

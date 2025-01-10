@@ -83,7 +83,7 @@
     },
     {
       "type": "object",
-      "title": "scalar_struct_shared_1",
+      "title": "struct_542d7",
       "properties": {},
       "id": [],
       "required": []
@@ -109,11 +109,11 @@
     },
     {
       "type": "string",
-      "title": "scalar_string_1"
+      "title": "string_5d176"
     },
     {
       "type": "string",
-      "title": "scalar_string_uri_1",
+      "title": "Typegraph_url_string_uri",
       "format": "uri"
     },
     {
@@ -198,7 +198,7 @@
     },
     {
       "type": "string",
-      "title": "scalar_string_json_1",
+      "title": "string_json_df54e",
       "format": "json"
     },
     {
@@ -240,7 +240,7 @@
     },
     {
       "type": "string",
-      "title": "scalar_string_enum_1",
+      "title": "root_addTypegraph_fn_output_messages_struct_type_string_enum",
       "enum": [
         "\"info\"",
         "\"warning\"",
@@ -268,7 +268,7 @@
     },
     {
       "type": "optional",
-      "title": "root_addTypegraph_fn_output_failure_scalar_string_json_1_optional",
+      "title": "root_addTypegraph_fn_output_failure_string_json_df54e_optional",
       "item": 14,
       "default_value": null
     },
@@ -296,12 +296,12 @@
     },
     {
       "type": "list",
-      "title": "scalar_scalar_string_1_list_shared_1",
+      "title": "string_5d176_list_691ee",
       "items": 5
     },
     {
       "type": "boolean",
-      "title": "scalar_boolean_1"
+      "title": "boolean_a56cd"
     },
     {
       "type": "function",
@@ -333,7 +333,7 @@
     },
     {
       "type": "list",
-      "title": "root_argInfoByPath_fn_input_argPaths_scalar_scalar_string_1_list_shared_1_list",
+      "title": "root_argInfoByPath_fn_input_argPaths_string_5d176_list_691ee_list",
       "items": 24
     },
     {
@@ -369,18 +369,18 @@
     },
     {
       "type": "optional",
-      "title": "TypeInfo_enum_TypeInfo_enum_scalar_string_json_1_list_optional",
+      "title": "TypeInfo_enum_TypeInfo_enum_string_json_df54e_list_optional",
       "item": 32,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "TypeInfo_enum_scalar_string_json_1_list",
+      "title": "TypeInfo_enum_string_json_df54e_list",
       "items": 14
     },
     {
       "type": "optional",
-      "title": "TypeInfo_format_scalar_string_1_optional",
+      "title": "TypeInfo_format_string_5d176_optional",
       "item": 5,
       "default_value": null
     },
@@ -440,7 +440,7 @@
     },
     {
       "type": "object",
-      "title": "scalar_struct_shared_2",
+      "title": "struct_8f8a3",
       "properties": {
         "typegraph": 5
       },
@@ -477,7 +477,7 @@
     },
     {
       "type": "string",
-      "title": "scalar_string_enum_2",
+      "title": "OperationInfo_type_string_enum",
       "enum": [
         "\"query\"",
         "\"mutation\""
@@ -596,7 +596,7 @@
     },
     {
       "type": "object",
-      "title": "scalar_struct_shared_3",
+      "title": "struct_5fa3d",
       "properties": {
         "typegraph": 5,
         "runtime": 5,
@@ -697,13 +697,13 @@
     },
     {
       "type": "optional",
-      "title": "PrismaBatchQuery_transaction_struct_isolationLevel_scalar_string_enum_3_optional",
+      "title": "PrismaBatchQuery_transaction_struct_isolationLevel_PrismaBatchQuery_transaction_struct_isolationLevel_string_enum_optional",
       "item": 63,
       "default_value": null
     },
     {
       "type": "string",
-      "title": "scalar_string_enum_3",
+      "title": "PrismaBatchQuery_transaction_struct_isolationLevel_string_enum",
       "enum": [
         "\"read uncommitted\"",
         "\"readuncommitted\"",
@@ -777,7 +777,7 @@
     },
     {
       "type": "integer",
-      "title": "scalar_integer_1"
+      "title": "integer_e116e"
     },
     {
       "type": "object",

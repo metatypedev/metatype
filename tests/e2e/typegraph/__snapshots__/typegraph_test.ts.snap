@@ -60,17 +60,17 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "string",
-        "title": "scalar_string_1"
+        "title": "ComplexType_a_string_string"
       },
       {
         "type": "float",
-        "title": "scalar_float_1",
+        "title": "ComplexType_a_float_float",
         "minimum": 1.0,
         "multipleOf": 2.0
       },
       {
         "type": "string",
-        "title": "scalar_string_enum_1",
+        "title": "ComplexType_an_enum_string_enum",
         "enum": [
           "\\\\"one\\\\"",
           "\\\\"two\\\\""
@@ -78,7 +78,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "integer",
-        "title": "scalar_integer_enum_1",
+        "title": "ComplexType_an_integer_enum_integer_enum",
         "enum": [
           "1",
           "2"
@@ -86,7 +86,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "float",
-        "title": "scalar_float_2",
+        "title": "ComplexType_a_float_enum_float",
         "enum": [
           "1.5",
           "2.5"
@@ -106,7 +106,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "float",
-        "title": "scalar_float_3"
+        "title": "ComplexType_a_struct_struct_value_float"
       },
       {
         "type": "optional",
@@ -129,7 +129,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "integer",
-        "title": "scalar_integer_1"
+        "title": "ComplexType_nested_either_t1_integer"
       },
       {
         "type": "object",
@@ -159,12 +159,12 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "string",
-        "title": "scalar_string_email_1",
+        "title": "ComplexType_an_email_string_email",
         "format": "email"
       },
       {
         "type": "boolean",
-        "title": "scalar_boolean_1"
+        "title": "root_test_fn_output"
       }
     ],
     "materializers": [
@@ -302,7 +302,7 @@ snapshot[`typegraphs creation 2`] = `
       },
       {
         "type": "object",
-        "title": "scalar_struct_shared_1",
+        "title": "struct_aada4",
         "properties": {
           "first": 3,
           "second": 3
@@ -316,7 +316,7 @@ snapshot[`typegraphs creation 2`] = `
       },
       {
         "type": "float",
-        "title": "scalar_float_1"
+        "title": "float_9d392"
       },
       {
         "type": "function",
@@ -454,7 +454,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "object",
-        "title": "scalar_struct_shared_1",
+        "title": "struct_62ec9",
         "properties": {
           "a": 3,
           "b": 4
@@ -468,16 +468,16 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "integer",
-        "title": "scalar_integer_1"
+        "title": "struct_62ec9_a_integer"
       },
       {
         "type": "integer",
-        "title": "scalar_integer_2",
+        "title": "struct_62ec9_b_integer",
         "minimum": 12
       },
       {
         "type": "integer",
-        "title": "scalar_integer_3",
+        "title": "root_one_fn_output",
         "minimum": 12,
         "maximum": 43
       },
@@ -729,17 +729,17 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "string",
-        "title": "scalar_string_1"
+        "title": "ComplexType_a_string_string"
       },
       {
         "type": "float",
-        "title": "scalar_float_1",
+        "title": "ComplexType_a_float_float",
         "minimum": 1.0,
         "multipleOf": 2.0
       },
       {
         "type": "string",
-        "title": "scalar_string_enum_1",
+        "title": "ComplexType_an_enum_string_enum",
         "enum": [
           "\\\\"one\\\\"",
           "\\\\"two\\\\""
@@ -747,7 +747,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "integer",
-        "title": "scalar_integer_enum_1",
+        "title": "ComplexType_an_integer_enum_integer_enum",
         "enum": [
           "1",
           "2"
@@ -755,7 +755,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "float",
-        "title": "scalar_float_2",
+        "title": "ComplexType_a_float_enum_float",
         "enum": [
           "1.5",
           "2.5"
@@ -775,7 +775,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "float",
-        "title": "scalar_float_3"
+        "title": "ComplexType_a_struct_struct_value_float"
       },
       {
         "type": "optional",
@@ -798,7 +798,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "integer",
-        "title": "scalar_integer_1"
+        "title": "ComplexType_nested_either_t1_integer"
       },
       {
         "type": "object",
@@ -828,12 +828,12 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "string",
-        "title": "scalar_string_email_1",
+        "title": "ComplexType_an_email_string_email",
         "format": "email"
       },
       {
         "type": "boolean",
-        "title": "scalar_boolean_1"
+        "title": "root_test_fn_output"
       }
     ],
     "materializers": [
@@ -971,7 +971,7 @@ snapshot[`typegraphs creation 5`] = `
       },
       {
         "type": "object",
-        "title": "scalar_struct_shared_1",
+        "title": "struct_aada4",
         "properties": {
           "first": 3,
           "second": 3
@@ -985,7 +985,7 @@ snapshot[`typegraphs creation 5`] = `
       },
       {
         "type": "float",
-        "title": "scalar_float_1"
+        "title": "float_9d392"
       },
       {
         "type": "function",
@@ -1123,7 +1123,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "object",
-        "title": "scalar_struct_shared_1",
+        "title": "struct_62ec9",
         "properties": {
           "a": 3,
           "b": 4
@@ -1137,16 +1137,16 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "integer",
-        "title": "scalar_integer_1"
+        "title": "struct_62ec9_a_integer"
       },
       {
         "type": "integer",
-        "title": "scalar_integer_2",
+        "title": "struct_62ec9_b_integer",
         "minimum": 12
       },
       {
         "type": "integer",
-        "title": "scalar_integer_3",
+        "title": "root_one_fn_output",
         "minimum": 12,
         "maximum": 43
       },

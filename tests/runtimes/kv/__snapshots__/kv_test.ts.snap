@@ -52,7 +52,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "object",
-        "title": "scalar_struct_shared_1",
+        "title": "struct_d0873",
         "properties": {
           "key": 3
         },
@@ -64,11 +64,11 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "string",
-        "title": "scalar_string_1"
+        "title": "string_a7e0d"
       },
       {
         "type": "optional",
-        "title": "scalar_scalar_string_1_optional_shared_1",
+        "title": "string_a7e0d_optional_d0873",
         "item": 3,
         "default_value": null
       },
@@ -108,7 +108,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "integer",
-        "title": "scalar_integer_1"
+        "title": "root_delete_fn_output"
       },
       {
         "type": "function",
@@ -122,7 +122,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "object",
-        "title": "scalar_struct_shared_2",
+        "title": "struct_443be",
         "properties": {
           "filter": 4
         },
@@ -134,7 +134,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "list",
-        "title": "scalar_scalar_string_1_list_shared_1",
+        "title": "string_a7e0d_list_443be",
         "items": 3
       },
       {
@@ -304,7 +304,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "object",
-        "title": "scalar_struct_shared_1",
+        "title": "struct_d0873",
         "properties": {
           "key": 3
         },
@@ -316,11 +316,11 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "string",
-        "title": "scalar_string_1"
+        "title": "string_a7e0d"
       },
       {
         "type": "optional",
-        "title": "scalar_scalar_string_1_optional_shared_1",
+        "title": "string_a7e0d_optional_d0873",
         "item": 3,
         "default_value": null
       },
@@ -360,7 +360,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "integer",
-        "title": "scalar_integer_1"
+        "title": "root_delete_fn_output"
       },
       {
         "type": "function",
@@ -374,7 +374,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "object",
-        "title": "scalar_struct_shared_2",
+        "title": "struct_443be",
         "properties": {
           "filter": 4
         },
@@ -386,7 +386,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "list",
-        "title": "scalar_scalar_string_1_list_shared_1",
+        "title": "string_a7e0d_list_443be",
         "items": 3
       },
       {
