@@ -807,15 +807,21 @@
       "data": {}
     },
     {
-      "name": "function",
+      "name": "predefined_function",
       "runtime": 0,
       "effect": {
         "effect": "read",
         "idempotent": true
       },
       "data": {
-        "script": "var _my_lambda = (_args, { context }) => context.username === 'admin' ? 'ALLOW' : 'DENY' ",
-        "secrets": []
+        "name": "context_check",
+        "param": {
+          "key": "username",
+          "value": {
+            "type": "value",
+            "value": "admin"
+          }
+        }
       }
     },
     {
@@ -942,7 +948,7 @@
   ],
   "policies": [
     {
-      "name": "admin_only",
+      "name": "__ctx_username_admin",
       "materializer": 1
     }
   ],

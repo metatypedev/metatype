@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use common::typegraph::runtimes::deno::PredefinedFunctionMatData;
+
 use crate::runtimes::{DenoMaterializer, MaterializerData, Runtime};
 use crate::types::{AsTypeDefEx as _, TypeDef, TypeId};
 use crate::wit::core::TypeFunc;
@@ -26,42 +28,53 @@ impl Materializer {
     fn validate_deno_mat(mat_data: &DenoMaterializer, func: &TypeFunc) -> Result<()> {
         match mat_data {
             DenoMaterializer::Predefined(predef) => {
-                match predef.name.as_str() {
-                    "identity" => {
+                use PredefinedFunctionMatData as P;
+                match predef {
+                    P::Identity => {
                         if !type_utils::is_equal(func.inp.into(), func.out.into())? {
                             return Err(errors::invalid_output_type_predefined(
-                                &predef.name,
+                                "identity",
                                 &TypeId(func.inp).repr()?,
                                 &TypeId(func.out).repr()?,
                             ));
                         }
                     }
-
-                    "true" | "false" => {
+                    P::True | P::False => {
                         if let Ok(xdef) = TypeId(func.out).as_xdef() {
                             let TypeDef::Boolean(_) = xdef.type_def else {
                                 return Err(errors::invalid_output_type_predefined(
-                                    &predef.name,
+                                    match predef {
+                                        P::True => "true",
+                                        P::False => "false",
+                                        _ => unreachable!(),
+                                    },
                                     "bool",
                                     &TypeId(func.out).repr()?,
                                 ));
                             };
                         }
                     }
-
-                    "allow" | "deny" | "pass" => {
+                    P::Allow
+                    | P::Deny
+                    | P::Pass
+                    | P::ContextCheck { .. }
+                    | P::InternalPolicy { .. } => {
                         if let Ok(xdef) = TypeId(func.out).as_xdef() {
                             let TypeDef::String(_) = xdef.type_def else {
                                 return Err(errors::invalid_output_type_predefined(
-                                    &predef.name,
+                                    match predef {
+                                        P::Allow => "allow",
+                                        P::Deny => "deny",
+                                        P::Pass => "pass",
+                                        P::ContextCheck { .. } => "context_check",
+                                        P::InternalPolicy { .. } => "internal_policy",
+                                        _ => unreachable!(),
+                                    },
                                     "string",
                                     &TypeId(func.out).repr()?,
                                 ));
                             };
                         }
-                    }
-                    _ => {
-                        return Err(errors::unknown_predefined_function(&predef.name));
                     }
                 }
                 Ok(())
