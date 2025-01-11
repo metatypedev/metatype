@@ -118,7 +118,7 @@ class DenoRuntime(Runtime):
         from typegraph import t
 
         res = runtimes.get_predefined_deno_func(
-            store, MaterializerDenoPredefined(name="identity")
+            store, MaterializerDenoPredefined(name="identity", param=None)
         )
         if isinstance(res, Err):
             raise Exception(res.value)
