@@ -43,6 +43,7 @@ const syncConfig = transformSyncConfig({
   s3_secret_key: syncEnvs.SYNC_S3_SECRET_KEY,
   s3_bucket: syncEnvs.SYNC_S3_BUCKET,
   s3_path_style: true,
+  force_remove: false
 });
 
 // put here typegraphs that are to be excluded
