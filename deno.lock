@@ -8,6 +8,7 @@
       "jsr:@std/assert@^0.221.0": "jsr:@std/assert@0.221.0",
       "jsr:@std/assert@^1.0.6": "jsr:@std/assert@1.0.9",
       "jsr:@std/assert@^1.0.9": "jsr:@std/assert@1.0.9",
+      "jsr:@std/async@1.0.9": "jsr:@std/async@1.0.9",
       "jsr:@std/async@^1.0.3": "jsr:@std/async@1.0.9",
       "jsr:@std/bytes@^0.221.0": "jsr:@std/bytes@0.221.0",
       "jsr:@std/bytes@^1.0.2": "jsr:@std/bytes@1.0.4",
