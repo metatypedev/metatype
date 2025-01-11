@@ -26,22 +26,30 @@ export function redisCleanup(url: string) {
   };
 }
 
+type TestTemplateOptions = {
+  secrets?: Record<string, string>;
+  only?: boolean;
+};
+
+type TestTemplateOptionsX<TDelayKeys extends string> = TestTemplateOptions & {
+  delays: {
+    [K in TDelayKeys]: number;
+  };
+};
+
 export function basicTestTemplate(
   backendName: BackendName,
   {
     delays,
     secrets,
-  }: {
-    delays: {
-      awaitSleepCompleteSec: number;
-    };
-    secrets?: Record<string, string>;
-  },
+    only = false,
+  }: TestTemplateOptionsX<"awaitSleepCompleteSec">,
   cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
       name: `Basic workflow execution lifecycle + interrupts (${backendName})`,
+      only,
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
@@ -163,17 +171,14 @@ export function concurrentWorkflowTestTemplate(
   {
     delays,
     secrets,
-  }: {
-    delays: {
-      awaitEmailCompleteSec: number;
-    };
-    secrets?: Record<string, string>;
-  },
+    only = false,
+  }: TestTemplateOptionsX<"awaitEmailCompleteSec">,
   cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
       name: `Events and concurrent runs (${backendName})`,
+      only,
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
@@ -342,17 +347,14 @@ export function retrySaveTestTemplate(
   {
     delays,
     secrets,
-  }: {
-    delays: {
-      awaitCompleteAll: number;
-    };
-    secrets?: Record<string, string>;
-  },
+    only = false,
+  }: TestTemplateOptionsX<"awaitCompleteAll">,
   cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
       name: `Retry logic (${backendName})`,
+      only,
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
@@ -512,17 +514,14 @@ export function childWorkflowTestTemplate(
   {
     delays,
     secrets,
-  }: {
-    delays: {
-      awaitCompleteSec: number;
-    };
-    secrets?: Record<string, string>;
-  },
+    only = false,
+  }: TestTemplateOptionsX<"awaitCompleteSec">,
   cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
       name: `Child workflows (${backendName})`,
+      only,
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
@@ -624,9 +623,10 @@ export function childWorkflowTestTemplate(
           .on(e);
       });
 
-
-      await t.should(`filter the runs given a nested expr (${backendName})`, async () => {
-        await gql`
+      await t.should(
+        `filter the runs given a nested expr (${backendName})`,
+        async () => {
+          await gql`
           query {
             search(name: "bumpPackage", filter: $filter) {
               # started_at
@@ -636,30 +636,35 @@ export function childWorkflowTestTemplate(
             }
           }
         `
-        .withVars({
-          filter: {
-            or: [
-              {
-                and: [
-                  { status: { contains: JSON.stringify("COMPL") }},
-                  { contains: JSON.stringify("substantial") }
-                ]
-              },
-              { not: { not: { eq: JSON.stringify("Bump typegraph v3 => v4") } } }
-            ]
-          } satisfies Expr
-        })
-        .expectBody((body) => {
-          const sorted = body.data.search.sort((a: any, b: any) => a.value.localeCompare(b.value));
-          assertEquals(sorted, 
-            [
-              { status: "COMPLETED", value: '"Bump substantial v2 => v3"' },
-              { status: "COMPLETED", value: '"Bump typegraph v3 => v4"' }
-            ]
-          );
-        })
-          .on(e);
-      });
+            .withVars({
+              filter: {
+                or: [
+                  {
+                    and: [
+                      { status: { contains: JSON.stringify("COMPL") } },
+                      { contains: JSON.stringify("substantial") },
+                    ],
+                  },
+                  {
+                    not: {
+                      not: { eq: JSON.stringify("Bump typegraph v3 => v4") },
+                    },
+                  },
+                ],
+              } satisfies Expr,
+            })
+            .expectBody((body) => {
+              const sorted = body.data.search.sort((a: any, b: any) =>
+                a.value.localeCompare(b.value)
+              );
+              assertEquals(sorted, [
+                { status: "COMPLETED", value: '"Bump substantial v2 => v3"' },
+                { status: "COMPLETED", value: '"Bump typegraph v3 => v4"' },
+              ]);
+            })
+            .on(e);
+        },
+      );
     },
   );
 }
@@ -668,14 +673,14 @@ export function inputMutationTemplate(
   backendName: BackendName,
   {
     secrets,
-  }: {
-    secrets?: Record<string, string>;
-  },
+    only = false,
+  }: TestTemplateOptions,
   cleanup?: MetaTestCleanupFn,
 ) {
   Meta.test(
     {
       name: `kwargs input mutation after interrupts (${backendName})`,
+      only,
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
