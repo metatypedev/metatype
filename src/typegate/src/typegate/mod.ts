@@ -43,7 +43,7 @@ import type { ArtifactStore } from "./artifacts/mod.ts";
 // TODO move from tests (MET-497)
 import { MemoryRegister } from "./memory_register.ts";
 import { NoLimiter } from "./no_limiter.ts";
-import { TypegraphStore } from "../sync/typegraph.ts";
+import { typegraphIdSchema, TypegraphStore } from "../sync/typegraph.ts";
 import { createLocalArtifactStore } from "./artifacts/local.ts";
 import { createSharedArtifactStore } from "./artifacts/shared.ts";
 import { AsyncDisposableStack } from "dispose";
@@ -141,14 +141,29 @@ export class Typegate implements AsyncDisposable {
         stack.move(),
       );
 
+      const typegraphStore = TypegraphStore.init(syncConfig, cryptoKeys);
       const register = await ReplicatedRegister.init(
         typegate,
         syncConfig.redis,
-        TypegraphStore.init(syncConfig, cryptoKeys),
+        typegraphStore
       );
       typegate.disposables.use(register);
 
       (typegate as { register: Register }).register = register;
+
+
+      if (config.sync?.forceRemove) {
+        logger.warn("Force removal at boot enabled");
+        const history = await register.replicatedMap.getAllHistory();
+        for (const { name, payload } of history) {
+          try {
+            await typegate.forceRemove(name, payload, typegraphStore);
+          } catch (e) {
+            logger.error(`Failed to force remove typegraph "${name}": ${e}`);
+            Sentry.captureException(e);
+          }
+        }
+      }
 
       const lastSync = await register.historySync().catch((err) => {
         logger.error(err);
@@ -396,6 +411,22 @@ export class Typegate implements AsyncDisposable {
     );
     await this.artifactStore.updateRefCounts(new Set(), artifacts);
     await this.artifactStore.runArtifactGC();
+  }
+
+  async forceRemove(name: string, payload: string, typegraphStore: TypegraphStore) {
+    logger.warn(`Dropping "${name}": started`);
+    const typegraphId = typegraphIdSchema.parse(JSON.parse(payload));
+    const [tg] = await typegraphStore.download(
+      typegraphId,
+    );
+    const artifacts = new Set(
+      Object.values(tg.meta.artifacts).map((m) => m.hash),
+    );
+
+    await this.register.remove(name);
+    await this.artifactStore.updateRefCounts(new Set(), artifacts);
+    await this.artifactStore.runArtifactGC();
+    logger.warn(`Dropping "${name}": done`);
   }
 
   async initQueryEngine(

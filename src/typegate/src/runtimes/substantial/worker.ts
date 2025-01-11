@@ -4,12 +4,12 @@
 import { errorToString } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
 import { toFileUrl } from "@std/path/to-file-url";
-import { Err, Msg, Ok, WorkerData, WorkflowResult } from "./types.ts";
+import { Interrupt, WorkflowEvent, WorkflowMessage } from "./types.ts";
 
 let runCtx: Context | undefined;
 
 self.onmessage = async function (event) {
-  const { type, data } = event.data as WorkerData;
+  const { type, data } = event.data as WorkflowMessage;
   switch (type) {
     case "START": {
       const { modulePath, functionName, run, schedule, internal } = data;
@@ -21,7 +21,12 @@ self.onmessage = async function (event) {
       const workflowFn = module[functionName];
 
       if (typeof workflowFn !== "function") {
-        self.postMessage(Err(`Function "${functionName}" not found`));
+        self.postMessage(
+          {
+            type: "ERROR",
+            error: `Function "${functionName}" not found`,
+          } satisfies WorkflowEvent,
+        );
         self.close();
         return;
       }
@@ -31,40 +36,48 @@ self.onmessage = async function (event) {
       workflowFn(runCtx, internal)
         .then((wfResult: unknown) => {
           self.postMessage(
-            Ok(
-              Msg(
-                type,
-                {
-                  kind: "SUCCESS",
-                  result: wfResult,
-                  run: runCtx!.getRun(),
-                  schedule,
-                } satisfies WorkflowResult,
-              ),
-            ),
+            {
+              type: "SUCCESS",
+              result: wfResult,
+              run: runCtx!.getRun(),
+              schedule,
+            } satisfies WorkflowEvent,
           );
         })
         .catch((wfException: unknown) => {
-          self.postMessage(
-            Ok(
-              Msg(
-                type,
-                {
-                  kind: "FAIL",
-                  result: errorToString(wfException),
-                  exception: wfException instanceof Error
-                    ? wfException
-                    : undefined,
-                  run: runCtx!.getRun(),
-                  schedule,
-                } satisfies WorkflowResult,
-              ),
-            ),
-          );
+          const interrupt = Interrupt.getTypeOf(wfException);
+          if (interrupt) {
+            self.postMessage(
+              {
+                type: "INTERRUPT",
+                interrupt,
+                run: runCtx!.getRun(),
+                schedule,
+              } satisfies WorkflowEvent,
+            );
+          } else {
+            self.postMessage(
+              {
+                type: "FAIL",
+                error: errorToString(wfException),
+                // How??
+                exception: wfException instanceof Error
+                  ? wfException
+                  : undefined,
+                run: runCtx!.getRun(),
+                schedule,
+              } satisfies WorkflowEvent,
+            );
+          }
         });
       break;
     }
     default:
-      self.postMessage(Err(Msg(type, `Unknown command ${type}`)));
+      self.postMessage(
+        {
+          type: "ERROR",
+          error: `Unknown command ${type}`,
+        } satisfies WorkflowEvent,
+      );
   }
 };

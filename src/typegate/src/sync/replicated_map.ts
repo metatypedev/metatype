@@ -105,27 +105,43 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
     this.redisObs.close();
   }
 
+  async getAllHistory() {
+    const { key, redis } = this;
+    const all = await redis.hgetall(key);
+    const history = [];
+    for (let i = 0; i < all.length; i += 2) {
+      history.push({
+        name: all[i],
+        payload: all[i+1]
+      });
+    }
+
+    return history;
+  }
+
   async historySync(): Promise<XIdInput> {
-    const { key, redis, deserializer } = this;
+    const { redis, deserializer } = this;
 
     // get last received message before loading history
     const [lastMessage] = await redis.xrevrange(this.ekey, "+", "-", 1);
     const lastId = lastMessage ? lastMessage.xid : 0;
     logger.debug("last message loaded: {}", lastId);
 
-    const all = await redis.hgetall(key);
+    const all = await this.getAllHistory();
     logger.debug("history load start: {} elements", all.length);
-    for (let i = 0; i < all.length; i += 2) {
-      const name = all[i];
-      const payload = all[i + 1];
+
+    for (const { name, payload } of all) {
       logger.info(`reloaded addition: ${name}`);
       ensure(
         !this.memory.has(name),
         () => `typegraph ${name} should not exists in memory at first sync`,
       );
-      this.memory.set(name, await deserializer(payload, true));
+
+      const engine = await deserializer(payload, true);
+      this.memory.set(name, engine);
     }
     logger.debug("history load end");
+ 
     return lastId;
   }
 

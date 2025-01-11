@@ -63,12 +63,11 @@ export default {
 export function validateVersions() {
   const currentVersion = semver.parse(consts.CURRENT_VERSION);
   const latestRelease = semver.parse(consts.LATEST_RELEASE_VERSION);
-  const latestPreRelease = consts.LATEST_PRE_RELEASE_VERSION == null
-    ? null
-    : semver.parse(consts.LATEST_PRE_RELEASE_VERSION);
-
   const prerelease = currentVersion.prerelease ?? [];
   const isPreRelease = prerelease.length > 0;
+  const latestPreRelease = isPreRelease
+    ? semver.parse(consts.LATEST_PRE_RELEASE_VERSION)
+    : null;
 
   if (!isPreRelease || (isPreRelease && prerelease[1] == 0)) {
     assert(latestPreRelease == null, "expected no latest pre-release version");

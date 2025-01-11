@@ -117,6 +117,7 @@ export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
     redis,
     s3,
     s3Bucket: raw.s3_bucket,
+    forceRemove: raw.force_remove
   };
 }
 

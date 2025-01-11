@@ -94,7 +94,7 @@ export class ReplicatedRegister extends Register {
     return new ReplicatedRegister(replicatedMap);
   }
 
-  constructor(private replicatedMap: RedisReplicatedMap<QueryEngine>) {
+  constructor(public replicatedMap: RedisReplicatedMap<QueryEngine>) {
     super();
   }
 
