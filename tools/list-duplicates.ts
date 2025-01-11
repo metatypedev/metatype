@@ -12,21 +12,27 @@
  *                  Default: 0
  */
 
-import { cyan, green, red, objectHash, parseArgs } from "./deps.ts";
+import { green, objectHash, parseArgs, red } from "./deps.ts";
 // FIXME: import from @metatype/typegate
 import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
 import { projectDir } from "./utils.ts";
 import { TypeNode } from "../src/typegate/src/typegraph/type_node.ts";
 
+// Tries to detect structurally equivalent duplicates by iteratively
+// updating composite types to refer to deduped types.
+// I.e. optional<A> and optional<B> should be considered duplicates
+// if A and B are duplicates of each other.
+// This function is not perfect and is not able to detect some
+// forms of structural equivalence. Additions to the TypeNode might
+// break it.
 export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
   // to <- from
   const reducedSetMap = new Map<number, number[]>();
   const reducedSet = new Set<number>();
   let cycleNo = 0;
-  let whereTypeCount = 0;
-  let optionalTypeCount = 0;
-  const theWheres = [] as [number, TypeNode][];
+  const globalKindCounts = {} as Record<string, number>;
+  const dupeKindCount = {} as Record<string, number>;
   while (true) {
     cycleNo += 1;
     const bins = new Map<string, [number, TypeNode][]>();
@@ -45,24 +51,15 @@ export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
     let visitedTypesCount = 0;
     {
       let idx = -1;
-      /* visitType(tg, rootIdx, ({ type, idx }) => {
-    }, { allowCircular: false }); */
-      for (const type of tg.types) { idx += 1;
+      for (const type of tg.types) {
+        idx += 1;
         if (reducedSet.has(idx)) {
           continue;
         }
         visitedTypesCount += 1;
-        const { title, description: _description, ...structure } = type;
+        const { title: _title, description: _description, ...structure } = type;
         if (cycleNo == 1) {
-          if (title.match(/_where_/)) {
-            if (type.type != "optional") {
-              theWheres.push([idx, type]);
-              whereTypeCount++;
-            }
-          }
-          if (type.type == "optional") {
-            optionalTypeCount++;
-          }
+          incrementKindCount(type, globalKindCounts);
         }
         // deno-lint-ignore no-explicit-any
         const hash = objectHash(structure as any);
@@ -76,9 +73,8 @@ export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
         }
         switch (structure.type) {
           case "function":
-            edges.set(idx, [structure.input]);
+            edges.set(idx, [structure.input, structure.output]);
             addToRevEdges(structure.input, idx);
-            edges.set(idx, [structure.output]);
             addToRevEdges(structure.output, idx);
             break;
           case "object":
@@ -121,12 +117,12 @@ export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
     }
 
     const dedupIndices = new Map<number, number>();
-    let dupesFound = 0;
-    let dupesBinsFound = 0;
+    let cycleDupesFound = 0;
+    let cycleDupeBinsFound = 0;
     for (const [_hash, bin] of bins.entries()) {
       if (bin.length > 1) {
-        dupesBinsFound += 1;
-        dupesFound += bin.length;
+        cycleDupeBinsFound += 1;
+        cycleDupesFound += bin.length;
         const dedupedIdx = bin[0][0];
         const set = reducedSetMap.get(dedupedIdx) ?? [];
         for (const [idx, _type] of bin.slice(1)) {
@@ -142,12 +138,12 @@ export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
         reducedSetMap.set(dedupedIdx, set);
       }
     }
-    if (dupesBinsFound == 0) {
+    if (cycleDupeBinsFound == 0) {
       break;
     }
     console.log("reducing dupe bins", {
-      dupesFound,
-      dupesBinsFound,
+      cycleDupesFound,
+      cycleDupeBinsFound,
       reducedSetCount: reducedSet.size,
       visitedTypesCount,
       cycleNo,
@@ -222,18 +218,18 @@ export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
       }
     }
   }
-  let dupesFound = 0;
-  let dupesBinsFound = 0;
+  const sortedDupes = [] as [number, number][];
   for (const [toIdx, bin] of reducedSetMap.entries()) {
-    dupesBinsFound += 1;
     if (bin.length > 1) {
-      dupesFound += bin.length;
+      sortedDupes.push([toIdx, bin.length]);
       const toType = tg.types[toIdx];
+      incrementKindCount(toType, dupeKindCount);
 
-      console.log(`${cyan(toType.title)}`);
+      // console.log(`${cyan(toType.title)}`);
       for (const fromIdx of bin) {
         const fromType = tg.types[fromIdx];
-        const injection = "injection" in fromType
+        incrementKindCount(fromType, dupeKindCount);
+        /* const injection = "injection" in fromType
           // deno-lint-ignore no-explicit-any
           ? ` (injection ${(fromType.injection as any).source})`
           : "";
@@ -241,28 +237,63 @@ export function listDuplicatesEnhanced(tg: TypeGraphDS, _rootIdx = 0) {
           `    ${
             green(fromIdx.toString())
           } ${fromType.type}:${fromType.title}${injection}`,
-        );
+        ); */
       }
     }
   }
-  /* theWheres.sort((a, b) => a[1].title.localeCompare(b[1].title));
-  for (const [idx, type] of theWheres) {
+  sortedDupes.sort((a, b) => a[1] - b[1]);
+  const dupesBinsFound = sortedDupes.length;
+  const dupesFound = sortedDupes
+    .map(([_rootIdx, count]) => count)
+    .reduce((a, b) => a + b);
+  console.log(
+    `${green("dupeCount")} kind:selected dedup root title`,
+  );
+  for (const [rootIdx, count] of sortedDupes) {
+    const type = tg.types[rootIdx];
     console.log(
-      `    ${green(idx.toString())} ${type.type}:${type.title}`,
+      `${green(count.toString()) + "dupes"} ${type.type}:${type.title}`,
     );
-  } */
+  }
+  console.log(
+    `${green("dupeCount")} kind:selected dedup root title`,
+  );
   console.log("that's it folks!", {
+    globalKindCounts,
+    dupeKindCount,
     dupesFound,
     dupesBinsFound,
-    whereTypeCount,
-    optionalTypeCount,
+    totalCycles: cycleNo,
+    tgSize: tg.types.length,
   });
 }
+
+function incrementKindCount(type: TypeNode, sumMap: Record<string, number>) {
+  if (type.title.match(/_where_/)) {
+    const key = "prismaWhereFilterRelated";
+    sumMap[key] = (sumMap[key] ?? 0) + 1;
+  }
+  if (type.title.match(/_update_input/)) {
+    const key = "prismaUpdateInputRelated";
+    sumMap[key] = (sumMap[key] ?? 0) + 1;
+  }
+  if (type.title.match(/_create_input/)) {
+    const key = "prismaCreateInputRelated";
+    sumMap[key] = (sumMap[key] ?? 0) + 1;
+  }
+  if (type.title.match(/_output/)) {
+    const key = "prismaOutputRelated";
+    sumMap[key] = (sumMap[key] ?? 0) + 1;
+  }
+  sumMap[type.type] = (sumMap[type.type] ?? 0) + 1;
+}
+
 export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
   const bins = new Map<string, readonly [number, TypeNode][]>();
   const duplicateNameBins = new Map<string, readonly [number, TypeNode][]>();
   visitType(tg, rootIdx, ({ type, idx }) => {
     const { title, description: _description, ...structure } = type;
+    // deno-lint-ignore no-explicit-any
     const hash = objectHash(structure as any);
     bins.set(hash, [...bins.get(hash) ?? [], [idx, type] as const]);
     duplicateNameBins.set(title, [
@@ -295,6 +326,7 @@ export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
       console.log(`${red(hash)}`);
       for (const [idx, type] of bin) {
         const injection = "injection" in type
+          // deno-lint-ignore no-explicit-any
           ? ` (injection ${(type.injection as any).source})`
           : "";
         console.log(
