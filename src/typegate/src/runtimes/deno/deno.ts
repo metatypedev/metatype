@@ -30,14 +30,42 @@ import { getLogger } from "../../log.ts";
 
 const logger = getLogger(import.meta);
 
-const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
-  identity: ({ _, ...args }) => args,
-  true: () => true,
-  false: () => false,
-  allow: () => "ALLOW" as PolicyResolverOutput,
-  deny: () => "DENY" as PolicyResolverOutput,
-  pass: () => "PASS" as PolicyResolverOutput,
-  internal_policy: ({ _: { context } }) => context.provider === "internal" ? "ALLOW" : "PASS" as PolicyResolverOutput,
+const predefinedFuncs: Record<
+  string,
+  (param: any) => Resolver<Record<string, unknown>>
+> = {
+  identity: () => ({ _, ...args }) => args,
+  true: () => () => true,
+  false: () => () => false,
+  allow: () => () => "ALLOW" as PolicyResolverOutput,
+  deny: () => () => "DENY" as PolicyResolverOutput,
+  pass: () => () => "PASS" as PolicyResolverOutput,
+  internal_policy: () => ({ _: { context } }) =>
+    context.provider === "internal" ? "ALLOW" : "PASS" as PolicyResolverOutput,
+  context_check: ({ key, value }) => {
+    let check: (value: any) => boolean;
+    switch (value.type) {
+      case "not_null":
+        check = (v) => v != null;
+        break;
+      case "value":
+        check = (v) => v === value.value;
+        break;
+      case "pattern":
+        check = (v) => new RegExp(value.pattern).test(v);
+        break;
+      default:
+        throw new Error("unreachable");
+    }
+    const path = key.split(".");
+    return ({ _: { context } }) => {
+      let value: any = context;
+      for (const segment of path) {
+        value = value?.[segment];
+      }
+      return check(value) ? "PASS" : "DENY" as PolicyResolverOutput;
+    };
+  },
 };
 
 export class DenoRuntime extends Runtime {
@@ -241,7 +269,7 @@ export class DenoRuntime extends Runtime {
       if (!func) {
         throw new Error(`predefined function ${mat.data.name} not found`);
       }
-      return func;
+      return func(mat.data.param);
     }
 
     if (mat.name === "static") {
