@@ -18,7 +18,6 @@ import type {
 } from "../../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
-import { DenoMessenger } from "./deno_messenger.ts";
 import type { Task } from "./shared_types.ts";
 import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
@@ -27,6 +26,7 @@ import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
 import { getInjectionValues } from "../../engine/planner/injection_utils.ts";
 import DynamicInjection from "../../engine/injection/dynamic.ts";
 import { getLogger } from "../../log.ts";
+import { WorkerManager } from "./worker_manager.ts";
 
 const logger = getLogger(import.meta);
 
@@ -74,8 +74,7 @@ export class DenoRuntime extends Runtime {
     uuid: string,
     private tg: TypeGraphDS,
     private typegate: Typegate,
-    private w: DenoMessenger,
-    private registry: Map<string, number>,
+    private workerManager: WorkerManager,
     private secrets: Record<string, string>,
   ) {
     super(typegraphName, uuid);
@@ -166,28 +165,16 @@ export class DenoRuntime extends Runtime {
       }
     }
 
-    const w = new DenoMessenger(
-      name,
-      {
-        ...(args.permissions ?? {}),
-        read: [basePath],
-      } as Deno.PermissionOptionsObject,
-      false,
-      ops,
-      typegate.config.base,
-    );
-
-    if (Deno.env.get("DENO_TESTING") === "true") {
-      w.disableLazyness();
-    }
+    const workerManager = new WorkerManager({
+      timeout_ms: typegate.config.base.timer_max_timeout_ms,
+    });
 
     const rt = new DenoRuntime(
       typegraphName,
       uuid,
       tg,
       typegate,
-      w,
-      registry,
+      workerManager,
       secrets,
     );
 
@@ -195,7 +182,7 @@ export class DenoRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
-    await this.w.terminate();
+    // await this.workerManager.deinit();
   }
 
   materialize(
@@ -285,7 +272,10 @@ export class DenoRuntime extends Runtime {
       const modMat = this.tg.materializers[mat.data.mod as number];
       const entryPoint =
         this.tg.meta.artifacts[modMat.data.entryPoint as string];
-      const op = this.registry.get(entryPoint.hash)!;
+      const depMetas = (modMat.data.deps as string[]).map((dep) =>
+        createArtifactMeta(this.typegraphName, this.tg.meta.artifacts[dep])
+      );
+      const moduleMeta = createArtifactMeta(this.typegraphName, entryPoint);
 
       return async ({
         _: {
@@ -297,33 +287,33 @@ export class DenoRuntime extends Runtime {
       }) => {
         const token = await InternalAuth.emit(this.typegate.cryptoKeys);
 
-        return await this.w.execute(
-          op,
+        // TODO cache??
+        const entryModulePath = await this.typegate.artifactStore.getLocalPath(
+          moduleMeta,
+          depMetas,
+        );
+
+        return await this.workerManager.callFunction(
+          mat.data.name as string,
+          entryModulePath,
+          entryPoint.path,
+          args,
           {
-            type: "import_func",
-            args,
-            internals: {
-              parent,
-              context,
-              secrets,
-              effect: mat.effect.effect ?? null,
-              meta: {
-                url: `${url.protocol}//${url.host}/${this.typegraphName}`,
-                token,
-              },
-              headers,
+            parent,
+            context,
+            secrets,
+            effect: mat.effect.effect ?? null,
+            meta: {
+              url: `${url.protocol}//${url.host}/${this.typegraphName}`,
+              token,
             },
-            name: mat.data.name as string,
-            verbose,
+            headers,
           },
-          [],
-          pulseCount,
         );
       };
     }
 
     if (mat.name === "function") {
-      const op = this.registry.get(mat.data.script as string)!;
       return async ({
         _: {
           context,
@@ -334,26 +324,29 @@ export class DenoRuntime extends Runtime {
       }) => {
         const token = await InternalAuth.emit(this.typegate.cryptoKeys);
 
-        return await this.w.execute(
-          op,
+        const modulePath = await this.typegate.artifactStore.getInlineArtifact(
+          this.typegraphName,
+          mat.data.script as string,
+          ".ts",
+          exportInlineFunction("inlineFunction"),
+        );
+
+        return await this.workerManager.callFunction(
+          "inlineFunction",
+          modulePath,
+          "tg",
+          args,
           {
-            type: "func",
-            args,
-            internals: {
-              parent,
-              context,
-              secrets,
-              effect: mat.effect.effect ?? null,
-              meta: {
-                url: `${url.protocol}//${url.host}/${this.typegraphName}`,
-                token,
-              },
-              headers,
+            parent,
+            context,
+            secrets,
+            effect: mat.effect.effect ?? null,
+            meta: {
+              url: `${url.protocol}//${url.host}/${this.typegraphName}`,
+              token,
             },
-            verbose,
+            headers,
           },
-          [],
-          pulseCount,
         );
       };
     }
@@ -391,6 +384,18 @@ export class DenoRuntime extends Runtime {
       }
     }
   }
+}
+
+function exportInlineFunction(name = "fn", symbol = "_my_lambda") {
+  if (!name.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/)) {
+    throw new Error(`Invalid identifier: ${name}`);
+  }
+  if (!symbol.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/)) {
+    throw new Error(`Invalid identifier: ${symbol}`);
+  }
+  return (code: string) => {
+    return `${code}\nexport const ${name} = ${symbol};`;
+  };
 }
 
 function getInjectionData(d: InjectionData) {
