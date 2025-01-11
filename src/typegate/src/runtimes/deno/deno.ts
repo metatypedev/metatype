@@ -52,7 +52,7 @@ const predefinedFuncs: Record<
         check = (v) => v === value.value;
         break;
       case "pattern":
-        check = (v) => new RegExp(value.pattern).test(v);
+        check = (v) => v != null && new RegExp(value.value).test(v);
         break;
       default:
         throw new Error("unreachable");
