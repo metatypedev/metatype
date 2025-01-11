@@ -19,7 +19,7 @@ export default {
     workingDir: "src/substantial",
     inherit: "_rust",
     installs: [
-      ports.cargobi({ crateName: "protobuf-codegen", version: "3.5.1" }),
+      ports.cargobi({ crateName: "protobuf-codegen", version: "3.7.1" }),
     ],
     fn: ($) => {
       // https://github.com/protocolbuffers/protobuf/issues/13346
@@ -27,7 +27,8 @@ export default {
         "protocol/events.proto",
         "protocol/metadata.proto",
       ];
-      return $`protoc --proto_path=. ${protoFiles} --rust_out=src/protocol --rust_opt=experimental-codegen=enabled,kernel=cpp`;
+
+      return $`protoc --proto_path=. ${protoFiles} --rs_out=src/protocol`;
     },
   },
 } satisfies Record<string, DenoTaskDefArgs>;
