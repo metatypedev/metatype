@@ -87,7 +87,7 @@ mod test {
     #[test]
     fn stub_test() -> anyhow::Result<()> {
         let tg_name = "my_tg".to_string();
-        let tg = Box::new(Typegraph {
+        let tg = Arc::new(Typegraph {
             path: None,
             policies: vec![],
             deps: vec![],

@@ -4,7 +4,7 @@
 use crate::interlude::*;
 use common::typegraph::*;
 
-pub async fn test_typegraph_1() -> anyhow::Result<Box<Typegraph>> {
+pub async fn test_typegraph_1() -> anyhow::Result<Arc<Typegraph>> {
     let out = tokio::process::Command::new("cargo")
         .args(
             "run -p meta-cli -- serialize -f fixtures/tg.ts -vvv"
@@ -18,7 +18,7 @@ pub async fn test_typegraph_1() -> anyhow::Result<Box<Typegraph>> {
         .kill_on_drop(true)
         .output()
         .await?;
-    let mut tg: Vec<Box<Typegraph>> = serde_json::from_slice(&out.stdout).with_context(|| {
+    let mut tg: Vec<Arc<Typegraph>> = serde_json::from_slice(&out.stdout).with_context(|| {
         format!(
             "error deserializing typegraph: {out:?}\nstderr):\n{}\n---END---",
             std::str::from_utf8(&out.stderr).unwrap(),
@@ -105,7 +105,7 @@ pub fn default_type_node_base() -> TypeNodeBase {
     }
 }
 
-pub async fn test_typegraph_3() -> anyhow::Result<Box<Typegraph>> {
+pub async fn test_typegraph_3() -> anyhow::Result<Arc<Typegraph>> {
     let out = tokio::process::Command::new("cargo")
         .args(
             "run -p meta-cli -- serialize -f fixtures/tg2.ts -vvv"
@@ -120,7 +120,7 @@ pub async fn test_typegraph_3() -> anyhow::Result<Box<Typegraph>> {
         .kill_on_drop(true)
         .output()
         .await?;
-    let mut tg: Vec<Box<Typegraph>> = serde_json::from_slice(&out.stdout).with_context(|| {
+    let mut tg: Vec<Arc<Typegraph>> = serde_json::from_slice(&out.stdout).with_context(|| {
         format!(
             "error deserializing typegraph: {out:?}\nstderr):\n{}\n---END---",
             std::str::from_utf8(&out.stderr).unwrap(),
