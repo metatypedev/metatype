@@ -53,7 +53,6 @@ try {
     base: defaultTypegateConfigBase,
   });
   const typegate = await Typegate.init(config);
-
   await SystemTypegraph.loadAll(typegate, !globalConfig.packaged);
 
   const server = Deno.serve(

@@ -295,7 +295,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
     fn get_predefined_deno_func(
         data: wit::MaterializerDenoPredefined,
     ) -> Result<wit::MaterializerId> {
-        Store::get_predefined_deno_function(data.name)
+        Store::get_predefined_deno_function(data.name, data.param)
     }
 
     fn import_deno_function(
