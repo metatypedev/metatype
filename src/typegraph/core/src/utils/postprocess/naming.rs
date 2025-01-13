@@ -10,6 +10,8 @@ use common::typegraph::{
     visitor::{Edge, PathSegment},
     StringFormat, TypeNode, Typegraph,
 };
+use indexmap::IndexSet;
+use sha2::{Digest, Sha256};
 
 use crate::errors::TgError;
 
@@ -25,16 +27,26 @@ impl super::PostProcessor for NamingProcessor {
             tg,
             user_named: self.user_named,
         };
-        let mut acc = VisitCollector {
-            named_types: Default::default(),
-            path: vec![],
-        };
 
         let TypeNode::Object {
             data: root_data, ..
         } = &tg.types[0]
         else {
             panic!("first item must be root object")
+        };
+
+        let mut ref_counters = TypeRefCount {
+            counts: Default::default(),
+        };
+        for (_, &ty_id) in &root_data.properties {
+            collect_ref_info(&cx, &mut ref_counters, ty_id, &mut HashSet::new())?;
+        }
+
+        let mut acc = VisitCollector {
+            named_types: Default::default(),
+            path: vec![],
+            // ref related
+            counts: ref_counters.counts,
         };
         for (key, &ty_id) in &root_data.properties {
             acc.path.push((
@@ -62,6 +74,41 @@ struct VisitContext<'a> {
 struct VisitCollector {
     named_types: HashMap<u32, Rc<str>>,
     path: Vec<(PathSegment, Rc<str>)>,
+    // ref related
+    counts: HashMap<u32, IndexSet<u32>>,
+}
+
+struct TypeRefCount {
+    pub counts: HashMap<u32, IndexSet<u32>>,
+}
+
+impl TypeRefCount {
+    pub fn new_hit(&mut self, id: u32, referrer: u32) {
+        self.counts
+            .entry(id)
+            .and_modify(|counter| {
+                counter.insert(referrer);
+            })
+            .or_insert(IndexSet::from([referrer]));
+    }
+}
+
+impl VisitCollector {
+    pub fn has_more_than_one_referrer(&self, id: u32) -> bool {
+        if let Some(referrers) = self.counts.get(&id) {
+            return referrers.len() > 1;
+        }
+
+        false
+    }
+
+    pub fn next_name(&mut self, name: String, hash_input: String) -> String {
+        let mut sha256 = Sha256::new();
+        sha256.update(hash_input.bytes().collect::<Vec<_>>());
+        let hash = format!("{:x}", sha256.finalize());
+
+        format!("{name}_{}", hash.chars().take(5).collect::<String>())
+    }
 }
 
 fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::Result<Rc<str>> {
@@ -215,14 +262,89 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
     };
 
     acc.named_types.insert(id, name.clone());
+
     Ok(name)
 }
 
+fn collect_ref_info(
+    cx: &VisitContext,
+    acc: &mut TypeRefCount,
+    id: u32,
+    visited: &mut HashSet<u32>,
+) -> anyhow::Result<()> {
+    if cx.user_named.contains(&id) || visited.contains(&id) {
+        return Ok(());
+    }
+
+    visited.insert(id);
+
+    let node = &cx.tg.types[id as usize];
+    match node {
+        TypeNode::Boolean { .. }
+        | TypeNode::Float { .. }
+        | TypeNode::Integer { .. }
+        | TypeNode::String { .. }
+        | TypeNode::File { .. }
+        | TypeNode::Any { .. } => {
+            // base case
+        }
+        TypeNode::Optional { data, .. } => {
+            acc.new_hit(data.item, id);
+            collect_ref_info(cx, acc, data.item, visited)?;
+        }
+        TypeNode::Object { data, .. } => {
+            for (_, key_id) in &data.properties {
+                acc.new_hit(*key_id, id);
+                collect_ref_info(cx, acc, *key_id, visited)?;
+            }
+        }
+        TypeNode::Function { data, .. } => {
+            acc.new_hit(data.input, id);
+            acc.new_hit(data.output, id);
+
+            collect_ref_info(cx, acc, data.input, visited)?;
+            collect_ref_info(cx, acc, data.output, visited)?;
+        }
+        TypeNode::List { data, .. } => {
+            acc.new_hit(data.items, id);
+            collect_ref_info(cx, acc, data.items, visited)?;
+        }
+        TypeNode::Union { data, .. } => {
+            for variant in &data.any_of {
+                acc.new_hit(*variant, id);
+                collect_ref_info(cx, acc, *variant, visited)?;
+            }
+        }
+        TypeNode::Either { data, .. } => {
+            for variant in &data.one_of {
+                acc.new_hit(*variant, id);
+                collect_ref_info(cx, acc, *variant, visited)?;
+            }
+        }
+    };
+
+    visited.remove(&id);
+
+    Ok(())
+}
+
 fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str) -> Rc<str> {
+    let node = &cx.tg.types[id as usize];
     let name: Rc<str> = if cx.user_named.contains(&id) {
-        let node = &cx.tg.types[id as usize];
         node.base().title.clone().into()
     } else {
+        macro_rules! join_if_ok {
+            ($prefix:expr, $default:expr) => {
+                if acc.has_more_than_one_referrer(id) {
+                    // Cannot be opinionated on the prefix path if shared (confusing)
+                    let hash_input = $prefix;
+                    acc.next_name(ty_name.to_string(), hash_input)
+                } else {
+                    format!("{}_{}", $prefix, $default)
+                }
+            };
+        }
+
         let title;
         let mut last = acc.path.len();
         loop {
@@ -232,11 +354,13 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
                 // we don't include optional and list nodes in
                 // generated names (useless but also, they might be placeholders)
                 Edge::OptionalItem | Edge::ArrayItem => continue,
-                Edge::FunctionInput => format!("{last_name}_input"),
-                Edge::FunctionOutput => format!("{last_name}_output"),
-                Edge::ObjectProp(key) => format!("{last_name}_{key}_{ty_name}"),
+                Edge::FunctionInput => join_if_ok!(last_name.to_string(), "input"),
+                Edge::FunctionOutput => join_if_ok!(last_name.to_string(), "output"),
+                Edge::ObjectProp(key) => {
+                    join_if_ok!(format!("{last_name}_{key}"), ty_name)
+                }
                 Edge::EitherVariant(idx) | Edge::UnionVariant(idx) => {
-                    format!("{last_name}_t{idx}_{ty_name}")
+                    join_if_ok!(format!("{last_name}_t{idx}"), ty_name)
                 }
             };
             break;
