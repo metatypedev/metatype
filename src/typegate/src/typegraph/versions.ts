@@ -42,40 +42,15 @@ const typegraphChangelog: Record<
   "0.0.3": {
     "next": "0.0.4",
     "transform": (x) => {
-      console.log("types", x.types.length);
-      for (const typeNode of x.types) {
-        if (typeNode.type === Type.FUNCTION) {
-          // build injection tree from the input type
-          const path: string[] = [];
-          const input = x.types[typeNode.input];
-          const traverse = (objectNode: ObjectNode) => {
-            console.log({ path });
-            const properties = objectNode.properties;
-            for (const [name, typeIdx] of Object.entries(properties)) {
-              path.push(name);
-              const prop = x.types[typeIdx];
-              if ("injection" in prop) {
-                console.log({ injection: prop.injection, path });
-                // throw new Error("injection");
-              }
-              if (prop.type === Type.OBJECT) {
-                traverse(prop);
-              }
-              path.pop();
-            }
-          };
-          traverse(input);
-          typeNode.injections = {};
-        }
-      }
-      return x;
+      throw new Error(
+        "upgrade not allowed; please rerun the typegate with the SYNC_FORCE_REMOVE=true environment variable",
+      );
     },
   },
 };
 
 export function isTypegraphUpToDate(typegraph: TypeGraphDS): boolean {
   const { meta } = typegraph;
-  console.log({ typegraphVersion, metaVersion: meta.version });
   return semver.equals(
     semver.parse(typegraphVersion),
     semver.parse(meta.version),
@@ -87,7 +62,6 @@ export function upgradeTypegraph(typegraph: TypeGraphDS): TypeGraphDS {
   const { meta } = typegraph;
 
   let currentVersion = meta.version;
-  console.log("upgrade", { currentVersion, typegraphVersion });
   while (
     semver.notEquals(
       semver.parse(typegraphVersion),
@@ -95,7 +69,6 @@ export function upgradeTypegraph(typegraph: TypeGraphDS): TypeGraphDS {
     )
   ) {
     const migration = typegraphChangelog[currentVersion];
-    console.log({ migration });
     if (!migration) {
       throw Error(
         `typegate ${globalConfig.version} supports typegraph ${typegraphVersion} which is incompatible with ${typegraphName} ${meta.version} (max auto upgrade was ${currentVersion})`,

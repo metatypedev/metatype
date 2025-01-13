@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { Meta } from "test-utils/mod.ts";
 import { $ } from "@local/tools/deps.ts";
 import { encodeBase64 } from "@std/encoding/base64";
@@ -30,6 +33,7 @@ Meta.test(
     async teardown() {
       await testConfig.clearSyncData();
     },
+    ignore: previousVersion === "0.4.10",
   },
   async (t) => {
     let publishedBin = "";

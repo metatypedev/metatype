@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { transformSyncConfig } from "@metatype/typegate/config.ts";
 import { clearSyncData, setupSync } from "test-utils/hooks.ts";
 
@@ -9,6 +12,7 @@ const defaultSyncEnvs = {
   SYNC_S3_SECRET_KEY: "password",
   // SYNC_S3_BUCKET: "upgrade-test",
   SYNC_S3_PATH_STYLE: "true",
+  SYNC_FORCE_REMOVE: "false",
 };
 
 export function config(p: { redisDb: number; s3Bucket: string }) {
@@ -25,6 +29,7 @@ export function config(p: { redisDb: number; s3Bucket: string }) {
     s3_secret_key: syncEnvs.SYNC_S3_SECRET_KEY,
     s3_bucket: syncEnvs.SYNC_S3_BUCKET,
     s3_path_style: true,
+    force_remove: false,
   });
 
   return { syncConfig, syncEnvs };
@@ -48,6 +53,7 @@ export class Config {
       s3_secret_key: this.syncEnvs.SYNC_S3_SECRET_KEY,
       s3_bucket: this.syncEnvs.SYNC_S3_BUCKET,
       s3_path_style: true,
+      force_remove: false,
     });
   }
 

@@ -10,8 +10,6 @@ import {
 } from "@local/tools/consts.ts";
 import { encodeBase64 } from "@std/encoding/base64";
 import { Lines } from "test-utils/process.ts";
-import { newTempDir } from "test-utils/dir.ts";
-import { downloadAndExtractCli } from "./utils.ts";
 import { Config } from "./config.ts";
 import { downloadSteps } from "./common.ts";
 
@@ -33,8 +31,7 @@ for (const version of previousVersions) {
       async teardown() {
         await testConfig.clearSyncData();
       },
-      // only: version === LATEST_PRE_RELEASE_VERSION,
-      only: version === LATEST_RELEASE_VERSION,
+      only: version === LATEST_PRE_RELEASE_VERSION,
     },
     async (t) => {
       const { publishedBin, examplesDir } = await downloadSteps(t, version);
