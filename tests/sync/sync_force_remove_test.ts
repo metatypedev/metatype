@@ -74,41 +74,37 @@ Meta.test(
     },
   },
   async (t) => {
-    await t.should(
-      "cleanup if forceRemove is true",
-      async () => {
-        const _engine = await t.engine("sync/sync.py", {
-          secrets: {
-            ULTRA_SECRET:
-              "if_you_can_read_me_on_an_ERROR_there_is_a_bug",
-          },
-        });
+    await t.should("cleanup if forceRemove is true", async () => {
+      const _engine = await t.engine("sync/sync.py", {
+        secrets: {
+          ULTRA_SECRET: "if_you_can_read_me_on_an_ERROR_there_is_a_bug",
+        },
+      });
 
-        const s3 = new S3Client(syncConfig.s3);
-        const initialObjects = await listObjects(s3, syncConfig.s3Bucket);
-        assertEquals(initialObjects?.length, 3);
+      const s3 = new S3Client(syncConfig.s3);
+      const initialObjects = await listObjects(s3, syncConfig.s3Bucket);
+      assertEquals(initialObjects?.length, 2);
 
-        const gateNoRemove = await spawnGate(syncConfig);
-        const namesNoRemove = gateNoRemove.register.list().map(({ name }) =>
-          name
-        );
+      const gateNoRemove = await spawnGate(syncConfig);
+      const namesNoRemove = gateNoRemove.register
+        .list()
+        .map(({ name }) => name);
 
-        const gateAfterRemove = await spawnGate({
-          ...syncConfig,
-          forceRemove: true,
-        });
-        const namesAfterRemove = gateAfterRemove.register.list().map((
-          { name },
-        ) => name);
+      const gateAfterRemove = await spawnGate({
+        ...syncConfig,
+        forceRemove: true,
+      });
+      const namesAfterRemove = gateAfterRemove.register
+        .list()
+        .map(({ name }) => name);
 
-        t.addCleanup(async () => {
-          await gateNoRemove[Symbol.asyncDispose]();
-          await gateAfterRemove[Symbol.asyncDispose]();
-        });
+      t.addCleanup(async () => {
+        await gateNoRemove[Symbol.asyncDispose]();
+        await gateAfterRemove[Symbol.asyncDispose]();
+      });
 
-        assertEquals(namesNoRemove, ["sync"]);
-        assertEquals(namesAfterRemove, []); // !
-      },
-    );
+      assertEquals(namesNoRemove, ["sync"]);
+      assertEquals(namesAfterRemove, []); // !
+    });
   },
 );

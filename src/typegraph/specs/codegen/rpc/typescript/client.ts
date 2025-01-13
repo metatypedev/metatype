@@ -57,13 +57,13 @@ function readResponse() {
     do {
       bytesRead = Deno.stdin.readSync(buffer) ?? 0;
       content = Buffer.concat([content, buffer.subarray(0, bytesRead)]);
-    } while (bytesRead == BUFFER_SIZE);
+    } while (content[content.length - 1] != 0x0a);
   } else {
     const fd = fs.openSync("/dev/stdin", "r");
     do {
       bytesRead = fs.readSync(fd, buffer) ?? 0;
       content = Buffer.concat([content, buffer.subarray(0, bytesRead)]);
-    } while (bytesRead == BUFFER_SIZE);
+    } while (content[content.length - 1] != 0x0a);
 
     fs.closeSync(fd);
   }
