@@ -42,10 +42,10 @@ mod node_metas {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("file".into(), "RootUploadFnInputFileFile".into()),
+                    ("file".into(), "FileBf9b7".into()),
                     (
                         "path".into(),
-                        "RootUploadFnInputPathRootUploadFnInputPathStringOptional".into(),
+                        "RootUploadFnInputPathString25e51Optional".into(),
                     ),
                 ]
                 .into(),
@@ -62,11 +62,11 @@ mod node_metas {
                 [
                     (
                         "prefix".into(),
-                        "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional".into(),
+                        "RootUploadManyFnInputPrefixString25e51Optional".into(),
                     ),
                     (
                         "files".into(),
-                        "RootUploadManyFnInputFilesRootUploadFnInputFileFileList".into(),
+                        "RootUploadManyFnInputFilesFileBf9b7List".into(),
                     ),
                 ]
                 .into(),
@@ -81,25 +81,20 @@ mod node_metas {
 }
 use types::*;
 pub mod types {
-    pub type RootUploadFnInputFileFile = super::FileId;
-    pub type RootUploadFnInputPathString = String;
-    pub type RootUploadFnInputPathRootUploadFnInputPathStringOptional =
-        Option<RootUploadFnInputPathString>;
+    pub type FileBf9b7 = super::FileId;
+    pub type RootUploadFnInputPathString25e51Optional = Option<String>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadFnInputPartial {
-        pub file: Option<RootUploadFnInputFileFile>,
-        pub path: RootUploadFnInputPathRootUploadFnInputPathStringOptional,
+        pub file: Option<FileBf9b7>,
+        pub path: RootUploadFnInputPathString25e51Optional,
     }
-    pub type RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional =
-        Option<RootUploadFnInputPathString>;
-    pub type RootUploadManyFnInputFilesRootUploadFnInputFileFileList =
-        Vec<RootUploadFnInputFileFile>;
+    pub type RootUploadManyFnInputPrefixString25e51Optional = Option<String>;
+    pub type RootUploadManyFnInputFilesFileBf9b7List = Vec<FileBf9b7>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadManyFnInputPartial {
-        pub prefix: RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
-        pub files: Option<RootUploadManyFnInputFilesRootUploadFnInputFileFileList>,
+        pub prefix: RootUploadManyFnInputPrefixString25e51Optional,
+        pub files: Option<RootUploadManyFnInputFilesFileBf9b7List>,
     }
-    pub type RootUploadFnOutput = bool;
 }
 
 impl QueryGraph {
@@ -108,21 +103,18 @@ impl QueryGraph {
             addr,
             ty_to_gql_ty_map: std::sync::Arc::new(
                 [
+                    ("FileBf9b7".into(), "file_bf9b7!".into()),
                     (
-                        "RootUploadFnInputFileFile".into(),
-                        "root_upload_fn_input_file_file!".into(),
-                    ),
-                    (
-                        "RootUploadFnInputPathRootUploadFnInputPathStringOptional".into(),
+                        "RootUploadFnInputPathString25e51Optional".into(),
                         "String".into(),
                     ),
                     (
-                        "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional".into(),
+                        "RootUploadManyFnInputPrefixString25e51Optional".into(),
                         "String".into(),
                     ),
                     (
-                        "RootUploadManyFnInputFilesRootUploadFnInputFileFileList".into(),
-                        "[root_upload_fn_input_file_file]!".into(),
+                        "RootUploadManyFnInputFilesFileBf9b7List".into(),
+                        "[file_bf9b7]!".into(),
                     ),
                 ]
                 .into(),
@@ -133,7 +125,7 @@ impl QueryGraph {
     pub fn upload(
         &self,
         args: impl Into<NodeArgs<RootUploadFnInputPartial>>,
-    ) -> MutationNode<RootUploadFnOutput> {
+    ) -> MutationNode<bool> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -151,7 +143,7 @@ impl QueryGraph {
     pub fn upload_many(
         &self,
         args: impl Into<NodeArgs<RootUploadManyFnInputPartial>>,
-    ) -> MutationNode<RootUploadFnOutput> {
+    ) -> MutationNode<bool> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
