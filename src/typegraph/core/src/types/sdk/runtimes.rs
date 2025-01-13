@@ -35,6 +35,7 @@ pub struct MaterializerDenoStatic {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MaterializerDenoPredefined {
     pub name: String,
+    pub param: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -730,6 +730,41 @@
           "buildDepConfigs": {},
           "portRef": "pnpm_ghrel@0.1.0",
           "specifiedVersion": true
+        },
+        "bciqn2ct4mwrwyise3qlnabpine33dzt3lvnrhrbnkw4pnyryfe5is5a": {
+          "version": "3.7.1",
+          "buildDepConfigs": {
+            "cargo_binstall_ghrel": {
+              "version": "v1.10.9",
+              "buildDepConfigs": {},
+              "portRef": "cargo_binstall_ghrel@0.1.0",
+              "specifiedVersion": false
+            },
+            "rust_rustup": {
+              "version": "1.80.1",
+              "buildDepConfigs": {
+                "rustup_rustlang": {
+                  "version": "1.27.1",
+                  "buildDepConfigs": {
+                    "git_aa": {
+                      "version": "2.34.1",
+                      "buildDepConfigs": {},
+                      "portRef": "git_aa@0.1.0",
+                      "specifiedVersion": false
+                    }
+                  },
+                  "portRef": "rustup_rustlang@0.1.0",
+                  "specifiedVersion": false
+                }
+              },
+              "portRef": "rust_rustup@0.1.0",
+              "profile": "minimal",
+              "specifiedVersion": true
+            }
+          },
+          "portRef": "cargobi_cratesio@0.1.0",
+          "crateName": "protobuf-codegen",
+          "specifiedVersion": true
         }
       }
     },
@@ -853,7 +888,7 @@
             },
             "ghjkEnvProvInstSet_______task_env_gen-subs-protoc": {
               "installs": [
-                "bciqm2rvnfe77sj6jekrm65oayuywt5lbrw33qezqjcg5rzaioc6uszy",
+                "bciqifvrtbr5a6nomogpnbn7jxwscqpepdgh67lrsjpkh6t2odnjrnma",
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
@@ -3084,8 +3119,8 @@
         },
         "packageName": "@bytecodealliance/jco"
       },
-      "bciqm2rvnfe77sj6jekrm65oayuywt5lbrw33qezqjcg5rzaioc6uszy": {
-        "version": "3.5.1",
+      "bciqifvrtbr5a6nomogpnbn7jxwscqpepdgh67lrsjpkh6t2odnjrnma": {
+        "version": "3.7.1",
         "port": {
           "ty": "denoWorker@v1",
           "name": "cargobi_cratesio",

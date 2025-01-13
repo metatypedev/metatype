@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::sdk::{core::MaterializerId, runtimes as sdk};
+use common::typegraph::runtimes::deno::PredefinedFunctionMatData;
+
+use crate::sdk::{core::MaterializerId, runtimes::MaterializerDenoFunc};
 
 #[derive(Debug)]
 pub struct MaterializerDenoModule {
@@ -24,8 +26,8 @@ pub struct MaterializerDenoStatic {
 #[derive(Debug)]
 pub enum DenoMaterializer {
     Static(MaterializerDenoStatic),
-    Inline(sdk::MaterializerDenoFunc),
-    Predefined(sdk::MaterializerDenoPredefined),
+    Inline(MaterializerDenoFunc),
+    Predefined(PredefinedFunctionMatData),
     Module(MaterializerDenoModule),
     Import(MaterializerDenoImport),
 }

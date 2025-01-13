@@ -128,10 +128,7 @@ impl MaterializerConverter for DenoMaterializer {
                 ("import_function".to_string(), data)
             }
             Predefined(predef) => {
-                let data = serde_json::from_value(json!({
-                    "name": predef.name,
-                }))
-                .unwrap();
+                let data = serde_json::from_value(serde_json::to_value(predef).unwrap()).unwrap();
                 ("predefined_function".to_string(), data)
             }
         };

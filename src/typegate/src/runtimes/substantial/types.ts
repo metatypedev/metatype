@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Operation, Run } from "../../../engine/runtime.js";
+import { TaskContext } from "../deno/shared_types.ts";
+import { DenoWorkerError } from "../patterns/worker_manager/deno.ts";
 export type {
   Backend,
   Operation,
@@ -9,43 +11,54 @@ export type {
   Run,
 } from "../../../engine/runtime.js";
 
-export type AnyString = string & Record<string | number | symbol, never>;
-
-export type WorkerEvent = "START" | AnyString;
-
-export type WorkerData = {
-  type: WorkerEvent;
-  data: any;
+export type WorkflowMessage = {
+  type: "START";
+  data: {
+    modulePath: string;
+    functionName: string;
+    run: Run;
+    schedule: string;
+    internal: TaskContext;
+  };
 };
 
-export type WorkerEventHandler = (message: Result<unknown>) => Promise<void>;
+export type WorkflowCompletionEvent =
+  | {
+    type: "SUCCESS";
+    result: unknown;
+    run: Run;
+    schedule: string;
+  }
+  | {
+    type: "FAIL";
+    error: string;
+    exception: Error | undefined;
+    run: Run;
+    schedule: string;
+  };
+
+export type InterruptEvent = {
+  type: "INTERRUPT";
+  interrupt: InterruptType;
+  schedule: string;
+  run: Run;
+};
+
+export type WorkflowEvent =
+  | WorkflowCompletionEvent
+  | InterruptEvent
+  | {
+    type: "ERROR";
+    error: string;
+  }
+  | DenoWorkerError;
 
 export type Result<T> = {
   error: boolean;
   payload: T;
 };
 
-export function Ok<R>(payload: R): Result<R> {
-  return { error: false, payload };
-}
-
-export function Err<E>(payload: E): Result<E> {
-  return { error: true, payload };
-}
-
-export function Msg(type: WorkerEvent, data: unknown): WorkerData {
-  return { type, data };
-}
-
 export type ExecutionResultKind = "SUCCESS" | "FAIL";
-
-export type WorkflowResult = {
-  kind: ExecutionResultKind;
-  result: unknown;
-  exception?: Error;
-  schedule: string;
-  run: Run;
-};
 
 // TODO: convert python exceptions into these
 // by using prefixes on the exception message for example

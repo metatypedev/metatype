@@ -20,10 +20,10 @@ mod test_utils;
 
 use std::collections::HashSet;
 
+use common::typegraph::runtimes::deno::{ContextCheckX, PredefinedFunctionMatData};
 use common::typegraph::Injection;
 use errors::{Result, TgError};
 use global_store::Store;
-use indoc::formatdoc;
 use params::apply;
 use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
@@ -32,7 +32,7 @@ use sdk::core::{
     TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
     TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
 };
-use sdk::runtimes::{Handler, MaterializerDenoFunc};
+use sdk::runtimes::{Handler, MaterializerDenoPredefined};
 use types::type_ref::AsId;
 use types::{
     AsTypeDefEx as _, Boolean, Either, File, Float, Func, Integer, List, Named, Optional, StringT,
@@ -41,6 +41,17 @@ use types::{
 };
 
 pub struct Lib {}
+
+impl From<ContextCheck> for ContextCheckX {
+    fn from(check: ContextCheck) -> Self {
+        use ContextCheck as CC;
+        match check {
+            CC::NotNull => ContextCheckX::NotNull,
+            CC::Value(v) => ContextCheckX::Value(v),
+            CC::Pattern(p) => ContextCheckX::Pattern(p),
+        }
+    }
+}
 
 impl sdk::core::Handler for Lib {
     fn init_typegraph(params: TypegraphInitParams) -> Result<()> {
@@ -175,9 +186,7 @@ impl sdk::core::Handler for Lib {
     }
 
     fn get_internal_policy() -> Result<(PolicyId, String)> {
-        let deno_mat = DenoMaterializer::Predefined(sdk::runtimes::MaterializerDenoPredefined {
-            name: "internal_policy".to_string(),
-        });
+        let deno_mat = DenoMaterializer::Predefined(PredefinedFunctionMatData::InternalPolicy);
         let mat = Materializer::deno(deno_mat, crate::sdk::runtimes::Effect::Read);
         let policy_id = Store::register_policy(
             Policy {
@@ -203,42 +212,19 @@ impl sdk::core::Handler for Lib {
             .replace_all(&name, "_")
             .to_string();
 
-        let check = match check {
-            ContextCheck::NotNull => "value != null ? 'PASS' : 'DENY'".to_string(),
-            ContextCheck::Value(val) => {
-                format!(
-                    "value === {} ?  'PASS' : 'DENY'",
-                    serde_json::to_string(&val).unwrap()
-                )
-            }
-            ContextCheck::Pattern(pattern) => {
-                format!(
-                    "new RegExp({}).test(value) ? 'PASS' : 'DENY' ",
-                    serde_json::to_string(&pattern).unwrap()
-                )
-            }
-        };
+        let check: ContextCheckX = check.into();
+        let check = serde_json::json!({
+            "key": key,
+            "value": check
+        });
 
-        let key = serde_json::to_string(&key).unwrap();
-
-        let code = formatdoc! {r#"
-            (_, {{ context }}) => {{
-                const chunks = {key}.split(".");
-                let value = context;
-                for (const chunk of chunks) {{
-                    value = value?.[chunk];
-                }}
-                return {check};
-            }}
-        "# };
-
-        let mat_id = Lib::register_deno_func(
-            MaterializerDenoFunc {
-                code,
-                secrets: vec![],
-            },
-            sdk::runtimes::Effect::Read,
-        )?;
+        let mat_id = Lib::get_predefined_deno_func(MaterializerDenoPredefined {
+            name: "context_check".to_string(),
+            param: Some(
+                serde_json::to_string(&check)
+                    .map_err(|e| format!("Error while serializing context check: {e:?}"))?,
+            ),
+        })?;
 
         Lib::register_policy(Policy {
             name: name.clone(),

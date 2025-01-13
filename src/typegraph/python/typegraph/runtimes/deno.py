@@ -105,7 +105,7 @@ class DenoRuntime(Runtime):
         from typegraph import t
 
         res = runtimes.get_predefined_deno_func(
-            MaterializerDenoPredefined(name="identity")
+            MaterializerDenoPredefined(name="identity", param=None)
         )
 
         return t.func(

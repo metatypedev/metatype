@@ -134,9 +134,9 @@ export class DenoRuntime extends Runtime {
   fetchContext<C extends t.Typedef>(outputShape?: C): t.Func {
     const returnValue = outputShape ? `context` : "JSON.stringify(context)";
     return this.func(
-      t.struct({}), 
+      t.struct({}),
       outputShape ?? t.json(),
-      { code: `(_, { context }) => ${returnValue}` }
+      { code: `(_, { context }) => ${returnValue}` },
     );
   }
 

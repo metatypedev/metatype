@@ -33,6 +33,7 @@ type MaterializerDenoStatic = {
 
 type MaterializerDenoPredefined = {
   name: string;
+  param?: string;
 };
 
 type MaterializerDenoImport = {

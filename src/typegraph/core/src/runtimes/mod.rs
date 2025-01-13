@@ -289,7 +289,7 @@ impl crate::sdk::runtimes::Handler for crate::Lib {
     }
 
     fn get_predefined_deno_func(data: rt::MaterializerDenoPredefined) -> Result<MaterializerId> {
-        Store::get_predefined_deno_function(data.name)
+        Store::get_predefined_deno_function(data.name, data.param)
     }
 
     fn import_deno_function(
