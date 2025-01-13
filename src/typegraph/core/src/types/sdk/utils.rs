@@ -68,6 +68,7 @@ pub trait Handler {
     ) -> Result<String, super::Error>;
     fn gql_deploy_query(params: QueryDeployParams) -> Result<String, super::Error>;
     fn gql_remove_query(tg_name: Vec<String>) -> Result<String, super::Error>;
+    fn gql_ping_query() -> Result<String, super::Error>;
     fn metagen_exec(config: FdkConfig) -> Result<Vec<FdkOutput>, super::Error>;
     fn metagen_write_files(
         items: Vec<FdkOutput>,

@@ -48,6 +48,7 @@ pub enum RpcCall {
     GqlRemoveQuery {
         tg_name: Vec<String>,
     },
+    GqlPingQuery,
     MetagenExec {
         config: FdkConfig,
     },
@@ -99,6 +100,9 @@ impl super::RpcDispatch for RpcCall {
             }
             Self::GqlRemoveQuery { tg_name } => {
                 Lib::gql_remove_query(tg_name).map(|res| serde_json::to_value(res).unwrap())
+            }
+            Self::GqlPingQuery => {
+                Lib::gql_ping_query().map(|res| serde_json::to_value(res).unwrap())
             }
             Self::MetagenExec { config } => {
                 Lib::metagen_exec(config).map(|res| serde_json::to_value(res).unwrap())

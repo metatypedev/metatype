@@ -627,6 +627,7 @@ impl crate::sdk::runtimes::Handler for crate::Lib {
             SdkOP::RawPrismaUpdate => (Effect::Update(false), Op::RawPrismaQuery),
             SdkOP::RawPrismaDelete => (Effect::Delete(true), Op::RawPrismaQuery),
             SdkOP::QueryPrismaModel => (Effect::Read, Op::QueryPrismaModel),
+            SdkOP::Ping => (Effect::Read, Op::Ping),
         };
 
         Ok(Store::register_materializer(Materializer::typegate(

@@ -115,7 +115,7 @@ impl crate::sdk::utils::Handler for crate::Lib {
     }
 
     fn gql_deploy_query(params: QueryDeployParams) -> Result<String> {
-        let query = r"
+        let query = "
             mutation InsertTypegraph($tg: String!, $secrets: String!, $targetVersion: String!) {
                 addTypegraph(fromString: $tg, secrets: $secrets, targetVersion: $targetVersion) {
                     name
@@ -128,8 +128,8 @@ impl crate::sdk::utils::Handler for crate::Lib {
 
         let mut secrets_map = IndexMap::new();
         if let Some(secrets) = params.secrets {
-            for item in secrets {
-                secrets_map.insert(item.0, item.1);
+            for (secret, value) in secrets {
+                secrets_map.insert(secret, value);
             }
         }
 
@@ -147,7 +147,7 @@ impl crate::sdk::utils::Handler for crate::Lib {
     }
 
     fn gql_remove_query(names: Vec<String>) -> Result<String> {
-        let query = r"
+        let query = "
             mutation($names: [String!]!) {
                 removeTypegraphs(names: $names)
             }
@@ -156,8 +156,19 @@ impl crate::sdk::utils::Handler for crate::Lib {
             "query": query,
             "variables": json!({
                 "names":  names,
-              }),
+            }),
         });
+
+        Ok(req_body.to_string())
+    }
+
+    fn gql_ping_query() -> Result<String> {
+        let query = "query { ping }";
+        let req_body = json!({
+            "query": query,
+            "variables": json!({}),
+        });
+
         Ok(req_body.to_string())
     }
 

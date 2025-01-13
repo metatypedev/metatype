@@ -63,6 +63,8 @@ type gql_deploy_query = (params: QueryDeployParams) => string;
 
 type gql_remove_query = (tg_name: string[]) => string;
 
+type gql_ping_query = () => string;
+
 type metagen_exec = (config: FdkConfig) => FdkOutput[];
 
 type metagen_write_files = (items: FdkOutput[], typegraph_dir: string) => void;
@@ -84,6 +86,7 @@ export type {
   oauth2_with_custom_profiler,
   gql_deploy_query,
   gql_remove_query,
+  gql_ping_query,
   metagen_exec,
   metagen_write_files,
 };

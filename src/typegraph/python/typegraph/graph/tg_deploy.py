@@ -70,6 +70,9 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
     if typegate.auth is not None:
         headers["Authorization"] = typegate.auth.as_header_value()
 
+    # Make sure we have the correct credentials before doing anything
+    ping_typegate(url, headers)
+
     serialize_params = SerializeParams(
         typegraph_path=params.typegraph_path,
         prefix=params.prefix,
@@ -103,7 +106,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         artifact_uploader.upload_artifacts()
 
     # deploy the typegraph
-    res = sdk_utils.gql_deploy_query(
+    query = sdk_utils.gql_deploy_query(
         params=QueryDeployParams(
             tg=tg_json,
             secrets=[(k, v) for k, v in (params.secrets or {}).items()],
@@ -114,7 +117,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         url=url,
         method="POST",
         headers=headers,
-        data=res.encode(),
+        data=query.encode(),
     )
 
     response = exec_request(req)
@@ -147,13 +150,13 @@ def tg_remove(typegraph_name: str, params: TypegraphRemoveParams):
     if typegate.auth is not None:
         headers["Authorization"] = typegate.auth.as_header_value()
 
-    res = sdk_utils.gql_remove_query([typegraph_name])
+    query = sdk_utils.gql_remove_query([typegraph_name])
 
     req = request.Request(
         url=url,
         method="POST",
         headers=headers,
-        data=res.encode(),
+        data=query.encode(),
     )
 
     response = exec_request(req).read().decode()
@@ -178,3 +181,19 @@ def handle_response(res: Any, url=""):
         return json.loads(res)
     except Exception as _:
         raise Exception(f'Expected json object: got "{res}": {url}')
+
+
+def ping_typegate(url: str, headers: dict[str, str]):
+    req = request.Request(
+        url=url,
+        method="POST",
+        headers=headers,
+        data=sdk_utils.gql_ping_query().encode(),
+    )
+
+    try:
+        _ = request.urlopen(req)
+    except request.HTTPError as e:
+        raise Exception(f"Failed to access to typegate: {e}")
+    except Exception as e:
+        raise Exception(f"{e}: {req.full_url}")

@@ -203,6 +203,7 @@ pub enum TypegateOperation {
     RawPrismaUpdate,
     RawPrismaDelete,
     QueryPrismaModel,
+    Ping,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

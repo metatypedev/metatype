@@ -166,7 +166,8 @@ type TypegateOperation =
   | "raw_prisma_create"
   | "raw_prisma_update"
   | "raw_prisma_delete"
-  | "query_prisma_model";
+  | "query_prisma_model"
+  | "ping";
 
 type TypegraphOperation = "resolver" | "get_type" | "get_schema";
 
