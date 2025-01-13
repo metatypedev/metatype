@@ -114,7 +114,8 @@ export class TypeGateRuntime extends Runtime {
           return this.execRawPrismaQuery;
         case "queryPrismaModel":
           return this.queryPrismaModel;
-
+        case "ping":
+            return (_) => true;
         default:
           if (name != null) {
             throw new Error(`materializer '${name}' not implemented`);

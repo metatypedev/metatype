@@ -654,6 +654,7 @@ impl crate::wit::runtimes::Guest for crate::Lib {
             WitOp::RawPrismaUpdate => (WitEffect::Update(false), Op::RawPrismaQuery),
             WitOp::RawPrismaDelete => (WitEffect::Delete(true), Op::RawPrismaQuery),
             WitOp::QueryPrismaModel => (WitEffect::Read, Op::QueryPrismaModel),
+            WitOp::Ping => (WitEffect::Read, Op::Ping),
         };
 
         Ok(Store::register_materializer(Materializer::typegate(
