@@ -195,6 +195,27 @@ export class ArtifactStore implements AsyncDisposable {
     return this.#resolveLocalPath(meta, parentDirName);
   }
 
+  async getInlineArtifact(
+    tgName: string,
+    code: string,
+    ext: string,
+    transform = (code: string) => code,
+  ) {
+    const hash = await sha256(code);
+    const path = resolve(
+      this.persistence.dirs.cache,
+      "inline",
+      tgName,
+      hash + ext,
+    );
+    if (await exists(path)) {
+      return path;
+    }
+    await Deno.mkdir(dirname(path), { recursive: true });
+    await Deno.writeTextFile(path, transform(code));
+    return path;
+  }
+
   prepareUpload(meta: ArtifactMeta) {
     return this.uploadEndpoints.prepareUpload(meta, this.persistence);
   }

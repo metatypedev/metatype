@@ -42,6 +42,7 @@ Deno.test("test sync config", async (t) => {
     Deno.env.set("SYNC_S3_BUCKET", "bucket");
 
     assertEquals(getSyncConfig(), {
+      forceRemove: false,
       redis: {
         hostname: "localhost",
         port: "6379",
