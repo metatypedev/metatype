@@ -12,14 +12,14 @@ use super::{Cardinality, TypeGen};
 
 pub struct OutType {
     model_id: TypeId,
-    skip_rel: Vec<String>, // list of relationships to skip to avoid infinite recursion
+    skip_rel: std::collections::BTreeSet<String>, // list of relationships to skip to avoid infinite recursion
 }
 
 impl OutType {
     pub fn new(model_id: TypeId) -> Self {
         Self {
             model_id,
-            skip_rel: vec![],
+            skip_rel: Default::default(),
         }
     }
 }
@@ -45,7 +45,7 @@ impl TypeGen for OutType {
                     }
 
                     let mut skip_rel = self.skip_rel.clone();
-                    skip_rel.push(rel_name.clone());
+                    skip_rel.insert(rel_name.clone());
 
                     let out_type = context.generate(&OutType {
                         model_id: prop.model_type.type_id,
@@ -78,7 +78,14 @@ impl TypeGen for OutType {
         let suffix = if self.skip_rel.is_empty() {
             String::new()
         } else {
-            format!("_excluding_{}", self.skip_rel.join("_and_"))
+            format!(
+                "_excluding_{}",
+                self.skip_rel
+                    .iter()
+                    .map(|owned| &owned[..])
+                    .collect::<Vec<_>>()
+                    .join("_and_")
+            )
         };
         Ok(format!("{model_name}_output{suffix}"))
     }

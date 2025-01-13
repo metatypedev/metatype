@@ -2,7 +2,7 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct #202
+root: struct #189
 ├─ [data]: struct 'User_update_input' #161
 │  ├─ [id]: optional #99
 │  │  └─ item: union #98
@@ -285,89 +285,44 @@ root: struct #202
 │                             ├─ [id]: optional #104
 │                             │  └─ item: integer #88
 │                             └─ [title]: string #89
-└─ [where]: struct 'User_query_where_unique_input' #201
-   ├─ [AND]: optional #198
-   │  └─ item: list #197
-   │     └─ item: &User_query_where_unique_input #196
-   ├─ [NOT]: optional #199
-   │  └─ item: &User_query_where_unique_input #196
-   ├─ [OR]: optional #198
-   │  └─ item: list #197
-   │     └─ item: &User_query_where_unique_input #196
+└─ [where]: struct 'User_query_where_unique_input' #188
+   ├─ [AND]: optional #185
+   │  └─ item: list #184
+   │     └─ item: &User_query_where_unique_input #183
+   ├─ [NOT]: optional #186
+   │  └─ item: &User_query_where_unique_input #183
+   ├─ [OR]: optional #185
+   │  └─ item: list #184
+   │     └─ item: &User_query_where_unique_input #183
    ├─ [id]: optional #164
    │  └─ item: &_prisma_integer_filter_ex #52
    ├─ [name]: optional #165
    │  └─ item: &_prisma_string_filter_ex #30
-   └─ [posts]: optional #193
-      └─ item: union #192
-         ├─ variant_0: struct #187
-         │  └─ [every]: optional #186
-         │     └─ item: struct 'Post_where_excluding_User' #185
-         │        ├─ [author]: optional #183
-         │        │  └─ item: struct 'User_where_excluding_Post_and_User' #182
-         │        │     ├─ [id]: optional #170
-         │        │     │  └─ item: &_prisma_integer_filter_ex #52
-         │        │     ├─ [name]: optional #171
-         │        │     │  └─ item: &_prisma_string_filter_ex #30
-         │        │     └─ [posts]: optional #180
-         │        │        └─ item: union #179
-         │        │           ├─ variant_0: struct #174
-         │        │           │  └─ [every]: optional #173
-         │        │           │     └─ item: &Post_where_excluding_User #172
-         │        │           ├─ variant_1: struct #176
-         │        │           │  └─ [some]: optional #175
-         │        │           │     └─ item: &Post_where_excluding_User #172
-         │        │           └─ variant_2: struct #178
-         │        │              └─ [none]: optional #177
-         │        │                 └─ item: &Post_where_excluding_User #172
+   └─ [posts]: optional #180
+      └─ item: union #179
+         ├─ variant_0: struct #174
+         │  └─ [every]: optional #173
+         │     └─ item: struct 'Post_where_excluding_User' #172
+         │        ├─ [author]: optional #170
+         │        │  └─ item: &User_where #169
          │        ├─ [id]: optional #167
          │        │  └─ item: &_prisma_integer_filter_ex #52
          │        └─ [title]: optional #168
          │           └─ item: &_prisma_string_filter_ex #30
-         ├─ variant_1: struct #189
-         │  └─ [some]: optional #188
-         │     └─ item: struct 'Post_where_excluding_User' #185
-         │        ├─ [author]: optional #183
-         │        │  └─ item: struct 'User_where_excluding_Post_and_User' #182
-         │        │     ├─ [id]: optional #170
-         │        │     │  └─ item: &_prisma_integer_filter_ex #52
-         │        │     ├─ [name]: optional #171
-         │        │     │  └─ item: &_prisma_string_filter_ex #30
-         │        │     └─ [posts]: optional #180
-         │        │        └─ item: union #179
-         │        │           ├─ variant_0: struct #174
-         │        │           │  └─ [every]: optional #173
-         │        │           │     └─ item: &Post_where_excluding_User #172
-         │        │           ├─ variant_1: struct #176
-         │        │           │  └─ [some]: optional #175
-         │        │           │     └─ item: &Post_where_excluding_User #172
-         │        │           └─ variant_2: struct #178
-         │        │              └─ [none]: optional #177
-         │        │                 └─ item: &Post_where_excluding_User #172
+         ├─ variant_1: struct #176
+         │  └─ [some]: optional #175
+         │     └─ item: struct 'Post_where_excluding_User' #172
+         │        ├─ [author]: optional #170
+         │        │  └─ item: &User_where #169
          │        ├─ [id]: optional #167
          │        │  └─ item: &_prisma_integer_filter_ex #52
          │        └─ [title]: optional #168
          │           └─ item: &_prisma_string_filter_ex #30
-         └─ variant_2: struct #191
-            └─ [none]: optional #190
-               └─ item: struct 'Post_where_excluding_User' #185
-                  ├─ [author]: optional #183
-                  │  └─ item: struct 'User_where_excluding_Post_and_User' #182
-                  │     ├─ [id]: optional #170
-                  │     │  └─ item: &_prisma_integer_filter_ex #52
-                  │     ├─ [name]: optional #171
-                  │     │  └─ item: &_prisma_string_filter_ex #30
-                  │     └─ [posts]: optional #180
-                  │        └─ item: union #179
-                  │           ├─ variant_0: struct #174
-                  │           │  └─ [every]: optional #173
-                  │           │     └─ item: &Post_where_excluding_User #172
-                  │           ├─ variant_1: struct #176
-                  │           │  └─ [some]: optional #175
-                  │           │     └─ item: &Post_where_excluding_User #172
-                  │           └─ variant_2: struct #178
-                  │              └─ [none]: optional #177
-                  │                 └─ item: &Post_where_excluding_User #172
+         └─ variant_2: struct #178
+            └─ [none]: optional #177
+               └─ item: struct 'Post_where_excluding_User' #172
+                  ├─ [author]: optional #170
+                  │  └─ item: &User_where #169
                   ├─ [id]: optional #167
                   │  └─ item: &_prisma_integer_filter_ex #52
                   └─ [title]: optional #168
