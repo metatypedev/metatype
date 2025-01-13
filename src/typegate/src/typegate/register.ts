@@ -11,7 +11,6 @@ import {
 } from "../typegraph/versions.ts";
 import { typegraphIdSchema, type TypegraphStore } from "../sync/typegraph.ts";
 import { RedisReplicatedMap } from "../sync/replicated_map.ts";
-import { setNamespaces } from "../transports/graphql/typegraph.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -61,15 +60,8 @@ export class ReplicatedRegister extends Register {
             typegraphId,
           );
 
-          // temparary hack
-          // FIXME why are namespaces not set??
-          if (tg.meta.namespaces == null) {
-            setNamespaces(tg);
-          }
-
           // typegraph is updated while being pushed, this is only for initial load
-          const hasUpgrade = (initialLoad && isTypegraphUpToDate(tg)) || true;
-          console.log({ hasUpgrade });
+          const hasUpgrade = initialLoad && isTypegraphUpToDate(tg);
 
           const engine = await typegate.initQueryEngine(
             hasUpgrade ? upgradeTypegraph(tg) : tg,
@@ -104,7 +96,6 @@ export class ReplicatedRegister extends Register {
   }
 
   async add(engine: QueryEngine): Promise<void> {
-    console.debug("meta", engine.tg.tg.meta);
     if (SystemTypegraph.check(engine.name)) {
       // no need for a sync
       this.replicatedMap.memory.set(engine.name, engine);

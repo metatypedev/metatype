@@ -145,12 +145,11 @@ export class Typegate implements AsyncDisposable {
       const register = await ReplicatedRegister.init(
         typegate,
         syncConfig.redis,
-        typegraphStore
+        typegraphStore,
       );
       typegate.disposables.use(register);
 
       (typegate as { register: Register }).register = register;
-
 
       if (config.sync?.forceRemove) {
         logger.warn("Force removal at boot enabled");
@@ -382,7 +381,6 @@ export class Typegate implements AsyncDisposable {
     );
 
     logger.info(`Registering engine '${name}'`);
-    logger.info("registering {}", this.register.constructor.name);
     await this.register.add(engine);
 
     const newArtifacts = new Set(
@@ -413,7 +411,11 @@ export class Typegate implements AsyncDisposable {
     await this.artifactStore.runArtifactGC();
   }
 
-  async forceRemove(name: string, payload: string, typegraphStore: TypegraphStore) {
+  async forceRemove(
+    name: string,
+    payload: string,
+    typegraphStore: TypegraphStore,
+  ) {
     logger.warn(`Dropping "${name}": started`);
     const typegraphId = typegraphIdSchema.parse(JSON.parse(payload));
     const [tg] = await typegraphStore.download(
