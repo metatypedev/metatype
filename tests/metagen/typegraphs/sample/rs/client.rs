@@ -494,4 +494,3 @@ impl QueryGraph {
         }
     }
 }
-

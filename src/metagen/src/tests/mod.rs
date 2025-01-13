@@ -7,6 +7,7 @@ use crate::{interlude::*, *};
 
 mod fixtures;
 pub use fixtures::*;
+use futures_concurrency::future::FutureGroup;
 use futures_lite::StreamExt as _;
 
 #[derive(Clone)]
