@@ -20,7 +20,7 @@ enum Operation {
 
 pub struct InputType {
     model_id: TypeId,
-    skip_rel: Vec<String>,
+    skip_rel: std::collections::BTreeSet<String>,
     operation: Operation,
 }
 
@@ -28,7 +28,7 @@ impl InputType {
     pub fn for_create(model_id: TypeId) -> Self {
         Self {
             model_id,
-            skip_rel: vec![],
+            skip_rel: Default::default(),
             operation: Operation::Create,
         }
     }
@@ -36,7 +36,7 @@ impl InputType {
     pub fn for_update(model_id: TypeId) -> Self {
         Self {
             model_id,
-            skip_rel: vec![],
+            skip_rel: Default::default(),
             operation: Operation::Update,
         }
     }
@@ -66,7 +66,7 @@ impl TypeGen for InputType {
                         model_id: prop.model_type.type_id,
                         skip_rel: {
                             let mut skip_rel = self.skip_rel.clone();
-                            skip_rel.push(rel_name.to_string());
+                            skip_rel.insert(rel_name.to_string());
                             skip_rel
                         },
                         operation: Operation::Create,
@@ -98,7 +98,7 @@ impl TypeGen for InputType {
                             model_id: prop.model_type.type_id,
                             skip_rel: {
                                 let mut skip_rel = self.skip_rel.clone();
-                                skip_rel.push(rel_name.to_string());
+                                skip_rel.insert(rel_name.to_string());
                                 skip_rel
                             },
                             operation: Operation::Update,
@@ -218,7 +218,14 @@ impl TypeGen for InputType {
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {
-            format!("_excluding_{}", self.skip_rel.join("_and_"))
+            format!(
+                "_excluding_{}",
+                self.skip_rel
+                    .iter()
+                    .map(|owned| &owned[..])
+                    .collect::<Vec<_>>()
+                    .join("_and_")
+            )
         };
         let op = match self.operation {
             Operation::Create => "create",

@@ -268,6 +268,7 @@ interface runtimes {
 
     record materializer-deno-predefined {
         name: string,
+        param: option<string>,
     }
 
     record materializer-deno-import {
@@ -471,6 +472,7 @@ interface runtimes {
         raw-prisma-update,
         raw-prisma-delete,
         query-prisma-model,
+        ping,
     }
 
     register-typegate-materializer: func(operation: typegate-operation) -> result<materializer-id, error>;
@@ -637,8 +639,9 @@ interface utils {
         secrets: option<list<tuple<string, string>>>,
     }
 
-    gql-deploy-query: func(params: query-deploy-params) -> result<string, error>;
-    gql-remove-query: func(tg-name: list<string>) -> result<string, error>;
+    gql-deploy-query: func(params: query-deploy-params) -> string;
+    gql-remove-query: func(tg-name: list<string>) -> string;
+    gql-ping-query: func() -> string;
 
     record fdk-config {
         workspace-path: string,

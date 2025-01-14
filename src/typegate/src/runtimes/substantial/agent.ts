@@ -10,14 +10,15 @@ import {
 } from "../../../engine/runtime.js";
 import { getLoggerByAddress, Logger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
+import { getTaskNameFromId } from "../patterns/worker_manager/mod.ts";
+import { EventHandler } from "../patterns/worker_manager/types.ts";
 import {
   appendIfOngoing,
-  Interrupt,
-  Result,
-  WorkerData,
-  WorkflowResult,
+  InterruptEvent,
+  WorkflowCompletionEvent,
+  WorkflowEvent,
 } from "./types.ts";
-import { RunId, WorkerManager } from "./workflow_worker_manager.ts";
+import { WorkerManager } from "./workflow_worker_manager.ts";
 
 export interface StdKwargs {
   taskContext: TaskContext;
@@ -45,7 +46,7 @@ export class Agent {
   constructor(
     private backend: Backend,
     private queue: string,
-    private config: AgentConfig
+    private config: AgentConfig,
   ) {
     this.logger = getLoggerByAddress(import.meta, "substantial");
   }
@@ -64,7 +65,7 @@ export class Agent {
       });
     } catch (err) {
       this.logger.warn(
-        `Failed writing log metadata for schedule "${schedule}" (${runId}), skipping it: ${err}`
+        `Failed writing log metadata for schedule "${schedule}" (${runId}), skipping it: ${err}`,
       );
     }
   }
@@ -97,9 +98,11 @@ export class Agent {
     this.workflows = workflows;
 
     this.logger.warn(
-      `Initializing agent to handle ${workflows
-        .map(({ name }) => name)
-        .join(", ")}`
+      `Initializing agent to handle ${
+        workflows
+          .map(({ name }) => name)
+          .join(", ")
+      }`,
     );
 
     this.pollIntervalHandle = setInterval(async () => {
@@ -138,7 +141,7 @@ export class Agent {
 
     for (const workflow of this.workflows) {
       const requests = replayRequests.filter(
-        ({ run_id }) => Agent.parseWorkflowName(run_id) == workflow.name
+        ({ run_id }) => getTaskNameFromId(run_id) == workflow.name,
       );
 
       while (requests.length > 0) {
@@ -149,7 +152,7 @@ export class Agent {
             await this.#replay(next, workflow);
           } catch (err) {
             this.logger.error(
-              `Replay failed for ${workflow.name} => ${JSON.stringify(next)}`
+              `Replay failed for ${workflow.name} => ${JSON.stringify(next)}`,
             );
             this.logger.error(err);
           } finally {
@@ -195,7 +198,7 @@ export class Agent {
     // necessarily represent the state of what is actually running on the current typegate node
     if (this.workerManager.isOngoing(next.run_id)) {
       this.logger.warn(
-        `skip triggering ${next.run_id} for the current tick as it is still ongoing`
+        `skip triggering ${next.run_id} for the current tick as it is still ongoing`,
       );
 
       return;
@@ -222,7 +225,7 @@ export class Agent {
       // This may occur if an event is sent but the underlying run already completed
       // Or does not exist.
       this.logger.warn(
-        `Run ${next.run_id} has already stopped, closing schedule`
+        `Run ${next.run_id} has already stopped, closing schedule`,
       );
       await Meta.substantial.storeCloseSchedule(schedDef);
       return;
@@ -242,9 +245,11 @@ export class Agent {
       // A consequence of the above, a workflow is always triggered by gql { start(..) }
       // This can also occur if an event is sent from gql under a runId that is not valid (e.g. due to typo)
       this.logger.warn(
-        `First item in the operation list is not a Start, got "${JSON.stringify(
-          first
-        )}" instead. Closing the underlying schedule.`
+        `First item in the operation list is not a Start, got "${
+          JSON.stringify(
+            first,
+          )
+        }" instead. Closing the underlying schedule.`,
       );
 
       await Meta.substantial.storeCloseSchedule(schedDef);
@@ -259,12 +264,12 @@ export class Agent {
         workflow.path,
         run,
         next.schedule_date,
-        taskContext
+        taskContext,
       );
 
       this.workerManager.listen(
         next.run_id,
-        this.#eventResultHandlerFor(workflow.name, next.run_id)
+        this.#eventResultHandlerFor(workflow.name, next.run_id),
       );
     } catch (err) {
       throw err;
@@ -281,73 +286,52 @@ export class Agent {
     }
   }
 
-  #eventResultHandlerFor(workflowName: string, runId: string) {
-    return async (result: Result<unknown>) => {
-      if (result.error) {
-        // All Worker/Runner non-user issue should fall here
-        // Note: Should never throw (typegate will panic), this will run in a worker
-        this.logger.error(
-          `result error for "${runId}": ${JSON.stringify(result.payload)}`
-        );
-        return;
-      }
-
-      const answer = result.payload as WorkerData;
-      this.logger.info(
-        `"${runId}" answered: type ${JSON.stringify(answer.type)}`
-      );
-
+  #eventResultHandlerFor(
+    workflowName: string,
+    runId: string,
+  ): EventHandler<WorkflowEvent> {
+    return async (e) => {
       const startedAt = this.workerManager.getInitialTimeStartedAt(runId);
 
-      switch (answer.type) {
-        case "START": {
-          const ret = answer.data as WorkflowResult;
-          const interrupt = Interrupt.getTypeOf(ret.exception);
-          switch (interrupt) {
-            case "SAVE_RETRY":
-            case "SLEEP":
-            case "WAIT_ENSURE_VALUE":
-            case "WAIT_HANDLE_EVENT":
-            case "WAIT_RECEIVE_EVENT": {
-              await this.#workflowHandleInterrupts(workflowName, runId, ret);
-              break;
-            }
-            case null: {
-              await this.#workflowHandleGracefullCompletion(
-                startedAt,
-                workflowName,
-                runId,
-                ret
-              );
-              break;
-            }
-            default:
-              throw new Error(`Unknown interrupt "${interrupt}"`);
-          }
-          break;
-        }
-        default:
-          this.logger.error(
-            `Fatal: invalid type ${
-              answer.type
-            } sent by "${runId}": ${JSON.stringify(answer.data)}`
+      switch (e.type) {
+        case "SUCCESS":
+        case "FAIL":
+          await this.#workflowHandleGracefullCompletion(
+            startedAt,
+            workflowName,
+            runId,
+            e,
           );
+          break;
+        case "ERROR":
+          this.logger.error(
+            `Result error for "${runId}": ${JSON.stringify(e.error)}`,
+          );
+          return;
+        case "INTERRUPT":
+          // TODO unknown interrupt
+          await this.#workflowHandleInterrupts(workflowName, runId, e);
+          break;
       }
+
+      // this.logger.info(
+      //   `"${runId}" answered: type ${JSON.stringify(answer.type)}`,
+      // );
     };
   }
 
   async #workflowHandleInterrupts(
     workflowName: string,
     runId: string,
-    { result, schedule, run }: WorkflowResult
+    { interrupt, schedule, run }: InterruptEvent,
   ) {
     this.workerManager.destroyWorker(workflowName, runId); // !
 
-    this.logger.debug(`Interrupt "${workflowName}": ${result}"`);
+    this.logger.debug(`Interrupt "${workflowName}": ${interrupt}"`);
 
     // TODO: make all of these transactional
 
-    this.logger.info(`Persist records for "${workflowName}": ${result}"`);
+    this.logger.info(`Persist records for "${workflowName}": ${interrupt}"`);
     const _run = await Meta.substantial.storePersistRun({
       backend: this.backend,
       run,
@@ -388,38 +372,41 @@ export class Agent {
     startedAt: Date,
     workflowName: string,
     runId: string,
-    { result, kind, schedule, run }: WorkflowResult
+    event: WorkflowCompletionEvent,
   ) {
     this.workerManager.destroyWorker(workflowName, runId);
+    console.log({ event });
+
+    const result = event.type == "SUCCESS" ? event.result : event.error;
 
     this.logger.info(
-      `gracefull completion of "${runId}" (${kind}): ${JSON.stringify(
-        result
-      )} started at "${startedAt}"`
+      `gracefull completion of "${runId}" (${event.type}): ${
+        JSON.stringify(result)
+      } started at "${startedAt}"`,
     );
 
     this.logger.info(`Append Stop ${runId}`);
-    const rustResult = kind == "FAIL" ? "Err" : "Ok";
+    const rustResult = event.type == "FAIL" ? "Err" : "Ok";
 
     // Note: run is a one-time value, thus can be mutated
 
-    appendIfOngoing(run, {
+    appendIfOngoing(event.run, {
       at: new Date().toJSON(),
       event: {
         type: "Stop",
         result: {
-          [rustResult]: result ?? null,
+          [rustResult]: result,
         } as unknown,
       },
     });
 
     this.logger.info(
-      `Persist finalized records for "${workflowName}": ${result}" and closing everything..`
+      `Persist finalized records for "${workflowName}": ${result}" and closing everything..`,
     );
 
     const _run = await Meta.substantial.storePersistRun({
       backend: this.backend,
-      run,
+      run: event.run,
     });
 
     // console.log("Persisted", run);
@@ -428,7 +415,7 @@ export class Agent {
       backend: this.backend,
       queue: this.queue,
       run_id: runId,
-      schedule,
+      schedule: event.schedule,
     });
 
     await Meta.substantial.agentRemoveLease({
@@ -436,21 +423,6 @@ export class Agent {
       run_id: runId,
       lease_seconds: this.config.leaseLifespanSec,
     });
-  }
-
-  static nextId(name: string): RunId {
-    const uuid = crypto.randomUUID();
-    return `${name}_::_${uuid}`;
-  }
-
-  static parseWorkflowName(runId: string) {
-    const [name, uuid] = runId.split("_::_");
-    if (!name && !uuid) {
-      // Impossible since it must be produced from nextId upon a Start event
-      throw new Error(`Fatal: ${runId} does not respect the convention`);
-    }
-
-    return name;
   }
 }
 
@@ -464,13 +436,15 @@ function checkIfRunHasStopped(run: Run) {
     if (op.event.type == "Start") {
       if (life >= 1) {
         logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type)
-          )}`
+          `bad logs: ${
+            JSON.stringify(
+              run.operations.map(({ event }) => event.type),
+            )
+          }`,
         );
 
         throw new Error(
-          `"${run.run_id}" has potentially corrupted logs, another run occured yet previous has not stopped`
+          `"${run.run_id}" has potentially corrupted logs, another run occured yet previous has not stopped`,
         );
       }
 
@@ -479,13 +453,15 @@ function checkIfRunHasStopped(run: Run) {
     } else if (op.event.type == "Stop") {
       if (life <= 0) {
         logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type)
-          )}`
+          `bad logs: ${
+            JSON.stringify(
+              run.operations.map(({ event }) => event.type),
+            )
+          }`,
         );
 
         throw new Error(
-          `"${run.run_id}" has potentitally corrupted logs, attempted stopping already closed run, or run with a missing Start`
+          `"${run.run_id}" has potentitally corrupted logs, attempted stopping already closed run, or run with a missing Start`,
         );
       }
 

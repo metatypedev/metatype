@@ -114,8 +114,8 @@ impl crate::wit::utils::Guest for crate::Lib {
             .build(named_provider(&service_name)?)
     }
 
-    fn gql_deploy_query(params: QueryDeployParams) -> Result<String> {
-        let query = r"
+    fn gql_deploy_query(params: QueryDeployParams) -> String {
+        let query = "
             mutation InsertTypegraph($tg: String!, $secrets: String!, $targetVersion: String!) {
                 addTypegraph(fromString: $tg, secrets: $secrets, targetVersion: $targetVersion) {
                     name
@@ -128,8 +128,8 @@ impl crate::wit::utils::Guest for crate::Lib {
 
         let mut secrets_map = IndexMap::new();
         if let Some(secrets) = params.secrets {
-            for item in secrets {
-                secrets_map.insert(item.0, item.1);
+            for (secret, value) in secrets {
+                secrets_map.insert(secret, value);
             }
         }
 
@@ -143,11 +143,11 @@ impl crate::wit::utils::Guest for crate::Lib {
             }),
         });
 
-        Ok(req_body.to_string())
+        req_body.to_string()
     }
 
-    fn gql_remove_query(names: Vec<String>) -> Result<String> {
-        let query = r"
+    fn gql_remove_query(names: Vec<String>) -> String {
+        let query = "
             mutation($names: [String!]!) {
                 removeTypegraphs(names: $names)
             }
@@ -156,9 +156,20 @@ impl crate::wit::utils::Guest for crate::Lib {
             "query": query,
             "variables": json!({
                 "names":  names,
-              }),
+            }),
         });
-        Ok(req_body.to_string())
+
+        req_body.to_string()
+    }
+
+    fn gql_ping_query() -> String {
+        let query = "query { ping }";
+        let req_body = json!({
+            "query": query,
+            "variables": json!({}),
+        });
+
+        req_body.to_string()
     }
 
     fn metagen_exec(config: FdkConfig) -> Result<Vec<FdkOutput>> {

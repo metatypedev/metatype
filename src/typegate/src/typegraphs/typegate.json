@@ -15,7 +15,8 @@
         "execRawPrismaCreate": 64,
         "execRawPrismaUpdate": 65,
         "execRawPrismaDelete": 66,
-        "queryPrismaModel": 67
+        "queryPrismaModel": 67,
+        "ping": 71
       },
       "id": [],
       "required": [
@@ -30,7 +31,8 @@
         "execRawPrismaCreate",
         "execRawPrismaUpdate",
         "execRawPrismaDelete",
-        "queryPrismaModel"
+        "queryPrismaModel",
+        "ping"
       ],
       "policies": {
         "typegraphs": [
@@ -68,6 +70,9 @@
         ],
         "queryPrismaModel": [
           0
+        ],
+        "ping": [
+          0
         ]
       }
     },
@@ -83,7 +88,7 @@
     },
     {
       "type": "object",
-      "title": "root_typegraphs_fn_input",
+      "title": "struct_542d7",
       "properties": {},
       "id": [],
       "required": []
@@ -109,7 +114,7 @@
     },
     {
       "type": "string",
-      "title": "Typegraph_name_string"
+      "title": "string_5d176"
     },
     {
       "type": "string",
@@ -198,7 +203,7 @@
     },
     {
       "type": "string",
-      "title": "root_addTypegraph_fn_input_fromString_string_json",
+      "title": "string_json_df54e",
       "format": "json"
     },
     {
@@ -268,7 +273,7 @@
     },
     {
       "type": "optional",
-      "title": "root_addTypegraph_fn_output_failure_root_addTypegraph_fn_input_fromString_string_json_optional",
+      "title": "root_addTypegraph_fn_output_failure_string_json_df54e_optional",
       "item": 14,
       "default_value": null
     },
@@ -296,12 +301,12 @@
     },
     {
       "type": "list",
-      "title": "root_removeTypegraphs_fn_input_names_Typegraph_name_string_list",
+      "title": "string_5d176_list_691ee",
       "items": 5
     },
     {
       "type": "boolean",
-      "title": "root_removeTypegraphs_fn_output"
+      "title": "boolean_a56cd"
     },
     {
       "type": "function",
@@ -333,7 +338,7 @@
     },
     {
       "type": "list",
-      "title": "root_argInfoByPath_fn_input_argPaths_root_removeTypegraphs_fn_input_names_Typegraph_name_string_list_list",
+      "title": "root_argInfoByPath_fn_input_argPaths_string_5d176_list_691ee_list",
       "items": 24
     },
     {
@@ -369,18 +374,18 @@
     },
     {
       "type": "optional",
-      "title": "TypeInfo_enum_TypeInfo_enum_root_addTypegraph_fn_input_fromString_string_json_list_optional",
+      "title": "TypeInfo_enum_TypeInfo_enum_string_json_df54e_list_optional",
       "item": 32,
       "default_value": null
     },
     {
       "type": "list",
-      "title": "TypeInfo_enum_root_addTypegraph_fn_input_fromString_string_json_list",
+      "title": "TypeInfo_enum_string_json_df54e_list",
       "items": 14
     },
     {
       "type": "optional",
-      "title": "TypeInfo_format_Typegraph_name_string_optional",
+      "title": "TypeInfo_format_string_5d176_optional",
       "item": 5,
       "default_value": null
     },
@@ -440,7 +445,7 @@
     },
     {
       "type": "object",
-      "title": "root_findAvailableOperations_fn_input",
+      "title": "struct_8f8a3",
       "properties": {
         "typegraph": 5
       },
@@ -596,7 +601,7 @@
     },
     {
       "type": "object",
-      "title": "root_execRawPrismaRead_fn_input",
+      "title": "struct_5fa3d",
       "properties": {
         "typegraph": 5,
         "runtime": 5,
@@ -777,7 +782,7 @@
     },
     {
       "type": "integer",
-      "title": "root_queryPrismaModel_fn_input_offset_integer"
+      "title": "integer_e116e"
     },
     {
       "type": "object",
@@ -794,6 +799,16 @@
         "rowCount": [],
         "data": []
       }
+    },
+    {
+      "type": "function",
+      "title": "root_ping_fn",
+      "input": 2,
+      "output": 25,
+      "runtimeConfig": null,
+      "materializer": 14,
+      "rate_weight": null,
+      "rate_calls": false
     }
   ],
   "materializers": [
@@ -807,15 +822,21 @@
       "data": {}
     },
     {
-      "name": "function",
+      "name": "predefined_function",
       "runtime": 0,
       "effect": {
         "effect": "read",
         "idempotent": true
       },
       "data": {
-        "script": "var _my_lambda = (_args, { context }) => context.username === 'admin' ? 'ALLOW' : 'DENY' ",
-        "secrets": []
+        "name": "context_check",
+        "param": {
+          "key": "username",
+          "value": {
+            "type": "value",
+            "value": "admin"
+          }
+        }
       }
     },
     {
@@ -925,6 +946,15 @@
         "idempotent": true
       },
       "data": {}
+    },
+    {
+      "name": "ping",
+      "runtime": 1,
+      "effect": {
+        "effect": "read",
+        "idempotent": true
+      },
+      "data": {}
     }
   ],
   "runtimes": [
@@ -942,7 +972,7 @@
   ],
   "policies": [
     {
-      "name": "admin_only",
+      "name": "__ctx_username_admin",
       "materializer": 1
     }
   ],

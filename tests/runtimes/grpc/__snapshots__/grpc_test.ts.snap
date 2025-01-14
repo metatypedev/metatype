@@ -44,7 +44,7 @@ snapshot[`Typegraph using grpc 1`] = `
       },
       {
         "type": "optional",
-        "title": "root_greet_fn_input_name_root_greet_fn_input_name_string_optional",
+        "title": "root_greet_fn_input_name_string_optional_b02c2",
         "item": 4,
         "default_value": null
       },
@@ -180,7 +180,7 @@ snapshot[`Typegraph using grpc 2`] = `
       },
       {
         "type": "optional",
-        "title": "root_greet_fn_input_name_root_greet_fn_input_name_string_optional",
+        "title": "root_greet_fn_input_name_string_optional_b02c2",
         "item": 4,
         "default_value": null
       },

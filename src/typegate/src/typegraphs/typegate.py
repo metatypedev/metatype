@@ -1,12 +1,11 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import Graph, fx, t, typegraph
+from typegraph import Graph, fx, t, typegraph, Policy
 from typegraph.gen.exports.runtimes import TypegateOperation
 from typegraph.gen.types import Err
 from typegraph.graph.params import Auth, Cors, Rate
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.deno import DenoRuntime
 from typegraph.wit import runtimes, store
 
 ### Prisma query (Json protocol):
@@ -95,11 +94,7 @@ prisma_query = t.either([prisma_query_single, prisma_query_batch], name="PrismaQ
     ),
 )
 def typegate(g: Graph):
-    deno = DenoRuntime()
-    admin_only = deno.policy(
-        "admin_only",
-        code="(_args, { context }) => context.username === 'admin' ? 'ALLOW' : 'DENY' ",
-    )
+    admin_only = Policy.context("username", "admin")
 
     g.auth(Auth.basic(["admin"]))
 
@@ -150,6 +145,11 @@ def typegate(g: Graph):
     if isinstance(arg_info_by_path_id, Err):
         raise Exception(arg_info_by_path_id.value)
     arg_info_by_path_mat = Materializer(arg_info_by_path_id.value, effect=fx.read())
+
+    ping_mat_id = runtimes.register_typegate_materializer(store, TypegateOperation.PING)
+    if isinstance(ping_mat_id, Err):
+        raise Exception(ping_mat_id.value)
+    ping_mat = Materializer(ping_mat_id.value, effect=fx.read())
 
     serialized = t.gen(t.string(), serialized_typegraph_mat)
 
@@ -424,4 +424,9 @@ def typegate(g: Graph):
             raw_prisma_delete_mat,
         ),
         queryPrismaModel=query_prisma_model,
+        ping=t.func(
+            t.struct({}),
+            t.boolean(),  # always True
+            ping_mat,
+        ),
     )

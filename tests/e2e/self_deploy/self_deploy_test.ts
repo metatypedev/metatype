@@ -21,7 +21,7 @@ Meta.test(
     const { serialized, response: gateResponseAdd } = await tgDeploy(tg, {
       typegate: { url: gate, auth },
       secrets: {},
-      typegraphPath: path.join(cwdDir, "self_deploy.mjs"),
+      typegraphPath: path.join(cwdDir, "self_deploy.ts"),
       migrationsDir: `${cwdDir}/prisma-migrations`,
       defaultMigrationAction: {
         apply: true,
