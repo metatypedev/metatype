@@ -177,7 +177,7 @@ export async function compensation(ctx: Context) {
     debitAccount(2);
     risky_transaction();
   }, {
-    compensateWith: () => creditAccount(4),
+    compensateWith: () => creditAccount(2),
   });
 
   await ctx.save(() => debitAccount(100), {

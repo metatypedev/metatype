@@ -503,7 +503,7 @@ class Utils {
   constructor(private ctx: Context) {}
 
   async now() {
-    return await this.ctx.save(() => Date.now());
+    return await this.ctx.save(() => new Date());
   }
 
   async random(a: number, b: number) {

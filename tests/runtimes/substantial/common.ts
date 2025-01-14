@@ -172,6 +172,7 @@ export function basicTestTemplate(
           }
         `
           .withVars({ account_balance })
+          .expectErrorContains("Transaction Failed")
           .on(e);
       });
     },
