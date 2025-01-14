@@ -1986,7 +1986,7 @@
                 }
               ]
             },
-            "bciqjlkji6dp2icuvfv5lg6fk5pkfbl5diawrc6tw5fy325ifejnkxki": {
+            "bciqoz54u3qtrflsfe3amc2pcmlt6xqnemagw3egggrtlc76tyy6hkua": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -2017,6 +2017,11 @@
                   "ty": "posix.envVar",
                   "key": "V8_FORCE_DEBUG",
                   "val": "true"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_JOBS",
+                  "val": "8"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -2066,7 +2071,7 @@
             "_ecma": "bciqdjeti6ggn2dvpporxwb2phkde5ebqydekhmnwsadglmaulgfvkpq",
             "_rust": "bciqo2beyk2zq4cqxjmaidvdvyqadpxjj7cg3s2gsmffvbu3dsorujpq",
             "ci": "bciqgfkhptprs54tg3wl45acxctzc2lu4v2xlh3slk6w4m5g5ctysv4a",
-            "dev": "bciqjlkji6dp2icuvfv5lg6fk5pkfbl5diawrc6tw5fy325ifejnkxki",
+            "dev": "bciqoz54u3qtrflsfe3amc2pcmlt6xqnemagw3egggrtlc76tyy6hkua",
             "oci": "bciqauxlnabn27drh7ggpn5ykcbei24vpq53dvuiq3gwt2hzyvr7bwaq"
           }
         }

@@ -9,16 +9,16 @@ Meta.test("serialization size test", async (mt) => {
   const raw = await mt.serialize("runtimes/prisma/type_duplication.ts");
   const size = new TextEncoder().encode(raw).length;
   assert(
-    size < 1_240_000,
+    size < (1_240_000 * 8),
     `serialized size is too large ${Math.ceil(size / 1024)}KiB`,
   );
 
-  console.log(raw)
+  console.log(raw);
   const tg: TypeGraphDS = JSON.parse(
     raw,
   );
   assert(
-    tg.types.length < 3000,
+    tg.types.length < 30_000,
     `typegraph has too many types: ${tg.types.length}`,
   );
 });

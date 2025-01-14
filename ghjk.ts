@@ -114,6 +114,8 @@ env("dev")
   // debug v8 to fix MET-633: segementation fault bug with custom deno rt
   // doesn't appear in CI so only dev envs get it
   .var("V8_FORCE_DEBUG", "true")
+  // limit to 8 cores to avoid exhausting memory
+  .var("RUST_JOBS", "8")
   .install(
     ports.act(),
     ports.cargobi({ crateName: "whiz", locked: true }),

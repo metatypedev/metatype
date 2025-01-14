@@ -15,7 +15,8 @@
         "execRawPrismaCreate": 64,
         "execRawPrismaUpdate": 65,
         "execRawPrismaDelete": 66,
-        "queryPrismaModel": 67
+        "queryPrismaModel": 67,
+        "ping": 71
       },
       "id": [],
       "required": [
@@ -30,7 +31,8 @@
         "execRawPrismaCreate",
         "execRawPrismaUpdate",
         "execRawPrismaDelete",
-        "queryPrismaModel"
+        "queryPrismaModel",
+        "ping"
       ],
       "policies": {
         "typegraphs": [
@@ -67,6 +69,9 @@
           0
         ],
         "queryPrismaModel": [
+          0
+        ],
+        "ping": [
           0
         ]
       }
@@ -794,6 +799,16 @@
         "rowCount": [],
         "data": []
       }
+    },
+    {
+      "type": "function",
+      "title": "root_ping_fn",
+      "input": 2,
+      "output": 25,
+      "runtimeConfig": null,
+      "materializer": 14,
+      "rate_weight": null,
+      "rate_calls": false
     }
   ],
   "materializers": [
@@ -925,6 +940,15 @@
     },
     {
       "name": "queryPrismaModel",
+      "runtime": 1,
+      "effect": {
+        "effect": "read",
+        "idempotent": true
+      },
+      "data": {}
+    },
+    {
+      "name": "ping",
       "runtime": 1,
       "effect": {
         "effect": "read",

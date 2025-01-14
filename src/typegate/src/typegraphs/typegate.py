@@ -146,6 +146,11 @@ def typegate(g: Graph):
         raise Exception(arg_info_by_path_id.value)
     arg_info_by_path_mat = Materializer(arg_info_by_path_id.value, effect=fx.read())
 
+    ping_mat_id = runtimes.register_typegate_materializer(store, TypegateOperation.PING)
+    if isinstance(ping_mat_id, Err):
+        raise Exception(ping_mat_id.value)
+    ping_mat = Materializer(ping_mat_id.value, effect=fx.read())
+
     serialized = t.gen(t.string(), serialized_typegraph_mat)
 
     typegraph = t.struct(
@@ -419,4 +424,9 @@ def typegate(g: Graph):
             raw_prisma_delete_mat,
         ),
         queryPrismaModel=query_prisma_model,
+        ping=t.func(
+            t.struct({}),
+            t.boolean(),  # always True
+            ping_mat,
+        ),
     )
