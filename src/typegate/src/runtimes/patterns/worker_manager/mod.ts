@@ -25,8 +25,10 @@ export type PoolConfig = {
 
 type DeallocateOptions = {
   destroy?: boolean;
-  // recreate workers to ensure minWorkers
-  // recreate?: boolean;
+  /// defaults to `true`
+  /// recreate workers to replace destroyed ones if `.destroy` is `true`.
+  /// Set to `false` for deinit.
+  ensureMinWorkers?: boolean;
 };
 
 export class BaseWorkerManager<
@@ -45,6 +47,10 @@ export class BaseWorkerManager<
   #idleWorkers: BaseWorker<M, E>[] = [];
   #waitQueue: Array<(worker: BaseWorker<M, E>) => void> = [];
   #nextWorkerId = 1;
+
+  get #workerCount() {
+    return this.#idleWorkers.length + this.#activeTasks.size;
+  }
 
   #workerFactory: () => BaseWorker<M, E>;
   protected constructor(
@@ -97,7 +103,6 @@ export class BaseWorkerManager<
       this.#poolConfig.maxWorkers == null ||
       this.#activeTasks.size < this.#poolConfig.maxWorkers
     ) {
-      // TODO worker id
       return Promise.resolve(this.#workerFactory());
     }
     return this.#waitForWorker();
@@ -161,7 +166,7 @@ export class BaseWorkerManager<
   deallocateWorker(
     name: string,
     taskId: TaskId,
-    { destroy = false }: DeallocateOptions = {},
+    { destroy = false, ensureMinWorkers = true }: DeallocateOptions = {},
   ) {
     const task = this.#activeTasks.get(taskId);
     if (this.#tasksByName.has(name)) {
@@ -176,26 +181,33 @@ export class BaseWorkerManager<
       this.#tasksByName.get(name)!.delete(taskId);
       // startedAt records are not deleted
 
-      if (destroy) {
-        task.worker.destroy();
-        // TODO check minWorkers
-      }
-
       const nextTask = this.#waitQueue.shift();
       if (destroy) {
         task.worker.destroy();
 
         if (nextTask) {
-          // TODO worker name
           nextTask(this.#workerFactory());
         } else {
-          // TODO check minWorkers
+          if (ensureMinWorkers) {
+            const { minWorkers } = this.#poolConfig;
+            if (minWorkers != null && this.#workerCount < minWorkers) {
+              this.#idleWorkers.push(this.#workerFactory());
+            }
+          }
         }
       } else {
         if (nextTask) {
           nextTask(task.worker);
         } else {
-          this.#idleWorkers.push(task.worker);
+          const { maxWorkers } = this.#poolConfig;
+          // how?? xD
+          // We might add "urgent" tasks in the future;
+          // in this case the worker count might exceed `maxWorkers`.
+          if (maxWorkers != null && this.#workerCount >= maxWorkers) {
+            task.worker.destroy();
+          } else {
+            this.#idleWorkers.push(task.worker);
+          }
         }
       }
 
@@ -217,7 +229,7 @@ export class BaseWorkerManager<
   }
 
   deinit() {
-    this.deallocateAllWorkers({ destroy: true });
+    this.deallocateAllWorkers({ destroy: true, ensureMinWorkers: false });
     if (this.#idleWorkers.length > 0) {
       logger.warn(
         `destroying idle workers: ${

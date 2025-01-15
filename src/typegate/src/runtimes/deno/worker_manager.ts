@@ -21,7 +21,6 @@ export class WorkerManager
   extends BaseWorkerManager<TaskSpec, DenoMessage, DenoEvent> {
   constructor(private config: WorkerManagerConfig) {
     super(
-      // TODO runtime name?
       "deno runtime",
       (taskId: TaskId) => {
         return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
