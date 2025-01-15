@@ -115,7 +115,7 @@ export class Agent {
   }
 
   stop() {
-    this.workerManager.destroyAllWorkers();
+    this.workerManager.deinit();
     if (this.pollIntervalHandle !== undefined) {
       clearInterval(this.pollIntervalHandle);
     }
@@ -325,7 +325,7 @@ export class Agent {
     runId: string,
     { interrupt, schedule, run }: InterruptEvent,
   ) {
-    this.workerManager.destroyWorker(workflowName, runId); // !
+    this.workerManager.deallocateWorker(workflowName, runId); // !
 
     this.logger.debug(`Interrupt "${workflowName}": ${interrupt}"`);
 
@@ -374,8 +374,7 @@ export class Agent {
     runId: string,
     event: WorkflowCompletionEvent,
   ) {
-    this.workerManager.destroyWorker(workflowName, runId);
-    console.log({ event });
+    this.workerManager.deallocateWorker(workflowName, runId);
 
     const result = event.type == "SUCCESS" ? event.result : event.error;
 

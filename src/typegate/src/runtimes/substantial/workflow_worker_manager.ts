@@ -22,25 +22,9 @@ export type WorkflowSpec = {
 export class WorkerManager
   extends BaseWorkerManager<WorkflowSpec, WorkflowMessage, WorkflowEvent> {
   constructor() {
-    super((taskId: TaskId) => {
+    super("substantial workflows", (taskId: TaskId) => {
       return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
     });
-  }
-
-  destroyWorker(name: string, runId: string) {
-    return super.destroyWorker(name, runId);
-  }
-
-  destroyAllWorkers() {
-    logger.warn(
-      `Destroying workers for ${
-        this
-          .getActiveTaskNames()
-          .map((w) => `"${w}"`)
-          .join(", ")
-      }`,
-    );
-    super.destroyAllWorkers();
   }
 
   isOngoing(runId: TaskId) {
@@ -85,18 +69,19 @@ export class WorkerManager
     schedule: string,
     internalTCtx: TaskContext,
   ) {
-    this.createWorker(name, runId, {
+    this.delegateTask(name, runId, {
       modulePath: workflowModPath,
-    });
-    this.sendMessage(runId, {
-      type: "START",
-      data: {
-        modulePath: workflowModPath,
-        functionName: name,
-        run: storedRun,
-        schedule,
-        internal: internalTCtx,
-      },
+    }).then(() => {
+      this.sendMessage(runId, {
+        type: "START",
+        data: {
+          modulePath: workflowModPath,
+          functionName: name,
+          run: storedRun,
+          schedule,
+          internal: internalTCtx,
+        },
+      });
     });
   }
 }

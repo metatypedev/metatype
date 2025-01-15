@@ -17,25 +17,45 @@ export abstract class BaseWorker<M extends BaseMessage, E extends BaseMessage> {
   abstract get id(): TaskId;
 }
 
+export type PoolConfig = {
+  maxWorkers?: number | null;
+  minWorkers?: number | null;
+  waitTimeoutMs?: number | null;
+};
+
+type DeallocateOptions = {
+  destroy?: boolean;
+  // recreate workers to ensure minWorkers
+  // recreate?: boolean;
+};
+
 export class BaseWorkerManager<
   T,
   M extends BaseMessage,
   E extends BaseMessage,
 > {
+  #name: string;
   #activeTasks: Map<TaskId, {
     worker: BaseWorker<M, E>;
     taskSpec: T;
   }> = new Map();
   #tasksByName: Map<string, Set<TaskId>> = new Map();
   #startedAt: Map<TaskId, Date> = new Map();
+  #poolConfig: PoolConfig;
+  #idleWorkers: BaseWorker<M, E>[] = [];
+  #waitQueue: Array<(worker: BaseWorker<M, E>) => void> = [];
+  #nextWorkerId = 1;
 
-  #workerFactory: (taskId: TaskId) => BaseWorker<M, E>;
-  protected constructor(workerFactory: (taskId: TaskId) => BaseWorker<M, E>) {
-    this.#workerFactory = workerFactory;
-  }
-
-  get workerFactory() {
-    return this.#workerFactory;
+  #workerFactory: () => BaseWorker<M, E>;
+  protected constructor(
+    name: string,
+    workerFactory: (taskId: TaskId) => BaseWorker<M, E>,
+    config: PoolConfig = {},
+  ) {
+    this.#name = name;
+    this.#workerFactory = () =>
+      workerFactory(`${this.#name} worker #${this.#nextWorkerId++}`);
+    this.#poolConfig = config;
   }
 
   protected getActiveTaskNames() {
@@ -68,20 +88,35 @@ export class BaseWorkerManager<
     return startedAt;
   }
 
-  // allocate worker?
-  protected createWorker(name: string, taskId: TaskId, taskSpec: T) {
-    const worker = this.#workerFactory(taskId);
-    // TODO inline
-    this.addWorker(name, taskId, worker, taskSpec, new Date());
+  #nextWorker() {
+    const idleWorker = this.#idleWorkers.shift();
+    if (idleWorker) {
+      return Promise.resolve(idleWorker);
+    }
+    if (
+      this.#poolConfig.maxWorkers == null ||
+      this.#activeTasks.size < this.#poolConfig.maxWorkers
+    ) {
+      // TODO worker id
+      return Promise.resolve(this.#workerFactory());
+    }
+    return this.#waitForWorker();
   }
 
-  protected addWorker(
+  #waitForWorker() {
+    // TODO timeout
+    return new Promise<BaseWorker<M, E>>((resolve) => {
+      this.#waitQueue.push(resolve);
+    });
+  }
+
+  protected async delegateTask(
     name: string,
     taskId: TaskId,
-    worker: BaseWorker<M, E>,
     taskSpec: T,
-    startedAt: Date,
-  ) {
+  ): Promise<void> {
+    const worker = await this.#nextWorker();
+
     if (!this.#tasksByName.has(name)) {
       this.#tasksByName.set(name, new Set());
     }
@@ -89,28 +124,45 @@ export class BaseWorkerManager<
     this.#tasksByName.get(name)!.add(taskId);
     this.#activeTasks.set(taskId, { worker, taskSpec });
     if (!this.#startedAt.has(taskId)) {
-      this.#startedAt.set(taskId, startedAt);
+      this.#startedAt.set(taskId, new Date());
     }
   }
 
-  protected destroyAllWorkers() {
-    for (const name of this.getActiveTaskNames()) {
-      this.destroyWorkersByName(name);
+  protected deallocateAllWorkers(options: DeallocateOptions = {}) {
+    const activeTaskNames = this.getActiveTaskNames();
+    if (activeTaskNames.length > 0) {
+      if (options.destroy) {
+        logger.warn(
+          `destroying workers for tasks ${
+            activeTaskNames.map((w) => `"${w}"`).join(", ")
+          }`,
+        );
+      }
+      for (const name of activeTaskNames) {
+        this.deallocateWorkersByName(name, options);
+      }
     }
   }
 
-  protected destroyWorkersByName(name: string) {
+  protected deallocateWorkersByName(
+    name: string,
+    options: DeallocateOptions = {},
+  ) {
     const taskIds = this.#tasksByName.get(name);
     if (taskIds) {
       for (const taskId of taskIds) {
-        this.destroyWorker(name, taskId);
+        this.deallocateWorker(name, taskId, options);
       }
       return true;
     }
     return false;
   }
 
-  protected destroyWorker(name: string, taskId: TaskId) {
+  deallocateWorker(
+    name: string,
+    taskId: TaskId,
+    { destroy = false }: DeallocateOptions = {},
+  ) {
     const task = this.#activeTasks.get(taskId);
     if (this.#tasksByName.has(name)) {
       if (!task) {
@@ -120,14 +172,37 @@ export class BaseWorkerManager<
         return false;
       }
 
-      task.worker.destroy();
       this.#activeTasks.delete(taskId);
       this.#tasksByName.get(name)!.delete(taskId);
       // startedAt records are not deleted
 
+      if (destroy) {
+        task.worker.destroy();
+        // TODO check minWorkers
+      }
+
+      const nextTask = this.#waitQueue.shift();
+      if (destroy) {
+        task.worker.destroy();
+
+        if (nextTask) {
+          // TODO worker name
+          nextTask(this.#workerFactory());
+        } else {
+          // TODO check minWorkers
+        }
+      } else {
+        if (nextTask) {
+          nextTask(task.worker);
+        } else {
+          this.#idleWorkers.push(task.worker);
+        }
+      }
+
       return true;
     }
 
+    logger.warn(`Task with name "${name}" does not exist`);
     return false;
   }
 
@@ -139,6 +214,22 @@ export class BaseWorkerManager<
     const { worker } = this.getTask(taskId);
     worker.send(msg);
     this.logMessage(taskId, msg);
+  }
+
+  deinit() {
+    this.deallocateAllWorkers({ destroy: true });
+    if (this.#idleWorkers.length > 0) {
+      logger.warn(
+        `destroying idle workers: ${
+          this.#idleWorkers.map((w) => `"${w.id}"`).join(", ")
+        }`,
+      );
+      for (const worker of this.#idleWorkers) {
+        worker.destroy();
+      }
+      this.#idleWorkers = [];
+    }
+    return Promise.resolve();
   }
 }
 

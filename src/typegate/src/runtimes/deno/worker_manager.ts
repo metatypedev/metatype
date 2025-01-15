@@ -21,13 +21,15 @@ export class WorkerManager
   extends BaseWorkerManager<TaskSpec, DenoMessage, DenoEvent> {
   constructor(private config: WorkerManagerConfig) {
     super(
+      // TODO runtime name?
+      "deno runtime",
       (taskId: TaskId) => {
         return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
       },
     );
   }
 
-  callFunction(
+  async callFunction(
     name: string,
     modulePath: string,
     relativeModulePath: string,
@@ -35,7 +37,7 @@ export class WorkerManager
     internalTCtx: TaskContext,
   ) {
     const taskId = createTaskId(`${name}@${relativeModulePath}`);
-    this.createWorker(name, taskId, {
+    await this.delegateTask(name, taskId, {
       modulePath,
       functionName: name,
     });
@@ -49,13 +51,13 @@ export class WorkerManager
 
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        this.destroyWorker(name, taskId);
+        this.deallocateWorker(name, taskId);
         reject(new Error(`${this.config.timeout_ms}ms timeout exceeded`));
       }, this.config.timeout_ms);
 
       const handler: (event: DenoEvent) => void = (event) => {
         clearTimeout(timeoutId);
-        this.destroyWorker(name, taskId);
+        this.deallocateWorker(name, taskId);
         switch (event.type) {
           case "SUCCESS":
             resolve(event.result);
