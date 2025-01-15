@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 // NOTE: https://github.com/ajv-validator/ajv-formats/issues/85
-import Ajv from "https://esm.sh/ajv@8.12.0";
-import addFormats from "https://esm.sh/ajv-formats@3.0.1";
+import Ajv from "https://esm.sh/ajv@8.12.0?pin=v135";
+import addFormats from "https://esm.sh/ajv-formats@3.0.1?pin=v135";
 
 import { parse } from "npm:yaml";
 import schema from "@local/tools/schema/metatype.json" with { type: "json" };
