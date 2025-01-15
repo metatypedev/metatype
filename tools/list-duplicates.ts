@@ -12,7 +12,7 @@
  *                  Default: 0
  */
 
-import { cyan, green, objectHash, parseArgs, red } from "./deps.ts";
+import { green, objectHash, parseArgs, red } from "./deps.ts";
 // FIXME: import from @metatype/typegate
 import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
@@ -379,8 +379,6 @@ const tgs: TypeGraphDS[] = JSON.parse(raw);
 for (const tg of tgs) {
   listDuplicatesEnhanced(tg, rootIdx);
 }
-
-console.log({ whereTypeCount, optionalTypeCount });
 
 function argToInt(arg: string | undefined, defaultValue: number): number {
   const parsed = parseInt(arg ?? `${defaultValue}`);

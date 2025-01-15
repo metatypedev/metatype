@@ -32,6 +32,7 @@ export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
           write: false,
           ffi: false,
           env: envSharedWithWorkers,
+          import: true,
         },
       },
     });

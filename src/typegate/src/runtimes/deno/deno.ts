@@ -119,7 +119,7 @@ export class DenoRuntime extends Runtime {
     const ops = new Map<number, Task>();
 
     const uuid = crypto.randomUUID();
-    const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
+    const _basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
 
     let registryCount = 0;
     for (const mat of materializers) {
@@ -248,8 +248,8 @@ export class DenoRuntime extends Runtime {
 
   delegate(
     mat: TypeMaterializer,
-    verbose: boolean,
-    pulseCount?: number,
+    _verbose: boolean,
+    _pulseCount?: number,
   ): Resolver {
     if (mat.name === "predefined_function") {
       const func = predefinedFuncs[mat.data.name as string];

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { gql, Meta } from "test-utils/mod.ts";
+import { Meta } from "test-utils/mod.ts";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, listObjects, tryDeleteBucket } from "test-utils/s3.ts";
@@ -79,8 +79,7 @@ Meta.test(
       async () => {
         const _engine = await t.engine("sync/sync.py", {
           secrets: {
-            ULTRA_SECRET:
-              "if_you_can_read_me_on_an_ERROR_there_is_a_bug",
+            ULTRA_SECRET: "if_you_can_read_me_on_an_ERROR_there_is_a_bug",
           },
         });
 
