@@ -1,12 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-// Copyright Metatype DeployCommand, licensed under the Mozilla Public License Version 2.0.
-// SPDX-License-Identifier: MPL-2.0
-
 use super::action::{
-    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, SharedActionConfig,
-    TaskAction, TaskActionGenerator, TaskFilter,
+    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, RpcResponse,
+    SharedActionConfig, TaskAction, TaskActionGenerator, TaskFilter,
 };
 use super::command::build_task_command;
 use super::deploy::MigrationAction;
@@ -116,7 +113,6 @@ impl TaskAction for ListAction {
     type Options = ListOptions;
     type Generator = ListActionGenerator;
     type RpcRequest = serde_json::Value;
-    type RpcCommand = serde_json::Value;
 
     async fn get_command(&self) -> Result<Command> {
         build_task_command(
@@ -181,14 +177,10 @@ impl TaskAction for ListAction {
         &self.task_ref
     }
 
-    async fn handle_rpc_request(&self, _call: serde_json::Value) -> Result<serde_json::Value> {
-        Err(ferr!("rpc request not supported on list task"))
-    }
-
-    async fn handle_rpc_command(
+    async fn handle_rpc_request(
         &self,
-        _call: Self::RpcCommand,
-    ) -> Result<Self::SuccessData, Self::FailureData> {
-        todo!() // TODO
+        _call: Self::RpcRequest,
+    ) -> Result<RpcResponse<Self::SuccessData, Self::FailureData>> {
+        Err(ferr!("rpc request not supported on list task"))
     }
 }

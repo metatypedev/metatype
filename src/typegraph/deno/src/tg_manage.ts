@@ -6,7 +6,7 @@ import type { TypegraphOutput } from "./typegraph.ts";
 import { log } from "./io.ts";
 import { type CliEnv, getCliEnv } from "./envs/cli.ts";
 import * as path from "node:path";
-import { rpcNotify } from "./gen/client.ts";
+import { rpcRequest } from "./gen/client.ts";
 
 type DeployParams = {
   typegraphName: string;
@@ -30,7 +30,7 @@ export class Manager {
         this.#serialize();
         break;
       case "deploy":
-        await this.#deploy();
+        this.#deploy();
         break;
       case "list":
         this.#list();
@@ -67,10 +67,10 @@ export class Manager {
       pretty: false,
     };
 
-    rpcNotify("Serialize", params);
+    rpcRequest("Serialize", params);
   }
 
-  async #deploy(): Promise<void> {
+  #deploy() {
     const env = this.#env;
     if (!env.artifact_resolution) {
       log.failure({
@@ -87,7 +87,7 @@ export class Manager {
       migrationDir: env.migrations_dir,
     };
 
-    rpcNotify("Serialize", params);
+    rpcRequest("Deploy", params);
   }
 
   #list() {

@@ -176,36 +176,22 @@ impl<A: TaskAction + 'static> Actor for TaskIoActor<A> {
 }
 
 #[derive(Deserialize, Debug)]
-struct RpcNotification<S, F, C> {
+struct RpcNotification<S, F> {
     #[allow(dead_code)]
     jsonrpc: JsonRpcVersion,
     #[serde(flatten)]
-    call: RpcNotificationKind<S, F, C>,
+    call: RpcNotificationKind<S, F>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(tag = "method", content = "params")]
-enum RpcNotificationKind<S, F, C> {
-    Debug {
-        message: String,
-    },
-    Info {
-        message: String,
-    },
-    Warning {
-        message: String,
-    },
-    Error {
-        message: String,
-    },
-    Success {
-        data: S,
-    },
-    Failure {
-        data: F,
-    },
-    #[serde(untagged)]
-    Command(C),
+enum RpcNotificationKind<S, F> {
+    Debug { message: String },
+    Info { message: String },
+    Warning { message: String },
+    Error { message: String },
+    Success { data: S },
+    Failure { data: F },
 }
 
 impl<A: TaskAction + 'static> Handler<message::OutputLine> for TaskIoActor<A> {
@@ -278,7 +264,7 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
         } else {
             // JSON-RPC notification
             match serde_json::from_value(message) {
-                Ok(notification) => self.handle_rpc_notification(notification, ctx),
+                Ok(notification) => self.handle_rpc_notification(notification),
                 Err(err) => {
                     console.error(format!(
                         "{scope} failed to validate JSON-RPC notification: {err}"
@@ -291,8 +277,7 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
 
     fn handle_rpc_notification(
         &mut self,
-        notification: RpcNotification<A::SuccessData, A::FailureData, A::RpcCommand>,
-        ctx: &mut Context<Self>,
+        notification: RpcNotification<A::SuccessData, A::FailureData>,
     ) {
         let console = &self.console;
         let scope = self.get_console_scope();
@@ -324,16 +309,6 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
             RpcNotificationKind::Failure { data } => {
                 self.results.push(Err(data));
             }
-            RpcNotificationKind::Command(data) => {
-                let self_addr = ctx.address();
-                let action = self.action.clone();
-
-                let fut = async move {
-                    self_addr.do_send(message::TaskResult(action.handle_rpc_command(data).await));
-                };
-
-                ctx.spawn(fut.in_current_span().into_actor(self));
-            }
         }
     }
 
@@ -346,9 +321,19 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
 
                 let fut = async move {
                     match action.handle_rpc_request(rpc_call).await {
-                        Ok(response) => {
-                            self_addr.do_send(message::SendRpcResponse(req.response(response)));
-                        }
+                        Ok(response) => match response {
+                            super::task::action::RpcResponse::Value(value) => {
+                                self_addr.do_send(message::SendRpcResponse(req.response(value)))
+                            }
+                            super::task::action::RpcResponse::TaskResult(result) => {
+                                // Wait for deploy to finish before exiting the process
+                                // in order to prevent task from hanging out
+                                // TODO: Send some actual data?
+                                let response = req.response(serde_json::Value::Null);
+                                self_addr.do_send(message::SendRpcResponse(response));
+                                self_addr.do_send(message::TaskResult(result))
+                            }
+                        },
                         Err(err) => {
                             // Handle error on the client side
                             console.debug(format!(

@@ -10,8 +10,9 @@ from typegraph.gen.core import (
     MigrationAction,
     PrismaMigrationConfig,
 )
+from typegraph.gen.client import rpc_request
 from typegraph.graph.shared_types import TypegraphOutput
-from typegraph.io import Log, rpc_notify
+from typegraph.io import Log
 from typegraph.envs.cli import CliEnv, Command, get_cli_env
 
 
@@ -19,7 +20,7 @@ class DeployParams(BaseModel):
     typegraph_name: str
     typegraph_path: str
     prefix: Optional[str]
-    migrations_dir: str
+    migration_dir: str
 
 
 class Manager:
@@ -63,18 +64,18 @@ class Manager:
             pretty=False,
         )
 
-        rpc_notify("Serialize", params.model_dump())
+        rpc_request("Serialize", params.model_dump())
 
     def deploy(self):
         env = self.env
         params = DeployParams(
             typegraph_name=self.typegraph.name,
             typegraph_path=env.typegraph_path,
-            migrations_dir=self.get_migrations_dir(),
+            migration_dir=self.get_migrations_dir(),
             prefix=env.prefix,
         )
 
-        rpc_notify("Deploy", params.model_dump())
+        rpc_request("Deploy", params.model_dump())
 
     def list(self):
         Log.success({"typegraph": self.typegraph.name})

@@ -147,8 +147,6 @@ export interface TgFinalizationResult {
   ref_artifacts: Artifact[];
 }
 
-let counter = 0;
-
 export async function typegraph(
   name: string,
   builder: TypegraphBuilder,
@@ -162,7 +160,6 @@ export async function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
   maybeBuilder?: TypegraphBuilder,
 ): Promise<TypegraphOutput> {
-  ++counter;
   const args =
     typeof nameOrArgs === "string" ? { name: nameOrArgs } : nameOrArgs;
 
@@ -274,17 +271,8 @@ export async function typegraph(
   if (hasCliEnv()) {
     const manager = new Manager(ret);
     await manager.run();
-
-    // TODO solve hanging process (stdin??)
-    setTimeout(() => {
-      if (counter === 0) {
-        log.debug("exiting");
-        process.exit(0);
-      }
-    }, 1000);
+    log.debug("exiting");
   }
-
-  --counter;
 
   return ret;
 }

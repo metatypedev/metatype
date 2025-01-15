@@ -80,13 +80,18 @@ pub trait FollowupOption<A: TaskAction> {
     fn add_to_options(&self, options: &mut A::Options);
 }
 
+#[derive(Debug)]
+pub enum RpcResponse<S, F> {
+    Value(serde_json::Value),
+    TaskResult(Result<S, F>),
+}
+
 pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
     type SuccessData: OutputData;
     type FailureData: OutputData;
     type Options: Default + std::fmt::Debug + Unpin + Send;
     type Generator: TaskActionGenerator<Action = Self> + Unpin;
     type RpcRequest: serde::de::DeserializeOwned + std::fmt::Debug + Unpin + Send;
-    type RpcCommand: serde::de::DeserializeOwned + std::fmt::Debug + Unpin + Send;
 
     fn get_command(&self) -> impl Future<Output = Result<Command>>;
     fn get_task_ref(&self) -> &TaskRef;
@@ -103,15 +108,10 @@ pub trait TaskAction: std::fmt::Debug + Clone + Send + Unpin {
         ctx: ActionFinalizeContext<Self>,
     ) -> impl Future<Output = Result<Option<Box<dyn FollowupOption<Self>>>>>;
 
-    fn handle_rpc_command(
-        &self,
-        call: Self::RpcCommand,
-    ) -> impl Future<Output = Result<Self::SuccessData, Self::FailureData>>;
-
     fn handle_rpc_request(
         &self,
         call: Self::RpcRequest,
-    ) -> impl Future<Output = Result<serde_json::Value>>;
+    ) -> impl Future<Output = Result<RpcResponse<Self::SuccessData, Self::FailureData>>>;
 }
 
 pub type ActionResult<A> = Result<<A as TaskAction>::SuccessData, <A as TaskAction>::FailureData>;

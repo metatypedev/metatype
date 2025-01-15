@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::action::{
-    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, SharedActionConfig,
-    TaskAction, TaskActionGenerator, TaskFilter,
+    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, RpcResponse,
+    SharedActionConfig, TaskAction, TaskActionGenerator, TaskFilter,
 };
 use super::command::build_task_command;
 use super::deploy::MigrationAction;
@@ -106,9 +106,12 @@ impl OutputData for SerializeError {
     }
 }
 
-#[derive(Deserialize, Debug)]
-pub struct SerializeCommand {
-    params: SerializeParams,
+#[derive(Debug, Deserialize)]
+#[serde(tag = "method", content = "params")]
+pub enum RpcRequest {
+    Serialize(SerializeParams),
+    #[serde(untagged)]
+    Typegraph(TypegraphRpcCall),
 }
 
 impl TaskAction for SerializeAction {
@@ -116,8 +119,7 @@ impl TaskAction for SerializeAction {
     type FailureData = SerializeError;
     type Options = SerializeOptions;
     type Generator = SerializeActionGenerator;
-    type RpcRequest = TypegraphRpcCall;
-    type RpcCommand = SerializeCommand;
+    type RpcRequest = RpcRequest;
 
     async fn get_command(&self) -> Result<Command> {
         build_task_command(
@@ -182,16 +184,21 @@ impl TaskAction for SerializeAction {
         &self.task_ref
     }
 
-    async fn handle_rpc_request(&self, call: Self::RpcRequest) -> Result<serde_json::Value> {
-        Ok(call.dispatch()?)
-    }
-
-    async fn handle_rpc_command(
+    async fn handle_rpc_request(
         &self,
-        call: Self::RpcCommand,
-    ) -> Result<Self::SuccessData, Self::FailureData> {
-        let typegraph_name = call.params.typegraph_name.clone();
-        match Lib::serialize_typegraph(call.params) {
+        call: Self::RpcRequest,
+    ) -> Result<RpcResponse<Self::SuccessData, Self::FailureData>> {
+        match call {
+            RpcRequest::Serialize(params) => Ok(RpcResponse::TaskResult(self.serialize(params))),
+            RpcRequest::Typegraph(method) => Ok(RpcResponse::Value(method.dispatch()?)),
+        }
+    }
+}
+
+impl SerializeActionInner {
+    fn serialize(&self, params: SerializeParams) -> Result<Box<Typegraph>, SerializeError> {
+        let typegraph_name = params.typegraph_name.clone();
+        match Lib::serialize_typegraph(params) {
             Ok((value, _)) => {
                 Ok(serde_json::from_str(&value).expect("Failed to deserialize JSON typegraph"))
             }
