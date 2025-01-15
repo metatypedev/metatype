@@ -79,7 +79,8 @@ Meta.test(
       async () => {
         const _engine = await t.engine("sync/sync.py", {
           secrets: {
-            ULTRA_SECRET: "if_you_can_read_me_on_an_ERROR_there_is_a_bug",
+            ULTRA_SECRET:
+              "if_you_can_read_me_on_an_ERROR_there_is_a_bug",
           },
         });
 
