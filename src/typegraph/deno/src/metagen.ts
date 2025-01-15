@@ -15,6 +15,7 @@ export class Metagen {
 
   private getFdkConfig(tgOutput: TypegraphOutput, targetName: string) {
     const serializeParams = {
+      typegraphName: "",
       typegraphPath: `${this.workspacePath}/tg.ts`,
       prefix: undefined,
       artifactResolution: false,

@@ -68,6 +68,7 @@ pub struct PrismaMigrationConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SerializeParams {
+    pub typegraph_name: String,
     pub typegraph_path: String,
     pub prefix: Option<String>,
     pub artifact_resolution: bool,

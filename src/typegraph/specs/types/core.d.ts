@@ -57,6 +57,7 @@ type PrismaMigrationConfig = {
 };
 
 type SerializeParams = {
+  typegraph_name: string;
   typegraph_path: string;
   prefix?: string;
   artifact_resolution: boolean;

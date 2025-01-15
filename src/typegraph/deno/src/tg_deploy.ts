@@ -60,6 +60,7 @@ export async function tgDeploy(
   params: TypegraphDeployParams,
 ): Promise<DeployResult> {
   const serializeParams = {
+    typegraphName: typegraph.name,
     typegraphPath: params.typegraphPath,
     prefix: params.prefix,
     artifactResolution: true,

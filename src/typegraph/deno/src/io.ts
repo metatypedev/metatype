@@ -24,6 +24,7 @@ function writeRpcMessage(message: string) {
 }
 
 type RpcNotificationMethod =
+  | "Serialize"
   | "Debug"
   | "Info"
   | "Warning"
@@ -31,8 +32,11 @@ type RpcNotificationMethod =
   | "Success"
   | "Failure";
 
-// deno-lint-ignore no-explicit-any
-const rpcNotify = (method: RpcNotificationMethod, params: any = null) => {
+export const rpcNotify = (
+  method: RpcNotificationMethod,
+  // deno-lint-ignore no-explicit-any
+  params: any = null,
+) => {
   const message = JSON.stringify({
     jsonrpc: JSONRPC_VERSION,
     method,

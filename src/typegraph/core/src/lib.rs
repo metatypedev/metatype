@@ -418,6 +418,7 @@ mod tests {
     impl Default for SerializeParams {
         fn default() -> Self {
             Self {
+                typegraph_name: "dummy".to_owned(),
                 typegraph_path: "some/dummy/path".to_string(),
                 prefix: None,
                 artifact_resolution: false,

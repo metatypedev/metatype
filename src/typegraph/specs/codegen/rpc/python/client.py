@@ -32,3 +32,18 @@ def rpc_request(method: str, params: Optional[Any] = None):
         raise Exception(response["error"]["message"])
 
     return response["result"]
+
+
+def rpc_notify(method: str, params: Optional[Any] = None):
+    request = {
+        "jsonrpc": "2.0",
+        "method": method,
+    }
+
+    if params is not None:
+        request["params"] = params
+
+    json_request = json.dumps(request)
+
+    sys.stdout.write("jsonrpc$: " + json_request + "\n")
+    sys.stdout.flush()

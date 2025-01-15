@@ -16,6 +16,8 @@ use common::typegraph::Typegraph;
 use serde::Deserialize;
 use std::sync::Arc;
 use tokio::process::Command;
+use typegraph_core::sdk::core::{Handler, SerializeParams};
+use typegraph_core::Lib;
 
 pub type SerializeAction = Arc<SerializeActionInner>;
 
@@ -104,12 +106,18 @@ impl OutputData for SerializeError {
     }
 }
 
+#[derive(Deserialize, Debug)]
+pub struct SerializeCommand {
+    params: SerializeParams,
+}
+
 impl TaskAction for SerializeAction {
     type SuccessData = Box<Typegraph>;
     type FailureData = SerializeError;
     type Options = SerializeOptions;
     type Generator = SerializeActionGenerator;
-    type RpcCall = TypegraphRpcCall;
+    type RpcRequest = TypegraphRpcCall;
+    type RpcCommand = SerializeCommand;
 
     async fn get_command(&self) -> Result<Command> {
         build_task_command(
@@ -174,7 +182,23 @@ impl TaskAction for SerializeAction {
         &self.task_ref
     }
 
-    async fn get_rpc_response(&self, call: Self::RpcCall) -> Result<serde_json::Value> {
+    async fn handle_rpc_request(&self, call: Self::RpcRequest) -> Result<serde_json::Value> {
         Ok(call.dispatch()?)
+    }
+
+    async fn handle_rpc_command(
+        &self,
+        call: Self::RpcCommand,
+    ) -> Result<Self::SuccessData, Self::FailureData> {
+        let typegraph_name = call.params.typegraph_name.clone();
+        match Lib::serialize_typegraph(call.params) {
+            Ok((value, _)) => {
+                Ok(serde_json::from_str(&value).expect("Failed to deserialize JSON typegraph"))
+            }
+            Err(error) => Err(SerializeError {
+                typegraph: typegraph_name,
+                errors: error.stack,
+            }),
+        }
     }
 }

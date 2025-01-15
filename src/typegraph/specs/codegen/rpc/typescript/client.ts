@@ -99,4 +99,17 @@ function rpcRequest<R, P>(method: string, params?: P, transform = true) {
   }
 }
 
-export { rpcRequest };
+function rpcNotify<P>(method: string, params?: P) {
+  const request = {
+    jsonrpc: "2.0",
+    method,
+    params: params && transformKeys(params, toSnakeCase),
+  };
+
+  const jsonRequest = JSON.stringify(request);
+  const message = encoder.encode("jsonrpc$: " + jsonRequest + "\n");
+
+  Deno.stdout.writeSync(message);
+}
+
+export { rpcRequest, rpcNotify };
