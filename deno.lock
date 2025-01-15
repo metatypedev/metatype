@@ -1094,7 +1094,7 @@
     "https://esm.sh/ajv@8.12.0": "cc1a73af661466c7f4e6a94d93ece78542d700f2165bdb16a531e9db8856c5aa",
     "https://esm.sh/ajv@8.12.0?pin=v131": "f8dc3d8e4d6d69f48381749333cc388e54177f66601125b43246c3e43d3145d6",
     "https://esm.sh/ajv@8.12.0?pin=v135": "cc1a73af661466c7f4e6a94d93ece78542d700f2165bdb16a531e9db8856c5aa",
-    "https://esm.sh/jszip@3.7.1": "f3872a819b015715edb05f81d973b5cd05d3d213d8eb28293ca5471fe7a71773",
+    "https://esm.sh/jszip@3.7.1": "5161d6a228d844791a60ab58360bd3b76c4d3921b4a725616cd7403203519249",
     "https://esm.sh/v135/@aws-crypto/crc32@5.2.0/denonext/crc32.mjs": "6a9bc8418c01e2539665b528ccea843f1319a3b32d759fcbb1d4468156c25100",
     "https://esm.sh/v135/@aws-crypto/crc32c@5.2.0/denonext/crc32c.mjs": "1e8985997bd2c0807d349acaf192a54147d779e5349faf6507f51aa8becb85ca",
     "https://esm.sh/v135/@aws-crypto/sha1-browser@5.2.0/denonext/sha1-browser.mjs": "d80868d5524769e0334b50124d547ce9875fb05f9924acca4c42ed877b41ce7f",
