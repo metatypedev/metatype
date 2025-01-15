@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+mod artifacts;
 mod migrations;
 
 use super::action::{
@@ -13,9 +14,11 @@ use crate::deploy::actors::task_manager::{self, TaskRef};
 use crate::interlude::*;
 use crate::secrets::Secrets;
 use crate::typegraph::rpc::{RpcCall as TypegraphRpcCall, RpcDispatch};
+use artifacts::ArtifactUploader;
 use base64::prelude::*;
 use color_eyre::owo_colors::OwoColorize;
 use common::node::Node;
+use reqwest::header::{self, HeaderMap, HeaderValue};
 use reqwest::Client;
 use serde::Deserialize;
 use std::{path::Path, sync::Arc};
@@ -373,11 +376,11 @@ impl DeployActionInner {
     async fn deploy(&self, params: DeployParams) -> Result<DeploySuccess, DeployError> {
         let deploy_data = self
             .get_deploy_data(&params.typegraph_name)
-            .await
             .map_err(|err| DeployError {
                 typegraph: params.typegraph_name.clone(),
                 errors: vec![err.to_string()],
-            })?;
+            })
+            .await?;
 
         let (typgraph, artifacts) = Lib::serialize_typegraph(SerializeParams {
             typegraph_name: params.typegraph_name.clone(),
@@ -425,24 +428,61 @@ impl DeployActionInner {
             errors: error.stack,
         })?;
 
-        let mut request = client
-            .post(url)
-            .header("Content-type", "application/json")
-            .body(body);
+        let mut base_headers = HeaderMap::new();
+
+        base_headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        );
 
         if let Some(auth) = basic_auth.as_ref() {
-            request = request.header("Authorization", auth);
+            base_headers.insert(
+                header::AUTHORIZATION,
+                HeaderValue::from_str(auth).map_err(|error| DeployError {
+                    typegraph: params.typegraph_name.clone(),
+                    errors: vec![error.to_string()],
+                })?,
+            );
         }
 
-        let response = request.send().await.map_err(|error| DeployError {
-            typegraph: params.typegraph_name.clone(),
-            errors: vec![error.to_string()],
-        })?;
+        if !artifacts.is_empty() {
+            let artifact_uploader = ArtifactUploader {
+                client: &client,
+                base_url: self.deploy_target.base_url.clone(),
+                base_header: base_headers.clone(),
+                typegraph_name: params.typegraph_name.clone(),
+                typegraph_path: params.typegraph_path.clone(),
+            };
 
-        let response: DeployResponse = response.json().await.map_err(|error| DeployError {
-            typegraph: params.typegraph_name.clone(),
-            errors: vec![error.to_string()],
-        })?;
+            artifact_uploader
+                .upload_artifacts(&artifacts)
+                .map_err(|error| DeployError {
+                    typegraph: params.typegraph_name.clone(),
+                    errors: vec![error.to_string()],
+                })
+                .await?;
+        } else {
+            log::debug!("no artifacts to upload");
+        }
+
+        let response = client
+            .post(url)
+            .headers(base_headers)
+            .body(body)
+            .send()
+            .map_err(|error| DeployError {
+                typegraph: params.typegraph_name.clone(),
+                errors: vec![error.to_string()],
+            })
+            .await?;
+
+        let response: DeployResponse = response
+            .json()
+            .map_err(|error| DeployError {
+                typegraph: params.typegraph_name.clone(),
+                errors: vec![error.to_string()],
+            })
+            .await?;
 
         match response {
             DeployResponse::Success { data } => Ok(DeploySuccess {
