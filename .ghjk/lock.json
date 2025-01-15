@@ -9,7 +9,7 @@
           "version": "v2.4.0",
           "buildDepConfigs": {
             "tar_aa": {
-              "version": "1.34",
+              "version": "1.35",
               "buildDepConfigs": {},
               "portRef": "tar_aa@0.1.0",
               "specifiedVersion": false
@@ -20,13 +20,13 @@
           "specifiedVersion": true
         },
         "bciqj4p5hoqweghbuvz52rupja7sqze34z63dd62nz632c5zxikv6ezy": {
-          "version": "1.34",
+          "version": "1.35",
           "buildDepConfigs": {},
           "portRef": "tar_aa@0.1.0",
           "specifiedVersion": false
         },
         "bciqjlw6cxddajjmznoemlmnu7mgbbm7a3hfmnd2x5oivwajmiqui5ey": {
-          "version": "v0.2.69",
+          "version": "v0.2.71",
           "buildDepConfigs": {},
           "portRef": "act_ghrel@0.1.0",
           "specifiedVersion": false
@@ -35,7 +35,7 @@
           "version": "0.5.0",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
+              "version": "v1.10.21",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -47,7 +47,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.45.2",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -68,7 +68,7 @@
           "specifiedVersion": false
         },
         "bciqeal5okt5zj763vhgsmf3afr5thrkqaitv6pb3wwegcwyb74gdyjq": {
-          "version": "v1.10.9",
+          "version": "v1.10.21",
           "buildDepConfigs": {},
           "portRef": "cargo_binstall_ghrel@0.1.0",
           "specifiedVersion": false
@@ -80,7 +80,7 @@
               "version": "1.27.1",
               "buildDepConfigs": {
                 "git_aa": {
-                  "version": "2.34.1",
+                  "version": "2.45.2",
                   "buildDepConfigs": {},
                   "portRef": "git_aa@0.1.0",
                   "specifiedVersion": false
@@ -95,7 +95,7 @@
           "specifiedVersion": true
         },
         "bciqay4m4kmzfduj5t2clgejxgpe5zwper6lyyaxt7rhbjalaqd32nhq": {
-          "version": "2.34.1",
+          "version": "2.45.2",
           "buildDepConfigs": {},
           "portRef": "git_aa@0.1.0",
           "specifiedVersion": false
@@ -104,7 +104,7 @@
           "version": "1.27.1",
           "buildDepConfigs": {
             "git_aa": {
-              "version": "2.34.1",
+              "version": "2.45.2",
               "buildDepConfigs": {},
               "portRef": "git_aa@0.1.0",
               "specifiedVersion": false
@@ -117,7 +117,7 @@
           "version": "0.4.0",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
+              "version": "v1.10.21",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -129,7 +129,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.45.2",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -150,10 +150,10 @@
           "specifiedVersion": false
         },
         "bciqjt35de5uwbp3qv3idkj7or2pu2gcun5jjkdttfupyuseslmjny5i": {
-          "version": "2.6.1",
+          "version": "2.7.0",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
+              "version": "v1.10.21",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -165,7 +165,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.45.2",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -192,13 +192,13 @@
               "version": "3.12.5",
               "buildDepConfigs": {
                 "tar_aa": {
-                  "version": "1.34",
+                  "version": "1.35",
                   "buildDepConfigs": {},
                   "portRef": "tar_aa@0.1.0",
                   "specifiedVersion": false
                 },
                 "zstd_aa": {
-                  "version": "v1.4.8,",
+                  "version": "v1.5.6,",
                   "buildDepConfigs": {},
                   "portRef": "zstd_aa@0.1.0",
                   "specifiedVersion": false
@@ -217,13 +217,13 @@
           "version": "3.12.5",
           "buildDepConfigs": {
             "tar_aa": {
-              "version": "1.34",
+              "version": "1.35",
               "buildDepConfigs": {},
               "portRef": "tar_aa@0.1.0",
               "specifiedVersion": false
             },
             "zstd_aa": {
-              "version": "v1.4.8,",
+              "version": "v1.5.6,",
               "buildDepConfigs": {},
               "portRef": "zstd_aa@0.1.0",
               "specifiedVersion": false
@@ -234,7 +234,7 @@
           "specifiedVersion": true
         },
         "bciqe6fwheayositrdk7rkr2ngdr4wizldakex23tgivss7w6z7g3q3y": {
-          "version": "v1.4.8,",
+          "version": "v1.5.6,",
           "buildDepConfigs": {},
           "portRef": "zstd_aa@0.1.0",
           "specifiedVersion": false
@@ -249,7 +249,7 @@
           "version": "1.33.0",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
+              "version": "v1.10.21",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -261,7 +261,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.45.2",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -285,7 +285,7 @@
           "version": "0.2.5",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
+              "version": "v1.10.21",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -297,7 +297,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.45.2",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -324,22 +324,22 @@
           "specifiedVersion": true
         },
         "bciqmpujkkyxmzdz7sxpvi2pmajzfmg6gofplyqn43av2styxu2ng7sy": {
-          "version": "7.81.0",
+          "version": "8.11.0",
           "buildDepConfigs": {},
           "portRef": "curl_aa@0.1.0",
           "specifiedVersion": false
         },
         "bciqngfjdds2gmnwhriiif3fjgqw2hhpm3ssqxlnq4kiwyk53uesmzgy": {
-          "version": "3.31.0-rc3",
+          "version": "3.31.4",
           "buildDepConfigs": {
             "curl_aa": {
-              "version": "7.81.0",
+              "version": "8.11.0",
               "buildDepConfigs": {},
               "portRef": "curl_aa@0.1.0",
               "specifiedVersion": false
             },
             "git_aa": {
-              "version": "2.34.1",
+              "version": "2.45.2",
               "buildDepConfigs": {},
               "portRef": "git_aa@0.1.0",
               "specifiedVersion": false
@@ -348,7 +348,7 @@
               "version": "9959904699",
               "buildDepConfigs": {
                 "git_aa": {
-                  "version": "2.34.1",
+                  "version": "2.45.2",
                   "buildDepConfigs": {},
                   "portRef": "git_aa@0.1.0",
                   "specifiedVersion": false
@@ -374,7 +374,7 @@
           "version": "9959904699",
           "buildDepConfigs": {
             "git_aa": {
-              "version": "2.34.1",
+              "version": "2.45.2",
               "buildDepConfigs": {},
               "portRef": "git_aa@0.1.0",
               "specifiedVersion": false
@@ -384,8 +384,8 @@
           "pluginRepo": "https://github.com/asdf-community/asdf-cmake",
           "specifiedVersion": false
         },
-        "bciqnevzirr33l7mxnm5j4ztqpfr3vm3tqpk674kohp2f3mpqv44zzry": {
-          "version": "2.34.1",
+        "bciqann5bufou5bjvn7uzq4zr5baiawmo23rkt4jy2bpruewumtfmbei": {
+          "version": "2.45.2",
           "buildDepConfigs": {},
           "portRef": "git_aa@0.1.0",
           "specifiedVersion": true
@@ -400,13 +400,13 @@
           "version": "3.9.19",
           "buildDepConfigs": {
             "tar_aa": {
-              "version": "1.34",
+              "version": "1.35",
               "buildDepConfigs": {},
               "portRef": "tar_aa@0.1.0",
               "specifiedVersion": false
             },
             "zstd_aa": {
-              "version": "v1.4.8,",
+              "version": "v1.5.6,",
               "buildDepConfigs": {},
               "portRef": "zstd_aa@0.1.0",
               "specifiedVersion": false
@@ -423,13 +423,13 @@
               "version": "3.12.5",
               "buildDepConfigs": {
                 "tar_aa": {
-                  "version": "1.34",
+                  "version": "1.35",
                   "buildDepConfigs": {},
                   "portRef": "tar_aa@0.1.0",
                   "specifiedVersion": false
                 },
                 "zstd_aa": {
-                  "version": "v1.4.8,",
+                  "version": "v1.5.6,",
                   "buildDepConfigs": {},
                   "portRef": "zstd_aa@0.1.0",
                   "specifiedVersion": false
@@ -451,13 +451,13 @@
               "version": "3.12.5",
               "buildDepConfigs": {
                 "tar_aa": {
-                  "version": "1.34",
+                  "version": "1.35",
                   "buildDepConfigs": {},
                   "portRef": "tar_aa@0.1.0",
                   "specifiedVersion": false
                 },
                 "zstd_aa": {
-                  "version": "v1.4.8,",
+                  "version": "v1.5.6,",
                   "buildDepConfigs": {},
                   "portRef": "zstd_aa@0.1.0",
                   "specifiedVersion": false
@@ -476,7 +476,7 @@
           "version": "v20.8.0",
           "buildDepConfigs": {
             "tar_aa": {
-              "version": "1.34",
+              "version": "1.35",
               "buildDepConfigs": {},
               "portRef": "tar_aa@0.1.0",
               "specifiedVersion": false
@@ -485,8 +485,8 @@
           "portRef": "node_org@0.1.0",
           "specifiedVersion": true
         },
-        "bciqcph72sicdlw4p47fufwrlg32rgxrnkunrofr3eyql5zmnsjguk4q": {
-          "version": "v9.4.0",
+        "bciqb53vnbgb6fcovjas7p4vhxkqbqicchrmz4g6cz2c2ffj2lqaog3i": {
+          "version": "v9.15.0",
           "buildDepConfigs": {},
           "portRef": "pnpm_ghrel@0.1.0",
           "specifiedVersion": true
@@ -498,7 +498,7 @@
               "version": "v20.8.0",
               "buildDepConfigs": {
                 "tar_aa": {
-                  "version": "1.34",
+                  "version": "1.35",
                   "buildDepConfigs": {},
                   "portRef": "tar_aa@0.1.0",
                   "specifiedVersion": false
@@ -516,7 +516,7 @@
           "version": "0.116.1",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
+              "version": "v1.10.21",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -528,7 +528,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.45.2",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -552,7 +552,7 @@
           "version": "1.208.1",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
+              "version": "v1.10.21",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -564,7 +564,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.45.2",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -591,13 +591,13 @@
               "version": "3.12.5",
               "buildDepConfigs": {
                 "tar_aa": {
-                  "version": "1.34",
+                  "version": "1.35",
                   "buildDepConfigs": {},
                   "portRef": "tar_aa@0.1.0",
                   "specifiedVersion": false
                 },
                 "zstd_aa": {
-                  "version": "v1.4.8,",
+                  "version": "v1.5.6,",
                   "buildDepConfigs": {},
                   "portRef": "zstd_aa@0.1.0",
                   "specifiedVersion": false
@@ -619,7 +619,7 @@
               "version": "v20.8.0",
               "buildDepConfigs": {
                 "tar_aa": {
-                  "version": "1.34",
+                  "version": "1.35",
                   "buildDepConfigs": {},
                   "portRef": "tar_aa@0.1.0",
                   "specifiedVersion": false
@@ -633,11 +633,11 @@
           "packageName": "@bytecodealliance/jco",
           "specifiedVersion": true
         },
-        "bciqad6aisdl5shqpoyngeaoclm3akepy6wf7vtbmdhyduegz6yxbjdi": {
-          "version": "3.5.1",
+        "bciqn2ct4mwrwyise3qlnabpine33dzt3lvnrhrbnkw4pnyryfe5is5a": {
+          "version": "3.7.1",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
+              "version": "v1.10.21",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -649,7 +649,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.45.2",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -675,7 +675,7 @@
               "version": "1.27.1",
               "buildDepConfigs": {
                 "git_aa": {
-                  "version": "2.34.1",
+                  "version": "2.45.2",
                   "buildDepConfigs": {},
                   "portRef": "git_aa@0.1.0",
                   "specifiedVersion": false
@@ -693,7 +693,7 @@
           "version": "0.1.47",
           "buildDepConfigs": {
             "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
+              "version": "v1.10.21",
               "buildDepConfigs": {},
               "portRef": "cargo_binstall_ghrel@0.1.0",
               "specifiedVersion": false
@@ -705,7 +705,7 @@
                   "version": "1.27.1",
                   "buildDepConfigs": {
                     "git_aa": {
-                      "version": "2.34.1",
+                      "version": "2.45.2",
                       "buildDepConfigs": {},
                       "portRef": "git_aa@0.1.0",
                       "specifiedVersion": false
@@ -723,47 +723,6 @@
           "portRef": "cargobi_cratesio@0.1.0",
           "crateName": "cargo-udeps",
           "locked": true,
-          "specifiedVersion": true
-        },
-        "bciqb53vnbgb6fcovjas7p4vhxkqbqicchrmz4g6cz2c2ffj2lqaog3i": {
-          "version": "v9.15.0",
-          "buildDepConfigs": {},
-          "portRef": "pnpm_ghrel@0.1.0",
-          "specifiedVersion": true
-        },
-        "bciqn2ct4mwrwyise3qlnabpine33dzt3lvnrhrbnkw4pnyryfe5is5a": {
-          "version": "3.7.1",
-          "buildDepConfigs": {
-            "cargo_binstall_ghrel": {
-              "version": "v1.10.9",
-              "buildDepConfigs": {},
-              "portRef": "cargo_binstall_ghrel@0.1.0",
-              "specifiedVersion": false
-            },
-            "rust_rustup": {
-              "version": "1.80.1",
-              "buildDepConfigs": {
-                "rustup_rustlang": {
-                  "version": "1.27.1",
-                  "buildDepConfigs": {
-                    "git_aa": {
-                      "version": "2.34.1",
-                      "buildDepConfigs": {},
-                      "portRef": "git_aa@0.1.0",
-                      "specifiedVersion": false
-                    }
-                  },
-                  "portRef": "rustup_rustlang@0.1.0",
-                  "specifiedVersion": false
-                }
-              },
-              "portRef": "rust_rustup@0.1.0",
-              "profile": "minimal",
-              "specifiedVersion": true
-            }
-          },
-          "portRef": "cargobi_cratesio@0.1.0",
-          "crateName": "protobuf-codegen",
           "specifiedVersion": true
         }
       }
