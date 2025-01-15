@@ -31,6 +31,77 @@ type DeallocateOptions = {
   ensureMinWorkers?: boolean;
 };
 
+type Consumer<T> = (x: T) => void;
+
+interface WaitQueue<W> {
+  push(consumer: Consumer<W>, onCancel: () => void): void;
+  shift(worker: W): boolean;
+}
+
+class WaitQueueWithTimeout<W> implements WaitQueue<W> {
+  #queue: Array<{
+    consumer: Consumer<W>;
+    cancellationHandler: () => void;
+    addedAt: number; // timestamp
+  }> = [];
+  #timerId: number | null = null;
+  #waitTimeoutMs: number;
+
+  constructor(timeoutMs: number) {
+    this.#waitTimeoutMs = timeoutMs;
+  }
+
+  push(consumer: Consumer<W>, onCancel: () => void) {
+    this.#queue.push({
+      consumer,
+      cancellationHandler: onCancel,
+      addedAt: Date.now(),
+    });
+    if (this.#timerId == null) {
+      if (this.#queue.length !== 1) {
+        throw new Error("unreachable: inconsistent state: no active timer");
+      }
+      this.#updateTimer();
+    }
+  }
+
+  shift(worker: W) {
+    const entry = this.#queue.shift();
+    if (entry) {
+      entry.consumer(worker);
+      return true;
+    }
+    return false;
+  }
+
+  #timeoutHandler() {
+    this.#cancelNextEntry();
+    this.#updateTimer();
+  }
+
+  #updateTimer() {
+    if (this.#queue.length > 0) {
+      const timeoutMs = this.#queue[0].addedAt + this.#waitTimeoutMs -
+        Date.now();
+      if (timeoutMs <= 0) {
+        this.#cancelNextEntry();
+        this.#updateTimer();
+        return;
+      }
+      this.#timerId = setTimeout(
+        this.#timeoutHandler.bind(this),
+        timeoutMs,
+      );
+    } else {
+      this.#timerId = null;
+    }
+  }
+
+  #cancelNextEntry() {
+    this.#queue.shift()!.cancellationHandler();
+  }
+}
+
 export class BaseWorkerManager<
   T,
   M extends BaseMessage,
@@ -45,14 +116,15 @@ export class BaseWorkerManager<
   #startedAt: Map<TaskId, Date> = new Map();
   #poolConfig: PoolConfig;
   #idleWorkers: BaseWorker<M, E>[] = [];
-  #waitQueue: Array<(worker: BaseWorker<M, E>) => void> = [];
+  #waitQueue: WaitQueue<BaseWorker<M, E>>;
   #nextWorkerId = 1;
+
+  #workerFactory: () => BaseWorker<M, E>;
 
   get #workerCount() {
     return this.#idleWorkers.length + this.#activeTasks.size;
   }
 
-  #workerFactory: () => BaseWorker<M, E>;
   protected constructor(
     name: string,
     workerFactory: (taskId: TaskId) => BaseWorker<M, E>,
@@ -62,6 +134,8 @@ export class BaseWorkerManager<
     this.#workerFactory = () =>
       workerFactory(`${this.#name} worker #${this.#nextWorkerId++}`);
     this.#poolConfig = config;
+    // TODO no timeout
+    this.#waitQueue = new WaitQueueWithTimeout(config.waitTimeoutMs ?? 30000);
   }
 
   protected getActiveTaskNames() {
@@ -110,8 +184,14 @@ export class BaseWorkerManager<
 
   #waitForWorker() {
     // TODO timeout
-    return new Promise<BaseWorker<M, E>>((resolve) => {
-      this.#waitQueue.push(resolve);
+    return new Promise<BaseWorker<M, E>>((resolve, reject) => {
+      this.#waitQueue.push(
+        (worker) => resolve(worker),
+        () =>
+          reject(
+            new Error("timeout while waiting for a worker to be available"),
+          ),
+      );
     });
   }
 
