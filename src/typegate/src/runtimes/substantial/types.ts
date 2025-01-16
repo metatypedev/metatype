@@ -71,7 +71,7 @@ const validInterrupts = [
   "SAVE_RETRY",
   "WAIT_RECEIVE_EVENT",
   "WAIT_HANDLE_EVENT",
-  "WAIT_ENSURE_EVENT",
+  "WAIT_ENSURE_VALUE",
 ] as const;
 
 type InterruptType = (typeof validInterrupts)[number];

@@ -30,31 +30,40 @@ Deno.test("simple wait queue", (t) => {
   assertEquals(history[1], 3);
 });
 
-Deno.test.only("wait queue with timeout", async (t) => {
+Deno.test("wait queue with timeout", async (t) => {
   using queue = new WaitQueueWithTimeout<number>(100);
+  await t.step("succeed with sync execution", async () => {
+    const history: number[] = [];
 
-  const history: number[] = [];
+    assertFalse(queue.shift(() => 1));
 
-  assertFalse(queue.shift(() => 1));
+    queue.push((v) => history.push(v), () => {});
+    assertEquals(history.length, 0);
+    assert(queue.shift(() => 2));
+    assertEquals(history.length, 1);
+    assertEquals(history[0], 2);
 
-  queue.push((v) => history.push(v), () => {});
-  assertEquals(history.length, 0);
-  assert(queue.shift(() => 2));
-  assertEquals(history.length, 1);
-  assertEquals(history[0], 2);
+    assertFalse(queue.shift(() => 1));
 
-  assertFalse(queue.shift(() => 1));
+    queue.push((v) => history.push(v), () => {});
+    assertEquals(history.length, 1);
+    assert(queue.shift(() => 3));
+    assertEquals(history.length, 2);
+    assertEquals(history[1], 3);
+  });
 
-  queue.push((v) => history.push(v), () => {});
-  assertEquals(history.length, 1);
-  assert(queue.shift(() => 3));
-  assertEquals(history.length, 2);
-  assertEquals(history[1], 3);
-
-  {
+  await t.step("succeed with small delay", async () => {
     const resolvers = Promise.withResolvers();
     queue.push(resolvers.resolve, () => resolvers.reject(new Error("timeout")));
-    assertEquals(history.length, 2);
+    await delay(50);
+    assert(queue.shift(() => 4));
+    assertEquals(await resolvers.promise, 4);
+  });
+
+  await t.step("fail with timeout", async () => {
+    const resolvers = Promise.withResolvers();
+    queue.push(resolvers.resolve, () => resolvers.reject(new Error("timeout")));
+    // assertEquals(history.length, 2);
     await assertRejects(
       () =>
         Promise.race([
@@ -65,8 +74,5 @@ Deno.test.only("wait queue with timeout", async (t) => {
       "timeout",
     );
     await delay(100);
-    // await delay(100);
-    // assertEquals(history.length, 2);
-    // await assertRejects(() => resolvers.promise, "timeout");
-  }
+  });
 });
