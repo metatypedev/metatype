@@ -85,6 +85,10 @@ export async function tgDeploy(
   if (typegate.auth) {
     headers.append("Authorization", typegate.auth.asHeaderValue());
   }
+  const url = new URL("/typegate", typegate.url);
+
+  // Make sure we have the correct credentials before doing anything
+  await pingTypegate(url, headers);
 
   if (refArtifacts.length > 0) {
     // upload the artifacts
@@ -103,7 +107,7 @@ export async function tgDeploy(
 
   // deploy the typegraph
   const response = (await execRequest(
-    new URL("/typegate", typegate.url),
+    url,
     {
       method: "POST",
       headers,
@@ -164,4 +168,19 @@ export async function tgRemove(
   )) as Record<string, any> | string;
 
   return { typegate: response };
+}
+
+export async function pingTypegate(
+  url: URL,
+  headers: Headers,
+) {
+  await execRequest(
+      url,
+    {
+      method: "POST",
+      headers,
+      body: wit_utils.gqlPingQuery(),
+    },
+    "Failed to access typegate",
+  );
 }

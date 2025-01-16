@@ -17,7 +17,7 @@ use super::TypeGen;
 
 pub struct Where {
     model_id: TypeId,
-    skip_models: std::collections::BTreeMap<TypeId, String>,
+    skip_models: std::collections::BTreeMap<String, String>,
     aggregates: bool,
 }
 
@@ -32,7 +32,7 @@ impl Where {
 
     fn nested(&self, name: &str, model_id: TypeId) -> Self {
         let mut skip_models = self.skip_models.clone();
-        skip_models.insert(self.model_id, name.to_string());
+        skip_models.insert(self.model_id.name().unwrap().unwrap(), name.to_string());
         Self {
             model_id,
             skip_models,
@@ -61,7 +61,7 @@ impl TypeGen for Where {
         for (key, prop) in model.iter_props() {
             match prop {
                 Property::Model(prop) => {
-                    let inner = match self.skip_models.get(&prop.model_type.type_id) {
+                    let inner = match self.skip_models.get(&prop.model_type.name()[..]) {
                         Some(name) => t::ref_(name.clone(), Default::default()).build()?,
                         None => context.generate(&self.nested(&name, prop.model_type.type_id))?,
                     };
@@ -121,24 +121,25 @@ impl TypeGen for Where {
         };
 
         let suffix2 = if !self.skip_models.is_empty() {
-            let nested_suffix = if self.aggregates {
+            /* let nested_suffix = if self.aggregates {
                 "_where_with_aggregates"
             } else {
                 "_where"
-            };
+            }; */
 
-            format!(
-                "_excluding_{}",
-                self.skip_models
-                    .keys()
-                    .map(|id| id.name().unwrap().unwrap())
-                    .map(|name| name
-                        .strip_suffix(nested_suffix)
-                        .map(|str| str.to_owned())
-                        .unwrap_or(name))
-                    .collect::<Vec<_>>()
-                    .join("_and_")
-            )
+            let mut keys = self
+                .skip_models
+                .keys()
+                .cloned()
+                // .map(|id| id.name().unwrap().unwrap())
+                // .map(|name| {
+                //     name.strip_suffix(nested_suffix)
+                //         .map(|str| str.to_owned())
+                //         .unwrap_or(name)
+                // })
+                .collect::<Vec<_>>();
+            keys.sort();
+            format!("_excluding_{}", keys.join("_and_"))
         } else {
             "".to_string()
         };

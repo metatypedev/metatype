@@ -302,7 +302,7 @@ snapshot[`typegraphs creation 2`] = `
       },
       {
         "type": "object",
-        "title": "root_add_fn_input",
+        "title": "struct_aada4",
         "properties": {
           "first": 3,
           "second": 3
@@ -316,7 +316,7 @@ snapshot[`typegraphs creation 2`] = `
       },
       {
         "type": "float",
-        "title": "root_add_fn_input_first_float"
+        "title": "float_9d392"
       },
       {
         "type": "function",
@@ -454,7 +454,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "object",
-        "title": "root_one_fn_input",
+        "title": "struct_62ec9",
         "properties": {
           "a": 3,
           "b": 4
@@ -468,11 +468,11 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "integer",
-        "title": "root_one_fn_input_a_integer"
+        "title": "struct_62ec9_a_integer"
       },
       {
         "type": "integer",
-        "title": "root_one_fn_input_b_integer",
+        "title": "struct_62ec9_b_integer",
         "minimum": 12
       },
       {
@@ -971,7 +971,7 @@ snapshot[`typegraphs creation 5`] = `
       },
       {
         "type": "object",
-        "title": "root_add_fn_input",
+        "title": "struct_aada4",
         "properties": {
           "first": 3,
           "second": 3
@@ -985,7 +985,7 @@ snapshot[`typegraphs creation 5`] = `
       },
       {
         "type": "float",
-        "title": "root_add_fn_input_first_float"
+        "title": "float_9d392"
       },
       {
         "type": "function",
@@ -1123,7 +1123,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "object",
-        "title": "root_one_fn_input",
+        "title": "struct_62ec9",
         "properties": {
           "a": 3,
           "b": 4
@@ -1137,11 +1137,11 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "integer",
-        "title": "root_one_fn_input_a_integer"
+        "title": "struct_62ec9_a_integer"
       },
       {
         "type": "integer",
-        "title": "root_one_fn_input_b_integer",
+        "title": "struct_62ec9_b_integer",
         "minimum": 12
       },
       {

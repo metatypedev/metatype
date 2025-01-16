@@ -86,8 +86,8 @@ mod node_metas {
             arg_types: Some(
                 [
                     ("id".into(), "UserIdStringUuid".into()),
-                    ("slug".into(), "PostSlugString".into()),
-                    ("title".into(), "PostSlugString".into()),
+                    ("slug".into(), "StringE1a43".into()),
+                    ("title".into(), "StringE1a43".into()),
                 ].into()
             ),
             ..scalar()
@@ -102,7 +102,7 @@ mod node_metas {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("id".into(), "PostSlugString".into()),
+                    ("id".into(), "StringE1a43".into()),
                 ].into()
             ),
             ..Post()
@@ -112,7 +112,7 @@ mod node_metas {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("id".into(), "PostSlugString".into()),
+                    ("id".into(), "StringE1a43".into()),
                 ].into()
             ),
             ..scalar()
@@ -135,7 +135,7 @@ mod node_metas {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("id".into(), "PostSlugString".into()),
+                    ("id".into(), "StringE1a43".into()),
                 ].into()
             ),
             ..RootCompositeUnionFnOutput()
@@ -158,7 +158,7 @@ mod node_metas {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("id".into(), "PostSlugString".into()),
+                    ("id".into(), "StringE1a43".into()),
                 ].into()
             ),
             ..RootMixedUnionFnOutput()
@@ -225,16 +225,15 @@ mod node_metas {
 use types::*;
 pub mod types {
     pub type UserIdStringUuid = String;
-    pub type PostSlugString = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PostPartial {
         pub id: Option<UserIdStringUuid>,
-        pub slug: Option<PostSlugString>,
-        pub title: Option<PostSlugString>,
+        pub slug: Option<String>,
+        pub title: Option<String>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootCompositeArgsFnInputPartial {
-        pub id: Option<PostSlugString>,
+    pub struct StructC339cPartial {
+        pub id: Option<String>,
     }
     pub type UserEmailStringEmail = String;
     pub type UserPostsPostList = Vec<PostPartial>;
@@ -244,12 +243,11 @@ pub mod types {
         pub email: Option<UserEmailStringEmail>,
         pub posts: Option<UserPostsPostList>,
     }
-    pub type RootScalarUnionFnOutputT1Integer = i64;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
     pub enum RootScalarUnionFnOutput {
-        PostSlugString(PostSlugString),
-        RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
+        String(String),
+        I64(i64),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[serde(untagged)]
@@ -262,26 +260,26 @@ pub mod types {
     pub enum RootMixedUnionFnOutput {
         PostPartial(PostPartial),
         UserPartial(UserPartial),
-        PostSlugString(PostSlugString),
-        RootScalarUnionFnOutputT1Integer(RootScalarUnionFnOutputT1Integer),
+        String(String),
+        I64(i64),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootNestedCompositeFnOutputCompositeStructNestedStructPartial {
-        pub inner: Option<RootScalarUnionFnOutputT1Integer>,
+        pub inner: Option<i64>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootNestedCompositeFnOutputCompositeStructPartial {
-        pub value: Option<RootScalarUnionFnOutputT1Integer>,
+        pub value: Option<i64>,
         pub nested: Option<RootNestedCompositeFnOutputCompositeStructNestedStructPartial>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootNestedCompositeFnOutputListStructPartial {
-        pub value: Option<RootScalarUnionFnOutputT1Integer>,
+        pub value: Option<i64>,
     }
     pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Vec<RootNestedCompositeFnOutputListStructPartial>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootNestedCompositeFnOutputPartial {
-        pub scalar: Option<RootScalarUnionFnOutputT1Integer>,
+        pub scalar: Option<i64>,
         pub composite: Option<RootNestedCompositeFnOutputCompositeStructPartial>,
         pub list: Option<RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList>,
     }
@@ -344,7 +342,7 @@ impl QueryGraph {
             ty_to_gql_ty_map: std::sync::Arc::new([
             
                 ("UserIdStringUuid".into(), "String!".into()),
-                ("PostSlugString".into(), "String!".into()),
+                ("StringE1a43".into(), "String!".into()),
                 ("post".into(), "post!".into()),
                 ("user".into(), "user!".into()),
         ].into()),
@@ -375,7 +373,7 @@ impl QueryGraph {
     }
     pub fn scalar_no_args(
         &self,
-    ) -> QueryNode<PostSlugString>
+    ) -> QueryNode<String>
     {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
@@ -396,7 +394,7 @@ impl QueryGraph {
     pub fn scalar_args(
         &self,
         args: impl Into<NodeArgs<PostPartial>>
-    ) -> MutationNode<PostSlugString>
+    ) -> MutationNode<String>
     {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
@@ -427,7 +425,7 @@ impl QueryGraph {
     }
     pub fn composite_args(
         &self,
-        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
+        args: impl Into<NodeArgs<StructC339cPartial>>
     ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial>
     {
         UnselectedNode {
@@ -439,7 +437,7 @@ impl QueryGraph {
     }
     pub fn scalar_union(
         &self,
-        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
+        args: impl Into<NodeArgs<StructC339cPartial>>
     ) -> QueryNode<RootScalarUnionFnOutput>
     {
         let nodes = selection_to_node_set(
@@ -460,7 +458,7 @@ impl QueryGraph {
     }
     pub fn composite_union(
         &self,
-        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
+        args: impl Into<NodeArgs<StructC339cPartial>>
     ) -> UnselectedNode<RootCompositeUnionFnOutputSelections, RootCompositeUnionFnOutputSelections<HasAlias>, QueryMarker, RootCompositeUnionFnOutput>
     {
         UnselectedNode {
@@ -472,7 +470,7 @@ impl QueryGraph {
     }
     pub fn mixed_union(
         &self,
-        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
+        args: impl Into<NodeArgs<StructC339cPartial>>
     ) -> UnselectedNode<RootMixedUnionFnOutputSelections, RootMixedUnionFnOutputSelections<HasAlias>, QueryMarker, RootMixedUnionFnOutput>
     {
         UnselectedNode {
