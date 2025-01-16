@@ -93,4 +93,10 @@ export class WaitQueueWithTimeout<W> implements WaitQueue<W> {
   #cancelNextEntry() {
     this.#queue.shift()!.cancellationHandler();
   }
+
+  [Symbol.dispose]() {
+    if (this.#timerId != null) {
+      clearTimeout(this.#timerId);
+    }
+  }
 }
