@@ -89,7 +89,7 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   ],
   "examples/templates/**/*.ts": [
     [
-      /(import\s+.+\s+from "jsr:@typegraph\/sdk@)[^\/]+(\/.+";)/,
+      /(import\s+.+\s+from "jsr:@typegraph\/sdk@)[^\/]+((?:\/.+)?";)/,
       CURRENT_VERSION,
     ],
   ],
