@@ -610,6 +610,10 @@ Meta.test(
         list: zod.array(zod.object({ value: zod.number() })),
       }),
     });
+    const expectedSchemaS = zod.object({
+      singleQuery: postSchema,
+      singleMutation: zod.string(),
+    });
     const expectedSchema = zod.tuple([
       expectedSchemaQ,
       expectedSchemaQ,
@@ -623,6 +627,7 @@ Meta.test(
         mixedUnion: zod.string(),
       }),
       expectedSchemaC,
+      expectedSchemaS,
     ]);
     const cases = [
       {

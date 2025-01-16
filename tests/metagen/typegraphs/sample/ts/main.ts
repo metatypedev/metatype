@@ -147,4 +147,18 @@ const res6 = await gqlClient.query({
   }),
 });
 
-console.log(JSON.stringify([res1, res1a, res2, res3, res4, res5, res6]));
+const res7a = await gqlClient.query(api1.getPosts({ _: "selectAll" }));
+const res7b = await gqlClient.mutation(
+  api1.scalarArgs({
+    id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+    slug: "",
+    title: "",
+  }),
+);
+
+const res7 = {
+  singleQuery: res7a,
+  singleMutation: res7b,
+};
+
+console.log(JSON.stringify([res1, res1a, res2, res3, res4, res5, res6, res7]));

@@ -168,4 +168,20 @@ res6 = gql_client.query(
     },
 )
 
-print(json.dumps([res1, res1a, res2, res3, res4, res5, res6]))
+res7a = gql_client.query(qg.get_posts({"_": SelectionFlags(select_all=True)}))
+res7b = gql_client.mutation(
+    qg.scalar_args(
+        {
+            "id": "94be5420-8c4a-4e67-b4f4-e1b2b54832a2",
+            "slug": "s",
+            "title": "t",
+        }
+    )
+)
+
+res7 = {
+    "singleQuery": res7a,
+    "singleMutation": res7b,
+}
+
+print(json.dumps([res1, res1a, res2, res3, res4, res5, res6, res7]))

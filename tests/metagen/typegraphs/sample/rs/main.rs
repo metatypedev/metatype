@@ -165,6 +165,15 @@ fn main() -> Result<(), BoxErr> {
                 ))
                 .await?;
 
+            let res7a = gql.query(api1.get_posts().select(all())).await?;
+            let res7b = gql
+                .mutation(api1.scalar_args(types::PostPartial {
+                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                    slug: Some("".into()),
+                    title: Some("".into()),
+                }))
+                .await?;
+
             println!(
                 "{}",
                 serde_json::to_string_pretty(&serde_json::json!([
@@ -204,6 +213,9 @@ fn main() -> Result<(), BoxErr> {
                         "withStruct": res6.1,
                         "withStructNested": res6.2,
                         "withList": res6.3
+                    },{
+                        "singleQuery": res7a,
+                        "singleMutation": res7b,
                     }
                 ]))?
             );
