@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../../../log.ts";
+import { PoolConfig, WaitQueue, WaitQueueWithTimeout } from "./pooling.ts";
 import { BaseMessage, EventHandler, TaskId } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
@@ -17,12 +18,6 @@ export abstract class BaseWorker<M extends BaseMessage, E extends BaseMessage> {
   abstract get id(): TaskId;
 }
 
-export type PoolConfig = {
-  maxWorkers?: number | null;
-  minWorkers?: number | null;
-  waitTimeoutMs?: number | null;
-};
-
 type DeallocateOptions = {
   destroy?: boolean;
   /// defaults to `true`
@@ -30,77 +25,6 @@ type DeallocateOptions = {
   /// Set to `false` for deinit.
   ensureMinWorkers?: boolean;
 };
-
-type Consumer<T> = (x: T) => void;
-
-interface WaitQueue<W> {
-  push(consumer: Consumer<W>, onCancel: () => void): void;
-  shift(worker: W): boolean;
-}
-
-class WaitQueueWithTimeout<W> implements WaitQueue<W> {
-  #queue: Array<{
-    consumer: Consumer<W>;
-    cancellationHandler: () => void;
-    addedAt: number; // timestamp
-  }> = [];
-  #timerId: number | null = null;
-  #waitTimeoutMs: number;
-
-  constructor(timeoutMs: number) {
-    this.#waitTimeoutMs = timeoutMs;
-  }
-
-  push(consumer: Consumer<W>, onCancel: () => void) {
-    this.#queue.push({
-      consumer,
-      cancellationHandler: onCancel,
-      addedAt: Date.now(),
-    });
-    if (this.#timerId == null) {
-      if (this.#queue.length !== 1) {
-        throw new Error("unreachable: inconsistent state: no active timer");
-      }
-      this.#updateTimer();
-    }
-  }
-
-  shift(worker: W) {
-    const entry = this.#queue.shift();
-    if (entry) {
-      entry.consumer(worker);
-      return true;
-    }
-    return false;
-  }
-
-  #timeoutHandler() {
-    this.#cancelNextEntry();
-    this.#updateTimer();
-  }
-
-  #updateTimer() {
-    if (this.#queue.length > 0) {
-      const timeoutMs = this.#queue[0].addedAt + this.#waitTimeoutMs -
-        Date.now();
-      if (timeoutMs <= 0) {
-        this.#cancelNextEntry();
-        this.#updateTimer();
-        return;
-      }
-      this.#timerId = setTimeout(
-        this.#timeoutHandler.bind(this),
-        timeoutMs,
-      );
-    } else {
-      this.#timerId = null;
-    }
-  }
-
-  #cancelNextEntry() {
-    this.#queue.shift()!.cancellationHandler();
-  }
-}
 
 export class BaseWorkerManager<
   T,
@@ -261,13 +185,13 @@ export class BaseWorkerManager<
       this.#tasksByName.get(name)!.delete(taskId);
       // startedAt records are not deleted
 
-      const nextTask = this.#waitQueue.shift();
+      // const nextTask = this.#waitQueue.shift(task.worker);
       if (destroy) {
         task.worker.destroy();
 
-        if (nextTask) {
-          nextTask(this.#workerFactory());
-        } else {
+        const taskAdded = this.#waitQueue.shift(() => this.#workerFactory());
+        if (!taskAdded) {
+          // no task from the queue
           if (ensureMinWorkers) {
             const { minWorkers } = this.#poolConfig;
             if (minWorkers != null && this.#workerCount < minWorkers) {
@@ -276,9 +200,8 @@ export class BaseWorkerManager<
           }
         }
       } else {
-        if (nextTask) {
-          nextTask(task.worker);
-        } else {
+        const taskAdded = this.#waitQueue.shift(() => task.worker);
+        if (!taskAdded) { // worker has not been reassigned
           const { maxWorkers } = this.#poolConfig;
           // how?? xD
           // We might add "urgent" tasks in the future;
