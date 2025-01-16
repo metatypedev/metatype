@@ -14,6 +14,23 @@ export interface WaitQueue<W> {
   shift(produce: () => W): boolean;
 }
 
+export function createSimpleWaitQueue<W>(): WaitQueue<W> {
+  const queue: Array<Consumer<W>> = [];
+  return {
+    push(consumer, _onCancel) {
+      queue.push(consumer);
+    },
+    shift(produce) {
+      const consumer = queue.shift();
+      if (consumer) {
+        consumer(produce());
+        return true;
+      }
+      return false;
+    },
+  };
+}
+
 export class WaitQueueWithTimeout<W> implements WaitQueue<W> {
   #queue: Array<{
     consumer: Consumer<W>;

@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../../../log.ts";
-import { PoolConfig, WaitQueue, WaitQueueWithTimeout } from "./pooling.ts";
+import {
+  createSimpleWaitQueue,
+  PoolConfig,
+  WaitQueue,
+  WaitQueueWithTimeout,
+} from "./pooling.ts";
 import { BaseMessage, EventHandler, TaskId } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
@@ -39,6 +44,7 @@ export class BaseWorkerManager<
   #tasksByName: Map<string, Set<TaskId>> = new Map();
   #startedAt: Map<TaskId, Date> = new Map();
   #poolConfig: PoolConfig;
+  // TODO auto-remove idle workers after a certain time
   #idleWorkers: BaseWorker<M, E>[] = [];
   #waitQueue: WaitQueue<BaseWorker<M, E>>;
   #nextWorkerId = 1;
@@ -58,8 +64,12 @@ export class BaseWorkerManager<
     this.#workerFactory = () =>
       workerFactory(`${this.#name} worker #${this.#nextWorkerId++}`);
     this.#poolConfig = config;
-    // TODO no timeout
-    this.#waitQueue = new WaitQueueWithTimeout(config.waitTimeoutMs ?? 30000);
+
+    if (config.waitTimeoutMs == null) { // no timeout
+      this.#waitQueue = createSimpleWaitQueue();
+    } else {
+      this.#waitQueue = new WaitQueueWithTimeout(config.waitTimeoutMs ?? 30000);
+    }
   }
 
   protected getActiveTaskNames() {
@@ -107,7 +117,6 @@ export class BaseWorkerManager<
   }
 
   #waitForWorker() {
-    // TODO timeout
     return new Promise<BaseWorker<M, E>>((resolve, reject) => {
       this.#waitQueue.push(
         (worker) => resolve(worker),
@@ -185,13 +194,11 @@ export class BaseWorkerManager<
       this.#tasksByName.get(name)!.delete(taskId);
       // startedAt records are not deleted
 
-      // const nextTask = this.#waitQueue.shift(task.worker);
       if (destroy) {
         task.worker.destroy();
 
         const taskAdded = this.#waitQueue.shift(() => this.#workerFactory());
-        if (!taskAdded) {
-          // no task from the queue
+        if (!taskAdded) { // no task from the queue
           if (ensureMinWorkers) {
             const { minWorkers } = this.#poolConfig;
             if (minWorkers != null && this.#workerCount < minWorkers) {
