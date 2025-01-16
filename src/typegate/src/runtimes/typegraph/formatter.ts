@@ -26,6 +26,7 @@ import {
   typeCustomScalar,
   typeEmptyObjectScalar,
 } from "./helpers.ts";
+import { TypeVisibility } from "./visibility.ts";
 
 const SCALAR_TYPE_MAP = {
   boolean: "Boolean",
@@ -43,7 +44,10 @@ type FieldInfo = {
 
 export class TypeFormatter {
   scalarIndex = new Map<string, number>();
-  constructor(private tg: TypeGraphDS) {}
+  constructor(
+    private tg: TypeGraphDS,
+    private visibilityFilter: TypeVisibility,
+  ) {}
 
   formatInputFields(
     [name, typeIdx]: [string, number],

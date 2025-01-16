@@ -32,17 +32,17 @@ import {
   typeCustomScalar,
   typeEmptyObjectScalar,
 } from "./typegraph/helpers.ts";
+import { TypeVisibility } from "./typegraph/visibility.ts";
 
 export type DeprecatedArg = { includeDeprecated?: boolean };
 
 export class TypeGraphRuntime extends Runtime {
   tg: TypeGraphDS;
-  formatter: TypeFormatter;
+  #formatterInstance: TypeFormatter | null = null;
 
   private constructor(tg: TypeGraphDS) {
     super(TypeGraph.formatName(tg));
     this.tg = tg;
-    this.formatter = new TypeFormatter(tg);
   }
 
   static init(
@@ -67,6 +67,19 @@ export class TypeGraphRuntime extends Runtime {
         resolver,
       }),
     ];
+  }
+
+  initFormatter(denoRuntime: Runtime) {
+    const visibilityFilter = new TypeVisibility( this.tg, denoRuntime);
+    this.#formatterInstance = new TypeFormatter( this.tg, visibilityFilter);
+  }
+
+  get #formatter() {
+    if (!this.#formatterInstance) {
+      throw new Error("Fatal: Type formatter not initialized yet");
+    }
+
+    return this.#formatterInstance;
   }
 
   #delegate(stage: ComputeStage): Resolver {
@@ -108,15 +121,15 @@ export class TypeGraphRuntime extends Runtime {
       queryType: () => {
         if (!queries || Object.values(queries.properties).length === 0) {
           // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
-          return this.formatter.formatType(queries, false, false);
+          return this.#formatter.formatType(queries, false, false);
         }
-        return this.formatter.formatType(queries, false, false);
+        return this.#formatter.formatType(queries, false, false);
       },
       mutationType: () => {
         if (!mutations || Object.values(mutations.properties).length === 0) {
           return null;
         }
-        return this.formatter.formatType(mutations, false, false);
+        return this.#formatter.formatType(mutations, false, false);
       },
       subscriptionType: () => null,
       directives: () => [],
@@ -166,7 +179,7 @@ export class TypeGraphRuntime extends Runtime {
             hasUnion ||= isUnion(type) || isEither(type);
             if (isScalar(type)) {
               scalarTypeIndices.add(idx);
-              this.formatter.scalarIndex.set(type.type, idx);
+              this.#formatter.scalarIndex.set(type.type, idx);
               return false;
             }
             // FIXME
@@ -191,7 +204,7 @@ export class TypeGraphRuntime extends Runtime {
         hasUnion ||= isUnion(type) || isEither(type);
         if (isScalar(type)) {
           scalarTypeIndices.add(idx);
-          this.formatter.scalarIndex.set(type.type, idx);
+          this.#formatter.scalarIndex.set(type.type, idx);
           return false;
         }
         // FIXME
@@ -208,26 +221,26 @@ export class TypeGraphRuntime extends Runtime {
       (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
     );
     const scalarTypes = distinctScalars.map((type) =>
-      this.formatter.formatType(type, false, false)
+      this.#formatter.formatType(type, false, false)
     );
 
     const adhocCustomScalarTypes = hasUnion
       ? distinctScalars.map((node) => {
-        const idx = this.formatter.scalarIndex.get(node.type)!;
+        const idx = this.#formatter.scalarIndex.get(node.type)!;
         const asObject = typeCustomScalar(node, idx);
-        return this.formatter.formatType(asObject, false, false);
+        return this.#formatter.formatType(asObject, false, false);
       })
       : [];
 
     const regularTypes = distinctBy(
       [...regularTypeIndices].map((idx) => this.tg.types[idx]),
       (t) => t.title,
-    ).map((type) => this.formatter.formatType(type, false, false));
+    ).map((type) => this.#formatter.formatType(type, false, false));
 
     const inputTypes = distinctBy(
       [...inputTypeIndices].map((idx) => this.tg.types[idx]),
       (t) => t.title,
-    ).map((type) => this.formatter.formatType(type, false, true));
+    ).map((type) => this.#formatter.formatType(type, false, true));
 
     const types = [
       ...scalarTypes,
@@ -244,12 +257,12 @@ export class TypeGraphRuntime extends Runtime {
       types.push(typeEmptyObjectScalar());
     }
 
-    this.formatter.scalarIndex.clear();
+    this.#formatter.scalarIndex.clear();
     return types;
   };
 
   #getTypeResolver: Resolver = ({ name }) => {
     const type = this.tg.types.find((type) => type.title === name);
-    return type ? this.formatter.formatType(type, false, false) : null;
+    return type ? this.#formatter.formatType(type, false, false) : null;
   };
 }
