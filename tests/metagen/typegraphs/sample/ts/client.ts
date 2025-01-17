@@ -1132,84 +1132,84 @@ export class QueryGraph extends _QueryGraphBase {
     });
   }
     
-  getUser(select: UserSelections) {
+  getUser(select: UserSelections): QueryNode<User> {
     const inner = _selectionToNodeSet(
       { "getUser": select },
       [["getUser", nodeMetas.RootGetUserFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<User>;
+    return new QueryNode(inner);
   }
-  getPosts(select: PostSelections) {
+  getPosts(select: PostSelections): QueryNode<Post> {
     const inner = _selectionToNodeSet(
       { "getPosts": select },
       [["getPosts", nodeMetas.RootGetPostsFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<Post>;
+    return new QueryNode(inner);
   }
-  scalarNoArgs() {
+  scalarNoArgs(): QueryNode<string> {
     const inner = _selectionToNodeSet(
       { "scalarNoArgs": true },
       [["scalarNoArgs", nodeMetas.RootScalarNoArgsFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<string>;
+    return new QueryNode(inner);
   }
-  scalarArgs(args: Post | PlaceholderArgs<Post>) {
+  scalarArgs(args: Post | PlaceholderArgs<Post>): MutationNode<string> {
     const inner = _selectionToNodeSet(
       { "scalarArgs": args },
       [["scalarArgs", nodeMetas.RootScalarArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<string>;
+    return new MutationNode(inner);
   }
-  compositeNoArgs(select: PostSelections) {
+  compositeNoArgs(select: PostSelections): MutationNode<Post> {
     const inner = _selectionToNodeSet(
       { "compositeNoArgs": select },
       [["compositeNoArgs", nodeMetas.RootCompositeNoArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<Post>;
+    return new MutationNode(inner);
   }
-  compositeArgs(args: StructC339c | PlaceholderArgs<StructC339c>, select: PostSelections) {
+  compositeArgs(args: StructC339c | PlaceholderArgs<StructC339c>, select: PostSelections): MutationNode<Post> {
     const inner = _selectionToNodeSet(
       { "compositeArgs": [args, select] },
       [["compositeArgs", nodeMetas.RootCompositeArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<Post>;
+    return new MutationNode(inner);
   }
-  scalarUnion(args: StructC339c | PlaceholderArgs<StructC339c>) {
+  scalarUnion(args: StructC339c | PlaceholderArgs<StructC339c>): QueryNode<RootScalarUnionFnOutput> {
     const inner = _selectionToNodeSet(
       { "scalarUnion": args },
       [["scalarUnion", nodeMetas.RootScalarUnionFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<RootScalarUnionFnOutput>;
+    return new QueryNode(inner);
   }
-  compositeUnion(args: StructC339c | PlaceholderArgs<StructC339c>, select: RootCompositeUnionFnOutputSelections) {
+  compositeUnion(args: StructC339c | PlaceholderArgs<StructC339c>, select: RootCompositeUnionFnOutputSelections): QueryNode<RootCompositeUnionFnOutput> {
     const inner = _selectionToNodeSet(
       { "compositeUnion": [args, select] },
       [["compositeUnion", nodeMetas.RootCompositeUnionFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<RootCompositeUnionFnOutput>;
+    return new QueryNode(inner);
   }
-  mixedUnion(args: StructC339c | PlaceholderArgs<StructC339c>, select: RootMixedUnionFnOutputSelections) {
+  mixedUnion(args: StructC339c | PlaceholderArgs<StructC339c>, select: RootMixedUnionFnOutputSelections): QueryNode<RootMixedUnionFnOutput> {
     const inner = _selectionToNodeSet(
       { "mixedUnion": [args, select] },
       [["mixedUnion", nodeMetas.RootMixedUnionFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<RootMixedUnionFnOutput>;
+    return new QueryNode(inner);
   }
-  nestedComposite(select: RootNestedCompositeFnOutputSelections) {
+  nestedComposite(select: RootNestedCompositeFnOutputSelections): QueryNode<RootNestedCompositeFnOutput> {
     const inner = _selectionToNodeSet(
       { "nestedComposite": select },
       [["nestedComposite", nodeMetas.RootNestedCompositeFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<RootNestedCompositeFnOutput>;
+    return new QueryNode(inner);
   }
 }

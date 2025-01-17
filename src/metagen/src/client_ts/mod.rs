@@ -203,13 +203,13 @@ export class QueryGraph extends _QueryGraphBase {{
         write!(
             dest,
             r#"
-  {method_name}({args_row}) {{
+  {method_name}({args_row}): {node_type}<{out_ty_name}> {{
     const inner = _selectionToNodeSet(
       {{ "{node_name}": {args_selection} }},
       [["{node_name}", nodeMetas.{meta_method}]],
       "$q",
     )[0];
-    return new {node_type}(inner) as {node_type}<{out_ty_name}>;
+    return new {node_type}(inner);
   }}"#
         )?;
     }

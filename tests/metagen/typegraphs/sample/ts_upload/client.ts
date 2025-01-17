@@ -948,20 +948,20 @@ export class QueryGraph extends _QueryGraphBase {
     });
   }
     
-  upload(args: RootUploadFnInput | PlaceholderArgs<RootUploadFnInput>) {
+  upload(args: RootUploadFnInput | PlaceholderArgs<RootUploadFnInput>): MutationNode<boolean> {
     const inner = _selectionToNodeSet(
       { "upload": args },
       [["upload", nodeMetas.RootUploadFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<boolean>;
+    return new MutationNode(inner);
   }
-  uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>) {
+  uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>): MutationNode<boolean> {
     const inner = _selectionToNodeSet(
       { "uploadMany": args },
       [["uploadMany", nodeMetas.RootUploadManyFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<boolean>;
+    return new MutationNode(inner);
   }
 }
