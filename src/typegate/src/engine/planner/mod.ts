@@ -116,14 +116,18 @@ export class Planner {
         stageId,
         typeIdx: stage.props.typeIdx,
         isTopLevel: stage.props.parent ? false : true,
-        node: stage.props.node // actual non aliased name
+        node: stage.props.node, // actual non aliased name
       });
     }
 
     const { timer_policy_eval_retries } = this.tg.typegate.config.base;
-    const operationPolicies =  new OperationPolicies(this.tg, orderedStageMetadata, {
-      timer_policy_eval_retries
-    });
+    const operationPolicies = new OperationPolicies(
+      this.tg,
+      orderedStageMetadata,
+      {
+        timer_policy_eval_retries,
+      },
+    );
 
     return {
       stages,
@@ -549,7 +553,7 @@ export class Planner {
         this.tg.getGraphQLType(
           this.tg.type(idx),
           false,
-          inputType.id.includes(key),
+          inputType.id?.includes(key) ?? false,
         ),
     );
 

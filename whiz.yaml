@@ -3,7 +3,7 @@
 # process will leak in the bg and hog the port
 
 env:
-  TYPEGRAPH_VERSION: "0.0.3"
+  TYPEGRAPH_VERSION: "0.0.4"
   CLICOLOR_FORCE: "1"
   TIMER_MAX_TIMEOUT_MS: "30000"
 
