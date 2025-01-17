@@ -265,12 +265,12 @@ export class Agent {
         run,
         next.schedule_date,
         taskContext,
-      );
-
-      this.workerManager.listen(
-        next.run_id,
-        this.#eventResultHandlerFor(workflow.name, next.run_id),
-      );
+      ).then(() => {
+        this.workerManager.listen(
+          next.run_id,
+          this.#eventResultHandlerFor(workflow.name, next.run_id),
+        );
+      });
     } catch (err) {
       throw err;
     } finally {
@@ -407,8 +407,6 @@ export class Agent {
       backend: this.backend,
       run: event.run,
     });
-
-    // console.log("Persisted", run);
 
     await Meta.substantial.storeCloseSchedule({
       backend: this.backend,

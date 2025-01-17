@@ -43,13 +43,14 @@ export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
       await handlerFn(message.data as E);
     };
 
-    this.#worker.onerror = /*async*/ (event) =>
-      handlerFn(
+    this.#worker.onerror = async (event) => {
+      await handlerFn(
         {
           type: "WORKER_ERROR",
           event,
         } as E,
       );
+    };
   }
 
   send(msg: M) {

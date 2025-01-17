@@ -61,7 +61,7 @@ export class WorkerManager
     logger.info(`trigger ${msg.type} for ${runId}`);
   }
 
-  triggerStart(
+  async triggerStart(
     name: string,
     runId: string,
     workflowModPath: string,
@@ -69,19 +69,18 @@ export class WorkerManager
     schedule: string,
     internalTCtx: TaskContext,
   ) {
-    this.delegateTask(name, runId, {
+    await this.delegateTask(name, runId, {
       modulePath: workflowModPath,
-    }).then(() => {
-      this.sendMessage(runId, {
-        type: "START",
-        data: {
-          modulePath: workflowModPath,
-          functionName: name,
-          run: storedRun,
-          schedule,
-          internal: internalTCtx,
-        },
-      });
+    });
+    this.sendMessage(runId, {
+      type: "START",
+      data: {
+        modulePath: workflowModPath,
+        functionName: name,
+        run: storedRun,
+        schedule,
+        internal: internalTCtx,
+      },
     });
   }
 }
