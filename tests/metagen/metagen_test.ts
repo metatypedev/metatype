@@ -613,6 +613,8 @@ Meta.test(
     const expectedSchemaS = zod.object({
       singleQuery: postSchema,
       singleMutation: zod.string(),
+      singlePreparedQuery: zod.object({ input: zod.number() }),
+      singlePreparedMutation: zod.object({ input: zod.number() }),
     });
     const expectedSchema = zod.tuple([
       expectedSchemaQ,

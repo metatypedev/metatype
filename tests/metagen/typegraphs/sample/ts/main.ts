@@ -155,10 +155,22 @@ const res7b = await gqlClient.mutation(
     title: "",
   }),
 );
+const res7c = await gqlClient
+  .prepareQuery((args) =>
+    api1.identity({ input: args.get("num") }, { input: true }),
+  )
+  .perform({ num: 0 });
+const res7d = await gqlClient
+  .prepareMutation((args) =>
+    api1.identityUpdate({ input: args.get("num") }, { input: true }),
+  )
+  .perform({ num: 0 });
 
 const res7 = {
   singleQuery: res7a,
   singleMutation: res7b,
+  singlePreparedQuery: res7c,
+  singlePreparedMutation: res7d,
 };
 
 console.log(JSON.stringify([res1, res1a, res2, res3, res4, res5, res6, res7]));

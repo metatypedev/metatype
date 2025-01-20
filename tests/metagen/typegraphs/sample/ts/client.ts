@@ -741,7 +741,7 @@ export class GraphQLTransport {
    */
   prepareQuery<
     T extends JsonObject,
-    Q extends Record<string, QueryNode<unknown>>,
+    Q extends QueryNode<unknown> | Record<string, QueryNode<unknown>>,
   >(
     fun: (args: PreparedArgs<T>) => Q,
     { name = "" }: { name?: string } = {},
@@ -761,7 +761,7 @@ export class GraphQLTransport {
    */
   prepareMutation<
     T extends JsonObject,
-    Q extends Record<string, MutationNode<unknown>>,
+    Q extends MutationNode<unknown> | Record<string, MutationNode<unknown>>,
   >(
     fun: (args: PreparedArgs<T>) => Q,
     { name = "" }: { name?: string } = {},
@@ -1035,6 +1035,29 @@ const nodeMetas = {
       ...nodeMetas.RootNestedCompositeFnOutput(),
     };
   },
+  Struct17dc8(): NodeMeta {
+    return {
+      subNodes: [
+        ["input", nodeMetas.scalar],
+      ],
+    };
+  },
+  RootIdentityFn(): NodeMeta {
+    return {
+      ...nodeMetas.Struct17dc8(),
+      argumentTypes: {
+        input: "Integer64be4",
+      },
+    };
+  },
+  RootIdentityUpdateFn(): NodeMeta {
+    return {
+      ...nodeMetas.Struct17dc8(),
+      argumentTypes: {
+        input: "Integer64be4",
+      },
+    };
+  },
 };
 export type UserIdStringUuid = string;
 export type Post = {
@@ -1044,6 +1067,9 @@ export type Post = {
 };
 export type StructC339c = {
   id: string;
+};
+export type Struct17dc8 = {
+  input: number;
 };
 export type UserEmailStringEmail = string;
 export type UserPostsPostList = Array<Post>;
@@ -1121,12 +1147,17 @@ export type RootNestedCompositeFnOutputSelections = {
   composite?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructSelections>;
   list?: CompositeSelectNoArgs<RootNestedCompositeFnOutputListStructSelections>;
 };
+export type Struct17dc8Selections = {
+  _?: SelectionFlags;
+  input?: ScalarSelectNoArgs;
+};
 
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
       "UserIdStringUuid": "String!",
       "StringE1a43": "String!",
+      "Integer64be4": "Int!",
       "post": "post!",
       "user": "user!",
     });
@@ -1211,5 +1242,21 @@ export class QueryGraph extends _QueryGraphBase {
       "$q",
     )[0];
     return new QueryNode(inner);
+  }
+  identity(args: Struct17dc8 | PlaceholderArgs<Struct17dc8>, select: Struct17dc8Selections): QueryNode<Struct17dc8> {
+    const inner = _selectionToNodeSet(
+      { "identity": [args, select] },
+      [["identity", nodeMetas.RootIdentityFn]],
+      "$q",
+    )[0];
+    return new QueryNode(inner);
+  }
+  identityUpdate(args: Struct17dc8 | PlaceholderArgs<Struct17dc8>, select: Struct17dc8Selections): MutationNode<Struct17dc8> {
+    const inner = _selectionToNodeSet(
+      { "identityUpdate": [args, select] },
+      [["identityUpdate", nodeMetas.RootIdentityUpdateFn]],
+      "$q",
+    )[0];
+    return new MutationNode(inner);
   }
 }

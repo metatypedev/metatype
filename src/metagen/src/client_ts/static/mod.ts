@@ -738,7 +738,7 @@ export class GraphQLTransport {
    */
   prepareQuery<
     T extends JsonObject,
-    Q extends Record<string, QueryNode<unknown>>,
+    Q extends QueryNode<unknown> | Record<string, QueryNode<unknown>>,
   >(
     fun: (args: PreparedArgs<T>) => Q,
     { name = "" }: { name?: string } = {},
@@ -758,7 +758,7 @@ export class GraphQLTransport {
    */
   prepareMutation<
     T extends JsonObject,
-    Q extends Record<string, MutationNode<unknown>>,
+    Q extends MutationNode<unknown> | Record<string, MutationNode<unknown>>,
   >(
     fun: (args: PreparedArgs<T>) => Q,
     { name = "" }: { name?: string } = {},

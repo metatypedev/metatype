@@ -178,10 +178,18 @@ res7b = gql_client.mutation(
         }
     )
 )
+res7c = gql_client.prepare_query(
+    lambda args: qg.identity({"input": args.get("num")}, {"input": True})
+).perform({"num": 0})
+res7d = gql_client.prepare_mutation(
+    lambda args: qg.identity_update({"input": args.get("num")}, {"input": True})
+).perform({"num": 0})
 
 res7 = {
     "singleQuery": res7a,
     "singleMutation": res7b,
+    "singlePreparedQuery": res7c,
+    "singlePreparedMutation": res7d,
 }
 
 print(json.dumps([res1, res1a, res2, res3, res4, res5, res6, res7]))
