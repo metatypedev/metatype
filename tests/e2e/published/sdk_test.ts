@@ -31,7 +31,6 @@ for (const version of previousVersions) {
       async teardown() {
         await testConfig.clearSyncData();
       },
-      ignore: version === LATEST_RELEASE_VERSION,
     },
     async (t) => {
       const { publishedBin, examplesDir } = await downloadSteps(t, version);
