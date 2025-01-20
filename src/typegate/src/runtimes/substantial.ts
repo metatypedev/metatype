@@ -113,9 +113,9 @@ export class SubstantialRuntime extends Runtime {
     const queue = "default";
 
     const agentConfig = {
-      pollIntervalSec: typegate.config.base.substantial_poll_interval_sec,
-      leaseLifespanSec: typegate.config.base.substantial_lease_lifespan_sec,
-      maxAcquirePerTick: typegate.config.base.substantial_max_acquire_per_tick,
+      pollIntervalSec: typegate.config.base.substantial_poll_interval_sec!,
+      leaseLifespanSec: typegate.config.base.substantial_lease_lifespan_sec!,
+      maxAcquirePerTick: typegate.config.base.substantial_max_acquire_per_tick!,
     } satisfies AgentConfig;
 
     const agent = new Agent(backend, queue, agentConfig);
