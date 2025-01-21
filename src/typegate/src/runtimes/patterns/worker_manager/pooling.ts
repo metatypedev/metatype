@@ -1,6 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { BaseWorker, BaseWorkerManager } from "./mod.ts";
+import { BaseMessage } from "./types.ts";
+import { getLogger } from "../../../log.ts";
+
+const logger = getLogger(import.meta, "WARN");
+
 export type PoolConfig = {
   maxWorkers?: number | null;
   minWorkers?: number | null;
@@ -98,5 +104,120 @@ export class WaitQueueWithTimeout<W> implements WaitQueue<W> {
     if (this.#timerId != null) {
       clearTimeout(this.#timerId);
     }
+  }
+}
+
+/// W is the worker type
+/// R is the manager type
+export class WorkerPool<
+  T,
+  M extends BaseMessage,
+  E extends BaseMessage,
+  W extends BaseWorker<M, E> = BaseWorker<M, E>,
+  G extends BaseWorkerManager<T, M, E> = BaseWorkerManager<T, M, E>,
+> {
+  #config: PoolConfig;
+  // TODO auto-remove idle workers after a certain time
+  #idleWorkers: Array<W> = [];
+  #busyWorkers: Map<string, G> = new Map();
+  #waitQueue: WaitQueue<W>;
+  #workerFactory: () => W;
+  #nextWorkerId = 1;
+
+  constructor(
+    name: string,
+    config: PoolConfig,
+    factory: (id: string) => W,
+  ) {
+    this.#config = config;
+    this.#workerFactory = () =>
+      factory(`${name} worker #${this.#nextWorkerId++}`);
+
+    if (config.waitTimeoutMs == null) { // no timeout
+      this.#waitQueue = createSimpleWaitQueue();
+    } else {
+      this.#waitQueue = new WaitQueueWithTimeout(config.waitTimeoutMs ?? 30000);
+    }
+  }
+
+  #lendWorkerTo(worker: W, manager: G): W {
+    this.#busyWorkers.set(worker.id, manager);
+    return worker;
+  }
+
+  borrowWorker(manager: G) {
+    const idleWorker = this.#idleWorkers.shift();
+    if (idleWorker) {
+      return Promise.resolve(this.#lendWorkerTo(idleWorker, manager));
+    }
+    if (
+      this.#config.maxWorkers == null ||
+      this.#busyWorkers.size < this.#config.maxWorkers
+    ) {
+      return Promise.resolve(
+        this.#lendWorkerTo(this.#workerFactory(), manager),
+      );
+    }
+
+    // wait for a worker to become available
+    return new Promise<W>((resolve, reject) => {
+      this.#waitQueue.push(
+        (worker) => resolve(this.#lendWorkerTo(worker, manager)),
+        () =>
+          reject(
+            new Error("timeout while waiting for a worker to be available"),
+          ),
+      );
+    });
+  }
+
+  // ensureMinWorkers will be false when we are shutting down.
+  unborrowWorker(
+    worker: W,
+  ) {
+    this.#busyWorkers.delete(worker.id);
+    const taskAdded = this.#waitQueue.shift(() => worker);
+    if (!taskAdded) { // worker has not been reassigned
+      const { maxWorkers } = this.#config;
+      // how?? xD
+      // We might add "urgent" tasks in the future;
+      // in this case the worker count might exceed `maxWorkers`.
+      if (maxWorkers != null && this.#workerCount >= maxWorkers) {
+        worker.destroy();
+      } else {
+        this.#idleWorkers.push(worker);
+      }
+    }
+  }
+
+  // when shutdown is true, new tasks will not be dequeued
+  destroyWorker(worker: W, shutdown = false) {
+    this.#busyWorkers.delete(worker.id);
+    worker.destroy();
+    if (!shutdown) {
+      const taskAdded = this.#waitQueue.shift(() => this.#workerFactory());
+      if (!taskAdded) { // queue was empty: worker not reassigned
+        const { minWorkers } = this.#config;
+        if (minWorkers != null && this.#workerCount < minWorkers) {
+          this.#idleWorkers.push(this.#workerFactory());
+        }
+      }
+    }
+  }
+
+  get #workerCount() {
+    return this.#idleWorkers.length + this.#busyWorkers.size;
+  }
+
+  clear() {
+    logger.warn(
+      `destroying idle workers: ${
+        this.#idleWorkers.map((w) => `"${w.id}"`).join(", ")
+      }`,
+    );
+    for (const worker of this.#idleWorkers) {
+      worker.destroy();
+    }
+    this.#idleWorkers = [];
   }
 }

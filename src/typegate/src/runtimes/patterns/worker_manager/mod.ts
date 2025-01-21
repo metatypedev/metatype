@@ -2,12 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../../../log.ts";
-import {
-  createSimpleWaitQueue,
-  PoolConfig,
-  WaitQueue,
-  WaitQueueWithTimeout,
-} from "./pooling.ts";
+import { WorkerPool } from "./pooling.ts";
 import { BaseMessage, EventHandler, TaskId } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
@@ -25,10 +20,8 @@ export abstract class BaseWorker<M extends BaseMessage, E extends BaseMessage> {
 
 type DeallocateOptions = {
   destroy?: boolean;
-  /// defaults to `true`
-  /// recreate workers to replace destroyed ones if `.destroy` is `true`.
-  /// Set to `false` for deinit.
-  ensureMinWorkers?: boolean;
+  // only relevant if destroy is true; if true, no pending task will be dequeued
+  shutdown?: boolean;
 };
 
 export class BaseWorkerManager<
@@ -36,40 +29,16 @@ export class BaseWorkerManager<
   M extends BaseMessage,
   E extends BaseMessage,
 > {
-  #name: string;
   #activeTasks: Map<TaskId, {
     worker: BaseWorker<M, E>;
     taskSpec: T;
   }> = new Map();
   #tasksByName: Map<string, Set<TaskId>> = new Map();
   #startedAt: Map<TaskId, Date> = new Map();
-  #poolConfig: PoolConfig;
-  // TODO auto-remove idle workers after a certain time
-  #idleWorkers: BaseWorker<M, E>[] = [];
-  #waitQueue: WaitQueue<BaseWorker<M, E>>;
-  #nextWorkerId = 1;
+  #pool: WorkerPool<T, M, E>;
 
-  #workerFactory: () => BaseWorker<M, E>;
-
-  get #workerCount() {
-    return this.#idleWorkers.length + this.#activeTasks.size;
-  }
-
-  protected constructor(
-    name: string,
-    workerFactory: (taskId: TaskId) => BaseWorker<M, E>,
-    config: PoolConfig = {},
-  ) {
-    this.#name = name;
-    this.#workerFactory = () =>
-      workerFactory(`${this.#name} worker #${this.#nextWorkerId++}`);
-    this.#poolConfig = config;
-
-    if (config.waitTimeoutMs == null) { // no timeout
-      this.#waitQueue = createSimpleWaitQueue();
-    } else {
-      this.#waitQueue = new WaitQueueWithTimeout(config.waitTimeoutMs ?? 30000);
-    }
+  protected constructor(pool: WorkerPool<T, M, E>) {
+    this.#pool = pool;
   }
 
   protected getActiveTaskNames() {
@@ -102,38 +71,12 @@ export class BaseWorkerManager<
     return startedAt;
   }
 
-  #nextWorker() {
-    const idleWorker = this.#idleWorkers.shift();
-    if (idleWorker) {
-      return Promise.resolve(idleWorker);
-    }
-    if (
-      this.#poolConfig.maxWorkers == null ||
-      this.#activeTasks.size < this.#poolConfig.maxWorkers
-    ) {
-      return Promise.resolve(this.#workerFactory());
-    }
-    return this.#waitForWorker();
-  }
-
-  #waitForWorker() {
-    return new Promise<BaseWorker<M, E>>((resolve, reject) => {
-      this.#waitQueue.push(
-        (worker) => resolve(worker),
-        () =>
-          reject(
-            new Error("timeout while waiting for a worker to be available"),
-          ),
-      );
-    });
-  }
-
   protected async delegateTask(
     name: string,
     taskId: TaskId,
     taskSpec: T,
   ): Promise<void> {
-    const worker = await this.#nextWorker();
+    const worker = await this.#pool.borrowWorker(this);
 
     if (!this.#tasksByName.has(name)) {
       this.#tasksByName.set(name, new Set());
@@ -179,7 +122,7 @@ export class BaseWorkerManager<
   deallocateWorker(
     name: string,
     taskId: TaskId,
-    { destroy = false, ensureMinWorkers = true }: DeallocateOptions = {},
+    { destroy = false, shutdown = false }: DeallocateOptions = {},
   ) {
     const task = this.#activeTasks.get(taskId);
     if (this.#tasksByName.has(name)) {
@@ -195,30 +138,9 @@ export class BaseWorkerManager<
       // startedAt records are not deleted
 
       if (destroy) {
-        task.worker.destroy();
-
-        const taskAdded = this.#waitQueue.shift(() => this.#workerFactory());
-        if (!taskAdded) { // no task from the queue
-          if (ensureMinWorkers) {
-            const { minWorkers } = this.#poolConfig;
-            if (minWorkers != null && this.#workerCount < minWorkers) {
-              this.#idleWorkers.push(this.#workerFactory());
-            }
-          }
-        }
+        this.#pool.destroyWorker(task.worker, shutdown);
       } else {
-        const taskAdded = this.#waitQueue.shift(() => task.worker);
-        if (!taskAdded) { // worker has not been reassigned
-          const { maxWorkers } = this.#poolConfig;
-          // how?? xD
-          // We might add "urgent" tasks in the future;
-          // in this case the worker count might exceed `maxWorkers`.
-          if (maxWorkers != null && this.#workerCount >= maxWorkers) {
-            task.worker.destroy();
-          } else {
-            this.#idleWorkers.push(task.worker);
-          }
-        }
+        this.#pool.unborrowWorker(task.worker);
       }
 
       return true;
@@ -239,18 +161,8 @@ export class BaseWorkerManager<
   }
 
   deinit() {
-    this.deallocateAllWorkers({ destroy: true, ensureMinWorkers: false });
-    if (this.#idleWorkers.length > 0) {
-      logger.warn(
-        `destroying idle workers: ${
-          this.#idleWorkers.map((w) => `"${w.id}"`).join(", ")
-        }`,
-      );
-      for (const worker of this.#idleWorkers) {
-        worker.destroy();
-      }
-      this.#idleWorkers = [];
-    }
+    this.deallocateAllWorkers({ destroy: true, shutdown: true });
+    this.#pool.clear(); // this will be called more than once, but that is ok
     return Promise.resolve();
   }
 }

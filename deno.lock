@@ -6,8 +6,6 @@
       "jsr:@david/which@^0.4.1": "jsr:@david/which@0.4.1",
       "jsr:@std/archive@^0.225.0": "jsr:@std/archive@0.225.4",
       "jsr:@std/assert@^0.221.0": "jsr:@std/assert@0.221.0",
-      "jsr:@std/assert@^1.0.10": "jsr:@std/assert@1.0.10",
-      "jsr:@std/assert@^1.0.2": "jsr:@std/assert@1.0.10",
       "jsr:@std/assert@^1.0.3": "jsr:@std/assert@1.0.10",
       "jsr:@std/assert@^1.0.6": "jsr:@std/assert@1.0.10",
       "jsr:@std/async@^1.0.3": "jsr:@std/async@1.0.9",
@@ -42,10 +40,8 @@
       "jsr:@std/semver@^1.0.1": "jsr:@std/semver@1.0.3",
       "jsr:@std/streams@0.221.0": "jsr:@std/streams@0.221.0",
       "jsr:@std/streams@1": "jsr:@std/streams@1.0.8",
-      "jsr:@std/testing@^1.0.1": "jsr:@std/testing@1.0.9",
       "jsr:@std/url@^0.225.0": "jsr:@std/url@0.225.1",
       "jsr:@std/uuid@^1.0.1": "jsr:@std/uuid@1.0.4",
-      "jsr:@std/yaml@^1.0.4": "jsr:@std/yaml@1.0.5",
       "npm:@noble/hashes@1.4.0": "npm:@noble/hashes@1.4.0",
       "npm:@sentry/node@7.70.0": "npm:@sentry/node@7.70.0",
       "npm:@types/node": "npm:@types/node@18.16.19",
@@ -186,15 +182,6 @@
           "jsr:@std/bytes@^1.0.3"
         ]
       },
-      "@std/testing@1.0.9": {
-        "integrity": "9bdd4ac07cb13e7594ac30e90f6ceef7254ac83a9aeaa089be0008f33aab5cd4",
-        "dependencies": [
-          "jsr:@std/assert@^1.0.10",
-          "jsr:@std/fs@^1.0.9",
-          "jsr:@std/internal@^1.0.5",
-          "jsr:@std/path@^1.0.8"
-        ]
-      },
       "@std/url@0.225.1": {
         "integrity": "7961f62f0a3cd2c7aa5b785822874132760b50bbf5ed0ccfded8668f203e7a95",
         "dependencies": [
@@ -207,9 +194,6 @@
           "jsr:@std/bytes@^1.0.2",
           "jsr:@std/crypto@^1.0.3"
         ]
-      },
-      "@std/yaml@1.0.5": {
-        "integrity": "71ba3d334305ee2149391931508b2c293a8490f94a337eef3a09cade1a2a2742"
       }
     },
     "npm": {
