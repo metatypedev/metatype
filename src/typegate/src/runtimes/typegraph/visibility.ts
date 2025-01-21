@@ -5,7 +5,7 @@ import { TypegateConfigBase } from "../../config.ts";
 import { TypeGraphDS } from "../../typegraph/mod.ts";
 import { Type } from "../../typegraph/type_node.ts";
 import { getChildTypes, TypeVisitorMap, VisitPath, visitTypes } from "../../typegraph/visitor.ts";
-import { Resolver } from "../../types.ts";
+import { Context, Resolver } from "../../types.ts";
 import { DenoRuntime } from "../deno/deno.ts";
 
 export interface FieldToPolicy {
@@ -105,7 +105,7 @@ export class TypeVisibility {
     return true;
   }
 
-  async computeAllowList() {
+  async computeAllowList(context: Context) {
     // TODO:
     // 1. evaluate the resolver queue from left to right
     // 2. increase deniers count for the underlying typeIdx if DENY
