@@ -5,10 +5,19 @@ import { getLogger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import { DenoWorker } from "../patterns/worker_manager/deno.ts";
 import { BaseWorkerManager } from "../patterns/worker_manager/mod.ts";
+import { WorkerPool } from "../patterns/worker_manager/pooling.ts";
 import { EventHandler, TaskId } from "../patterns/worker_manager/types.ts";
 import { Run, WorkflowEvent, WorkflowMessage } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
+
+// TODO lazy
+const pool = new WorkerPool<WorkflowSpec, WorkflowMessage, WorkflowEvent>(
+  "substantial workflows",
+  // TODO load from config
+  {},
+  (id: string) => new DenoWorker(id, import.meta.resolve("./worker.ts")),
+);
 
 export type WorkflowSpec = {
   modulePath: string;
@@ -22,9 +31,7 @@ export type WorkflowSpec = {
 export class WorkerManager
   extends BaseWorkerManager<WorkflowSpec, WorkflowMessage, WorkflowEvent> {
   constructor() {
-    super("substantial workflows", (taskId: TaskId) => {
-      return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
-    });
+    super(pool);
   }
 
   isOngoing(runId: TaskId) {

@@ -7,6 +7,7 @@ import {
   BaseWorkerManager,
   createTaskId,
 } from "../patterns/worker_manager/mod.ts";
+import { WorkerPool } from "../patterns/worker_manager/pooling.ts";
 import { TaskId } from "../patterns/worker_manager/types.ts";
 import { TaskContext } from "./shared_types.ts";
 import { DenoEvent, DenoMessage, TaskSpec } from "./types.ts";
@@ -17,15 +18,18 @@ export type WorkerManagerConfig = {
   timeout_ms: number;
 };
 
+// TODO lazy
+const pool = new WorkerPool<TaskSpec, DenoMessage, DenoEvent>(
+  "deno runtime",
+  // TODO load from config
+  {},
+  (id: string) => new DenoWorker(id, import.meta.resolve("./worker.ts")),
+);
+
 export class WorkerManager
   extends BaseWorkerManager<TaskSpec, DenoMessage, DenoEvent> {
   constructor(private config: WorkerManagerConfig) {
-    super(
-      "deno runtime",
-      (taskId: TaskId) => {
-        return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
-      },
-    );
+    super(pool);
   }
 
   async callFunction(
