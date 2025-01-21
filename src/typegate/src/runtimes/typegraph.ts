@@ -33,12 +33,15 @@ import {
   typeEmptyObjectScalar,
 } from "./typegraph/helpers.ts";
 import { TypeVisibility } from "./typegraph/visibility.ts";
+import { TypegateConfigBase } from "../config.ts";
+import { DenoRuntime } from "./deno/deno.ts";
 
 export type DeprecatedArg = { includeDeprecated?: boolean };
 
 export class TypeGraphRuntime extends Runtime {
   tg: TypeGraphDS;
   #formatterInstance: TypeFormatter | null = null;
+  #typeVisibilityInstance: TypeVisibility | null = null;
 
   private constructor(tg: TypeGraphDS) {
     super(TypeGraph.formatName(tg));
@@ -69,17 +72,28 @@ export class TypeGraphRuntime extends Runtime {
     ];
   }
 
-  initFormatter(denoRuntime: Runtime) {
-    const visibilityFilter = new TypeVisibility( this.tg, denoRuntime);
-    this.#formatterInstance = new TypeFormatter( this.tg, visibilityFilter);
+  initFormatter(
+    config: TypegateConfigBase,
+    denoRuntime: DenoRuntime,
+  ) {
+    this.#typeVisibilityInstance = new TypeVisibility(this.tg, denoRuntime, config);
+    this.#formatterInstance = new TypeFormatter(this.tg);
   }
 
   get #formatter() {
     if (!this.#formatterInstance) {
-      throw new Error("Fatal: Type formatter not initialized yet");
+      throw new Error("Fatal: TypeFormatter not initialized yet");
     }
 
     return this.#formatterInstance;
+  }
+
+  get #visible() {
+    if (!this.#typeVisibilityInstance) {
+      throw new Error("Fatal: TypeVisibility not initialized yet");
+    }
+
+    return this.#typeVisibilityInstance;
   }
 
   #delegate(stage: ComputeStage): Resolver {
@@ -136,7 +150,7 @@ export class TypeGraphRuntime extends Runtime {
     };
   };
 
-  #typesResolver: Resolver = (_) => {
+  #typesResolver: Resolver = async (_) => {
     // filter non-native GraphQL types
     const filter = (
       type: TypeNode,
@@ -214,16 +228,23 @@ export class TypeGraphRuntime extends Runtime {
         return true;
       },
     };
-
     visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
+
+    // TODO: Better place
+    await this.#visible.computeAllowList();
+
+    // Known scalars (integer, boolean, ..)
     const distinctScalars = distinctBy(
-      [...scalarTypeIndices].map((idx) => this.tg.types[idx]),
+      this.#visible.filterVisible(scalarTypeIndices).map((idx) =>
+        this.tg.types[idx]
+      ),
       (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
     );
     const scalarTypes = distinctScalars.map((type) =>
       this.#formatter.formatType(type, false, false)
     );
 
+    // Adhoc types (Union/Either on the input)
     const adhocCustomScalarTypes = hasUnion
       ? distinctScalars.map((node) => {
         const idx = this.#formatter.scalarIndex.get(node.type)!;
@@ -232,13 +253,19 @@ export class TypeGraphRuntime extends Runtime {
       })
       : [];
 
+    // Object types that are not an input type
     const regularTypes = distinctBy(
-      [...regularTypeIndices].map((idx) => this.tg.types[idx]),
+      this.#visible.filterVisible(regularTypeIndices).map((idx) =>
+        this.tg.types[idx]
+      ),
       (t) => t.title,
     ).map((type) => this.#formatter.formatType(type, false, false));
 
+    // Input type (must be Object)
     const inputTypes = distinctBy(
-      [...inputTypeIndices].map((idx) => this.tg.types[idx]),
+      this.#visible.filterVisible(inputTypeIndices).map((idx) =>
+        this.tg.types[idx]
+      ),
       (t) => t.title,
     ).map((type) => this.#formatter.formatType(type, false, true));
 

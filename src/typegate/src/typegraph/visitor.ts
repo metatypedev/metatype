@@ -4,7 +4,7 @@
 import type { TypeGraphDS } from "../typegraph/mod.ts";
 import { Type, type TypeNode } from "./type_node.ts";
 
-interface Path {
+export interface VisitPath {
   indices: number[];
   edges: string[];
 }
@@ -12,10 +12,10 @@ interface Path {
 interface VisitorNode<T extends TypeNode> {
   type: T;
   idx: number;
-  path: Path;
+  path: VisitPath;
 }
 
-function extendPath(path: Path, [idx, edge]: [number, string]): Path {
+function extendPath(path: VisitPath, [idx, edge]: [number, string]): VisitPath {
   return {
     indices: [...path.indices, idx],
     edges: [...path.edges, edge],

@@ -26,7 +26,7 @@ import {
   typeCustomScalar,
   typeEmptyObjectScalar,
 } from "./helpers.ts";
-import { TypeVisibility } from "./visibility.ts";
+import { Resolver } from "../../types.ts";
 
 const SCALAR_TYPE_MAP = {
   boolean: "Boolean",
@@ -45,9 +45,9 @@ type FieldInfo = {
 export class TypeFormatter {
   scalarIndex = new Map<string, number>();
   constructor(
-    private tg: TypeGraphDS,
-    private visibilityFilter: TypeVisibility,
+    private readonly tg: TypeGraphDS
   ) {}
+
 
   formatInputFields(
     [name, typeIdx]: [string, number],
@@ -80,7 +80,7 @@ export class TypeFormatter {
     type: TypeNode,
     required: boolean,
     asInput: boolean,
-  ): Record<string, () => unknown> => {
+  ): Record<string, Resolver> => {
     const common = {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L207
       name: () => null,

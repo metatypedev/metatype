@@ -51,6 +51,7 @@ import { createSharedArtifactStore } from "./artifacts/shared.ts";
 import { AsyncDisposableStack } from "dispose";
 import { globalConfig, type TypegateConfig } from "../config.ts";
 import { TypegateCryptoKeys } from "../crypto.ts";
+import { DenoRuntime } from "../runtimes/deno/deno.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -454,7 +455,8 @@ export class Typegate implements AsyncDisposable {
         },
       );
       (typegraphRuntime as TypeGraphRuntime).initFormatter(
-        introspectionRuntimeRefData.denoRuntime,
+        this.config.base,
+        introspectionRuntimeRefData.denoRuntime as DenoRuntime,
       );
 
       introspection = await TypeGraph.init(
