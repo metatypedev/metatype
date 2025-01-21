@@ -18,7 +18,7 @@ import {
   Type,
   type TypeNode,
 } from "../typegraph/type_node.ts";
-import type { Resolver } from "../types.ts";
+import type { Context, Resolver } from "../types.ts";
 import {
   getChildTypes,
   type TypeVisitorMap,
@@ -150,7 +150,7 @@ export class TypeGraphRuntime extends Runtime {
     };
   };
 
-  #typesResolver: Resolver = async (_) => {
+  #typesResolver: Resolver = async (context: Context) => {
     // filter non-native GraphQL types
     const filter = (
       type: TypeNode,
@@ -231,7 +231,7 @@ export class TypeGraphRuntime extends Runtime {
     visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
 
     // TODO: Better place
-    await this.#visible.computeAllowList();
+    await this.#visible.computeAllowList(context);
 
     // Known scalars (integer, boolean, ..)
     const distinctScalars = distinctBy(
