@@ -12,12 +12,6 @@ import { Run, WorkflowEvent, WorkflowMessage } from "./types.ts";
 const logger = getLogger(import.meta, "WARN");
 
 // TODO lazy
-const pool = new WorkerPool<WorkflowSpec, WorkflowMessage, WorkflowEvent>(
-  "substantial workflows",
-  // TODO load from config
-  {},
-  (id: string) => new DenoWorker(id, import.meta.resolve("./worker.ts")),
-);
 
 export type WorkflowSpec = {
   modulePath: string;
@@ -30,8 +24,23 @@ export type WorkflowSpec = {
  */
 export class WorkerManager
   extends BaseWorkerManager<WorkflowSpec, WorkflowMessage, WorkflowEvent> {
+  static #pool:
+    | WorkerPool<WorkflowSpec, WorkflowMessage, WorkflowEvent>
+    | null = null;
+  static #getPool() {
+    if (!WorkerManager.#pool) {
+      WorkerManager.#pool = new WorkerPool(
+        "substantial workflows",
+        // TODO load from config
+        {},
+        (id: string) => new DenoWorker(id, import.meta.resolve("./worker.ts")),
+      );
+    }
+    return WorkerManager.#pool!;
+  }
+
   constructor() {
-    super(pool);
+    super(WorkerManager.#getPool());
   }
 
   isOngoing(runId: TaskId) {

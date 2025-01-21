@@ -18,18 +18,23 @@ export type WorkerManagerConfig = {
   timeout_ms: number;
 };
 
-// TODO lazy
-const pool = new WorkerPool<TaskSpec, DenoMessage, DenoEvent>(
-  "deno runtime",
-  // TODO load from config
-  {},
-  (id: string) => new DenoWorker(id, import.meta.resolve("./worker.ts")),
-);
-
 export class WorkerManager
   extends BaseWorkerManager<TaskSpec, DenoMessage, DenoEvent> {
+  static #pool: WorkerPool<TaskSpec, DenoMessage, DenoEvent> | null = null;
+  static #getPool() {
+    if (!WorkerManager.#pool) {
+      WorkerManager.#pool = new WorkerPool(
+        "deno runtime",
+        // TODO load from config
+        {},
+        (id: string) => new DenoWorker(id, import.meta.resolve("./worker.ts")),
+      );
+    }
+    return WorkerManager.#pool!;
+  }
+
   constructor(private config: WorkerManagerConfig) {
-    super(pool);
+    super(WorkerManager.#getPool());
   }
 
   async callFunction(
