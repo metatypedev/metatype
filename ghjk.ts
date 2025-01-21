@@ -3,8 +3,13 @@
 
 // @ts-nocheck: Deno file
 
-import { METATYPE_VERSION, PUBLISHED_VERSION } from "./tools/consts.ts";
+import {
+  CURRENT_VERSION,
+  LATEST_PRE_RELEASE_VERSION,
+  LATEST_RELEASE_VERSION,
+} from "./tools/consts.ts";
 import { file, ports, sedLock, semver, stdDeps } from "./tools/deps.ts";
+import { validateVersions } from "./tools/tasks/lock.ts";
 import installs from "./tools/installs.ts";
 import tasks from "./tools/tasks/mod.ts";
 
@@ -20,7 +25,7 @@ env("main")
   .vars({
     RUST_LOG:
       "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,quaint=off",
-    TYPEGRAPH_VERSION: "0.0.3",
+    TYPEGRAPH_VERSION: "0.0.4",
     CLICOLOR_FORCE: "1",
     CROSS_CONFIG: "tools/Cross.toml",
     GIT_CLIFF_CONFIG: "tools/cliff.toml",
@@ -119,11 +124,12 @@ env("dev")
     ports.cargobi({ crateName: "git-cliff", locked: true }),
   );
 
-task("version-print", () => console.log(METATYPE_VERSION), {
-  desc: "Print $METATYPE_VERSION",
+task("version-print", () => console.log(CURRENT_VERSION), {
+  desc: "Print $CURRENT_VERSION",
 });
 
 task("version-bump", async ($) => {
+  validateVersions();
   const bumps = [
     "major",
     "premajor",
@@ -143,7 +149,7 @@ task("version-bump", async ($) => {
 
   const newVersion = semver.format(
     semver.increment(
-      semver.parse(METATYPE_VERSION),
+      semver.parse(CURRENT_VERSION),
       bump as semver.ReleaseType,
       {
         prerelease: "rc",
@@ -151,15 +157,17 @@ task("version-bump", async ($) => {
     ),
   );
 
-  $.logStep(`Bumping ${METATYPE_VERSION} → ${newVersion}`);
-  const lines = [[/^(export const METATYPE_VERSION = ").*(";)$/, newVersion]];
+  $.logStep(`Bumping ${CURRENT_VERSION} → ${newVersion}`);
+  const lines = [[/^(export const CURRENT_VERSION = ").*(";)$/, newVersion]];
   if (bump === "prerelease") {
     $.logStep(
-      `Bumping published version ${PUBLISHED_VERSION} → ${METATYPE_VERSION}`,
+      `Bumping published version ${
+        LATEST_PRE_RELEASE_VERSION || LATEST_RELEASE_VERSION
+      } → ${CURRENT_VERSION}`,
     );
     lines.push([
       /^(export const PUBLISHED_VERSION = ").*(";)$/,
-      METATYPE_VERSION,
+      CURRENT_VERSION,
     ]);
   }
 
@@ -167,6 +175,7 @@ task("version-bump", async ($) => {
     lines: {
       "./tools/consts.ts": lines,
     },
+    ignores: [".metatype/**/*"],
   });
   await $`ghjk x lock-sed`;
 });

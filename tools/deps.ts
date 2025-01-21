@@ -46,6 +46,7 @@ export {
   red,
   yellow,
 } from "jsr:@std/fmt@^1.0.0/colors";
+export { assert } from "jsr:@std/assert@^1.0.3";
 export { format as formatDuration } from "jsr:@std/fmt@^1.0.0/duration";
 export { mergeReadableStreams, TextLineStream } from "jsr:@std/streams@1";
 export type {} from "jsr:@std/path@^1.0.2";

@@ -105,7 +105,7 @@ impl Store {
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
-    pub static SDK_VERSION: String = "0.5.0-rc.9".to_owned();
+    pub static SDK_VERSION: String = "0.5.0".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {

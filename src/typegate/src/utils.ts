@@ -216,3 +216,5 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
+export const deepClone = <T>(clonable: T): T => JSON.parse(JSON.stringify(clonable)) as T;
