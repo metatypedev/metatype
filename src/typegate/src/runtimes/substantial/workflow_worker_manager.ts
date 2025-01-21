@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { globalConfig } from "../../config.ts";
 import { getLogger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import { DenoWorker } from "../patterns/worker_manager/deno.ts";
@@ -32,7 +33,11 @@ export class WorkerManager
       WorkerManager.#pool = new WorkerPool(
         "substantial workflows",
         // TODO load from config
-        {},
+        {
+          minWorkers: globalConfig.min_substantial_workers,
+          maxWorkers: globalConfig.max_substantial_workers,
+          waitTimeoutMs: globalConfig.substantial_worker_wait_timeout_ms,
+        },
         (id: string) => new DenoWorker(id, import.meta.resolve("./worker.ts")),
       );
     }

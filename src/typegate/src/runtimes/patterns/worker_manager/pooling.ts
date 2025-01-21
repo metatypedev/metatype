@@ -8,9 +8,12 @@ import { getLogger } from "../../../log.ts";
 const logger = getLogger(import.meta, "WARN");
 
 export type PoolConfig = {
-  maxWorkers?: number | null;
-  minWorkers?: number | null;
-  waitTimeoutMs?: number | null;
+  // non-negative integer; 0 means no limit
+  maxWorkers: number;
+  // non-negative integer; must be less than or equal to `maxWorkers` if maxWorkers is not 0
+  minWorkers: number;
+  // non-negative integer; 0 means no timeout
+  waitTimeoutMs: number;
 };
 
 export type Consumer<T> = (x: T) => void;
@@ -87,10 +90,7 @@ export class WaitQueueWithTimeout<W> implements WaitQueue<W> {
         this.#updateTimer();
         return;
       }
-      this.#timerId = setTimeout(
-        this.#timeoutHandler.bind(this),
-        timeoutMs,
-      );
+      this.#timerId = setTimeout(this.#timeoutHandler.bind(this), timeoutMs);
     } else {
       this.#timerId = null;
     }
@@ -124,19 +124,22 @@ export class WorkerPool<
   #workerFactory: () => W;
   #nextWorkerId = 1;
 
-  constructor(
-    name: string,
-    config: PoolConfig,
-    factory: (id: string) => W,
-  ) {
+  constructor(name: string, config: PoolConfig, factory: (id: string) => W) {
+    if (config.maxWorkers != 0 && config.minWorkers > config.maxWorkers) {
+      throw new Error(
+        "Worker pool configuration error: maxWorkers must be greater than or equal to minWorkers or be 0",
+      );
+    }
+
     this.#config = config;
     this.#workerFactory = () =>
       factory(`${name} worker #${this.#nextWorkerId++}`);
 
-    if (config.waitTimeoutMs == null) { // no timeout
+    if (config.waitTimeoutMs === 0) {
+      // no timeout
       this.#waitQueue = createSimpleWaitQueue();
     } else {
-      this.#waitQueue = new WaitQueueWithTimeout(config.waitTimeoutMs ?? 30000);
+      this.#waitQueue = new WaitQueueWithTimeout(config.waitTimeoutMs);
     }
   }
 
@@ -151,7 +154,7 @@ export class WorkerPool<
       return Promise.resolve(this.#lendWorkerTo(idleWorker, manager));
     }
     if (
-      this.#config.maxWorkers == null ||
+      this.#config.maxWorkers === 0 ||
       this.#busyWorkers.size < this.#config.maxWorkers
     ) {
       return Promise.resolve(
@@ -172,17 +175,16 @@ export class WorkerPool<
   }
 
   // ensureMinWorkers will be false when we are shutting down.
-  unborrowWorker(
-    worker: W,
-  ) {
+  unborrowWorker(worker: W) {
     this.#busyWorkers.delete(worker.id);
     const taskAdded = this.#waitQueue.shift(() => worker);
-    if (!taskAdded) { // worker has not been reassigned
+    if (!taskAdded) {
+      // worker has not been reassigned
       const { maxWorkers } = this.#config;
       // how?? xD
       // We might add "urgent" tasks in the future;
       // in this case the worker count might exceed `maxWorkers`.
-      if (maxWorkers != null && this.#workerCount >= maxWorkers) {
+      if (maxWorkers !== 0 && this.#workerCount >= maxWorkers) {
         worker.destroy();
       } else {
         this.#idleWorkers.push(worker);
@@ -196,9 +198,10 @@ export class WorkerPool<
     worker.destroy();
     if (!shutdown) {
       const taskAdded = this.#waitQueue.shift(() => this.#workerFactory());
-      if (!taskAdded) { // queue was empty: worker not reassigned
+      if (!taskAdded) {
+        // queue was empty: worker not reassigned
         const { minWorkers } = this.#config;
-        if (minWorkers != null && this.#workerCount < minWorkers) {
+        if (this.#workerCount < minWorkers) {
           this.#idleWorkers.push(this.#workerFactory());
         }
       }
@@ -212,7 +215,9 @@ export class WorkerPool<
   clear() {
     logger.warn(
       `destroying idle workers: ${
-        this.#idleWorkers.map((w) => `"${w.id}"`).join(", ")
+        this.#idleWorkers
+          .map((w) => `"${w.id}"`)
+          .join(", ")
       }`,
     );
     for (const worker of this.#idleWorkers) {
