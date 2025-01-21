@@ -293,6 +293,7 @@ jobs:
       - shell: bash
         run: |
           # the big run
+          set -x
 
           # we don't want bash sub shells to do ghjk_reload
           # TODO: consider disabling ghjk_reload on non-interactive shells
