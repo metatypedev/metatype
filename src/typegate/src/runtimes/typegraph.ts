@@ -150,7 +150,7 @@ export class TypeGraphRuntime extends Runtime {
     };
   };
 
-  #typesResolver: Resolver = async (context: Context) => {
+  #typesResolver: Resolver = async (resArgs) => {
     // filter non-native GraphQL types
     const filter = (
       type: TypeNode,
@@ -231,7 +231,7 @@ export class TypeGraphRuntime extends Runtime {
     visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
 
     // TODO: Better place
-    await this.#visible.computeAllowList(context);
+    await this.#visible.computeAllowList(resArgs);
 
     // Known scalars (integer, boolean, ..)
     const distinctScalars = distinctBy(

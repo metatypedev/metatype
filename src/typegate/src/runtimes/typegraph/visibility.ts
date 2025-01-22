@@ -4,28 +4,48 @@
 import { TypegateConfigBase } from "../../config.ts";
 import { TypeGraphDS } from "../../typegraph/mod.ts";
 import { Type } from "../../typegraph/type_node.ts";
-import { getChildTypes, TypeVisitorMap, VisitPath, visitTypes } from "../../typegraph/visitor.ts";
-import { Context, Resolver } from "../../types.ts";
+import {
+  getChildTypes,
+  TypeVisitorMap,
+  VisitPath,
+  visitTypes,
+} from "../../typegraph/visitor.ts";
+import { Resolver, ResolverArgs } from "../../types.ts";
 import { DenoRuntime } from "../deno/deno.ts";
+import { Policy } from "../../typegraph/types.ts";
 
 export interface FieldToPolicy {
   fieldName: string;
-  policies: Array<number>;
-};
+  policies: Array<Policy>;
+  typeIdx: number;
+  path: VisitPath;
+}
+
+interface ResolutionData {
+  resolver: Resolver;
+  fieldPolicyData: FieldToPolicy;
+  targetTypeIdx: number;
+  policyNameAtTargetTypeIdx: string;
+}
 
 export class TypeVisibility {
   pathToIdx: Map<string, number>;
-  #resolvers: Map<string, Resolver>;
-  #typeAllowCounters: Map<number, { referrers: number, deniers: number }>;
+  #resolvers: Map<string, ResolutionData>;
+  #typeAllowCounters: Map<number, { referrers: number; deniers: number }>;
+
+  #idToAllow: Map<string, boolean>;
+  #typeIdxToIds: Map<number, Set<string>>;
 
   constructor(
     private readonly tg: TypeGraphDS,
     private readonly denoRuntime: DenoRuntime,
-    private readonly config: TypegateConfigBase
-    ) {
+    private readonly config: TypegateConfigBase,
+  ) {
     this.pathToIdx = new Map();
     this.#resolvers = new Map();
     this.#typeAllowCounters = new Map();
+    this.#typeIdxToIds = new Map();
+    this.#idToAllow = new Map();
 
     this.#visitTypegraph();
   }
@@ -42,18 +62,18 @@ export class TypeVisibility {
         } else {
           this.#typeAllowCounters.set(idx, {
             referrers: 1,
-            deniers: 0
+            deniers: 0,
           });
         }
 
         this.#collectPolicyMetadata(path, idx);
         return true;
-      }
+      },
     };
     visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
   }
 
-  #collectPolicyMetadata(path: VisitPath, typeIdx: number) {
+  #collectPolicyMetadata(path: VisitPath, targetTypeIdx: number) {
     const policiesQueue = [] as Array<FieldToPolicy>;
     // Note: last item on path indices is the current type
     if (path.edges.length + 1 != path.indices.length) {
@@ -61,9 +81,9 @@ export class TypeVisibility {
     }
 
     for (let i = 0; i < path.edges.length; i++) {
-      const typeIdx = path.indices[i];
+      const currTypeIdx = path.indices[i];
       const fieldName = path.edges[i];
-      const node = this.tg.types[typeIdx];
+      const node = this.tg.types[currTypeIdx];
       if (node.type == Type.OBJECT && node.policies?.[fieldName]) {
         const policyIndices = node.policies[fieldName];
         const allIndices = policyIndices.map((value) => {
@@ -78,7 +98,9 @@ export class TypeVisibility {
 
         policiesQueue.push({
           fieldName,
-          policies: allIndices.flat(),
+          policies: allIndices.flat().map((polIdx) => this.tg.policies[polIdx]),
+          typeIdx: currTypeIdx,
+          path,
         });
       }
     }
@@ -86,33 +108,71 @@ export class TypeVisibility {
     this.allocateResolvers(
       TypeVisibility.getId(path.indices),
       policiesQueue,
-      typeIdx
+      targetTypeIdx,
     );
   }
 
-  allocateResolvers(qId: string, queue: Array<FieldToPolicy>, typeIdx: number) {
+  allocateResolvers(
+    qId: string,
+    queue: Array<FieldToPolicy>,
+    targetTypeIdx: number,
+  ) {
     console.log("Queue", queue);
-    for (const { fieldName: _, policies } of queue) {
-      for (const polIdx of policies) {
-        const policy = this.tg.policies[polIdx];
+    for (const fieldToPolicy of queue) {
+      for (const policy of fieldToPolicy.policies) {
         const mat = this.tg.materializers[policy.materializer];
-        
-        const resolver = this.denoRuntime.delegate(mat, false, this.config.timer_policy_eval_retries);
-        this.#resolvers.set(qId, resolver);
+
+        const resolver = this.denoRuntime.delegate(
+          mat,
+          false,
+          this.config.timer_policy_eval_retries,
+        );
+        this.#resolvers.set(qId, {
+          resolver,
+          fieldPolicyData: fieldToPolicy,
+          targetTypeIdx,
+          policyNameAtTargetTypeIdx: policy.name,
+        });
       }
     }
 
     return true;
   }
 
-  async computeAllowList(context: Context) {
+  async computeAllowList(resArgs: ResolverArgs<Record<string, any>>) {
+    for (const [qid, resData] of this.#resolvers) {
+      const { fieldPolicyData, resolver, policyNameAtTargetTypeIdx, targetTypeIdx } = resData;
+      const cached = this.#idToAllow.get(qid);
+      const result = cached === undefined ? await resolver(resArgs) : cached;
+
+      if (result == "PASS") {
+        continue;
+      } else if (result == "ALLOW" || result == "DENY") {
+        const ret = result == "ALLOW";
+        this.#idToAllow.set(qid, ret);
+        if (this.#typeIdxToIds.has(targetTypeIdx)) {
+          this.#typeIdxToIds.get(targetTypeIdx)!.add(qid);
+        } else {
+          this.#typeIdxToIds.set(targetTypeIdx, new Set([qid]));
+        }
+
+        return ret;
+      } else {
+        const path = fieldPolicyData.path.edges.join(".");
+        throw new Error(
+          `Unexpected value of type ${typeof result} for policy "${policyNameAtTargetTypeIdx}" at '${path}', for policy, must be "PASS", "ALLOW", or "DENY"`,
+        );
+      }
+    }
+
     // TODO:
     // 1. evaluate the resolver queue from left to right
     // 2. increase deniers count for the underlying typeIdx if DENY
     // 3. types field on the introspection is a flat list
     // yet the input objects should be cared for separately (custom visitor maybe? + construct the path and get the id)
-    // 4. special care for union/either 
-    await Promise.resolve("todo"); 
+    // 4. special care for union/either
+
+    return true;
   }
 
   isVisible(typeIdx: number) {
