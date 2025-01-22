@@ -33,6 +33,21 @@ export function typeEmptyObjectScalar() {
   };
 }
 
+export function fieldCommon() {
+  return {
+    // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L207
+    name: () => null,
+    specifiedByURL: () => null,
+    // logic at https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L453-L490
+    ofType: () => null,
+    inputFields: () => null,
+    fields: () => null,
+    interfaces: () => null,
+    possibleTypes: () => null,
+    enumValues: () => null,
+  };
+}
+
 export function policyDescription(
   tg: TypeGraphDS,
   policies: PolicyIndices[],

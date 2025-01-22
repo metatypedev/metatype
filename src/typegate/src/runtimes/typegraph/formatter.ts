@@ -9,6 +9,7 @@ import {
   PolicyIndices,
 } from "../../typegraph/types.ts";
 import {
+  type EitherNode,
   isEither,
   isEmptyObject,
   isFunction,
@@ -18,10 +19,12 @@ import {
   isScalar,
   isUnion,
   type TypeNode,
+  type UnionNode,
 } from "../../typegraph/type_node.ts";
 import { DeprecatedArg } from "../typegraph.ts";
 import { ensure } from "../../utils.ts";
 import {
+  fieldCommon,
   policyDescription,
   typeCustomScalar,
   typeEmptyObjectScalar,
@@ -45,9 +48,8 @@ type FieldInfo = {
 export class TypeFormatter {
   scalarIndex = new Map<string, number>();
   constructor(
-    private readonly tg: TypeGraphDS
+    private readonly tg: TypeGraphDS,
   ) {}
-
 
   formatInputFields(
     [name, typeIdx]: [string, number],
@@ -81,19 +83,6 @@ export class TypeFormatter {
     required: boolean,
     asInput: boolean,
   ): Record<string, Resolver> => {
-    const common = {
-      // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L207
-      name: () => null,
-      specifiedByURL: () => null,
-      // logic at https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L453-L490
-      ofType: () => null,
-      inputFields: () => null,
-      fields: () => null,
-      interfaces: () => null,
-      possibleTypes: () => null,
-      enumValues: () => null,
-    };
-
     if (isOptional(type)) {
       const subtype = this.tg.types[type.item];
       return this.formatType(subtype, false, asInput);
@@ -101,7 +90,7 @@ export class TypeFormatter {
 
     if (required) {
       return {
-        ...common,
+        ...fieldCommon(),
         kind: () => TypeKind.NON_NULL,
         ofType: () => {
           return this.formatType(type, false, asInput);
@@ -111,7 +100,7 @@ export class TypeFormatter {
 
     if (isList(type)) {
       return {
-        ...common,
+        ...fieldCommon(),
         kind: () => TypeKind.LIST,
         ofType: () => {
           const subtype = this.tg.types[type.items];
@@ -122,7 +111,7 @@ export class TypeFormatter {
 
     if (isScalar(type)) {
       return {
-        ...common,
+        ...fieldCommon(),
         kind: () => TypeKind.SCALAR,
         name: () => SCALAR_TYPE_MAP[type.type],
         description: () => `${type.type} type`,
@@ -136,76 +125,133 @@ export class TypeFormatter {
 
     if (isObject(type)) {
       if (type.title === "Query" && Object.keys(type.properties).length === 0) {
-        // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
-        return {
-          ...common,
-          kind: () => TypeKind.OBJECT,
-          name: () => "Query",
-          description: () => `${type.title} type`,
-          fields: () => [
-            {
-              name: () => "_",
-              args: () => [],
-              type: () =>
-                this.formatType(
-                  this.tg.types[
-                    (this.tg.types[0] as ObjectNode).properties["query"]
-                  ], // itself
-                  false,
-                  false,
-                ),
-              isDeprecated: () => true,
-              deprecationReason: () =>
-                "Dummy value due to https://github.com/graphql/graphiql/issues/2308",
-            },
-          ],
-          interfaces: () => [],
-        };
+        return this.#formatEmptyQueryObject(type);
       }
-
       if (isEmptyObject(type)) {
         return typeEmptyObjectScalar();
       }
 
-      if (asInput) {
-        return {
-          ...common,
-          kind: () => TypeKind.INPUT_OBJECT,
-          name: () => `${type.title}Inp`,
-          description: () => `${type.title} input type`,
-          inputFields: () => {
-            return Object.entries(type.properties).map(([name, typeIdx]) =>
-              this.formatField(true)({
-                name,
-                typeIdx,
-                policies: type.policies?.[name] ?? [],
-              })
-            );
-          },
-          interfaces: () => [],
-        };
-      } else {
-        return {
-          ...common,
-          kind: () => TypeKind.OBJECT,
-          name: () => type.title,
-          description: () => `${type.title} type`,
-          fields: () => {
-            let entries = Object.entries(type.properties);
-            entries = entries.sort((a, b) => b[1] - a[1]);
-            return entries.map(([name, typeIdx]) =>
-              this.formatField(false)({
-                name,
-                typeIdx,
-                policies: type.policies?.[name] ?? [],
-              })
-            );
-          },
-          interfaces: () => [],
-        };
-      }
+      return this.#formatObject(asInput, type);
     }
 
+    if (isEither(type) || isUnion(type)) {
+      return this.#formatUnionOrEither(asInput, type);
+    }
+
+    throw Error(`unexpected type format ${(type as any).type}`);
+    // interface: fields, interfaces, possibleTypes
+    // union: possibleTypes
+    // enum: enumValues
+  };
+
+  #formatField(asInput: boolean, { name, typeIdx, policies }: FieldInfo) {
+    const type = this.tg.types[typeIdx];
+    const common = {
+      // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L329
+      name: () => name,
+      description: () => `${name} field${policyDescription(this.tg, policies)}`,
+      isDeprecated: () => false,
+      deprecationReason: () => null,
+    };
+
+    if (isFunction(type)) {
+      return {
+        ...common,
+        args: (_: DeprecatedArg = {}) => {
+          const inp = this.tg.types[type.input as number];
+          ensure(
+            isObject(inp),
+            `${type} cannot be an input field, require struct`,
+          );
+          let entries = Object.entries((inp as ObjectNode).properties);
+          entries = entries.sort((a, b) => b[1] - a[1]);
+          return entries
+            .map((entry) =>
+              this.formatInputFields(
+                entry,
+                (type.injections ?? {})[entry[0]] ?? null,
+              )
+            )
+            .filter((f) => f !== null);
+        },
+        type: () => {
+          const output = this.tg.types[type.output as number];
+          return this.formatType(output, true, false);
+        },
+      };
+    }
+
+    return {
+      ...common,
+      args: () => [],
+      type: () => {
+        return this.formatType(type, true, asInput);
+      },
+    };
+  }
+
+  #formatEmptyQueryObject(type: ObjectNode) {
+    // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
+    return {
+      ...fieldCommon(),
+      kind: () => TypeKind.OBJECT,
+      name: () => "Query",
+      description: () => `${type.title} type`,
+      fields: () => [
+        {
+          name: () => "_",
+          args: () => [],
+          type: () =>
+            this.formatType(
+              this.tg.types[
+                (this.tg.types[0] as ObjectNode).properties["query"]
+              ], // itself
+              false,
+              false,
+            ),
+          isDeprecated: () => true,
+          deprecationReason: () =>
+            "Dummy value due to https://github.com/graphql/graphiql/issues/2308",
+        },
+      ],
+      interfaces: () => [],
+    };
+  }
+
+  #formatObject(asInput: boolean, type: ObjectNode) {
+    const fieldsLabel = asInput ? "inputFields" : "fields";
+
+    return {
+      ...fieldCommon(),
+      kind: () => asInput ? TypeKind.INPUT_OBJECT : TypeKind.OBJECT,
+      name: () => asInput ? `${type.title}Inp` : type.title,
+      description: () =>
+        asInput ? `${type.title} input type` : `${type.title} type`,
+
+      [fieldsLabel]: () => {
+        let entries = Object.entries(type.properties);
+        if (!asInput) {
+          entries = entries.sort((a, b) => b[1] - a[1]);
+        }
+        // TODO:
+        // 1. construct ids here
+        // 2. fetch pre computed visibility by path
+        // 3. skip verdict is false!
+
+        return entries.map(([name, typeIdx]) =>
+          this.#formatField(asInput, {
+            name,
+            typeIdx,
+            policies: type.policies?.[name] ?? [],
+          })
+        );
+      },
+
+      interfaces: () => [],
+    };
+  }
+
+  #formatUnionOrEither(asInput: boolean, type: UnionNode | EitherNode) {
     // Issue:
     // Translate union (anyOf) / either (oneOf) to Graphql types that behave the same way
     // - Current graphql spec does not allow UNION types on the input (yet)
@@ -217,97 +263,42 @@ export class TypeFormatter {
     //    to custom graphql objects
     // Alternative ?
     // https://github.com/graphql/graphql-spec/pull/825
-    if (isEither(type) || isUnion(type)) {
-      const variants = isUnion(type) ? type.anyOf : type.oneOf;
-      if (asInput) {
-        const titles = new Set<string>(
-          variants.map((idx) => this.tg.types[idx].title),
-        );
-        const description = `${type.type} type\n${
-          Array.from(titles).join(
-            ", ",
-          )
-        }`;
-
-        return {
-          ...common,
-          kind: () => TypeKind.SCALAR,
-          name: () => `${type.title}In`,
-          description: () => description,
-        };
-      } else {
-        return {
-          ...common,
-          kind: () => TypeKind.UNION,
-          name: () => `${type.title}Out`,
-          description: () => `${type.title} type`,
-          possibleTypes: () => {
-            return variants.map((idx) => {
-              const variant = this.tg.types[idx];
-              if (isScalar(variant)) {
-                const idx = this.scalarIndex.get(variant.type)!;
-                const asObject = typeCustomScalar(variant, idx);
-                return this.formatType(asObject, false, false);
-              } else {
-                return this.formatType(variant, false, false);
-              }
-            });
-          },
-        };
-      }
-    }
-
-    throw Error(`unexpected type format ${(type as any).type}`);
-    // interface: fields, interfaces, possibleTypes
-    // union: possibleTypes
-    // enum: enumValues
-  };
-
-  formatField =
-    (asInput: boolean) => ({ name, typeIdx, policies }: FieldInfo) => {
-      const type = this.tg.types[typeIdx];
-      const common = {
-        // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L329
-        name: () => name,
-        description: () =>
-          `${name} field${policyDescription(this.tg, policies)}`,
-        isDeprecated: () => false,
-        deprecationReason: () => null,
-      };
-
-      if (isFunction(type)) {
-        return {
-          ...common,
-          args: (_: DeprecatedArg = {}) => {
-            const inp = this.tg.types[type.input as number];
-            ensure(
-              isObject(inp),
-              `${type} cannot be an input field, require struct`,
-            );
-            let entries = Object.entries((inp as ObjectNode).properties);
-            entries = entries.sort((a, b) => b[1] - a[1]);
-            return entries
-              .map((entry) =>
-                this.formatInputFields(
-                  entry,
-                  (type.injections ?? {})[entry[0]] ?? null,
-                )
-              )
-              .filter((f) => f !== null);
-          },
-          type: () => {
-            const output = this.tg.types[type.output as number];
-            return this.formatType(output, true, false);
-          },
-        };
-      }
+    const variants = isUnion(type) ? type.anyOf : type.oneOf;
+    if (asInput) {
+      const titles = new Set<string>(
+        variants.map((idx) => this.tg.types[idx].title),
+      );
+      const description = `${type.type} type\n${
+        Array.from(titles).join(
+          ", ",
+        )
+      }`;
 
       return {
-        ...common,
-        args: () => [],
-        type: () => {
-          return this.formatType(type, true, asInput);
+        ...fieldCommon(),
+        kind: () => TypeKind.SCALAR,
+        name: () => `${type.title}In`,
+        description: () => description,
+      };
+    } else {
+      return {
+        ...fieldCommon(),
+        kind: () => TypeKind.UNION,
+        name: () => `${type.title}Out`,
+        description: () => `${type.title} type`,
+        possibleTypes: () => {
+          return variants.map((idx) => {
+            const variant = this.tg.types[idx];
+            if (isScalar(variant)) {
+              const idx = this.scalarIndex.get(variant.type)!;
+              const asObject = typeCustomScalar(variant, idx);
+              return this.formatType(asObject, false, false);
+            } else {
+              return this.formatType(variant, false, false);
+            }
+          });
         },
       };
-    };
+    }
+  }
 }
