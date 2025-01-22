@@ -538,7 +538,7 @@ class TestResultConsumer {
         Math.floor(
           duration / 60_000,
         )
-      }m${Math.floor(duration / 1_000)}s:`,
+      }m${Math.floor((duration % 60_000) / 1_000)}s:`,
     );
     console.log(`  successes: ${this.#counts.success}/${this.results.length}`);
 

@@ -5,7 +5,7 @@ import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
 import type { DenoRuntime } from "../runtimes/deno/deno.ts";
 import type { Runtime } from "../runtimes/Runtime.ts";
-import { ensure, ensureNonNullable } from "../utils.ts";
+import { deepClone, ensure, ensureNonNullable } from "../utils.ts";
 import { typegraph_validate } from "native";
 import Chance from "chance";
 import {
@@ -217,6 +217,7 @@ export class TypeGraph implements AsyncDisposable {
 
     // this is not the best implementation for auth function
     // however, it is the simplest one for now
+
     const auths = new Map<string, Protocol>();
     const tg = new TypeGraph(
       typegate,
@@ -565,12 +566,12 @@ export function prepareRuntimeReferences(
           typegraph,
           typegraphName,
           materializers,
-          args: (runtime as any)?.data ?? {},
+          args: deepClone(runtime as any)?.data ?? {},
           secretManager,
         });
       }),
     );
-  
+
     return {
       runtimeReferences,
       denoRuntimeIdx,

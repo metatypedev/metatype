@@ -4,8 +4,9 @@
 import { TypeGraph, type TypeGraphDS } from "../typegraph/mod.ts";
 import { globalConfig } from "../config.ts";
 import * as semver from "@std/semver";
+import { ObjectNode, Type } from "./type_node.ts";
 
-const typegraphVersion = "0.0.3";
+const typegraphVersion = "0.0.4";
 
 const typegraphChangelog: Record<
   string,
@@ -36,6 +37,14 @@ const typegraphChangelog: Record<
         }
       });
       return x;
+    },
+  },
+  "0.0.3": {
+    "next": "0.0.4",
+    "transform": (x) => {
+      throw new Error(
+        "upgrade not allowed; please rerun the typegate with the SYNC_FORCE_REMOVE=true environment variable",
+      );
     },
   },
 };
