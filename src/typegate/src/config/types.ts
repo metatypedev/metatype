@@ -66,9 +66,13 @@ export const globalConfigSchema = z.object({
   // deno_idle_worker_timeout_ms: z.coerce.number().positive().optional(), // auto remove idle workers
   min_substantial_workers: z.coerce.number().positive().default(2),
   max_substantial_workers: z.coerce.number().positive().default(8),
-  substantial_worker_wait_timeout_ms: z.coerce.number().positive().default(
-    15000,
-  ),
+  min_wasm_workers: z.coerce.number().positive().default(2),
+  max_wasm_workers: z.coerce.number().positive().default(8),
+  wasm_worker_wait_timeout_ms: z.coerce.number().positive().default(5000),
+  substantial_worker_wait_timeout_ms: z.coerce
+    .number()
+    .positive()
+    .default(15000),
   // substantial_idle_worker_timeout_ms: z.coerce.number().positive().optional(), // auto remove idle workers
 });
 export type GlobalConfig = z.infer<typeof globalConfigSchema>;
@@ -88,8 +92,7 @@ export const typegateConfigBaseSchema = z.object({
       if (bytes.length != 64) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
+          message: `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
         });
       }
       return bytes;

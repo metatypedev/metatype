@@ -3,13 +3,128 @@
 
 import * as zod from "zod";
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
-import type { ResolverArgs } from "../../types.ts";
+import type { ResolverArgs, WitOpArgs } from "../../types.ts";
 import type { Typegate } from "../../typegate/mod.ts";
 import { getLogger } from "../../log.ts";
 
 const logger = getLogger(import.meta);
 
 const METATYPE_VERSION = "0.5.1-rc.0";
+
+export class WitWireHandle {
+  static async init(
+    componentPath: string,
+    instanceId: string,
+    ops: WitWireMatInfo[],
+    cx: HostCallCtx,
+  ) {
+    try {
+      const _res = await Meta.wit_wire.init(
+        componentPath,
+        instanceId,
+        {
+          expected_ops: ops,
+          metatype_version: METATYPE_VERSION,
+        }, // this callback will be used from the native end
+        async (op: string, json: string) => await hostcall(cx, op, json),
+      );
+      return new WitWireHandle(instanceId, componentPath, ops);
+    } catch (err) {
+      throw new Error(
+        `error on init for component at path: ${componentPath}: ${err}`,
+        {
+          cause: {
+            componentPath,
+            ops,
+            err,
+          },
+        },
+      );
+    }
+  }
+
+  constructor(
+    public id: string,
+    public componentPath: string,
+    public ops: WitWireMatInfo[],
+  ) {}
+
+  async [Symbol.asyncDispose]() {
+    await Meta.wit_wire.destroy(this.id);
+  }
+}
+
+export async function handleWitOp(params: WitOpArgs) {
+  const { _, ...inJson } = params.args;
+  const { id, opName, componentPath, ops } = params;
+
+  let res;
+  try {
+    res = await Meta.wit_wire.handle(id, {
+      op_name: opName,
+      in_json: JSON.stringify(inJson),
+    });
+  } catch (err) {
+    throw new Error(
+      `unexpected error handling request for op ${opName}: ${err}`,
+      {
+        cause: {
+          opName,
+          args: inJson,
+          component: componentPath,
+          err,
+        },
+      },
+    );
+  }
+  if (typeof res == "string") {
+    if (res == "NoHandler") {
+      throw new Error(
+        `materializer doesn't implement handler for op ${opName}`,
+        {
+          cause: {
+            opName,
+            args: inJson,
+            component: componentPath,
+            ops,
+          },
+        },
+      );
+    } else {
+      throw new Error(`unexpected mat result for op ${opName}: ${res}`, {
+        cause: {
+          opName,
+          args: inJson,
+          component: componentPath,
+        },
+      });
+    }
+  } else if ("Ok" in res) {
+    return JSON.parse(res.Ok);
+  } else if ("InJsonErr" in res) {
+    throw new Error(
+      `materializer failed deserializing json args for op ${opName}: ${res.InJsonErr}`,
+      {
+        cause: {
+          opName,
+          args: inJson,
+          component: componentPath,
+        },
+      },
+    );
+  } else {
+    throw new Error(
+      `materializer handler error for op ${opName}: ${res.HandlerErr}`,
+      {
+        cause: {
+          opName,
+          args: inJson,
+          component: componentPath,
+        },
+      },
+    );
+  }
+}
 
 export class WitWireMessenger {
   static async init(
@@ -47,8 +162,7 @@ export class WitWireMessenger {
     public id: string,
     public componentPath: string,
     public ops: WitWireMatInfo[],
-  ) {
-  }
+  ) {}
 
   async [Symbol.asyncDispose]() {
     await Meta.wit_wire.destroy(this.id);
@@ -76,9 +190,7 @@ export class WitWireMessenger {
         },
       );
     }
-    if (
-      typeof res == "string"
-    ) {
+    if (typeof res == "string") {
       if (res == "NoHandler") {
         throw new Error(
           `materializer doesn't implement handler for op ${opName}`,
@@ -155,12 +267,12 @@ async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
         cause: err.cause,
         ...(typeof err.cause == "object" && err
           ? {
-            // deno-lint-ignore no-explicit-any
-            code: (err.cause as any).code ?? "unexpected_err",
-          }
+              // deno-lint-ignore no-explicit-any
+              code: (err.cause as any).code ?? "unexpected_err",
+            }
           : {
-            code: "unexpected_err",
-          }),
+              code: "unexpected_err",
+            }),
       };
     } else {
       throw {

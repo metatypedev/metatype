@@ -8,11 +8,12 @@ import type { Resolver, RuntimeInitParams } from "../types.ts";
 import type { ComputeStage } from "../engine/query_engine.ts";
 import type { Materializer } from "../typegraph/types.ts";
 import * as ast from "graphql/ast";
-import { WitWireMessenger } from "./wit_wire/mod.ts";
+import { WitWireHandle } from "./wit_wire/mod.ts";
 import type { WitWireMatInfo } from "../../engine/runtime.js";
 import { sha256 } from "../crypto.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { TypeGraphDS } from "../typegraph/mod.ts";
+import { WorkerManager } from "./wasm/worker_manager.ts";
 
 const logger = getLogger(import.meta);
 
@@ -24,7 +25,8 @@ export class PythonRuntime extends Runtime {
     typegraphName: string,
     private tg: TypeGraphDS,
     uuid: string,
-    private wire: WitWireMessenger,
+    private wire: WitWireHandle,
+    private workerManager: WorkerManager,
   ) {
     super(typegraphName, uuid);
     this.logger = getLogger(`python:'${typegraphName}'`);
@@ -124,10 +126,10 @@ export class PythonRuntime extends Runtime {
     // add default vm for lambda/def
     const uuid = crypto.randomUUID();
     logger.info(
-      `initializing WitWireMessenger for PythonRuntime ${uuid} on typegraph ${typegraphName}`,
+      `initializing WitWireHandle for PythonRuntime ${uuid} on typegraph ${typegraphName}`,
     );
     const token = await InternalAuth.emit(typegate.cryptoKeys);
-    const wire = await WitWireMessenger.init(
+    const wire = await WitWireHandle.init(
       "inline://pyrt_wit_wire.cwasm",
       uuid,
       wireMatInfos,
@@ -138,7 +140,17 @@ export class PythonRuntime extends Runtime {
       },
     );
 
-    return new PythonRuntime(typegraphName, typegraph, uuid, wire);
+    console.log("Wire initialized: ", wire.id);
+
+    const workerManager = new WorkerManager();
+
+    return new PythonRuntime(
+      typegraphName,
+      typegraph,
+      uuid,
+      wire,
+      workerManager,
+    );
   }
 
   async deinit(): Promise<void> {
@@ -200,15 +212,19 @@ export class PythonRuntime extends Runtime {
   async delegate(mat: Materializer): Promise<Resolver> {
     const { name } = mat.data;
     const dataHash = await sha256(JSON.stringify(mat.data));
-    const op_name = `${name as string}_${dataHash.slice(0, 12)}`;
+    const opName = `${name as string}_${dataHash.slice(0, 12)}`;
     return async (args) => {
-      this.logger.info(`running '${op_name}'`);
+      this.logger.info(`running '${opName}'`);
       this.logger.debug(
-        `running '${op_name}' with args: ${JSON.stringify(args)}`,
+        `running '${opName}' with args: ${JSON.stringify(args)}`,
       );
-      const res = await this.wire.handle(op_name, args);
-      this.logger.info(`'${op_name}' successful`);
-      this.logger.debug(`'${op_name}' returned: ${JSON.stringify(res)}`);
+      const res = await this.workerManager.callWitOp({
+        opName,
+        args,
+        ...this.wire,
+      });
+      this.logger.info(`'${opName}' successful`);
+      this.logger.debug(`'${opName}' returned: ${JSON.stringify(res)}`);
       return res;
     };
   }
