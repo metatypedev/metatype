@@ -31,7 +31,7 @@ def substantial(g: Graph):
                 "retryExample",
                 "secretsExample",
                 "accidentalInputMutation",
-                "compensation",
+                "compensationExample",
             ]
         )
         .build()
@@ -92,5 +92,5 @@ def substantial(g: Graph):
                     "account": t.integer(),
                 }
             )
-        ).reduce({"name": "compensation"}),
+        ).reduce({"name": "compensationExample"}),
     )

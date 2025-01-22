@@ -47,7 +47,7 @@ export interface Context {
     handleDef: SerializableWorkflowHandle,
   ): ChildWorkflowHandle;
 
-  logger: SubLogger
+  logger: SubLogger;
   utils: Utils;
 }
 
@@ -79,8 +79,9 @@ export interface SaveOption {
     minBackoffMs: number;
     maxBackoffMs: number;
     maxRetries: number;
+    compensationOnfristFail: boolean;
   };
-  compensateWith?: () => any | Promise<any>
+  compensateWith?: () => any | Promise<any>;
 }
 
 export interface Utils {

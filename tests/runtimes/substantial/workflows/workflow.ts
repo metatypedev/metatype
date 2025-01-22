@@ -77,6 +77,7 @@ export async function retryExample(ctx: Context) {
         minBackoffMs: 1000,
         maxBackoffMs: 5000,
         maxRetries: 4,
+        compensationOnfristFail: false,
       },
     },
   );
@@ -96,6 +97,7 @@ export async function retryExample(ctx: Context) {
         minBackoffMs: 1000,
         maxBackoffMs: 3000,
         maxRetries: 5,
+        compensationOnfristFail: false,
       },
     },
   );
@@ -150,7 +152,7 @@ export async function accidentalInputMutation(ctx: Context) {
   return { copy, items };
 }
 
-export async function compensation(ctx: Context) {
+export async function compensationExample(ctx: Context) {
   const { account } = ctx.kwargs;
 
   const debitAccount = (value: number) => {
@@ -166,7 +168,10 @@ export async function compensation(ctx: Context) {
   };
 
   await ctx.save(() => debitAccount(4), {
-    compensateWith: () => [creditAccount(4), assertEquals(account, 1000)],
+    compensateWith: () => {
+      creditAccount(4);
+      assertEquals(account, 1000);
+    },
   });
 
   await ctx.save(() => debitAccount(10), {
