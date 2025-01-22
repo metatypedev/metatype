@@ -54,7 +54,7 @@ export const codeValidations: PushHandler = async (
           logger.info(
             `Successfully validated Python code at entry point: ${entryPoint.path}`,
           );
-        } catch (err) {
+        } catch (err: any) {
           console.error({ err });
           throw new ValidationFailure(
             `Python code validation error at entry point '${entryPoint.path}': ${err.message}`,

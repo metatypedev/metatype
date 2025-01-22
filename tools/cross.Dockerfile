@@ -37,7 +37,7 @@ RUN set -eux \
 
 ENV GHJK_SHARE_DIR=/ghjk
 ARG GHJK_VERSION=v0.2.1
-RUN curl -fsSL https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
+RUN curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
    | GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash sh 
 
 WORKDIR /app

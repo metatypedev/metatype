@@ -5,7 +5,7 @@
 
 /**
  * Usage:
- *   deno run -A tools/list-duplicates.ts [<options>] <file.py>
+ *   meta serialize -f my_tg.py | deno run -A tools/list-duplicates.ts [<options>]
  *
  * Options:
  *    --root <N>    The index of the root type
@@ -16,7 +16,6 @@ import { green, objectHash, parseArgs, red } from "./deps.ts";
 // FIXME: import from @metatype/typegate
 import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
-import { projectDir } from "./utils.ts";
 import { TypeNode } from "../src/typegate/src/typegraph/type_node.ts";
 
 // Tries to detect structurally equivalent duplicates by iteratively
@@ -311,6 +310,7 @@ export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
       /* console.log(`${cyan(hash)}`);
       for (const [idx, type] of bin) {
         const injection = "injection" in type
+          // deno-lint-ignore no-explicit-any
           ? ` (injection ${(type.injection as any).source})`
           : "";
         console.log(
@@ -343,7 +343,7 @@ const args = parseArgs(Deno.args, {
 
 const rootIdx = argToInt(args.root, 0);
 
-const files = args._ as string[];
+/* const files = args._ as string[];
 if (files.length === 0) {
   throw new Error("Path to typegraph definition module is required.");
 }
@@ -366,11 +366,15 @@ const { stdout } = await new Deno.Command(cmd[0], {
   args: cmd.slice(1),
   stdout: "piped",
   stderr: "inherit",
-}).output();
+}).output(); */
 
-const tgs: TypeGraphDS[] = JSON.parse(
-  new TextDecoder().decode(stdout),
-);
+const decoder = new TextDecoder();
+let raw = "";
+for await (const chunk of Deno.stdin.readable) {
+  raw += decoder.decode(chunk);
+}
+
+const tgs: TypeGraphDS[] = JSON.parse(raw);
 
 for (const tg of tgs) {
   listDuplicatesEnhanced(tg, rootIdx);

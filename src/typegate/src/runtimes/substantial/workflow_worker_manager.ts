@@ -27,11 +27,11 @@ export class WorkerManager
     });
   }
 
-  destroyWorker(name: string, runId: string) {
+  override destroyWorker(name: string, runId: string) {
     return super.destroyWorker(name, runId);
   }
 
-  destroyAllWorkers() {
+  override destroyAllWorkers() {
     logger.warn(
       `Destroying workers for ${
         this

@@ -27,7 +27,7 @@ Meta.test("typegraph validation", async (t) => {
           "validator.py",
         );
         fail("should have thrown");
-      } catch (e) {
+      } catch (e: any) {
         console.log(e);
         await t.assertSnapshot(e.stderr);
       }

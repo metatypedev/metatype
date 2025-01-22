@@ -277,7 +277,9 @@ Meta.test(
   async (t) => {
     const load = async (value: number) => {
       Deno.env.set("DYNAMIC", path.join("dynamic", `${value}.ts`));
-      const e = await t.engine("runtimes/deno/deno_reload.py");
+      const e = await t.engine("runtimes/deno/deno_reload.py", {
+        prefix: "sync",
+      });
       Deno.env.delete("DYNAMIC");
       return e;
     };

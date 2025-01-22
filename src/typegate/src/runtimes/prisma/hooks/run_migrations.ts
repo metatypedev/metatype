@@ -107,7 +107,7 @@ export const runMigrations: PushHandler = async (
 
     try {
       await migration.run();
-    } catch (err) {
+    } catch (err: any) {
       const error = err instanceof MigrationFailure
         ? err
         : MigrationFailure.fromErrorMessage(err.message, rt.data.name);

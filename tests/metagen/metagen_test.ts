@@ -34,12 +34,15 @@ async function prepareBucket() {
       secretAccessKey: s3Secrets.S3_SECRET_KEY,
     },
     forcePathStyle: Boolean(s3Secrets.S3_PATH_STYLE),
+    logger: console,
   });
 
   try {
     await createBucket(client, "metagen-test-bucket");
-  } catch (_e) {
-    //
+  } catch (err: any) {
+    if (err?.Code != "BucketAlreadyOwnedByYou") {
+      throw err;
+    }
   }
 }
 
