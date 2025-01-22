@@ -122,7 +122,7 @@ export class TypeGraphRuntime extends Runtime {
     }
   }
 
-  #getSchemaResolver: Resolver = () => {
+  #getSchemaResolver: Resolver = (args) => {
     const root = this.tg.types[0] as ObjectNode;
 
     const queries = this.tg.types[root.properties["query"]] as ObjectNode;
@@ -131,7 +131,7 @@ export class TypeGraphRuntime extends Runtime {
     return {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L36
       description: () => `${root.type} typegraph`,
-      types: this.#typesResolver,
+      types: () => this.#typesResolver(args),
       queryType: () => {
         if (!queries || Object.values(queries.properties).length === 0) {
           // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
@@ -231,11 +231,11 @@ export class TypeGraphRuntime extends Runtime {
     visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
 
     // TODO: Better place
-    await this.#visible.computeAllowList(resArgs);
+    await this.#visible.computeAllowList(resArgs ?? {});
 
     // Known scalars (integer, boolean, ..)
     const distinctScalars = distinctBy(
-      this.#visible.filterVisible(scalarTypeIndices).map((idx) =>
+      this.#visible.filterVisible(scalarTypeIndices, "known scalars").map((idx) =>
         this.tg.types[idx]
       ),
       (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
@@ -255,7 +255,7 @@ export class TypeGraphRuntime extends Runtime {
 
     // Object types that are not an input type
     const regularTypes = distinctBy(
-      this.#visible.filterVisible(regularTypeIndices).map((idx) =>
+      this.#visible.filterVisible(regularTypeIndices, "regular").map((idx) =>
         this.tg.types[idx]
       ),
       (t) => t.title,
@@ -263,7 +263,7 @@ export class TypeGraphRuntime extends Runtime {
 
     // Input type (must be Object)
     const inputTypes = distinctBy(
-      this.#visible.filterVisible(inputTypeIndices).map((idx) =>
+      this.#visible.filterVisible(inputTypeIndices, "input").map((idx) =>
         this.tg.types[idx]
       ),
       (t) => t.title,

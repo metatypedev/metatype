@@ -13,10 +13,11 @@ import {
 import { Resolver, ResolverArgs } from "../../types.ts";
 import { DenoRuntime } from "../deno/deno.ts";
 import { Policy } from "../../typegraph/types.ts";
+import { getLogger } from "../../log.ts";
 
 export interface FieldToPolicy {
   fieldName: string;
-  policies: Array<Policy>;
+  queueOfPolicyChain: Array<Array<Policy>>;
   typeIdx: number;
   path: VisitPath;
 }
@@ -28,12 +29,15 @@ interface ResolutionData {
   policyNameAtTargetTypeIdx: string;
 }
 
+const logger = getLogger("visibility");
+
 export class TypeVisibility {
   pathToIdx: Map<string, number>;
-  #resolvers: Map<string, ResolutionData>;
+ // Note: value has same dim as the queue of policy chain to evaluate
+  #resolvers: Map<string, Array<Array<ResolutionData>>>;
   #typeAllowCounters: Map<number, { referrers: number; deniers: number }>;
 
-  #idToAllow: Map<string, boolean>;
+  #idToAllow: Map<string, boolean | null>;
   #typeIdxToIds: Map<number, Set<string>>;
 
   constructor(
@@ -98,7 +102,9 @@ export class TypeVisibility {
 
         policiesQueue.push({
           fieldName,
-          policies: allIndices.flat().map((polIdx) => this.tg.policies[polIdx]),
+          queueOfPolicyChain: allIndices.map((chainIndicies) => {
+            return chainIndicies.map((polIdx) => this.tg.policies[polIdx]) 
+          }),
           typeIdx: currTypeIdx,
           path,
         });
@@ -117,46 +123,53 @@ export class TypeVisibility {
     queue: Array<FieldToPolicy>,
     targetTypeIdx: number,
   ) {
-    console.log("Queue", queue);
     for (const fieldToPolicy of queue) {
-      for (const policy of fieldToPolicy.policies) {
-        const mat = this.tg.materializers[policy.materializer];
-
-        const resolver = this.denoRuntime.delegate(
-          mat,
-          false,
-          this.config.timer_policy_eval_retries,
-        );
-        this.#resolvers.set(qId, {
-          resolver,
-          fieldPolicyData: fieldToPolicy,
-          targetTypeIdx,
-          policyNameAtTargetTypeIdx: policy.name,
+      for (const polChain of fieldToPolicy.queueOfPolicyChain) {
+        const currChainResData = polChain.map((policy) => {
+          const mat = this.tg.materializers[policy.materializer];
+          const resolver = this.denoRuntime.delegate(
+            mat,
+            false,
+            this.config.timer_policy_eval_retries,
+          );
+          return {
+            resolver,
+            fieldPolicyData: fieldToPolicy,
+            targetTypeIdx,
+            policyNameAtTargetTypeIdx: policy.name,
+          };
         });
-      }
-    }
 
-    return true;
-  }
-
-  async computeAllowList(resArgs: ResolverArgs<Record<string, any>>) {
-    for (const [qid, resData] of this.#resolvers) {
-      const { fieldPolicyData, resolver, policyNameAtTargetTypeIdx, targetTypeIdx } = resData;
-      const cached = this.#idToAllow.get(qid);
-      const result = cached === undefined ? await resolver(resArgs) : cached;
-
-      if (result == "PASS") {
-        continue;
-      } else if (result == "ALLOW" || result == "DENY") {
-        const ret = result == "ALLOW";
-        this.#idToAllow.set(qid, ret);
-        if (this.#typeIdxToIds.has(targetTypeIdx)) {
-          this.#typeIdxToIds.get(targetTypeIdx)!.add(qid);
-        } else {
-          this.#typeIdxToIds.set(targetTypeIdx, new Set([qid]));
+        if (!this.#resolvers.has(qId)) {
+          this.#resolvers.set(qId, []);
         }
 
-        return ret;
+        this.#resolvers.get(qId)!.push(currChainResData);
+      }
+    }
+  }
+
+  /**
+   * Compose policies at a given node
+   * 
+   * If one policy on the chain, regardless of the effect is allowed, the underlying type is visible
+   */
+  async #composePolicies(resArgs: ResolverArgs<Record<string, any>>, operands: Array<ResolutionData>) {
+    let verdict = null;
+
+    for (const { resolver, fieldPolicyData, policyNameAtTargetTypeIdx, targetTypeIdx} of operands) {
+      const result = await resolver(resArgs);
+      if (result == "PASS") {
+        continue;
+      } else if (result == "ALLOw") {
+        verdict = true;
+      } else if (result == "DENY") {
+        this.#typeAllowCounters.get(targetTypeIdx)!.deniers++;
+        if (verdict) {
+          continue;
+        }
+
+        verdict = false;
       } else {
         const path = fieldPolicyData.path.edges.join(".");
         throw new Error(
@@ -165,31 +178,65 @@ export class TypeVisibility {
       }
     }
 
+    return verdict;
+  }
+
+  async #computeQueue(resArgs: ResolverArgs<Record<string, any>>, queueOfChains: Array<Array<ResolutionData>>) {
+    // This basically emulates node traversal,
+    // collect the policy chain at each node,
+    // then apply the pol spec logic but tunned for visibility, and ignores effects
+    for (const chainRes of queueOfChains) {
+      const result = await this.#composePolicies(resArgs, chainRes);
+      if (result === null) {
+        // no policies or PASS at the current node
+        continue;
+      }
+
+      // No need to go further, ALLOW and DENY are absolute
+      return result;
+    }
+
+    return null;
+  }
+
+  async computeAllowList(resArgs: ResolverArgs<Record<string, any>>) {
+    for (const [qid, resQueue] of this.#resolvers) {
+      const cached = this.#idToAllow.get(qid);
+      if (cached !== undefined) {
+        return cached;
+      }
+
+      const verdict = await this.#computeQueue(resArgs, resQueue);
+      this.#idToAllow.set(qid, verdict);
+    }
+
+    logger.debug("Allowed typeIdx info: " +  Deno.inspect(this.#idToAllow));
+    // logger.debug("Denied referrers info: " +  Deno.inspect(this.#typeAllowCounters));
     // TODO:
-    // 1. evaluate the resolver queue from left to right
     // 2. increase deniers count for the underlying typeIdx if DENY
     // 3. types field on the introspection is a flat list
     // yet the input objects should be cared for separately (custom visitor maybe? + construct the path and get the id)
     // 4. special care for union/either
-
-    return true;
   }
 
   isVisible(typeIdx: number) {
     if (this.#typeAllowCounters.has(typeIdx)) {
       const data = this.#typeAllowCounters.get(typeIdx)!;
       const refThatAllows = data.referrers - data.deniers;
+      console.log("check", typeIdx,refThatAllows > 0 ? "Allow" : "deny");
       return refThatAllows > 0;
     }
 
     throw new Error("Invalid state: type metadata not collected properly");
   }
 
-  filterVisible(indices: Set<number>) {
+  filterVisible(indices: Set<number>, debugInfo?: string) {
     const visible = [];
     for (const index of indices) {
       if (this.isVisible(index)) {
         visible.push(index);
+      } else if (debugInfo) {
+        logger.debug(`visibility check: ${debugInfo}: removed ${index} (${this.tg.types[index].title})`);
       }
     }
 
