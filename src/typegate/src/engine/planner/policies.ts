@@ -82,7 +82,6 @@ export class OperationPolicies {
   }
 
   #prepareStageToPolicies() {
-    console.log("prep", this.tg.name, this.orderedStageMetadata);
     this.#stageToPolicies = new Map();
 
     // Note: policies for exposed functions are hoisted on the root struct (index 0)
@@ -100,7 +99,7 @@ export class OperationPolicies {
     ) {
       const policies = this.#getPolicies(maybeWrappedIdx);
       this.#stageToPolicies.set(stageId, policies);
-      console.log("> found", stageId, policies, node, this.#findSelectedFields(stageId));
+      // console.log("> found", stageId, policies, node, this.#findSelectedFields(stageId));
 
       // top-level functions must have policies
       const isTopLevel = stageId.split(".").length == 1;

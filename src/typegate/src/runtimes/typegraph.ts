@@ -77,7 +77,7 @@ export class TypeGraphRuntime extends Runtime {
     denoRuntime: DenoRuntime,
   ) {
     this.#typeVisibilityInstance = new TypeVisibility(this.tg, denoRuntime, config);
-    this.#formatterInstance = new TypeFormatter(this.tg);
+    this.#formatterInstance = new TypeFormatter(this.tg, this.#typeVisibilityInstance);
   }
 
   get #formatter() {
@@ -151,6 +151,9 @@ export class TypeGraphRuntime extends Runtime {
   };
 
   #typesResolver: Resolver = async (resArgs) => {
+    // TODO: Better place
+    await this.#visible.computeAllowList(resArgs ?? {});
+
     // filter non-native GraphQL types
     const filter = (
       type: TypeNode,
@@ -178,7 +181,11 @@ export class TypeGraphRuntime extends Runtime {
     let requireEmptyObject = false;
 
     const myVisitor: TypeVisitorMap = {
-      [Type.FUNCTION]: ({ type }) => {
+      [Type.FUNCTION]: ({ type, path }) => {
+        if (!this.#visible.isVisible(path)) {
+          return false;
+        }
+
         // TODO skip if policy check fails
         // https://metatype.atlassian.net/browse/MET-119
 
@@ -205,7 +212,11 @@ export class TypeGraphRuntime extends Runtime {
         );
         return true;
       },
-      default: ({ type, idx }) => {
+      default: ({ type, idx, path }) => {
+        if (!this.#visible.isVisible(path)) {
+          return false;
+        }
+
         requireEmptyObject ||= isEmptyObject(type);
 
         if (
@@ -230,12 +241,9 @@ export class TypeGraphRuntime extends Runtime {
     };
     visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
 
-    // TODO: Better place
-    await this.#visible.computeAllowList(resArgs ?? {});
-
     // Known scalars (integer, boolean, ..)
     const distinctScalars = distinctBy(
-      this.#visible.filterVisible(scalarTypeIndices, "known scalars").map((idx) =>
+      this.#visible.keepReachable(scalarTypeIndices, "known scalars").map((idx) =>
         this.tg.types[idx]
       ),
       (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
@@ -255,7 +263,7 @@ export class TypeGraphRuntime extends Runtime {
 
     // Object types that are not an input type
     const regularTypes = distinctBy(
-      this.#visible.filterVisible(regularTypeIndices, "regular").map((idx) =>
+      this.#visible.keepReachable(regularTypeIndices, "regular").map((idx) =>
         this.tg.types[idx]
       ),
       (t) => t.title,
@@ -263,7 +271,7 @@ export class TypeGraphRuntime extends Runtime {
 
     // Input type (must be Object)
     const inputTypes = distinctBy(
-      this.#visible.filterVisible(inputTypeIndices, "input").map((idx) =>
+      this.#visible.keepReachable(inputTypeIndices, "input").map((idx) =>
         this.tg.types[idx]
       ),
       (t) => t.title,

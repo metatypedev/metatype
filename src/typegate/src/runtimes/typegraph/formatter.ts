@@ -30,6 +30,7 @@ import {
   typeEmptyObjectScalar,
 } from "./helpers.ts";
 import { Resolver } from "../../types.ts";
+import { TypeVisibility } from "./visibility.ts";
 
 const SCALAR_TYPE_MAP = {
   boolean: "Boolean",
@@ -49,6 +50,7 @@ export class TypeFormatter {
   scalarIndex = new Map<string, number>();
   constructor(
     private readonly tg: TypeGraphDS,
+    private readonly visibility: TypeVisibility,
   ) {}
 
   formatInputFields(

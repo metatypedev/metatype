@@ -3,7 +3,7 @@
 
 import { TypegateConfigBase } from "../../config.ts";
 import { TypeGraphDS } from "../../typegraph/mod.ts";
-import { Type } from "../../typegraph/type_node.ts";
+import { Type, TypeNode } from "../../typegraph/type_node.ts";
 import {
   getChildTypes,
   TypeVisitorMap,
@@ -22,6 +22,12 @@ export interface FieldToPolicy {
   path: VisitPath;
 }
 
+export interface WithPath<T extends TypeNode> {
+  path: VisitPath;
+  node: T;
+}
+
+
 interface ResolutionData {
   resolver: Resolver;
   fieldPolicyData: FieldToPolicy;
@@ -38,7 +44,7 @@ export class TypeVisibility {
   #typeAllowCounters: Map<number, { referrers: number; deniers: number }>;
 
   #idToAllow: Map<string, boolean | null>;
-  #typeIdxToIds: Map<number, Set<string>>;
+  #idxPaths: Map<number, Array<VisitPath>>;
 
   constructor(
     private readonly tg: TypeGraphDS,
@@ -48,7 +54,7 @@ export class TypeVisibility {
     this.pathToIdx = new Map();
     this.#resolvers = new Map();
     this.#typeAllowCounters = new Map();
-    this.#typeIdxToIds = new Map();
+    this.#idxPaths = new Map();
     this.#idToAllow = new Map();
 
     this.#visitTypegraph();
@@ -61,6 +67,11 @@ export class TypeVisibility {
   #visitTypegraph() {
     const myVisitor: TypeVisitorMap = {
       default: ({ idx, path }) => {
+        if (!this.#idxPaths.has(idx)) {
+          this.#idxPaths.set(idx, []);
+        }
+        this.#idxPaths.get(idx)!.push(path);
+
         if (this.#typeAllowCounters.has(idx)) {
           this.#typeAllowCounters.get(idx)!.referrers++;
         } else {
@@ -211,7 +222,7 @@ export class TypeVisibility {
     }
 
     logger.debug("Allowed typeIdx info: " +  Deno.inspect(this.#idToAllow));
-    // logger.debug("Denied referrers info: " +  Deno.inspect(this.#typeAllowCounters));
+    logger.debug("Index referrers info: " +  Deno.inspect(this.#idxPaths));
     // TODO:
     // 2. increase deniers count for the underlying typeIdx if DENY
     // 3. types field on the introspection is a flat list
@@ -219,7 +230,7 @@ export class TypeVisibility {
     // 4. special care for union/either
   }
 
-  isVisible(typeIdx: number) {
+  isUnreachable(typeIdx: number) {
     if (this.#typeAllowCounters.has(typeIdx)) {
       const data = this.#typeAllowCounters.get(typeIdx)!;
       const refThatAllows = data.referrers - data.deniers;
@@ -230,10 +241,10 @@ export class TypeVisibility {
     throw new Error("Invalid state: type metadata not collected properly");
   }
 
-  filterVisible(indices: Set<number>, debugInfo?: string) {
+  keepReachable(indices: Set<number>, debugInfo?: string) {
     const visible = [];
     for (const index of indices) {
-      if (this.isVisible(index)) {
+      if (this.isUnreachable(index)) {
         visible.push(index);
       } else if (debugInfo) {
         logger.debug(`visibility check: ${debugInfo}: removed ${index} (${this.tg.types[index].title})`);
@@ -241,5 +252,16 @@ export class TypeVisibility {
     }
 
     return visible;
+  }
+
+  isVisible(path: VisitPath) {
+    const qid = TypeVisibility.getId(path.indices);
+    const verdict = this.#idToAllow.get(qid);
+    if (typeof verdict == "boolean") {
+      console.log("BAD", qid);
+      return verdict;
+    }
+
+    return true;
   }
 }
