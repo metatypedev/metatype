@@ -2,20 +2,47 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { errorToString } from "../../worker_utils.ts";
-import { handleWitOp } from "../wit_wire/mod.ts";
-import { WasmMessage } from "./types.ts";
+import { handleWitOp, WitWireHandle } from "../wit_wire/mod.ts";
+import { WasmCallMessage } from "./types.ts";
 
-self.onmessage = async function (event: MessageEvent<WasmMessage>) {
-  const { type } = event.data;
+const witWireInstances = new Map<string, WitWireHandle>();
+
+function hostcall(op: string, json: string) {
+  self.postMessage({ type: "HOSTCALL", op, json });
+
+  return new Promise((resolve, reject) => {
+    const prevHandler = self.onmessage;
+
+    self.onmessage = (event) => {
+      if (prevHandler) {
+        self.onmessage = prevHandler;
+      }
+      resolve(event.data);
+    };
+
+    self.onerror = (event) => {
+      if (prevHandler) {
+        self.onmessage = prevHandler;
+      }
+      reject(event.error);
+    };
+  });
+}
+
+self.onmessage = async function (event: MessageEvent<WasmCallMessage>) {
+  const { type, id } = event.data;
+
+  if (!witWireInstances.has(id)) {
+    const handle = await WitWireHandle.init({ ...event.data, hostcall });
+    witWireInstances.set(id, handle);
+  }
 
   switch (type) {
     case "CALL":
       try {
-        // FIXME: wit_wire instance is not available in the worker, why???
-        const result = await handleWitOp(event.data);
         self.postMessage({
           type: "SUCCESS",
-          result,
+          result: await handleWitOp(event.data),
         });
       } catch (error) {
         self.postMessage({

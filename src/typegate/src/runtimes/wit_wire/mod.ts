@@ -12,23 +12,25 @@ const logger = getLogger(import.meta);
 const METATYPE_VERSION = "0.5.1-rc.0";
 
 export class WitWireHandle {
-  static async init(
-    componentPath: string,
-    instanceId: string,
-    ops: WitWireMatInfo[],
-    cx: HostCallCtx,
-  ) {
+  static async init(params: {
+    componentPath: string;
+    id: string;
+    ops: WitWireMatInfo[];
+    hostcall: (op: string, json: string) => Promise<any>;
+  }) {
+    const { id, componentPath, ops, hostcall } = params;
+
     try {
       const _res = await Meta.wit_wire.init(
         componentPath,
-        instanceId,
+        id,
         {
           expected_ops: ops,
           metatype_version: METATYPE_VERSION,
         }, // this callback will be used from the native end
-        async (op: string, json: string) => await hostcall(cx, op, json),
+        hostcall,
       );
-      return new WitWireHandle(instanceId, componentPath, ops);
+      return new WitWireHandle(id, componentPath, ops);
     } catch (err) {
       throw new Error(
         `error on init for component at path: ${componentPath}: ${err}`,
@@ -246,7 +248,7 @@ export type HostCallCtx = {
   typegraphUrl: URL;
 };
 
-async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
+export async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
   try {
     const args = JSON.parse(json);
     switch (op_name) {

@@ -8,10 +8,11 @@ export type TaskSpec = {
   componentPath: string;
 };
 
-export interface WasmMessage extends WitOpArgs {
-  type: "CALL";
-}
+export type WasmCallMessage = { type: "CALL" } & WitOpArgs;
+
+export type WasmMessage = WasmCallMessage | { type: "HOSTCALL"; result: any };
 
 export type WasmEvent =
   | { type: "SUCCESS"; result: unknown }
+  | { type: "HOSTCALL"; opName: string; json: string }
   | { type: "FAILURE"; error: string; exception: Error | undefined };

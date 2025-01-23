@@ -11,6 +11,7 @@ import {
 } from "../patterns/worker_manager/mod.ts";
 import { WorkerPool } from "../patterns/worker_manager/pooling.ts";
 import { TaskId } from "../patterns/worker_manager/types.ts";
+import { hostcall, HostCallCtx } from "../wit_wire/mod.ts";
 import { WasmEvent, WasmMessage, TaskSpec } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
@@ -36,7 +37,7 @@ export class WorkerManager extends BaseWorkerManager<
     return WorkerManager.#pool!;
   }
 
-  constructor() {
+  constructor(private hostcallCtx: HostCallCtx) {
     super(WorkerManager.#getPool());
   }
 
@@ -52,9 +53,19 @@ export class WorkerManager extends BaseWorkerManager<
     });
 
     return new Promise((resolve, reject) => {
-      const handler: (event: WasmEvent) => void = (event) => {
+      const handler: (event: WasmEvent) => void = async (event) => {
         this.deallocateWorker(name, taskId);
         switch (event.type) {
+          case "HOSTCALL":
+            this.sendMessage(taskId, {
+              type: "HOSTCALL",
+              result: await hostcall(
+                this.hostcallCtx,
+                event.opName,
+                event.json,
+              ),
+            });
+            break;
           case "SUCCESS":
             resolve(event.result);
             break;

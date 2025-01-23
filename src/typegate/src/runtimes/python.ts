@@ -8,7 +8,6 @@ import type { Resolver, RuntimeInitParams } from "../types.ts";
 import type { ComputeStage } from "../engine/query_engine.ts";
 import type { Materializer } from "../typegraph/types.ts";
 import * as ast from "graphql/ast";
-import { WitWireHandle } from "./wit_wire/mod.ts";
 import type { WitWireMatInfo } from "../../engine/runtime.js";
 import { sha256 } from "../crypto.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
@@ -24,8 +23,8 @@ export class PythonRuntime extends Runtime {
   private constructor(
     typegraphName: string,
     private tg: TypeGraphDS,
-    uuid: string,
-    private wire: WitWireHandle,
+    private uuid: string,
+    private wireMat: WitWireMatInfo[],
     private workerManager: WorkerManager,
   ) {
     super(typegraphName, uuid);
@@ -129,26 +128,19 @@ export class PythonRuntime extends Runtime {
       `initializing WitWireHandle for PythonRuntime ${uuid} on typegraph ${typegraphName}`,
     );
     const token = await InternalAuth.emit(typegate.cryptoKeys);
-    const wire = await WitWireHandle.init(
-      "inline://pyrt_wit_wire.cwasm",
-      uuid,
-      wireMatInfos,
-      {
-        authToken: token,
-        typegate,
-        typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
-      },
-    );
+    const hostcallCtx = {
+      authToken: token,
+      typegate,
+      typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
+    };
 
-    console.log("Wire initialized: ", wire.id);
-
-    const workerManager = new WorkerManager();
+    const workerManager = new WorkerManager(hostcallCtx);
 
     return new PythonRuntime(
       typegraphName,
       typegraph,
       uuid,
-      wire,
+      wireMatInfos,
       workerManager,
     );
   }
@@ -158,7 +150,7 @@ export class PythonRuntime extends Runtime {
     //   throw new Error("wtf");
     // }
     this.logger.info("deinitializing PythonRuntime");
-    await using _drop = this.wire;
+    //await using _drop = this.wireMat;
   }
 
   async materialize(
@@ -221,7 +213,9 @@ export class PythonRuntime extends Runtime {
       const res = await this.workerManager.callWitOp({
         opName,
         args,
-        ...this.wire,
+        ops: this.wireMat,
+        id: this.uuid,
+        componentPath: "inline://pyrt_wit_wire.cwasm",
       });
       this.logger.info(`'${opName}' successful`);
       this.logger.debug(`'${opName}' returned: ${JSON.stringify(res)}`);
