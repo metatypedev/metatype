@@ -2,65 +2,65 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct #244
-├─ [data]: struct 'Post_update_input' #236
-│  ├─ [author]: optional #234
-│  │  └─ item: union #233
-│  │     ├─ variant_0: struct #217
-│  │     │  └─ [create]: struct 'User_create_input_excluding_rel_Post_User' #215
+root: struct #231
+├─ [data]: struct 'Post_update_input' #223
+│  ├─ [author]: optional #221
+│  │  └─ item: union #220
+│  │     ├─ variant_0: struct #204
+│  │     │  └─ [create]: struct 'User_create_input_excluding_rel_Post_User' #202
 │  │     │     ├─ [id]: integer #80
 │  │     │     └─ [name]: string #81
-│  │     ├─ variant_1: struct #218
+│  │     ├─ variant_1: struct #205
 │  │     │  └─ [connect]: &User_where #163
-│  │     ├─ variant_2: struct #219
-│  │     │  └─ [connectOrCreate]: struct #216
-│  │     │     ├─ [create]: struct 'User_create_input_excluding_rel_Post_User' #215
+│  │     ├─ variant_2: struct #206
+│  │     │  └─ [connectOrCreate]: struct #203
+│  │     │     ├─ [create]: struct 'User_create_input_excluding_rel_Post_User' #202
 │  │     │     │  ├─ [id]: integer #80
 │  │     │     │  └─ [name]: string #81
 │  │     │     └─ [where]: &User_where #163
-│  │     └─ variant_3: struct #232
-│  │        └─ [update]: struct 'User_update_input_excluding_rel_Post_User' #231
-│  │           ├─ [id]: optional #226
-│  │           │  └─ item: union #225
+│  │     └─ variant_3: struct #219
+│  │        └─ [update]: struct 'User_update_input_excluding_rel_Post_User' #218
+│  │           ├─ [id]: optional #213
+│  │           │  └─ item: union #212
 │  │           │     ├─ variant_0: integer #80
-│  │           │     ├─ variant_1: struct #221
+│  │           │     ├─ variant_1: struct #208
 │  │           │     │  └─ [set]: integer #80
-│  │           │     ├─ variant_2: struct #222
+│  │           │     ├─ variant_2: struct #209
 │  │           │     │  └─ [multiply]: integer #80
-│  │           │     ├─ variant_3: struct #223
+│  │           │     ├─ variant_3: struct #210
 │  │           │     │  └─ [decrement]: integer #80
-│  │           │     └─ variant_4: struct #224
+│  │           │     └─ variant_4: struct #211
 │  │           │        └─ [increment]: integer #80
-│  │           └─ [name]: optional #229
-│  │              └─ item: union #228
+│  │           └─ [name]: optional #216
+│  │              └─ item: union #215
 │  │                 ├─ variant_0: string #81
-│  │                 └─ variant_1: struct #227
+│  │                 └─ variant_1: struct #214
 │  │                    └─ [set]: string #81
-│  ├─ [id]: optional #209
-│  │  └─ item: union #208
+│  ├─ [id]: optional #196
+│  │  └─ item: union #195
 │  │     ├─ variant_0: integer #88
-│  │     ├─ variant_1: struct #204
+│  │     ├─ variant_1: struct #191
 │  │     │  └─ [set]: integer #88
-│  │     ├─ variant_2: struct #205
+│  │     ├─ variant_2: struct #192
 │  │     │  └─ [multiply]: integer #88
-│  │     ├─ variant_3: struct #206
+│  │     ├─ variant_3: struct #193
 │  │     │  └─ [decrement]: integer #88
-│  │     └─ variant_4: struct #207
+│  │     └─ variant_4: struct #194
 │  │        └─ [increment]: integer #88
-│  └─ [title]: optional #212
-│     └─ item: union #211
+│  └─ [title]: optional #199
+│     └─ item: union #198
 │        ├─ variant_0: string #89
-│        └─ variant_1: struct #210
+│        └─ variant_1: struct #197
 │           └─ [set]: string #89
-└─ [where]: struct 'Post_query_where_unique_input' #243
-   ├─ [AND]: optional #240
-   │  └─ item: list #239
-   │     └─ item: &Post_query_where_unique_input #238
-   ├─ [NOT]: optional #241
-   │  └─ item: &Post_query_where_unique_input #238
-   ├─ [OR]: optional #240
-   │  └─ item: list #239
-   │     └─ item: &Post_query_where_unique_input #238
+└─ [where]: struct 'Post_query_where_unique_input' #230
+   ├─ [AND]: optional #227
+   │  └─ item: list #226
+   │     └─ item: &Post_query_where_unique_input #225
+   ├─ [NOT]: optional #228
+   │  └─ item: &Post_query_where_unique_input #225
+   ├─ [OR]: optional #227
+   │  └─ item: list #226
+   │     └─ item: &Post_query_where_unique_input #225
    ├─ [author]: optional #126
    │  └─ item: struct 'User_where_excluding_Post' #125
    │     ├─ [id]: optional #113

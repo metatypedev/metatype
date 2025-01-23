@@ -828,8 +828,8 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "file": "RootUploadFnInputFileFile",
-                "path": "RootUploadFnInputPathRootUploadFnInputPathStringOptional",
+                "file": "FileBf9b7",
+                "path": "RootUploadFnInputPathString25e51Optional",
             },
             input_files=[[".file"]],
         )
@@ -841,64 +841,54 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "prefix": "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional",
-                "files": "RootUploadManyFnInputFilesRootUploadFnInputFileFileList",
+                "prefix": "RootUploadManyFnInputPrefixString25e51Optional",
+                "files": "RootUploadManyFnInputFilesFileBf9b7List",
             },
             input_files=[[".files", "[]"]],
         )
 
 
-RootUploadFnInputFileFile = File
+FileBf9b7 = File
 
-RootUploadFnInputPathString = str
-
-RootUploadFnInputPathRootUploadFnInputPathStringOptional = typing.Union[
-    RootUploadFnInputPathString, None
-]
+RootUploadFnInputPathString25e51Optional = typing.Union[str, None]
 
 RootUploadFnInput = typing.TypedDict(
     "RootUploadFnInput",
     {
-        "file": RootUploadFnInputFileFile,
-        "path": RootUploadFnInputPathRootUploadFnInputPathStringOptional,
+        "file": FileBf9b7,
+        "path": RootUploadFnInputPathString25e51Optional,
     },
     total=False,
 )
 
-RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional = typing.Union[
-    RootUploadFnInputPathString, None
-]
+RootUploadManyFnInputPrefixString25e51Optional = typing.Union[str, None]
 
-RootUploadManyFnInputFilesRootUploadFnInputFileFileList = typing.List[
-    RootUploadFnInputFileFile
-]
+RootUploadManyFnInputFilesFileBf9b7List = typing.List[FileBf9b7]
 
 RootUploadManyFnInput = typing.TypedDict(
     "RootUploadManyFnInput",
     {
-        "prefix": RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional,
-        "files": RootUploadManyFnInputFilesRootUploadFnInputFileFileList,
+        "prefix": RootUploadManyFnInputPrefixString25e51Optional,
+        "files": RootUploadManyFnInputFilesFileBf9b7List,
     },
     total=False,
 )
-
-RootUploadFnOutput = bool
 
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
         super().__init__(
             {
-                "RootUploadFnInputFileFile": "root_upload_fn_input_file_file!",
-                "RootUploadFnInputPathRootUploadFnInputPathStringOptional": "String",
-                "RootUploadManyFnInputPrefixRootUploadFnInputPathStringOptional": "String",
-                "RootUploadManyFnInputFilesRootUploadFnInputFileFileList": "[root_upload_fn_input_file_file]!",
+                "FileBf9b7": "file_bf9b7!",
+                "RootUploadFnInputPathString25e51Optional": "String",
+                "RootUploadManyFnInputPrefixString25e51Optional": "String",
+                "RootUploadManyFnInputFilesFileBf9b7List": "[file_bf9b7]!",
             }
         )
 
     def upload(
         self, args: typing.Union[RootUploadFnInput, PlaceholderArgs]
-    ) -> MutationNode[RootUploadFnOutput]:
+    ) -> MutationNode[bool]:
         node = selection_to_nodes(
             {"upload": args}, {"upload": NodeDescs.RootUploadFn}, "$q"
         )[0]
@@ -908,7 +898,7 @@ class QueryGraph(QueryGraphBase):
 
     def upload_many(
         self, args: typing.Union[RootUploadManyFnInput, PlaceholderArgs]
-    ) -> MutationNode[RootUploadFnOutput]:
+    ) -> MutationNode[bool]:
         node = selection_to_nodes(
             {"uploadMany": args}, {"uploadMany": NodeDescs.RootUploadManyFn}, "$q"
         )[0]

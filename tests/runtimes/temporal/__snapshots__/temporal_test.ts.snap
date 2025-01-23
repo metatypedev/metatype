@@ -63,11 +63,11 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "string",
-        "title": "root_start_fn_input_workflow_id_string"
+        "title": "string_e97ab"
       },
       {
         "type": "list",
-        "title": "root_start_fn_input_args_root_start_fn_input_args_struct_list",
+        "title": "root_start_fn_input_args_struct_list_a2e91",
         "items": 5
       },
       {
@@ -94,7 +94,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "object",
-        "title": "root_query_fn_input",
+        "title": "struct_ee884",
         "properties": {
           "workflow_id": 3,
           "run_id": 3,
@@ -278,7 +278,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       "auths": [],
       "rate": null,
-      "version": "0.0.3",
+      "version": "0.0.4",
       "randomSeed": null,
       "artifacts": {}
     }
@@ -349,7 +349,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "string",
-        "title": "root_startKv_fn_input_workflow_id_string"
+        "title": "string_03667"
       },
       {
         "type": "list",
@@ -391,7 +391,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       {
         "type": "list",
-        "title": "root_query_fn_input_args_root_startKv_fn_input_workflow_id_string_list",
+        "title": "root_query_fn_input_args_string_03667_list",
         "items": 3
       },
       {
@@ -595,7 +595,7 @@ snapshot[`Typegraph using temporal 2`] = `
       },
       "auths": [],
       "rate": null,
-      "version": "0.0.3",
+      "version": "0.0.4",
       "randomSeed": null,
       "artifacts": {}
     }

@@ -47,7 +47,7 @@ expression: typegraph.0
     },
     {
       "type": "integer",
-      "title": "root_one_fn_input_two_integer",
+      "title": "integer_f0e37",
       "minimum": 12,
       "maximum": 44
     },
@@ -108,7 +108,7 @@ expression: typegraph.0
     },
     "auths": [],
     "rate": null,
-    "version": "0.0.3",
+    "version": "0.0.4",
     "randomSeed": null,
     "artifacts": {}
   }
