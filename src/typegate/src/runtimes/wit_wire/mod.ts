@@ -16,7 +16,7 @@ export class WitWireHandle {
     componentPath: string,
     instanceId: string,
     ops: WitWireMatInfo[],
-    cx: HostCallCtx,
+    //cx: HostCallCtx,
   ) {
     try {
       const _res = await Meta.wit_wire.init(
@@ -26,7 +26,7 @@ export class WitWireHandle {
           expected_ops: ops,
           metatype_version: METATYPE_VERSION,
         }, // this callback will be used from the native end
-        async (op: string, json: string) => await hostcall(cx, op, json),
+        async (op: string, json: string) => {},
       );
       return new WitWireHandle(instanceId, componentPath, ops);
     } catch (err) {

@@ -2,16 +2,22 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { errorToString } from "../../worker_utils.ts";
-import { handleWitOp } from "../wit_wire/mod.ts";
+import { handleWitOp, WitWireHandle } from "../wit_wire/mod.ts";
 import { WasmMessage } from "./types.ts";
 
+const wireInstances = new Map<string, WitWireHandle>();
+
 self.onmessage = async function (event: MessageEvent<WasmMessage>) {
-  const { type } = event.data;
+  const { type, id, componentPath, ops } = event.data;
+
+  if (!wireInstances.has(id)) {
+    const handle = await WitWireHandle.init(componentPath, id, ops);
+    wireInstances.set(id, handle);
+  }
 
   switch (type) {
     case "CALL":
       try {
-        // FIXME: wit_wire instance is not available in the worker, why???
         const result = await handleWitOp(event.data);
         self.postMessage({
           type: "SUCCESS",
