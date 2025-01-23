@@ -30,6 +30,7 @@ Args: {args:?}
                     .map(|var| var != "0")
                     .unwrap_or(true),
             )
+            .display_env_section(false)
             .try_into_hooks()
             .unwrap();
         let eyre_panic_hook = eyre_panic_hook.into_panic_hook();
