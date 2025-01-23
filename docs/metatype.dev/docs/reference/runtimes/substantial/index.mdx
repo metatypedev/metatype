@@ -37,13 +37,86 @@ Additionally, if we were to shut down the Typegate node executing it and then re
 
 ## Key Concepts
 
-### Workflows
-
-A special type of function with **durable state** and an execution mechanism directly tied to time. A workflow can also trigger other workflows (child workflows).
 
 ### Backend
 
 This abstraction implements a set of atomic operations that allows Typegate to persist and recover the workflow state. Currently, we have the **Redis** backend available, along with others like **fs** and **memory**, which are primarily intended for development or testing purposes.
+
+### Workflows
+
+A special type of function with **durable state** and an execution mechanism directly tied to time. A workflow can also trigger other workflows (child workflows).
+
+#### Persistence and Lifecycle
+
+* **Context**
+
+The context object contains the workflow input (namely `kwargs` as seen in the example above), but it can also be thought as a namespace that contains all of the core functions used for durableness.
+
+* **Interrupts**
+
+An special state of the program that is produced by any function that can trigger a workflow **replay**.
+
+One simple example of such function is when you want to wait for a given amount of time, Substantial will save the current time and the end time, interrupts the workflow then requeue it to execute later.
+Any agent (Typegate node) that picks the workflow, will **replay** it, the cycle repeats until the actual current time is greater or equal to the end time.
+
+```typescript
+await ctx.sleep(24 * 3600 * 1000); // 1 day
+```
+
+* **Save**
+
+A save is one of the main building blocks of a workflow, many functions avalaiable on the context object relays on it.
+
+This is mainly because, a save call converts any function into a durable one: the function output is saved.
+This ensures that when a workflow is resumed(after a typgate reboot for example) or replayed (after interrupts), if the the result was saved the saved function result will be 
+
+```typescript
+// For example, if the ouptut was 7, after replay, save will not execute the function inside but directly return the 
+const rand = await ctx.save(() => Math.random());
+
+// If you keep in mind that the workflow can be replayed many times
+// A save call should make more sense!
+const now = await ctx.save(() => Date.now());
+
+// And even more for functions that can produce outside effects
+const result = await ctx.save(sendEmail());
+```
+
+:::info Notes
+
+Only json-compliant values can be persisted.
+
+:::
+
+
+* **Send/Receive**
+
+You can send events to a workflow through GraphQL, any receive call on the workflow will await for it and will **interrupt** the workflow if it was not noticed yet.
+```gralhql
+query {
+  awesomeSend(
+    run_id: "<workflow_run_id>",
+    event: { name: "myEvent", payload: 1234 }
+  )
+}
+```
+
+```typescript
+const value = await ctx.receive<number>("myEvent"); // 1234
+```
+
+* **ensure**
+
+It's a function that takes a function that returns a boolean, if the returned value is false, it will **interrupt** the workflow.
+
+```typescript
+const secret = await ctx.receive<string>("secret");
+await ctx.ensure(() => secret == "top_secret");
+```
+
+#### Filters
+
+TODO
 
 ### Run
 
