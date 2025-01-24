@@ -419,22 +419,22 @@ You can also refer to your GraphQL playground for guiding you into expressing yo
 
 Base specification:
 
-```enbf
+```
 val          ::=  json_string
 
-special_term ::=  { started_at: operator }
-                | { ended_at: operator }
-                | { status: operator }
- 
-operator     ::=  { eq: val } 
+term         ::=  { eq: val } 
                 | { lt: val } | { lte: val }
                 | { gt: val } |  { gte: val }
                 | { in: val } | { contains: val }
 
-expr     ::=  not | or | and | term
-not      ::=  { not: expr }
-or       ::=  { or: [expr] }
-and      ::=  { and: [expr] }
+special_term ::=  { started_at: term }
+                | { ended_at: term }
+                | { status: term }
+ 
+expr          ::=  not | or | and | term | special_term
+not           ::=  { not: expr }
+or            ::=  { or: [expr] }
+and           ::=  { and: [expr] }
 ```
 
 :::info Notes
@@ -445,13 +445,13 @@ and      ::=  { and: [expr] }
   - Check if the workflow output is within a list or is a substring of the given value.
 
 * `status`
-  - Can be one of `"COMPLETED"`, `"COMMPLETED_WITH_ERROR"`, `"ONGOING"` or `"UNKNOWN"`.
+  - Can be one of `"COMPLETED"`, `"COMPLETED_WITH_ERROR"`, `"ONGOING"` or `"UNKNOWN"`.
 
-For exapmle, the operand
+For example, the term
 ```graphql
 { status: { contains: "\"COMPLETED\"" } }
 ```
 
-..should cover `"COMPLETED"` and `"COMMPLETED_WITH_ERROR"`.
+..should cover `"COMPLETED"` and `"COMPLETED_WITH_ERROR"`.
 
 ::::
