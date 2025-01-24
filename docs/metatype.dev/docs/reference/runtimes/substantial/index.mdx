@@ -5,7 +5,7 @@ import TabItem from "@theme/TabItem";
 
 ## Substantial runtime
 
-The Substantial runtime enables the execution of durable workflows in one or accross multiple typegates.
+The Substantial runtime enables the execution of durable workflows in one or across multiple typegates.
 
 Why use it?
 
@@ -13,7 +13,7 @@ Why use it?
 - **Fault-tolerant execution**: Ensure reliable execution of tasks, even upon failures, by maintaining a durable state of the latest run.
 - **Task orchestration**: Coordinate complex sequences of workflows (analogous to microservices interactions).
 
-For example, the workflow bellow will continue running until a `confirmation` event is sent to the **associated run**.
+For example, the workflow below will continue running until a `confirmation` event is sent to the **associated run**.
 
 ```typescript
 export async function sendEmail(ctx: Context) {
@@ -52,11 +52,16 @@ A special type of function with **durable state** and an execution mechanism dir
 
 The context object contains the workflow input (namely `kwargs` as seen in the example above), but it can also be thought as a namespace that contains all of the core functions used for durableness.
 
+It is recreated at every replay.
+
 * **Interrupts**
 
-An special state of the program that is produced by any function that can trigger a workflow **replay**.
+A special state of the program that is produced by any function that can trigger a workflow **replay**.
+
+An interrupt will pause the program at the line it was emitted then queue it back to execute later.
 
 One simple example of such function is when you want to wait for a given amount of time, Substantial will save the current time and the end time, interrupts the workflow then requeue it to execute later.
+
 Any agent (Typegate node) that picks the workflow, will **replay** it, the cycle repeats until the actual current time is greater or equal to the end time.
 
 ```typescript
@@ -65,36 +70,85 @@ await ctx.sleep(24 * 3600 * 1000); // 1 day
 
 * **Save**
 
-A save is one of the main building blocks of a workflow, many functions avalaiable on the context object relays on it.
+A save is one of the main building blocks of a workflow, many functions available on the context object relies on it.
 
-This is mainly because, a save call converts any function into a durable one: the function output is saved.
-This ensures that when a workflow is resumed(after a typgate reboot for example) or replayed (after interrupts), if the the result was saved the saved function result will be 
+This is mainly because a save call converts any function into a **durable** one: the function output is saved.
+This ensures that when a workflow is resumed (after a Typegate reboot for example) or replayed (after interrupts), the saved function will not be executed again.
 
 ```typescript
-// For example, if the ouptut was 7, after replay, save will not execute the function inside but directly return the 
-const rand = await ctx.save(() => Math.random());
+// For example, if the output was 7 then after replay,
+// save will not execute the function inside but directly return already persisted value, which was 7.
+const rand = await ctx.save(() => Math.floor(10 * Math.random()));
 
 // If you keep in mind that the workflow can be replayed many times
 // A save call should make more sense!
 const now = await ctx.save(() => Date.now());
 
-// And even more for functions that can produce outside effects
-const result = await ctx.save(sendEmail());
+// And even more for functions that can produce external side-effects
+const result = await ctx.save(() => sendEmail());
 ```
 
 :::info Notes
 
-Only json-compliant values can be persisted.
+* Only JSON-compliant values can be persisted. The execution will throw otherwise.
+* Make sure to not rely on changing outside references inside a save call, best is to always expect a replay.
+```typescript
+let value = 5;
+const afterSave =  await save(() => { 
+  value *= 2;
+  return save; // 10 will be stored on the Backend
+});
+
+console.log(value); // 10 on the first replay, 5 on the next replay (save call function was skipped)
+console.log(afterSave); // always 10
+
+// Ideally, what you want is to reuse the saved value if the effect was desired
+// especially when you branch
+if (afterSave == 10) {
+  console.log("All good"); // branch path is now durable even after replays!
+} else {
+  throw new Error("Unreachable code");
+}
+
+```
 
 :::
 
 
 * **Send/Receive**
 
-You can send events to a workflow through GraphQL, any receive call on the workflow will await for it and will **interrupt** the workflow if it was not noticed yet.
-```gralhql
+You can send events to a workflow through GraphQL, any receive call on the workflow will await for it and will **interrupt** the workflow if it hasn't been received yet.
+
+<SDKTabs>
+    <TabItem value="python">
+
+```python
+g.expose(
+  # ..
+  send=sub.send(t.integer())
+)
+```
+
+    </TabItem>
+    <TabItem value="typescript">
+
+```typescript
+g.expose(
+  {
+    // ..
+    send: sub.send(t.integer())
+  }
+);
+```
+
+    </TabItem>
+
+</SDKTabs>
+
+```graphql
+# Client
 query {
-  awesomeSend(
+  send(
     run_id: "<workflow_run_id>",
     event: { name: "myEvent", payload: 1234 }
   )
@@ -102,21 +156,20 @@ query {
 ```
 
 ```typescript
+// Workflow
 const value = await ctx.receive<number>("myEvent"); // 1234
 ```
 
-* **ensure**
+* **Ensure**
 
-It's a function that takes a function that returns a boolean, if the returned value is false, it will **interrupt** the workflow.
+It's a function that takes a predicate, and will **interrupt** the workflow so that it will be replayed later if the returned value is false.
 
 ```typescript
 const secret = await ctx.receive<string>("secret");
 await ctx.ensure(() => secret == "top_secret");
+//
+// continue execution
 ```
-
-#### Filters
-
-TODO
 
 ### Run
 
@@ -249,6 +302,9 @@ def substantial_example(g: Graph):
         send_single_email=sub.start(t.struct({"to": t.email()})).reduce(
             {"name": "sendEmail"}
         ),
+        send_confirmation=sub.send(t.boolean()).reduce(
+            {"event": {"name": "confirmation", "payload": g.inherit()}}
+        ),
         results_raw=sub.query_results_raw(),
         workers=sub.query_resources(),
         **sub.internals(), # Required for child workflows
@@ -302,3 +358,100 @@ typegraph(
     </TabItem>
 
 </SDKTabs>
+
+
+
+### Advanced Filters
+
+In practice, you will have a lot of workflows that has been executed in different states. Substantial provides a way to filter the runs.
+
+<SDKTabs>
+    <TabItem value="python">
+
+```python
+g.expose(
+  # ..
+  search=sub.advanced_filters()
+)
+```
+
+    </TabItem>
+    <TabItem value="typescript">
+
+```typescript
+g.expose(
+  {
+    // ..
+    search: sub.advancedFilters()
+  }
+);
+```
+
+    </TabItem>
+
+</SDKTabs>
+
+```graphql
+# Client
+query {
+  search(
+    name: "sendEmail",
+    filter: {
+      and: [
+        { status: { contains: "\"COMPLETED\"" } },
+        { not: { started_at: { lt: "\"2025-01-15T00:00:00Z\"" } } },
+        { not: { eq: "null" } }
+      ]
+    }
+  ) {
+    run_id
+    started_at
+    ended_at
+    status
+    value
+  }
+}
+```
+
+#### Filter spec
+The specification itself is very close to Prisma queries.
+You can also refer to your GraphQL playground for guiding you into expressing your query.
+
+Base specification:
+
+```enbf
+val          ::=  json_string
+
+special_term ::=  { started_at: operator }
+                | { ended_at: operator }
+                | { status: operator }
+ 
+operator     ::=  { eq: val } 
+                | { lt: val } | { lte: val }
+                | { gt: val } |  { gte: val }
+                | { in: val } | { contains: val }
+
+expr     ::=  not | or | and | term
+not      ::=  { not: expr }
+or       ::=  { or: [expr] }
+and      ::=  { and: [expr] }
+```
+
+:::info Notes
+
+* `contains`
+  - Check if the workflow output is a list that contains the given value or if the given value is a substring of it.
+* `in`
+  - Check if the workflow output is within a list or is a substring of the given value.
+
+* `status`
+  - Can be one of `"COMPLETED"`, `"COMMPLETED_WITH_ERROR"`, `"ONGOING"` or `"UNKNOWN"`.
+
+For exapmle, the operand
+```graphql
+{ status: { contains: "\"COMPLETED\"" } }
+```
+
+..should cover `"COMPLETED"` and `"COMMPLETED_WITH_ERROR"`.
+
+::::
