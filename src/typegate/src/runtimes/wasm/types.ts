@@ -10,9 +10,13 @@ export type TaskSpec = {
 
 export type WasmCallMessage = { type: "CALL" } & WitOpArgs;
 
-export type WasmMessage = WasmCallMessage | { type: "HOSTCALL"; result: any };
+export type WasmMessage =
+  | WasmCallMessage
+  | { type: "HOSTCALL"; result: any }
+  | { type: "SHUTDOWN" };
 
 export type WasmEvent =
   | { type: "SUCCESS"; result: unknown }
   | { type: "HOSTCALL"; opName: string; json: string }
+  | { type: "SHUTDOWN" }
   | { type: "FAILURE"; error: string; exception: Error | undefined };

@@ -14,7 +14,7 @@ const logger = getLogger(import.meta, "WARN");
 export abstract class BaseWorker<M extends BaseMessage, E extends BaseMessage> {
   abstract listen(handlerFn: EventHandler<E>): void;
   abstract send(msg: M): void;
-  abstract destroy(): void;
+  abstract destroy(): void | Promise<void>;
   abstract get id(): TaskId;
 }
 
@@ -29,10 +29,13 @@ export class BaseWorkerManager<
   M extends BaseMessage,
   E extends BaseMessage,
 > {
-  #activeTasks: Map<TaskId, {
-    worker: BaseWorker<M, E>;
-    taskSpec: T;
-  }> = new Map();
+  #activeTasks: Map<
+    TaskId,
+    {
+      worker: BaseWorker<M, E>;
+      taskSpec: T;
+    }
+  > = new Map();
   #tasksByName: Map<string, Set<TaskId>> = new Map();
   #startedAt: Map<TaskId, Date> = new Map();
   #pool: WorkerPool<T, M, E>;
@@ -89,37 +92,42 @@ export class BaseWorkerManager<
     }
   }
 
-  protected deallocateAllWorkers(options: DeallocateOptions = {}) {
+  protected async deallocateAllWorkers(options: DeallocateOptions = {}) {
     const activeTaskNames = this.getActiveTaskNames();
     if (activeTaskNames.length > 0) {
       if (options.destroy) {
         logger.warn(
-          `destroying workers for tasks ${
-            activeTaskNames.map((w) => `"${w}"`).join(", ")
-          }`,
+          `destroying workers for tasks ${activeTaskNames
+            .map((w) => `"${w}"`)
+            .join(", ")}`,
         );
       }
-      for (const name of activeTaskNames) {
-        this.deallocateWorkersByName(name, options);
-      }
+
+      await Promise.all(
+        activeTaskNames.map((name) =>
+          this.deallocateWorkersByName(name, options),
+        ),
+      );
     }
   }
 
-  protected deallocateWorkersByName(
+  protected async deallocateWorkersByName(
     name: string,
     options: DeallocateOptions = {},
   ) {
     const taskIds = this.#tasksByName.get(name);
     if (taskIds) {
-      for (const taskId of taskIds) {
-        this.deallocateWorker(name, taskId, options);
-      }
+      await Promise.all(
+        Array.from(taskIds).map((id) =>
+          this.deallocateWorker(name, id, options),
+        ),
+      );
       return true;
     }
     return false;
   }
 
-  deallocateWorker(
+  async deallocateWorker(
     name: string,
     taskId: TaskId,
     { destroy = false, shutdown = false }: DeallocateOptions = {},
@@ -138,9 +146,9 @@ export class BaseWorkerManager<
       // startedAt records are not deleted
 
       if (destroy) {
-        this.#pool.destroyWorker(task.worker, shutdown);
+        await this.#pool.destroyWorker(task.worker, shutdown);
       } else {
-        this.#pool.unborrowWorker(task.worker);
+        await this.#pool.unborrowWorker(task.worker);
       }
 
       return true;
@@ -160,10 +168,9 @@ export class BaseWorkerManager<
     this.logMessage(taskId, msg);
   }
 
-  deinit() {
-    this.deallocateAllWorkers({ destroy: true, shutdown: true });
+  async deinit() {
+    await this.deallocateAllWorkers({ destroy: true, shutdown: true });
     this.#pool.clear(); // this will be called more than once, but that is ok
-    return Promise.resolve();
   }
 }
 

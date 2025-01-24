@@ -4,7 +4,7 @@
 import { globalConfig } from "../../config.ts";
 import { getLogger } from "../../log.ts";
 import { WitOpArgs } from "../../types.ts";
-import { DenoWorker } from "../patterns/worker_manager/deno.ts";
+import { WasmWorker } from "../patterns/worker_manager/wasm.ts";
 import {
   BaseWorkerManager,
   createTaskId,
@@ -31,7 +31,7 @@ export class WorkerManager extends BaseWorkerManager<
           maxWorkers: globalConfig.max_wasm_workers,
           waitTimeoutMs: globalConfig.wasm_worker_wait_timeout_ms,
         },
-        (id: string) => new DenoWorker(id, import.meta.resolve("./worker.ts")),
+        (id: string) => new WasmWorker(id, import.meta.resolve("./worker.ts")),
       );
     }
     return WorkerManager.#pool!;
@@ -54,7 +54,10 @@ export class WorkerManager extends BaseWorkerManager<
 
     return new Promise((resolve, reject) => {
       const handler: (event: WasmEvent) => void = async (event) => {
-        this.deallocateWorker(name, taskId);
+        if (event.type !== "HOSTCALL") {
+          this.deallocateWorker(name, taskId);
+        }
+
         switch (event.type) {
           case "HOSTCALL":
             this.sendMessage(taskId, {

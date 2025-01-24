@@ -83,8 +83,8 @@ export class WaitQueueWithTimeout<W> implements WaitQueue<W> {
 
   #updateTimer() {
     if (this.#queue.length > 0) {
-      const timeoutMs = this.#queue[0].addedAt + this.#waitTimeoutMs -
-        Date.now();
+      const timeoutMs =
+        this.#queue[0].addedAt + this.#waitTimeoutMs - Date.now();
       if (timeoutMs <= 0) {
         this.#cancelNextEntry();
         this.#updateTimer();
@@ -175,7 +175,7 @@ export class WorkerPool<
   }
 
   // ensureMinWorkers will be false when we are shutting down.
-  unborrowWorker(worker: W) {
+  async unborrowWorker(worker: W) {
     this.#busyWorkers.delete(worker.id);
     const taskAdded = this.#waitQueue.shift(() => worker);
     if (!taskAdded) {
@@ -185,7 +185,7 @@ export class WorkerPool<
       // We might add "urgent" tasks in the future;
       // in this case the worker count might exceed `maxWorkers`.
       if (maxWorkers !== 0 && this.#workerCount >= maxWorkers) {
-        worker.destroy();
+        await worker.destroy();
       } else {
         this.#idleWorkers.push(worker);
       }
@@ -193,9 +193,9 @@ export class WorkerPool<
   }
 
   // when shutdown is true, new tasks will not be dequeued
-  destroyWorker(worker: W, shutdown = false) {
+  async destroyWorker(worker: W, shutdown = false) {
     this.#busyWorkers.delete(worker.id);
-    worker.destroy();
+    await worker.destroy();
     if (!shutdown) {
       const taskAdded = this.#waitQueue.shift(() => this.#workerFactory());
       if (!taskAdded) {
@@ -214,11 +214,9 @@ export class WorkerPool<
 
   clear() {
     logger.warn(
-      `destroying idle workers: ${
-        this.#idleWorkers
-          .map((w) => `"${w.id}"`)
-          .join(", ")
-      }`,
+      `destroying idle workers: ${this.#idleWorkers
+        .map((w) => `"${w.id}"`)
+        .join(", ")}`,
     );
     for (const worker of this.#idleWorkers) {
       worker.destroy();

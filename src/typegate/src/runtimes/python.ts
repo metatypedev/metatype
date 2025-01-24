@@ -14,8 +14,6 @@ import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { TypeGraphDS } from "../typegraph/mod.ts";
 import { WorkerManager } from "./wasm/worker_manager.ts";
 
-const logger = getLogger(import.meta);
-
 @registerRuntime("python")
 export class PythonRuntime extends Runtime {
   private logger: Logger;
@@ -124,10 +122,8 @@ export class PythonRuntime extends Runtime {
 
     // add default vm for lambda/def
     const uuid = crypto.randomUUID();
-    logger.info(
-      `initializing WitWireHandle for PythonRuntime ${uuid} on typegraph ${typegraphName}`,
-    );
     const token = await InternalAuth.emit(typegate.cryptoKeys);
+
     const hostcallCtx = {
       authToken: token,
       typegate,
@@ -145,12 +141,12 @@ export class PythonRuntime extends Runtime {
     );
   }
 
-  async deinit(): Promise<void> {
+  async deinit() {
     // if (Deno.env.get("KILL_PY")) {
     //   throw new Error("wtf");
     // }
+    await this.workerManager.deinit();
     this.logger.info("deinitializing PythonRuntime");
-    //await using _drop = this.wireMat;
   }
 
   async materialize(

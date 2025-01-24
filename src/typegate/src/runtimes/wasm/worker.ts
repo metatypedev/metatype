@@ -3,42 +3,39 @@
 
 import { errorToString } from "../../worker_utils.ts";
 import { handleWitOp, WitWireHandle } from "../wit_wire/mod.ts";
-import { WasmCallMessage } from "./types.ts";
+import { WasmMessage } from "./types.ts";
 
 const witWireInstances = new Map<string, WitWireHandle>();
 
-function hostcall(op: string, json: string) {
-  self.postMessage({ type: "HOSTCALL", op, json });
+async function hostcall(opName: string, json: string) {
+  const prevHandler = self.onmessage;
 
-  return new Promise((resolve, reject) => {
-    const prevHandler = self.onmessage;
-
-    self.onmessage = (event) => {
-      if (prevHandler) {
-        self.onmessage = prevHandler;
-      }
-      resolve(event.data);
-    };
-
-    self.onerror = (event) => {
-      if (prevHandler) {
-        self.onmessage = prevHandler;
-      }
-      reject(event.error);
-    };
+  const response = await new Promise<{ result: any }>((resolve, reject) => {
+    self.onmessage = (event) => resolve(event.data);
+    self.onerror = (event) => reject(event.error);
+    self.postMessage({ type: "HOSTCALL", opName, json });
   });
+
+  self.onmessage = prevHandler;
+
+  return response.result;
 }
 
-self.onmessage = async function (event: MessageEvent<WasmCallMessage>) {
-  const { type, id } = event.data;
-
-  if (!witWireInstances.has(id)) {
-    const handle = await WitWireHandle.init({ ...event.data, hostcall });
-    witWireInstances.set(id, handle);
-  }
+self.onmessage = async function (event: MessageEvent<WasmMessage>) {
+  const { type } = event.data;
 
   switch (type) {
-    case "CALL":
+    case "CALL": {
+      const { id } = event.data;
+
+      if (!witWireInstances.has(id)) {
+        const handle = await WitWireHandle.init({
+          ...event.data,
+          hostcall,
+        });
+        witWireInstances.set(id, handle);
+      }
+
       try {
         self.postMessage({
           type: "SUCCESS",
@@ -51,7 +48,19 @@ self.onmessage = async function (event: MessageEvent<WasmCallMessage>) {
           exception: error,
         });
       }
+
       break;
+    }
+
+    case "SHUTDOWN": {
+      for (const instance of witWireInstances.values()) {
+        await using _drop = instance;
+      }
+
+      self.postMessage({ type: "SHUTDOWN" });
+
+      break;
+    }
 
     default:
       throw new Error(`Unknown message type: ${type}`);
