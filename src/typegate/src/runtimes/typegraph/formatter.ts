@@ -30,7 +30,7 @@ import {
   typeEmptyObjectScalar,
 } from "./helpers.ts";
 import { Resolver } from "../../types.ts";
-import { TypeVisibility } from "./visibility.ts";
+import { AllowOrPass, TypeVisibility } from "./visibility.ts";
 
 const SCALAR_TYPE_MAP = {
   boolean: "Boolean",
@@ -43,6 +43,7 @@ const SCALAR_TYPE_MAP = {
 type FieldInfo = {
   name: string;
   typeIdx: number;
+  verdict: AllowOrPass;
   policies: PolicyIndices[];
 };
 
@@ -55,6 +56,7 @@ export class TypeFormatter {
 
   formatInputFields(
     [name, typeIdx]: [string, number],
+    verdict: AllowOrPass,
     injectionNode: InjectionNode | null,
   ) {
     const type = this.tg.types[typeIdx];
@@ -71,7 +73,7 @@ export class TypeFormatter {
       name: () => name,
       description: () => `${name} input field`,
       type: () => {
-        const ret = this.formatType(type, true, true);
+        const ret = this.formatType(type, true, true, verdict);
         return ret;
       },
       defaultValue: () => null,
@@ -84,10 +86,11 @@ export class TypeFormatter {
     type: TypeNode,
     required: boolean,
     asInput: boolean,
+    parentVerdict?: AllowOrPass
   ): Record<string, Resolver> => {
     if (isOptional(type)) {
       const subtype = this.tg.types[type.item];
-      return this.formatType(subtype, false, asInput);
+      return this.formatType(subtype, false, asInput, parentVerdict);
     }
 
     if (required) {
@@ -95,7 +98,7 @@ export class TypeFormatter {
         ...fieldCommon(),
         kind: () => TypeKind.NON_NULL,
         ofType: () => {
-          return this.formatType(type, false, asInput);
+          return this.formatType(type, false, asInput, parentVerdict);
         },
       };
     }
@@ -106,7 +109,7 @@ export class TypeFormatter {
         kind: () => TypeKind.LIST,
         ofType: () => {
           const subtype = this.tg.types[type.items];
-          return this.formatType(subtype, true, asInput);
+          return this.formatType(subtype, true, asInput, parentVerdict);
         },
       };
     }
@@ -122,7 +125,7 @@ export class TypeFormatter {
 
     if (isFunction(type)) {
       const output = this.tg.types[type.output as number];
-      return this.formatType(output, false, false);
+      return this.formatType(output, false, false, parentVerdict);
     }
 
     if (isObject(type)) {
@@ -133,11 +136,11 @@ export class TypeFormatter {
         return typeEmptyObjectScalar();
       }
 
-      return this.#formatObject(asInput, type);
+      return this.#formatObject(asInput, type, parentVerdict);
     }
 
     if (isEither(type) || isUnion(type)) {
-      return this.#formatUnionOrEither(asInput, type);
+      return this.#formatUnionOrEither(asInput, type, parentVerdict);
     }
 
     throw Error(`unexpected type format ${(type as any).type}`);
@@ -146,7 +149,7 @@ export class TypeFormatter {
     // enum: enumValues
   };
 
-  #formatField(asInput: boolean, { name, typeIdx, policies }: FieldInfo) {
+  #formatField(asInput: boolean, { name, typeIdx, verdict, policies }: FieldInfo) {
     const type = this.tg.types[typeIdx];
     const common = {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L329
@@ -165,20 +168,21 @@ export class TypeFormatter {
             isObject(inp),
             `${type} cannot be an input field, require struct`,
           );
-          let entries = Object.entries((inp as ObjectNode).properties);
+          let entries = this.visibility.filterAllowedFields(inp as ObjectNode, verdict);
           entries = entries.sort((a, b) => b[1] - a[1]);
           return entries
-            .map((entry) =>
+            .map(([fieldName, fieldIdx, verdict]) =>
               this.formatInputFields(
-                entry,
-                (type.injections ?? {})[entry[0]] ?? null,
+                [fieldName, fieldIdx],
+                verdict,
+                (type.injections ?? {})[fieldName] ?? null,
               )
             )
             .filter((f) => f !== null);
         },
         type: () => {
           const output = this.tg.types[type.output as number];
-          return this.formatType(output, true, false);
+          return this.formatType(output, true, false, verdict);
         },
       };
     }
@@ -220,8 +224,9 @@ export class TypeFormatter {
     };
   }
 
-  #formatObject(asInput: boolean, type: ObjectNode) {
+  #formatObject(asInput: boolean, type: ObjectNode, parentVerdict?: AllowOrPass) {
     const fieldsLabel = asInput ? "inputFields" : "fields";
+    console.log(fieldsLabel, parentVerdict);
 
     return {
       ...fieldCommon(),
@@ -231,20 +236,17 @@ export class TypeFormatter {
         asInput ? `${type.title} input type` : `${type.title} type`,
 
       [fieldsLabel]: () => {
-        let entries = this.visibility.filterAllowedFields(type);
+        let entries = this.visibility.filterAllowedFields(type, parentVerdict);
 
         if (!asInput) {
           entries = entries.sort((a, b) => b[1] - a[1]);
         }
-        // TODO:
-        // 1. construct ids here
-        // 2. fetch pre computed visibility by path
-        // 3. skip verdict is false!
-
-        return entries.map(([name, typeIdx]) =>
+        
+        return entries.map(([name, typeIdx, verdict]) =>
           this.#formatField(asInput, {
             name,
             typeIdx,
+            verdict,
             policies: type.policies?.[name] ?? [],
           })
         );
@@ -254,7 +256,7 @@ export class TypeFormatter {
     };
   }
 
-  #formatUnionOrEither(asInput: boolean, type: UnionNode | EitherNode) {
+  #formatUnionOrEither(asInput: boolean, type: UnionNode | EitherNode, parentVerdict?: AllowOrPass) {
     // Issue:
     // Translate union (anyOf) / either (oneOf) to Graphql types that behave the same way
     // - Current graphql spec does not allow UNION types on the input (yet)
@@ -295,9 +297,9 @@ export class TypeFormatter {
             if (isScalar(variant)) {
               const idx = this.scalarIndex.get(variant.type)!;
               const asObject = typeCustomScalar(variant, idx);
-              return this.formatType(asObject, false, false);
+              return this.formatType(asObject, false, false, parentVerdict);
             } else {
-              return this.formatType(variant, false, false);
+              return this.formatType(variant, false, false, parentVerdict);
             }
           });
         },

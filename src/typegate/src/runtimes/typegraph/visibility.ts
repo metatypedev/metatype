@@ -15,6 +15,7 @@ import { DenoRuntime } from "../deno/deno.ts";
 import { Policy } from "../../typegraph/types.ts";
 import { getLogger } from "../../log.ts";
 import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
+import { extractExceptionKeysForMessage } from "../../../../../../../../../home/afmika/.cache/deno/npm/registry.npmjs.org/@sentry/utils/7.70.0/types/object.d.ts";
 
 export interface FieldToPolicy {
   fieldName: string;
@@ -28,6 +29,7 @@ export interface WithPath<T extends TypeNode> {
   node: T;
 }
 
+export type AllowOrPass = "ALLOW" | "PASS";
 
 interface ResolutionData {
   resolver: Resolver;
@@ -130,37 +132,72 @@ export class TypeVisibility {
     }
   }
 
-  filterAllowedFields(node: ObjectNode): Array<[string, number]> {
+
+  // Applies the compose rule for chains
+  composeChain(operands: Array<PolicyResolverOutput>): PolicyResolverOutput {
+    let allowCount = 0;
+    for (const operand of operands) {
+      if (operand == "PASS") {
+        continue;
+      }
+
+      const isAllowed = operand == "ALLOW";
+      if (!isAllowed) {
+        return "DENY";
+      } else {
+        allowCount += 1;
+      }
+    }
+
+    return allowCount > 0 ? "ALLOW" : "PASS";
+  }
+
+  filterAllowedFields(
+    node: ObjectNode,
+    parentVerdict?: AllowOrPass
+  ): Array<[string, number, AllowOrPass]> {
     const policies = Object.entries(node.policies ?? {});
-    const result = [] as Array<[string, number]>;
+    const result = [] as Array<[string, number, AllowOrPass]>;
+    if (parentVerdict == "ALLOW") {
+      return Object.entries(node.properties).map((entry) => {
+        return  [...entry, "ALLOW"];
+      });
+    }
 
     for (const [fieldName, policyChain] of policies) {
-     const flatChain = policyChain.map((value) => {
+     const chainIndices = policyChain.map((value) => {
       if (typeof value == "number") {
         return [value];
       }
-    
+
       return [value.create, value.delete, value.read, value.update].filter((
         idx,
       ) => idx !== undefined && idx !== null);
-     })
-     .flat();
+     });
 
-     let allow = true;
-     for (const policyIdx of flatChain) {
-      const verdict = this.#resolvedPolicy.get(policyIdx);
-      if (verdict === undefined) {
-        throw new Error(`Invalid state: policy "${this.tg.policies[policyIdx].name}" not computed`);
+     const fieldStatus = chainIndices.map((operand) => {
+      const operandRes = operand.map((policyIdx) => {
+        const res = this.#resolvedPolicy.get(policyIdx);
+        if (res === undefined) {
+          throw new Error(`Invalid state: policy "${this.tg.policies[policyIdx].name}" not computed`);
+        }
+        return res
+      });
+
+      if (operandRes.some((out) => out == "ALLOW")) {
+        return "ALLOW";
+      } else if (operandRes.every((out) => out == "DENY")) {
+        return "DENY";
       }
 
-      if (verdict == "DENY") {
-        allow = false;
-        break;
-      }
-     }
+      return "PASS";
+     });
 
-     if (allow) {
-      result.push([fieldName, node.properties[fieldName]])
+     // Chain compose rule
+     const folded = this.composeChain(fieldStatus);
+     logger.debug(`Field ${fieldName}: ${folded}`);
+     if (folded != "DENY") {
+      result.push([fieldName, node.properties[fieldName], folded as AllowOrPass])
      }
     }
 
