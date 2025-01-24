@@ -163,6 +163,7 @@ typegraphs:
     exclude:
       - "typegraphs/temporal.ts"
       - "typegraphs/kv.ts"
+      - "typegraphs/scripts/"
     include:
       - "typegraphs/*.ts"
   javascript:
