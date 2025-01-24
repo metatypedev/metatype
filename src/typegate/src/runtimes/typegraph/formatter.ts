@@ -231,7 +231,8 @@ export class TypeFormatter {
         asInput ? `${type.title} input type` : `${type.title} type`,
 
       [fieldsLabel]: () => {
-        let entries = Object.entries(type.properties);
+        let entries = this.visibility.filterAllowedFields(type);
+
         if (!asInput) {
           entries = entries.sort((a, b) => b[1] - a[1]);
         }

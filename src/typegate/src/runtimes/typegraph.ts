@@ -18,7 +18,7 @@ import {
   Type,
   type TypeNode,
 } from "../typegraph/type_node.ts";
-import type { Context, Resolver } from "../types.ts";
+import type { Resolver } from "../types.ts";
 import {
   getChildTypes,
   type TypeVisitorMap,
@@ -151,8 +151,7 @@ export class TypeGraphRuntime extends Runtime {
   };
 
   #typesResolver: Resolver = async (resArgs) => {
-    // TODO: Better place
-    await this.#visible.computeAllowList(resArgs ?? {});
+    await this.#visible.preComputeAllPolicies(resArgs ?? {});
 
     // filter non-native GraphQL types
     const filter = (
@@ -181,11 +180,7 @@ export class TypeGraphRuntime extends Runtime {
     let requireEmptyObject = false;
 
     const myVisitor: TypeVisitorMap = {
-      [Type.FUNCTION]: ({ type, path }) => {
-        if (!this.#visible.isVisible(path)) {
-          return false;
-        }
-
+      [Type.FUNCTION]: ({ type }) => {
         // TODO skip if policy check fails
         // https://metatype.atlassian.net/browse/MET-119
 
@@ -212,11 +207,7 @@ export class TypeGraphRuntime extends Runtime {
         );
         return true;
       },
-      default: ({ type, idx, path }) => {
-        if (!this.#visible.isVisible(path)) {
-          return false;
-        }
-
+      default: ({ type, idx }) => {
         requireEmptyObject ||= isEmptyObject(type);
 
         if (

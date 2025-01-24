@@ -3,7 +3,7 @@
 
 import { TypegateConfigBase } from "../../config.ts";
 import { TypeGraphDS } from "../../typegraph/mod.ts";
-import { Type, TypeNode } from "../../typegraph/type_node.ts";
+import { ObjectNode, Type, TypeNode } from "../../typegraph/type_node.ts";
 import {
   getChildTypes,
   TypeVisitorMap,
@@ -14,6 +14,7 @@ import { Resolver, ResolverArgs } from "../../types.ts";
 import { DenoRuntime } from "../deno/deno.ts";
 import { Policy } from "../../typegraph/types.ts";
 import { getLogger } from "../../log.ts";
+import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
 
 export interface FieldToPolicy {
   fieldName: string;
@@ -30,32 +31,24 @@ export interface WithPath<T extends TypeNode> {
 
 interface ResolutionData {
   resolver: Resolver;
-  fieldPolicyData: FieldToPolicy;
-  targetTypeIdx: number;
-  policyNameAtTargetTypeIdx: string;
+  policy: Policy
 }
 
 const logger = getLogger("visibility");
 
 export class TypeVisibility {
-  pathToIdx: Map<string, number>;
- // Note: value has same dim as the queue of policy chain to evaluate
-  #resolvers: Map<string, Array<Array<ResolutionData>>>;
+  #resolvers: Map<number, ResolutionData>;
+  #resolvedPolicy: Map<number, PolicyResolverOutput>;
   #typeAllowCounters: Map<number, { referrers: number; deniers: number }>;
-
-  #idToAllow: Map<string, boolean | null>;
-  #idxPaths: Map<number, Array<VisitPath>>;
 
   constructor(
     private readonly tg: TypeGraphDS,
     private readonly denoRuntime: DenoRuntime,
     private readonly config: TypegateConfigBase,
   ) {
-    this.pathToIdx = new Map();
     this.#resolvers = new Map();
     this.#typeAllowCounters = new Map();
-    this.#idxPaths = new Map();
-    this.#idToAllow = new Map();
+    this.#resolvedPolicy = new Map();
 
     this.#visitTypegraph();
   }
@@ -66,12 +59,7 @@ export class TypeVisibility {
 
   #visitTypegraph() {
     const myVisitor: TypeVisitorMap = {
-      default: ({ idx, path }) => {
-        if (!this.#idxPaths.has(idx)) {
-          this.#idxPaths.set(idx, []);
-        }
-        this.#idxPaths.get(idx)!.push(path);
-
+      default: ({ idx }) => {
         if (this.#typeAllowCounters.has(idx)) {
           this.#typeAllowCounters.get(idx)!.referrers++;
         } else {
@@ -81,154 +69,104 @@ export class TypeVisibility {
           });
         }
 
-        this.#collectPolicyMetadata(path, idx);
+        this.#collectPolicyMetadata(idx);
         return true;
       },
     };
     visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
   }
 
-  #collectPolicyMetadata(path: VisitPath, targetTypeIdx: number) {
-    const policiesQueue = [] as Array<FieldToPolicy>;
-    // Note: last item on path indices is the current type
-    if (path.edges.length + 1 != path.indices.length) {
-      throw new Error("Invalid state: visited path metadata not in sync");
-    }
+  #collectPolicyMetadata(targetTypeIdx: number) {
+    const node = this.tg.types[targetTypeIdx];
+    if (node.type == Type.OBJECT) {
+      const policyIndices = Object.values(node.policies ?? {}).flat();
 
-    for (let i = 0; i < path.edges.length; i++) {
-      const currTypeIdx = path.indices[i];
-      const fieldName = path.edges[i];
-      const node = this.tg.types[currTypeIdx];
-      if (node.type == Type.OBJECT && node.policies?.[fieldName]) {
-        const policyIndices = node.policies[fieldName];
-        const allIndices = policyIndices.map((value) => {
-          if (typeof value == "number") {
-            return [value];
-          }
+      const allIndices = policyIndices.map((value) => {
+        if (typeof value == "number") {
+          return [value];
+        }
 
-          return [value.create, value.delete, value.read, value.update].filter((
-            idx,
-          ) => idx !== undefined && idx !== null);
-        });
+        return [value.create, value.delete, value.read, value.update].filter((
+          idx,
+        ) => idx !== undefined && idx !== null);
+      }).flat();
 
-        policiesQueue.push({
-          fieldName,
-          queueOfPolicyChain: allIndices.map((chainIndicies) => {
-            return chainIndicies.map((polIdx) => this.tg.policies[polIdx]) 
-          }),
-          typeIdx: currTypeIdx,
-          path,
-        });
+      for (const policyIdx of allIndices) {
+        this.#allocateResolver(policyIdx);
       }
     }
-
-    this.allocateResolvers(
-      TypeVisibility.getId(path.indices),
-      policiesQueue,
-      targetTypeIdx,
-    );
   }
 
-  allocateResolvers(
-    qId: string,
-    queue: Array<FieldToPolicy>,
-    targetTypeIdx: number,
+  #allocateResolver(
+    policyIdx: number,
   ) {
-    for (const fieldToPolicy of queue) {
-      for (const polChain of fieldToPolicy.queueOfPolicyChain) {
-        const currChainResData = polChain.map((policy) => {
-          const mat = this.tg.materializers[policy.materializer];
-          const resolver = this.denoRuntime.delegate(
-            mat,
-            false,
-            this.config.timer_policy_eval_retries,
-          );
-          return {
-            resolver,
-            fieldPolicyData: fieldToPolicy,
-            targetTypeIdx,
-            policyNameAtTargetTypeIdx: policy.name,
-          };
-        });
-
-        if (!this.#resolvers.has(qId)) {
-          this.#resolvers.set(qId, []);
-        }
-
-        this.#resolvers.get(qId)!.push(currChainResData);
-      }
+    if (this.#resolvers.has(policyIdx)) {
+      return;
     }
+
+    const policy = this.tg.policies[policyIdx];
+    const mat = this.tg.materializers[policy.materializer];
+    const resolver = this.denoRuntime.delegate(
+      mat,
+      false,
+      this.config.timer_policy_eval_retries,
+    );
+
+    this.#resolvers.set(policyIdx, {
+      policy,
+      resolver
+    });
   }
 
-  /**
-   * Compose policies at a given node
-   * 
-   * If one policy on the chain, regardless of the effect is allowed, the underlying type is visible
-   */
-  async #composePolicies(resArgs: ResolverArgs<Record<string, any>>, operands: Array<ResolutionData>) {
-    let verdict = null;
-
-    for (const { resolver, fieldPolicyData, policyNameAtTargetTypeIdx, targetTypeIdx} of operands) {
-      const result = await resolver(resArgs);
-      if (result == "PASS") {
-        continue;
-      } else if (result == "ALLOw") {
-        verdict = true;
-      } else if (result == "DENY") {
-        this.#typeAllowCounters.get(targetTypeIdx)!.deniers++;
-        if (verdict) {
-          continue;
-        }
-
-        verdict = false;
+  async preComputeAllPolicies(resArg: ResolverArgs<Record<string, any>>) {
+    for (const [policyIdx, { policy, resolver }] of this.#resolvers) {
+      const result = await resolver(resArg);
+      const validOutput = ["DENY", "ALLOW", "PASS"]  satisfies Array<PolicyResolverOutput>;
+      if (validOutput.includes(result)) {
+        this.#resolvedPolicy.set(policyIdx, result);
       } else {
-        const path = fieldPolicyData.path.edges.join(".");
-        throw new Error(
-          `Unexpected value of type ${typeof result} for policy "${policyNameAtTargetTypeIdx}" at '${path}', for policy, must be "PASS", "ALLOW", or "DENY"`,
-        );
+        throw new Error(`Policy "${policy.name}" returned a value of type ${typeof result}, one of ${validOutput.join(", ")} expected`);
       }
     }
-
-    return verdict;
   }
 
-  async #computeQueue(resArgs: ResolverArgs<Record<string, any>>, queueOfChains: Array<Array<ResolutionData>>) {
-    // This basically emulates node traversal,
-    // collect the policy chain at each node,
-    // then apply the pol spec logic but tunned for visibility, and ignores effects
-    for (const chainRes of queueOfChains) {
-      const result = await this.#composePolicies(resArgs, chainRes);
-      if (result === null) {
-        // no policies or PASS at the current node
-        continue;
+  filterAllowedFields(node: ObjectNode): Array<[string, number]> {
+    const policies = Object.entries(node.policies ?? {});
+    const result = [] as Array<[string, number]>;
+
+    for (const [fieldName, policyChain] of policies) {
+     const flatChain = policyChain.map((value) => {
+      if (typeof value == "number") {
+        return [value];
+      }
+    
+      return [value.create, value.delete, value.read, value.update].filter((
+        idx,
+      ) => idx !== undefined && idx !== null);
+     })
+     .flat();
+
+     let allow = true;
+     for (const policyIdx of flatChain) {
+      const verdict = this.#resolvedPolicy.get(policyIdx);
+      if (verdict === undefined) {
+        throw new Error(`Invalid state: policy "${this.tg.policies[policyIdx].name}" not computed`);
       }
 
-      // No need to go further, ALLOW and DENY are absolute
-      return result;
-    }
-
-    return null;
-  }
-
-  async computeAllowList(resArgs: ResolverArgs<Record<string, any>>) {
-    for (const [qid, resQueue] of this.#resolvers) {
-      const cached = this.#idToAllow.get(qid);
-      if (cached !== undefined) {
-        return cached;
+      if (verdict == "DENY") {
+        allow = false;
+        break;
       }
+     }
 
-      const verdict = await this.#computeQueue(resArgs, resQueue);
-      this.#idToAllow.set(qid, verdict);
+     if (allow) {
+      result.push([fieldName, node.properties[fieldName]])
+     }
     }
 
-    logger.debug("Allowed typeIdx info: " +  Deno.inspect(this.#idToAllow));
-    logger.debug("Index referrers info: " +  Deno.inspect(this.#idxPaths));
-    // TODO:
-    // 2. increase deniers count for the underlying typeIdx if DENY
-    // 3. types field on the introspection is a flat list
-    // yet the input objects should be cared for separately (custom visitor maybe? + construct the path and get the id)
-    // 4. special care for union/either
+    return result;
   }
+
 
   isUnreachable(typeIdx: number) {
     if (this.#typeAllowCounters.has(typeIdx)) {
@@ -252,16 +190,5 @@ export class TypeVisibility {
     }
 
     return visible;
-  }
-
-  isVisible(path: VisitPath) {
-    const qid = TypeVisibility.getId(path.indices);
-    const verdict = this.#idToAllow.get(qid);
-    if (typeof verdict == "boolean") {
-      console.log("BAD", qid);
-      return verdict;
-    }
-
-    return true;
   }
 }
