@@ -22,7 +22,12 @@ async function hostcall(opName: string, json: string) {
 }
 
 self.onmessage = async function (event: MessageEvent<WasmMessage>) {
-  const { type } = event.data;
+  const { type, id, componentPath, ops } = event.data;
+
+  if (!wireInstances.has(id)) {
+    const handle = await WitWireHandle.init(componentPath, id, ops);
+    wireInstances.set(id, handle);
+  }
 
   switch (type) {
     case "CALL": {
