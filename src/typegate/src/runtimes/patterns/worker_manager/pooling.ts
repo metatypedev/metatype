@@ -84,6 +84,10 @@ export class WaitQueueWithTimeout<W> implements WaitQueue<W> {
     }
   }
 
+  [Symbol.dispose]() {
+    this.clear();
+  }
+
   #timeoutHandler() {
     this.#cancelNextEntry();
     this.#updateTimer();
@@ -222,6 +226,6 @@ export class WorkerPool<
     );
     await Promise.all(this.#idleWorkers.map((worker) => worker.destroy()));
     this.#idleWorkers = [];
-    this.#waitQueue.clear();
+    this.#waitQueue.clear(); // FIXME: [Symbol.dispose] is never called
   }
 }
