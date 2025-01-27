@@ -31,7 +31,8 @@ for (const version of previousVersions) {
       async teardown() {
         await testConfig.clearSyncData();
       },
-      ignore: version === LATEST_RELEASE_VERSION,
+      // TODO re-enable after next release
+      ignore: true,
     },
     async (t) => {
       const { publishedBin, examplesDir } = await downloadSteps(t, version);

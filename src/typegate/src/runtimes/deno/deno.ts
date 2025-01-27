@@ -182,7 +182,7 @@ export class DenoRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
-    // await this.workerManager.deinit();
+    this.workerManager.deinit();
   }
 
   materialize(
