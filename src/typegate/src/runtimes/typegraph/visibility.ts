@@ -12,10 +12,9 @@ import {
 } from "../../typegraph/visitor.ts";
 import { Resolver, ResolverArgs } from "../../types.ts";
 import { DenoRuntime } from "../deno/deno.ts";
-import { Policy } from "../../typegraph/types.ts";
+import { Policy, PolicyIndices } from "../../typegraph/types.ts";
 import { getLogger } from "../../log.ts";
 import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
-import { extractExceptionKeysForMessage } from "../../../../../../../../../home/afmika/.cache/deno/npm/registry.npmjs.org/@sentry/utils/7.70.0/types/object.d.ts";
 
 export interface FieldToPolicy {
   fieldName: string;
@@ -33,7 +32,7 @@ export type AllowOrPass = "ALLOW" | "PASS";
 
 interface ResolutionData {
   resolver: Resolver;
-  policy: Policy
+  policy: Policy;
 }
 
 const logger = getLogger("visibility");
@@ -41,7 +40,6 @@ const logger = getLogger("visibility");
 export class TypeVisibility {
   #resolvers: Map<number, ResolutionData>;
   #resolvedPolicy: Map<number, PolicyResolverOutput>;
-  #typeAllowCounters: Map<number, { referrers: number; deniers: number }>;
 
   constructor(
     private readonly tg: TypeGraphDS,
@@ -49,7 +47,6 @@ export class TypeVisibility {
     private readonly config: TypegateConfigBase,
   ) {
     this.#resolvers = new Map();
-    this.#typeAllowCounters = new Map();
     this.#resolvedPolicy = new Map();
 
     this.#visitTypegraph();
@@ -60,17 +57,12 @@ export class TypeVisibility {
   }
 
   #visitTypegraph() {
+    // root
+    this.#collectPolicyMetadata(0);
+
+    // child
     const myVisitor: TypeVisitorMap = {
       default: ({ idx }) => {
-        if (this.#typeAllowCounters.has(idx)) {
-          this.#typeAllowCounters.get(idx)!.referrers++;
-        } else {
-          this.#typeAllowCounters.set(idx, {
-            referrers: 1,
-            deniers: 0,
-          });
-        }
-
         this.#collectPolicyMetadata(idx);
         return true;
       },
@@ -83,15 +75,7 @@ export class TypeVisibility {
     if (node.type == Type.OBJECT) {
       const policyIndices = Object.values(node.policies ?? {}).flat();
 
-      const allIndices = policyIndices.map((value) => {
-        if (typeof value == "number") {
-          return [value];
-        }
-
-        return [value.create, value.delete, value.read, value.update].filter((
-          idx,
-        ) => idx !== undefined && idx !== null);
-      }).flat();
+      const allIndices = policyIndices.map(flattenRegardlessOfEffects).flat();
 
       for (const policyIdx of allIndices) {
         this.#allocateResolver(policyIdx);
@@ -116,22 +100,34 @@ export class TypeVisibility {
 
     this.#resolvers.set(policyIdx, {
       policy,
-      resolver
+      resolver,
     });
   }
 
   async preComputeAllPolicies(resArg: ResolverArgs<Record<string, any>>) {
     for (const [policyIdx, { policy, resolver }] of this.#resolvers) {
+      if (this.#resolvedPolicy.has(policyIdx)) {
+        continue;
+      }
+
       const result = await resolver(resArg);
-      const validOutput = ["DENY", "ALLOW", "PASS"]  satisfies Array<PolicyResolverOutput>;
+      const validOutput = ["DENY", "ALLOW", "PASS"] satisfies Array<
+        PolicyResolverOutput
+      >;
+      logger.debug(
+        `Precomputed ${this.tg.policies[policyIdx].name}: ${result}`,
+      );
       if (validOutput.includes(result)) {
         this.#resolvedPolicy.set(policyIdx, result);
       } else {
-        throw new Error(`Policy "${policy.name}" returned a value of type ${typeof result}, one of ${validOutput.join(", ")} expected`);
+        throw new Error(
+          `Policy "${policy.name}" returned a value of type ${typeof result}, one of ${
+            validOutput.join(", ")
+          } expected`,
+        );
       }
     }
   }
-
 
   // Applies the compose rule for chains
   composeChain(operands: Array<PolicyResolverOutput>): PolicyResolverOutput {
@@ -154,78 +150,62 @@ export class TypeVisibility {
 
   filterAllowedFields(
     node: ObjectNode,
-    parentVerdict?: AllowOrPass
+    parentVerdict?: AllowOrPass,
   ): Array<[string, number, AllowOrPass]> {
     const policies = Object.entries(node.policies ?? {});
     const result = [] as Array<[string, number, AllowOrPass]>;
     if (parentVerdict == "ALLOW") {
       return Object.entries(node.properties).map((entry) => {
-        return  [...entry, "ALLOW"];
+        return [...entry, "ALLOW"];
       });
     }
 
     for (const [fieldName, policyChain] of policies) {
-     const chainIndices = policyChain.map((value) => {
-      if (typeof value == "number") {
-        return [value];
-      }
+      const chainIndices = policyChain.map(flattenRegardlessOfEffects);
 
-      return [value.create, value.delete, value.read, value.update].filter((
-        idx,
-      ) => idx !== undefined && idx !== null);
-     });
+      const fieldStatus = chainIndices.map((operand) => {
+        const operandRes = operand.map((policyIdx) => {
+          const res = this.#resolvedPolicy.get(policyIdx);
+          if (res === undefined) {
+            throw new Error(
+              `Invalid state: policy "${
+                this.tg.policies[policyIdx].name
+              }" not computed`,
+            );
+          }
+          return res;
+        });
 
-     const fieldStatus = chainIndices.map((operand) => {
-      const operandRes = operand.map((policyIdx) => {
-        const res = this.#resolvedPolicy.get(policyIdx);
-        if (res === undefined) {
-          throw new Error(`Invalid state: policy "${this.tg.policies[policyIdx].name}" not computed`);
+        if (operandRes.some((out) => out == "ALLOW")) {
+          return "ALLOW";
+        } else if (operandRes.every((out) => out == "DENY")) {
+          return "DENY";
         }
-        return res
+
+        return "PASS";
       });
 
-      if (operandRes.some((out) => out == "ALLOW")) {
-        return "ALLOW";
-      } else if (operandRes.every((out) => out == "DENY")) {
-        return "DENY";
+      // Chain compose rule
+      const folded = this.composeChain(fieldStatus);
+      logger.debug(`Field ${fieldName}: ${folded}`);
+      if (folded != "DENY") {
+        result.push([
+          fieldName,
+          node.properties[fieldName],
+          folded as AllowOrPass,
+        ]);
       }
-
-      return "PASS";
-     });
-
-     // Chain compose rule
-     const folded = this.composeChain(fieldStatus);
-     logger.debug(`Field ${fieldName}: ${folded}`);
-     if (folded != "DENY") {
-      result.push([fieldName, node.properties[fieldName], folded as AllowOrPass])
-     }
     }
 
     return result;
   }
+}
 
-
-  isUnreachable(typeIdx: number) {
-    if (this.#typeAllowCounters.has(typeIdx)) {
-      const data = this.#typeAllowCounters.get(typeIdx)!;
-      const refThatAllows = data.referrers - data.deniers;
-      console.log("check", typeIdx,refThatAllows > 0 ? "Allow" : "deny");
-      return refThatAllows > 0;
-    }
-
-    throw new Error("Invalid state: type metadata not collected properly");
+function flattenRegardlessOfEffects(value: PolicyIndices) {
+  if (typeof value == "number") {
+    return [value];
   }
-
-  keepReachable(indices: Set<number>, debugInfo?: string) {
-    const visible = [];
-    for (const index of indices) {
-      if (this.isUnreachable(index)) {
-        visible.push(index);
-      } else if (debugInfo) {
-        logger.debug(`visibility check: ${debugInfo}: removed ${index} (${this.tg.types[index].title})`);
-      }
-    }
-
-    return visible;
-  }
+  return [value.create, value.delete, value.read, value.update].filter((
+    idx,
+  ) => idx !== undefined && idx !== null);
 }

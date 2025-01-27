@@ -17,24 +17,12 @@ snapshot[`Basic introspection 1`] = `
         possibleTypes: null,
       },
       {
-        fields: [
-          {
-            name: "string",
-          },
-        ],
-        kind: "OBJECT",
+        kind: "SCALAR",
         name: "_String",
-        possibleTypes: null,
       },
       {
-        fields: [
-          {
-            name: "integer",
-          },
-        ],
-        kind: "OBJECT",
+        kind: "SCALAR",
         name: "_Integer",
-        possibleTypes: null,
       },
       {
         fields: [
@@ -120,11 +108,11 @@ snapshot[`Basic introspection 1`] = `
         name: "Gunpla_ref_unionOut",
         possibleTypes: [
           {
-            kind: "OBJECT",
+            kind: "SCALAR",
             name: "_String",
           },
           {
-            kind: "OBJECT",
+            kind: "SCALAR",
             name: "_Integer",
           },
         ],

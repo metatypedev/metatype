@@ -26,8 +26,9 @@ import { ensure } from "../../utils.ts";
 import {
   fieldCommon,
   policyDescription,
-  typeCustomScalar,
+  genOutputScalarVariantWrapper,
   typeEmptyObjectScalar,
+  typeGenericCustomScalar,
 } from "./helpers.ts";
 import { Resolver } from "../../types.ts";
 import { AllowOrPass, TypeVisibility } from "./visibility.ts";
@@ -49,6 +50,7 @@ type FieldInfo = {
 
 export class TypeFormatter {
   scalarIndex = new Map<string, number>();
+
   constructor(
     private readonly tg: TypeGraphDS,
     private readonly visibility: TypeVisibility,
@@ -133,7 +135,7 @@ export class TypeFormatter {
         return this.#formatEmptyQueryObject(type);
       }
       if (isEmptyObject(type)) {
-        return typeEmptyObjectScalar();
+        return this.formatEmptyObject();
       }
 
       return this.#formatObject(asInput, type, parentVerdict);
@@ -226,7 +228,10 @@ export class TypeFormatter {
 
   #formatObject(asInput: boolean, type: ObjectNode, parentVerdict?: AllowOrPass) {
     const fieldsLabel = asInput ? "inputFields" : "fields";
-    console.log(fieldsLabel, parentVerdict);
+    let entries = this.visibility.filterAllowedFields(type, parentVerdict);
+    if (entries.length == 0) {
+      return this.formatEmptyObject();
+    }
 
     return {
       ...fieldCommon(),
@@ -236,7 +241,6 @@ export class TypeFormatter {
         asInput ? `${type.title} input type` : `${type.title} type`,
 
       [fieldsLabel]: () => {
-        let entries = this.visibility.filterAllowedFields(type, parentVerdict);
 
         if (!asInput) {
           entries = entries.sort((a, b) => b[1] - a[1]);
@@ -270,21 +274,7 @@ export class TypeFormatter {
     // https://github.com/graphql/graphql-spec/pull/825
     const variants = isUnion(type) ? type.anyOf : type.oneOf;
     if (asInput) {
-      const titles = new Set<string>(
-        variants.map((idx) => this.tg.types[idx].title),
-      );
-      const description = `${type.type} type\n${
-        Array.from(titles).join(
-          ", ",
-        )
-      }`;
-
-      return {
-        ...fieldCommon(),
-        kind: () => TypeKind.SCALAR,
-        name: () => `${type.title}In`,
-        description: () => description,
-      };
+      return this.formatUnionEitherOnInput(type);
     } else {
       return {
         ...fieldCommon(),
@@ -295,9 +285,9 @@ export class TypeFormatter {
           return variants.map((idx) => {
             const variant = this.tg.types[idx];
             if (isScalar(variant)) {
-              const idx = this.scalarIndex.get(variant.type)!;
-              const asObject = typeCustomScalar(variant, idx);
-              return this.formatType(asObject, false, false, parentVerdict);
+              const adhocOutputVariant = genOutputScalarVariantWrapper(variant, idx);
+              // allow since the fields are adhoc
+              return this.formatType(adhocOutputVariant, false, false, "ALLOW");
             } else {
               return this.formatType(variant, false, false, parentVerdict);
             }
@@ -305,5 +295,27 @@ export class TypeFormatter {
         },
       };
     }
+  }
+
+  emittedCustomScalars: Map<string, ReturnType<typeof typeEmptyObjectScalar> | ReturnType<typeof typeGenericCustomScalar> > = new Map();
+
+  formatUnionEitherOnInput(type: EitherNode | UnionNode) {
+    const variants = isUnion(type) ? type.anyOf : type.oneOf;
+    const titles = new Set<string>(
+      variants.map((idx) => this.tg.types[idx].title),
+    );
+    const description = `${type.type} type\n${
+      Array.from(titles).join(", ")
+    }`;
+
+    const unionEitherInput = typeGenericCustomScalar(type.title, description);
+    this.emittedCustomScalars.set(type.title, unionEitherInput);
+    return unionEitherInput;
+  }
+
+  formatEmptyObject() {
+    const emptyObjScalar = typeEmptyObjectScalar();
+    this.emittedCustomScalars.set("_", emptyObjScalar);
+    return emptyObjScalar;
   }
 }

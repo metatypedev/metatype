@@ -18,7 +18,7 @@ import {
   Type,
   type TypeNode,
 } from "../typegraph/type_node.ts";
-import type { Resolver } from "../types.ts";
+import type { Resolver, ResolverArgs } from "../types.ts";
 import {
   getChildTypes,
   type TypeVisitorMap,
@@ -28,10 +28,7 @@ import { distinctBy } from "@std/collections/distinct-by";
 import { isInjected } from "../typegraph/utils.ts";
 import type { InjectionNode } from "../typegraph/types.ts";
 import { TypeFormatter } from "./typegraph/formatter.ts";
-import {
-  typeCustomScalar,
-  typeEmptyObjectScalar,
-} from "./typegraph/helpers.ts";
+import { genOutputScalarVariantWrapper } from "./typegraph/helpers.ts";
 import { TypeVisibility } from "./typegraph/visibility.ts";
 import { TypegateConfigBase } from "../config.ts";
 import { DenoRuntime } from "./deno/deno.ts";
@@ -76,8 +73,15 @@ export class TypeGraphRuntime extends Runtime {
     config: TypegateConfigBase,
     denoRuntime: DenoRuntime,
   ) {
-    this.#typeVisibilityInstance = new TypeVisibility(this.tg, denoRuntime, config);
-    this.#formatterInstance = new TypeFormatter(this.tg, this.#typeVisibilityInstance);
+    this.#typeVisibilityInstance = new TypeVisibility(
+      this.tg,
+      denoRuntime,
+      config,
+    );
+    this.#formatterInstance = new TypeFormatter(
+      this.tg,
+      this.#typeVisibilityInstance,
+    );
   }
 
   get #formatter() {
@@ -100,25 +104,25 @@ export class TypeGraphRuntime extends Runtime {
     const name = stage.props.materializer?.name;
     switch (name) {
       case "getSchema":
-        return this.#getSchemaResolver;
+        return this.#withPrecomputePolicies(this.#getSchemaResolver);
       case "getType":
-        return this.#getTypeResolver;
+        return this.#withPrecomputePolicies(this.#getTypeResolver);
       case "resolver":
-        return async ({ _: { parent } }) => {
+        return this.#withPrecomputePolicies(async ({ _: { parent } }) => {
           const resolver = parent[stage.props.node];
           const ret = typeof resolver === "function"
             ? await resolver()
             : resolver;
           return ret;
-        };
+        });
       default:
-        return async ({ _: { parent } }) => {
+        return this.#withPrecomputePolicies(async ({ _: { parent } }) => {
           const resolver = parent[stage.props.node];
           const ret = typeof resolver === "function"
             ? await resolver()
             : resolver;
           return ret;
-        };
+        });
     }
   }
 
@@ -150,140 +154,62 @@ export class TypeGraphRuntime extends Runtime {
     };
   };
 
-  #typesResolver: Resolver = async (resArgs) => {
-    await this.#visible.preComputeAllPolicies(resArgs ?? {});
-
-    // filter non-native GraphQL types
-    const filter = (
-      type: TypeNode,
-      input: {
-        injectionTree: Record<string, InjectionNode>;
-        path: string[];
-      } | null,
-    ) => {
-      return (
-        (input == null ||
-          !isInjected(this.tg, type, input.path, input.injectionTree)) &&
-        !isQuantifier(type)
-      );
-    };
-
-    const scalarTypeIndices = new Set<number>();
-    const inputTypeIndices = new Set<number>();
-    const regularTypeIndices = new Set<number>();
-
-    const inputRootTypeIndices = new Set<number>();
-    const outputRootTypeIndices = new Set<number>();
-
-    // decides whether or not custom object should be generated
-    let hasUnion = false;
-    let requireEmptyObject = false;
-
-    const myVisitor: TypeVisitorMap = {
-      [Type.FUNCTION]: ({ type }) => {
-        // TODO skip if policy check fails
-        // https://metatype.atlassian.net/browse/MET-119
-
-        // the struct input of a function never generates a GrahpQL type
-        // the actual inputs are the properties
-        inputRootTypeIndices.add(type.input);
-        outputRootTypeIndices.add(type.output);
-        visitTypes(
-          this.tg,
-          getChildTypes(this.tg.types[type.input]),
-          ({ type, idx }) => {
-            hasUnion ||= isUnion(type) || isEither(type);
-            if (isScalar(type)) {
-              scalarTypeIndices.add(idx);
-              this.#formatter.scalarIndex.set(type.type, idx);
-              return false;
-            }
-            // FIXME
-            if (filter(type, null)) {
-              inputTypeIndices.add(idx);
-            }
-            return true;
-          },
-        );
-        return true;
-      },
-      default: ({ type, idx }) => {
-        requireEmptyObject ||= isEmptyObject(type);
-
-        if (
-          inputRootTypeIndices.has(idx) &&
-          !outputRootTypeIndices.has(idx)
-        ) {
-          return false;
-        }
-        // type is either a regular type or an input type reused in the output
-        hasUnion ||= isUnion(type) || isEither(type);
-        if (isScalar(type)) {
-          scalarTypeIndices.add(idx);
-          this.#formatter.scalarIndex.set(type.type, idx);
-          return false;
-        }
-        // FIXME
-        if (filter(type, null)) {
-          regularTypeIndices.add(idx);
-        }
-        return true;
-      },
-    };
-    visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
+  #typesResolver: Resolver = (args) => {
+    const {
+      flags,
+      scalarTypeIndices,
+      inputTypeIndices,
+      regularTypeIndices,
+    } = groupTypeKindsHelper(this.tg, this.#formatter);
 
     // Known scalars (integer, boolean, ..)
     const distinctScalars = distinctBy(
-      this.#visible.keepReachable(scalarTypeIndices, "known scalars").map((idx) =>
-        this.tg.types[idx]
-      ),
+      scalarTypeIndices.map((idx) => this.tg.types[idx]),
       (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
     );
-    const scalarTypes = distinctScalars.map((type) =>
+    const knownScalarTypes = distinctScalars.map((type) =>
       this.#formatter.formatType(type, false, false)
     );
 
-    // Adhoc types (Union/Either on the input)
-    const adhocCustomScalarTypes = hasUnion
-      ? distinctScalars.map((node) => {
-        const idx = this.#formatter.scalarIndex.get(node.type)!;
-        const asObject = typeCustomScalar(node, idx);
-        return this.#formatter.formatType(asObject, false, false);
+    // Adhoc types (Union/Either on the output)
+    const adhocCustomScalarTypesRaw = flags.hasUnion
+      ? distinctScalars.map((type) => {
+        const idx = this.tg.types.findIndex((t) => t.title == type.title)!;
+        const node = genOutputScalarVariantWrapper(type, idx);
+        return this.#formatter.formatType(node, false, false, "ALLOW");
       })
       : [];
+    const adhocCustomScalarTypes = adhocCustomScalarTypesRaw.map((o) =>
+      precalculateResolver(args, o)
+    );
 
     // Object types that are not an input type
-    const regularTypes = distinctBy(
-      this.#visible.keepReachable(regularTypeIndices, "regular").map((idx) =>
-        this.tg.types[idx]
-      ),
+    const regularTypesRaw = distinctBy(
+      regularTypeIndices.map((idx) => this.tg.types[idx]),
       (t) => t.title,
     ).map((type) => this.#formatter.formatType(type, false, false));
+    const regularTypes = regularTypesRaw.map((o) =>
+      precalculateResolver(args, o)
+    );
 
     // Input type (must be Object)
-    const inputTypes = distinctBy(
-      this.#visible.keepReachable(inputTypeIndices, "input").map((idx) =>
-        this.tg.types[idx]
-      ),
+    const inputTypesRaw = distinctBy(
+      inputTypeIndices.map((idx) => this.tg.types[idx]),
       (t) => t.title,
-    ).map((type) => this.#formatter.formatType(type, false, true));
+    ).map((type) => this.#formatter.formatType(type, false, false, "ALLOW")); // input types does not care about policies
+    const inputTypes = inputTypesRaw.map((o) => precalculateResolver(args, o));
+
+    const customScalars = this.#formatter.emittedCustomScalars.values();
+    console.log(Array.from(this.#formatter.emittedCustomScalars.keys()));
 
     const types = [
-      ...scalarTypes,
+      ...knownScalarTypes,
       ...adhocCustomScalarTypes,
+      ...customScalars,
       ...regularTypes,
       ...inputTypes,
     ];
 
-    // Handle non-root leaf case
-    if (
-      requireEmptyObject &&
-      !types.some((t: any) => t!.title == "EmptyObject")
-    ) {
-      types.push(typeEmptyObjectScalar());
-    }
-
-    this.#formatter.scalarIndex.clear();
     return types;
   };
 
@@ -291,4 +217,122 @@ export class TypeGraphRuntime extends Runtime {
     const type = this.tg.types.find((type) => type.title === name);
     return type ? this.#formatter.formatType(type, false, false) : null;
   };
+
+  #withPrecomputePolicies(resolver: Resolver): Resolver {
+    return async (args) => {
+      await this.#visible.preComputeAllPolicies(args ?? {});
+      return await resolver(args);
+    };
+  }
+}
+
+function groupTypeKindsHelper(tg: TypeGraphDS, formatter: TypeFormatter) {
+  // filter non-native GraphQL types
+  const filter = (
+    type: TypeNode,
+    input: {
+      injectionTree: Record<string, InjectionNode>;
+      path: string[];
+    } | null,
+  ) => {
+    return (
+      (input == null ||
+        !isInjected(tg, type, input.path, input.injectionTree)) &&
+      !isQuantifier(type)
+    );
+  };
+
+  const scalarTypeIndices = new Set<number>();
+  const inputTypeIndices = new Set<number>();
+  const regularTypeIndices = new Set<number>();
+
+  const inputRootTypeIndices = new Set<number>();
+  const outputRootTypeIndices = new Set<number>();
+
+  // decides whether or not custom object should be generated
+  let hasUnion = false;
+  let requireEmptyObject = false;
+
+  const myVisitor: TypeVisitorMap = {
+    [Type.FUNCTION]: ({ type }) => {
+      // TODO skip if policy check fails
+      // https://metatype.atlassian.net/browse/MET-119
+
+      // the struct input of a function never generates a GrahpQL type
+      // the actual inputs are the properties
+      inputRootTypeIndices.add(type.input);
+      outputRootTypeIndices.add(type.output);
+      visitTypes(
+        tg,
+        getChildTypes(tg.types[type.input]),
+        ({ type, idx }) => {
+          hasUnion ||= isUnion(type) || isEither(type);
+
+          { // FIXME: input resolvers are done dynamically yet it is expected at the root types statically
+            // (as a part of the flat array)
+            // this works for now..
+            if (isUnion(type) || isEither(type)) {
+              const _ = formatter.formatUnionEitherOnInput(type); // register
+            }
+          }
+
+          if (isScalar(type)) {
+            scalarTypeIndices.add(idx);
+            return false;
+          }
+          // FIXME
+          if (filter(type, null)) {
+            inputTypeIndices.add(idx);
+          }
+          return true;
+        },
+      );
+      return true;
+    },
+    default: ({ type, idx }) => {
+      requireEmptyObject ||= isEmptyObject(type);
+
+      if (
+        inputRootTypeIndices.has(idx) &&
+        !outputRootTypeIndices.has(idx)
+      ) {
+        return false;
+      }
+      // type is either a regular type or an input type reused in the output
+      hasUnion ||= isUnion(type) || isEither(type);
+      if (isScalar(type)) {
+        scalarTypeIndices.add(idx);
+        return false;
+      }
+      // FIXME
+      if (filter(type, null)) {
+        regularTypeIndices.add(idx);
+      }
+      return true;
+    },
+  };
+  visitTypes(tg, getChildTypes(tg.types[0]), myVisitor);
+
+  return {
+    flags: {
+      hasUnion,
+      requireEmptyObject,
+    },
+    scalarTypeIndices: Array.from(scalarTypeIndices),
+    inputTypeIndices: Array.from(inputTypeIndices),
+    regularTypeIndices: Array.from(regularTypeIndices),
+  };
+}
+
+function precalculateResolver(
+  args: ResolverArgs,
+  lazyObj: Record<string, Resolver>,
+) {
+  const entries = Object.entries(lazyObj).map(([k, res]) =>
+    [k, res(args)] satisfies [string, unknown]
+  );
+  const lazyEntries = entries.map(([k, v]) =>
+    [k, () => v] satisfies [string, Resolver]
+  );
+  return Object.fromEntries(lazyEntries) satisfies Record<string, Resolver>;
 }

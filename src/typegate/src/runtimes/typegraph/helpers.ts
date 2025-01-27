@@ -6,7 +6,8 @@ import { TypeGraphDS } from "../../typegraph/mod.ts";
 import { ObjectNode, PolicyIndices } from "../../typegraph/types.ts";
 import { isScalar, type TypeNode } from "../../typegraph/type_node.ts";
 
-export function typeCustomScalar(type: TypeNode, idx: number) {
+// Note: graphql UNION output does not support scalars, only OBJECT
+export function genOutputScalarVariantWrapper(type: TypeNode, idx: number) {
   if (isScalar(type)) {
     const id = type.type;
     return {
@@ -17,20 +18,15 @@ export function typeCustomScalar(type: TypeNode, idx: number) {
       },
     } as ObjectNode;
   }
+
   throw `"${type.title}" of type "${type.type}" is not a scalar`;
 }
 
 export function typeEmptyObjectScalar() {
-  return {
-    kind: () => TypeKind.SCALAR,
-    name: () => "EmptyObject",
-    description: () => "object scalar type representing an empty object",
-    fields: () => {},
-    inputFields: () => {},
-    interfaces: () => {},
-    enumValues: () => {},
-    possibleTypes: () => {},
-  };
+  return typeGenericCustomScalar(
+    "EmptyObject",
+    "object scalar type representing an empty object",
+  );
 }
 
 export function fieldCommon() {
@@ -72,4 +68,17 @@ export function policyDescription(
   }
 
   return ret;
+}
+
+export function typeGenericCustomScalar(name: string, description: string) {
+  return {
+    kind: () => TypeKind.SCALAR,
+    name: () => name,
+    description: () => description,
+    fields: () => {},
+    inputFields: () => {},
+    interfaces: () => {},
+    enumValues: () => {},
+    possibleTypes: () => {},
+  };
 }
