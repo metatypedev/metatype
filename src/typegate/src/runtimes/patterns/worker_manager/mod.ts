@@ -170,7 +170,7 @@ export class BaseWorkerManager<
 
   async deinit() {
     await this.deallocateAllWorkers({ destroy: true, shutdown: true });
-    this.#pool.clear(); // this will be called more than once, but that is ok
+    await this.#pool.clear(); // this will be called more than once, but that is ok
   }
 }
 

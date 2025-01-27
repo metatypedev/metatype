@@ -12,8 +12,10 @@ export interface DenoWorkerError extends BaseMessage {
 
 export type BaseDenoWorkerMessage = BaseMessage | DenoWorkerError;
 
-export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
-  extends BaseWorker<M, E> {
+export class DenoWorker<
+  M extends BaseMessage,
+  E extends BaseDenoWorkerMessage,
+> extends BaseWorker<M, E> {
   #worker: Worker;
   #workerId: string;
   constructor(workerId: string, workerPath: string) {
@@ -44,12 +46,10 @@ export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
     };
 
     this.#worker.onerror = async (event) => {
-      await handlerFn(
-        {
-          type: "WORKER_ERROR",
-          event,
-        } as E,
-      );
+      await handlerFn({
+        type: "WORKER_ERROR",
+        event,
+      } as E);
     };
   }
 

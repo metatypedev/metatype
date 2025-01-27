@@ -27,10 +27,10 @@ Meta.test("Python VM performance", async (t) => {
     );
     const samples = await Promise.all(
       [...Array(100).keys()].map((_i) =>
-        wire.handle(
-          "test_lambda",
-          { a: "test", _: {} } as unknown as ResolverArgs,
-        )
+        wire.handle("test_lambda", {
+          a: "test",
+          _: {},
+        } as unknown as ResolverArgs),
       ),
     );
     const start = performance.now();
@@ -65,10 +65,7 @@ Meta.test("Python VM performance", async (t) => {
       {} as any,
     );
     const samples = [...Array(100).keys()].map((_i) =>
-      wire.handle(
-        "test_def",
-        { a: "test", _: {} } as unknown as ResolverArgs,
-      )
+      wire.handle("test_def", { a: "test", _: {} } as unknown as ResolverArgs),
     );
     const start = performance.now();
     const items = await Promise.all(samples);
@@ -89,9 +86,7 @@ Meta.test(
     name: "Python runtime - Python SDK",
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/python/python.py",
-    );
+    const e = await t.engine("runtimes/python/python.py");
 
     await t.should("work once (lambda)", async () => {
       await gql`
@@ -162,8 +157,11 @@ Meta.test(
           .expectData({
             test: `test${i}`,
           })
-          .on(e)
+          .on(e),
       );
+
+      // pre-warming
+      await Promise.all(tests.slice(0, 10));
 
       const start = performance.now();
       await Promise.all(tests);
@@ -256,9 +254,7 @@ Meta.test(
     sanitizeOps: false,
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/python/python.py",
-    );
+    const e = await t.engine("runtimes/python/python.py");
 
     await t.should("safely fail upon stackoverflow", async () => {
       await gql`
@@ -333,9 +329,7 @@ Meta.test(
     });
 
     // reload
-    const reloadedEngine = await metaTest.engine(
-      "runtimes/python/python.ts",
-    );
+    const reloadedEngine = await metaTest.engine("runtimes/python/python.ts");
 
     await metaTest.should("work after typegate is reloaded", async () => {
       await runPythonOnPython(reloadedEngine);
@@ -345,23 +339,20 @@ Meta.test(
 
 Meta.test(
   {
-    name:
-      "PythonRuntime - Python SDK: typegraph with no artifacts in sync mode",
+    name: "PythonRuntime - Python SDK: typegraph with no artifacts in sync mode",
     sanitizeOps: false,
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/python/python_no_artifact.py",
-    );
+    const e = await t.engine("runtimes/python/python_no_artifact.py");
 
     await t.should(
       "work when there are no artifacts in the typegraph: python SDK",
       async () => {
         await gql`
-        query {
-          test_lambda(a: "test")
-        }
-      `
+          query {
+            test_lambda(a: "test")
+          }
+        `
           .expectData({
             test_lambda: "test",
           })
@@ -383,17 +374,17 @@ Meta.test(
       "work when there are no artifacts in the typegraph: TS SDK",
       async () => {
         await gql`
-        query {
-          identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
+          query {
+            identityDef(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
+            identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
           }
-          identityLambda(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          }
-        }
-      `
+        `
           .expectData({
             identityDef: {
               a: "hello",
@@ -412,24 +403,21 @@ Meta.test(
 
 Meta.test(
   {
-    name:
-      "Python Runtime - Python SDK: typegraph with duplicate artifact uploads",
+    name: "Python Runtime - Python SDK: typegraph with duplicate artifact uploads",
     sanitizeOps: false,
   },
   async (t) => {
-    const e = await t.engine(
-      "runtimes/python/python_duplicate_artifact.py",
-    );
+    const e = await t.engine("runtimes/python/python_duplicate_artifact.py");
 
     await t.should(
       "work when there is duplicate artifacts uploads: Python SDK",
       async () => {
         await gql`
-        query {
-          testMod(name: "Loyd")
-          testModDuplicate(name: "Barney")
-        }
-      `
+          query {
+            testMod(name: "Loyd")
+            testModDuplicate(name: "Barney")
+          }
+        `
           .expectData({
             testMod: "Hello Loyd",
             testModDuplicate: "Hello Barney",
@@ -452,17 +440,17 @@ Meta.test(
       "work when there is duplicate artifacts uploads: TS SDK",
       async () => {
         await gql`
-        query {
-          identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
-          },
-          identityModDuplicate(input: { a: "hello", b: [1, 2, "three"] }) {
-            a
-            b
+          query {
+            identityMod(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
+            identityModDuplicate(input: { a: "hello", b: [1, 2, "three"] }) {
+              a
+              b
+            }
           }
-        }
-      `
+        `
           .expectData({
             identityMod: {
               a: "hello",

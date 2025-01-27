@@ -418,11 +418,14 @@ pub fn op_wit_wire_destroy(
     let tg_host = instance.store.into_data().tg_host;
     tg_host.drop(scope);
     std::mem::drop(tokio::task::spawn(async move {
-        if let Err(err) = tokio::fs::remove_dir_all(&instance.preopen_dir).await {
-            error!(
-                "error removing preopend dir for instance {_id} at {:?}: {err}",
-                instance.preopen_dir
-            )
+        match tokio::fs::remove_dir_all(&instance.preopen_dir).await {
+            Err(err) if err.kind() != std::io::ErrorKind::NotFound => {
+                error!(
+                    "error removing preopend dir for instance {_id} at {:?}: {err}",
+                    instance.preopen_dir
+                )
+            }
+            _ => (),
         }
     }));
 }
