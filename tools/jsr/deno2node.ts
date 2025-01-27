@@ -3,7 +3,7 @@
 
 import { dnt, expandGlobSync, join } from "../deps.ts";
 import { copyFilesAt, removeExtension } from "../utils.ts";
-import { METATYPE_VERSION, SDK_PACKAGE_NAME_TS, TAGLINE } from "../consts.ts";
+import { CURRENT_VERSION, SDK_PACKAGE_NAME_TS, TAGLINE } from "../consts.ts";
 import { fromRoot, outDir } from "./common.ts";
 import { srcDir } from "./common.ts";
 
@@ -56,7 +56,7 @@ await dnt.build({
   packageManager: "pnpm",
   package: {
     name: SDK_PACKAGE_NAME_TS,
-    version: METATYPE_VERSION,
+    version: CURRENT_VERSION,
     description: TAGLINE,
     license: "MPL-2.0",
     repository: {

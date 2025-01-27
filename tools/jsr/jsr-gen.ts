@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { METATYPE_VERSION, SDK_PACKAGE_NAME_TS } from "../consts.ts";
+import { CURRENT_VERSION, SDK_PACKAGE_NAME_TS } from "../consts.ts";
 import { $, existsSync, expandGlob, join } from "../deps.ts";
 import { copyFilesAt } from "../utils.ts";
 import { removeExtension } from "../utils.ts";
@@ -57,7 +57,7 @@ Deno.writeTextFileSync(
   JSON.stringify(
     {
       name: SDK_PACKAGE_NAME_TS,
-      version: METATYPE_VERSION,
+      version: CURRENT_VERSION,
       // ungitignore
       // https://jsr.io/docs/troubleshooting#excluded-module-error
       publish: {

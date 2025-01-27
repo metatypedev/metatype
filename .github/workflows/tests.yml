@@ -306,6 +306,7 @@ jobs:
             tests/runtimes/python/*.ts \
             tests/runtimes/substantial/common.ts \
             tests/e2e/self_deploy/self_deploy.ts \
+            tests/e2e/published/*.ts \
             tests/metagen/typegraphs/metagen.ts \
             src/typegraph/deno/src/*.ts \
             tools/*.ts

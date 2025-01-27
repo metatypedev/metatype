@@ -140,9 +140,7 @@ export class Agent {
     }
 
     for (const workflow of this.workflows) {
-      const requests = replayRequests.filter(
-        ({ run_id }) => getTaskNameFromId(run_id) == workflow.name,
-      );
+      const requests = this.#selectReplayRequestsFor(workflow.name, replayRequests);
 
       while (requests.length > 0) {
         // this.logger.warn(`Run workflow ${JSON.stringify(next)}`);
@@ -164,6 +162,25 @@ export class Agent {
         }
       }
     }
+  }
+
+  #selectReplayRequestsFor(workflowName: string, runsInScope: Array<NextRun>) {
+    const runsToDo = [];
+    for (const run of runsInScope) {
+      try {
+        if (getTaskNameFromId(run.run_id) == workflowName) {
+          runsToDo.push(run);
+        }
+      } catch(err) {
+        this.logger.warn(`Bad runId ${run.run_id}`);
+        this.logger.error(err);
+
+        // TODO:
+        // Force remove?
+      }
+    }
+
+    return runsToDo;
   }
 
   async #tryAcquireNextRun() {
