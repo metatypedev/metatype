@@ -3,13 +3,32 @@
 
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { gql, Meta } from "test-utils/mod.ts";
-import { WitWireMessenger } from "@metatype/typegate/runtimes/wit_wire/mod.ts";
+import {
+  hostcall,
+  HostCallCtx,
+  WitWireHandle,
+} from "@metatype/typegate/runtimes/wit_wire/mod.ts";
 import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import type { ResolverArgs } from "@metatype/typegate/types.ts";
+import { WitWireMatInfo } from "../../../src/typegate/engine/runtime.js";
+
+function initInlineWitWire(
+  componentPath: string,
+  id: string,
+  ops: WitWireMatInfo[],
+  ctx: HostCallCtx,
+) {
+  return WitWireHandle.init({
+    componentPath,
+    id,
+    ops,
+    hostcall: (op, json) => hostcall(ctx, op, json),
+  });
+}
 
 Meta.test("Python VM performance", async (t) => {
   await t.should("work with low latency for lambdas", async () => {
-    await using wire = await WitWireMessenger.init(
+    const wire = await initInlineWitWire(
       "inline://pyrt_wit_wire.cwasm",
       crypto.randomUUID(),
       [
@@ -47,7 +66,7 @@ Meta.test("Python VM performance", async (t) => {
   });
 
   await t.should("work with low latency for defs", async () => {
-    await using wire = await WitWireMessenger.init(
+    const wire = await initInlineWitWire(
       "inline://pyrt_wit_wire.cwasm",
       crypto.randomUUID(),
       [

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { errorToString } from "../../worker_utils.ts";
-import { handleWitOp, WitWireHandle } from "../wit_wire/mod.ts";
+import { WitWireHandle } from "../wit_wire/mod.ts";
 import { WasmMessage } from "./types.ts";
 
 const witWireInstances = new Map<string, WitWireHandle>();
@@ -26,20 +26,21 @@ self.onmessage = async function (event: MessageEvent<WasmMessage>) {
 
   switch (type) {
     case "CALL": {
-      const { id } = event.data;
+      const { id, opName, args } = event.data;
+      let instance = witWireInstances.get(id);
 
-      if (!witWireInstances.has(id)) {
-        const handle = await WitWireHandle.init({
+      if (!instance) {
+        instance = await WitWireHandle.init({
           ...event.data,
           hostcall,
         });
-        witWireInstances.set(id, handle);
+        witWireInstances.set(id, instance);
       }
 
       try {
         self.postMessage({
           type: "SUCCESS",
-          result: await handleWitOp(event.data),
+          result: await instance.handle(opName, args),
         });
       } catch (error) {
         self.postMessage({

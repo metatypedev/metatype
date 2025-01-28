@@ -3,7 +3,7 @@
 
 import * as zod from "zod";
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
-import type { ResolverArgs, WitOpArgs } from "../../types.ts";
+import type { ResolverArgs } from "../../types.ts";
 import type { Typegate } from "../../typegate/mod.ts";
 import { getLogger } from "../../log.ts";
 
@@ -50,77 +50,77 @@ export class WitWireHandle {
     public componentPath: string,
     public ops: WitWireMatInfo[],
   ) {}
-}
 
-export async function handleWitOp(params: WitOpArgs) {
-  const { _, ...inJson } = params.args;
-  const { id, opName, componentPath, ops } = params;
+  async handle(opName: string, args: ResolverArgs) {
+    const { _, ...inJson } = args;
+    const { id, componentPath, ops } = this;
 
-  let res;
-  try {
-    res = await Meta.wit_wire.handle(id, {
-      op_name: opName,
-      in_json: JSON.stringify(inJson),
-    });
-  } catch (err) {
-    throw new Error(
-      `unexpected error handling request for op ${opName}: ${err}`,
-      {
-        cause: {
-          opName,
-          args: inJson,
-          component: componentPath,
-          err,
-        },
-      },
-    );
-  }
-  if (typeof res == "string") {
-    if (res == "NoHandler") {
+    let res;
+    try {
+      res = await Meta.wit_wire.handle(id, {
+        op_name: opName,
+        in_json: JSON.stringify(inJson),
+      });
+    } catch (err) {
       throw new Error(
-        `materializer doesn't implement handler for op ${opName}`,
+        `unexpected error handling request for op ${opName}: ${err}`,
         {
           cause: {
             opName,
             args: inJson,
             component: componentPath,
-            ops,
+            err,
+          },
+        },
+      );
+    }
+    if (typeof res == "string") {
+      if (res == "NoHandler") {
+        throw new Error(
+          `materializer doesn't implement handler for op ${opName}`,
+          {
+            cause: {
+              opName,
+              args: inJson,
+              component: componentPath,
+              ops,
+            },
+          },
+        );
+      } else {
+        throw new Error(`unexpected mat result for op ${opName}: ${res}`, {
+          cause: {
+            opName,
+            args: inJson,
+            component: componentPath,
+          },
+        });
+      }
+    } else if ("Ok" in res) {
+      return JSON.parse(res.Ok);
+    } else if ("InJsonErr" in res) {
+      throw new Error(
+        `materializer failed deserializing json args for op ${opName}: ${res.InJsonErr}`,
+        {
+          cause: {
+            opName,
+            args: inJson,
+            component: componentPath,
           },
         },
       );
     } else {
-      throw new Error(`unexpected mat result for op ${opName}: ${res}`, {
-        cause: {
-          opName,
-          args: inJson,
-          component: componentPath,
+      throw new Error(
+        `materializer handler error for op ${opName}: ${res.HandlerErr}`,
+        {
+          cause: {
+            opName,
+            args: inJson,
+            component: componentPath,
+          },
         },
-      });
+      );
     }
-  } else if ("Ok" in res) {
-    return JSON.parse(res.Ok);
-  } else if ("InJsonErr" in res) {
-    throw new Error(
-      `materializer failed deserializing json args for op ${opName}: ${res.InJsonErr}`,
-      {
-        cause: {
-          opName,
-          args: inJson,
-          component: componentPath,
-        },
-      },
-    );
-  } else {
-    throw new Error(
-      `materializer handler error for op ${opName}: ${res.HandlerErr}`,
-      {
-        cause: {
-          opName,
-          args: inJson,
-          component: componentPath,
-        },
-      },
-    );
   }
 }
 
