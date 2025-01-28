@@ -32,6 +32,7 @@ import {
 } from "./helpers.ts";
 import { Resolver } from "../../types.ts";
 import { AllowOrPass, TypeVisibility } from "./visibility.ts";
+import { IntrospectionGen } from "./introspection_gen.ts";
 
 const SCALAR_TYPE_MAP = {
   boolean: "Boolean",
@@ -54,7 +55,10 @@ export class TypeFormatter {
   constructor(
     private readonly tg: TypeGraphDS,
     private readonly visibility: TypeVisibility,
-  ) {}
+  ) {
+    const gen = new IntrospectionGen(this.tg, visibility);
+    gen.generateQuery();
+  }
 
   formatInputFields(
     [name, typeIdx]: [string, number],
