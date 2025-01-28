@@ -218,7 +218,7 @@ export class WorkerPool<
         .map((w) => `"${w.id}"`)
         .join(", ")}`,
     );
-    this.#idleWorkers.map((worker) => worker.destroy());
+    this.#idleWorkers.forEach((worker) => worker.destroy());
     this.#idleWorkers = [];
   }
 }

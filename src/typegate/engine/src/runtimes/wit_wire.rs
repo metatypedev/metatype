@@ -102,6 +102,8 @@ struct Instance {
     preopen_dir: PathBuf,
 }
 
+// An Instance's lifetime is tied to a thread (worker)
+// The Instance is dropped when a worker is terminated
 impl Drop for Instance {
     fn drop(&mut self) {
         let id = self.id.clone();

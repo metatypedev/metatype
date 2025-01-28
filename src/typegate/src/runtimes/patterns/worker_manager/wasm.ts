@@ -38,8 +38,8 @@ export class WasmWorker extends BaseWorker<WasmMessage, WasmEvent> {
       await handlerFn(message.data as WasmEvent);
     };
 
-    this.#worker.onerror = async (_event) => {
-      // TODO: Error handling?
+    this.#worker.onerror = (event) => {
+      throw event.error;
     };
   }
 
