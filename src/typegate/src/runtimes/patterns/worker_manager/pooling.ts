@@ -181,7 +181,7 @@ export class WorkerPool<
   }
 
   // ensureMinWorkers will be false when we are shutting down.
-  async unborrowWorker(worker: W) {
+  unborrowWorker(worker: W) {
     this.#busyWorkers.delete(worker.id);
     const taskAdded = this.#waitQueue.shift(() => worker);
     if (!taskAdded) {
@@ -191,7 +191,7 @@ export class WorkerPool<
       // We might add "urgent" tasks in the future;
       // in this case the worker count might exceed `maxWorkers`.
       if (maxWorkers !== 0 && this.#workerCount >= maxWorkers) {
-        await worker.destroy();
+        worker.destroy();
       } else {
         this.#idleWorkers.push(worker);
       }
@@ -199,9 +199,9 @@ export class WorkerPool<
   }
 
   // when shutdown is true, new tasks will not be dequeued
-  async destroyWorker(worker: W, shutdown = false) {
+  destroyWorker(worker: W, shutdown = false) {
     this.#busyWorkers.delete(worker.id);
-    await worker.destroy();
+    worker.destroy();
     if (!shutdown) {
       const taskAdded = this.#waitQueue.shift(() => this.#workerFactory());
       if (!taskAdded) {
@@ -218,13 +218,13 @@ export class WorkerPool<
     return this.#idleWorkers.length + this.#busyWorkers.size;
   }
 
-  async clear() {
+  clear() {
     logger.warn(
       `destroying idle workers: ${this.#idleWorkers
         .map((w) => `"${w.id}"`)
         .join(", ")}`,
     );
-    await Promise.all(this.#idleWorkers.map((worker) => worker.destroy()));
+    this.#idleWorkers.map((worker) => worker.destroy());
     this.#idleWorkers = [];
     this.#waitQueue.clear(); // FIXME: [Symbol.dispose] is never called
   }

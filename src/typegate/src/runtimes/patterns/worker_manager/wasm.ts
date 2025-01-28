@@ -47,12 +47,8 @@ export class WasmWorker extends BaseWorker<WasmMessage, WasmEvent> {
     this.#worker.postMessage(msg);
   }
 
-  destroy(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.#worker.onmessage = () => resolve(this.#worker.terminate());
-      this.#worker.onerror = (event) => reject(event.error);
-      this.send({ type: "SHUTDOWN" });
-    });
+  destroy() {
+    this.#worker.terminate();
   }
 
   get id() {

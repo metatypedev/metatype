@@ -52,16 +52,6 @@ self.onmessage = async function (event: MessageEvent<WasmMessage>) {
       break;
     }
 
-    case "SHUTDOWN": {
-      for (const instance of witWireInstances.values()) {
-        await using _drop = instance;
-      }
-
-      self.postMessage({ type: "SHUTDOWN" });
-
-      break;
-    }
-
     default:
       throw new Error(`Unknown message type: ${type}`);
   }

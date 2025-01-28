@@ -14,7 +14,7 @@ const logger = getLogger(import.meta, "WARN");
 export abstract class BaseWorker<M extends BaseMessage, E extends BaseMessage> {
   abstract listen(handlerFn: EventHandler<E>): void;
   abstract send(msg: M): void;
-  abstract destroy(): void | Promise<void>;
+  abstract destroy(): void;
   abstract get id(): TaskId;
 }
 
@@ -92,7 +92,7 @@ export class BaseWorkerManager<
     }
   }
 
-  protected async deallocateAllWorkers(options: DeallocateOptions = {}) {
+  protected deallocateAllWorkers(options: DeallocateOptions = {}) {
     const activeTaskNames = this.getActiveTaskNames();
     if (activeTaskNames.length > 0) {
       if (options.destroy) {
@@ -103,31 +103,27 @@ export class BaseWorkerManager<
         );
       }
 
-      await Promise.all(
-        activeTaskNames.map((name) =>
-          this.deallocateWorkersByName(name, options),
-        ),
-      );
+      for (const name of activeTaskNames) {
+        this.deallocateWorkersByName(name, options);
+      }
     }
   }
 
-  protected async deallocateWorkersByName(
+  protected deallocateWorkersByName(
     name: string,
     options: DeallocateOptions = {},
   ) {
     const taskIds = this.#tasksByName.get(name);
     if (taskIds) {
-      await Promise.all(
-        Array.from(taskIds).map((id) =>
-          this.deallocateWorker(name, id, options),
-        ),
-      );
+      for (const id of taskIds) {
+        this.deallocateWorker(name, id, options);
+      }
       return true;
     }
     return false;
   }
 
-  async deallocateWorker(
+  deallocateWorker(
     name: string,
     taskId: TaskId,
     { destroy = false, shutdown = false }: DeallocateOptions = {},
@@ -146,9 +142,9 @@ export class BaseWorkerManager<
       // startedAt records are not deleted
 
       if (destroy) {
-        await this.#pool.destroyWorker(task.worker, shutdown);
+        this.#pool.destroyWorker(task.worker, shutdown);
       } else {
-        await this.#pool.unborrowWorker(task.worker);
+        this.#pool.unborrowWorker(task.worker);
       }
 
       return true;
@@ -168,9 +164,9 @@ export class BaseWorkerManager<
     this.logMessage(taskId, msg);
   }
 
-  async deinit() {
-    await this.deallocateAllWorkers({ destroy: true, shutdown: true });
-    await this.#pool.clear(); // this will be called more than once, but that is ok
+  deinit() {
+    this.deallocateAllWorkers({ destroy: true, shutdown: true });
+    this.#pool.clear(); // this will be called more than once, but that is ok
   }
 }
 

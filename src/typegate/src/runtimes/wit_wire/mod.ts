@@ -50,10 +50,6 @@ export class WitWireHandle {
     public componentPath: string,
     public ops: WitWireMatInfo[],
   ) {}
-
-  async [Symbol.asyncDispose]() {
-    await Meta.wit_wire.destroy(this.id);
-  }
 }
 
 export async function handleWitOp(params: WitOpArgs) {
@@ -125,120 +121,6 @@ export async function handleWitOp(params: WitOpArgs) {
         },
       },
     );
-  }
-}
-
-export class WitWireMessenger {
-  static async init(
-    componentPath: string,
-    instanceId: string,
-    ops: WitWireMatInfo[],
-    cx: HostCallCtx,
-  ) {
-    try {
-      const _res = await Meta.wit_wire.init(
-        componentPath,
-        instanceId,
-        {
-          expected_ops: ops,
-          metatype_version: METATYPE_VERSION,
-        }, // this callback will be used from the native end
-        async (op: string, json: string) => await hostcall(cx, op, json),
-      );
-      return new WitWireMessenger(instanceId, componentPath, ops);
-    } catch (err) {
-      throw new Error(
-        `error on init for component at path: ${componentPath}: ${err}`,
-        {
-          cause: {
-            componentPath,
-            ops,
-            err,
-          },
-        },
-      );
-    }
-  }
-
-  constructor(
-    public id: string,
-    public componentPath: string,
-    public ops: WitWireMatInfo[],
-  ) {}
-
-  async [Symbol.asyncDispose]() {
-    await Meta.wit_wire.destroy(this.id);
-  }
-
-  async handle(opName: string, args: ResolverArgs) {
-    const { _, ...inJson } = args;
-
-    let res;
-    try {
-      res = await Meta.wit_wire.handle(this.id, {
-        op_name: opName,
-        in_json: JSON.stringify(inJson),
-      });
-    } catch (err) {
-      throw new Error(
-        `unexpected error handling request for op ${opName}: ${err}`,
-        {
-          cause: {
-            opName,
-            args: inJson,
-            component: this.componentPath,
-            err,
-          },
-        },
-      );
-    }
-    if (typeof res == "string") {
-      if (res == "NoHandler") {
-        throw new Error(
-          `materializer doesn't implement handler for op ${opName}`,
-          {
-            cause: {
-              opName,
-              args: inJson,
-              component: this.componentPath,
-              ops: this.ops,
-            },
-          },
-        );
-      } else {
-        throw new Error(`unexpected mat result for op ${opName}: ${res}`, {
-          cause: {
-            opName,
-            args: inJson,
-            component: this.componentPath,
-          },
-        });
-      }
-    } else if ("Ok" in res) {
-      return JSON.parse(res.Ok);
-    } else if ("InJsonErr" in res) {
-      throw new Error(
-        `materializer failed deserializing json args for op ${opName}: ${res.InJsonErr}`,
-        {
-          cause: {
-            opName,
-            args: inJson,
-            component: this.componentPath,
-          },
-        },
-      );
-    } else {
-      throw new Error(
-        `materializer handler error for op ${opName}: ${res.HandlerErr}`,
-        {
-          cause: {
-            opName,
-            args: inJson,
-            component: this.componentPath,
-          },
-        },
-      );
-    }
   }
 }
 
