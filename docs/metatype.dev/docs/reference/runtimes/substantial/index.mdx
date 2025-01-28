@@ -71,7 +71,8 @@ await ctx.sleep(24 * 3600 * 1000); // 1 day
 
 A save is one of the main building blocks of a workflow, many functions available on the context object rely on it.
 
-This is mainly because a save call converts any function into a **durable** one: the function output is saved.
+This is mainly because a save call converts any function into a **durable** one: the function output is saved and persisted in the backend. On subsequent executions, the saved value is retrieved from the backend instead of re-executing the function.
+
 This ensures that when a workflow is resumed (after a Typegate reboot for example) or replayed (after interrupts), the saved function will not be executed again.
 
 ```typescript
