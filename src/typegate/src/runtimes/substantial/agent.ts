@@ -115,7 +115,7 @@ export class Agent {
   }
 
   stop() {
-    this.workerManager.destroyAllWorkers();
+    this.workerManager.deinit();
     if (this.pollIntervalHandle !== undefined) {
       clearInterval(this.pollIntervalHandle);
     }
@@ -140,9 +140,7 @@ export class Agent {
     }
 
     for (const workflow of this.workflows) {
-      const requests = replayRequests.filter(
-        ({ run_id }) => getTaskNameFromId(run_id) == workflow.name,
-      );
+      const requests = this.#selectReplayRequestsFor(workflow.name, replayRequests);
 
       while (requests.length > 0) {
         // this.logger.warn(`Run workflow ${JSON.stringify(next)}`);
@@ -164,6 +162,25 @@ export class Agent {
         }
       }
     }
+  }
+
+  #selectReplayRequestsFor(workflowName: string, runsInScope: Array<NextRun>) {
+    const runsToDo = [];
+    for (const run of runsInScope) {
+      try {
+        if (getTaskNameFromId(run.run_id) == workflowName) {
+          runsToDo.push(run);
+        }
+      } catch(err) {
+        this.logger.warn(`Bad runId ${run.run_id}`);
+        this.logger.error(err);
+
+        // TODO:
+        // Force remove?
+      }
+    }
+
+    return runsToDo;
   }
 
   async #tryAcquireNextRun() {
@@ -265,12 +282,12 @@ export class Agent {
         run,
         next.schedule_date,
         taskContext,
-      );
-
-      this.workerManager.listen(
-        next.run_id,
-        this.#eventResultHandlerFor(workflow.name, next.run_id),
-      );
+      ).then(() => {
+        this.workerManager.listen(
+          next.run_id,
+          this.#eventResultHandlerFor(workflow.name, next.run_id),
+        );
+      });
     } catch (err) {
       throw err;
     } finally {
@@ -325,7 +342,7 @@ export class Agent {
     runId: string,
     { interrupt, schedule, run }: InterruptEvent,
   ) {
-    this.workerManager.destroyWorker(workflowName, runId); // !
+    this.workerManager.deallocateWorker(workflowName, runId); // !
 
     this.logger.debug(`Interrupt "${workflowName}": ${interrupt}"`);
 
@@ -374,8 +391,7 @@ export class Agent {
     runId: string,
     event: WorkflowCompletionEvent,
   ) {
-    this.workerManager.destroyWorker(workflowName, runId);
-    console.log({ event });
+    this.workerManager.deallocateWorker(workflowName, runId);
 
     const result = event.type == "SUCCESS" ? event.result : event.error;
 
@@ -408,8 +424,6 @@ export class Agent {
       backend: this.backend,
       run: event.run,
     });
-
-    // console.log("Persisted", run);
 
     await Meta.substantial.storeCloseSchedule({
       backend: this.backend,

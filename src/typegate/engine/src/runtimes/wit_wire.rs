@@ -405,7 +405,7 @@ pub fn op_wit_wire_destroy(
     scope: &mut v8::HandleScope<'_>,
     #[string] instance_id: String,
 ) {
-    debug!("destroying wit_wire instnace {instance_id}");
+    debug!("destroying wit_wire instance {instance_id}");
     let ctx = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();

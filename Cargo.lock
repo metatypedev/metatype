@@ -1591,7 +1591,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6965,7 +6965,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "actix",
  "assert_cmd",
@@ -7032,7 +7032,7 @@ dependencies = [
 
 [[package]]
 name = "metagen"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "color-eyre",
  "common",
@@ -7056,7 +7056,7 @@ dependencies = [
 
 [[package]]
 name = "metagen-client"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "derive_more 1.0.0",
  "futures",
@@ -7407,7 +7407,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
  "deno",
@@ -10298,7 +10298,7 @@ dependencies = [
 
 [[package]]
 name = "sample_client"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "metagen-client",
  "serde",
@@ -10308,7 +10308,7 @@ dependencies = [
 
 [[package]]
 name = "sample_client_upload"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "metagen-client",
  "serde",
@@ -11460,7 +11460,7 @@ dependencies = [
 
 [[package]]
 name = "substantial"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -12951,7 +12951,7 @@ dependencies = [
 
 [[package]]
 name = "typegate"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "colored",
  "env_logger 0.11.0",
@@ -12964,7 +12964,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_engine"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -13010,7 +13010,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
  "color-eyre",
@@ -14829,7 +14829,7 @@ checksum = "791978798f0597cfc70478424c2b4fdc2b7a8024aaff78497ef00f24ef674193"
 
 [[package]]
 name = "xtask"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
  "clap",
