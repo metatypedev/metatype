@@ -5,6 +5,7 @@ import { TypeGraphDS } from "../../typegraph/mod.ts";
 import {
   EitherNode,
   isEither,
+  ScalarNode,
   isFunction,
   isList,
   isObject,
@@ -23,7 +24,7 @@ import {
   typeGenericCustomScalar,
 } from "./helpers.ts";
 import { TypeKind } from "graphql";
-import { Resolver, ResolverArgs } from "../../types.ts";
+import { Resolver } from "../../types.ts";
 import { getLogger } from "../../log.ts";
 
 const SCALAR_TYPE_MAP = {
@@ -39,21 +40,33 @@ interface GenContext {
   parentVerdict: AllowOrPass;
 }
 
-type Schema = Record<string, Record<string, Resolver>>;
 const logger = getLogger("introspection_gen");
 
 export class IntrospectionGen {
-  types: Array<[string, Schema]>;
+  types: Array<[string, Record<string, Resolver>]>;
+  typesSeen: Set<string>;
   names: Map<string, number>;
 
   constructor(private tg: TypeGraphDS, private visibility: TypeVisibility) {
     this.types = [];
+    this.typesSeen = new Set();
+
     this.names = new Map();
   }
 
   #define(name: string, schema: Record<string, Resolver>) {
-    // logger.debug(`Emitted: ${name} => ${Deno.inspect(schema)}`);
+    logger.debug(`Emitted: ${name} => ${Deno.inspect(schema)}`);
     this.types.push([name, schema]);
+    this.typesSeen.add(name);
+  }
+
+  #seenOrPush(key: string) {
+    if (this.typesSeen.has(key)) {
+      return true;
+    } else {
+      this.typesSeen.add(key);
+      return false;
+    }
   }
 
   nextName(name: string) {
@@ -74,7 +87,9 @@ export class IntrospectionGen {
       parentVerdict: "PASS",
     });
 
-    console.log(this.types.map(([n, x]) => resolveRecDebug(x)));
+    logger.debug(`types: ${name} => ${Deno.inspect(this.types.map(([n, x]) => resolveRecDebug(x)), {
+      depth: 10
+    })}`);
   }
 
   #emitEmptyObject() {
@@ -82,6 +97,10 @@ export class IntrospectionGen {
   }
 
   #emitObject(type: ObjectNode, gctx: GenContext) {
+    if (this.#seenOrPush(type.title)) {
+      return;
+    }
+
     if (Object.keys(type.properties).length == 0) {
       this.#emitEmptyObject();
       return;
@@ -101,17 +120,25 @@ export class IntrospectionGen {
     this.#define(schema.name as string, toResolverMap(schema));
   }
 
+  #emitScalar(type: ScalarNode) {
+    if (this.#seenOrPush(type.type)) {
+      return;
+    }
+
+    const schema = {
+      ...fieldCommon(),
+      kind: () => TypeKind.SCALAR,
+      name: () => SCALAR_TYPE_MAP[type.type],
+      description: () => `${type.type} type`,
+    };
+    this.#define(type.type, schema);
+  }
+
   // Only leaf types
   // Root types are always of type Object or Scalars
   #emitType(type: TypeNode, gctx: GenContext) {
     if (isScalar(type)) {
-      const schema = {
-        ...fieldCommon(),
-        kind: () => TypeKind.SCALAR,
-        name: () => SCALAR_TYPE_MAP[type.type],
-        description: () => `${type.type} type`,
-      };
-      this.#define(type.type, schema);
+      this.#emitScalar(type);
     } else if (isObject(type)) {
       this.#emitObject(type, gctx);
     } else if (isUnion(type) || isEither(type)) {
@@ -128,6 +155,7 @@ export class IntrospectionGen {
       throw new Error(`Unhandled "${type.type}" of title ${type.title}`);
     }
   }
+
 
   #emitWrapperAndReturnSchema(
     type: TypeNode,
@@ -152,7 +180,7 @@ export class IntrospectionGen {
 
     return toResolverMap({
       kind: TypeKind.NON_NULL,
-      ofType: this.$refSchema(type.title),
+      ofType: this.$refSchema(isScalar(type) ?  SCALAR_TYPE_MAP[type.type]: type.title),
     }, true);
   }
 
@@ -161,12 +189,12 @@ export class IntrospectionGen {
     type: TypeNode,
     gctx: GenContext,
     fieldName: string | null,
-  ) {
+  ): Record<string, Resolver> {
     if (!isOptional(type) || isList(type)) {
       const innerSchema = this.#emitWrapperAndReturnSchema(type, gctx);
       if (fieldName) {
         return toResolverMap({
-          name,
+          name: fieldName,
           type: innerSchema,
         });
       } else {
@@ -175,11 +203,15 @@ export class IntrospectionGen {
     }
 
     // Optional
-    const optType = this.tg.types[type.item];
-    const innerSchema = this.$refSchema(optType.title);
+    const innerType = this.tg.types[type.item];
+    let innerSchema = this.$refSchema(innerType.title);
+    if (isList(innerType)) {
+      innerSchema =  this.#emitWrapperAndReturnSchema(innerType, gctx);
+    }
+
     if (fieldName) {
       return toResolverMap({
-        name,
+        name: fieldName,
         type: innerSchema,
       });
     } else {
@@ -188,6 +220,11 @@ export class IntrospectionGen {
   }
 
   #emitUnionEitherInput(type: UnionNode | EitherNode) {
+    const title = `${type.title}_${type.type}`;
+    if (this.#seenOrPush(title)) {
+      return;
+    }
+    
     const variants = isUnion(type) ? type.anyOf : type.oneOf;
 
     const titles = new Set<string>(
@@ -197,7 +234,7 @@ export class IntrospectionGen {
     const description = `${type.type} type\n${Array.from(titles).join(", ")}`;
 
     const schema = typeGenericCustomScalar(type.title, description);
-    this.#define(type.title, schema);
+    this.#define(title, schema);
   }
 
   $requiredSchema(schema: Record<string, Resolver>): Record<string, Resolver> {
@@ -240,12 +277,12 @@ export class IntrospectionGen {
         }),
 
         // Output
-        type: this.#emitMaybeWithQuantifierSchema(output, gctx, null),
+        type: this.#emitMaybeWithQuantifierSchema(output, gctx, fieldName),
       }, true);
     }
 
     console.log("field", fieldName, type);
-    return this.#emitMaybeWithQuantifierSchema(type, gctx, null);
+    return this.#emitMaybeWithQuantifierSchema(type, gctx, fieldName);
   }
 
   // Only on leaf
@@ -264,31 +301,30 @@ function toResolverMap<T>(
   const entries = Object.entries(rec).map(([k, v]) => [k, () => v]);
   const ret = Object.fromEntries(entries);
   if (addOtherFields) {
-    return { ...fieldCommon(), ...ret };
+    // return { ...fieldCommon(), ...ret };
+    return { ...ret };
   }
 
   return ret;
 }
 
-function resolveRecDebug(rec: any): Record<string, unknown> {
-  const entries = [] as Array<[string, unknown]>;
-  for (const k of Object.keys(rec)) {
-    const input = {} as ResolverArgs<unknown>;
-    if (typeof rec[k] == "object" && rec[k] != null) {
-      entries.push([k, resolveRecDebug(rec[k])]);
-    } else if (typeof rec[k] == "function") {
-      let val = rec[k](input);
-      while (typeof val == "function") {
-        console.log("resolve");
-        val = val(input);
-      }
-      entries.push([k, val]);
-    } else if (Array.isArray(rec[k])) {
-      entries.push([k, rec[k].map(resolveRecDebug)]);
-    } else {
-      entries.push([k, rec[k]]);
+// rm
+function resolveRecDebug(rec: any): Record<string, unknown> | null {
+  function resolve(value: unknown): unknown {
+    while (typeof value === "function") {
+      value = (value as () => unknown)();
     }
+
+    if (Array.isArray(value)) {
+      return value.map(resolve)
+    } else if (typeof value === "object" && value !== null) {
+      return resolveRecDebug(value as Record<string, unknown>);
+    }
+
+    return value;
   }
 
-  return Object.fromEntries(entries);
+  return Object.fromEntries(
+    Object.entries(rec).map(([key, value]) => [key, resolve(value)]),
+  );
 }
