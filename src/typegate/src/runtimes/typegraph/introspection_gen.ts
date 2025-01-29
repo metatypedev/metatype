@@ -3,23 +3,28 @@
 
 import { TypeGraphDS } from "../../typegraph/mod.ts";
 import {
-  FunctionNode,
+  EitherNode,
+  isEither,
   isFunction,
   isList,
   isObject,
   isOptional,
   isScalar,
-  ListNode,
+  isUnion,
   ObjectNode,
-  Type,
   TypeNode,
+  UnionNode,
 } from "../../typegraph/type_node.ts";
 import { AllowOrPass } from "./visibility.ts";
 import { TypeVisibility } from "./visibility.ts";
-import { fieldCommon, typeEmptyObjectScalar } from "./helpers.ts";
+import {
+  fieldCommon,
+  typeEmptyObjectScalar,
+  typeGenericCustomScalar,
+} from "./helpers.ts";
 import { TypeKind } from "graphql";
-import { isType } from "graphql";
-import { Resolver } from "../../types.ts";
+import { Resolver, ResolverArgs } from "../../types.ts";
+import { getLogger } from "../../log.ts";
 
 const SCALAR_TYPE_MAP = {
   boolean: "Boolean",
@@ -32,10 +37,10 @@ const SCALAR_TYPE_MAP = {
 interface GenContext {
   asInput: boolean;
   parentVerdict: AllowOrPass;
-  isOptional?: boolean;
 }
 
-type Schema = Record<string, unknown>;
+type Schema = Record<string, Record<string, Resolver>>;
+const logger = getLogger("introspection_gen");
 
 export class IntrospectionGen {
   types: Array<[string, Schema]>;
@@ -46,7 +51,8 @@ export class IntrospectionGen {
     this.names = new Map();
   }
 
-  #define(name: string, schema: Record<string, unknown>) {
+  #define(name: string, schema: Record<string, Resolver>) {
+    // logger.debug(`Emitted: ${name} => ${Deno.inspect(schema)}`);
     this.types.push([name, schema]);
   }
 
@@ -67,24 +73,12 @@ export class IntrospectionGen {
       asInput: false,
       parentVerdict: "PASS",
     });
+
+    console.log(this.types.map(([n, x]) => resolveRecDebug(x)));
   }
 
   #emitEmptyObject() {
     this.#define("", typeEmptyObjectScalar());
-  }
-
-  #emitFunction(type: FunctionNode, gctx: GenContext) {
-    const input = this.tg.types[type.input];
-    const output = this.tg.types[type.output];
-
-    this.#emitType(input, {
-      ...gctx,
-      asInput: true,
-    });
-    this.#emitType(output, {
-      ...gctx,
-      asInput: false,
-    });
   }
 
   #emitObject(type: ObjectNode, gctx: GenContext) {
@@ -93,11 +87,11 @@ export class IntrospectionGen {
       return;
     }
 
-    const { asInput, isOptional } = gctx;
-    const fields = asInput ? "fields" : "inputFields";
+    const { asInput } = gctx;
+    const fields = asInput ? "inputFields" : "fields";
     const schema = {
       name: `${type.title}${asInput ? "Inp" : ""}`,
-      kind: isOptional ? TypeKind.NON_NULL : TypeKind.OBJECT,
+      kind: asInput ? TypeKind.INPUT_OBJECT : TypeKind.OBJECT,
       [fields]: Object.entries(type.properties).map(([fieldName, idx]) => {
         const fieldType = this.tg.types[idx];
         return this.$fieldSchema(fieldName, fieldType, gctx);
@@ -118,23 +112,99 @@ export class IntrospectionGen {
         description: () => `${type.type} type`,
       };
       this.#define(type.type, schema);
-    } else if (isFunction(type)) {
-      this.#emitFunction(type, gctx);
     } else if (isObject(type)) {
       this.#emitObject(type, gctx);
-    } else if (isList(type) || isOptional(type)) {
-      // type Example {
-      //   field: [Whatever] # optinoal list
-      // }
-      //
-      // type Field = [Whatever] # unsupported
-
-      throw new Error(
-        `Unreasonable call, type with quantifier only expected on an object field`,
-      );
+    } else if (isUnion(type) || isEither(type)) {
+      const variantIdx = isUnion(type) ? type.anyOf : type.oneOf;
+      if (gctx.asInput) {
+        this.#emitUnionEitherInput(type);
+      } else {
+        for (const idx of variantIdx) {
+          const variant = this.tg.types[idx];
+          this.#emitType(variant, gctx);
+        }
+      }
     } else {
-      throw new Error(`Unhandled "${type.type}"`);
+      throw new Error(`Unhandled "${type.type}" of title ${type.title}`);
     }
+  }
+
+  #emitWrapperAndReturnSchema(
+    type: TypeNode,
+    gctx: GenContext,
+  ): Record<string, Resolver> {
+    if (isList(type)) {
+      return toResolverMap({
+        kind: TypeKind.LIST,
+        ofType: this.#emitWrapperAndReturnSchema(
+          this.tg.types[type.items],
+          gctx,
+        ),
+      }, true);
+    }
+
+    if (isOptional(type)) {
+      throw new Error(`Unexpected input optional type "${type.title}"`);
+    }
+
+    // std type
+    this.#emitType(type, gctx);
+
+    return toResolverMap({
+      kind: TypeKind.NON_NULL,
+      ofType: this.$refSchema(type.title),
+    }, true);
+  }
+
+  // Output and object fields must pass through this
+  #emitMaybeWithQuantifierSchema(
+    type: TypeNode,
+    gctx: GenContext,
+    fieldName: string | null,
+  ) {
+    if (!isOptional(type) || isList(type)) {
+      const innerSchema = this.#emitWrapperAndReturnSchema(type, gctx);
+      if (fieldName) {
+        return toResolverMap({
+          name,
+          type: innerSchema,
+        });
+      } else {
+        return innerSchema;
+      }
+    }
+
+    // Optional
+    const optType = this.tg.types[type.item];
+    const innerSchema = this.$refSchema(optType.title);
+    if (fieldName) {
+      return toResolverMap({
+        name,
+        type: innerSchema,
+      });
+    } else {
+      return innerSchema;
+    }
+  }
+
+  #emitUnionEitherInput(type: UnionNode | EitherNode) {
+    const variants = isUnion(type) ? type.anyOf : type.oneOf;
+
+    const titles = new Set<string>(
+      variants.map((idx) => this.tg.types[idx].title),
+    );
+
+    const description = `${type.type} type\n${Array.from(titles).join(", ")}`;
+
+    const schema = typeGenericCustomScalar(type.title, description);
+    this.#define(type.title, schema);
+  }
+
+  $requiredSchema(schema: Record<string, Resolver>): Record<string, Resolver> {
+    return toResolverMap({
+      kind: TypeKind.NON_NULL,
+      ofType: schema,
+    });
   }
 
   /**
@@ -146,7 +216,11 @@ export class IntrospectionGen {
    * }
    * ```
    */
-  $fieldSchema(fieldName: string, type: TypeNode, gctx: GenContext) {
+  $fieldSchema(
+    fieldName: string,
+    type: TypeNode,
+    gctx: GenContext,
+  ): Record<string, Resolver> {
     if (isFunction(type)) {
       const input = this.tg.types[type.input];
       const output = this.tg.types[type.output];
@@ -156,40 +230,30 @@ export class IntrospectionGen {
         );
       }
 
-      this.#emitType(output, gctx);
-
       const enries = Object.entries(input.properties);
       return toResolverMap({
         name: fieldName,
+        // input
         args: enries.map(([name, idx]) => {
           const entry = this.tg.types[idx];
-          this.#emitType(entry, gctx);
-
-          return {
-            name,
-            type: this.$refSchema(entry.title, entry.type),
-          };
+          return this.#emitMaybeWithQuantifierSchema(entry, gctx, name);
         }),
-        // output
-        type: this.$refSchema(output.title, output.type),
+
+        // Output
+        type: this.#emitMaybeWithQuantifierSchema(output, gctx, null),
       }, true);
     }
 
-    this.#emitType(type, gctx);
-    return toResolverMap({
-      name: fieldName,
-      args: [],
-      type: this.$refSchema(type.title, type.type),
-    }, true);
+    console.log("field", fieldName, type);
+    return this.#emitMaybeWithQuantifierSchema(type, gctx, null);
   }
 
   // Only on leaf
-  $refSchema(name: string, kind: unknown) {
-    return {
-      kind: () => kind,
-      name: () => name,
+  $refSchema(name: string): Record<string, Resolver> {
+    return toResolverMap({
+      name,
       ofType: null,
-    };
+    }, true);
   }
 }
 
@@ -204,4 +268,27 @@ function toResolverMap<T>(
   }
 
   return ret;
+}
+
+function resolveRecDebug(rec: any): Record<string, unknown> {
+  const entries = [] as Array<[string, unknown]>;
+  for (const k of Object.keys(rec)) {
+    const input = {} as ResolverArgs<unknown>;
+    if (typeof rec[k] == "object" && rec[k] != null) {
+      entries.push([k, resolveRecDebug(rec[k])]);
+    } else if (typeof rec[k] == "function") {
+      let val = rec[k](input);
+      while (typeof val == "function") {
+        console.log("resolve");
+        val = val(input);
+      }
+      entries.push([k, val]);
+    } else if (Array.isArray(rec[k])) {
+      entries.push([k, rec[k].map(resolveRecDebug)]);
+    } else {
+      entries.push([k, rec[k]]);
+    }
+  }
+
+  return Object.fromEntries(entries);
 }
