@@ -94,11 +94,11 @@ export class IntrospectionGen {
     }
 
     const { asInput, isOptional } = gctx;
-    const field = asInput ? "fields" : "inputFields";
+    const fields = asInput ? "fields" : "inputFields";
     const schema = {
       name: `${type.title}${asInput ? "Inp" : ""}`,
       kind: isOptional ? TypeKind.NON_NULL : TypeKind.OBJECT,
-      [field]: Object.entries(type.properties).map(([fieldName, idx]) => {
+      [fields]: Object.entries(type.properties).map(([fieldName, idx]) => {
         const fieldType = this.tg.types[idx];
         return this.$fieldSchema(fieldName, fieldType, gctx);
       }),
@@ -137,30 +137,71 @@ export class IntrospectionGen {
     }
   }
 
-  // Only on leaf
-  $refSchema(name: string, kind: unknown) {
-    return {
-      "kind": () => kind,
-      "name": () => name,
-      "ofType": null,
-    };
-  }
-
   /**
+   * * Shape
    * ```gql
    * query {
-   *   field(arg1, arg2, ..): Output
+   *   fieldCase1(arg1: A1, arg2: A2, ..): Output
+   *   fieldCase2: Output
    * }
    * ```
    */
   $fieldSchema(fieldName: string, type: TypeNode, gctx: GenContext) {
-    // Emit arg and Output
-    // return schema
-    throw new Error("TODO");
+    if (isFunction(type)) {
+      const input = this.tg.types[type.input];
+      const output = this.tg.types[type.output];
+      if (!isObject(input)) {
+        throw new Error(
+          `Expected Object for input type named "${input.title}", got "${input.type}" instead`,
+        );
+      }
+
+      this.#emitType(output, gctx);
+
+      const enries = Object.entries(input.properties);
+      return toResolverMap({
+        name: fieldName,
+        args: enries.map(([name, idx]) => {
+          const entry = this.tg.types[idx];
+          this.#emitType(entry, gctx);
+
+          return {
+            name,
+            type: this.$refSchema(entry.title, entry.type),
+          };
+        }),
+        // output
+        type: this.$refSchema(output.title, output.type),
+      }, true);
+    }
+
+    this.#emitType(type, gctx);
+    return toResolverMap({
+      name: fieldName,
+      args: [],
+      type: this.$refSchema(type.title, type.type),
+    }, true);
+  }
+
+  // Only on leaf
+  $refSchema(name: string, kind: unknown) {
+    return {
+      kind: () => kind,
+      name: () => name,
+      ofType: null,
+    };
   }
 }
 
-function toResolverMap<T>(rec: Record<string, T>): Record<string, Resolver> {
+function toResolverMap<T>(
+  rec: Record<string, T>,
+  addOtherFields?: boolean,
+): Record<string, Resolver> {
   const entries = Object.entries(rec).map(([k, v]) => [k, () => v]);
-  return Object.fromEntries(entries);
+  const ret = Object.fromEntries(entries);
+  if (addOtherFields) {
+    return { ...fieldCommon(), ...ret };
+  }
+
+  return ret;
 }
