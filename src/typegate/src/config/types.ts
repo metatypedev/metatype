@@ -60,6 +60,20 @@ export const globalConfigSchema = z.object({
   sentry_sample_rate: z.coerce.number().positive().min(0).max(1),
   sentry_traces_sample_rate: z.coerce.number().positive().min(0).max(1),
   deno_v8_flags: z.string().optional(),
+  min_deno_workers: z.coerce.number().positive().default(2),
+  max_deno_workers: z.coerce.number().positive().default(8),
+  deno_worker_wait_timeout_ms: z.coerce.number().positive().default(5000),
+  // deno_idle_worker_timeout_ms: z.coerce.number().positive().optional(), // auto remove idle workers
+  min_substantial_workers: z.coerce.number().positive().default(2),
+  max_substantial_workers: z.coerce.number().positive().default(8),
+  min_wasm_workers: z.coerce.number().positive().default(2),
+  max_wasm_workers: z.coerce.number().positive().default(8),
+  wasm_worker_wait_timeout_ms: z.coerce.number().positive().default(5000),
+  substantial_worker_wait_timeout_ms: z.coerce
+    .number()
+    .positive()
+    .default(15000),
+  // substantial_idle_worker_timeout_ms: z.coerce.number().positive().optional(), // auto remove idle workers
 });
 export type GlobalConfig = z.infer<typeof globalConfigSchema>;
 
@@ -78,8 +92,7 @@ export const typegateConfigBaseSchema = z.object({
       if (bytes.length != 64) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
+          message: `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
         });
       }
       return bytes;
@@ -122,7 +135,7 @@ export type SyncConfigX = {
   redis: RedisConnectOptions;
   s3: S3ClientConfig;
   s3Bucket: string;
-  forceRemove?: boolean
+  forceRemove?: boolean;
 };
 
 export type TypegateConfig = {

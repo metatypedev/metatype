@@ -189,6 +189,9 @@ Meta.test(
           .on(e),
       );
 
+      // pre-warming
+      await Promise.all(tests.slice(0, 10));
+
       const start = performance.now();
       await Promise.all(tests);
       const end = performance.now();

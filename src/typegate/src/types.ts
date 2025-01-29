@@ -14,6 +14,7 @@ import type { ComputeArg } from "./engine/planner/args.ts";
 import type { EffectType, PolicyIndices } from "./typegraph/types.ts";
 import type { VariantMatcher } from "./engine/typecheck/matching_variant.ts";
 import type { Typegate } from "./typegate/mod.ts";
+import { WitWireMatInfo } from "../engine/runtime.d.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;
@@ -48,6 +49,14 @@ export type ResolverArgs<T = Record<string, any>> = T & ResolverArgsBase;
 export type Resolver<T = Record<string, any>> = (
   args: ResolverArgs<T>,
 ) => Promise<any> | any;
+
+export interface WitOpArgs {
+  opName: string;
+  args: ResolverArgs;
+  id: string;
+  componentPath: string;
+  ops: WitWireMatInfo[];
+}
 
 export type Batcher = (x: any) => any;
 
