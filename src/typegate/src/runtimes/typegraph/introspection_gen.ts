@@ -204,7 +204,8 @@ export class IntrospectionGen {
 
     // Optional
     const innerType = this.tg.types[type.item];
-    let innerSchema = this.$refSchema(innerType.title);
+    let innerSchema = this.$refSchema(isScalar(innerType) ?  SCALAR_TYPE_MAP[innerType.type]: type.title);
+
     if (isList(innerType)) {
       innerSchema =  this.#emitWrapperAndReturnSchema(innerType, gctx);
     }
