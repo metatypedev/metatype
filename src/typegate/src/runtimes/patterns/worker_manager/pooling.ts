@@ -21,7 +21,6 @@ export type Consumer<T> = (x: T) => void;
 export interface WaitQueue<W> {
   push(consumer: Consumer<W>, onCancel: () => void): void;
   shift(produce: () => W): boolean;
-  clear(): void;
 }
 
 export function createSimpleWaitQueue<W>(): WaitQueue<W> {
@@ -38,7 +37,6 @@ export function createSimpleWaitQueue<W>(): WaitQueue<W> {
       }
       return false;
     },
-    clear() {},
   };
 }
 
@@ -78,12 +76,6 @@ export class WaitQueueWithTimeout<W> implements WaitQueue<W> {
     return false;
   }
 
-  clear() {
-    if (this.#timerId != null) {
-      clearTimeout(this.#timerId);
-    }
-  }
-
   #timeoutHandler() {
     this.#cancelNextEntry();
     this.#updateTimer();
@@ -105,7 +97,13 @@ export class WaitQueueWithTimeout<W> implements WaitQueue<W> {
   }
 
   #cancelNextEntry() {
-    this.#queue.shift()!.cancellationHandler();
+    this.#queue.shift()?.cancellationHandler();
+  }
+
+  [Symbol.dispose]() {
+    if (this.#timerId != null) {
+      clearTimeout(this.#timerId);
+    }
   }
 }
 
@@ -222,6 +220,5 @@ export class WorkerPool<
     );
     this.#idleWorkers.forEach((worker) => worker.destroy());
     this.#idleWorkers = [];
-    this.#waitQueue.clear();
   }
 }
