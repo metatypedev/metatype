@@ -123,6 +123,7 @@ export class IntrospectionGen {
         const fieldType = this.tg.types[idx];
         return {
           isDeprecated: () => false,
+          args: asInput ? undefined : [], // only on output OBJECT
           ...this.$fieldSchema(fieldName, fieldType, gctx)
         };
       }),
@@ -187,10 +188,12 @@ export class IntrospectionGen {
     // std type
     this.#emitType(type, gctx);
 
-    return toResolverMap({
+    const schema = this.$refSchema(this.#getName(type, gctx.asInput));
+
+    return gctx.asInput ? toResolverMap({
       kind: TypeKind.NON_NULL,
       ofType: this.$refSchema(this.#getName(type, gctx.asInput)),
-    }, true);
+    }, true) : schema;
   }
 
   // Output and object fields must pass through this
