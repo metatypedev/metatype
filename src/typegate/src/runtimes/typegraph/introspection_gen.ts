@@ -118,9 +118,13 @@ export class IntrospectionGen {
     this.#define(title, toResolverMap({
       name: title,
       kind: asInput ? TypeKind.INPUT_OBJECT : TypeKind.OBJECT,
+      interfaces: () => [],
       [fields]: Object.entries(type.properties).map(([fieldName, idx]) => {
         const fieldType = this.tg.types[idx];
-        return this.$fieldSchema(fieldName, fieldType, gctx);
+        return {
+          isDeprecated: () => false,
+          ...this.$fieldSchema(fieldName, fieldType, gctx)
+        };
       }),
     } as Record<string, unknown>));
   }
@@ -184,7 +188,6 @@ export class IntrospectionGen {
     this.#emitType(type, gctx);
 
     return toResolverMap({
-      name: this.#getName(type),
       kind: TypeKind.NON_NULL,
       ofType: this.$refSchema(this.#getName(type, gctx.asInput)),
     }, true);
@@ -278,6 +281,7 @@ export class IntrospectionGen {
       const enries = Object.entries(input.properties);
       return toResolverMap({
         name: fieldName,
+        interfaces: () => [],
         // input
         args: enries.map(([argName, idx]) => {
           const entry = this.tg.types[idx];
@@ -285,7 +289,7 @@ export class IntrospectionGen {
         }),
 
         // Output
-        type: this.#emitMaybeWithQuantifierSchema(output, {...gctx, asInput: false}, fieldName),
+        type: this.#emitMaybeWithQuantifierSchema(output, {...gctx, asInput: false}, null),
       }, true);
     }
 
