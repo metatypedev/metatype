@@ -110,7 +110,7 @@ class DenoRuntime(Runtime):
         *,
         module: Union[str, ResolvedModule],
         name: Optional[str] = None,
-        deps: List[str] = [],
+        deps: Optional[List[str]] = None,
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
@@ -209,7 +209,7 @@ class DenoRuntime(Runtime):
         name: Optional[str],
         func_name: str,
         module: str,
-        deps: List[str] = [],
+        deps: List[str],
         secrets: Optional[List[str]],
     ) -> Policy: ...
 
@@ -219,7 +219,7 @@ class DenoRuntime(Runtime):
         name: Optional[str] = None,
         module: Union[str, ResolvedModule],
         func_name: Optional[str] = None,
-        deps: List[str] = [],
+        deps: Optional[List[str]] = None,
         secrets: Optional[List[str]] = None,
     ) -> Policy:
         resolved = resolve_module_params(module, func_name, deps)

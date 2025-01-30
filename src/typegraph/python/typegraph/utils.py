@@ -100,20 +100,20 @@ class ResolvedModule:
 
 
 class Module:
-    def __init__(self, source: str, deps: List[str] = []):
-        self.source = source
+    def __init__(self, path: str, deps: Optional[List[str]] = None):
+        self.source = path
         self.deps = deps
 
     def import_(self, name: str):
-        return ResolvedModule(module=self.source, deps=self.deps, func_name=name)
+        return ResolvedModule(module=self.source, deps=self.deps or [], func_name=name)
 
 
 def resolve_module_params(
     module: Union[str, ResolvedModule],
     name: Optional[str] = None,
-    deps: List[str] = [],
+    deps: Optional[List[str]] = None,
 ):
     if isinstance(module, ResolvedModule):
         return module
 
-    return ResolvedModule(module=module, deps=deps, func_name=cast(str, name))
+    return ResolvedModule(module=module, deps=deps or [], func_name=cast(str, name))

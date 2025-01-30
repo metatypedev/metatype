@@ -14,7 +14,7 @@ def deno_duplicate_artifact(g: Graph):
     public = Policy.public()
 
     mod = DenoModule(
-        source="ts/dep/main.ts",
+        path="ts/dep/main.ts",
         deps=["ts/dep/nested/dep.ts"],
     )
 

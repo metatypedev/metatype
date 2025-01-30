@@ -13,7 +13,7 @@ export const tg = await typegraph(
     const pub = Policy.public();
 
     const mod = new DenoModule({
-      source: "ts/dep/main.ts",
+      path: "ts/dep/main.ts",
       deps: ["ts/dep/nested/dep.ts"],
       exports: ["doAddition"],
     });

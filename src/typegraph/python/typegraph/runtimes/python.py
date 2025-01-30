@@ -99,7 +99,7 @@ class PythonRuntime(Runtime):
         *,
         module: str,
         name: str,
-        deps: List[str] = [],
+        deps: List[str],
         effect: Optional[Effect],
         secrets: Optional[List[str]],
     ): ...
@@ -121,7 +121,7 @@ class PythonRuntime(Runtime):
         *,
         module: Union[str, ResolvedModule],
         name: Optional[str] = None,
-        deps: List[str] = [],
+        deps: Optional[List[str]] = None,
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):

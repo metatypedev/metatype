@@ -30,18 +30,18 @@ export type ModuleImportPolicy =
   | Omit<ExtendedModuleImport, "effect">;
 
 export class Module<T extends string> {
-  source: string;
+  path: string;
   deps?: string[];
 
-  constructor(params: { source: string; deps?: string[]; exports?: T[] }) {
-    this.source = params.source;
+  constructor(params: { path: string; deps?: string[]; exports?: T[] }) {
+    this.path = params.path;
     this.deps = params.deps;
   }
 
   import(name: T): ModuleParams {
     return {
       name,
-      module: this.source,
+      module: this.path,
       deps: this.deps,
     };
   }

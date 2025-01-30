@@ -14,7 +14,7 @@ def python_duplicate_artifact(g: Graph):
     python = PythonRuntime()
 
     mod = PythonModule(
-        source="py/hello.py",
+        path="py/hello.py",
         deps=["py/nested/dep.py"],
     )
 
