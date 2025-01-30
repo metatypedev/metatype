@@ -45,13 +45,10 @@ const logger = getLogger("introspection_gen");
 export class IntrospectionGen {
   types: Array<[string, Record<string, Resolver>]>;
   typesSeen: Set<string>;
-  names: Map<string, number>;
 
   constructor(private tg: TypeGraphDS, private visibility: TypeVisibility) {
     this.types = [];
     this.typesSeen = new Set();
-
-    this.names = new Map();
   }
 
   #define(name: string, schema: Record<string, Resolver>) {
@@ -69,15 +66,12 @@ export class IntrospectionGen {
     }
   }
 
-  nextName(name: string) {
-    const counter = this.names.get(name);
-    if (counter === undefined) {
-      this.names.set(name, 1);
-      return name;
+  #getName(type: TypeNode, asInput?: boolean) {
+    if (isScalar(type)) {
+      return SCALAR_TYPE_MAP[type.type];
     }
 
-    this.names.set(name, counter + 1);
-    return `${name}_${counter}`;
+    return asInput ? `${type.title}_Inp` : type.title;
   }
 
   generateQuery() {
@@ -93,11 +87,17 @@ export class IntrospectionGen {
   }
 
   #emitEmptyObject() {
+    if (this.#seenOrPush("")) {
+      return;
+    }
+
     this.#define("", typeEmptyObjectScalar());
   }
 
   #emitObject(type: ObjectNode, gctx: GenContext) {
-    if (this.#seenOrPush(type.title)) {
+    const { asInput } = gctx;
+    const title = this.#getName(type, asInput);
+    if (this.#seenOrPush(title)) {
       return;
     }
 
@@ -106,18 +106,15 @@ export class IntrospectionGen {
       return;
     }
 
-    const { asInput } = gctx;
     const fields = asInput ? "inputFields" : "fields";
-    const schema = {
-      name: `${type.title}${asInput ? "Inp" : ""}`,
+    this.#define(title, toResolverMap({
+      name: title,
       kind: asInput ? TypeKind.INPUT_OBJECT : TypeKind.OBJECT,
       [fields]: Object.entries(type.properties).map(([fieldName, idx]) => {
         const fieldType = this.tg.types[idx];
         return this.$fieldSchema(fieldName, fieldType, gctx);
       }),
-    } as Record<string, unknown>;
-
-    this.#define(schema.name as string, toResolverMap(schema));
+    } as Record<string, unknown>));
   }
 
   #emitScalar(type: ScalarNode) {
@@ -125,13 +122,12 @@ export class IntrospectionGen {
       return;
     }
 
-    const schema = {
+    this.#define(this.#getName(type), {
       ...fieldCommon(),
       kind: () => TypeKind.SCALAR,
       name: () => SCALAR_TYPE_MAP[type.type],
       description: () => `${type.type} type`,
-    };
-    this.#define(type.type, schema);
+    });
   }
 
   // Only leaf types
@@ -140,6 +136,7 @@ export class IntrospectionGen {
     if (isScalar(type)) {
       this.#emitScalar(type);
     } else if (isObject(type)) {
+      // must come from args right??? but why
       this.#emitObject(type, gctx);
     } else if (isUnion(type) || isEither(type)) {
       const variantIdx = isUnion(type) ? type.anyOf : type.oneOf;
@@ -180,7 +177,7 @@ export class IntrospectionGen {
 
     return toResolverMap({
       kind: TypeKind.NON_NULL,
-      ofType: this.$refSchema(isScalar(type) ?  SCALAR_TYPE_MAP[type.type]: type.title),
+      ofType: this.$refSchema(this.#getName(type, gctx.asInput)),
     }, true);
   }
 
@@ -204,7 +201,7 @@ export class IntrospectionGen {
 
     // Optional
     const innerType = this.tg.types[type.item];
-    let innerSchema = this.$refSchema(isScalar(innerType) ?  SCALAR_TYPE_MAP[innerType.type]: type.title);
+    let innerSchema = this.$refSchema(this.#getName(type, gctx.asInput));
 
     if (isList(innerType)) {
       innerSchema =  this.#emitWrapperAndReturnSchema(innerType, gctx);
@@ -225,7 +222,7 @@ export class IntrospectionGen {
     if (this.#seenOrPush(title)) {
       return;
     }
-    
+
     const variants = isUnion(type) ? type.anyOf : type.oneOf;
 
     const titles = new Set<string>(
@@ -262,6 +259,7 @@ export class IntrospectionGen {
     if (isFunction(type)) {
       const input = this.tg.types[type.input];
       const output = this.tg.types[type.output];
+
       if (!isObject(input)) {
         throw new Error(
           `Expected Object for input type named "${input.title}", got "${input.type}" instead`,
@@ -272,13 +270,13 @@ export class IntrospectionGen {
       return toResolverMap({
         name: fieldName,
         // input
-        args: enries.map(([name, idx]) => {
+        args: enries.map(([argName, idx]) => {
           const entry = this.tg.types[idx];
-          return this.#emitMaybeWithQuantifierSchema(entry, gctx, name);
+          return this.#emitMaybeWithQuantifierSchema(entry, {...gctx, asInput: true}, argName);
         }),
 
         // Output
-        type: this.#emitMaybeWithQuantifierSchema(output, gctx, fieldName),
+        type: this.#emitMaybeWithQuantifierSchema(output, {...gctx, asInput: false}, fieldName),
       }, true);
     }
 
@@ -302,8 +300,7 @@ function toResolverMap<T>(
   const entries = Object.entries(rec).map(([k, v]) => [k, () => v]);
   const ret = Object.fromEntries(entries);
   if (addOtherFields) {
-    // return { ...fieldCommon(), ...ret };
-    return { ...ret };
+    return { ...fieldCommon(), ...ret };
   }
 
   return ret;
