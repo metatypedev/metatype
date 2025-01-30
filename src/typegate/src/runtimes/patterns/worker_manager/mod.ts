@@ -29,10 +29,13 @@ export class BaseWorkerManager<
   M extends BaseMessage,
   E extends BaseMessage,
 > {
-  #activeTasks: Map<TaskId, {
-    worker: BaseWorker<M, E>;
-    taskSpec: T;
-  }> = new Map();
+  #activeTasks: Map<
+    TaskId,
+    {
+      worker: BaseWorker<M, E>;
+      taskSpec: T;
+    }
+  > = new Map();
   #tasksByName: Map<string, Set<TaskId>> = new Map();
   #startedAt: Map<TaskId, Date> = new Map();
   #pool: WorkerPool<T, M, E>;
@@ -94,11 +97,12 @@ export class BaseWorkerManager<
     if (activeTaskNames.length > 0) {
       if (options.destroy) {
         logger.warn(
-          `destroying workers for tasks ${
-            activeTaskNames.map((w) => `"${w}"`).join(", ")
-          }`,
+          `destroying workers for tasks ${activeTaskNames
+            .map((w) => `"${w}"`)
+            .join(", ")}`,
         );
       }
+
       for (const name of activeTaskNames) {
         this.deallocateWorkersByName(name, options);
       }
@@ -111,8 +115,8 @@ export class BaseWorkerManager<
   ) {
     const taskIds = this.#tasksByName.get(name);
     if (taskIds) {
-      for (const taskId of taskIds) {
-        this.deallocateWorker(name, taskId, options);
+      for (const id of taskIds) {
+        this.deallocateWorker(name, id, options);
       }
       return true;
     }
@@ -163,7 +167,6 @@ export class BaseWorkerManager<
   deinit() {
     this.deallocateAllWorkers({ destroy: true, shutdown: true });
     this.#pool.clear(); // this will be called more than once, but that is ok
-    return Promise.resolve();
   }
 }
 

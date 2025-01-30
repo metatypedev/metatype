@@ -55,7 +55,6 @@ const Meta = {
   wasmtimeWit: getOp("op_wasmtime_wit"),
   wit_wire: {
     init: getOp("op_wit_wire_init"),
-    destroy: getOp("op_wit_wire_destroy"),
     handle: getOp("op_wit_wire_handle"),
   },
   substantial: {

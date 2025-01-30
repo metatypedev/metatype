@@ -34,14 +34,21 @@ const predefinedFuncs: Record<
   string,
   (param: any) => Resolver<Record<string, unknown>>
 > = {
-  identity: () => ({ _, ...args }) => args,
+  identity:
+    () =>
+    ({ _, ...args }) =>
+      args,
   true: () => () => true,
   false: () => () => false,
   allow: () => () => "ALLOW" as PolicyResolverOutput,
   deny: () => () => "DENY" as PolicyResolverOutput,
   pass: () => () => "PASS" as PolicyResolverOutput,
-  internal_policy: () => ({ _: { context } }) =>
-    context.provider === "internal" ? "ALLOW" : "PASS" as PolicyResolverOutput,
+  internal_policy:
+    () =>
+    ({ _: { context } }) =>
+      context.provider === "internal"
+        ? "ALLOW"
+        : ("PASS" as PolicyResolverOutput),
   context_check: ({ key, value }) => {
     let check: (value: any) => boolean;
     switch (value.type) {
@@ -63,7 +70,7 @@ const predefinedFuncs: Record<
       for (const segment of path) {
         value = value?.[segment];
       }
-      return check(value) ? "PASS" : "DENY" as PolicyResolverOutput;
+      return check(value) ? "PASS" : ("DENY" as PolicyResolverOutput);
     };
   },
 };
@@ -102,9 +109,8 @@ export class DenoRuntime extends Runtime {
     for (const m of materializers) {
       let matSecrets = (m.data.secrets as string[]) ?? [];
       if (m.name === "outjection") {
-        matSecrets = m.data.source === "secret"
-          ? [...getInjectionValues(m.data)]
-          : [];
+        matSecrets =
+          m.data.source === "secret" ? [...getInjectionValues(m.data)] : [];
       }
       for (const secretName of (m.data.secrets as []) ?? []) {
         secrets[secretName] = secretManager.secretOrFail(secretName);
@@ -137,7 +143,7 @@ export class DenoRuntime extends Runtime {
         const matData = mat.data;
         const entryPoint = artifacts[matData.entryPoint as string];
         const depMetas = (matData.deps as string[]).map((dep) =>
-          createArtifactMeta(typegraphName, artifacts[dep])
+          createArtifactMeta(typegraphName, artifacts[dep]),
         );
         const moduleMeta = createArtifactMeta(typegraphName, entryPoint);
 
@@ -273,7 +279,7 @@ export class DenoRuntime extends Runtime {
       const entryPoint =
         this.tg.meta.artifacts[modMat.data.entryPoint as string];
       const depMetas = (modMat.data.deps as string[]).map((dep) =>
-        createArtifactMeta(this.typegraphName, this.tg.meta.artifacts[dep])
+        createArtifactMeta(this.typegraphName, this.tg.meta.artifacts[dep]),
       );
       const moduleMeta = createArtifactMeta(this.typegraphName, entryPoint);
 
