@@ -75,15 +75,23 @@ export class IntrospectionGen {
   }
 
   generateQuery() {
+    // mutation or query
     const root = this.tg.types[0] as ObjectNode;
-    this.#emitObject(root, {
-      asInput: false,
-      parentVerdict: "PASS",
-    });
+    for (const idx of Object.values(root.properties)) {
+      this.#emitObject(this.tg.types[idx] as ObjectNode, {
+        asInput: false,
+        parentVerdict: "PASS",
+      });
+    }
 
     logger.debug(`types: ${name} => ${Deno.inspect(this.types.map(([n, x]) => resolveRecDebug(x)), {
       depth: 10
     })}`);
+
+
+    this.types = this.types.map(([k, v]) => {
+      return [k, toResolverMap(resolveRecDebug(v)!)]
+    })
   }
 
   #emitEmptyObject() {
@@ -176,6 +184,7 @@ export class IntrospectionGen {
     this.#emitType(type, gctx);
 
     return toResolverMap({
+      name: this.#getName(type),
       kind: TypeKind.NON_NULL,
       ofType: this.$refSchema(this.#getName(type, gctx.asInput)),
     }, true);
