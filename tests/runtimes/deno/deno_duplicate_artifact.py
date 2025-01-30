@@ -3,7 +3,7 @@
 
 from typegraph.graph.typegraph import Graph
 from typegraph.policy import Policy
-from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.deno import DenoRuntime, DenoModule
 
 from typegraph import t, typegraph
 
@@ -13,20 +13,21 @@ def deno_duplicate_artifact(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
 
+    mod = DenoModule(
+        source="ts/dep/main.ts",
+        deps=["ts/dep/nested/dep.ts"],
+    )
+
     g.expose(
         public,
         doAddition=deno.import_(
             t.struct({"a": t.float(), "b": t.float()}),
             t.float(),
-            module="ts/dep/main.ts",
-            deps=["ts/dep/nested/dep.ts"],
-            name="doAddition",
+            module=mod.import_("doAddition"),
         ),
         doAdditionDuplicate=deno.import_(
             t.struct({"a": t.float(), "b": t.float()}),
             t.float(),
-            module="ts/dep/main.ts",
-            deps=["ts/dep/nested/dep.ts"],
-            name="doAddition",
+            module=mod.import_("doAddition"),
         ),
     )

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Policy, t, typegraph } from "@typegraph/sdk";
-import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
+import { DenoRuntime, DenoModule } from "@typegraph/sdk/runtimes/deno";
 
 export const tg = await typegraph(
   {
@@ -12,19 +12,21 @@ export const tg = await typegraph(
     const deno = new DenoRuntime();
     const pub = Policy.public();
 
+    const mod = new DenoModule({
+      source: "ts/dep/main.ts",
+      deps: ["ts/dep/nested/dep.ts"],
+      exports: ["doAddition"],
+    });
+
     g.expose({
       doAddition: deno
         .import(t.struct({ a: t.float(), b: t.float() }), t.float(), {
-          module: "ts/dep/main.ts",
-          name: "doAddition",
-          deps: ["ts/dep/nested/dep.ts"],
+          module: mod.import("doAddition"),
         })
         .withPolicy(pub),
       doAdditionDuplicate: deno
         .import(t.struct({ a: t.float(), b: t.float() }), t.float(), {
-          module: "ts/dep/main.ts",
-          name: "doAddition",
-          deps: ["ts/dep/nested/dep.ts"],
+          module: mod.import("doAddition"),
         })
         .withPolicy(pub),
     });

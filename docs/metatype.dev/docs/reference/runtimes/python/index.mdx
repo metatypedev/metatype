@@ -8,12 +8,17 @@ The PythonRuntime allows you to run short-lived code on a Python virtual machine
 # my_typegraph.py
 
 from typegraph import typegraph, Policy, t, Graph
-from typegraph.runtimes.deno import PythonRuntime
+from typegraph.runtimes.deno import PythonRuntime, PythonModule
 
 @typegraph()
 def example_python(g: Graph):
     public = Policy.public()
     python = PythonRuntime()
+
+    module = PythonModule(
+        source="module.py",
+        deps=["deps.py"]
+    )
 
     g.expose(
         public,
@@ -28,7 +33,14 @@ def example_python(g: Graph):
             t.string(),
             # point to pythoin a file on disc
             module="hello.py",
-            name="say_hello"
+            name="say_hello" # name of the function to use
+            deps=["deps.py"] # path to dependencies
+        ),
+        # we can also use the following method for reusability
+        sayHelloAlt=python.import_(
+            t.struct({"name": t.string()}),
+            t.string(),
+            module=module.import_("say_hello"), # name of the function to use
         ),
     )
 ```

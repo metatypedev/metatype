@@ -4,7 +4,7 @@
 import json
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union, overload
 
 from typegraph.gen.exports.runtimes import (
     Effect,
@@ -17,6 +17,8 @@ from typegraph.gen.exports.runtimes import (
 from typegraph.gen.types import Err
 from typegraph.policy import Policy
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils import ResolvedModule, resolve_module_params
+from typegraph.utils import Module
 from typegraph.wit import runtimes, store
 
 # from typegraph.wit import wit_utils
@@ -24,6 +26,9 @@ from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
     from typegraph import t
+
+
+DenoModule = Module
 
 
 class DenoRuntime(Runtime):
@@ -76,6 +81,7 @@ class DenoRuntime(Runtime):
             inp, out, FunMat(mat_id.value, code=code, secrets=secrets, effect=effect)
         )
 
+    @overload
     def import_(
         self,
         inp: "t.struct",
@@ -83,16 +89,41 @@ class DenoRuntime(Runtime):
         *,
         module: str,
         name: str,
+        deps: List[str],
+        effect: Optional[Effect],
+        secrets: Optional[List[str]],
+    ): ...
+
+    @overload
+    def import_(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        module: ResolvedModule,
+    ): ...
+
+    def import_(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        module: Union[str, ResolvedModule],
+        name: Optional[str] = None,
         deps: List[str] = [],
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
         effect = effect or EffectRead()
         secrets = secrets or []
+        resolved = resolve_module_params(module, name, deps)
         mat_id = runtimes.import_deno_function(
             store,
             MaterializerDenoImport(
-                func_name=name, module=module, secrets=secrets, deps=deps
+                func_name=resolved.func_name,
+                module=resolved.module,
+                secrets=secrets,
+                deps=resolved.deps,
             ),
             effect,
         )
@@ -107,8 +138,8 @@ class DenoRuntime(Runtime):
             out,
             ImportMat(
                 id=mat_id.value,
-                name=name,
-                module=module,
+                name=resolved.func_name,
+                module=resolved.module,
                 secrets=secrets,
                 effect=effect,
             ),
@@ -162,19 +193,47 @@ class DenoRuntime(Runtime):
             mat_id.value,
         )
 
+    @overload
     def import_policy(
         self,
+        *,
+        name: str,
+        module: ResolvedModule,
+        secrets: Optional[List[str]],
+    ) -> Policy: ...
+
+    @overload
+    def import_policy(
+        self,
+        *,
+        name: Optional[str],
         func_name: str,
         module: str,
-        secrets: Optional[List[str]] = None,
+        deps: List[str] = [],
+        secrets: Optional[List[str]],
+    ) -> Policy: ...
+
+    def import_policy(
+        self,
+        *,
         name: Optional[str] = None,
+        module: Union[str, ResolvedModule],
+        func_name: Optional[str] = None,
+        deps: List[str] = [],
+        secrets: Optional[List[str]] = None,
     ) -> Policy:
-        name = name or re.sub("[^a-zA-Z0-9_]", "_", f"__imp_{module}_{name}")
+        resolved = resolve_module_params(module, func_name, deps)
+        name = name or re.sub(
+            "[^a-zA-Z0-9_]", "_", f"__imp_{resolved.module}_{resolved.func_name}"
+        )
 
         res = runtimes.import_deno_function(
             store,
             MaterializerDenoImport(
-                func_name=func_name, module=module, secrets=secrets or [], deps=[]
+                func_name=resolved.func_name,
+                module=resolved.module,
+                deps=resolved.deps,
+                secrets=secrets or [],
             ),
             EffectRead(),
         )

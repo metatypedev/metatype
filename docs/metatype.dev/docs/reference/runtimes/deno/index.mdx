@@ -20,7 +20,7 @@ Instead of providing the typescript code inline, we can also point to a file on 
 # my_typegraph.py
 
 from typegraph import typegraph, Policy, t, Graph
-from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.deno import DenoRuntime, DenoModule
 
 @typegraph()
 def deno(g: Graph):
@@ -30,10 +30,27 @@ def deno(g: Graph):
     g.expose(
         public,
         add=deno.import_(
-            t.struct({"a": t.number(), "b": t.number()}),
-            t.number(),
+            t.struct({"a": t.integer(), "b": t.integer()}),
+            t.integer(),
             module="main.ts", # path to ts file
             name="doAddition", # function export from ts file to use
+            deps=[] # path to dependencies
+        ),
+    )
+
+    # We can also use the following method for reusability
+
+    module = DenoModule(
+        source="main.ts",
+        deps=["deps.ts"],
+    )
+
+    g.expose(
+        public,
+        add_alt=deno.import_(
+            t.struct({"a": t.integer(), "b": t.integer()}),
+            t.integer(),
+            module=module.import_("doAddition") # name of the function to use
         ),
     )
 ```

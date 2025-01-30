@@ -7,6 +7,13 @@ import type { Effect } from "../gen/typegraph_core.d.ts";
 import Policy from "../policy.ts";
 import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
+import {
+  type ModuleImport,
+  type ModuleImportPolicy,
+  resolveModuleParams,
+} from "../utils/module.ts";
+
+export { Module as DenoModule } from "../utils/module.ts";
 
 interface FunMat extends Materializer {
   code: string;
@@ -32,13 +39,7 @@ export interface DenoFunc {
   effect?: Effect;
 }
 
-export interface DenoImport {
-  name: string;
-  module: string;
-  deps?: Array<string>;
-  secrets?: Array<string>;
-  effect?: Effect;
-}
+type DenoImport = ModuleImport;
 
 // deno-lint-ignore no-explicit-any
 function stringifyFn(code: string | ((...any: []) => any)) {
@@ -85,21 +86,20 @@ export class DenoRuntime extends Runtime {
   import<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    { name, module, deps = [], effect = fx.read(), secrets = [] }: DenoImport,
+    { effect = fx.read(), secrets = [], ...params }: DenoImport,
   ): t.Func<I, O, ImportMat> {
+    const resolved = resolveModuleParams(params);
     const matId = runtimes.importDenoFunction(
       {
-        funcName: name,
-        module,
-        deps,
         secrets,
+        ...resolved,
       },
       effect,
     );
     const mat: ImportMat = {
       _id: matId,
-      name,
-      module,
+      name: resolved.funcName,
+      module: resolved.module,
       secrets,
       effect,
     };
@@ -133,19 +133,18 @@ export class DenoRuntime extends Runtime {
   /** Utility for fetching the current request context */
   fetchContext<C extends t.Typedef>(outputShape?: C): t.Func {
     const returnValue = outputShape ? `context` : "JSON.stringify(context)";
-    return this.func(
-      t.struct({}),
-      outputShape ?? t.json(),
-      { code: `(_, { context }) => ${returnValue}` },
-    );
+    return this.func(t.struct({}), outputShape ?? t.json(), {
+      code: `(_, { context }) => ${returnValue}`,
+    });
   }
 
   policy(name: string, _code: string): Policy;
   policy(name: string, data: Omit<DenoFunc, "effect">): Policy;
   policy(name: string, data: string | Omit<DenoFunc, "effect">): Policy {
-    const params = typeof data === "string"
-      ? { code: data, secrets: [] }
-      : { secrets: [], ...data };
+    const params =
+      typeof data === "string"
+        ? { code: data, secrets: [] }
+        : { secrets: [], ...data };
 
     return Policy.create(
       name,
@@ -156,17 +155,23 @@ export class DenoRuntime extends Runtime {
     );
   }
 
-  importPolicy(data: Omit<DenoImport, "effect">, name?: string): Policy {
-    const policyName = name ??
-      `__imp_${data.module}_${data.name}`.replace(/[^a-zA-Z0-9_]/g, "_");
+  importPolicy(
+    { secrets = [], ...params }: ModuleImportPolicy,
+    name?: string,
+  ): Policy {
+    const resolved = resolveModuleParams(params);
+    const policyName =
+      name ??
+      `__imp_${resolved.module}_${resolved.funcName}`.replace(
+        /[^a-zA-Z0-9_]/g,
+        "_",
+      );
     return Policy.create(
       policyName,
       runtimes.importDenoFunction(
         {
-          funcName: data.name,
-          module: data.module,
-          secrets: data.secrets ?? [],
-          deps: data.deps ?? [],
+          ...resolved,
+          secrets,
         },
         fx.read(),
       ),
