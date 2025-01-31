@@ -5,7 +5,6 @@ import { TypeGraphDS } from "../../typegraph/mod.ts";
 import {
   EitherNode,
   isEither,
-  ScalarNode,
   isFunction,
   isList,
   isObject,
@@ -13,6 +12,7 @@ import {
   isScalar,
   isUnion,
   ObjectNode,
+  ScalarNode,
   TypeNode,
   UnionNode,
 } from "../../typegraph/type_node.ts";
@@ -84,14 +84,17 @@ export class IntrospectionGen {
       });
     }
 
-    logger.debug(`types: ${name} => ${Deno.inspect(this.types.map(([n, x]) => resolveRecDebug(x)), {
-      depth: 10
-    })}`);
-
+    logger.debug(
+      `types: ${name} => ${
+        Deno.inspect(this.types.map(([n, x]) => resolveRecDebug(x)), {
+          depth: 10,
+        })
+      }`,
+    );
 
     this.types = this.types.map(([k, v]) => {
-      return [k, toResolverMap(resolveRecDebug(v)!)]
-    })
+      return [k, toResolverMap(resolveRecDebug(v)!)];
+    });
   }
 
   #emitEmptyObject() {
@@ -115,19 +118,22 @@ export class IntrospectionGen {
     }
 
     const fields = asInput ? "inputFields" : "fields";
-    this.#define(title, toResolverMap({
-      name: title,
-      kind: asInput ? TypeKind.INPUT_OBJECT : TypeKind.OBJECT,
-      interfaces: () => [],
-      [fields]: Object.entries(type.properties).map(([fieldName, idx]) => {
-        const fieldType = this.tg.types[idx];
-        return {
-          isDeprecated: () => false,
-          args: asInput ? undefined : [], // only on output OBJECT
-          ...this.$fieldSchema(fieldName, fieldType, gctx)
-        };
-      }),
-    } as Record<string, unknown>));
+    this.#define(
+      title,
+      toResolverMap({
+        name: title,
+        kind: asInput ? TypeKind.INPUT_OBJECT : TypeKind.OBJECT,
+        interfaces: () => [],
+        [fields]: Object.entries(type.properties).map(([fieldName, idx]) => {
+          const fieldType = this.tg.types[idx];
+          return {
+            isDeprecated: () => false,
+            args: asInput ? undefined : [], // only on output OBJECT
+            ...this.$fieldSchema(fieldName, fieldType, gctx),
+          };
+        }),
+      } as Record<string, unknown>),
+    );
   }
 
   #emitScalar(type: ScalarNode) {
@@ -166,7 +172,6 @@ export class IntrospectionGen {
     }
   }
 
-
   #emitWrapperAndReturnSchema(
     type: TypeNode,
     gctx: GenContext,
@@ -174,14 +179,16 @@ export class IntrospectionGen {
     if (isList(type)) {
       return toResolverMap({
         kind: TypeKind.LIST,
-        ofType: this.#emitWrapperAndReturnSchema(
+        ofType: this.#emitMaybeWithQuantifierSchema(
           this.tg.types[type.items],
           gctx,
+          null,
         ),
       }, true);
     }
 
     if (isOptional(type)) {
+      // Optional type does not have a wrapper, by default all is optional
       throw new Error(`Unexpected input optional type "${type.title}"`);
     }
 
@@ -190,10 +197,12 @@ export class IntrospectionGen {
 
     const schema = this.$refSchema(this.#getName(type, gctx.asInput));
 
-    return gctx.asInput ? toResolverMap({
-      kind: TypeKind.NON_NULL,
-      ofType: this.$refSchema(this.#getName(type, gctx.asInput)),
-    }, true) : schema;
+    return gctx.asInput
+      ? toResolverMap({
+        kind: TypeKind.NON_NULL,
+        ofType: this.$refSchema(this.#getName(type, gctx.asInput)),
+      }, true)
+      : schema;
   }
 
   // Output and object fields must pass through this
@@ -215,11 +224,14 @@ export class IntrospectionGen {
     }
 
     // Optional
-    const innerType = this.tg.types[type.item];
-    let innerSchema = this.$refSchema(this.#getName(type, gctx.asInput));
+    const innerType = unwrapOptionalRec(this.tg, type);
+    let innerSchema = this.$refSchema(this.#getName(innerType, gctx.asInput));
 
     if (isList(innerType)) {
-      innerSchema =  this.#emitWrapperAndReturnSchema(innerType, gctx);
+      const unwrapInnerType = unwrapOptionalRec(this.tg, this.tg.types[innerType.items]);
+      innerSchema = this.#emitWrapperAndReturnSchema(unwrapInnerType, gctx);
+    } else {
+      this.#emitType(innerType, gctx);
     }
 
     if (fieldName) {
@@ -288,15 +300,20 @@ export class IntrospectionGen {
         // input
         args: enries.map(([argName, idx]) => {
           const entry = this.tg.types[idx];
-          return this.#emitMaybeWithQuantifierSchema(entry, {...gctx, asInput: true}, argName);
+          return this.#emitMaybeWithQuantifierSchema(entry, {
+            ...gctx,
+            asInput: true,
+          }, argName);
         }),
 
         // Output
-        type: this.#emitMaybeWithQuantifierSchema(output, {...gctx, asInput: false}, null),
+        type: this.#emitMaybeWithQuantifierSchema(output, {
+          ...gctx,
+          asInput: false,
+        }, null),
       }, true);
     }
 
-    console.log("field", fieldName, type);
     return this.#emitMaybeWithQuantifierSchema(type, gctx, fieldName);
   }
 
@@ -330,7 +347,7 @@ function resolveRecDebug(rec: any): Record<string, unknown> | null {
     }
 
     if (Array.isArray(value)) {
-      return value.map(resolve)
+      return value.map(resolve);
     } else if (typeof value === "object" && value !== null) {
       return resolveRecDebug(value as Record<string, unknown>);
     }
@@ -341,4 +358,13 @@ function resolveRecDebug(rec: any): Record<string, unknown> | null {
   return Object.fromEntries(
     Object.entries(rec).map(([key, value]) => [key, resolve(value)]),
   );
+}
+
+
+function unwrapOptionalRec(tg: TypeGraphDS, type: TypeNode) {
+  while (isOptional(type)) {
+    type = tg.types[type.item];
+  }
+
+  return type;
 }
