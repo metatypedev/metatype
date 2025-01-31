@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-export const CURRENT_VERSION = "0.5.0";
-export const LATEST_RELEASE_VERSION = "0.4.10";
-export const LATEST_PRE_RELEASE_VERSION = "0.5.0-rc.9";
+export const CURRENT_VERSION = "0.5.1-rc.0";
+export const LATEST_RELEASE_VERSION = "0.5.0";
+export const LATEST_PRE_RELEASE_VERSION = null;
 export const GHJK_VERSION = "v0.2.1";
 export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";
 export const RUST_VERSION = "1.80.1";

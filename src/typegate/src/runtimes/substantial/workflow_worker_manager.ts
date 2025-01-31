@@ -1,14 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { globalConfig } from "../../config.ts";
 import { getLogger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import { DenoWorker } from "../patterns/worker_manager/deno.ts";
 import { BaseWorkerManager } from "../patterns/worker_manager/mod.ts";
+import { WorkerPool } from "../patterns/worker_manager/pooling.ts";
 import { EventHandler, TaskId } from "../patterns/worker_manager/types.ts";
 import { Run, WorkflowEvent, WorkflowMessage } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
+
+// TODO lazy
 
 export type WorkflowSpec = {
   modulePath: string;
@@ -21,26 +25,27 @@ export type WorkflowSpec = {
  */
 export class WorkerManager
   extends BaseWorkerManager<WorkflowSpec, WorkflowMessage, WorkflowEvent> {
+  static #pool:
+    | WorkerPool<WorkflowSpec, WorkflowMessage, WorkflowEvent>
+    | null = null;
+  static #getPool() {
+    if (!WorkerManager.#pool) {
+      WorkerManager.#pool = new WorkerPool(
+        "substantial workflows",
+        // TODO load from config
+        {
+          minWorkers: globalConfig.min_substantial_workers,
+          maxWorkers: globalConfig.max_substantial_workers,
+          waitTimeoutMs: globalConfig.substantial_worker_wait_timeout_ms,
+        },
+        (id: string) => new DenoWorker(id, import.meta.resolve("./worker.ts")),
+      );
+    }
+    return WorkerManager.#pool!;
+  }
+
   constructor() {
-    super((taskId: TaskId) => {
-      return new DenoWorker(taskId, import.meta.resolve("./worker.ts"));
-    });
-  }
-
-  destroyWorker(name: string, runId: string) {
-    return super.destroyWorker(name, runId);
-  }
-
-  destroyAllWorkers() {
-    logger.warn(
-      `Destroying workers for ${
-        this
-          .getActiveTaskNames()
-          .map((w) => `"${w}"`)
-          .join(", ")
-      }`,
-    );
-    super.destroyAllWorkers();
+    super(WorkerManager.#getPool());
   }
 
   isOngoing(runId: TaskId) {
@@ -77,7 +82,7 @@ export class WorkerManager
     logger.info(`trigger ${msg.type} for ${runId}`);
   }
 
-  triggerStart(
+  async triggerStart(
     name: string,
     runId: string,
     workflowModPath: string,
@@ -85,7 +90,7 @@ export class WorkerManager
     schedule: string,
     internalTCtx: TaskContext,
   ) {
-    this.createWorker(name, runId, {
+    await this.delegateTask(name, runId, {
       modulePath: workflowModPath,
     });
     this.sendMessage(runId, {

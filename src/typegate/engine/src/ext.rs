@@ -40,7 +40,6 @@ deno_core::extension!(
         prisma::op_archive,
         wit_wire::op_wit_wire_init,
         wit_wire::op_wit_wire_handle,
-        wit_wire::op_wit_wire_destroy,
         grpc::op_grpc_register,
         grpc::op_grpc_unregister,
         grpc::op_call_grpc_method,

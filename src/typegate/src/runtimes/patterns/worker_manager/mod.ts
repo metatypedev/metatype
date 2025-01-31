@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../../../log.ts";
+import { WorkerPool } from "./pooling.ts";
 import { BaseMessage, EventHandler, TaskId } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
@@ -17,25 +18,30 @@ export abstract class BaseWorker<M extends BaseMessage, E extends BaseMessage> {
   abstract get id(): TaskId;
 }
 
+type DeallocateOptions = {
+  destroy?: boolean;
+  // only relevant if destroy is true; if true, no pending task will be dequeued
+  shutdown?: boolean;
+};
+
 export class BaseWorkerManager<
   T,
   M extends BaseMessage,
   E extends BaseMessage,
 > {
-  #activeTasks: Map<TaskId, {
-    worker: BaseWorker<M, E>;
-    taskSpec: T;
-  }> = new Map();
+  #activeTasks: Map<
+    TaskId,
+    {
+      worker: BaseWorker<M, E>;
+      taskSpec: T;
+    }
+  > = new Map();
   #tasksByName: Map<string, Set<TaskId>> = new Map();
   #startedAt: Map<TaskId, Date> = new Map();
+  #pool: WorkerPool<T, M, E>;
 
-  #workerFactory: (taskId: TaskId) => BaseWorker<M, E>;
-  protected constructor(workerFactory: (taskId: TaskId) => BaseWorker<M, E>) {
-    this.#workerFactory = workerFactory;
-  }
-
-  get workerFactory() {
-    return this.#workerFactory;
+  protected constructor(pool: WorkerPool<T, M, E>) {
+    this.#pool = pool;
   }
 
   protected getActiveTaskNames() {
@@ -68,20 +74,13 @@ export class BaseWorkerManager<
     return startedAt;
   }
 
-  // allocate worker?
-  protected createWorker(name: string, taskId: TaskId, taskSpec: T) {
-    const worker = this.#workerFactory(taskId);
-    // TODO inline
-    this.addWorker(name, taskId, worker, taskSpec, new Date());
-  }
-
-  protected addWorker(
+  protected async delegateTask(
     name: string,
     taskId: TaskId,
-    worker: BaseWorker<M, E>,
     taskSpec: T,
-    startedAt: Date,
-  ) {
+  ): Promise<void> {
+    const worker = await this.#pool.borrowWorker(this);
+
     if (!this.#tasksByName.has(name)) {
       this.#tasksByName.set(name, new Set());
     }
@@ -89,28 +88,46 @@ export class BaseWorkerManager<
     this.#tasksByName.get(name)!.add(taskId);
     this.#activeTasks.set(taskId, { worker, taskSpec });
     if (!this.#startedAt.has(taskId)) {
-      this.#startedAt.set(taskId, startedAt);
+      this.#startedAt.set(taskId, new Date());
     }
   }
 
-  protected destroyAllWorkers() {
-    for (const name of this.getActiveTaskNames()) {
-      this.destroyWorkersByName(name);
+  protected deallocateAllWorkers(options: DeallocateOptions = {}) {
+    const activeTaskNames = this.getActiveTaskNames();
+    if (activeTaskNames.length > 0) {
+      if (options.destroy) {
+        logger.warn(
+          `destroying workers for tasks ${activeTaskNames
+            .map((w) => `"${w}"`)
+            .join(", ")}`,
+        );
+      }
+
+      for (const name of activeTaskNames) {
+        this.deallocateWorkersByName(name, options);
+      }
     }
   }
 
-  protected destroyWorkersByName(name: string) {
+  protected deallocateWorkersByName(
+    name: string,
+    options: DeallocateOptions = {},
+  ) {
     const taskIds = this.#tasksByName.get(name);
     if (taskIds) {
-      for (const taskId of taskIds) {
-        this.destroyWorker(name, taskId);
+      for (const id of taskIds) {
+        this.deallocateWorker(name, id, options);
       }
       return true;
     }
     return false;
   }
 
-  protected destroyWorker(name: string, taskId: TaskId) {
+  deallocateWorker(
+    name: string,
+    taskId: TaskId,
+    { destroy = false, shutdown = false }: DeallocateOptions = {},
+  ) {
     const task = this.#activeTasks.get(taskId);
     if (this.#tasksByName.has(name)) {
       if (!task) {
@@ -120,14 +137,20 @@ export class BaseWorkerManager<
         return false;
       }
 
-      task.worker.destroy();
       this.#activeTasks.delete(taskId);
       this.#tasksByName.get(name)!.delete(taskId);
       // startedAt records are not deleted
 
+      if (destroy) {
+        this.#pool.destroyWorker(task.worker, shutdown);
+      } else {
+        this.#pool.unborrowWorker(task.worker);
+      }
+
       return true;
     }
 
+    logger.warn(`Task with name "${name}" does not exist`);
     return false;
   }
 
@@ -139,6 +162,11 @@ export class BaseWorkerManager<
     const { worker } = this.getTask(taskId);
     worker.send(msg);
     this.logMessage(taskId, msg);
+  }
+
+  deinit() {
+    this.deallocateAllWorkers({ destroy: true, shutdown: true });
+    this.#pool.clear(); // this will be called more than once, but that is ok
   }
 }
 
