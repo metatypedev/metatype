@@ -8,36 +8,20 @@ import {
 } from "../typegraph/mod.ts";
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import {
-  isEither,
-  isEmptyObject,
-  isQuantifier,
-  isScalar,
-  isUnion,
-  type ObjectNode,
-  Type,
-  type TypeNode,
-} from "../typegraph/type_node.ts";
+import { type ObjectNode } from "../typegraph/type_node.ts";
 import type { Resolver } from "../types.ts";
-import {
-  getChildTypes,
-  type TypeVisitorMap,
-  visitTypes,
-} from "../typegraph/visitor.ts";
-import { isInjected } from "../typegraph/utils.ts";
-import type { InjectionNode } from "../typegraph/types.ts";
-import { TypeFormatter } from "./typegraph/formatter.ts";
 import { TypeVisibility } from "./typegraph/visibility.ts";
 import { TypegateConfigBase } from "../config.ts";
 import { DenoRuntime } from "./deno/deno.ts";
-import { IntrospectionGen } from "./typegraph/introspection_gen.ts";
+import { IntrospectionTypeEmitter } from "./typegraph/type_emitter.ts";
 
 export type DeprecatedArg = { includeDeprecated?: boolean };
 
 export class TypeGraphRuntime extends Runtime {
   tg: TypeGraphDS;
-  #formatterInstance: TypeFormatter | null = null;
-  #typeVisibilityInstance: TypeVisibility | null = null;
+  #typeGen: IntrospectionTypeEmitter | null = null;
+  #visibility: TypeVisibility | null = null;
+  #generatorStarted = false;
 
   private constructor(tg: TypeGraphDS) {
     super(TypeGraph.formatName(tg));
@@ -72,31 +56,20 @@ export class TypeGraphRuntime extends Runtime {
     config: TypegateConfigBase,
     denoRuntime: DenoRuntime,
   ) {
-    this.#typeVisibilityInstance = new TypeVisibility(
+    this.#visibility = new TypeVisibility(this.tg, denoRuntime, config);
+    this.#typeGen = new IntrospectionTypeEmitter(
       this.tg,
-      denoRuntime,
-      config,
-    );
-    this.#formatterInstance = new TypeFormatter(
-      this.tg,
-      this.#typeVisibilityInstance,
+      this.#visibility,
     );
   }
 
-  get #formatter() {
-    if (!this.#formatterInstance) {
-      throw new Error("Fatal: TypeFormatter not initialized yet");
+  get #types() {
+    if (!this.#generatorStarted) {
+      this.#typeGen?.emitRoot();
+      this.#generatorStarted = true;
     }
 
-    return this.#formatterInstance;
-  }
-
-  get #visible() {
-    if (!this.#typeVisibilityInstance) {
-      throw new Error("Fatal: TypeVisibility not initialized yet");
-    }
-
-    return this.#typeVisibilityInstance;
+    return this.#typeGen!;
   }
 
   #delegate(stage: ComputeStage): Resolver {
@@ -127,144 +100,30 @@ export class TypeGraphRuntime extends Runtime {
 
   #getSchemaResolver: Resolver = (args) => {
     const root = this.tg.types[0] as ObjectNode;
-
-    const queries = this.tg.types[root.properties["query"]] as ObjectNode;
-    const mutations = this.tg.types[root.properties["mutation"]] as ObjectNode;
-
     return {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L36
       description: () => `${root.type} typegraph`,
       types: () => this.#typesResolver(args),
-      queryType: () => {
-        if (!queries || Object.values(queries.properties).length === 0) {
-          // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
-          return this.#formatter.formatType(queries, false, false);
-        }
-        return this.#formatter.formatType(queries, false, false);
-      },
-      mutationType: () => {
-        if (!mutations || Object.values(mutations.properties).length === 0) {
-          return null;
-        }
-        return this.#formatter.formatType(mutations, false, false);
-      },
+      queryType: () => this.#types?.getRootSchema("Query"),
+      mutationType: this.#types?.getRootSchema("Mutation"),
       subscriptionType: () => null,
       directives: () => [],
     };
   };
 
   #typesResolver: Resolver = () => {
-    const gen = new IntrospectionGen(this.tg, this.#visible);
-    return gen.types.map(([_, v]) => v);
+    return this.#types.getTypes();
   };
 
   #getTypeResolver: Resolver = ({ name }) => {
-    const type = this.tg.types.find((type) => type.title === name);
-    return type ? this.#formatter.formatType(type, false, false) : null;
+    const schema = this.#types.getTypes().find((type) => type.title === name);
+    return schema ?? null;
   };
 
   #withPrecomputePolicies(resolver: Resolver): Resolver {
     return async (args) => {
-      await this.#visible.preComputeAllPolicies(args ?? {});
+      await this.#visibility!.preComputeAllPolicies(args ?? {});
       return await resolver(args);
     };
   }
-}
-
-function groupTypeKindsHelper(tg: TypeGraphDS, formatter: TypeFormatter) {
-  // filter non-native GraphQL types
-  const filter = (
-    type: TypeNode,
-    input: {
-      injectionTree: Record<string, InjectionNode>;
-      path: string[];
-    } | null,
-  ) => {
-    return (
-      (input == null ||
-        !isInjected(tg, type, input.path, input.injectionTree)) &&
-      !isQuantifier(type)
-    );
-  };
-
-  const scalarTypeIndices = new Set<number>();
-  const inputTypeIndices = new Set<number>();
-  const regularTypeIndices = new Set<number>();
-
-  const inputRootTypeIndices = new Set<number>();
-  const outputRootTypeIndices = new Set<number>();
-
-  // decides whether or not custom object should be generated
-  let hasUnion = false;
-  let requireEmptyObject = false;
-
-  const myVisitor: TypeVisitorMap = {
-    [Type.FUNCTION]: ({ type }) => {
-      // TODO skip if policy check fails
-      // https://metatype.atlassian.net/browse/MET-119
-
-      // the struct input of a function never generates a GrahpQL type
-      // the actual inputs are the properties
-      inputRootTypeIndices.add(type.input);
-      outputRootTypeIndices.add(type.output);
-      visitTypes(
-        tg,
-        getChildTypes(tg.types[type.input]),
-        ({ type, idx }) => {
-          hasUnion ||= isUnion(type) || isEither(type);
-
-          { // FIXME: input resolvers are done dynamically yet it is expected at the root types statically
-            // (as a part of the flat array)
-            // this works for now..
-            if (isUnion(type) || isEither(type)) {
-              const _ = formatter.formatUnionEitherOnInput(type); // register
-            }
-          }
-
-          if (isScalar(type)) {
-            scalarTypeIndices.add(idx);
-            return false;
-          }
-          // FIXME
-          if (filter(type, null)) {
-            inputTypeIndices.add(idx);
-          }
-          return true;
-        },
-      );
-      return true;
-    },
-    default: ({ type, idx }) => {
-      requireEmptyObject ||= isEmptyObject(type);
-
-      if (
-        inputRootTypeIndices.has(idx) &&
-        !outputRootTypeIndices.has(idx)
-      ) {
-        return false;
-      }
-      // type is either a regular type or an input type reused in the output
-      hasUnion ||= isUnion(type) || isEither(type);
-      if (isScalar(type)) {
-        scalarTypeIndices.add(idx);
-        return false;
-      }
-      // FIXME
-      if (filter(type, null)) {
-        regularTypeIndices.add(idx);
-      }
-      return true;
-    },
-  };
-  visitTypes(tg, getChildTypes(tg.types[0]), myVisitor);
-
-  return {
-    flags: {
-      hasUnion,
-      requireEmptyObject,
-    },
-    scalarTypeIndices: Array.from(scalarTypeIndices),
-    inputTypeIndices: Array.from(inputTypeIndices),
-    regularTypeIndices: Array.from(regularTypeIndices),
-  };
 }

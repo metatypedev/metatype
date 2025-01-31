@@ -190,11 +190,13 @@ export class TypeVisibility {
       const folded = this.composeChain(fieldStatus);
       logger.debug(`Field ${fieldName}: ${folded}`);
       if (folded != "DENY") {
-        result.push([
-          fieldName,
-          node.properties[fieldName],
-          folded as AllowOrPass,
-        ] satisfies LocalFieldTuple);
+        result.push(
+          [
+            fieldName,
+            node.properties[fieldName],
+            folded as AllowOrPass,
+          ] satisfies LocalFieldTuple,
+        );
       }
     }
 

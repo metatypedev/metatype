@@ -22,9 +22,9 @@ export function genOutputScalarVariantWrapper(type: TypeNode, idx: number) {
   throw `"${type.title}" of type "${type.type}" is not a scalar`;
 }
 
-export function typeEmptyObjectScalar() {
+export function typeEmptyObjectScalar(name?: string) {
   return typeGenericCustomScalar(
-    "EmptyObject",
+    name ?? "EmptyObject",
     "object scalar type representing an empty object",
   );
 }

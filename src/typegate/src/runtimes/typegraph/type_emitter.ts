@@ -44,15 +44,22 @@ interface GenContext {
 
 const logger = getLogger("introspection_gen");
 
-export class IntrospectionGen {
-  types: Array<[string, Record<string, Resolver>]>;
+export class IntrospectionTypeEmitter {
+  #types: Array<[string, Record<string, Resolver>]>;
   #typesDefined: Set<string>;
 
   constructor(private tg: TypeGraphDS, private visibility?: TypeVisibility) {
-    this.types = [];
+    this.#types = [];
     this.#typesDefined = new Set();
+  }
 
-    this.#emitRoot();
+  getTypes() {
+    return this.#types.map(([_, res]) => res);
+  }
+
+  getRootSchema(rootKind: "Mutation" | "Query") {
+    const tup = this.#types.find(([name, _]) => name == rootKind);
+    return tup ? tup[1] : null;
   }
 
   #define(name: string, schema: Record<string, Resolver>) {
@@ -61,13 +68,17 @@ export class IntrospectionGen {
     }
 
     logger.debug(`Emitted: ${name} => ${Deno.inspect(schema)}`);
-    this.types.push([name, schema]);
+    this.#types.push([name, schema]);
     this.#typesDefined.add(name);
   }
 
-  #getName(typeOrName: TypeNode, asInput: boolean | null) {
+  #getName(typeOrName: string | TypeNode, asInput: boolean | null) {
     const nameIt = (title: string) =>
       `${title}${asInput ? title + "_Inp" : ""}`;
+
+    if (typeof typeOrName == "string") {
+      return nameIt(typeOrName);
+    }
 
     const type = typeOrName;
     if (isScalar(type)) {
@@ -78,9 +89,9 @@ export class IntrospectionGen {
   }
 
   /** mutation and query */
-  #emitRoot() {
-    // mutation or query
+  emitRoot() {
     const root = this.tg.types[0] as ObjectNode;
+
     for (const idx of Object.values(root.properties)) {
       this.#emitObject(this.tg.types[idx] as ObjectNode, {
         asInput: false,
@@ -89,15 +100,15 @@ export class IntrospectionGen {
       });
     }
 
-    logger.debug(
-      `types: ${name} => ${
-        Deno.inspect(this.types.map(([n, x]) => resolveRecDebug(x)), {
-          depth: 10,
-        })
-      }`,
-    );
+    // logger.debug(
+    //   `types: ${name} => ${
+    //     Deno.inspect(this.#types.map(([n, x]) => resolveRecDebug(x)), {
+    //       depth: 10,
+    //     })
+    //   }`,
+    // );
 
-    this.types = this.types.map(([k, v]) => {
+    this.#types = this.#types.map(([k, v]) => {
       return [k, toResolverMap(resolveRecDebug(v)!)];
     });
   }
@@ -108,13 +119,14 @@ export class IntrospectionGen {
     gctx: GenContext,
     parentFunction: FunctionNode | null,
   ) {
+    const originalEntries = Object.entries(type.properties);
     let entries = null;
 
     // Policies
     if (this.visibility && gctx.parentVerdict == "PASS") {
       entries = this.visibility.filterAllowedFields(type, gctx.parentVerdict);
     } else {
-      entries = Object.entries(type.properties).map(([k, idx]) =>
+      entries = originalEntries.map(([k, idx]) =>
         [k, idx, "PASS"] satisfies LocalFieldTuple
       );
     }
@@ -133,30 +145,47 @@ export class IntrospectionGen {
         TypeNode,
         AllowOrPass,
       ];
-    });
+    }).filter((r) => r != null);
 
-    return entries.filter((r) => r != null);
+    return {
+      // Note: this is arbitrary, injections and policies will reduce the field
+      // thus making a completely different type
+      adhocId: originalEntries.length == entries.length
+        ? ""
+        : `_${entries.length.toString()}`,
+      entries,
+    };
   }
 
-  #emitEmptyObject() {
-    if (this.#typesDefined.has("")) {
+  #emitNamedEmptyObject(name: string) {
+    if (this.#typesDefined.has(name)) {
       return;
     }
 
-    this.#define("", typeEmptyObjectScalar());
+    this.#define(name, typeEmptyObjectScalar(name));
   }
 
   #emitObject(type: ObjectNode, gctx: GenContext) {
     const { asInput } = gctx;
-    const title = this.#getName(type, asInput);
+    const { adhocId, entries } = this.#filterWithInjectionAnPolicies(
+      type,
+      gctx,
+      null,
+    );
+    const title = this.#getName(`${type.title}`, asInput);
+
     if (this.#typesDefined.has(title)) {
       return;
     }
 
-    const entries = this.#filterWithInjectionAnPolicies(type, gctx, null);
-
     if (entries.length == 0) {
-      this.#emitEmptyObject();
+      if (type.title == "Query") {
+        const schema = this.$emptyQuerySchema(type);
+        this.#define(type.title, schema);
+      } else {
+        this.#emitNamedEmptyObject(title);
+      }
+
       return;
     }
 
@@ -166,14 +195,14 @@ export class IntrospectionGen {
       toResolverMap({
         name: title,
         kind: asInput ? TypeKind.INPUT_OBJECT : TypeKind.OBJECT,
-        interfaces: () => [],
+        interfaces: [],
         [fields]: entries.map(([fieldName, fieldType, verdict]) => {
           const fieldSchema = this.$fieldSchema(fieldName, fieldType, {
             ...gctx,
             parentVerdict: verdict,
           });
           return {
-            isDeprecated: () => false,
+            isDeprecated: false,
             args: asInput ? undefined : [], // only on output OBJECT
             ...fieldSchema,
           };
@@ -326,17 +355,15 @@ export class IntrospectionGen {
     const schema = toResolverMap({
       kind: TypeKind.UNION,
       name: title,
-      possibleTypes: () => {
-        return variants.map((variant) => {
-          if (isScalar(variant)) {
-            throw new Error(
-              "Invalid state: got scalar that should have been handled prior",
-            );
-          }
+      possibleTypes: variants.map((variant) => {
+        if (isScalar(variant)) {
+          throw new Error(
+            "Invalid state: got scalar that should have been handled prior",
+          );
+        }
 
-          return this.#emitMaybeWithQuantifierSchema(variant, gctx, null);
-        });
-      },
+        return this.#emitMaybeWithQuantifierSchema(variant, gctx, null);
+      }),
     }, true);
 
     if (!this.#typesDefined.has(outTitle)) {
@@ -377,7 +404,7 @@ export class IntrospectionGen {
         );
       }
 
-      const inputEntries = this.#filterWithInjectionAnPolicies(
+      const { entries: inputEntries } = this.#filterWithInjectionAnPolicies(
         input,
         gctx,
         type,
@@ -385,7 +412,7 @@ export class IntrospectionGen {
 
       return toResolverMap({
         name: fieldName,
-        interfaces: () => [],
+        interfaces: [],
         // input
         args: inputEntries.map(([argName, argType, verdict]) => {
           return this.#emitMaybeWithQuantifierSchema(argType, {
@@ -412,13 +439,35 @@ export class IntrospectionGen {
       ofType: null,
     }, true);
   }
+
+  $emptyQuerySchema(type: ObjectNode) {
+    // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
+    const title = "Query";
+    return toResolverMap({
+      kind: TypeKind.OBJECT,
+      name: title,
+      description: `${type.title} type`,
+      fields: [
+        {
+          name: "_",
+          args: [],
+          type: this.$refSchema(title), // itself
+          isDeprecated: true,
+          deprecationReason:
+            "Dummy value due to https://github.com/graphql/graphiql/issues/2308",
+        },
+      ],
+    }, true);
+  }
 }
 
 function toResolverMap<T>(
   rec: Record<string, T>,
   addOtherFields?: boolean,
 ): Record<string, Resolver> {
-  const entries = Object.entries(rec).map(([k, v]) => [k, () => v]);
+  const entries = Object.entries(rec).map((
+    [k, v],
+  ) => [k, typeof v == "function" ? v : () => v]);
   const ret = Object.fromEntries(entries);
   if (addOtherFields) {
     return { ...fieldCommon(), ...ret };
