@@ -32,8 +32,5 @@ snapshot[`typegraph validation 1`] = `
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - Typegraph validator failed validation
 Error: 
    0: [91mfailed[0m
-
-Backtrace omitted. Run with RUST_BACKTRACE=1 environment variable to display it.
-Run with RUST_BACKTRACE=full to include source snippets.
 \`
 `;
