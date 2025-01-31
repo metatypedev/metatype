@@ -18,20 +18,19 @@ import {
   Type,
   type TypeNode,
 } from "../typegraph/type_node.ts";
-import type { Resolver, ResolverArgs } from "../types.ts";
+import type { Resolver } from "../types.ts";
 import {
   getChildTypes,
   type TypeVisitorMap,
   visitTypes,
 } from "../typegraph/visitor.ts";
-import { distinctBy } from "@std/collections/distinct-by";
 import { isInjected } from "../typegraph/utils.ts";
 import type { InjectionNode } from "../typegraph/types.ts";
 import { TypeFormatter } from "./typegraph/formatter.ts";
-import { genOutputScalarVariantWrapper } from "./typegraph/helpers.ts";
 import { TypeVisibility } from "./typegraph/visibility.ts";
 import { TypegateConfigBase } from "../config.ts";
 import { DenoRuntime } from "./deno/deno.ts";
+import { IntrospectionGen } from "./typegraph/introspection_gen.ts";
 
 export type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -154,63 +153,9 @@ export class TypeGraphRuntime extends Runtime {
     };
   };
 
-  #typesResolver: Resolver = (args) => {
-    const {
-      flags,
-      scalarTypeIndices,
-      inputTypeIndices,
-      regularTypeIndices,
-    } = groupTypeKindsHelper(this.tg, this.#formatter);
-
-    // Known scalars (integer, boolean, ..)
-    const distinctScalars = distinctBy(
-      scalarTypeIndices.map((idx) => this.tg.types[idx]),
-      (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
-    );
-    const knownScalarTypes = distinctScalars.map((type) =>
-      this.#formatter.formatType(type, false, false)
-    );
-
-    // Adhoc types (Union/Either on the output)
-    const adhocCustomScalarTypesRaw = flags.hasUnion
-      ? distinctScalars.map((type) => {
-        const idx = this.tg.types.findIndex((t) => t.title == type.title)!;
-        const node = genOutputScalarVariantWrapper(type, idx);
-        return this.#formatter.formatType(node, false, false, "ALLOW");
-      })
-      : [];
-    const adhocCustomScalarTypes = adhocCustomScalarTypesRaw.map((o) =>
-      precalculateResolver(args, o)
-    );
-
-    // Object types that are not an input type
-    const regularTypesRaw = distinctBy(
-      regularTypeIndices.map((idx) => this.tg.types[idx]),
-      (t) => t.title,
-    ).map((type) => this.#formatter.formatType(type, false, false));
-    const regularTypes = regularTypesRaw.map((o) =>
-      precalculateResolver(args, o)
-    );
-
-    // Input type (must be Object)
-    const inputTypesRaw = distinctBy(
-      inputTypeIndices.map((idx) => this.tg.types[idx]),
-      (t) => t.title,
-    ).map((type) => this.#formatter.formatType(type, false, false, "ALLOW")); // input types does not care about policies
-    const inputTypes = inputTypesRaw.map((o) => precalculateResolver(args, o));
-
-    const customScalars = this.#formatter.emittedCustomScalars.values();
-    console.log(Array.from(this.#formatter.emittedCustomScalars.keys()));
-
-    const types = [
-      ...knownScalarTypes,
-      ...adhocCustomScalarTypes,
-      ...customScalars,
-      ...regularTypes,
-      ...inputTypes,
-    ];
-
-    return types;
+  #typesResolver: Resolver = () => {
+    const gen = new IntrospectionGen(this.tg, this.#visible);
+    return gen.types.map(([_, v]) => v);
   };
 
   #getTypeResolver: Resolver = ({ name }) => {
@@ -322,17 +267,4 @@ function groupTypeKindsHelper(tg: TypeGraphDS, formatter: TypeFormatter) {
     inputTypeIndices: Array.from(inputTypeIndices),
     regularTypeIndices: Array.from(regularTypeIndices),
   };
-}
-
-function precalculateResolver(
-  args: ResolverArgs,
-  lazyObj: Record<string, Resolver>,
-) {
-  const entries = Object.entries(lazyObj).map(([k, res]) =>
-    [k, res(args)] satisfies [string, unknown]
-  );
-  const lazyEntries = entries.map(([k, v]) =>
-    [k, () => v] satisfies [string, Resolver]
-  );
-  return Object.fromEntries(lazyEntries) satisfies Record<string, Resolver>;
 }

@@ -16,7 +16,7 @@ import {
   TypeNode,
   UnionNode,
 } from "../../typegraph/type_node.ts";
-import { AllowOrPass } from "./visibility.ts";
+import { AllowOrPass, LocalFieldTuple } from "./visibility.ts";
 import { TypeVisibility } from "./visibility.ts";
 import {
   fieldCommon,
@@ -26,6 +26,7 @@ import {
 import { TypeKind } from "graphql";
 import { Resolver } from "../../types.ts";
 import { getLogger } from "../../log.ts";
+import { FunctionNode } from "../../typegraph/type_node.ts";
 
 const SCALAR_TYPE_MAP = {
   boolean: "Boolean",
@@ -45,22 +46,23 @@ const logger = getLogger("introspection_gen");
 
 export class IntrospectionGen {
   types: Array<[string, Record<string, Resolver>]>;
-  typesDefined: Set<string>;
+  #typesDefined: Set<string>;
 
-  constructor(private tg: TypeGraphDS, private visibility: TypeVisibility) {
+  constructor(private tg: TypeGraphDS, private visibility?: TypeVisibility) {
     this.types = [];
-    this.typesDefined = new Set();
+    this.#typesDefined = new Set();
+
+    this.#emitRoot();
   }
 
   #define(name: string, schema: Record<string, Resolver>) {
-    if (this.typesDefined.has(name)) {
-      logger.debug(`Already emitted type of name ${name}`);
-      return;
+    if (this.#typesDefined.has(name)) {
+      throw new Error(`Already emitted type of name ${name}`);
     }
 
     logger.debug(`Emitted: ${name} => ${Deno.inspect(schema)}`);
     this.types.push([name, schema]);
-    this.typesDefined.add(name);
+    this.#typesDefined.add(name);
   }
 
   #getName(typeOrName: TypeNode, asInput: boolean | null) {
@@ -75,7 +77,8 @@ export class IntrospectionGen {
     return nameIt(type.title);
   }
 
-  generateQuery() {
+  /** mutation and query */
+  #emitRoot() {
     // mutation or query
     const root = this.tg.types[0] as ObjectNode;
     for (const idx of Object.values(root.properties)) {
@@ -99,8 +102,44 @@ export class IntrospectionGen {
     });
   }
 
+  /** Filter according to the injections and pre-computed policies */
+  #filterWithInjectionAnPolicies(
+    type: ObjectNode,
+    gctx: GenContext,
+    parentFunction: FunctionNode | null,
+  ) {
+    let entries = null;
+
+    // Policies
+    if (this.visibility && gctx.parentVerdict == "PASS") {
+      entries = this.visibility.filterAllowedFields(type, gctx.parentVerdict);
+    } else {
+      entries = Object.entries(type.properties).map(([k, idx]) =>
+        [k, idx, "PASS"] satisfies LocalFieldTuple
+      );
+    }
+
+    // Injections
+    entries = entries.map(([fieldName, idx, verdict]) => {
+      const injectionNode = (parentFunction?.injections ?? {})?.[fieldName] ??
+        null;
+      if (injectionNode && ("injection" in injectionNode)) {
+        // FIXME MET-704: still relevant?
+        return null;
+      }
+
+      return [fieldName, this.tg.types[idx], verdict] satisfies [
+        string,
+        TypeNode,
+        AllowOrPass,
+      ];
+    });
+
+    return entries.filter((r) => r != null);
+  }
+
   #emitEmptyObject() {
-    if (this.typesDefined.has("")) {
+    if (this.#typesDefined.has("")) {
       return;
     }
 
@@ -110,11 +149,13 @@ export class IntrospectionGen {
   #emitObject(type: ObjectNode, gctx: GenContext) {
     const { asInput } = gctx;
     const title = this.#getName(type, asInput);
-    if (this.typesDefined.has(title)) {
+    if (this.#typesDefined.has(title)) {
       return;
     }
 
-    if (Object.keys(type.properties).length == 0) {
+    const entries = this.#filterWithInjectionAnPolicies(type, gctx, null);
+
+    if (entries.length == 0) {
       this.#emitEmptyObject();
       return;
     }
@@ -126,9 +167,11 @@ export class IntrospectionGen {
         name: title,
         kind: asInput ? TypeKind.INPUT_OBJECT : TypeKind.OBJECT,
         interfaces: () => [],
-        [fields]: Object.entries(type.properties).map(([fieldName, idx]) => {
-          const fieldType = this.tg.types[idx];
-          const fieldSchema = this.$fieldSchema(fieldName, fieldType, gctx);
+        [fields]: entries.map(([fieldName, fieldType, verdict]) => {
+          const fieldSchema = this.$fieldSchema(fieldName, fieldType, {
+            ...gctx,
+            parentVerdict: verdict,
+          });
           return {
             isDeprecated: () => false,
             args: asInput ? undefined : [], // only on output OBJECT
@@ -141,7 +184,7 @@ export class IntrospectionGen {
 
   #emitScalar(type: ScalarNode) {
     const name = this.#getName(type, null);
-    if (this.typesDefined.has(name)) {
+    if (this.#typesDefined.has(name)) {
       return;
     }
 
@@ -201,7 +244,7 @@ export class IntrospectionGen {
     }
 
     // std type
-    if (!this.typesDefined.has(this.#getName(type, gctx.asInput))) {
+    if (!this.#typesDefined.has(this.#getName(type, gctx.asInput))) {
       this.#emitRawType(type, gctx);
     }
 
@@ -236,13 +279,7 @@ export class IntrospectionGen {
     const innerType = unwrapOptionalRec(this.tg, type);
     let innerSchema = null;
 
-    if (isList(innerType)) {
-      const unwrapInnerType = unwrapOptionalRec(
-        this.tg,
-        this.tg.types[innerType.items],
-      );
-      innerSchema = this.#emitWrapperAndReturnSchema(unwrapInnerType, gctx);
-    } else if (isUnion(innerType) || isEither(innerType)) {
+    if (isList(innerType) || isUnion(innerType) || isEither(innerType)) {
       innerSchema = this.#emitWrapperAndReturnSchema(innerType, gctx);
     } else {
       this.#emitRawType(innerType, gctx);
@@ -274,7 +311,7 @@ export class IntrospectionGen {
     if (gctx.asInput || variants.some(isScalar)) {
       // Note: if one item is a scalar
       // might as well create custom scalars for the others
-      if (!this.typesDefined.has(title)) {
+      if (!this.#typesDefined.has(title)) {
         const schema = typeGenericCustomScalar(type.title, description);
         this.#define(title, schema);
       }
@@ -302,7 +339,7 @@ export class IntrospectionGen {
       },
     }, true);
 
-    if (!this.typesDefined.has(outTitle)) {
+    if (!this.#typesDefined.has(outTitle)) {
       this.#define(outTitle, schema);
     }
 
@@ -340,16 +377,21 @@ export class IntrospectionGen {
         );
       }
 
-      const enries = Object.entries(input.properties);
+      const inputEntries = this.#filterWithInjectionAnPolicies(
+        input,
+        gctx,
+        type,
+      );
+
       return toResolverMap({
         name: fieldName,
         interfaces: () => [],
         // input
-        args: enries.map(([argName, idx]) => {
-          const entry = this.tg.types[idx];
-          return this.#emitMaybeWithQuantifierSchema(entry, {
+        args: inputEntries.map(([argName, argType, verdict]) => {
+          return this.#emitMaybeWithQuantifierSchema(argType, {
             ...gctx,
             asInput: true,
+            parentVerdict: verdict,
           }, argName);
         }),
 

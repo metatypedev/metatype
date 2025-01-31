@@ -38,7 +38,7 @@ export function fieldCommon() {
     ofType: () => null,
     inputFields: () => null,
     fields: () => null,
-    interfaces: () => null,
+    interfaces: () => [],
     possibleTypes: () => null,
     enumValues: () => null,
   };

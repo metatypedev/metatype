@@ -29,6 +29,7 @@ export interface WithPath<T extends TypeNode> {
 }
 
 export type AllowOrPass = "ALLOW" | "PASS";
+export type LocalFieldTuple = [string, number, AllowOrPass];
 
 interface ResolutionData {
   resolver: Resolver;
@@ -151,12 +152,12 @@ export class TypeVisibility {
   filterAllowedFields(
     node: ObjectNode,
     parentVerdict?: AllowOrPass,
-  ): Array<[string, number, AllowOrPass]> {
+  ): Array<LocalFieldTuple> {
     const policies = Object.entries(node.policies ?? {});
-    const result = [] as Array<[string, number, AllowOrPass]>;
+    const result = [] as Array<LocalFieldTuple>;
     if (parentVerdict == "ALLOW") {
-      return Object.entries(node.properties).map((entry) => {
-        return [...entry, "ALLOW"];
+      return Object.entries(node.properties).map(([k, idx]) => {
+        return [k, idx, "ALLOW"] satisfies LocalFieldTuple;
       });
     }
 
@@ -193,7 +194,7 @@ export class TypeVisibility {
           fieldName,
           node.properties[fieldName],
           folded as AllowOrPass,
-        ]);
+        ] satisfies LocalFieldTuple);
       }
     }
 
