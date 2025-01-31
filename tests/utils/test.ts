@@ -212,6 +212,7 @@ export class MetaTest {
       "--allow-dirty",
       ...optSecrets,
       `--file=${path}`,
+      "--allow-destructive",
     ];
 
     if (opts.prefix) {
@@ -238,9 +239,11 @@ export class MetaTest {
     }
 
     const prefix = opts.prefix ?? "";
-    const tgName = opts.typegraph ?? typegraphs[0];
+    const tgName = opts.typegraph ? prefix + opts.typegraph : typegraphs[0];
     const typegate = this.typegate;
-    const engine = typegate.register.get(prefix + tgName)!;
+    const engine = typegate.register.get(tgName)!;
+
+    console.log(typegate.register.list().map((e) => e.name));
 
     if (!engine) {
       throw new Error(`Typegate engine '${tgName}' not found`);

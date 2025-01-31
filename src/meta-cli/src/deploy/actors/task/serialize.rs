@@ -171,9 +171,14 @@ impl TaskAction for SerializeAction {
                     name = output.get_typegraph_name().cyan(),
                     path = self.task_ref.path.display().yellow(),
                 ));
-                for err in output.errors.iter() {
-                    ctx.console.error(err.to_string());
-                }
+
+                let messages = output
+                    .errors
+                    .iter()
+                    .map(|err| format!("- {err}"))
+                    .collect::<Vec<_>>();
+
+                ctx.console.error(messages.join("\n"));
             }
         }
 

@@ -349,9 +349,15 @@ impl TaskAction for DeployAction {
                     name = data.get_typegraph_name().cyan(),
                     path = self.task_ref.path.display().yellow(),
                 ));
-                for error in &data.errors {
-                    ctx.console.error(format!("- {error}", error = error));
-                }
+
+                let messages = &data
+                    .errors
+                    .iter()
+                    .map(|err| format!("- {err}"))
+                    .collect::<Vec<_>>();
+
+                ctx.console.error(messages.join("\n"));
+
                 Ok(None)
             }
         }

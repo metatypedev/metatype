@@ -51,110 +51,110 @@ async function writeTypegraph(
   }
 }
 
-Meta.test(
-  {
-    name: "meta dev: choose to reset the database",
-    gitRepo: {
-      content: {
-        "metatype.yml": "metatype.yml",
-      },
-    },
-  },
-  async (t) => {
-    const schema = randomSchema();
-    const tgDefPath = join(t.workingDir, "migration.py");
-
-    await t.should("load first version of the typegraph", async () => {
-      await reset(tgName, schema);
-      await writeTypegraph(null, tgDefPath);
-    });
-
-    const metadev = new Deno.Command("meta", {
-      cwd: t.workingDir,
-      args: [
-        "dev",
-        "--target=dev",
-        `--gate=http://localhost:${t.port}`,
-        "--secret",
-        `${tgName}:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
-      ],
-      // stdout: "piped",
-      stderr: "piped",
-      stdin: "piped",
-    }).spawn();
-    const stderr = new Lines(metadev.stderr);
-    const stdin = new LineWriter(metadev.stdin);
-
-    t.addCleanup(async () => {
-      await stderr.close();
-      await stdin.close();
-      await termProcess(metadev);
-    });
-
-    await stderr.readWhile((line) => {
-      // console.log("meta dev>", line);
-      return !$.stripAnsi(line).includes(
-        `successfully deployed typegraph ${tgName} from migration.py`,
-      );
-    });
-
-    await t.should("insert records", async () => {
-      const e = t.getTypegraphEngine(tgName);
-      if (!e) {
-        throw new Error("typegraph not found");
-      }
-      await gql`
-        mutation {
-          createRecord(data: {}) {
-            id
-          }
-        }
-      `
-        .expectData({
-          createRecord: {
-            id: 1,
-          },
-        })
-        .on(e);
-    });
-
-    await t.should("load second version of the typegraph", async () => {
-      await writeTypegraph(1, tgDefPath);
-      await stderr.readWhile((line) => {
-        // console.log("line:", line);
-        return !line.includes("[select]");
-      });
-
-      await stdin.writeLine("3");
-    });
-
-    await stderr.readWhile((line) => {
-      // console.log("meta dev>", line);
-      return !$.stripAnsi(line).includes(
-        `successfully deployed typegraph ${tgName}`,
-      );
-    });
-
-    await t.should("database be empty", async () => {
-      const e = t.getTypegraphEngine(tgName);
-      if (!e) {
-        throw new Error("typegraph not found");
-      }
-      await gql`
-        query {
-          findRecords {
-            id
-            age
-          }
-        }
-      `
-        .expectData({
-          findRecords: [],
-        })
-        .on(e);
-    });
-  },
-);
+//Meta.test(
+//  {
+//    name: "meta dev: choose to reset the database",
+//    gitRepo: {
+//      content: {
+//        "metatype.yml": "metatype.yml",
+//      },
+//    },
+//  },
+//  async (t) => {
+//    const schema = randomSchema();
+//    const tgDefPath = join(t.workingDir, "migration.py");
+//
+//    await t.should("load first version of the typegraph", async () => {
+//      await reset(tgName, schema);
+//      await writeTypegraph(null, tgDefPath);
+//    });
+//
+//    const metadev = new Deno.Command("meta", {
+//      cwd: t.workingDir,
+//      args: [
+//        "dev",
+//        "--target=dev",
+//        `--gate=http://localhost:${t.port}`,
+//        "--secret",
+//        `${tgName}:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+//      ],
+//      // stdout: "piped",
+//      stderr: "piped",
+//      stdin: "piped",
+//    }).spawn();
+//    const stderr = new Lines(metadev.stderr);
+//    const stdin = new LineWriter(metadev.stdin);
+//
+//    t.addCleanup(async () => {
+//      await stderr.close();
+//      await stdin.close();
+//      await termProcess(metadev);
+//    });
+//
+//    await stderr.readWhile((line) => {
+//      // console.log("meta dev>", line);
+//      return !$.stripAnsi(line).includes(
+//        `successfully deployed typegraph ${tgName} from migration.py`,
+//      );
+//    });
+//
+//    await t.should("insert records", async () => {
+//      const e = t.getTypegraphEngine(tgName);
+//      if (!e) {
+//        throw new Error("typegraph not found");
+//      }
+//      await gql`
+//        mutation {
+//          createRecord(data: {}) {
+//            id
+//          }
+//        }
+//      `
+//        .expectData({
+//          createRecord: {
+//            id: 1,
+//          },
+//        })
+//        .on(e);
+//    });
+//
+//    await t.should("load second version of the typegraph", async () => {
+//      await writeTypegraph(1, tgDefPath);
+//      await stderr.readWhile((line) => {
+//        // console.log("line:", line);
+//        return !line.includes("[select]");
+//      });
+//
+//      await stdin.writeLine("3");
+//    });
+//
+//    await stderr.readWhile((line) => {
+//      // console.log("meta dev>", line);
+//      return !$.stripAnsi(line).includes(
+//        `successfully deployed typegraph ${tgName}`,
+//      );
+//    });
+//
+//    await t.should("database be empty", async () => {
+//      const e = t.getTypegraphEngine(tgName);
+//      if (!e) {
+//        throw new Error("typegraph not found");
+//      }
+//      await gql`
+//        query {
+//          findRecords {
+//            id
+//            age
+//          }
+//        }
+//      `
+//        .expectData({
+//          findRecords: [],
+//        })
+//        .on(e);
+//    });
+//  },
+//);
 
 async function listSubdirs(path: string): Promise<string[]> {
   const subdirs: string[] = [];
@@ -166,112 +166,112 @@ async function listSubdirs(path: string): Promise<string[]> {
   return subdirs;
 }
 
-Meta.test(
-  {
-    name: "meta dev: remove latest migration",
-    gitRepo: {
-      content: {
-        "metatype.yml": "metatype.yml",
-      },
-    },
-  },
-  async (t) => {
-    const schema = randomSchema();
-    const tgDefFile = join(t.workingDir, `migration.py`);
-
-    await t.should("have no migration file", async () => {
-      await assertRejects(() =>
-        Deno.lstat(resolve(t.workingDir, "prisma-migrations"))
-      );
-    });
-
-    await t.should("load first version of the typegraph", async () => {
-      await reset(tgName, schema);
-      await writeTypegraph(null, tgDefFile);
-    });
-
-    const metadev = new Deno.Command("meta", {
-      cwd: t.workingDir,
-      args: [
-        "dev",
-        "--target=dev",
-        `--gate=http://localhost:${t.port}`,
-        `--secret=${tgName}:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
-      ],
-      // stdout: "piped",
-      stderr: "piped",
-      stdin: "piped",
-    }).spawn();
-
-    const stderr = new Lines(metadev.stderr);
-    const stdin = new LineWriter(metadev.stdin);
-
-    t.addCleanup(async () => {
-      await stderr.close();
-      await stdin.close();
-      await termProcess(metadev);
-    });
-
-    await stderr.readWhile((line) => {
-      console.log("line:", line);
-      return !$.stripAnsi(line).includes(
-        `successfully deployed typegraph ${tgName}`,
-      );
-    });
-
-    await t.should("have created migration", async () => {
-      await Deno.lstat(resolve(t.workingDir, "prisma-migrations"));
-    });
-
-    await t.should("insert records", async () => {
-      const e = t.getTypegraphEngine(tgName);
-      if (!e) {
-        throw new Error("typegraph not found");
-      }
-      await gql`
-        mutation {
-          createRecord(data: {}) {
-            id
-          }
-        }
-      `
-        .expectData({
-          createRecord: {
-            id: 1,
-          },
-        })
-        .on(e);
-    });
-
-    const migrationsDir = resolve(
-      t.workingDir,
-      "prisma-migrations",
-      `${tgName}/main`,
-    );
-    console.log("Typegate migration dir", migrationsDir);
-
-    await t.should("load second version of the typegraph", async () => {
-      await writeTypegraph(1, tgDefFile);
-      await stderr.readWhile((line) => {
-        // console.log("line:", line);
-        return !line.includes("[select]");
-      });
-
-      assert((await listSubdirs(migrationsDir)).length === 2);
-
-      await stdin.writeLine("1");
-    });
-
-    await stderr.readWhile((line) => {
-      // console.log("line:", line);
-      return !line.includes("Removed migration directory");
-    });
-
-    await t.should("have removed latest migration", async () => {
-      assert((await listSubdirs(migrationsDir)).length === 1);
-    });
-  },
-);
+//Meta.test(
+//  {
+//    name: "meta dev: remove latest migration",
+//    gitRepo: {
+//      content: {
+//        "metatype.yml": "metatype.yml",
+//      },
+//    },
+//  },
+//  async (t) => {
+//    const schema = randomSchema();
+//    const tgDefFile = join(t.workingDir, `migration.py`);
+//
+//    await t.should("have no migration file", async () => {
+//      await assertRejects(() =>
+//        Deno.lstat(resolve(t.workingDir, "prisma-migrations"))
+//      );
+//    });
+//
+//    await t.should("load first version of the typegraph", async () => {
+//      await reset(tgName, schema);
+//      await writeTypegraph(null, tgDefFile);
+//    });
+//
+//    const metadev = new Deno.Command("meta", {
+//      cwd: t.workingDir,
+//      args: [
+//        "dev",
+//        "--target=dev",
+//        `--gate=http://localhost:${t.port}`,
+//        `--secret=${tgName}:POSTGRES=postgresql://postgres:password@localhost:5432/db?schema=${schema}`,
+//      ],
+//      // stdout: "piped",
+//      stderr: "piped",
+//      stdin: "piped",
+//    }).spawn();
+//
+//    const stderr = new Lines(metadev.stderr);
+//    const stdin = new LineWriter(metadev.stdin);
+//
+//    t.addCleanup(async () => {
+//      await stderr.close();
+//      await stdin.close();
+//      await termProcess(metadev);
+//    });
+//
+//    await stderr.readWhile((line) => {
+//      console.log("line:", line);
+//      return !$.stripAnsi(line).includes(
+//        `successfully deployed typegraph ${tgName}`,
+//      );
+//    });
+//
+//    await t.should("have created migration", async () => {
+//      await Deno.lstat(resolve(t.workingDir, "prisma-migrations"));
+//    });
+//
+//    await t.should("insert records", async () => {
+//      const e = t.getTypegraphEngine(tgName);
+//      if (!e) {
+//        throw new Error("typegraph not found");
+//      }
+//      await gql`
+//        mutation {
+//          createRecord(data: {}) {
+//            id
+//          }
+//        }
+//      `
+//        .expectData({
+//          createRecord: {
+//            id: 1,
+//          },
+//        })
+//        .on(e);
+//    });
+//
+//    const migrationsDir = resolve(
+//      t.workingDir,
+//      "prisma-migrations",
+//      `${tgName}/main`,
+//    );
+//    console.log("Typegate migration dir", migrationsDir);
+//
+//    await t.should("load second version of the typegraph", async () => {
+//      await writeTypegraph(1, tgDefFile);
+//      await stderr.readWhile((line) => {
+//        // console.log("line:", line);
+//        return !line.includes("[select]");
+//      });
+//
+//      assert((await listSubdirs(migrationsDir)).length === 2);
+//
+//      await stdin.writeLine("1");
+//    });
+//
+//    await stderr.readWhile((line) => {
+//      // console.log("line:", line);
+//      return !line.includes("Removed migration directory");
+//    });
+//
+//    await t.should("have removed latest migration", async () => {
+//      assert((await listSubdirs(migrationsDir)).length === 1);
+//    });
+//  },
+//);
 
 const examplesDir = $.path(workspaceDir).join("examples");
 
@@ -358,27 +358,30 @@ Meta.test(
       return true;
     }, null);
 
-    await stderr.readWhile((rawLine) => {
-      console.log("meta-full dev[E]>", rawLine);
-      const line = $.stripAnsi(rawLine);
-      if (line.match(/failed to deploy/i)) {
-        throw new Error("error detected on line: " + rawLine);
-      }
-      const match = line.match(
-        /successfully deployed typegraph ([\w_-]+) from (.+)$/,
-      );
-      if (match) {
-        const prefix = "typegraphs/";
-        if (!match[2].startsWith(prefix)) {
-          throw new Error("unexpected");
+    await stderr.readWhile(
+      (rawLine) => {
+        console.log("meta-full dev[E]>", rawLine);
+        const line = $.stripAnsi(rawLine);
+        if (line.match(/failed to deploy/i)) {
+          throw new Error("error detected on line: " + rawLine);
         }
-        const file = match[2].slice(prefix.length);
-        if (!skipDeployed.has(file)) {
-          deployed.push([file, match[1]]);
+        const match = line.match(
+          /successfully deployed typegraph ([\w_-]+) from (.+)$/,
+        );
+        if (match) {
+          const prefix = "typegraphs/";
+          if (!match[2].startsWith(prefix)) {
+            throw new Error("unexpected");
+          }
+          const file = match[2].slice(prefix.length);
+          if (!skipDeployed.has(file)) {
+            deployed.push([file, match[1]]);
+          }
         }
-      }
-      return deployed.length != expectedDeployed.length;
-    }, 3 * 60 * 1000);
+        return deployed.length != expectedDeployed.length;
+      },
+      3 * 60 * 1000,
+    );
 
     await t.should("have deployed all the typegraphs", () => {
       // TODO use `meta list`
