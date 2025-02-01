@@ -18,8 +18,7 @@ snapshot[`Union type 2`] = `
     types: [
       {
         kind: "SCALAR",
-        name: "Int",
-        possibleTypes: null,
+        name: "Color",
       },
       {
         kind: "SCALAR",
@@ -28,66 +27,49 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "Boolean",
+        name: "NestedUnions",
+      },
+      {
+        kind: "OBJECT",
+        name: "A3",
+      },
+      {
+        kind: "SCALAR",
+        name: "Int",
         possibleTypes: null,
       },
       {
         kind: "OBJECT",
-        name: "_Integer",
-        possibleTypes: null,
-      },
-      {
-        kind: "OBJECT",
-        name: "_String",
-        possibleTypes: null,
-      },
-      {
-        kind: "OBJECT",
-        name: "_Boolean",
-        possibleTypes: null,
-      },
-      {
-        kind: "OBJECT",
-        name: "Query",
-        possibleTypes: null,
+        name: "A4",
       },
       {
         kind: "UNION",
-        name: "ColorOut",
+        name: "A2_a_union",
         possibleTypes: [
           {
-            kind: "LIST",
-            name: null,
+            name: "A3",
           },
           {
-            kind: "OBJECT",
-            name: "RGBStruct",
-          },
-          {
-            kind: "OBJECT",
-            name: "_String",
-          },
-          {
-            kind: "OBJECT",
-            name: "_String",
+            name: "A4",
           },
         ],
       },
       {
         kind: "OBJECT",
-        name: "RGBStruct",
-        possibleTypes: null,
+        name: "A2",
+      },
+      {
+        kind: "OBJECT",
+        name: "B",
       },
       {
         kind: "UNION",
-        name: "NestedUnionsOut",
+        name: "A1_a_union",
         possibleTypes: [
           {
-            kind: "OBJECT",
-            name: "A1",
+            name: "A2",
           },
           {
-            kind: "OBJECT",
             name: "B",
           },
         ],
@@ -95,253 +77,98 @@ snapshot[`Union type 2`] = `
       {
         kind: "OBJECT",
         name: "A1",
-        possibleTypes: null,
       },
       {
         kind: "UNION",
-        name: "A1_a_unionOut",
+        name: "NestedUnions",
         possibleTypes: [
           {
-            kind: "OBJECT",
-            name: "A2",
+            name: "A1",
           },
           {
-            kind: "OBJECT",
             name: "B",
           },
         ],
       },
       {
-        kind: "OBJECT",
-        name: "A2",
-        possibleTypes: null,
+        kind: "SCALAR",
+        name: "ScalarUnion",
       },
       {
-        kind: "UNION",
-        name: "A2_a_unionOut",
-        possibleTypes: [
-          {
-            kind: "OBJECT",
-            name: "A3",
-          },
-          {
-            kind: "OBJECT",
-            name: "A4",
-          },
-        ],
-      },
-      {
-        kind: "OBJECT",
-        name: "A3",
-        possibleTypes: null,
-      },
-      {
-        kind: "OBJECT",
-        name: "A4",
-        possibleTypes: null,
-      },
-      {
-        kind: "OBJECT",
-        name: "B",
-        possibleTypes: null,
-      },
-      {
-        kind: "UNION",
-        name: "ScalarUnionOut",
-        possibleTypes: [
-          {
-            kind: "OBJECT",
-            name: "_Boolean",
-          },
-          {
-            kind: "OBJECT",
-            name: "_Integer",
-          },
-          {
-            kind: "OBJECT",
-            name: "_String",
-          },
-        ],
-      },
-      {
-        kind: "UNION",
-        name: "MultilevelUnionOut",
-        possibleTypes: [
-          {
-            kind: "OBJECT",
-            name: "Ua",
-          },
-          {
-            kind: "OBJECT",
-            name: "Ub",
-          },
-          {
-            kind: "UNION",
-            name: "MultilevelUnion_t2_unionOut",
-          },
-        ],
+        kind: "SCALAR",
+        name: "MultilevelUnion",
       },
       {
         kind: "OBJECT",
         name: "Ua",
-        possibleTypes: null,
       },
       {
         kind: "OBJECT",
         name: "Ub",
-        possibleTypes: null,
-      },
-      {
-        kind: "UNION",
-        name: "MultilevelUnion_t2_unionOut",
-        possibleTypes: [
-          {
-            kind: "OBJECT",
-            name: "Uc",
-          },
-          {
-            kind: "OBJECT",
-            name: "Ud",
-          },
-          {
-            kind: "UNION",
-            name: "MultilevelUnion_t2_union_t2_eitherOut",
-          },
-        ],
       },
       {
         kind: "OBJECT",
         name: "Uc",
-        possibleTypes: null,
       },
       {
         kind: "OBJECT",
         name: "Ud",
-        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "Ue",
+      },
+      {
+        kind: "OBJECT",
+        name: "Uf",
       },
       {
         kind: "UNION",
-        name: "MultilevelUnion_t2_union_t2_eitherOut",
+        name: "MultilevelUnion_t2_union_t2_either",
         possibleTypes: [
           {
-            kind: "OBJECT",
             name: "Ue",
           },
           {
-            kind: "OBJECT",
             name: "Uf",
           },
         ],
       },
       {
-        kind: "OBJECT",
-        name: "Ue",
-        possibleTypes: null,
+        kind: "UNION",
+        name: "MultilevelUnion_t2_union",
+        possibleTypes: [
+          {
+            name: "Uc",
+          },
+          {
+            name: "Ud",
+          },
+          {
+            kind: "UNION",
+            name: "MultilevelUnion_t2_union_t2_either",
+          },
+        ],
+      },
+      {
+        kind: "UNION",
+        name: "MultilevelUnion",
+        possibleTypes: [
+          {
+            name: "Ua",
+          },
+          {
+            name: "Ub",
+          },
+          {
+            kind: "UNION",
+            name: "MultilevelUnion_t2_union",
+          },
+        ],
       },
       {
         kind: "OBJECT",
-        name: "Uf",
-        possibleTypes: null,
-      },
-      {
-        kind: "SCALAR",
-        name: "ColorIn",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "RGBStructInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "SCALAR",
-        name: "NestedUnionsIn",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "A1Inp",
-        possibleTypes: null,
-      },
-      {
-        kind: "SCALAR",
-        name: "A1_a_unionIn",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "A2Inp",
-        possibleTypes: null,
-      },
-      {
-        kind: "SCALAR",
-        name: "A2_a_unionIn",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "A3Inp",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "A4Inp",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "BInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "SCALAR",
-        name: "ScalarUnionIn",
-        possibleTypes: null,
-      },
-      {
-        kind: "SCALAR",
-        name: "MultilevelUnionIn",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "UaInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "UbInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "SCALAR",
-        name: "MultilevelUnion_t2_unionIn",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "UcInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "UdInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "SCALAR",
-        name: "MultilevelUnion_t2_union_t2_eitherIn",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "UeInp",
-        possibleTypes: null,
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "UfInp",
-        possibleTypes: null,
+        name: "Query",
       },
     ],
   },
