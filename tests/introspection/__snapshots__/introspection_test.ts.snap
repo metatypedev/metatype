@@ -23,7 +23,10 @@ snapshot[`Full introspection 1`] = `
       {
         inputFields: [
           {
-            description: "NestedNested_Inp input field",
+            description: "NestedNested_Inp input field
+
+Policies:
+- inherit",
             name: "arg",
             type: {
               kind: "NON_NULL",
@@ -43,7 +46,10 @@ snapshot[`Full introspection 1`] = `
         fields: [
           {
             args: [],
-            description: "inp field",
+            description: "inp field
+
+Policies:
+- inherit",
             isDeprecated: false,
             name: "a",
             type: {
@@ -73,7 +79,10 @@ snapshot[`Full introspection 1`] = `
                 },
               },
             ],
-            description: "Query field",
+            description: "Query field
+
+Policies:
+- __public",
             isDeprecated: false,
             name: "rec",
             type: {
@@ -96,7 +105,10 @@ snapshot[`Full introspection 1`] = `
                 },
               },
             ],
-            description: "Query field",
+            description: "Query field
+
+Policies:
+- __public",
             isDeprecated: false,
             name: "test",
             type: {

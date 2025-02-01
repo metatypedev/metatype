@@ -20,6 +20,7 @@ import { AllowOrPass, LocalFieldTuple } from "./visibility.ts";
 import { TypeVisibility } from "./visibility.ts";
 import {
   fieldCommon,
+  policyDescription,
   typeEmptyObjectScalar,
   typeGenericCustomScalar,
 } from "./helpers.ts";
@@ -168,7 +169,7 @@ export class IntrospectionTypeEmitter {
       // thus making a completely different type
       adhocId: originalEntries.length == entries.length
         ? ""
-        : `_${entries.length.toString()}`,
+        : `_f${entries.length == 0 ? "empty" : entries.length}`,
       entries,
     };
   }
@@ -215,15 +216,17 @@ export class IntrospectionTypeEmitter {
         kind: asInput ? TypeKind.INPUT_OBJECT : TypeKind.OBJECT,
         interfaces: [],
         [fields]: entries.map(([fieldName, fieldType, verdict]) => {
-          const fieldSchema = this.$fieldSchema(fieldName, fieldType, {
-            ...gctx,
-            parentVerdict: verdict,
-          });
+          const policies = (type.policies ?? {})[fieldName];
+          const polDescription = policyDescription(this.tg, policies ?? []);
+
           return {
             isDeprecated: false,
             args: asInput ? undefined : [], // only on output OBJECT
-            description,
-            ...fieldSchema,
+            description: description + polDescription,
+            ...this.$fieldSchema(fieldName, fieldType, {
+              ...gctx,
+              parentVerdict: verdict,
+            }),
           };
         }),
       } as Record<string, unknown>),
