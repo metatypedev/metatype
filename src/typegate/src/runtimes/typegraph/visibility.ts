@@ -106,6 +106,11 @@ export class TypeVisibility {
   }
 
   async preComputeAllPolicies(resArg: ResolverArgs<Record<string, any>>) {
+    if (this.#resolvedPolicy.size > 0) {
+      // logger.debug("Policies already pre-computed");
+      return;
+    }
+
     for (const [policyIdx, { policy, resolver }] of this.#resolvers) {
       if (this.#resolvedPolicy.has(policyIdx)) {
         continue;
