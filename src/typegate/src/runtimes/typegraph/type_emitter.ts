@@ -72,7 +72,8 @@ export class IntrospectionTypeEmitter {
       throw new Error(`Already emitted type of name ${name}`);
     }
 
-    logger.debug(`Emitted: ${name} => ${Deno.inspect(schema)}`);
+    // logger.debug(`Emitted: ${name} => ${Deno.inspect(schema)}`);
+    logger.debug(`Emitted: ${name}`);
     this.#types.push([name, schema]);
     this.#typesDefined.add(name);
   }
@@ -363,7 +364,7 @@ export class IntrospectionTypeEmitter {
       // Note: if one item is a scalar
       // might as well create custom scalars for the others
       if (!this.#typesDefined.has(title)) {
-        const schema = typeGenericCustomScalar(type.title, description);
+        const schema = typeGenericCustomScalar(title, description);
         this.#define(title, schema);
       }
 
@@ -373,10 +374,12 @@ export class IntrospectionTypeEmitter {
       }, true);
     }
 
-    const outTitle = title + "Out"; // avoids name clash if shared
+    // title is reserved for the input scalar version
+    // TODO: use possibleTypes, hash then use as id (variants depends on policies and injections)
+    const outTitle = title + "Out";
     const schema = toResolverMap({
       kind: TypeKind.UNION,
-      name: title,
+      name: outTitle,
       possibleTypes: variants.map((variant) => {
         if (isScalar(variant)) {
           throw new Error(
@@ -390,9 +393,10 @@ export class IntrospectionTypeEmitter {
 
     if (!this.#typesDefined.has(outTitle)) {
       this.#define(outTitle, schema);
+      return schema;
     }
 
-    return schema;
+    return this.$refSchema(outTitle);
   }
 
   $requiredSchema(schema: Record<string, Resolver>): Record<string, Resolver> {

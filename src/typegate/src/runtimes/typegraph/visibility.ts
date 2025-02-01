@@ -193,7 +193,7 @@ export class TypeVisibility {
 
       // Chain compose rule
       const folded = this.composeChain(fieldStatus);
-      logger.debug(`Field ${fieldName}: ${folded}`);
+      // logger.debug(`Field ${fieldName}: ${folded}`);
       if (folded != "DENY") {
         result.push(
           [
