@@ -57,6 +57,10 @@ export class IntrospectionTypeEmitter {
     return this.#types.map(([_, res]) => res);
   }
 
+  findType(reqName: string) {
+    return this.#types.find(([name, _]) => name == reqName)?.[1] ?? null;
+  }
+
   getRootSchema(rootKind: "Mutation" | "Query") {
     const tup = this.#types.find(([name, _]) => name == rootKind);
     return tup ? tup[1] : null;
@@ -72,17 +76,24 @@ export class IntrospectionTypeEmitter {
     this.#typesDefined.add(name);
   }
 
-  #getName(typeOrName: string | TypeNode, asInput: boolean | null) {
+  #getName(type: TypeNode, gctx: GenContext) {
     const nameIt = (title: string) =>
-      `${title}${asInput ? title + "_Inp" : ""}`;
+      `${title}${gctx.asInput ? title + "_Inp" : ""}`;
 
-    if (typeof typeOrName == "string") {
-      return nameIt(typeOrName);
-    }
-
-    const type = typeOrName;
     if (isScalar(type)) {
       return SCALAR_TYPE_MAP[type.type];
+    }
+
+    if (isObject(type)) {
+      const { adhocId } = this.#filterWithInjectionAnPolicies(
+        type,
+        gctx,
+        null,
+        false,
+      );
+
+      const isRootQuery = type.title == "Query" || type.title == "Mutation";
+      return nameIt(isRootQuery ? type.title : `${type.title}${adhocId}`);
     }
 
     return nameIt(type.title);
@@ -118,6 +129,7 @@ export class IntrospectionTypeEmitter {
     type: ObjectNode,
     gctx: GenContext,
     parentFunction: FunctionNode | null,
+    sortFields: boolean,
   ) {
     const originalEntries = Object.entries(type.properties);
     let entries = null;
@@ -147,6 +159,10 @@ export class IntrospectionTypeEmitter {
       ];
     }).filter((r) => r != null);
 
+    if (sortFields) {
+      entries = entries.sort(([f1], [f2]) => f1.localeCompare(f2));
+    }
+
     return {
       // Note: this is arbitrary, injections and policies will reduce the field
       // thus making a completely different type
@@ -167,12 +183,13 @@ export class IntrospectionTypeEmitter {
 
   #emitObject(type: ObjectNode, gctx: GenContext) {
     const { asInput } = gctx;
-    const { adhocId, entries } = this.#filterWithInjectionAnPolicies(
+    const { entries } = this.#filterWithInjectionAnPolicies(
       type,
       gctx,
       null,
+      false,
     );
-    const title = this.#getName(`${type.title}`, asInput);
+    const title = this.#getName(type, gctx);
 
     if (this.#typesDefined.has(title)) {
       return;
@@ -190,6 +207,7 @@ export class IntrospectionTypeEmitter {
     }
 
     const fields = asInput ? "inputFields" : "fields";
+    const description = asInput ? `${title} input field` : `${title} field`;
     this.#define(
       title,
       toResolverMap({
@@ -204,6 +222,7 @@ export class IntrospectionTypeEmitter {
           return {
             isDeprecated: false,
             args: asInput ? undefined : [], // only on output OBJECT
+            description,
             ...fieldSchema,
           };
         }),
@@ -211,8 +230,8 @@ export class IntrospectionTypeEmitter {
     );
   }
 
-  #emitScalar(type: ScalarNode) {
-    const name = this.#getName(type, null);
+  #emitScalar(type: ScalarNode, gctx: GenContext) {
+    const name = this.#getName(type, gctx);
     if (this.#typesDefined.has(name)) {
       return;
     }
@@ -237,7 +256,7 @@ export class IntrospectionTypeEmitter {
 
     let ret = null;
     if (isScalar(type)) {
-      ret = this.#emitScalar(type);
+      ret = this.#emitScalar(type, gctx);
     } else if (isObject(type)) {
       ret = this.#emitObject(type, gctx);
     } else {
@@ -273,16 +292,16 @@ export class IntrospectionTypeEmitter {
     }
 
     // std type
-    if (!this.#typesDefined.has(this.#getName(type, gctx.asInput))) {
+    if (!this.#typesDefined.has(this.#getName(type, gctx))) {
       this.#emitRawType(type, gctx);
     }
 
-    const schema = this.$refSchema(this.#getName(type, gctx.asInput));
+    const schema = this.$refSchema(this.#getName(type, gctx));
 
     return gctx.asInput
       ? toResolverMap({
         kind: TypeKind.NON_NULL,
-        ofType: this.$refSchema(this.#getName(type, gctx.asInput)),
+        ofType: this.$refSchema(this.#getName(type, gctx)),
       }, true)
       : schema;
   }
@@ -312,7 +331,7 @@ export class IntrospectionTypeEmitter {
       innerSchema = this.#emitWrapperAndReturnSchema(innerType, gctx);
     } else {
       this.#emitRawType(innerType, gctx);
-      innerSchema = this.$refSchema(this.#getName(innerType, gctx.asInput));
+      innerSchema = this.$refSchema(this.#getName(innerType, gctx));
     }
 
     if (fieldName) {
@@ -329,11 +348,11 @@ export class IntrospectionTypeEmitter {
     type: UnionNode | EitherNode,
     gctx: GenContext,
   ): Record<string, Resolver> {
-    const title = this.#getName(type, null);
+    const title = this.#getName(type, { ...gctx, asInput: false });
     const variantIdx = isUnion(type) ? type.anyOf : type.oneOf;
     const variants = variantIdx.map((idx) => this.tg.types[idx]);
     const titles = new Set<string>(
-      variants.map((t) => this.#getName(t, null)),
+      variants.map((t) => this.#getName(t, { ...gctx, asInput: false })),
     );
     const description = `${type.type} type\n${Array.from(titles).join(", ")}`;
 
@@ -408,6 +427,7 @@ export class IntrospectionTypeEmitter {
         input,
         gctx,
         type,
+        true,
       );
 
       return toResolverMap({
@@ -415,11 +435,16 @@ export class IntrospectionTypeEmitter {
         interfaces: [],
         // input
         args: inputEntries.map(([argName, argType, verdict]) => {
-          return this.#emitMaybeWithQuantifierSchema(argType, {
+          const argSchema = this.#emitMaybeWithQuantifierSchema(argType, {
             ...gctx,
             asInput: true,
             parentVerdict: verdict,
           }, argName);
+
+          return {
+            description: `${fieldName} argument`,
+            ...argSchema,
+          };
         }),
 
         // Output

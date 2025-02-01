@@ -11,73 +11,26 @@ snapshot[`Basic introspection 1`] = `
         possibleTypes: null,
       },
       {
+        kind: "SCALAR",
+        name: "FavoriteToy",
+      },
+      {
         fields: null,
         kind: "SCALAR",
         name: "Int",
         possibleTypes: null,
       },
       {
-        kind: "SCALAR",
-        name: "_String",
-      },
-      {
-        kind: "SCALAR",
-        name: "_Integer",
-      },
-      {
         fields: [
-          {
-            name: "identity",
-          },
-        ],
-        kind: "OBJECT",
-        name: "Query",
-        possibleTypes: null,
-      },
-      {
-        fields: [
-          {
-            name: "favorite",
-          },
           {
             name: "name",
           },
-        ],
-        kind: "OBJECT",
-        name: "User",
-        possibleTypes: null,
-      },
-      {
-        fields: null,
-        kind: "UNION",
-        name: "FavoriteToyOut",
-        possibleTypes: [
-          {
-            kind: "OBJECT",
-            name: "Rubix",
-          },
-          {
-            kind: "OBJECT",
-            name: "Toygun",
-          },
-          {
-            kind: "OBJECT",
-            name: "Gunpla",
-          },
-        ],
-      },
-      {
-        fields: [
           {
             name: "size",
-          },
-          {
-            name: "name",
           },
         ],
         kind: "OBJECT",
         name: "Rubix",
-        possibleTypes: null,
       },
       {
         fields: [
@@ -87,65 +40,59 @@ snapshot[`Basic introspection 1`] = `
         ],
         kind: "OBJECT",
         name: "Toygun",
-        possibleTypes: null,
+      },
+      {
+        kind: "SCALAR",
+        name: "Gunpla_ref_union",
       },
       {
         fields: [
           {
-            name: "ref",
+            name: "model",
           },
           {
-            name: "model",
+            name: "ref",
           },
         ],
         kind: "OBJECT",
         name: "Gunpla",
-        possibleTypes: null,
       },
       {
         fields: null,
         kind: "UNION",
-        name: "Gunpla_ref_unionOut",
+        name: "FavoriteToy",
         possibleTypes: [
           {
-            kind: "SCALAR",
-            name: "_String",
+            name: "Rubix",
           },
           {
-            kind: "SCALAR",
-            name: "_Integer",
+            name: "Toygun",
+          },
+          {
+            name: "Gunpla",
           },
         ],
       },
       {
-        fields: null,
-        kind: "SCALAR",
-        name: "FavoriteToyIn",
-        possibleTypes: null,
+        fields: [
+          {
+            name: "name",
+          },
+          {
+            name: "favorite",
+          },
+        ],
+        kind: "OBJECT",
+        name: "User",
       },
       {
-        fields: null,
-        kind: "INPUT_OBJECT",
-        name: "RubixInp",
-        possibleTypes: null,
-      },
-      {
-        fields: null,
-        kind: "INPUT_OBJECT",
-        name: "ToygunInp",
-        possibleTypes: null,
-      },
-      {
-        fields: null,
-        kind: "INPUT_OBJECT",
-        name: "GunplaInp",
-        possibleTypes: null,
-      },
-      {
-        fields: null,
-        kind: "SCALAR",
-        name: "Gunpla_ref_unionIn",
-        possibleTypes: null,
+        fields: [
+          {
+            name: "identity",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Query",
       },
     ],
   },

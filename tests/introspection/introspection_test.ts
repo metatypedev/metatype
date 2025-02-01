@@ -25,16 +25,16 @@ Meta.test({
         __schema: {
           types: [
             {
-              "name": "Int",
+              name: "Int",
             },
             {
-              "name": "Query",
+              name: "NestedNested_Inp",
             },
             {
               name: "inp",
             },
             {
-              "name": "NestedInp",
+              name: "Query",
             },
           ],
         },
@@ -114,8 +114,7 @@ Meta.test({
             {
               name: "a",
               type: {
-                name: null,
-                kind: "NON_NULL",
+                name: "Int",
               },
             },
           ],
@@ -152,12 +151,8 @@ Meta.test({
               {
                 name: "a",
                 type: {
-                  name: null,
-                  kind: "NON_NULL",
-                  ofType: {
-                    name: "Int",
-                    kind: "SCALAR",
-                  },
+                  name: "Int",
+                  ofType: null,
                 },
               },
             ],
@@ -193,41 +188,37 @@ Meta.test({
     `
       .expectData({
         __schema: {
-          queryType: {
-            fields: [
+          "queryType": {
+            "fields": [
               {
-                args: [
+                "name": "rec",
+                "args": [
                   {
-                    defaultValue: null,
-                    description: "a input field",
-                    type: {
-                      kind: "NON_NULL",
-                      name: null,
-                      ofType: {
-                        kind: "SCALAR",
-                        name: "Int",
+                    "description": "rec argument",
+                    "type": {
+                      "name": null,
+                      "kind": "NON_NULL",
+                      "ofType": {
+                        "name": "NestedNested_Inp",
                       },
                     },
                   },
                 ],
-                name: "test",
               },
               {
-                args: [
+                "name": "test",
+                "args": [
                   {
-                    defaultValue: null,
-                    description: "nested input field",
-                    type: {
-                      kind: "NON_NULL",
-                      name: null,
-                      ofType: {
-                        kind: "INPUT_OBJECT",
-                        name: "NestedInp",
+                    "description": "test argument",
+                    "type": {
+                      "name": null,
+                      "kind": "NON_NULL",
+                      "ofType": {
+                        "name": "Int",
                       },
                     },
                   },
                 ],
-                name: "rec",
               },
             ],
           },

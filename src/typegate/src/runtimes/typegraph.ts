@@ -116,8 +116,7 @@ export class TypeGraphRuntime extends Runtime {
   };
 
   #getTypeResolver: Resolver = ({ name }) => {
-    const schema = this.#types.getTypes().find((type) => type.title === name);
-    return schema ?? null;
+    return this.#types.findType(name) ?? null;
   };
 
   #withPrecomputePolicies(resolver: Resolver): Resolver {
