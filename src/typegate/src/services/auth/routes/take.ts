@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../../../log.ts";
+import { jsonError, jsonOk } from "../../responses.ts";
 import { clearCookie, getEncryptedCookie } from "../cookies.ts";
 import type { RouteParams } from "./mod.ts";
 
@@ -20,24 +21,16 @@ export async function take(params: RouteParams) {
     );
 
     if (!redirectUri.startsWith(origin)) {
-      return new Response(
+      return jsonError(
         "take request must share domain with redirect uri",
-        {
-          status: 400,
-          headers: resHeaders,
-        },
+        resHeaders,
+        400,
       );
     }
     resHeaders.set("content-type", "application/json");
-    return new Response(JSON.stringify({ token }), {
-      status: 200,
-      headers: resHeaders,
-    });
+    return jsonOk({ token }, resHeaders);
   } catch (e) {
     logger.info(`take request failed ${e}`);
-    return new Response("not authorized", {
-      status: 401,
-      headers: resHeaders,
-    });
+    return jsonError("not authorized", resHeaders, 401);
   }
 }

@@ -132,9 +132,7 @@ export async function handleAuth(
         uri:
           `${url.protocol}//${url.host}/${engine.name}/auth/${name}?redirect_uri=${origin}`,
       }));
-    return new Response(JSON.stringify({ providers }), {
-      headers: { "content-type": "application/json" },
-    });
+    return jsonOk({ providers }, new Headers());
   }
 
   return await provider.authMiddleware(request);

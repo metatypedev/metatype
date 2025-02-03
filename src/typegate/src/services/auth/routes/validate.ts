@@ -1,13 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { jsonError, jsonOk } from "../../responses.ts";
 import type { RouteParams } from "./mod.ts";
 
+// TODO use `BaseError`
 export function badRequest(message: string): Response {
-  return new Response(message, {
-    status: 400,
-    headers: { "content-type": "text/plain" },
-  });
+  return jsonError(message, new Headers(), 400);
 }
 
 type Action =
@@ -69,11 +68,11 @@ export async function validate(params: RouteParams): Promise<Response> {
   }
 
   // return json response
-  return new Response(JSON.stringify(result), {
-    headers: {
-      "content-type": "application/json",
+  return jsonOk(
+    result,
+    new Headers({
       "access-control-allow-origin": "*",
       ...headers,
-    },
-  });
+    }),
+  );
 }

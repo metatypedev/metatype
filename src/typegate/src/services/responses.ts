@@ -4,7 +4,7 @@
 import type { JSONValue } from "../utils.ts";
 import { BaseError, ErrorKind } from "../errors.ts";
 
-export const jsonOk = (data: JSONValue, headers: Headers) => {
+export const jsonOk = (data: JSONValue, headers: Headers, code = 200) => {
   headers.set("content-type", "application/json");
   return new Response(JSON.stringify({ data }), {
     status: 200,
