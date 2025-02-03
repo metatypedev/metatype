@@ -63,6 +63,15 @@ export class IntrospectionTypeEmitter {
     return this.#types.find(([name, _]) => name == reqName)?.[1] ?? null;
   }
 
+  findTypeOrError(name: string) {
+    const schema = this.findType(name);
+    if (schema) {
+      return schema;
+    }
+
+    throw new Error(`GraphQL type "${name}" not defined yet`);
+  }
+
   getRootSchema(rootKind: "Mutation" | "Query") {
     const tup = this.#types.find(([name, _]) => name == rootKind);
     return tup ? tup[1] : null;
@@ -95,8 +104,9 @@ export class IntrospectionTypeEmitter {
         false,
       );
 
-      const isRootQuery = type.title == "Query" || type.title == "Mutation";
-      return nameIt(isRootQuery ? type.title : `${type.title}${adhocId}`);
+      return nameIt(
+        isRootQueryObject(type) ? type.title : `${type.title}${adhocId}`,
+      );
     }
 
     return nameIt(type.title);
@@ -378,11 +388,44 @@ export class IntrospectionTypeEmitter {
     }
 
     // Output type
-    const possibleTypes = variants.map((variant) => {
+    const { adhocId, possibleTypes } = this.#emitPossibleTypesAndReturnSchema(
+      variants,
+      gctx,
+    );
+
+    // title is reserved for the input scalar version
+    const outTitle = `${title}_of_${adhocId}`;
+    const schema = toResolverMap({
+      kind: TypeKind.UNION,
+      name: outTitle,
+      possibleTypes,
+    }, true);
+
+    if (!this.#typesDefined.has(outTitle)) {
+      this.#define(outTitle, schema);
+    }
+
+    return this.$refSchema(outTitle);
+  }
+
+  #emitPossibleTypesAndReturnSchema(
+    variants: Array<TypeNode>,
+    gctx: GenContext,
+  ) {
+    if (gctx.asInput) {
+      throw new Error(
+        "Unexpected use of possibleTypes schema as an input type",
+      );
+    }
+
+    const possibleTypes = [];
+    const variantNames = [];
+    for (const variant of variants) {
       if (isScalar(variant)) {
         // Scalar as union variant are not supported on the output, even custom ones
         throw new Error("Encounted scalar that should have been handled prior");
       }
+
       // Note: this can still emit empty an object scalar
       const refSchema = this.#emitMaybeWithQuantifierSchema(
         variant,
@@ -391,45 +434,30 @@ export class IntrospectionTypeEmitter {
       );
 
       // Handle case when we emit an empty scalar that represents an empty field object
-      const typeName = refSchema?.name({} as any) as string;
-      ensure(
-        typeName != null,
-        `Coult not retrieve name, available keys: ${
-          Object.keys(refSchema).join(", ")
-        }`,
-      );
-      const definition = this.findType(typeName);
-      if (definition) {
-        const defKind = definition?.kind({} as any);
-        if (defKind == TypeKind.SCALAR) {
-          // Make up a new object
-          const adhocTitle = "EmptyObjectUnion";
-          if (!this.#typesDefined.has(adhocTitle)) {
-            this.#define(adhocTitle, this.$emptyAdhocObjectSchema(adhocTitle));
-          }
+      const typeName = getSchemaName(refSchema);
+      variantNames.push(typeName);
 
-          return [typeName, this.$refSchema(adhocTitle)];
+      const definition = this.findTypeOrError(typeName);
+      const defKind = definition?.kind({} as any);
+      if (defKind == TypeKind.SCALAR) {
+        // Make up a new object
+        const adhocTitle = "_EmptyObject";
+        if (!this.#typesDefined.has(adhocTitle)) {
+          this.#define(adhocTitle, this.$emptyAdhocObjectSchema(adhocTitle));
         }
+
+        possibleTypes.push(this.$refSchema(adhocTitle));
+        continue;
       }
 
-      return [typeName, refSchema];
-    });
-
-    // title is reserved for the input scalar version
-    const outTitle = `${title}_of_${
-      possibleTypes.map(([name]) => name).join("_")
-    }`;
-    const schema = toResolverMap({
-      kind: TypeKind.UNION,
-      name: outTitle,
-      possibleTypes: possibleTypes.map(([_, schema]) => schema),
-    }, true);
-
-    if (!this.#typesDefined.has(outTitle)) {
-      this.#define(outTitle, schema);
+      possibleTypes.push(refSchema);
     }
 
-    return this.$refSchema(outTitle);
+    return {
+      // the underlying names are shape dependent if some fields are omitted
+      adhocId: variantNames.join("_"),
+      possibleTypes,
+    };
   }
 
   $requiredSchema(schema: Record<string, Resolver>): Record<string, Resolver> {
@@ -440,11 +468,14 @@ export class IntrospectionTypeEmitter {
   }
 
   /**
+   * Get the schema for a field (either a simple field or a function field)
+   * and emit required types along the way.
+   *
    * * Shape
    * ```gql
    * query {
-   *   fieldCase1(arg1: A1, arg2: A2, ..): Output
-   *   fieldCase2: Output
+   *   fieldCase1_Simple: Output
+   *   fieldCase2_Func(arg1: A1, arg2: A2, ..): Output
    * }
    * ```
    */
@@ -498,6 +529,7 @@ export class IntrospectionTypeEmitter {
     return this.#emitMaybeWithQuantifierSchema(type, gctx, fieldName);
   }
 
+  /** Reference to a supposedly defined type */
   $refSchema(name: string): Record<string, Resolver> {
     return toResolverMap({
       name,
@@ -505,8 +537,13 @@ export class IntrospectionTypeEmitter {
     }, true);
   }
 
+  /** Adhoc empty object placeholder for empty `Query` and `Mutation` */
   $emptyQuerySchema(type: ObjectNode) {
     // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
+    ensure(
+      isRootQueryObject(type),
+      "Mutation or Query expected",
+    );
     return this.$emptyAdhocObjectSchema(type.title);
   }
 
@@ -578,4 +615,24 @@ function unwrapOptionalRec(tg: TypeGraphDS, type: TypeNode) {
   }
 
   return type;
+}
+
+function getSchemaName(schemaRes: Record<string, Resolver>) {
+  let schema = resolveRec(schemaRes);
+
+  let name = null;
+  if (schema?.ofType) {
+    schema = schema.ofType as Record<string, unknown>;
+  }
+
+  name = schema?.name;
+
+  ensure(name != null, `Bad schema: ofType.name or name are undefined`);
+  ensure(typeof name == "string", "Schema name is not a string");
+
+  return name as string;
+}
+
+function isRootQueryObject(type: ObjectNode) {
+  return type.title == "Mutation" || type.title == "Query";
 }
