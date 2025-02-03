@@ -3,7 +3,7 @@
 
 use crate::errors::{ErrorContext, Result, TgError};
 use crate::t::{self, TypeBuilder};
-use crate::types::{AsTypeDefEx as _, TypeDef, TypeId};
+use crate::types::{AsTypeDefEx as _, TypeDef, TypeDefExt as _, TypeId};
 use crate::wit::core::{ParameterTransform, TransformData};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -274,83 +274,98 @@ impl TransformDataBuildContext {
     ) -> Result<(ParameterTransformNode, TypeId)> {
         let mut new_fields = HashMap::new();
         let type_id = type_id.resolve_optional()?;
-        let ty = type_id.as_struct().with_context(|| {
-            format!(
-                "Expected a (optional) struct for an object node at {path:?}",
-                path = stringify_path(&self.path).unwrap()
-            )
-        })?;
-        let mut available_fields = ty
-            .data
-            .props
-            .iter()
-            .map(|(k, v)| (k.as_str(), *v))
-            .collect::<HashMap<_, _>>();
-        for (field, node) in fields {
-            let prop_type_id = available_fields.remove(field.as_str()).ok_or_else(|| {
-                format!(
-                    "Field {field:?} not found in type {repr:?} at {path:?}",
-                    field = field,
-                    repr = type_id.repr().unwrap(),
-                    path = stringify_path(&self.path).unwrap()
-                )
-            })?;
+        match type_id
+            .as_type()
+            .and_then(|x| x.as_xdef())
+            .context("resolving type for apply tree")?
+            .type_def
+        {
+            TypeDef::Optional(ty) => self.check_object_node(TypeId(ty.data.of), fields),
+            TypeDef::Struct(ty) => {
+                let mut available_fields = ty
+                    .data
+                    .props
+                    .iter()
+                    .map(|(k, v)| (k.as_str(), *v))
+                    .collect::<HashMap<_, _>>();
+                for (field, node) in fields {
+                    let prop_type_id =
+                        available_fields.remove(field.as_str()).ok_or_else(|| {
+                            format!(
+                                "Field {field:?} not found in type {repr:?} at {path:?}",
+                                field = field,
+                                repr = type_id.repr().unwrap(),
+                                path = stringify_path(&self.path).unwrap()
+                            )
+                        })?;
 
-            self.path.push(PathSeg::Field(field.clone()));
-            let extended_node = self.check_node(prop_type_id.into(), node)?;
-            self.path.pop();
-            new_fields.insert(field.clone(), extended_node);
-        }
+                    self.path.push(PathSeg::Field(field.clone()));
+                    let extended_node = self.check_node(prop_type_id.into(), node)?;
+                    self.path.pop();
+                    new_fields.insert(field.clone(), extended_node);
+                }
 
-        let non_optional_fields = available_fields
-            .iter()
-            .filter_map(|(&k, &type_id)| {
-                TypeId(type_id)
-                    .as_type()
-                    .with_context(|| {
-                        format!(
+                let non_optional_fields = available_fields
+                    .iter()
+                    .filter_map(|(&k, &type_id)| {
+                        TypeId(type_id)
+                            .as_type()
+                            .with_context(|| {
+                                format!(
                             "Error while resolving type #{type_id} at the field {k:?} at {path:?}",
                             path = stringify_path(&self.path).unwrap()
                         )
+                            })
+                            .and_then(|ty| {
+                                ty.as_xdef().with_context(|| {
+                                    format!("resolving type: {}", ty.id().repr().unwrap())
+                                })
+                            })
+                            .map(|ty| {
+                                if !matches!(ty.type_def, TypeDef::Optional(_)) {
+                                    Some(k)
+                                } else {
+                                    None
+                                }
+                            })
+                            .transpose()
                     })
-                    .and_then(|ty| {
-                        ty.as_xdef()
-                            .with_context(|| format!("resolving type: {}", ty.id().repr().unwrap()))
-                    })
-                    .map(|ty| {
-                        if !matches!(ty.type_def, TypeDef::Optional(_)) {
-                            Some(k)
-                        } else {
-                            None
-                        }
-                    })
-                    .transpose()
-            })
-            .collect::<Result<Vec<_>>>()?;
+                    .collect::<Result<Vec<_>>>()?;
 
-        if !non_optional_fields.is_empty() {
-            Err(format!(
-                "missing non-optional fields {non_optional_fields:?} at {path:?}",
-                path = stringify_path(&self.path).unwrap()
-            )
-            .into())
-        } else {
-            let mut builder = t::struct_();
-            let mut fields = HashMap::default();
-            for (name, (node, type_id)) in new_fields.into_iter() {
-                builder.prop(&name, type_id);
-                fields.insert(name, node);
+                if !non_optional_fields.is_empty() {
+                    Err(format!(
+                        "missing non-optional fields {non_optional_fields:?} at {path:?}",
+                        path = stringify_path(&self.path).unwrap()
+                    )
+                    .into())
+                } else {
+                    let mut builder = t::struct_();
+                    let mut fields = HashMap::default();
+                    for (name, (node, type_id)) in new_fields.into_iter() {
+                        builder.prop(&name, type_id);
+                        fields.insert(name, node);
+                    }
+
+                    Ok((
+                        ParameterTransformNode {
+                            type_id: type_id.0,
+                            data: ParameterTransformNodeData::Parent(
+                                ParameterTransformParentNode::Object { fields },
+                            ),
+                        },
+                        builder.build()?,
+                    ))
+                }
             }
-
-            Ok((
-                ParameterTransformNode {
-                    type_id: type_id.0,
-                    data: ParameterTransformNodeData::Parent(
-                        ParameterTransformParentNode::Object { fields },
-                    ),
-                },
-                builder.build()?,
-            ))
+            TypeDef::Union(ty) => self.check_object_union(&ty.data.variants, fields),
+            TypeDef::Either(ty) => self.check_object_union(&ty.data.variants, fields),
+            _ => Err(format!(
+                "expected a struct for an object node at {path:?}; got {r1:?}/{repr:?}",
+                path = stringify_path(&self.path).unwrap(),
+                r1 = type_id.repr().unwrap(),
+                repr = type_id.as_xdef().unwrap().type_def.id().repr().unwrap()
+            )
+            .into()),
         }
     }
 
@@ -382,6 +397,30 @@ impl TransformDataBuildContext {
                 items: new_items,
             }),
         })
+    }
+
+    fn check_object_union(
+        &mut self,
+        variants: &[u32],
+        fields: &HashMap<String, raw_tree::ParameterTransformNode>,
+    ) -> Result<(ParameterTransformNode, TypeId)> {
+        let mut errors = vec![];
+        for &variant in variants {
+            match self.check_object_node(TypeId(variant), fields) {
+                Ok(res) => {
+                    return Ok(res);
+                }
+                Err(e) => {
+                    errors.push(e.to_string());
+                    continue;
+                }
+            }
+        }
+        Err(format!(
+            "no matching variant found for union at {path:?}",
+            path = stringify_path(&self.path).unwrap()
+        )
+        .into())
     }
 
     fn check_node(
@@ -562,6 +601,73 @@ mod test {
                     [a]: string #0
                     [first]: string #1
                     [second]: string #1
+            "}
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn unions() -> Result<()> {
+        let input = t::struct_()
+            .propx(
+                "prop",
+                t::optionalx(t::unionx!(
+                    t::struct_().propx("a", t::string()),
+                    t::struct_().propx("b", t::integer()),
+                )),
+            )?
+            .build()?;
+
+        let root = vec![(
+            "prop".to_string(),
+            ParameterTransformNode::Parent(ParameterTransformParentNode::Object {
+                fields: vec![(
+                    "a".to_string(),
+                    ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                        name: Some("first".to_string()),
+                        type_id: None,
+                    }),
+                )]
+                .into_iter()
+                .collect(),
+            }),
+        )]
+        .into_iter()
+        .collect();
+
+        let transform_data = build_transform_data(input, &root)?;
+        let print_options = tree::PrintOptions::new().no_indent_lines();
+        assert_eq!(
+            print_options.print(transform_data.query_input.into()),
+            indoc::indoc! {"
+                root: struct #9
+                    [first]: string #0
+            "}
+        );
+
+        let root = vec![(
+            "prop".to_string(),
+            ParameterTransformNode::Parent(ParameterTransformParentNode::Object {
+                fields: vec![(
+                    "b".to_string(),
+                    ParameterTransformNode::Leaf(ParameterTransformLeafNode::Arg {
+                        name: Some("first".to_string()),
+                        type_id: None,
+                    }),
+                )]
+                .into_iter()
+                .collect(),
+            }),
+        )]
+        .into_iter()
+        .collect();
+
+        let transform_data = build_transform_data(input, &root)?;
+        assert_eq!(
+            print_options.print(transform_data.query_input.into()),
+            indoc::indoc! {"
+                root: struct #12
+                    [first]: integer #2
             "}
         );
         Ok(())

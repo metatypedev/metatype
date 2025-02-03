@@ -11,24 +11,26 @@ const logger = getLogger(import.meta);
 
 const METATYPE_VERSION = "0.5.1-rc.0";
 
-export class WitWireMessenger {
-  static async init(
-    componentPath: string,
-    instanceId: string,
-    ops: WitWireMatInfo[],
-    cx: HostCallCtx,
-  ) {
+export class WitWireHandle {
+  static async init(params: {
+    componentPath: string;
+    id: string;
+    ops: WitWireMatInfo[];
+    hostcall: (op: string, json: string) => Promise<any>;
+  }) {
+    const { id, componentPath, ops, hostcall } = params;
+
     try {
       const _res = await Meta.wit_wire.init(
         componentPath,
-        instanceId,
+        id,
         {
           expected_ops: ops,
           metatype_version: METATYPE_VERSION,
         }, // this callback will be used from the native end
-        async (op: string, json: string) => await hostcall(cx, op, json),
+        hostcall,
       );
-      return new WitWireMessenger(instanceId, componentPath, ops);
+      return new WitWireHandle(id, componentPath, ops);
     } catch (err) {
       throw new Error(
         `error on init for component at path: ${componentPath}: ${err}`,
@@ -47,19 +49,15 @@ export class WitWireMessenger {
     public id: string,
     public componentPath: string,
     public ops: WitWireMatInfo[],
-  ) {
-  }
-
-  async [Symbol.asyncDispose]() {
-    await Meta.wit_wire.destroy(this.id);
-  }
+  ) {}
 
   async handle(opName: string, args: ResolverArgs) {
     const { _, ...inJson } = args;
+    const { id, componentPath, ops } = this;
 
     let res;
     try {
-      res = await Meta.wit_wire.handle(this.id, {
+      res = await Meta.wit_wire.handle(id, {
         op_name: opName,
         in_json: JSON.stringify(inJson),
       });
@@ -70,15 +68,13 @@ export class WitWireMessenger {
           cause: {
             opName,
             args: inJson,
-            component: this.componentPath,
+            component: componentPath,
             err,
           },
         },
       );
     }
-    if (
-      typeof res == "string"
-    ) {
+    if (typeof res == "string") {
       if (res == "NoHandler") {
         throw new Error(
           `materializer doesn't implement handler for op ${opName}`,
@@ -86,8 +82,8 @@ export class WitWireMessenger {
             cause: {
               opName,
               args: inJson,
-              component: this.componentPath,
-              ops: this.ops,
+              component: componentPath,
+              ops,
             },
           },
         );
@@ -96,7 +92,7 @@ export class WitWireMessenger {
           cause: {
             opName,
             args: inJson,
-            component: this.componentPath,
+            component: componentPath,
           },
         });
       }
@@ -109,7 +105,7 @@ export class WitWireMessenger {
           cause: {
             opName,
             args: inJson,
-            component: this.componentPath,
+            component: componentPath,
           },
         },
       );
@@ -120,7 +116,7 @@ export class WitWireMessenger {
           cause: {
             opName,
             args: inJson,
-            component: this.componentPath,
+            component: componentPath,
           },
         },
       );
@@ -134,7 +130,7 @@ export type HostCallCtx = {
   typegraphUrl: URL;
 };
 
-async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
+export async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
   try {
     const args = JSON.parse(json);
     switch (op_name) {
@@ -155,12 +151,12 @@ async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
         cause: err.cause,
         ...(typeof err.cause == "object" && err
           ? {
-            // deno-lint-ignore no-explicit-any
-            code: (err.cause as any).code ?? "unexpected_err",
-          }
+              // deno-lint-ignore no-explicit-any
+              code: (err.cause as any).code ?? "unexpected_err",
+            }
           : {
-            code: "unexpected_err",
-          }),
+              code: "unexpected_err",
+            }),
       };
     } else {
       throw {

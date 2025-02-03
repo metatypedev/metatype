@@ -98,11 +98,9 @@ export class Agent {
     this.workflows = workflows;
 
     this.logger.warn(
-      `Initializing agent to handle ${
-        workflows
-          .map(({ name }) => name)
-          .join(", ")
-      }`,
+      `Initializing agent to handle ${workflows
+        .map(({ name }) => name)
+        .join(", ")}`,
     );
 
     this.pollIntervalHandle = setInterval(async () => {
@@ -114,8 +112,8 @@ export class Agent {
     }, 1000 * this.config.pollIntervalSec);
   }
 
-  stop() {
-    this.workerManager.deinit();
+  async stop() {
+    await this.workerManager.deinit();
     if (this.pollIntervalHandle !== undefined) {
       clearInterval(this.pollIntervalHandle);
     }
@@ -140,7 +138,10 @@ export class Agent {
     }
 
     for (const workflow of this.workflows) {
-      const requests = this.#selectReplayRequestsFor(workflow.name, replayRequests);
+      const requests = this.#selectReplayRequestsFor(
+        workflow.name,
+        replayRequests,
+      );
 
       while (requests.length > 0) {
         // this.logger.warn(`Run workflow ${JSON.stringify(next)}`);
@@ -171,7 +172,7 @@ export class Agent {
         if (getTaskNameFromId(run.run_id) == workflowName) {
           runsToDo.push(run);
         }
-      } catch(err) {
+      } catch (err) {
         this.logger.warn(`Bad runId ${run.run_id}`);
         this.logger.error(err);
 
@@ -262,11 +263,9 @@ export class Agent {
       // A consequence of the above, a workflow is always triggered by gql { start(..) }
       // This can also occur if an event is sent from gql under a runId that is not valid (e.g. due to typo)
       this.logger.warn(
-        `First item in the operation list is not a Start, got "${
-          JSON.stringify(
-            first,
-          )
-        }" instead. Closing the underlying schedule.`,
+        `First item in the operation list is not a Start, got "${JSON.stringify(
+          first,
+        )}" instead. Closing the underlying schedule.`,
       );
 
       await Meta.substantial.storeCloseSchedule(schedDef);
@@ -275,19 +274,21 @@ export class Agent {
 
     const { taskContext } = first.event.kwargs as unknown as StdKwargs;
     try {
-      this.workerManager.triggerStart(
-        workflow.name,
-        next.run_id,
-        workflow.path,
-        run,
-        next.schedule_date,
-        taskContext,
-      ).then(() => {
-        this.workerManager.listen(
+      this.workerManager
+        .triggerStart(
+          workflow.name,
           next.run_id,
-          this.#eventResultHandlerFor(workflow.name, next.run_id),
-        );
-      });
+          workflow.path,
+          run,
+          next.schedule_date,
+          taskContext,
+        )
+        .then(() => {
+          this.workerManager.listen(
+            next.run_id,
+            this.#eventResultHandlerFor(workflow.name, next.run_id),
+          );
+        });
     } catch (err) {
       throw err;
     } finally {
@@ -396,9 +397,9 @@ export class Agent {
     const result = event.type == "SUCCESS" ? event.result : event.error;
 
     this.logger.info(
-      `gracefull completion of "${runId}" (${event.type}): ${
-        JSON.stringify(result)
-      } started at "${startedAt}"`,
+      `gracefull completion of "${runId}" (${event.type}): ${JSON.stringify(
+        result,
+      )} started at "${startedAt}"`,
     );
 
     this.logger.info(`Append Stop ${runId}`);
@@ -450,11 +451,9 @@ function checkIfRunHasStopped(run: Run) {
     if (op.event.type == "Start") {
       if (life >= 1) {
         logger.error(
-          `bad logs: ${
-            JSON.stringify(
-              run.operations.map(({ event }) => event.type),
-            )
-          }`,
+          `bad logs: ${JSON.stringify(
+            run.operations.map(({ event }) => event.type),
+          )}`,
         );
 
         throw new Error(
@@ -467,11 +466,9 @@ function checkIfRunHasStopped(run: Run) {
     } else if (op.event.type == "Stop") {
       if (life <= 0) {
         logger.error(
-          `bad logs: ${
-            JSON.stringify(
-              run.operations.map(({ event }) => event.type),
-            )
-          }`,
+          `bad logs: ${JSON.stringify(
+            run.operations.map(({ event }) => event.type),
+          )}`,
         );
 
         throw new Error(

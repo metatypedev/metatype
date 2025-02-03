@@ -2,20 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { envSharedWithWorkers } from "../../../config/shared.ts";
+import { WasmEvent } from "../../wasm/types.ts";
+import { WasmMessage } from "../../wasm/types.ts";
 import { BaseWorker } from "./mod.ts";
-import { BaseMessage, EventHandler } from "./types.ts";
+import { EventHandler } from "./types.ts";
 
-export interface DenoWorkerError extends BaseMessage {
-  type: "WORKER_ERROR";
-  event: ErrorEvent;
-}
-
-export type BaseDenoWorkerMessage = BaseMessage | DenoWorkerError;
-
-export class DenoWorker<
-  M extends BaseMessage,
-  E extends BaseDenoWorkerMessage,
-> extends BaseWorker<M, E> {
+export class WasmWorker extends BaseWorker<WasmMessage, WasmEvent> {
   #worker: Worker;
   #workerId: string;
   constructor(workerId: string, workerPath: string) {
@@ -24,6 +16,7 @@ export class DenoWorker<
       name: workerId,
       type: "module",
       deno: {
+        // FIXME: What are correct permissions?
         permissions: {
           net: true,
           // on request permissions
@@ -40,20 +33,17 @@ export class DenoWorker<
     this.#workerId = workerId;
   }
 
-  listen(handlerFn: EventHandler<E>) {
+  listen(handlerFn: EventHandler<WasmEvent>) {
     this.#worker.onmessage = async (message) => {
-      await handlerFn(message.data as E);
+      await handlerFn(message.data as WasmEvent);
     };
 
-    this.#worker.onerror = async (event) => {
-      await handlerFn({
-        type: "WORKER_ERROR",
-        event,
-      } as E);
+    this.#worker.onerror = (event) => {
+      throw event.error;
     };
   }
 
-  send(msg: M) {
+  send(msg: WasmMessage) {
     this.#worker.postMessage(msg);
   }
 

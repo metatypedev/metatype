@@ -148,10 +148,9 @@ export class SubstantialRuntime extends Runtime {
     return instance;
   }
 
-  deinit(): Promise<void> {
+  async deinit() {
     logger.info("deinitializing SubstantialRuntime");
-    this.agent.stop();
-    return Promise.resolve();
+    await this.agent.stop();
   }
 
   materialize(
@@ -218,9 +217,8 @@ export class SubstantialRuntime extends Runtime {
         return ({ name: workflowName }) => {
           this.#checkWorkflowExistOrThrow(workflowName);
 
-          const res = this.agent.workerManager.getAllocatedResources(
-            workflowName,
-          );
+          const res =
+            this.agent.workerManager.getAllocatedResources(workflowName);
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
@@ -341,7 +339,7 @@ export class SubstantialRuntime extends Runtime {
         ongoing: {
           count: ongoing.length,
           runs: ongoing.sort((a, b) =>
-            a.started_at.localeCompare(b.started_at)
+            a.started_at.localeCompare(b.started_at),
           ),
         },
         completed: {
@@ -462,11 +460,9 @@ export class SubstantialRuntime extends Runtime {
       }
 
       throw new Error(
-        `workflow "${name}" does not exist, available workflows are ${
-          known
-            .map((name) => `"${name}"`)
-            .join(", ")
-        }`,
+        `workflow "${name}" does not exist, available workflows are ${known
+          .map((name) => `"${name}"`)
+          .join(", ")}`,
       );
     }
   }
