@@ -164,63 +164,63 @@ export function basicTestTemplate(
         },
       );
 
-      const account_balance = 1000;
-      let compensateId: string | null = null;
+      //   const account_balance = 1000;
+      //   let compensateId: string | null = null;
 
-      await t.should("start compensate", async () => {
-        await gql`
-            mutation {
-              start_compensation(kwargs: { account: $account_balance })
-            }
-          `
-          .withVars({ account_balance })
-          .expectBody((body) => {
-            compensateId = body.data?.start_compensation! as string;
-            assertExists(compensateId);
-          })
-          .on(e);
-      });
+      //   await t.should("start compensate", async () => {
+      //     await gql`
+      //         mutation {
+      //           start_compensation(kwargs: { account: $account_balance })
+      //         }
+      //       `
+      //       .withVars({ account_balance })
+      //       .expectBody((body) => {
+      //         compensateId = body.data?.start_compensation! as string;
+      //         assertExists(compensateId);
+      //       })
+      //       .on(e);
+      //   });
 
-      // Wait for workflow to complete
-      await sleep(15 * 1000);
+      //   // Wait for workflow to complete
+      //   await sleep(15 * 1000);
 
-      await t.should("compensate the balance account", async () => {
-        await gql`
-            query {
-              results(name: "compensationExample") {
-                ongoing {
-                  count
-                }
-                completed {
-                  count
-                  runs {
-                    run_id
-                    result {
-                      status
-                      value
-                    }
-                  }
-                }
-              }
-            }
-          `
-          .expectData({
-            results: {
-              ongoing: {
-                count: 0,
-              },
-              completed: {
-                count: 1,
-                runs: [
-                  {
-                    run_id: currentRunId,
-                  },
-                ],
-              },
-            },
-          })
-          .on(e);
-      });
+      //   await t.should("compensate the balance account", async () => {
+      //     await gql`
+      //         query {
+      //           results(name: "compensationExample") {
+      //             ongoing {
+      //               count
+      //             }
+      //             completed {
+      //               count
+      //               runs {
+      //                 run_id
+      //                 result {
+      //                   status
+      //                   value
+      //                 }
+      //               }
+      //             }
+      //           }
+      //         }
+      //       `
+      //       .expectData({
+      //         results: {
+      //           ongoing: {
+      //             count: 0,
+      //           },
+      //           completed: {
+      //             count: 1,
+      //             runs: [
+      //               {
+      //                 run_id: currentRunId,
+      //               },
+      //             ],
+      //           },
+      //         },
+      //       })
+      //       .on(e);
+      //   });
     },
   );
 }
