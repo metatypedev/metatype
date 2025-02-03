@@ -40,7 +40,6 @@
       "jsr:@std/semver@^1.0.1": "jsr:@std/semver@1.0.3",
       "jsr:@std/streams@0.221.0": "jsr:@std/streams@0.221.0",
       "jsr:@std/streams@1": "jsr:@std/streams@1.0.8",
-      "jsr:@std/streams@^1.0.2": "jsr:@std/streams@1.0.8",
       "jsr:@std/testing@^1.0.1": "jsr:@std/testing@1.0.9",
       "jsr:@std/text@^1.0.7": "jsr:@std/text@1.0.10",
       "jsr:@std/uuid@^1.0.1": "jsr:@std/uuid@1.0.4",

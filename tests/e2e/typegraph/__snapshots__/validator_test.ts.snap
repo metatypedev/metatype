@@ -32,8 +32,5 @@ snapshot[`typegraph validation 1`] = `
 - Typegraph validator failed validation
 Error: 
    0: [91mfailed[0m
-
-Backtrace omitted. Run with RUST_BACKTRACE=1 environment variable to display it.
-Run with RUST_BACKTRACE=full to include source snippets.
 \`
 `;

@@ -84,7 +84,7 @@ export class Manager {
       typegraphName: this.#typegraph.name,
       typegraphPath: env.typegraph_path,
       prefix: env.prefix,
-      migrationDir: env.migrations_dir,
+      migrationDir: this.#getMigrationsDir(),
     };
 
     rpcRequest("Deploy", params);
