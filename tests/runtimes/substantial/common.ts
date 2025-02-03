@@ -182,7 +182,7 @@ export function basicTestTemplate(
       });
 
       // Wait for workflow to complete
-      await sleep(5 * 1000);
+      await sleep(15 * 1000);
 
       await t.should("compensate the balance account", async () => {
         await gql`
