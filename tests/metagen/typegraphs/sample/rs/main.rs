@@ -10,11 +10,12 @@ use metagen_client::prelude::*;
 
 fn main() -> Result<(), BoxErr> {
     let port = std::env::var("TG_PORT")?;
-    let api1 = QueryGraph::new(format!("http://localhost:{port}/sample").parse()?);
+    let addr: Url = format!("http://localhost:{port}/sample").parse()?;
+    let api1 = query_graph();
 
     let (res2, res3) = {
         // blocking reqwest uses tokio under the hood
-        let gql_sync = api1.graphql_sync();
+        let gql_sync = client::transports::graphql_sync(&api1, addr.clone());
         let res3 = gql_sync.query((
             api1.get_user().select_aliased(UserSelections {
                 posts: alias([
@@ -65,7 +66,7 @@ fn main() -> Result<(), BoxErr> {
         .enable_all()
         .build()?
         .block_on(async move {
-            let gql = api1.graphql();
+            let gql = client::transports::graphql(&api1, addr.clone());
             let prepared_q = gql.prepare_query(|_args| {
                 (
                     api1.get_user().select_aliased(UserSelections {

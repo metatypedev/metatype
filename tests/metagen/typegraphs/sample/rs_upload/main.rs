@@ -9,11 +9,12 @@ use metagen_client::prelude::*;
 
 fn main() -> Result<(), BoxErr> {
     let port = std::env::var("TG_PORT")?;
-    let api1 = QueryGraph::new(format!("http://localhost:{port}/sample").parse()?);
+    let addr: Url = format!("http://localhost:{port}/sample").parse()?;
+    let api1 = query_graph();
 
     // blocking
     let (res2, res3) = {
-        let gql_sync = api1.graphql_sync();
+        let gql_sync = transports::graphql_sync(&api1, addr.clone());
 
         let res3 = gql_sync.mutation((api1.upload(types::RootUploadFnInputPartial {
             file: Some(
@@ -50,7 +51,7 @@ fn main() -> Result<(), BoxErr> {
         .enable_all()
         .build()?
         .block_on(async move {
-            let gql = api1.graphql();
+            let gql = client::transports::graphql(&api1, addr);
 
             let prepared_m = gql.prepare_mutation(|args| {
                 (api1.upload(
