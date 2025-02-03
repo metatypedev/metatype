@@ -21,7 +21,6 @@ export class TypeGraphRuntime extends Runtime {
   tg: TypeGraphDS;
   #typeGen: IntrospectionTypeEmitter | null = null;
   #visibility: TypeVisibility | null = null;
-  #generatorStarted = false;
 
   private constructor(tg: TypeGraphDS) {
     super(TypeGraph.formatName(tg));
@@ -43,11 +42,23 @@ export class TypeGraphRuntime extends Runtime {
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const resolver = this.#delegate(stage);
+    const getResolver = () => {
+      if (stage.id() == "__schema") {
+        // FIXME: other way to make sure we can start fresh at every request?
+
+        // Assumes:
+        // - root __schema is the first stage encountered
+        // - stages are computed sequentially
+        return this.#withPrecomputeVisibility(this.#delegate(stage));
+      }
+
+      return this.#delegate(stage);
+    };
+
     return [
       new ComputeStage({
         ...stage.props,
-        resolver,
+        resolver: getResolver(),
       }),
     ];
   }
@@ -64,11 +75,6 @@ export class TypeGraphRuntime extends Runtime {
   }
 
   get #types() {
-    if (!this.#generatorStarted) {
-      this.#typeGen?.emitRoot();
-      this.#generatorStarted = true;
-    }
-
     return this.#typeGen!;
   }
 
@@ -76,25 +82,25 @@ export class TypeGraphRuntime extends Runtime {
     const name = stage.props.materializer?.name;
     switch (name) {
       case "getSchema":
-        return this.#withPrecomputePolicies(this.#getSchemaResolver);
+        return this.#getSchemaResolver;
       case "getType":
-        return this.#withPrecomputePolicies(this.#getTypeResolver);
+        return this.#getTypeResolver;
       case "resolver":
-        return this.#withPrecomputePolicies(async ({ _: { parent } }) => {
+        return async ({ _: { parent } }) => {
           const resolver = parent[stage.props.node];
           const ret = typeof resolver === "function"
             ? await resolver()
             : resolver;
           return ret;
-        });
+        };
       default:
-        return this.#withPrecomputePolicies(async ({ _: { parent } }) => {
+        return async ({ _: { parent } }) => {
           const resolver = parent[stage.props.node];
           const ret = typeof resolver === "function"
             ? await resolver()
             : resolver;
           return ret;
-        });
+        };
     }
   }
 
@@ -119,10 +125,15 @@ export class TypeGraphRuntime extends Runtime {
     return this.#types.findType(name) ?? null;
   };
 
-  #withPrecomputePolicies(resolver: Resolver): Resolver {
+  #withPrecomputeVisibility(resolver: Resolver): Resolver {
     return async (args) => {
+      this.#visibility!.reset();
       await this.#visibility!.preComputeAllPolicies(args ?? {});
-      return await resolver(args);
+
+      this.#types.reset();
+      this.#types.emitRoot();
+
+      return resolver(args);
     };
   }
 }

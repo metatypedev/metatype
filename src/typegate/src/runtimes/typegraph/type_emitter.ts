@@ -55,6 +55,11 @@ export class IntrospectionTypeEmitter {
     this.#typesDefined = new Set();
   }
 
+  reset() {
+    this.#types = [];
+    this.#typesDefined = new Set();
+  }
+
   getTypes() {
     return this.#types.map(([_, res]) => res);
   }
@@ -441,7 +446,7 @@ export class IntrospectionTypeEmitter {
       const defKind = definition?.kind({} as any);
       if (defKind == TypeKind.SCALAR) {
         // Make up a new object
-        const adhocTitle = "_EmptyObject";
+        const adhocTitle = `_variant_empty_${variant.title}`;
         if (!this.#typesDefined.has(adhocTitle)) {
           this.#define(adhocTitle, this.$emptyAdhocObjectSchema(adhocTitle));
         }

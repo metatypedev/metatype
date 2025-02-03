@@ -44,7 +44,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "A2_a_union",
+        name: "A2_a_union_of_A3_A4",
         possibleTypes: [
           {
             name: "A3",
@@ -64,7 +64,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "A1_a_union",
+        name: "A1_a_union_of_A2_B",
         possibleTypes: [
           {
             name: "A2",
@@ -80,7 +80,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "NestedUnions",
+        name: "NestedUnions_of_A1_B",
         possibleTypes: [
           {
             name: "A1",
@@ -124,7 +124,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "MultilevelUnion_t2_union_t2_either",
+        name: "MultilevelUnion_t2_union_t2_either_of_Ue_Uf",
         possibleTypes: [
           {
             name: "Ue",
@@ -136,7 +136,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "MultilevelUnion_t2_union",
+        name: "MultilevelUnion_t2_union_of_Uc_Ud_MultilevelUnion_t2_union_t2_either_of_Ue_Uf",
         possibleTypes: [
           {
             name: "Uc",
@@ -145,14 +145,13 @@ snapshot[`Union type 2`] = `
             name: "Ud",
           },
           {
-            kind: "UNION",
-            name: "MultilevelUnion_t2_union_t2_either",
+            name: "MultilevelUnion_t2_union_t2_either_of_Ue_Uf",
           },
         ],
       },
       {
         kind: "UNION",
-        name: "MultilevelUnion",
+        name: "MultilevelUnion_of_Ua_Ub_MultilevelUnion_t2_union_of_Uc_Ud_MultilevelUnion_t2_union_t2_either_of_Ue_Uf",
         possibleTypes: [
           {
             name: "Ua",
@@ -161,8 +160,7 @@ snapshot[`Union type 2`] = `
             name: "Ub",
           },
           {
-            kind: "UNION",
-            name: "MultilevelUnion_t2_union",
+            name: "MultilevelUnion_t2_union_of_Uc_Ud_MultilevelUnion_t2_union_t2_either_of_Ue_Uf",
           },
         ],
       },

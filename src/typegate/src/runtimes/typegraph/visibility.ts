@@ -50,11 +50,17 @@ export class TypeVisibility {
     this.#resolvers = new Map();
     this.#resolvedPolicy = new Map();
 
-    this.#visitTypegraph();
+    this.reset();
   }
 
   static getId(indicies: Array<number>) {
     return indicies.join(".");
+  }
+
+  reset() {
+    this.#resolvers = new Map();
+    this.#resolvedPolicy = new Map();
+    this.#visitTypegraph();
   }
 
   #visitTypegraph() {

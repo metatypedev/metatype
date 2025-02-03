@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { gql, Meta } from "../utils/mod.ts";
+import { fullIntrospection } from "./common.ts";
 
 // https://github.com/graphql/graphql-js/blob/main/src/__tests__/starWarsIntrospection-test.ts
 
@@ -235,102 +236,7 @@ Meta.test({
   const e = await t.engine("simple/simple.py");
 
   await t.should("not fail", async () => {
-    await gql`
-      query IntrospectionQuery {
-        __schema {
-          
-          queryType { name }
-          mutationType { name }
-          subscriptionType { name }
-          types {
-            ...FullType
-          }
-          directives {
-            name
-            description
-            
-            locations
-            args {
-              ...InputValue
-            }
-          }
-        }
-      }
-
-      fragment FullType on __Type {
-        kind
-        name
-        description
-        
-        fields(includeDeprecated: true) {
-          name
-          description
-          args {
-            ...InputValue
-          }
-          type {
-            ...TypeRef
-          }
-          isDeprecated
-          deprecationReason
-        }
-        inputFields {
-          ...InputValue
-        }
-        interfaces {
-          ...TypeRef
-        }
-        enumValues(includeDeprecated: true) {
-          name
-          description
-          isDeprecated
-          deprecationReason
-        }
-        possibleTypes {
-          ...TypeRef
-        }
-      }
-
-      fragment InputValue on __InputValue {
-        name
-        description
-        type { ...TypeRef }
-        defaultValue
-      }
-
-      fragment TypeRef on __Type {
-        kind
-        name
-        ofType {
-          kind
-          name
-          ofType {
-            kind
-            name
-            ofType {
-              kind
-              name
-              ofType {
-                kind
-                name
-                ofType {
-                  kind
-                  name
-                  ofType {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `
+    await fullIntrospection()
       .matchOkSnapshot(t)
       .on(e);
   });

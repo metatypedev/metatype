@@ -34,7 +34,7 @@ snapshot[`Either type 2`] = `
       },
       {
         kind: "UNION",
-        name: "Response",
+        name: "Response_of_SuccessTransaction_FailedTransaction",
         possibleTypes: [
           {
             name: "SuccessTransaction",
