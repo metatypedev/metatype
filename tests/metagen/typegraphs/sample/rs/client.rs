@@ -4,6 +4,17 @@
 use core::marker::PhantomData;
 use metagen_client::prelude::*;
 
+pub mod transports {
+    use super::*;
+
+    pub fn graphql(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwest {
+        GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+    pub fn graphql_sync(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwestSync {
+        GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+}
+
 //
 // --- --- QueryGraph types --- --- //
 //
@@ -11,16 +22,6 @@ use metagen_client::prelude::*;
 #[derive(Clone)]
 pub struct QueryGraph {
     ty_to_gql_ty_map: TyToGqlTyMap,
-    addr: Url,
-}
-
-impl QueryGraph {
-    pub fn graphql(&self) -> GraphQlTransportReqwest {
-        GraphQlTransportReqwest::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
-    }
-    pub fn graphql_sync(&self) -> GraphQlTransportReqwestSync {
-        GraphQlTransportReqwestSync::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
-    }
 }
 
 //
@@ -375,22 +376,20 @@ pub struct RootIdentityFnInputSelections<ATy = NoAlias> {
 }
 impl_selection_traits!(RootIdentityFnInputSelections, input);
 
+pub fn query_graph() -> QueryGraph {
+    QueryGraph {
+        ty_to_gql_ty_map: std::sync::Arc::new([
+        
+            ("UserIdStringUuid".into(), "String!".into()),
+            ("StringE1a43".into(), "String!".into()),
+            ("Integer64be4".into(), "Int!".into()),
+            ("post".into(), "post!".into()),
+            ("user".into(), "user!".into()),
+        ].into()),
+    }
+}
 impl QueryGraph {
 
-    pub fn new(addr: Url) -> Self {
-        Self {
-            addr,
-            ty_to_gql_ty_map: std::sync::Arc::new([
-            
-                ("UserIdStringUuid".into(), "String!".into()),
-                ("StringE1a43".into(), "String!".into()),
-                ("Integer64be4".into(), "Int!".into()),
-                ("post".into(), "post!".into()),
-                ("user".into(), "user!".into()),
-        ].into()),
-        }
-    }
-    
     pub fn get_user(
         &self,
     ) -> UnselectedNode<UserSelections, UserSelections<HasAlias>, QueryMarker, UserPartial>

@@ -4,6 +4,17 @@
 use core::marker::PhantomData;
 use metagen_client::prelude::*;
 
+pub mod transports {
+    use super::*;
+
+    pub fn graphql(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwest {
+        GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+    pub fn graphql_sync(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwestSync {
+        GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+}
+
 //
 // --- --- QueryGraph types --- --- //
 //
@@ -11,16 +22,6 @@ use metagen_client::prelude::*;
 #[derive(Clone)]
 pub struct QueryGraph {
     ty_to_gql_ty_map: TyToGqlTyMap,
-    addr: Url,
-}
-
-impl QueryGraph {
-    pub fn graphql(&self) -> GraphQlTransportReqwest {
-        GraphQlTransportReqwest::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
-    }
-    pub fn graphql_sync(&self) -> GraphQlTransportReqwestSync {
-        GraphQlTransportReqwestSync::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
-    }
 }
 
 //
@@ -98,31 +99,29 @@ pub mod types {
     pub type RootUploadFnOutput = bool;
 }
 
-impl QueryGraph {
-    pub fn new(addr: Url) -> Self {
-        Self {
-            addr,
-            ty_to_gql_ty_map: std::sync::Arc::new(
-                [
-                    ("FileBf9b7".into(), "file_bf9b7!".into()),
-                    (
-                        "RootUploadFnInputPathString25e51Optional".into(),
-                        "String".into(),
-                    ),
-                    (
-                        "RootUploadManyFnInputPrefixString25e51Optional".into(),
-                        "String".into(),
-                    ),
-                    (
-                        "RootUploadManyFnInputFilesFileBf9b7List".into(),
-                        "[file_bf9b7]!".into(),
-                    ),
-                ]
-                .into(),
-            ),
-        }
+pub fn query_graph() -> QueryGraph {
+    QueryGraph {
+        ty_to_gql_ty_map: std::sync::Arc::new(
+            [
+                ("FileBf9b7".into(), "file_bf9b7!".into()),
+                (
+                    "RootUploadFnInputPathString25e51Optional".into(),
+                    "String".into(),
+                ),
+                (
+                    "RootUploadManyFnInputPrefixString25e51Optional".into(),
+                    "String".into(),
+                ),
+                (
+                    "RootUploadManyFnInputFilesFileBf9b7List".into(),
+                    "[file_bf9b7]!".into(),
+                ),
+            ]
+            .into(),
+        ),
     }
-
+}
+impl QueryGraph {
     pub fn upload(
         &self,
         args: impl Into<NodeArgs<RootUploadFnInputPartial>>,

@@ -750,7 +750,8 @@ where
     }
 }
 
-// TODO: convert to proc_macro
+// TODO(Natoandro): convert to proc_macro
+// REPLY(Yohe): compile time hits might be a good reason to keep this macro
 #[macro_export]
 macro_rules! impl_selection_traits {
     ($ty:ident,$($field:tt),+) => {

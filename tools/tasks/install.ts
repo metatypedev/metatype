@@ -8,7 +8,7 @@ export default {
   "install-sys": {
     desc: "Print a command you can use to install system items",
     fn: async ($) => {
-      $.logger.info("pipe me to a shell");
+      $.logger.warn("pipe me to a shell");
       const osRelease = await $`cat /etc/os-release`.text();
       if (/(Ubuntu|Debian|Linux pop-os)/.test(osRelease)) {
         console.log(
@@ -25,6 +25,11 @@ export default {
         $.logger.error("unable to determine platform");
         $.logGroup("install the following manually");
         $.log("- openssl development libs");
+        $.log("- gcc");
+        $.log("- clang development libs");
+        $.log("- perl");
+        $.log("- pkg-config");
+        $.log("- make");
         $.logGroupEnd();
         throw new Error("err");
       }

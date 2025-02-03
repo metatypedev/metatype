@@ -162,20 +162,17 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: &Typegraph) -> anyhow::Resul
     write!(
         dest,
         r#"
-impl QueryGraph {{
-
-    pub fn new(addr: Url) -> Self {{
-        Self {{
-            addr,
-            ty_to_gql_ty_map: std::sync::Arc::new([
-            "#
+pub fn query_graph() -> QueryGraph {{
+    QueryGraph {{
+        ty_to_gql_ty_map: std::sync::Arc::new([
+        "#
     )?;
     for (&id, ty_name) in name_mapper.memo.borrow().deref() {
         let gql_ty = get_gql_type(&tg.types, id, false);
         write!(
             dest,
             r#"
-                ("{ty_name}".into(), "{gql_ty}".into()),"#
+            ("{ty_name}".into(), "{gql_ty}".into()),"#
         )?;
     }
     for id in named_types {
@@ -184,18 +181,19 @@ impl QueryGraph {{
         write!(
             dest,
             r#"
-                ("{ty_name}".into(), "{gql_ty}".into()),"#
+            ("{ty_name}".into(), "{gql_ty}".into()),"#
         )?;
     }
     write!(
         dest,
         r#"
         ].into()),
-        }}
     }}
-    "#
+}}
+"#
     )?;
 
+    writeln!(dest, r#"impl QueryGraph {{"#)?;
     for fun in manifest.root_fns {
         use heck::ToSnekCase;
 

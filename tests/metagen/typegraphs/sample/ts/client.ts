@@ -23,14 +23,15 @@ function _selectionToNodeSet(
 
     const { argumentTypes, subNodes, variants, inputFiles } = metaFn();
 
-    const nodeInstances =
-      nodeSelection instanceof Alias
-        ? nodeSelection.aliases()
-        : { [nodeName]: nodeSelection };
+    const nodeInstances = nodeSelection instanceof Alias
+      ? nodeSelection.aliases()
+      : { [nodeName]: nodeSelection };
 
-    for (const [instanceName, instanceSelection] of Object.entries(
-      nodeInstances,
-    )) {
+    for (
+      const [instanceName, instanceSelection] of Object.entries(
+        nodeInstances,
+      )
+    ) {
       if (!instanceSelection && !selectAll) {
         continue;
       }
@@ -137,10 +138,10 @@ function _selectionToNodeSet(
             const variant_select = subSelections[variantTy];
             const nodes = variant_select
               ? _selectionToNodeSet(
-                  variant_select as Selection,
-                  variant_meta.subNodes,
-                  `${parentPath}.${instanceName}.variant(${variantTy})`,
-                )
+                variant_select as Selection,
+                variant_meta.subNodes,
+                `${parentPath}.${instanceName}.variant(${variantTy})`,
+              )
               : [];
             nodes.push({
               nodeName: "__typename",
@@ -207,17 +208,14 @@ export class MutationNode<Out> {
   }
 }
 
-type SelectNodeOut<T> = T extends QueryNode<infer O> | MutationNode<infer O>
-  ? O
+type SelectNodeOut<T> = T extends QueryNode<infer O> | MutationNode<infer O> ? O
   : never;
-type QueryOut<T> =
-  T extends Record<string, QueryNode<unknown> | MutationNode<unknown>>
-    ? {
-        [K in keyof T]: SelectNodeOut<T[K]>;
-      }
-    : T extends QueryNode<unknown> | MutationNode<unknown>
-      ? SelectNodeOut<T>
-      : never;
+type QueryOut<T> = T extends
+  Record<string, QueryNode<unknown> | MutationNode<unknown>> ? {
+    [K in keyof T]: SelectNodeOut<T[K]>;
+  }
+  : T extends QueryNode<unknown> | MutationNode<unknown> ? SelectNodeOut<T>
+  : never;
 
 type TypePath = ("?" | "[]" | `.${string}`)[];
 type ValuePath = ("" | `[${number}]` | `.${string}`)[];
@@ -450,10 +448,9 @@ function convertQueryNodeGql(
   variables: Map<string, NodeArgValue>,
   files: Map<string, File>,
 ) {
-  let out =
-    node.nodeName == node.instanceName
-      ? node.nodeName
-      : `${node.instanceName}: ${node.nodeName}`;
+  let out = node.nodeName == node.instanceName
+    ? node.nodeName
+    : `${node.instanceName}: ${node.nodeName}`;
 
   const args = node.args;
   if (args && Object.keys(args).length > 0) {
@@ -483,29 +480,35 @@ function convertQueryNodeGql(
   const subNodes = node.subNodes;
   if (subNodes) {
     if (Array.isArray(subNodes)) {
-      out = `${out} { ${subNodes
-        .map((node) =>
-          convertQueryNodeGql(typeToGqlTypeMap, node, variables, files),
-        )
-        .join(" ")} }`;
+      out = `${out} { ${
+        subNodes
+          .map((node) =>
+            convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+          )
+          .join(" ")
+      } }`;
     } else {
-      out = `${out} { ${Object.entries(subNodes)
-        .map(([variantTy, subNodes]) => {
-          let gqlTy = typeToGqlTypeMap[variantTy];
-          if (!gqlTy) {
-            throw new Error(
-              `unreachable: no graphql type found for variant ${variantTy}`,
-            );
-          }
-          gqlTy = gqlTy.replace(/[!]+$/, "");
+      out = `${out} { ${
+        Object.entries(subNodes)
+          .map(([variantTy, subNodes]) => {
+            let gqlTy = typeToGqlTypeMap[variantTy];
+            if (!gqlTy) {
+              throw new Error(
+                `unreachable: no graphql type found for variant ${variantTy}`,
+              );
+            }
+            gqlTy = gqlTy.replace(/[!]+$/, "");
 
-          return `... on ${gqlTy} {${subNodes
-            .map((node) =>
-              convertQueryNodeGql(typeToGqlTypeMap, node, variables, files),
-            )
-            .join(" ")}}`;
-        })
-        .join(" ")} }`;
+            return `... on ${gqlTy} {${
+              subNodes
+                .map((node) =>
+                  convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+                )
+                .join(" ")
+            }}`;
+          })
+          .join(" ")
+      } }`;
     }
   }
   return out;
@@ -678,14 +681,12 @@ export class GraphQLTransport {
     const isNode = query instanceof QueryNode;
     const { variables, doc } = buildGql(
       this.typeToGqlTypeMap,
-      isNode
-        ? { value: query.inner() }
-        : Object.fromEntries(
-            Object.entries(query).map(([key, val]) => [
-              key,
-              (val as QueryNode<unknown>).inner(),
-            ]),
-          ),
+      isNode ? { value: query.inner() } : Object.fromEntries(
+        Object.entries(query).map(([key, val]) => [
+          key,
+          (val as QueryNode<unknown>).inner(),
+        ]),
+      ),
       "query",
       name,
     );
@@ -716,14 +717,12 @@ export class GraphQLTransport {
     const isNode = query instanceof MutationNode;
     const { variables, doc, files } = buildGql(
       this.typeToGqlTypeMap,
-      isNode
-        ? { value: query.inner() }
-        : Object.fromEntries(
-            Object.entries(query).map(([key, val]) => [
-              key,
-              (val as MutationNode<unknown>).inner(),
-            ]),
-          ),
+      isNode ? { value: query.inner() } : Object.fromEntries(
+        Object.entries(query).map(([key, val]) => [
+          key,
+          (val as MutationNode<unknown>).inner(),
+        ]),
+      ),
       "mutation",
       name,
     );
@@ -803,18 +802,16 @@ export class PreparedRequest<
   ) {
     const args = new PreparedArgs<T>();
     const dryRunNode = fun(args);
-    const isSingleNode =
-      dryRunNode instanceof QueryNode || dryRunNode instanceof MutationNode;
+    const isSingleNode = dryRunNode instanceof QueryNode ||
+      dryRunNode instanceof MutationNode;
     const { doc, variables } = buildGql(
       typeToGqlTypeMap,
-      isSingleNode
-        ? { value: dryRunNode.inner() }
-        : Object.fromEntries(
-            Object.entries(dryRunNode).map(([key, val]) => [
-              key,
-              (val as MutationNode<unknown>).inner(),
-            ]),
-          ),
+      isSingleNode ? { value: dryRunNode.inner() } : Object.fromEntries(
+        Object.entries(dryRunNode).map(([key, val]) => [
+          key,
+          (val as MutationNode<unknown>).inner(),
+        ]),
+      ),
       ty,
       name,
     );
@@ -880,19 +877,25 @@ type ErrorPolyfill = new (msg: string, payload: unknown) => Error;
 
 /* QueryGraph section */
 
-class _QueryGraphBase {
-  constructor(private typeNameMapGql: Record<string, string>) {}
-
+export class Transports {
   /**
    * Get the {@link GraphQLTransport} for the typegraph.
    */
-  graphql(addr: URL | string, options?: GraphQlTransportOptions) {
+  static graphql(
+    qg: _QueryGraphBase,
+    addr: URL | string,
+    options?: GraphQlTransportOptions,
+  ) {
     return new GraphQLTransport(
       new URL(addr),
       options ?? {},
-      this.typeNameMapGql,
+      qg.typeNameMapGql,
     );
   }
+}
+
+class _QueryGraphBase {
+  constructor(public typeNameMapGql: Record<string, string>) {}
 }
 
 // -------------------------------------------------- //

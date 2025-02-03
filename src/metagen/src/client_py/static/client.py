@@ -889,11 +889,16 @@ class QueryGraphBase:
     def __init__(self, ty_to_gql_ty_map: typing.Dict[str, str]):
         self.ty_to_gql_ty_map = ty_to_gql_ty_map
 
+
+class Tranports:
+    @staticmethod
     def graphql_sync(
-        self, addr: str, opts: typing.Optional[GraphQLTransportOptions] = None
+        qg: QueryGraphBase,
+        addr: str,
+        opts: typing.Optional[GraphQLTransportOptions] = None,
     ):
         return GraphQLTransportUrlib(
-            addr, opts or GraphQLTransportOptions({}), self.ty_to_gql_ty_map
+            addr, opts or GraphQLTransportOptions({}), qg.ty_to_gql_ty_map
         )
 
 
