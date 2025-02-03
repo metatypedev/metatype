@@ -10,7 +10,6 @@ from typegraph.runtimes.deno import DenoRuntime
 def visibility(g: Graph):
     deno = DenoRuntime()
     pass_through = deno.policy("passThrough", "() => 'PASS'")
-    allow = deno.policy("allowAll", "() => 'ALLOW'")
     deny = deno.policy("denyAll", "() => 'DENY'")
 
     def ctxread(pol_name: str):
@@ -18,39 +17,21 @@ def visibility(g: Graph):
             pol_name, code=f"(_, {{ context }}) => context?.{pol_name} ?? 'DENY'"
         )
 
-    input = (
-        t.struct(
-            {
-                "one": t.struct(
-                    {"depthOne": t.struct({"another": t.integer().set(111)})}
-                ),
-                "two": t.struct(
-                    {
-                        "depth_two_one": t.integer(),
-                        "depth_two_two": t.list(
-                            t.list(t.integer().optional())
-                        ).optional(),
-                    }
-                ),
-                # "itself": g.ref("InputRec"),   # non optional recursive input is illegal per graphql spec
-                "itself": g.ref("InputRec").optional(),
-                "union": t.union(
-                    [
-                        t.integer(),
-                        t.string(),
-                    ]
-                ).with_policy(ctxread("control_union")),
-                "list_and_opt_1": t.list(
-                    t.list(t.list(t.integer()))
-                ).optional(),  # [[[Int!]]]
-                "list_and_opt_2": t.list(
-                    t.list(t.list(t.integer().optional()))
-                ).optional(),  # [[[Int]]]
-            }
-        )
-        .rename("InputRec")
-        .with_policy(allow)
-    )
+    input = t.struct(
+        {
+            "one": t.struct(
+                {"depthOne": t.struct({"another": t.integer().set(111)})}
+            ),  # should skip
+            "two": t.struct(
+                {
+                    "depth_two_one": t.integer().with_policy(
+                        deny
+                    ),  # should no op on input
+                    "depth_two_two": t.list(t.list(t.integer().optional())).optional(),
+                }
+            ),
+        }
+    ).rename("InputRec")
 
     # mutually recursive types demo
     rec_type_inner = t.struct(

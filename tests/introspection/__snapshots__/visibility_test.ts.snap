@@ -21,10 +21,6 @@ snapshot[`Visibility check upon introspection 1`] = `
         name: "InputRec_two_structInputRec_two_struct_Inp",
       },
       {
-        kind: "INPUT_OBJECT",
-        name: "InputRec_f5InputRec_f5_Inp",
-      },
-      {
         kind: "OBJECT",
         name: "struct_ab80b_field_list_optional_struct",
       },
@@ -108,14 +104,6 @@ snapshot[`Visibility check upon introspection 2`] = `
       {
         kind: "INPUT_OBJECT",
         name: "InputRec_two_structInputRec_two_struct_Inp",
-      },
-      {
-        kind: "SCALAR",
-        name: "InputRec_union_union",
-      },
-      {
-        kind: "INPUT_OBJECT",
-        name: "InputRecInputRec_Inp",
       },
       {
         kind: "SCALAR",
@@ -250,7 +238,7 @@ Policies:
             description: "InputRec_two_structInputRec_two_struct_Inp input field
 
 Policies:
-- inherit",
+- denyAll",
             name: "depth_two_one",
             type: {
               kind: "NON_NULL",
@@ -284,104 +272,6 @@ Policies:
         interfaces: [],
         kind: "INPUT_OBJECT",
         name: "InputRec_two_structInputRec_two_struct_Inp",
-      },
-      {
-        inputFields: [
-          {
-            description: "InputRec_f5InputRec_f5_Inp input field
-
-Policies:
-- inherit",
-            name: "one",
-            type: {
-              kind: "NON_NULL",
-              name: null,
-              ofType: {
-                name: "InputRec_one_structInputRec_one_struct_Inp",
-                ofType: null,
-              },
-            },
-          },
-          {
-            description: "InputRec_f5InputRec_f5_Inp input field
-
-Policies:
-- inherit",
-            name: "two",
-            type: {
-              kind: "NON_NULL",
-              name: null,
-              ofType: {
-                name: "InputRec_two_structInputRec_two_struct_Inp",
-                ofType: null,
-              },
-            },
-          },
-          {
-            description: "InputRec_f5InputRec_f5_Inp input field
-
-Policies:
-- inherit",
-            name: "itself",
-            type: {
-              name: "InputRec_f5InputRec_f5_Inp",
-              ofType: null,
-            },
-          },
-          {
-            description: "InputRec_f5InputRec_f5_Inp input field
-
-Policies:
-- inherit",
-            name: "list_and_opt_1",
-            type: {
-              kind: "LIST",
-              name: null,
-              ofType: {
-                kind: "LIST",
-                name: null,
-                ofType: {
-                  kind: "LIST",
-                  name: null,
-                  ofType: {
-                    kind: "NON_NULL",
-                    name: null,
-                    ofType: {
-                      name: "Int",
-                      ofType: null,
-                    },
-                  },
-                },
-              },
-            },
-          },
-          {
-            description: "InputRec_f5InputRec_f5_Inp input field
-
-Policies:
-- inherit",
-            name: "list_and_opt_2",
-            type: {
-              kind: "LIST",
-              name: null,
-              ofType: {
-                kind: "LIST",
-                name: null,
-                ofType: {
-                  kind: "LIST",
-                  name: null,
-                  ofType: {
-                    name: "Int",
-                    ofType: null,
-                  },
-                },
-              },
-            },
-          },
-        ],
-        interfaces: [],
-        kind: "INPUT_OBJECT",
-        name: "InputRec_f5InputRec_f5_Inp",
       },
       {
         fields: [
@@ -739,58 +629,6 @@ Policies:
             args: [
               {
                 description: "identity_read argument",
-                name: "itself",
-                type: {
-                  name: "InputRec_f5InputRec_f5_Inp",
-                  ofType: null,
-                },
-              },
-              {
-                description: "identity_read argument",
-                name: "list_and_opt_1",
-                type: {
-                  kind: "LIST",
-                  name: null,
-                  ofType: {
-                    kind: "LIST",
-                    name: null,
-                    ofType: {
-                      kind: "LIST",
-                      name: null,
-                      ofType: {
-                        kind: "NON_NULL",
-                        name: null,
-                        ofType: {
-                          name: "Int",
-                          ofType: null,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              {
-                description: "identity_read argument",
-                name: "list_and_opt_2",
-                type: {
-                  kind: "LIST",
-                  name: null,
-                  ofType: {
-                    kind: "LIST",
-                    name: null,
-                    ofType: {
-                      kind: "LIST",
-                      name: null,
-                      ofType: {
-                        name: "Int",
-                        ofType: null,
-                      },
-                    },
-                  },
-                },
-              },
-              {
-                description: "identity_read argument",
                 name: "one",
                 type: {
                   kind: "NON_NULL",
@@ -834,58 +672,6 @@ Policies:
         fields: [
           {
             args: [
-              {
-                description: "identity_update argument",
-                name: "itself",
-                type: {
-                  name: "InputRec_f5InputRec_f5_Inp",
-                  ofType: null,
-                },
-              },
-              {
-                description: "identity_update argument",
-                name: "list_and_opt_1",
-                type: {
-                  kind: "LIST",
-                  name: null,
-                  ofType: {
-                    kind: "LIST",
-                    name: null,
-                    ofType: {
-                      kind: "LIST",
-                      name: null,
-                      ofType: {
-                        kind: "NON_NULL",
-                        name: null,
-                        ofType: {
-                          name: "Int",
-                          ofType: null,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              {
-                description: "identity_update argument",
-                name: "list_and_opt_2",
-                type: {
-                  kind: "LIST",
-                  name: null,
-                  ofType: {
-                    kind: "LIST",
-                    name: null,
-                    ofType: {
-                      kind: "LIST",
-                      name: null,
-                      ofType: {
-                        name: "Int",
-                        ofType: null,
-                      },
-                    },
-                  },
-                },
-              },
               {
                 description: "identity_update argument",
                 name: "one",

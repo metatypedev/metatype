@@ -153,7 +153,7 @@ export class IntrospectionTypeEmitter {
     let entries = null;
 
     // Policies
-    if (this.visibility && gctx.parentVerdict == "PASS") {
+    if (this.visibility && !gctx.asInput && gctx.parentVerdict == "PASS") {
       entries = this.visibility.filterAllowedFields(type, gctx.parentVerdict);
     } else {
       entries = originalEntries.map(([k, idx]) =>
@@ -499,22 +499,15 @@ export class IntrospectionTypeEmitter {
         );
       }
 
-      const { entries: inputEntries } = this.#filterWithInjectionAnPolicies(
-        input,
-        gctx,
-        type,
-        true,
-      );
 
       return toResolverMap({
         name: fieldName,
         interfaces: [],
         // input
-        args: inputEntries.map(([argName, argType, verdict]) => {
-          const argSchema = this.#emitMaybeWithQuantifierSchema(argType, {
+        args: Object.entries(input.properties).map(([argName, idx]) => {
+          const argSchema = this.#emitMaybeWithQuantifierSchema(this.tg.types[idx], {
             ...gctx,
             asInput: true,
-            parentVerdict: verdict,
           }, argName);
 
           return {
