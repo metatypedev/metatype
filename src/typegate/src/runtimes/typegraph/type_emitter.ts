@@ -28,6 +28,7 @@ import { TypeKind } from "graphql";
 import { Resolver } from "../../types.ts";
 import { getLogger } from "../../log.ts";
 import { FunctionNode } from "../../typegraph/type_node.ts";
+import { ensure } from "../../utils.ts";
 
 const SCALAR_TYPE_MAP = {
   boolean: "Boolean",
@@ -115,14 +116,14 @@ export class IntrospectionTypeEmitter {
 
     // logger.debug(
     //   `types: ${name} => ${
-    //     Deno.inspect(this.#types.map(([n, x]) => resolveRecDebug(x)), {
+    //     Deno.inspect(this.#types.map(([n, x]) => resolveRec(x)), {
     //       depth: 10,
     //     })
     //   }`,
     // );
 
     this.#types = this.#types.map(([k, v]) => {
-      return [k, toResolverMap(resolveRecDebug(v)!)];
+      return [k, toResolverMap(resolveRec(v)!)];
     });
   }
 
@@ -150,7 +151,8 @@ export class IntrospectionTypeEmitter {
       const injectionNode = (parentFunction?.injections ?? {})?.[fieldName] ??
         null;
       if (injectionNode && ("injection" in injectionNode)) {
-        // FIXME MET-704: still relevant?
+        // FIXME MET-704
+        // FIXME: collect information on visibilty
         return null;
       }
 
@@ -361,6 +363,7 @@ export class IntrospectionTypeEmitter {
     const description = `${type.type} type\n${Array.from(titles).join(", ")}`;
 
     if (gctx.asInput || variants.some(isScalar)) {
+      console.log("INPUT", title, gctx.asInput || variants.some(isScalar));
       // Note: if one item is a scalar
       // might as well create custom scalars for the others
       if (!this.#typesDefined.has(title)) {
@@ -374,26 +377,56 @@ export class IntrospectionTypeEmitter {
       }, true);
     }
 
+    // Output type
+    const possibleTypes = variants.map((variant) => {
+      if (isScalar(variant)) {
+        // Scalar as union variant are not supported on the output, even custom ones
+        throw new Error("Encounted scalar that should have been handled prior");
+      }
+      // Note: this can still emit empty an object scalar
+      const refSchema = this.#emitMaybeWithQuantifierSchema(
+        variant,
+        gctx,
+        null,
+      );
+
+      // Handle case when we emit an empty scalar that represents an empty field object
+      const typeName = refSchema?.name({} as any) as string;
+      ensure(
+        typeName != null,
+        `Coult not retrieve name, available keys: ${
+          Object.keys(refSchema).join(", ")
+        }`,
+      );
+      const definition = this.findType(typeName);
+      if (definition) {
+        const defKind = definition?.kind({} as any);
+        if (defKind == TypeKind.SCALAR) {
+          // Make up a new object
+          const adhocTitle = "EmptyObjectUnion";
+          if (!this.#typesDefined.has(adhocTitle)) {
+            this.#define(adhocTitle, this.$emptyAdhocObjectSchema(adhocTitle));
+          }
+
+          return [typeName, this.$refSchema(adhocTitle)];
+        }
+      }
+
+      return [typeName, refSchema];
+    });
+
     // title is reserved for the input scalar version
-    // TODO: use possibleTypes, hash then use as id (variants depends on policies and injections)
-    const outTitle = title + "Out";
+    const outTitle = `${title}_of_${
+      possibleTypes.map(([name]) => name).join("_")
+    }`;
     const schema = toResolverMap({
       kind: TypeKind.UNION,
       name: outTitle,
-      possibleTypes: variants.map((variant) => {
-        if (isScalar(variant)) {
-          throw new Error(
-            "Invalid state: got scalar that should have been handled prior",
-          );
-        }
-
-        return this.#emitMaybeWithQuantifierSchema(variant, gctx, null);
-      }),
+      possibleTypes: possibleTypes.map(([_, schema]) => schema),
     }, true);
 
     if (!this.#typesDefined.has(outTitle)) {
       this.#define(outTitle, schema);
-      return schema;
     }
 
     return this.$refSchema(outTitle);
@@ -474,11 +507,21 @@ export class IntrospectionTypeEmitter {
 
   $emptyQuerySchema(type: ObjectNode) {
     // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
-    const title = "Query";
+    return this.$emptyAdhocObjectSchema(type.title);
+  }
+
+  /**
+   * ```gql
+   * type Title {
+   *   _: Title
+   * }
+   * ```
+   */
+  $emptyAdhocObjectSchema(title: string) {
     return toResolverMap({
       kind: TypeKind.OBJECT,
       name: title,
-      description: `${type.title} type`,
+      description: `${title} type`,
       fields: [
         {
           name: "_",
@@ -509,7 +552,7 @@ function toResolverMap<T>(
 }
 
 // rm
-function resolveRecDebug(rec: any): Record<string, unknown> | null {
+function resolveRec(rec: any): Record<string, unknown> | null {
   function resolve(value: unknown): unknown {
     while (typeof value === "function") {
       value = (value as () => unknown)();
@@ -518,7 +561,7 @@ function resolveRecDebug(rec: any): Record<string, unknown> | null {
     if (Array.isArray(value)) {
       return value.map(resolve);
     } else if (typeof value === "object" && value !== null) {
-      return resolveRecDebug(value as Record<string, unknown>);
+      return resolveRec(value as Record<string, unknown>);
     }
 
     return value;
