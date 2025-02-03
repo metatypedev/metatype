@@ -81,13 +81,13 @@ pub fn gen_op_to_mat_map(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{fdk_rust::*, tests::default_type_node_base};
+    use crate::{fdk_rs::*, tests::default_type_node_base};
     use common::typegraph::*;
 
     #[test]
     fn stub_test() -> anyhow::Result<()> {
         let tg_name = "my_tg".to_string();
-        let tg = Box::new(Typegraph {
+        let tg = Arc::new(Typegraph {
             path: None,
             policies: vec![],
             deps: vec![],
@@ -175,7 +175,7 @@ mod test {
                     "template_dir".to_owned(),
                     GeneratorInputResolved::FdkTemplate {
                         template: FdkTemplate {
-                            entries: fdk_rust::DEFAULT_TEMPLATE
+                            entries: fdk_rs::DEFAULT_TEMPLATE
                                 .iter()
                                 .map(|(file, content)| (*file, (*content).into()))
                                 .collect(),

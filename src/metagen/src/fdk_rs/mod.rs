@@ -283,7 +283,7 @@ impl FdkRustTemplate {
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let cargo_toml = include_str!("static/Cargo.toml");
     let mut cargo_toml = if let Some(crate_name) = crate_name {
-        const DEF_CRATE_NAME: &str = "metagen_fdk_rust_static";
+        const DEF_CRATE_NAME: &str = "metagen_fdk_rs_static";
         cargo_toml.replace(DEF_CRATE_NAME, crate_name)
     } else {
         cargo_toml.to_string()
@@ -336,8 +336,8 @@ fn e2e() -> anyhow::Result<()> {
             "default".to_string(),
             config::Target(
                 [GeneratorConfig {
-                    generator_name: "fdk_rust".to_string(),
-                    other: serde_json::to_value(fdk_rust::FdkRustGenConfig {
+                    generator_name: "fdk_rs".to_string(),
+                    other: serde_json::to_value(fdk_rs::FdkRustGenConfig {
                         skip_cargo_toml: None,
                         skip_lib_rs: Some(true),
                         stubbed_runtimes: Some(vec!["wasm_wire".into()]),
