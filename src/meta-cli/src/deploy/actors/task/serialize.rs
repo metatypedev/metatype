@@ -80,7 +80,7 @@ pub struct SerializeError {
     pub errors: Vec<String>,
 }
 
-impl OutputData for Box<Typegraph> {
+impl OutputData for Arc<Typegraph> {
     fn get_typegraph_name(&self) -> String {
         self.name().unwrap()
     }
@@ -104,7 +104,7 @@ impl OutputData for SerializeError {
 }
 
 impl TaskAction for SerializeAction {
-    type SuccessData = Box<Typegraph>;
+    type SuccessData = Arc<Typegraph>;
     type FailureData = SerializeError;
     type Options = SerializeOptions;
     type Generator = SerializeActionGenerator;

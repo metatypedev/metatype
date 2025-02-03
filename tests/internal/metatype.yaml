@@ -7,6 +7,6 @@ typegates:
 metagen:
   targets:
     main:
-      - generator: fdk_python
+      - generator: fdk_py
         path: ./py/
         typegraph_path: internal.py

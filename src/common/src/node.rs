@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use indoc::indoc;
 use reqwest::{Client, IntoUrl, RequestBuilder, Url};
 use serde::Serialize;
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use crate::{
     graphql::{self, Query},
@@ -129,7 +129,7 @@ impl Node {
         Ok(())
     }
 
-    pub async fn typegraph(&self, name: &str) -> Result<Option<Box<Typegraph>>, Error> {
+    pub async fn typegraph(&self, name: &str) -> Result<Option<Arc<Typegraph>>, Error> {
         let res = self
             .post("/typegate")
             .map_err(Error::Other)?
@@ -157,7 +157,7 @@ impl Node {
             return Ok(None);
         };
         serde_json::from_str::<Typegraph>(&res.serialized)
-            .map(|tg| Some(Box::new(tg)))
+            .map(|tg| Some(Arc::new(tg)))
             .map_err(|err| Error::Other(anyhow::anyhow!(err)))
     }
 }

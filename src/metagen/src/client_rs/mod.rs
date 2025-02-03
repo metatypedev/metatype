@@ -12,7 +12,7 @@ use shared::get_gql_type;
 use crate::interlude::*;
 use crate::*;
 
-use crate::fdk_rust::utils;
+use crate::fdk_rs::utils;
 use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
@@ -305,7 +305,7 @@ fn render_data_types(
 ) -> anyhow::Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(fdk_rust::types::RustTypeRenderer {
+        Rc::new(fdk_rs::types::RustTypeRenderer {
             derive_debug: true,
             derive_serde: true,
             all_fields_optional: true,
@@ -314,7 +314,7 @@ fn render_data_types(
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;
     }
-    /* renderer.replace_renderer(Rc::new(fdk_rust::types::RustTypeRenderer {
+    /* renderer.replace_renderer(Rc::new(fdk_rs::types::RustTypeRenderer {
         derive_debug: true,
         derive_serde: true,
         all_fields_optional: true,

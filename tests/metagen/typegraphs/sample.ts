@@ -93,6 +93,15 @@ export const tg = await typegraph({
             list: [{ value: 3 }],
           }),
         }),
+        identity: deno.identity(t.struct({ input: t.integer() })),
+        identityUpdate: deno.func(
+          t.struct({ input: t.integer() }),
+          t.struct({ input: t.integer() }),
+          {
+            code: (input) => input,
+            effect: fx.update(),
+          },
+        ),
       },
       Policy.public(),
     );

@@ -130,11 +130,11 @@ impl Action for Serialize {
 
 pub trait SerializeReportExt {
     #[allow(clippy::vec_box)]
-    fn into_typegraphs(self) -> Result<Vec<Box<Typegraph>>>;
+    fn into_typegraphs(self) -> Result<Vec<Arc<Typegraph>>>;
 }
 
 impl SerializeReportExt for Report<SerializeAction> {
-    fn into_typegraphs(self) -> Result<Vec<Box<Typegraph>>> {
+    fn into_typegraphs(self) -> Result<Vec<Arc<Typegraph>>> {
         let mut res = vec![];
         for entry in self.entries.into_iter() {
             match entry.status {

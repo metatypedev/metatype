@@ -12,7 +12,7 @@ use shared::get_gql_type;
 use crate::interlude::*;
 use crate::*;
 
-use crate::fdk_typescript::utils;
+use crate::fdk_ts::utils;
 use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
@@ -203,13 +203,13 @@ export class QueryGraph extends _QueryGraphBase {{
         write!(
             dest,
             r#"
-  {method_name}({args_row}) {{
+  {method_name}({args_row}): {node_type}<{out_ty_name}> {{
     const inner = _selectionToNodeSet(
       {{ "{node_name}": {args_selection} }},
       [["{node_name}", nodeMetas.{meta_method}]],
       "$q",
     )[0];
-    return new {node_type}(inner) as {node_type}<{out_ty_name}>;
+    return new {node_type}(inner);
   }}"#
         )?;
     }
@@ -239,7 +239,7 @@ fn render_data_types(
 ) -> anyhow::Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(fdk_typescript::types::TypescriptTypeRenderer {}),
+        Rc::new(fdk_ts::types::TypescriptTypeRenderer {}),
     );
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;

@@ -7,11 +7,12 @@ use crate::{interlude::*, *};
 
 mod fixtures;
 pub use fixtures::*;
+use futures_concurrency::future::FutureGroup;
 use futures_lite::StreamExt as _;
 
 #[derive(Clone)]
 struct TestCtx {
-    typegraphs: Arc<IndexMap<String, Box<Typegraph>>>,
+    typegraphs: Arc<IndexMap<String, Arc<Typegraph>>>,
 }
 
 impl InputResolver for TestCtx {
@@ -75,7 +76,7 @@ pub struct E2eTestCase {
     pub target: String,
     pub config: config::Config,
     pub target_dir: Option<PathBuf>,
-    pub typegraphs: IndexMap<String, Box<Typegraph>>,
+    pub typegraphs: IndexMap<String, Arc<Typegraph>>,
     pub build_fn: fn(BuildArgs) -> BoxFuture<anyhow::Result<()>>,
 }
 
