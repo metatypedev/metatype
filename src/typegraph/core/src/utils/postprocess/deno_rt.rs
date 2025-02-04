@@ -30,9 +30,17 @@ impl PostProcessor for DenoProcessor {
 
                 fs_ctx.register_artifact(mat_data.entry_point.clone(), tg)?;
 
+                // TODO shared logic for artifact registration
                 let deps = std::mem::take(&mut mat_data.deps);
                 for artifact in deps.into_iter() {
                     let artifacts = fs_ctx.list_files(&[artifact.to_string_lossy().to_string()]);
+                    if artifacts.is_empty() {
+                        return Err(format!(
+                            "no artifacts found for dependency '{}'",
+                            artifact.to_string_lossy()
+                        )
+                        .into());
+                    }
                     for artifact in artifacts.iter() {
                         fs_ctx.register_artifact(artifact.clone(), tg)?;
                     }
