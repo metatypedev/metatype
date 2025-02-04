@@ -39,14 +39,14 @@ Note that the `WasmRuntime` constructor mentions a non-existent wasm file on dis
 
 ## Metagen
 
-We can now tackle the boilerplate. Metagen bundles the [`fdk_rust`](/docs/reference/metagen#fdk_rust) generator which can generate all the glue code along with Rust types that correspond to our typegraph types. Let's configure a metagen target in our configuration file to get just that done.
+We can now tackle the boilerplate. Metagen bundles the [`fdk_rs`](/docs/reference/metagen#fdk_rs) generator which can generate all the glue code along with Rust types that correspond to our typegraph types. Let's configure a metagen target in our configuration file to get just that done.
 
 ```yaml
 metagen:
   targets:
     metagen_rs:
       # this is the generator we're interested in
-      - generator: fdk_rust
+      - generator: fdk_rs
         # the location where to put the generated files
         path: ./metagen/rs/
         # the path to our typegraph
@@ -69,7 +69,7 @@ This should give us the following files:
 └──  fdk.rs
 ```
 
-By default, the `fdk_rust` generator outputs all the necessary files required to build our wasm file. This includes the `Cargo.toml` manifest for our Rust crate.
+By default, the `fdk_rs` generator outputs all the necessary files required to build our wasm file. This includes the `Cargo.toml` manifest for our Rust crate.
 
 <CodeBlock language="toml">
   {
@@ -78,7 +78,7 @@ By default, the `fdk_rust` generator outputs all the necessary files required to
   }
 </CodeBlock>
 
-`fdk_rust` will not overwrite a `Cargo.toml` file discovered at generation path so you can add other dependencies if need be.
+`fdk_rs` will not overwrite a `Cargo.toml` file discovered at generation path so you can add other dependencies if need be.
 
 The `fdk.rs` file contains all the glue code including the typegraph types.
 

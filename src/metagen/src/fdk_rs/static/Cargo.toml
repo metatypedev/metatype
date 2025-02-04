@@ -1,4 +1,4 @@
-package.name = "metagen_fdk_rust_static"
+package.name = "metagen_fdk_rs_static"
 package.edition = "2021"
 package.version = "0.0.1"
 

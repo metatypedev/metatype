@@ -109,8 +109,8 @@
       "type": "object",
       "properties": {
         "generator": {
-          "const": "fdk_typescript",
-          "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_typescript>."
+          "const": "fdk_ts",
+          "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_ts>."
         },
         "stubbed_runtimes": {
           "type": "array",
@@ -124,8 +124,8 @@
       "type": "object",
       "properties": {
         "generator": {
-          "const": "fdk_python",
-          "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_python>."
+          "const": "fdk_py",
+          "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_py>."
         }
       }
     },
@@ -135,8 +135,8 @@
           "type": "object",
           "properties": {
             "generator": {
-              "const": "fdk_rust",
-              "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_rust>."
+              "const": "fdk_rs",
+              "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_rs>."
             },
             "stubbed_runtimes": {
               "type": "array",

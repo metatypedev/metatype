@@ -318,4 +318,26 @@ Meta.test("apply with prisma generated types", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("complex apply", async () => {
+    await gql`
+      query {
+        complex {
+          id
+          name
+          email
+          age
+        }
+      }
+    `
+      .expectData({
+        complex: [{
+          id,
+          name: "Alice",
+          email: "alice@example.com",
+          age: 30,
+        }],
+      })
+      .on(e);
+  });
 });

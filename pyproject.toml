@@ -6,7 +6,7 @@
 
 [tool.poetry]
 name = "metatype"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 description = ""
 authors = []
 
@@ -16,7 +16,7 @@ typegraph = { path = "src/typegraph/python", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 # used in ./tests/importers/*.py
-respx = "^0.21.1"
+respx = "^0.22.0"
 # used in examples/programmable-api-gateway
 pyyaml = "^6.0.1"
 
