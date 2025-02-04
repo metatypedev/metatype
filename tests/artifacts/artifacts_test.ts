@@ -203,24 +203,20 @@ for (const { mode, ...options } of variants) {
       });
     },
   );
-
-  Meta.test({
-    only: mode === "default",
-    name: `Missing artifact (mode: ${mode})`,
-    ...options,
-  }, async (t) => {
-    await t.should("fail on missing artifact", async () => {
-      await assertRejects(
-        async () => {
-          await t.engine("runtimes/deno/inexisting_dep.py");
-        },
-      );
-      try {
-        await t.engine("runtimes/deno/inexisting_dep.py");
-        assert(false, "should have thrown");
-      } catch (e) {
-        assertStringIncludes(e.message, "no artifacts found for dependency");
-      }
-    });
-  });
 }
+
+Meta.test(`Missing artifact`, async (t) => {
+  await t.should("fail on missing artifact", async () => {
+    await assertRejects(
+      async () => {
+        await t.engine("runtimes/deno/inexisting_dep.py");
+      },
+    );
+    try {
+      await t.engine("runtimes/deno/inexisting_dep.py");
+      assert(false, "should have thrown");
+    } catch (e) {
+      assertStringIncludes(e.message, "no artifacts found for dependency");
+    }
+  });
+});
