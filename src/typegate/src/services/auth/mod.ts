@@ -14,7 +14,7 @@ import { unsafeExtractJWT } from "../../crypto.ts";
 import type { QueryEngine } from "../../engine/query_engine.ts";
 import * as routes from "./routes/mod.ts";
 import { getLogger } from "../../log.ts";
-import { methodNotAllowed } from "../../services/responses.ts";
+import { jsonOk, methodNotAllowed } from "../../services/responses.ts";
 import type { Runtime } from "../../runtimes/Runtime.ts";
 
 const logger = getLogger(import.meta);
@@ -132,7 +132,7 @@ export async function handleAuth(
         uri:
           `${url.protocol}//${url.host}/${engine.name}/auth/${name}?redirect_uri=${origin}`,
       }));
-    return jsonOk({ providers }, new Headers());
+    return jsonOk({ data: providers });
   }
 
   return await provider.authMiddleware(request);

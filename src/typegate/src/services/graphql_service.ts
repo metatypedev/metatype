@@ -142,7 +142,7 @@ export async function handleGraphQL(
           Deno.inspect(e.cause, { strAbbreviateSize: 1024, depth: 10 }),
         );
       }
-      jsonError({ status: 400, message: e.message, headers });
+      return jsonError({ status: 400, message: e.message, headers });
     }
   }
 }

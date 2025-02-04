@@ -8,16 +8,18 @@ export type JsonOkConfig = {
   data: JSONValue;
   headers?: Headers | HeadersInit;
   status?: number;
+  graphql?: boolean;
 };
 
 export const jsonOk = (
-  { status = 200, data, headers: headersInit }: JsonOkConfig,
+  { status = 200, data, headers: headersInit, graphql = true }: JsonOkConfig,
 ) => {
   const headers = headersInit != null
     ? new Headers(headersInit)
     : new Headers();
   headers.set("content-type", "application/json");
-  return new Response(JSON.stringify({ data }), {
+  const payload = graphql ? { data } : data;
+  return new Response(JSON.stringify(payload), {
     status,
     headers,
   });
