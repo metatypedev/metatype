@@ -64,17 +64,17 @@
     },
     {
       "type": "string",
-      "title": "root_diff_fn_input_typegraph_string"
+      "title": "string_57769"
     },
     {
       "type": "optional",
-      "title": "root_diff_fn_input_runtime_root_diff_fn_input_typegraph_string_optional",
+      "title": "string_57769_optional_cbd28",
       "item": 3,
       "default_value": null
     },
     {
       "type": "boolean",
-      "title": "root_diff_fn_input_script_boolean"
+      "title": "boolean_3ee65"
     },
     {
       "type": "object",
@@ -134,7 +134,7 @@
     },
     {
       "type": "list",
-      "title": "root_apply_fn_output_appliedMigrations_root_diff_fn_input_typegraph_string_list",
+      "title": "string_57769_list_3054b",
       "items": 3
     },
     {

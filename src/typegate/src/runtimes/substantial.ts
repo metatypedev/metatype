@@ -113,9 +113,9 @@ export class SubstantialRuntime extends Runtime {
     const queue = "default";
 
     const agentConfig = {
-      pollIntervalSec: typegate.config.base.substantial_poll_interval_sec,
-      leaseLifespanSec: typegate.config.base.substantial_lease_lifespan_sec,
-      maxAcquirePerTick: typegate.config.base.substantial_max_acquire_per_tick,
+      pollIntervalSec: typegate.config.base.substantial_poll_interval_sec!,
+      leaseLifespanSec: typegate.config.base.substantial_lease_lifespan_sec!,
+      maxAcquirePerTick: typegate.config.base.substantial_max_acquire_per_tick!,
     } satisfies AgentConfig;
 
     const agent = new Agent(backend, queue, agentConfig);
@@ -148,10 +148,9 @@ export class SubstantialRuntime extends Runtime {
     return instance;
   }
 
-  deinit(): Promise<void> {
+  async deinit() {
     logger.info("deinitializing SubstantialRuntime");
-    this.agent.stop();
-    return Promise.resolve();
+    await this.agent.stop();
   }
 
   materialize(
@@ -218,9 +217,8 @@ export class SubstantialRuntime extends Runtime {
         return ({ name: workflowName }) => {
           this.#checkWorkflowExistOrThrow(workflowName);
 
-          const res = this.agent.workerManager.getAllocatedResources(
-            workflowName,
-          );
+          const res =
+            this.agent.workerManager.getAllocatedResources(workflowName);
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
@@ -341,7 +339,7 @@ export class SubstantialRuntime extends Runtime {
         ongoing: {
           count: ongoing.length,
           runs: ongoing.sort((a, b) =>
-            a.started_at.localeCompare(b.started_at)
+            a.started_at.localeCompare(b.started_at),
           ),
         },
         completed: {
@@ -462,11 +460,9 @@ export class SubstantialRuntime extends Runtime {
       }
 
       throw new Error(
-        `workflow "${name}" does not exist, available workflows are ${
-          known
-            .map((name) => `"${name}"`)
-            .join(", ")
-        }`,
+        `workflow "${name}" does not exist, available workflows are ${known
+          .map((name) => `"${name}"`)
+          .join(", ")}`,
       );
     }
   }

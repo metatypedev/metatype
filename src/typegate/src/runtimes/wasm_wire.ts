@@ -8,9 +8,10 @@ import type { ComputeStage } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import type { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
 import { getLogger, type Logger } from "../log.ts";
-import { WitWireMessenger } from "./wit_wire/mod.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { TypeGraphDS } from "../typegraph/mod.ts";
+import { WitWireMatInfo } from "../../engine/runtime.js";
+import { WorkerManager } from "./wasm/worker_manager.ts";
 
 const logger = getLogger(import.meta);
 
@@ -21,8 +22,10 @@ export class WasmRuntimeWire extends Runtime {
   private constructor(
     typegraphName: string,
     private tg: TypeGraphDS,
-    uuid: string,
-    private wire: WitWireMessenger,
+    private uuid: string,
+    private componentPath: string,
+    private wireMat: WitWireMatInfo[],
+    private workerManager: WorkerManager,
   ) {
     super(typegraphName, uuid);
     this.logger = getLogger(`wasm_wire:'${typegraphName}'`);
@@ -50,37 +53,39 @@ export class WasmRuntimeWire extends Runtime {
     };
 
     const uuid = crypto.randomUUID();
-    logger.debug("initializing wit wire {}", {
-      instanceId: uuid,
-      module: artifactMeta,
-    });
-
-    logger.info("initializing wit wire messenger");
     const token = await InternalAuth.emit(typegate.cryptoKeys);
-    const wire = await WitWireMessenger.init(
-      await typegate.artifactStore.getLocalPath(artifactMeta),
-      uuid,
-      materializers.map((mat) => ({
-        op_name: mat.data.op_name as string,
-        // TODO; appropriately source the following
-        mat_hash: mat.data.op_name as string,
-        mat_title: mat.data.op_name as string,
-        mat_data_json: JSON.stringify({}),
-      })),
-      {
-        authToken: token,
-        typegate,
-        typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
-      },
-    );
-    logger.info("wit wire messenger initialized");
+    const componentPath =
+      await typegate.artifactStore.getLocalPath(artifactMeta);
 
-    return new WasmRuntimeWire(typegraphName, typegraph, uuid, wire);
+    const wireMat = materializers.map((mat) => ({
+      op_name: mat.data.op_name as string,
+      // TODO; appropriately source the following
+      mat_hash: mat.data.op_name as string,
+      mat_title: mat.data.op_name as string,
+      mat_data_json: JSON.stringify({}),
+    }));
+
+    const hostcallCtx = {
+      authToken: token,
+      typegate,
+      typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
+    };
+
+    const workerManager = new WorkerManager(hostcallCtx);
+
+    return new WasmRuntimeWire(
+      typegraphName,
+      typegraph,
+      uuid,
+      componentPath,
+      wireMat,
+      workerManager,
+    );
   }
 
-  async deinit(): Promise<void> {
+  async deinit() {
+    await this.workerManager.deinit();
     this.logger.info("deinitializing WasmRuntimeWire");
-    await using _drop = this.wire;
   }
 
   materialize(
@@ -132,11 +137,17 @@ export class WasmRuntimeWire extends Runtime {
 
   delegate(mat: Materializer): Resolver {
     const { op_name } = mat.data;
-    return (args) => {
+    return async (args) => {
       this.logger.info(`running '${op_name}'`);
       this.logger.debug(`running '${op_name}' with args: {}`, args);
 
-      const res = this.wire.handle(op_name as string, args);
+      const res = await this.workerManager.callWitOp({
+        opName: op_name as string,
+        args,
+        ops: this.wireMat,
+        id: this.uuid,
+        componentPath: this.componentPath,
+      });
 
       this.logger.info(`'${op_name}' successful`);
       this.logger.debug(`'${op_name}' returned: ${JSON.stringify(res)}`);

@@ -96,9 +96,38 @@ impl Ctx {
 }
 
 struct Instance {
+    id: String,
     bindings: wit::WitWire,
     store: wasmtime::Store<InstanceState>,
     preopen_dir: PathBuf,
+}
+
+// An Instance's lifetime is tied to a thread (worker)
+// The Instance is dropped when a worker is terminated
+impl Drop for Instance {
+    fn drop(&mut self) {
+        let id = self.id.clone();
+        let preopen_dir = self.preopen_dir.clone();
+
+        debug!("destroying wit_wire instance {id}");
+
+        // FIXME: Does it really have to be async?
+        std::mem::drop(tokio::task::spawn(async move {
+            debug!("Removing preopened dir: {preopen_dir:?}");
+
+            match tokio::fs::remove_dir_all(&preopen_dir).await {
+                Err(err) if err.kind() != std::io::ErrorKind::NotFound => {
+                    error!(
+                        "error removing preopend dir for instance {id} at {:?}: {err}",
+                        preopen_dir
+                    )
+                }
+                _ => {
+                    debug!("preopened dir removed for instance {id}")
+                }
+            }
+        }));
+    }
 }
 
 struct InstanceState {
@@ -156,14 +185,6 @@ struct TypegateHost {
 #[repr(transparent)]
 struct SendPtr<T>(NonNull<T>);
 unsafe impl<T> Send for SendPtr<T> {}
-
-impl TypegateHost {
-    fn drop(self, scope: &mut v8::HandleScope) {
-        unsafe {
-            _ = v8::Global::from_raw(scope, self.js_fn.0);
-        }
-    }
-}
 
 #[wasmtime_wasi::async_trait]
 impl Host for TypegateHost {
@@ -389,42 +410,15 @@ pub async fn op_wit_wire_init<'scope>(
     })??; // <- note second try for the wit err. we have an into impl above
     assert!(res.ok);
     ctx.instances.insert(
-        instance_id,
+        instance_id.clone(),
         Instance {
+            id: instance_id,
             bindings,
             store,
             preopen_dir: work_dir,
         },
     );
     Ok(WitWireInitResponse {})
-}
-
-#[deno_core::op2(fast)]
-pub fn op_wit_wire_destroy(
-    state: Rc<RefCell<OpState>>,
-    scope: &mut v8::HandleScope<'_>,
-    #[string] instance_id: String,
-) {
-    debug!("destroying wit_wire instnace {instance_id}");
-    let ctx = {
-        let state = state.borrow();
-        let ctx = state.borrow::<Ctx>();
-        ctx.clone()
-    };
-
-    let Some((_id, instance)) = ctx.instances.remove(&instance_id) else {
-        return;
-    };
-    let tg_host = instance.store.into_data().tg_host;
-    tg_host.drop(scope);
-    std::mem::drop(tokio::task::spawn(async move {
-        if let Err(err) = tokio::fs::remove_dir_all(&instance.preopen_dir).await {
-            error!(
-                "error removing preopend dir for instance {_id} at {:?}: {err}",
-                instance.preopen_dir
-            )
-        }
-    }));
 }
 
 #[derive(Deserialize)]

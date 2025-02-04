@@ -38,4 +38,7 @@ def prisma_apply(g: Graph):
                 }
             }
         ),
+        complex=prisma.find_many(user).apply(
+            {"where": {"AND": [{"name": {"contains": g.set("Al")}}]}}
+        ),
     )

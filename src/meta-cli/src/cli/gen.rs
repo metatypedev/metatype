@@ -13,6 +13,7 @@ use crate::{config::Config, deploy::actors::console::ConsoleActor};
 use actix::Actor;
 use clap::Parser;
 use common::typegraph::Typegraph;
+use dashmap::DashMap;
 use futures_concurrency::future::FutureGroup;
 use metagen::*;
 
@@ -59,6 +60,7 @@ impl Action for Gen {
             config: config.clone(),
             dir,
             typegate: Arc::new(node),
+            typegraph_cache: DashMap::new(),
         };
 
         if !mgen_conf.targets.contains_key(&self.gen_target) {
@@ -100,11 +102,28 @@ impl Action for Gen {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 struct MetagenCtx {
     config: Arc<Config>,
     typegate: Arc<common::node::Node>,
     dir: PathBuf,
+    typegraph_cache: DashMap<String, Arc<Typegraph>>,
+}
+
+impl MetagenCtx {
+    async fn get_cached_typegraph_or(
+        &self,
+        key: &str,
+        fetch: impl Future<Output = Result<Arc<Typegraph>>>,
+    ) -> Result<Arc<Typegraph>> {
+        if let Some(cached) = self.typegraph_cache.get(key) {
+            Ok(cached.value().clone())
+        } else {
+            let result = fetch.await?;
+            self.typegraph_cache.insert(key.to_string(), result.clone());
+            Ok(result)
+        }
+    }
 }
 
 async fn load_fdk_template(
@@ -143,22 +162,37 @@ impl InputResolver for MetagenCtx {
     async fn resolve(&self, order: GeneratorInputOrder) -> Result<GeneratorInputResolved> {
         Ok(match order {
             GeneratorInputOrder::TypegraphFromTypegate { name } => {
-                GeneratorInputResolved::TypegraphFromTypegate {
-                    raw: self
-                        .typegate
-                        .typegraph(&name)
-                        .await?
-                        .with_context(|| format!("no typegraph found under {name:?}"))?,
-                }
+                let raw = self
+                    .get_cached_typegraph_or(&name, async {
+                        self.typegate
+                            .typegraph(&name)
+                            .await?
+                            .with_context(|| format!("no typegraph found under {name:?}"))
+                    })
+                    .await?;
+
+                GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
             GeneratorInputOrder::TypegraphFromPath { path, name } => {
                 let config = self.config.clone();
+                let key = format!(
+                    "{}{}",
+                    path.to_string_lossy(),
+                    name.clone().unwrap_or_default()
+                );
                 let path = self
                     .dir
                     .join(path)
                     .canonicalize()
                     .wrap_err("unable to canonicalize typegraph path, make sure it exists")?;
-                let raw = load_tg_at(config, path, name.as_deref(), &self.dir).await?;
+
+                let raw = self
+                    .get_cached_typegraph_or(
+                        &key,
+                        load_tg_at(config, path, name.as_deref(), &self.dir),
+                    )
+                    .await?;
+
                 GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
             GeneratorInputOrder::LoadFdkTemplate {
@@ -178,7 +212,7 @@ async fn load_tg_at(
     path: PathBuf,
     name: Option<&str>,
     dir: &Path,
-) -> anyhow::Result<Box<Typegraph>> {
+) -> anyhow::Result<Arc<Typegraph>> {
     let console = ConsoleActor::new(Arc::clone(&config)).start();
 
     let config_dir: Arc<Path> = config.dir().unwrap_or_log().into();

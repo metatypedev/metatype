@@ -4,7 +4,7 @@ members = [
   "src/common",
   "src/meta-cli",
   "src/metagen",
-  "src/metagen/src/fdk_rust/static",
+  "src/metagen/src/fdk_rs/static",
   "src/mt_deno",
   "src/typegate/engine",
   "src/typegate/standalone",
@@ -24,7 +24,7 @@ exclude = [
 ]
 
 [workspace.package]
-version = "0.5.0"
+version = "0.5.1-rc.0"
 edition = "2021"
 
 [workspace.dependencies]

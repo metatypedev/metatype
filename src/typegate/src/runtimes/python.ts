@@ -8,13 +8,11 @@ import type { Resolver, RuntimeInitParams } from "../types.ts";
 import type { ComputeStage } from "../engine/query_engine.ts";
 import type { Materializer } from "../typegraph/types.ts";
 import * as ast from "graphql/ast";
-import { WitWireMessenger } from "./wit_wire/mod.ts";
 import type { WitWireMatInfo } from "../../engine/runtime.js";
 import { sha256 } from "../crypto.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { TypeGraphDS } from "../typegraph/mod.ts";
-
-const logger = getLogger(import.meta);
+import { WorkerManager } from "./wasm/worker_manager.ts";
 
 @registerRuntime("python")
 export class PythonRuntime extends Runtime {
@@ -23,8 +21,9 @@ export class PythonRuntime extends Runtime {
   private constructor(
     typegraphName: string,
     private tg: TypeGraphDS,
-    uuid: string,
-    private wire: WitWireMessenger,
+    private uuid: string,
+    private wireMat: WitWireMatInfo[],
+    private workerManager: WorkerManager,
   ) {
     super(typegraphName, uuid);
     this.logger = getLogger(`python:'${typegraphName}'`);
@@ -123,30 +122,31 @@ export class PythonRuntime extends Runtime {
 
     // add default vm for lambda/def
     const uuid = crypto.randomUUID();
-    logger.info(
-      `initializing WitWireMessenger for PythonRuntime ${uuid} on typegraph ${typegraphName}`,
-    );
     const token = await InternalAuth.emit(typegate.cryptoKeys);
-    const wire = await WitWireMessenger.init(
-      "inline://pyrt_wit_wire.cwasm",
+
+    const hostcallCtx = {
+      authToken: token,
+      typegate,
+      typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
+    };
+
+    const workerManager = new WorkerManager(hostcallCtx);
+
+    return new PythonRuntime(
+      typegraphName,
+      typegraph,
       uuid,
       wireMatInfos,
-      {
-        authToken: token,
-        typegate,
-        typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
-      },
+      workerManager,
     );
-
-    return new PythonRuntime(typegraphName, typegraph, uuid, wire);
   }
 
-  async deinit(): Promise<void> {
+  async deinit() {
     // if (Deno.env.get("KILL_PY")) {
     //   throw new Error("wtf");
     // }
+    await this.workerManager.deinit();
     this.logger.info("deinitializing PythonRuntime");
-    await using _drop = this.wire;
   }
 
   async materialize(
@@ -200,15 +200,21 @@ export class PythonRuntime extends Runtime {
   async delegate(mat: Materializer): Promise<Resolver> {
     const { name } = mat.data;
     const dataHash = await sha256(JSON.stringify(mat.data));
-    const op_name = `${name as string}_${dataHash.slice(0, 12)}`;
+    const opName = `${name as string}_${dataHash.slice(0, 12)}`;
     return async (args) => {
-      this.logger.info(`running '${op_name}'`);
+      this.logger.info(`running '${opName}'`);
       this.logger.debug(
-        `running '${op_name}' with args: ${JSON.stringify(args)}`,
+        `running '${opName}' with args: ${JSON.stringify(args)}`,
       );
-      const res = await this.wire.handle(op_name, args);
-      this.logger.info(`'${op_name}' successful`);
-      this.logger.debug(`'${op_name}' returned: ${JSON.stringify(res)}`);
+      const res = await this.workerManager.callWitOp({
+        opName,
+        args,
+        ops: this.wireMat,
+        id: this.uuid,
+        componentPath: "inline://pyrt_wit_wire.cwasm",
+      });
+      this.logger.info(`'${opName}' successful`);
+      this.logger.debug(`'${opName}' returned: ${JSON.stringify(res)}`);
       return res;
     };
   }

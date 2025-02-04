@@ -60,7 +60,6 @@ self.onmessage = async function (event) {
               {
                 type: "FAIL",
                 error: errorToString(wfException),
-                // How??
                 exception: wfException instanceof Error
                   ? wfException
                   : undefined,

@@ -9,7 +9,7 @@ export default {
     inherit: "ci",
     desc: "Shorthand for `tools/test.ts`",
     fn: async ($) => {
-      if (await testE2eCli($.argv) != 0) {
+      if ((await testE2eCli($.argv)) != 0) {
         throw new Error("tests failed");
       }
     },
@@ -34,7 +34,7 @@ export default {
                 --exclude typegate
                 --exclude typegate_engine
                 --exclude typegraph_core
-                --exclude metagen_fdk_rust_static
+                --exclude metagen_fdk_rs_static
                 --exclude client_rs_static`;
     },
   },
