@@ -5,14 +5,14 @@ snapshot[`Basic introspection 1`] = `
   __schema: {
     types: [
       {
-        kind: "SCALAR",
-        name: "FavoriteToy",
-      },
-      {
         fields: null,
         kind: "SCALAR",
         name: "String",
         possibleTypes: null,
+      },
+      {
+        kind: "SCALAR",
+        name: "FavoriteToy",
       },
       {
         fields: null,

@@ -12,12 +12,12 @@ const context = {
 };
 
 Meta.test({
-  name: "Visibility check upon introspection",
+  name: "Visibility check upon introspection on complex typegraph",
   introspection: true,
 }, async (t) => {
-  const e = await t.engine("introspection/visibility.py");
+  const e = await t.engine("introspection/visibility_complex.py");
   await t.should(
-    "enumerate types without context",
+    "enumerate types without context on complex typegraph",
     async () => {
       await enumerateTypes()
         .matchOkSnapshot(t)
@@ -26,7 +26,7 @@ Meta.test({
   );
 
   await t.should(
-    "enumerate types after context defined",
+    "enumerate types after context defined on complex typegraph",
     async () => {
       await enumerateTypes()
         .withContext(context)
@@ -37,10 +37,10 @@ Meta.test({
 });
 
 Meta.test({
-  name: "Full introspection without context provided",
+  name: "Full introspection without context provided on complex typegraph",
   introspection: true,
 }, async (t) => {
-  const e = await t.engine("introspection/visibility.py");
+  const e = await t.engine("introspection/visibility_complex.py");
   await t.should(
     "have a few fields inivible without proper access",
     async () => {

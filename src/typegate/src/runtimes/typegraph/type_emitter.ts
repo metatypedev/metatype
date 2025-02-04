@@ -208,14 +208,14 @@ export class IntrospectionTypeEmitter {
       null,
       false,
     );
-    const title = this.#getName(type, gctx);
 
+    const title = this.#getName(type, gctx);
     if (this.#typesDefined.has(title)) {
       return;
     }
 
     if (entries.length == 0) {
-      if (type.title == "Query") {
+      if (isRootQueryObject(type)) {
         const schema = this.$emptyQuerySchema(type);
         this.#define(type.title, schema);
       } else {
@@ -236,6 +236,9 @@ export class IntrospectionTypeEmitter {
         [fields]: entries.map(([fieldName, fieldType, verdict]) => {
           const policies = (type.policies ?? {})[fieldName];
           const polDescription = policyDescription(this.tg, policies ?? []);
+          const currentVerdict = gctx.parentVerdict == "ALLOW"
+            ? "ALLOW"
+            : verdict;
 
           return {
             isDeprecated: false,
@@ -243,7 +246,7 @@ export class IntrospectionTypeEmitter {
             description: description + polDescription,
             ...this.$fieldSchema(fieldName, fieldType, {
               ...gctx,
-              parentVerdict: verdict,
+              parentVerdict: currentVerdict,
             }),
           };
         }),
@@ -378,7 +381,6 @@ export class IntrospectionTypeEmitter {
     const description = `${type.type} type\n${Array.from(titles).join(", ")}`;
 
     if (gctx.asInput || variants.some(isScalar)) {
-      console.log("INPUT", title, gctx.asInput || variants.some(isScalar));
       // Note: if one item is a scalar
       // might as well create custom scalars for the others
       if (!this.#typesDefined.has(title)) {
@@ -499,16 +501,19 @@ export class IntrospectionTypeEmitter {
         );
       }
 
-
       return toResolverMap({
         name: fieldName,
         interfaces: [],
         // input
         args: Object.entries(input.properties).map(([argName, idx]) => {
-          const argSchema = this.#emitMaybeWithQuantifierSchema(this.tg.types[idx], {
-            ...gctx,
-            asInput: true,
-          }, argName);
+          const argSchema = this.#emitMaybeWithQuantifierSchema(
+            this.tg.types[idx],
+            {
+              ...gctx,
+              asInput: true,
+            },
+            argName,
+          );
 
           return {
             description: `${fieldName} argument`,

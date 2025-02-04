@@ -1,6 +1,6 @@
 export const snapshot = {};
 
-snapshot[`Visibility check upon introspection 1`] = `
+snapshot[`Visibility check upon introspection on complex typegraph 1`] = `
 {
   __schema: {
     types: [
@@ -85,7 +85,7 @@ snapshot[`Visibility check upon introspection 1`] = `
 }
 `;
 
-snapshot[`Visibility check upon introspection 2`] = `
+snapshot[`Visibility check upon introspection on complex typegraph 2`] = `
 {
   __schema: {
     types: [
@@ -166,7 +166,7 @@ snapshot[`Visibility check upon introspection 2`] = `
 }
 `;
 
-snapshot[`Full introspection without context provided 1`] = `
+snapshot[`Full introspection without context provided on complex typegraph 1`] = `
 {
   __schema: {
     directives: [],

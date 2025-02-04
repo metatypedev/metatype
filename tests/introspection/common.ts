@@ -111,3 +111,18 @@ export const enumerateTypes = () => gql`
     }
   }
 `;
+
+
+export const enumerateTypesAndInspectFields = () => gql`
+  query IntrospectionQuery {
+    __schema {
+      types {
+        name
+        kind
+        fields {
+          name
+        }
+      }
+    }
+  }
+`;

@@ -7,7 +7,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 
 @typegraph()
-def visibility(g: Graph):
+def visibility_complex(g: Graph):
     deno = DenoRuntime()
     pass_through = deno.policy("passThrough", "() => 'PASS'")
     deny = deno.policy("denyAll", "() => 'DENY'")

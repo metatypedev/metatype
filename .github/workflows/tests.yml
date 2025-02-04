@@ -6,7 +6,7 @@ on:
       tmate_enabled:
         type: boolean
         description: |
-          Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate). 
+          Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate).
           This disables all but the test-full jobs.
         required: false
         default: false
@@ -19,7 +19,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-
 
 # Cancel any in-flight jobs for the same PR/branch so there's only one active
 # at a time
@@ -304,6 +303,7 @@ jobs:
             tests/runtimes/wasm_reflected/*.ts \
             tests/runtimes/python/*.ts \
             tests/runtimes/substantial/common.ts \
+            tests/introspection/common.ts \
             tests/e2e/self_deploy/self_deploy.ts \
             tests/e2e/published/*.ts \
             tests/metagen/typegraphs/metagen.ts \
