@@ -4,7 +4,6 @@
 import { jsonError, jsonOk } from "../../responses.ts";
 import type { RouteParams } from "./mod.ts";
 
-// TODO use `BaseError`
 export function badRequest(message: string): Response {
   return jsonError({ status: 400, message });
 }
