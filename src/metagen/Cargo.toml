@@ -23,6 +23,7 @@ serde_json.workspace = true
 heck.workspace = true
 
 # ds
+dashmap.workspace = true
 indexmap.workspace = true
 regex.workspace = true
 tera = { workspace = true, default-features = false }

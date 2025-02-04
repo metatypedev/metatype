@@ -220,6 +220,38 @@ mod node_metas {
             ..RootNestedCompositeFnOutput()
         }
     }
+    pub fn Struct17dc8() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("input".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RootIdentityFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("input".into(), "Integer64be4".into()),
+                ].into()
+            ),
+            ..Struct17dc8()
+        }
+    }
+    pub fn RootIdentityUpdateFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("input".into(), "Integer64be4".into()),
+                ].into()
+            ),
+            ..Struct17dc8()
+        }
+    }
 
 }
 use types::*;
@@ -234,6 +266,10 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct StructC339cPartial {
         pub id: Option<String>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Struct17dc8Partial {
+        pub input: Option<i64>,
     }
     pub type UserEmailStringEmail = String;
     pub type UserPostsPostList = Vec<PostPartial>;
@@ -333,6 +369,11 @@ pub struct RootNestedCompositeFnOutputSelections<ATy = NoAlias> {
     pub list: CompositeSelect<RootNestedCompositeFnOutputListStructSelections<ATy>, ATy>,
 }
 impl_selection_traits!(RootNestedCompositeFnOutputSelections, scalar, composite, list);
+#[derive(Default, Debug)]
+pub struct Struct17dc8Selections<ATy = NoAlias> {
+    pub input: ScalarSelect<ATy>,
+}
+impl_selection_traits!(Struct17dc8Selections, input);
 
 impl QueryGraph {
 
@@ -343,6 +384,7 @@ impl QueryGraph {
             
                 ("UserIdStringUuid".into(), "String!".into()),
                 ("StringE1a43".into(), "String!".into()),
+                ("Integer64be4".into(), "Int!".into()),
                 ("post".into(), "post!".into()),
                 ("user".into(), "user!".into()),
         ].into()),
@@ -488,6 +530,30 @@ impl QueryGraph {
             root_name: "nestedComposite".into(),
             root_meta: node_metas::RootNestedCompositeFn,
             args: NodeArgsErased::None,
+            _marker: PhantomData,
+        }
+    }
+    pub fn identity(
+        &self,
+        args: impl Into<NodeArgs<Struct17dc8Partial>>
+    ) -> UnselectedNode<Struct17dc8Selections, Struct17dc8Selections<HasAlias>, QueryMarker, Struct17dc8Partial>
+    {
+        UnselectedNode {
+            root_name: "identity".into(),
+            root_meta: node_metas::RootIdentityFn,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn identity_update(
+        &self,
+        args: impl Into<NodeArgs<Struct17dc8Partial>>
+    ) -> UnselectedNode<Struct17dc8Selections, Struct17dc8Selections<HasAlias>, MutationMarker, Struct17dc8Partial>
+    {
+        UnselectedNode {
+            root_name: "identityUpdate".into(),
+            root_meta: node_metas::RootIdentityUpdateFn,
+            args: args.into().into(),
             _marker: PhantomData,
         }
     }

@@ -210,12 +210,14 @@ export class MutationNode<Out> {
 type SelectNodeOut<T> = T extends QueryNode<infer O> | MutationNode<infer O>
   ? O
   : never;
-type QueryDocOut<T> =
+type QueryOut<T> =
   T extends Record<string, QueryNode<unknown> | MutationNode<unknown>>
     ? {
         [K in keyof T]: SelectNodeOut<T[K]>;
       }
-    : never;
+    : T extends QueryNode<unknown> | MutationNode<unknown>
+      ? SelectNodeOut<T>
+      : never;
 
 type TypePath = ("?" | "[]" | `.${string}`)[];
 type ValuePath = ("" | `[${number}]` | `.${string}`)[];
@@ -661,8 +663,10 @@ export class GraphQLTransport {
   /**
    * Make a query request to the typegraph.
    */
-  async query<Doc extends Record<string, QueryNode<unknown>>>(
-    query: Doc,
+  async query<
+    Q extends QueryNode<unknown> | Record<string, QueryNode<unknown>>,
+  >(
+    query: Q,
     {
       options,
       name = "",
@@ -670,30 +674,37 @@ export class GraphQLTransport {
       options?: GraphQlTransportOptions;
       name?: string;
     } = {},
-  ): Promise<QueryDocOut<Doc>> {
+  ): Promise<QueryOut<Q>> {
+    const isNode = query instanceof QueryNode;
     const { variables, doc } = buildGql(
       this.typeToGqlTypeMap,
-      Object.fromEntries(
-        Object.entries(query).map(([key, val]) => [
-          key,
-          (val as QueryNode<unknown>).inner(),
-        ]),
-      ),
+      isNode
+        ? { value: query.inner() }
+        : Object.fromEntries(
+            Object.entries(query).map(([key, val]) => [
+              key,
+              (val as QueryNode<unknown>).inner(),
+            ]),
+          ),
       "query",
       name,
     );
-    return (await this.#request(
-      doc,
-      variables,
-      options ?? {},
-    )) as QueryDocOut<Doc>;
+    let result = await this.#request(doc, variables, options ?? {});
+
+    if (isNode) {
+      result = (result as { value: SelectNodeOut<Q> }).value;
+    }
+
+    return result as QueryOut<Q>;
   }
 
   /**
    * Make a mutation request to the typegraph.
    */
-  async mutation<Doc extends Record<string, MutationNode<unknown>>>(
-    query: Doc,
+  async mutation<
+    Q extends MutationNode<unknown> | Record<string, MutationNode<unknown>>,
+  >(
+    query: Q,
     {
       options,
       name = "",
@@ -701,24 +712,28 @@ export class GraphQLTransport {
       options?: GraphQlTransportOptions;
       name?: string;
     } = {},
-  ): Promise<QueryDocOut<Doc>> {
+  ): Promise<QueryOut<Q>> {
+    const isNode = query instanceof MutationNode;
     const { variables, doc, files } = buildGql(
       this.typeToGqlTypeMap,
-      Object.fromEntries(
-        Object.entries(query).map(([key, val]) => [
-          key,
-          (val as MutationNode<unknown>).inner(),
-        ]),
-      ),
+      isNode
+        ? { value: query.inner() }
+        : Object.fromEntries(
+            Object.entries(query).map(([key, val]) => [
+              key,
+              (val as MutationNode<unknown>).inner(),
+            ]),
+          ),
       "mutation",
       name,
     );
-    return (await this.#request(
-      doc,
-      variables,
-      options ?? {},
-      files,
-    )) as QueryDocOut<Doc>;
+    let result = await this.#request(doc, variables, options ?? {}, files);
+
+    if (isNode) {
+      result = (result as { value: SelectNodeOut<Q> }).value;
+    }
+
+    return result as QueryOut<Q>;
   }
 
   /**
@@ -726,11 +741,11 @@ export class GraphQLTransport {
    */
   prepareQuery<
     T extends JsonObject,
-    Doc extends Record<string, QueryNode<unknown>>,
+    Q extends QueryNode<unknown> | Record<string, QueryNode<unknown>>,
   >(
-    fun: (args: PreparedArgs<T>) => Doc,
+    fun: (args: PreparedArgs<T>) => Q,
     { name = "" }: { name?: string } = {},
-  ): PreparedRequest<T, Doc> {
+  ): PreparedRequest<T, Q> {
     return new PreparedRequest(
       this.address,
       this.options,
@@ -746,7 +761,7 @@ export class GraphQLTransport {
    */
   prepareMutation<
     T extends JsonObject,
-    Q extends Record<string, MutationNode<unknown>>,
+    Q extends MutationNode<unknown> | Record<string, MutationNode<unknown>>,
   >(
     fun: (args: PreparedArgs<T>) => Q,
     { name = "" }: { name?: string } = {},
@@ -769,34 +784,43 @@ export class GraphQLTransport {
  */
 export class PreparedRequest<
   T extends JsonObject,
-  Doc extends Record<string, QueryNode<unknown> | MutationNode<unknown>>,
+  Q extends
+    | QueryNode<unknown>
+    | MutationNode<unknown>
+    | Record<string, QueryNode<unknown> | MutationNode<unknown>>,
 > {
   public doc: string;
   #mappings: Record<string, unknown>;
+  private singleNode: boolean;
 
   constructor(
     private address: URL,
     private options: GraphQlTransportOptions,
     typeToGqlTypeMap: Record<string, string>,
-    fun: (args: PreparedArgs<T>) => Doc,
+    fun: (args: PreparedArgs<T>) => Q,
     ty: "query" | "mutation",
     name: string = "",
   ) {
     const args = new PreparedArgs<T>();
     const dryRunNode = fun(args);
+    const isSingleNode =
+      dryRunNode instanceof QueryNode || dryRunNode instanceof MutationNode;
     const { doc, variables } = buildGql(
       typeToGqlTypeMap,
-      Object.fromEntries(
-        Object.entries(dryRunNode).map(([key, val]) => [
-          key,
-          (val as MutationNode<unknown>).inner(),
-        ]),
-      ),
+      isSingleNode
+        ? { value: dryRunNode.inner() }
+        : Object.fromEntries(
+            Object.entries(dryRunNode).map(([key, val]) => [
+              key,
+              (val as MutationNode<unknown>).inner(),
+            ]),
+          ),
       ty,
       name,
     );
     this.doc = doc;
     this.#mappings = variables;
+    this.singleNode = isSingleNode;
   }
 
   resolveVariables(args: T, mappings: Record<string, unknown>) {
@@ -816,12 +840,7 @@ export class PreparedRequest<
   /**
    * Execute the prepared request.
    */
-  async perform(
-    args: T,
-    opts?: GraphQlTransportOptions,
-  ): Promise<{
-    [K in keyof Doc]: SelectNodeOut<Doc[K]>;
-  }> {
+  async perform(args: T, opts?: GraphQlTransportOptions): Promise<QueryOut<Q>> {
     const resolvedVariables = this.resolveVariables(args, this.#mappings);
     // console.log(this.doc, {
     //   resolvedVariables,
@@ -836,7 +855,13 @@ export class PreparedRequest<
         cause: res.errors,
       });
     }
-    return res.data as QueryDocOut<Doc>;
+    let result = res.data;
+
+    if (this.singleNode) {
+      result = (result as { value: SelectNodeOut<Q> }).value;
+    }
+
+    return result as QueryOut<Q>;
   }
 }
 
@@ -1010,6 +1035,29 @@ const nodeMetas = {
       ...nodeMetas.RootNestedCompositeFnOutput(),
     };
   },
+  Struct17dc8(): NodeMeta {
+    return {
+      subNodes: [
+        ["input", nodeMetas.scalar],
+      ],
+    };
+  },
+  RootIdentityFn(): NodeMeta {
+    return {
+      ...nodeMetas.Struct17dc8(),
+      argumentTypes: {
+        input: "Integer64be4",
+      },
+    };
+  },
+  RootIdentityUpdateFn(): NodeMeta {
+    return {
+      ...nodeMetas.Struct17dc8(),
+      argumentTypes: {
+        input: "Integer64be4",
+      },
+    };
+  },
 };
 export type UserIdStringUuid = string;
 export type Post = {
@@ -1019,6 +1067,9 @@ export type Post = {
 };
 export type StructC339c = {
   id: string;
+};
+export type Struct17dc8 = {
+  input: number;
 };
 export type UserEmailStringEmail = string;
 export type UserPostsPostList = Array<Post>;
@@ -1096,95 +1147,116 @@ export type RootNestedCompositeFnOutputSelections = {
   composite?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructSelections>;
   list?: CompositeSelectNoArgs<RootNestedCompositeFnOutputListStructSelections>;
 };
+export type Struct17dc8Selections = {
+  _?: SelectionFlags;
+  input?: ScalarSelectNoArgs;
+};
 
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
       "UserIdStringUuid": "String!",
       "StringE1a43": "String!",
+      "Integer64be4": "Int!",
       "post": "post!",
       "user": "user!",
     });
   }
     
-  getUser(select: UserSelections) {
+  getUser(select: UserSelections): QueryNode<User> {
     const inner = _selectionToNodeSet(
       { "getUser": select },
       [["getUser", nodeMetas.RootGetUserFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<User>;
+    return new QueryNode(inner);
   }
-  getPosts(select: PostSelections) {
+  getPosts(select: PostSelections): QueryNode<Post> {
     const inner = _selectionToNodeSet(
       { "getPosts": select },
       [["getPosts", nodeMetas.RootGetPostsFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<Post>;
+    return new QueryNode(inner);
   }
-  scalarNoArgs() {
+  scalarNoArgs(): QueryNode<string> {
     const inner = _selectionToNodeSet(
       { "scalarNoArgs": true },
       [["scalarNoArgs", nodeMetas.RootScalarNoArgsFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<string>;
+    return new QueryNode(inner);
   }
-  scalarArgs(args: Post | PlaceholderArgs<Post>) {
+  scalarArgs(args: Post | PlaceholderArgs<Post>): MutationNode<string> {
     const inner = _selectionToNodeSet(
       { "scalarArgs": args },
       [["scalarArgs", nodeMetas.RootScalarArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<string>;
+    return new MutationNode(inner);
   }
-  compositeNoArgs(select: PostSelections) {
+  compositeNoArgs(select: PostSelections): MutationNode<Post> {
     const inner = _selectionToNodeSet(
       { "compositeNoArgs": select },
       [["compositeNoArgs", nodeMetas.RootCompositeNoArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<Post>;
+    return new MutationNode(inner);
   }
-  compositeArgs(args: StructC339c | PlaceholderArgs<StructC339c>, select: PostSelections) {
+  compositeArgs(args: StructC339c | PlaceholderArgs<StructC339c>, select: PostSelections): MutationNode<Post> {
     const inner = _selectionToNodeSet(
       { "compositeArgs": [args, select] },
       [["compositeArgs", nodeMetas.RootCompositeArgsFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<Post>;
+    return new MutationNode(inner);
   }
-  scalarUnion(args: StructC339c | PlaceholderArgs<StructC339c>) {
+  scalarUnion(args: StructC339c | PlaceholderArgs<StructC339c>): QueryNode<RootScalarUnionFnOutput> {
     const inner = _selectionToNodeSet(
       { "scalarUnion": args },
       [["scalarUnion", nodeMetas.RootScalarUnionFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<RootScalarUnionFnOutput>;
+    return new QueryNode(inner);
   }
-  compositeUnion(args: StructC339c | PlaceholderArgs<StructC339c>, select: RootCompositeUnionFnOutputSelections) {
+  compositeUnion(args: StructC339c | PlaceholderArgs<StructC339c>, select: RootCompositeUnionFnOutputSelections): QueryNode<RootCompositeUnionFnOutput> {
     const inner = _selectionToNodeSet(
       { "compositeUnion": [args, select] },
       [["compositeUnion", nodeMetas.RootCompositeUnionFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<RootCompositeUnionFnOutput>;
+    return new QueryNode(inner);
   }
-  mixedUnion(args: StructC339c | PlaceholderArgs<StructC339c>, select: RootMixedUnionFnOutputSelections) {
+  mixedUnion(args: StructC339c | PlaceholderArgs<StructC339c>, select: RootMixedUnionFnOutputSelections): QueryNode<RootMixedUnionFnOutput> {
     const inner = _selectionToNodeSet(
       { "mixedUnion": [args, select] },
       [["mixedUnion", nodeMetas.RootMixedUnionFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<RootMixedUnionFnOutput>;
+    return new QueryNode(inner);
   }
-  nestedComposite(select: RootNestedCompositeFnOutputSelections) {
+  nestedComposite(select: RootNestedCompositeFnOutputSelections): QueryNode<RootNestedCompositeFnOutput> {
     const inner = _selectionToNodeSet(
       { "nestedComposite": select },
       [["nestedComposite", nodeMetas.RootNestedCompositeFn]],
       "$q",
     )[0];
-    return new QueryNode(inner) as QueryNode<RootNestedCompositeFnOutput>;
+    return new QueryNode(inner);
+  }
+  identity(args: Struct17dc8 | PlaceholderArgs<Struct17dc8>, select: Struct17dc8Selections): QueryNode<Struct17dc8> {
+    const inner = _selectionToNodeSet(
+      { "identity": [args, select] },
+      [["identity", nodeMetas.RootIdentityFn]],
+      "$q",
+    )[0];
+    return new QueryNode(inner);
+  }
+  identityUpdate(args: Struct17dc8 | PlaceholderArgs<Struct17dc8>, select: Struct17dc8Selections): MutationNode<Struct17dc8> {
+    const inner = _selectionToNodeSet(
+      { "identityUpdate": [args, select] },
+      [["identityUpdate", nodeMetas.RootIdentityUpdateFn]],
+      "$q",
+    )[0];
+    return new MutationNode(inner);
   }
 }

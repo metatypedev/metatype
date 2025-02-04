@@ -199,6 +199,7 @@ def selection_to_nodes(
 #
 
 Out = typing.TypeVar("Out", covariant=True)
+PreparedOut = typing.TypeVar("PreparedOut", covariant=True)
 
 T = typing.TypeVar("T")
 
@@ -706,53 +707,134 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         except urllib.error.URLError as err:
             raise Exception(f"URL error: {err.reason}")
 
+    @typing.overload
+    def query(
+        self,
+        inp: QueryNode[Out],
+        opts: typing.Optional[GraphQLTransportOptions] = None,
+        name: str = "",
+    ) -> Out: ...
+
+    @typing.overload
     def query(
         self,
         inp: typing.Dict[str, QueryNode[Out]],
         opts: typing.Optional[GraphQLTransportOptions] = None,
         name: str = "",
-    ) -> typing.Dict[str, Out]:
-        doc, variables, _ = self.build_gql(
-            {key: val for key, val in inp.items()}, "query", name
-        )
-        return self.fetch(doc, variables, opts)
+    ) -> typing.Dict[str, Out]: ...
 
+    def query(
+        self,
+        inp: typing.Union[QueryNode[Out], typing.Dict[str, QueryNode[Out]]],
+        opts: typing.Optional[GraphQLTransportOptions] = None,
+        name: str = "",
+    ) -> typing.Union[Out, typing.Dict[str, Out]]:
+        query = {"value": inp} if isinstance(inp, QueryNode) else inp
+        doc, variables, _ = self.build_gql(query, "query", name)
+        result = self.fetch(doc, variables, opts)
+        return result["value"] if isinstance(inp, QueryNode) else result
+
+    @typing.overload
+    def mutation(
+        self,
+        inp: MutationNode[Out],
+        opts: typing.Optional[GraphQLTransportOptions] = None,
+        name: str = "",
+    ) -> Out: ...
+
+    @typing.overload
     def mutation(
         self,
         inp: typing.Dict[str, MutationNode[Out]],
         opts: typing.Optional[GraphQLTransportOptions] = None,
         name: str = "",
-    ) -> typing.Dict[str, Out]:
-        doc, variables, files = self.build_gql(
-            {key: val for key, val in inp.items()}, "mutation", name
-        )
-        return self.fetch(doc, variables, opts, files)
+    ) -> typing.Dict[str, Out]: ...
 
+    def mutation(
+        self,
+        inp: typing.Union[MutationNode[Out], typing.Dict[str, MutationNode[Out]]],
+        opts: typing.Optional[GraphQLTransportOptions] = None,
+        name: str = "",
+    ) -> typing.Union[Out, typing.Dict[str, Out]]:
+        mutation = {"value": inp} if isinstance(inp, MutationNode) else inp
+        doc, variables, files = self.build_gql(mutation, "mutation", name)
+        result = self.fetch(doc, variables, opts, files)
+        return result["value"] if isinstance(inp, MutationNode) else result
+
+    @typing.overload
+    def prepare_query(
+        self,
+        fun: typing.Callable[[PreparedArgs], QueryNode[Out]],
+        name: str = "",
+    ) -> "PreparedRequestUrlib[Out, Out]": ...
+
+    @typing.overload
     def prepare_query(
         self,
         fun: typing.Callable[[PreparedArgs], typing.Dict[str, QueryNode[Out]]],
         name: str = "",
-    ) -> "PreparedRequestUrlib[Out]":
+    ) -> "PreparedRequestUrlib[Out, typing.Dict[str, Out]]": ...
+
+    def prepare_query(
+        self,
+        fun: typing.Callable[
+            [PreparedArgs],
+            typing.Union[QueryNode[Out], typing.Dict[str, QueryNode[Out]]],
+        ],
+        name: str = "",
+    ) -> typing.Union[
+        "PreparedRequestUrlib[Out, Out]",
+        "PreparedRequestUrlib[Out, typing.Dict[str, Out]]",
+    ]:
         return PreparedRequestUrlib(self, fun, "query", name)
 
+    @typing.overload
+    def prepare_mutation(
+        self,
+        fun: typing.Callable[[PreparedArgs], MutationNode[Out]],
+        name: str = "",
+    ) -> "PreparedRequestUrlib[Out, Out]": ...
+
+    @typing.overload
     def prepare_mutation(
         self,
         fun: typing.Callable[[PreparedArgs], typing.Dict[str, MutationNode[Out]]],
         name: str = "",
-    ) -> "PreparedRequestUrlib[Out]":
+    ) -> "PreparedRequestUrlib[Out, typing.Dict[str, Out]]": ...
+
+    def prepare_mutation(
+        self,
+        fun: typing.Callable[
+            [PreparedArgs],
+            typing.Union[MutationNode[Out], typing.Dict[str, MutationNode[Out]]],
+        ],
+        name: str = "",
+    ) -> typing.Union[
+        "PreparedRequestUrlib[Out, Out]",
+        "PreparedRequestUrlib[Out, typing.Dict[str, Out]]",
+    ]:
         return PreparedRequestUrlib(self, fun, "mutation", name)
 
 
-class PreparedRequestBase(typing.Generic[Out]):
+class PreparedRequestBase(typing.Generic[Out, PreparedOut]):
     def __init__(
         self,
         transport: GraphQLTransportBase,
-        fun: typing.Callable[[PreparedArgs], typing.Mapping[str, SelectNode[Out]]],
+        fun: typing.Callable[
+            [PreparedArgs],
+            typing.Union[SelectNode[Out], typing.Mapping[str, SelectNode[Out]]],
+        ],
         ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
         name: str = "",
     ):
         dry_run_node = fun(PreparedArgs())
-        doc, variables, files = transport.build_gql(dry_run_node, ty, name)
+        query = (
+            {"value": dry_run_node}
+            if isinstance(dry_run_node, SelectNode)
+            else dry_run_node
+        )
+        doc, variables, files = transport.build_gql(query, ty, name)
+        self.single_node = isinstance(dry_run_node, SelectNode)
         self.doc = doc
         self._mapping = variables
         self.transport = transport
@@ -774,11 +856,14 @@ class PreparedRequestBase(typing.Generic[Out]):
         return resolved
 
 
-class PreparedRequestUrlib(PreparedRequestBase[Out]):
+class PreparedRequestUrlib(PreparedRequestBase[Out, PreparedOut]):
     def __init__(
         self,
         transport: GraphQLTransportUrlib,
-        fun: typing.Callable[[PreparedArgs], typing.Mapping[str, SelectNode[Out]]],
+        fun: typing.Callable[
+            [PreparedArgs],
+            typing.Union[SelectNode[Out], typing.Mapping[str, SelectNode[Out]]],
+        ],
         ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
         name: str = "",
     ):
@@ -789,9 +874,13 @@ class PreparedRequestUrlib(PreparedRequestBase[Out]):
         self,
         args: typing.Mapping[str, typing.Any],
         opts: typing.Optional[GraphQLTransportOptions] = None,
-    ) -> typing.Dict[str, Out]:
+    ) -> PreparedOut:
         resolved_vars = self.resolve_vars(args, self._mapping)
-        return self.transport.fetch(self.doc, resolved_vars, opts)
+        result = self.transport.fetch(self.doc, resolved_vars, opts)
+        if self.single_node:
+            return result["value"]
+        else:
+            return result
 
 
 #
@@ -991,6 +1080,36 @@ class NodeDescs:
             variants=return_node.variants,
         )
 
+    @staticmethod
+    def Struct17dc8():
+        return NodeMeta(
+            sub_nodes={
+                "input": NodeDescs.scalar,
+            },
+        )
+
+    @staticmethod
+    def RootIdentityFn():
+        return_node = NodeDescs.Struct17dc8()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "input": "Integer64be4",
+            },
+        )
+
+    @staticmethod
+    def RootIdentityUpdateFn():
+        return_node = NodeDescs.Struct17dc8()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "input": "Integer64be4",
+            },
+        )
+
 
 UserIdStringUuid = str
 
@@ -1008,6 +1127,14 @@ StructC339c = typing.TypedDict(
     "StructC339c",
     {
         "id": str,
+    },
+    total=False,
+)
+
+Struct17dc8 = typing.TypedDict(
+    "Struct17dc8",
+    {
+        "input": int,
     },
     total=False,
 )
@@ -1173,6 +1300,15 @@ RootNestedCompositeFnOutputSelections = typing.TypedDict(
     total=False,
 )
 
+Struct17dc8Selections = typing.TypedDict(
+    "Struct17dc8Selections",
+    {
+        "_": SelectionFlags,
+        "input": ScalarSelectNoArgs,
+    },
+    total=False,
+)
+
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
@@ -1180,6 +1316,7 @@ class QueryGraph(QueryGraphBase):
             {
                 "UserIdStringUuid": "String!",
                 "StringE1a43": "String!",
+                "Integer64be4": "Int!",
                 "post": "post!",
                 "user": "user!",
             }
@@ -1288,5 +1425,31 @@ class QueryGraph(QueryGraphBase):
             "$q",
         )[0]
         return QueryNode(
+            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
+        )
+
+    def identity(
+        self,
+        args: typing.Union[Struct17dc8, PlaceholderArgs],
+        select: Struct17dc8Selections,
+    ) -> QueryNode[Struct17dc8]:
+        node = selection_to_nodes(
+            {"identity": (args, select)}, {"identity": NodeDescs.RootIdentityFn}, "$q"
+        )[0]
+        return QueryNode(
+            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
+        )
+
+    def identity_update(
+        self,
+        args: typing.Union[Struct17dc8, PlaceholderArgs],
+        select: Struct17dc8Selections,
+    ) -> MutationNode[Struct17dc8]:
+        node = selection_to_nodes(
+            {"identityUpdate": (args, select)},
+            {"identityUpdate": NodeDescs.RootIdentityUpdateFn},
+            "$q",
+        )[0]
+        return MutationNode(
             node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
         )

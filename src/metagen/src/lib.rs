@@ -31,10 +31,10 @@ mod macros;
 // used by the NamingPostProcessor
 pub mod shared;
 
-mod fdk_python;
-mod fdk_rust;
+mod fdk_py;
+mod fdk_rs;
 mod fdk_substantial;
-mod fdk_typescript;
+mod fdk_ts;
 
 mod client_py;
 mod client_rs;
@@ -47,12 +47,11 @@ mod utils;
 use crate::interlude::*;
 
 pub use config::*;
-use futures_concurrency::future::FutureGroup;
 pub use shared::FdkTemplate;
 
-pub use fdk_python::DEFAULT_TEMPLATE as FDK_PYTHON_DEFAULT_TEMPLATE;
-pub use fdk_rust::DEFAULT_TEMPLATE as FDK_RUST_DEFAULT_TEMPLATE;
-pub use fdk_typescript::DEFAULT_TEMPLATE as FDK_TYPESCRIPT_DEFAULT_TEMPLATE;
+pub use fdk_py::DEFAULT_TEMPLATE as FDK_PY_DEFAULT_TEMPLATE;
+pub use fdk_rs::DEFAULT_TEMPLATE as FDK_RS_DEFAULT_TEMPLATE;
+pub use fdk_ts::DEFAULT_TEMPLATE as FDK_TS_DEFAULT_TEMPLATE;
 
 /// This implements a command object pattern API for generator
 /// implementations to access the external world. See [InputResolver].
@@ -79,8 +78,8 @@ pub enum GeneratorInputOrder {
 /// by [GeneratorInputOrder].
 #[derive(Debug)]
 pub enum GeneratorInputResolved {
-    TypegraphFromTypegate { raw: Box<Typegraph> },
-    TypegraphFromPath { raw: Box<Typegraph> },
+    TypegraphFromTypegate { raw: Arc<Typegraph> },
+    TypegraphFromPath { raw: Arc<Typegraph> },
     FdkTemplate { template: FdkTemplate },
 }
 
@@ -140,21 +139,21 @@ impl GeneratorRunner {
             static GENERATORS: IndexMap<String, GeneratorRunner> = IndexMap::from([
                 // builtin generatorsFdkPythonGenConfig
                 (
-                    "fdk_rust".to_string(),
+                    "fdk_rs".to_string(),
                     GeneratorRunner {
                         op: |workspace_path: &Path, val| {
-                            let config = fdk_rust::FdkRustGenConfig::from_json(val, workspace_path)?;
-                            let generator = fdk_rust::Generator::new(config)?;
+                            let config = fdk_rs::FdkRustGenConfig::from_json(val, workspace_path)?;
+                            let generator = fdk_rs::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },
                 ),
                 (
-                    "fdk_python".to_string(),
+                    "fdk_py".to_string(),
                     GeneratorRunner {
                         op: |workspace_path: &Path, val| {
-                            let config = fdk_python::FdkPythonGenConfig::from_json(val, workspace_path)?;
-                            let generator = fdk_python::Generator::new(config)?;
+                            let config = fdk_py::FdkPythonGenConfig::from_json(val, workspace_path)?;
+                            let generator = fdk_py::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },
@@ -170,11 +169,11 @@ impl GeneratorRunner {
                     },
                 ),
                 (
-                    "fdk_typescript".to_string(),
+                    "fdk_ts".to_string(),
                     GeneratorRunner {
                         op: |workspace_path: &Path, val| {
-                            let config = fdk_typescript::FdkTypescriptGenConfig::from_json(val, workspace_path)?;
-                            let generator = fdk_typescript::Generator::new(config)?;
+                            let config = fdk_ts::FdkTypescriptGenConfig::from_json(val, workspace_path)?;
+                            let generator = fdk_ts::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },
                     },
@@ -220,16 +219,15 @@ pub async fn generate_target(
     config: &config::Config,
     target_name: &str,
     workspace_path: PathBuf,
-    resolver: impl InputResolver + Send + Sync + Clone + 'static,
+    resolver: impl InputResolver + Send + Sync + 'static,
 ) -> anyhow::Result<GeneratorOutput> {
-    use futures_lite::StreamExt;
-
     let target_conf = config
         .targets
         .get(target_name)
         .with_context(|| format!("target {target_name:?} not found in config"))?;
 
-    let mut group = FutureGroup::new();
+    let mut out = IndexMap::new();
+
     for config in &target_conf.0 {
         let gen_name = &config.generator_name;
         let config = config.other.to_owned();
@@ -238,29 +236,16 @@ pub async fn generate_target(
 
         let gen_impl = get_gen_op.exec(&workspace_path, config)?;
         let bill = gen_impl.bill_of_inputs();
+        let gen_name: Arc<str> = gen_name[..].into();
+        let mut inputs = IndexMap::new();
 
-        let mut resolve_group = FutureGroup::new();
         for (name, order) in bill.into_iter() {
-            let resolver = resolver.clone();
-            resolve_group.insert(Box::pin(async move {
-                anyhow::Ok((name, resolver.resolve(order).await?))
-            }));
+            let input = resolver.resolve(order).await?;
+            inputs.insert(name, input);
         }
 
-        let gen_name: Arc<str> = gen_name[..].into();
-        group.insert(Box::pin(async move {
-            let mut inputs = IndexMap::new();
-            while let Some(res) = resolve_group.next().await {
-                let (name, input) = res?;
-                inputs.insert(name, input);
-            }
-            let out = gen_impl.generate(inputs)?;
-            anyhow::Ok((gen_name, out))
-        }));
-    }
-    let mut out = IndexMap::new();
-    while let Some(res) = group.next().await {
-        let (gen_name, files) = res?;
+        let files = gen_impl.generate(inputs)?;
+
         for (path, buf) in files.0 {
             if let Some((src, _)) = out.get(&path) {
                 anyhow::bail!("generators \"{src}\" and \"{gen_name}\" clashed at \"{path:?}\"");
