@@ -4,7 +4,6 @@
 import { basename, dirname, extname } from "@std/path";
 import { getLogger } from "./log.ts";
 import { globalConfig } from "./config.ts";
-import { jsonError } from "./services/responses.ts";
 
 const logger = getLogger(import.meta);
 

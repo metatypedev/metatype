@@ -6,7 +6,7 @@ import type { RouteParams } from "./mod.ts";
 
 // TODO use `BaseError`
 export function badRequest(message: string): Response {
-  return jsonError(message, new Headers(), 400);
+  return jsonError({ status: 400, message });
 }
 
 type Action =
@@ -68,11 +68,11 @@ export async function validate(params: RouteParams): Promise<Response> {
   }
 
   // return json response
-  return jsonOk(
-    result,
-    new Headers({
+  return jsonOk({
+    data: result,
+    headers: new Headers({
       "access-control-allow-origin": "*",
       ...headers,
     }),
-  );
+  });
 }

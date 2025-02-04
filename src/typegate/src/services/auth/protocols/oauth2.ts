@@ -206,11 +206,11 @@ export class OAuth2Auth extends Protocol {
           new Headers(),
         );
         // https://github.com/cmd-johnson/deno-oauth2-client/issues/25
-        return jsonError(
-          `invalid oauth2, check your credentials: ${e}`,
+        return jsonError({
+          message: `invalid oauth2, check your credentials: ${e}`,
           headers,
-          400,
-        );
+          status: 400,
+        });
       }
     }
 
@@ -239,11 +239,10 @@ export class OAuth2Auth extends Protocol {
       });
     }
 
-    return jsonError(
-      "missing origin or redirect_uri query parameter",
-      new Headers(),
-      400,
-    );
+    return jsonError({
+      message: "missing origin or redirect_uri query parameter",
+      status: 400,
+    });
   }
 
   async tokenMiddleware(

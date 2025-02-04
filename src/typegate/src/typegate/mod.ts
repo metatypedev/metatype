@@ -285,7 +285,7 @@ export class Typegate implements AsyncDisposable {
         new Headers(cors),
       ).catch((e) => e);
       if (jwtCheck instanceof Error) {
-        return jsonError(jwtCheck.message, new Headers(), 401);
+        return jsonError({ message: jwtCheck.message, status: 401 });
       }
 
       const [context, headers] = jwtCheck;

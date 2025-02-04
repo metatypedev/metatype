@@ -21,16 +21,20 @@ export async function take(params: RouteParams) {
     );
 
     if (!redirectUri.startsWith(origin)) {
-      return jsonError(
-        "take request must share domain with redirect uri",
-        resHeaders,
-        400,
-      );
+      return jsonError({
+        status: 400,
+        message: "take request must share domain with redirect uri",
+        headers: resHeaders,
+      });
     }
     resHeaders.set("content-type", "application/json");
-    return jsonOk({ token }, resHeaders);
+    return jsonOk({ data: { token }, headers: resHeaders });
   } catch (e) {
     logger.info(`take request failed ${e}`);
-    return jsonError("not authorized", resHeaders, 401);
+    return jsonError({
+      status: 401,
+      message: "not authorized",
+      headers: resHeaders,
+    });
   }
 }
