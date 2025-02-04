@@ -119,7 +119,7 @@ export async function handleGraphQL(
       );
     }
 
-    return jsonOk({ data: res, headers });
+    return jsonOk({ data: { data: res }, headers });
   } catch (e) {
     // throw e;
     if (e instanceof BaseError) {

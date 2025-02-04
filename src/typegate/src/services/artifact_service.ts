@@ -46,7 +46,7 @@ export class ArtifactService {
 
       try {
         const data = await this.#createUploadTokens(metaList, tgName);
-        return jsonOk({ data, graphql: false });
+        return jsonOk({ data });
       } catch (e) {
         if (e instanceof BaseError) {
           return e.toResponse();
