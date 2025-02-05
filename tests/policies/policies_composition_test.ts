@@ -17,20 +17,43 @@ Meta.test("Basic composition through traversal spec", async (t) => {
         }
       }
     `
-    .withContext({
-      control_value: "ALLOW"
-    })
+      .withContext({
+        control_value: "ALLOW",
+      })
       .expectData({
         simple_traversal_comp: {
           one: {
             two: 2,
-            three: "three"
-          }
+            three: "three",
+          },
         },
       })
       .on(e);
   });
 
+  await t.should("have allowed field", async () => {
+    await gql`
+      query {
+        simple_traversal_comp(one: { two: 2, three: "three" }) { # pass
+          one {
+            # two # deny
+            three # allow
+          } #! pass
+        }
+      }
+    `
+      .withContext({
+        control_value: "PASS",
+      })
+      .expectData({
+        simple_traversal_comp: {
+          one: {
+            three: "three",
+          },
+        },
+      })
+      .on(e);
+  });
 
   await t.should("skip parent and go further with 'PASS'", async () => {
     await gql`
@@ -43,13 +66,12 @@ Meta.test("Basic composition through traversal spec", async (t) => {
         }
       }
     `
-    .withContext({
-      control_value: "PASS"
-    })
+      .withContext({
+        control_value: "PASS",
+      })
       .expectErrorContains("'<root>.simple_traversal_comp.one.two'")
       .on(e);
   });
-
 
   await t.should("deny and stop if parent is set to 'DENY'", async () => {
     await gql`
@@ -62,58 +84,60 @@ Meta.test("Basic composition through traversal spec", async (t) => {
         }
       }
     `
-    .withContext({
-      control_value: "DENY"
-    })
+      .withContext({
+        control_value: "DENY",
+      })
       .expectErrorContains("'<root>.simple_traversal_comp.one'")
       .on(e);
   });
 });
 
-
-
 Meta.test("Basic chain composition on a single field spec", async (t) => {
   const e = await t.engine("policies/policies_composition.py");
 
-  await t.should("have PASS not affecting the outcome (version 1)", async () => {
-    await gql`
+  await t.should(
+    "have PASS not affecting the outcome (version 1)",
+    async () => {
+      await gql`
       query {
         single_field_comp(abc: "enter" ) {
           abc
         }
       }
     `
-    .withContext({
-      A: "PASS",
-      B: "ALLOW",
-      C: "PASS"
-    })
-      .expectData({
-        single_field_comp: {
-          abc: "enter"
-        }
-      })
-      .on(e);
-  });
+        .withContext({
+          A: "PASS",
+          B: "ALLOW",
+          C: "PASS",
+        })
+        .expectData({
+          single_field_comp: {
+            abc: "enter",
+          },
+        })
+        .on(e);
+    },
+  );
 
-
-  await t.should("have PASS not affecting the outcome (version 2)", async () => {
-    await gql`
+  await t.should(
+    "have PASS not affecting the outcome (version 2)",
+    async () => {
+      await gql`
       query {
         single_field_comp(abc: "enter" ) {
           abc
         }
       }
     `
-    .withContext({
-      A: "PASS",
-      B: "DENY",
-      C: "PASS"
-    })
-      .expectErrorContains("Authorization failed for policy 'B'")
-      .on(e);
-  });
-
+        .withContext({
+          A: "PASS",
+          B: "DENY",
+          C: "PASS",
+        })
+        .expectErrorContains("Authorization failed for policy 'B'")
+        .on(e);
+    },
+  );
 
   await t.should("have DENY ruling", async () => {
     await gql`
@@ -123,16 +147,15 @@ Meta.test("Basic chain composition on a single field spec", async (t) => {
         }
       }
     `
-    .withContext({
-      A: "PASS",
-      B: "DENY",
-      C: "ALLOW"
-    })
+      .withContext({
+        A: "PASS",
+        B: "DENY",
+        C: "ALLOW",
+      })
       .expectErrorContains("Authorization failed for policy 'B'")
       .on(e);
   });
 });
-
 
 Meta.test("Traversal composition on a per effect policy setup", async (t) => {
   const e = await t.engine("policies/policies_composition.py");
@@ -141,22 +164,24 @@ Meta.test("Traversal composition on a per effect policy setup", async (t) => {
     two: {
       three: {
         a: 1,
-      }
-    }
+      },
+    },
   };
 
   const inputB = {
     two: {
       three: {
         b: {
-          c: 2
+          c: 2,
         },
-      }
-    }
+      },
+    },
   };
 
-  await t.should("have PASS acting as a no-op upon traversal (version 1)", async () => {
-    await gql`
+  await t.should(
+    "have PASS acting as a no-op upon traversal (version 1)",
+    async () => {
+      await gql`
       mutation {
         traversal_comp(one: $one) {
           one {
@@ -174,23 +199,26 @@ Meta.test("Traversal composition on a per effect policy setup", async (t) => {
         }
       }
     `
-    .withVars({ one: inputA })
-    .withContext({
-      depth_1: "PASS",
-      depth_2: "ALLOW",
-      depth_3: "PASS",
-      depth_4: "PASS"
-    })
-      .expectData({
-        traversal_comp: {
-          one: inputA
-        }
-      })
-      .on(e);
-  });
+        .withVars({ one: inputA })
+        .withContext({
+          depth_1: "PASS",
+          depth_2: "ALLOW",
+          depth_3: "PASS",
+          depth_4: "PASS",
+        })
+        .expectData({
+          traversal_comp: {
+            one: inputA,
+          },
+        })
+        .on(e);
+    },
+  );
 
-  await t.should("have PASS acting as a no-op upon traversal (version 2)", async () => {
-    await gql`
+  await t.should(
+    "have PASS acting as a no-op upon traversal (version 2)",
+    async () => {
+      await gql`
       mutation {
         traversal_comp(one: $one) {
           one {
@@ -208,20 +236,22 @@ Meta.test("Traversal composition on a per effect policy setup", async (t) => {
         }
       }
     `
-    .withVars({ one: inputA })
-    .withContext({
-      depth_1: "PASS", 
-      depth_2: "DENY", // stop!
-      depth_3: "ALLOW",
-      depth_4: "ALLOW"
-    })
-      .expectErrorContains("'<root>.traversal_comp.one.two'")
-      .on(e);
-  });
+        .withVars({ one: inputA })
+        .withContext({
+          depth_1: "PASS",
+          depth_2: "DENY", // stop!
+          depth_3: "ALLOW",
+          depth_4: "ALLOW",
+        })
+        .expectErrorContains("'<root>.traversal_comp.one.two'")
+        .on(e);
+    },
+  );
 
-
-  await t.should("DENY when a protected field on a either variant is encountered", async () => {
-    await gql`
+  await t.should(
+    "DENY when a protected field on a either variant is encountered",
+    async () => {
+      await gql`
       mutation {
         traversal_comp(one: $one) {
           one {
@@ -239,14 +269,15 @@ Meta.test("Traversal composition on a per effect policy setup", async (t) => {
         }
       }
     `
-    .withVars({ one: inputB })
-    .withContext({
-      depth_1: "PASS", 
-      depth_2: "PASS",
-      depth_3: "PASS",
-      depth_4: "DENY"
-    })
-      .expectErrorContains("'<root>.traversal_comp.one.two.three$Second.b.c'")
-      .on(e);
-  });
+        .withVars({ one: inputB })
+        .withContext({
+          depth_1: "PASS",
+          depth_2: "PASS",
+          depth_3: "PASS",
+          depth_4: "DENY",
+        })
+        .expectErrorContains("'<root>.traversal_comp.one.two.three$Second.b.c'")
+        .on(e);
+    },
+  );
 });
