@@ -25,7 +25,7 @@ import {
   typeGenericCustomScalar,
 } from "./helpers.ts";
 import { TypeKind } from "graphql";
-import { Resolver } from "../../types.ts";
+import { Resolver, ResolverArgs } from "../../types.ts";
 import { getLogger } from "../../log.ts";
 import { FunctionNode } from "../../typegraph/type_node.ts";
 import { ensure } from "../../utils.ts";
@@ -55,7 +55,12 @@ export class IntrospectionTypeEmitter {
     this.#typesDefined = new Set();
   }
 
-  reset() {
+  async resetComputations(args: ResolverArgs) {
+    if (this.visibility) {
+      this.visibility!.reset();
+      await this.visibility!.preComputeAllPolicies(args ?? {});
+    }
+
     this.#types = [];
     this.#typesDefined = new Set();
   }
@@ -185,6 +190,8 @@ export class IntrospectionTypeEmitter {
     return {
       // Note: this is arbitrary, injections and policies will reduce the field
       // thus making a completely different type
+      // Alternatively, we can return null and make the parent itself invisible (we don't emit an empty object scalar)
+      // but in a way the parent field is accessible
       adhocId: originalEntries.length == entries.length
         ? ""
         : `_f${entries.length == 0 ? "empty" : entries.length}`,
@@ -278,17 +285,15 @@ export class IntrospectionTypeEmitter {
 
     gctx.path.push(type.title);
 
-    let ret = null;
     if (isScalar(type)) {
-      ret = this.#emitScalar(type, gctx);
+      this.#emitScalar(type, gctx);
     } else if (isObject(type)) {
-      ret = this.#emitObject(type, gctx);
+      this.#emitObject(type, gctx);
     } else {
       throw new Error(`Unhandled "${type.type}" of title ${type.title}`);
     }
 
     gctx.path.pop();
-    return ret;
   }
 
   #emitWrapperAndReturnSchema(

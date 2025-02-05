@@ -20,7 +20,6 @@ export type DeprecatedArg = { includeDeprecated?: boolean };
 export class TypeGraphRuntime extends Runtime {
   tg: TypeGraphDS;
   #typeGen: IntrospectionTypeEmitter | null = null;
-  #visibility: TypeVisibility | null = null;
 
   private constructor(tg: TypeGraphDS) {
     super(TypeGraph.formatName(tg));
@@ -63,18 +62,22 @@ export class TypeGraphRuntime extends Runtime {
     ];
   }
 
-  initFormatter(
+  initTypeGenerator(
     config: TypegateConfigBase,
     denoRuntime: DenoRuntime,
   ) {
-    this.#visibility = new TypeVisibility(this.tg, denoRuntime, config);
     this.#typeGen = new IntrospectionTypeEmitter(
       this.tg,
-      this.#visibility,
+      new TypeVisibility(this.tg, denoRuntime, config),
     );
   }
 
   get #types() {
+    if (!this.#typeGen) {
+      // Unreachable
+      throw new Error("Invalid state: type generator not initialized");
+    }
+
     return this.#typeGen!;
   }
 
@@ -110,8 +113,8 @@ export class TypeGraphRuntime extends Runtime {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L36
       description: () => `${root.type} typegraph`,
       types: () => this.#typesResolver(args),
-      queryType: () => this.#types?.getRootSchema("Query"),
-      mutationType: this.#types?.getRootSchema("Mutation"),
+      queryType: () => this.#types.getRootSchema("Query"),
+      mutationType: this.#types.getRootSchema("Mutation"),
       subscriptionType: () => null,
       directives: () => [],
     };
@@ -127,10 +130,7 @@ export class TypeGraphRuntime extends Runtime {
 
   #withPrecomputeVisibility(resolver: Resolver): Resolver {
     return async (args) => {
-      this.#visibility!.reset();
-      await this.#visibility!.preComputeAllPolicies(args ?? {});
-
-      this.#types.reset();
+      await this.#types.resetComputations(args);
       this.#types.emitRoot();
 
       return resolver(args);

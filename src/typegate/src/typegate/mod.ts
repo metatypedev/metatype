@@ -454,7 +454,7 @@ export class Typegate implements AsyncDisposable {
           typegraph: typegraphRuntime,
         },
       );
-      (typegraphRuntime as TypeGraphRuntime).initFormatter(
+      (typegraphRuntime as TypeGraphRuntime).initTypeGenerator(
         this.config.base,
         introspectionRuntimeRefData.denoRuntime as DenoRuntime,
       );
