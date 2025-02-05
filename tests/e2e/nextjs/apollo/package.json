@@ -9,23 +9,23 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@apollo/client": "^3",
-    "apollo-upload-client": "^18",
-    "graphql": "^16",
-    "next": "^14",
-    "react": "^18",
-    "react-dom": "^18"
+    "@apollo/client": "^3.12.9",
+    "apollo-upload-client": "^18.0.1",
+    "graphql": "^16.10.0",
+    "next": "^14.2.23",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/apollo-upload-client": "^17",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "autoprefixer": "^10",
-    "eslint": "^8",
-    "eslint-config-next": "14",
-    "postcss": "^8",
-    "tailwindcss": "^3",
-    "typescript": "^5"
+    "@types/apollo-upload-client": "^17.0.5",
+    "@types/node": "^20.17.17",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.23",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
   }
 }
