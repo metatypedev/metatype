@@ -21,22 +21,17 @@ impl SubstantialProcessor {
 impl PostProcessor for SubstantialProcessor {
     fn postprocess(self, tg: &mut Typegraph) -> Result<(), crate::errors::TgError> {
         let fs_ctx = FsContext::new(self.typegraph_dir.clone());
-        let runtimes = std::mem::take(&mut tg.runtimes);
+        let mut runtimes = std::mem::take(&mut tg.runtimes);
 
-        for runtime in runtimes.iter() {
+        for runtime in runtimes.iter_mut() {
             if let TGRuntime::Known(known_runtime) = runtime {
                 match known_runtime {
                     runtimes::KnownRuntime::Substantial(data) => {
-                        for wf_description in &data.workflows {
-                            fs_ctx.register_artifact(wf_description.file.clone(), tg)?;
-
-                            for artifact in &wf_description.deps {
-                                let artifacts: Vec<PathBuf> =
-                                    fs_ctx.list_files(&[artifact.to_string_lossy().to_string()]);
-                                for artifact in artifacts.iter() {
-                                    fs_ctx.register_artifact(artifact.clone(), tg)?;
-                                }
-                            }
+                        for wf_description in &mut data.workflows {
+                            let entrypoint = wf_description.file.clone();
+                            let deps = std::mem::take(&mut wf_description.deps);
+                            wf_description.deps =
+                                fs_ctx.register_artifacts(tg, entrypoint, deps)?;
                         }
                     }
                     _ => continue,

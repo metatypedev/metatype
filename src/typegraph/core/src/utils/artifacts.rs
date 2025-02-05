@@ -9,11 +9,44 @@ use common::typegraph::{runtimes::Artifact, Typegraph};
 
 pub trait ArtifactsExt {
     /// update the artifact meta, and register the artifact in the typegraph
-    fn register_artifact(&self, artifact_path: PathBuf, tg: &mut Typegraph) -> Result<()>;
+    fn register_artifacts(
+        &self,
+        tg: &mut Typegraph,
+        entry: PathBuf,
+        deps: Vec<PathBuf>,
+    ) -> Result<Vec<PathBuf>>;
 }
 
 impl ArtifactsExt for FsContext {
-    fn register_artifact(&self, path: PathBuf, tg: &mut Typegraph) -> Result<()> {
+    fn register_artifacts(
+        &self,
+        tg: &mut Typegraph,
+        entry: PathBuf,
+        deps: Vec<PathBuf>,
+    ) -> Result<Vec<PathBuf>> {
+        let mut registered_deps = vec![];
+        self.register_artifact(tg, entry)?;
+        for dep in deps {
+            let artifacts = self.list_files(&[dep.to_string_lossy().to_string()]);
+            if artifacts.is_empty() {
+                return Err(format!(
+                    "no artifacts found for dependency '{}'",
+                    dep.to_string_lossy()
+                )
+                .into());
+            }
+            for artifact in artifacts.into_iter() {
+                self.register_artifact(tg, artifact.clone())?;
+                registered_deps.push(artifact);
+            }
+        }
+
+        Ok(registered_deps)
+    }
+}
+
+impl FsContext {
+    fn register_artifact(&self, tg: &mut Typegraph, path: PathBuf) -> Result<()> {
         use std::collections::btree_map::Entry;
         if let Entry::Vacant(entry) = tg.meta.artifacts.entry(path) {
             let path = entry.key().to_path_buf();
