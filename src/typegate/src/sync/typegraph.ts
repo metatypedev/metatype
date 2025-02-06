@@ -63,15 +63,23 @@ export class TypegraphStore {
     return id;
   }
 
-  public async download(
+  public async downloadTypegraph(
     id: TypegraphId,
-  ): Promise<[TypeGraphDS, SecretManager]> {
+  ) {
     const key = TypegraphStore.#getKey(id);
     const data = await this.#downloadData(this.bucket, key);
     const [typegraph, encryptedSecrets] = JSON.parse(data) as [
       TypeGraphDS,
       string,
     ];
+
+    return [typegraph, encryptedSecrets] satisfies [TypeGraphDS, string];
+  }
+
+  public async download(
+    id: TypegraphId,
+  ): Promise<[TypeGraphDS, SecretManager]> {
+    const [typegraph, encryptedSecrets] = await this.downloadTypegraph(id);
     const secrets = JSON.parse(await this.cryptoKeys.decrypt(encryptedSecrets));
     const secretManager = new SecretManager(typegraph, secrets);
 
