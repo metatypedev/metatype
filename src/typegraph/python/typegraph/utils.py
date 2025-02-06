@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json
+from dataclasses import dataclass
 from functools import reduce
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 from typegraph.gen.core import SerializeParams
 from typegraph.gen.utils import ReduceEntry
@@ -84,3 +85,30 @@ def freeze_tg_output(
     return TypegraphOutput(
         name=tg_output.name, serialize=lambda _: frozen_memo[tg_output.name]
     )
+
+
+@dataclass
+class ResolvedModule:
+    module: str
+    deps: List[str]
+    func_name: str
+
+
+class Module:
+    def __init__(self, path: str, deps: Optional[List[str]] = None):
+        self.source = path
+        self.deps = deps
+
+    def import_(self, name: str):
+        return ResolvedModule(module=self.source, deps=self.deps or [], func_name=name)
+
+
+def resolve_module_params(
+    module: Union[str, ResolvedModule],
+    name: Optional[str] = None,
+    deps: Optional[List[str]] = None,
+):
+    if isinstance(module, ResolvedModule):
+        return module
+
+    return ResolvedModule(module=module, deps=deps or [], func_name=cast(str, name))

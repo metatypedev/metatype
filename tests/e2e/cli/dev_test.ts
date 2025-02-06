@@ -283,6 +283,7 @@ const expectedDeployed = [
   ["basic.ts", "basic-authentication"],
   ["cors.ts", "cors"],
   ["database.ts", "database"],
+  ["deno-import.ts", "deno-import"],
   ["deno.ts", "deno"],
   ["example_rest.ts", "example-rest"],
   ["execute.ts", "roadmap-execute"],

@@ -6,6 +6,9 @@ import { runtimes } from "../sdk.ts";
 import type { Effect } from "../gen/runtimes.ts";
 import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
+import { resolveModuleParams, type ModuleImport } from "../utils/module.ts";
+
+export { Module as PythonModule } from "../utils/module.ts";
 
 interface LambdaMat extends Materializer {
   function: string;
@@ -18,13 +21,7 @@ interface DefMat extends Materializer {
   effect: Effect;
 }
 
-interface PythonImport {
-  name: string;
-  module: string;
-  deps?: Array<string>;
-  secrets?: Array<string>;
-  effect?: Effect;
-}
+type PythonImport = ModuleImport;
 
 interface ImportMat extends Materializer {
   module: string;
@@ -91,29 +88,30 @@ export class PythonRuntime extends Runtime {
   import<I extends t.Typedef = t.Typedef, O extends t.Typedef = t.Typedef>(
     inp: I,
     out: O,
-    { name, module, deps = [], effect = fx.read(), secrets = [] }: PythonImport,
+    { effect = fx.read(), secrets = [], ...params }: PythonImport,
   ): t.Func<I, O, ImportMat> {
+    const resolved = resolveModuleParams(params);
     const base = {
       runtime: this._id,
       effect,
     };
 
     const matId = runtimes.fromPythonModule(base, {
-      file: module,
+      file: resolved.module,
+      deps: resolved.deps,
       runtime: this._id,
-      deps: deps ?? [],
     });
 
     const pyModMatId = runtimes.fromPythonImport(base, {
       module: matId,
-      funcName: name,
+      funcName: resolved.funcName,
       secrets,
     });
 
     return t.func(inp, out, {
       _id: pyModMatId,
-      module,
-      name,
+      module: resolved.module,
+      name: resolved.funcName,
     });
   }
 }
