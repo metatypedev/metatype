@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::interlude::*;
-use common::typegraph::*;
+use tg_schema::*;
 
 pub async fn test_typegraph_1() -> anyhow::Result<Arc<Typegraph>> {
     let out = tokio::process::Command::new("cargo")
@@ -36,8 +36,8 @@ pub fn test_typegraph_2() -> Typegraph {
         meta: TypeMeta {
             ..Default::default()
         },
-        runtimes: vec![common::typegraph::runtimes::TGRuntime::Unknown(
-            common::typegraph::runtimes::UnknownRuntime {
+        runtimes: vec![tg_schema::runtimes::TGRuntime::Unknown(
+            tg_schema::runtimes::UnknownRuntime {
                 name: "wasm".into(),
                 data: Default::default(),
             },

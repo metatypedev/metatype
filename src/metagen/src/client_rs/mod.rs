@@ -6,8 +6,8 @@ mod selections;
 
 use core::fmt::Write;
 
-use tg_schema::EffectType;
 use shared::get_gql_type;
+use tg_schema::EffectType;
 
 use crate::interlude::*;
 use crate::*;

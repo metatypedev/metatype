@@ -42,3 +42,4 @@ futures-lite.workspace = true
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }
 tempfile.workspace = true
+typegate_api.workspace = true

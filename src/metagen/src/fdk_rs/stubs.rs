@@ -82,7 +82,7 @@ pub fn gen_op_to_mat_map(
 mod test {
     use super::*;
     use crate::{fdk_rs::*, tests::default_type_node_base};
-    use common::typegraph::*;
+    use tg_schema::*;
 
     #[test]
     fn stub_test() -> anyhow::Result<()> {
@@ -94,8 +94,8 @@ mod test {
             meta: TypeMeta {
                 ..Default::default()
             },
-            runtimes: vec![common::typegraph::runtimes::TGRuntime::Unknown(
-                common::typegraph::runtimes::UnknownRuntime {
+            runtimes: vec![tg_schema::runtimes::TGRuntime::Unknown(
+                tg_schema::runtimes::UnknownRuntime {
                     name: "wasm".into(),
                     data: Default::default(),
                 },
