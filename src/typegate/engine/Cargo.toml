@@ -48,7 +48,10 @@ tempfile.workspace = true
 
 # internal
 mt_deno.workspace = true
+tg_schema.workspace = true
 substantial.workspace = true
+grpc_utils.workspace = true
+archive_utils.workspace = true
 
 # runtimes
 deno_core.workspace = true

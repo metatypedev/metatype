@@ -12995,6 +12995,7 @@ name = "typegate_engine"
 version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
+ "archive_utils",
  "base64 0.22.1",
  "bytes",
  "chrono",
@@ -13005,6 +13006,7 @@ dependencies = [
  "deno_core",
  "env_logger 0.11.0",
  "futures",
+ "grpc_utils",
  "mt_deno",
  "once_cell",
  "protobuf",
@@ -13025,6 +13027,7 @@ dependencies = [
  "tempfile",
  "temporal-client",
  "temporal-sdk-core-protos",
+ "tg_schema",
  "thiserror",
  "tokio",
  "tonic 0.12.3",

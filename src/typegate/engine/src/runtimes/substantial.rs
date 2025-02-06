@@ -6,13 +6,13 @@
 use crate::interlude::*;
 
 use chrono::{DateTime, Utc};
-use common::typegraph::runtimes::substantial::SubstantialBackend;
 use dashmap::DashMap;
 use deno_core::OpState;
 use substantial::{
     backends::{fs::FsBackend, memory::MemoryBackend, redis::RedisBackend, Backend, NextRun},
     converters::{MetadataEvent, Operation, Run},
 };
+use tg_schema::runtimes::substantial::SubstantialBackend;
 
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
