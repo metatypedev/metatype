@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { gql, Meta } from "../utils/mod.ts";
+import { fullIntrospection } from "./common.ts";
 
 // https://github.com/graphql/graphql-js/blob/main/src/__tests__/starWarsIntrospection-test.ts
 
@@ -25,16 +26,16 @@ Meta.test({
         __schema: {
           types: [
             {
-              "name": "Int",
+              name: "Int",
             },
             {
-              "name": "Query",
+              name: "NestedNested_Inp",
             },
             {
               name: "inp",
             },
             {
-              "name": "NestedInp",
+              name: "Query",
             },
           ],
         },
@@ -114,8 +115,7 @@ Meta.test({
             {
               name: "a",
               type: {
-                name: null,
-                kind: "NON_NULL",
+                name: "Int",
               },
             },
           ],
@@ -152,12 +152,8 @@ Meta.test({
               {
                 name: "a",
                 type: {
-                  name: null,
-                  kind: "NON_NULL",
-                  ofType: {
-                    name: "Int",
-                    kind: "SCALAR",
-                  },
+                  name: "Int",
+                  ofType: null,
                 },
               },
             ],
@@ -193,41 +189,37 @@ Meta.test({
     `
       .expectData({
         __schema: {
-          queryType: {
-            fields: [
+          "queryType": {
+            "fields": [
               {
-                args: [
+                "name": "rec",
+                "args": [
                   {
-                    defaultValue: null,
-                    description: "a input field",
-                    type: {
-                      kind: "NON_NULL",
-                      name: null,
-                      ofType: {
-                        kind: "SCALAR",
-                        name: "Int",
+                    "description": "rec argument",
+                    "type": {
+                      "name": null,
+                      "kind": "NON_NULL",
+                      "ofType": {
+                        "name": "NestedNested_Inp",
                       },
                     },
                   },
                 ],
-                name: "test",
               },
               {
-                args: [
+                "name": "test",
+                "args": [
                   {
-                    defaultValue: null,
-                    description: "nested input field",
-                    type: {
-                      kind: "NON_NULL",
-                      name: null,
-                      ofType: {
-                        kind: "INPUT_OBJECT",
-                        name: "NestedInp",
+                    "description": "test argument",
+                    "type": {
+                      "name": null,
+                      "kind": "NON_NULL",
+                      "ofType": {
+                        "name": "Int",
                       },
                     },
                   },
                 ],
-                name: "rec",
               },
             ],
           },
@@ -244,102 +236,7 @@ Meta.test({
   const e = await t.engine("simple/simple.py");
 
   await t.should("not fail", async () => {
-    await gql`
-      query IntrospectionQuery {
-        __schema {
-          
-          queryType { name }
-          mutationType { name }
-          subscriptionType { name }
-          types {
-            ...FullType
-          }
-          directives {
-            name
-            description
-            
-            locations
-            args {
-              ...InputValue
-            }
-          }
-        }
-      }
-
-      fragment FullType on __Type {
-        kind
-        name
-        description
-        
-        fields(includeDeprecated: true) {
-          name
-          description
-          args {
-            ...InputValue
-          }
-          type {
-            ...TypeRef
-          }
-          isDeprecated
-          deprecationReason
-        }
-        inputFields {
-          ...InputValue
-        }
-        interfaces {
-          ...TypeRef
-        }
-        enumValues(includeDeprecated: true) {
-          name
-          description
-          isDeprecated
-          deprecationReason
-        }
-        possibleTypes {
-          ...TypeRef
-        }
-      }
-
-      fragment InputValue on __InputValue {
-        name
-        description
-        type { ...TypeRef }
-        defaultValue
-      }
-
-      fragment TypeRef on __Type {
-        kind
-        name
-        ofType {
-          kind
-          name
-          ofType {
-            kind
-            name
-            ofType {
-              kind
-              name
-              ofType {
-                kind
-                name
-                ofType {
-                  kind
-                  name
-                  ofType {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `
+    await fullIntrospection()
       .matchOkSnapshot(t)
       .on(e);
   });

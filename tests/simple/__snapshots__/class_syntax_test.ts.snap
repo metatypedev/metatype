@@ -14,83 +14,29 @@ snapshot[`Class Syntax 1`] = `
         name: "String",
       },
       {
+        kind: "INPUT_OBJECT",
+        name: "root_identity_fn_input_comments_structroot_identity_fn_input_comments_struct_Inp",
+      },
+      {
         fields: null,
         kind: "SCALAR",
         name: "Int",
       },
       {
-        fields: [
-          {
-            name: "string",
-          },
-        ],
-        kind: "OBJECT",
-        name: "_String",
+        kind: "SCALAR",
+        name: "root_identity_fn_input_metadatas_either",
       },
       {
         fields: [
-          {
-            name: "integer",
-          },
-        ],
-        kind: "OBJECT",
-        name: "_Integer",
-      },
-      {
-        fields: [
-          {
-            name: "id_class_struct",
-          },
-          {
-            name: "id_struct_class",
-          },
-          {
-            name: "identity",
-          },
-        ],
-        kind: "OBJECT",
-        name: "Query",
-      },
-      {
-        fields: [
-          {
-            name: "metadatas",
-          },
-          {
-            name: "likes",
-          },
-          {
-            name: "title",
-          },
           {
             name: "content",
           },
           {
-            name: "id",
-          },
-          {
-            name: "comments",
-          },
-        ],
-        kind: "OBJECT",
-        name: "root_identity_fn_input",
-      },
-      {
-        fields: [
-          {
             name: "title",
-          },
-          {
-            name: "content",
           },
         ],
         kind: "OBJECT",
         name: "root_identity_fn_input_comments_struct",
-      },
-      {
-        fields: null,
-        kind: "UNION",
-        name: "root_identity_fn_input_metadatas_eitherOut",
       },
       {
         fields: [
@@ -104,26 +50,47 @@ snapshot[`Class Syntax 1`] = `
       {
         fields: [
           {
-            name: "title",
+            name: "content",
           },
           {
-            name: "content",
+            name: "title",
           },
         ],
         kind: "OBJECT",
         name: "Info",
       },
       {
+        fields: null,
+        kind: "UNION",
+        name: "root_identity_fn_input_metadatas_either_of_Tag_Info",
+      },
+      {
         fields: [
           {
-            name: "class",
+            name: "comments",
           },
           {
-            name: "b",
+            name: "content",
+          },
+          {
+            name: "id",
+          },
+          {
+            name: "likes",
+          },
+          {
+            name: "metadatas",
+          },
+          {
+            name: "title",
           },
         ],
         kind: "OBJECT",
-        name: "B",
+        name: "root_identity_fn_input",
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "B_class_structB_class_struct_Inp",
       },
       {
         fields: [
@@ -137,44 +104,45 @@ snapshot[`Class Syntax 1`] = `
       {
         fields: [
           {
-            name: "struct",
+            name: "b",
           },
           {
+            name: "class",
+          },
+        ],
+        kind: "OBJECT",
+        name: "B",
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "BB_Inp",
+      },
+      {
+        fields: [
+          {
             name: "c",
+          },
+          {
+            name: "struct",
           },
         ],
         kind: "OBJECT",
         name: "root_id_class_struct_fn_input",
       },
       {
-        fields: null,
-        kind: "INPUT_OBJECT",
-        name: "root_identity_fn_input_comments_structInp",
-      },
-      {
-        fields: null,
-        kind: "SCALAR",
-        name: "root_identity_fn_input_metadatas_eitherIn",
-      },
-      {
-        fields: null,
-        kind: "INPUT_OBJECT",
-        name: "TagInp",
-      },
-      {
-        fields: null,
-        kind: "INPUT_OBJECT",
-        name: "InfoInp",
-      },
-      {
-        fields: null,
-        kind: "INPUT_OBJECT",
-        name: "B_class_structInp",
-      },
-      {
-        fields: null,
-        kind: "INPUT_OBJECT",
-        name: "BInp",
+        fields: [
+          {
+            name: "identity",
+          },
+          {
+            name: "id_struct_class",
+          },
+          {
+            name: "id_class_struct",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Query",
       },
     ],
   },

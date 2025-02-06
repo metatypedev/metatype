@@ -110,7 +110,7 @@ export function findCursors(
   return matches;
 }
 
-/** Remove extension, will treat `.d.ts` as a whole for example */
+/** Remove extension, will treat `.d.ts` as a whole */
 export function removeExtension(path: string) {
   const known = /(\.d\.m?ts)$/;
   const match = path.trim().match(known);

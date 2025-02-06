@@ -203,31 +203,33 @@ export class OperationPolicies {
         } // elif deny => already thrown
       }
 
-      const res = await this.#checkStageAuthorization(
+      const resultsPerField = await this.#checkStageAuthorization(
         stageId,
         activeEffect,
         getResolverResult,
       );
 
-      switch (res.authorized) {
-        case "ALLOW": {
-          resolvedPolicyCachePerStage.set(stageId, "ALLOW");
-          continue;
-        }
-        case "PASS": {
-          resolvedPolicyCachePerStage.set(stageId, "PASS");
-          continue;
-        }
-        default: {
-          resolvedPolicyCachePerStage.set(stageId, res.authorized);
-          const policyNames = res.policiesFailed.map((operand) => ({
-            name: this.tg.policy(operand.index).name,
-            concernedField: operand.canonFieldName,
-          }));
+      for (const { fieldStageId, check } of resultsPerField) {
+        switch (check.authorized) {
+          case "ALLOW": {
+            resolvedPolicyCachePerStage.set(fieldStageId, "ALLOW");
+            continue;
+          }
+          case "PASS": {
+            resolvedPolicyCachePerStage.set(fieldStageId, "PASS");
+            continue;
+          }
+          default: {
+            resolvedPolicyCachePerStage.set(fieldStageId, check.authorized);
+            const policyNames = check.policiesFailed.map((operand) => ({
+              name: this.tg.policy(operand.index).name,
+              concernedField: operand.canonFieldName,
+            }));
 
-          throw new BadContext(
-            this.#getRejectionReason(stageId, activeEffect, policyNames),
-          );
+            throw new BadContext(
+              this.#getRejectionReason(fieldStageId, activeEffect, policyNames),
+            );
+          }
         }
       }
     }
@@ -238,19 +240,19 @@ export class OperationPolicies {
     effect: EffectType,
     policiesData: Array<{ name: string; concernedField: string }>,
   ): string {
-    const getPath = (concernedField: string) => {
+    const getPath = () => {
       if (stageId == EXPOSE_STAGE_ID) {
-        return [EXPOSE_STAGE_ID, concernedField].join(".");
+        return EXPOSE_STAGE_ID;
       }
-      return [EXPOSE_STAGE_ID, stageId, concernedField].join(".");
+      return [EXPOSE_STAGE_ID, stageId].join(".");
     };
 
     const detailsPerPolicy = policiesData
-      .map(({ name, concernedField }) =>
+      .map(({ name }) =>
         [
           `policy '${name}'`,
           `with effect '${effect}'`,
-          `at '${getPath(concernedField)}'`,
+          `at '${getPath()}'`,
         ].join(" ")
       );
     return `Authorization failed for ${detailsPerPolicy.join(";  ")}`;
@@ -407,12 +409,16 @@ export class OperationPolicies {
     getResolverResult: GetResolverResult,
   ) {
     const selectedFields = this.#findSelectedFields(stageId);
-
+    const checkResults = [];
     const policiesForStage = this.#stageToPolicies.get(stageId) ?? [];
-    const policies = [];
     for (const { canonFieldName, indices } of policiesForStage) {
+      const policies = [];
+
       // Note: canonFieldName is the field on the type (but not the alias if any!)
-      if (!selectedFields.includes(canonFieldName)) {
+      const selected = selectedFields.find(({ node }) =>
+        node == canonFieldName
+      );
+      if (!selected) {
         continue;
       }
 
@@ -433,13 +439,18 @@ export class OperationPolicies {
           policies.push({ canonFieldName, index: actualIndex });
         }
       }
+
+      checkResults.push({
+        fieldStageId: selected.stageId,
+        check: await this.#composePolicies(
+          policies,
+          effect,
+          getResolverResult,
+        ),
+      });
     }
 
-    return await this.#composePolicies(
-      policies,
-      effect,
-      getResolverResult,
-    );
+    return checkResults;
   }
 
   #findSelectedFields(targetStageId: string) {
@@ -447,11 +458,11 @@ export class OperationPolicies {
       const chunks = stageId.split(".");
       const parent = chunks.slice(0, -1).join(".");
       if (parent == "" && targetStageId == EXPOSE_STAGE_ID) {
-        return node;
+        return { stageId, node };
       }
 
-      return targetStageId == parent ? node : null;
-    }).filter((name) => name != null);
+      return targetStageId == parent ? { stageId, node } : null;
+    }).filter((val) => val != null);
   }
 
   // for testing

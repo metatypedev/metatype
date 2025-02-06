@@ -94,7 +94,7 @@ def introspection(g: Graph):
 
     type = t.struct(
         {
-            "kind": kind,
+            "kind": kind.optional(),
             "name": t.string().optional(),
             "description": t.string().optional(),
             "specifiedByURL": t.string().optional(),
