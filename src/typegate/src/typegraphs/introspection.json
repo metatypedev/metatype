@@ -5,7 +5,7 @@
       "title": "introspection",
       "properties": {
         "__type": 1,
-        "__schema": 26
+        "__schema": 27
       },
       "id": [],
       "required": [
@@ -58,14 +58,14 @@
       "title": "type",
       "properties": {
         "kind": 6,
-        "name": 7,
-        "description": 7,
-        "specifiedByURL": 7,
-        "fields": 8,
-        "interfaces": 18,
-        "possibleTypes": 18,
-        "enumValues": 20,
-        "inputFields": 24,
+        "name": 8,
+        "description": 8,
+        "specifiedByURL": 8,
+        "fields": 9,
+        "interfaces": 19,
+        "possibleTypes": 19,
+        "enumValues": 21,
+        "inputFields": 25,
         "ofType": 4
       },
       "id": [],
@@ -82,6 +82,12 @@
         "inputFields": [],
         "ofType": []
       }
+    },
+    {
+      "type": "optional",
+      "title": "type_kind_type_kind_optional",
+      "item": 7,
+      "default_value": null
     },
     {
       "type": "string",
@@ -106,8 +112,8 @@
     {
       "type": "function",
       "title": "type_fields_fn",
-      "input": 9,
-      "output": 12,
+      "input": 10,
+      "output": 13,
       "runtimeConfig": null,
       "materializer": 1,
       "rate_weight": null,
@@ -117,7 +123,7 @@
       "type": "object",
       "title": "type_fields_fn_input",
       "properties": {
-        "includeDeprecated": 10
+        "includeDeprecated": 11
       },
       "id": [],
       "required": [],
@@ -128,7 +134,7 @@
     {
       "type": "optional",
       "title": "type_fields_fn_input_includeDeprecated_type_fields_fn_input_includeDeprecated_boolean_optional",
-      "item": 11,
+      "item": 12,
       "default_value": null
     },
     {
@@ -138,24 +144,24 @@
     {
       "type": "optional",
       "title": "type_fields_fn_output",
-      "item": 13,
+      "item": 14,
       "default_value": null
     },
     {
       "type": "list",
       "title": "type_fields_fn_output",
-      "items": 14
+      "items": 15
     },
     {
       "type": "object",
       "title": "field",
       "properties": {
         "name": 3,
-        "description": 7,
-        "args": 15,
+        "description": 8,
+        "args": 16,
         "type": 5,
-        "isDeprecated": 11,
-        "deprecationReason": 7
+        "isDeprecated": 12,
+        "deprecationReason": 8
       },
       "id": [],
       "required": [],
@@ -171,8 +177,8 @@
     {
       "type": "function",
       "title": "field_args_fn",
-      "input": 9,
-      "output": 16,
+      "input": 10,
+      "output": 17,
       "runtimeConfig": null,
       "materializer": 1,
       "rate_weight": null,
@@ -181,18 +187,18 @@
     {
       "type": "list",
       "title": "field_args_fn_output",
-      "items": 17
+      "items": 18
     },
     {
       "type": "object",
       "title": "input_value",
       "properties": {
         "name": 3,
-        "description": 7,
+        "description": 8,
         "type": 5,
-        "defaultValue": 7,
-        "isDeprecated": 11,
-        "deprecationReason": 7
+        "defaultValue": 8,
+        "isDeprecated": 12,
+        "deprecationReason": 8
       },
       "id": [],
       "required": [],
@@ -208,7 +214,7 @@
     {
       "type": "optional",
       "title": "type_interfaces_type_interfaces_type_list_optional",
-      "item": 19,
+      "item": 20,
       "default_value": null
     },
     {
@@ -219,8 +225,8 @@
     {
       "type": "function",
       "title": "type_enumValues_fn",
-      "input": 9,
-      "output": 21,
+      "input": 10,
+      "output": 22,
       "runtimeConfig": null,
       "materializer": 1,
       "rate_weight": null,
@@ -229,22 +235,22 @@
     {
       "type": "optional",
       "title": "type_enumValues_fn_output",
-      "item": 22,
+      "item": 23,
       "default_value": null
     },
     {
       "type": "list",
       "title": "type_enumValues_fn_output",
-      "items": 23
+      "items": 24
     },
     {
       "type": "object",
       "title": "enum_value",
       "properties": {
         "name": 3,
-        "description": 7,
-        "isDeprecated": 11,
-        "deprecationReason": 7
+        "description": 8,
+        "isDeprecated": 12,
+        "deprecationReason": 8
       },
       "id": [],
       "required": [],
@@ -258,8 +264,8 @@
     {
       "type": "function",
       "title": "type_inputFields_fn",
-      "input": 9,
-      "output": 25,
+      "input": 10,
+      "output": 26,
       "runtimeConfig": null,
       "materializer": 1,
       "rate_weight": null,
@@ -268,14 +274,14 @@
     {
       "type": "optional",
       "title": "type_inputFields_fn_output",
-      "item": 16,
+      "item": 17,
       "default_value": null
     },
     {
       "type": "function",
       "title": "root___schema_fn",
-      "input": 27,
-      "output": 28,
+      "input": 28,
+      "output": 29,
       "runtimeConfig": null,
       "materializer": 3,
       "rate_weight": null,
@@ -292,12 +298,12 @@
       "type": "object",
       "title": "schema",
       "properties": {
-        "description": 7,
-        "types": 19,
+        "description": 8,
+        "types": 20,
         "queryType": 5,
         "mutationType": 4,
         "subscriptionType": 4,
-        "directives": 29
+        "directives": 30
       },
       "id": [],
       "required": [],
@@ -313,17 +319,17 @@
     {
       "type": "list",
       "title": "schema_directives_directive_list",
-      "items": 30
+      "items": 31
     },
     {
       "type": "object",
       "title": "directive",
       "properties": {
         "name": 3,
-        "description": 7,
-        "isRepeatable": 11,
-        "locations": 31,
-        "args": 15
+        "description": 8,
+        "isRepeatable": 12,
+        "locations": 32,
+        "args": 16
       },
       "id": [],
       "required": [],
@@ -338,7 +344,7 @@
     {
       "type": "list",
       "title": "directive_locations_directive_location_list",
-      "items": 32
+      "items": 33
     },
     {
       "type": "string",

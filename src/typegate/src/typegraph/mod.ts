@@ -56,6 +56,11 @@ export type {
 };
 
 export type RuntimeResolver = Record<string, Runtime>;
+export type RuntimeRefData = {
+  runtimeReferences: Array<Runtime>;
+  denoRuntimeIdx: number;
+  denoRuntime: Runtime;
+};
 
 export class SecretManager {
   private typegraphName: string;
@@ -165,11 +170,11 @@ export class TypeGraph implements AsyncDisposable {
     typegate: Typegate,
     typegraph: TypeGraphDS,
     secretManager: SecretManager,
-    staticReference: RuntimeResolver,
+    runtimeRefData: RuntimeRefData,
     introspection: TypeGraph | null,
   ): Promise<TypeGraph> {
     const typegraphName = TypeGraph.formatName(typegraph);
-    const { meta, runtimes } = typegraph;
+    const { meta } = typegraph;
 
     // check mandatory secrets for injection
     meta.secrets.forEach((s) => secretManager.secretOrFail(s));
@@ -208,36 +213,10 @@ export class TypeGraph implements AsyncDisposable {
       return {};
     };
 
+    const { denoRuntimeIdx, runtimeReferences, denoRuntime } = runtimeRefData
+
     // this is not the best implementation for auth function
     // however, it is the simplest one for now
-    const denoRuntimeIdx = runtimes.findIndex((r) => r.name === "deno");
-    ensure(denoRuntimeIdx !== -1, "cannot find deno runtime");
-
-    const runtimeReferences = await Promise.all(
-      runtimes.map((runtime, idx) => {
-        if (runtime.name in staticReference) {
-          return staticReference[runtime.name];
-        }
-
-        const materializers = typegraph.materializers.filter(
-          (mat) => mat.runtime === idx,
-        );
-
-        logger.info("initializing runtime {}", { name: runtime.name });
-        return initRuntime(runtime.name, {
-          typegate,
-          typegraph,
-          typegraphName,
-          materializers,
-          args: deepClone((runtime as any)?.data ?? {}),
-          secretManager,
-        });
-      }),
-    );
-
-    const denoRuntime = runtimeReferences[denoRuntimeIdx];
-
-    ensureNonNullable(denoRuntime, "cannot find deno runtime");
 
     const auths = new Map<string, Protocol>();
     const tg = new TypeGraph(
@@ -557,3 +536,46 @@ export type PossibleSelectionFields =
   | null
   | Map<string, PossibleSelectionFields>
   | Array<[string, Map<string, PossibleSelectionFields>]>;
+
+export function prepareRuntimeReferences(
+  typegate: Typegate,
+  secretManager: SecretManager,
+) {
+  return async (
+    typegraph: TypeGraphDS,
+    staticReference: RuntimeResolver,
+  )=> {
+    const typegraphName = TypeGraph.formatName(typegraph);
+    const { runtimes } = typegraph;
+    const denoRuntimeIdx = runtimes.findIndex((r) => r.name === "deno");
+    ensure(denoRuntimeIdx !== -1, "cannot find deno runtime");
+  
+    const runtimeReferences = await Promise.all(
+      runtimes.map((runtime, idx) => {
+        if (runtime.name in staticReference) {
+          return staticReference[runtime.name];
+        }
+  
+        const materializers = typegraph.materializers.filter(
+          (mat) => mat.runtime === idx,
+        );
+  
+        logger.info("initializing runtime {}", { name: runtime.name });
+        return initRuntime(runtime.name, {
+          typegate,
+          typegraph,
+          typegraphName,
+          materializers,
+          args: deepClone(runtime as any)?.data ?? {},
+          secretManager,
+        });
+      }),
+    );
+
+    return {
+      runtimeReferences,
+      denoRuntimeIdx,
+      denoRuntime: runtimeReferences[denoRuntimeIdx],
+    };
+  }
+}

@@ -1,0 +1,206 @@
+export const snapshot = {};
+
+snapshot[`Policy rule logic upon introspection on nested struct 1`] = `
+{
+  __schema: {
+    types: [
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "Int",
+      },
+      {
+        fields: [
+          {
+            name: "a_11_deny_allowed",
+          },
+          {
+            name: "a_12",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_a_struct_a_1_struct",
+      },
+      {
+        fields: [
+          {
+            name: "a_21",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_a_struct_a_2_struct",
+      },
+      {
+        fields: [
+          {
+            name: "a_1",
+          },
+          {
+            name: "a_2",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_a_struct",
+      },
+      {
+        fields: [
+          {
+            name: "b_12",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_b_struct_b_1_struct_f1",
+      },
+      {
+        fields: [
+          {
+            name: "b_1",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_b_struct_f1",
+      },
+      {
+        fields: [
+          {
+            name: "a",
+          },
+          {
+            name: "b",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output",
+      },
+      {
+        fields: [
+          {
+            name: "identity_simple",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Query",
+      },
+    ],
+  },
+}
+`;
+
+snapshot[`Policy rule logic upon introspection on nested struct 2`] = `
+{
+  __schema: {
+    types: [
+      {
+        fields: [
+          {
+            name: "_",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Query",
+      },
+    ],
+  },
+}
+`;
+
+snapshot[`Policy rule logic upon introspection on nested struct 3`] = `
+{
+  __schema: {
+    types: [
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "Int",
+      },
+      {
+        fields: [
+          {
+            name: "a_11_deny_allowed",
+          },
+          {
+            name: "a_12",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_a_struct_a_1_struct",
+      },
+      {
+        fields: [
+          {
+            name: "a_21",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_a_struct_a_2_struct",
+      },
+      {
+        fields: [
+          {
+            name: "a_1",
+          },
+          {
+            name: "a_2",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_a_struct",
+      },
+      {
+        fields: [
+          {
+            name: "b_11_deny",
+          },
+          {
+            name: "b_12",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_b_struct_b_1_struct",
+      },
+      {
+        fields: [
+          {
+            name: "b_21_allow_denied",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_b_struct_b_2_struct",
+      },
+      {
+        fields: [
+          {
+            name: "b_1",
+          },
+          {
+            name: "b_2",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output_b_struct",
+      },
+      {
+        fields: [
+          {
+            name: "a",
+          },
+          {
+            name: "b",
+          },
+        ],
+        kind: "OBJECT",
+        name: "root_identity_simple_fn_output",
+      },
+      {
+        fields: [
+          {
+            name: "identity_simple",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Query",
+      },
+    ],
+  },
+}
+`;

@@ -1,0 +1,723 @@
+export const snapshot = {};
+
+snapshot[`Visibility check upon introspection on complex typegraph 1`] = `
+{
+  __schema: {
+    types: [
+      {
+        kind: "SCALAR",
+        name: "Int",
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "InputRec_one_struct_depthOne_structInputRec_one_struct_depthOne_struct_Inp",
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "InputRec_one_structInputRec_one_struct_Inp",
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "InputRec_two_structInputRec_two_struct_Inp",
+      },
+      {
+        kind: "OBJECT",
+        name: "struct_ab80b_field_list_optional_struct",
+      },
+      {
+        kind: "OBJECT",
+        name: "struct_ab80b_field_optional_List_struct",
+      },
+      {
+        kind: "SCALAR",
+        name: "String",
+      },
+      {
+        kind: "OBJECT",
+        name: "struct_ab80b_denied_struct_f1",
+      },
+      {
+        kind: "OBJECT",
+        name: "SelfInner",
+      },
+      {
+        kind: "OBJECT",
+        name: "SelfRecursive_f2",
+      },
+      {
+        kind: "SCALAR",
+        name: "struct_ab80b_union_scalar_union",
+      },
+      {
+        kind: "SCALAR",
+        name: "OnionInner_fempty",
+      },
+      {
+        kind: "OBJECT",
+        name: "_variant_empty_OnionInner",
+      },
+      {
+        kind: "SCALAR",
+        name: "EmptyStuff",
+      },
+      {
+        kind: "OBJECT",
+        name: "_variant_empty_EmptyStuff",
+      },
+      {
+        kind: "UNION",
+        name: "UnionWithRecVariant_of_OnionInner_fempty_EmptyStuff_SelfRecursive_f2",
+      },
+      {
+        kind: "OBJECT",
+        name: "struct_ab80b_f6",
+      },
+      {
+        kind: "OBJECT",
+        name: "Query",
+      },
+      {
+        kind: "OBJECT",
+        name: "Mutation",
+      },
+    ],
+  },
+}
+`;
+
+snapshot[`Visibility check upon introspection on complex typegraph 2`] = `
+{
+  __schema: {
+    types: [
+      {
+        kind: "SCALAR",
+        name: "Int",
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "InputRec_one_struct_depthOne_structInputRec_one_struct_depthOne_struct_Inp",
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "InputRec_one_structInputRec_one_struct_Inp",
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "InputRec_two_structInputRec_two_struct_Inp",
+      },
+      {
+        kind: "SCALAR",
+        name: "String",
+      },
+      {
+        kind: "OBJECT",
+        name: "struct_ab80b_field_list_optional_struct",
+      },
+      {
+        kind: "OBJECT",
+        name: "struct_ab80b_field_optional_List_struct",
+      },
+      {
+        kind: "OBJECT",
+        name: "struct_ab80b_denied_struct_f1",
+      },
+      {
+        kind: "OBJECT",
+        name: "SelfInner",
+      },
+      {
+        kind: "OBJECT",
+        name: "SelfRecursive",
+      },
+      {
+        kind: "SCALAR",
+        name: "struct_ab80b_union_scalar_union",
+      },
+      {
+        kind: "OBJECT",
+        name: "OnionInner",
+      },
+      {
+        kind: "SCALAR",
+        name: "EmptyStuff",
+      },
+      {
+        kind: "OBJECT",
+        name: "_variant_empty_EmptyStuff",
+      },
+      {
+        kind: "UNION",
+        name: "UnionWithRecVariant_of_OnionInner_EmptyStuff_SelfRecursive",
+      },
+      {
+        kind: "OBJECT",
+        name: "struct_ab80b",
+      },
+      {
+        kind: "OBJECT",
+        name: "Query",
+      },
+      {
+        kind: "OBJECT",
+        name: "Mutation",
+      },
+    ],
+  },
+}
+`;
+
+snapshot[`Full introspection without context provided on complex typegraph 1`] = `
+{
+  __schema: {
+    directives: [],
+    mutationType: {
+      name: "Mutation",
+    },
+    queryType: {
+      name: "Query",
+    },
+    subscriptionType: null,
+    types: [
+      {
+        description: "integer type",
+        enumValues: null,
+        fields: null,
+        inputFields: null,
+        interfaces: [],
+        kind: "SCALAR",
+        name: "Int",
+        possibleTypes: null,
+      },
+      {
+        inputFields: [
+          {
+            description: "InputRec_one_struct_depthOne_structInputRec_one_struct_depthOne_struct_Inp input field
+
+Policies:
+- inherit",
+            name: "another",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                name: "Int",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "INPUT_OBJECT",
+        name: "InputRec_one_struct_depthOne_structInputRec_one_struct_depthOne_struct_Inp",
+      },
+      {
+        inputFields: [
+          {
+            description: "InputRec_one_structInputRec_one_struct_Inp input field
+
+Policies:
+- inherit",
+            name: "depthOne",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                name: "InputRec_one_struct_depthOne_structInputRec_one_struct_depthOne_struct_Inp",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "INPUT_OBJECT",
+        name: "InputRec_one_structInputRec_one_struct_Inp",
+      },
+      {
+        inputFields: [
+          {
+            description: "InputRec_two_structInputRec_two_struct_Inp input field
+
+Policies:
+- denyAll",
+            name: "depth_two_one",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                name: "Int",
+                ofType: null,
+              },
+            },
+          },
+          {
+            description: "InputRec_two_structInputRec_two_struct_Inp input field
+
+Policies:
+- inherit",
+            name: "depth_two_two",
+            type: {
+              kind: "LIST",
+              name: null,
+              ofType: {
+                kind: "LIST",
+                name: null,
+                ofType: {
+                  name: "Int",
+                  ofType: null,
+                },
+              },
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "INPUT_OBJECT",
+        name: "InputRec_two_structInputRec_two_struct_Inp",
+      },
+      {
+        fields: [
+          {
+            args: [],
+            description: "struct_ab80b_field_list_optional_struct field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "inner_one",
+            type: {
+              name: "Int",
+              ofType: null,
+            },
+          },
+          {
+            args: [],
+            description: "struct_ab80b_field_list_optional_struct field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "inner_two_two",
+            type: {
+              name: "Int",
+              ofType: null,
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "OBJECT",
+        name: "struct_ab80b_field_list_optional_struct",
+      },
+      {
+        fields: [
+          {
+            args: [],
+            description: "struct_ab80b_field_optional_List_struct field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "inner",
+            type: {
+              name: "Int",
+              ofType: null,
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "OBJECT",
+        name: "struct_ab80b_field_optional_List_struct",
+      },
+      {
+        description: "string type",
+        enumValues: null,
+        fields: null,
+        inputFields: null,
+        interfaces: [],
+        kind: "SCALAR",
+        name: "String",
+        possibleTypes: null,
+      },
+      {
+        fields: [
+          {
+            args: [],
+            description: "struct_ab80b_denied_struct_f1 field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "field_second",
+            type: {
+              name: "String",
+              ofType: null,
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "OBJECT",
+        name: "struct_ab80b_denied_struct_f1",
+      },
+      {
+        fields: [
+          {
+            args: [],
+            description: "SelfInner field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "self_rec",
+            type: {
+              name: "SelfRecursive_f2",
+              ofType: null,
+            },
+          },
+          {
+            args: [],
+            description: "SelfInner field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "other",
+            type: {
+              name: "Int",
+              ofType: null,
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "OBJECT",
+        name: "SelfInner",
+      },
+      {
+        fields: [
+          {
+            args: [],
+            description: "SelfRecursive_f2 field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "self_rec",
+            type: {
+              name: "SelfRecursive_f2",
+              ofType: null,
+            },
+          },
+          {
+            args: [],
+            description: "SelfRecursive_f2 field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "inner_self",
+            type: {
+              kind: "LIST",
+              name: null,
+              ofType: {
+                name: "SelfInner",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "OBJECT",
+        name: "SelfRecursive_f2",
+      },
+      {
+        description: "union type
+Int, String",
+        kind: "SCALAR",
+        name: "struct_ab80b_union_scalar_union",
+      },
+      {
+        description: "object scalar type representing an empty object",
+        kind: "SCALAR",
+        name: "OnionInner_fempty",
+      },
+      {
+        description: "_variant_empty_OnionInner type",
+        enumValues: null,
+        fields: [
+          {
+            args: [],
+            deprecationReason: "Dummy value due to https://github.com/graphql/graphiql/issues/2308",
+            isDeprecated: true,
+            name: "_",
+            type: {
+              name: "_variant_empty_OnionInner",
+              ofType: null,
+            },
+          },
+        ],
+        inputFields: null,
+        interfaces: [],
+        kind: "OBJECT",
+        name: "_variant_empty_OnionInner",
+        possibleTypes: null,
+      },
+      {
+        description: "object scalar type representing an empty object",
+        kind: "SCALAR",
+        name: "EmptyStuff",
+      },
+      {
+        description: "_variant_empty_EmptyStuff type",
+        enumValues: null,
+        fields: [
+          {
+            args: [],
+            deprecationReason: "Dummy value due to https://github.com/graphql/graphiql/issues/2308",
+            isDeprecated: true,
+            name: "_",
+            type: {
+              name: "_variant_empty_EmptyStuff",
+              ofType: null,
+            },
+          },
+        ],
+        inputFields: null,
+        interfaces: [],
+        kind: "OBJECT",
+        name: "_variant_empty_EmptyStuff",
+        possibleTypes: null,
+      },
+      {
+        enumValues: null,
+        fields: null,
+        inputFields: null,
+        interfaces: [],
+        kind: "UNION",
+        name: "UnionWithRecVariant_of_OnionInner_fempty_EmptyStuff_SelfRecursive_f2",
+        possibleTypes: [
+          {
+            name: "_variant_empty_OnionInner",
+            ofType: null,
+          },
+          {
+            name: "_variant_empty_EmptyStuff",
+            ofType: null,
+          },
+          {
+            name: "SelfRecursive_f2",
+            ofType: null,
+          },
+        ],
+      },
+      {
+        fields: [
+          {
+            args: [],
+            description: "struct_ab80b_f6 field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "field_list_optional",
+            type: {
+              kind: "LIST",
+              name: null,
+              ofType: {
+                name: "struct_ab80b_field_list_optional_struct",
+                ofType: null,
+              },
+            },
+          },
+          {
+            args: [],
+            description: "struct_ab80b_f6 field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "field_optional_List",
+            type: {
+              kind: "LIST",
+              name: null,
+              ofType: {
+                kind: "LIST",
+                name: null,
+                ofType: {
+                  name: "struct_ab80b_field_optional_List_struct",
+                  ofType: null,
+                },
+              },
+            },
+          },
+          {
+            args: [],
+            description: "struct_ab80b_f6 field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "denied",
+            type: {
+              kind: "LIST",
+              name: null,
+              ofType: {
+                kind: "LIST",
+                name: null,
+                ofType: {
+                  name: "struct_ab80b_denied_struct_f1",
+                  ofType: null,
+                },
+              },
+            },
+          },
+          {
+            args: [],
+            description: "struct_ab80b_f6 field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "mutually_recursive",
+            type: {
+              kind: "LIST",
+              name: null,
+              ofType: {
+                kind: "LIST",
+                name: null,
+                ofType: {
+                  name: "SelfRecursive_f2",
+                  ofType: null,
+                },
+              },
+            },
+          },
+          {
+            args: [],
+            description: "struct_ab80b_f6 field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "union_scalar",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                name: "struct_ab80b_union_scalar_union",
+                ofType: null,
+              },
+            },
+          },
+          {
+            args: [],
+            description: "struct_ab80b_f6 field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "union_rec_and_empty_variant",
+            type: {
+              name: "UnionWithRecVariant_of_OnionInner_fempty_EmptyStuff_SelfRecursive_f2",
+              ofType: null,
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "OBJECT",
+        name: "struct_ab80b_f6",
+      },
+      {
+        fields: [
+          {
+            args: [
+              {
+                description: "identity_read argument",
+                name: "one",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    name: "InputRec_one_structInputRec_one_struct_Inp",
+                    ofType: null,
+                  },
+                },
+              },
+              {
+                description: "identity_read argument",
+                name: "two",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    name: "InputRec_two_structInputRec_two_struct_Inp",
+                    ofType: null,
+                  },
+                },
+              },
+            ],
+            description: "Query field
+
+Policies:
+- passThrough",
+            isDeprecated: false,
+            name: "identity_read",
+            type: {
+              name: "struct_ab80b_f6",
+              ofType: null,
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "OBJECT",
+        name: "Query",
+      },
+      {
+        fields: [
+          {
+            args: [
+              {
+                description: "identity_update argument",
+                name: "one",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    name: "InputRec_one_structInputRec_one_struct_Inp",
+                    ofType: null,
+                  },
+                },
+              },
+              {
+                description: "identity_update argument",
+                name: "two",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    name: "InputRec_two_structInputRec_two_struct_Inp",
+                    ofType: null,
+                  },
+                },
+              },
+            ],
+            description: "Mutation field
+
+Policies:
+- passThrough",
+            isDeprecated: false,
+            name: "identity_update",
+            type: {
+              kind: "LIST",
+              name: null,
+              ofType: {
+                name: "struct_ab80b_f6",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        interfaces: [],
+        kind: "OBJECT",
+        name: "Mutation",
+      },
+    ],
+  },
+}
+`;
