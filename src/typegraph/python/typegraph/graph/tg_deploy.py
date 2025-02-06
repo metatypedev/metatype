@@ -7,12 +7,12 @@ from typing import Any, Dict, Optional, Union
 from urllib import request
 from platform import python_version
 
-from typegraph.gen.exports.utils import QueryDeployParams
-from typegraph.gen.exports.core import MigrationAction, PrismaMigrationConfig
+from typegraph.gen.utils import QueryDeployParams
+from typegraph.gen.core import MigrationAction, PrismaMigrationConfig, SerializeParams
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_artifact_upload import ArtifactUploader
 from typegraph.graph.typegraph import TypegraphOutput
-from typegraph.wit import SerializeParams, store, wit_utils
+from typegraph.sdk import sdk_utils
 from typegraph import version as sdk_version
 from typegraph.io import Log
 
@@ -106,8 +106,7 @@ def tg_deploy(tg: TypegraphOutput, params: TypegraphDeployParams) -> DeployResul
         artifact_uploader.upload_artifacts()
 
     # deploy the typegraph
-    query = wit_utils.gql_deploy_query(
-        store,
+    query = sdk_utils.gql_deploy_query(
         params=QueryDeployParams(
             tg=tg_json,
             secrets=[(k, v) for k, v in (params.secrets or {}).items()],
@@ -151,7 +150,7 @@ def tg_remove(typegraph_name: str, params: TypegraphRemoveParams):
     if typegate.auth is not None:
         headers["Authorization"] = typegate.auth.as_header_value()
 
-    query = wit_utils.gql_remove_query(store, [typegraph_name])
+    query = sdk_utils.gql_remove_query([typegraph_name])
 
     req = request.Request(
         url=url,
@@ -189,7 +188,7 @@ def ping_typegate(url: str, headers: dict[str, str]):
         url=url,
         method="POST",
         headers=headers,
-        data=wit_utils.gql_ping_query(store).encode(),
+        data=sdk_utils.gql_ping_query().encode(),
     )
 
     try:

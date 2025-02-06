@@ -8,12 +8,12 @@ use crate::conversion::hash::{Hashable, Hasher};
 use crate::conversion::types::TypeConversion;
 use crate::errors::Result;
 use crate::global_store::Store;
-use crate::typegraph::TypegraphContext;
-use crate::types::ExtendedTypeDef;
-use crate::wit::core::{
+use crate::sdk::core::{
     TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional, TypeString,
     TypeStruct, TypeUnion,
 };
+use crate::typegraph::TypegraphContext;
+use crate::types::ExtendedTypeDef;
 use enum_dispatch::enum_dispatch;
 use std::hash::Hash as _;
 use tg_schema::TypeNode;

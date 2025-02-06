@@ -9,12 +9,12 @@ use crate::global_store::Store;
 use crate::params::apply::ParameterTransformNode;
 use crate::runtimes::random::collect_random_runtime_config;
 use crate::runtimes::Runtime;
+use crate::sdk::core::TypeFunc;
 use crate::typegraph::TypegraphContext;
 use crate::types::{
     AsTypeDefEx as _, ExtendedTypeDef, FindAttribute as _, Func, InjectionTree, RefAttr, Struct,
     TypeDef, TypeDefData, TypeId,
 };
-use crate::wit::core::TypeFunc;
 use indexmap::IndexMap;
 use std::collections::HashSet;
 use std::hash::Hash as _;

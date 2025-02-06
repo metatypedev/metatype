@@ -24,7 +24,6 @@ src/meta-lsp/*.vsix
 src/typegate/workers
 src/typegate/codegen
 
-tests/prisma-migrations
 tests/e2e/cli/prisma-migrations
 tests/importers/copy/
 tests/**/*.wasm

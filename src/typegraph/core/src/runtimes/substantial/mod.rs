@@ -4,12 +4,10 @@
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
 use crate::global_store::Store;
+use crate::sdk::core::FuncParams;
+use crate::sdk::{core::RuntimeId, runtimes::Effect, runtimes::SubstantialOperationData};
 use crate::t::{self, TypeBuilder};
 use crate::typegraph::TypegraphContext;
-use crate::wit::core::FuncParams;
-use crate::wit::{
-    core::RuntimeId, runtimes::Effect as WitEffect, runtimes::SubstantialOperationData,
-};
 use serde_json::json;
 use tg_schema::Materializer;
 
@@ -34,7 +32,7 @@ impl MaterializerConverter for SubstantialMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
 
@@ -85,7 +83,7 @@ pub fn substantial_operation(
             );
 
             (
-                WitEffect::Create(true),
+                Effect::Create(true),
                 SubstantialMaterializer::Start {
                     secrets: data.secrets,
                 },
@@ -99,7 +97,7 @@ pub fn substantial_operation(
             inp.prop("kwargs", t::string().format("json").build()?);
 
             (
-                WitEffect::Create(true),
+                Effect::Create(true),
                 SubstantialMaterializer::StartRaw {
                     secrets: data.secrets,
                 },
@@ -112,7 +110,7 @@ pub fn substantial_operation(
             inp.prop("run_id", t::string().build()?);
 
             (
-                WitEffect::Create(false),
+                Effect::Create(false),
                 SubstantialMaterializer::Stop,
                 inp.build()?,
                 t::list(t::string().build()?).build()?,
@@ -129,7 +127,7 @@ pub fn substantial_operation(
             inp.prop("event", event);
 
             (
-                WitEffect::Create(false),
+                Effect::Create(false),
                 SubstantialMaterializer::Send,
                 inp.build()?,
                 t::string().build()?,
@@ -146,7 +144,7 @@ pub fn substantial_operation(
             inp.prop("event", event);
 
             (
-                WitEffect::Create(false),
+                Effect::Create(false),
                 SubstantialMaterializer::SendRaw,
                 inp.build()?,
                 t::string().build()?,
@@ -171,7 +169,7 @@ pub fn substantial_operation(
                 .build()?;
 
             (
-                WitEffect::Read,
+                Effect::Read,
                 SubstantialMaterializer::Resources,
                 inp.build()?,
                 out,
@@ -181,7 +179,7 @@ pub fn substantial_operation(
             let mut inp = t::struct_();
             inp.prop("name", t::string().build()?);
             (
-                WitEffect::Read,
+                Effect::Read,
                 SubstantialMaterializer::Results,
                 inp.build()?,
                 type_utils::results_op_results_ty(data)?,
@@ -191,7 +189,7 @@ pub fn substantial_operation(
             let mut inp = t::struct_();
             inp.prop("name", t::string().build()?);
             (
-                WitEffect::Read,
+                Effect::Read,
                 SubstantialMaterializer::ResultsRaw,
                 inp.build()?,
                 type_utils::results_op_results_ty(t::string().format("json").build()?.into())?,
@@ -203,14 +201,14 @@ pub fn substantial_operation(
             inp.prop("child_run_id", t::string().build()?);
 
             (
-                WitEffect::Create(true),
+                Effect::Create(true),
                 SubstantialMaterializer::InternalLinkParentChild,
                 inp.build()?,
                 t::boolean().build()?,
             )
         }
         SubstantialOperationData::AdvancedFilters => (
-            WitEffect::Read,
+            Effect::Read,
             SubstantialMaterializer::AdvancedFilters,
             type_utils::filter_expr_ty()?,
             type_utils::search_results_ty()?,

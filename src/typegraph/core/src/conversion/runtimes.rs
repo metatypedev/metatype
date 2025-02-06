@@ -7,11 +7,11 @@ use crate::runtimes::{
     DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
     Runtime, TemporalMaterializer, WasmMaterializer,
 };
-use crate::wit::core::{Artifact as WitArtifact, RuntimeId};
-use crate::wit::runtimes::{
+use crate::sdk::core::{Artifact as SdkArtifact, RuntimeId};
+use crate::sdk::runtimes::{
     HttpMethod, KvMaterializer, MaterializerHttpRequest, SubstantialBackend,
 };
-use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
+use crate::{sdk::runtimes::Effect as SdkEffect, typegraph::TypegraphContext};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 use serde_json::json;
@@ -45,13 +45,13 @@ fn effect(typ: EffectType, idempotent: bool) -> Effect {
     }
 }
 
-impl From<WitEffect> for Effect {
-    fn from(eff: WitEffect) -> Self {
+impl From<SdkEffect> for Effect {
+    fn from(eff: SdkEffect) -> Self {
         match eff {
-            WitEffect::Read => effect(EffectType::Read, true),
-            WitEffect::Create(idemp) => effect(EffectType::Create, idemp),
-            WitEffect::Update(idemp) => effect(EffectType::Update, idemp),
-            WitEffect::Delete(idemp) => effect(EffectType::Delete, idemp),
+            SdkEffect::Read => effect(EffectType::Read, true),
+            SdkEffect::Create(idemp) => effect(EffectType::Create, idemp),
+            SdkEffect::Update(idemp) => effect(EffectType::Update, idemp),
+            SdkEffect::Delete(idemp) => effect(EffectType::Delete, idemp),
         }
     }
 }
@@ -62,7 +62,7 @@ pub trait MaterializerConverter {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: SdkEffect,
     ) -> Result<tg_schema::Materializer>;
 }
 
@@ -71,7 +71,7 @@ impl<T: MaterializerConverter> MaterializerConverter for Rc<T> {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: SdkEffect,
     ) -> Result<tg_schema::Materializer> {
         (**self).convert(c, runtime_id, effect)
     }
@@ -82,7 +82,7 @@ impl MaterializerConverter for DenoMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: SdkEffect,
     ) -> Result<Materializer> {
         use crate::runtimes::DenoMaterializer::*;
         let runtime = c.register_runtime(runtime_id)?;
@@ -156,12 +156,12 @@ impl MaterializerConverter for MaterializerHttpRequest {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: SdkEffect,
     ) -> Result<tg_schema::Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
 
         let mut data: IndexMap<String, serde_json::Value> = serde_json::from_value(json!({
-            "verb": http_method(self.method),
+            "verb": http_method(self.method.clone()),
             "path": self.path,
             "content_type": self.content_type.as_deref().unwrap_or("application/json"),
             "header_prefix": self.header_prefix.as_deref().unwrap_or("header#"),
@@ -209,7 +209,7 @@ impl MaterializerConverter for PythonMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: SdkEffect,
     ) -> Result<Materializer> {
         use crate::runtimes::PythonMaterializer::*;
         let runtime = c.register_runtime(runtime_id)?;
@@ -217,12 +217,12 @@ impl MaterializerConverter for PythonMaterializer {
             Lambda(lambda) => {
                 let mut data = IndexMap::new();
                 let mut sha256 = Sha256::new();
-                sha256.update(lambda.fn_.clone());
+                sha256.update(lambda.function.clone());
                 let fn_hash: String = format!("sha256_{:x}", sha256.finalize());
                 data.insert("name".to_string(), serde_json::Value::String(fn_hash));
                 data.insert(
                     "fn".to_string(),
-                    serde_json::Value::String(lambda.fn_.clone()),
+                    serde_json::Value::String(lambda.function.clone()),
                 );
                 ("lambda".to_string(), data)
             }
@@ -232,7 +232,10 @@ impl MaterializerConverter for PythonMaterializer {
                     "name".to_string(),
                     serde_json::Value::String(def.name.clone()),
                 );
-                data.insert("fn".to_string(), serde_json::Value::String(def.fn_.clone()));
+                data.insert(
+                    "fn".to_string(),
+                    serde_json::Value::String(def.function.clone()),
+                );
                 ("def".to_string(), data)
             }
             Module(module) => {
@@ -269,7 +272,7 @@ impl MaterializerConverter for RandomMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: SdkEffect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
         let RandomMaterializer::Runtime(ret) = self;
@@ -288,8 +291,8 @@ impl MaterializerConverter for RandomMaterializer {
     }
 }
 
-impl From<WitArtifact> for Artifact {
-    fn from(artifact: WitArtifact) -> Self {
+impl From<SdkArtifact> for Artifact {
+    fn from(artifact: SdkArtifact) -> Self {
         Artifact {
             path: artifact.path.into(),
             hash: artifact.hash,
@@ -298,9 +301,9 @@ impl From<WitArtifact> for Artifact {
     }
 }
 
-impl From<Artifact> for WitArtifact {
+impl From<Artifact> for SdkArtifact {
     fn from(artifact: Artifact) -> Self {
-        WitArtifact {
+        SdkArtifact {
             path: artifact.path.as_os_str().to_str().unwrap().to_string(),
             hash: artifact.hash,
             size: artifact.size,
@@ -313,7 +316,7 @@ impl MaterializerConverter for WasmMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: SdkEffect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
         let (name, func_name) = match &self {
@@ -341,7 +344,7 @@ impl MaterializerConverter for TemporalMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: SdkEffect,
     ) -> Result<Materializer> {
         use crate::runtimes::TemporalMaterializer::*;
         let runtime = c.register_runtime(runtime_id)?;
@@ -387,7 +390,7 @@ impl MaterializerConverter for KvMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: SdkEffect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
         let data = serde_json::from_value(json!({})).map_err(|e| e.to_string())?;
@@ -515,10 +518,10 @@ pub fn convert_runtime(_c: &mut TypegraphContext, runtime: Runtime) -> Result<Co
                     .map(|desc| WorkflowFileDescription {
                         file: PathBuf::from(desc.file.clone()),
                         kind: match desc.kind {
-                            crate::wit::runtimes::WorkflowKind::Python => {
+                            crate::sdk::runtimes::WorkflowKind::Python => {
                                 substantial::WorkflowKind::Python
                             }
-                            crate::wit::runtimes::WorkflowKind::Deno => {
+                            crate::sdk::runtimes::WorkflowKind::Deno => {
                                 substantial::WorkflowKind::Deno
                             }
                         },

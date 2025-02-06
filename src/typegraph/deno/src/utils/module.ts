@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import type { Effect } from "../gen/typegraph_core.d.ts";
+import type { Effect } from "../gen/runtimes.ts";
 
 export type ModuleParams = {
   name: string;

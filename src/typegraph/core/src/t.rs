@@ -3,14 +3,14 @@
 
 use crate::errors::Result;
 use crate::errors::TgError;
+use crate::sdk::core::{
+    Handler, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional, TypeString,
+    TypeStruct, TypeUnion,
+};
 use crate::types::RefAttr;
 use crate::types::TypeRefBuilder;
 use crate::types::{Named as _, TypeId, TypeRef};
 
-use crate::wit::core::{
-    Guest, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional, TypeString,
-    TypeStruct, TypeUnion,
-};
 #[cfg(test)]
 use common::typegraph::{Injection, InjectionData, SingleValue};
 

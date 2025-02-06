@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{RefAttr, TypeRef};
+use crate::sdk::utils::ReduceEntry;
 use crate::types::Type;
-use crate::wit::utils::ReduceEntry;
-use crate::{errors::Result, wit::core::Error};
+use crate::{errors::Result, sdk::core::Error};
 use indexmap::{map::Entry, IndexMap};
 use serde::{Deserialize, Serialize};
 use std::hash::{Hash, Hasher};

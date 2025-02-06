@@ -11,9 +11,11 @@ Meta.test("type comparison test", async (t) => {
     if (!err.stderr) {
       throw err;
     }
-    const errStart = "typegraph.wit.ErrorStack: ";
+    const errStart = "- at";
+    const errEnd = "failed validation";
     const errOutput = err.stderr.slice(
-      err.stderr.indexOf(errStart) + errStart.length,
+      err.stderr.indexOf(errStart),
+      err.stderr.indexOf(errEnd) + errEnd.length,
     );
     await t.assertSnapshot(errOutput, {
       name: "type comparison errors",

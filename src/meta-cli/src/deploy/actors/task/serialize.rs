@@ -2,19 +2,22 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::action::{
-    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, SharedActionConfig,
-    TaskAction, TaskActionGenerator, TaskFilter,
+    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, RpcResponse,
+    SharedActionConfig, TaskAction, TaskActionGenerator, TaskFilter,
 };
 use super::command::build_task_command;
 use super::deploy::MigrationAction;
 use crate::deploy::actors::console::Console;
 use crate::deploy::actors::task_manager::TaskRef;
 use crate::interlude::*;
+use crate::typegraph::rpc::{RpcCall as TypegraphRpcCall, RpcDispatch};
 use color_eyre::owo_colors::OwoColorize;
 use common::typegraph::Typegraph;
 use serde::Deserialize;
 use std::sync::Arc;
 use tokio::process::Command;
+use typegraph_core::sdk::core::{Handler, SerializeParams};
+use typegraph_core::Lib;
 
 pub type SerializeAction = Arc<SerializeActionInner>;
 
@@ -103,12 +106,20 @@ impl OutputData for SerializeError {
     }
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(tag = "method", content = "params")]
+pub enum RpcRequest {
+    Serialize(SerializeParams),
+    #[serde(untagged)]
+    Typegraph(TypegraphRpcCall),
+}
+
 impl TaskAction for SerializeAction {
     type SuccessData = Arc<Typegraph>;
     type FailureData = SerializeError;
     type Options = SerializeOptions;
     type Generator = SerializeActionGenerator;
-    type RpcCall = serde_json::Value;
+    type RpcRequest = RpcRequest;
 
     async fn get_command(&self) -> Result<Command> {
         build_task_command(
@@ -160,9 +171,14 @@ impl TaskAction for SerializeAction {
                     name = output.get_typegraph_name().cyan(),
                     path = self.task_ref.path.display().yellow(),
                 ));
-                for err in output.errors.iter() {
-                    ctx.console.error(format!("- {err}"));
-                }
+
+                let messages = output
+                    .errors
+                    .iter()
+                    .map(|err| format!("- {err}"))
+                    .collect::<Vec<_>>();
+
+                ctx.console.error(messages.join("\n"));
             }
         }
 
@@ -173,7 +189,28 @@ impl TaskAction for SerializeAction {
         &self.task_ref
     }
 
-    async fn get_rpc_response(&self, _call: &serde_json::Value) -> Result<serde_json::Value> {
-        Err(ferr!("rpc request not supported on serialize task"))
+    async fn handle_rpc_request(
+        &self,
+        call: Self::RpcRequest,
+    ) -> Result<RpcResponse<Self::SuccessData, Self::FailureData>> {
+        match call {
+            RpcRequest::Serialize(params) => Ok(RpcResponse::TaskResult(self.serialize(params))),
+            RpcRequest::Typegraph(method) => Ok(RpcResponse::Value(method.dispatch()?)),
+        }
+    }
+}
+
+impl SerializeActionInner {
+    fn serialize(&self, params: SerializeParams) -> Result<Arc<Typegraph>, SerializeError> {
+        let typegraph_name = params.typegraph_name.clone();
+        match Lib::serialize_typegraph(params) {
+            Ok((value, _)) => {
+                Ok(serde_json::from_str(&value).expect("Failed to deserialize JSON typegraph"))
+            }
+            Err(error) => Err(SerializeError {
+                typegraph: typegraph_name,
+                errors: error.stack,
+            }),
+        }
     }
 }

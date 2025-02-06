@@ -87,15 +87,15 @@ class Struct:
 
 
 @dataclass
-class RootSumFnInput(Struct):
+class StructC3ed7(Struct):
     first: float
     second: float
 
 
-FORWARD_REFS["RootSumFnInput"] = RootSumFnInput
+FORWARD_REFS["StructC3ed7"] = StructC3ed7
 
 
-TypeRootSumFnInputFirstFloat = float
+TypeFloatB5e57 = float
 
 
 def __repr(value: Any):
@@ -104,12 +104,10 @@ def __repr(value: Any):
     return value
 
 
-def typed_remote_sum(
-    user_fn: Callable[[RootSumFnInput, Ctx], TypeRootSumFnInputFirstFloat],
-):
+def typed_remote_sum(user_fn: Callable[[StructC3ed7, Ctx], TypeFloatB5e57]):
     def exported_wrapper(raw_inp, ctx):
-        inp: RootSumFnInput = Struct.new(RootSumFnInput, raw_inp)
-        out: TypeRootSumFnInputFirstFloat = user_fn(inp, ctx)
+        inp: StructC3ed7 = Struct.new(StructC3ed7, raw_inp)
+        out: TypeFloatB5e57 = user_fn(inp, ctx)
         if isinstance(out, list):
             return [__repr(v) for v in out]
         return __repr(out)

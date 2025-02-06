@@ -3,28 +3,25 @@
 
 from enum import Enum, auto
 
-from typegraph.gen.exports.runtimes import (
-    EffectCreate,
-    EffectDelete,
-    EffectRead,
-    EffectUpdate,
+from typegraph.gen.runtimes import (
+    Effect,
 )
 
 
-def read():
-    return EffectRead()
+def read() -> Effect:
+    return "read"
 
 
-def create(idempotent: bool = False):
-    return EffectCreate(idempotent)
+def create(idempotent: bool = False) -> Effect:
+    return {"create": idempotent}
 
 
-def delete(idempotent: bool = True):
-    return EffectDelete(idempotent)
+def delete(idempotent: bool = True) -> Effect:
+    return {"delete": idempotent}
 
 
-def update(idempotent: bool = False):
-    return EffectUpdate(idempotent)
+def update(idempotent: bool = False) -> Effect:
+    return {"update": idempotent}
 
 
 # For injections

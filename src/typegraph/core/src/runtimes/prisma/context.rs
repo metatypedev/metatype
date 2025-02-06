@@ -10,7 +10,7 @@ use super::{
 };
 use crate::errors::Result;
 use crate::types::TypeId;
-use crate::{typegraph::TypegraphContext, wit::runtimes as wit};
+use crate::{sdk::runtimes as sdk, typegraph::TypegraphContext};
 use indexmap::{map::Entry, IndexMap, IndexSet};
 use std::{
     cell::{OnceCell, Ref, RefCell, RefMut},
@@ -331,7 +331,7 @@ impl PrismaContext {
     pub fn convert(
         &self,
         ctx: &mut TypegraphContext,
-        data: Rc<wit::PrismaRuntimeData>,
+        data: Rc<sdk::PrismaRuntimeData>,
     ) -> Result<cm::PrismaRuntimeData> {
         Ok(cm::PrismaRuntimeData {
             name: data.name.clone(),

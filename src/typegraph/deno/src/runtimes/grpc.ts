@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Func } from "../types.ts";
-import { runtimes } from "../wit.ts";
+import { runtimes } from "../sdk.ts";
 import { Runtime } from "./mod.ts";
 
 export class GrpcRuntime extends Runtime {

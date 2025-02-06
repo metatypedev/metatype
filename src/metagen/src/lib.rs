@@ -215,6 +215,7 @@ impl GeneratorRunner {
     }
 }
 
+// FIXME: Bring FutureGroup back after multithreading support for typegraph core (MET-755)
 pub async fn generate_target(
     config: &config::Config,
     target_name: &str,

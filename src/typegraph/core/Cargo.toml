@@ -3,9 +3,6 @@ name = "typegraph_core"
 version = "0.5.1-rc.0"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
-
 [dependencies]
 # common.workspace = true
 tg_schema.workspace = true
@@ -22,8 +19,6 @@ serde.workspace = true
 serde_json.workspace = true
 indoc.workspace = true
 unindent.workspace = true
-
-wit-bindgen.workspace = true
 
 once_cell.workspace = true
 regex.workspace = true

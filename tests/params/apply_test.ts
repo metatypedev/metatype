@@ -1,15 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { randomPGConnStr } from "test-utils/database.ts";
+import { dropSchema, randomPGConnStr } from "test-utils/database.ts";
 import { gql, Meta } from "test-utils/mod.ts";
-import { dropSchemas, recreateMigrations } from "test-utils/migrations.ts";
 import { assertEquals } from "@std/assert/equals";
 
 Meta.test("(python (sdk): apply)", async (t) => {
   const e = await t.engine("params/apply.py", {
     secrets: {
-      "MY_SECRET": "supersecret",
+      MY_SECRET: "supersecret",
     },
   });
 
@@ -17,7 +16,8 @@ Meta.test("(python (sdk): apply)", async (t) => {
     await gql`
       query {
         renamed(first: 1, second: 2) {
-          a b
+          a
+          b
         }
       }
     `
@@ -31,8 +31,17 @@ Meta.test("(python (sdk): apply)", async (t) => {
     await gql`
       query {
         flattened(a1: 1, a2: 2, b11: 3, b12: 4, b2: 5) {
-          a { a1 a2 }
-          b { b1 { b11 b12 } b2 }
+          a {
+            a1
+            a2
+          }
+          b {
+            b1 {
+              b11
+              b12
+            }
+            b2
+          }
         }
       }
     `
@@ -81,7 +90,10 @@ Meta.test("(python (sdk): apply)", async (t) => {
       query {
         withParent {
           a
-          b(b1: 2) { b1 b2 }
+          b(b1: 2) {
+            b1
+            b2
+          }
         }
       }
     `
@@ -123,7 +135,9 @@ Meta.test("(python (sdk): apply)", async (t) => {
     await gql`
       query {
         withArrayOfObjects(first: 1, second: { b: 12 }) {
-          a { b }
+          a {
+            b
+          }
         }
       }
     `
@@ -143,9 +157,11 @@ Meta.test("(python (sdk): apply)", async (t) => {
     `
       .withContext({
         context_key: "hum",
-      }).expectData({
+      })
+      .expectData({
         contextToUnionType: { a: "hum" },
-      }).on(e);
+      })
+      .on(e);
   });
 });
 
@@ -205,7 +221,7 @@ Meta.test("nested context access", async (t) => {
 
   await t.should("work with deeply nested value", async () => {
     await gql`
-      query  {
+      query {
         deeplyNestedEntry {
           value
         }
@@ -213,9 +229,7 @@ Meta.test("nested context access", async (t) => {
     `
       .withContext({
         profile: {
-          deeply: [
-            { nested: [{ value: "Hello" }, { value: "world" }] },
-          ],
+          deeply: [{ nested: [{ value: "Hello" }, { value: "world" }] }],
         },
       })
       .expectData({
@@ -258,32 +272,27 @@ Meta.test("nested context access", async (t) => {
 });
 
 Meta.test("apply with prisma generated types", async (t) => {
-  const { connStr, schema: _ } = randomPGConnStr();
+  const { connStr, schema } = randomPGConnStr();
+  await dropSchema(schema);
   const e = await t.engine("params/prisma_apply.py", {
     secrets: {
-      "POSTGRES": connStr,
+      POSTGRES: connStr,
     },
   });
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   let id: string = null!;
 
   await t.should("create user", async () => {
     await gql`
       mutation {
-        createUser(
-          name: "Alice"
-          email: "alice@example.com"
-          age: 30
-          ) {
-            id
-            name
-            email
-            age
-          }
+        createUser(name: "Alice", email: "alice@example.com", age: 30) {
+          id
+          name
+          email
+          age
         }
-      `
+      }
+    `
       .expectBody((body) => {
         id = body.data.createUser.id;
         assertEquals(body.data.createUser, {

@@ -7049,6 +7049,7 @@ dependencies = [
  "tracing-subscriber",
  "tracing-unwrap",
  "typegate_engine",
+ "typegraph_core",
 ]
 
 [[package]]
@@ -13066,7 +13067,6 @@ dependencies = [
  "sha2 0.10.8",
  "tg_schema",
  "unindent",
- "wit-bindgen",
 ]
 
 [[package]]

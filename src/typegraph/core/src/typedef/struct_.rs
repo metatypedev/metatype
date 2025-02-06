@@ -7,7 +7,7 @@ use crate::types::{
     AsTypeDefEx as _, ExtendedTypeDef, FindAttribute as _, IdKind, PolicySpec, Struct, TypeDef,
     TypeDefData, TypeId,
 };
-use crate::{errors, typegraph::TypegraphContext, wit::core::TypeStruct};
+use crate::{errors, sdk::core::TypeStruct, typegraph::TypegraphContext};
 use errors::Result;
 use indexmap::IndexMap;
 use std::hash::Hash as _;

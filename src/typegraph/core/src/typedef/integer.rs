@@ -12,9 +12,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeInteger,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, Integer, TypeDefData},
-    wit::core::TypeInteger,
 };
 
 impl TypeConversion for Integer {

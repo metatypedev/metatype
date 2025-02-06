@@ -5,15 +5,15 @@ use crate::errors::{self, Result, TgError};
 use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
+use crate::sdk::core::{MaterializerId, Policy as CorePolicy, PolicyId, RuntimeId};
+use crate::sdk::utils::Auth as SdkAuth;
 use crate::types::type_ref::TypeRef;
 use crate::types::{
     AsTypeDefEx as _, NamedTypeRef, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder,
 };
-use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
-use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
-use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
+use crate::sdk::runtimes::{Effect, MaterializerDenoPredefined};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::rc::Rc;
@@ -120,14 +120,6 @@ pub fn get_sdk_version() -> String {
     SDK_VERSION.with(|v| v.clone())
 }
 
-#[cfg(test)]
-impl Store {
-    pub fn reset() {
-        let _ = crate::typegraph::serialize(Default::default());
-        with_store_mut(|s| *s = Store::new());
-    }
-}
-
 impl Store {
     pub fn save() -> SavedState {
         with_store(|s| SavedState {
@@ -149,6 +141,10 @@ impl Store {
             s.policies.truncate(saved_state.policies);
             s.deno_modules.truncate(saved_state.deno_modules);
         })
+    }
+
+    pub fn reset() {
+        with_store_mut(|s| *s = Store::new());
     }
 
     pub fn get_type_by_name(name: &str) -> Option<NamedTypeRef> {
@@ -410,7 +406,7 @@ impl Store {
         with_store(|s| s.graphql_endpoints.clone())
     }
 
-    pub fn add_auth(auth: WitAuth) -> Result<u32> {
+    pub fn add_auth(auth: SdkAuth) -> Result<u32> {
         with_store_mut(|s| {
             let auth = auth.convert()?;
             s.auths.push(auth);

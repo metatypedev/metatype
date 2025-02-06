@@ -5,25 +5,13 @@ from dataclasses import dataclass
 from re import Pattern
 from typing import List, Optional, Union
 
-from typegraph.gen.exports.core import (
-    ContextCheckPattern,
-    ContextCheckValue,
-    ContextCheckNotNull,
-    Err,
+from typegraph.gen.core import (
     MaterializerId,
-    PolicySpecPerEffect,
-    PolicySpecSimple,
+    Policy as CorePolicy,
+    PolicySpec as CorePolicySpec,
+    PolicyPerEffect as CorePolicyPerEffect,
 )
-from typegraph.gen.exports.core import (
-    Policy as WitPolicy,
-)
-from typegraph.gen.exports.core import (
-    PolicyPerEffect as WitPolicyPerEffect,
-)
-from typegraph.gen.exports.core import (
-    PolicySpec as WitPolicySpec,
-)
-from typegraph.wit import core, store
+from typegraph.sdk import core
 
 
 class Policy:
@@ -39,42 +27,30 @@ class Policy:
         """
         Public access
         """
-        res = core.get_public_policy(store)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return cls(id=res.value[0], name=res.value[1])
+        res = core.get_public_policy()
+        return cls(id=res[0], name=res[1])
 
     @classmethod
     def context(cls, key: str, check: Optional[Union[str, Pattern]] = None) -> "Policy":
         if check is None:
-            res = core.register_context_policy(store, key, ContextCheckNotNull())
+            res = core.register_context_policy(key, "not_null")
         elif isinstance(check, str):
-            res = core.register_context_policy(store, key, ContextCheckValue(check))
+            res = core.register_context_policy(key, {"value": check})
         else:
-            res = core.register_context_policy(
-                store, key, ContextCheckPattern(check.pattern)
-            )
+            res = core.register_context_policy(key, {"pattern": check.pattern})
 
-        if isinstance(res, Err):
-            raise Exception(res.value)
-
-        (policy_id, name) = res.value
+        (policy_id, name) = res
         return cls(id=policy_id, name=name)
 
     @classmethod
     def internal(cls) -> "Policy":
-        res = core.get_internal_policy(store)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        return cls(id=res.value[0], name=res.value[1])
+        res = core.get_internal_policy()
+        return cls(id=res[0], name=res[1])
 
     @classmethod
     def create(cls, name: str, mat_id: MaterializerId) -> "Policy":
-        res = core.register_policy(store, WitPolicy(name=name, materializer=mat_id))
-        if isinstance(res, Err):
-            raise Exception(res.value)
-
-        return cls(id=res.value, name=name)
+        res = core.register_policy(CorePolicy(name=name, materializer=mat_id))
+        return cls(id=res, name=name)
 
     @classmethod
     def on(
@@ -101,20 +77,22 @@ SinglePolicySpec = Union[Policy, PolicyPerEffect]
 PolicySpec = Union[SinglePolicySpec, List[SinglePolicySpec]]
 
 
-def get_policy_chain(policies: PolicySpec) -> List[WitPolicySpec]:
+def get_policy_chain(policies: PolicySpec) -> List[CorePolicySpec]:
     if not isinstance(policies, list) and not isinstance(policies, tuple):
         policies = (policies,)
 
     return [
-        PolicySpecSimple(value=p.id)
-        if isinstance(p, Policy)
-        else PolicySpecPerEffect(
-            value=WitPolicyPerEffect(
-                create=p.create and p.create.id,
-                update=p.update and p.update.id,
-                delete=p.delete and p.delete.id,
-                read=p.read and p.read.id,
-            )
+        (
+            {"simple": p.id}
+            if isinstance(p, Policy)
+            else {
+                "per_effect": CorePolicyPerEffect(
+                    create=p.create and p.create.id,
+                    update=p.update and p.update.id,
+                    delete=p.delete and p.delete.id,
+                    read=p.read and p.read.id,
+                )
+            }
         )
         for p in policies
     ]

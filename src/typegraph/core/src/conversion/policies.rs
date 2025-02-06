@@ -4,14 +4,14 @@
 use tg_schema::Policy;
 
 use crate::errors::Result;
+use crate::sdk::core::PolicySpec;
 use crate::typegraph::TypegraphContext;
-use crate::wit::core::PolicySpec;
 
 use std::hash::Hash as _;
 
 use super::hash::Hashable;
 
-impl crate::wit::core::Policy {
+impl crate::sdk::core::Policy {
     pub fn convert(&self, ctx: &mut TypegraphContext) -> Result<Policy> {
         let mat_id = ctx.register_materializer(self.materializer)?;
         Ok(Policy {

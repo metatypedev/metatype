@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { gql, Meta } from "../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
 import { assertRejects } from "@std/assert";
 import { buildSchema, graphql } from "graphql";
 import * as mf from "test/mock_fetch";
-import { dropSchemas, recreateMigrations } from "../utils/migrations.ts";
-import { freezeDate, unfreezeDate } from "../utils/date.ts";
+import { freezeDate, unfreezeDate } from "test-utils/date.ts";
+import { dropSchema } from "test-utils/database.ts";
 
 Meta.test("Missing env var", async (t) => {
   await assertRejects(
@@ -27,10 +27,12 @@ const schema = buildSchema(`
   }
 `);
 
+const schemaName = "injection_test_prisma";
 const POSTGRES =
-  "postgresql://postgres:password@localhost:5432/db?schema=injection_test_prisma";
+  `postgresql://postgres:password@localhost:5432/db?schema=${schema}`;
 
 Meta.test("Injected values", async (t) => {
+  await dropSchema(schemaName);
   const e = await t.engine("injection/injection.py", {
     secrets: { TEST_VAR: "3", POSTGRES },
   });
@@ -188,12 +190,10 @@ mf.mock("POST@/api/graphql", async (req) => {
 });
 
 Meta.test("Injection from/into graphql", async (t) => {
+  await dropSchema(schemaName);
   const e = await t.engine("injection/injection.py", {
     secrets: { TEST_VAR: "3", POSTGRES },
   });
-
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   await t.should("inject params to graphql", async () => {
     await gql`
@@ -269,6 +269,7 @@ Meta.test("Injection from/into graphql", async (t) => {
 });
 
 Meta.test("dynamic value injection", async (t) => {
+  await dropSchema(schemaName);
   const e = await t.engine("injection/injection.py", {
     secrets: { TEST_VAR: "3", POSTGRES },
   });
@@ -347,6 +348,7 @@ Meta.test("Deno: value injection", async (t) => {
 });
 
 Meta.test("Injection from nested context", async (t) => {
+  await dropSchema(schemaName);
   const e = await t.engine("injection/nested_context.py");
 
   await t.should("access injected nested context", async () => {
