@@ -11,7 +11,7 @@ use std::env::{set_var, var};
 
 use crate::config::VENV_FOLDERS;
 use crate::fs::find_in_parents;
-use common::node::BasicAuth as BasicAuthCommon;
+use typegate_api::BasicAuth as BasicAuthCommon;
 
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if let Ok(active_venv) = var("VIRTUAL_ENV") {

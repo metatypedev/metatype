@@ -1602,30 +1602,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "common"
-version = "0.5.1-rc.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64 0.22.1",
- "colored",
- "flate2",
- "ignore",
- "indexmap 2.6.0",
- "indoc",
- "itertools 0.13.0",
- "proto-parser",
- "protobuf",
- "reqwest",
- "serde",
- "serde_json",
- "serde_with",
- "tar",
- "thiserror",
- "url",
-]
-
-[[package]]
 name = "compact_str"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6989,6 +6965,7 @@ name = "meta-cli"
 version = "0.5.1-rc.0"
 dependencies = [
  "actix",
+ "archive_utils",
  "assert_cmd",
  "async-trait",
  "base64 0.22.1",
@@ -6998,7 +6975,6 @@ dependencies = [
  "clap-verbosity-flag",
  "clap_complete",
  "color-eyre",
- "common",
  "crossbeam-channel",
  "ctrlc",
  "dashmap 6.1.0",
@@ -7043,11 +7019,13 @@ dependencies = [
  "tar",
  "tempfile",
  "textwrap",
+ "tg_schema",
  "tokio",
  "tracing",
  "tracing-error",
  "tracing-subscriber",
  "tracing-unwrap",
+ "typegate_api",
  "typegate_engine",
  "typegraph_core",
 ]
@@ -12996,6 +12974,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "typegate_api"
+version = "0.5.1-rc.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "colored",
+ "indoc",
+ "itertools 0.13.0",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tg_schema",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "typegate_engine"
 version = "0.5.1-rc.0"
 dependencies = [
@@ -13003,7 +12998,6 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "chrono",
- "common",
  "connection-string",
  "convert_case 0.6.0",
  "dashmap 6.1.0",

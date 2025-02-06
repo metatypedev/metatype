@@ -10,7 +10,7 @@ use crate::deploy::actors::console::ConsoleActor;
 use crate::interlude::*;
 use crate::secrets::{RawSecrets, Secrets};
 use clap::Parser;
-use common::node::Node;
+use typegate_api::Node;
 
 #[derive(Parser, Debug)]
 pub struct DeploySubcommand {

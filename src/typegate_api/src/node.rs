@@ -7,10 +7,8 @@ use reqwest::{Client, IntoUrl, RequestBuilder, Url};
 use serde::Serialize;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
-use crate::{
-    graphql::{self, Query},
-    typegraph::Typegraph,
-};
+use crate::graphql::{self, Query};
+use tg_schema::Typegraph;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct BasicAuth {

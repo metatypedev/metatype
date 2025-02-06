@@ -48,7 +48,6 @@ tempfile.workspace = true
 
 # internal
 mt_deno.workspace = true
-common.workspace = true
 substantial.workspace = true
 
 # runtimes

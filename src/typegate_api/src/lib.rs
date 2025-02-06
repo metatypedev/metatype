@@ -3,3 +3,5 @@
 
 pub mod graphql;
 pub mod node;
+
+pub use node::{BasicAuth, Node};

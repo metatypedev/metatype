@@ -9,9 +9,9 @@ use crate::deploy::actors::task::TaskFinishStatus;
 use crate::deploy::actors::task_manager::{Report, StopReason, TaskManagerInit, TaskSource};
 use crate::interlude::*;
 use clap::Parser;
-use common::typegraph::Typegraph;
 use core::fmt::Debug;
 use std::io::{self, Write};
+use tg_schema::Typegraph;
 use tokio::io::AsyncWriteExt;
 
 #[derive(Parser, Debug)]
