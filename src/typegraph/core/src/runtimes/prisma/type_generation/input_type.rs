@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::runtimes::prisma::ScalarType;
+use tg_schema::runtimes::prisma::ScalarType;
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;

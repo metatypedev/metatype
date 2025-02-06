@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use super::fs::FsContext;
 use crate::errors::Result;
-use common::typegraph::{runtimes::Artifact, Typegraph};
+use tg_schema::{runtimes::Artifact, Typegraph};
 
 pub trait ArtifactsExt {
     /// update the artifact meta, and register the artifact in the typegraph

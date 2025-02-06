@@ -11,13 +11,13 @@ use super::{
 use crate::errors::Result;
 use crate::types::TypeId;
 use crate::{sdk::runtimes as sdk, typegraph::TypegraphContext};
-use common::typegraph::runtimes::prisma as cm;
 use indexmap::{map::Entry, IndexMap, IndexSet};
 use std::{
     cell::{OnceCell, Ref, RefCell, RefMut},
     collections::HashMap,
     rc::{Rc, Weak},
 };
+use tg_schema::runtimes::prisma as cm;
 
 use super::{errors, model::Model, relationship::Relationship};
 

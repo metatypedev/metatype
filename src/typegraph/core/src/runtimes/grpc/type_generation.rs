@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use anyhow::{bail, Result};
-use common::grpc::{
+use grpc_utils::{
     get_file_descriptor, get_message_field_descriptor, get_method_descriptor_proto, Fields,
     FileDescriptor, Type,
 };

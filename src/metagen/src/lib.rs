@@ -3,8 +3,8 @@
 
 #[allow(unused)]
 mod interlude {
-    pub use common::typegraph::TypeNode;
-    pub use common::typegraph::Typegraph;
+    pub use tg_schema::TypeNode;
+    pub use tg_schema::Typegraph;
 
     pub use std::collections::{BTreeMap, BTreeSet};
     pub use std::ops::Deref;

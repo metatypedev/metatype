@@ -140,7 +140,7 @@ pub async fn e2e_test(cases: Vec<E2eTestCase>) -> anyhow::Result<()> {
 }
 
 #[allow(unused)]
-async fn spin_up_typegate() -> anyhow::Result<(tokio::process::Child, common::node::Node)> {
+async fn spin_up_typegate() -> anyhow::Result<(tokio::process::Child, typegate_api::Node)> {
     let tg_port = 7899;
 
     let tg_secret =
@@ -160,10 +160,10 @@ async fn spin_up_typegate() -> anyhow::Result<(tokio::process::Child, common::no
         ])
         .kill_on_drop(true)
         .spawn()?;
-    let node = common::node::Node::new(
+    let node = typegate_api::Node::new(
         format!("localhost:{tg_port}"),
         None,
-        Some(common::node::BasicAuth {
+        Some(typegate_api::BasicAuth {
             username: "admin".into(),
             password: tg_admin_password.into(),
         }),

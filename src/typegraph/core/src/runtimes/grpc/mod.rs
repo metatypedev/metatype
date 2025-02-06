@@ -13,7 +13,7 @@ use crate::{
     conversion::runtimes::MaterializerConverter, errors::Result, typegraph::TypegraphContext,
 };
 
-use common::typegraph::Materializer;
+use tg_schema::Materializer;
 
 use serde_json::{from_value, json};
 

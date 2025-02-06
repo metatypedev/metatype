@@ -3,7 +3,7 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use crate::typegraph::{
+use crate::{
     visitor::{Edge, PathSegment},
     TypeNode, Typegraph,
 };

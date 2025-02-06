@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 use std::path::PathBuf;
 
-use common::typegraph::runtimes::prisma::MigrationOptions;
-use common::typegraph::runtimes::{KnownRuntime::Prisma, TGRuntime};
-use common::typegraph::Typegraph;
+use tg_schema::runtimes::prisma::MigrationOptions;
+use tg_schema::runtimes::{KnownRuntime::Prisma, TGRuntime};
+use tg_schema::Typegraph;
 
 use crate::errors::Result;
 use crate::sdk::core::MigrationAction;

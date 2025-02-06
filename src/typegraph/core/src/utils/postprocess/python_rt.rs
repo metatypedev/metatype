@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::utils::{artifacts::ArtifactsExt, fs::FsContext, postprocess::PostProcessor};
-use common::typegraph::{
+use std::path::PathBuf;
+use tg_schema::{
     runtimes::python::ModuleMatData,
     utils::{map_from_object, object_from_map},
     Typegraph,
 };
-use std::path::PathBuf;
 
 pub struct PythonProcessor {
     typegraph_dir: PathBuf,

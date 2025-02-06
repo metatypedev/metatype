@@ -12,23 +12,6 @@ use crate::sdk::runtimes::{
     HttpMethod, KvMaterializer, MaterializerHttpRequest, SubstantialBackend,
 };
 use crate::{sdk::runtimes::Effect as SdkEffect, typegraph::TypegraphContext};
-use common::typegraph::runtimes::deno::DenoRuntimeData;
-use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
-use common::typegraph::runtimes::grpc::GrpcRuntimeData;
-use common::typegraph::runtimes::http::HTTPRuntimeData;
-use common::typegraph::runtimes::kv::KvRuntimeData;
-use common::typegraph::runtimes::python::PythonRuntimeData;
-use common::typegraph::runtimes::random::RandomRuntimeData;
-use common::typegraph::runtimes::s3::S3RuntimeData;
-use common::typegraph::runtimes::substantial::{
-    self, RedisConfig, SubstantialRuntimeData, WorkflowFileDescription,
-};
-use common::typegraph::runtimes::temporal::TemporalRuntimeData;
-use common::typegraph::runtimes::wasm::WasmRuntimeData;
-use common::typegraph::runtimes::{
-    Artifact, KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
-};
-use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 use serde_json::json;
@@ -36,6 +19,23 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::rc::Rc;
+use tg_schema::runtimes::deno::DenoRuntimeData;
+use tg_schema::runtimes::graphql::GraphQLRuntimeData;
+use tg_schema::runtimes::grpc::GrpcRuntimeData;
+use tg_schema::runtimes::http::HTTPRuntimeData;
+use tg_schema::runtimes::kv::KvRuntimeData;
+use tg_schema::runtimes::python::PythonRuntimeData;
+use tg_schema::runtimes::random::RandomRuntimeData;
+use tg_schema::runtimes::s3::S3RuntimeData;
+use tg_schema::runtimes::substantial::{
+    self, RedisConfig, SubstantialRuntimeData, WorkflowFileDescription,
+};
+use tg_schema::runtimes::temporal::TemporalRuntimeData;
+use tg_schema::runtimes::wasm::WasmRuntimeData;
+use tg_schema::runtimes::{
+    Artifact, KnownRuntime, PrismaMigrationRuntimeData, TypegateRuntimeData, TypegraphRuntimeData,
+};
+use tg_schema::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use unindent::Unindent;
 
 fn effect(typ: EffectType, idempotent: bool) -> Effect {
@@ -63,7 +63,7 @@ pub trait MaterializerConverter {
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
         effect: SdkEffect,
-    ) -> Result<common::typegraph::Materializer>;
+    ) -> Result<tg_schema::Materializer>;
 }
 
 impl<T: MaterializerConverter> MaterializerConverter for Rc<T> {
@@ -72,7 +72,7 @@ impl<T: MaterializerConverter> MaterializerConverter for Rc<T> {
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
         effect: SdkEffect,
-    ) -> Result<common::typegraph::Materializer> {
+    ) -> Result<tg_schema::Materializer> {
         (**self).convert(c, runtime_id, effect)
     }
 }
@@ -157,7 +157,7 @@ impl MaterializerConverter for MaterializerHttpRequest {
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
         effect: SdkEffect,
-    ) -> Result<common::typegraph::Materializer> {
+    ) -> Result<tg_schema::Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
 
         let mut data: IndexMap<String, serde_json::Value> = serde_json::from_value(json!({

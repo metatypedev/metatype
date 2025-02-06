@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::Policy;
+use tg_schema::Policy;
 
 use crate::errors::Result;
 use crate::sdk::core::PolicySpec;

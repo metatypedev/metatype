@@ -3,7 +3,7 @@
 
 use std::hash::Hash as _;
 
-use common::typegraph::{ListTypeData, TypeNode};
+use tg_schema::{ListTypeData, TypeNode};
 
 use crate::{
     conversion::{

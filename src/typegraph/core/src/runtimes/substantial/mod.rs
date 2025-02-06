@@ -8,8 +8,8 @@ use crate::sdk::core::FuncParams;
 use crate::sdk::{core::RuntimeId, runtimes::Effect, runtimes::SubstantialOperationData};
 use crate::t::{self, TypeBuilder};
 use crate::typegraph::TypegraphContext;
-use common::typegraph::Materializer;
 use serde_json::json;
+use tg_schema::Materializer;
 
 mod type_utils;
 

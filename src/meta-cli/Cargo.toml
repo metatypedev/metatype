@@ -32,9 +32,11 @@ typegate = ["dep:typegate_engine"]
 
 # internal
 typegraph_core.workspace = true
+tg_schema.workspace = true
 typegate_engine = { workspace = true, optional = true }
-common.workspace = true
+typegate_api.workspace = true
 metagen.workspace = true
+archive_utils.workspace = true
 
 # data structures
 chrono = { workspace = true, features = ["serde"] }

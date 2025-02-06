@@ -3,7 +3,7 @@
 
 use std::fmt::Write;
 
-use common::typegraph::*;
+use tg_schema::*;
 
 use crate::{interlude::*, utils::GenDestBuf};
 
@@ -273,7 +273,7 @@ pub fn type_body_required(node: Rc<TypeNode>) -> bool {
         TypeNode::Integer {
             base,
             data:
-                common::typegraph::IntegerTypeData {
+                tg_schema::IntegerTypeData {
                     minimum: None,
                     maximum: None,
                     multiple_of: None,

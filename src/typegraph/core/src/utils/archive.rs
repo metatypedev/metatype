@@ -3,7 +3,7 @@
 
 use super::fs::FsContext;
 use crate::errors::Result;
-use common::archive::{archive_entries_from_bytes, encode_bytes_to_base_64};
+use archive_utils::{archive_entries_from_bytes, encode_bytes_to_base_64};
 use std::{collections::BTreeMap, path::Path};
 
 pub trait ArchiveExt {

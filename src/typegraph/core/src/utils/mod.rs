@@ -4,10 +4,10 @@
 use std::path::PathBuf;
 
 use crate::utils::metagen_utils::RawTgResolver;
-use common::typegraph::{Auth, AuthProtocol};
 use fs::FsContext;
 use indexmap::IndexMap;
 use serde_json::json;
+use tg_schema::{Auth, AuthProtocol};
 
 use self::oauth2::std::{named_provider, Oauth2Builder};
 use crate::errors::Result;

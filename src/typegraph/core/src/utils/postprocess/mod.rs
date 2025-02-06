@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::sdk::core::SerializeParams;
-use common::typegraph::Typegraph;
 use std::path::PathBuf;
 use substantial_rt::SubstantialProcessor;
+use tg_schema::Typegraph;
 
 pub mod deno_rt;
 pub mod naming;

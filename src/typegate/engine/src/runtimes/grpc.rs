@@ -3,7 +3,7 @@
 
 use std::{cell::RefCell, ops::Deref, rc::Rc, str::FromStr, sync::Arc};
 
-use common::grpc::{get_file_descriptor, get_method_descriptor_proto};
+use grpc_utils::{get_file_descriptor, get_method_descriptor_proto};
 
 use anyhow::{Context, Result};
 use bytes::{Buf, BufMut};

@@ -64,7 +64,7 @@ impl DeployActionInner {
 
         for migration in migrations.iter() {
             let dest = migdir.join(&migration.runtime);
-            if let Err(err) = common::archive::unpack(&dest, Some(&migration.archive)) {
+            if let Err(err) = archive_utils::unpack(&dest, Some(&migration.archive)) {
                 ctx.console.error(format!(
                     "{scope} error while unpacking migrations into {:?}",
                     migdir

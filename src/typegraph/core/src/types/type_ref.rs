@@ -8,8 +8,8 @@ use super::Type;
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::types::{TypeDef, TypeDefExt as _, TypeId};
-use common::typegraph::Injection;
 use serde::{Deserialize, Serialize};
+use tg_schema::Injection;
 
 pub use as_id::{AsId, IdKind};
 pub use injection::{InjectionTree, OverrideInjections, WithInjection};

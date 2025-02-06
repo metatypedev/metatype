@@ -11,10 +11,9 @@ use crate::interlude::*;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
-use common::graphql::Query;
-use common::node::Node;
 use serde::Deserialize;
 use tabled::{settings::Style, Table, Tabled};
+use typegate_api::{graphql::Query, Node};
 
 #[derive(Parser, Debug)]
 pub struct List {

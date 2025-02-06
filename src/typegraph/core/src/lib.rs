@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 pub mod errors;
+use tg_schema::runtimes::deno::{ContextCheckX, PredefinedFunctionMatData};
+use tg_schema::Injection;
 pub use types::sdk;
 
 mod conversion;
@@ -20,8 +22,6 @@ mod test_utils;
 
 use std::collections::HashSet;
 
-use common::typegraph::runtimes::deno::{ContextCheckX, PredefinedFunctionMatData};
-use common::typegraph::Injection;
 use errors::{Result, TgError};
 use global_store::Store;
 use params::apply;

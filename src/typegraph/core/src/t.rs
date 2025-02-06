@@ -12,7 +12,7 @@ use crate::types::TypeRefBuilder;
 use crate::types::{Named as _, TypeId, TypeRef};
 
 #[cfg(test)]
-use common::typegraph::{Injection, InjectionData, SingleValue};
+use tg_schema::{Injection, InjectionData, SingleValue};
 
 pub trait TypeBuilder {
     fn build(&self) -> Result<TypeId>;

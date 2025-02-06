@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use anyhow::{anyhow, bail, Result};
 use serde_json::Value;
 
-use crate::typegraph::{
+use crate::{
     EitherTypeData, FloatTypeData, IntegerTypeData, ListTypeData, ObjectTypeData, StringTypeData,
     TypeNode, Typegraph, UnionTypeData,
 };

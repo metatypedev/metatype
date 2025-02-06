@@ -14,11 +14,11 @@ use crate::types::{
 
 #[allow(unused)]
 use crate::sdk::runtimes::{Effect, MaterializerDenoPredefined};
-use common::typegraph::runtimes::deno::PredefinedFunctionMatData;
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
+use tg_schema::runtimes::deno::PredefinedFunctionMatData;
 
 const PLACEHOLDER_TYPE_SUFFIX: &str = "_____PLACEHOLDER_____";
 
@@ -65,7 +65,7 @@ pub struct Store {
     typegate_runtime: RuntimeId,
     typegraph_runtime: RuntimeId,
     graphql_endpoints: Vec<String>,
-    auths: Vec<common::typegraph::Auth>,
+    auths: Vec<tg_schema::Auth>,
 
     random_seed: Option<u32>,
 }
@@ -414,14 +414,14 @@ impl Store {
         })
     }
 
-    pub fn add_raw_auth(auth: common::typegraph::Auth) -> Result<u32> {
+    pub fn add_raw_auth(auth: tg_schema::Auth) -> Result<u32> {
         with_store_mut(|s| {
             s.auths.push(auth);
             Ok(s.auths.len() as u32)
         })
     }
 
-    pub fn get_auths() -> Vec<common::typegraph::Auth> {
+    pub fn get_auths() -> Vec<tg_schema::Auth> {
         with_store(|s| s.auths.clone())
     }
 }

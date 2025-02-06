@@ -13,7 +13,7 @@ use super::visitor::{
     visit_child, ChildNode, CurrentNode, ParentFn, Path, PathSegment, TypeVisitor,
     TypeVisitorContext, VisitLayer, VisitResult, VisitorResult,
 };
-use crate::typegraph::{TypeNode, Typegraph};
+use crate::{TypeNode, Typegraph};
 use std::collections::{hash_map, HashMap};
 
 use self::types::{EnsureSubtypeOf, ErrorCollector, ExtendedTypeNode};

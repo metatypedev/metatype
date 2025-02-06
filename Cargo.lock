@@ -342,6 +342,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "archive_utils"
+version = "0.5.1-rc.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "flate2",
+ "ignore",
+ "indexmap 2.6.0",
+ "tar",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1587,30 +1599,6 @@ checksum = "ba5a308b75df32fe02788e748662718f03fde005016435c444eea572398219fd"
 dependencies = [
  "bytes",
  "memchr",
-]
-
-[[package]]
-name = "common"
-version = "0.5.1-rc.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64 0.22.1",
- "colored",
- "flate2",
- "ignore",
- "indexmap 2.6.0",
- "indoc",
- "itertools 0.13.0",
- "proto-parser",
- "protobuf",
- "reqwest",
- "serde",
- "serde_json",
- "serde_with",
- "tar",
- "thiserror",
- "url",
 ]
 
 [[package]]
@@ -5301,6 +5289,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "grpc_utils"
+version = "0.5.1-rc.0"
+dependencies = [
+ "anyhow",
+ "proto-parser",
+ "protobuf",
+]
+
+[[package]]
 name = "gzip-header"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6968,6 +6965,7 @@ name = "meta-cli"
 version = "0.5.1-rc.0"
 dependencies = [
  "actix",
+ "archive_utils",
  "assert_cmd",
  "async-trait",
  "base64 0.22.1",
@@ -6977,7 +6975,6 @@ dependencies = [
  "clap-verbosity-flag",
  "clap_complete",
  "color-eyre",
- "common",
  "crossbeam-channel",
  "ctrlc",
  "dashmap 6.1.0",
@@ -7022,11 +7019,13 @@ dependencies = [
  "tar",
  "tempfile",
  "textwrap",
+ "tg_schema",
  "tokio",
  "tracing",
  "tracing-error",
  "tracing-subscriber",
  "tracing-unwrap",
+ "typegate_api",
  "typegate_engine",
  "typegraph_core",
 ]
@@ -7036,7 +7035,6 @@ name = "metagen"
 version = "0.5.1-rc.0"
 dependencies = [
  "color-eyre",
- "common",
  "dashmap 6.1.0",
  "futures-concurrency",
  "futures-lite 2.3.0",
@@ -7052,7 +7050,9 @@ dependencies = [
  "serde_json",
  "tempfile",
  "tera",
+ "tg_schema",
  "tokio",
+ "typegate_api",
 ]
 
 [[package]]
@@ -12243,6 +12243,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tg_schema"
+version = "0.5.1-rc.0"
+dependencies = [
+ "anyhow",
+ "indexmap 2.6.0",
+ "serde",
+ "serde_json",
+ "serde_with",
+]
+
+[[package]]
 name = "thiserror"
 version = "1.0.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12964,14 +12975,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "typegate_api"
+version = "0.5.1-rc.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "colored",
+ "indoc",
+ "itertools 0.13.0",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tg_schema",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "typegate_engine"
 version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
+ "archive_utils",
  "base64 0.22.1",
  "bytes",
  "chrono",
- "common",
  "connection-string",
  "convert_case 0.6.0",
  "dashmap 6.1.0",
@@ -12979,6 +13007,7 @@ dependencies = [
  "deno_core",
  "env_logger 0.11.0",
  "futures",
+ "grpc_utils",
  "mt_deno",
  "once_cell",
  "protobuf",
@@ -12999,6 +13028,7 @@ dependencies = [
  "tempfile",
  "temporal-client",
  "temporal-sdk-core-protos",
+ "tg_schema",
  "thiserror",
  "tokio",
  "tonic 0.12.3",
@@ -13014,11 +13044,12 @@ name = "typegraph_core"
 version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
+ "archive_utils",
  "color-eyre",
- "common",
  "enum_dispatch",
  "glob",
  "graphql-parser 0.4.0",
+ "grpc_utils",
  "indexmap 2.6.0",
  "indoc",
  "insta",
@@ -13032,6 +13063,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.8",
+ "tg_schema",
  "unindent",
 ]
 

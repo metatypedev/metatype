@@ -81,7 +81,7 @@ impl MaterializerConverter for S3Materializer {
         c: &mut TypegraphContext,
         runtime_id: u32,
         effect: Effect,
-    ) -> Result<common::typegraph::Materializer> {
+    ) -> Result<tg_schema::Materializer> {
         use S3Materializer as M;
 
         let runtime = c.register_runtime(runtime_id)?;
@@ -109,7 +109,7 @@ impl MaterializerConverter for S3Materializer {
             ),
         };
 
-        Ok(common::typegraph::Materializer {
+        Ok(tg_schema::Materializer {
             name: name.to_string(),
             runtime,
             effect: effect.into(),

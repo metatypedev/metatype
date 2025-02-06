@@ -3,7 +3,7 @@
 
 use std::fmt::Write;
 
-use common::typegraph::*;
+use tg_schema::*;
 
 use super::utils::{normalize_struct_prop_name, normalize_type_title};
 use crate::{interlude::*, shared::types::*};

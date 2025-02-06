@@ -233,11 +233,11 @@ pub struct UnpackInp {
 
 #[deno_core::op2]
 pub fn op_unpack(#[serde] input: UnpackInp) -> Result<()> {
-    common::archive::unpack(&input.dest, Some(input.migrations))
+    archive_utils::unpack(&input.dest, Some(input.migrations))
 }
 
 #[deno_core::op2]
 #[string]
 pub fn op_archive(#[string] path: &str) -> Result<Option<String>> {
-    common::archive::archive(path)
+    archive_utils::archive(path)
 }

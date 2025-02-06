@@ -4,8 +4,11 @@ version = "0.5.1-rc.0"
 edition = "2021"
 
 [dependencies]
-common.workspace = true
+# common.workspace = true
+tg_schema.workspace = true
 metagen.workspace = true
+grpc_utils.workspace = true
+archive_utils.workspace = true
 
 enum_dispatch.workspace = true
 color-eyre.workspace = true

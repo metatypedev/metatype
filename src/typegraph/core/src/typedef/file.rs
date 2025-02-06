@@ -3,7 +3,7 @@
 
 use std::hash::Hash as _;
 
-use common::typegraph::{FileTypeData, TypeNode};
+use tg_schema::{FileTypeData, TypeNode};
 
 use crate::conversion::hash::Hashable;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};

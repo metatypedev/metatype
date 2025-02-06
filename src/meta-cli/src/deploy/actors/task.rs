@@ -27,11 +27,11 @@ use crate::deploy::actors::task_io::TaskIoActor;
 use crate::interlude::*;
 use action::{get_typegraph_name, TaskActionGenerator};
 use colored::OwoColorize;
-use common::typegraph::Typegraph;
 use indexmap::IndexMap;
 use process_wrap::tokio::TokioChildWrapper;
 use serde::Deserialize;
 use std::time::Duration;
+use tg_schema::Typegraph;
 use tokio::process::Command;
 
 pub mod message {

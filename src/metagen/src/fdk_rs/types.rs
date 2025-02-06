@@ -4,9 +4,9 @@
 use super::utils::*;
 use crate::interlude::*;
 use crate::shared::types::*;
-use common::typegraph::*;
 use heck::ToPascalCase;
 use std::fmt::Write;
+use tg_schema::*;
 
 pub struct RustTypeRenderer {
     pub derive_debug: bool,

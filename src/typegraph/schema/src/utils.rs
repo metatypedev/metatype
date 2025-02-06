@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::typegraph::{runtimes::TGRuntime, Typegraph};
+use crate::{runtimes::TGRuntime, Typegraph};
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
 use serde::{de::DeserializeOwned, ser::Serialize};

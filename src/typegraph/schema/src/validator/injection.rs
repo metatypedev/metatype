@@ -6,8 +6,8 @@ use serde_json::Value;
 
 use super::types::{EnsureSubtypeOf as _, ErrorCollector, ExtendedTypeNode};
 use super::{Validator, ValidatorContext};
-use crate::typegraph::visitor::{Edge, PathSegment, TypeVisitorContext as _};
-use crate::typegraph::{Injection, InjectionNode, ObjectTypeData, TypeId, TypeNode};
+use crate::visitor::{Edge, PathSegment, TypeVisitorContext as _};
+use crate::{Injection, InjectionNode, ObjectTypeData, TypeId, TypeNode};
 
 pub struct InjectionValidationContext<'a> {
     pub fn_path: Vec<PathSegment>,

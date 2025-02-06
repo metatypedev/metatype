@@ -3,7 +3,7 @@
 
 use std::fmt::Write;
 
-use common::typegraph::*;
+use tg_schema::*;
 
 use super::utils::*;
 use crate::{interlude::*, shared::client::*, shared::types::*};

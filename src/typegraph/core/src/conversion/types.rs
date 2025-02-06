@@ -4,9 +4,9 @@
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
 use crate::types::{ExtendedTypeDef, TypeId};
-use common::typegraph::{TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
 use std::rc::Rc;
+use tg_schema::{TypeNode, TypeNodeBase};
 
 #[enum_dispatch]
 pub trait TypeConversion {

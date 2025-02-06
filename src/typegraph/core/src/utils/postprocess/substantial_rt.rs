@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::utils::{artifacts::ArtifactsExt, fs::FsContext, postprocess::PostProcessor};
-use common::typegraph::{
+use std::path::PathBuf;
+use tg_schema::{
     runtimes::{self, TGRuntime},
     Typegraph,
 };
-use std::path::PathBuf;
 
 pub struct SubstantialProcessor {
     typegraph_dir: PathBuf,

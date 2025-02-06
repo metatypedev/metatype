@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::runtimes::deno::ModuleMatData;
-use common::typegraph::utils::map_from_object;
-use common::typegraph::{utils::object_from_map, Typegraph};
 use std::path::PathBuf;
+use tg_schema::runtimes::deno::ModuleMatData;
+use tg_schema::utils::map_from_object;
+use tg_schema::{utils::object_from_map, Typegraph};
 
 use crate::utils::{artifacts::ArtifactsExt, fs::FsContext, postprocess::PostProcessor};
 

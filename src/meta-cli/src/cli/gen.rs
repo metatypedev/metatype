@@ -12,10 +12,10 @@ use crate::interlude::*;
 use crate::{config::Config, deploy::actors::console::ConsoleActor};
 use actix::Actor;
 use clap::Parser;
-use common::typegraph::Typegraph;
 use dashmap::DashMap;
 use futures_concurrency::future::FutureGroup;
 use metagen::*;
+use tg_schema::Typegraph;
 
 #[derive(Parser, Debug, Clone)]
 pub struct Gen {
@@ -105,7 +105,7 @@ impl Action for Gen {
 #[derive(Debug)]
 struct MetagenCtx {
     config: Arc<Config>,
-    typegate: Arc<common::node::Node>,
+    typegate: Arc<typegate_api::Node>,
     dir: PathBuf,
     typegraph_cache: DashMap<String, Arc<Typegraph>>,
 }

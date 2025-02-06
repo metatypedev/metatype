@@ -21,7 +21,7 @@ impl Default for Effect {
 pub mod models {
     use std::collections::BTreeMap;
 
-    use common::typegraph::{EffectType, Injection, InjectionData};
+    use tg_schema::{EffectType, Injection, InjectionData};
 
     use crate::errors::Result;
     use crate::t::{self, TypeBuilder};
