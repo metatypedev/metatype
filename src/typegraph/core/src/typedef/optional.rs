@@ -12,9 +12,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeOptional,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, Optional, TypeDefData, TypeId},
-    wit::core::TypeOptional,
 };
 
 impl TypeConversion for Optional {

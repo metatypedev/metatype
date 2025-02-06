@@ -70,14 +70,9 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
     ['(  TYPEGRAPH_VERSION: ").+(")', TYPEGRAPH_VERSION],
     ['(    GHJK_VERSION: ").+(")', GHJK_VERSION],
   ],
-  "ghjk.ts": [
-    ['(    TYPEGRAPH_VERSION: ").+(",)', TYPEGRAPH_VERSION],
-  ],
+  "ghjk.ts": [['(    TYPEGRAPH_VERSION: ").+(",)', TYPEGRAPH_VERSION]],
   "docs/metatype.dev/docusaurus.config.js": [['(  tagline: ").+(",)', TAGLINE]],
-  "**/pyproject.toml": [
-    ['(version = ").+(")', CURRENT_VERSION],
-    [/(wasmtime = "\^).+(")/, WASMTIME_PY_VERSION],
-  ],
+  "**/pyproject.toml": [['(version = ").+(")', CURRENT_VERSION]],
   "examples/templates/**/compose.yml": [
     ["(    image: ghcr.io/metatypedev/typegate:v).+()", CURRENT_VERSION],
   ],

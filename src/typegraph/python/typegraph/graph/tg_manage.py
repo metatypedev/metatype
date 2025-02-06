@@ -1,24 +1,26 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-import traceback
 from pathlib import Path
+from typing import Optional
+from pydantic import BaseModel
 
-from typegraph.gen.exports.core import (
+from typegraph.gen.core import (
     SerializeParams,
     MigrationAction,
     PrismaMigrationConfig,
 )
+from typegraph.gen.client import rpc_request
 from typegraph.graph.shared_types import TypegraphOutput
-from typegraph.graph.tg_deploy import (
-    TypegateConnectionOptions,
-    TypegraphDeployParams,
-    tg_deploy,
-)
-from typegraph.wit import ErrorStack
-from typegraph.utils import freeze_tg_output
-from typegraph.io import Log, Rpc
+from typegraph.io import Log
 from typegraph.envs.cli import CliEnv, Command, get_cli_env
+
+
+class DeployParams(BaseModel):
+    typegraph_name: str
+    typegraph_path: str
+    prefix: Optional[str]
+    migration_dir: str
 
 
 class Manager:
@@ -45,6 +47,7 @@ class Manager:
     def serialize(self):
         env = self.env
         params = SerializeParams(
+            typegraph_name=self.typegraph.name,
             typegraph_path=env.typegraph_path,
             prefix=env.prefix,
             artifact_resolution=env.artifact_resolution,
@@ -61,83 +64,18 @@ class Manager:
             pretty=False,
         )
 
-        try:
-            res = self.typegraph.serialize(params)
-            Log.success(res.tgJson, noencode=True)
-        except Exception as err:
-            Log.debug(traceback.format_exc())
-            if isinstance(err, ErrorStack):
-                Log.failure({"typegraph": self.typegraph.name, "errors": err.stack})
-            else:
-                Log.failure({"typegraph": self.typegraph.name, "errors": [str(err)]})
+        rpc_request("Serialize", params.model_dump())
 
     def deploy(self):
         env = self.env
-        deploy_data = Rpc.get_deploy_data(self.typegraph.name)
-
-        params = SerializeParams(
+        params = DeployParams(
+            typegraph_name=self.typegraph.name,
             typegraph_path=env.typegraph_path,
+            migration_dir=self.get_migrations_dir(),
             prefix=env.prefix,
-            artifact_resolution=True,
-            codegen=False,
-            prisma_migration=PrismaMigrationConfig(
-                migrations_dir=self.get_migrations_dir(),
-                migration_actions=list(deploy_data.migration_actions.items()),
-                default_migration_action=deploy_data.default_migration_action,
-            ),
-            pretty=False,
         )
 
-        # hack for allowing tg.serialize(config) to be called more than once
-        frozen_out = freeze_tg_output(params, self.typegraph)
-        try:
-            frozen_out.serialize(params)
-        except Exception as err:
-            Log.debug(traceback.format_exc())
-            if isinstance(err, ErrorStack):
-                Log.failure({"typegraph": self.typegraph.name, "errors": err.stack})
-            else:
-                Log.failure({"typegraph": self.typegraph.name, "errors": [str(err)]})
-            return
-
-        try:
-            deploy_target = Rpc.get_deploy_target()
-            params = TypegraphDeployParams(
-                typegate=TypegateConnectionOptions(
-                    url=deploy_target.base_url,
-                    auth=deploy_target.auth,
-                ),
-                typegraph_path=env.typegraph_path,
-                prefix=env.prefix,
-                secrets=deploy_data.secrets,
-                migrations_dir=self.get_migrations_dir(),
-                migration_actions=deploy_data.migration_actions,
-                default_migration_action=deploy_data.default_migration_action,
-            )
-            ret = tg_deploy(frozen_out, params)
-            response = ret.response
-
-            Log.debug("response", response)
-
-            if not isinstance(response, dict):
-                raise Exception("unexpected")
-            Log.success(
-                {
-                    "typegraph": {
-                        "name": self.typegraph.name,
-                        "path": env.typegraph_path,
-                        "value": ret.serialized,
-                    },
-                    **response,
-                }
-            )
-        except Exception as err:
-            Log.debug(traceback.format_exc())
-            if isinstance(err, ErrorStack):
-                Log.failure({"typegraph": self.typegraph.name, "errors": err.stack})
-            else:
-                Log.failure({"typegraph": self.typegraph.name, "errors": [str(err)]})
-            return
+        rpc_request("Deploy", params.model_dump())
 
     def list(self):
         Log.success({"typegraph": self.typegraph.name})

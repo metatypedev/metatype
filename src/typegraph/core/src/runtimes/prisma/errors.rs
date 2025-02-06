@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{types::TypeId, wit::core::Error};
+use crate::{sdk::core::Error, types::TypeId};
 
 // pub fn relationship_not_found(source_model: &str, field: &str) -> Error {
 //     format!("relationship target not found for  {source_model}::{field}")

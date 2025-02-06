@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { type Materializer, Runtime } from "../runtimes/mod.ts";
-import { runtimes } from "../wit.ts";
+import { runtimes } from "../sdk.ts";
 import { Func, type Typedef } from "../types.ts";
 import type {
   SubstantialBackend,
   SubstantialOperationData,
   WorkflowFileDescription,
   WorkflowKind,
-} from "../gen/typegraph_core.d.ts";
+} from "../gen/runtimes.ts";
 
 interface StartFunc {
   secrets?: string[];
@@ -41,75 +41,51 @@ export class SubstantialRuntime extends Runtime {
     kwargs: Typedef,
     { secrets }: StartFunc = {},
   ): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc(
-      {
-        tag: "start",
-        val: { secrets: secrets ?? [], funcArg: kwargs._id },
-      },
-    );
+    return this._genericSubstantialFunc({
+      start: { secrets: secrets ?? [], funcArg: kwargs._id },
+    });
   }
 
-  startRaw(
-    { secrets }: StartFunc = {},
-  ): Func<Typedef, Typedef, Materializer> {
+  startRaw({ secrets }: StartFunc = {}): Func<Typedef, Typedef, Materializer> {
     return this._genericSubstantialFunc({
-      tag: "start-raw",
-      val: { secrets: secrets ?? [] },
+      startRaw: { secrets: secrets ?? [] },
     });
   }
 
   stop(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "stop",
-    });
+    return this._genericSubstantialFunc("stop");
   }
 
   send(payload: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc(
-      {
-        tag: "send",
-        val: payload._id,
-      },
-    );
+    return this._genericSubstantialFunc({
+      send: payload._id,
+    });
   }
 
   sendRaw(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "send-raw",
-    });
+    return this._genericSubstantialFunc("send_raw");
   }
 
   queryResources(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "resources",
-    });
+    return this._genericSubstantialFunc("resources");
   }
 
   queryResults(output: Typedef): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc(
-      {
-        tag: "results",
-        val: output._id,
-      },
-    );
+    return this._genericSubstantialFunc({
+      results: output._id,
+    });
   }
 
   queryResultsRaw(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "results-raw",
-    });
+    return this._genericSubstantialFunc("results_raw");
   }
 
   advancedFilters(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "advanced-filters"
-    });
+    return this._genericSubstantialFunc("advanced_filters");
   }
 
   #internalLinkParentChild(): Func<Typedef, Typedef, Materializer> {
-    return this._genericSubstantialFunc({
-      tag: "internal-link-parent-child",
-    });
+    return this._genericSubstantialFunc("internal_link_parent_child");
   }
 
   internals(): Record<string, Func<Typedef, Typedef, Materializer>> {
@@ -125,17 +101,16 @@ export class SubstantialRuntime extends Runtime {
 
 export class Backend {
   static devMemory(): SubstantialBackend {
-    return { tag: "memory" };
+    return "memory";
   }
 
   static devFs(): SubstantialBackend {
-    return { tag: "fs" };
+    return "fs";
   }
 
   static redis(connectionStringSecret: string): SubstantialBackend {
     return {
-      tag: "redis",
-      val: {
+      redis: {
         connectionStringSecret,
       },
     };

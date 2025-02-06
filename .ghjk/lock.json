@@ -902,30 +902,22 @@
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
-            "ghjkEnvProvInstSet_______task_env_build-tgraph-core": {
-              "installs": [
-                "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
-                "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
-                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
-                "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
-                "bciqcnbruy2q6trpvia52n2yis4t27taoz4mxkeguqz5aif7ex6rp26y",
-                "bciqpu7gxs3zm7i4gwp3m3cfdxwz27ixvsykdnbxrl5m5mt3xbb3b4la",
-                "bciqjme7csfq43oenkrsakdhaha34hgy6vdwkfffki2ank3kf6mjcguq"
-              ],
-              "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
-            },
             "ghjkEnvProvInstSet_______task_env_build-tgraph-py": {
               "installs": [
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
-                "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
-                "bciqcnbruy2q6trpvia52n2yis4t27taoz4mxkeguqz5aif7ex6rp26y",
-                "bciqpu7gxs3zm7i4gwp3m3cfdxwz27ixvsykdnbxrl5m5mt3xbb3b4la",
-                "bciqjme7csfq43oenkrsakdhaha34hgy6vdwkfffki2ank3kf6mjcguq",
                 "bciqfpjzi6gguk7dafyicfjpzpwtybgyc2dsnxg2zxkcmyinzy7abpla",
                 "bciqkgncxbauys2qfguplxcz2auxrcyamj4b6htqk2fqvohfm3afd7sa",
                 "bciqihcmo6l5uwzih3e3ujc55curep4arfomo6rzkdsfim74unxexiqy"
+              ],
+              "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
+            },
+            "ghjkEnvProvInstSet_______task_env_build-tgraph-rpc": {
+              "installs": [
+                "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
+                "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
+                "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a"
               ],
               "allowedBuildDeps": "bciqek3tmrhm4iohl6tvdzlhxwhv7b52makvvgehltxv52d3l7rbki3y"
             },
@@ -934,10 +926,6 @@
                 "bciqfjvqemdy7d6axvwkywcm6v66wogddvk7k6e6rps4e6zidkjvm4fy",
                 "bciqlubbahrp4pxohyffmn5yj52atjgmn5nxepmkdev6wtmvpbx7kr7y",
                 "bciqminqcmgw3fbbhibwc7tf6mrupttheic7kpiykadbowqmnzhmzo5a",
-                "bciqojan3zglnfctnmqyxvnxaha46yrnlhj77j3kw4mxadvauqepqdba",
-                "bciqcnbruy2q6trpvia52n2yis4t27taoz4mxkeguqz5aif7ex6rp26y",
-                "bciqpu7gxs3zm7i4gwp3m3cfdxwz27ixvsykdnbxrl5m5mt3xbb3b4la",
-                "bciqjme7csfq43oenkrsakdhaha34hgy6vdwkfffki2ank3kf6mjcguq",
                 "bciqezep4ufkgwesldlm5etyfkgdsiickfudx7cosydcz6xtgeorn2hy",
                 "bciqlt3rqqcn2tgexcgf7ndjceavwycoddgtn63fkh6z6i6pgmz7jr6y",
                 "bciqlt27ioikxnpkqq37hma7ibn5e5wpzfarbvoh77zwdkarwghtvzxa"
@@ -984,6 +972,12 @@
               "key": "version-print",
               "desc": "Print $CURRENT_VERSION",
               "envKey": "bciqori26ml2iqph3izifvvfsf4b2ar3yddr344utbfstyk2v33ot3mq"
+            },
+            "test-codegen": {
+              "ty": "denoFile@v1",
+              "key": "test-codegen",
+              "workingDir": "./src/typegraph/specs/codegen",
+              "envKey": "bciqbjavwy7rbire3zwlpgo2ifwzgnm6ywxqswnh6qxezwuvc4bqhrca"
             },
             "test-rust": {
               "ty": "denoFile@v1",
@@ -1132,31 +1126,25 @@
               "desc": "Execute tools/*.ts scripts.",
               "envKey": "bciqori26ml2iqph3izifvvfsf4b2ar3yddr344utbfstyk2v33ot3mq"
             },
+            "build-tgraph-py": {
+              "ty": "denoFile@v1",
+              "key": "build-tgraph-py",
+              "envKey": "bciqbk2kwzvfc2c5ti6x7z2pju22i3qkhn76hei4patfnwqv6xr4umlq"
+            },
             "build-tgraph-ts-jsr": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-ts-jsr",
               "envKey": "bciqori26ml2iqph3izifvvfsf4b2ar3yddr344utbfstyk2v33ot3mq"
             },
-            "build-tgraph-core": {
+            "build-tgraph-rpc": {
               "ty": "denoFile@v1",
-              "key": "build-tgraph-core",
-              "envKey": "bciqay3wlzl37o3e5sleadckz3lc3ku7bwxhtmcp253zu37itg6lop4y"
-            },
-            "build-tgraph-py": {
-              "ty": "denoFile@v1",
-              "key": "build-tgraph-py",
-              "dependsOn": [
-                "build-tgraph-core"
-              ],
-              "envKey": "bciqkwu4gv6lblxqmz7qn2lcpoqj734thuq6xvrj7n6olow2dxtzyb7a"
+              "key": "build-tgraph-rpc",
+              "envKey": "bciqeeh6cx5grefrnieyki54emcwuxb57ahioapdi6opi47dyg6hxgki"
             },
             "build-tgraph-ts": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-ts",
-              "dependsOn": [
-                "build-tgraph-core"
-              ],
-              "envKey": "bciqjt6brrpsukhzp7rtwcque7ltthdnfx3rqjly6w3jgivxixs6dmlq"
+              "envKey": "bciqpj74st4da74tgeqyzsppxpvncbekb65n2ow6tbcsfdcrdyq6smxy"
             },
             "build-tgraph-ts-node": {
               "ty": "denoFile@v1",
@@ -1164,12 +1152,19 @@
               "dependsOn": [
                 "build-tgraph-ts"
               ],
-              "envKey": "bciqjt6brrpsukhzp7rtwcque7ltthdnfx3rqjly6w3jgivxixs6dmlq"
+              "envKey": "bciqpj74st4da74tgeqyzsppxpvncbekb65n2ow6tbcsfdcrdyq6smxy"
+            },
+            "build-tgraph-core": {
+              "ty": "denoFile@v1",
+              "key": "build-tgraph-core",
+              "envKey": "bciqlndcuvoua6nwkocqwfmugmbzrpk5yfr5wfv7mzazugh3ofyptv2a"
             },
             "build-tgraph": {
               "ty": "denoFile@v1",
               "key": "build-tgraph",
               "dependsOn": [
+                "build-tgraph-core",
+                "build-tgraph-rpc",
                 "build-tgraph-py",
                 "build-tgraph-ts-node"
               ],
@@ -1186,6 +1181,7 @@
             "clean-rust",
             "version-bump",
             "version-print",
+            "test-codegen",
             "test-rust",
             "test-website",
             "test-e2e",
@@ -1211,11 +1207,12 @@
             "dev-eg-tgraphs",
             "dev-compose",
             "dev",
-            "build-tgraph-ts-jsr",
-            "build-tgraph-core",
             "build-tgraph-py",
+            "build-tgraph-ts-jsr",
+            "build-tgraph-rpc",
             "build-tgraph-ts",
             "build-tgraph-ts-node",
+            "build-tgraph-core",
             "build-tgraph",
             "build-sys-tgraphs"
           ]
@@ -1765,7 +1762,7 @@
                 }
               ]
             },
-            "bciqay3wlzl37o3e5sleadckz3lc3ku7bwxhtmcp253zu37itg6lop4y": {
+            "bciqlndcuvoua6nwkocqwfmugmbzrpk5yfr5wfv7mzazugh3ofyptv2a": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1794,16 +1791,16 @@
                 },
                 {
                   "ty": "posix.envVar",
-                  "key": "WASM_FILE",
-                  "val": "target/wasm/release/typegraph_core.wasm"
+                  "key": "TG_CODEGEN",
+                  "val": "src/typegraph/specs/codegen/tg-codegen"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
-                  "setId": "ghjkEnvProvInstSet_______task_env_build-tgraph-core"
+                  "setId": "ghjkEnvProvInstSet____rust"
                 }
               ]
             },
-            "bciqkwu4gv6lblxqmz7qn2lcpoqj734thuq6xvrj7n6olow2dxtzyb7a": {
+            "bciqbk2kwzvfc2c5ti6x7z2pju22i3qkhn76hei4patfnwqv6xr4umlq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1832,8 +1829,8 @@
                 },
                 {
                   "ty": "posix.envVar",
-                  "key": "WASM_FILE",
-                  "val": "target/wasm/release/typegraph_core.wasm"
+                  "key": "TG_CODEGEN",
+                  "val": "src/typegraph/specs/codegen/tg-codegen"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",
@@ -1841,7 +1838,7 @@
                 }
               ]
             },
-            "bciqjt6brrpsukhzp7rtwcque7ltthdnfx3rqjly6w3jgivxixs6dmlq": {
+            "bciqeeh6cx5grefrnieyki54emcwuxb57ahioapdi6opi47dyg6hxgki": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1870,8 +1867,46 @@
                 },
                 {
                   "ty": "posix.envVar",
-                  "key": "WASM_FILE",
-                  "val": "target/wasm/release/typegraph_core.wasm"
+                  "key": "TG_CODEGEN",
+                  "val": "src/typegraph/specs/codegen/tg-codegen"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet_______task_env_build-tgraph-rpc"
+                }
+              ]
+            },
+            "bciqpj74st4da74tgeqyzsppxpvncbekb65n2ow6tbcsfdcrdyq6smxy": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,quaint=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.3"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TG_CODEGEN",
+                  "val": "src/typegraph/specs/codegen/tg-codegen"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",

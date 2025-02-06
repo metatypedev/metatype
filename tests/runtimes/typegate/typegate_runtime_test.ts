@@ -1,21 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchema } from "test-utils/database.ts";
 
 Meta.test({
   name: "typegate: find available operations",
 }, async (t) => {
-  const prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
+  await dropSchema("prisma_rt_test");
+  const _prismaEngine = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       POSTGRES:
-        "postgresql://postgres:password@localhost:5432/postgres?schema=prisma_rt_test",
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma_rt_test",
     },
   });
-
-  await dropSchemas(prismaEngine);
-  await recreateMigrations(prismaEngine);
 
   const e = t.getTypegraphEngine("typegate");
   if (e === undefined) {

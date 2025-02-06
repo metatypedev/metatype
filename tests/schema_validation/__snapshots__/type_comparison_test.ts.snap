@@ -49,6 +49,5 @@ snapshot[`type comparison errors 1`] = `
 - at type-comparison:/enum_fail_1_test_type/[out]/injected/[in]/field: from_parent injection:  - Expected all enum values to be defined on the supertype
 - at type-comparison:/enum_fail_1_test_type/[out]/injected/[in]/field: from_parent injection:  - - Value "\\\\"c\\\\"" (#2) is not defined on the supertype
 - at type-comparison:/enum_fail_2_test_type/[out]/injected/[in]/field: from_parent injection: Expected the subtype to be an enum
-- Typegraph type-comparison failed validation
-\`
+- Typegraph type-comparison failed validation\`
 `;

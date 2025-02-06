@@ -12,9 +12,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeUnion,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, TypeDefData, TypeId, Union},
-    wit::core::TypeUnion,
 };
 
 impl TypeConversion for Union {

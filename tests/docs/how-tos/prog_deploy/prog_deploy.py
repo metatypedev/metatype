@@ -8,7 +8,7 @@ from os import path
 import sys
 
 # skip:end
-from typegraph.gen.exports.core import MigrationAction
+from typegraph.gen.core import MigrationAction
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.graph.tg_deploy import (
     TypegraphDeployParams,

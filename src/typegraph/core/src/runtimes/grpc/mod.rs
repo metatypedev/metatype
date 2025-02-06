@@ -7,8 +7,8 @@ use std::rc::Rc;
 
 use super::Runtime;
 use crate::global_store::Store;
-use crate::wit::core::{FuncParams, RuntimeId};
-use crate::wit::runtimes::{Effect as WitEffect, GrpcData, GrpcRuntimeData};
+use crate::sdk::core::{FuncParams, RuntimeId};
+use crate::sdk::runtimes::{Effect, GrpcData, GrpcRuntimeData};
 use crate::{
     conversion::runtimes::MaterializerConverter, errors::Result, typegraph::TypegraphContext,
 };
@@ -27,7 +27,7 @@ impl MaterializerConverter for GrpcMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: WitEffect,
+        effect: Effect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
         let data = from_value(json!({"method": self.method})).map_err(|e| e.to_string())?;
@@ -55,7 +55,7 @@ pub fn call_grpc_method(runtime: RuntimeId, data: GrpcData) -> Result<FuncParams
     };
 
     let mat_id =
-        Store::register_materializer(super::Materializer::grpc(runtime, mat, WitEffect::Read));
+        Store::register_materializer(super::Materializer::grpc(runtime, mat, Effect::Read));
 
     let t = type_generation::generate_type(&grpc_runtime_data.proto_file, &data.method)
         .map_err(|err| format!("failed generate type {err}"))?;

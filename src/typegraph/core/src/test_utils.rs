@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-pub(crate) use crate::wit::runtimes::{Effect, MaterializerDenoFunc};
+pub(crate) use crate::sdk::runtimes::{Effect, MaterializerDenoFunc};
 
 impl MaterializerDenoFunc {
     pub fn with_code(code: impl Into<String>) -> Self {
@@ -69,9 +69,9 @@ pub mod models {
 }
 
 pub fn setup(name: Option<&str>) -> crate::errors::Result<()> {
-    use crate::wit::core::Guest;
+    use crate::sdk::core::Handler;
 
-    crate::Lib::init_typegraph(crate::wit::core::TypegraphInitParams {
+    crate::Lib::init_typegraph(crate::sdk::core::TypegraphInitParams {
         name: name
             .map(|n| n.to_string())
             .unwrap_or_else(|| "test".to_string()),

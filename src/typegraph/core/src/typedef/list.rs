@@ -11,9 +11,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors::Result,
+    sdk::core::TypeList,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, List, TypeDefData, TypeId},
-    wit::core::TypeList,
 };
 
 impl TypeConversion for List {

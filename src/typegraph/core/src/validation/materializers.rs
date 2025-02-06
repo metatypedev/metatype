@@ -4,8 +4,8 @@
 use common::typegraph::runtimes::deno::PredefinedFunctionMatData;
 
 use crate::runtimes::{DenoMaterializer, MaterializerData, Runtime};
+use crate::sdk::core::TypeFunc;
 use crate::types::{AsTypeDefEx as _, TypeDef, TypeId};
-use crate::wit::core::TypeFunc;
 use crate::Result;
 use crate::{global_store::Store, runtimes::Materializer};
 

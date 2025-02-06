@@ -13,9 +13,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeFloat,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, Float, TypeDefData},
-    wit::core::TypeFloat,
 };
 
 impl TypeConversion for Float {

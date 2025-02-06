@@ -6,19 +6,17 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Union, overload
 
 from astunparse import unparse
-from typegraph.gen.exports.runtimes import (
+from typegraph.gen.runtimes import (
     BaseMaterializer,
     Effect,
-    EffectRead,
     MaterializerPythonDef,
     MaterializerPythonImport,
     MaterializerPythonLambda,
     MaterializerPythonModule,
 )
-from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.sdk import runtimes
 from typegraph.utils import Module, ResolvedModule, resolve_module_params
-from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
     from typegraph import t
@@ -29,7 +27,7 @@ PythonModule = Module
 
 class PythonRuntime(Runtime):
     def __init__(self):
-        super().__init__(runtimes.register_python_runtime(store))
+        super().__init__(runtimes.register_python_runtime())
 
     def from_lambda(
         self,
@@ -37,7 +35,7 @@ class PythonRuntime(Runtime):
         out: "t.typedef",
         function: callable,
         *,
-        effect: Effect = EffectRead(),
+        effect: Effect = "read",
         # secrets: Optional[List[str]] = None,
     ):
         lambdas, _defs = DefinitionCollector.collect(function)
@@ -46,20 +44,16 @@ class PythonRuntime(Runtime):
         if fn.startswith("(") and fn.endswith(")"):
             fn = fn[1:-1]
         mat_id = runtimes.from_python_lambda(
-            store,
-            BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerPythonLambda(runtime=self.id.value, fn=fn),
+            BaseMaterializer(runtime=self.id, effect=effect),
+            MaterializerPythonLambda(runtime=self.id, function=fn),
         )
-
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
 
         from typegraph import t
 
         return t.func(
             inp,
             out,
-            LambdaMat(id=mat_id.value, fn=fn, effect=effect),
+            LambdaMat(id=mat_id, fn=fn, effect=effect),
         )
 
     def from_def(
@@ -68,27 +62,23 @@ class PythonRuntime(Runtime):
         out: "t.typedef",
         function: callable,
         *,
-        effect: Effect = EffectRead(),
+        effect: Effect = "read",
     ):
         _lambdas, defs = DefinitionCollector.collect(function)
         assert len(defs) == 1
         name, fn = defs[0]
 
         mat_id = runtimes.from_python_def(
-            store,
-            BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerPythonDef(runtime=self.id.value, name=name, fn=fn),
+            BaseMaterializer(runtime=self.id, effect=effect),
+            MaterializerPythonDef(runtime=self.id, name=name, function=fn),
         )
-
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
 
         from typegraph import t
 
         return t.func(
             inp,
             out,
-            DefMat(id=mat_id.value, name=name, fn=fn, effect=effect),
+            DefMat(id=mat_id, name=name, fn=fn, effect=effect),
         )
 
     @overload
@@ -125,34 +115,26 @@ class PythonRuntime(Runtime):
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
-        effect = effect or EffectRead()
+        effect = effect or "read"
         secrets = secrets or []
         resolved = resolve_module_params(module, name, deps)
 
-        base = BaseMaterializer(runtime=self.id.value, effect=effect)
+        base = BaseMaterializer(runtime=self.id, effect=effect)
         mat_id = runtimes.from_python_module(
-            store,
             base,
             MaterializerPythonModule(
                 file=resolved.module,
                 deps=resolved.deps,
-                runtime=self.id.value,
+                runtime=self.id,
             ),
         )
-
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
 
         py_mod_mat_id = runtimes.from_python_import(
-            store,
             base,
             MaterializerPythonImport(
-                module=mat_id.value, func_name=resolved.func_name, secrets=secrets
+                module=mat_id, func_name=resolved.func_name, secrets=secrets
             ),
         )
-
-        if isinstance(py_mod_mat_id, Err):
-            raise Exception(py_mod_mat_id.value)
 
         from typegraph import t
 
@@ -160,7 +142,7 @@ class PythonRuntime(Runtime):
             inp,
             out,
             ImportMat(
-                id=py_mod_mat_id.value,
+                id=py_mod_mat_id,
                 name=resolved.func_name,
                 module=resolved.module,
                 secrets=secrets,
