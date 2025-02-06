@@ -83,7 +83,7 @@ pub struct SerializeError {
     pub errors: Vec<String>,
 }
 
-impl OutputData for Box<Typegraph> {
+impl OutputData for Arc<Typegraph> {
     fn get_typegraph_name(&self) -> String {
         self.name().unwrap()
     }
@@ -115,7 +115,7 @@ pub enum RpcRequest {
 }
 
 impl TaskAction for SerializeAction {
-    type SuccessData = Box<Typegraph>;
+    type SuccessData = Arc<Typegraph>;
     type FailureData = SerializeError;
     type Options = SerializeOptions;
     type Generator = SerializeActionGenerator;
@@ -201,7 +201,7 @@ impl TaskAction for SerializeAction {
 }
 
 impl SerializeActionInner {
-    fn serialize(&self, params: SerializeParams) -> Result<Box<Typegraph>, SerializeError> {
+    fn serialize(&self, params: SerializeParams) -> Result<Arc<Typegraph>, SerializeError> {
         let typegraph_name = params.typegraph_name.clone();
         match Lib::serialize_typegraph(params) {
             Ok((value, _)) => {

@@ -71,8 +71,8 @@ Deno.test("Rust import codegen", () => {
   rustcg.process(utils.importCase);
 
   const result = rustcg.formatHeaders();
-  const expected = `use serde::{Serialize, Deserialize};
-use super::foobar::{Foo, Bar};`;
+  const expected = `use super::foobar::{Foo, Bar};
+use serde::{Deserialize, Serialize};`;
 
   assertEquals(result, expected);
 });

@@ -61,7 +61,7 @@ typegates:
 metagen:
   targets:
     main:
-      - generator: fdk_rust
+      - generator: fdk_rs
         path: ${genCratePath}
         typegraph_path: ${typegraphPath}
         stubbed_runtimes: ["python"]
@@ -118,7 +118,7 @@ typegates:
 metagen:
   targets:
     my_target:
-      - generator: fdk_python
+      - generator: fdk_py
         path: ${basePath}
         typegraph_path: ${typegraphPath}
 `,
@@ -611,6 +611,12 @@ Meta.test(
         list: zod.array(zod.object({ value: zod.number() })),
       }),
     });
+    const expectedSchemaS = zod.object({
+      singleQuery: postSchema,
+      singleMutation: zod.string(),
+      singlePreparedQuery: zod.object({ input: zod.number() }),
+      singlePreparedMutation: zod.object({ input: zod.number() }),
+    });
     const expectedSchema = zod.tuple([
       expectedSchemaQ,
       expectedSchemaQ,
@@ -624,6 +630,7 @@ Meta.test(
         mixedUnion: zod.string(),
       }),
       expectedSchemaC,
+      expectedSchemaS,
     ]);
     const cases = [
       {

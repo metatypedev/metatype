@@ -48,16 +48,19 @@ abstract class TypeDefProcessor {
   protected imports: TypeImport[];
   protected typeMap: Record<string, string | undefined>;
   protected fileExtension: string;
+  protected commentString: string;
 
   constructor(params: {
     typeMap: Record<string, string | undefined>;
     fileExtension: string;
+    commentString: string;
   }) {
     this.typeDefs = [];
     this.funcDefs = [];
     this.imports = [];
     this.typeMap = params.typeMap;
     this.fileExtension = params.fileExtension;
+    this.commentString = params.commentString;
   }
 
   process(source: string) {
@@ -211,6 +214,13 @@ abstract class TypeDefProcessor {
   abstract formatFuncDef(def: FuncDef): string;
   abstract formatHeaders(moduleName: string): string;
 
+  formatLicenseHeader() {
+    return [
+      `${this.commentString} Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.`,
+      `${this.commentString} SPDX-License-Identifier: MPL-2.0`,
+    ].join("\n");
+  }
+
   formatTypeDef(def: TypeDef) {
     if (def.kind === "alias") return this.formatAliasTypeDef(def);
     else if (def.kind === "record") return this.formatRecordTypeDef(def);
@@ -227,6 +237,7 @@ abstract class TypeDefProcessor {
 
   formatFile(moduleNmae: string) {
     return [
+      this.formatLicenseHeader(),
       this.formatHeaders(moduleNmae),
       this.formatTypeDefs(),
       this.formatFuncDefs(),

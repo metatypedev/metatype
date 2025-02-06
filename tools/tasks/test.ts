@@ -34,7 +34,7 @@ export default {
                 --exclude typegate
                 --exclude typegate_engine
                 --exclude typegraph_core
-                --exclude metagen_fdk_rust_static
+                --exclude metagen_fdk_rs_static
                 --exclude client_rs_static`;
     },
   },

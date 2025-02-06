@@ -13,7 +13,7 @@ class RustRpcCodeGenerator extends RustLibCodeGenerator {
 
   override formatHeaders(moduleName: string) {
     const baseImports = [
-      "use serde::{Serialize, Deserialize};",
+      "use serde::{Deserialize, Serialize};",
       "use serde_json::Value;",
       "use typegraph_core::{errors::Result, Lib};",
       `use typegraph_core::sdk::${moduleName}::*;`,
@@ -68,6 +68,7 @@ ${this.funcDefs.map((def) => `            Self::${this.formatEnumVariantBranchin
 
   override formatFile(moduleName: string) {
     return [
+      this.formatLicenseHeader(),
       this.formatHeaders(moduleName),
       this.formatRpcEnumDef(),
       this.formatRpcEnumImpl(),
@@ -81,7 +82,7 @@ ${this.funcDefs.map((def) => `            Self::${this.formatEnumVariantBranchin
 
     const dependencies = [
       "use enum_dispatch::enum_dispatch;",
-      "use serde::{Serialize, Deserialize};",
+      "use serde::{Deserialize, Serialize};",
       "use serde_json::Value;",
       "use typegraph_core::errors::Result;",
     ].join("\n");
@@ -98,7 +99,13 @@ pub enum RpcCall {
 ${sources.map(({ moduleName }) => `    ${toPascalCase(moduleName)}(${moduleName}::RpcCall),`).join("\n")}
 }`;
 
-    const fileContent = [exports, dependencies, traitDef, rpcDef].join("\n\n");
+    const fileContent = [
+      this.formatLicenseHeader(),
+      exports,
+      dependencies,
+      traitDef,
+      rpcDef,
+    ].join("\n\n");
 
     Deno.writeTextFileSync(path.join(outDir, "mod.rs"), fileContent);
 

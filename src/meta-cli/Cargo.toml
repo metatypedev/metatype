@@ -79,7 +79,7 @@ git2 = { workspace = true, features = [
 ], default-features = false }
 
 # codecs
-serde.workspace = true
+serde = { workspace = true, features = ["rc"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
 flate2.workspace = true
 tar.workspace = true

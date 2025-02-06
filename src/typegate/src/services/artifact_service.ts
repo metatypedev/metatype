@@ -9,6 +9,8 @@ import {
 import { z } from "zod";
 import { getLogger } from "../log.ts";
 import { BaseError, UnknownError } from "../errors.ts";
+import { jsonError } from "./responses.ts";
+import { jsonOk } from "./responses.ts";
 
 const logger = getLogger(import.meta);
 
@@ -25,9 +27,9 @@ export class ArtifactService {
     if (operation === "prepare-upload") {
       if (request.method !== "POST") {
         logger.warn("Method not allowed: {}", request.method);
-        return new Response(JSON.stringify({ error: "method not allowed" }), {
+        return jsonError({
+          message: `method not allowed: ${request.method}`,
           status: 405,
-          headers: { "Content-Type": "application/json" },
         });
       }
 
@@ -36,20 +38,15 @@ export class ArtifactService {
         metaList = prepareUploadBodySchema.parse(await request.json());
       } catch (error) {
         logger.error("Failed to parse data: {}", error);
-        return new Response(
-          JSON.stringify({ error: `Invalid Request Body: ${error.message}` }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          },
-        );
+        return jsonError({
+          message: `invalid request body: ${error.message}`,
+          status: 400,
+        });
       }
 
       try {
         const data = await this.#createUploadTokens(metaList, tgName);
-        return new Response(JSON.stringify(data), {
-          headers: { "Content-Type": "application/json" },
-        });
+        return jsonOk({ data });
       } catch (e) {
         if (e instanceof BaseError) {
           return e.toResponse();
@@ -60,17 +57,14 @@ export class ArtifactService {
 
     if (operation) {
       logger.warn("not found: {} {}", request.method, url.toString());
-      return new Response(JSON.stringify({ message: "not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonError({ message: "not found", status: 404 });
     }
 
     if (request.method !== "POST") {
       logger.warn("Method not allowed: {}", request.method);
-      return new Response(JSON.stringify({ error: "method not allowed" }), {
+      return jsonError({
+        message: `method not allowed: ${request.method}`,
         status: 405,
-        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -78,10 +72,7 @@ export class ArtifactService {
 
     if (!token) {
       logger.warn("Missing upload token");
-      return new Response(JSON.stringify({ error: "missing token" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonError({ message: "missing token", status: 403 });
     }
 
     return await this.#handleUpload(token, request.body!, tgName);
@@ -110,10 +101,7 @@ export class ArtifactService {
       if (e instanceof BaseError) {
         return e.toResponse();
       }
-      return new Response(JSON.stringify({ error: e.message }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonError({ message: e.message, status: 500 });
     }
 
     if (meta.typegraphName !== tgName) {
@@ -125,17 +113,9 @@ export class ArtifactService {
     if (hash !== meta.hash) {
       await this.store.persistence.delete(hash);
       logger.warn("hash mismatch: {} {}", hash, meta.hash);
-      return new Response(JSON.stringify({ error: "hash mismatch" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonError({ message: "hash mismatch", status: 403 });
     }
 
-    return new Response(JSON.stringify({ status: "ok" }), {
-      status: 201,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return jsonOk({ data: { status: "ok" }, status: 201 });
   }
 }

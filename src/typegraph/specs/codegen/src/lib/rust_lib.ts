@@ -26,6 +26,7 @@ class RustLibCodeGenerator extends TypeDefProcessor {
     super({
       typeMap,
       fileExtension: ".rs",
+      commentString: "//",
     });
   }
 
@@ -38,7 +39,7 @@ class RustLibCodeGenerator extends TypeDefProcessor {
   }
 
   override formatHeaders(_moduleName?: string) {
-    const baseImport = "use serde::{Serialize, Deserialize};";
+    const baseImport = "use serde::{Deserialize, Serialize};";
 
     const imports = this.imports.map(
       ({ imports, source }) =>
@@ -47,7 +48,7 @@ class RustLibCodeGenerator extends TypeDefProcessor {
         };`,
     );
 
-    return [baseImport, ...imports].filter(Boolean).join("\n");
+    return [...imports, baseImport].filter(Boolean).join("\n");
   }
 
   override formatAliasTypeDef(def: AliasTypeDef) {
@@ -104,8 +105,9 @@ ${this.funcDefs.map((f) => `    ${this.formatFuncDef(f)}`).join("\n")}
       .map(({ moduleName }) => `pub mod ${moduleName};`)
       .concat("pub use self::core::Error;\n")
       .join("\n");
+    const content = [this.formatLicenseHeader(), imports].join("\n\n");
 
-    Deno.writeTextFileSync(path.join(outDir, "mod.rs"), imports);
+    Deno.writeTextFileSync(path.join(outDir, "mod.rs"), content);
 
     const cmd = new Deno.Command("cargo", {
       cwd: outDir,

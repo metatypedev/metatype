@@ -24,6 +24,7 @@ class TypeScriptCodeGenerator extends TypeDefProcessor {
     super({
       typeMap,
       fileExtension: ".ts",
+      commentString: "//",
     });
   }
 

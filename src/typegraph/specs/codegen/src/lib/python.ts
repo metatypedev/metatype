@@ -27,6 +27,7 @@ class PythonCodeGenerator extends TypeDefProcessor {
     super({
       typeMap,
       fileExtension: ".py",
+      commentString: "#",
     });
   }
 

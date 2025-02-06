@@ -7037,6 +7037,7 @@ version = "0.5.1-rc.0"
 dependencies = [
  "color-eyre",
  "common",
+ "dashmap 6.1.0",
  "futures-concurrency",
  "futures-lite 2.3.0",
  "garde",
@@ -7069,7 +7070,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "metagen_fdk_rust_static"
+name = "metagen_fdk_rs_static"
 version = "0.0.1"
 dependencies = [
  "anyhow",
