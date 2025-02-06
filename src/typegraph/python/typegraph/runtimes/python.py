@@ -3,7 +3,7 @@
 import ast
 import inspect
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union, overload
 
 from astunparse import unparse
 from typegraph.gen.exports.runtimes import (
@@ -17,10 +17,14 @@ from typegraph.gen.exports.runtimes import (
 )
 from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils import Module, ResolvedModule, resolve_module_params
 from typegraph.wit import runtimes, store
 
 if TYPE_CHECKING:
     from typegraph import t
+
+
+PythonModule = Module
 
 
 class PythonRuntime(Runtime):
@@ -87,6 +91,7 @@ class PythonRuntime(Runtime):
             DefMat(id=mat_id.value, name=name, fn=fn, effect=effect),
         )
 
+    @overload
     def import_(
         self,
         inp: "t.struct",
@@ -94,20 +99,43 @@ class PythonRuntime(Runtime):
         *,
         module: str,
         name: str,
-        deps: List[str] = [],
+        deps: List[str],
+        effect: Optional[Effect],
+        secrets: Optional[List[str]],
+    ): ...
+
+    @overload
+    def import_(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        module: ResolvedModule,
+        secrets: Optional[List[str]],
+    ): ...
+
+    def import_(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        module: Union[str, ResolvedModule],
+        name: Optional[str] = None,
+        deps: Optional[List[str]] = None,
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
         effect = effect or EffectRead()
         secrets = secrets or []
+        resolved = resolve_module_params(module, name, deps)
 
         base = BaseMaterializer(runtime=self.id.value, effect=effect)
         mat_id = runtimes.from_python_module(
             store,
             base,
             MaterializerPythonModule(
-                file=module,
-                deps=deps,
+                file=resolved.module,
+                deps=resolved.deps,
                 runtime=self.id.value,
             ),
         )
@@ -119,7 +147,7 @@ class PythonRuntime(Runtime):
             store,
             base,
             MaterializerPythonImport(
-                module=mat_id.value, func_name=name, secrets=secrets
+                module=mat_id.value, func_name=resolved.func_name, secrets=secrets
             ),
         )
 
@@ -133,8 +161,8 @@ class PythonRuntime(Runtime):
             out,
             ImportMat(
                 id=py_mod_mat_id.value,
-                name=name,
-                module=module,
+                name=resolved.func_name,
+                module=resolved.module,
                 secrets=secrets,
                 effect=effect,
             ),
