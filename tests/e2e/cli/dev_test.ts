@@ -181,7 +181,7 @@ Meta.test(
 
     await t.should("have no migration file", async () => {
       await assertRejects(() =>
-        Deno.lstat(resolve(t.workingDir, "prisma-migrations"))
+        Deno.lstat(resolve(t.workingDir, "prisma-migrations")),
       );
     });
 
@@ -283,6 +283,7 @@ const expectedDeployed = [
   ["basic.ts", "basic-authentication"],
   ["cors.ts", "cors"],
   ["database.ts", "database"],
+  ["deno-import.ts", "deno-import"],
   ["deno.ts", "deno"],
   ["example_rest.ts", "example-rest"],
   ["execute.ts", "roadmap-execute"],
@@ -358,27 +359,30 @@ Meta.test(
       return true;
     }, null);
 
-    await stderr.readWhile((rawLine) => {
-      console.log("meta-full dev[E]>", rawLine);
-      const line = $.stripAnsi(rawLine);
-      if (line.match(/failed to deploy/i)) {
-        throw new Error("error detected on line: " + rawLine);
-      }
-      const match = line.match(
-        /successfully deployed typegraph ([\w_-]+) from (.+)$/,
-      );
-      if (match) {
-        const prefix = "typegraphs/";
-        if (!match[2].startsWith(prefix)) {
-          throw new Error("unexpected");
+    await stderr.readWhile(
+      (rawLine) => {
+        console.log("meta-full dev[E]>", rawLine);
+        const line = $.stripAnsi(rawLine);
+        if (line.match(/failed to deploy/i)) {
+          throw new Error("error detected on line: " + rawLine);
         }
-        const file = match[2].slice(prefix.length);
-        if (!skipDeployed.has(file)) {
-          deployed.push([file, match[1]]);
+        const match = line.match(
+          /successfully deployed typegraph ([\w_-]+) from (.+)$/,
+        );
+        if (match) {
+          const prefix = "typegraphs/";
+          if (!match[2].startsWith(prefix)) {
+            throw new Error("unexpected");
+          }
+          const file = match[2].slice(prefix.length);
+          if (!skipDeployed.has(file)) {
+            deployed.push([file, match[1]]);
+          }
         }
-      }
-      return deployed.length != expectedDeployed.length;
-    }, 3 * 60 * 1000);
+        return deployed.length != expectedDeployed.length;
+      },
+      3 * 60 * 1000,
+    );
 
     await t.should("have deployed all the typegraphs", () => {
       // TODO use `meta list`
