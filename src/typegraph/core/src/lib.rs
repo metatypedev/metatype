@@ -19,13 +19,13 @@ mod test_utils;
 
 use std::collections::HashSet;
 
-use common::typegraph::runtimes::deno::{ContextCheckX, PredefinedFunctionMatData};
-use common::typegraph::Injection;
 use errors::{Result, TgError};
 use global_store::Store;
 use params::apply;
 use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
+use tg_schema::runtimes::deno::{ContextCheckX, PredefinedFunctionMatData};
+use tg_schema::Injection;
 use types::type_ref::AsId;
 use types::{
     AsTypeDefEx as _, Boolean, Either, File, Float, Func, Integer, List, Named, Optional, StringT,

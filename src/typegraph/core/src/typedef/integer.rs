@@ -3,8 +3,8 @@
 
 use std::hash::Hash as _;
 
-use common::typegraph::{IntegerTypeData, TypeNode};
 use errors::Result;
+use tg_schema::{IntegerTypeData, TypeNode};
 
 use crate::{
     conversion::{

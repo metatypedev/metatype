@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use crate::interlude::*;
-use common::typegraph::{
+use tg_schema::{
     visitor::{Edge, PathSegment},
     visitor2::{self, NearestFn, VisitNext},
     Typegraph,

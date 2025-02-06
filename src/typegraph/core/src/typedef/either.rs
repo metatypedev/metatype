@@ -3,8 +3,8 @@
 
 use std::hash::Hash as _;
 
-use common::typegraph::{EitherTypeData, TypeNode};
 use errors::Result;
+use tg_schema::{EitherTypeData, TypeNode};
 
 use crate::{
     conversion::{

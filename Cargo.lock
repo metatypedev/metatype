@@ -342,6 +342,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "archive_utils"
+version = "0.5.1-rc.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "flate2",
+ "ignore",
+ "indexmap 2.6.0",
+ "tar",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5301,6 +5313,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "grpc_utils"
+version = "0.5.1-rc.0"
+dependencies = [
+ "anyhow",
+ "proto-parser",
+ "protobuf",
+]
+
+[[package]]
 name = "gzip-header"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7035,7 +7056,6 @@ name = "metagen"
 version = "0.5.1-rc.0"
 dependencies = [
  "color-eyre",
- "common",
  "dashmap 6.1.0",
  "futures-concurrency",
  "futures-lite 2.3.0",
@@ -7051,6 +7071,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "tera",
+ "tg_schema",
  "tokio",
 ]
 
@@ -12242,6 +12263,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tg_schema"
+version = "0.5.1-rc.0"
+dependencies = [
+ "anyhow",
+ "indexmap 2.6.0",
+ "serde",
+ "serde_json",
+ "serde_with",
+]
+
+[[package]]
 name = "thiserror"
 version = "1.0.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13013,11 +13045,12 @@ name = "typegraph_core"
 version = "0.5.1-rc.0"
 dependencies = [
  "anyhow",
+ "archive_utils",
  "color-eyre",
- "common",
  "enum_dispatch",
  "glob",
  "graphql-parser 0.4.0",
+ "grpc_utils",
  "indexmap 2.6.0",
  "indoc",
  "insta",
@@ -13031,6 +13064,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.8",
+ "tg_schema",
  "unindent",
  "wit-bindgen",
 ]

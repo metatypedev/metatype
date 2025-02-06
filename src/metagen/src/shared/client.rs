@@ -9,8 +9,8 @@ use super::{
     files::{get_path_to_files, TypePath},
     types::*,
 };
-use common::typegraph::{EffectType, ListTypeData, OptionalTypeData};
 use indexmap::IndexSet;
+use tg_schema::{EffectType, ListTypeData, OptionalTypeData};
 
 pub struct RenderManifest {
     pub return_types: IndexSet<u32>,
@@ -155,11 +155,11 @@ pub fn selection_for_field(
             select_ty: renderer.render_subgraph(ty, cursor)?.0.unwrap(),
         },
         TypeNode::Either {
-            data: common::typegraph::EitherTypeData { one_of: variants },
+            data: tg_schema::EitherTypeData { one_of: variants },
             ..
         }
         | TypeNode::Union {
-            data: common::typegraph::UnionTypeData { any_of: variants },
+            data: tg_schema::UnionTypeData { any_of: variants },
             ..
         } => {
             let select_ty = renderer.render_subgraph(ty, cursor)?.0.unwrap();

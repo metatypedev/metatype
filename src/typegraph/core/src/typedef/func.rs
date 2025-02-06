@@ -15,14 +15,12 @@ use crate::types::{
     TypeDef, TypeDefData, TypeId,
 };
 use crate::wit::core::TypeFunc;
-use common::typegraph::{
-    parameter_transform::FunctionParameterTransform, FunctionTypeData, TypeNode,
-};
-use common::typegraph::{Injection, InjectionData, InjectionNode};
 use indexmap::IndexMap;
 use std::collections::HashSet;
 use std::hash::Hash as _;
 use std::rc::Rc;
+use tg_schema::{parameter_transform::FunctionParameterTransform, FunctionTypeData, TypeNode};
+use tg_schema::{Injection, InjectionData, InjectionNode};
 
 impl TypeConversion for Func {
     fn convert(&self, ctx: &mut TypegraphContext, xdef: ExtendedTypeDef) -> Result<TypeNode> {

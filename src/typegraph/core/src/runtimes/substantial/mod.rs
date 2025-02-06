@@ -10,8 +10,8 @@ use crate::wit::core::FuncParams;
 use crate::wit::{
     core::RuntimeId, runtimes::Effect as WitEffect, runtimes::SubstantialOperationData,
 };
-use common::typegraph::Materializer;
 use serde_json::json;
+use tg_schema::Materializer;
 
 mod type_utils;
 

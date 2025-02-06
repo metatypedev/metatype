@@ -6,7 +6,7 @@ mod selections;
 
 use core::fmt::Write;
 
-use common::typegraph::EffectType;
+use tg_schema::EffectType;
 use shared::get_gql_type;
 
 use crate::interlude::*;

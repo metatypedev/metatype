@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::runtimes::deno::PredefinedFunctionMatData;
+use tg_schema::runtimes::deno::PredefinedFunctionMatData;
 
 use crate::runtimes::{DenoMaterializer, MaterializerData, Runtime};
 use crate::types::{AsTypeDefEx as _, TypeDef, TypeId};

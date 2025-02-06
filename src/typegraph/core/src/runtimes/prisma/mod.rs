@@ -14,9 +14,9 @@ use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
 
-use common::typegraph::runtimes::prisma as cm;
-use common::typegraph::Materializer;
 use indexmap::IndexMap;
+use tg_schema::runtimes::prisma as cm;
+use tg_schema::Materializer;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;

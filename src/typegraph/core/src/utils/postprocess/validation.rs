@@ -3,7 +3,7 @@
 
 use crate::errors::TgError;
 use crate::utils::postprocess::PostProcessor;
-use common::typegraph::{validator::validate_typegraph, Typegraph};
+use tg_schema::{validator::validate_typegraph, Typegraph};
 
 pub struct ValidationProcessor;
 

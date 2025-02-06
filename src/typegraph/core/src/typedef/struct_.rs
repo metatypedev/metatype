@@ -8,10 +8,10 @@ use crate::types::{
     TypeDefData, TypeId,
 };
 use crate::{errors, typegraph::TypegraphContext, wit::core::TypeStruct};
-use common::typegraph::{ObjectTypeData, PolicyIndices, TypeNode};
 use errors::Result;
 use indexmap::IndexMap;
 use std::hash::Hash as _;
+use tg_schema::{ObjectTypeData, PolicyIndices, TypeNode};
 
 impl TypeStruct {
     pub fn get_prop(&self, key: &str) -> Option<TypeId> {

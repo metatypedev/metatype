@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
-use common::typegraph::{Auth, AuthProtocol, Cors, Rate};
 use indexmap::IndexMap;
+use tg_schema::{Auth, AuthProtocol, Cors, Rate};
 
 impl From<crate::wit::core::Cors> for Cors {
     fn from(value: crate::wit::core::Cors) -> Self {

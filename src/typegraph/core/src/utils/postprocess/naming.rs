@@ -6,12 +6,12 @@ use std::{
     rc::Rc,
 };
 
-use common::typegraph::{
+use indexmap::IndexSet;
+use sha2::{Digest, Sha256};
+use tg_schema::{
     visitor::{Edge, PathSegment},
     StringFormat, TypeNode, Typegraph,
 };
-use indexmap::IndexSet;
-use sha2::{Digest, Sha256};
 
 use crate::errors::TgError;
 
@@ -19,10 +19,7 @@ pub struct NamingProcessor {
     pub user_named: HashSet<u32>,
 }
 impl super::PostProcessor for NamingProcessor {
-    fn postprocess(
-        self,
-        tg: &mut common::typegraph::Typegraph,
-    ) -> Result<(), crate::errors::TgError> {
+    fn postprocess(self, tg: &mut tg_schema::Typegraph) -> Result<(), crate::errors::TgError> {
         let cx = VisitContext {
             tg,
             user_named: self.user_named,

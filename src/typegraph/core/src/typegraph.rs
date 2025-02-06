@@ -16,11 +16,6 @@ use crate::{
     errors::{self, Result},
     global_store::Store,
 };
-use common::typegraph::runtimes::TGRuntime;
-use common::typegraph::{
-    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
-    TypeNode, TypeNodeBase, Typegraph,
-};
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
@@ -28,6 +23,11 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hasher as _;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use tg_schema::runtimes::TGRuntime;
+use tg_schema::{
+    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
+    TypeNode, TypeNodeBase, Typegraph,
+};
 
 use crate::wit::core::{
     Artifact as WitArtifact, Error as TgError, MaterializerId, PolicyId, RuntimeId,
@@ -147,11 +147,11 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     Ok(())
 }
 
-pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegraph::Auth>> {
+pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<tg_schema::Auth>> {
     Store::get_auths()
         .iter()
         .map(|auth| match auth.protocol {
-            common::typegraph::AuthProtocol::OAuth2 => {
+            tg_schema::AuthProtocol::OAuth2 => {
                 let profiler_key = "profiler";
                 match auth.auth_data.get(profiler_key) {
                     Some(value) => match value {

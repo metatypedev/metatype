@@ -3,8 +3,8 @@
 
 use std::hash::Hash as _;
 
-use common::typegraph::{OptionalTypeData, TypeNode};
 use errors::Result;
+use tg_schema::{OptionalTypeData, TypeNode};
 
 use crate::{
     conversion::{

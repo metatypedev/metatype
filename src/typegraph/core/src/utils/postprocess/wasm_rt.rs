@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use crate::utils::{artifacts::ArtifactsExt, fs::FsContext};
-use common::typegraph::{
+use tg_schema::{
     runtimes::{KnownRuntime, TGRuntime},
     Typegraph,
 };

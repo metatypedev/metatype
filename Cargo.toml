@@ -9,7 +9,10 @@ members = [
   "src/typegate/engine",
   "src/typegate/standalone",
   "src/typegraph/core",
+  "src/typegraph/schema",
   "src/xtask",
+  "src/utils/grpc",
+  "src/utils/archive",
   "src/substantial",
   "src/metagen-client-rs",
   "tests/metagen/typegraphs/sample/rs",
@@ -32,10 +35,13 @@ edition = "2021"
 # internal crates
 mt_deno = { path = "src/mt_deno/" }
 common = { path = "src/common/" }
+tg_schema = { path = "src/typegraph/schema" }
 substantial = { path = "src/substantial/" }
 metagen = { path = "src/metagen/" }
 metagen-client = { path = "src/metagen-client-rs" }
 typegate_engine = { path = "src/typegate/engine" }
+grpc_utils = { path = "src/utils/grpc" }
+archive_utils = { path = "src/utils/archive" }
 
 # cli
 clap = "=4.5.13"

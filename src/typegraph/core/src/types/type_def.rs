@@ -14,9 +14,9 @@ use crate::wit::core::{
     TypeEither, TypeFile, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional, TypeString,
     TypeStruct, TypeUnion,
 };
-use common::typegraph::TypeNode;
 use enum_dispatch::enum_dispatch;
 use std::hash::Hash as _;
+use tg_schema::TypeNode;
 
 pub trait TypeDefData: Hashable {
     fn get_display_params_into(&self, params: &mut Vec<String>);
