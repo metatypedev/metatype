@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use common::typegraph::Typegraph;
+use typegraph_core::sdk::core::Artifact;
 
 #[derive(Default)]
 pub struct DependencyGraph {
@@ -15,10 +15,11 @@ pub struct DependencyGraph {
 }
 
 impl DependencyGraph {
-    pub fn update_typegraph(&mut self, path: PathBuf, tg: &Typegraph) {
+    pub fn update_typegraph(&mut self, path: PathBuf, artifacts: &[Artifact]) {
         let parent_dir = path.parent().unwrap();
-        let artifacts = tg.meta.artifacts.values();
-        let artifact_paths = artifacts.flat_map(|a| parent_dir.join(&a.path).canonicalize());
+        let artifact_paths = artifacts
+            .iter()
+            .flat_map(|a| parent_dir.join(&a.path).canonicalize());
         let deps = self.deps.entry(path.clone()).or_default();
         let old_deps = std::mem::replace(deps, artifact_paths.collect());
         let removed_deps = old_deps.difference(deps);

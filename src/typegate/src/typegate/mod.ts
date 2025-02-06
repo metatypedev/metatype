@@ -421,7 +421,7 @@ export class Typegate implements AsyncDisposable {
   ) {
     logger.warn(`Dropping "${name}": started`);
     const typegraphId = typegraphIdSchema.parse(JSON.parse(payload));
-    const [tg] = await typegraphStore.download(
+    const [tg] = await typegraphStore.downloadTypegraph(
       typegraphId,
     );
     const artifacts = new Set(

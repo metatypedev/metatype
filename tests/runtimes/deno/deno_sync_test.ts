@@ -225,7 +225,7 @@ Meta.test(
 Meta.test(
   {
     name: "DenoRuntime - Python SDK: multiple typegate instances in sync mode",
-    replicas: 1,
+    replicas: 3,
     syncConfig,
     async setup() {
       await clearSyncData(syncConfig);
@@ -237,9 +237,9 @@ Meta.test(
   },
   async (metaTest) => {
     const testMultipleReplica = async (instanceNumber: number) => {
-      const e = await metaTest.engine("runtimes/deno/deno_dep.py");
-
-      await sleep(5_000);
+      const e = await metaTest.engine("runtimes/deno/deno_dep.py", {
+        syncMode: true,
+      });
 
       await metaTest.should(
         `work on the typgate instance #${instanceNumber}`,

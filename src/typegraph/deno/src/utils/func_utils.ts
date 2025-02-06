@@ -8,11 +8,11 @@ import {
   type TgFinalizationResult,
   type TypegraphOutput,
 } from "../typegraph.ts";
-import type { ReduceEntry } from "../gen/typegraph_core.d.ts";
+import type { ReduceEntry } from "../gen/utils.ts";
 import { serializeStaticInjection } from "./injection_utils.ts";
-import type { SerializeParams } from "../gen/typegraph_core.d.ts";
+import type { SerializeParams } from "../gen/core.ts";
 import { log } from "../io.ts";
-import { core } from "../wit.ts";
+import { core } from "../sdk.ts";
 
 export function stringifySymbol(symbol: symbol): string {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -34,13 +34,18 @@ export function serializeConfig(config: ConfigSpec | undefined): string | null {
   if (array.length === 0) {
     return null;
   }
-  return JSON.stringify(array.reduce<Record<string, unknown>>((acc, item) => {
-    if (typeof item === "string") {
-      return { ...acc, [item]: true };
-    } else {
-      return { ...acc, ...item };
-    }
-  }, {} as Record<string, unknown>));
+  return JSON.stringify(
+    array.reduce<Record<string, unknown>>(
+      (acc, item) => {
+        if (typeof item === "string") {
+          return { ...acc, [item]: true };
+        } else {
+          return { ...acc, ...item };
+        }
+      },
+      {} as Record<string, unknown>,
+    ),
+  );
 }
 
 export type AsIdField = boolean | "simple" | "composite";
@@ -134,8 +139,8 @@ export function freezeTgOutput(
   config: SerializeParams,
   tgOutput: TypegraphOutput,
 ): TypegraphOutput {
-  frozenMemo[tgOutput.name] = frozenMemo[tgOutput.name] ??
-    tgOutput.serialize(config);
+  frozenMemo[tgOutput.name] =
+    frozenMemo[tgOutput.name] ?? tgOutput.serialize(config);
   return {
     ...tgOutput,
     serialize: () => frozenMemo[tgOutput.name],

@@ -43,7 +43,9 @@ pub struct Serialize {
     #[clap(short, long)]
     prefix: Option<String>,
 
-    #[clap(long)]
+    // FIXME: restructure the typegraph core to handle multiple threads
+    #[allow(unused)]
+    #[clap(skip = None)]
     max_parallel_loads: Option<usize>,
 }
 
@@ -79,15 +81,13 @@ impl Action for Serialize {
         }
 
         // TODO fail_fast
-        let mut init = TaskManagerInit::<SerializeAction>::new(
+        let init = TaskManagerInit::<SerializeAction>::new(
             config.clone(),
             action_generator,
             console,
             TaskSource::Static(self.files.clone()),
-        );
-        if let Some(max_parallel_tasks) = self.max_parallel_loads {
-            init = init.max_parallel_tasks(max_parallel_tasks);
-        }
+        )
+        .max_parallel_tasks(1); // FIXME: make the server work with multiple threads
 
         let report = init.run().await;
 

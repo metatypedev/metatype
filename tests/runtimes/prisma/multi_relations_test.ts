@@ -1,19 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta } from "test-utils/mod.ts";
+import { dropSchema } from "test-utils/database.ts";
 
 Meta.test("multiple relationships", async (t) => {
+  await dropSchema("prisma-multi");
   const e = await t.engine("runtimes/prisma/multi_relations.py", {
     secrets: {
       POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-multi",
     },
   });
-
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   await t.should("insert a simple record", async () => {
     await gql`

@@ -4,11 +4,11 @@
 use super::Materializer;
 use crate::errors::Result;
 use crate::global_store::Store;
+use crate::sdk::core::{FuncParams, RuntimeId};
+use crate::sdk::runtimes::Effect;
+use crate::sdk::runtimes::{TemporalOperationData, TemporalOperationType};
 use crate::t;
 use crate::t::TypeBuilder;
-use crate::wit::core::FuncParams;
-use crate::wit::runtimes::Effect as WitEffect;
-use crate::wit::runtimes::{RuntimeId, TemporalOperationData, TemporalOperationType};
 
 #[derive(Debug)]
 pub enum TemporalMaterializer {
@@ -32,7 +32,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
             inp.prop("task_queue", t::string().build()?);
             inp.prop("args", t::list(arg.into()).build()?);
             (
-                WitEffect::Create(false),
+                Effect::Create(false),
                 TemporalMaterializer::Start {
                     workflow_type: mat_arg,
                 },
@@ -50,7 +50,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
             inp.prop("run_id", t::string().build()?);
             inp.prop("args", t::list(arg.into()).build()?);
             (
-                WitEffect::Update(false),
+                Effect::Update(false),
                 TemporalMaterializer::Signal {
                     signal_name: mat_arg,
                 },
@@ -68,7 +68,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
             inp.prop("run_id", t::string().build()?);
             inp.prop("args", t::list(arg.into()).build()?);
             (
-                WitEffect::Read,
+                Effect::Read,
                 TemporalMaterializer::Query {
                     query_type: mat_arg,
                 },
@@ -94,7 +94,7 @@ pub fn temporal_operation(runtime: RuntimeId, data: TemporalOperationData) -> Re
                 ),
             ]);
             (
-                WitEffect::Read,
+                Effect::Read,
                 TemporalMaterializer::Describe,
                 out_ty.build()?,
             )

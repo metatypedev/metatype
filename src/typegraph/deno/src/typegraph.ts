@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as t from "./types.ts";
-import { core } from "./gen/typegraph_core.js";
-import { caller, fromFileUrl } from "./deps/mod.ts";
+import { core } from "./sdk.ts";
+import { caller, dirname, fromFileUrl } from "./deps/mod.ts";
 import type { InjectionValue } from "./utils/type_utils.ts";
 import {
   serializeFromParentInjection,
@@ -12,12 +12,12 @@ import {
 } from "./utils/injection_utils.ts";
 import {
   type Auth,
-  type Cors as CorsWit,
+  type Cors as CoreCors,
   type Rate,
-  wit_utils,
-} from "./wit.ts";
+  sdkUtils,
+} from "./sdk.ts";
 import { getPolicyChain } from "./types.ts";
-import type { Artifact, SerializeParams } from "./gen/typegraph_core.d.ts";
+import type { Artifact, SerializeParams } from "./gen/core.ts";
 import { Manager } from "./tg_manage.ts";
 import { log } from "./io.ts";
 import { hasCliEnv } from "./envs/cli.ts";
@@ -25,7 +25,7 @@ import process from "node:process";
 
 type Exports = Record<string, t.Func>;
 
-type Cors = Partial<CorsWit>;
+type Cors = Partial<CoreCors>;
 
 interface TypegraphArgs {
   name: string;
@@ -39,7 +39,10 @@ interface TypegraphArgs {
 }
 
 export class ApplyFromArg {
-  constructor(public name: string | null, public type: number | null) {}
+  constructor(
+    public name: string | null,
+    public type: number | null,
+  ) {}
 }
 
 export class ApplyFromStatic {
@@ -52,7 +55,10 @@ export class ApplyFromSecret {
 }
 
 export class ApplyFromContext {
-  constructor(public key: string | null, public type: number | null) {}
+  constructor(
+    public key: string | null,
+    public type: number | null,
+  ) {}
 }
 
 export class ApplyFromParent {
@@ -141,8 +147,6 @@ export interface TgFinalizationResult {
   ref_artifacts: Artifact[];
 }
 
-let counter = 0;
-
 export async function typegraph(
   name: string,
   builder: TypegraphBuilder,
@@ -156,15 +160,12 @@ export async function typegraph(
   nameOrArgs: string | TypegraphArgs | Omit<TypegraphArgs, "builder">,
   maybeBuilder?: TypegraphBuilder,
 ): Promise<TypegraphOutput> {
-  ++counter;
-  const args = typeof nameOrArgs === "string"
-    ? { name: nameOrArgs }
-    : nameOrArgs;
+  const args =
+    typeof nameOrArgs === "string" ? { name: nameOrArgs } : nameOrArgs;
 
   const { name, dynamic, cors, prefix, rate, secrets } = args;
-  const builder = "builder" in args
-    ? (args.builder as TypegraphBuilder)
-    : maybeBuilder!;
+  const builder =
+    "builder" in args ? (args.builder as TypegraphBuilder) : maybeBuilder!;
 
   const file = caller();
   if (!file) {
@@ -181,7 +182,7 @@ export async function typegraph(
     allowOrigin: [],
     exposeHeaders: [],
     maxAgeSec: undefined,
-  } as CorsWit;
+  } as CoreCors;
 
   const defaultRateFields = {
     localExcess: 0,
@@ -207,13 +208,13 @@ export async function typegraph(
       return new InheritDef();
     },
     rest: (graphql: string) => {
-      return wit_utils.addGraphqlEndpoint(graphql);
+      return sdkUtils.addGraphqlEndpoint(graphql);
     },
     auth: (value: Auth | RawAuth) => {
       if (value instanceof RawAuth) {
-        return wit_utils.addRawAuth(value.jsonStr);
+        return sdkUtils.addRawAuth(value.jsonStr);
       }
-      return wit_utils.addAuth(value);
+      return sdkUtils.addAuth(value);
     },
     ref: (name: string) => {
       return genRef(name);
@@ -231,7 +232,7 @@ export async function typegraph(
     if (err.payload && !err.cause) {
       err.cause = err.payload;
     }
-    if (("cause" in err) && ("stack" in err.cause)) {
+    if ("cause" in err && "stack" in err.cause) {
       console.error(`Error in typegraph '${name}':`);
       for (const msg of err.cause.stack) {
         console.error(`- ${msg}`);
@@ -270,24 +271,15 @@ export async function typegraph(
   if (hasCliEnv()) {
     const manager = new Manager(ret);
     await manager.run();
-
-    // TODO solve hanging process (stdin??)
-    setTimeout(() => {
-      if (counter === 0) {
-        log.debug("exiting");
-        process.exit(0);
-      }
-    }, 1000);
+    log.debug("exiting");
   }
-
-  --counter;
 
   return ret;
 }
 
 /** generate a type reference (by name) */
 export function genRef(name: string): t.Typedef {
-  const value = core.refb(name, null);
+  const value = core.refb(name);
   if (typeof value == "object") {
     throw new Error(JSON.stringify(value));
   }

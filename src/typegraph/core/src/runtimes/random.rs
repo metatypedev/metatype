@@ -3,15 +3,15 @@
 
 use crate::{
     errors::Result,
+    sdk::runtimes as sdk,
     types::{AsTypeDefEx as _, FindAttribute as _, TypeDef, TypeId},
-    wit::runtimes as wit,
 };
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub enum RandomMaterializer {
-    Runtime(wit::MaterializerRandom),
+    Runtime(sdk::MaterializerRandom),
 }
 
 #[derive(Debug, Serialize)]

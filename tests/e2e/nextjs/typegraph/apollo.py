@@ -6,7 +6,7 @@ from typegraph.graph.params import Cors
 from typegraph.providers.aws import S3Runtime
 
 
-@typegraph(cors=Cors(allow_origin="*"))
+@typegraph(cors=Cors(allow_origin=["*"]))
 def apollo(g: Graph):
     public = Policy.public()
 

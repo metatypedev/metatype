@@ -36,6 +36,7 @@ substantial = { path = "src/substantial/" }
 metagen = { path = "src/metagen/" }
 metagen-client = { path = "src/metagen-client-rs" }
 typegate_engine = { path = "src/typegate/engine" }
+typegraph_core = { path = "src/typegraph/core" }
 
 # cli
 clap = "=4.5.13"
@@ -129,7 +130,6 @@ rustpython-parser = "0.4.0"
 # wasm
 wasmtime = "25.0.2"
 wasmtime-wasi = "25.0.2"
-wit-bindgen = "0.34.0"
 
 # deno
 # deno = { path =  "../deno/cli" }
@@ -150,8 +150,6 @@ tracing-subscriber = { version = "0.3.18", features = [
 tracing-error = "0.2"
 # `unwrap` that also logs
 tracing-unwrap = { version = "1.0.1", features = ["log-location"] }
-# collect traces to file
-tracing-appender = "0.2.3"
 
 # async
 futures = "=0.3.30"                                   # pinned due to bug with .31 with zeromq (deno)

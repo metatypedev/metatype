@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import type {
-  MigrationAction,
-  SerializeParams,
-} from "./gen/typegraph_core.d.ts";
+import type { MigrationAction, SerializeParams } from "./gen/core.ts";
 import { ArtifactUploader } from "./tg_artifact_upload.ts";
 import type { TypegraphOutput } from "./typegraph.ts";
-import { wit_utils } from "./wit.ts";
+import { sdkUtils } from "./sdk.ts";
 import { execRequest } from "./utils/func_utils.ts";
 import { log } from "./io.ts";
 
 export class BasicAuth {
-  constructor(public username: string, public password: string) {}
+  constructor(
+    public username: string,
+    public password: string,
+  ) {}
   asHeaderValue(): string {
     return `Basic ${btoa(this.username + ":" + this.password)}`;
   }
@@ -60,6 +60,7 @@ export async function tgDeploy(
   params: TypegraphDeployParams,
 ): Promise<DeployResult> {
   const serializeParams = {
+    typegraphName: typegraph.name,
     typegraphPath: params.typegraphPath,
     prefix: params.prefix,
     artifactResolution: true,
@@ -111,7 +112,7 @@ export async function tgDeploy(
     {
       method: "POST",
       headers,
-      body: wit_utils.gqlDeployQuery({
+      body: sdkUtils.gqlDeployQuery({
         tg: tgJson,
         secrets: Object.entries(params.secrets ?? {}),
       }),
@@ -161,7 +162,7 @@ export async function tgRemove(
     {
       method: "POST",
       headers,
-      body: wit_utils.gqlRemoveQuery([typegraphName.toString()]),
+      body: sdkUtils.gqlRemoveQuery([typegraphName.toString()]),
     },
     `tgRemove failed to remove typegraph ${typegraphName}`,
     // deno-lint-ignore no-explicit-any
@@ -170,16 +171,13 @@ export async function tgRemove(
   return { typegate: response };
 }
 
-export async function pingTypegate(
-  url: URL,
-  headers: Headers,
-) {
+export async function pingTypegate(url: URL, headers: Headers) {
   await execRequest(
-      url,
+    url,
     {
       method: "POST",
       headers,
-      body: wit_utils.gqlPingQuery(),
+      body: sdkUtils.gqlPingQuery(),
     },
     "Failed to access typegate",
   );

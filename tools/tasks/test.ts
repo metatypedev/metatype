@@ -38,4 +38,11 @@ export default {
                 --exclude client_rs_static`;
     },
   },
+  "test-codegen": {
+    inherit: "ci",
+    workingDir: "./src/typegraph/specs/codegen",
+    async fn($) {
+      await $`bash -c "deno test --allow-env --allow-read --allow-ffi --allow-run"`;
+    },
+  },
 } satisfies Record<string, DenoTaskDefArgs>;

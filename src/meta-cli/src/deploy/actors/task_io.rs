@@ -24,6 +24,10 @@ mod message {
 
     #[derive(Message)]
     #[rtype(result = "()")]
+    pub(super) struct TaskResult<T, E>(pub Result<T, E>);
+
+    #[derive(Message)]
+    #[rtype(result = "()")]
     pub(super) struct SendRpcResponse(pub RpcResponse);
 
     #[derive(Message)]
@@ -51,7 +55,17 @@ impl RpcRequest {
         RpcResponse {
             jsonrpc: JsonRpcVersion::V2,
             id: self.id,
-            result,
+            body: RpcBody::Ok { result },
+        }
+    }
+
+    fn error(&self, message: String) -> RpcResponse {
+        RpcResponse {
+            jsonrpc: JsonRpcVersion::V2,
+            id: self.id,
+            body: RpcBody::Err {
+                error: RpcError { message },
+            },
         }
     }
 }
@@ -60,7 +74,21 @@ impl RpcRequest {
 struct RpcResponse {
     jsonrpc: JsonRpcVersion,
     id: u32,
-    result: serde_json::Value,
+    #[serde(flatten)]
+    body: RpcBody,
+}
+
+#[derive(Serialize, Debug)]
+#[serde(untagged)]
+enum RpcBody {
+    Ok { result: serde_json::Value },
+    Err { error: RpcError },
+}
+
+#[derive(Serialize, Debug)]
+struct RpcError {
+    //code: i32,
+    message: String,
 }
 
 pub(super) struct TaskIoActor<A: TaskAction + 'static> {
@@ -148,22 +176,22 @@ impl<A: TaskAction + 'static> Actor for TaskIoActor<A> {
 }
 
 #[derive(Deserialize, Debug)]
-struct RpcNotificationMessage {
+struct RpcNotification<S, F> {
     #[allow(dead_code)]
     jsonrpc: JsonRpcVersion,
     #[serde(flatten)]
-    notification: RpcNotification,
+    call: RpcNotificationKind<S, F>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(tag = "method", content = "params")]
-enum RpcNotification {
+enum RpcNotificationKind<S, F> {
     Debug { message: String },
     Info { message: String },
     Warning { message: String },
     Error { message: String },
-    Success { data: serde_json::Value },
-    Failure { data: serde_json::Value },
+    Success { data: S },
+    Failure { data: F },
 }
 
 impl<A: TaskAction + 'static> Handler<message::OutputLine> for TaskIoActor<A> {
@@ -197,8 +225,7 @@ impl<A: TaskAction + 'static> Handler<message::OutputLine> for TaskIoActor<A> {
             None => {
                 // a log message that were not outputted with the log library
                 // on the typegraph client
-                // --> as a debug message
-                console.debug(format!("{scope}$>{line}"));
+                console.info(format!("{scope}$>{line}"));
             }
         }
     }
@@ -236,9 +263,7 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
             }
         } else {
             // JSON-RPC notification
-            match serde_json::from_value::<RpcNotificationMessage>(message)
-                .map(|msg| msg.notification)
-            {
+            match serde_json::from_value(message) {
                 Ok(notification) => self.handle_rpc_notification(notification),
                 Err(err) => {
                     console.error(format!(
@@ -250,75 +275,71 @@ impl<A: TaskAction + 'static> TaskIoActor<A> {
         }
     }
 
-    fn handle_rpc_notification(&mut self, notification: RpcNotification) {
+    fn handle_rpc_notification(
+        &mut self,
+        notification: RpcNotification<A::SuccessData, A::FailureData>,
+    ) {
         let console = &self.console;
         let scope = self.get_console_scope();
-        match notification {
-            RpcNotification::Debug { message } => {
+
+        match notification.call {
+            RpcNotificationKind::Debug { message } => {
                 for line in message.lines() {
                     console.debug(format!("{scope} {line}"));
                 }
             }
-            RpcNotification::Info { message } => {
+            RpcNotificationKind::Info { message } => {
                 for line in message.lines() {
                     console.info(format!("{scope} {line}"));
                 }
             }
-            RpcNotification::Warning { message } => {
+            RpcNotificationKind::Warning { message } => {
                 for line in message.lines() {
                     console.warning(format!("{scope} {line}"));
                 }
             }
-            RpcNotification::Error { message } => {
+            RpcNotificationKind::Error { message } => {
                 for line in message.lines() {
                     console.error(format!("{scope} {line}"));
                 }
             }
-            RpcNotification::Success { data } => {
-                let data = match serde_json::from_value(data) {
-                    Ok(data) => data,
-                    Err(err) => {
-                        console.error(format!(
-                            "{scope} failed to validate JSON-RPC notification (success): {err}"
-                        ));
-                        // TODO cancel task?
-                        return;
-                    }
-                };
+            RpcNotificationKind::Success { data } => {
                 self.results.push(Ok(data));
             }
-            RpcNotification::Failure { data } => {
-                let data = match serde_json::from_value(data) {
-                    Ok(data) => data,
-                    Err(err) => {
-                        console.error(format!(
-                            "{scope} failed to validate JSON-RPC notification (failure): {err}"
-                        ));
-                        // TODO cancel task?
-                        return;
-                    }
-                };
+            RpcNotificationKind::Failure { data } => {
                 self.results.push(Err(data));
             }
         }
     }
 
     fn handle_rpc_request(&self, req: RpcRequest, self_addr: Addr<Self>, ctx: &mut Context<Self>) {
-        match serde_json::from_value::<A::RpcCall>(req.call.clone()) {
+        match serde_json::from_value::<A::RpcRequest>(req.call.clone()) {
             Ok(rpc_call) => {
                 let console = self.console.clone();
                 let action = self.action.clone();
                 let scope = self.get_console_scope();
 
                 let fut = async move {
-                    match action.get_rpc_response(&rpc_call).await {
-                        Ok(response) => {
-                            self_addr.do_send(message::SendRpcResponse(req.response(response)));
-                        }
+                    match action.handle_rpc_request(rpc_call).await {
+                        Ok(response) => match response {
+                            super::task::action::RpcResponse::Value(value) => {
+                                self_addr.do_send(message::SendRpcResponse(req.response(value)))
+                            }
+                            super::task::action::RpcResponse::TaskResult(result) => {
+                                // Wait for deploy to finish before exiting the process
+                                // in order to prevent task from hanging out
+                                // TODO: Send some actual data?
+                                let response = req.response(serde_json::Value::Null);
+                                self_addr.do_send(message::SendRpcResponse(response));
+                                self_addr.do_send(message::TaskResult(result))
+                            }
+                        },
                         Err(err) => {
-                            console.error(format!(
+                            // Handle error on the client side
+                            console.debug(format!(
                                 "{scope} failed to handle jsonrpc call {req:?}: {err}"
                             ));
+                            self_addr.do_send(message::SendRpcResponse(req.error(err.to_string())));
                             // TODO fail task?
                         }
                     }
@@ -361,6 +382,20 @@ impl<A: TaskAction + 'static> Handler<message::SendRpcResponse> for TaskIoActor<
                     .error(format!("could not serialize rpc response {e}"));
             }
         }
+    }
+}
+
+impl<A: TaskAction + 'static> Handler<message::TaskResult<A::SuccessData, A::FailureData>>
+    for TaskIoActor<A>
+{
+    type Result = ();
+
+    fn handle(
+        &mut self,
+        message: message::TaskResult<A::SuccessData, A::FailureData>,
+        _ctx: &mut Context<Self>,
+    ) {
+        self.results.push(message.0);
     }
 }
 

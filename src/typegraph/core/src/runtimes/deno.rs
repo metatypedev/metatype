@@ -3,7 +3,7 @@
 
 use common::typegraph::runtimes::deno::PredefinedFunctionMatData;
 
-use crate::wit::runtimes as wit;
+use crate::sdk::{core::MaterializerId, runtimes::MaterializerDenoFunc};
 
 #[derive(Debug)]
 pub struct MaterializerDenoModule {
@@ -14,7 +14,7 @@ pub struct MaterializerDenoModule {
 #[derive(Debug)]
 pub struct MaterializerDenoImport {
     pub func_name: String,
-    pub module: wit::MaterializerId,
+    pub module: MaterializerId,
     pub secrets: Vec<String>,
 }
 
@@ -26,7 +26,7 @@ pub struct MaterializerDenoStatic {
 #[derive(Debug)]
 pub enum DenoMaterializer {
     Static(MaterializerDenoStatic),
-    Inline(wit::MaterializerDenoFunc),
+    Inline(MaterializerDenoFunc),
     Predefined(PredefinedFunctionMatData),
     Module(MaterializerDenoModule),
     Import(MaterializerDenoImport),

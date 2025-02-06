@@ -8,9 +8,9 @@ use common::typegraph::{FileTypeData, TypeNode};
 use crate::conversion::hash::Hashable;
 use crate::conversion::types::{BaseBuilderInit, TypeConversion};
 use crate::errors::Result;
+use crate::sdk::core::TypeFile;
 use crate::typegraph::TypegraphContext;
 use crate::types::{ExtendedTypeDef, File, TypeDefData};
-use crate::wit::core::TypeFile;
 
 impl TypeDefData for TypeFile {
     fn get_display_params_into(&self, params: &mut Vec<String>) {

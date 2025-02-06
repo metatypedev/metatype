@@ -6,15 +6,13 @@ import type {
   Effect,
   HttpMethod,
   MaterializerHttpRequest,
-} from "../gen/typegraph_core.d.ts";
-import { runtimes } from "../wit.ts";
+} from "../gen/runtimes.ts";
+import { runtimes } from "../sdk.ts";
 import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 
-type HttpRequestMat<M extends string> =
-  & Materializer
-  & Omit<MaterializerHttpRequest, "method">
-  & {
+type HttpRequestMat<M extends string> = Materializer &
+  Omit<MaterializerHttpRequest, "method"> & {
     method: M;
   };
 

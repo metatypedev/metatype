@@ -3,9 +3,9 @@
 
 import { gql, Meta } from "../../utils/mod.ts";
 import { TestModule } from "../../utils/test_module.ts";
-import { dropSchemas, removeMigrations } from "test-utils/migrations.ts";
+import * as path from "@std/path";
 import { assertRejects, assertStringIncludes } from "@std/assert";
-import { randomPGConnStr, reset } from "test-utils/database.ts";
+import { dropSchema, randomPGConnStr, reset } from "test-utils/database.ts";
 
 const m = new TestModule(import.meta);
 
@@ -205,21 +205,20 @@ Meta.test(
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",
         "metatype.yml": "metatype.yml",
-        "utils/tg_deploy_script.py": "utils/tg_deploy_script.py",
       },
     },
   },
   async (t) => {
     const port = t.port!;
     const { connStr, schema } = randomPGConnStr();
-    const e = await t.engine("prisma.py", {
+    await dropSchema(schema);
+    const tgPath = path.join(t.workingDir, "prisma.py");
+    const e = await t.engine(tgPath, {
       secrets: {
         POSTGRES: connStr,
       },
+      createMigration: false,
     });
-
-    await dropSchemas(e);
-    await removeMigrations(e);
 
     const nodeConfigs = [
       "--target",
@@ -245,7 +244,7 @@ Meta.test(
     await t.should("fail on dirty repo", async () => {
       await t.shell(["bash", "-c", "touch README.md"]);
       await assertRejects(() =>
-        t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"])
+        t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"]),
       );
     });
 
@@ -306,21 +305,20 @@ Meta.test(
       content: {
         "prisma.py": "runtimes/prisma/prisma.py",
         "metatype.yml": "metatype.yml",
-        "utils/tg_deploy_script.py": "utils/tg_deploy_script.py",
       },
     },
   },
   async (t) => {
     const { connStr, schema } = randomPGConnStr();
-    const e = await t.engine("prisma.py", {
+    await dropSchema(schema);
+    const tgPath = path.join(t.workingDir, "prisma.py");
+    const e = await t.engine(tgPath, {
       secrets: {
         POSTGRES: connStr,
       },
       prefix: "pref-",
+      createMigration: false,
     });
-
-    await dropSchemas(e);
-    await removeMigrations(e);
 
     const nodeConfigs = [
       "-t",
