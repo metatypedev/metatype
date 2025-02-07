@@ -2,25 +2,25 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list 'Post_group' #408
-└─ item: struct #406
-   ├─ [_avg]: struct 'Post_number_fields_float' #398
-   │  └─ [id]: optional #396
-   │     └─ item: float #395
-   ├─ [_count]: struct 'Post_count_aggregate' #393
-   │  ├─ [_all]: optional #391
-   │  │  └─ item: integer #390
-   │  ├─ [author]: optional #391
-   │  │  └─ item: integer #390
-   │  ├─ [id]: optional #391
-   │  │  └─ item: integer #390
-   │  └─ [title]: optional #391
-   │     └─ item: integer #390
-   ├─ [_max]: &Post_number_fields #399
-   ├─ [_min]: &Post_number_fields #399
-   ├─ [_sum]: struct 'Post_number_fields' #405
-   │  └─ [id]: optional #403
-   │     └─ item: integer #402
-   ├─ [author]: &User #185
-   ├─ [id]: integer #183
-   └─ [title]: string #184
+root: list 'Post_group' #448
+└─ item: struct #446
+   ├─ [_avg]: struct 'Post_number_fields_float' #438
+   │  └─ [id]: optional #436
+   │     └─ item: float #435
+   ├─ [_count]: struct 'Post_count_aggregate' #433
+   │  ├─ [_all]: optional #431
+   │  │  └─ item: integer #430
+   │  ├─ [author]: optional #431
+   │  │  └─ item: integer #430
+   │  ├─ [id]: optional #431
+   │  │  └─ item: integer #430
+   │  └─ [title]: optional #431
+   │     └─ item: integer #430
+   ├─ [_max]: &Post_number_fields #439
+   ├─ [_min]: &Post_number_fields #439
+   ├─ [_sum]: struct 'Post_number_fields' #445
+   │  └─ [id]: optional #443
+   │     └─ item: integer #442
+   ├─ [author]: &User #225
+   ├─ [id]: integer #223
+   └─ [title]: string #224

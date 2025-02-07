@@ -86,7 +86,7 @@ impl TypeGen for Where {
                     let generated = if let Cardinality::Many = prop.quantifier {
                         context.generate(&CompleteFilter(ScalarListFilter(prop.type_id)))?
                     } else {
-                        match prop.prop_type {
+                        match &prop.prop_type {
                             ScalarType::Boolean => {
                                 context.generate(&CompleteFilter(BooleanFilter))?
                             }
@@ -96,8 +96,10 @@ impl TypeGen for Where {
                             ScalarType::Float => context.generate(&CompleteFilter(
                                 NumberFilter::new(NumberType::Float, self.aggregates), // TODO with aggregates??
                             ))?,
-                            ScalarType::String { .. } => {
-                                context.generate(&CompleteFilter(StringFilter))?
+                            ScalarType::String { format } => {
+                                context.generate(&CompleteFilter(StringFilter {
+                                    format: format.clone(),
+                                }))?
                             }
                         }
                     };

@@ -57,6 +57,16 @@ pub enum StringType {
     DateTime,
 }
 
+impl std::fmt::Display for StringType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StringType::Plain => write!(f, "string"),
+            StringType::Uuid => write!(f, "uuid"),
+            StringType::DateTime => write!(f, "date-time"),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type")]
 pub enum ScalarType {

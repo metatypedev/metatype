@@ -2,27 +2,27 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list 'Record_group' #173
-└─ item: struct #171
-   ├─ [_avg]: struct 'Record_number_fields_float' #163
-   │  └─ [age]: optional #161
-   │     └─ item: float #160
-   ├─ [_count]: struct 'Record_count_aggregate' #158
-   │  ├─ [_all]: optional #156
-   │  │  └─ item: integer #155
-   │  ├─ [age]: optional #156
-   │  │  └─ item: integer #155
-   │  ├─ [created_at]: optional #156
-   │  │  └─ item: integer #155
-   │  ├─ [id]: optional #156
-   │  │  └─ item: integer #155
-   │  └─ [name]: optional #156
-   │     └─ item: integer #155
-   ├─ [_max]: &Record_number_fields #164
-   ├─ [_min]: &Record_number_fields #164
-   ├─ [_sum]: struct 'Record_number_fields' #170
-   │  └─ [age]: optional #168
-   │     └─ item: integer #167
+root: list 'Record_group' #213
+└─ item: struct #211
+   ├─ [_avg]: struct 'Record_number_fields_float' #203
+   │  └─ [age]: optional #201
+   │     └─ item: float #200
+   ├─ [_count]: struct 'Record_count_aggregate' #198
+   │  ├─ [_all]: optional #196
+   │  │  └─ item: integer #195
+   │  ├─ [age]: optional #196
+   │  │  └─ item: integer #195
+   │  ├─ [created_at]: optional #196
+   │  │  └─ item: integer #195
+   │  ├─ [id]: optional #196
+   │  │  └─ item: integer #195
+   │  └─ [name]: optional #196
+   │     └─ item: integer #195
+   ├─ [_max]: &Record_number_fields #204
+   ├─ [_min]: &Record_number_fields #204
+   ├─ [_sum]: struct 'Record_number_fields' #210
+   │  └─ [age]: optional #208
+   │     └─ item: integer #207
    ├─ [age]: optional #7
    │  └─ item: integer #6
    ├─ [created_at]: string #1

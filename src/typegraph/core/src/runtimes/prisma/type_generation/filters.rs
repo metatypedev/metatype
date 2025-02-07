@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use tg_schema::runtimes::prisma::StringType;
+
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::t::{self, TypeBuilder};
@@ -112,11 +114,16 @@ impl TypeGen for NumberFilter {
     }
 }
 
-pub(super) struct StringFilter;
+pub(super) struct StringFilter {
+    pub format: StringType,
+}
 
 impl TypeGen for StringFilter {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        let type_id = t::string().build()?;
+        let type_id = match &self.format {
+            StringType::Plain => t::string().build()?,
+            custom => t::string().format(custom.to_string()).build()?,
+        };
         let opt_type_id = t::optional(type_id).build()?;
         let list_type_id = t::list(type_id).build()?;
 
@@ -141,7 +148,7 @@ impl TypeGen for StringFilter {
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
-        Ok("_prisma_string_filter".to_string())
+        Ok(format!("_prisma_{}_filter", self.format))
     }
 }
 

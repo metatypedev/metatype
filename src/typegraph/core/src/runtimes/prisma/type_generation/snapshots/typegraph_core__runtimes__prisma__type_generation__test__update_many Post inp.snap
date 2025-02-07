@@ -2,84 +2,84 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct #234
-├─ [data]: struct 'Post_update_input' #225
-│  ├─ [author]: optional #223
-│  │  └─ item: union #222
-│  │     ├─ variant_0: struct #206
-│  │     │  └─ [create]: struct 'User_create_input_excluding_rel_Post_User' #204
-│  │     │     ├─ [id]: integer #81
-│  │     │     └─ [name]: string #82
-│  │     ├─ variant_1: struct #207
-│  │     │  └─ [connect]: &User_where #164
-│  │     ├─ variant_2: struct #208
-│  │     │  └─ [connectOrCreate]: struct #205
-│  │     │     ├─ [create]: struct 'User_create_input_excluding_rel_Post_User' #204
-│  │     │     │  ├─ [id]: integer #81
-│  │     │     │  └─ [name]: string #82
-│  │     │     └─ [where]: &User_where #164
-│  │     └─ variant_3: struct #221
-│  │        └─ [update]: struct 'User_update_input_excluding_rel_Post_User' #220
-│  │           ├─ [id]: optional #215
-│  │           │  └─ item: union #214
-│  │           │     ├─ variant_0: integer #81
-│  │           │     ├─ variant_1: struct #210
-│  │           │     │  └─ [set]: integer #81
-│  │           │     ├─ variant_2: struct #211
-│  │           │     │  └─ [multiply]: integer #81
-│  │           │     ├─ variant_3: struct #212
-│  │           │     │  └─ [decrement]: integer #81
-│  │           │     └─ variant_4: struct #213
-│  │           │        └─ [increment]: integer #81
-│  │           └─ [name]: optional #218
-│  │              └─ item: union #217
-│  │                 ├─ variant_0: string #82
-│  │                 └─ variant_1: struct #216
-│  │                    └─ [set]: string #82
-│  ├─ [id]: optional #198
-│  │  └─ item: union #197
-│  │     ├─ variant_0: integer #89
-│  │     ├─ variant_1: struct #193
-│  │     │  └─ [set]: integer #89
-│  │     ├─ variant_2: struct #194
-│  │     │  └─ [multiply]: integer #89
-│  │     ├─ variant_3: struct #195
-│  │     │  └─ [decrement]: integer #89
-│  │     └─ variant_4: struct #196
-│  │        └─ [increment]: integer #89
-│  └─ [title]: optional #201
-│     └─ item: union #200
-│        ├─ variant_0: string #90
-│        └─ variant_1: struct #199
-│           └─ [set]: string #90
-└─ [where]: optional #233
-   └─ item: struct 'Post_query_where_input' #232
-      ├─ [AND]: optional #229
-      │  └─ item: list #228
-      │     └─ item: &Post_query_where_input #227
-      ├─ [NOT]: optional #230
-      │  └─ item: &Post_query_where_input #227
-      ├─ [OR]: optional #229
-      │  └─ item: list #228
-      │     └─ item: &Post_query_where_input #227
-      ├─ [author]: optional #127
-      │  └─ item: struct 'User_where_excluding_Post' #126
-      │     ├─ [id]: optional #114
-      │     │  └─ item: &_prisma_integer_filter_ex #52
-      │     ├─ [name]: optional #115
-      │     │  └─ item: &_prisma_string_filter_ex #30
-      │     └─ [posts]: optional #124
-      │        └─ item: union #123
-      │           ├─ variant_0: struct #118
-      │           │  └─ [every]: optional #117
-      │           │     └─ item: &Post_where #116
-      │           ├─ variant_1: struct #120
-      │           │  └─ [some]: optional #119
-      │           │     └─ item: &Post_where #116
-      │           └─ variant_2: struct #122
-      │              └─ [none]: optional #121
-      │                 └─ item: &Post_where #116
-      ├─ [id]: optional #111
-      │  └─ item: &_prisma_integer_filter_ex #52
-      └─ [title]: optional #112
-         └─ item: &_prisma_string_filter_ex #30
+root: struct #274
+├─ [data]: struct 'Post_update_input' #265
+│  ├─ [author]: optional #263
+│  │  └─ item: union #262
+│  │     ├─ variant_0: struct #246
+│  │     │  └─ [create]: struct 'User_create_input_excluding_rel_Post_User' #244
+│  │     │     ├─ [id]: integer #121
+│  │     │     └─ [name]: string #122
+│  │     ├─ variant_1: struct #247
+│  │     │  └─ [connect]: &User_where #204
+│  │     ├─ variant_2: struct #248
+│  │     │  └─ [connectOrCreate]: struct #245
+│  │     │     ├─ [create]: struct 'User_create_input_excluding_rel_Post_User' #244
+│  │     │     │  ├─ [id]: integer #121
+│  │     │     │  └─ [name]: string #122
+│  │     │     └─ [where]: &User_where #204
+│  │     └─ variant_3: struct #261
+│  │        └─ [update]: struct 'User_update_input_excluding_rel_Post_User' #260
+│  │           ├─ [id]: optional #255
+│  │           │  └─ item: union #254
+│  │           │     ├─ variant_0: integer #121
+│  │           │     ├─ variant_1: struct #250
+│  │           │     │  └─ [set]: integer #121
+│  │           │     ├─ variant_2: struct #251
+│  │           │     │  └─ [multiply]: integer #121
+│  │           │     ├─ variant_3: struct #252
+│  │           │     │  └─ [decrement]: integer #121
+│  │           │     └─ variant_4: struct #253
+│  │           │        └─ [increment]: integer #121
+│  │           └─ [name]: optional #258
+│  │              └─ item: union #257
+│  │                 ├─ variant_0: string #122
+│  │                 └─ variant_1: struct #256
+│  │                    └─ [set]: string #122
+│  ├─ [id]: optional #238
+│  │  └─ item: union #237
+│  │     ├─ variant_0: integer #129
+│  │     ├─ variant_1: struct #233
+│  │     │  └─ [set]: integer #129
+│  │     ├─ variant_2: struct #234
+│  │     │  └─ [multiply]: integer #129
+│  │     ├─ variant_3: struct #235
+│  │     │  └─ [decrement]: integer #129
+│  │     └─ variant_4: struct #236
+│  │        └─ [increment]: integer #129
+│  └─ [title]: optional #241
+│     └─ item: union #240
+│        ├─ variant_0: string #130
+│        └─ variant_1: struct #239
+│           └─ [set]: string #130
+└─ [where]: optional #273
+   └─ item: struct 'Post_query_where_input' #272
+      ├─ [AND]: optional #269
+      │  └─ item: list #268
+      │     └─ item: &Post_query_where_input #267
+      ├─ [NOT]: optional #270
+      │  └─ item: &Post_query_where_input #267
+      ├─ [OR]: optional #269
+      │  └─ item: list #268
+      │     └─ item: &Post_query_where_input #267
+      ├─ [author]: optional #167
+      │  └─ item: struct 'User_where_excluding_Post' #166
+      │     ├─ [id]: optional #154
+      │     │  └─ item: &_prisma_integer_filter_ex #72
+      │     ├─ [name]: optional #155
+      │     │  └─ item: &_prisma_string_filter_ex #51
+      │     └─ [posts]: optional #164
+      │        └─ item: union #163
+      │           ├─ variant_0: struct #158
+      │           │  └─ [every]: optional #157
+      │           │     └─ item: &Post_where #156
+      │           ├─ variant_1: struct #160
+      │           │  └─ [some]: optional #159
+      │           │     └─ item: &Post_where #156
+      │           └─ variant_2: struct #162
+      │              └─ [none]: optional #161
+      │                 └─ item: &Post_where #156
+      ├─ [id]: optional #151
+      │  └─ item: &_prisma_integer_filter_ex #72
+      └─ [title]: optional #152
+         └─ item: &_prisma_string_filter_ex #51
