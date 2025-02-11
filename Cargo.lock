@@ -13040,6 +13040,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "typegraph"
+version = "0.5.1-rc.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tg_schema",
+]
+
+[[package]]
 name = "typegraph_core"
 version = "0.5.1-rc.0"
 dependencies = [

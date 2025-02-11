@@ -9,6 +9,7 @@ members = [
   "src/typegate/standalone",
   "src/typegate_api",
   "src/typegraph/core",
+  "src/typegraph/graph",
   "src/typegraph/schema",
   "src/xtask",
   "src/utils/grpc",
@@ -43,6 +44,7 @@ typegate_engine = { path = "src/typegate/engine" }
 typegate_api = { path = "src/typegate_api" }
 grpc_utils = { path = "src/utils/grpc" }
 archive_utils = { path = "src/utils/archive" }
+typegraph = { path = "src/typegraph/graph" }
 
 # cli
 clap = "=4.5.13"

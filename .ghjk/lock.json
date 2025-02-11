@@ -977,7 +977,7 @@
               "ty": "denoFile@v1",
               "key": "test-codegen",
               "workingDir": "./src/typegraph/specs/codegen",
-              "envKey": "bciqbjavwy7rbire3zwlpgo2ifwzgnm6ywxqswnh6qxezwuvc4bqhrca"
+              "envKey": "bciqgfkhptprs54tg3wl45acxctzc2lu4v2xlh3slk6w4m5g5ctysv4a"
             },
             "test-rust": {
               "ty": "denoFile@v1",
@@ -1129,7 +1129,7 @@
             "build-tgraph-py": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-py",
-              "envKey": "bciqbk2kwzvfc2c5ti6x7z2pju22i3qkhn76hei4patfnwqv6xr4umlq"
+              "envKey": "bciqpei32hkwk37chtbyin65e3pvaeawn6cq3ytsihyxo54ixft7yyjq"
             },
             "build-tgraph-ts-jsr": {
               "ty": "denoFile@v1",
@@ -1139,12 +1139,12 @@
             "build-tgraph-rpc": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-rpc",
-              "envKey": "bciqeeh6cx5grefrnieyki54emcwuxb57ahioapdi6opi47dyg6hxgki"
+              "envKey": "bciqn7hev7ej5zg7cixajsoe5kpouah36nmzt2o7vsxnxgl6tou4z7cy"
             },
             "build-tgraph-ts": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-ts",
-              "envKey": "bciqpj74st4da74tgeqyzsppxpvncbekb65n2ow6tbcsfdcrdyq6smxy"
+              "envKey": "bciqdxfpgv43gmtbphf7wdom7n6wv3xvhrtexnqrokaok6ljbccma5by"
             },
             "build-tgraph-ts-node": {
               "ty": "denoFile@v1",
@@ -1152,12 +1152,12 @@
               "dependsOn": [
                 "build-tgraph-ts"
               ],
-              "envKey": "bciqpj74st4da74tgeqyzsppxpvncbekb65n2ow6tbcsfdcrdyq6smxy"
+              "envKey": "bciqdxfpgv43gmtbphf7wdom7n6wv3xvhrtexnqrokaok6ljbccma5by"
             },
             "build-tgraph-core": {
               "ty": "denoFile@v1",
               "key": "build-tgraph-core",
-              "envKey": "bciqlndcuvoua6nwkocqwfmugmbzrpk5yfr5wfv7mzazugh3ofyptv2a"
+              "envKey": "bciqg4j54df6d7tkfqx5g6fwnhuznqtrveerazjqzrtykguzhefcljpa"
             },
             "build-tgraph": {
               "ty": "denoFile@v1",
@@ -1762,7 +1762,7 @@
                 }
               ]
             },
-            "bciqlndcuvoua6nwkocqwfmugmbzrpk5yfr5wfv7mzazugh3ofyptv2a": {
+            "bciqg4j54df6d7tkfqx5g6fwnhuznqtrveerazjqzrtykguzhefcljpa": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1800,7 +1800,7 @@
                 }
               ]
             },
-            "bciqbk2kwzvfc2c5ti6x7z2pju22i3qkhn76hei4patfnwqv6xr4umlq": {
+            "bciqpei32hkwk37chtbyin65e3pvaeawn6cq3ytsihyxo54ixft7yyjq": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1838,7 +1838,7 @@
                 }
               ]
             },
-            "bciqeeh6cx5grefrnieyki54emcwuxb57ahioapdi6opi47dyg6hxgki": {
+            "bciqn7hev7ej5zg7cixajsoe5kpouah36nmzt2o7vsxnxgl6tou4z7cy": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1876,7 +1876,7 @@
                 }
               ]
             },
-            "bciqpj74st4da74tgeqyzsppxpvncbekb65n2ow6tbcsfdcrdyq6smxy": {
+            "bciqdxfpgv43gmtbphf7wdom7n6wv3xvhrtexnqrokaok6ljbccma5by": {
               "provides": [
                 {
                   "ty": "posix.envVar",
@@ -1886,7 +1886,7 @@
                 {
                   "ty": "posix.envVar",
                   "key": "TYPEGRAPH_VERSION",
-                  "val": "0.0.3"
+                  "val": "0.0.4"
                 },
                 {
                   "ty": "posix.envVar",
