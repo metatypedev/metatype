@@ -115,7 +115,7 @@ pub mod tests {
     // FIXME: this is also broken for some reason
     #[deno_core::op2]
     #[serde]
-    pub fn op_obj_go_round(#[state] ctx: &TestCtx, #[serde] incoming: In) -> Result<Out> {
+    pub fn op_obj_go_round(#[state] ctx: &TestCtx, #[serde] incoming: In) -> Result<Out, OpErr> {
         Ok(Out {
             a: incoming.a + ctx.val,
             b: incoming.b,
@@ -128,7 +128,7 @@ pub mod tests {
     async fn test_obj_go_round() -> Result<()> {
         let deno_factory = deno::factory::CliFactory::from_flags(
             deno::args::Flags {
-                unstable_config: deno::args::UnstableConfig {
+                unstable_config: deno::deno_lib::args::UnstableConfig {
                     legacy_flag_enabled: true,
                     ..Default::default()
                 },

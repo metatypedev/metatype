@@ -53,6 +53,7 @@ substantial.workspace = true
 
 # runtimes
 deno_core.workspace = true
+deno_error.workspace = true
 wasmtime = { workspace = true, features = ["component-model"] }
 wasmtime-wasi.workspace = true
 

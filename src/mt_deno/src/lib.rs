@@ -42,7 +42,7 @@ pub fn run_sync(
     main_mod: ModuleSpecifier,
     import_map_url: Option<String>,
     permissions: args::PermissionFlags,
-    custom_extensions: Arc<worker::CustomExtensionsCb>,
+    custom_extensions: Arc<deno_lib::worker::CustomExtensionsCb>,
 ) {
     new_thread_builder()
         .spawn(|| {
@@ -65,7 +65,7 @@ pub async fn run(
     main_module: ModuleSpecifier,
     import_map_url: Option<String>,
     permissions: args::PermissionFlags,
-    custom_extensions: Arc<worker::CustomExtensionsCb>,
+    custom_extensions: Arc<deno_lib::worker::CustomExtensionsCb>,
 ) -> anyhow::Result<()> {
     deno::util::v8::init_v8_flags(&[], &[], deno::util::v8::get_v8_flags_from_env());
 
@@ -79,7 +79,7 @@ pub async fn run(
     let flags = args::Flags {
         permissions,
         import_map_path: import_map_url,
-        unstable_config: args::UnstableConfig {
+        unstable_config: deno_lib::args::UnstableConfig {
             features: DEFAULT_UNSTABLE_FLAGS
                 .iter()
                 .copied()
@@ -116,7 +116,7 @@ pub fn test_sync(
     config_file: PathBuf,
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
-    custom_extensions: Arc<worker::CustomExtensionsCb>,
+    custom_extensions: Arc<deno_lib::worker::CustomExtensionsCb>,
     argv: Vec<String>,
 ) {
     new_thread_builder()
@@ -148,7 +148,7 @@ pub async fn test(
     config_file: PathBuf,
     permissions: PermissionsOptions,
     coverage_dir: Option<String>,
-    custom_extensions: Arc<worker::CustomExtensionsCb>,
+    custom_extensions: Arc<deno_lib::worker::CustomExtensionsCb>,
     argv: Vec<String>,
 ) -> anyhow::Result<()> {
     use deno::tools::test::*;
@@ -189,7 +189,7 @@ pub async fn test(
         ..Default::default()
     };
     let flags = args::Flags {
-        unstable_config: args::UnstableConfig {
+        unstable_config: deno_lib::args::UnstableConfig {
             features: DEFAULT_UNSTABLE_FLAGS
                 .iter()
                 .copied()
@@ -233,7 +233,7 @@ pub async fn test(
     .await?;
 
     if !test_options.permit_no_files && specifiers_with_mode.is_empty() {
-        return Err(deno_core::error::generic_error("No test modules found"));
+        return Err(deno_error::JsErrorBox::generic("No test modules found").into());
     }
     let doc_tests = get_doc_tests(&specifiers_with_mode, file_fetcher).await?;
     let specifiers_for_typecheck_and_test = get_target_specifiers(specifiers_with_mode, &doc_tests);
