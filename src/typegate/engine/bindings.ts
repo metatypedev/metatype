@@ -18,6 +18,7 @@ import type {
   TemporalWorkflowStartInput,
   WasmInput,
 } from "./runtime.js";
+import { Meta } from "./runtime.js";
 
 export function get_version() {
   return Meta.version();

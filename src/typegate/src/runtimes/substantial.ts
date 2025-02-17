@@ -11,7 +11,7 @@ import * as ast from "graphql/ast";
 import { path } from "compress/deps.ts";
 import { Artifact } from "../typegraph/types.ts";
 import { Typegate } from "../typegate/mod.ts";
-import { Backend } from "../../engine/runtime.js";
+import { type Backend, Meta } from "../../engine/runtime.js";
 import {
   Agent,
   AgentConfig,

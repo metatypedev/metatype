@@ -90,4 +90,4 @@ const Meta = {
   },
 };
 
-globalThis.Meta = Meta;
+globalThis.____Meta = Meta;

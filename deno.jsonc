@@ -1,6 +1,7 @@
 {
   // Deno doesn't suport remote workspaces so we must
   // use import maps for meta-cli to work from github sources
+  // but this prevents us from using imports in workspace configs
   "importMap": "./import_map.json",
   "workspace": {
     "members": [

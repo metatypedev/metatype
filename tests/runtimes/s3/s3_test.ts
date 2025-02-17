@@ -3,6 +3,9 @@
 
 import { assertEquals, assertExists } from "@std/assert";
 import { execute, gql, Meta } from "../../utils/mod.ts";
+console.log({
+  Meta
+})
 import {
   CreateBucketCommand,
   DeleteObjectsCommand,

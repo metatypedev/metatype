@@ -503,7 +503,7 @@ checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
 
 [[package]]
 name = "metagen-client"
-version = "0.5.0-rc.9"
+version = "0.5.0"
 dependencies = [
  "derive_more",
  "futures",
@@ -798,7 +798,7 @@ checksum = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
 
 [[package]]
 name = "sample_client"
-version = "0.5.0-rc.9"
+version = "0.5.0"
 dependencies = [
  "metagen-client",
  "serde",

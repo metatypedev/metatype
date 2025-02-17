@@ -6,6 +6,7 @@ import type { WitWireMatInfo } from "../../../engine/runtime.js";
 import type { ResolverArgs } from "../../types.ts";
 import type { Typegate } from "../../typegate/mod.ts";
 import { getLogger } from "../../log.ts";
+import { Meta } from "../../../engine/runtime.js";
 
 const logger = getLogger(import.meta);
 
