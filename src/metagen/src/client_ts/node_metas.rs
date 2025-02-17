@@ -15,9 +15,9 @@ use crate::{
 };
 
 pub struct TsNodeMetasRenderer {
-    pub name_mapper: Rc<super::NameMapper>,
-    pub named_types: Rc<std::sync::Mutex<IndexSet<u32>>>,
-    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
+    pub name_mapper: Arc<super::NameMapper>,
+    pub named_types: Arc<std::sync::Mutex<IndexSet<u32>>>,
+    pub input_files: Arc<HashMap<u32, Vec<TypePath>>>,
 }
 
 impl TsNodeMetasRenderer {
@@ -26,7 +26,7 @@ impl TsNodeMetasRenderer {
         &self,
         dest: &mut impl Write,
         ty_name: &str,
-        props: IndexMap<String, Rc<str>>,
+        props: IndexMap<String, Arc<str>>,
     ) -> std::fmt::Result {
         write!(
             dest,
@@ -57,7 +57,7 @@ impl TsNodeMetasRenderer {
         dest: &mut impl Write,
         ty_name: &str,
         return_node: &str,
-        argument_fields: Option<IndexMap<String, Rc<str>>>,
+        argument_fields: Option<IndexMap<String, Arc<str>>>,
         input_files: Option<String>,
     ) -> std::fmt::Result {
         write!(
@@ -108,7 +108,7 @@ impl TsNodeMetasRenderer {
         &self,
         dest: &mut TypeRenderer,
         ty_name: &str,
-        variants: IndexMap<String, Rc<str>>,
+        variants: IndexMap<String, Arc<str>>,
     ) -> std::fmt::Result {
         write!(
             dest,

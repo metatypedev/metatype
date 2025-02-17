@@ -1,174 +1,253 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::interlude::*;
+use crate::naming::NamingEngine;
+use crate::runtimes::{convert_materializer, Materializer};
+use crate::types::{BooleanType, TypeNodeExt, WeakType};
+use crate::{FunctionType, IntegerType, ObjectProperty, ObjectType, Type, TypeNode as _};
+pub use key::{Key, Path, PathSegment, ValueTypeKey};
 use std::collections::HashMap;
+use tg_schema::runtimes::TGRuntime;
 
-use crate::types::{BooleanType, WeakType};
-use crate::{IntegerType, Lrc, ObjectProperty, Type};
+mod key;
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum Scope {
-    Input { parent_fn: u32 },
-    Output { parent_fn: u32 },
-    Namespace,
+// enum ValueTypeKind {
+//     Input,
+//     Output,
+// }
+
+/// A conversion map is associated to each type in the typegraph schema.
+/// Functions and namespace objects are converted to a single node,
+/// while value types are converted into one or more input types and one or more output types.
+#[derive(Debug, Default)]
+pub enum ConversionMap {
+    #[default]
+    Unset,
+    ValueType {
+        inputs: HashMap<ValueTypeKey, Type>,
+        outputs: HashMap<ValueTypeKey, Type>,
+    },
+    Function(Arc<FunctionType>),
+    NsObject(Arc<ObjectType>),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum PathSegment {
-    ObjectProp(Lrc<str>),
-    ListItem,
-    Optional,
-    UnionVariant(u32),
-    EitherVariant(u32),
-}
-
-type Path = Vec<PathSegment>;
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct ConversionKey {
-    scope: Scope,
-    path: Path,
-}
-
-impl ConversionKey {
-    fn push(&self, segment: PathSegment) -> ConversionKey {
-        let mut path = self.path.clone();
-        path.push(segment);
-        ConversionKey {
-            scope: self.scope.clone(),
-            path,
+impl ConversionMap {
+    pub fn register_input(&mut self, key: ValueTypeKey, typ: Type) {
+        match self {
+            ConversionMap::ValueType { inputs, .. } => {
+                inputs.insert(key, typ);
+            }
+            _ => unreachable!(), // TODO error
         }
     }
-}
 
-impl From<(Scope, Path)> for ConversionKey {
-    fn from((scope, path): (Scope, Path)) -> Self {
-        ConversionKey { scope, path }
+    pub fn register_output(&mut self, key: ValueTypeKey, typ: Type) {
+        match self {
+            ConversionMap::ValueType { outputs, .. } => {
+                outputs.insert(key, typ);
+            }
+            _ => unreachable!(), // TODO error
+        }
     }
 }
 
 pub struct Conversion {
-    schema: Lrc<tg_schema::Typegraph>,
-    types: Vec<HashMap<ConversionKey, WeakType>>,
+    schema: Arc<tg_schema::Typegraph>,
+    types: Vec<ConversionMap>,
+    input_types: HashMap<ValueTypeKey, Type>,
+    output_types: HashMap<ValueTypeKey, Type>,
+    functions: HashMap<u32, Arc<FunctionType>>,
+    namespace_objects: HashMap<Vec<Arc<str>>, Arc<ObjectType>>,
+    materializers: Vec<Materializer>,
+    runtimes: Vec<Arc<TGRuntime>>,
 }
 
 impl Conversion {
-    fn new(schema: Lrc<tg_schema::Typegraph>) -> Conversion {
+    fn new(schema: Arc<tg_schema::Typegraph>) -> Conversion {
         let mut types = Vec::with_capacity(schema.types.len());
+        let runtimes: Vec<_> = schema.runtimes.iter().map(|rt| rt.clone().into()).collect();
+        let materializers = schema
+            .materializers
+            .iter()
+            .map(|mat| convert_materializer(&runtimes, mat.clone()))
+            .collect();
+
         types.resize_with(schema.types.len(), Default::default);
         Conversion {
             schema: schema.clone(),
             types,
+            input_types: Default::default(),
+            output_types: Default::default(),
+            functions: Default::default(),
+            namespace_objects: Default::default(),
+            materializers,
+            runtimes,
         }
     }
 
-    pub fn convert(schema: Lrc<tg_schema::Typegraph>) -> crate::Typegraph {
+    pub fn convert<NE>(schema: Arc<tg_schema::Typegraph>, naming_engine: NE) -> crate::Typegraph
+    where
+        NE: NamingEngine,
+    {
         let mut conv = Conversion::new(schema.clone());
-        let root = conv.convert_type(
-            WeakType::Object(Default::default()),
-            0,
-            (Scope::Namespace, vec![]).into(),
-        );
+        let root = conv.convert_type(WeakType::Object(Default::default()), 0, Key::root());
+        let mut ne = naming_engine;
+        for map in conv.types.iter() {
+            match map {
+                ConversionMap::Function(func) => ne.name_function(func),
+                ConversionMap::NsObject(obj) => ne.name_ns_object(obj),
+                ConversionMap::ValueType { inputs, outputs } => {
+                    ne.name_value_types(inputs, outputs)
+                }
+                ConversionMap::Unset => (),
+            }
+        }
+        let reg = std::mem::take(ne.registry());
         crate::Typegraph {
             schema,
-            root,
-            types: conv.types,
+            root: root.as_object().unwrap().clone(),
+            input_types: conv.input_types,
+            output_types: conv.output_types,
+            functions: conv.functions,
+            namespace_objects: conv.namespace_objects,
+            named: reg.map,
         }
     }
 
-    fn register_type(&mut self, type_idx: u32, key: ConversionKey, typ: Type) -> Type {
-        self.types[type_idx as usize].insert(key, typ.downgrade());
+    fn register_type(&mut self, typ: Type) -> Type {
+        let idx = typ.base().type_idx as usize;
+        // let ty = typ.clone();
+        match typ.key() {
+            Key::Function(fn_idx) => {
+                let func = typ.as_func().unwrap();
+                self.functions.insert(*fn_idx, func.clone());
+                self.types[idx] = ConversionMap::Function(func.clone());
+            }
+            Key::NsObject(path) => {
+                let obj = typ.assert_object().unwrap();
+                self.namespace_objects.insert(path.clone(), obj.clone());
+                self.types[idx] = ConversionMap::NsObject(obj.clone());
+            }
+            Key::Input(key) => {
+                self.input_types.insert(key.clone(), typ.clone());
+                match &self.types[idx] {
+                    ConversionMap::Unset => {
+                        self.types[idx] = ConversionMap::ValueType {
+                            inputs: Default::default(),
+                            outputs: Default::default(),
+                        };
+                    }
+                    _ => (),
+                }
+                self.types[idx].register_input(key.clone(), typ.clone());
+            }
+            Key::Output(key) => {
+                self.output_types.insert(key.clone(), typ.clone());
+                if !matches!(self.types[idx], ConversionMap::ValueType { .. }) {
+                    self.types[idx] = ConversionMap::ValueType {
+                        inputs: Default::default(),
+                        outputs: Default::default(),
+                    };
+                }
+                self.types[idx].register_output(key.clone(), typ.clone());
+            }
+        }
         typ
     }
 
-    pub fn convert_type(&mut self, parent: WeakType, type_idx: u32, key: ConversionKey) -> Type {
+    pub fn convert_type(&mut self, parent: WeakType, type_idx: u32, key: Key) -> Type {
         let schema = self.schema.clone();
         let type_node = &schema.types[type_idx as usize];
         use tg_schema::TypeNode as N;
 
         {
             let cache = &self.types[type_idx as usize];
-            // FIXME(perf) different conversion keys might yield the same type
-            if let Some(t) = cache.get(&key) {
-                // TODO assert same parent
-                return t.upgrade().unwrap();
+            match (&key, cache) {
+                (_, ConversionMap::Unset) => (),
+                (Key::NsObject(_), ConversionMap::NsObject(obj)) => {
+                    if obj.base().type_idx == type_idx {
+                        return Type::Object(obj.clone());
+                    }
+                }
+                (Key::Input(key), ConversionMap::ValueType { inputs, .. }) => {
+                    if let Some(t) = inputs.get(&key) {
+                        return t.clone();
+                    }
+                }
+                (Key::Output(key), ConversionMap::ValueType { outputs, .. }) => {
+                    if let Some(t) = outputs.get(&key) {
+                        return t.clone();
+                    }
+                }
+                (Key::Function(fn_idx), ConversionMap::Function(func)) => {
+                    if func.base().type_idx == *fn_idx {
+                        return Type::Function(func.clone());
+                    }
+                }
+                _ => unreachable!(),
             }
         }
 
         match type_node {
-            N::Boolean { base } => self.register_type(
-                type_idx,
-                key,
-                Type::Boolean(
-                    BooleanType {
-                        base: Self::base(parent, type_idx, base),
-                    }
-                    .into(),
-                ),
-            ),
-            N::Integer { base, data } => self.register_type(
-                type_idx,
-                key,
-                Type::Integer(
-                    IntegerType {
-                        base: Self::base(parent, type_idx, base),
-                        minimum: data.minimum,
-                        maximum: data.maximum,
-                        exclusive_minimum: data.exclusive_minimum,
-                        exclusive_maximum: data.exclusive_maximum,
-                        multiple_of: data.multiple_of,
-                    }
-                    .into(),
-                ),
-            ),
-            N::Float { base, data } => self.register_type(
-                type_idx,
-                key,
-                Type::Float(
-                    crate::FloatType {
-                        base: Self::base(parent, type_idx, base),
-                        minimum: data.minimum,
-                        maximum: data.maximum,
-                        exclusive_minimum: data.exclusive_minimum,
-                        exclusive_maximum: data.exclusive_maximum,
-                        multiple_of: data.multiple_of,
-                    }
-                    .into(),
-                ),
-            ),
-            N::String { base, data } => self.register_type(
-                type_idx,
-                key,
-                Type::String(
-                    crate::StringType {
-                        base: Self::base(parent, type_idx, base),
-                        pattern: data.pattern.clone(),
-                        format: data.format.clone(),
-                        min_length: data.min_length,
-                        max_length: data.max_length,
-                    }
-                    .into(),
-                ),
-            ),
-            N::File { base, data } => self.register_type(
-                type_idx,
-                key,
-                Type::File(
-                    crate::FileType {
-                        base: Self::base(parent, type_idx, base),
-                        min_size: data.min_size,
-                        max_size: data.max_size,
-                        mime_types: data.mime_types.clone(),
-                    }
-                    .into(),
-                ),
-            ),
+            N::Boolean { base } => self.register_type(Type::Boolean(
+                BooleanType {
+                    base: Self::base(key, parent, type_idx, base),
+                }
+                .into(),
+            )),
+            N::Integer { base, data } => self.register_type(Type::Integer(
+                IntegerType {
+                    base: Self::base(key, parent, type_idx, base),
+                    minimum: data.minimum,
+                    maximum: data.maximum,
+                    exclusive_minimum: data.exclusive_minimum,
+                    exclusive_maximum: data.exclusive_maximum,
+                    multiple_of: data.multiple_of,
+                }
+                .into(),
+            )),
+            N::Float { base, data } => self.register_type(Type::Float(
+                crate::FloatType {
+                    base: Self::base(key, parent, type_idx, base),
+                    minimum: data.minimum,
+                    maximum: data.maximum,
+                    exclusive_minimum: data.exclusive_minimum,
+                    exclusive_maximum: data.exclusive_maximum,
+                    multiple_of: data.multiple_of,
+                }
+                .into(),
+            )),
+            N::String { base, data } => self.register_type(Type::String(
+                crate::StringType {
+                    base: Self::base(key, parent, type_idx, base),
+                    pattern: data.pattern.clone(),
+                    format: data.format.clone(),
+                    min_length: data.min_length,
+                    max_length: data.max_length,
+                    enumeration: base.enumeration.clone(),
+                }
+                .into(),
+            )),
+            N::File { base, data } => self.register_type(Type::File(
+                crate::FileType {
+                    base: Self::base(key, parent, type_idx, base),
+                    min_size: data.min_size,
+                    max_size: data.max_size,
+                    mime_types: data.mime_types.clone(),
+                }
+                .into(),
+            )),
             N::Optional { base, data } => self.convert_optional(parent, type_idx, key, base, data),
             N::List { base, data } => self.convert_list(parent, type_idx, key, base, data),
             N::Object { base, data } => self.convert_object(parent, type_idx, key, base, data),
-            N::Either { base, data } => self.convert_either(parent, type_idx, key, base, data),
-            N::Union { base, data } => self.convert_union(parent, type_idx, key, base, data),
-            N::Function { base, data } => self.convert_function(parent, type_idx, key, base, data),
+            N::Either { base, data } => {
+                self.convert_union(parent, type_idx, key, base, &data.one_of, true)
+            }
+            N::Union { base, data } => {
+                self.convert_union(parent, type_idx, key, base, &data.any_of, false)
+            }
+            N::Function { base, data } => self.convert_function(parent, type_idx, base, data),
             N::Any { .. } => unreachable!(), // FIXME is this still used?
         }
     }
@@ -177,24 +256,24 @@ impl Conversion {
         &mut self,
         parent: WeakType,
         type_idx: u32,
-        key: ConversionKey,
+        key: Key,
         base: &tg_schema::TypeNodeBase,
         data: &tg_schema::OptionalTypeData,
     ) -> Type {
-        let res = self.register_type(
-            type_idx,
-            key.clone(),
-            Type::Optional(
-                crate::OptionalType {
-                    base: Self::base(parent, type_idx, base),
-                    item: Default::default(),
-                    default_value: data.default_value.clone(),
-                }
-                .into(),
-            ),
-        );
+        let res = self.register_type(Type::Optional(
+            crate::OptionalType {
+                base: Self::base(key.clone(), parent, type_idx, base),
+                item: Default::default(),
+                default_value: data.default_value.clone(),
+            }
+            .into(),
+        ));
 
-        let item = self.convert_type(res.downgrade(), data.item, key.push(PathSegment::Optional));
+        let item = self.convert_type(
+            res.downgrade(),
+            data.item,
+            key.push(PathSegment::OptionalItem),
+        );
 
         match &res {
             Type::Optional(opt) => {
@@ -211,24 +290,20 @@ impl Conversion {
         &mut self,
         parent: WeakType,
         type_idx: u32,
-        key: ConversionKey,
+        key: Key,
         base: &tg_schema::TypeNodeBase,
         data: &tg_schema::ListTypeData,
     ) -> Type {
-        let res = self.register_type(
-            type_idx,
-            key.clone(),
-            Type::List(
-                crate::ListType {
-                    base: Self::base(parent, type_idx, base),
-                    item: Default::default(),
-                    min_items: data.min_items,
-                    max_items: data.max_items,
-                    unique_items: data.unique_items.unwrap_or(false),
-                }
-                .into(),
-            ),
-        );
+        let res = self.register_type(Type::List(
+            crate::ListType {
+                base: Self::base(key.clone(), parent, type_idx, base),
+                item: Default::default(),
+                min_items: data.min_items,
+                max_items: data.max_items,
+                unique_items: data.unique_items.unwrap_or(false),
+            }
+            .into(),
+        ));
 
         let item = self.convert_type(res.downgrade(), data.items, key.push(PathSegment::ListItem));
 
@@ -247,26 +322,22 @@ impl Conversion {
         &mut self,
         parent: WeakType,
         type_idx: u32,
-        key: ConversionKey,
+        key: Key,
         base: &tg_schema::TypeNodeBase,
         data: &tg_schema::ObjectTypeData,
     ) -> Type {
-        let res = self.register_type(
-            type_idx,
-            key.clone(),
-            Type::Object(
-                crate::ObjectType {
-                    base: Self::base(parent, type_idx, base),
-                    properties: Default::default(),
-                }
-                .into(),
-            ),
-        );
+        let res = self.register_type(Type::Object(
+            crate::ObjectType {
+                base: Self::base(key.clone(), parent, type_idx, base),
+                properties: Default::default(),
+            }
+            .into(),
+        ));
 
         let mut properties = HashMap::with_capacity(data.properties.len());
 
         for (name, &prop) in &data.properties {
-            let name: Lrc<str> = name.clone().into();
+            let name: Arc<str> = name.clone().into();
             let key = key.push(PathSegment::ObjectProp(name.clone()));
             let prop_type = self.convert_type(res.downgrade(), prop, key);
             properties.insert(
@@ -296,25 +367,23 @@ impl Conversion {
         &mut self,
         parent: WeakType,
         type_idx: u32,
-        key: ConversionKey,
+        key: Key,
         base: &tg_schema::TypeNodeBase,
-        data: &tg_schema::UnionTypeData,
+        variant_indices: &[u32],
+        either: bool,
     ) -> Type {
-        let res = self.register_type(
-            type_idx,
-            key.clone(),
-            Type::Union(
-                crate::UnionType {
-                    base: Self::base(parent, type_idx, base),
-                    variants: Default::default(),
-                }
-                .into(),
-            ),
-        );
+        let res = self.register_type(Type::Union(
+            crate::UnionType {
+                base: Self::base(key.clone(), parent, type_idx, base),
+                variants: Default::default(),
+                either,
+            }
+            .into(),
+        ));
 
-        let mut variants = Vec::with_capacity(data.any_of.len());
+        let mut variants = Vec::with_capacity(variant_indices.len());
 
-        for (i, &variant_idx) in data.any_of.iter().enumerate() {
+        for (i, &variant_idx) in variant_indices.iter().enumerate() {
             let key = key.push(PathSegment::UnionVariant(i as u32));
             let variant_type = self.convert_type(res.downgrade(), variant_idx, key);
             variants.push(variant_type);
@@ -331,93 +400,40 @@ impl Conversion {
         res
     }
 
-    fn convert_either(
-        &mut self,
-        parent: WeakType,
-        type_idx: u32,
-        key: ConversionKey,
-        base: &tg_schema::TypeNodeBase,
-        data: &tg_schema::EitherTypeData,
-    ) -> Type {
-        let res = self.register_type(
-            type_idx,
-            key.clone(),
-            Type::Either(
-                crate::EitherType {
-                    base: Self::base(parent, type_idx, base),
-                    variants: Default::default(),
-                }
-                .into(),
-            ),
-        );
-
-        let mut variants = Vec::with_capacity(data.one_of.len());
-
-        for (i, &variant_idx) in data.one_of.iter().enumerate() {
-            let key = key.push(PathSegment::EitherVariant(i as u32));
-            let variant_type = self.convert_type(res.downgrade(), variant_idx, key);
-            variants.push(variant_type);
-        }
-
-        match &res {
-            Type::Either(either) => {
-                // TODO error handling
-                either.variants.set(variants).unwrap();
-            }
-            _ => unreachable!(),
-        }
-
-        res
-    }
-
     fn convert_function(
         &mut self,
         parent: WeakType,
         type_idx: u32,
-        key: ConversionKey,
         base: &tg_schema::TypeNodeBase,
         data: &tg_schema::FunctionTypeData,
     ) -> Type {
-        let res = self.register_type(
-            type_idx,
-            key.clone(),
-            Type::Function(
-                crate::FunctionType {
-                    base: Self::base(parent, type_idx, base),
-                    input: Default::default(),
-                    output: Default::default(),
-                    parameter_transform: data.parameter_transform.clone(),
-                    runtime_config: data.runtime_config.clone(),
-                    materializer: Default::default(), // TODO
-                    rate_weight: data.rate_weight,
-                    rate_calls: data.rate_calls,
-                }
-                .into(),
-            ),
-        );
+        let res = self.register_type(Type::Function(
+            crate::FunctionType {
+                base: Self::base(Key::Function(type_idx), parent, type_idx, base),
+                input: Default::default(),
+                output: Default::default(),
+                parameter_transform: data.parameter_transform.clone(),
+                runtime_config: data.runtime_config.clone(),
+                materializer: self.materializers[data.materializer as usize].clone(),
+                rate_weight: data.rate_weight,
+                rate_calls: data.rate_calls,
+            }
+            .into(),
+        ));
+
+        let weak = res.downgrade();
+        let weak = weak.as_func().unwrap();
 
         let input = self.convert_type(
             res.downgrade(),
             data.input,
-            (
-                Scope::Input {
-                    parent_fn: type_idx,
-                },
-                vec![],
-            )
-                .into(),
+            Key::input(weak.clone(), vec![]),
         );
 
         let output = self.convert_type(
             res.downgrade(),
             data.output,
-            (
-                Scope::Output {
-                    parent_fn: type_idx,
-                },
-                vec![],
-            )
-                .into(),
+            Key::output(weak.clone(), vec![]),
         );
 
         match &res {
@@ -440,11 +456,18 @@ impl Conversion {
         res
     }
 
-    fn base(parent: WeakType, type_idx: u32, base: &tg_schema::TypeNodeBase) -> crate::TypeBase {
+    fn base(
+        key: Key,
+        parent: WeakType,
+        type_idx: u32,
+        base: &tg_schema::TypeNodeBase,
+    ) -> crate::TypeBase {
         crate::TypeBase {
+            key,
             parent,
             type_idx,
             title: base.title.clone(),
+            name: Default::default(),
             description: base.description.clone(),
         }
     }

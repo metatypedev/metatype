@@ -7,6 +7,8 @@ pub mod utils;
 use core::fmt::Write;
 use std::borrow::Cow;
 
+use typegraph::TypeNodeExt as _;
+
 use crate::interlude::*;
 use crate::shared::*;
 use crate::*;
@@ -72,7 +74,7 @@ impl FdkTypescriptTemplate {
     fn render_fdk_ts(
         &self,
         config: &FdkTypescriptGenConfig,
-        tg: &Typegraph,
+        tg: Arc<Typegraph>,
     ) -> anyhow::Result<String> {
         let mut fdk_ts = GenDestBuf {
             buf: Default::default(),
@@ -87,27 +89,24 @@ impl FdkTypescriptTemplate {
         )?;
         writeln!(&mut fdk_ts)?;
         self.gen_static(&mut fdk_ts)?;
-        let ty_name_memo = render_types(&mut fdk_ts, tg)?;
+        let ty_name_memo = render_types(&mut fdk_ts, tg.clone())?;
         writeln!(&mut fdk_ts)?;
         {
             let stubbed_rts = config
                 .stubbed_runtimes
                 .clone()
                 .unwrap_or_else(|| vec!["deno".to_string()]);
-            let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
+            let stubbed_funs = filter_stubbed_funcs(&tg, &stubbed_rts).wrap_err_with(|| {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             for fun in &stubbed_funs {
-                let TypeNode::Function { base, data } = &fun.node else {
-                    unreachable!()
-                };
                 let inp_ty = ty_name_memo
-                    .get(&data.input)
+                    .get(&fun.input().name())
                     .context("input type for function not found")?;
                 let out_ty = ty_name_memo
-                    .get(&data.output)
+                    .get(&fun.output().name())
                     .context("output type for function not found")?;
-                let type_name: String = utils::normalize_type_title(&base.title);
+                let type_name: String = utils::normalize_type_title(&fun.base.title);
                 writeln!(
                     &mut fdk_ts,
                     "export type {type_name}Handler = Handler<{inp_ty}, {out_ty}>;"
@@ -173,7 +172,7 @@ impl crate::Plugin for Generator {
         out.insert(
             self.config.base.path.join("fdk.ts"),
             GeneratedFile {
-                contents: template.render_fdk_ts(&self.config, &tg)?,
+                contents: template.render_fdk_ts(&self.config, tg)?,
                 overwrite: true,
             },
         );
@@ -182,16 +181,13 @@ impl crate::Plugin for Generator {
     }
 }
 
-fn render_types(dest: &mut GenDestBuf, tg: &Typegraph) -> anyhow::Result<NameMemo> {
-    let mut renderer = TypeRenderer::new(
-        tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
-        Rc::new(types::TypescriptTypeRenderer {}),
-    );
+fn render_types(dest: &mut GenDestBuf, tg: Arc<Typegraph>) -> anyhow::Result<NameMemo> {
+    let mut renderer = TypeRenderer::new(tg.clone(), Arc::new(types::TypescriptTypeRenderer {}));
     // remove the root type which we don't want to generate types for
     // TODO: gql types || function wrappers for exposed functions
     // skip object 0, the root object where the `exposed` items are locted
-    for id in 1..tg.types.len() {
-        _ = renderer.render(id as u32)?;
+    for ty in tg.named.values() {
+        _ = renderer.render(ty)?;
     }
     let (types_ts, name_memo) = renderer.finalize();
     writeln!(dest.buf, "{}", types_ts)?;

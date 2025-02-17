@@ -7,6 +7,8 @@ edition.workspace = true
 tg_schema.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+enum_dispatch.workspace = true
+indexmap.workspace = true
+paste.workspace = true
+color-eyre.workspace = true
 
-[features]
-mt = []

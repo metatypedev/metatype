@@ -1,18 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
-
 use crate::interlude::*;
-use tg_schema::{
-    visitor::{Edge, PathSegment},
-    visitor2::{self, NearestFn, VisitNext},
-    Typegraph,
+use std::collections::HashMap;
+use typegraph::{
+    conv::{Key, PathSegment},
+    visitor::{PathExt as _, VisitNext},
+    TypeNodeExt as _,
 };
 
 #[derive(Debug)]
 pub enum ObjectPathSegment {
-    Prop(String),
+    Prop(Arc<str>),
     Array,
     Optional,
 }
@@ -21,12 +20,13 @@ impl TryFrom<&PathSegment> for ObjectPathSegment {
     type Error = anyhow::Error;
 
     fn try_from(value: &PathSegment) -> Result<Self, Self::Error> {
-        match &value.edge {
-            Edge::ObjectProp(key) => Ok(ObjectPathSegment::Prop(key.to_owned())),
-            Edge::ArrayItem => Ok(ObjectPathSegment::Array),
-            Edge::OptionalItem => Ok(ObjectPathSegment::Optional),
-            Edge::UnionVariant(_) => bail!("file input is not supported in polymorphic types"),
-            _ => bail!("unexpected path segment in input type: {:?}", value),
+        match &value {
+            PathSegment::ObjectProp(key) => Ok(ObjectPathSegment::Prop(key.clone())),
+            PathSegment::ListItem => Ok(ObjectPathSegment::Array),
+            PathSegment::OptionalItem => Ok(ObjectPathSegment::Optional),
+            PathSegment::UnionVariant(_) | PathSegment::EitherVariant(_) => {
+                bail!("file input is not supported in polymorphic types")
+            }
         }
     }
 }
@@ -81,6 +81,18 @@ impl TypePath {
     }
 }
 
+impl TryFrom<&Vec<PathSegment>> for TypePath {
+    type Error = anyhow::Error;
+
+    fn try_from(tg_path: &Vec<PathSegment>) -> Result<Self, Self::Error> {
+        let inner = tg_path
+            .iter()
+            .map(|seg| ObjectPathSegment::try_from(seg))
+            .collect::<Result<Vec<_>>>()?;
+        Ok(Self(inner))
+    }
+}
+
 pub fn serialize_typepaths_json(typepaths: &[TypePath]) -> Option<String> {
     let paths = typepaths
         .iter()
@@ -94,33 +106,24 @@ pub fn serialize_typepaths_json(typepaths: &[TypePath]) -> Option<String> {
     }
 }
 
-pub fn get_path_to_files(tg: &Typegraph, root: u32) -> Result<HashMap<u32, Vec<TypePath>>> {
-    visitor2::traverse_types(
-        tg,
-        root,
+pub fn get_path_to_files(root: &Type) -> Result<HashMap<u32, Vec<TypePath>>> {
+    typegraph::visitor::traverse_types(
+        root.clone(),
         Default::default(),
-        |cx, acc| -> Result<VisitNext, anyhow::Error> {
-            if cx.current_node.in_cycle {
-                return Ok(visitor2::VisitNext::Stop);
+        |ty, path, acc| -> Result<VisitNext, anyhow::Error> {
+            if path.is_cyclic() {
+                return Ok(VisitNext::Stop);
             }
-            match cx.current_node.type_node {
-                TypeNode::File { .. } => {
-                    let nearest_fn = cx.current_node.nearest_function();
-                    if let Some(NearestFn {
-                        path_index,
-                        type_idx: fn_idx,
-                        is_input,
-                    }) = nearest_fn
-                    {
-                        if is_input {
-                            let entry = acc.entry(fn_idx).or_default();
-                            let current_path = cx.current_node.path.borrow();
-                            entry.push(TypePath::try_from(&current_path[(path_index + 1)..])?);
-                        }
+            match &ty {
+                Type::File(file) => {
+                    if let Key::Input(key) = file.key() {
+                        let fn_idx = key.owner.upgrade().unwrap().idx();
+                        let entry = acc.entry(fn_idx).or_default();
+                        entry.push((&key.path).try_into().unwrap());
                     }
-                    Ok(visitor2::VisitNext::Siblings)
+                    Ok(VisitNext::Siblings)
                 }
-                _ => Ok(visitor2::VisitNext::Children),
+                _ => Ok(VisitNext::Children),
             }
         },
     )

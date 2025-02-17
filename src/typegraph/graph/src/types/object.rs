@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::{policies::PolicyRef, Lazy, Lrc};
+use crate::{policies::PolicyRef, Lazy, Arc};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -17,18 +17,30 @@ pub struct ObjectProperty {
 #[derive(Debug)]
 pub struct ObjectType {
     pub base: TypeBase,
-    pub properties: Lazy<HashMap<Lrc<str>, ObjectProperty>>,
+    pub(crate) properties: Lazy<HashMap<Arc<str>, ObjectProperty>>,
 }
 
 impl ObjectType {
-    pub fn properties(&self) -> &HashMap<Lrc<str>, ObjectProperty> {
+    pub fn properties(&self) -> &HashMap<Arc<str>, ObjectProperty> {
         self.properties.get().expect("uninitialized")
+    }
+
+    pub fn non_empty(self: Arc<Self>) -> Option<Arc<Self>> {
+        if self.as_ref().properties().is_empty() {
+            None
+        } else {
+            Some(self)
+        }
     }
 }
 
-impl TypeNode for ObjectType {
+impl TypeNode for Arc<ObjectType> {
     fn base(&self) -> &TypeBase {
         &self.base
+    }
+
+    fn tag(&self) -> &'static str {
+        "object"
     }
 
     fn children(&self) -> Vec<Type> {
@@ -38,11 +50,11 @@ impl TypeNode for ObjectType {
             .collect()
     }
 
-    fn edges(self: &Lrc<Self>) -> Vec<Edge> {
+    fn edges(&self) -> Vec<Edge> {
         self.properties()
             .iter()
             .map(|(name, prop)| Edge {
-                from: WeakType::Object(Lrc::downgrade(self)),
+                from: WeakType::Object(Arc::downgrade(self)),
                 to: prop.type_.clone(),
                 kind: EdgeKind::ObjectProperty(name.clone()),
             })

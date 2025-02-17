@@ -11,6 +11,7 @@ use core::fmt::Write;
 
 use shared::get_gql_type;
 use tg_schema::EffectType;
+use typegraph::TypeNodeExt as _;
 
 use crate::interlude::*;
 use crate::*;
@@ -91,7 +92,7 @@ impl crate::Plugin for Generator {
         out.insert(
             self.config.base.path.join("client.py"),
             GeneratedFile {
-                contents: render_client_py(&self.config, tg)?,
+                contents: render_client_py(&self.config, tg.clone())?,
                 overwrite: true,
             },
         );
@@ -100,7 +101,7 @@ impl crate::Plugin for Generator {
     }
 }
 
-fn render_client_py(_config: &ClienPyGenConfig, tg: &Typegraph) -> anyhow::Result<String> {
+fn render_client_py(_config: &ClienPyGenConfig, tg: Arc<Typegraph>) -> anyhow::Result<String> {
     let mut client_py = GenDestBuf {
         buf: Default::default(),
     };
@@ -118,17 +119,17 @@ fn render_client_py(_config: &ClienPyGenConfig, tg: &Typegraph) -> anyhow::Resul
     render_static(&mut client_py)?;
 
     let dest: &mut GenDestBuf = &mut client_py;
-    let manifest = get_manifest(tg)?;
+    let manifest = get_manifest(&tg)?;
 
     let name_mapper = NameMapper {
-        nodes: tg.types.iter().cloned().map(Rc::new).collect(),
+        tg: tg.clone(),
         memo: Default::default(),
     };
-    let name_mapper = Rc::new(name_mapper);
+    let name_mapper = Arc::new(name_mapper);
 
     let (node_metas, named_types) = render_node_metas(dest, &manifest, name_mapper.clone())?;
     let data_types = render_data_types(dest, &manifest, name_mapper.clone())?;
-    let data_types = Rc::new(data_types);
+    let data_types = Arc::new(data_types);
     let selection_names =
         render_selection_types(dest, &manifest, data_types.clone(), name_mapper.clone())?;
 
@@ -139,8 +140,8 @@ class QueryGraph(QueryGraphBase):
     def __init__(self):
         super().__init__({{"#
     )?;
-    for (&id, ty_name) in name_mapper.memo.borrow().deref() {
-        let gql_ty = get_gql_type(&tg.types, id, false);
+    for (name, ty_name) in name_mapper.memo.borrow().deref() {
+        let gql_ty = get_gql_type(&tg.named.get(name).unwrap(), false);
         write!(
             dest,
             r#"
@@ -148,8 +149,9 @@ class QueryGraph(QueryGraphBase):
         )?;
     }
     for id in named_types {
-        let ty_name = &tg.types[id as usize].base().title;
-        let gql_ty = get_gql_type(&tg.types, id, false);
+        let ty = tg.named.get(&id).unwrap();
+        let ty_name = ty.title();
+        let gql_ty = get_gql_type(ty, false);
         write!(
             dest,
             r#"
@@ -166,13 +168,17 @@ class QueryGraph(QueryGraphBase):
     for fun in manifest.root_fns {
         use heck::ToSnekCase;
 
-        let node_name = fun.name;
+        let node_name = fun.type_.name();
         let method_name = node_name.to_snek_case();
-        let out_ty_name = data_types.get(&fun.out_id).unwrap();
+        let out_ty_name = data_types.get(&fun.type_.output().name()).unwrap();
 
         let args_row = match (
-            fun.in_id.map(|id| data_types.get(&id).unwrap()),
-            fun.select_ty.map(|id| selection_names.get(&id).unwrap()),
+            fun.type_
+                .input()
+                .non_empty()
+                .map(|ty| data_types.get(&ty.name()).unwrap()),
+            fun.select_ty
+                .map(|name| selection_names.get(&name).unwrap()),
         ) {
             (Some(arg_ty), Some(select_ty)) => {
                 format!("self, args: typing.Union[{arg_ty}, PlaceholderArgs], select: {select_ty}")
@@ -184,7 +190,7 @@ class QueryGraph(QueryGraphBase):
             (None, None) => "self".into(),
         };
 
-        let args_selection = match (fun.in_id, fun.select_ty) {
+        let args_selection = match (fun.type_.input().non_empty(), fun.select_ty) {
             (Some(_), Some(_)) => "(args, select)",
             (Some(_), None) => "args",
             (None, Some(_)) => "select",
@@ -192,11 +198,11 @@ class QueryGraph(QueryGraphBase):
         };
 
         let meta_method = node_metas
-            .get(&fun.id)
+            .get(&fun.type_.name())
             .map(|str| &str[..])
             .unwrap_or_else(|| "scalar");
 
-        let node_type = match fun.effect {
+        let node_type = match fun.type_.effect() {
             EffectType::Read => "QueryNode",
             EffectType::Update | EffectType::Delete | EffectType::Create => "MutationNode",
         };
@@ -231,15 +237,15 @@ fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
 fn render_data_types(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    name_mapper: Rc<NameMapper>,
+    name_mapper: Arc<NameMapper>,
 ) -> anyhow::Result<NameMemo> {
-    let mut renderer =
-        TypeRenderer::new(name_mapper.nodes.clone(), Rc::new(types::PyTypeRenderer {}));
-    for &id in &manifest.arg_types {
-        _ = renderer.render(id)?;
+    let tg = name_mapper.tg.clone();
+    let mut renderer = TypeRenderer::new(name_mapper.tg.clone(), Arc::new(types::PyTypeRenderer {}));
+    for &ty_id in &manifest.arg_types {
+        _ = renderer.render(&tg.named[&ty_id])?;
     }
-    for &id in &manifest.return_types {
-        _ = renderer.render(id)?;
+    for &ty_id in &manifest.return_types {
+        _ = renderer.render(&tg.named[&ty_id])?;
     }
     let (types_ts, name_memo) = renderer.finalize();
     writeln!(dest.buf, "{}", types_ts)?;
@@ -250,17 +256,18 @@ fn render_data_types(
 fn render_selection_types(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    arg_types_memo: Rc<NameMemo>,
-    name_mapper: Rc<NameMapper>,
+    arg_types_memo: Arc<NameMemo>,
+    name_mapper: Arc<NameMapper>,
 ) -> Result<NameMemo> {
+    let tg = name_mapper.tg.clone();
     let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Rc::new(selections::PyNodeSelectionsRenderer {
+        name_mapper.tg.clone(),
+        Arc::new(selections::PyNodeSelectionsRenderer {
             arg_ty_names: arg_types_memo,
         }),
     );
-    for &id in &manifest.selections {
-        _ = renderer.render(id)?;
+    for &ty_id in &manifest.selections {
+        _ = renderer.render(&tg.named[&ty_id])?;
     }
     let (buf, memo) = renderer.finalize();
     write!(dest, "{buf}")?;
@@ -272,19 +279,20 @@ fn render_selection_types(
 fn render_node_metas(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    name_mapper: Rc<NameMapper>,
-) -> Result<(NameMemo, IndexSet<u32>)> {
-    let named_types = Rc::new(std::sync::Mutex::new(IndexSet::new()));
+    name_mapper: Arc<NameMapper>,
+) -> Result<(NameMemo, IndexSet<Arc<str>>)> {
+    let tg = name_mapper.tg.clone();
+    let named_types = Arc::new(std::sync::Mutex::new(IndexSet::new()));
     let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Rc::new(node_metas::PyNodeMetasRenderer {
+        name_mapper.tg.clone(),
+        Arc::new(node_metas::PyNodeMetasRenderer {
             name_mapper,
             named_types: named_types.clone(),
             input_files: manifest.input_files.clone(),
         }),
     );
-    for &id in &manifest.node_metas {
-        _ = renderer.render(id)?;
+    for &ty_id in &manifest.node_metas {
+        _ = renderer.render(&tg.named[&ty_id])?;
     }
     let (methods, memo) = renderer.finalize();
     write!(
@@ -299,23 +307,21 @@ class NodeDescs:
     )?;
     Ok((
         memo,
-        Rc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
+        Arc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
     ))
 }
 
 struct NameMapper {
-    nodes: Vec<Rc<TypeNode>>,
+    tg: Arc<Typegraph>,
     memo: std::cell::RefCell<NameMemo>,
 }
 
 impl NameMapper {
-    pub fn name_for(&self, id: u32) -> Rc<str> {
+    pub fn name_for(&self, ty: &Type) -> Arc<str> {
         self.memo
             .borrow_mut()
-            .entry(id)
-            .or_insert_with(|| {
-                Rc::from(normalize_type_title(&self.nodes[id as usize].base().title))
-            })
+            .entry(ty.name())
+            .or_insert_with(|| Arc::from(normalize_type_title(&ty.title())))
             .clone()
     }
 }

@@ -6,6 +6,7 @@
 use garde::external::compact_str::CompactStringExt;
 use heck::ToPascalCase;
 use indexmap::IndexSet;
+use typegraph::{FunctionType, TypeNode as _};
 
 use crate::interlude::*;
 use crate::shared::*;
@@ -125,7 +126,7 @@ impl crate::Plugin for Generator {
         let stubbed_funs = filter_stubbed_funcs(&tg, &["python".to_string()])
             .wrap_err("error collecting materializers for \"python\" runtime")?;
         for fun in &stubbed_funs {
-            if fun.mat.data.get("mod").is_none() {
+            if fun.materializer.data.get("mod").is_none() {
                 continue;
             }
             let (_, script_path) = get_module_infos(fun, &tg)?;
@@ -193,9 +194,9 @@ impl crate::Plugin for Generator {
     }
 }
 
-fn get_module_infos(fun: &StubbedFunction, tg: &Typegraph) -> anyhow::Result<(String, PathBuf)> {
+fn get_module_infos(fun: &Arc<FunctionType>, tg: &Typegraph) -> anyhow::Result<(String, PathBuf)> {
     let idx = serde_json::from_value::<usize>(
-        fun.mat
+        fun.materializer
             .data
             .get("mod")
             .with_context(|| "python mod index")
@@ -203,18 +204,19 @@ fn get_module_infos(fun: &StubbedFunction, tg: &Typegraph) -> anyhow::Result<(St
             .clone(),
     )?;
     let mod_name = serde_json::from_value::<String>(
-        fun.mat
+        fun.materializer
             .data
             .get("name")
             .with_context(|| "python mod name")
             .unwrap()
             .clone(),
     )?;
-    let script_path =
-        serde_json::from_value::<String>(tg.materializers[idx].data["entryPoint"].clone())?;
-    let script_path = PathBuf::from(script_path.clone());
-
-    Ok((mod_name, script_path))
+    todo!()
+    // let script_path =
+    //     serde_json::from_value::<String>(tg.materializers[idx].data["entryPoint"].clone())?;
+    // let script_path = PathBuf::from(script_path.clone());
+    //
+    // Ok((mod_name, script_path))
 }
 
 #[derive(Serialize, Eq, PartialEq, Hash)]
@@ -290,55 +292,51 @@ fn render_types(tera: &tera::Tera, required: &MergedRequiredObjects) -> anyhow::
 
 fn gen_required_objects(
     tera: &tera::Tera,
-    fun: &StubbedFunction,
+    fun: &Arc<FunctionType>,
     tg: &Typegraph,
 ) -> anyhow::Result<RequiredObjects> {
-    if let TypeNode::Function { data, .. } = fun.node.clone() {
-        let mut memo = Memo::new();
-        let input = tg.types[data.input as usize].clone();
-        let output = tg.types[data.output as usize].clone();
+    let mut memo = Memo::new();
+    let input = fun.input();
+    let output = fun.output();
 
-        let input_name = input.base().title.to_pascal_case();
-        let output_name = output.base().title.to_pascal_case();
+    let input_name = input.base().title.to_pascal_case();
+    let output_name = output.base().title.to_pascal_case();
 
-        let _input_hint = types::visit_type(tera, &mut memo, &input, tg)?.hint;
-        let output_hint = types::visit_type(tera, &mut memo, &output, tg)?.hint;
+    let _input_hint = types::visit_type(tera, &mut memo, &Type::Object(input.clone()), tg)?.hint;
+    let output_hint = types::visit_type(tera, &mut memo, &output, tg)?.hint;
 
-        let (fn_name, _) = get_module_infos(fun, tg)?;
-        match output {
-            TypeNode::Object { .. } => {
-                // output is a top level dataclass
-                Ok(RequiredObjects {
-                    func_details: FuncDetails {
-                        input_name,
-                        output_name,
-                        name: fn_name,
-                    },
-                    top_level_types: vec![],
-                    memo,
-                })
-            }
-            _ => {
-                // output is a top level inline def
-                let output_name = format!("Type{output_name}");
-                let def = format!("{} = {}", output_name.clone(), output_hint);
-                let top_level_types = vec![TypeGenerated {
-                    hint: output_hint,
-                    def: Some(def),
-                }];
-                Ok(RequiredObjects {
-                    func_details: FuncDetails {
-                        input_name,
-                        output_name,
-                        name: fn_name,
-                    },
-                    top_level_types,
-                    memo,
-                })
-            }
+    let (fn_name, _) = get_module_infos(fun, tg)?;
+    match output {
+        Type::Object(_) => {
+            // output is a top level dataclass
+            Ok(RequiredObjects {
+                func_details: FuncDetails {
+                    input_name,
+                    output_name,
+                    name: fn_name,
+                },
+                top_level_types: vec![],
+                memo,
+            })
         }
-    } else {
-        panic!("function node was expected")
+        _ => {
+            // output is a top level inline def
+            let output_name = format!("Type{output_name}");
+            let def = format!("{} = {}", output_name.clone(), output_hint);
+            let top_level_types = vec![TypeGenerated {
+                hint: output_hint,
+                def: Some(def),
+            }];
+            Ok(RequiredObjects {
+                func_details: FuncDetails {
+                    input_name,
+                    output_name,
+                    name: fn_name,
+                },
+                top_level_types,
+                memo,
+            })
+        }
     }
 }
 

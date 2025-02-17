@@ -8,6 +8,7 @@ use core::fmt::Write;
 
 use shared::get_gql_type;
 use tg_schema::EffectType;
+use typegraph::TypeNode as _;
 
 use crate::interlude::*;
 use crate::*;
@@ -119,14 +120,14 @@ fn render_client_ts(_config: &ClienTsGenConfig, tg: &Typegraph) -> anyhow::Resul
     let manifest = get_manifest(tg)?;
 
     let name_mapper = NameMapper {
-        nodes: tg.types.iter().cloned().map(Rc::new).collect(),
+        nodes: tg.types.iter().cloned().map(Arc::new).collect(),
         memo: Default::default(),
     };
-    let name_mapper = Rc::new(name_mapper);
+    let name_mapper = Arc::new(name_mapper);
 
     let (node_metas, named_types) = render_node_metas(dest, &manifest, name_mapper.clone())?;
     let data_types = render_data_types(dest, &manifest, name_mapper.clone())?;
-    let data_types = Rc::new(data_types);
+    let data_types = Arc::new(data_types);
     let selection_names =
         render_selection_types(dest, &manifest, data_types.clone(), name_mapper.clone())?;
 
@@ -235,11 +236,11 @@ fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
 fn render_data_types(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    name_mapper: Rc<NameMapper>,
+    name_mapper: Arc<NameMapper>,
 ) -> anyhow::Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(fdk_ts::types::TypescriptTypeRenderer {}),
+        Arc::new(fdk_ts::types::TypescriptTypeRenderer {}),
     );
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;
@@ -256,12 +257,12 @@ fn render_data_types(
 fn render_selection_types(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    arg_types_memo: Rc<NameMemo>,
-    name_mapper: Rc<NameMapper>,
+    arg_types_memo: Arc<NameMemo>,
+    name_mapper: Arc<NameMapper>,
 ) -> Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(selections::TsNodeSelectionsRenderer {
+        Arc::new(selections::TsNodeSelectionsRenderer {
             arg_ty_names: arg_types_memo,
         }),
     );
@@ -278,12 +279,12 @@ fn render_selection_types(
 fn render_node_metas(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    name_mapper: Rc<NameMapper>,
+    name_mapper: Arc<NameMapper>,
 ) -> Result<(NameMemo, IndexSet<u32>)> {
-    let named_types = Rc::new(std::sync::Mutex::new(IndexSet::new()));
+    let named_types = Arc::new(std::sync::Mutex::new(IndexSet::new()));
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(node_metas::TsNodeMetasRenderer {
+        Arc::new(node_metas::TsNodeMetasRenderer {
             name_mapper,
             named_types: named_types.clone(),
             input_files: manifest.input_files.clone(),
@@ -306,23 +307,20 @@ const nodeMetas = {{
     )?;
     Ok((
         memo,
-        Rc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
+        Arc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
     ))
 }
 
 struct NameMapper {
-    nodes: Vec<Rc<TypeNode>>,
     memo: std::cell::RefCell<NameMemo>,
 }
 
 impl NameMapper {
-    pub fn name_for(&self, id: u32) -> Rc<str> {
+    pub fn name_for(&self, ty: &Type) -> Arc<str> {
         self.memo
             .borrow_mut()
-            .entry(id)
-            .or_insert_with(|| {
-                Rc::from(normalize_type_title(&self.nodes[id as usize].base().title))
-            })
+            .entry(ty.base().type_idx)
+            .or_insert_with(|| Arc::from(normalize_type_title(&ty.base().title)))
             .clone()
     }
 }

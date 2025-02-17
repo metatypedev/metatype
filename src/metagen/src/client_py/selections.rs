@@ -3,13 +3,12 @@
 
 use std::fmt::Write;
 
-use tg_schema::*;
-
 use super::utils::*;
 use crate::{interlude::*, shared::client::*, shared::types::*};
+use typegraph::TypeNodeExt as _;
 
 pub struct PyNodeSelectionsRenderer {
-    pub arg_ty_names: Rc<NameMemo>,
+    pub arg_ty_names: Arc<NameMemo>,
 }
 
 impl PyNodeSelectionsRenderer {
@@ -83,67 +82,54 @@ impl RenderType for PyNodeSelectionsRenderer {
     fn render(&self, renderer: &mut TypeRenderer, cursor: &mut VisitCursor) -> Result<String> {
         use heck::ToPascalCase;
 
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Boolean { .. }
-            | TypeNode::Float { .. }
-            | TypeNode::Integer { .. }
-            | TypeNode::String { .. }
-            | TypeNode::File { .. } => unreachable!("scalars don't get to have selections"),
-            TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
-            TypeNode::Optional {
-                data: OptionalTypeData { item, .. },
-                ..
-            }
-            | TypeNode::List {
-                data: ListTypeData { items: item, .. },
-                ..
-            }
-            | TypeNode::Function {
-                data: FunctionTypeData { output: item, .. },
-                ..
-            } => renderer
-                .render_subgraph(*item, cursor)?
+        let render_item = |item: &Type, cursor: &mut VisitCursor| -> Result<String> {
+            Ok(renderer
+                .render_subgraph(item, cursor)?
                 .0
                 .unwrap()
-                .to_string(),
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
+                .to_string())
+        };
+        let name = match &cursor.node {
+            Type::Boolean(_)
+            | Type::Float(_)
+            | Type::Integer(_)
+            | Type::String(_)
+            | Type::File(_) => unreachable!("scalars don't get to have selections"),
+            Type::Optional(ty) => render_item(ty.item(), cursor)?,
+            Type::List(ty) => render_item(ty.item(), cursor)?,
+            Type::Function(ty) => render_item(ty.output(), cursor)?,
+            Type::Object(ty) => {
+                let props = ty
+                    .properties()
                     .iter()
                     // generate property types first
-                    .map(|(name, &dep_id)| {
+                    .map(|(name, prop)| {
                         eyre::Ok((
                             normalize_struct_prop_name(name),
-                            selection_for_field(dep_id, &self.arg_ty_names, renderer, cursor)?,
+                            selection_for_field(&prop.type_, &self.arg_ty_names, renderer, cursor)?,
                         ))
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
-                let node_name = &base.title;
+                let node_name = &ty.title();
                 let ty_name = normalize_type_title(node_name);
                 let ty_name = format!("{ty_name}Selections").to_pascal_case();
                 self.render_for_object(renderer, &ty_name, props)?;
                 ty_name
             }
-            TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            }
-            | TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            } => {
-                let variants = variants
+            Type::Union(ty) => {
+                let variants = ty
+                    .variants()
                     .iter()
-                    .filter_map(|&inner| {
-                        if !renderer.is_composite(inner) {
+                    .filter_map(|variant| {
+                        if !TypeRenderer::is_composite(variant) {
                             return None;
                         }
-                        let ty_name = renderer.nodes[inner as usize].deref().base().title.clone();
+                        let ty_name = variant.title().to_string();
                         let struct_prop_name =
                             normalize_struct_prop_name(&normalize_type_title(&ty_name[..]));
 
                         let selection = match selection_for_field(
-                            inner,
+                            variant,
                             &self.arg_ty_names,
                             renderer,
                             cursor,
@@ -155,7 +141,7 @@ impl RenderType for PyNodeSelectionsRenderer {
                         Some(eyre::Ok((struct_prop_name, (ty_name, selection))))
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
-                let ty_name = normalize_type_title(&base.title);
+                let ty_name = normalize_type_title(ty.title());
                 let ty_name = format!("{ty_name}Selections").to_pascal_case();
                 self.render_for_union(renderer, &ty_name, variants)?;
                 ty_name

@@ -7053,6 +7053,7 @@ dependencies = [
  "tg_schema",
  "tokio",
  "typegate_api",
+ "typegraph",
 ]
 
 [[package]]
@@ -13043,6 +13044,10 @@ dependencies = [
 name = "typegraph"
 version = "0.5.1-rc.0"
 dependencies = [
+ "color-eyre",
+ "enum_dispatch",
+ "indexmap 2.6.0",
+ "paste",
  "serde",
  "serde_json",
  "tg_schema",

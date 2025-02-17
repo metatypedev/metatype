@@ -20,6 +20,7 @@ use crate::utils::*;
 use crate::*;
 use std::borrow::Cow;
 use std::fmt::Write;
+use typegraph::TypeNodeExt as _;
 
 pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.rs", include_str!("static/fdk.rs"))];
 
@@ -131,16 +132,17 @@ impl crate::Plugin for Generator {
         };
 
         let mut out = IndexMap::new();
+
         out.insert(
             self.config.base.path.join("fdk.rs"),
             GeneratedFile {
-                contents: template.gen_mod_rs(&self.config, &tg)?,
+                contents: template.gen_mod_rs(&self.config, tg.clone())?,
                 overwrite: true,
             },
         );
         let crate_name = self.config.crate_name.clone().unwrap_or_else(|| {
             use heck::ToSnekCase;
-            let tg_name = tg.name().unwrap_or_else(|_| "generated".to_string());
+            let tg_name = tg.name();
             format!("{}_fdk", tg_name.to_snek_case())
         });
         if !matches!(self.config.skip_cargo_toml, Some(true)) {
@@ -166,7 +168,7 @@ impl crate::Plugin for Generator {
 }
 
 impl FdkRustTemplate {
-    fn gen_mod_rs(&self, config: &FdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<String> {
+    fn gen_mod_rs(&self, config: &FdkRustGenConfig, tg: Arc<Typegraph>) -> anyhow::Result<String> {
         let mut mod_rs = GenDestBuf {
             buf: Default::default(),
         };
@@ -185,8 +187,8 @@ impl FdkRustTemplate {
         writeln!(&mut mod_rs.buf, "pub mod types {{")?;
         let ty_name_memo = {
             let mut renderer = shared::types::TypeRenderer::new(
-                tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
-                Rc::new(types::RustTypeRenderer {
+                tg.clone(),
+                Arc::new(types::RustTypeRenderer {
                     derive_serde: true,
                     derive_debug: true,
                     all_fields_optional: false,
@@ -195,8 +197,8 @@ impl FdkRustTemplate {
             // remove the root type which we don't want to generate types for
             // TODO: gql types || function wrappers for exposed functions
             // skip object 0, the root object where the `exposed` items are locted
-            for id in 1..tg.types.len() {
-                _ = renderer.render(id as u32)?;
+            for ty in tg.named.values().filter(|&ty| ty.idx() != 0) {
+                _ = renderer.render(ty)?;
             }
             let (types_rs, name_memo) = renderer.finalize();
             for line in types_rs.lines() {
@@ -220,14 +222,16 @@ impl FdkRustTemplate {
                 .stubbed_runtimes
                 .clone()
                 .unwrap_or_else(|| vec!["wasm_wire".to_string()]);
-            let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
+            let stubbed_funs = filter_stubbed_funcs(&tg, &stubbed_rts).wrap_err_with(|| {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             let mut op_to_mat_map = BTreeMap::new();
             for fun in &stubbed_funs {
                 let trait_name =
                     stubs::gen_stub(fun, &mut stubs_rs, &ty_name_memo, &gen_stub_opts)?;
-                if let Some(Some(op_name)) = fun.mat.data.get("op_name").map(|val| val.as_str()) {
+                if let Some(Some(op_name)) =
+                    fun.materializer.data.get("op_name").map(|val| val.as_str())
+                {
                     op_to_mat_map.insert(op_name.to_string(), trait_name);
                 }
             }

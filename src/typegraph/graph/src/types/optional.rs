@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::{Lazy, Lrc};
+use crate::{Lazy, Arc};
 
 #[derive(Debug)]
 pub struct OptionalType {
     pub base: TypeBase,
-    pub item: Lazy<Type>,
+    pub(crate) item: Lazy<Type>,
     pub default_value: Option<serde_json::Value>,
 }
 
@@ -17,18 +17,22 @@ impl OptionalType {
     }
 }
 
-impl TypeNode for OptionalType {
+impl TypeNode for Arc<OptionalType> {
     fn base(&self) -> &TypeBase {
         &self.base
+    }
+
+    fn tag(&self) -> &'static str {
+        "optional"
     }
 
     fn children(&self) -> Vec<Type> {
         vec![self.item().clone()]
     }
 
-    fn edges(self: &Lrc<Self>) -> Vec<Edge> {
+    fn edges(&self) -> Vec<Edge> {
         vec![Edge {
-            from: WeakType::Optional(Lrc::downgrade(self)),
+            from: WeakType::Optional(Arc::downgrade(self)),
             to: self.item().clone(),
             kind: EdgeKind::OptionalItem,
         }]

@@ -3,4 +3,4 @@
 
 // TODO
 pub type Policy = u32;
-pub type PolicyRef = super::Lrc<Policy>;
+pub type PolicyRef = super::Arc<Policy>;

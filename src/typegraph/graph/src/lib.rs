@@ -1,36 +1,73 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-mod conv;
+pub mod conv;
+pub mod naming;
 mod policies;
+mod runtimes;
 mod types;
+pub mod visitor;
 
-use conv::ConversionKey;
+mod interlude {
+    pub use std::sync::Arc;
+    pub use std::sync::Weak;
+    pub type Lazy<T> = std::sync::OnceLock<T>;
+    pub use color_eyre::{eyre::eyre, Result};
+}
+
+use conv::ValueTypeKey;
+use interlude::*;
+use naming::DefaultNamingEngine;
 use std::collections::HashMap;
 pub use types::*;
 
-#[cfg(feature = "mt")]
-type Lrc<T> = std::sync::Arc<T>;
-#[cfg(feature = "mt")]
-type Weak<T> = std::sync::Weak<T>;
-#[cfg(feature = "mt")]
-type Lazy<T> = std::sync::OnceLock<T>;
-
-#[cfg(not(feature = "mt"))]
-type Lrc<T> = std::rc::Rc<T>;
-#[cfg(not(feature = "mt"))]
-type Weak<T> = std::rc::Weak<T>;
-#[cfg(not(feature = "mt"))]
-type Lazy<T> = std::cell::OnceCell<T>;
-
+#[derive(Debug)]
 pub struct Typegraph {
-    pub schema: Lrc<tg_schema::Typegraph>,
-    pub root: Type,
-    pub types: Vec<HashMap<ConversionKey, WeakType>>,
+    pub schema: Arc<tg_schema::Typegraph>,
+    pub root: Arc<ObjectType>,
+    pub input_types: HashMap<ValueTypeKey, Type>,
+    pub output_types: HashMap<ValueTypeKey, Type>,
+    pub functions: HashMap<u32, Arc<FunctionType>>,
+    pub namespace_objects: HashMap<Vec<Arc<str>>, Arc<ObjectType>>,
+    pub named: HashMap<Arc<str>, Type>,
 }
 
-impl From<Lrc<tg_schema::Typegraph>> for Typegraph {
-    fn from(schema: Lrc<tg_schema::Typegraph>) -> Self {
-        conv::Conversion::convert(schema)
+impl From<Arc<tg_schema::Typegraph>> for Typegraph {
+    fn from(schema: Arc<tg_schema::Typegraph>) -> Self {
+        conv::Conversion::convert(schema, DefaultNamingEngine::default())
+    }
+}
+
+impl Typegraph {
+    pub fn root_functions(&self) -> RootFnsIter {
+        RootFnsIter {
+            stack: vec![Type::Object(Arc::clone(&self.root))],
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        self.root.title()
+    }
+}
+
+pub struct RootFnsIter {
+    stack: Vec<Type>,
+}
+
+impl Iterator for RootFnsIter {
+    // Item = Result<Arc<FunctionType>, Error>;
+    type Item = Arc<FunctionType>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let item = self.stack.pop()?;
+        match item {
+            Type::Object(object) => {
+                self.stack
+                    .extend(object.properties().values().map(|prop| prop.type_.clone()));
+                self.next()
+            }
+            Type::Function(function) => Some(function),
+            _ => unreachable!(), // TODO error
+        }
     }
 }

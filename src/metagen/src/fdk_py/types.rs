@@ -3,6 +3,7 @@
 
 use garde::external::compact_str::CompactStringExt;
 use heck::ToPascalCase;
+use typegraph::TypeNode as _;
 
 use crate::interlude::*;
 
@@ -13,17 +14,17 @@ use super::STRUCT_TEMPLATE;
 pub fn visit_type(
     tera: &tera::Tera,
     memo: &mut Memo,
-    tpe: &TypeNode,
+    tpe: &Type,
     tg: &Typegraph,
 ) -> anyhow::Result<TypeGenerated> {
     memo.incr_weight();
 
     let hint = match tpe {
-        TypeNode::Boolean { .. } => "bool".to_string(),
-        TypeNode::Float { .. } => "float".to_string(),
-        TypeNode::Integer { .. } => "int".to_string(),
-        TypeNode::String { .. } => "str".to_string(),
-        TypeNode::Object { .. } => {
+        Type::Boolean(_) => "bool".to_string(),
+        Type::Float(_) => "float".to_string(),
+        Type::Integer(_) => "int".to_string(),
+        Type::String(_) => "str".to_string(),
+        Type::Object(_) => {
             let class_hint = tpe.base().title.to_pascal_case();
             let hint = match memo.is_allocated(&class_hint) {
                 true => class_hint,
@@ -31,23 +32,19 @@ pub fn visit_type(
             };
             format!("\"{hint}\"")
         }
-        TypeNode::Optional { data, .. } => {
-            let item = &tg.types[data.item as usize];
-            let item_hint = visit_type(tera, memo, item, tg)?.hint;
+        Type::Optional(ty) => {
+            let item_hint = visit_type(tera, memo, ty.item(), tg)?.hint;
             format!("Union[{item_hint}, None]")
         }
-        TypeNode::List { data, .. } => {
-            let item = &tg.types[data.items as usize];
-            let item_hint = visit_type(tera, memo, item, tg)?.hint;
+        Type::List(ty) => {
+            let item_hint = visit_type(tera, memo, ty.item(), tg)?.hint;
             format!("List[{item_hint}]")
         }
-        TypeNode::Function { .. } => "".to_string(),
-        TypeNode::Union { .. } | TypeNode::Either { .. } => {
-            visit_union_or_either(tera, memo, tpe, tg)?.hint
-        }
+        Type::Function(_) => "".to_string(),
+        Type::Union(_) => visit_union(tera, memo, tpe, tg)?.hint,
         // TODO: base64
-        TypeNode::File { .. } => "str".to_string(),
-        TypeNode::Any { .. } => "Any".to_string(),
+        Type::File { .. } => "str".to_string(),
+        // Type::Any { .. } => "Any".to_string(),
     };
 
     memo.decr_weight();
@@ -58,23 +55,22 @@ pub fn visit_type(
 fn visit_object(
     tera: &tera::Tera,
     memo: &mut Memo,
-    tpe: &TypeNode,
+    tpe: &Type,
     tg: &Typegraph,
 ) -> anyhow::Result<TypeGenerated> {
-    if let TypeNode::Object { base, data } = tpe {
+    if let Type::Object(ty) = tpe {
         let mut fields_repr = vec![];
-        let hint = base.title.clone().to_pascal_case();
+        let hint = ty.base().title.clone().to_pascal_case();
 
         memo.allocate(hint.clone());
 
-        for (field, idx) in data.properties.iter() {
-            let field_tpe = &tg.types[*idx as usize];
-            let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
-            fields_repr.push(format!("{field}: {type_repr}"));
+        for (name, prop) in ty.properties().iter() {
+            let type_repr = visit_type(tera, memo, &prop.type_, tg)?.hint;
+            fields_repr.push(format!("{name}: {type_repr}"));
         }
 
         let mut context = tera::Context::new();
-        context.insert("class_name", &base.title.to_pascal_case());
+        context.insert("class_name", &ty.base().title.to_pascal_case()); // TODO hint??
         context.insert("fields", &fields_repr);
 
         let code = tera.render(STRUCT_TEMPLATE, &context)?;
@@ -87,22 +83,22 @@ fn visit_object(
 
         Ok(generated)
     } else {
-        panic!("object node was expected, got {:?}", tpe.type_name())
+        panic!("object node was expected, got {:?}", tpe.tag())
     }
 }
 
 /// Collect relevant definitions in `memo`, return the type in Python
-fn visit_union_or_either(
+fn visit_union(
     tera: &tera::Tera,
     memo: &mut Memo,
-    tpe: &TypeNode,
+    tpe: &Type,
     tg: &Typegraph,
 ) -> anyhow::Result<TypeGenerated> {
-    let mut visit_variants = |variants: &[u32]| -> anyhow::Result<TypeGenerated> {
+    if let Type::Union(ty) = tpe {
+        let variants = ty.variants();
         let mut variants_repr = std::collections::BTreeSet::new();
-        for idx in variants.iter() {
-            let field_tpe = &tg.types[*idx as usize];
-            let type_repr = visit_type(tera, memo, field_tpe, tg)?.hint;
+        for ty in variants.iter() {
+            let type_repr = visit_type(tera, memo, ty, tg)?.hint;
             variants_repr.insert(type_repr);
         }
         let variant_hints = variants_repr.join_compact(", ").to_string();
@@ -111,13 +107,7 @@ fn visit_union_or_either(
             false => format!("Union[{variant_hints}]"),
         };
         Ok(hint.into())
-    };
-
-    if let TypeNode::Union { data, .. } = tpe {
-        visit_variants(&data.any_of)
-    } else if let TypeNode::Either { data, .. } = tpe {
-        visit_variants(&data.one_of)
     } else {
-        panic!("union/either node was expected, got {:?}", tpe.type_name())
+        panic!("union/either node was expected, got {:?}", tpe.tag())
     }
 }
