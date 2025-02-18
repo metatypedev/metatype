@@ -52,7 +52,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "object",
-        "title": "struct_d0873",
+        "title": "root_get_fn_input",
         "properties": {
           "key": 3
         },
@@ -64,11 +64,11 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "string",
-        "title": "string_a7e0d"
+        "title": "string_f6356"
       },
       {
         "type": "optional",
-        "title": "string_a7e0d_optional_d0873",
+        "title": "root_get_fn_output",
         "item": 3,
         "default_value": null
       },
@@ -122,7 +122,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "object",
-        "title": "struct_443be",
+        "title": "root_keys_fn_input",
         "properties": {
           "filter": 4
         },
@@ -134,7 +134,7 @@ snapshot[`Typegraph using kv 1`] = `
       },
       {
         "type": "list",
-        "title": "string_a7e0d_list_443be",
+        "title": "root_keys_fn_output",
         "items": 3
       },
       {
@@ -304,7 +304,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "object",
-        "title": "struct_d0873",
+        "title": "root_get_fn_input",
         "properties": {
           "key": 3
         },
@@ -316,11 +316,11 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "string",
-        "title": "string_a7e0d"
+        "title": "string_f6356"
       },
       {
         "type": "optional",
-        "title": "string_a7e0d_optional_d0873",
+        "title": "root_get_fn_output",
         "item": 3,
         "default_value": null
       },
@@ -374,7 +374,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "object",
-        "title": "struct_443be",
+        "title": "root_keys_fn_input",
         "properties": {
           "filter": 4
         },
@@ -386,7 +386,7 @@ snapshot[`Typegraph using kv 2`] = `
       },
       {
         "type": "list",
-        "title": "string_a7e0d_list_443be",
+        "title": "root_keys_fn_output",
         "items": 3
       },
       {
