@@ -137,7 +137,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "string",
-      "title": "string_uri_99c36",
+      "title": "root_getDownloadUrl_fn_output",
       "format": "uri"
     },
     {
@@ -197,7 +197,7 @@ snapshot[`s3 typegraphs 1`] = `
     },
     {
       "type": "boolean",
-      "title": "boolean_02b82"
+      "title": "root_upload_fn_output"
     },
     {
       "type": "function",

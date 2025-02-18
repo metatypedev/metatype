@@ -963,6 +963,8 @@ RootUploadManyFnInput = typing.TypedDict(
     total=False,
 )
 
+RootUploadFnOutput = bool
+
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
@@ -977,7 +979,7 @@ class QueryGraph(QueryGraphBase):
 
     def upload(
         self, args: typing.Union[RootUploadFnInput, PlaceholderArgs]
-    ) -> MutationNode[bool]:
+    ) -> MutationNode[RootUploadFnOutput]:
         node = selection_to_nodes(
             {"upload": args}, {"upload": NodeDescs.RootUploadFn}, "$q"
         )[0]
@@ -987,7 +989,7 @@ class QueryGraph(QueryGraphBase):
 
     def upload_many(
         self, args: typing.Union[RootUploadManyFnInput, PlaceholderArgs]
-    ) -> MutationNode[bool]:
+    ) -> MutationNode[RootUploadFnOutput]:
         node = selection_to_nodes(
             {"uploadMany": args}, {"uploadMany": NodeDescs.RootUploadManyFn}, "$q"
         )[0]

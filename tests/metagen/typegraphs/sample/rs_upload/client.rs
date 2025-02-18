@@ -95,6 +95,7 @@ pub mod types {
         pub prefix: RootUploadManyFnInputPrefixString25e51Optional,
         pub files: Option<RootUploadManyFnInputFilesFileBf9b7List>,
     }
+    pub type RootUploadFnOutput = bool;
 }
 
 impl QueryGraph {
@@ -125,7 +126,7 @@ impl QueryGraph {
     pub fn upload(
         &self,
         args: impl Into<NodeArgs<RootUploadFnInputPartial>>,
-    ) -> MutationNode<bool> {
+    ) -> MutationNode<RootUploadFnOutput> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -143,7 +144,7 @@ impl QueryGraph {
     pub fn upload_many(
         &self,
         args: impl Into<NodeArgs<RootUploadManyFnInputPartial>>,
-    ) -> MutationNode<bool> {
+    ) -> MutationNode<RootUploadFnOutput> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
