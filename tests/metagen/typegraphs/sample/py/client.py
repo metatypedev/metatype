@@ -1081,7 +1081,7 @@ class NodeDescs:
         )
 
     @staticmethod
-    def Struct17dc8():
+    def RootIdentityFnInput():
         return NodeMeta(
             sub_nodes={
                 "input": NodeDescs.scalar,
@@ -1090,7 +1090,7 @@ class NodeDescs:
 
     @staticmethod
     def RootIdentityFn():
-        return_node = NodeDescs.Struct17dc8()
+        return_node = NodeDescs.RootIdentityFnInput()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
@@ -1101,7 +1101,7 @@ class NodeDescs:
 
     @staticmethod
     def RootIdentityUpdateFn():
-        return_node = NodeDescs.Struct17dc8()
+        return_node = NodeDescs.RootIdentityFnInput()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
@@ -1123,16 +1123,16 @@ Post = typing.TypedDict(
     total=False,
 )
 
-StructC339c = typing.TypedDict(
-    "StructC339c",
+RootCompositeArgsFnInput = typing.TypedDict(
+    "RootCompositeArgsFnInput",
     {
         "id": str,
     },
     total=False,
 )
 
-Struct17dc8 = typing.TypedDict(
-    "Struct17dc8",
+RootIdentityFnInput = typing.TypedDict(
+    "RootIdentityFnInput",
     {
         "input": int,
     },
@@ -1300,8 +1300,8 @@ RootNestedCompositeFnOutputSelections = typing.TypedDict(
     total=False,
 )
 
-Struct17dc8Selections = typing.TypedDict(
-    "Struct17dc8Selections",
+RootIdentityFnInputSelections = typing.TypedDict(
+    "RootIdentityFnInputSelections",
     {
         "_": SelectionFlags,
         "input": ScalarSelectNoArgs,
@@ -1367,7 +1367,9 @@ class QueryGraph(QueryGraphBase):
         )
 
     def composite_args(
-        self, args: typing.Union[StructC339c, PlaceholderArgs], select: PostSelections
+        self,
+        args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs],
+        select: PostSelections,
     ) -> MutationNode[Post]:
         node = selection_to_nodes(
             {"compositeArgs": (args, select)},
@@ -1379,7 +1381,7 @@ class QueryGraph(QueryGraphBase):
         )
 
     def scalar_union(
-        self, args: typing.Union[StructC339c, PlaceholderArgs]
+        self, args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs]
     ) -> QueryNode[RootScalarUnionFnOutput]:
         node = selection_to_nodes(
             {"scalarUnion": args}, {"scalarUnion": NodeDescs.RootScalarUnionFn}, "$q"
@@ -1390,7 +1392,7 @@ class QueryGraph(QueryGraphBase):
 
     def composite_union(
         self,
-        args: typing.Union[StructC339c, PlaceholderArgs],
+        args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs],
         select: RootCompositeUnionFnOutputSelections,
     ) -> QueryNode[RootCompositeUnionFnOutput]:
         node = selection_to_nodes(
@@ -1404,7 +1406,7 @@ class QueryGraph(QueryGraphBase):
 
     def mixed_union(
         self,
-        args: typing.Union[StructC339c, PlaceholderArgs],
+        args: typing.Union[RootCompositeArgsFnInput, PlaceholderArgs],
         select: RootMixedUnionFnOutputSelections,
     ) -> QueryNode[RootMixedUnionFnOutput]:
         node = selection_to_nodes(
@@ -1430,9 +1432,9 @@ class QueryGraph(QueryGraphBase):
 
     def identity(
         self,
-        args: typing.Union[Struct17dc8, PlaceholderArgs],
-        select: Struct17dc8Selections,
-    ) -> QueryNode[Struct17dc8]:
+        args: typing.Union[RootIdentityFnInput, PlaceholderArgs],
+        select: RootIdentityFnInputSelections,
+    ) -> QueryNode[RootIdentityFnInput]:
         node = selection_to_nodes(
             {"identity": (args, select)}, {"identity": NodeDescs.RootIdentityFn}, "$q"
         )[0]
@@ -1442,9 +1444,9 @@ class QueryGraph(QueryGraphBase):
 
     def identity_update(
         self,
-        args: typing.Union[Struct17dc8, PlaceholderArgs],
-        select: Struct17dc8Selections,
-    ) -> MutationNode[Struct17dc8]:
+        args: typing.Union[RootIdentityFnInput, PlaceholderArgs],
+        select: RootIdentityFnInputSelections,
+    ) -> MutationNode[RootIdentityFnInput]:
         node = selection_to_nodes(
             {"identityUpdate": (args, select)},
             {"identityUpdate": NodeDescs.RootIdentityUpdateFn},

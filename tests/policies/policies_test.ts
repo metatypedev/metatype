@@ -55,6 +55,19 @@ Meta.test("Policies", async (t) => {
       .on(e);
   });
 
+  await t.should("have no access to internal", async () => {
+    await gql`
+      query {
+        pol_internal(a: 1) {
+          a
+        }
+      }
+    `
+      .expectErrorContains("Authorization failed")
+      .expectStatus(401)
+      .on(e);
+  });
+
   await t.should("have access with correct value", async () => {
     await gql`
       query {

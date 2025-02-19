@@ -220,7 +220,7 @@ mod node_metas {
             ..RootNestedCompositeFnOutput()
         }
     }
-    pub fn Struct17dc8() -> NodeMeta {
+    pub fn RootIdentityFnInput() -> NodeMeta {
         NodeMeta {
             arg_types: None,
             variants: None,
@@ -239,7 +239,7 @@ mod node_metas {
                     ("input".into(), "Integer64be4".into()),
                 ].into()
             ),
-            ..Struct17dc8()
+            ..RootIdentityFnInput()
         }
     }
     pub fn RootIdentityUpdateFn() -> NodeMeta {
@@ -249,7 +249,7 @@ mod node_metas {
                     ("input".into(), "Integer64be4".into()),
                 ].into()
             ),
-            ..Struct17dc8()
+            ..RootIdentityFnInput()
         }
     }
 
@@ -264,11 +264,11 @@ pub mod types {
         pub title: Option<String>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct StructC339cPartial {
+    pub struct RootCompositeArgsFnInputPartial {
         pub id: Option<String>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Struct17dc8Partial {
+    pub struct RootIdentityFnInputPartial {
         pub input: Option<i64>,
     }
     pub type UserEmailStringEmail = String;
@@ -370,10 +370,10 @@ pub struct RootNestedCompositeFnOutputSelections<ATy = NoAlias> {
 }
 impl_selection_traits!(RootNestedCompositeFnOutputSelections, scalar, composite, list);
 #[derive(Default, Debug)]
-pub struct Struct17dc8Selections<ATy = NoAlias> {
+pub struct RootIdentityFnInputSelections<ATy = NoAlias> {
     pub input: ScalarSelect<ATy>,
 }
-impl_selection_traits!(Struct17dc8Selections, input);
+impl_selection_traits!(RootIdentityFnInputSelections, input);
 
 impl QueryGraph {
 
@@ -467,7 +467,7 @@ impl QueryGraph {
     }
     pub fn composite_args(
         &self,
-        args: impl Into<NodeArgs<StructC339cPartial>>
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
     ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial>
     {
         UnselectedNode {
@@ -479,7 +479,7 @@ impl QueryGraph {
     }
     pub fn scalar_union(
         &self,
-        args: impl Into<NodeArgs<StructC339cPartial>>
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
     ) -> QueryNode<RootScalarUnionFnOutput>
     {
         let nodes = selection_to_node_set(
@@ -500,7 +500,7 @@ impl QueryGraph {
     }
     pub fn composite_union(
         &self,
-        args: impl Into<NodeArgs<StructC339cPartial>>
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
     ) -> UnselectedNode<RootCompositeUnionFnOutputSelections, RootCompositeUnionFnOutputSelections<HasAlias>, QueryMarker, RootCompositeUnionFnOutput>
     {
         UnselectedNode {
@@ -512,7 +512,7 @@ impl QueryGraph {
     }
     pub fn mixed_union(
         &self,
-        args: impl Into<NodeArgs<StructC339cPartial>>
+        args: impl Into<NodeArgs<RootCompositeArgsFnInputPartial>>
     ) -> UnselectedNode<RootMixedUnionFnOutputSelections, RootMixedUnionFnOutputSelections<HasAlias>, QueryMarker, RootMixedUnionFnOutput>
     {
         UnselectedNode {
@@ -535,8 +535,8 @@ impl QueryGraph {
     }
     pub fn identity(
         &self,
-        args: impl Into<NodeArgs<Struct17dc8Partial>>
-    ) -> UnselectedNode<Struct17dc8Selections, Struct17dc8Selections<HasAlias>, QueryMarker, Struct17dc8Partial>
+        args: impl Into<NodeArgs<RootIdentityFnInputPartial>>
+    ) -> UnselectedNode<RootIdentityFnInputSelections, RootIdentityFnInputSelections<HasAlias>, QueryMarker, RootIdentityFnInputPartial>
     {
         UnselectedNode {
             root_name: "identity".into(),
@@ -547,8 +547,8 @@ impl QueryGraph {
     }
     pub fn identity_update(
         &self,
-        args: impl Into<NodeArgs<Struct17dc8Partial>>
-    ) -> UnselectedNode<Struct17dc8Selections, Struct17dc8Selections<HasAlias>, MutationMarker, Struct17dc8Partial>
+        args: impl Into<NodeArgs<RootIdentityFnInputPartial>>
+    ) -> UnselectedNode<RootIdentityFnInputSelections, RootIdentityFnInputSelections<HasAlias>, MutationMarker, RootIdentityFnInputPartial>
     {
         UnselectedNode {
             root_name: "identityUpdate".into(),
