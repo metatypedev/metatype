@@ -3,26 +3,26 @@
 
 use std::fmt::Write;
 
-use typegraph::{TypeNodeExt as _, Wrap as _};
+use typegraph::{conv::TypeKey, TypeNodeExt as _, Wrap as _};
 
 use crate::{interlude::*, utils::GenDestBuf};
 
 pub type VisitedTypePaths = IndexMap<Arc<str>, Vec<Vec<Arc<str>>>>;
 
-#[derive(Debug, Clone)]
-pub enum RenderedName {
-    Name(Arc<str>),
-    Placeholder(Arc<str>),
-}
-
-impl RenderedName {
-    pub fn unwrap(self) -> Arc<str> {
-        match self {
-            RenderedName::Name(name) => name,
-            RenderedName::Placeholder(name) => name,
-        }
-    }
-}
+// #[derive(Debug, Clone)]
+// pub enum RenderedName {
+//     Name(Arc<str>),
+//     Placeholder(Arc<str>),
+// }
+//
+// impl RenderedName {
+//     pub fn unwrap(self) -> Arc<str> {
+//         match self {
+//             RenderedName::Name(name) => name,
+//             RenderedName::Placeholder(name) => name,
+//         }
+//     }
+// }
 
 /// This type tracks the type graph traversal path.
 pub struct VisitCursor {
@@ -86,16 +86,16 @@ pub trait RenderType {
     }
 }
 
-pub type NameMemo = std::collections::BTreeMap<Arc<str>, Arc<str>>;
+pub type NameMemo = std::collections::BTreeMap<TypeKey, Arc<str>>;
 
-/// type_id, old_str, (final_ty_name) -> new_str
-type ReplacementRecords = Vec<(Arc<str>, Arc<str>, Box<dyn Fn(&str) -> String>)>;
+/// type_key, old_str, (final_ty_name) -> new_str
+type ReplacementRecords = Vec<(TypeKey, Arc<str>, Box<dyn Fn(&str) -> String>)>;
 
 /// Helper for generating type bodies that's cycle aware.
 pub struct TypeRenderer {
     dest: GenDestBuf,
     tg: Arc<Typegraph>,
-    name_memo: IndexMap<Arc<str>, RenderedName>,
+    // name_memo: IndexMap<TypeKey, RenderedName>,
     render_type: Arc<dyn RenderType>,
     replacement_records: ReplacementRecords,
 }
@@ -107,7 +107,7 @@ impl TypeRenderer {
             dest: GenDestBuf {
                 buf: Default::default(),
             },
-            name_memo: Default::default(),
+            // name_memo: Default::default(),
             render_type,
             replacement_records: Default::default(),
         }
@@ -131,17 +131,17 @@ impl TypeRenderer {
         }
     }
 
-    pub fn placeholder_string(
-        &mut self,
-        target_name: Arc<str>,
-        replacement_maker: Box<dyn Fn(&str) -> String>,
-    ) -> Arc<str> {
-        // dbg!((&id, &replacement_records));
-        let string: Arc<str> = format!("&&placeholder{}%%", self.replacement_records.len()).into();
-        self.replacement_records
-            .push((target_name, string.clone(), replacement_maker));
-        string
-    }
+    // pub fn placeholder_string(
+    //     &mut self,
+    //     target_name: Arc<str>,
+    //     replacement_maker: Box<dyn Fn(&str) -> String>,
+    // ) -> Arc<str> {
+    //     // dbg!((&id, &replacement_records));
+    //     let string: Arc<str> = format!("&&placeholder{}%%", self.replacement_records.len()).into();
+    //     self.replacement_records
+    //         .push((target_name, string.clone(), replacement_maker));
+    //     string
+    // }
 
     pub fn render(&mut self, ty: &Type) -> anyhow::Result<Arc<str>> {
         let (name, _) = self.render_subgraph(
@@ -152,10 +152,11 @@ impl TypeRenderer {
                 visited_path: Default::default(),
             },
         )?;
-        match name {
-            RenderedName::Name(name) => Ok(name),
-            RenderedName::Placeholder(_) => unreachable!(),
-        }
+        Ok(name)
+        // match name {
+        //     RenderedName::Name(name) => Ok(name),
+        //     RenderedName::Placeholder(_) => unreachable!(),
+        // }
     }
 
     /// The flag notifies if the subgraph was cyclic to the current type and
@@ -164,7 +165,7 @@ impl TypeRenderer {
         &mut self,
         ty: &Type,
         parent_cursor: &mut VisitCursor,
-    ) -> anyhow::Result<(RenderedName, Option<bool>)> {
+    ) -> anyhow::Result<(Arc<str>, Option<bool>)> {
         let my_path: Vec<_> = parent_cursor
             .path
             .iter()
@@ -179,28 +180,29 @@ impl TypeRenderer {
         };
 
         // short circuit if we've already generated the type
-        let ty_name = if let Some(name) = self.name_memo.get(&ty.name()) {
-            name.clone()
-        } else if parent_cursor.path.contains(&ty.name()) {
-            let ancestor_placeholder = RenderedName::Placeholder(
-                self.placeholder_string(ty.name(), Box::new(|ty_name| ty_name.into())),
-            );
-            self.name_memo
-                .insert(ty.name(), ancestor_placeholder.clone());
-            ancestor_placeholder
-        } else {
-            let render_type_impl = self.render_type.clone();
-
-            let ty_name = render_type_impl.render(self, &mut current_cursor)?;
-            let ty_name: Arc<str> = ty_name.into();
-
-            // if let Some(RenderedName::Placeholder(placeholder)) = self.name_memo.get(&id) {}
-
-            self.name_memo
-                .insert(ty.name(), RenderedName::Name(ty_name.clone()));
-
-            RenderedName::Name(ty_name)
-        };
+        // let ty_name = if let Some(name) = self.name_memo.get(&ty.key()) {
+        //     name.clone()
+        // } else if parent_cursor.path.contains(&ty.name()) {
+        //     let ancestor_placeholder = RenderedName::Placeholder(
+        //         self.placeholder_string(ty.name(), Box::new(|ty_name| ty_name.into())),
+        //     );
+        //     self.name_memo
+        //         .insert(ty.key(), ancestor_placeholder.clone());
+        //     ancestor_placeholder
+        // } else {
+        //     let render_type_impl = self.render_type.clone();
+        //
+        //     let ty_name = render_type_impl.render(self, &mut current_cursor)?;
+        //     let ty_name: Arc<str> = ty_name.into();
+        //
+        //     // if let Some(RenderedName::Placeholder(placeholder)) = self.name_memo.get(&id) {}
+        //
+        //     self.name_memo
+        //         .insert(ty.key(), RenderedName::Name(ty_name.clone()));
+        //
+        //     RenderedName::Name(ty_name)
+        // };
+        let ty_name = ty.name();
 
         let cyclic =
             self.render_type
@@ -215,27 +217,29 @@ impl TypeRenderer {
         Ok((ty_name, cyclic))
     }
 
-    pub fn finalize(self) -> (String, NameMemo) {
-        let mut out = self.dest.buf;
-        let name_memo = self
-            .name_memo
-            .into_iter()
-            .map(|(key, val)| {
-                let RenderedName::Name(val) = val else {
-                    panic!("placeholder name found at finalize for {key}")
-                };
-                (key, val)
-            })
-            .collect::<NameMemo>();
-        for (id, from, fun) in self.replacement_records.into_iter().rev() {
-            // dbg!((&_id, &records));
-            let Some(name) = name_memo.get(&id) else {
-                panic!("unable to find rendered name for replacement target {id}")
-            };
-            let to = fun(name);
-            out = out.replace(&from[..], &to);
-        }
-        (out, name_memo)
+    pub fn finalize(self) -> String {
+        // let mut out = self.dest.buf;
+        // let name_memo = self
+        //     .name_memo
+        //     .into_iter()
+        //     .map(|(key, val)| {
+        //         let RenderedName::Name(val) = val else {
+        //             panic!("placeholder name found at finalize for Type{key:?}")
+        //         };
+        //         (key, val)
+        //     })
+        //     .collect::<NameMemo>();
+        // for (key, from, fun) in self.replacement_records.into_iter().rev() {
+        //     // dbg!((&_id, &records));
+        //     let Some(name) = name_memo.get(&key) else {
+        //         panic!("unable to find rendered name for replacement target Type{key:?}")
+        //     };
+        //     let to = fun(name);
+        //     out = out.replace(&from[..], &to);
+        // }
+        // (out, name_memo)
+
+        self.dest.buf
     }
 }
 

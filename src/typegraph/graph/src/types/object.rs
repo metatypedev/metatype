@@ -1,8 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use indexmap::IndexMap;
+
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::{policies::PolicyRef, Lazy, Arc};
+use crate::conv::interlude::*;
+use crate::{policies::PolicyRef, Arc, Lazy};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -59,5 +62,82 @@ impl TypeNode for Arc<ObjectType> {
                 kind: EdgeKind::ObjectProperty(name.clone()),
             })
             .collect()
+    }
+}
+
+pub(crate) fn convert_object(
+    parent: WeakType,
+    type_idx: u32,
+    key: TypeKey,
+    rpath: RelativePath,
+    base: &tg_schema::TypeNodeBase,
+    data: &tg_schema::ObjectTypeData,
+) -> Box<dyn TypeConversionResult> {
+    let ty = Type::Object(
+        ObjectType {
+            base: Conversion::base(key, parent, type_idx, base),
+            properties: Default::default(),
+        }
+        .into(),
+    );
+
+    Box::new(ObjectTypeConversionResult {
+        ty,
+        properties: data.properties.clone(),
+        required: data.required.clone(),
+        rpath,
+    })
+}
+
+pub struct ObjectTypeConversionResult {
+    ty: Type,
+    properties: IndexMap<String, u32>, // TODO reference
+    required: Vec<String>,
+    rpath: RelativePath,
+}
+
+impl TypeConversionResult for ObjectTypeConversionResult {
+    fn get_type(&self) -> Type {
+        self.ty.clone()
+    }
+
+    fn finalize(&mut self, conv: &mut Conversion) {
+        let mut properties = HashMap::with_capacity(self.properties.len());
+
+        let mut results = Vec::new();
+
+        let weak = self.ty.downgrade();
+
+        for (name, &idx) in self.properties.iter() {
+            let name: Arc<str> = name.clone().into();
+            let res = conv.convert_type(
+                weak.clone(),
+                idx,
+                self.rpath.push(PathSegment::ObjectProp(name.clone())),
+            );
+            let required = self.required.iter().any(|r| r == name.as_ref());
+            properties.insert(
+                name,
+                ObjectProperty {
+                    type_: res.get_type(),
+                    policies: Default::default(), // TODO
+                    injection: None,              // TODO
+                    outjection: None,             // TODO
+                    required,
+                },
+            );
+            results.push(res);
+        }
+
+        match &self.ty {
+            Type::Object(obj) => {
+                obj.properties.set(properties).unwrap();
+            }
+            _ => unreachable!(),
+        }
+
+        for res in results.iter_mut() {
+            res.finalize(conv);
+        }
     }
 }

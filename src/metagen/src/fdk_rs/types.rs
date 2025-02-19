@@ -159,10 +159,10 @@ impl RenderType for RustTypeRenderer {
                     .map(|(name, prop)| {
                         let (ty_name, cyclic) = renderer.render_subgraph(&prop.type_, cursor)?;
 
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
+                        // let ty_name = match ty_name {
+                        //     RenderedName::Name(name) => name,
+                        //     RenderedName::Placeholder(name) => name,
+                        // };
 
                         let ty_name = match &prop.type_ {
                             Type::Optional { .. } => ty_name.to_string(),
@@ -201,18 +201,19 @@ impl RenderType for RustTypeRenderer {
                     .iter()
                     .map(|variant| {
                         let (ty_name, cyclic) = renderer.render_subgraph(&variant, cursor)?;
-                        let (variant_name, ty_name) = match ty_name {
-                            RenderedName::Name(name) => (name.to_pascal_case(), name),
-                            RenderedName::Placeholder(name) => (
-                                renderer
-                                    .placeholder_string(
-                                        variant.name(),
-                                        Box::new(|final_name| final_name.to_pascal_case()),
-                                    )
-                                    .to_string(),
-                                name,
-                            ),
-                        };
+                        // let (variant_name, ty_name) = match ty_name {
+                        //     RenderedName::Name(name) => (name.to_pascal_case(), name),
+                        //     RenderedName::Placeholder(name) => (
+                        //         renderer
+                        //             .placeholder_string(
+                        //                 variant.name(),
+                        //                 Box::new(|final_name| final_name.to_pascal_case()),
+                        //             )
+                        //             .to_string(),
+                        //         name,
+                        //     ),
+                        // };
+                        let variant_name = ty_name.to_pascal_case();
                         let ty_name = if let Some(true) = cyclic {
                             format!("Box<{ty_name}>")
                         } else {
@@ -231,10 +232,10 @@ impl RenderType for RustTypeRenderer {
             {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, cyclic) = renderer.render_subgraph(ty.item(), cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                // let inner_ty_name = match inner_ty_name {
+                //     RenderedName::Name(name) => name,
+                //     RenderedName::Placeholder(name) => name,
+                // };
                 let inner_ty_name = if let Some(true) = cyclic {
                     format!("Box<{inner_ty_name}>")
                 } else {
@@ -245,10 +246,10 @@ impl RenderType for RustTypeRenderer {
             Type::Optional(ty) => {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, cyclic) = renderer.render_subgraph(ty.item(), cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                // let inner_ty_name = match inner_ty_name {
+                //     RenderedName::Name(name) => name,
+                //     RenderedName::Placeholder(name) => name,
+                // };
                 let inner_ty_name = if let Some(true) = cyclic {
                     format!("Box<{inner_ty_name}>")
                 } else {
@@ -265,10 +266,10 @@ impl RenderType for RustTypeRenderer {
             {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                // let inner_ty_name = match inner_ty_name {
+                //     RenderedName::Name(name) => name,
+                //     RenderedName::Placeholder(name) => name,
+                // };
                 if ty.unique_items {
                     format!("std::collections::HashSet<{inner_ty_name}>")
                 } else {
@@ -278,10 +279,10 @@ impl RenderType for RustTypeRenderer {
             Type::List(ty) => {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                // let inner_ty_name = match inner_ty_name {
+                //     RenderedName::Name(name) => name,
+                //     RenderedName::Placeholder(name) => name,
+                // };
                 let ty_name = normalize_type_title(&ty.title());
                 if ty.unique_items {
                     // let ty_name = format!("{inner_ty_name}Set");

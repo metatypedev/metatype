@@ -92,7 +92,7 @@ pub fn selection_for_field(
         Type::Function(t) => {
             let arg_ty = if !t.input().properties().is_empty() {
                 // FIXME
-                Some(arg_ty_names.get(&t.input().name()).unwrap().clone())
+                Some(arg_ty_names.get(&t.input().key()).unwrap().clone())
             } else {
                 None
             };
@@ -117,10 +117,10 @@ pub fn selection_for_field(
         Type::Optional(t) => selection_for_field(t.item(), arg_ty_names, renderer, cursor)?,
         Type::List(t) => selection_for_field(t.item(), arg_ty_names, renderer, cursor)?,
         Type::Object(t) => SelectionTy::Composite {
-            select_ty: renderer.render_subgraph(&t.wrap(), cursor)?.0.unwrap(),
+            select_ty: renderer.render_subgraph(&t.wrap(), cursor)?.0,
         },
         Type::Union(t) => {
-            let select_ty = renderer.render_subgraph(&t.wrap(), cursor)?.0.unwrap();
+            let select_ty = renderer.render_subgraph(&t.wrap(), cursor)?.0;
             let variants = t.variants();
             match selection_for_field(&variants[0], arg_ty_names, renderer, cursor)? {
                 SelectionTy::Scalar => SelectionTy::Scalar,

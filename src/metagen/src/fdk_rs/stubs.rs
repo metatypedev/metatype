@@ -15,16 +15,18 @@ pub struct GenStubOptions {}
 pub fn gen_stub(
     fun: &Arc<FunctionType>,
     mod_stub_traits: &mut GenDestBuf,
-    type_names: &BTreeMap<Arc<str>, Arc<str>>,
+    // type_names: &BTreeMap<Arc<str>, Arc<str>>,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<String> {
-    let inp_ty = type_names
-        .get(&fun.input().name())
-        .context("input type for function not found")?;
-    let out_ty = type_names
-        .get(&fun.output().name())
-        .context("output type for function not found")?;
-    let title = &fun.base.title;
+    // let inp_ty = type_names
+    //     .get(&fun.input().name())
+    //     .context("input type for function not found")?;
+    // let out_ty = type_names
+    //     .get(&fun.output().name())
+    //     .context("output type for function not found")?;
+    let inp_ty = fun.input().name();
+    let out_ty = fun.output().name();
+    let title = &fun.name();
     let trait_name: String = normalize_type_title(title);
     // FIXME: use hash or other stable id
     let id = title;

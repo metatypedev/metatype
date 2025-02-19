@@ -63,26 +63,26 @@ impl RenderType for TypescriptTypeRenderer {
         let name = match cursor.node.clone() {
             Type::Function { .. } => "void".into(),
             Type::Boolean(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(renderer, &ty_name, "boolean")?;
                 ty_name
             }
             Type::Boolean(_) => "boolean".into(),
             Type::Float(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(renderer, &ty_name, "number")?;
                 ty_name
             }
             Type::Float(_) => "number".into(),
             Type::Integer(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(renderer, &ty_name, "number")?;
                 ty_name
             }
             Type::Integer(_) => "number".into(),
             Type::String(ty) if body_required => {
                 if let Some(variants) = &ty.enumeration {
-                    let ty_name = normalize_type_title(&ty.title());
+                    let ty_name = normalize_type_title(&ty.name());
                     self.render_alias(renderer, &ty_name, &variants.join(" | "))?;
                     ty_name
                 } else if let Some(format) = ty.format_only() {
@@ -91,14 +91,14 @@ impl RenderType for TypescriptTypeRenderer {
                     self.render_alias(renderer, &ty_name, "string")?;
                     ty_name
                 } else {
-                    let ty_name = normalize_type_title(&ty.title());
+                    let ty_name = normalize_type_title(&ty.name());
                     self.render_alias(renderer, &ty_name, "string")?;
                     ty_name
                 }
             }
             Type::String { .. } => "string".into(),
             Type::File(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(renderer, &ty_name, "File")?;
                 ty_name
             }
@@ -110,10 +110,10 @@ impl RenderType for TypescriptTypeRenderer {
                     // generate property types first
                     .map(|(name, prop)| {
                         let (ty_name, _cyclic) = renderer.render_subgraph(&prop.type_, cursor)?;
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
+                        // let ty_name = match ty_name {
+                        //     RenderedName::Name(name) => name,
+                        //     RenderedName::Placeholder(name) => name,
+                        // };
                         let optional = matches!(prop.type_, Type::Optional(_));
                         Ok::<_, anyhow::Error>((
                             normalize_struct_prop_name(&name[..]),
@@ -122,7 +122,7 @@ impl RenderType for TypescriptTypeRenderer {
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
 
-                let ty_name = normalize_type_title(ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 if !props.is_empty() {
                     self.render_object_type(renderer, &ty_name, props)?;
                 } else {
@@ -136,14 +136,14 @@ impl RenderType for TypescriptTypeRenderer {
                     .iter()
                     .map(|variant| {
                         let (ty_name, _cyclic) = renderer.render_subgraph(variant, cursor)?;
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
+                        // let ty_name = match ty_name {
+                        //     RenderedName::Name(name) => name,
+                        //     RenderedName::Placeholder(name) => name,
+                        // };
                         Ok::<_, anyhow::Error>(ty_name)
                     })
                     .collect::<Result<Vec<_>, _>>()?;
-                let ty_name = normalize_type_title(ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_union_type(renderer, &ty_name, variants)?;
                 ty_name
             }
@@ -152,20 +152,20 @@ impl RenderType for TypescriptTypeRenderer {
             {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                // let inner_ty_name = match inner_ty_name {
+                //     RenderedName::Name(name) => name,
+                //     RenderedName::Placeholder(name) => name,
+                // };
                 format!("({inner_ty_name}) | null | undefined")
             }
             Type::Optional(ty) => {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                let ty_name = normalize_type_title(ty.title());
+                // let inner_ty_name = match inner_ty_name {
+                //     RenderedName::Name(name) => name,
+                //     RenderedName::Placeholder(name) => name,
+                // };
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(
                     renderer,
                     &ty_name,
@@ -179,10 +179,10 @@ impl RenderType for TypescriptTypeRenderer {
             {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
+                // let inner_ty_name = match inner_ty_name {
+                //     RenderedName::Name(name) => name,
+                //     RenderedName::Placeholder(name) => name,
+                // };
                 if let true = ty.unique_items {
                     // TODO: use sets?
                     format!("Array<{inner_ty_name}>")
@@ -193,11 +193,11 @@ impl RenderType for TypescriptTypeRenderer {
             Type::List(ty) => {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                let ty_name = normalize_type_title(ty.title());
+                // let inner_ty_name = match inner_ty_name {
+                //     RenderedName::Name(name) => name,
+                //     RenderedName::Placeholder(name) => name,
+                // };
+                let ty_name = normalize_type_title(&ty.name());
                 if let true = ty.unique_items {
                     // FIXME: use set?
                     self.render_alias(renderer, &ty_name, &format!("Array<{inner_ty_name}>"))?;

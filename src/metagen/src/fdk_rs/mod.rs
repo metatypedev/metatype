@@ -185,7 +185,7 @@ impl FdkRustTemplate {
         self.gen_static(&mut mod_rs)?;
         writeln!(&mut mod_rs.buf, "use types::*;")?;
         writeln!(&mut mod_rs.buf, "pub mod types {{")?;
-        let ty_name_memo = {
+        {
             let mut renderer = shared::types::TypeRenderer::new(
                 tg.clone(),
                 Arc::new(types::RustTypeRenderer {
@@ -200,7 +200,7 @@ impl FdkRustTemplate {
             for ty in tg.named.values().filter(|&ty| ty.idx() != 0) {
                 _ = renderer.render(ty)?;
             }
-            let (types_rs, name_memo) = renderer.finalize();
+            let types_rs = renderer.finalize();
             for line in types_rs.lines() {
                 if !line.is_empty() {
                     writeln!(&mut mod_rs.buf, "    {line}")?;
@@ -208,7 +208,6 @@ impl FdkRustTemplate {
                     writeln!(&mut mod_rs.buf)?;
                 }
             }
-            name_memo
         };
         writeln!(&mut mod_rs.buf, "}}")?;
         writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
@@ -227,8 +226,7 @@ impl FdkRustTemplate {
             })?;
             let mut op_to_mat_map = BTreeMap::new();
             for fun in &stubbed_funs {
-                let trait_name =
-                    stubs::gen_stub(fun, &mut stubs_rs, &ty_name_memo, &gen_stub_opts)?;
+                let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &gen_stub_opts)?;
                 if let Some(Some(op_name)) =
                     fun.materializer.data.get("op_name").map(|val| val.as_str())
                 {

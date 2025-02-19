@@ -15,7 +15,6 @@ use crate::*;
 
 use crate::utils::GenDestBuf;
 
-use self::shared::types::NameMemo;
 use self::shared::types::TypeRenderer;
 
 pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.ts", include_str!("static/fdk.ts"))];
@@ -89,7 +88,8 @@ impl FdkTypescriptTemplate {
         )?;
         writeln!(&mut fdk_ts)?;
         self.gen_static(&mut fdk_ts)?;
-        let ty_name_memo = render_types(&mut fdk_ts, tg.clone())?;
+        // let ty_name_memo = render_types(&mut fdk_ts, tg.clone())?;
+        // eprintln!("ty_name_memo: {:#?}", ty_name_memo);
         writeln!(&mut fdk_ts)?;
         {
             let stubbed_rts = config
@@ -100,13 +100,15 @@ impl FdkTypescriptTemplate {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             for fun in &stubbed_funs {
-                let inp_ty = ty_name_memo
-                    .get(&fun.input().name())
-                    .context("input type for function not found")?;
-                let out_ty = ty_name_memo
-                    .get(&fun.output().name())
-                    .context("output type for function not found")?;
-                let type_name: String = utils::normalize_type_title(&fun.base.title);
+                // let inp_ty = ty_name_memo
+                //     .get(&fun.input().name())
+                //     .context("input type for function not found")?;
+                // let out_ty = ty_name_memo
+                //     .get(&fun.output().name())
+                //     .context("output type for function not found")?;
+                let inp_ty = utils::normalize_type_title(&fun.input().name());
+                let out_ty = utils::normalize_type_title(&fun.output().name());
+                let type_name: String = utils::normalize_type_title(&fun.name());
                 writeln!(
                     &mut fdk_ts,
                     "export type {type_name}Handler = Handler<{inp_ty}, {out_ty}>;"
@@ -181,7 +183,7 @@ impl crate::Plugin for Generator {
     }
 }
 
-fn render_types(dest: &mut GenDestBuf, tg: Arc<Typegraph>) -> anyhow::Result<NameMemo> {
+fn render_types(dest: &mut GenDestBuf, tg: Arc<Typegraph>) -> anyhow::Result<()> {
     let mut renderer = TypeRenderer::new(tg.clone(), Arc::new(types::TypescriptTypeRenderer {}));
     // remove the root type which we don't want to generate types for
     // TODO: gql types || function wrappers for exposed functions
@@ -189,9 +191,9 @@ fn render_types(dest: &mut GenDestBuf, tg: Arc<Typegraph>) -> anyhow::Result<Nam
     for ty in tg.named.values() {
         _ = renderer.render(ty)?;
     }
-    let (types_ts, name_memo) = renderer.finalize();
+    let types_ts = renderer.finalize();
     writeln!(dest.buf, "{}", types_ts)?;
-    Ok(name_memo)
+    Ok(())
 }
 
 #[test]
@@ -235,6 +237,10 @@ fn e2e() -> anyhow::Result<()> {
                 config,
                 build_fn: |args| {
                     Box::pin(async move {
+                        println!(
+                            "file content:fdk.ts:\n{}\n--end--",
+                            std::fs::read_to_string(args.path.join("fdk.ts"))?
+                        );
                         let status = tokio::process::Command::new("deno")
                             .args("check fdk.ts".split(' ').collect::<Vec<_>>())
                             .current_dir(&args.path)

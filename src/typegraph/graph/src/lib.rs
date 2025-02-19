@@ -15,7 +15,7 @@ mod interlude {
     pub use color_eyre::{eyre::eyre, Result};
 }
 
-use conv::ValueTypeKey;
+use conv::TypeKey;
 use interlude::*;
 use naming::DefaultNamingEngine;
 use std::collections::HashMap;
@@ -25,8 +25,8 @@ pub use types::*;
 pub struct Typegraph {
     pub schema: Arc<tg_schema::Typegraph>,
     pub root: Arc<ObjectType>,
-    pub input_types: HashMap<ValueTypeKey, Type>,
-    pub output_types: HashMap<ValueTypeKey, Type>,
+    pub input_types: HashMap<TypeKey, Type>,
+    pub output_types: HashMap<TypeKey, Type>,
     pub functions: HashMap<u32, Arc<FunctionType>>,
     pub namespace_objects: HashMap<Vec<Arc<str>>, Arc<ObjectType>>,
     pub named: HashMap<Arc<str>, Type>,

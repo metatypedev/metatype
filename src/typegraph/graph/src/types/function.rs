@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType};
+use crate::conv::interlude::*;
 use crate::{
-    runtimes::{Materializer, Runtime},
-    Lazy, Arc,
+    runtimes::{Materializer, MaterializerNode, Runtime},
+    Arc, Lazy,
 };
 use tg_schema::parameter_transform::FunctionParameterTransform;
 
@@ -67,5 +68,79 @@ impl TypeNode for Arc<FunctionType> {
                 kind: EdgeKind::FunctionOutput,
             },
         ]
+    }
+}
+
+pub(crate) fn convert_function(
+    parent: WeakType,
+    type_idx: u32,
+    base: &tg_schema::TypeNodeBase,
+    data: &tg_schema::FunctionTypeData,
+    materializer: Arc<MaterializerNode>,
+) -> Box<dyn TypeConversionResult> {
+    let ty = Type::Function(
+        FunctionType {
+            base: Conversion::base(TypeKey(type_idx, 0), parent, type_idx, base),
+            input: Default::default(),
+            output: Default::default(),
+            parameter_transform: data.parameter_transform.clone(),
+            runtime_config: data.runtime_config.clone(),
+            materializer,
+            rate_weight: data.rate_weight,
+            rate_calls: data.rate_calls,
+        }
+        .into(),
+    );
+
+    Box::new(FunctionTypeConversionResult {
+        ty,
+        input_idx: data.input,
+        output_idx: data.output,
+    })
+}
+
+struct FunctionTypeConversionResult {
+    ty: Type,
+    input_idx: u32,
+    output_idx: u32,
+}
+
+impl TypeConversionResult for FunctionTypeConversionResult {
+    fn get_type(&self) -> Type {
+        self.ty.clone()
+    }
+
+    fn finalize(&mut self, conv: &mut Conversion) {
+        let weak = self.ty.downgrade();
+        let owner_fn = weak.as_func().unwrap();
+
+        let mut input_res = conv.convert_type(
+            weak.clone(),
+            self.input_idx,
+            RelativePath::input(owner_fn.clone(), vec![]),
+        );
+
+        let mut output_res = conv.convert_type(
+            weak.clone(),
+            self.output_idx,
+            RelativePath::output(owner_fn.clone(), vec![]),
+        );
+
+        match &self.ty {
+            Type::Function(func) => {
+                match &input_res.get_type() {
+                    Type::Object(input) => {
+                        func.input.set(input.clone()).unwrap();
+                    }
+                    _ => unreachable!(),
+                }
+                func.output.set(output_res.get_type()).unwrap();
+                // TODO materializer
+            }
+            _ => unreachable!(),
+        }
+
+        input_res.finalize(conv);
+        output_res.finalize(conv)
     }
 }

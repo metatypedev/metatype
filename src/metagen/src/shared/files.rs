@@ -4,7 +4,7 @@
 use crate::interlude::*;
 use std::collections::HashMap;
 use typegraph::{
-    conv::{Key, PathSegment},
+    conv::{PathSegment, RelativePath},
     visitor::{PathExt as _, VisitNext},
     TypeNodeExt as _,
 };
@@ -24,7 +24,7 @@ impl TryFrom<&PathSegment> for ObjectPathSegment {
             PathSegment::ObjectProp(key) => Ok(ObjectPathSegment::Prop(key.clone())),
             PathSegment::ListItem => Ok(ObjectPathSegment::Array),
             PathSegment::OptionalItem => Ok(ObjectPathSegment::Optional),
-            PathSegment::UnionVariant(_) | PathSegment::EitherVariant(_) => {
+            PathSegment::UnionVariant(_) => {
                 bail!("file input is not supported in polymorphic types")
             }
         }
@@ -109,14 +109,15 @@ pub fn serialize_typepaths_json(typepaths: &[TypePath]) -> Option<String> {
 pub fn get_path_to_files(root: &Type) -> Result<HashMap<u32, Vec<TypePath>>> {
     typegraph::visitor::traverse_types(
         root.clone(),
+        RelativePath::root(),
         Default::default(),
-        |ty, path, acc| -> Result<VisitNext, anyhow::Error> {
-            if path.is_cyclic() {
+        |n, acc| -> Result<VisitNext, anyhow::Error> {
+            if n.path.is_cyclic() {
                 return Ok(VisitNext::Stop);
             }
-            match &ty {
-                Type::File(file) => {
-                    if let Key::Input(key) = file.key() {
+            match &n.ty {
+                Type::File(_) => {
+                    if let RelativePath::Input(key) = &n.relative_path {
                         let fn_idx = key.owner.upgrade().unwrap().idx();
                         let entry = acc.entry(fn_idx).or_default();
                         entry.push((&key.path).try_into().unwrap());

@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::{Lazy, Arc};
+use crate::conv::interlude::*;
+use crate::{Arc, Lazy};
 
 #[derive(Debug)]
 pub struct UnionType {
@@ -44,5 +45,65 @@ impl TypeNode for Arc<UnionType> {
                 kind: EdgeKind::UnionVariant(v),
             })
             .collect()
+    }
+}
+
+pub(crate) fn convert_union(
+    parent: WeakType,
+    type_idx: u32,
+    key: TypeKey,
+    rpath: RelativePath,
+    base: &tg_schema::TypeNodeBase,
+    variants: &[u32],
+    either: bool,
+) -> Box<dyn TypeConversionResult> {
+    let ty = Type::Union(
+        UnionType {
+            base: Conversion::base(key, parent, type_idx, base),
+            variants: Default::default(),
+            either,
+        }
+        .into(),
+    );
+
+    Box::new(UnionTypeConversionResult {
+        ty,
+        variants: variants.to_vec(),
+        rpath,
+    })
+}
+
+pub struct UnionTypeConversionResult {
+    ty: Type,
+    variants: Vec<u32>, // TODO reference
+    rpath: RelativePath,
+}
+
+impl TypeConversionResult for UnionTypeConversionResult {
+    fn get_type(&self) -> Type {
+        self.ty.clone()
+    }
+
+    fn finalize(&mut self, conv: &mut Conversion) {
+        let mut variants = Vec::with_capacity(self.variants.len());
+        let mut results = Vec::with_capacity(self.variants.len());
+        let weak = self.ty.downgrade();
+        for (i, &idx) in self.variants.iter().enumerate() {
+            let rpath = self.rpath.push(PathSegment::UnionVariant(i as u32));
+            let res = conv.convert_type(weak.clone(), idx, rpath);
+            variants.push(res.get_type());
+            results.push(res);
+        }
+
+        match &self.ty {
+            Type::Union(union) => {
+                union.variants.set(variants).unwrap();
+            }
+            _ => unreachable!(),
+        }
+
+        for mut res in results {
+            res.finalize(conv);
+        }
     }
 }

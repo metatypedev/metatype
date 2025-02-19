@@ -31,7 +31,7 @@ pub mod shared;
 
 mod fdk_py;
 mod fdk_rs;
-mod fdk_substantial;
+// mod fdk_substantial;
 mod fdk_ts;
 
 // mod client_py;
@@ -156,16 +156,16 @@ impl GeneratorRunner {
                         },
                     },
                 ),
-                (
-                    "fdk_substantial".to_string(),
-                    GeneratorRunner {
-                        op: |workspace_path: &Path, val| {
-                            let config = fdk_substantial::FdkSubstantialGenConfig::from_json(val, workspace_path)?;
-                            let generator = fdk_substantial::Generator::new(config)?;
-                            Ok(Box::new(generator))
-                        },
-                    },
-                ),
+                // (
+                //     "fdk_substantial".to_string(),
+                //     GeneratorRunner {
+                //         op: |workspace_path: &Path, val| {
+                //             let config = fdk_substantial::FdkSubstantialGenConfig::from_json(val, workspace_path)?;
+                //             let generator = fdk_substantial::Generator::new(config)?;
+                //             Ok(Box::new(generator))
+                //         },
+                //     },
+                // ),
                 (
                     "fdk_ts".to_string(),
                     GeneratorRunner {

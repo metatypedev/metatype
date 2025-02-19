@@ -1,8 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::conv::Key;
-use crate::interlude::*;
+use crate::{conv::TypeKey, interlude::*};
 use enum_dispatch::enum_dispatch;
 
 mod boolean;
@@ -66,7 +65,7 @@ impl std::hash::Hash for Edge {
 pub struct TypeBase {
     pub parent: WeakType,
     pub type_idx: u32,
-    pub key: Key,
+    pub key: TypeKey,
     pub title: String,
     pub name: Lazy<Arc<str>>,
     pub description: Option<String>,
@@ -105,10 +104,10 @@ pub trait TypeNodeExt: TypeNode {
     fn name(&self) -> Arc<str>;
     fn parent(&self) -> Option<Type>;
     fn title(&self) -> &str;
-    fn key(&self) -> &Key;
-    fn is_input(&self) -> bool;
-    fn is_output(&self) -> bool;
-    fn is_namespace(&self) -> bool;
+    fn key(&self) -> TypeKey;
+    // fn is_input(&self) -> bool;
+    // fn is_output(&self) -> bool;
+    // fn is_namespace(&self) -> bool;
 }
 
 impl<N> TypeNodeExt for N
@@ -131,21 +130,21 @@ where
         self.base().title.as_ref()
     }
 
-    fn key(&self) -> &Key {
-        &self.base().key
+    fn key(&self) -> TypeKey {
+        self.base().key
     }
 
-    fn is_input(&self) -> bool {
-        self.base().key.is_input()
-    }
+    // fn is_input(&self) -> bool {
+    //     self.base().key.is_input()
+    // }
+    //
+    // fn is_output(&self) -> bool {
+    //     self.base().key.is_output()
+    // }
 
-    fn is_output(&self) -> bool {
-        self.base().key.is_output()
-    }
-
-    fn is_namespace(&self) -> bool {
-        self.base().key.is_namespace()
-    }
+    // fn is_namespace(&self) -> bool {
+    //     self.base().key.is_namespace()
+    // }
 }
 
 #[derive(Debug, Clone)]
@@ -191,6 +190,32 @@ impl Type {
             Type::Union(t) => t.variants.get().unwrap().iter().any(|v| v.is_composite()),
             Type::Function(_) => panic!("function type isn't composite or scalar"),
         }
+    }
+}
+
+// TODO move to (...)
+pub fn is_composite(tg: &tg_schema::Typegraph, idx: u32) -> bool {
+    let node = &tg.types[idx as usize];
+    use tg_schema::TypeNode as N;
+    match node {
+        N::Boolean { .. }
+        | N::Integer { .. }
+        | N::Float { .. }
+        | N::String { .. }
+        | N::File { .. } => false,
+        N::Object { .. } => true,
+        N::Optional { data, .. } => is_composite(tg, data.item),
+        N::List { data, .. } => is_composite(tg, data.items),
+        N::Union {
+            data: tg_schema::UnionTypeData { any_of: variants },
+            ..
+        }
+        | N::Either {
+            data: tg_schema::EitherTypeData { one_of: variants },
+            ..
+        } => variants.iter().any(|v| is_composite(tg, *v)),
+        N::Function { .. } => panic!("function type isn't composite or scalar"),
+        N::Any { .. } => unimplemented!("Any type support not implemented"),
     }
 }
 
