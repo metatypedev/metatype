@@ -45,10 +45,8 @@ const predefinedFuncs: Record<
   pass: () => () => "PASS" as PolicyResolverOutput,
   internal_policy:
     () =>
-    ({ _: { context } }) =>
-      context.provider === "internal"
-        ? "ALLOW"
-        : ("PASS" as PolicyResolverOutput),
+    ({ _: { context } }): PolicyResolverOutput =>
+      context.provider === "internal" ? "PASS" : "DENY",
   context_check: ({ key, value }) => {
     let check: (value: any) => boolean;
     switch (value.type) {

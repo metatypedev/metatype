@@ -3,8 +3,9 @@
 
 import { Policy, t, typegraph } from "@typegraph/sdk";
 import { RandomRuntime } from "@typegraph/sdk/runtimes/random";
+import { DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 
-export const tg = await typegraph("dedup", (g: any) => {
+await typegraph("object-dedup", (g: any) => {
   const rand = new RandomRuntime({});
 
   const obj1 = t.struct({
@@ -26,8 +27,28 @@ export const tg = await typegraph("dedup", (g: any) => {
     dateInj2: t.datetime().inject("now"),
   });
 
+  g.expose(
+    {
+      test: rand.gen(obj1),
+      test2: rand.gen(obj2),
+    },
+    Policy.public(),
+  );
+});
+
+await typegraph("materializer-dedup", (g: any) => {
+  const deno = new DenoRuntime();
+
+  const f = deno.func(
+    t.struct({ i: t.integer() }),
+    t.struct({ o: t.string() }),
+    {
+      code: ({ i }) => ({ o: i.toString() }),
+    },
+  );
+
   g.expose({
-    test: rand.gen(obj1),
-    test2: rand.gen(obj2),
-  }, Policy.public());
+    f1: f.withPolicy(Policy.public()),
+    f2: f.withPolicy(Policy.internal()),
+  });
 });

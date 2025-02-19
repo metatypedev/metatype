@@ -25,6 +25,7 @@ def policies(g: Graph):
                 "(_args, { context }) => Number(context.a) === 2 ? 'ALLOW' : 'DENY'",
             )
         ),
+        pol_internal=fn.with_policy(Policy.internal()),
         ns=t.struct(
             {
                 "select": deno.func(
