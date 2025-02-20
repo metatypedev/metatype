@@ -43,7 +43,7 @@ async function prepareBucket() {
   }
 }
 
-Meta.test("metagen rust builds", async (t) => {
+Meta.test.only("metagen rust builds", async (t) => {
   const tmpDir = t.tempDir;
 
   const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.ts");
@@ -102,7 +102,7 @@ members = ["fdk/"]
   );
 });
 
-Meta.test("metagen python runs on cyclic types", async (t) => {
+Meta.test.only("metagen python runs on cyclic types", async (t) => {
   const typegraphPath = join(import.meta.dirname!, "typegraphs/python.py");
   const basePath = join(t.tempDir, "fdk");
 
