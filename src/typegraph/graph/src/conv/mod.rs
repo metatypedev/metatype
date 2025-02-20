@@ -180,16 +180,20 @@ impl Conversion {
         conv_res: Box<dyn TypeConversionResult>,
     ) -> Box<dyn TypeConversionResult> {
         let typ = conv_res.get_type();
-        eprintln!("register type: {:?}", rpath);
-        self.conversion_map.register(rpath.clone(), typ.clone());
+        // eprintln!("register type: {:?}", rpath);
 
-        if let Some(dupl) = rpath.find_cycle() {
+        if let Some(dupl) = rpath.find_cycle(&self.schema) {
             // cycle detected, reuse the existing type
-            eprintln!("cycle detected: {:?}", dupl);
+            eprintln!("cycle detected: {:?} vs {:?}", dupl, rpath);
+            eprintln!("   cycle: {:?}", self.conversion_map.reverse[&dupl]);
+            eprintln!("skip registration for {:?}", typ.key());
             let key = self.conversion_map.reverse[&dupl].clone();
+            let ty = self.conversion_map.direct[&key].node.clone();
             self.conversion_map.append(key, rpath.clone()); // note that it is a cycle??
-            return finalized_type(self.conversion_map.direct[&key].node.clone());
+            return finalized_type(ty);
         }
+
+        self.conversion_map.register(rpath.clone(), typ.clone());
 
         use RelativePath as RP;
         match rpath {

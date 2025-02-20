@@ -178,7 +178,7 @@ impl RenderType for TypescriptTypeRenderer {
                     && ty.title().starts_with("list_") =>
             {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
+                let (inner_ty_name, _) = renderer.render_subgraph(ty.item()?, cursor)?;
                 // let inner_ty_name = match inner_ty_name {
                 //     RenderedName::Name(name) => name,
                 //     RenderedName::Placeholder(name) => name,
@@ -192,7 +192,7 @@ impl RenderType for TypescriptTypeRenderer {
             }
             Type::List(ty) => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
+                let (inner_ty_name, _) = renderer.render_subgraph(ty.item()?, cursor)?;
                 // let inner_ty_name = match inner_ty_name {
                 //     RenderedName::Name(name) => name,
                 //     RenderedName::Placeholder(name) => name,

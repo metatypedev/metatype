@@ -3,6 +3,7 @@
 
 use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType};
 use crate::conv::interlude::*;
+use crate::interlude::*;
 use crate::{
     runtimes::{Materializer, MaterializerNode, Runtime},
     Arc, Lazy,
@@ -51,8 +52,11 @@ impl TypeNode for Arc<FunctionType> {
         "function"
     }
 
-    fn children(&self) -> Vec<Type> {
-        vec![Type::Object(self.input().clone()), self.output().clone()]
+    fn children(&self) -> Result<Vec<Type>> {
+        Ok(vec![
+            Type::Object(self.input().clone()),
+            self.output().clone(),
+        ])
     }
 
     fn edges(&self) -> Vec<Edge> {
@@ -78,6 +82,7 @@ pub(crate) fn convert_function(
     data: &tg_schema::FunctionTypeData,
     materializer: Arc<MaterializerNode>,
 ) -> Box<dyn TypeConversionResult> {
+    eprintln!("convert function #{type_idx}: start");
     let ty = Type::Function(
         FunctionType {
             base: Conversion::base(TypeKey(type_idx, 0), parent, type_idx, base),

@@ -91,8 +91,8 @@ pub trait TypeNode {
     fn base(&self) -> &TypeBase;
     fn tag(&self) -> &'static str;
 
-    fn children(&self) -> Vec<Type> {
-        vec![]
+    fn children(&self) -> Result<Vec<Type>> {
+        Ok(vec![])
     }
     fn edges(&self) -> Vec<Edge> {
         vec![]

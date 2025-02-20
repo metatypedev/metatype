@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
+use crate::interlude::*;
 use crate::{conv::interlude::*, Arc, Lazy};
 
 #[derive(Debug)]
@@ -26,8 +27,8 @@ impl TypeNode for Arc<OptionalType> {
         "optional"
     }
 
-    fn children(&self) -> Vec<Type> {
-        vec![self.item().clone()]
+    fn children(&self) -> Result<Vec<Type>> {
+        Ok(vec![self.item().clone()])
     }
 
     fn edges(&self) -> Vec<Edge> {

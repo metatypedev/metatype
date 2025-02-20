@@ -121,7 +121,7 @@ where
         }
 
         Type::List(inner) => {
-            let item = inner.item().clone();
+            let item = inner.item().unwrap().clone();
             path.push(edge(&item, EdgeKind::ListItem));
             let res = traverse_types_with_path(
                 item,

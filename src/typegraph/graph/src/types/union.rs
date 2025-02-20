@@ -3,6 +3,7 @@
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
 use crate::conv::interlude::*;
+use crate::interlude::*;
 use crate::{Arc, Lazy};
 
 #[derive(Debug)]
@@ -31,8 +32,8 @@ impl TypeNode for Arc<UnionType> {
         }
     }
 
-    fn children(&self) -> Vec<Type> {
-        self.variants().clone()
+    fn children(&self) -> Result<Vec<Type>> {
+        Ok(self.variants().clone())
     }
 
     fn edges(&self) -> Vec<Edge> {

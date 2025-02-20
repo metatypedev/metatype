@@ -115,7 +115,7 @@ pub fn selection_for_field(
         }
 
         Type::Optional(t) => selection_for_field(t.item(), arg_ty_names, renderer, cursor)?,
-        Type::List(t) => selection_for_field(t.item(), arg_ty_names, renderer, cursor)?,
+        Type::List(t) => selection_for_field(t.item()?, arg_ty_names, renderer, cursor)?,
         Type::Object(t) => SelectionTy::Composite {
             select_ty: renderer.render_subgraph(&t.wrap(), cursor)?.0,
         },

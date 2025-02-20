@@ -192,14 +192,18 @@ impl FdkRustTemplate {
                     derive_serde: true,
                     derive_debug: true,
                     all_fields_optional: false,
+                    rendered: Default::default(),
                 }),
             );
             // remove the root type which we don't want to generate types for
             // TODO: gql types || function wrappers for exposed functions
             // skip object 0, the root object where the `exposed` items are locted
+            eprintln!("rendering types");
             for ty in tg.named.values().filter(|&ty| ty.idx() != 0) {
+                eprintln!("render type: name={}", ty.name());
                 _ = renderer.render(ty)?;
             }
+            eprintln!("finalizing types");
             let types_rs = renderer.finalize();
             for line in types_rs.lines() {
                 if !line.is_empty() {
@@ -234,6 +238,8 @@ impl FdkRustTemplate {
                 }
             }
             stubs::gen_op_to_mat_map(&op_to_mat_map, &mut stubs_rs, &gen_stub_opts)?;
+
+            eprintln!("stubs_rs:\n{}", stubs_rs.buf);
 
             for line in stubs_rs.buf.lines() {
                 if !line.is_empty() {

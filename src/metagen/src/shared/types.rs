@@ -123,7 +123,7 @@ impl TypeRenderer {
             | Type::File { .. } => false,
             Type::Object { .. } => true,
             Type::Optional(ty) => Self::is_composite(ty.item()),
-            Type::List(ty) => Self::is_composite(ty.item()),
+            Type::List(ty) => Self::is_composite(ty.item().unwrap()),
             Type::Union(ty) => ty
                 .variants()
                 .iter()
@@ -179,29 +179,10 @@ impl TypeRenderer {
             path: my_path,
         };
 
-        // short circuit if we've already generated the type
-        // let ty_name = if let Some(name) = self.name_memo.get(&ty.key()) {
-        //     name.clone()
-        // } else if parent_cursor.path.contains(&ty.name()) {
-        //     let ancestor_placeholder = RenderedName::Placeholder(
-        //         self.placeholder_string(ty.name(), Box::new(|ty_name| ty_name.into())),
-        //     );
-        //     self.name_memo
-        //         .insert(ty.key(), ancestor_placeholder.clone());
-        //     ancestor_placeholder
-        // } else {
-        //     let render_type_impl = self.render_type.clone();
-        //
-        //     let ty_name = render_type_impl.render(self, &mut current_cursor)?;
-        //     let ty_name: Arc<str> = ty_name.into();
-        //
-        //     // if let Some(RenderedName::Placeholder(placeholder)) = self.name_memo.get(&id) {}
-        //
-        //     self.name_memo
-        //         .insert(ty.key(), RenderedName::Name(ty_name.clone()));
-        //
-        //     RenderedName::Name(ty_name)
-        // };
+        let render_type_impl = self.render_type.clone();
+
+        let _ty_name = render_type_impl.render(self, &mut current_cursor)?;
+
         let ty_name = ty.name();
 
         let cyclic =

@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::{conv::interlude::*, Arc, Lazy};
+use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, TypeNodeExt as _, WeakType};
+use crate::{conv::interlude::*, interlude::*, Arc, Lazy};
 
 #[derive(Debug)]
 pub struct ListType {
@@ -14,8 +14,15 @@ pub struct ListType {
 }
 
 impl ListType {
-    pub fn item(&self) -> &Type {
-        self.item.get().expect("uninitialized")
+    pub fn item(&self) -> Result<&Type> {
+        match self.item.get() {
+            Some(item) => Ok(item),
+            None => bail!(
+                "list item uninitialized: key={:?}; parent_key={:?}",
+                self.base.key,
+                self.base.parent.upgrade().unwrap().key()
+            ),
+        }
     }
 }
 
@@ -28,14 +35,14 @@ impl TypeNode for Arc<ListType> {
         "list"
     }
 
-    fn children(&self) -> Vec<Type> {
-        vec![self.item().clone()]
+    fn children(&self) -> Result<Vec<Type>> {
+        Ok(vec![self.item()?.clone()])
     }
 
     fn edges(&self) -> Vec<Edge> {
         vec![Edge {
             from: WeakType::List(Arc::downgrade(self)),
-            to: self.item().clone(),
+            to: self.item().unwrap().clone(),
             kind: EdgeKind::ListItem,
         }]
     }
@@ -49,6 +56,7 @@ pub(crate) fn convert_list(
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::ListTypeData,
 ) -> Box<dyn TypeConversionResult> {
+    eprintln!("convert_list: #{key:?}");
     let ty = Type::List(
         ListType {
             base: Conversion::base(key, parent, type_idx, base),
@@ -79,6 +87,7 @@ impl TypeConversionResult for ListTypeConversionResult {
     }
 
     fn finalize(&mut self, conv: &mut Conversion) {
+        eprintln!("finalize list: #{:?}", self.ty.key());
         let mut item = conv.convert_type(
             self.ty.downgrade(),
             self.item_idx,
@@ -86,11 +95,13 @@ impl TypeConversionResult for ListTypeConversionResult {
         );
         match &self.ty {
             Type::List(list) => {
+                eprintln!("finalize list: #{:?}: set item", self.ty.key());
                 list.item.set(item.get_type()).unwrap();
             }
             _ => unreachable!(),
         }
 
+        eprintln!("finalize list: #{:?}: finalize item", self.ty.key());
         item.finalize(conv);
     }
 }

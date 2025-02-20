@@ -5,7 +5,10 @@ use super::utils::*;
 use crate::interlude::*;
 use crate::shared::types::*;
 use heck::ToPascalCase;
+use std::cell::RefCell;
+use std::collections::HashSet;
 use std::fmt::Write;
+use typegraph::conv::TypeKey;
 use typegraph::TypeNodeExt as _;
 
 pub struct RustTypeRenderer {
@@ -15,10 +18,12 @@ pub struct RustTypeRenderer {
     // users might exclude fields on return
     // types
     pub all_fields_optional: bool,
+    pub rendered: RefCell<HashSet<TypeKey>>,
 }
 
 impl RustTypeRenderer {
     fn render_derive(&self, dest: &mut impl Write) -> std::fmt::Result {
+        eprintln!("rendering derive");
         let mut derive_args = vec![];
         if self.derive_debug {
             derive_args.extend_from_slice(&["Debug"]);
@@ -44,6 +49,7 @@ impl RustTypeRenderer {
         alias_name: &str,
         aliased_ty: &str,
     ) -> std::fmt::Result {
+        eprintln!("rendering alias: {}", alias_name);
         writeln!(out, "pub type {alias_name} = {aliased_ty};")
     }
 
@@ -54,6 +60,7 @@ impl RustTypeRenderer {
         ty_name: &str,
         props: IndexMap<String, (String, Option<Arc<str>>)>,
     ) -> std::fmt::Result {
+        eprintln!("rendering struct: {}", ty_name);
         self.render_derive(dest)?;
         writeln!(dest, "pub struct {ty_name} {{")?;
         for (name, (ty_name, ser_name)) in props.into_iter() {
@@ -74,6 +81,7 @@ impl RustTypeRenderer {
         ty_name: &str,
         variants: Vec<(String, String)>,
     ) -> std::fmt::Result {
+        eprintln!("rendering enum: {}", ty_name);
         self.render_derive(dest)?;
         writeln!(dest, "#[serde(untagged)]")?;
         writeln!(dest, "pub enum {ty_name} {{")?;
@@ -90,6 +98,10 @@ impl RenderType for RustTypeRenderer {
         renderer: &mut TypeRenderer,
         cursor: &mut VisitCursor,
     ) -> anyhow::Result<String> {
+        if !self.rendered.borrow_mut().insert(cursor.node.key()) {
+            return Ok("".into());
+        }
+        eprintln!("RustTypeRenderer::render: {}", cursor.node.name());
         let body_required = type_body_required(&cursor.node);
         let name = match cursor.node.clone() {
             Type::Function { .. } => "()".into(),
@@ -97,7 +109,7 @@ impl RenderType for RustTypeRenderer {
             // if [type_body_required] says so, we usually need to generate
             // aliases for even simple primitie types
             Type::Boolean(ty) if body_required => {
-                let ty_name = normalize_type_title(ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(renderer, &ty_name, "bool")?;
                 ty_name
             }
@@ -108,14 +120,14 @@ impl RenderType for RustTypeRenderer {
             Type::Boolean(_) => "bool".into(),
 
             Type::Float(ty) if body_required => {
-                let ty_name = normalize_type_title(ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(renderer, &ty_name, "f64")?;
                 ty_name
             }
             Type::Float(_) => "f64".into(),
 
             Type::Integer(ty) if body_required => {
-                let ty_name = normalize_type_title(ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(renderer, &ty_name, "i64")?;
                 ty_name
             }
@@ -129,7 +141,7 @@ impl RenderType for RustTypeRenderer {
                     ty_name
                 } else {
                     if body_required {
-                        let ty_name = normalize_type_title(ty.title());
+                        let ty_name = normalize_type_title(&ty.name());
                         self.render_alias(renderer, &ty_name, "String")?;
                         ty_name
                     } else {
@@ -139,7 +151,7 @@ impl RenderType for RustTypeRenderer {
             }
 
             Type::File(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(renderer, &ty_name, "super::FileId")?;
                 ty_name
             }
@@ -152,12 +164,15 @@ impl RenderType for RustTypeRenderer {
             // }
             // TypeNode::Any { .. } => "serde_json::Value".into(),
             Type::Object(ty) => {
+                eprintln!("rendering object: {}", ty.name());
                 let props = ty
                     .properties()
                     .iter()
                     // generate property type sfirst
                     .map(|(name, prop)| {
                         let (ty_name, cyclic) = renderer.render_subgraph(&prop.type_, cursor)?;
+                        let ty_name = normalize_type_title(&ty_name);
+                        eprintln!("rendered prop: {name}; ty_name={ty_name}, cyclick={cyclic:?}",);
 
                         // let ty_name = match ty_name {
                         //     RenderedName::Name(name) => name,
@@ -265,7 +280,7 @@ impl RenderType for RustTypeRenderer {
                     && ty.title().starts_with("list_") =>
             {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
+                let (inner_ty_name, _) = renderer.render_subgraph(ty.item()?, cursor)?;
                 // let inner_ty_name = match inner_ty_name {
                 //     RenderedName::Name(name) => name,
                 //     RenderedName::Placeholder(name) => name,
@@ -278,7 +293,7 @@ impl RenderType for RustTypeRenderer {
             }
             Type::List(ty) => {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(ty.item(), cursor)?;
+                let (inner_ty_name, _) = renderer.render_subgraph(ty.item()?, cursor)?;
                 // let inner_ty_name = match inner_ty_name {
                 //     RenderedName::Name(name) => name,
                 //     RenderedName::Placeholder(name) => name,

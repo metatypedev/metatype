@@ -37,7 +37,7 @@ pub fn visit_type(
             format!("Union[{item_hint}, None]")
         }
         Type::List(ty) => {
-            let item_hint = visit_type(tera, memo, ty.item(), tg)?.hint;
+            let item_hint = visit_type(tera, memo, ty.item()?, tg)?.hint;
             format!("List[{item_hint}]")
         }
         Type::Function(_) => "".to_string(),

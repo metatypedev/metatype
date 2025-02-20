@@ -68,7 +68,7 @@ impl PathSegment {
                 _ => None,
             },
             PathSegment::ListItem => match ty {
-                Type::List(list) => Some(list.item().clone()),
+                Type::List(list) => Some(list.item().unwrap().clone()),
                 _ => None,
             },
             PathSegment::OptionalItem => match ty {
@@ -77,6 +77,34 @@ impl PathSegment {
             },
             PathSegment::UnionVariant(idx) => match ty {
                 Type::Union(union) => Some(union.variants().get(*idx as usize)?.clone()),
+                _ => None,
+            },
+        }
+    }
+
+    pub fn apply_on_schema_node(
+        &self,
+        nodes: &[tg_schema::TypeNode],
+        type_idx: u32,
+    ) -> Option<u32> {
+        use tg_schema::TypeNode as N;
+        let node = &nodes[type_idx as usize];
+        match self {
+            PathSegment::ObjectProp(key) => match node {
+                N::Object { data, .. } => data.properties.get(key.as_ref()).copied(),
+                _ => None,
+            },
+            PathSegment::ListItem => match node {
+                N::List { data, .. } => Some(data.items),
+                _ => None,
+            },
+            PathSegment::OptionalItem => match node {
+                N::Optional { data, .. } => Some(data.item),
+                _ => None,
+            },
+            PathSegment::UnionVariant(idx) => match node {
+                N::Union { data, .. } => data.any_of.get(*idx as usize).copied(),
+                N::Either { data, .. } => data.one_of.get(*idx as usize).copied(),
                 _ => None,
             },
         }
@@ -92,28 +120,33 @@ pub struct ValueTypePath {
 }
 
 impl ValueTypePath {
-    pub fn to_indices(&self, root_type: Type) -> Vec<u32> {
+    pub fn to_indices(&self, root_type: Type, schema: &tg_schema::Typegraph) -> Vec<u32> {
         self.path
             .iter()
-            .fold((vec![], root_type), |(mut acc, ty), seg| {
-                let ty = seg.apply(&ty).unwrap();
-                acc.push(ty.idx());
-                (acc, ty)
-            })
+            .fold(
+                (vec![root_type.idx()], root_type.idx()),
+                |(mut acc, ty), seg| {
+                    let ty = seg.apply_on_schema_node(&schema.types, ty).unwrap();
+                    acc.push(ty);
+                    (acc, ty)
+                },
+            )
             .0
     }
 
-    pub fn find_cycle(&self, root_type: Type) -> Option<ValueTypePath> {
-        if self.path.is_empty() {
-            return None;
-        }
-        let indices = self.to_indices(root_type);
+    pub fn find_cycle(
+        &self,
+        root_type: Type,
+        schema: &tg_schema::Typegraph,
+    ) -> Option<ValueTypePath> {
+        // precondition: self.path.len() > 2
+        let indices = self.to_indices(root_type, schema);
         let last = indices.last().unwrap();
         indices[..indices.len() - 1]
             .iter()
             .position(|idx| idx == last)
             .map(|idx| {
-                let path = self.path[..idx + 1].to_vec();
+                let path = self.path[..idx].to_vec();
                 ValueTypePath {
                     owner: self.owner.clone(),
                     path,
@@ -194,17 +227,25 @@ impl RelativePath {
         }
     }
 
-    pub fn find_cycle(&self) -> Option<RelativePath> {
+    pub fn find_cycle(&self, schema: &tg_schema::Typegraph) -> Option<RelativePath> {
         use RelativePath as RP;
         match self {
             RP::Function(_) => None,
             RP::NsObject(_) => None,
-            RP::Input(p) => p
-                .find_cycle(p.owner.upgrade().unwrap().input().wrap())
-                .map(|p| RP::Input(p)),
-            RP::Output(p) => p
-                .find_cycle(p.owner.upgrade().unwrap().output().clone())
-                .map(|p| RP::Output(p)),
+            RP::Input(p) => {
+                if p.path.len() <= 2 {
+                    return None;
+                }
+                p.find_cycle(p.owner.upgrade().unwrap().input().wrap(), schema)
+                    .map(|p| RP::Input(p))
+            }
+            RP::Output(p) => {
+                if p.path.len() <= 2 {
+                    return None;
+                }
+                p.find_cycle(p.owner.upgrade().unwrap().output().clone(), schema)
+                    .map(|p| RP::Output(p))
+            }
         }
     }
 }

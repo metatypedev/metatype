@@ -5,6 +5,8 @@ use indexmap::IndexMap;
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
 use crate::conv::interlude::*;
+use crate::interlude::*;
+use crate::TypeNodeExt as _;
 use crate::{policies::PolicyRef, Arc, Lazy};
 use std::collections::HashMap;
 
@@ -25,7 +27,10 @@ pub struct ObjectType {
 
 impl ObjectType {
     pub fn properties(&self) -> &HashMap<Arc<str>, ObjectProperty> {
-        self.properties.get().expect("uninitialized")
+        match self.properties.get() {
+            Some(props) => props,
+            None => unreachable!("object properties uninitialized: key={:?}", self.base.key),
+        }
     }
 
     pub fn non_empty(self: Arc<Self>) -> Option<Arc<Self>> {
@@ -46,11 +51,12 @@ impl TypeNode for Arc<ObjectType> {
         "object"
     }
 
-    fn children(&self) -> Vec<Type> {
-        self.properties()
+    fn children(&self) -> Result<Vec<Type>> {
+        Ok(self
+            .properties()
             .values()
             .map(|p| p.type_.clone())
-            .collect()
+            .collect())
     }
 
     fn edges(&self) -> Vec<Edge> {
@@ -73,6 +79,7 @@ pub(crate) fn convert_object(
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::ObjectTypeData,
 ) -> Box<dyn TypeConversionResult> {
+    // eprintln!("convert object #{type_idx}: start");
     let ty = Type::Object(
         ObjectType {
             base: Conversion::base(key, parent, type_idx, base),
@@ -102,6 +109,7 @@ impl TypeConversionResult for ObjectTypeConversionResult {
     }
 
     fn finalize(&mut self, conv: &mut Conversion) {
+        // eprintln!("finalize object: #{:?}", self.ty.key());
         let mut properties = HashMap::with_capacity(self.properties.len());
 
         let mut results = Vec::new();
@@ -131,11 +139,17 @@ impl TypeConversionResult for ObjectTypeConversionResult {
 
         match &self.ty {
             Type::Object(obj) => {
+                // eprintln!(
+                //     "set object properties: key={:?}; {:?}",
+                //     self.ty.key(),
+                //     properties.keys().collect::<Vec<_>>()
+                // );
                 obj.properties.set(properties).unwrap();
             }
             _ => unreachable!(),
         }
 
+        // eprintln!("finalize object: #{:?}: finalize properties", self.ty.key());
         for res in results.iter_mut() {
             res.finalize(conv);
         }
