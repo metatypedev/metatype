@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     backends::Backend,
     protocol::{
-        events::{Event, Records, SaveFailed, SaveResolved, SaveRetry},
+        events::{Compensation, Event, Records, SaveFailed, SaveResolved, SaveRetry},
         metadata::{metadata::Of, Error, Info, Metadata},
     },
 };
@@ -67,7 +67,11 @@ pub enum OperationEvent {
     Start {
         kwargs: HashMap<String, serde_json::Value>,
     },
-    Compensate,
+    Compensate {
+        save_id: u32,
+        error: String,
+        compensation_result: serde_json::Value,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -344,8 +348,23 @@ impl TryFrom<Operation> for Event {
                     ..Default::default()
                 })
             }
-            OperationEvent::Compensate => {
-                unimplemented!()
+            OperationEvent::Compensate {
+                save_id,
+                error,
+                compensation_result,
+            } => {
+                let compensation = Compensation {
+                    save_id,
+                    error,
+                    compensation_result: serde_json::to_string(&compensation_result)?,
+                    ..Default::default()
+                };
+
+                Ok(Event {
+                    at: MessageField::some(at),
+                    compensation: MessageField::some(compensation),
+                    ..Default::default()
+                })
             }
         }
     }

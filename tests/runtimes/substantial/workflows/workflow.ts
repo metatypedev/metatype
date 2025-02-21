@@ -9,6 +9,8 @@ import {
   Workflow,
 } from "../imports/common_types.ts";
 
+import { assertEquals } from "@std/assert";
+
 export const eventsAndExceptionExample: Workflow<string> = async (
   ctx: Context,
 ) => {
@@ -75,6 +77,7 @@ export async function retryExample(ctx: Context) {
         minBackoffMs: 1000,
         maxBackoffMs: 5000,
         maxRetries: 4,
+        compensationOnfristFail: false,
       },
     },
   );
@@ -94,6 +97,7 @@ export async function retryExample(ctx: Context) {
         minBackoffMs: 1000,
         maxBackoffMs: 3000,
         maxRetries: 5,
+        compensationOnfristFail: false,
       },
     },
   );
@@ -146,4 +150,42 @@ export async function accidentalInputMutation(ctx: Context) {
 
   console.log("FINAL copy", copy);
   return { copy, items };
+}
+
+export async function compensationExample(ctx: Context) {
+  const { account } = ctx.kwargs;
+
+  const debitAccount = (value: number) => {
+    return account - value;
+  };
+
+  const creditAccount = (value: number) => {
+    return account + value;
+  };
+
+  const risky_transaction = () => {
+    throw Error("Transaction Failed");
+  };
+
+  await ctx.save(() => debitAccount(4), {
+    compensateWith: () => {
+      creditAccount(4);
+      assertEquals(account, 1000);
+    },
+  });
+
+  await ctx.save(() => debitAccount(10), {
+    compensateWith: () => creditAccount(10),
+  });
+
+  await ctx.save(() => {
+    debitAccount(2);
+    risky_transaction();
+  }, {
+    compensateWith: () => creditAccount(2),
+  });
+
+  await ctx.save(() => debitAccount(100), {
+    compensateWith: () => creditAccount(100),
+  });
 }
