@@ -22,10 +22,14 @@ export const tg = await typegraph(
 
     g.expose(
       {
-        one: python.import(t.struct({ name: t.string() }), t.list(student), {
-          module: "./scripts/same_hit.py",
-          name: "fnOne",
-        }),
+        one: python.import(
+          t.struct({ name: t.string() }).rename("OneInput"),
+          t.list(student),
+          {
+            module: "./scripts/same_hit.py",
+            name: "fnOne",
+          },
+        ),
         two: python.import(
           t.struct({ name: t.string() }).rename("TwoInput"),
           t.string(),

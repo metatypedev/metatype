@@ -92,6 +92,11 @@ members = ["fdk/"]
     ).code,
     0,
   );
+  await Deno.copyFile(
+    join(genCratePath, "fdk.rs"),
+    join(tmpDir, "fdk.rs"),
+  );
+
   assertEquals(
     (
       await t.shell("cargo build --target wasm32-wasi".split(" "), {
@@ -102,7 +107,7 @@ members = ["fdk/"]
   );
 });
 
-Meta.test.only("metagen python runs on cyclic types", async (t) => {
+Meta.test("metagen python runs on cyclic types", async (t) => {
   const typegraphPath = join(import.meta.dirname!, "typegraphs/python.py");
   const basePath = join(t.tempDir, "fdk");
 

@@ -1,5 +1,5 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-Lice
 
 use crate::naming::NamingEngine;
 use crate::runtimes::{convert_materializer, Materializer};
@@ -95,6 +95,14 @@ impl TypeConversionResult for FinalizedTypeConversion {
 
 impl Conversion {
     fn new(schema: Arc<tg_schema::Typegraph>) -> Conversion {
+        for (idx, node) in schema.types.iter().enumerate() {
+            eprintln!(
+                "#{idx} {} {} children={:?}",
+                node.type_name(),
+                node.base().title,
+                node.children()
+            );
+        }
         let runtimes: Vec<_> = schema.runtimes.iter().map(|rt| rt.clone().into()).collect();
         let materializers = schema
             .materializers
@@ -180,7 +188,10 @@ impl Conversion {
         conv_res: Box<dyn TypeConversionResult>,
     ) -> Box<dyn TypeConversionResult> {
         let typ = conv_res.get_type();
-        // eprintln!("register type: {:?}", rpath);
+        eprintln!("R: {:?}", typ.key());
+        if typ.key() == TypeKey(4, 1) {
+            eprintln!("P: {:?}", rpath);
+        }
 
         if let Some(dupl) = rpath.find_cycle(&self.schema) {
             // cycle detected, reuse the existing type
@@ -209,6 +220,7 @@ impl Conversion {
                 self.input_types.insert(typ.key(), typ.clone());
             }
             RP::Output(_) => {
+                eprintln!("REGISTER OUTPUT: {:?}", typ.key());
                 self.output_types.insert(typ.key(), typ.clone());
             }
         }
@@ -295,8 +307,8 @@ impl Conversion {
             Bound::Included(&TypeKey(type_idx, 0)),
             Bound::Included(&TypeKey(type_idx, u32::MAX)),
         ));
-        let latest_key = range.rev().next().map(|(k, _)| k.1).unwrap_or(0);
-        let key = TypeKey(type_idx, latest_key + 1);
+        let duplicate_no = range.rev().next().map(|(k, _)| k.1 + 1).unwrap_or(0);
+        let key = TypeKey(type_idx, duplicate_no);
 
         match type_node {
             N::Boolean { base } => self.register_type(

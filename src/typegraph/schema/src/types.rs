@@ -377,4 +377,17 @@ impl TypeNode {
             Boolean { .. } | Float { .. } | Integer { .. } | String { .. }
         )
     }
+
+    pub fn children(&self) -> Result<Vec<TypeId>> {
+        use TypeNode::*;
+        match self {
+            Optional { data, .. } => Ok(vec![data.item]),
+            Object { data, .. } => Ok(data.properties.values().cloned().collect()),
+            List { data, .. } => Ok(vec![data.items]),
+            Function { data, .. } => Ok(vec![data.input, data.output]),
+            Union { data, .. } => Ok(data.any_of.clone()),
+            Either { data, .. } => Ok(data.one_of.clone()),
+            _ => Ok(vec![]),
+        }
+    }
 }

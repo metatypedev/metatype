@@ -30,27 +30,31 @@ fn test_expanded_graph() -> color_eyre::Result<()> {
 
     let tg = typegraph::Typegraph::from(schema.clone());
 
-    println!(
-        "named types: {:#?}",
-        tg.named
-            .values()
-            .map(|v| Ok(format!(
-                "{}/{} key={:?} parent={:?} children={:?}",
-                v.tag(),
-                v.name(),
-                v.key(),
-                v.parent().map(|p| p.name()),
-                v.children()?
-                    .into_iter()
-                    .map(|c| c.name())
-                    .collect::<Vec<_>>()
-            )))
-            .collect::<Result<Vec<_>>>()?
-    );
-    // println!("namespace_objects: {:?}", tg.namespace_objects);
-    // println!("functions: {:?}", tg.functions);
-    // println!("input_types: {:?}", tg.input_types);
-    // println!("output_types: {:?}", tg.output_types);
+    println!("namespaces");
+    for (ns, obj) in tg.namespace_objects.iter() {
+        println!("    /{}: {}", ns.join("/"), obj.name());
+    }
+
+    println!("functions");
+    for (idx, func) in tg.functions.iter() {
+        println!("    {:2}: {}", idx, func.name());
+    }
+
+    println!("input_types");
+    for (key, ty) in tg.input_types.iter() {
+        println!("    {:?}({}): {}", key, ty.tag(), ty.name());
+    }
+
+    println!("output_types");
+    for (key, ty) in tg.output_types.iter() {
+        println!(
+            "    {:?}({}): {} parent_idx={}",
+            key,
+            ty.tag(),
+            ty.name(),
+            ty.parent().unwrap().idx()
+        );
+    }
 
     Ok(())
 }

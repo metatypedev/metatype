@@ -141,6 +141,7 @@ impl ValueTypePath {
     ) -> Option<ValueTypePath> {
         // precondition: self.path.len() > 2
         let indices = self.to_indices(root_type, schema);
+        eprintln!("find cycle: {:?}", indices);
         let last = indices.last().unwrap();
         indices[..indices.len() - 1]
             .iter()
@@ -181,12 +182,33 @@ impl Hash for ValueTypePath {
 }
 
 /// type id in the expanded graph
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum RelativePath {
     Function(u32),
     NsObject(Vec<Arc<str>>),
     Input(ValueTypePath),
     Output(ValueTypePath),
+}
+
+impl std::fmt::Debug for RelativePath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Function(idx) => write!(f, "Function({})", idx),
+            Self::NsObject(path) => write!(f, "NsObject(/{:?})", path.join("/")),
+            Self::Input(k) => write!(
+                f,
+                "Input(fn={}; {:?})",
+                k.owner.upgrade().unwrap().idx(),
+                k.path
+            ),
+            Self::Output(k) => write!(
+                f,
+                "Output(fn={}; {:?})",
+                k.owner.upgrade().unwrap().idx(),
+                k.path
+            ),
+        }
+    }
 }
 
 impl RelativePath {

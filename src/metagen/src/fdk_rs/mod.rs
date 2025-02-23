@@ -199,12 +199,14 @@ impl FdkRustTemplate {
             // TODO: gql types || function wrappers for exposed functions
             // skip object 0, the root object where the `exposed` items are locted
             eprintln!("rendering types");
+
             for ty in tg.named.values().filter(|&ty| ty.idx() != 0) {
-                eprintln!("render type: name={}", ty.name());
+                eprintln!("render type: key={:?} name={}", ty.key(), ty.name());
                 _ = renderer.render(ty)?;
             }
             eprintln!("finalizing types");
             let types_rs = renderer.finalize();
+            eprintln!("types_rs: {types_rs}");
             for line in types_rs.lines() {
                 if !line.is_empty() {
                     writeln!(&mut mod_rs.buf, "    {line}")?;
@@ -238,8 +240,6 @@ impl FdkRustTemplate {
                 }
             }
             stubs::gen_op_to_mat_map(&op_to_mat_map, &mut stubs_rs, &gen_stub_opts)?;
-
-            eprintln!("stubs_rs:\n{}", stubs_rs.buf);
 
             for line in stubs_rs.buf.lines() {
                 if !line.is_empty() {

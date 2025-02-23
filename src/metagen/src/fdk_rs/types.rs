@@ -23,7 +23,6 @@ pub struct RustTypeRenderer {
 
 impl RustTypeRenderer {
     fn render_derive(&self, dest: &mut impl Write) -> std::fmt::Result {
-        eprintln!("rendering derive");
         let mut derive_args = vec![];
         if self.derive_debug {
             derive_args.extend_from_slice(&["Debug"]);
@@ -49,7 +48,6 @@ impl RustTypeRenderer {
         alias_name: &str,
         aliased_ty: &str,
     ) -> std::fmt::Result {
-        eprintln!("rendering alias: {}", alias_name);
         writeln!(out, "pub type {alias_name} = {aliased_ty};")
     }
 
@@ -60,7 +58,6 @@ impl RustTypeRenderer {
         ty_name: &str,
         props: IndexMap<String, (String, Option<Arc<str>>)>,
     ) -> std::fmt::Result {
-        eprintln!("rendering struct: {}", ty_name);
         self.render_derive(dest)?;
         writeln!(dest, "pub struct {ty_name} {{")?;
         for (name, (ty_name, ser_name)) in props.into_iter() {
@@ -81,7 +78,6 @@ impl RustTypeRenderer {
         ty_name: &str,
         variants: Vec<(String, String)>,
     ) -> std::fmt::Result {
-        eprintln!("rendering enum: {}", ty_name);
         self.render_derive(dest)?;
         writeln!(dest, "#[serde(untagged)]")?;
         writeln!(dest, "pub enum {ty_name} {{")?;
@@ -98,10 +94,15 @@ impl RenderType for RustTypeRenderer {
         renderer: &mut TypeRenderer,
         cursor: &mut VisitCursor,
     ) -> anyhow::Result<String> {
+        eprintln!(
+            "RustTypeRenderer::render: {} {:?}",
+            cursor.node.name(),
+            cursor.node.key()
+        );
         if !self.rendered.borrow_mut().insert(cursor.node.key()) {
+            eprintln!("  > already rendered: {}", cursor.node.name());
             return Ok("".into());
         }
-        eprintln!("RustTypeRenderer::render: {}", cursor.node.name());
         let body_required = type_body_required(&cursor.node);
         let name = match cursor.node.clone() {
             Type::Function { .. } => "()".into(),
@@ -164,7 +165,7 @@ impl RenderType for RustTypeRenderer {
             // }
             // TypeNode::Any { .. } => "serde_json::Value".into(),
             Type::Object(ty) => {
-                eprintln!("rendering object: {}", ty.name());
+                // eprintln!("rendering object: {}", ty.name());
                 let props = ty
                     .properties()
                     .iter()
@@ -172,7 +173,7 @@ impl RenderType for RustTypeRenderer {
                     .map(|(name, prop)| {
                         let (ty_name, cyclic) = renderer.render_subgraph(&prop.type_, cursor)?;
                         let ty_name = normalize_type_title(&ty_name);
-                        eprintln!("rendered prop: {name}; ty_name={ty_name}, cyclick={cyclic:?}",);
+                        // eprintln!("rendered prop: {name}; ty_name={ty_name}, cyclick={cyclic:?}",);
 
                         // let ty_name = match ty_name {
                         //     RenderedName::Name(name) => name,
@@ -201,7 +202,7 @@ impl RenderType for RustTypeRenderer {
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
 
-                let ty_name = normalize_type_title(&ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 let ty_name = if self.all_fields_optional {
                     format!("{ty_name}Partial")
                 } else {
@@ -237,7 +238,7 @@ impl RenderType for RustTypeRenderer {
                         Ok::<_, anyhow::Error>((variant_name, ty_name))
                     })
                     .collect::<Result<Vec<_>, _>>()?;
-                let ty_name = normalize_type_title(ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_enum(renderer, &ty_name, variants)?;
                 ty_name
             }
@@ -251,6 +252,7 @@ impl RenderType for RustTypeRenderer {
                 //     RenderedName::Name(name) => name,
                 //     RenderedName::Placeholder(name) => name,
                 // };
+                let inner_ty_name = normalize_type_title(&inner_ty_name);
                 let inner_ty_name = if let Some(true) = cyclic {
                     format!("Box<{inner_ty_name}>")
                 } else {
@@ -265,12 +267,13 @@ impl RenderType for RustTypeRenderer {
                 //     RenderedName::Name(name) => name,
                 //     RenderedName::Placeholder(name) => name,
                 // };
+                let inner_ty_name = normalize_type_title(&inner_ty_name);
                 let inner_ty_name = if let Some(true) = cyclic {
                     format!("Box<{inner_ty_name}>")
                 } else {
                     inner_ty_name.to_string()
                 };
-                let ty_name = normalize_type_title(&ty.title());
+                let ty_name = normalize_type_title(&ty.name());
                 self.render_alias(renderer, &ty_name, &format!("Option<{inner_ty_name}>"))?;
                 ty_name
             }
@@ -298,7 +301,8 @@ impl RenderType for RustTypeRenderer {
                 //     RenderedName::Name(name) => name,
                 //     RenderedName::Placeholder(name) => name,
                 // };
-                let ty_name = normalize_type_title(&ty.title());
+                let inner_ty_name = normalize_type_title(&inner_ty_name);
+                let ty_name = normalize_type_title(&ty.name());
                 if ty.unique_items {
                     // let ty_name = format!("{inner_ty_name}Set");
                     self.render_alias(
