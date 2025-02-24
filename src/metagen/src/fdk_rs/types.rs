@@ -1,325 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use super::map::{TypeGenMap, TypeSpec};
 use super::utils::*;
 use crate::interlude::*;
 use crate::shared::types::*;
-use heck::ToPascalCase;
-use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::fmt::Write;
 use typegraph::conv::TypeKey;
 use typegraph::TypeNodeExt as _;
-
-pub struct RustTypeRenderer {
-    pub derive_debug: bool,
-    pub derive_serde: bool,
-    // this is used by the client since
-    // users might exclude fields on return
-    // types
-    pub all_fields_optional: bool,
-    pub rendered: RefCell<HashSet<TypeKey>>,
-}
-
-impl RustTypeRenderer {
-    fn render_derive(&self, dest: &mut impl Write) -> std::fmt::Result {
-        let mut derive_args = vec![];
-        if self.derive_debug {
-            derive_args.extend_from_slice(&["Debug"]);
-        }
-        if self.derive_serde {
-            derive_args.extend_from_slice(&["serde::Serialize", "serde::Deserialize"]);
-        }
-        if !derive_args.is_empty() {
-            write!(dest, "#[derive(")?;
-            let last = derive_args.pop().unwrap();
-            for arg in derive_args {
-                write!(dest, "{arg}, ")?;
-            }
-            write!(dest, "{last}")?;
-            writeln!(dest, ")]")?;
-        }
-        Ok(())
-    }
-
-    fn render_alias(
-        &self,
-        out: &mut impl Write,
-        alias_name: &str,
-        aliased_ty: &str,
-    ) -> std::fmt::Result {
-        writeln!(out, "pub type {alias_name} = {aliased_ty};")
-    }
-
-    /// `props` is a map of prop_name -> (TypeName, serialization_name)
-    fn render_struct(
-        &self,
-        dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, (String, Option<Arc<str>>)>,
-    ) -> std::fmt::Result {
-        self.render_derive(dest)?;
-        writeln!(dest, "pub struct {ty_name} {{")?;
-        for (name, (ty_name, ser_name)) in props.into_iter() {
-            if let Some(ser_name) = ser_name {
-                writeln!(dest, r#"    #[serde(rename = "{ser_name}")]"#)?;
-            }
-            writeln!(dest, "    pub {name}: {ty_name},")?;
-        }
-        writeln!(dest, "}}")?;
-        Ok(())
-    }
-
-    /// `variants` is variant name to variant type
-    /// All generated variants are tuples of arity 1.
-    fn render_enum(
-        &self,
-        dest: &mut impl Write,
-        ty_name: &str,
-        variants: Vec<(String, String)>,
-    ) -> std::fmt::Result {
-        self.render_derive(dest)?;
-        writeln!(dest, "#[serde(untagged)]")?;
-        writeln!(dest, "pub enum {ty_name} {{")?;
-        for (var_name, ty_name) in variants.into_iter() {
-            writeln!(dest, "    {var_name}({ty_name}),")?;
-        }
-        writeln!(dest, "}}")?;
-        Ok(())
-    }
-}
-impl RenderType for RustTypeRenderer {
-    fn render(
-        &self,
-        renderer: &mut TypeRenderer,
-        cursor: &mut VisitCursor,
-    ) -> anyhow::Result<String> {
-        eprintln!(
-            "RustTypeRenderer::render: {} {:?}",
-            cursor.node.name(),
-            cursor.node.key()
-        );
-        if !self.rendered.borrow_mut().insert(cursor.node.key()) {
-            eprintln!("  > already rendered: {}", cursor.node.name());
-            return Ok("".into());
-        }
-        let body_required = type_body_required(&cursor.node);
-        let name = match cursor.node.clone() {
-            Type::Function { .. } => "()".into(),
-
-            // if [type_body_required] says so, we usually need to generate
-            // aliases for even simple primitie types
-            Type::Boolean(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.name());
-                self.render_alias(renderer, &ty_name, "bool")?;
-                ty_name
-            }
-            // under certain conditionds, we don't want to  generate aliases
-            // for primitive types. this includes
-            // - types with defualt generated names
-            // - types with no special semantics
-            Type::Boolean(_) => "bool".into(),
-
-            Type::Float(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.name());
-                self.render_alias(renderer, &ty_name, "f64")?;
-                ty_name
-            }
-            Type::Float(_) => "f64".into(),
-
-            Type::Integer(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.name());
-                self.render_alias(renderer, &ty_name, "i64")?;
-                ty_name
-            }
-            Type::Integer(_) => "i64".into(),
-            Type::String(ty) => {
-                if let (Some(format), true) = (ty.format_only(), ty.title().starts_with("string_"))
-                {
-                    let ty_name =
-                        normalize_type_title(&format!("string_{format}_{}", cursor.node.idx()));
-                    self.render_alias(renderer, &ty_name, "String")?;
-                    ty_name
-                } else {
-                    if body_required {
-                        let ty_name = normalize_type_title(&ty.name());
-                        self.render_alias(renderer, &ty_name, "String")?;
-                        ty_name
-                    } else {
-                        "String".into()
-                    }
-                }
-            }
-
-            Type::File(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.name());
-                self.render_alias(renderer, &ty_name, "super::FileId")?;
-                ty_name
-            }
-            Type::File(_) => "super::FileId".into(),
-
-            // TypeNode::Any { base, .. } if body_required => {
-            //     let ty_name = normalize_type_title(&base.title);
-            //     self.render_alias(renderer, &ty_name, "serde_json::Value")?;
-            //     ty_name
-            // }
-            // TypeNode::Any { .. } => "serde_json::Value".into(),
-            Type::Object(ty) => {
-                // eprintln!("rendering object: {}", ty.name());
-                let props = ty
-                    .properties()
-                    .iter()
-                    // generate property type sfirst
-                    .map(|(name, prop)| {
-                        let (ty_name, cyclic) = renderer.render_subgraph(&prop.type_, cursor)?;
-                        let ty_name = normalize_type_title(&ty_name);
-                        // eprintln!("rendered prop: {name}; ty_name={ty_name}, cyclick={cyclic:?}",);
-
-                        // let ty_name = match ty_name {
-                        //     RenderedName::Name(name) => name,
-                        //     RenderedName::Placeholder(name) => name,
-                        // };
-
-                        let ty_name = match &prop.type_ {
-                            Type::Optional { .. } => ty_name.to_string(),
-                            _ if !self.all_fields_optional => ty_name.to_string(),
-                            _ => format!("Option<{ty_name}>"),
-                        };
-
-                        let ty_name = if let Some(true) = cyclic {
-                            format!("Box<{ty_name}>")
-                        } else {
-                            ty_name
-                        };
-
-                        let normalized_prop_name = normalize_struct_prop_name(name);
-                        let rename_name = if normalized_prop_name.as_str() != name.as_ref() {
-                            Some(name.clone())
-                        } else {
-                            None
-                        };
-                        Ok::<_, anyhow::Error>((normalized_prop_name, (ty_name, rename_name)))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-
-                let ty_name = normalize_type_title(&ty.name());
-                let ty_name = if self.all_fields_optional {
-                    format!("{ty_name}Partial")
-                } else {
-                    ty_name
-                };
-                self.render_struct(renderer, &ty_name, props)?;
-                ty_name
-            }
-            Type::Union(ty) => {
-                let variants = ty
-                    .variants()
-                    .iter()
-                    .map(|variant| {
-                        let (ty_name, cyclic) = renderer.render_subgraph(&variant, cursor)?;
-                        // let (variant_name, ty_name) = match ty_name {
-                        //     RenderedName::Name(name) => (name.to_pascal_case(), name),
-                        //     RenderedName::Placeholder(name) => (
-                        //         renderer
-                        //             .placeholder_string(
-                        //                 variant.name(),
-                        //                 Box::new(|final_name| final_name.to_pascal_case()),
-                        //             )
-                        //             .to_string(),
-                        //         name,
-                        //     ),
-                        // };
-                        let variant_name = ty_name.to_pascal_case();
-                        let ty_name = if let Some(true) = cyclic {
-                            format!("Box<{ty_name}>")
-                        } else {
-                            ty_name.to_string()
-                        };
-                        Ok::<_, anyhow::Error>((variant_name, ty_name))
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
-                let ty_name = normalize_type_title(&ty.name());
-                self.render_enum(renderer, &ty_name, variants)?;
-                ty_name
-            }
-            // Simple optionals don't require aliases
-            Type::Optional(ty)
-                if ty.default_value.is_none() && ty.title().starts_with("optional_") =>
-            {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, cyclic) = renderer.render_subgraph(ty.item(), cursor)?;
-                // let inner_ty_name = match inner_ty_name {
-                //     RenderedName::Name(name) => name,
-                //     RenderedName::Placeholder(name) => name,
-                // };
-                let inner_ty_name = normalize_type_title(&inner_ty_name);
-                let inner_ty_name = if let Some(true) = cyclic {
-                    format!("Box<{inner_ty_name}>")
-                } else {
-                    inner_ty_name.to_string()
-                };
-                format!("Option<{inner_ty_name}>")
-            }
-            Type::Optional(ty) => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, cyclic) = renderer.render_subgraph(ty.item(), cursor)?;
-                // let inner_ty_name = match inner_ty_name {
-                //     RenderedName::Name(name) => name,
-                //     RenderedName::Placeholder(name) => name,
-                // };
-                let inner_ty_name = normalize_type_title(&inner_ty_name);
-                let inner_ty_name = if let Some(true) = cyclic {
-                    format!("Box<{inner_ty_name}>")
-                } else {
-                    inner_ty_name.to_string()
-                };
-                let ty_name = normalize_type_title(&ty.name());
-                self.render_alias(renderer, &ty_name, &format!("Option<{inner_ty_name}>"))?;
-                ty_name
-            }
-            // simple list types don't require aliases
-            Type::List(ty)
-                if matches!((ty.min_items, ty.max_items), (None, None))
-                    && ty.title().starts_with("list_") =>
-            {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(ty.item()?, cursor)?;
-                // let inner_ty_name = match inner_ty_name {
-                //     RenderedName::Name(name) => name,
-                //     RenderedName::Placeholder(name) => name,
-                // };
-                if ty.unique_items {
-                    format!("std::collections::HashSet<{inner_ty_name}>")
-                } else {
-                    format!("Vec<{inner_ty_name}>")
-                }
-            }
-            Type::List(ty) => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(ty.item()?, cursor)?;
-                // let inner_ty_name = match inner_ty_name {
-                //     RenderedName::Name(name) => name,
-                //     RenderedName::Placeholder(name) => name,
-                // };
-                let inner_ty_name = normalize_type_title(&inner_ty_name);
-                let ty_name = normalize_type_title(&ty.name());
-                if ty.unique_items {
-                    // let ty_name = format!("{inner_ty_name}Set");
-                    self.render_alias(
-                        renderer,
-                        &ty_name,
-                        &format!("std::collections::HashSet<{inner_ty_name}>"),
-                    )?;
-                } else {
-                    // let ty_name = format!("{inner_ty_name}List");
-                    self.render_alias(renderer, &ty_name, &format!("Vec<{inner_ty_name}>"))?;
-                };
-                ty_name
-            }
-        };
-        Ok(name)
-    }
-}
 
 // #[cfg(test)]
 // mod test {
@@ -800,3 +489,362 @@ impl RenderType for RustTypeRenderer {
 //         Ok(())
 //     }
 // }
+
+#[derive(Debug)]
+enum Alias {
+    BuiltIn(&'static str),
+    Container {
+        name: &'static str,
+        item: TypeKey,
+        boxed: bool,
+    },
+}
+
+#[derive(Debug)]
+struct DeriveSpec {
+    debug: bool,
+    serde: bool,
+}
+
+#[derive(Debug)]
+pub enum RustTypeSpec {
+    Alias {
+        alias: Alias,
+        /// inlined if name is none
+        name: Option<String>,
+    },
+    Struct {
+        name: String,
+        derive: DeriveSpec,
+        properties: Vec<StructProp>,
+    },
+    Enum {
+        name: String,
+        derive: DeriveSpec,
+        variants: Vec<(String, TypeKey)>,
+    },
+}
+
+#[derive(Debug)]
+struct StructProp {
+    name: String,
+    rename: Option<String>,
+    ty: TypeKey,
+}
+
+impl TypeSpec for RustTypeSpec {
+    fn render_definition(&self, out: &mut impl Write, map: &TypeGenMap<Self>) -> std::fmt::Result {
+        match self {
+            Self::Alias {
+                alias,
+                name: alias_name,
+            } => {
+                if let Some(alias_name) = alias_name {
+                    match alias {
+                        Alias::BuiltIn(name) => {
+                            writeln!(out, "pub type {} = {};", alias_name, name)
+                        }
+                        Alias::Container {
+                            name: container_name,
+                            item,
+                            boxed,
+                        } => {
+                            let inner_name = map.get_name(item.clone()).unwrap();
+                            let inner_name = if *boxed {
+                                format!("Box<{}>", inner_name)
+                            } else {
+                                inner_name.into()
+                            };
+                            writeln!(
+                                out,
+                                "pub type {} = {}<{}>;",
+                                alias_name, container_name, inner_name
+                            )
+                        }
+                    }
+                } else {
+                    Ok(())
+                }
+            }
+
+            Self::Struct {
+                name,
+                derive,
+                properties,
+            } => {
+                RustTypeSpec::render_derive(out, derive)?;
+                writeln!(out, "pub struct {} {{", name)?;
+                for prop in properties.iter() {
+                    if let Some(rename) = &prop.rename {
+                        writeln!(out, r#"    #[serde(rename = "{}")]"#, rename)?;
+                    }
+                    writeln!(
+                        out,
+                        "    pub {}: {},",
+                        prop.name,
+                        map.get_name(prop.ty.clone()).unwrap()
+                    )?;
+                }
+                writeln!(out, "}}")
+            }
+
+            Self::Enum {
+                name,
+                derive,
+                variants,
+            } => {
+                RustTypeSpec::render_derive(out, &derive)?;
+                writeln!(out, "#[serde(untagged)]")?;
+                writeln!(out, "pub enum {} {{", name)?;
+                for (var_name, ty) in variants.iter() {
+                    writeln!(
+                        out,
+                        "    {}({}),",
+                        var_name,
+                        map.get_name(ty.clone()).unwrap()
+                    )?;
+                }
+                writeln!(out, "}}")
+            }
+        }
+    }
+
+    fn rendered_name(&self, map: &TypeGenMap<Self>) -> String {
+        match self {
+            Self::Alias { name, alias } => {
+                if let Some(name) = name {
+                    name.clone()
+                } else {
+                    // inlined
+                    match alias {
+                        Alias::BuiltIn(name) => name.to_string(),
+                        Alias::Container { name, item, boxed } => {
+                            self.container_def(name, item.clone(), *boxed, map)
+                        }
+                    }
+                }
+            }
+            Self::Struct { name, .. } => name.clone(),
+            Self::Enum { name, .. } => name.clone(),
+        }
+    }
+}
+
+impl RustTypeSpec {
+    fn container_def(
+        &self,
+        name: &str,
+        item: TypeKey,
+        boxed: bool,
+        map: &TypeGenMap<Self>,
+    ) -> String {
+        let inner_name = map.get_name(item).unwrap();
+        let inner_name = if boxed {
+            format!("Box<{}>", inner_name)
+        } else {
+            inner_name.into()
+        };
+        format!("{}<{}>", name, inner_name)
+    }
+
+    fn render_derive(out: &mut impl Write, spec: &DeriveSpec) -> std::fmt::Result {
+        let mut derive_args = vec![];
+        if spec.debug {
+            derive_args.extend_from_slice(&["Debug"]);
+        }
+        if spec.serde {
+            derive_args.extend_from_slice(&["serde::Serialize", "serde::Deserialize"]);
+        }
+        if !derive_args.is_empty() {
+            write!(out, "#[derive(")?;
+            let last = derive_args.pop().unwrap();
+            for arg in derive_args {
+                write!(out, "{arg}, ")?;
+            }
+            write!(out, "{last}")?;
+            writeln!(out, ")]")?;
+        }
+        Ok(())
+    }
+
+    fn builtin(target: &'static str, name: Option<String>) -> RustTypeSpec {
+        RustTypeSpec::Alias {
+            alias: Alias::BuiltIn(target),
+            name,
+        }
+    }
+
+    fn container(
+        container_name: &'static str,
+        item: TypeKey,
+        boxed: bool,
+        name: Option<String>,
+    ) -> RustTypeSpec {
+        RustTypeSpec::Alias {
+            alias: Alias::Container {
+                name: container_name,
+                item,
+                boxed,
+            },
+            name,
+        }
+    }
+}
+
+fn get_typespec(ty: &Type) -> RustTypeSpec {
+    // debug_assert!(!map.contains_key(&ty.key()));
+
+    eprintln!("{:?} body_required={}", ty.key(), type_body_required(ty));
+
+    if type_body_required(ty) {
+        let name = Some(normalize_type_title(&ty.name()));
+        match ty {
+            Type::Boolean(_) => RustTypeSpec::builtin("bool", name),
+            Type::Integer(_) => RustTypeSpec::builtin("i64", name),
+            Type::Float(_) => RustTypeSpec::builtin("f64", name),
+            Type::String(ty) => {
+                if let (Some(format), true) = (ty.format_only(), ty.title().starts_with("string_"))
+                {
+                    let name = Some(normalize_type_title(&format!(
+                        "string_{format}_{}",
+                        ty.idx()
+                    )));
+                    RustTypeSpec::builtin("String", name)
+                } else {
+                    RustTypeSpec::builtin("String", name)
+                }
+            }
+            Type::File(_) => RustTypeSpec::builtin("super::FileId", name),
+            Type::Optional(ty) => {
+                if ty.default_value.is_none() && ty.title().starts_with("optional_") {
+                    // no alias -- inline
+                    RustTypeSpec::container(
+                        "Option",
+                        ty.item().key().clone(),
+                        ty.item().is_composite(), // TODO is_cyclic
+                        None,
+                    )
+                } else {
+                    RustTypeSpec::container(
+                        "Option",
+                        ty.item().key().clone(),
+                        ty.item().is_composite(), // TODO is_cyclic
+                        name,
+                    )
+                }
+            }
+            Type::List(ty) => {
+                if matches!((ty.min_items, ty.max_items), (None, None))
+                    && ty.title().starts_with("list_")
+                {
+                    // no alias -- inline
+                    // let map = map.clone();
+                    let container_name = if ty.unique_items {
+                        "std::collections::HashSet"
+                    } else {
+                        "Vec"
+                    };
+                    RustTypeSpec::container(
+                        container_name,
+                        ty.item().unwrap().key().clone(),
+                        ty.item().unwrap().is_composite(), // TODO is_cyclic
+                        None,
+                    )
+                } else {
+                    let container_name = if ty.unique_items {
+                        "std::collections::HashSet"
+                    } else {
+                        "Vec"
+                    };
+                    RustTypeSpec::container(
+                        container_name,
+                        ty.item().unwrap().key().clone(),
+                        ty.item().unwrap().is_composite(), // TODO is_cyclic
+                        name,
+                    )
+                }
+            }
+
+            Type::Object(ty) => {
+                let props = ty
+                    .properties()
+                    .iter()
+                    .map(|(prop_name, prop)| {
+                        let name = normalize_struct_prop_name(prop_name);
+                        let rename = if prop_name.as_ref() != name.as_str() {
+                            Some(prop_name.to_string())
+                        } else {
+                            None
+                        };
+                        StructProp {
+                            name,
+                            rename,
+                            ty: prop.type_.key().clone(),
+                        }
+                    })
+                    .collect();
+                RustTypeSpec::Struct {
+                    name: normalize_type_title(&ty.name()),
+                    derive: DeriveSpec {
+                        debug: true,
+                        serde: true,
+                    },
+                    properties: props,
+                }
+            }
+
+            Type::Union(ty) => {
+                let variants = ty
+                    .variants()
+                    .iter()
+                    .map(|variant| (variant.name().to_pascal_case(), variant.key().clone()))
+                    .collect();
+                RustTypeSpec::Enum {
+                    name: normalize_type_title(&ty.name()),
+                    derive: DeriveSpec {
+                        debug: true,
+                        serde: true,
+                    },
+                    variants,
+                }
+            }
+
+            _ => unreachable!(),
+        }
+    } else {
+        RustTypeSpec::builtin(
+            match ty {
+                Type::Boolean(_) => "bool",
+                Type::Integer(_) => "i64",
+                Type::Float(_) => "f64",
+                Type::String(_) => "String",
+                Type::File(_) => "super::FileId",
+                _ => unreachable!(),
+            },
+            None,
+        )
+    }
+}
+
+pub fn generate_typegen_map(tg: &Typegraph) -> TypeGenMap<RustTypeSpec> {
+    let mut map = HashMap::new();
+
+    for (key, ty) in tg.input_types.iter() {
+        let typespec = get_typespec(ty);
+        match map.insert(key.clone(), typespec) {
+            None => {}
+            Some(_) => panic!("duplicate type key: {:?}", key),
+        }
+    }
+
+    for (key, ty) in tg.output_types.iter() {
+        let typespec = get_typespec(ty);
+        // match map.insert(key.clone(), typespec) {
+        //     None => {}
+        //     Some(_) => panic!("duplicate type key: {:?}", key),
+        // }
+        map.insert(key.clone(), typespec);
+    }
+
+    TypeGenMap::new(map)
+}

@@ -21,6 +21,7 @@ use crate::*;
 use std::borrow::Cow;
 use std::fmt::Write;
 use typegraph::TypeNodeExt as _;
+use types::generate_typegen_map;
 
 pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.rs", include_str!("static/fdk.rs"))];
 
@@ -185,28 +186,13 @@ impl FdkRustTemplate {
         self.gen_static(&mut mod_rs)?;
         writeln!(&mut mod_rs.buf, "use types::*;")?;
         writeln!(&mut mod_rs.buf, "pub mod types {{")?;
-        {
-            let mut renderer = shared::types::TypeRenderer::new(
-                tg.clone(),
-                Arc::new(types::RustTypeRenderer {
-                    derive_serde: true,
-                    derive_debug: true,
-                    all_fields_optional: false,
-                    rendered: Default::default(),
-                }),
-            );
-            // remove the root type which we don't want to generate types for
-            // TODO: gql types || function wrappers for exposed functions
-            // skip object 0, the root object where the `exposed` items are locted
-            eprintln!("rendering types");
 
-            for ty in tg.named.values().filter(|&ty| ty.idx() != 0) {
-                eprintln!("render type: key={:?} name={}", ty.key(), ty.name());
-                _ = renderer.render(ty)?;
-            }
-            eprintln!("finalizing types");
-            let types_rs = renderer.finalize();
-            eprintln!("types_rs: {types_rs}");
+        let map = {
+            let map = generate_typegen_map(&tg);
+            let mut buffer = String::new();
+            map.render_all_types(&mut buffer)?;
+
+            let types_rs = buffer;
             for line in types_rs.lines() {
                 if !line.is_empty() {
                     writeln!(&mut mod_rs.buf, "    {line}")?;
@@ -214,7 +200,10 @@ impl FdkRustTemplate {
                     writeln!(&mut mod_rs.buf)?;
                 }
             }
+
+            map
         };
+
         writeln!(&mut mod_rs.buf, "}}")?;
         writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
         writeln!(&mut mod_rs.buf, "    use super::*;")?;
@@ -232,7 +221,7 @@ impl FdkRustTemplate {
             })?;
             let mut op_to_mat_map = BTreeMap::new();
             for fun in &stubbed_funs {
-                let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &gen_stub_opts)?;
+                let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &map, &gen_stub_opts)?;
                 if let Some(Some(op_name)) =
                     fun.materializer.data.get("op_name").map(|val| val.as_str())
                 {

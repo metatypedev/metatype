@@ -6,6 +6,7 @@
 
 pub mod client;
 pub mod files;
+pub mod map;
 pub mod types;
 
 use std::collections::HashSet;
