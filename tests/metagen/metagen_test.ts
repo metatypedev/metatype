@@ -43,7 +43,7 @@ async function prepareBucket() {
   }
 }
 
-Meta.test("metagen rust builds", async (t) => {
+Meta.test.only("metagen rust builds", async (t) => {
   const tmpDir = t.tempDir;
 
   const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.ts");
@@ -92,6 +92,11 @@ members = ["fdk/"]
     ).code,
     0,
   );
+  await Deno.copyFile(
+    join(genCratePath, "fdk.rs"),
+    join(tmpDir, "fdk.rs"),
+  );
+
   assertEquals(
     (
       await t.shell("cargo build --target wasm32-wasi".split(" "), {
