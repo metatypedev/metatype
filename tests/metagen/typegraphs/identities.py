@@ -150,6 +150,8 @@ def identities(g: Graph):
             deps=["./identities/py/handlers_types.py"],
             name="simple_cycles",
         ).rename("py_simple_cycles"),
+        #
+        # typescript
         ts_primitives=deno.import_(
             primitives_args,
             primitives,
@@ -178,6 +180,15 @@ def identities(g: Graph):
             deps=["./identities/ts/fdk.ts"],
             name="simple_cycles",
         ).rename("ts_simple_cycles"),
+        ts_proxy_primitives=deno.import_(
+            primitives_args,
+            primitives,
+            module="./identities/ts/handlers.ts",
+            deps=["./identities/ts/fdk.ts"],
+            name="proxy_primitives",
+        ).rename("ts_proxy_primitives"),
+        #
+        # rust
         rs_primitives=wasm.handler(
             primitives_args,
             primitives,

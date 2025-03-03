@@ -113,9 +113,23 @@ fn render_client_ts(_config: &ClienTsGenConfig, tg: &Typegraph) -> anyhow::Resul
     )?;
     writeln!(&mut client_ts)?;
 
-    render_static(&mut client_ts)?;
+    render_client(&mut client_ts, tg, ClientTsOpts { hostcall: false })?;
 
-    let dest: &mut GenDestBuf = &mut client_ts;
+    writeln!(&mut client_ts)?;
+    Ok(client_ts.buf)
+}
+
+pub struct ClientTsOpts {
+    pub hostcall: bool,
+}
+
+pub fn render_client(
+    dest: &mut GenDestBuf,
+    tg: &Typegraph,
+    opts: ClientTsOpts,
+) -> anyhow::Result<NameMemo> {
+    render_static(dest, opts.hostcall)?;
+
     let manifest = get_manifest(tg)?;
 
     let name_mapper = NameMapper {
@@ -219,14 +233,17 @@ export class QueryGraph extends _QueryGraphBase {{
 }}"
     )?;
 
-    writeln!(&mut client_ts)?;
-    Ok(client_ts.buf)
+    Ok(Rc::into_inner(data_types).unwrap())
 }
 
 /// Render the common sections like the transports
-fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
+fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
     let client_ts = include_str!("static/mod.ts");
-    writeln!(dest, "{}", client_ts)?;
+    crate::utils::processed_write(
+        dest,
+        client_ts,
+        [("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
+    )?;
     Ok(())
 }
 
