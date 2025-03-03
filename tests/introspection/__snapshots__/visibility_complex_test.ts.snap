@@ -22,11 +22,11 @@ snapshot[`Visibility check upon introspection on complex typegraph 1`] = `
       },
       {
         kind: "OBJECT",
-        name: "struct_ab80b_field_list_optional_struct",
+        name: "root_identity_read_fn_output_field_list_optional_struct",
       },
       {
         kind: "OBJECT",
-        name: "struct_ab80b_field_optional_List_struct",
+        name: "root_identity_read_fn_output_field_optional_List_struct",
       },
       {
         kind: "SCALAR",
@@ -34,7 +34,7 @@ snapshot[`Visibility check upon introspection on complex typegraph 1`] = `
       },
       {
         kind: "OBJECT",
-        name: "struct_ab80b_denied_struct_f1",
+        name: "root_identity_read_fn_output_denied_struct_f1",
       },
       {
         kind: "OBJECT",
@@ -46,7 +46,7 @@ snapshot[`Visibility check upon introspection on complex typegraph 1`] = `
       },
       {
         kind: "SCALAR",
-        name: "struct_ab80b_union_scalar_union",
+        name: "root_identity_read_fn_output_union_scalar_union",
       },
       {
         kind: "SCALAR",
@@ -70,7 +70,7 @@ snapshot[`Visibility check upon introspection on complex typegraph 1`] = `
       },
       {
         kind: "OBJECT",
-        name: "struct_ab80b_f6",
+        name: "root_identity_read_fn_output_f6",
       },
       {
         kind: "OBJECT",
@@ -111,15 +111,15 @@ snapshot[`Visibility check upon introspection on complex typegraph 2`] = `
       },
       {
         kind: "OBJECT",
-        name: "struct_ab80b_field_list_optional_struct",
+        name: "root_identity_read_fn_output_field_list_optional_struct",
       },
       {
         kind: "OBJECT",
-        name: "struct_ab80b_field_optional_List_struct",
+        name: "root_identity_read_fn_output_field_optional_List_struct",
       },
       {
         kind: "OBJECT",
-        name: "struct_ab80b_denied_struct_f1",
+        name: "root_identity_read_fn_output_denied_struct_f1",
       },
       {
         kind: "OBJECT",
@@ -131,7 +131,7 @@ snapshot[`Visibility check upon introspection on complex typegraph 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "struct_ab80b_union_scalar_union",
+        name: "root_identity_read_fn_output_union_scalar_union",
       },
       {
         kind: "OBJECT",
@@ -151,7 +151,7 @@ snapshot[`Visibility check upon introspection on complex typegraph 2`] = `
       },
       {
         kind: "OBJECT",
-        name: "struct_ab80b",
+        name: "root_identity_read_fn_output",
       },
       {
         kind: "OBJECT",
@@ -277,7 +277,7 @@ Policies:
         fields: [
           {
             args: [],
-            description: "struct_ab80b_field_list_optional_struct field
+            description: "root_identity_read_fn_output_field_list_optional_struct field
 
 Policies:
 - inherit",
@@ -290,7 +290,7 @@ Policies:
           },
           {
             args: [],
-            description: "struct_ab80b_field_list_optional_struct field
+            description: "root_identity_read_fn_output_field_list_optional_struct field
 
 Policies:
 - inherit",
@@ -304,13 +304,13 @@ Policies:
         ],
         interfaces: [],
         kind: "OBJECT",
-        name: "struct_ab80b_field_list_optional_struct",
+        name: "root_identity_read_fn_output_field_list_optional_struct",
       },
       {
         fields: [
           {
             args: [],
-            description: "struct_ab80b_field_optional_List_struct field
+            description: "root_identity_read_fn_output_field_optional_List_struct field
 
 Policies:
 - inherit",
@@ -324,7 +324,7 @@ Policies:
         ],
         interfaces: [],
         kind: "OBJECT",
-        name: "struct_ab80b_field_optional_List_struct",
+        name: "root_identity_read_fn_output_field_optional_List_struct",
       },
       {
         description: "string type",
@@ -340,7 +340,7 @@ Policies:
         fields: [
           {
             args: [],
-            description: "struct_ab80b_denied_struct_f1 field
+            description: "root_identity_read_fn_output_denied_struct_f1 field
 
 Policies:
 - inherit",
@@ -354,7 +354,7 @@ Policies:
         ],
         interfaces: [],
         kind: "OBJECT",
-        name: "struct_ab80b_denied_struct_f1",
+        name: "root_identity_read_fn_output_denied_struct_f1",
       },
       {
         fields: [
@@ -430,7 +430,7 @@ Policies:
         description: "union type
 Int, String",
         kind: "SCALAR",
-        name: "struct_ab80b_union_scalar_union",
+        name: "root_identity_read_fn_output_union_scalar_union",
       },
       {
         description: "object scalar type representing an empty object",
@@ -510,7 +510,7 @@ Int, String",
         fields: [
           {
             args: [],
-            description: "struct_ab80b_f6 field
+            description: "root_identity_read_fn_output_f6 field
 
 Policies:
 - inherit",
@@ -520,14 +520,14 @@ Policies:
               kind: "LIST",
               name: null,
               ofType: {
-                name: "struct_ab80b_field_list_optional_struct",
+                name: "root_identity_read_fn_output_field_list_optional_struct",
                 ofType: null,
               },
             },
           },
           {
             args: [],
-            description: "struct_ab80b_f6 field
+            description: "root_identity_read_fn_output_f6 field
 
 Policies:
 - inherit",
@@ -540,7 +540,7 @@ Policies:
                 kind: "LIST",
                 name: null,
                 ofType: {
-                  name: "struct_ab80b_field_optional_List_struct",
+                  name: "root_identity_read_fn_output_field_optional_List_struct",
                   ofType: null,
                 },
               },
@@ -548,7 +548,7 @@ Policies:
           },
           {
             args: [],
-            description: "struct_ab80b_f6 field
+            description: "root_identity_read_fn_output_f6 field
 
 Policies:
 - inherit",
@@ -561,7 +561,7 @@ Policies:
                 kind: "LIST",
                 name: null,
                 ofType: {
-                  name: "struct_ab80b_denied_struct_f1",
+                  name: "root_identity_read_fn_output_denied_struct_f1",
                   ofType: null,
                 },
               },
@@ -569,7 +569,7 @@ Policies:
           },
           {
             args: [],
-            description: "struct_ab80b_f6 field
+            description: "root_identity_read_fn_output_f6 field
 
 Policies:
 - inherit",
@@ -590,7 +590,7 @@ Policies:
           },
           {
             args: [],
-            description: "struct_ab80b_f6 field
+            description: "root_identity_read_fn_output_f6 field
 
 Policies:
 - inherit",
@@ -600,14 +600,14 @@ Policies:
               kind: "NON_NULL",
               name: null,
               ofType: {
-                name: "struct_ab80b_union_scalar_union",
+                name: "root_identity_read_fn_output_union_scalar_union",
                 ofType: null,
               },
             },
           },
           {
             args: [],
-            description: "struct_ab80b_f6 field
+            description: "root_identity_read_fn_output_f6 field
 
 Policies:
 - inherit",
@@ -621,7 +621,7 @@ Policies:
         ],
         interfaces: [],
         kind: "OBJECT",
-        name: "struct_ab80b_f6",
+        name: "root_identity_read_fn_output_f6",
       },
       {
         fields: [
@@ -659,7 +659,7 @@ Policies:
             isDeprecated: false,
             name: "identity_read",
             type: {
-              name: "struct_ab80b_f6",
+              name: "root_identity_read_fn_output_f6",
               ofType: null,
             },
           },
@@ -707,7 +707,7 @@ Policies:
               kind: "LIST",
               name: null,
               ofType: {
-                name: "struct_ab80b_f6",
+                name: "root_identity_read_fn_output_f6",
                 ofType: null,
               },
             },

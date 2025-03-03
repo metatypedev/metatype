@@ -351,8 +351,8 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
                 // we don't include optional and list nodes in
                 // generated names (useless but also, they might be placeholders)
                 Edge::OptionalItem | Edge::ArrayItem => continue,
-                Edge::FunctionInput => join_if_ok!(last_name.to_string(), "input"),
-                Edge::FunctionOutput => join_if_ok!(last_name.to_string(), "output"),
+                Edge::FunctionInput => format!("{}_input", last_name),
+                Edge::FunctionOutput => format!("{}_output", last_name),
                 Edge::ObjectProp(key) => {
                     join_if_ok!(format!("{last_name}_{key}"), ty_name)
                 }

@@ -37,8 +37,8 @@ fn main() -> Result<(), BoxErr> {
             (
                 api1.scalar_args(args.get("post", |val: types::PostPartial| val)),
                 api1.composite_no_args().select(all()),
-                api1.composite_args(args.get("id", |id: String| types::StructC339cPartial {
-                    id: Some(id),
+                api1.composite_args(args.get("id", |id: String| {
+                    types::RootCompositeArgsFnInputPartial { id: Some(id) }
                 }))
                 .select(all()),
             )
@@ -98,7 +98,7 @@ fn main() -> Result<(), BoxErr> {
                         title: Some("".into()),
                     }),
                     api1.composite_no_args().select(all()),
-                    api1.composite_args(types::StructC339cPartial {
+                    api1.composite_args(types::RootCompositeArgsFnInputPartial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     })
                     .select(all()),
@@ -107,11 +107,11 @@ fn main() -> Result<(), BoxErr> {
 
             let res5 = gql
                 .query((
-                    api1.scalar_union(types::StructC339cPartial {
+                    api1.scalar_union(types::RootCompositeArgsFnInputPartial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     }),
                     // allows ignoring some members
-                    api1.composite_union(types::StructC339cPartial {
+                    api1.composite_union(types::RootCompositeArgsFnInputPartial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     })
                     .select(RootCompositeUnionFnOutputSelections {
@@ -120,14 +120,14 @@ fn main() -> Result<(), BoxErr> {
                     }),
                     // returns empty if returned type wasn't selected
                     // in union member
-                    api1.composite_union(types::StructC339cPartial {
+                    api1.composite_union(types::RootCompositeArgsFnInputPartial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     })
                     .select(RootCompositeUnionFnOutputSelections {
                         user: select(all()),
                         ..default()
                     }),
-                    api1.mixed_union(types::StructC339cPartial {
+                    api1.mixed_union(types::RootCompositeArgsFnInputPartial {
                         id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     })
                     .select(RootMixedUnionFnOutputSelections {
@@ -175,17 +175,19 @@ fn main() -> Result<(), BoxErr> {
                 .await?;
             let res7c = gql
                 .prepare_query(|args| {
-                    api1.identity(args.get("num", |val: i64| types::Struct17dc8Partial {
-                        input: Some(val),
-                    }))
+                    api1.identity(
+                        args.get("num", |val: i64| types::RootIdentityFnInputPartial {
+                            input: Some(val),
+                        }),
+                    )
                     .select(all())
                 })?
                 .perform::<_, i64>([("num", 0)])
                 .await?;
             let res7d = gql
                 .prepare_mutation(|args| {
-                    api1.identity_update(args.get("num", |val: i64| types::Struct17dc8Partial {
-                        input: Some(val),
+                    api1.identity_update(args.get("num", |val: i64| {
+                        types::RootIdentityFnInputPartial { input: Some(val) }
                     }))
                     .select(all())
                 })?

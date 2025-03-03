@@ -936,6 +936,7 @@ export type RootUploadManyFnInput = {
   prefix?: RootUploadManyFnInputPrefixString25e51Optional;
   files: RootUploadManyFnInputFilesFileBf9b7List;
 };
+export type RootUploadFnOutput = boolean;
 
 
 export class QueryGraph extends _QueryGraphBase {
@@ -948,7 +949,7 @@ export class QueryGraph extends _QueryGraphBase {
     });
   }
     
-  upload(args: RootUploadFnInput | PlaceholderArgs<RootUploadFnInput>): MutationNode<boolean> {
+  upload(args: RootUploadFnInput | PlaceholderArgs<RootUploadFnInput>): MutationNode<RootUploadFnOutput> {
     const inner = _selectionToNodeSet(
       { "upload": args },
       [["upload", nodeMetas.RootUploadFn]],
@@ -956,7 +957,7 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new MutationNode(inner);
   }
-  uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>): MutationNode<boolean> {
+  uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>): MutationNode<RootUploadFnOutput> {
     const inner = _selectionToNodeSet(
       { "uploadMany": args },
       [["uploadMany", nodeMetas.RootUploadManyFn]],
