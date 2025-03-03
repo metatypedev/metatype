@@ -11,6 +11,7 @@ import type {
   TsPrimitivesHandler,
   TsSimpleCyclesHandler,
 } from "./fdk.ts";
+import { QueryGraph, Transports } from "./fdk.ts";
 
 export const primitives: TsPrimitivesHandler = (inp, _ctx, _tg) => {
   const out: Primitives = {
@@ -38,4 +39,13 @@ export const simple_cycles: TsSimpleCyclesHandler = (inp, _ctx, _tg) => {
     ...inp.data,
   };
   return out;
+};
+
+export const proxy_primitives: TsPrimitivesHandler = async (inp, _ctx, tg) => {
+  const qg = new QueryGraph();
+  const host = Transports.hostcall(tg, qg);
+
+  return await host.query(
+    qg.tsPrimitives(inp, { _: "selectAll" }),
+  );
 };

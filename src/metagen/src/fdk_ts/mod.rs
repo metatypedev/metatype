@@ -39,6 +39,8 @@ pub struct FdkTypescriptGenConfig {
     /// Runtimes to generate stubbed materializer implementations for.
     #[garde(skip)]
     pub stubbed_runtimes: Option<Vec<String>>,
+    #[garde(skip)]
+    pub exclude_client: Option<bool>,
 }
 
 impl FdkTypescriptGenConfig {
@@ -87,7 +89,15 @@ impl FdkTypescriptTemplate {
         )?;
         writeln!(&mut fdk_ts)?;
         self.gen_static(&mut fdk_ts)?;
-        let ty_name_memo = render_types(&mut fdk_ts, tg)?;
+        let ty_name_memo = if config.exclude_client.unwrap_or_default() {
+            render_types(&mut fdk_ts, tg)?
+        } else {
+            super::client_ts::render_client(
+                &mut fdk_ts,
+                tg,
+                super::client_ts::ClientTsOpts { hostcall: true },
+            )?
+        };
         writeln!(&mut fdk_ts)?;
         {
             let stubbed_rts = config
@@ -211,6 +221,7 @@ fn e2e() -> anyhow::Result<()> {
                     generator_name: "fdk_ts".to_string(),
                     other: serde_json::to_value(fdk_ts::FdkTypescriptGenConfig {
                         stubbed_runtimes: Some(vec!["deno".into()]),
+                        exclude_client: None,
                         base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),
                             typegraph_path: None,

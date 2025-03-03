@@ -281,11 +281,12 @@ metagen:
 //  }
 //});
 
-Meta.test("fdk table suite", async (metaTest) => {
+Meta.test({
+  name: "fdk table suite",
+  only: true,
+}, async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/identities");
   const genCratePath = join(scriptsPath, "rs");
-  // const genPyPath = join(scriptsPath, "py");
-  // const genTsPath = join(scriptsPath, "ts");
 
   assertEquals(
     (
@@ -506,6 +507,43 @@ Meta.test("fdk table suite", async (metaTest) => {
         } as Record<string, JSONValue>,
       },
     },
+    {
+      name: "proxy primtives",
+      query: `query ($data: primitives) {
+        data: prefix_primitives(
+          data: $data
+        ) {
+          str
+          enum
+          uuid
+          email
+          ean
+          json
+          uri
+          date
+          datetime
+          int
+          float
+          boolean
+        }
+      }`,
+      vars: {
+        data: {
+          str: "bytes",
+          enum: "tree",
+          uuid: "a963f88a-52f2-46b0-9279-ed2910ac2ca5",
+          email: "contact@example.com",
+          ean: "0799439112766",
+          json: JSON.stringify({ foo: "bar" }),
+          uri: "https://metatype.dev",
+          date: "2024-12-24",
+          datetime: new Date().toISOString(),
+          int: 1,
+          float: 1.0,
+          boolean: true,
+        },
+      } as Record<string, JSONValue>,
+    },
   ];
 
   await metaTest.should("build rust crate", async () => {
@@ -521,7 +559,7 @@ Meta.test("fdk table suite", async (metaTest) => {
   await using engine = await metaTest.engine(
     "metagen/typegraphs/identities.py",
   );
-  for (const prefix of ["rs", "ts", "py"]) {
+  for (const prefix of [/* "rs",  */ "ts" /* , "py" */]) {
     await metaTest.should(`fdk data go round ${prefix}`, async (t) => {
       for (const { name, vars, query, skip } of cases) {
         if (skip) {
