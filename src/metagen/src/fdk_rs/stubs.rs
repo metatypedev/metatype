@@ -116,6 +116,7 @@ mod test {
                         policies: Default::default(),
                         id: vec![],
                         required: vec![],
+                        additional_props: false,
                     },
                     base: TypeNodeBase {
                         ..default_type_node_base()

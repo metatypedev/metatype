@@ -81,6 +81,7 @@ impl TypeConversion for Struct {
                 id: self.data.find_id_fields()?,
                 required: Vec::new(),
                 policies: self.data.collect_policies(ctx)?,
+                additional_props: self.data.additional_props,
             },
         })
     }

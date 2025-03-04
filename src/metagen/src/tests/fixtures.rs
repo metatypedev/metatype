@@ -58,6 +58,7 @@ pub fn test_typegraph_2() -> Typegraph {
                     policies: Default::default(),
                     id: vec![],
                     required: vec![],
+                    additional_props: false,
                 },
                 base: TypeNodeBase {
                     ..default_type_node_base()
