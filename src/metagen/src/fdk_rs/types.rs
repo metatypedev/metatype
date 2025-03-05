@@ -442,6 +442,7 @@ mod test {
                             id: vec![],
                             // FIXME: remove required
                             required: vec![],
+                            additional_props: false,
                         },
                         base: TypeNodeBase {
                             title: "my_obj".into(),
@@ -617,6 +618,7 @@ pub enum MyUnion {
                             id: vec![],
                             required: ["obj_b"].into_iter().map(Into::into).collect(),
                             policies: Default::default(),
+                            additional_props: false,
                         },
                         base: TypeNodeBase {
                             title: "ObjA".into(),
@@ -629,6 +631,7 @@ pub enum MyUnion {
                             policies: Default::default(),
                             id: vec![],
                             required: ["obj_c"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
                         },
                         base: TypeNodeBase {
                             title: "ObjB".into(),
@@ -641,6 +644,7 @@ pub enum MyUnion {
                             policies: Default::default(),
                             id: vec![],
                             required: ["obj_a"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
                         },
                         base: TypeNodeBase {
                             title: "ObjC".into(),
@@ -672,6 +676,7 @@ pub struct ObjC {
                             policies: Default::default(),
                             id: vec![],
                             required: ["obj_b"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
                         },
                         base: TypeNodeBase {
                             title: "ObjA".into(),
@@ -684,6 +689,7 @@ pub struct ObjC {
                             policies: Default::default(),
                             id: vec![],
                             required: ["union_c"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
                         },
                         base: TypeNodeBase {
                             title: "ObjB".into(),
@@ -723,6 +729,7 @@ pub enum CUnion {
                             policies: Default::default(),
                             id: vec![],
                             required: ["obj_b"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
                         },
                         base: TypeNodeBase {
                             title: "ObjA".into(),
@@ -735,6 +742,7 @@ pub enum CUnion {
                             policies: Default::default(),
                             id: vec![],
                             required: ["either_c"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
                         },
                         base: TypeNodeBase {
                             title: "ObjB".into(),
