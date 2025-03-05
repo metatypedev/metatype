@@ -190,7 +190,7 @@ export class ComputationEngine {
 
       // TODO
       this.lenses[stageId] = lens.flatMap((l) =>
-        batcher([((l ?? {})as Record<string, unknown>)[field]]) ?? []
+        batcher([((l ?? {}) as Record<string, unknown>)[field]]) ?? []
       );
     }
 

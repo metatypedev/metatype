@@ -3,43 +3,47 @@
 
 // WARNING: Assume any content or state in this file will run inside a Web Worker
 
-import { TaskContext } from "./runtimes/deno/shared_types.ts";
+export class HostcallPump {
+  #pendingHostCalls = new Map<string, PromiseWithResolvers<any>>();
 
-export function make_internal(
-  { meta: { url, token } }: TaskContext,
-  additionalHeaders: Record<string, string>,
-) {
-  const gql = (query: readonly string[], ...args: unknown[]) => {
-    if (args.length > 0) {
-      throw new Error("gql does not support arguments, use variables instead");
+  handleResponse(resp: { id: string; result: any; error: any }) {
+    const promise = this.#pendingHostCalls.get(resp.id);
+    if (!promise) {
+      throw new Error("unknown hostcall id");
     }
-    // console.log(query);
-    return {
-      run: async (
-        variables: Record<string, unknown>,
-      ): Promise<Record<string, unknown>> => {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            accept: "application/json",
-            "content-type": "application/json",
-            authorization: `Bearer ${token}`,
-            ...additionalHeaders,
-          },
-          body: JSON.stringify({
-            query: query[0],
-            variables,
-          }),
-        });
-        if (!res.ok) {
-          throw new Error(`gql fetch on ${url} failed: ${await res.text()}`);
-        }
-        // console.log
-        return res.json();
-      },
+    this.#pendingHostCalls.delete(resp.id);
+    if (resp.error) {
+      promise.reject(resp.error);
+    } else {
+      promise.resolve(resp.result);
+    }
+  }
+
+  newHandler(
+    hostcall: (id: string, opName: string, json: string) => void,
+  ) {
+    const gql = (query: readonly string[], ...args: unknown[]) => {
+      if (args.length > 0) {
+        throw new Error(
+          "gql does not support arguments, use variables instead",
+        );
+      }
+      // console.log(query);
+      return {
+        run: (
+          variables: Record<string, unknown>,
+        ): Promise<Record<string, unknown>> => {
+          const id = crypto.randomUUID();
+          const promise = Promise.withResolvers<any>();
+          this.#pendingHostCalls.set(id, promise);
+
+          hostcall(id, "gql", JSON.stringify({ query, variables }));
+          return promise.promise;
+        },
+      };
     };
-  };
-  return { gql };
+    return { gql };
+  }
 }
 
 export function errorToString(err: unknown) {

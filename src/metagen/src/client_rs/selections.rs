@@ -78,6 +78,9 @@ impl RsNodeSelectionsRenderer {
                 )?,
             };
         }
+        if props.is_empty() {
+            writeln!(dest, r#"    pub phantom: std::marker::PhantomData<ATy>,"#)?
+        }
         writeln!(dest, "}}")?;
         write!(dest, "impl_union_selection_traits!({ty_name}")?;
         for (name, (variant_ty, _)) in props.iter() {

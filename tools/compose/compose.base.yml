@@ -1,12 +1,16 @@
 services:
   envoy:
-    image: docker.io/envoyproxy/envoy:v1.26-latest
+    user: "1000:1000"
+    image: docker.io/envoyproxy/envoy:v1.33-latest
     restart: unless-stopped
     ports:
       - "9901:9901"
       - "7890:10000"
+    environment:
+      ENVOY_UID: 1000
+      ENVOY_GID: 1000
     volumes:
-      - ../envoy.yaml:/etc/envoy/envoy.yaml:ro
+      - ../envoy.yaml:/etc/envoy/envoy.yaml:Z
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

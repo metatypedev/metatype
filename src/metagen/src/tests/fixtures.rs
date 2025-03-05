@@ -18,13 +18,13 @@ pub async fn test_typegraph_1() -> anyhow::Result<Arc<Typegraph>> {
         .kill_on_drop(true)
         .output()
         .await?;
-    let mut tg: Vec<Arc<Typegraph>> = serde_json::from_slice(&out.stdout).with_context(|| {
+    let mut tg: Vec<Typegraph> = serde_json::from_slice(&out.stdout).with_context(|| {
         format!(
             "error deserializing typegraph: {out:?}\nstderr):\n{}\n---END---",
             std::str::from_utf8(&out.stderr).unwrap(),
         )
     })?;
-    Ok(tg.pop().unwrap())
+    Ok(Arc::new(tg.pop().unwrap()))
 }
 
 #[allow(unused)]
@@ -121,11 +121,11 @@ pub async fn test_typegraph_3() -> anyhow::Result<Arc<Typegraph>> {
         .kill_on_drop(true)
         .output()
         .await?;
-    let mut tg: Vec<Arc<Typegraph>> = serde_json::from_slice(&out.stdout).with_context(|| {
+    let mut tg: Vec<Typegraph> = serde_json::from_slice(&out.stdout).with_context(|| {
         format!(
             "error deserializing typegraph: {out:?}\nstderr):\n{}\n---END---",
             std::str::from_utf8(&out.stderr).unwrap(),
         )
     })?;
-    Ok(tg.pop().unwrap())
+    Ok(Arc::new(tg.pop().unwrap()))
 }
