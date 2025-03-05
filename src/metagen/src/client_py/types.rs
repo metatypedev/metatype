@@ -29,18 +29,15 @@ impl PyTypeRenderer {
         props: IndexMap<String, (Rc<str>, bool)>,
     ) -> std::fmt::Result {
         writeln!(dest, r#"{ty_name} = typing.TypedDict("{ty_name}", {{"#)?;
-        for (name, (ty_name, _optional)) in props.into_iter() {
-            // FIXME: use NotRequired when bumping to python version
-            // that supports it
-            // also, remove the total param below
-            // if optional {
-            //     writeln!(dest, r#"    "{name}": typing.NotRequired[{ty_name}],"#)?;
-            // } else {
-            //     writeln!(dest, r#"    "{name}": {ty_name},"#)?;
-            // }
-            writeln!(dest, r#"    "{name}": {ty_name},"#)?;
+        for (name, (ty_name, optional)) in props.into_iter() {
+            if optional {
+                writeln!(dest, r#"    "{name}": typing.NotRequired[{ty_name}],"#)?;
+            } else {
+                writeln!(dest, r#"    "{name}": {ty_name},"#)?;
+            }
+            // writeln!(dest, r#"    "{name}": {ty_name},"#)?;
         }
-        writeln!(dest, "}}, total=False)")?;
+        writeln!(dest, "}})")?;
         writeln!(dest)?;
         Ok(())
     }

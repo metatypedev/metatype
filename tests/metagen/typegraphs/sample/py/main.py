@@ -7,14 +7,14 @@ from client import (
     SelectionFlags,
     UserSelections,
     Alias,
-    Tranports,
+    Transports,
 )
 import json
 import os
 
 qg = QueryGraph()
 port = os.getenv("TG_PORT")
-gql_client = Tranports.graphql_sync(qg, f"http://localhost:{port}/sample")
+gql_client = Transports.graphql_sync(qg, f"http://localhost:{port}/sample")
 
 prepared_q = gql_client.prepare_query(
     lambda args: {

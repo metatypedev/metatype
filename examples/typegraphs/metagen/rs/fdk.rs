@@ -9,6 +9,7 @@ pub mod wit {
     wit_bindgen::generate!({
         pub_export_macro: true,
         
+
         inline: "package metatype:wit-wire;
 
 interface typegate-wire {
@@ -84,6 +85,12 @@ pub struct MatBuilder {
     handlers: HashMap<String, ErasedHandler>,
 }
 
+impl Default for MatBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MatBuilder {
     pub fn new() -> Self {
         Self {
@@ -127,7 +134,11 @@ impl Router {
         let Some(handler) = self.handlers.get(mat_trait) else {
             return Err(HandleErr::NoHandler);
         };
-        let cx = Ctx {};
+        let qg = query_graph();
+        let cx = Ctx {
+            host: transports::hostcall(&qg),
+            qg,
+        };
         (handler.handler_fn)(&req.in_json, cx)
     }
 }
@@ -138,7 +149,11 @@ thread_local! {
     pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
-pub struct Ctx {}
+
+pub struct Ctx {
+    pub qg: QueryGraph,
+    pub host: metagen_client::hostcall::HostcallTransport,
+}
 
 impl Ctx {
     pub fn gql<O>(
@@ -217,19 +232,129 @@ macro_rules! init_mat {
     };
 }
 // gen-static-end
+use core::marker::PhantomData;
+use metagen_client::prelude::*;
+
+pub mod transports {
+    use super::*;
+
+    pub fn graphql(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwest {
+        GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+    #[cfg(not(target_family = "wasm"))]
+    pub fn graphql_sync(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwestSync {
+        GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+
+    pub fn hostcall(qg: &QueryGraph) -> metagen_client::hostcall::HostcallTransport {
+        metagen_client::hostcall::HostcallTransport::new(
+            std::sync::Arc::new(super::hostcall),
+            qg.ty_to_gql_ty_map.clone(),
+        )
+    }
+}
+
+//
+// --- --- QueryGraph types --- --- //
+//
+
+#[derive(Clone)]
+pub struct QueryGraph {
+    ty_to_gql_ty_map: TyToGqlTyMap,
+}
+
+//
+// --- --- Typegraph types --- --- //
+//
+
+#[allow(non_snake_case)]
+mod node_metas {
+    use super::*;
+    pub fn scalar() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: None,
+            input_files: None,
+        }
+    }    
+    pub fn Idv3() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("title".into(), scalar as NodeMetaFn),
+                    ("artist".into(), scalar as NodeMetaFn),
+                    ("releaseTime".into(), scalar as NodeMetaFn),
+                    ("mp3Url".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RemixTrack() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("title".into(), "Idv3TitleString".into()),
+                    ("artist".into(), "Idv3TitleString".into()),
+                    ("releaseTime".into(), "Idv3ReleaseTimeStringDatetime".into()),
+                    ("mp3Url".into(), "Idv3Mp3UrlStringUri".into()),
+                ].into()
+            ),
+            ..Idv3()
+        }
+    }
+
+}
 use types::*;
 pub mod types {
     pub type Idv3TitleString = String;
     pub type Idv3ReleaseTimeStringDatetime = String;
     pub type Idv3Mp3UrlStringUri = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Idv3 {
-        pub title: Idv3TitleString,
-        pub artist: Idv3TitleString,
+    pub struct Idv3Partial {
+        pub title: Option<Idv3TitleString>,
+        pub artist: Option<Idv3TitleString>,
         #[serde(rename = "releaseTime")]
-        pub release_time: Idv3ReleaseTimeStringDatetime,
+        pub release_time: Option<Idv3ReleaseTimeStringDatetime>,
         #[serde(rename = "mp3Url")]
-        pub mp3_url: Idv3Mp3UrlStringUri,
+        pub mp3_url: Option<Idv3Mp3UrlStringUri>,
+    }
+}
+#[derive(Default, Debug)]
+pub struct Idv3Selections<ATy = NoAlias> {
+    pub title: ScalarSelect<ATy>,
+    pub artist: ScalarSelect<ATy>,
+    pub release_time: ScalarSelect<ATy>,
+    pub mp3_url: ScalarSelect<ATy>,
+}
+impl_selection_traits!(Idv3Selections, title, artist, release_time, mp3_url);
+
+pub fn query_graph() -> QueryGraph {
+    QueryGraph {
+        ty_to_gql_ty_map: std::sync::Arc::new([
+        
+            ("Idv3TitleString".into(), "String!".into()),
+            ("Idv3ReleaseTimeStringDatetime".into(), "String!".into()),
+            ("Idv3Mp3UrlStringUri".into(), "String!".into()),
+        ].into()),
+    }
+}
+impl QueryGraph {
+
+    pub fn remix(
+        &self,
+        args: impl Into<NodeArgs<Idv3Partial>>
+    ) -> UnselectedNode<Idv3Selections, Idv3Selections<HasAlias>, QueryMarker, Idv3Partial>
+    {
+        UnselectedNode {
+            root_name: "remix".into(),
+            root_meta: node_metas::RemixTrack,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
     }
 }
 pub mod stubs {
@@ -252,7 +377,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: Idv3, cx: Ctx) -> anyhow::Result<Idv3>;
+        fn handle(&self, input: Idv3Partial, cx: Ctx) -> anyhow::Result<Idv3Partial>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {

@@ -53,12 +53,12 @@ impl RustTypeRenderer {
         dest: &mut impl Write,
         ty_name: &str,
         props: IndexMap<String, (String, Option<String>)>,
-        additional_props: bool,
+        _additional_props: bool,
     ) -> std::fmt::Result {
         self.render_derive(dest)?;
-        if !additional_props {
-            writeln!(dest, "#[serde(deny_unknown_fields)]")?;
-        }
+        // if !additional_props {
+        //     writeln!(dest, "#[serde(deny_unknown_fields)]")?;
+        // }
         writeln!(dest, "pub struct {ty_name} {{")?;
         for (name, (ty_name, ser_name)) in props.into_iter() {
             if let Some(ser_name) = ser_name {

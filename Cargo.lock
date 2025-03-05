@@ -5849,6 +5849,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
+name = "identities_fdk"
+version = "0.5.1-rc.0"
+dependencies = [
+ "anyhow",
+ "metagen-client",
+ "serde",
+ "serde_json",
+ "wit-bindgen",
+]
+
+[[package]]
 name = "idna"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10296,6 +10307,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "sample_client"
+version = "0.5.1-rc.0"
+dependencies = [
+ "metagen-client",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "sample_client_upload"
+version = "0.5.1-rc.0"
+dependencies = [
+ "metagen-client",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-util 0.7.11",
 ]
 
 [[package]]

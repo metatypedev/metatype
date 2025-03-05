@@ -85,6 +85,12 @@ pub struct MatBuilder {
     handlers: HashMap<String, ErasedHandler>,
 }
 
+impl Default for MatBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MatBuilder {
     pub fn new() -> Self {
         Self {
@@ -480,6 +486,16 @@ mod node_metas {
             ..SimpleCycles1()
         }
     }
+    pub fn PyProxyPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "Primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
     pub fn TsPrimitives() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
@@ -597,7 +613,6 @@ pub mod types {
     pub type PrimitivesFloatFloat = f64;
     pub type PrimitivesBooleanBoolean = bool;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct PrimitivesPartial {
         pub str: Option<PrimitivesStrString>,
         #[serde(rename = "enum")]
@@ -614,13 +629,11 @@ pub mod types {
         pub boolean: Option<PrimitivesBooleanBoolean>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct PrimitivesArgsPartial {
         pub data: Option<PrimitivesPartial>,
     }
     pub type CompositesOptPrimitivesStrStringOptional = Option<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct Branch2Partial {
         pub branch2: Option<PrimitivesStrString>,
     }
@@ -643,7 +656,6 @@ pub mod types {
     }
     pub type CompositesListPrimitivesStrStringList = Vec<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct CompositesPartial {
         pub opt: CompositesOptPrimitivesStrStringOptional,
         pub either: Option<CompositesEitherEither>,
@@ -651,19 +663,16 @@ pub mod types {
         pub list: Option<CompositesListPrimitivesStrStringList>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct CompositesArgsPartial {
         pub data: Option<CompositesPartial>,
     }
     pub type Branch33ATo1Cycles1Optional = Option<Cycles1Partial>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct Branch33APartial {
         pub phantom3a: CompositesOptPrimitivesStrStringOptional,
         pub to1: Branch33ATo1Cycles1Optional,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct Branch33BPartial {
         pub phantom3b: CompositesOptPrimitivesStrStringOptional,
         pub to2: Cycles1To2Cycles2Optional,
@@ -684,40 +693,34 @@ pub mod types {
     pub type Cycles1List3Cycles3List = Vec<Cycles3>;
     pub type Cycles1List3Cycles1List3Cycles3ListOptional = Option<Cycles1List3Cycles3List>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct Cycles1Partial {
         pub phantom1: CompositesOptPrimitivesStrStringOptional,
         pub to2: Box<Cycles1To2Cycles2Optional>,
         pub list3: Cycles1List3Cycles1List3Cycles3ListOptional,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct Cycles1ArgsPartial {
         pub data: Option<Cycles1Partial>,
     }
     pub type SimpleCycles3To1SimpleCycles1Optional = Option<SimpleCycles1Partial>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct SimpleCycles3Partial {
         pub phantom3: CompositesOptPrimitivesStrStringOptional,
         pub to1: SimpleCycles3To1SimpleCycles1Optional,
     }
     pub type SimpleCycles2To3SimpleCycles3Optional = Option<SimpleCycles3Partial>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct SimpleCycles2Partial {
         pub phantom2: CompositesOptPrimitivesStrStringOptional,
         pub to3: SimpleCycles2To3SimpleCycles3Optional,
     }
     pub type SimpleCycles1To2SimpleCycles2Optional = Option<SimpleCycles2Partial>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct SimpleCycles1Partial {
         pub phantom1: CompositesOptPrimitivesStrStringOptional,
         pub to2: Box<SimpleCycles1To2SimpleCycles2Optional>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(deny_unknown_fields)]
     pub struct SimpleCycles1ArgsPartial {
         pub data: Option<SimpleCycles1Partial>,
     }
@@ -875,6 +878,18 @@ impl QueryGraph {
         UnselectedNode {
             root_name: "py_simple_cycles".into(),
             root_meta: node_metas::PySimpleCycles,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn py_proxy_primitives(
+        &self,
+        args: impl Into<NodeArgs<PrimitivesArgsPartial>>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
+    {
+        UnselectedNode {
+            root_name: "py_proxy_primitives".into(),
+            root_meta: node_metas::PyProxyPrimitives,
             args: args.into().into(),
             _marker: PhantomData,
         }

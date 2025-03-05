@@ -1,35 +1,44 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from .handlers_types import (
+from .fdk import (
     Composites,
-    typed_cycles,
+    handler_cycles,
     Primitives,
-    typed_composites,
+    handler_composites,
     Cycles1,
-    typed_primitives,
+    handler_primitives,
     SimpleCycles1,
-    typed_simple_cycles,
+    handler_simple_cycles,
+    handler_proxy_primitives,
     Ctx,
+    SelectionFlags,
 )
-from . import handlers_types as types
+from . import fdk as types
 
 
-@typed_primitives
+@handler_primitives
 def primitives(inp: types.PrimitivesArgs, ctx: Ctx) -> Primitives:
-    return inp.data
+    return inp["data"]
 
 
-@typed_composites
+@handler_composites
 def composites(inp: types.CompositesArgs, ctx: Ctx) -> Composites:
-    return inp.data
+    return inp["data"]
 
 
-@typed_cycles
+@handler_cycles
 def cycles(inp: types.Cycles1Args, ctx: Ctx) -> Cycles1:
-    return inp.data
+    return inp["data"]
 
 
-@typed_simple_cycles
+@handler_simple_cycles
 def simple_cycles(inp: types.SimpleCycles1Args, ctx: Ctx) -> SimpleCycles1:
-    return inp.data
+    return inp["data"]
+
+
+@handler_proxy_primitives
+def proxy_primitives(inp: types.PrimitivesArgs, ctx: Ctx) -> Primitives:
+    return ctx.host.query(
+        ctx.qg.py_primitives(inp, {"_": SelectionFlags(select_all=True)})
+    )

@@ -4,13 +4,13 @@
 import os
 import json
 
-from client import File, QueryGraph, Tranports
+from client import File, QueryGraph, Transports
 
 
 port = os.environ.get("TG_PORT")
 
 api = QueryGraph()
-gql = Tranports.graphql_sync(api, f"http://localhost:{port}/sample")
+gql = Transports.graphql_sync(api, f"http://localhost:{port}/sample")
 
 res1 = gql.mutation(
     {
