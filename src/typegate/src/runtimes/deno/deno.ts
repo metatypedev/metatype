@@ -19,7 +19,6 @@ import type {
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import type { Task } from "./shared_types.ts";
-import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
 import { createArtifactMeta } from "../utils/deno.ts";
 import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
@@ -34,19 +33,14 @@ const predefinedFuncs: Record<
   string,
   (param: any) => Resolver<Record<string, unknown>>
 > = {
-  identity:
-    () =>
-    ({ _, ...args }) =>
-      args,
+  identity: () => ({ _, ...args }) => args,
   true: () => () => true,
   false: () => () => false,
   allow: () => () => "ALLOW" as PolicyResolverOutput,
   deny: () => () => "DENY" as PolicyResolverOutput,
   pass: () => () => "PASS" as PolicyResolverOutput,
-  internal_policy:
-    () =>
-    ({ _: { context } }): PolicyResolverOutput =>
-      context.provider === "internal" ? "PASS" : "DENY",
+  internal_policy: () => ({ _: { context } }): PolicyResolverOutput =>
+    context.provider === "internal" ? "PASS" : "DENY",
   context_check: ({ key, value }) => {
     let check: (value: any) => boolean;
     switch (value.type) {
@@ -107,10 +101,11 @@ export class DenoRuntime extends Runtime {
     for (const m of materializers) {
       let matSecrets = (m.data.secrets as string[]) ?? [];
       if (m.name === "outjection") {
-        matSecrets =
-          m.data.source === "secret" ? [...getInjectionValues(m.data)] : [];
+        matSecrets = m.data.source === "secret"
+          ? [...getInjectionValues(m.data)]
+          : [];
       }
-      for (const secretName of (m.data.secrets as []) ?? []) {
+      for (const secretName of matSecrets) {
         secrets[secretName] = secretManager.secretOrFail(secretName);
       }
     }
@@ -123,7 +118,6 @@ export class DenoRuntime extends Runtime {
     const ops = new Map<number, Task>();
 
     const uuid = crypto.randomUUID();
-    const basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
 
     let registryCount = 0;
     for (const mat of materializers) {
@@ -141,7 +135,7 @@ export class DenoRuntime extends Runtime {
         const matData = mat.data;
         const entryPoint = artifacts[matData.entryPoint as string];
         const depMetas = (matData.deps as string[]).map((dep) =>
-          createArtifactMeta(typegraphName, artifacts[dep]),
+          createArtifactMeta(typegraphName, artifacts[dep])
         );
         const moduleMeta = createArtifactMeta(typegraphName, entryPoint);
 
@@ -169,9 +163,19 @@ export class DenoRuntime extends Runtime {
       }
     }
 
+    const token = await InternalAuth.emit(typegate.cryptoKeys);
+
+    const hostcallCtx = {
+      authToken: token,
+      typegate,
+      typegraphUrl: new URL(
+        `internal+hostcall+subs://typegate/${typegraphName}`,
+      ),
+    };
+
     const workerManager = new WorkerManager({
       timeout_ms: typegate.config.base.timer_max_timeout_ms,
-    });
+    }, hostcallCtx);
 
     const rt = new DenoRuntime(
       typegraphName,
@@ -185,8 +189,9 @@ export class DenoRuntime extends Runtime {
     return rt;
   }
 
-  async deinit(): Promise<void> {
+  deinit() {
     this.workerManager.deinit();
+    return Promise.resolve();
   }
 
   materialize(
@@ -252,8 +257,8 @@ export class DenoRuntime extends Runtime {
 
   delegate(
     mat: TypeMaterializer,
-    verbose: boolean,
-    pulseCount?: number,
+    _verbose: boolean,
+    _pulseCount?: number,
   ): Resolver {
     if (mat.name === "predefined_function") {
       const func = predefinedFuncs[mat.data.name as string];
@@ -277,7 +282,7 @@ export class DenoRuntime extends Runtime {
       const entryPoint =
         this.tg.meta.artifacts[modMat.data.entryPoint as string];
       const depMetas = (modMat.data.deps as string[]).map((dep) =>
-        createArtifactMeta(this.typegraphName, this.tg.meta.artifacts[dep]),
+        createArtifactMeta(this.typegraphName, this.tg.meta.artifacts[dep])
       );
       const moduleMeta = createArtifactMeta(this.typegraphName, entryPoint);
 

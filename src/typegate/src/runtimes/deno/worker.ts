@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { toFileUrl } from "@std/path/to-file-url";
-import { DenoMessage } from "./types.ts";
-import { errorToString, make_internal } from "../../worker_utils.ts";
+import { DenoEvent, DenoMessage } from "./types.ts";
+import { errorToString, HostcallPump } from "../../worker_utils.ts";
 
-const isTest = Deno.env.get("DENO_TESTING") === "true";
-
-const additionalHeaders = isTest
-  ? { connection: "close" }
-  : { connection: "keep-alive" };
+const hostcallPump = new HostcallPump();
 
 self.onmessage = async function (event: MessageEvent<DenoMessage>) {
+  if (event.data.type == "HOSTCALL_RESP") {
+    hostcallPump.handleResponse(event.data);
+    return;
+  }
   const { type, modulePath, functionName, args, internals } = event.data;
   switch (type) {
     case "CALL": {
@@ -30,7 +30,16 @@ self.onmessage = async function (event: MessageEvent<DenoMessage>) {
         const result = await fn(
           args,
           internals,
-          make_internal(internals, additionalHeaders),
+          hostcallPump.newHandler((id, opName, json) => {
+            postMessage(
+              {
+                type: "HOSTCALL",
+                id,
+                opName,
+                json,
+              } satisfies DenoEvent,
+            );
+          }),
         );
         self.postMessage({
           type: "SUCCESS",

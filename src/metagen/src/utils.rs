@@ -32,7 +32,7 @@ pub struct GenDestFs {
 pub fn processed_write(
     dest: &mut GenDestBuf,
     input: &str,
-    flags: BTreeMap<String, bool>,
+    flags: &BTreeMap<String, bool>,
 ) -> eyre::Result<()> {
     static SKIP: once_cell::sync::Lazy<regex::Regex> =
         once_cell::sync::Lazy::new(|| regex::Regex::new(r"metagen-skip").unwrap());

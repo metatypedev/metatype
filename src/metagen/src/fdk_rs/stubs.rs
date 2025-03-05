@@ -165,6 +165,7 @@ mod test {
             crate_name: None,
             skip_lib_rs: None,
             skip_cargo_toml: None,
+            exclude_client: None,
         })?;
         let out = generator.generate(
             [

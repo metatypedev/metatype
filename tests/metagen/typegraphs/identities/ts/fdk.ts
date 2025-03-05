@@ -956,7 +956,6 @@ export class Transports {
   }
 
   static hostcall(
-    // sync with Deployment from fdk.ts
     tg: Deployment,
     qg: _QueryGraphBase,
     options?: Pick<GraphQlTransportOptions, "headers">,
@@ -1189,6 +1188,14 @@ const nodeMetas = {
       ...nodeMetas.SimpleCycles1(),
       argumentTypes: {
         data: "SimpleCycles1",
+      },
+    };
+  },
+  RsProxyPrimitives(): NodeMeta {
+    return {
+      ...nodeMetas.Primitives(),
+      argumentTypes: {
+        data: "Primitives",
       },
     };
   },
@@ -1484,6 +1491,14 @@ export class QueryGraph extends _QueryGraphBase {
     const inner = _selectionToNodeSet(
       { "rs_simple_cycles": [args, select] },
       [["rs_simple_cycles", nodeMetas.RsSimpleCycles]],
+      "$q",
+    )[0];
+    return new QueryNode(inner);
+  }
+  rsProxyPrimitives(args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>, select: PrimitivesSelections): QueryNode<Primitives> {
+    const inner = _selectionToNodeSet(
+      { "rs_proxy_primitives": [args, select] },
+      [["rs_proxy_primitives", nodeMetas.RsProxyPrimitives]],
       "$q",
     )[0];
     return new QueryNode(inner);

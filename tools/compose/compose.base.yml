@@ -10,7 +10,7 @@ services:
       ENVOY_UID: 1000
       ENVOY_GID: 1000
     volumes:
-      - ../envoy.yaml:/etc/envoy/envoy.yaml:ro
+      - ../envoy.yaml:/etc/envoy/envoy.yaml:Z
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

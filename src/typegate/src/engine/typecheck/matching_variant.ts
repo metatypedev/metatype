@@ -35,6 +35,11 @@ export function generateVariantMatcher(
     for (let i = 0; i < variants.length; ++i) {
       const validator = validators[i];
       validator(value, "<value>", errors, validationContext);
+      console.log("XXXX", {
+        typeNode,
+        value,
+        errors,
+      });
       if (errors.length === 0) {
         return tg.type(variants[i]).title;
       }

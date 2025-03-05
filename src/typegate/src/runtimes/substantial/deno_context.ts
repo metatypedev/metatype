@@ -1,23 +1,21 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { make_internal } from "../../worker_utils.ts";
-import { TaskContext } from "../deno/shared_types.ts";
+import type { HostcallPump } from "../../worker_utils.ts";
 import { appendIfOngoing, Interrupt, OperationEvent, Run } from "./types.ts";
 
 // const isTest = Deno.env.get("DENO_TESTING") === "true";
-const testBaseUrl = Deno.env.get("TEST_OVERRIDE_GQL_ORIGIN");
-
-const additionalHeaders = { connection: "keep-alive" };
+// const testBaseUrl = Deno.env.get("TEST_OVERRIDE_GQL_ORIGIN");
 
 export class Context {
   private id = 0;
   public kwargs = {};
-  gql: ReturnType<typeof createGQLClient>;
   logger: SubLogger;
 
-  constructor(private run: Run, private internal: TaskContext) {
-    this.gql = createGQLClient(internal);
+  constructor(
+    private run: Run,
+    public gql: ReturnType<HostcallPump["newHandler"]>["gql"],
+  ) {
     this.kwargs = getKwargsCopy(run);
     this.logger = new SubLogger(this);
   }
@@ -416,20 +414,19 @@ class RetryStrategy {
   }
 }
 
-
 class SubLogger {
   constructor(private ctx: Context) {}
 
   async #log(kind: "warn" | "error" | "info", ...args: unknown[]) {
     await this.ctx.save(() => {
       const prefix = `[${kind.toUpperCase()}: ${this.ctx.getRun().run_id}]`;
-      switch(kind) {
+      switch (kind) {
         case "warn": {
           console.warn(prefix, ...args);
           break;
         }
         case "error": {
-          console.error(prefix,...args);
+          console.error(prefix, ...args);
           break;
         }
         default: {
@@ -444,7 +441,7 @@ class SubLogger {
           // Functions are omitted,
           // For example, JSON.stringify(() => 1234) => undefined (no throw)
           return json === undefined ? String(arg) : json;
-        } catch(_) {
+        } catch (_) {
           return String(arg);
         }
       }).join(" ");
@@ -464,19 +461,6 @@ class SubLogger {
   async error(...payload: unknown[]) {
     await this.#log("error", ...payload);
   }
-}
-
-function createGQLClient(internal: TaskContext) {
-  const tgLocal = new URL(internal.meta.url);
-  if (testBaseUrl) {
-    const newBase = new URL(testBaseUrl);
-    tgLocal.protocol = newBase.protocol;
-    tgLocal.hostname = newBase.hostname;
-    tgLocal.port = newBase.port;
-  }
-
-  const meta = { ...internal.meta, url: tgLocal.toString() };
-  return make_internal({ ...internal, meta }, additionalHeaders).gql;
 }
 
 function getKwargsCopy(run: Run): Record<string, unknown> {

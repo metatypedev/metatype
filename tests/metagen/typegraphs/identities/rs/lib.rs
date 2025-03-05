@@ -3,6 +3,7 @@
 
 mod fdk;
 pub use fdk::*;
+pub use metagen_client::prelude::*;
 
 init_mat! {
     hook: || {
@@ -13,35 +14,59 @@ init_mat! {
             .register_handler(stubs::RsComposites::erased(MyMat))
             .register_handler(stubs::RsCycles::erased(MyMat))
             .register_handler(stubs::RsSimpleCycles::erased(MyMat))
+            .register_handler(stubs::RsProxyPrimitives::erased(MyMat))
     }
 }
 
 struct MyMat;
 
 impl stubs::RsPrimitives for MyMat {
-    fn handle(&self, input: types::PrimitivesArgs, _cx: Ctx) -> anyhow::Result<types::Primitives> {
-        Ok(input.data)
+    fn handle(
+        &self,
+        input: types::PrimitivesArgsPartial,
+        _cx: Ctx,
+    ) -> anyhow::Result<types::PrimitivesPartial> {
+        Ok(input.data.unwrap())
     }
 }
 
 impl stubs::RsComposites for MyMat {
-    fn handle(&self, input: types::CompositesArgs, _cx: Ctx) -> anyhow::Result<types::Composites> {
-        Ok(input.data)
+    fn handle(
+        &self,
+        input: types::CompositesArgsPartial,
+        _cx: Ctx,
+    ) -> anyhow::Result<types::CompositesPartial> {
+        Ok(input.data.unwrap())
     }
 }
 
 impl stubs::RsCycles for MyMat {
-    fn handle(&self, input: types::Cycles1Args, _cx: Ctx) -> anyhow::Result<types::Cycles1> {
-        Ok(input.data)
+    fn handle(
+        &self,
+        input: types::Cycles1ArgsPartial,
+        _cx: Ctx,
+    ) -> anyhow::Result<types::Cycles1Partial> {
+        Ok(input.data.unwrap())
     }
 }
 
 impl stubs::RsSimpleCycles for MyMat {
     fn handle(
         &self,
-        input: types::SimpleCycles1Args,
+        input: types::SimpleCycles1ArgsPartial,
         _cx: Ctx,
-    ) -> anyhow::Result<types::SimpleCycles1> {
-        Ok(input.data)
+    ) -> anyhow::Result<types::SimpleCycles1Partial> {
+        Ok(input.data.unwrap())
+    }
+}
+
+impl stubs::RsProxyPrimitives for MyMat {
+    fn handle(
+        &self,
+        input: types::PrimitivesArgsPartial,
+        cx: Ctx,
+    ) -> anyhow::Result<types::PrimitivesPartial> {
+        let resp = cx.host.query(cx.qg.rs_primitives(input).select(all()))?;
+        Ok(resp)
     }
 }

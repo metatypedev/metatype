@@ -11,16 +11,18 @@ export type {
   Run,
 } from "../../../engine/runtime.js";
 
-export type WorkflowMessage = {
-  type: "START";
-  data: {
-    modulePath: string;
-    functionName: string;
-    run: Run;
-    schedule: string;
-    internal: TaskContext;
-  };
-};
+export type WorkflowMessage =
+  | {
+    type: "START";
+    data: {
+      modulePath: string;
+      functionName: string;
+      run: Run;
+      schedule: string;
+      internal: TaskContext;
+    };
+  }
+  | { type: "HOSTCALL_RESP"; id: string; result: any; error: any };
 
 export type WorkflowCompletionEvent =
   | {
@@ -51,7 +53,8 @@ export type WorkflowEvent =
     type: "ERROR";
     error: string;
   }
-  | DenoWorkerError;
+  | DenoWorkerError
+  | { type: "HOSTCALL"; id: string; opName: string; json: string };
 
 export type Result<T> = {
   error: boolean;

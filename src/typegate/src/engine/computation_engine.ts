@@ -154,6 +154,12 @@ export class ComputationEngine {
     if (!rateCalls) {
       this.consumeLimit(res.length * (rateWeight ?? 1));
     }
+    console.log("XXXX", {
+      stage,
+      stageId,
+      parentId,
+      res,
+    });
 
     this.registerResult(stage, stageId, parentId, res);
   }
@@ -190,7 +196,7 @@ export class ComputationEngine {
 
       // TODO
       this.lenses[stageId] = lens.flatMap((l) =>
-        batcher([((l ?? {})as Record<string, unknown>)[field]]) ?? []
+        batcher([((l ?? {}) as Record<string, unknown>)[field]]) ?? []
       );
     }
 

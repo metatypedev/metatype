@@ -95,7 +95,7 @@ impl FdkTypescriptTemplate {
             super::client_ts::render_client(
                 &mut fdk_ts,
                 tg,
-                super::client_ts::ClientTsOpts { hostcall: true },
+                super::client_ts::GenClientTsOpts { hostcall: true },
             )?
         };
         writeln!(&mut fdk_ts)?;
