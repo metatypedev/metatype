@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::borrow::Cow;
+use std::{borrow::Cow, sync::Arc};
 
 use super::fs::FsContext;
 use color_eyre::Result;
@@ -19,7 +19,7 @@ impl InputResolverSync for RawTgResolver {
         match order {
             GeneratorInputOrder::TypegraphFromTypegate { .. } => {
                 Ok(GeneratorInputResolved::TypegraphFromTypegate {
-                    raw: self.tg.clone().into(),
+                    raw: Arc::new(Arc::new(self.tg.clone()).into()),
                 })
             }
             GeneratorInputOrder::TypegraphFromPath { .. } => unimplemented!(),

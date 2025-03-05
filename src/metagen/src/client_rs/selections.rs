@@ -9,7 +9,7 @@ use super::utils::*;
 use crate::{interlude::*, shared::client::*, shared::types::*};
 
 pub struct RsNodeSelectionsRenderer {
-    pub arg_ty_names: Rc<NameMemo>,
+    pub arg_ty_names: Arc<NameMemo>,
 }
 
 impl RsNodeSelectionsRenderer {

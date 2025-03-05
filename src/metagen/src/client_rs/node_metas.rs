@@ -12,10 +12,10 @@ use crate::{
 };
 
 pub struct RsNodeMetasRenderer {
-    pub name_mapper: Rc<super::NameMapper>,
-    pub named_types: Rc<std::sync::Mutex<IndexSet<u32>>>,
+    pub name_mapper: Arc<super::NameMapper>,
+    pub named_types: Arc<std::sync::Mutex<IndexSet<u32>>>,
     /// path to file types in the input type
-    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
+    pub input_files: Arc<HashMap<u32, Vec<TypePath>>>,
 }
 
 impl RsNodeMetasRenderer {
@@ -24,7 +24,7 @@ impl RsNodeMetasRenderer {
         &self,
         dest: &mut impl Write,
         ty_name: &str,
-        props: IndexMap<String, Rc<str>>,
+        props: IndexMap<String, Arc<str>>,
     ) -> std::fmt::Result {
         write!(
             dest,
@@ -59,7 +59,7 @@ pub fn {ty_name}() -> NodeMeta {{
         &self,
         dest: &mut impl Write,
         ty_name: &str,
-        props: IndexMap<String, Rc<str>>,
+        props: IndexMap<String, Arc<str>>,
     ) -> std::fmt::Result {
         write!(
             dest,
@@ -95,7 +95,7 @@ pub fn {ty_name}() -> NodeMeta {{
         dest: &mut impl Write,
         ty_name: &str,
         return_node: &str,
-        argument_fields: Option<IndexMap<String, Rc<str>>>,
+        argument_fields: Option<IndexMap<String, Arc<str>>>,
         input_files: Option<String>,
     ) -> std::fmt::Result {
         write!(

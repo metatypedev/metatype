@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use super::fs::FsContext;
-use crate::errors::Result;
+use crate::errors::{ErrorContext as _, Result};
 use tg_schema::{runtimes::Artifact, Typegraph};
 
 pub trait ArtifactsExt {
@@ -25,6 +25,7 @@ impl ArtifactsExt for FsContext {
         deps: Vec<PathBuf>,
     ) -> Result<Vec<PathBuf>> {
         let mut registered_deps = vec![];
+        eprintln!("registering artifact: {:?}; deps={:?}", entry, deps);
         self.register_artifact(tg, entry)?;
         for dep in deps {
             let artifacts = self.list_files(&[dep.to_string_lossy().to_string()]);
@@ -50,7 +51,9 @@ impl FsContext {
         use std::collections::btree_map::Entry;
         if let Entry::Vacant(entry) = tg.meta.artifacts.entry(path) {
             let path = entry.key().to_path_buf();
-            let (hash, size) = self.hash_file(&path)?;
+            let (hash, size) = self
+                .hash_file(&path)
+                .with_context(|| format!("failed to hash artifact at {path:?}"))?;
             tg.deps.push(path.clone());
             entry.insert(Artifact { hash, size, path });
         }
