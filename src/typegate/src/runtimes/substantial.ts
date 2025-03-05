@@ -118,7 +118,16 @@ export class SubstantialRuntime extends Runtime {
       maxAcquirePerTick: typegate.config.base.substantial_max_acquire_per_tick!,
     } satisfies AgentConfig;
 
-    const agent = new Agent(backend, queue, agentConfig);
+    const token = await InternalAuth.emit(typegate.cryptoKeys);
+
+    const hostcallCtx = {
+      authToken: token,
+      typegate,
+      typegraphUrl: new URL(
+        `internal+hostcall+subs://typegate/${params.typegraphName}`,
+      ),
+    };
+    const agent = new Agent(hostcallCtx, backend, queue, agentConfig);
 
     const wfDescriptions = await getWorkflowDescriptions(
       tgName,
@@ -217,8 +226,9 @@ export class SubstantialRuntime extends Runtime {
         return ({ name: workflowName }) => {
           this.#checkWorkflowExistOrThrow(workflowName);
 
-          const res =
-            this.agent.workerManager.getAllocatedResources(workflowName);
+          const res = this.agent.workerManager.getAllocatedResources(
+            workflowName,
+          );
           return JSON.parse(JSON.stringify(res));
         };
       case "results":
@@ -339,7 +349,7 @@ export class SubstantialRuntime extends Runtime {
         ongoing: {
           count: ongoing.length,
           runs: ongoing.sort((a, b) =>
-            a.started_at.localeCompare(b.started_at),
+            a.started_at.localeCompare(b.started_at)
           ),
         },
         completed: {
@@ -460,9 +470,11 @@ export class SubstantialRuntime extends Runtime {
       }
 
       throw new Error(
-        `workflow "${name}" does not exist, available workflows are ${known
-          .map((name) => `"${name}"`)
-          .join(", ")}`,
+        `workflow "${name}" does not exist, available workflows are ${
+          known
+            .map((name) => `"${name}"`)
+            .join(", ")
+        }`,
       );
     }
   }

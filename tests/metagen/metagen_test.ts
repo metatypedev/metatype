@@ -559,7 +559,7 @@ Meta.test({
   await using engine = await metaTest.engine(
     "metagen/typegraphs/identities.py",
   );
-  for (const prefix of [/* "rs",  */ "ts" /* , "py" */]) {
+  for (const prefix of ["rs",  "ts" , /* "py" */]) {
     await metaTest.should(`fdk data go round ${prefix}`, async (t) => {
       for (const { name, vars, query, skip } of cases) {
         if (skip) {

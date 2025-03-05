@@ -78,7 +78,7 @@ pub fn selection_to_node_set(
     Ok(out)
 }
 
-pub fn selection_to_select_node(
+pub(crate) fn selection_to_select_node(
     instance_name: CowStr,
     node_name: CowStr,
     args: NodeArgsErased,
@@ -638,8 +638,8 @@ impl<ArgT> UnionMember for ScalarSelectArgs<ArgT, NoAlias> {
 }
 
 impl<SelT> UnionMember for CompositeSelect<SelT, NoAlias>
-where
-    SelT: NotUnionSelection,
+// where
+//     SelT: NotUnionSelection,
 {
     fn composite(self) -> Option<SelectionErasedMap> {
         use CompositeSelect::*;
@@ -655,8 +655,8 @@ where
 }
 
 impl<ArgT, SelT, NoAlias> UnionMember for CompositeSelectArgs<ArgT, SelT, NoAlias>
-where
-    SelT: NotUnionSelection,
+// where
+//     SelT: NotUnionSelection,
 {
     fn composite(self) -> Option<SelectionErasedMap> {
         use CompositeSelectArgs::*;
@@ -779,6 +779,13 @@ macro_rules! impl_selection_traits {
 }
 #[macro_export]
 macro_rules! impl_union_selection_traits {
+    ($ty:ident) => {
+        impl<ATy> From<$ty<ATy>> for CompositeSelection {
+            fn from(value: $ty<ATy>) -> CompositeSelection {
+                CompositeSelection::Union(Default::default())
+            }
+        }
+    };
     ($ty:ident,$(($variant_ty:tt, $field:tt)),+) => {
         impl<ATy> From<$ty<ATy>> for CompositeSelection {
             fn from(value: $ty<ATy>) -> CompositeSelection {
@@ -794,6 +801,14 @@ macro_rules! impl_union_selection_traits {
                     .filter_map(|val| val)
                     .collect(),
                 )
+            }
+        }
+
+        impl<ATy> Selection for $ty<ATy> {
+            fn all() -> Self {
+                Self {
+                    $($field: all(),)+
+                }
             }
         }
     };

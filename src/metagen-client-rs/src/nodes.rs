@@ -5,7 +5,7 @@ use crate::selection::{selection_to_node_set, SelectionErased, SelectionErasedMa
 
 use crate::{
     args::{NodeArgsErased, NodeArgsMerged},
-    files::PathToInputFiles,
+    common::PathToInputFiles,
     interlude::*,
     selection::CompositeSelection,
 };

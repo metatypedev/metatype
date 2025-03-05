@@ -127,7 +127,9 @@ export class PythonRuntime extends Runtime {
     const hostcallCtx = {
       authToken: token,
       typegate,
-      typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
+      typegraphUrl: new URL(
+        `internal+hostcall+witwire://typegate/${typegraphName}`,
+      ),
     };
 
     const workerManager = new WorkerManager(hostcallCtx);
@@ -141,12 +143,13 @@ export class PythonRuntime extends Runtime {
     );
   }
 
-  async deinit() {
+  deinit() {
     // if (Deno.env.get("KILL_PY")) {
     //   throw new Error("wtf");
     // }
-    await this.workerManager.deinit();
+    this.workerManager.deinit();
     this.logger.info("deinitializing PythonRuntime");
+    return Promise.resolve();
   }
 
   async materialize(

@@ -142,9 +142,23 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: &Typegraph) -> anyhow::Resul
     )?;
     writeln!(&mut client_rs)?;
 
-    render_static(&mut client_rs)?;
+    render_client(&mut client_rs, tg, &GenClientRsOpts { hostcall: false })?;
 
-    let dest: &mut GenDestBuf = &mut client_rs;
+    writeln!(&mut client_rs)?;
+    Ok(client_rs.buf)
+}
+
+pub struct GenClientRsOpts {
+    pub hostcall: bool,
+}
+
+pub fn render_client(
+    dest: &mut GenDestBuf,
+    tg: &Typegraph,
+    opts: &GenClientRsOpts,
+) -> anyhow::Result<NameMemo> {
+    render_static(dest, opts.hostcall)?;
+
     let manifest = get_manifest(tg)?;
 
     let name_mapper = NameMapper {
@@ -282,15 +296,17 @@ pub fn query_graph() -> QueryGraph {{
         "
 }}"
     )?;
-
-    writeln!(&mut client_rs)?;
-    Ok(client_rs.buf)
+    Ok(Rc::into_inner(data_types).unwrap())
 }
 
 /// Render the common sections like the transports
-fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
+fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
     let client_rs = include_str!("static/client.rs");
-    write!(dest, "{}", client_rs)?;
+    crate::utils::processed_write(
+        dest,
+        client_rs,
+        &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
+    )?;
     Ok(())
 }
 

@@ -209,4 +209,9 @@ def identities(g: Graph):
             simple_cycles_1,
             name="simple_cycles",
         ).rename("rs_simple_cycles"),
+        rs_proxy_primitives=wasm.handler(
+            primitives_args,
+            primitives,
+            name="proxy_primitives",
+        ).rename("rs_proxy_primitives"),
     )

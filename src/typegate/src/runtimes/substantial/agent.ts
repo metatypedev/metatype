@@ -12,6 +12,7 @@ import { getLoggerByAddress, Logger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import { getTaskNameFromId } from "../patterns/worker_manager/mod.ts";
 import { EventHandler } from "../patterns/worker_manager/types.ts";
+import { hostcall, HostCallCtx } from "../wit_wire/hostcall.ts";
 import {
   appendIfOngoing,
   InterruptEvent,
@@ -44,6 +45,7 @@ export class Agent {
   logger: Logger;
 
   constructor(
+    public hostcallCtx: HostCallCtx,
     private backend: Backend,
     private queue: string,
     private config: AgentConfig,
@@ -98,9 +100,11 @@ export class Agent {
     this.workflows = workflows;
 
     this.logger.warn(
-      `Initializing agent to handle ${workflows
-        .map(({ name }) => name)
-        .join(", ")}`,
+      `Initializing agent to handle ${
+        workflows
+          .map(({ name }) => name)
+          .join(", ")
+      }`,
     );
 
     this.pollIntervalHandle = setInterval(async () => {
@@ -263,9 +267,11 @@ export class Agent {
       // A consequence of the above, a workflow is always triggered by gql { start(..) }
       // This can also occur if an event is sent from gql under a runId that is not valid (e.g. due to typo)
       this.logger.warn(
-        `First item in the operation list is not a Start, got "${JSON.stringify(
-          first,
-        )}" instead. Closing the underlying schedule.`,
+        `First item in the operation list is not a Start, got "${
+          JSON.stringify(
+            first,
+          )
+        }" instead. Closing the underlying schedule.`,
       );
 
       await Meta.substantial.storeCloseSchedule(schedDef);
@@ -308,27 +314,47 @@ export class Agent {
     workflowName: string,
     runId: string,
   ): EventHandler<WorkflowEvent> {
-    return async (e) => {
+    return async (event) => {
       const startedAt = this.workerManager.getInitialTimeStartedAt(runId);
 
-      switch (e.type) {
+      switch (event.type) {
+        case "HOSTCALL": {
+          let result;
+          let error;
+          try {
+            result = await hostcall(
+              this.hostcallCtx,
+              event.opName,
+              event.json,
+            );
+          } catch (err) {
+            error = err;
+          }
+          this.workerManager.sendMessage(runId, {
+            type: "HOSTCALL_RESP",
+            id: event.id,
+            result,
+            error,
+          });
+          break;
+        }
         case "SUCCESS":
         case "FAIL":
           await this.#workflowHandleGracefullCompletion(
             startedAt,
             workflowName,
             runId,
-            e,
+            event,
           );
           break;
         case "ERROR":
           this.logger.error(
-            `Result error for "${runId}": ${JSON.stringify(e.error)}`,
+            `Result error for "${runId}": ${JSON.stringify(event.error)}`,
           );
           return;
         case "INTERRUPT":
           // TODO unknown interrupt
-          await this.#workflowHandleInterrupts(workflowName, runId, e);
+          await this.#workflowHandleInterrupts(workflowName, runId, event);
           break;
       }
 
@@ -397,9 +423,11 @@ export class Agent {
     const result = event.type == "SUCCESS" ? event.result : event.error;
 
     this.logger.info(
-      `gracefull completion of "${runId}" (${event.type}): ${JSON.stringify(
-        result,
-      )} started at "${startedAt}"`,
+      `gracefull completion of "${runId}" (${event.type}): ${
+        JSON.stringify(
+          result,
+        )
+      } started at "${startedAt}"`,
     );
 
     this.logger.info(`Append Stop ${runId}`);
@@ -451,9 +479,11 @@ function checkIfRunHasStopped(run: Run) {
     if (op.event.type == "Start") {
       if (life >= 1) {
         logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type),
-          )}`,
+          `bad logs: ${
+            JSON.stringify(
+              run.operations.map(({ event }) => event.type),
+            )
+          }`,
         );
 
         throw new Error(
@@ -466,9 +496,11 @@ function checkIfRunHasStopped(run: Run) {
     } else if (op.event.type == "Stop") {
       if (life <= 0) {
         logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type),
-          )}`,
+          `bad logs: ${
+            JSON.stringify(
+              run.operations.map(({ event }) => event.type),
+            )
+          }`,
         );
 
         throw new Error(

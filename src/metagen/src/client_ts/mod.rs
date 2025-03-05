@@ -113,20 +113,20 @@ fn render_client_ts(_config: &ClienTsGenConfig, tg: &Typegraph) -> anyhow::Resul
     )?;
     writeln!(&mut client_ts)?;
 
-    render_client(&mut client_ts, tg, ClientTsOpts { hostcall: false })?;
+    render_client(&mut client_ts, tg, GenClientTsOpts { hostcall: false })?;
 
     writeln!(&mut client_ts)?;
     Ok(client_ts.buf)
 }
 
-pub struct ClientTsOpts {
+pub struct GenClientTsOpts {
     pub hostcall: bool,
 }
 
 pub fn render_client(
     dest: &mut GenDestBuf,
     tg: &Typegraph,
-    opts: ClientTsOpts,
+    opts: GenClientTsOpts,
 ) -> anyhow::Result<NameMemo> {
     render_static(dest, opts.hostcall)?;
 
@@ -242,7 +242,7 @@ fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
     crate::utils::processed_write(
         dest,
         client_ts,
-        [("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
+        &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
     )?;
     Ok(())
 }
