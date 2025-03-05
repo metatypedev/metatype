@@ -9,6 +9,7 @@ import urllib.request as request
 import urllib.error
 import http.client as http_c
 import mimetypes
+from abc import ABC, abstractmethod
 
 
 def selection_to_nodes(
@@ -572,7 +573,7 @@ class MultiPartForm:
         return buffer.getvalue()
 
 
-class GraphQLTransportBase:
+class GraphQLTransportBase(ABC):
     def __init__(
         self,
         addr: str,
@@ -667,42 +668,14 @@ class GraphQLTransportBase:
             raise Exception("graphql errors in response", parsed)
         return parsed["data"]
 
-
-class GraphQLTransportUrlib(GraphQLTransportBase):
+    @abstractmethod
     def fetch(
         self,
         doc: str,
         variables: typing.Dict[str, typing.Any],
-        opts: typing.Optional[GraphQLTransportOptions],
+        opts: GraphQLTransportOptions | None,
         files: typing.Dict[str, File] = {},
-    ):
-        req = self.build_req(doc, variables, opts, files)
-        try:
-            with request.urlopen(
-                request.Request(
-                    url=req.addr, method=req.method, headers=req.headers, data=req.body
-                )
-            ) as res:
-                http_res: http_c.HTTPResponse = res
-                return self.handle_response(
-                    GraphQLResponse(
-                        req,
-                        status=http_res.status,
-                        body=http_res.read(),
-                        headers={key: val for key, val in http_res.headers.items()},
-                    )
-                )
-        except request.HTTPError as res:
-            return self.handle_response(
-                GraphQLResponse(
-                    req,
-                    status=res.status or 599,
-                    body=res.read(),
-                    headers={key: val for key, val in res.headers.items()},
-                )
-            )
-        except urllib.error.URLError as err:
-            raise Exception(f"URL error: {err.reason}")
+    ) -> typing.Any: ...
 
     @typing.overload
     def query(
@@ -758,19 +731,56 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         result = self.fetch(doc, variables, opts, files)
         return result["value"] if isinstance(inp, MutationNode) else result
 
+
+class GraphQLTransportUrlib(GraphQLTransportBase):
+    def fetch(
+        self,
+        doc: str,
+        variables: typing.Dict[str, typing.Any],
+        opts: typing.Optional[GraphQLTransportOptions],
+        files: typing.Dict[str, File] = {},
+    ):
+        req = self.build_req(doc, variables, opts, files)
+        try:
+            with request.urlopen(
+                request.Request(
+                    url=req.addr, method=req.method, headers=req.headers, data=req.body
+                )
+            ) as res:
+                http_res: http_c.HTTPResponse = res
+                return self.handle_response(
+                    GraphQLResponse(
+                        req,
+                        status=http_res.status,
+                        body=http_res.read(),
+                        headers={key: val for key, val in http_res.headers.items()},
+                    )
+                )
+        except request.HTTPError as res:
+            return self.handle_response(
+                GraphQLResponse(
+                    req,
+                    status=res.status or 599,
+                    body=res.read(),
+                    headers={key: val for key, val in res.headers.items()},
+                )
+            )
+        except urllib.error.URLError as err:
+            raise Exception(f"URL error: {err.reason}")
+
     @typing.overload
     def prepare_query(
         self,
         fun: typing.Callable[[PreparedArgs], QueryNode[Out]],
         name: str = "",
-    ) -> "PreparedRequestUrlib[Out, Out]": ...
+    ) -> "PreparedRequest[Out, Out]": ...
 
     @typing.overload
     def prepare_query(
         self,
         fun: typing.Callable[[PreparedArgs], typing.Dict[str, QueryNode[Out]]],
         name: str = "",
-    ) -> "PreparedRequestUrlib[Out, typing.Dict[str, Out]]": ...
+    ) -> "PreparedRequest[Out, typing.Dict[str, Out]]": ...
 
     def prepare_query(
         self,
@@ -780,24 +790,24 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         ],
         name: str = "",
     ) -> typing.Union[
-        "PreparedRequestUrlib[Out, Out]",
-        "PreparedRequestUrlib[Out, typing.Dict[str, Out]]",
+        "PreparedRequest[Out, Out]",
+        "PreparedRequest[Out, typing.Dict[str, Out]]",
     ]:
-        return PreparedRequestUrlib(self, fun, "query", name)
+        return PreparedRequest(self, fun, "query", name)
 
     @typing.overload
     def prepare_mutation(
         self,
         fun: typing.Callable[[PreparedArgs], MutationNode[Out]],
         name: str = "",
-    ) -> "PreparedRequestUrlib[Out, Out]": ...
+    ) -> "PreparedRequest[Out, Out]": ...
 
     @typing.overload
     def prepare_mutation(
         self,
         fun: typing.Callable[[PreparedArgs], typing.Dict[str, MutationNode[Out]]],
         name: str = "",
-    ) -> "PreparedRequestUrlib[Out, typing.Dict[str, Out]]": ...
+    ) -> "PreparedRequest[Out, typing.Dict[str, Out]]": ...
 
     def prepare_mutation(
         self,
@@ -807,13 +817,106 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         ],
         name: str = "",
     ) -> typing.Union[
-        "PreparedRequestUrlib[Out, Out]",
-        "PreparedRequestUrlib[Out, typing.Dict[str, Out]]",
+        "PreparedRequest[Out, Out]",
+        "PreparedRequest[Out, typing.Dict[str, Out]]",
     ]:
-        return PreparedRequestUrlib(self, fun, "mutation", name)
+        return PreparedRequest(self, fun, "mutation", name)
 
 
-class PreparedRequestBase(typing.Generic[Out, PreparedOut]):
+# metagen-genif HOSTCALL
+
+HostcallBinding = typing.Callable[
+    [str, typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]
+]
+
+
+class HostcallTransport(GraphQLTransportBase):
+    def __init__(
+        self,
+        gql_fn: HostcallBinding,
+        opts: GraphQLTransportOptions,
+        ty_to_gql_ty_map: typing.Dict[str, str],
+    ):
+        self.gql_fn = gql_fn
+        self.opts = opts
+        self.ty_to_gql_ty_map = ty_to_gql_ty_map
+
+    def fetch(
+        self,
+        doc: str,
+        variables: typing.Dict[str, typing.Any],
+        opts: typing.Optional[GraphQLTransportOptions],
+        files: typing.Dict[str, File] = {},
+    ):
+        _ = opts
+
+        if len(files) > 0:
+            raise Exception("no support for file upload on HostcallTransport")
+
+        res = self.gql_fn(doc, variables)
+        if res.get("errors"):
+            raise Exception("graphql errors in response", res)
+        return res["data"]
+
+    @typing.overload
+    def prepare_query(
+        self,
+        fun: typing.Callable[[PreparedArgs], QueryNode[Out]],
+        name: str = "",
+    ) -> "PreparedRequest[Out, Out]": ...
+
+    @typing.overload
+    def prepare_query(
+        self,
+        fun: typing.Callable[[PreparedArgs], typing.Dict[str, QueryNode[Out]]],
+        name: str = "",
+    ) -> "PreparedRequest[Out, typing.Dict[str, Out]]": ...
+
+    def prepare_query(
+        self,
+        fun: typing.Callable[
+            [PreparedArgs],
+            typing.Union[QueryNode[Out], typing.Dict[str, QueryNode[Out]]],
+        ],
+        name: str = "",
+    ) -> typing.Union[
+        "PreparedRequest[Out, Out]",
+        "PreparedRequest[Out, typing.Dict[str, Out]]",
+    ]:
+        return PreparedRequest(self, fun, "query", name)
+
+    @typing.overload
+    def prepare_mutation(
+        self,
+        fun: typing.Callable[[PreparedArgs], MutationNode[Out]],
+        name: str = "",
+    ) -> "PreparedRequest[Out, Out]": ...
+
+    @typing.overload
+    def prepare_mutation(
+        self,
+        fun: typing.Callable[[PreparedArgs], typing.Dict[str, MutationNode[Out]]],
+        name: str = "",
+    ) -> "PreparedRequest[Out, typing.Dict[str, Out]]": ...
+
+    def prepare_mutation(
+        self,
+        fun: typing.Callable[
+            [PreparedArgs],
+            typing.Union[MutationNode[Out], typing.Dict[str, MutationNode[Out]]],
+        ],
+        name: str = "",
+    ) -> typing.Union[
+        "PreparedRequest[Out, Out]",
+        "PreparedRequest[Out, typing.Dict[str, Out]]",
+    ]:
+        return PreparedRequest(self, fun, "mutation", name)
+
+
+# metagen-endif
+
+
+class PreparedRequest(typing.Generic[Out, PreparedOut]):
     def __init__(
         self,
         transport: GraphQLTransportBase,
@@ -852,21 +955,6 @@ class PreparedRequestBase(typing.Generic[Out, PreparedOut]):
                 resolved[key] = val
         return resolved
 
-
-class PreparedRequestUrlib(PreparedRequestBase[Out, PreparedOut]):
-    def __init__(
-        self,
-        transport: GraphQLTransportUrlib,
-        fun: typing.Callable[
-            [PreparedArgs],
-            typing.Union[SelectNode[Out], typing.Mapping[str, SelectNode[Out]]],
-        ],
-        ty: typing.Union[typing.Literal["query"], typing.Literal["mutation"]],
-        name: str = "",
-    ):
-        super().__init__(transport, fun, ty, name)
-        self.transport = transport
-
     def perform(
         self,
         args: typing.Mapping[str, typing.Any],
@@ -890,7 +978,7 @@ class QueryGraphBase:
         self.ty_to_gql_ty_map = ty_to_gql_ty_map
 
 
-class Tranports:
+class Transports:
     @staticmethod
     def graphql_sync(
         qg: QueryGraphBase,
@@ -900,6 +988,19 @@ class Tranports:
         return GraphQLTransportUrlib(
             addr, opts or GraphQLTransportOptions({}), qg.ty_to_gql_ty_map
         )
+
+    # metagen-genif HOSTCALL
+
+    @staticmethod
+    def hostcall(
+        qg: QueryGraphBase,
+        binding: HostcallBinding,
+    ):
+        return HostcallTransport(
+            binding, GraphQLTransportOptions({}), qg.ty_to_gql_ty_map
+        )
+
+    # metagen-endif
 
 
 #

@@ -49,6 +49,7 @@ Meta.test("metagen rust builds", async (t) => {
   const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.ts");
   const genCratePath = join(tmpDir, "fdk");
 
+  await Deno.mkdir(genCratePath, { recursive: true });
   await Deno.writeTextFile(
     join(tmpDir, "metatype.yml"),
     `
@@ -68,7 +69,7 @@ metagen:
 `,
   );
 
-  // enclose the generated create in a lone workspace
+  // enclose the generated crate in a lone workspace
   // to avoid Cargo from noticing the `metatype/Cargo.toml` worksapce
   await Deno.writeTextFile(
     join(tmpDir, "Cargo.toml"),
@@ -283,7 +284,6 @@ metagen:
 
 Meta.test({
   name: "fdk table suite",
-  only: true,
 }, async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/identities");
   const genCratePath = join(scriptsPath, "rs");
@@ -559,7 +559,7 @@ Meta.test({
   await using engine = await metaTest.engine(
     "metagen/typegraphs/identities.py",
   );
-  for (const prefix of ["rs",  "ts" , /* "py" */]) {
+  for (const prefix of [ "rs",  "ts" , "py" ]) {
     await metaTest.should(`fdk data go round ${prefix}`, async (t) => {
       for (const { name, vars, query, skip } of cases) {
         if (skip) {

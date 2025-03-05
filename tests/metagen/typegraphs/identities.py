@@ -126,30 +126,37 @@ def identities(g: Graph):
             primitives_args,
             primitives,
             module="./identities/py/handlers.py",
-            deps=["./identities/py/handlers_types.py"],
+            deps=["./identities/py/fdk.py"],
             name="primitives",
         ).rename("py_primitives"),
         py_composites=python.import_(
             composites_args,
             composites,
             module="./identities/py/handlers.py",
-            deps=["./identities/py/handlers_types.py"],
+            deps=["./identities/py/fdk.py"],
             name="composites",
         ).rename("py_composites"),
         py_cycles=python.import_(
             cycles1_args,
             cycles1,
             module="./identities/py/handlers.py",
-            deps=["./identities/py/handlers_types.py"],
+            deps=["./identities/py/fdk.py"],
             name="cycles",
         ).rename("py_cycles"),
         py_simple_cycles=python.import_(
             simple_cycles_1_args,
             simple_cycles_1,
             module="./identities/py/handlers.py",
-            deps=["./identities/py/handlers_types.py"],
+            deps=["./identities/py/fdk.py"],
             name="simple_cycles",
         ).rename("py_simple_cycles"),
+        py_proxy_primitives=python.import_(
+            primitives_args,
+            primitives,
+            module="./identities/py/handlers.py",
+            deps=["./identities/py/fdk.py"],
+            name="proxy_primitives",
+        ).rename("py_proxy_primitives"),
         #
         # typescript
         ts_primitives=deno.import_(

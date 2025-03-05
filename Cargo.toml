@@ -16,12 +16,12 @@ members = [
   "src/utils/archive",
   "src/substantial",
   "src/metagen-client-rs",
-]
-
-exclude = [
   "tests/metagen/typegraphs/identities/rs",
   "tests/metagen/typegraphs/sample/rs",
   "tests/metagen/typegraphs/sample/rs_upload",
+]
+
+exclude = [
   "tests/runtimes/wasm_reflected/rust",
   "tests/runtimes/wasm_wire/rust",
   "src/pyrt_wit_wire",

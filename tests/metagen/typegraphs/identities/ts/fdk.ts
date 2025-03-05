@@ -956,8 +956,8 @@ export class Transports {
   }
 
   static hostcall(
-    tg: Deployment,
     qg: _QueryGraphBase,
+    tg: Deployment,
     options?: Pick<GraphQlTransportOptions, "headers">,
   ) {
     return new HostcallTransport(
@@ -1116,6 +1116,14 @@ const nodeMetas = {
       ...nodeMetas.SimpleCycles1(),
       argumentTypes: {
         data: "SimpleCycles1",
+      },
+    };
+  },
+  PyProxyPrimitives(): NodeMeta {
+    return {
+      ...nodeMetas.Primitives(),
+      argumentTypes: {
+        data: "Primitives",
       },
     };
   },
@@ -1419,6 +1427,14 @@ export class QueryGraph extends _QueryGraphBase {
     const inner = _selectionToNodeSet(
       { "py_simple_cycles": [args, select] },
       [["py_simple_cycles", nodeMetas.PySimpleCycles]],
+      "$q",
+    )[0];
+    return new QueryNode(inner);
+  }
+  pyProxyPrimitives(args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>, select: PrimitivesSelections): QueryNode<Primitives> {
+    const inner = _selectionToNodeSet(
+      { "py_proxy_primitives": [args, select] },
+      [["py_proxy_primitives", nodeMetas.PyProxyPrimitives]],
       "$q",
     )[0];
     return new QueryNode(inner);

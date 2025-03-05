@@ -154,12 +154,6 @@ export class ComputationEngine {
     if (!rateCalls) {
       this.consumeLimit(res.length * (rateWeight ?? 1));
     }
-    console.log("XXXX", {
-      stage,
-      stageId,
-      parentId,
-      res,
-    });
 
     this.registerResult(stage, stageId, parentId, res);
   }

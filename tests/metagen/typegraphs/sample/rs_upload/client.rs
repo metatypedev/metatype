@@ -10,6 +10,7 @@ pub mod transports {
     pub fn graphql(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwest {
         GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
     }
+    #[cfg(not(target_family = "wasm"))]
     pub fn graphql_sync(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwestSync {
         GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
     }

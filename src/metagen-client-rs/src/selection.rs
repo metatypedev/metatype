@@ -622,6 +622,9 @@ pub trait UnionMember {
 
 /// Internal marker trait use to make sure we can't have union members
 /// selection being another union selection.
+// FIXME: I don't remember why I added this abstraction
+// I think it was breaking the generated graphql but
+// seems to be gone now
 pub trait NotUnionSelection {}
 
 // NOTE: UnionMembers are all NoAlias

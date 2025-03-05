@@ -43,7 +43,7 @@ export const simple_cycles: TsSimpleCyclesHandler = (inp, _ctx, _tg) => {
 
 export const proxy_primitives: TsPrimitivesHandler = async (inp, _ctx, tg) => {
   const qg = new QueryGraph();
-  const host = Transports.hostcall(tg, qg);
+  const host = Transports.hostcall(qg, tg);
 
   return await host.query(
     qg.tsPrimitives(inp, { _: "selectAll" }),

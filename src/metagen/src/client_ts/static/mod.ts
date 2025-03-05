@@ -930,8 +930,8 @@ export class Transports {
   // metagen-genif HOSTCALL
 
   static hostcall(
-    tg: Deployment,
     qg: _QueryGraphBase,
+    tg: Deployment,
     options?: Pick<GraphQlTransportOptions, "headers">,
   ) {
     return new HostcallTransport(
