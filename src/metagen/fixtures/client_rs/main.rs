@@ -36,11 +36,11 @@ fn main() -> Result<(), BoxErr> {
         ))?;
         let prepared_m = gql_sync.prepare_mutation(|args| {
             (
-                api1.scalar_args(args.get("post", |val: types::PostPartial| val)),
+                api1.scalar_args(args.get("post", |val: types::Post| val)),
                 api1.composite_no_args().select(all()),
-                api1.composite_args(args.get("id", |id: String| {
-                    types::RootCompositeArgsFnInputPartial { id: Some(id) }
-                }))
+                api1.composite_args(
+                    args.get("id", |id: String| types::RootCompositeArgsFnInput { id }),
+                )
                 .select(all()),
             )
         })?;
@@ -49,10 +49,10 @@ fn main() -> Result<(), BoxErr> {
         let res2 = prepared_clone.perform([
             (
                 "post",
-                serde_json::json!(types::PostPartial {
-                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                    slug: Some("".into()),
-                    title: Some("".into()),
+                serde_json::json!(types::Post {
+                    id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
+                    slug: "".into(),
+                    title: "".into(),
                 }),
             ),
             (
@@ -93,14 +93,14 @@ fn main() -> Result<(), BoxErr> {
 
             let res4 = gql
                 .mutation((
-                    api1.scalar_args(types::PostPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                        slug: Some("".into()),
-                        title: Some("".into()),
+                    api1.scalar_args(types::Post {
+                        id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
+                        slug: "".into(),
+                        title: "".into(),
                     }),
                     api1.composite_no_args().select(all()),
-                    api1.composite_args(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                    api1.composite_args(types::RootCompositeArgsFnInput {
+                        id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
                     })
                     .select(all()),
                 ))
