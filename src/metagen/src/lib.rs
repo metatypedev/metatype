@@ -3,13 +3,11 @@
 
 #[allow(unused)]
 mod interlude {
-    pub use tg_schema::TypeNode;
-    pub use tg_schema::Typegraph;
+    pub use typegraph::{Type, Typegraph};
 
     pub use std::collections::{BTreeMap, BTreeSet};
     pub use std::ops::Deref;
     pub use std::path::{Path, PathBuf};
-    pub use std::rc::Rc;
     pub use std::sync::Arc;
 
     pub use color_eyre::eyre::{
@@ -33,12 +31,12 @@ pub mod shared;
 
 mod fdk_py;
 mod fdk_rs;
-mod fdk_substantial;
+// mod fdk_substantial;
 mod fdk_ts;
 
-mod client_py;
+// mod client_py;
 mod client_rs;
-mod client_ts;
+// mod client_ts;
 
 #[cfg(test)]
 mod tests;
@@ -158,16 +156,16 @@ impl GeneratorRunner {
                         },
                     },
                 ),
-                (
-                    "fdk_substantial".to_string(),
-                    GeneratorRunner {
-                        op: |workspace_path: &Path, val| {
-                            let config = fdk_substantial::FdkSubstantialGenConfig::from_json(val, workspace_path)?;
-                            let generator = fdk_substantial::Generator::new(config)?;
-                            Ok(Box::new(generator))
-                        },
-                    },
-                ),
+                // (
+                //     "fdk_substantial".to_string(),
+                //     GeneratorRunner {
+                //         op: |workspace_path: &Path, val| {
+                //             let config = fdk_substantial::FdkSubstantialGenConfig::from_json(val, workspace_path)?;
+                //             let generator = fdk_substantial::Generator::new(config)?;
+                //             Ok(Box::new(generator))
+                //         },
+                //     },
+                // ),
                 (
                     "fdk_ts".to_string(),
                     GeneratorRunner {
@@ -178,26 +176,26 @@ impl GeneratorRunner {
                         },
                     },
                 ),
-                (
-                    "client_ts".to_string(),
-                    GeneratorRunner {
-                        op: |workspace_path: &Path, val| {
-                            let config = client_ts::ClienTsGenConfig::from_json(val, workspace_path)?;
-                            let generator = client_ts::Generator::new(config)?;
-                            Ok(Box::new(generator))
-                        },
-                    },
-                ),
-                (
-                    "client_py".to_string(),
-                    GeneratorRunner {
-                        op: |workspace_path: &Path, val| {
-                            let config = client_py::ClienPyGenConfig::from_json(val, workspace_path)?;
-                            let generator = client_py::Generator::new(config)?;
-                            Ok(Box::new(generator))
-                        },
-                    },
-                ),
+                // (
+                //     "client_ts".to_string(),
+                //     GeneratorRunner {
+                //         op: |workspace_path: &Path, val| {
+                //             let config = client_ts::ClienTsGenConfig::from_json(val, workspace_path)?;
+                //             let generator = client_ts::Generator::new(config)?;
+                //             Ok(Box::new(generator))
+                //         },
+                //     },
+                // ),
+                // (
+                //     "client_py".to_string(),
+                //     GeneratorRunner {
+                //         op: |workspace_path: &Path, val| {
+                //             let config = client_py::ClienPyGenConfig::from_json(val, workspace_path)?;
+                //             let generator = client_py::Generator::new(config)?;
+                //             Ok(Box::new(generator))
+                //         },
+                //     },
+                // ),
                 (
                     "client_rs".to_string(),
                     GeneratorRunner {

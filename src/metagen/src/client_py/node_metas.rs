@@ -3,7 +3,7 @@
 
 use std::{collections::HashMap, fmt::Write};
 
-use tg_schema::*;
+use typegraph::TypeNodeExt as _;
 
 use super::utils::normalize_type_title;
 use crate::{
@@ -15,9 +15,9 @@ use crate::{
 };
 
 pub struct PyNodeMetasRenderer {
-    pub name_mapper: Rc<super::NameMapper>,
-    pub named_types: Rc<std::sync::Mutex<IndexSet<u32>>>,
-    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
+    pub name_mapper: Arc<super::NameMapper>,
+    pub named_types: Arc<std::sync::Mutex<IndexSet<Arc<str>>>>,
+    pub input_files: Arc<HashMap<u32, Vec<TypePath>>>,
 }
 
 impl PyNodeMetasRenderer {
@@ -26,7 +26,7 @@ impl PyNodeMetasRenderer {
         &self,
         dest: &mut impl Write,
         ty_name: &str,
-        props: IndexMap<String, Rc<str>>,
+        props: IndexMap<Arc<str>, Arc<str>>,
     ) -> std::fmt::Result {
         write!(
             dest,
@@ -58,7 +58,7 @@ impl PyNodeMetasRenderer {
         dest: &mut impl Write,
         ty_name: &str,
         return_node: &str,
-        argument_fields: Option<IndexMap<String, Rc<str>>>,
+        argument_fields: Option<IndexMap<Arc<str>, Arc<str>>>,
         input_files: Option<String>,
     ) -> std::fmt::Result {
         write!(
@@ -112,7 +112,7 @@ impl PyNodeMetasRenderer {
         &self,
         dest: &mut TypeRenderer,
         ty_name: &str,
-        variants: IndexMap<String, Rc<str>>,
+        variants: IndexMap<String, Arc<str>>,
     ) -> std::fmt::Result {
         write!(
             dest,
@@ -148,93 +148,83 @@ impl RenderType for PyNodeMetasRenderer {
     ) -> anyhow::Result<String> {
         use heck::ToPascalCase;
 
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
-            TypeNode::Boolean { .. }
-            | TypeNode::Float { .. }
-            | TypeNode::Integer { .. }
-            | TypeNode::String { .. }
-            | TypeNode::File { .. } => "scalar".into(),
+        let name = match &cursor.node {
+            Type::Boolean(_)
+            | Type::Float(_)
+            | Type::Integer(_)
+            | Type::String(_)
+            | Type::File(_) => "scalar".into(),
             // list and optional node just return the meta of the wrapped type
-            TypeNode::Optional {
-                data: OptionalTypeData { item, .. },
-                ..
-            }
-            | TypeNode::List {
-                data: ListTypeData { items: item, .. },
-                ..
-            } => renderer
-                .render_subgraph(*item, cursor)?
+            Type::Optional(ty) => renderer
+                .render_subgraph(ty.item(), cursor)?
                 .0
                 .unwrap()
                 .to_string(),
-            TypeNode::Function { data, base } => {
-                let (return_ty_name, _cyclic) = renderer.render_subgraph(data.output, cursor)?;
+            Type::List(ty) => renderer
+                .render_subgraph(ty.item(), cursor)?
+                .0
+                .unwrap()
+                .to_string(),
+            Type::Function(ty) => {
+                let (return_ty_name, _cyclic) = renderer.render_subgraph(ty.output(), cursor)?;
                 let return_ty_name = return_ty_name.unwrap();
-                let props = match renderer.nodes[data.input as usize].deref() {
-                    TypeNode::Object { data, .. } if !data.properties.is_empty() => {
-                        let props = data
-                            .properties
+                let input = ty.input();
+                let props = {
+                    if !input.properties().is_empty() {
+                        let props = input
+                            .properties()
                             .iter()
                             // generate property types first
-                            .map(|(name, &dep_id)| {
-                                eyre::Ok((name.clone(), self.name_mapper.name_for(dep_id)))
+                            .map(|(name, prop)| {
+                                eyre::Ok((name.clone(), self.name_mapper.name_for(&prop.type_)))
                             })
                             .collect::<Result<IndexMap<_, _>, _>>()?;
                         Some(props)
+                    } else {
+                        None
                     }
-                    _ => None,
                 };
-                let node_name = &base.title;
+                let node_name = ty.title();
                 let ty_name = normalize_type_title(node_name).to_pascal_case();
                 let input_files = self
                     .input_files
-                    .get(&cursor.id)
+                    .get(&cursor.node.idx())
                     .and_then(|files| serialize_typepaths_json(files));
                 self.render_for_func(renderer, &ty_name, &return_ty_name, props, input_files)?;
                 ty_name
             }
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
+            Type::Object(ty) => {
+                let props = ty
+                    .properties()
                     .iter()
                     // generate property types first
-                    .map(|(name, &dep_id)| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(dep_id, cursor)?;
+                    .map(|(name, prop)| {
+                        let (ty_name, _cyclic) = renderer.render_subgraph(&prop.type_, cursor)?;
                         let ty_name = ty_name.unwrap();
                         eyre::Ok((name.clone(), ty_name))
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
-                let node_name = &base.title;
+                let node_name = &ty.title();
                 let ty_name = normalize_type_title(node_name).to_pascal_case();
                 self.render_for_object(renderer, &ty_name, props)?;
                 ty_name
             }
-            TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            }
-            | TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            } => {
+            Type::Union(ty) => {
                 let mut named_set = vec![];
-                let variants = variants
+                let variants = ty
+                    .variants()
                     .iter()
-                    .filter_map(|&inner| {
-                        if !renderer.is_composite(inner) {
+                    .filter_map(|variant| {
+                        if !TypeRenderer::is_composite(variant) {
                             return None;
                         }
-                        named_set.push(inner);
-                        let (ty_name, _cyclic) = match renderer.render_subgraph(inner, cursor) {
+                        named_set.push(variant.name());
+                        let (ty_name, _cyclic) = match renderer.render_subgraph(variant, cursor) {
                             Ok(val) => val,
                             Err(err) => return Some(Err(err)),
                         };
                         let ty_name = ty_name.unwrap();
-                        Some(eyre::Ok((
-                            renderer.nodes[inner as usize].deref().base().title.clone(),
-                            ty_name,
-                        )))
+                        Some(eyre::Ok((variant.title().to_string(), ty_name)))
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
                 if !variants.is_empty() {
@@ -242,7 +232,7 @@ impl RenderType for PyNodeMetasRenderer {
                         let mut named_types = self.named_types.lock().unwrap();
                         named_types.extend(named_set)
                     }
-                    let ty_name = normalize_type_title(&base.title);
+                    let ty_name = normalize_type_title(ty.title());
                     self.render_for_union(renderer, &ty_name, variants)?;
                     ty_name
                 } else {

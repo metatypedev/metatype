@@ -7,6 +7,7 @@ use tg_schema::*;
 
 use super::utils::{normalize_struct_prop_name, normalize_type_title};
 use crate::{interlude::*, shared::types::*};
+use typegraph::TypeNodeExt as _;
 
 pub struct PyTypeRenderer {}
 impl PyTypeRenderer {
@@ -26,7 +27,7 @@ impl PyTypeRenderer {
         &self,
         dest: &mut impl Write,
         ty_name: &str,
-        props: IndexMap<String, (Rc<str>, bool)>,
+        props: IndexMap<String, (Arc<str>, bool)>,
     ) -> std::fmt::Result {
         writeln!(dest, r#"{ty_name} = typing.TypedDict("{ty_name}", {{"#)?;
         for (name, (ty_name, _optional)) in props.into_iter() {
@@ -49,7 +50,7 @@ impl PyTypeRenderer {
         &self,
         dest: &mut impl Write,
         ty_name: &str,
-        variants: Vec<Rc<str>>,
+        variants: Vec<Arc<str>>,
     ) -> std::fmt::Result {
         writeln!(dest, "{ty_name} = typing.Union[")?;
         for ty_name in variants.into_iter() {
@@ -63,10 +64,10 @@ impl PyTypeRenderer {
 
     fn quote_ty_name(
         &self,
-        id: u32,
+        ty: &Type,
         (ty_name, cyclic): (RenderedName, Option<bool>),
         renderer: &mut TypeRenderer,
-    ) -> Rc<str> {
+    ) -> Arc<str> {
         match ty_name {
             RenderedName::Name(name) => {
                 if cyclic.is_some() && !name.contains('"') {
@@ -76,7 +77,7 @@ impl PyTypeRenderer {
                 }
             }
             RenderedName::Placeholder(_name) => renderer.placeholder_string(
-                id,
+                ty.name(),
                 Box::new(move |ty_name| {
                     if !ty_name.contains('"') {
                         format!(r#""{ty_name}""#)
@@ -95,156 +96,116 @@ impl RenderType for PyTypeRenderer {
         renderer: &mut TypeRenderer,
         cursor: &mut VisitCursor,
     ) -> anyhow::Result<String> {
-        let body_required = type_body_required(cursor.node.clone());
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Function { .. } => "None".into(),
-            TypeNode::Boolean { base } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
+        let body_required = type_body_required(&cursor.node);
+        let name = match &cursor.node {
+            Type::Function(_) => "None".into(),
+            Type::Boolean(ty) if body_required => {
+                let ty_name = normalize_type_title(ty.title());
                 self.render_alias(renderer, &ty_name, "bool")?;
                 ty_name
             }
-            TypeNode::Boolean { .. } => "bool".into(),
-            TypeNode::Float { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
+            Type::Boolean(_) => "bool".into(),
+            Type::Float(ty) if body_required => {
+                let ty_name = normalize_type_title(ty.title());
                 self.render_alias(renderer, &ty_name, "float")?;
                 ty_name
             }
-            TypeNode::Float { .. } => "float".into(),
-            TypeNode::Integer { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
+            Type::Float(_) => "float".into(),
+            Type::Integer(ty) if body_required => {
+                let ty_name = normalize_type_title(ty.title());
                 self.render_alias(renderer, &ty_name, "int")?;
                 ty_name
             }
-            TypeNode::Integer { .. } => "int".into(),
-            TypeNode::String {
-                base:
-                    TypeNodeBase {
-                        enumeration: Some(variants),
-                        title,
-                        ..
-                    },
-                ..
-            } if body_required => {
-                let ty_name = normalize_type_title(title);
-                // variants are valid strings in JSON (validated by the validator)
-                self.render_union_type(
-                    renderer,
-                    &ty_name,
-                    variants
-                        .iter()
-                        .map(|val| format!("typing.Literal[{val}]").into())
-                        .collect(),
-                )?;
-                ty_name
+            Type::Integer(_) => "int".into(),
+            Type::String(ty) if body_required => {
+                if let Some(variants) = &ty.enumeration {
+                    let ty_name = normalize_type_title(ty.title());
+                    // variants are valid strings in JSON (validated by the validator)
+                    self.render_union_type(
+                        renderer,
+                        &ty_name,
+                        variants
+                            .iter()
+                            .map(|val| format!("typing.Literal[{val}]").into())
+                            .collect(),
+                    )?;
+                    ty_name
+                } else if let Some(format) = ty.format_only() {
+                    let ty_name =
+                        normalize_type_title(&format!("string_{format}_{}", cursor.node.idx()));
+                    self.render_alias(renderer, &ty_name, "str")?;
+                    ty_name
+                } else {
+                    let ty_name = normalize_type_title(ty.title());
+                    self.render_alias(renderer, &ty_name, "str")?;
+                    ty_name
+                }
             }
-            TypeNode::String {
-                data:
-                    StringTypeData {
-                        format: Some(format),
-                        pattern: None,
-                        min_length: None,
-                        max_length: None,
-                    },
-                base:
-                    TypeNodeBase {
-                        title,
-                        enumeration: None,
-                        ..
-                    },
-            } if title.starts_with("string_") => {
-                let ty_name = normalize_type_title(&format!("string_{format}_{}", cursor.id));
-                self.render_alias(renderer, &ty_name, "str")?;
-                ty_name
-            }
-            TypeNode::String { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "str")?;
-                ty_name
-            }
-            TypeNode::String { .. } => "str".into(),
-            TypeNode::File { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
+            Type::String(_) => "str".into(),
+            Type::File(ty) if body_required => {
+                let ty_name = normalize_type_title(ty.title());
                 self.render_alias(renderer, &ty_name, "File")?;
                 ty_name
             }
-            TypeNode::File { .. } => "bytes".into(),
-            TypeNode::Any { base } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "typing.Any")?;
-                ty_name
-            }
-            TypeNode::Any { .. } => "typing.Any".into(),
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
+            Type::File(_) => "bytes".into(),
+            Type::Object(ty) => {
+                let props = ty
+                    .properties()
                     .iter()
                     // generate property types first
-                    .map(|(name, &dep_id)| {
+                    .map(|(name, prop)| {
                         let ty_name = self.quote_ty_name(
-                            dep_id,
-                            renderer.render_subgraph(dep_id, cursor)?,
+                            &prop.type_,
+                            renderer.render_subgraph(&prop.type_, cursor)?,
                             renderer,
                         );
-                        let optional = matches!(
-                            renderer.nodes[dep_id as usize].deref(),
-                            TypeNode::Optional { .. }
-                        );
+                        let optional = matches!(&prop.type_, Type::Optional(_));
                         Ok::<_, anyhow::Error>((
                             normalize_struct_prop_name(&name[..]),
                             (ty_name, optional),
                         ))
                     })
                     .collect::<Result<IndexMap<_, _>, _>>()?;
-                let ty_name = normalize_type_title(&base.title);
+                let ty_name = normalize_type_title(ty.title());
                 self.render_object_type(renderer, &ty_name, props)?;
                 ty_name
             }
-            TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            }
-            | TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            } => {
-                let variants = variants
+            Type::Union(ty) => {
+                let variants = ty
+                    .variants()
                     .iter()
-                    .map(|&dep_id| {
+                    .map(|variant| {
                         let ty_name = self.quote_ty_name(
-                            dep_id,
-                            renderer.render_subgraph(dep_id, cursor)?,
+                            variant,
+                            renderer.render_subgraph(variant, cursor)?,
                             renderer,
                         );
                         Ok::<_, anyhow::Error>(ty_name)
                     })
                     .collect::<Result<Vec<_>, _>>()?;
-                let ty_name = normalize_type_title(&base.title);
+                let ty_name = normalize_type_title(ty.title());
                 self.render_union_type(renderer, &ty_name, variants)?;
                 ty_name
             }
-            TypeNode::Optional {
-                // NOTE: keep this condition
-                // in sync with similar one above
-                base,
-                data:
-                    OptionalTypeData {
-                        default_value: None,
-                        item,
-                    },
-            } if base.title.starts_with("optional_") => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let inner_ty_name =
-                    self.quote_ty_name(*item, renderer.render_subgraph(*item, cursor)?, renderer);
-                format!("typing.Optional[{inner_ty_name}]")
-            }
-            TypeNode::Optional { data, base } => {
+            Type::Optional(ty)
+                if ty.default_value.is_none() && ty.title().starts_with("optional_") =>
+            {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let inner_ty_name = self.quote_ty_name(
-                    data.item,
-                    renderer.render_subgraph(data.item, cursor)?,
+                    ty.item(),
+                    renderer.render_subgraph(ty.item(), cursor)?,
                     renderer,
                 );
-                let ty_name = normalize_type_title(&base.title);
+                format!("typing.Optional[{inner_ty_name}]")
+            }
+            Type::Optional(ty) => {
+                // TODO: handle cyclic case where entire cycle is aliases
+                let inner_ty_name = self.quote_ty_name(
+                    ty.item(),
+                    renderer.render_subgraph(ty.item(), cursor)?,
+                    renderer,
+                );
+                let ty_name = normalize_type_title(ty.title());
                 self.render_alias(
                     renderer,
                     &ty_name,
@@ -252,36 +213,33 @@ impl RenderType for PyTypeRenderer {
                 )?;
                 ty_name
             }
-            TypeNode::List {
-                // NOTE: keep this condition
-                // in sync with similar one above
-                base,
-                data:
-                    ListTypeData {
-                        min_items: None,
-                        max_items: None,
-                        unique_items,
-                        items,
-                    },
-            } if base.title.starts_with("list_") => {
+            // NOTE: keep this condition
+            // in sync with similar one above
+            Type::List(ty)
+                if matches!((ty.max_items, ty.min_items), (None, None))
+                    && ty.title().starts_with("list_") =>
+            {
                 // TODO: handle cyclic case where entire cycle is aliases
-                let inner_ty_name =
-                    self.quote_ty_name(*items, renderer.render_subgraph(*items, cursor)?, renderer);
-                if let Some(true) = unique_items {
+                let inner_ty_name = self.quote_ty_name(
+                    ty.item(),
+                    renderer.render_subgraph(ty.item(), cursor)?,
+                    renderer,
+                );
+                if ty.unique_items {
                     format!("typing.Set[{inner_ty_name}]")
                 } else {
                     format!("typing.List[{inner_ty_name}]")
                 }
             }
-            TypeNode::List { data, base } => {
+            Type::List(ty) => {
                 // TODO: handle cyclic case where entire cycle is aliases
                 let inner_ty_name = self.quote_ty_name(
-                    data.items,
-                    renderer.render_subgraph(data.items, cursor)?,
+                    ty.item(),
+                    renderer.render_subgraph(ty.item(), cursor)?,
                     renderer,
                 );
-                let ty_name = normalize_type_title(&base.title);
-                if let Some(true) = data.unique_items {
+                let ty_name = normalize_type_title(ty.title());
+                if ty.unique_items {
                     self.render_alias(renderer, &ty_name, &format!("typing.Set[{inner_ty_name}]"))?;
                 } else {
                     self.render_alias(

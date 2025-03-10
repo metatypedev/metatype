@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 tg_schema.workspace = true
+typegraph.workspace = true
 
 # logging
 log.workspace = true

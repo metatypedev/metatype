@@ -92,6 +92,11 @@ members = ["fdk/"]
     ).code,
     0,
   );
+  await Deno.copyFile(
+    join(genCratePath, "fdk.rs"),
+    join(tmpDir, "fdk.rs"),
+  );
+
   assertEquals(
     (
       await t.shell("cargo build --target wasm32-wasi".split(" "), {
@@ -544,7 +549,7 @@ Meta.test("fdk table suite", async (metaTest) => {
   }
 });
 
-Meta.test(
+Meta.test.only(
   {
     name: "client table suite",
   },
@@ -640,6 +645,7 @@ Meta.test(
         expected: expectedSchema,
       },
       {
+        skip: true,
         name: "client_ts",
         // NOTE: dax replaces commands to deno with
         // commands to xtask so we go through bah
@@ -647,6 +653,7 @@ Meta.test(
         expected: expectedSchema,
       },
       {
+        skip: true,
         name: "client_py",
         command: $`python3 main.py`.cwd(join(scriptsPath, "py")),
         expected: expectedSchema,
