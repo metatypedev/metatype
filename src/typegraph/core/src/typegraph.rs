@@ -137,6 +137,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             policies: Default::default(),
             id: vec![],
             required: vec![],
+            additional_props: false,
         },
     }));
 

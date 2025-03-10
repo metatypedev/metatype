@@ -106,6 +106,12 @@ def typecheck(g: Graph):
 
     empty = t.struct({}).rename("WillNotHaveAnyEffectLikeOtherScalars")
 
+    stringify_struct = deno.func(
+        t.struct({"params": t.struct({}, additional_props=True, name="params")}),
+        t.string(),
+        code="({params}) => JSON.stringify(params)",
+    )
+
     g.expose(
         my_policy,
         createUser=create_user,
@@ -115,4 +121,5 @@ def typecheck(g: Graph):
         enums=deno.identity(enums),
         findProduct=deno.identity(product),
         emptyObjectOutput=deno.static(empty, {}),
+        stringifyStruct=stringify_struct,
     )

@@ -239,4 +239,17 @@ Meta.test("input validator compiler", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("pass for any struct", async () => {
+    await gql`
+      query structs {
+        simple: stringifyStruct(params: { str: "value", int: 0 })
+        nested: stringifyStruct(params: { obj: { key: "value" } })
+      }
+    `
+      .expectBody((body) => {
+        assert(body.errors == null);
+      })
+      .on(e);
+  });
 });

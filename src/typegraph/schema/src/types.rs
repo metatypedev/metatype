@@ -152,6 +152,7 @@ pub struct FileTypeData {
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ObjectTypeData<Id = TypeId> {
     pub properties: IndexMap<String, Id>,
     pub id: Vec<String>,
@@ -160,6 +161,9 @@ pub struct ObjectTypeData<Id = TypeId> {
     #[serde(skip_serializing_if = "IndexMap::is_empty")]
     #[serde(default)]
     pub policies: IndexMap<String, Vec<PolicyIndices>>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    #[serde(default)]
+    pub additional_props: bool,
 }
 
 #[skip_serializing_none]
