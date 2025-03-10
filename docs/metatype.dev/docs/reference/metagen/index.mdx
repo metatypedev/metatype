@@ -170,8 +170,9 @@ This generator supports:
 - Python classes that map to typegraph types
 - Decorators for custom functions implementors that require adherance to typegraph function types.
   - By default, all functions from the `PythonRuntime` get stub types.
-  - TODO: `stubbed_runtimes` for `fdk_py`
-- TODO: types for interacting with the typegate from within custom functions.
+  - Use `stubbed_runtimes` to select which runtimes get stubs.
+- [`client_py`](#client_py) based typegraph client
+  - Special `HostcallTransport` implementation
 
 If the referenced module for the custom function is not found, the generator will also output stub implementation (in addition to the types) at the given type. It will not replace our code on a second run.
 
@@ -214,7 +215,8 @@ To be more specific, it supports:
   - By default, all functions from the `WasmRuntime` get stub types.
   - The generator assumes the `wire` based wasm interface is being targetted.
   - `stubbed_runtimes` key can be used to configure stub generation from additional runtimes.
-- Types for interacting with the typegate from within custom functions.
+- [`client_rs`](#client_py) based typegraph client
+  - Special `HostcallTransport` implementation.
 - Glue code for setting up the wasm component to be run within the `WasmRuntime`.
 
 By default the generator will also output a library crate entrypoint and a functional Cargo.toml with all the required dependencies. These additional files wlil not be overwritten on a second run. The generator can also be configured to avoid generating them even if not present.

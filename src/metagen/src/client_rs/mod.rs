@@ -487,7 +487,7 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let is_test = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() == Some("1");
 
     #[cfg(debug_assertions)]
-    let dependency = if is_test {
+    let dependency = {
         use normpath::PathExt;
         let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../metagen-client-rs")
@@ -497,8 +497,6 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
             r#"metagen-client = {{ path = "{client_path}" }}"#,
             client_path = client_path.as_path().to_str().unwrap()
         )
-    } else {
-        "metagen-client.workspace = true".to_string()
     };
 
     #[cfg(not(debug_assertions))]

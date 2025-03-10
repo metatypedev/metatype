@@ -310,12 +310,9 @@ impl FdkRustTemplate {
 fn gen_cargo_toml(crate_name: Option<&str>, hostcall: bool) -> String {
     let crate_name = crate_name.unwrap_or("fdk_rs");
 
-    #[cfg(debug_assertions)]
-    let is_test = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() == Some("1");
-
     let dependency = if hostcall {
         #[cfg(debug_assertions)]
-        if is_test {
+        {
             use normpath::PathExt;
             let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
                 .join("../metagen-client-rs")
@@ -325,8 +322,6 @@ fn gen_cargo_toml(crate_name: Option<&str>, hostcall: bool) -> String {
                 r#"metagen-client = {{ path = "{client_path}", default-features = false }}"#,
                 client_path = client_path.as_path().to_str().unwrap()
             )
-        } else {
-            "metagen-client = { workspace = true, default-features = false }".to_string()
         }
 
         #[cfg(not(debug_assertions))]
