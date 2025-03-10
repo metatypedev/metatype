@@ -10,6 +10,7 @@ pub mod transports {
     pub fn graphql(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwest {
         GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
     }
+
     #[cfg(not(target_family = "wasm"))]
     pub fn graphql_sync(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwestSync {
         GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
@@ -82,22 +83,27 @@ mod node_metas {
     }
 }
 use types::*;
+#[allow(unused)]
 pub mod types {
     pub type FileBf9b7 = super::FileId;
     pub type RootUploadFnInputPathString25e51Optional = Option<String>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootUploadFnInputPartial {
-        pub file: Option<FileBf9b7>,
+    pub struct RootUploadFnInput {
+        pub file: FileBf9b7,
         pub path: RootUploadFnInputPathString25e51Optional,
     }
+    pub type RootUploadFnOutput = bool;
     pub type RootUploadManyFnInputPrefixString25e51Optional = Option<String>;
     pub type RootUploadManyFnInputFilesFileBf9b7List = Vec<FileBf9b7>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootUploadManyFnInputPartial {
+    pub struct RootUploadManyFnInput {
         pub prefix: RootUploadManyFnInputPrefixString25e51Optional,
-        pub files: Option<RootUploadManyFnInputFilesFileBf9b7List>,
+        pub files: RootUploadManyFnInputFilesFileBf9b7List,
     }
-    pub type RootUploadFnOutput = bool;
+}
+#[allow(unused)]
+pub mod return_types {
+    use super::types::*;
 }
 
 pub fn query_graph() -> QueryGraph {
@@ -125,7 +131,7 @@ pub fn query_graph() -> QueryGraph {
 impl QueryGraph {
     pub fn upload(
         &self,
-        args: impl Into<NodeArgs<RootUploadFnInputPartial>>,
+        args: impl Into<NodeArgs<RootUploadFnInput>>,
     ) -> MutationNode<RootUploadFnOutput> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
@@ -143,7 +149,7 @@ impl QueryGraph {
     }
     pub fn upload_many(
         &self,
-        args: impl Into<NodeArgs<RootUploadManyFnInputPartial>>,
+        args: impl Into<NodeArgs<RootUploadManyFnInput>>,
     ) -> MutationNode<RootUploadFnOutput> {
         let nodes = selection_to_node_set(
             SelectionErasedMap(

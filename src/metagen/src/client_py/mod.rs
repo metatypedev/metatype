@@ -235,7 +235,6 @@ class QueryGraph(QueryGraphBase):
 /// Render the common sections like the transports
 fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
     let client_py = include_str!("static/client.py");
-    writeln!(dest, "{}", client_py)?;
     crate::utils::processed_write(
         dest,
         client_py,
@@ -251,8 +250,11 @@ fn render_data_types(
     manifest: &RenderManifest,
     name_mapper: Rc<NameMapper>,
 ) -> anyhow::Result<NameMemo> {
-    let mut renderer =
-        TypeRenderer::new(name_mapper.nodes.clone(), Rc::new(types::PyTypeRenderer {}));
+    let mut renderer = TypeRenderer::new(
+        name_mapper.nodes.clone(),
+        Rc::new(types::PyTypeRenderer {}),
+        [],
+    );
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;
     }
@@ -276,6 +278,7 @@ fn render_selection_types(
         Rc::new(selections::PyNodeSelectionsRenderer {
             arg_ty_names: arg_types_memo,
         }),
+        [],
     );
     for &id in &manifest.selections {
         _ = renderer.render(id)?;
@@ -300,6 +303,7 @@ fn render_node_metas(
             named_types: named_types.clone(),
             input_files: manifest.input_files.clone(),
         }),
+        [],
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;

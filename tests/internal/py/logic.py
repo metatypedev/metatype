@@ -1,11 +1,12 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from .logic_types import Ctx
+from .fdk import Ctx, handler_remote_sum, RootSumFnInput
 import json
 
 
-def remote_sum(inp: dict, ctx: Ctx) -> float:
+@handler_remote_sum
+def remote_sum(inp: RootSumFnInput, ctx: Ctx) -> float:
     data = ctx.gql(
         query="""
         query q($first: Float!, $second: Float!) {

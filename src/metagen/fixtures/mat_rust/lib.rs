@@ -14,7 +14,7 @@ init_mat! {
 struct FaasImpl;
 
 impl MyFaas for FaasImpl {
-    fn handle(&self, input: MyObj, _cx: Ctx) -> anyhow::Result<MyObj> {
+    fn handle(&self, input: MyObjPartial, _cx: Ctx) -> anyhow::Result<MyObjPartial> {
         Ok(input)
     }
 }

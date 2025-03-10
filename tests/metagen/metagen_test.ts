@@ -44,7 +44,7 @@ async function prepareBucket() {
 }
 
 Meta.test("metagen rust builds", async (t) => {
-  const tmpDir = t.tempDir;
+  const tmpDir = "/tmp/stuff";
 
   const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.ts");
   const genCratePath = join(tmpDir, "fdk");
@@ -86,6 +86,7 @@ members = ["fdk/"]
           env: {
             MCLI_LOADER_CMD: `deno run -A --config ${denoJson}`,
             RUST_BACKTRACE: "1",
+            METAGEN_CLIENT_RS_TEST: "1",
           },
         },
         ...`-C ${tmpDir} gen`.split(" "),
@@ -493,6 +494,9 @@ Meta.test({
         },
       },
     },
+
+    // FIXME: this is broken in fdk_rs due to the
+    // ambigious unions/either bug
     {
       name: "composites 2",
       query: compositesQuery,
@@ -559,7 +563,7 @@ Meta.test({
   await using engine = await metaTest.engine(
     "metagen/typegraphs/identities.py",
   );
-  for (const prefix of [ "rs",  "ts" , "py" ]) {
+  for (const prefix of ["rs", "ts", "py"]) {
     await metaTest.should(`fdk data go round ${prefix}`, async (t) => {
       for (const { name, vars, query, skip } of cases) {
         if (skip) {
@@ -701,6 +705,8 @@ Meta.test(
         //   .env({ "TG_PORT": metaTest.port.toString() });
         const res = await command
           .env({ TG_PORT: metaTest.port.toString() })
+          .stderr("inherit")
+          // .stdout("inherit")
           .text();
         expected.parse(JSON.parse(res));
       });

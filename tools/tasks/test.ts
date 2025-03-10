@@ -34,11 +34,10 @@ export default {
                 --exclude typegate
                 --exclude typegate_engine
                 --exclude typegraph_core
-                --exclude client_rs_static
                 --exclude identities_fdk
                 --exclude sample_client
                 --exclude sample_client_upload
-                --exclude client_rs_static`;
+                --exclude metagen_fdk_rs_static`;
     },
   },
   "test-codegen": {

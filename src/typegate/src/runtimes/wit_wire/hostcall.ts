@@ -27,6 +27,7 @@ export async function hostcall(cx: HostCallCtx, op_name: string, json: string) {
         });
     }
   } catch (err) {
+    console.log({err}, "XXXX")
     logger.error("error on wit_wire hostcall {}", err);
     if (err instanceof Error) {
       throw {
@@ -64,6 +65,7 @@ async function gql(cx: HostCallCtx, args: object) {
     throw new Error("error validating gql args", {
       cause: {
         zodErr: parseRes.error,
+        args
       },
     });
   }

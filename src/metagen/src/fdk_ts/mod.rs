@@ -196,6 +196,7 @@ fn render_types(dest: &mut GenDestBuf, tg: &Typegraph) -> anyhow::Result<NameMem
     let mut renderer = TypeRenderer::new(
         tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
         Rc::new(types::TypescriptTypeRenderer {}),
+        [],
     );
     // remove the root type which we don't want to generate types for
     // TODO: gql types || function wrappers for exposed functions

@@ -238,13 +238,7 @@ use metagen_client::prelude::*;
 pub mod transports {
     use super::*;
 
-    pub fn graphql(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwest {
-        GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
-    }
-    #[cfg(not(target_family = "wasm"))]
-    pub fn graphql_sync(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwestSync {
-        GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
-    }
+
 
     pub fn hostcall(qg: &QueryGraph) -> metagen_client::hostcall::HostcallTransport {
         metagen_client::hostcall::HostcallTransport::new(
@@ -309,10 +303,24 @@ mod node_metas {
 
 }
 use types::*;
+#[allow(unused)]
 pub mod types {
     pub type Idv3TitleString = String;
     pub type Idv3ReleaseTimeStringDatetime = String;
     pub type Idv3Mp3UrlStringUri = String;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Idv3 {
+        pub title: Idv3TitleString,
+        pub artist: Idv3TitleString,
+        #[serde(rename = "releaseTime")]
+        pub release_time: Idv3ReleaseTimeStringDatetime,
+        #[serde(rename = "mp3Url")]
+        pub mp3_url: Idv3Mp3UrlStringUri,
+    }
+}
+#[allow(unused)]
+pub mod return_types {
+    use super::types::*;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Idv3Partial {
         pub title: Option<Idv3TitleString>,
@@ -346,8 +354,8 @@ impl QueryGraph {
 
     pub fn remix(
         &self,
-        args: impl Into<NodeArgs<Idv3Partial>>
-    ) -> UnselectedNode<Idv3Selections, Idv3Selections<HasAlias>, QueryMarker, Idv3Partial>
+        args: impl Into<NodeArgs<Idv3>>
+    ) -> UnselectedNode<Idv3Selections, Idv3Selections<HasAlias>, QueryMarker, return_types::Idv3Partial>
     {
         UnselectedNode {
             root_name: "remix".into(),
@@ -377,7 +385,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: Idv3Partial, cx: Ctx) -> anyhow::Result<Idv3Partial>;
+        fn handle(&self, input: Idv3, cx: Ctx) -> anyhow::Result<Idv3>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {

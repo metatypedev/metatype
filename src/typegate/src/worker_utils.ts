@@ -37,7 +37,7 @@ export class HostcallPump {
           const promise = Promise.withResolvers<any>();
           this.#pendingHostCalls.set(id, promise);
 
-          hostcall(id, "gql", JSON.stringify({ query, variables }));
+          hostcall(id, "gql", JSON.stringify({ query: query[0], variables }));
           return promise.promise;
         },
       };

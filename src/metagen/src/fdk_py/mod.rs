@@ -135,6 +135,9 @@ def handler_{def_name}(user_fn: typing.Callable[[{inp_ty}, Ctx], {out_ty}]):
                 )?;
             }
         }
+        static IF_END: once_cell::sync::Lazy<regex::Regex> =
+            once_cell::sync::Lazy::new(|| regex::Regex::new(r"^(from|import)").unwrap());
+        fdk_py.buf = crate::utils::collect_at_first_instance(&fdk_py.buf, &IF_END);
         Ok(fdk_py.buf)
     }
 
@@ -213,6 +216,7 @@ fn render_types(dest: &mut GenDestBuf, tg: &Typegraph) -> anyhow::Result<NameMem
     let mut renderer = TypeRenderer::new(
         tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
         Rc::new(client_py::types::PyTypeRenderer {}),
+        [],
     );
     // remove the root type which we don't want to generate types for
     // TODO: gql types || function wrappers for exposed functions
@@ -237,7 +241,7 @@ fn e2e() -> anyhow::Result<()> {
                 [GeneratorConfig {
                     generator_name: "fdk_py".to_string(),
                     other: serde_json::to_value(fdk_py::FdkPythonGenConfig {
-                        stubbed_runtimes: Some(vec!["python".into()]),
+                        stubbed_runtimes: Some(vec!["deno".into()]),
                         exclude_client: None,
                         base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),
@@ -267,7 +271,7 @@ fn e2e() -> anyhow::Result<()> {
                 config,
                 build_fn: |args| {
                     Box::pin(async move {
-                        let status = tokio::process::Command::new("deno")
+                        let status = tokio::process::Command::new("ruff")
                             .args("check fdk.py".split(' ').collect::<Vec<_>>())
                             .current_dir(&args.path)
                             .kill_on_drop(true)
@@ -275,17 +279,7 @@ fn e2e() -> anyhow::Result<()> {
                             .wait()
                             .await?;
                         if !status.success() {
-                            anyhow::bail!("error checking generated crate");
-                        }
-                        let status = tokio::process::Command::new("deno")
-                            .args("lint fdk.py".split(' ').collect::<Vec<_>>())
-                            .current_dir(&args.path)
-                            .kill_on_drop(true)
-                            .spawn()?
-                            .wait()
-                            .await?;
-                        if !status.success() {
-                            anyhow::bail!("error lint generated crate");
+                            anyhow::bail!("error checking generated module");
                         }
                         Ok(())
                     })

@@ -36,8 +36,9 @@ pub fn processed_write(
 ) -> eyre::Result<()> {
     static SKIP: once_cell::sync::Lazy<regex::Regex> =
         once_cell::sync::Lazy::new(|| regex::Regex::new(r"metagen-skip").unwrap());
-    static IF_START: once_cell::sync::Lazy<regex::Regex> =
-        once_cell::sync::Lazy::new(|| regex::Regex::new(r"metagen-genif (?<name>\S+)").unwrap());
+    static IF_START: once_cell::sync::Lazy<regex::Regex> = once_cell::sync::Lazy::new(|| {
+        regex::Regex::new(r"metagen-genif(?<not>-not)?\s+(?<name>\S+)").unwrap()
+    });
     static IF_END: once_cell::sync::Lazy<regex::Regex> =
         once_cell::sync::Lazy::new(|| regex::Regex::new(r"metagen-endif").unwrap());
 
@@ -56,7 +57,9 @@ pub fn processed_write(
         if let Some(caps) = IF_START.captures(line) {
             // Extract flag name after "genif"
             let flag = &caps["name"];
+            let not = caps.name("not");
             let condition = flags.get(flag).copied().unwrap_or(false);
+            let condition = condition ^ not.is_some();
             let (_, current_enabled) = stack.last().copied().unwrap_or((0, true));
             stack.push((ii, current_enabled && condition));
         } else if IF_END.is_match(line) {
@@ -83,4 +86,54 @@ pub fn processed_write(
     }
 
     Ok(())
+}
+
+pub fn collect_at_first_instance(input: &str, pattern: &regex::Regex) -> String {
+    use std::collections::HashSet;
+
+    let lines: Vec<&str> = input.lines().collect();
+    let mut matches = lines.iter().enumerate().filter_map(|(ii, line)| {
+        if pattern.is_match(line) {
+            Some(ii)
+        } else {
+            None
+        }
+    });
+
+    let Some(first) = matches.next() else {
+        return input.to_string();
+    };
+
+    let mut matches_set: HashSet<usize> = [first].into_iter().collect();
+
+    let mut output_lines = Vec::with_capacity(lines.len());
+
+    // Add lines before first match
+    output_lines.extend_from_slice(&lines[..first]);
+
+    // Add first match
+    output_lines.push(lines[first]);
+
+    // Add subsequent matches in order
+    for ii in matches {
+        matches_set.insert(ii);
+        output_lines.push(lines[ii]);
+    }
+
+    // Add non-matching lines after first match
+    let post_non_matches = lines[first + 1..]
+        .iter()
+        .enumerate()
+        .filter_map(|(rel_i, line)| {
+            let original_i = first + 1 + rel_i;
+            if matches_set.contains(&original_i) {
+                None
+            } else {
+                Some(*line)
+            }
+        });
+
+    output_lines.extend(post_non_matches);
+
+    output_lines.join("\n")
 }

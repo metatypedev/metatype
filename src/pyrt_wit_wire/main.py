@@ -33,17 +33,18 @@ from wit_wire.exports.mat_wire import (
 # from pyrt.imports.typegate_wire import hostcall
 from wit_wire.imports.typegate_wire import hostcall
 
+# ruff: noqa: F401
 # the following are required by client_py
-import io as _
-import re as _
-import uuid as _
-import typing as _
-import dataclasses as _
-import urllib as _
-import urllib.request as _
-import urllib.error as _
-import http.client as _
-import mimetypes as _
+import io as _1
+import re as _2
+import uuid as _3
+import typing as _4
+import dataclasses as _5
+import urllib as _6
+import urllib.request as _7
+import urllib.error as _8
+import http.client as _9
+import mimetypes as _10
 
 # the `MatWire` class is instantiated for each
 # external call. We have to put any persisted

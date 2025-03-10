@@ -197,10 +197,10 @@ impl FdkRustTemplate {
                     derive_debug: true,
                     all_fields_optional: false,
                 }),
+                [],
             );
             // remove the root type which we don't want to generate types for
             // TODO: gql types || function wrappers for exposed functions
-            // skip object 0, the root object where the `exposed` items are locted
             for id in 1..tg.types.len() {
                 _ = renderer.render(id as u32)?;
             }
@@ -322,52 +322,22 @@ fn gen_cargo_toml(crate_name: Option<&str>, hostcall: bool) -> String {
                 .normalize()
                 .unwrap();
             format!(
-                r#"metagen-client = {{ path = "{client_path}" }}"#,
+                r#"metagen-client = {{ path = "{client_path}", default-features = false }}"#,
                 client_path = client_path.as_path().to_str().unwrap()
             )
         } else {
-            "metagen-client = { workspace = true }".to_string()
+            "metagen-client = { workspace = true, default-features = false }".to_string()
         }
 
         #[cfg(not(debug_assertions))]
         format!(
-            "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", tag = \"{version}\" }}",
+            "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", tag = \"{version}\", default-features = false }}",
             version = env!("CARGO_PKG_VERSION")
         )
     } else {
         "".to_string()
     };
 
-    #[cfg(debug_assertions)]
-    let additional_deps = if is_test {
-        r#"
-tokio = { version = "1.0", features = ["rt-multi-thread"] }
-    "#
-    } else {
-        ""
-    };
-
-    #[cfg(not(debug_assertions))]
-    let additional_deps = "";
-
-    let bin_path = std::env::var("METAGEN_BIN_PATH").ok();
-
-    let exec = if let Some(bin_path) = bin_path {
-        format!(
-            r#"[[bin]]
-name = "metagen"
-path = "{bin_path}"
-"#
-        )
-    } else {
-        r#"# The options after here are configured for crates intended to be
-# wasm artifacts. Remove them if your usage is different
-[lib]
-path = "lib.rs"
-crate-type = ["cdylib", "rlib"]
-        "#
-        .to_string()
-    };
     format!(
         r#"[package]
 name = "{crate_name}"
@@ -380,9 +350,12 @@ anyhow = "1"
 serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"
 wit-bindgen = "0.34"
-{additional_deps}
 
-{exec}
+# The options after here are configured for crates intended to be
+# wasm artifacts. Remove them if your usage is different
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib", "rlib"]
 
 [profile.release]
 strip = "symbols"

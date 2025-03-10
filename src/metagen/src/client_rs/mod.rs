@@ -168,7 +168,7 @@ pub fn render_client(
     let name_mapper = Rc::new(name_mapper);
 
     let (node_metas, named_types) = render_node_metas(dest, &manifest, name_mapper.clone())?;
-    let data_types = render_data_types(dest, &manifest, name_mapper.clone())?;
+    let (data_types, return_types) = render_data_types(dest, tg, &manifest, name_mapper.clone())?;
     let data_types = Rc::new(data_types);
     let selection_names =
         render_selection_types(dest, &manifest, data_types.clone(), name_mapper.clone())?;
@@ -213,7 +213,12 @@ pub fn query_graph() -> QueryGraph {{
 
         let node_name = fun.name;
         let method_name = node_name.to_snek_case();
-        let out_ty_name = data_types.get(&fun.out_id).unwrap();
+        let out_ty_name = return_types.get(&fun.out_id).unwrap();
+        let out_ty_name = if shared::is_composite(&tg.types, fun.out_id) {
+            format!("return_types::{out_ty_name}",)
+        } else {
+            out_ty_name.to_string()
+        };
 
         let arg_ty = fun.in_id.map(|id| data_types.get(&id).unwrap());
         let select_ty = fun.select_ty.map(|id| selection_names.get(&id).unwrap());
@@ -314,9 +319,35 @@ fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
 /// used for serialization
 fn render_data_types(
     dest: &mut GenDestBuf,
+    tg: &Typegraph,
     manifest: &RenderManifest,
     name_mapper: Rc<NameMapper>,
-) -> anyhow::Result<NameMemo> {
+) -> anyhow::Result<(NameMemo, NameMemo)> {
+    // we first render all types under the `types`
+    // module for general use
+    let mut renderer = TypeRenderer::new(
+        name_mapper.nodes.clone(),
+        Rc::new(fdk_rs::types::RustTypeRenderer {
+            derive_debug: true,
+            derive_serde: true,
+            all_fields_optional: false,
+        }),
+        [],
+    );
+    for id in 1..tg.types.len() {
+        _ = renderer.render(id as u32)?;
+    }
+    let (types_rs, name_memo) = renderer.finalize();
+    writeln!(dest.buf, "use types::*;")?;
+    writeln!(dest.buf, "#[allow(unused)]")?;
+    writeln!(dest.buf, "pub mod types {{")?;
+    for line in types_rs.lines() {
+        writeln!(dest.buf, "    {line}")?;
+    }
+    writeln!(dest.buf, "}}")?;
+    // for types used for fn return types
+    // we separately render types that are
+    // fully partial
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
         Rc::new(fdk_rs::types::RustTypeRenderer {
@@ -324,15 +355,31 @@ fn render_data_types(
             derive_serde: true,
             all_fields_optional: true,
         }),
+        // we pre seed the renderer with names for those that
+        // aren't composites
+        name_memo.iter().filter_map(|(&ii, name)| {
+            if tg.types[ii as usize].type_name() == "function" {
+                return None;
+            }
+            if !shared::is_composite(&tg.types, ii) {
+                Some((ii, name.clone()))
+            } else {
+                None
+            }
+        }),
     );
-    for &id in &manifest.arg_types {
+    for &id in &manifest.return_types {
         _ = renderer.render(id)?;
     }
-    /* renderer.replace_renderer(Rc::new(fdk_rs::types::RustTypeRenderer {
-        derive_debug: true,
-        derive_serde: true,
-        all_fields_optional: true,
-    })); */
+    let (types_rs, name_memo_partial) = renderer.finalize();
+    // writeln!(dest.buf, "use return_types::*;")?;
+    writeln!(dest.buf, "#[allow(unused)]")?;
+    writeln!(dest.buf, "pub mod return_types {{")?;
+    writeln!(dest.buf, "    use super::types::*;")?;
+    for line in types_rs.lines() {
+        writeln!(dest.buf, "    {line}")?;
+    }
+    writeln!(dest.buf, "}}")?;
     // FIXME: it should be possible to have non
     // partial arg types but
     // - rendering the args and return_tys in separately
@@ -340,17 +387,7 @@ fn render_data_types(
     // - switching out the renderer halfway is troublsome as we
     //   can't afford to have any non-partial return_tys but
     //   we might get some if the args refer to one of them
-    for &id in &manifest.return_types {
-        _ = renderer.render(id)?;
-    }
-    let (types_rs, name_memo) = renderer.finalize();
-    writeln!(dest.buf, "use types::*;")?;
-    writeln!(dest.buf, "pub mod types {{")?;
-    for line in types_rs.lines() {
-        writeln!(dest.buf, "    {line}")?;
-    }
-    writeln!(dest.buf, "}}")?;
-    Ok(name_memo)
+    Ok((name_memo, name_memo_partial))
 }
 
 /// Render the type used for selecting fields
@@ -365,6 +402,7 @@ fn render_selection_types(
         Rc::new(selections::RsNodeSelectionsRenderer {
             arg_ty_names: arg_types_memo,
         }),
+        [],
     );
     for &id in &manifest.selections {
         _ = renderer.render(id)?;
@@ -389,6 +427,7 @@ fn render_node_metas(
             named_types: named_types.clone(),
             input_files: manifest.input_files.clone(),
         }),
+        [],
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;

@@ -53,12 +53,12 @@ impl RustTypeRenderer {
         dest: &mut impl Write,
         ty_name: &str,
         props: IndexMap<String, (String, Option<String>)>,
-        _additional_props: bool,
+        additional_props: bool,
     ) -> std::fmt::Result {
         self.render_derive(dest)?;
-        // if !additional_props {
-        //     writeln!(dest, "#[serde(deny_unknown_fields)]")?;
-        // }
+        if !additional_props {
+            // writeln!(dest, "#[serde(deny_unknown_fields)]")?;
+        }
         writeln!(dest, "pub struct {ty_name} {{")?;
         for (name, (ty_name, ser_name)) in props.into_iter() {
             if let Some(ser_name) = ser_name {
@@ -80,6 +80,7 @@ impl RustTypeRenderer {
     ) -> std::fmt::Result {
         self.render_derive(dest)?;
         writeln!(dest, "#[serde(untagged)]")?;
+        // writeln!(dest, r#"#[serde(tag = "__typename")]"#)?;
         writeln!(dest, "pub enum {ty_name} {{")?;
         for (var_name, ty_name) in variants.into_iter() {
             writeln!(dest, "    {var_name}({ty_name}),")?;
@@ -206,8 +207,7 @@ impl RenderType for RustTypeRenderer {
                 } else {
                     ty_name
                 };
-                // TODO: additional_props support
-                self.render_struct(renderer, &ty_name, props, false)?;
+                self.render_struct(renderer, &ty_name, props, data.additional_props)?;
                 ty_name
             }
             TypeNode::Union {
@@ -787,6 +787,7 @@ pub enum CEither {
                     derive_debug: true,
                     all_fields_optional: false,
                 }),
+                [],
             );
             let gen_name = renderer.render(nodes.len() as u32 - 1)?;
             let (real_out, _) = renderer.finalize();

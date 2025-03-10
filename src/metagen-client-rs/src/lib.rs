@@ -36,6 +36,5 @@ pub mod prelude {
     pub use crate::nodes::*;
     pub use crate::selection::*;
     pub use crate::{impl_selection_traits, impl_union_selection_traits};
-    #[cfg(feature = "graphql")]
-    pub use reqwest::Url;
+    pub use url::Url;
 }

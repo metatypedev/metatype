@@ -72,8 +72,6 @@ export class WorkerManager
       }, this.config.timeout_ms);
 
       const handler: (event: DenoEvent) => void = async (event) => {
-        clearTimeout(timeoutId);
-        this.deallocateWorker(name, taskId);
         switch (event.type) {
           case "HOSTCALL": {
             let result;
@@ -96,9 +94,13 @@ export class WorkerManager
             break;
           }
           case "SUCCESS":
+            clearTimeout(timeoutId);
+            this.deallocateWorker(name, taskId);
             resolve(event.result);
             break;
           case "FAILURE":
+            clearTimeout(timeoutId);
+            this.deallocateWorker(name, taskId);
             reject(event.exception ?? event.error);
             break;
         }

@@ -1,7 +1,13 @@
 import io
 import re
 import uuid
+
+# metagen-genif-not HOSTCALL
+# metagen-skip
+# the following import is expected from the fdk.py
 import typing
+
+# metagen-endif
 import dataclasses as dc
 import json
 import urllib

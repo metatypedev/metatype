@@ -36,11 +36,11 @@ fn main() -> Result<(), BoxErr> {
         ))?;
         let prepared_m = gql_sync.prepare_mutation(|args| {
             (
-                api1.scalar_args(args.get("post", |val: types::PostPartial| val)),
+                api1.scalar_args(args.get("post", |val: types::Post| val)),
                 api1.composite_no_args().select(all()),
-                api1.composite_args(args.get("id", |id: String| {
-                    types::RootCompositeArgsFnInputPartial { id: Some(id) }
-                }))
+                api1.composite_args(
+                    args.get("id", |id: String| types::RootCompositeArgsFnInput { id }),
+                )
                 .select(all()),
             )
         })?;
@@ -49,10 +49,10 @@ fn main() -> Result<(), BoxErr> {
         let res2 = prepared_clone.perform([
             (
                 "post",
-                serde_json::json!(types::PostPartial {
-                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                    slug: Some("".into()),
-                    title: Some("".into()),
+                serde_json::json!(types::Post {
+                    id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
+                    slug: "".into(),
+                    title: "".into(),
                 }),
             ),
             (
@@ -93,14 +93,14 @@ fn main() -> Result<(), BoxErr> {
 
             let res4 = gql
                 .mutation((
-                    api1.scalar_args(types::PostPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                        slug: Some("".into()),
-                        title: Some("".into()),
+                    api1.scalar_args(types::Post {
+                        id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
+                        slug: "".into(),
+                        title: "".into(),
                     }),
                     api1.composite_no_args().select(all()),
-                    api1.composite_args(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                    api1.composite_args(types::RootCompositeArgsFnInput {
+                        id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
                     })
                     .select(all()),
                 ))
@@ -108,12 +108,12 @@ fn main() -> Result<(), BoxErr> {
 
             let res5 = gql
                 .query((
-                    api1.scalar_union(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                    api1.scalar_union(types::RootCompositeArgsFnInput {
+                        id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
                     }),
                     // allows ignoring some members
-                    api1.composite_union(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                    api1.composite_union(types::RootCompositeArgsFnInput {
+                        id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
                     })
                     .select(RootCompositeUnionFnOutputSelections {
                         post: select(all()),
@@ -121,15 +121,15 @@ fn main() -> Result<(), BoxErr> {
                     }),
                     // returns empty if returned type wasn't selected
                     // in union member
-                    api1.composite_union(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                    api1.composite_union(types::RootCompositeArgsFnInput {
+                        id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
                     })
                     .select(RootCompositeUnionFnOutputSelections {
                         user: select(all()),
                         ..default()
                     }),
-                    api1.mixed_union(types::RootCompositeArgsFnInputPartial {
-                        id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                    api1.mixed_union(types::RootCompositeArgsFnInput {
+                        id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
                     })
                     .select(RootMixedUnionFnOutputSelections {
                         post: select(all()),
@@ -168,18 +168,16 @@ fn main() -> Result<(), BoxErr> {
 
             let res7a = gql.query(api1.get_posts().select(all())).await?;
             let res7b = gql
-                .mutation(api1.scalar_args(types::PostPartial {
-                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
-                    slug: Some("".into()),
-                    title: Some("".into()),
+                .mutation(api1.scalar_args(types::Post {
+                    id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
+                    slug: "".into(),
+                    title: "".into(),
                 }))
                 .await?;
             let res7c = gql
                 .prepare_query(|args| {
                     api1.identity(
-                        args.get("num", |val: i64| types::RootIdentityFnInputPartial {
-                            input: Some(val),
-                        }),
+                        args.get("num", |val: i64| types::RootIdentityFnInput { input: val }),
                     )
                     .select(all())
                 })?
@@ -187,9 +185,9 @@ fn main() -> Result<(), BoxErr> {
                 .await?;
             let res7d = gql
                 .prepare_mutation(|args| {
-                    api1.identity_update(args.get("num", |val: i64| {
-                        types::RootIdentityFnInputPartial { input: Some(val) }
-                    }))
+                    api1.identity_update(
+                        args.get("num", |val: i64| types::RootIdentityFnInput { input: val }),
+                    )
                     .select(all())
                 })?
                 .perform::<_, i64>([("num", 0)])

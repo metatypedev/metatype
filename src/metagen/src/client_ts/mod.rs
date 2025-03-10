@@ -257,6 +257,7 @@ fn render_data_types(
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
         Rc::new(fdk_ts::types::TypescriptTypeRenderer {}),
+        [],
     );
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;
@@ -281,6 +282,7 @@ fn render_selection_types(
         Rc::new(selections::TsNodeSelectionsRenderer {
             arg_ty_names: arg_types_memo,
         }),
+        [],
     );
     for &id in &manifest.selections {
         _ = renderer.render(id)?;
@@ -305,6 +307,7 @@ fn render_node_metas(
             named_types: named_types.clone(),
             input_files: manifest.input_files.clone(),
         }),
+        [],
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;
