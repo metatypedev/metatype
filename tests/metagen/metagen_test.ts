@@ -44,7 +44,7 @@ async function prepareBucket() {
 }
 
 Meta.test("metagen rust builds", async (t) => {
-  const tmpDir = "/tmp/stuff";
+  const tmpDir = t.tempDir;
 
   const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.ts");
   const genCratePath = join(tmpDir, "fdk");

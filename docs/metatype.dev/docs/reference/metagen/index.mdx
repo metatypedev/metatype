@@ -118,6 +118,15 @@ This generator supports:
 
 Refer to the [client reference](/docs/reference/typegraph/client/) for usage guidelines and examples.
 
+It supports the following extra configuration keys.
+
+| Key                | Type       | Default                | Description                                           |
+| ------------------ | ---------- | ---------------------- | ----------------------------------------------------- |
+| `crate_name`       | `string`   | `${typegraphName}_fdk` | Name to assign to crate when generating `Cargo.toml`. |
+| `skip_cargo_toml`  | `boolean`  | `false`                | Do not generate `Cargo.toml`.                         |
+| `skip_lib_rs`      | `boolean`  | `false`                | Do not generate `lib.rs`, the sample entrypoint.         |
+
+
 ### `fdk_ts`
 
 This generator supports:
@@ -162,6 +171,8 @@ It supports the following extra configuration keys.
 | Key                | Type       | Default    | Description                                |
 | ------------------ | ---------- | ---------- | ------------------------------------------ |
 | `stubbed_runtimes` | `string[]` | `["deno"]` | Runtimes for which to generate stub types. |
+| `exclude_client`   | `boolean`  | `false`                | Do not include the typegraph client from [`client_ts`](#client_ts). |
+
 
 ### `fdk_py`
 
@@ -202,6 +213,14 @@ Custom function:
     disablePlayground
   />
 </details>
+
+It supports the following extra configuration keys.
+
+| Key                | Type       | Default    | Description                                |
+| ------------------ | ---------- | ---------- | ------------------------------------------ |
+| `stubbed_runtimes` | `string[]` | `["deno"]` | Runtimes for which to generate stub types. |
+| `exclude_client`   | `boolean`  | `false`                | Do not include the typegraph client from [`client_py`](#client_py). |
+
 
 ### `fdk_rs`
 
@@ -257,4 +276,5 @@ It supports the following extra configuration keys.
 | `stubbed_runtimes` | `string[]` | `["wasm_wire"]`        | Runtimes for which to generate stub types.            |
 | `crate_name`       | `string`   | `${typegraphName}_fdk` | Name to assign to crate when generating `Cargo.toml`. |
 | `skip_cargo_toml`  | `boolean`  | `false`                | Do not generate `Cargo.toml`.                         |
-| `skip_lib_rs`      | `boolean`  | `false`                | Do not generate `lib.rs`, the sample entrypoint.      |
+| `skip_lib_rs`      | `boolean`  | `false`                | Do not generate `lib.rs`, the sample entrypoint.         |
+| `exclude_client`   | `boolean`  | `false`                | Do not include the typegraph client from [`client_rs`](#client_rs). |

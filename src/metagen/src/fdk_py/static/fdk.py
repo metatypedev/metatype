@@ -1,23 +1,29 @@
 import typing
 
 # metagen-genif IGNORE
+# these will be avail from client.py if hostcall is set
+# but are not used otherwise
+HostcallTransport = typing.Any
+QueryGraph = typing.Any
+# metagen-endif
+# metagen-genif-not HOSTCALL
 HostcallBinding = typing.Callable[
     [str, typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]
 ]
-HostcallTransport = typing.Any
-QueryGraph = typing.Any
 
 
 # metagen-endif
 class Ctx:
-    # metagen-genif HOSTCALL
     def __init__(
-        self, binding: "HostcallBinding", qg: "QueryGraph", host: "HostcallTransport"
+        self,
+        binding: "HostcallBinding",
+        # metagen-genif HOSTCALL
+        qg: "QueryGraph",
+        host: "HostcallTransport",
+        # metagen-endif
     ):
         self.gql = binding
+        # metagen-genif HOSTCALL
         self.qg = qg
         self.host = host
-        pass
-
-    # metagen-endif
-    pass
+        # metagen-endif

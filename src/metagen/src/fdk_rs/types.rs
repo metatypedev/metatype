@@ -57,6 +57,7 @@ impl RustTypeRenderer {
     ) -> std::fmt::Result {
         self.render_derive(dest)?;
         if !additional_props {
+            // FIXME: #MET-848
             // writeln!(dest, "#[serde(deny_unknown_fields)]")?;
         }
         writeln!(dest, "pub struct {ty_name} {{")?;

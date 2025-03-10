@@ -223,18 +223,6 @@ impl<'a> GqlRequestBuilder<'a> {
     }
 }
 
-// enum GraphQLRequestBody {
-//     Json(serde_json::Value),
-//     Multipart(reqwest::multipart::Form),
-// }
-//
-// struct GraphQLRequest {
-//     addr: Url,
-//     method: reqwest::Method,
-//     headers: reqwest::header::HeaderMap,
-//     body: GraphQLRequestBody,
-// }
-
 pub(crate) enum BuildReqError {
     #[allow(dead_code)]
     FileUpload { error: BoxErr },

@@ -100,7 +100,7 @@ thread_local! {
 }
 
 // metagen-genif IGNORE
-// these are stubs to items that cum from client.rs
+// these are stubs to items that come from client.rs
 pub struct QueryGraph;
 fn query_graph() -> QueryGraph {
     QueryGraph

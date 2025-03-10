@@ -325,68 +325,67 @@ fn render_data_types(
 ) -> anyhow::Result<(NameMemo, NameMemo)> {
     // we first render all types under the `types`
     // module for general use
-    let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Rc::new(fdk_rs::types::RustTypeRenderer {
-            derive_debug: true,
-            derive_serde: true,
-            all_fields_optional: false,
-        }),
-        [],
-    );
-    for id in 1..tg.types.len() {
-        _ = renderer.render(id as u32)?;
-    }
-    let (types_rs, name_memo) = renderer.finalize();
-    writeln!(dest.buf, "use types::*;")?;
-    writeln!(dest.buf, "#[allow(unused)]")?;
-    writeln!(dest.buf, "pub mod types {{")?;
-    for line in types_rs.lines() {
-        writeln!(dest.buf, "    {line}")?;
-    }
-    writeln!(dest.buf, "}}")?;
+    let name_memo = {
+        let mut renderer = TypeRenderer::new(
+            name_mapper.nodes.clone(),
+            Rc::new(fdk_rs::types::RustTypeRenderer {
+                derive_debug: true,
+                derive_serde: true,
+                all_fields_optional: false,
+            }),
+            [],
+        );
+        for id in 1..tg.types.len() {
+            _ = renderer.render(id as u32)?;
+        }
+        let (types_rs, name_memo) = renderer.finalize();
+        writeln!(dest.buf, "use types::*;")?;
+        writeln!(dest.buf, "#[allow(unused)]")?;
+        writeln!(dest.buf, "pub mod types {{")?;
+        for line in types_rs.lines() {
+            writeln!(dest.buf, "    {line}")?;
+        }
+        writeln!(dest.buf, "}}")?;
+        name_memo
+    };
     // for types used for fn return types
     // we separately render types that are
     // fully partial
-    let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Rc::new(fdk_rs::types::RustTypeRenderer {
-            derive_debug: true,
-            derive_serde: true,
-            all_fields_optional: true,
-        }),
-        // we pre seed the renderer with names for those that
-        // aren't composites
-        name_memo.iter().filter_map(|(&ii, name)| {
-            if tg.types[ii as usize].type_name() == "function" {
-                return None;
-            }
-            if !shared::is_composite(&tg.types, ii) {
-                Some((ii, name.clone()))
-            } else {
-                None
-            }
-        }),
-    );
-    for &id in &manifest.return_types {
-        _ = renderer.render(id)?;
-    }
-    let (types_rs, name_memo_partial) = renderer.finalize();
-    // writeln!(dest.buf, "use return_types::*;")?;
-    writeln!(dest.buf, "#[allow(unused)]")?;
-    writeln!(dest.buf, "pub mod return_types {{")?;
-    writeln!(dest.buf, "    use super::types::*;")?;
-    for line in types_rs.lines() {
-        writeln!(dest.buf, "    {line}")?;
-    }
-    writeln!(dest.buf, "}}")?;
-    // FIXME: it should be possible to have non
-    // partial arg types but
-    // - rendering the args and return_tys in separately
-    //   results in duplicate common types like for primitives
-    // - switching out the renderer halfway is troublsome as we
-    //   can't afford to have any non-partial return_tys but
-    //   we might get some if the args refer to one of them
+    let name_memo_partial = {
+        let mut renderer = TypeRenderer::new(
+            name_mapper.nodes.clone(),
+            Rc::new(fdk_rs::types::RustTypeRenderer {
+                derive_debug: true,
+                derive_serde: true,
+                all_fields_optional: true,
+            }),
+            // we pre seed the renderer with names for those that
+            // aren't composites
+            name_memo.iter().filter_map(|(&ii, name)| {
+                if tg.types[ii as usize].type_name() == "function" {
+                    return None;
+                }
+                if !shared::is_composite(&tg.types, ii) {
+                    Some((ii, name.clone()))
+                } else {
+                    None
+                }
+            }),
+        );
+        for &id in &manifest.return_types {
+            _ = renderer.render(id)?;
+        }
+        let (types_rs, name_memo) = renderer.finalize();
+        // writeln!(dest.buf, "use return_types::*;")?;
+        writeln!(dest.buf, "#[allow(unused)]")?;
+        writeln!(dest.buf, "pub mod return_types {{")?;
+        writeln!(dest.buf, "    use super::types::*;")?;
+        for line in types_rs.lines() {
+            writeln!(dest.buf, "    {line}")?;
+        }
+        writeln!(dest.buf, "}}")?;
+        name_memo
+    };
     Ok((name_memo, name_memo_partial))
 }
 

@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [features]
+# TODO: features for sync/async support
 default = ["graphql"]
 graphql = ["tokio-util", "reqwest"]
 
@@ -19,8 +20,3 @@ url = "=2.4.1"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 tokio-util = { version = "0.7", features = ["compat", "io"], optional = true }
-
-# [features]
-# default = ["sync"]
-# sync = ["reqwest/blocking"]
-# async = ["dep:futures", "dep:tokio-util"]

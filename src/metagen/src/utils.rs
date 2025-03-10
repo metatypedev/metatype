@@ -80,8 +80,9 @@ pub fn processed_write(
             "unclosed genif directives found at: {}",
             stack
                 .into_iter()
-                .map(|(line, _)| line)
-                .fold(String::new(), |acc, cur| { format!("{acc}, {cur}") })
+                .map(|(line, _)| line.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
         )
     }
 
