@@ -229,10 +229,12 @@ export class CodeGenerator {
       );
     }
 
-    this.validation(
-      "keys.size > 0",
-      `\`unexpected fields: \${[...keys].join(', ')}\``,
-    );
+    if (!typeNode.additionalProps) {
+      this.validation(
+        "keys.size > 0",
+        `\`unexpected fields: \${[...keys].join(', ')}\``,
+      );
+    }
     this.line("}");
     return Object.values(typeNode.properties);
   }
