@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { gql, Meta } from "../utils/mod.ts";
+import { gql, Meta, rest } from "../utils/mod.ts";
 
 import { Type } from "@metatype/typegate/typegraph/type_node.ts";
 import { InputValidationCompiler } from "@metatype/typegate/engine/typecheck/input.ts";
@@ -249,6 +249,15 @@ Meta.test("input validator compiler", async (t) => {
     `
       .expectBody((body) => {
         assert(body.errors == null);
+      })
+      .on(e);
+  });
+
+  await t.should("pass for any struct (rest)", async () => {
+    await rest
+      .get('stringifyStruct?params={"key":"value"}')
+      .expectBody((body) => {
+        assert(typeof body.stringifyStruct === "string");
       })
       .on(e);
   });
