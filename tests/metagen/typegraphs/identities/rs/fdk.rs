@@ -235,17 +235,14 @@ macro_rules! init_mat {
 use core::marker::PhantomData;
 use metagen_client::prelude::*;
 
+/// Contains constructors for the different transports supported
+/// by the typegate. Namely:
+/// - GraphQl transports ([sync](transports::graphql)/[async](transports::graphql_sync)): reqwest
+///   based transports that talk to the typegate using GraphQl over HTTP.
+/// - [Hostcall transport](transports::hostcall): used by custom functions running in the typegate to access typegraphs.
 pub mod transports {
     use super::*;
 
-    pub fn graphql(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwest {
-        GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
-    }
-
-    #[cfg(not(target_family = "wasm"))]
-    pub fn graphql_sync(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwestSync {
-        GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
-    }
 
 
     pub fn hostcall(qg: &QueryGraph) -> metagen_client::hostcall::HostcallTransport {

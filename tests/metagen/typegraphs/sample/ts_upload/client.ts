@@ -490,7 +490,7 @@ function convertQueryNodeGql(
     } else {
       out = `${out} { ${
         Object.entries(subNodes)
-          .map(([variantTy, subNodes]) => {
+          .map(([variantTy, variantSubNodes]) => {
             let gqlTy = typeToGqlTypeMap[variantTy];
             if (!gqlTy) {
               throw new Error(
@@ -500,7 +500,7 @@ function convertQueryNodeGql(
             gqlTy = gqlTy.replace(/[!]+$/, "");
 
             return `... on ${gqlTy} {${
-              subNodes
+              variantSubNodes
                 .map((node) =>
                   convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
                 )

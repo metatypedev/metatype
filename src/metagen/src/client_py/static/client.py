@@ -1,4 +1,3 @@
-# metagen-endif
 import dataclasses as dc
 import http.client as http_c
 import io
@@ -10,6 +9,8 @@ import re
 # metagen-skip
 # the following import is expected from the fdk.py
 import typing
+
+# metagen-endif
 import urllib
 import urllib.error
 import urllib.request as request

@@ -120,12 +120,11 @@ Refer to the [client reference](/docs/reference/typegraph/client/) for usage gui
 
 It supports the following extra configuration keys.
 
-| Key                | Type       | Default                | Description                                           |
-| ------------------ | ---------- | ---------------------- | ----------------------------------------------------- |
-| `crate_name`       | `string`   | `${typegraphName}_fdk` | Name to assign to crate when generating `Cargo.toml`. |
-| `skip_cargo_toml`  | `boolean`  | `false`                | Do not generate `Cargo.toml`.                         |
-| `skip_lib_rs`      | `boolean`  | `false`                | Do not generate `lib.rs`, the sample entrypoint.         |
-
+| Key               | Type      | Default                | Description                                           |
+| ----------------- | --------- | ---------------------- | ----------------------------------------------------- |
+| `crate_name`      | `string`  | `${typegraphName}_fdk` | Name to assign to crate when generating `Cargo.toml`. |
+| `skip_cargo_toml` | `boolean` | `false`                | Do not generate `Cargo.toml`.                         |
+| `skip_lib_rs`     | `boolean` | `false`                | Do not generate `lib.rs`, the sample entrypoint.      |
 
 ### `fdk_ts`
 
@@ -168,11 +167,10 @@ Custom function:
 
 It supports the following extra configuration keys.
 
-| Key                | Type       | Default    | Description                                |
-| ------------------ | ---------- | ---------- | ------------------------------------------ |
-| `stubbed_runtimes` | `string[]` | `["deno"]` | Runtimes for which to generate stub types. |
-| `exclude_client`   | `boolean`  | `false`                | Do not include the typegraph client from [`client_ts`](#client_ts). |
-
+| Key                | Type       | Default    | Description                                                         |
+| ------------------ | ---------- | ---------- | ------------------------------------------------------------------- |
+| `stubbed_runtimes` | `string[]` | `["deno"]` | Runtimes for which to generate stub types.                          |
+| `exclude_client`   | `boolean`  | `false`    | Do not include the typegraph client from [`client_ts`](#client_ts). |
 
 ### `fdk_py`
 
@@ -216,11 +214,10 @@ Custom function:
 
 It supports the following extra configuration keys.
 
-| Key                | Type       | Default    | Description                                |
-| ------------------ | ---------- | ---------- | ------------------------------------------ |
-| `stubbed_runtimes` | `string[]` | `["deno"]` | Runtimes for which to generate stub types. |
-| `exclude_client`   | `boolean`  | `false`                | Do not include the typegraph client from [`client_py`](#client_py). |
-
+| Key                | Type       | Default    | Description                                                         |
+| ------------------ | ---------- | ---------- | ------------------------------------------------------------------- |
+| `stubbed_runtimes` | `string[]` | `["deno"]` | Runtimes for which to generate stub types.                          |
+| `exclude_client`   | `boolean`  | `false`    | Do not include the typegraph client from [`client_py`](#client_py). |
 
 ### `fdk_rs`
 
@@ -234,7 +231,7 @@ To be more specific, it supports:
   - By default, all functions from the `WasmRuntime` get stub types.
   - The generator assumes the `wire` based wasm interface is being targetted.
   - `stubbed_runtimes` key can be used to configure stub generation from additional runtimes.
-- [`client_rs`](#client_py) based typegraph client
+- [`client_rs`](#client_rs) based typegraph client
   - Special `HostcallTransport` implementation.
 - Glue code for setting up the wasm component to be run within the `WasmRuntime`.
 
@@ -271,10 +268,10 @@ Custom function:
 
 It supports the following extra configuration keys.
 
-| Key                | Type       | Default                | Description                                           |
-| ------------------ | ---------- | ---------------------- | ----------------------------------------------------- |
-| `stubbed_runtimes` | `string[]` | `["wasm_wire"]`        | Runtimes for which to generate stub types.            |
-| `crate_name`       | `string`   | `${typegraphName}_fdk` | Name to assign to crate when generating `Cargo.toml`. |
-| `skip_cargo_toml`  | `boolean`  | `false`                | Do not generate `Cargo.toml`.                         |
-| `skip_lib_rs`      | `boolean`  | `false`                | Do not generate `lib.rs`, the sample entrypoint.         |
+| Key                | Type       | Default                | Description                                                         |
+| ------------------ | ---------- | ---------------------- | ------------------------------------------------------------------- |
+| `stubbed_runtimes` | `string[]` | `["wasm_wire"]`        | Runtimes for which to generate stub types.                          |
+| `crate_name`       | `string`   | `${typegraphName}_fdk` | Name to assign to crate when generating `Cargo.toml`.               |
+| `skip_cargo_toml`  | `boolean`  | `false`                | Do not generate `Cargo.toml`.                                       |
+| `skip_lib_rs`      | `boolean`  | `false`                | Do not generate `lib.rs`, the sample entrypoint.                    |
 | `exclude_client`   | `boolean`  | `false`                | Do not include the typegraph client from [`client_rs`](#client_rs). |

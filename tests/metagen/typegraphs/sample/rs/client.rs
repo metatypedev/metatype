@@ -4,6 +4,11 @@
 use core::marker::PhantomData;
 use metagen_client::prelude::*;
 
+/// Contains constructors for the different transports supported
+/// by the typegate. Namely:
+/// - GraphQl transports ([sync](transports::graphql)/[async](transports::graphql_sync)): reqwest
+///   based transports that talk to the typegate using GraphQl over HTTP.
+/// - [Hostcall transport](transports::hostcall): used by custom functions running in the typegate to access typegraphs.
 pub mod transports {
     use super::*;
 
