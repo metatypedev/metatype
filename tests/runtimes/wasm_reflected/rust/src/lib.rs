@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+#![allow(clippy::too_many_arguments, clippy::approx_constant)]
+
 wit_bindgen::generate!({ world: "host" });
 
 struct MyHost;
@@ -23,7 +25,7 @@ impl Guest for MyHost {
 
     fn record_creation() -> Vec<SomeEntity> {
         let a = SomeEntity {
-            name: format!("Entity A"),
+            name: "Entity A".into(),
             age: None,
             profile: Profile {
                 category: Category::A,
@@ -33,7 +35,7 @@ impl Guest for MyHost {
             },
         };
         let b = SomeEntity {
-            name: format!("Entity B"),
+            name: "Entity B".to_string(),
             age: Some(11),
             profile: Profile {
                 category: Category::B("bbb".to_string()),

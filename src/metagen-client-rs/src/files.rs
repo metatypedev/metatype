@@ -1,33 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::common::*;
 use crate::interlude::*;
-#[derive(Debug, Clone)]
-pub enum TypePathSegment {
-    Optional,
-    ArrayItem,
-    ObjectProp(&'static str),
-}
-
-#[derive(Debug, Clone)]
-pub struct TypePath(pub &'static [TypePathSegment]);
-
-// fn path_segment_as_prop(segment: &str) -> Option<&str> {
-//     segment.strip_prefix('.')
-// }
-//
-#[derive(Debug, Clone)]
-pub struct PathToInputFiles(pub &'static [TypePath]);
-
-#[derive(Debug)]
-pub enum ValuePathSegment {
-    Optional,
-    Index(usize),
-    Prop(&'static str),
-}
-
-#[derive(Default, Debug)]
-pub struct ValuePath(Vec<ValuePathSegment>);
 
 lazy_static::lazy_static! {
     static ref LATEST_FILE_ID: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -35,9 +10,12 @@ lazy_static::lazy_static! {
 }
 
 enum FileData {
+    #[cfg(not(target_family = "wasm"))]
     Path(std::path::PathBuf),
     Bytes(Vec<u8>),
+    #[allow(dead_code)]
     Reader(Box<dyn std::io::Read + Send + 'static>),
+    #[allow(dead_code)]
     Async(reqwest::Body),
 }
 
@@ -76,6 +54,7 @@ impl TryFrom<FileId> for File {
 }
 
 impl File {
+    #[cfg(not(target_family = "wasm"))]
     pub fn from_path<P: Into<std::path::PathBuf>>(path: P) -> Self {
         Self {
             data: FileData::Path(path.into()),
@@ -100,6 +79,7 @@ impl File {
         }
     }
 
+    #[cfg(not(target_family = "wasm"))]
     pub fn from_async_reader<R: futures::io::AsyncRead + Send + 'static>(reader: R) -> Self {
         use tokio_util::compat::FuturesAsyncReadCompatExt as _;
         let reader = reader.compat();
@@ -125,11 +105,13 @@ impl File {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 impl TryFrom<File> for reqwest::blocking::multipart::Part {
     type Error = BoxErr;
 
     fn try_from(file: File) -> Result<Self, Self::Error> {
         let mut part = match file.data {
+            #[cfg(not(target_family = "wasm"))]
             FileData::Path(path) => {
                 let file = std::fs::File::open(path.as_path())?;
                 let file_size = file.metadata()?.len();
@@ -168,6 +150,7 @@ impl TryFrom<File> for reqwest::blocking::multipart::Part {
 impl File {
     pub(crate) async fn into_reqwest_part(self) -> Result<reqwest::multipart::Part, BoxErr> {
         let mut part = match self.data {
+            #[cfg(not(target_family = "wasm"))]
             FileData::Path(path) => reqwest::multipart::Part::file(path).await?,
             FileData::Bytes(data) => reqwest::multipart::Part::bytes(data),
             FileData::Async(body) => reqwest::multipart::Part::stream(body),

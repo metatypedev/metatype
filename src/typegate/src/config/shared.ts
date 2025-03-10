@@ -15,7 +15,6 @@ export const MAIN_DEFAULT_LEVEL = "INFO" satisfies LevelName;
 export const ADDRESSED_DEFAULT_LEVEL = "ERROR" satisfies LevelName;
 
 export const envSharedWithWorkers = [
-  "TEST_OVERRIDE_GQL_ORIGIN",
   ...Object.keys(sharedConfigSchema.shape).map((k) => k.toUpperCase()),
 ];
 

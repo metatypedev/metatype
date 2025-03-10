@@ -4,8 +4,8 @@
 mod node_metas;
 
 mod selections;
-mod types;
-mod utils;
+pub mod types;
+pub mod utils;
 
 use core::fmt::Write;
 
@@ -115,9 +115,23 @@ fn render_client_py(_config: &ClienPyGenConfig, tg: &Typegraph) -> anyhow::Resul
     )?;
     writeln!(&mut client_py)?;
 
-    render_static(&mut client_py)?;
+    render_client(&mut client_py, tg, GenClientPyOpts { hostcall: false })?;
 
-    let dest: &mut GenDestBuf = &mut client_py;
+    writeln!(&mut client_py)?;
+    Ok(client_py.buf)
+}
+
+pub struct GenClientPyOpts {
+    pub hostcall: bool,
+}
+
+pub fn render_client(
+    dest: &mut GenDestBuf,
+    tg: &Typegraph,
+    opts: GenClientPyOpts,
+) -> anyhow::Result<NameMemo> {
+    render_static(dest, opts.hostcall)?;
+
     let manifest = get_manifest(tg)?;
 
     let name_mapper = NameMapper {
@@ -215,14 +229,17 @@ class QueryGraph(QueryGraphBase):
         )?;
     }
 
-    writeln!(&mut client_py)?;
-    Ok(client_py.buf)
+    Ok(Rc::into_inner(data_types).unwrap())
 }
 
 /// Render the common sections like the transports
-fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
+fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
     let client_py = include_str!("static/client.py");
-    writeln!(dest, "{}", client_py)?;
+    crate::utils::processed_write(
+        dest,
+        client_py,
+        &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
+    )?;
     Ok(())
 }
 
@@ -233,8 +250,11 @@ fn render_data_types(
     manifest: &RenderManifest,
     name_mapper: Rc<NameMapper>,
 ) -> anyhow::Result<NameMemo> {
-    let mut renderer =
-        TypeRenderer::new(name_mapper.nodes.clone(), Rc::new(types::PyTypeRenderer {}));
+    let mut renderer = TypeRenderer::new(
+        name_mapper.nodes.clone(),
+        Rc::new(types::PyTypeRenderer {}),
+        [],
+    );
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;
     }
@@ -258,6 +278,7 @@ fn render_selection_types(
         Rc::new(selections::PyNodeSelectionsRenderer {
             arg_ty_names: arg_types_memo,
         }),
+        [],
     );
     for &id in &manifest.selections {
         _ = renderer.render(id)?;
@@ -282,6 +303,7 @@ fn render_node_metas(
             named_types: named_types.clone(),
             input_files: manifest.input_files.clone(),
         }),
+        [],
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;

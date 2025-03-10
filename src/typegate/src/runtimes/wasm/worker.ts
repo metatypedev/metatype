@@ -8,6 +8,7 @@ import { WasmMessage } from "./types.ts";
 const witWireInstances = new Map<string, WitWireHandle>();
 
 async function hostcall(opName: string, json: string) {
+  // FIXME: won't this loose further calls to CALL if we're waiting on a hostcall?
   const prevHandler = self.onmessage;
 
   const response = await new Promise<{ result: any }>((resolve, reject) => {
