@@ -51,7 +51,6 @@ impl TypeNode for Arc<UnionType> {
 
 pub(crate) fn convert_union(
     parent: WeakType,
-    type_idx: u32,
     key: TypeKey,
     rpath: RelativePath,
     base: &tg_schema::TypeNodeBase,
@@ -60,7 +59,7 @@ pub(crate) fn convert_union(
 ) -> Box<dyn TypeConversionResult> {
     let ty = Type::Union(
         UnionType {
-            base: Conversion::base(key, parent, type_idx, base),
+            base: Conversion::base(key, parent, base),
             variants: Default::default(),
             either,
         }

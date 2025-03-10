@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::map::{TypeGenMap, TypeSpec};
+use super::manifest::{ManifestPage, TypeRenderer};
 use super::utils::*;
 use crate::interlude::*;
 use crate::shared::types::*;
+use heck::ToPascalCase as _;
 use std::collections::HashMap;
 use std::fmt::Write;
 use typegraph::conv::TypeKey;
@@ -501,13 +502,13 @@ enum Alias {
 }
 
 #[derive(Debug)]
-struct DeriveSpec {
+struct Derive {
     debug: bool,
     serde: bool,
 }
 
 #[derive(Debug)]
-pub enum RustTypeSpec {
+pub enum RustType {
     Alias {
         alias: Alias,
         /// inlined if name is none
@@ -515,12 +516,13 @@ pub enum RustTypeSpec {
     },
     Struct {
         name: String,
-        derive: DeriveSpec,
+        derive: Derive,
         properties: Vec<StructProp>,
+        partial: bool,
     },
     Enum {
         name: String,
-        derive: DeriveSpec,
+        derive: Derive,
         variants: Vec<(String, TypeKey)>,
     },
 }
@@ -530,10 +532,17 @@ struct StructProp {
     name: String,
     rename: Option<String>,
     ty: TypeKey,
+    optional: bool,
 }
 
-impl TypeSpec for RustTypeSpec {
-    fn render_definition(&self, out: &mut impl Write, map: &TypeGenMap<Self>) -> std::fmt::Result {
+impl TypeRenderer for RustType {
+    fn render(
+        &self,
+        out: &mut impl Write,
+        page: &ManifestPage<Self>,
+        memo: &impl NameMemo, // memo is not used ;-p
+    ) -> std::fmt::Result {
+        eprintln!("RustType::render: {:?}", self);
         match self {
             Self::Alias {
                 alias,
@@ -549,7 +558,7 @@ impl TypeSpec for RustTypeSpec {
                             item,
                             boxed,
                         } => {
-                            let inner_name = map.get_name(item.clone()).unwrap();
+                            let inner_name = page.get_ref(item, memo).unwrap();
                             let inner_name = if *boxed {
                                 format!("Box<{}>", inner_name)
                             } else {
@@ -571,19 +580,39 @@ impl TypeSpec for RustTypeSpec {
                 name,
                 derive,
                 properties,
+                partial,
             } => {
-                RustTypeSpec::render_derive(out, derive)?;
+                eprintln!("    >> derive");
+                RustType::render_derive(out, derive)?;
+                eprintln!("    >> struct");
+                let name = if *partial {
+                    format!("{}Partial", name)
+                } else {
+                    name.clone()
+                };
                 writeln!(out, "pub struct {} {{", name)?;
+                eprintln!("    >> props");
                 for prop in properties.iter() {
+                    eprintln!("      >> prop: {:?}", prop);
                     if let Some(rename) = &prop.rename {
                         writeln!(out, r#"    #[serde(rename = "{}")]"#, rename)?;
                     }
+                    eprintln!("      >> get ty_ref");
+                    let ty_ref = page.get_ref(&prop.ty, memo).unwrap();
+                    let ty_ref = if *partial && !prop.optional {
+                        format!("Option<{}>", ty_ref)
+                    } else {
+                        ty_ref
+                    };
+                    eprintln!("      >> ty_ref={}", ty_ref);
+
                     writeln!(
                         out,
                         "    pub {}: {},",
                         prop.name,
-                        map.get_name(prop.ty.clone()).unwrap()
+                        page.get_ref(&prop.ty, memo).unwrap()
                     )?;
+                    eprintln!("        >> pub {}: {}", prop.name, ty_ref);
                 }
                 writeln!(out, "}}")
             }
@@ -593,7 +622,7 @@ impl TypeSpec for RustTypeSpec {
                 derive,
                 variants,
             } => {
-                RustTypeSpec::render_derive(out, &derive)?;
+                RustType::render_derive(out, &derive)?;
                 writeln!(out, "#[serde(untagged)]")?;
                 writeln!(out, "pub enum {} {{", name)?;
                 for (var_name, ty) in variants.iter() {
@@ -601,7 +630,7 @@ impl TypeSpec for RustTypeSpec {
                         out,
                         "    {}({}),",
                         var_name,
-                        map.get_name(ty.clone()).unwrap()
+                        page.get_ref(&ty, memo).unwrap()
                     )?;
                 }
                 writeln!(out, "}}")
@@ -609,8 +638,13 @@ impl TypeSpec for RustTypeSpec {
         }
     }
 
-    fn rendered_name(&self, map: &TypeGenMap<Self>) -> String {
-        match self {
+    fn get_reference_expr(
+        &self,
+        page: &ManifestPage<Self>,
+        memo: &impl NameMemo,
+    ) -> Option<String> {
+        eprintln!("RustType::get_reference_expr: {:?}", self);
+        Some(match self {
             Self::Alias { name, alias } => {
                 if let Some(name) = name {
                     name.clone()
@@ -619,26 +653,33 @@ impl TypeSpec for RustTypeSpec {
                     match alias {
                         Alias::BuiltIn(name) => name.to_string(),
                         Alias::Container { name, item, boxed } => {
-                            self.container_def(name, item.clone(), *boxed, map)
+                            self.container_def(name, item, *boxed, page, memo)
                         }
                     }
                 }
             }
-            Self::Struct { name, .. } => name.clone(),
+            Self::Struct { name, partial, .. } => {
+                if *partial {
+                    format!("{}Partial", name)
+                } else {
+                    name.clone()
+                }
+            }
             Self::Enum { name, .. } => name.clone(),
-        }
+        })
     }
 }
 
-impl RustTypeSpec {
+impl RustType {
     fn container_def(
         &self,
         name: &str,
-        item: TypeKey,
+        item: &TypeKey,
         boxed: bool,
-        map: &TypeGenMap<Self>,
+        page: &ManifestPage<Self>,
+        memo: &impl NameMemo,
     ) -> String {
-        let inner_name = map.get_name(item).unwrap();
+        let inner_name = page.get_ref(item, memo).unwrap();
         let inner_name = if boxed {
             format!("Box<{}>", inner_name)
         } else {
@@ -647,7 +688,7 @@ impl RustTypeSpec {
         format!("{}<{}>", name, inner_name)
     }
 
-    fn render_derive(out: &mut impl Write, spec: &DeriveSpec) -> std::fmt::Result {
+    fn render_derive(out: &mut impl Write, spec: &Derive) -> std::fmt::Result {
         let mut derive_args = vec![];
         if spec.debug {
             derive_args.extend_from_slice(&["Debug"]);
@@ -667,8 +708,8 @@ impl RustTypeSpec {
         Ok(())
     }
 
-    fn builtin(target: &'static str, name: Option<String>) -> RustTypeSpec {
-        RustTypeSpec::Alias {
+    fn builtin(target: &'static str, name: Option<String>) -> RustType {
+        RustType::Alias {
             alias: Alias::BuiltIn(target),
             name,
         }
@@ -679,8 +720,8 @@ impl RustTypeSpec {
         item: TypeKey,
         boxed: bool,
         name: Option<String>,
-    ) -> RustTypeSpec {
-        RustTypeSpec::Alias {
+    ) -> RustType {
+        RustType::Alias {
             alias: Alias::Container {
                 name: container_name,
                 item,
@@ -691,7 +732,7 @@ impl RustTypeSpec {
     }
 }
 
-fn get_typespec(ty: &Type) -> RustTypeSpec {
+fn get_typespec(ty: &Type, partial: bool) -> RustType {
     // debug_assert!(!map.contains_key(&ty.key()));
 
     eprintln!("{:?} body_required={}", ty.key(), type_body_required(ty));
@@ -699,9 +740,9 @@ fn get_typespec(ty: &Type) -> RustTypeSpec {
     if type_body_required(ty) {
         let name = Some(normalize_type_title(&ty.name()));
         match ty {
-            Type::Boolean(_) => RustTypeSpec::builtin("bool", name),
-            Type::Integer(_) => RustTypeSpec::builtin("i64", name),
-            Type::Float(_) => RustTypeSpec::builtin("f64", name),
+            Type::Boolean(_) => RustType::builtin("bool", name),
+            Type::Integer(_) => RustType::builtin("i64", name),
+            Type::Float(_) => RustType::builtin("f64", name),
             Type::String(ty) => {
                 if let (Some(format), true) = (ty.format_only(), ty.title().starts_with("string_"))
                 {
@@ -709,23 +750,23 @@ fn get_typespec(ty: &Type) -> RustTypeSpec {
                         "string_{format}_{}",
                         ty.idx()
                     )));
-                    RustTypeSpec::builtin("String", name)
+                    RustType::builtin("String", name)
                 } else {
-                    RustTypeSpec::builtin("String", name)
+                    RustType::builtin("String", name)
                 }
             }
-            Type::File(_) => RustTypeSpec::builtin("super::FileId", name),
+            Type::File(_) => RustType::builtin("super::FileId", name),
             Type::Optional(ty) => {
                 if ty.default_value.is_none() && ty.title().starts_with("optional_") {
                     // no alias -- inline
-                    RustTypeSpec::container(
+                    RustType::container(
                         "Option",
                         ty.item().key().clone(),
                         ty.item().is_composite(), // TODO is_cyclic
                         None,
                     )
                 } else {
-                    RustTypeSpec::container(
+                    RustType::container(
                         "Option",
                         ty.item().key().clone(),
                         ty.item().is_composite(), // TODO is_cyclic
@@ -744,7 +785,7 @@ fn get_typespec(ty: &Type) -> RustTypeSpec {
                     } else {
                         "Vec"
                     };
-                    RustTypeSpec::container(
+                    RustType::container(
                         container_name,
                         ty.item().unwrap().key().clone(),
                         ty.item().unwrap().is_composite(), // TODO is_cyclic
@@ -756,7 +797,7 @@ fn get_typespec(ty: &Type) -> RustTypeSpec {
                     } else {
                         "Vec"
                     };
-                    RustTypeSpec::container(
+                    RustType::container(
                         container_name,
                         ty.item().unwrap().key().clone(),
                         ty.item().unwrap().is_composite(), // TODO is_cyclic
@@ -780,16 +821,18 @@ fn get_typespec(ty: &Type) -> RustTypeSpec {
                             name,
                             rename,
                             ty: prop.type_.key().clone(),
+                            optional: matches!(&prop.type_, Type::Optional(_)),
                         }
                     })
                     .collect();
-                RustTypeSpec::Struct {
+                RustType::Struct {
                     name: normalize_type_title(&ty.name()),
-                    derive: DeriveSpec {
+                    derive: Derive {
                         debug: true,
                         serde: true,
                     },
                     properties: props,
+                    partial,
                 }
             }
 
@@ -799,9 +842,9 @@ fn get_typespec(ty: &Type) -> RustTypeSpec {
                     .iter()
                     .map(|variant| (variant.name().to_pascal_case(), variant.key().clone()))
                     .collect();
-                RustTypeSpec::Enum {
+                RustType::Enum {
                     name: normalize_type_title(&ty.name()),
-                    derive: DeriveSpec {
+                    derive: Derive {
                         debug: true,
                         serde: true,
                     },
@@ -812,7 +855,7 @@ fn get_typespec(ty: &Type) -> RustTypeSpec {
             _ => unreachable!(),
         }
     } else {
-        RustTypeSpec::builtin(
+        RustType::builtin(
             match ty {
                 Type::Boolean(_) => "bool",
                 Type::Integer(_) => "i64",
@@ -826,25 +869,35 @@ fn get_typespec(ty: &Type) -> RustTypeSpec {
     }
 }
 
-pub fn generate_typegen_map(tg: &Typegraph) -> TypeGenMap<RustTypeSpec> {
-    let mut map = HashMap::new();
+pub fn manifest_page(tg: &Typegraph, partial_out_types: bool) -> ManifestPage<RustType> {
+    let mut map = IndexMap::new();
 
     for (key, ty) in tg.input_types.iter() {
-        let typespec = get_typespec(ty);
+        let typespec = get_typespec(ty, false);
         match map.insert(key.clone(), typespec) {
             None => {}
             Some(_) => panic!("duplicate type key: {:?}", key),
         }
     }
 
+    // TEMP
+    {
+        let output_types = tg.output_types.keys().cloned().collect::<Vec<_>>();
+        eprintln!("output_types: {:?}", output_types);
+    }
+
     for (key, ty) in tg.output_types.iter() {
-        let typespec = get_typespec(ty);
+        let typespec = get_typespec(ty, partial_out_types);
         // match map.insert(key.clone(), typespec) {
         //     None => {}
         //     Some(_) => panic!("duplicate type key: {:?}", key),
         // }
+        eprintln!("> adding output type: {:?}; spec={:?}", ty.key(), typespec);
         map.insert(key.clone(), typespec);
     }
 
-    TypeGenMap::new(map)
+    let res: ManifestPage<RustType> = map.into();
+    res.cache_references(&EmptyNameMemo);
+
+    res
 }

@@ -6,7 +6,7 @@
 
 pub mod client;
 pub mod files;
-pub mod map;
+pub mod manifest;
 pub mod types;
 
 use std::collections::HashSet;
@@ -54,18 +54,16 @@ pub fn filter_stubbed_funcs(
     Ok(stubbed_funcs)
 }
 
-pub fn get_gql_type(ty: &Type, optional: bool) -> String {
+pub fn get_gql_type(ty: &Type, as_id: bool, optional: bool) -> String {
     let name = match ty {
-        Type::Optional(ty) => return get_gql_type(ty.item(), true),
-        Type::List(ty) => format!("[{}]", get_gql_type(ty.item().unwrap(), true)),
+        Type::Optional(ty) => return get_gql_type(ty.item(), false, true),
+        Type::List(ty) => format!("[{}]", get_gql_type(ty.item().unwrap(), false, true)),
         Type::String(_ty) => {
-            // TODO
-            // if base.as_id {
-            //     "ID".into()
-            // } else {
-            //     "String".into()
-            // }
-            "String".into()
+            if as_id {
+                "ID".into()
+            } else {
+                "String".into()
+            }
         }
         Type::Boolean(_) => "Boolean".into(),
         Type::Float(_) => "Float".into(),

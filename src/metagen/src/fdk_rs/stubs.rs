@@ -1,11 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use map::TypeGenMap;
 use typegraph::FunctionType;
 use typegraph::TypeNodeExt as _;
+use types::NameMemo;
 
-use super::types::RustTypeSpec;
 use super::utils::normalize_type_title;
 use crate::interlude::*;
 use crate::shared::*;
@@ -17,7 +16,7 @@ pub struct GenStubOptions {}
 pub fn gen_stub(
     fun: &Arc<FunctionType>,
     mod_stub_traits: &mut GenDestBuf,
-    type_names: &TypeGenMap<RustTypeSpec>,
+    name_memo: &impl NameMemo,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<String> {
     // let inp_ty = type_names
@@ -28,8 +27,8 @@ pub fn gen_stub(
     //     .context("output type for function not found")?;
     // let inp_ty = normalize_type_title(&fun.input().name());
     // let out_ty = normalize_type_title(&fun.output().name());
-    let inp_ty = type_names.get_name(fun.input().key()).unwrap();
-    let out_ty = type_names.get_name(fun.output().key()).unwrap();
+    let inp_ty = name_memo.get(fun.input().key()).unwrap_or("()");
+    let out_ty = name_memo.get(fun.output().key()).unwrap();
     let title = &fun.name();
     let trait_name: String = normalize_type_title(title);
     // FIXME: use hash or other stable id

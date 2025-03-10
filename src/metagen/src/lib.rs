@@ -35,7 +35,7 @@ mod fdk_rs;
 mod fdk_ts;
 
 // mod client_py;
-// mod client_rs;
+mod client_rs;
 // mod client_ts;
 
 #[cfg(test)]
@@ -196,16 +196,16 @@ impl GeneratorRunner {
                 //         },
                 //     },
                 // ),
-                // (
-                //     "client_rs".to_string(),
-                //     GeneratorRunner {
-                //         op: |workspace_path: &Path, val| {
-                //             let config = client_rs::ClienRsGenConfig::from_json(val, workspace_path)?;
-                //             let generator = client_rs::Generator::new(config)?;
-                //             Ok(Box::new(generator))
-                //         },
-                //     },
-                // ),
+                (
+                    "client_rs".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = client_rs::ClienRsGenConfig::from_json(val, workspace_path)?;
+                            let generator = client_rs::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
             ]);
         }
 

@@ -50,16 +50,14 @@ impl TypeNode for Arc<ListType> {
 
 pub(crate) fn convert_list(
     parent: WeakType,
-    type_idx: u32,
     key: TypeKey,
     rpath: RelativePath,
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::ListTypeData,
 ) -> Box<dyn TypeConversionResult> {
-    eprintln!("convert_list: #{key:?}");
     let ty = Type::List(
         ListType {
-            base: Conversion::base(key, parent, type_idx, base),
+            base: Conversion::base(key, parent, base),
             item: Default::default(),
             min_items: data.min_items,
             max_items: data.max_items,

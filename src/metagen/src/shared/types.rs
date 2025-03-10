@@ -86,8 +86,6 @@ pub trait RenderType {
     }
 }
 
-pub type NameMemo = std::collections::BTreeMap<TypeKey, Arc<str>>;
-
 /// type_key, old_str, (final_ty_name) -> new_str
 type ReplacementRecords = Vec<(TypeKey, Arc<str>, Box<dyn Fn(&str) -> String>)>;
 
@@ -98,6 +96,22 @@ pub struct TypeRenderer {
     // name_memo: IndexMap<TypeKey, RenderedName>,
     render_type: Arc<dyn RenderType>,
     replacement_records: ReplacementRecords,
+}
+
+pub fn is_composite(typ: &Type) -> bool {
+    match typ {
+        Type::Function { .. } => panic!("function type isn't composite or scalar"),
+        // Type::Any { .. } => panic!("Any tye isn't composite or scalar"),
+        Type::Boolean { .. }
+        | Type::Float { .. }
+        | Type::Integer { .. }
+        | Type::String { .. }
+        | Type::File { .. } => false,
+        Type::Object { .. } => true,
+        Type::Optional(ty) => is_composite(ty.item()),
+        Type::List(ty) => is_composite(ty.item().unwrap()),
+        Type::Union(ty) => ty.variants().iter().any(|variant| is_composite(variant)),
+    }
 }
 
 impl TypeRenderer {
@@ -112,25 +126,6 @@ impl TypeRenderer {
             replacement_records: Default::default(),
         }
     }
-    pub fn is_composite(typ: &Type) -> bool {
-        match typ {
-            Type::Function { .. } => panic!("function type isn't composite or scalar"),
-            // Type::Any { .. } => panic!("Any tye isn't composite or scalar"),
-            Type::Boolean { .. }
-            | Type::Float { .. }
-            | Type::Integer { .. }
-            | Type::String { .. }
-            | Type::File { .. } => false,
-            Type::Object { .. } => true,
-            Type::Optional(ty) => Self::is_composite(ty.item()),
-            Type::List(ty) => Self::is_composite(ty.item().unwrap()),
-            Type::Union(ty) => ty
-                .variants()
-                .iter()
-                .any(|variant| Self::is_composite(variant)),
-        }
-    }
-
     // pub fn placeholder_string(
     //     &mut self,
     //     target_name: Arc<str>,
@@ -258,5 +253,16 @@ pub fn type_body_required(ty: &Type) -> bool {
         Type::String(ty) if ty.is_plain() && ty.base.title.starts_with("string_") => false,
         Type::File(ty) if ty.is_plain() && ty.base.title.starts_with("file_") => false,
         _ => true,
+    }
+}
+
+pub trait NameMemo {
+    fn get(&self, key: TypeKey) -> Option<&str>;
+}
+
+pub struct EmptyNameMemo;
+impl NameMemo for EmptyNameMemo {
+    fn get(&self, _key: TypeKey) -> Option<&str> {
+        None
     }
 }

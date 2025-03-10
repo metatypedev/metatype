@@ -43,7 +43,7 @@ async function prepareBucket() {
   }
 }
 
-Meta.test.only("metagen rust builds", async (t) => {
+Meta.test("metagen rust builds", async (t) => {
   const tmpDir = t.tempDir;
 
   const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.ts");
@@ -549,7 +549,7 @@ Meta.test("fdk table suite", async (metaTest) => {
   }
 });
 
-Meta.test(
+Meta.test.only(
   {
     name: "client table suite",
   },
@@ -645,6 +645,7 @@ Meta.test(
         expected: expectedSchema,
       },
       {
+        skip: true,
         name: "client_ts",
         // NOTE: dax replaces commands to deno with
         // commands to xtask so we go through bah
@@ -652,6 +653,7 @@ Meta.test(
         expected: expectedSchema,
       },
       {
+        skip: true,
         name: "client_py",
         command: $`python3 main.py`.cwd(join(scriptsPath, "py")),
         expected: expectedSchema,

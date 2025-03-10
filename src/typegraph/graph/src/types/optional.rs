@@ -42,7 +42,6 @@ impl TypeNode for Arc<OptionalType> {
 
 pub(crate) fn convert_optional(
     parent: WeakType,
-    type_idx: u32,
     key: TypeKey,
     rpath: RelativePath,
     base: &tg_schema::TypeNodeBase,
@@ -50,7 +49,7 @@ pub(crate) fn convert_optional(
 ) -> Box<dyn TypeConversionResult> {
     let ty = Type::Optional(
         OptionalType {
-            base: Conversion::base(key, parent, type_idx, base),
+            base: Conversion::base(key, parent, base),
             item: Default::default(),
             default_value: data.default_value.clone(),
         }

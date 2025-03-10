@@ -6,7 +6,6 @@ use indexmap::IndexMap;
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
 use crate::conv::interlude::*;
 use crate::interlude::*;
-use crate::TypeNodeExt as _;
 use crate::{policies::PolicyRef, Arc, Lazy};
 use std::collections::HashMap;
 
@@ -17,6 +16,7 @@ pub struct ObjectProperty {
     pub injection: Option<()>, // TODO
     pub outjection: Option<()>,
     pub required: bool,
+    pub as_id: bool,
 }
 
 #[derive(Debug)]
@@ -73,16 +73,14 @@ impl TypeNode for Arc<ObjectType> {
 
 pub(crate) fn convert_object(
     parent: WeakType,
-    type_idx: u32,
     key: TypeKey,
     rpath: RelativePath,
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::ObjectTypeData,
 ) -> Box<dyn TypeConversionResult> {
-    // eprintln!("convert object #{type_idx}: start");
     let ty = Type::Object(
         ObjectType {
-            base: Conversion::base(key, parent, type_idx, base),
+            base: Conversion::base(key, parent, base),
             properties: Default::default(),
         }
         .into(),
@@ -92,6 +90,7 @@ pub(crate) fn convert_object(
         ty,
         properties: data.properties.clone(),
         required: data.required.clone(),
+        id: data.id.clone(),
         rpath,
     })
 }
@@ -100,6 +99,7 @@ pub struct ObjectTypeConversionResult {
     ty: Type,
     properties: IndexMap<String, u32>, // TODO reference
     required: Vec<String>,
+    id: Vec<String>,
     rpath: RelativePath,
 }
 
@@ -124,6 +124,7 @@ impl TypeConversionResult for ObjectTypeConversionResult {
                 self.rpath.push(PathSegment::ObjectProp(name.clone())),
             );
             let required = self.required.iter().any(|r| r == name.as_ref());
+            let as_id = self.id.iter().any(|r| r == name.as_ref());
             properties.insert(
                 name,
                 ObjectProperty {
@@ -132,6 +133,7 @@ impl TypeConversionResult for ObjectTypeConversionResult {
                     injection: None,              // TODO
                     outjection: None,             // TODO
                     required,
+                    as_id,
                 },
             );
             results.push(res);

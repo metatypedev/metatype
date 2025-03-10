@@ -26,6 +26,15 @@ impl FunctionType {
     pub fn input(&self) -> &Arc<ObjectType> {
         self.input.get().expect("uninitialized")
     }
+    // TODO this should be the default
+    pub fn non_empty_input(&self) -> Option<&Arc<ObjectType>> {
+        let input = self.input();
+        if input.properties().is_empty() {
+            None
+        } else {
+            Some(input)
+        }
+    }
 
     pub fn output(&self) -> &Type {
         self.output.get().expect("uninitialized")
@@ -77,15 +86,14 @@ impl TypeNode for Arc<FunctionType> {
 
 pub(crate) fn convert_function(
     parent: WeakType,
-    type_idx: u32,
+    key: TypeKey,
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::FunctionTypeData,
     materializer: Arc<MaterializerNode>,
 ) -> Box<dyn TypeConversionResult> {
-    eprintln!("convert function #{type_idx}: start");
     let ty = Type::Function(
         FunctionType {
-            base: Conversion::base(TypeKey(type_idx, 0), parent, type_idx, base),
+            base: Conversion::base(key, parent, base),
             input: Default::default(),
             output: Default::default(),
             parameter_transform: data.parameter_transform.clone(),

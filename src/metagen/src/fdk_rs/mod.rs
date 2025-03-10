@@ -18,10 +18,11 @@ use crate::interlude::*;
 use crate::shared::*;
 use crate::utils::*;
 use crate::*;
+use shared::types::EmptyNameMemo;
 use std::borrow::Cow;
 use std::fmt::Write;
 use typegraph::TypeNodeExt as _;
-use types::generate_typegen_map;
+use types::manifest_page;
 
 pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.rs", include_str!("static/fdk.rs"))];
 
@@ -187,10 +188,11 @@ impl FdkRustTemplate {
         writeln!(&mut mod_rs.buf, "use types::*;")?;
         writeln!(&mut mod_rs.buf, "pub mod types {{")?;
 
-        let map = {
-            let map = generate_typegen_map(&tg);
+        let name_memo = {
+            let manif = manifest_page(&tg, false);
+            eprintln!("RENDERING ALL");
             let mut buffer = String::new();
-            map.render_all_types(&mut buffer)?;
+            manif.render_all(&mut buffer, &EmptyNameMemo)?;
 
             let types_rs = buffer;
             for line in types_rs.lines() {
@@ -201,7 +203,7 @@ impl FdkRustTemplate {
                 }
             }
 
-            map
+            manif.take_refs()
         };
 
         writeln!(&mut mod_rs.buf, "}}")?;
@@ -221,7 +223,7 @@ impl FdkRustTemplate {
             })?;
             let mut op_to_mat_map = BTreeMap::new();
             for fun in &stubbed_funs {
-                let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &map, &gen_stub_opts)?;
+                let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &name_memo, &gen_stub_opts)?;
                 if let Some(Some(op_name)) =
                     fun.materializer.data.get("op_name").map(|val| val.as_str())
                 {

@@ -3,10 +3,7 @@
 
 use std::collections::HashMap;
 
-use crate::{
-    conv::{MapEntry, TypeKey},
-    Arc, FunctionType, ObjectType, Type, TypeNode as _,
-};
+use crate::{conv::MapValueItem, Arc, FunctionType, ObjectType, Type, TypeNode as _};
 
 #[derive(Default)]
 pub struct NameRegistry {
@@ -24,14 +21,14 @@ impl NameRegistry {
 }
 
 pub trait NamingEngine {
-    fn name_value_types(&mut self, range: Vec<(TypeKey, &MapEntry)>);
+    fn name_value_types(&mut self, types: &[MapValueItem]);
     fn name_function(&mut self, function: &Arc<FunctionType>);
     fn name_ns_object(&mut self, ns_object: &Arc<ObjectType>);
     fn registry(&mut self) -> &mut NameRegistry;
 }
 
 mod default {
-    use crate::{conv::TypeKey, TypeNodeExt as _, Wrap as _};
+    use crate::{TypeNodeExt as _, Wrap as _};
 
     use super::*;
 
@@ -41,18 +38,20 @@ mod default {
     }
 
     impl NamingEngine for DefaultNamingEngine {
-        fn name_value_types(&mut self, range: Vec<(TypeKey, &MapEntry)>) {
+        fn name_value_types(&mut self, range: &[MapValueItem]) {
             match range.len() {
-                0 => {}
+                0 => {
+                    unreachable!("No registered type");
+                }
                 1 => {
-                    let (_, e) = range.into_iter().next().unwrap();
+                    let first = range.iter().next().unwrap();
                     self.registry()
-                        .register(e.node.base().title.clone(), e.node.clone());
+                        .register(first.ty.title().to_owned(), first.ty.clone());
                 }
                 _ => {
-                    for (key, e) in range {
+                    for (idx, item) in range.iter().enumerate() {
                         self.registry()
-                            .register(format!("{}_{}", e.node.title(), key.1), e.node.clone());
+                            .register(format!("{}_{}", item.ty.title(), idx), item.ty.clone());
                     }
                 }
             }

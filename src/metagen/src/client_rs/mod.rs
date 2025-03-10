@@ -5,10 +5,18 @@ mod node_metas;
 mod selections;
 
 use core::fmt::Write;
+use std::collections::HashMap;
 
+use fdk_rs::types::manifest_page;
+use fdk_rs::types::RustType;
 use shared::get_gql_type;
+use shared::manifest::ManifestPage;
+use shared::types::is_composite;
+use shared::types::EmptyNameMemo;
 use tg_schema::EffectType;
+use typegraph::conv::TypeKey;
 use typegraph::TypeNode as _;
+use typegraph::TypeNodeExt as _;
 
 use crate::interlude::*;
 use crate::*;
@@ -96,13 +104,13 @@ impl crate::Plugin for Generator {
         out.insert(
             self.config.base.path.join("client.rs"),
             GeneratedFile {
-                contents: render_client_rs(&self.config, tg)?,
+                contents: render_client_rs(&self.config, tg.clone())?,
                 overwrite: true,
             },
         );
         let crate_name = self.config.crate_name.clone().unwrap_or_else(|| {
             use heck::ToSnekCase;
-            let tg_name = tg.name().unwrap_or_else(|_| "generated".to_string());
+            let tg_name = tg.name();
             format!("{}_fdk", tg_name.to_snek_case())
         });
         if !matches!(self.config.skip_cargo_toml, Some(true)) {
@@ -128,7 +136,7 @@ impl crate::Plugin for Generator {
     }
 }
 
-fn render_client_rs(_config: &ClienRsGenConfig, tg: &Typegraph) -> anyhow::Result<String> {
+fn render_client_rs(_config: &ClienRsGenConfig, tg: Arc<Typegraph>) -> anyhow::Result<String> {
     let mut client_rs = GenDestBuf {
         buf: Default::default(),
     };
@@ -146,19 +154,52 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: &Typegraph) -> anyhow::Resul
     render_static(&mut client_rs)?;
 
     let dest: &mut GenDestBuf = &mut client_rs;
-    let manifest = get_manifest(tg)?;
+    let manifest = get_manifest(tg.clone())?;
 
-    let name_mapper = NameMapper {
-        nodes: tg.types.iter().cloned().map(Arc::new).collect(),
-        memo: Default::default(),
-    };
-    let name_mapper = Arc::new(name_mapper);
+    let name_memo = render_data_types(dest, &manifest)?.take_refs();
 
-    let (node_metas, named_types) = render_node_metas(dest, &manifest, name_mapper.clone())?;
-    let data_types = render_data_types(dest, &manifest, name_mapper.clone())?;
-    let data_types = Arc::new(data_types);
-    let selection_names =
-        render_selection_types(dest, &manifest, data_types.clone(), name_mapper.clone())?;
+    // let name_mapper = NameMapper {
+    //     nodes: tg.types.iter().cloned().map(Arc::new).collect(),
+    //     memo: Default::default(),
+    // };
+    // let name_mapper = Arc::new(name_mapper);
+
+    let node_metas = render_node_metas(dest, &manifest, &name_memo)?;
+    // let data_types = render_data_types(dest, &manifest)?;
+    // let data_types = Arc::new(data_types);
+
+    let selections = render_selection_types(dest, &manifest, &name_memo)?;
+
+    // Top level input types should be mapped to their GraphQL types
+    let mut named_types = tg
+        .functions
+        .values()
+        .map(|func| {
+            let inp_type = func.input();
+            inp_type
+                .properties()
+                .iter()
+                .map(|(ni_, prop)| ((prop.type_.key(), prop.as_id), prop.type_.clone()))
+        })
+        .flatten()
+        .collect::<IndexMap<_, _>>();
+
+    // additional named types: non scalar union variants
+    named_types.extend(
+        tg.output_types
+            .iter()
+            .filter_map(|(key, ty)| match ty {
+                Type::Union(ty) => Some(ty.variants().iter().filter_map(|variant| {
+                    if !is_composite(variant) {
+                        return None;
+                    }
+                    Some(variant.clone())
+                })),
+                _ => None,
+            })
+            .flatten()
+            .map(|ty| ((ty.key(), false), ty.clone())),
+    );
 
     write!(
         dest,
@@ -168,30 +209,23 @@ impl QueryGraph {{
     pub fn new(addr: Url) -> Self {{
         Self {{
             addr,
-            ty_to_gql_ty_map: std::sync::Arc::new([
-            "#
+            ty_to_gql_ty_map: std::sync::Arc::new(["#
     )?;
-    for (&id, ty_name) in name_mapper.memo.borrow().deref() {
-        let gql_ty = get_gql_type(&tg.types, id, false);
+
+    for ((key, as_id), ty) in named_types.into_iter() {
+        let gql_ty = get_gql_type(&ty, as_id, false);
+        let ty_name = name_memo.get(&key).unwrap().as_ref().unwrap();
         write!(
             dest,
             r#"
                 ("{ty_name}".into(), "{gql_ty}".into()),"#
         )?;
     }
-    for id in named_types {
-        let ty_name = &tg.types[id as usize].base().title;
-        let gql_ty = get_gql_type(&tg.types, id, false);
-        write!(
-            dest,
-            r#"
-                ("{ty_name}".into(), "{gql_ty}".into()),"#
-        )?;
-    }
+
     write!(
         dest,
         r#"
-        ].into()),
+            ].into()),
         }}
     }}
     "#
@@ -200,14 +234,27 @@ impl QueryGraph {{
     for fun in manifest.root_fns {
         use heck::ToSnekCase;
 
-        let node_name = fun.name;
+        let node_name = fun.path.join("_");
         let method_name = node_name.to_snek_case();
-        let out_ty_name = data_types.get(&fun.out_id).unwrap();
+        let out_ty_name = name_memo
+            .get(&fun.type_.output().key())
+            .map(|s| s.as_deref())
+            .flatten()
+            .unwrap();
 
-        let arg_ty = fun.in_id.map(|id| data_types.get(&id).unwrap());
-        let select_ty = fun.select_ty.map(|id| selection_names.get(&id).unwrap());
+        let arg_ty = fun
+            .type_
+            .non_empty_input()
+            .map(|ty| name_memo.get(&ty.key()).unwrap().as_deref())
+            .flatten();
 
-        let (marker_ty, node_ty) = match fun.effect {
+        let select_ty = selections
+            .get(&fun.type_.key())
+            .map(|s| s.as_deref())
+            .flatten();
+        // let select_ty = Some(fun.type_.output()).filter(|ty| is_composite(ty));
+
+        let (marker_ty, node_ty) = match fun.type_.effect() {
             EffectType::Read => ("QueryMarker", "QueryNode"),
             EffectType::Update | EffectType::Delete | EffectType::Create => {
                 ("MutationMarker", "MutationNode")
@@ -215,37 +262,44 @@ impl QueryGraph {{
         };
 
         let meta_method = node_metas
-            .get(&fun.id)
-            .map(|str| &str[..])
-            .unwrap_or_else(|| "scalar");
+            .get(&fun.type_.key())
+            .map(|str| str.as_deref())
+            .flatten()
+            .unwrap_or("scalar");
 
         let args_row = match &arg_ty {
             Some(arg_ty) => format!(
                 "
-        args: impl Into<NodeArgs<{arg_ty}>>"
+            args: impl Into<NodeArgs<{arg_ty}>>"
             ),
             None => "".into(),
         };
-        match &select_ty {
+
+        match select_ty {
             Some(select_ty) => {
                 let arg_value = match &arg_ty {
                     Some(_) => "args.into().into()",
                     None => "NodeArgsErased::None",
                 };
+                // let select_ty = name_memo
+                //     .get(select_ty.key())
+                //     .map(|s| s.as_deref())
+                //     .flatten()
+                //     .unwrap();
                 write!(
                     dest,
                     r#"
-    pub fn {method_name}(
-        &self,{args_row}
-    ) -> UnselectedNode<{select_ty}, {select_ty}<HasAlias>, {marker_ty}, {out_ty_name}>
-    {{
-        UnselectedNode {{
-            root_name: "{node_name}".into(),
-            root_meta: node_metas::{meta_method},
-            args: {arg_value},
-            _marker: PhantomData,
-        }}
-    }}"#
+        pub fn {method_name}(
+            &self,{args_row}
+        ) -> UnselectedNode<{select_ty}, {select_ty}<HasAlias>, {marker_ty}, {out_ty_name}>
+        {{
+            UnselectedNode {{
+                root_name: "{node_name}".into(),
+                root_meta: node_metas::{meta_method},
+                args: {arg_value},
+                _marker: PhantomData,
+            }}
+        }}"#
                 )?;
             }
             None => {
@@ -256,26 +310,26 @@ impl QueryGraph {{
                 write!(
                     dest,
                     r#"
-    pub fn {method_name}(
-        &self,{args_row}
-    ) -> {node_ty}<{out_ty_name}>
-    {{
-        let nodes = selection_to_node_set(
-            SelectionErasedMap(
-                [(
-                    "{node_name}".into(),
-                    {arg_value},
-                )]
-                .into(),
-            ),
-            &[
-                ("{node_name}".into(), node_metas::{meta_method} as NodeMetaFn),
-            ].into(),
-            "$q".into(),
-        )
-        .unwrap();
-        {node_ty}(nodes.into_iter().next().unwrap(), PhantomData)
-    }}"#
+        pub fn {method_name}(
+            &self,{args_row}
+        ) -> {node_ty}<{out_ty_name}>
+        {{
+            let nodes = selection_to_node_set(
+                SelectionErasedMap(
+                    [(
+                        "{node_name}".into(),
+                        {arg_value},
+                    )]
+                    .into(),
+                ),
+                &[
+                    ("{node_name}".into(), node_metas::{meta_method} as NodeMetaFn),
+                ].into(),
+                "$q".into(),
+            )
+            .unwrap();
+            {node_ty}(nodes.into_iter().next().unwrap(), PhantomData)
+        }}"#
                 )?;
             }
         };
@@ -302,63 +356,73 @@ fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
 fn render_data_types(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    name_mapper: Arc<NameMapper>,
-) -> anyhow::Result<NameMemo> {
-    let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Arc::new(fdk_rs::types::RustTypeRenderer {
-            derive_debug: true,
-            derive_serde: true,
-            all_fields_optional: true,
-        }),
-    );
-    for &id in &manifest.arg_types {
-        _ = renderer.render(id)?;
-    }
-    /* renderer.replace_renderer(Arc::new(fdk_rs::types::RustTypeRenderer {
-        derive_debug: true,
-        derive_serde: true,
-        all_fields_optional: true,
-    })); */
-    // FIXME: it should be possible to have non
-    // partial arg types but
-    // - rendering the args and return_tys in separately
-    //   results in duplicate common types like for primitives
-    // - switching out the renderer halfway is troublsome as we
-    //   can't afford to have any non-partial return_tys but
-    //   we might get some if the args refer to one of them
-    for &id in &manifest.return_types {
-        _ = renderer.render(id)?;
-    }
-    let (types_rs, name_memo) = renderer.finalize();
+) -> anyhow::Result<ManifestPage<RustType>> {
+    // let mut renderer = TypeRenderer::new(
+    //     name_mapper.nodes.clone(),
+    //     Arc::new(fdk_rs::types::RustTypeRenderer {
+    //         derive_debug: true,
+    //         derive_serde: true,
+    //         all_fields_optional: true,
+    //     }),
+    // );
+    // for &id in &manifest.arg_types {
+    //     _ = renderer.render(id)?;
+    // }
+    // /* renderer.replace_renderer(Arc::new(fdk_rs::types::RustTypeRenderer {
+    //     derive_debug: true,
+    //     derive_serde: true,
+    //     all_fields_optional: true,
+    // })); */
+    // // FIXME: it should be possible to have non
+    // // partial arg types but
+    // // - rendering the args and return_tys in separately
+    // //   results in duplicate common types like for primitives
+    // // - switching out the renderer halfway is troublsome as we
+    // //   can't afford to have any non-partial return_tys but
+    // //   we might get some if the args refer to one of them
+    // for &id in &manifest.return_types {
+    //     _ = renderer.render(id)?;
+    // }
+    // let (types_rs, name_memo) = renderer.finalize();
+
     writeln!(dest.buf, "use types::*;")?;
     writeln!(dest.buf, "pub mod types {{")?;
-    for line in types_rs.lines() {
-        writeln!(dest.buf, "    {line}")?;
-    }
+
+    let map = {
+        let map = manifest_page(&manifest.tg, true);
+        let mut types_rs = String::new();
+        map.render_all(&mut types_rs, &EmptyNameMemo)?;
+        for line in types_rs.lines() {
+            writeln!(dest.buf, "    {line}")?;
+        }
+        map
+    };
+
     writeln!(dest.buf, "}}")?;
-    Ok(name_memo)
+    Ok(map)
 }
 
 /// Render the type used for selecting fields
 fn render_selection_types(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    arg_types_memo: Arc<NameMemo>,
-    name_mapper: Arc<NameMapper>,
-) -> Result<NameMemo> {
-    let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Arc::new(selections::RsNodeSelectionsRenderer {
-            arg_ty_names: arg_types_memo,
-        }),
-    );
-    for &id in &manifest.selections {
-        _ = renderer.render(id)?;
-    }
-    let (buf, memo) = renderer.finalize();
-    write!(dest, "{buf}")?;
-    Ok(memo)
+    name_memo: &impl NameMemo,
+    // arg_types_memo: Arc<NameMemo>,
+) -> Result<HashMap<TypeKey, Option<String>>> {
+    let page = selections::manifest_page(&manifest.tg);
+    page.render_all(dest, name_memo)?;
+    // let mut renderer = TypeRenderer::new(
+    //     name_mapper.nodes.clone(),
+    //     Arc::new(selections::RsNodeSelectionsRenderer {
+    //         arg_ty_names: arg_types_memo,
+    //     }),
+    // );
+    // for &id in &manifest.selections {
+    //     _ = renderer.render(id)?;
+    // }
+    // let (buf, memo) = renderer.finalize();
+    // write!(dest, "{buf}")?;
+    Ok(page.take_refs())
 }
 
 /// Render the `nodeMetas` object used to encode the query
@@ -366,21 +430,13 @@ fn render_selection_types(
 fn render_node_metas(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    name_mapper: Arc<NameMapper>,
-) -> Result<(NameMemo, IndexSet<u32>)> {
-    let named_types = Arc::new(std::sync::Mutex::new(IndexSet::new()));
-    let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Arc::new(node_metas::RsNodeMetasRenderer {
-            name_mapper,
-            named_types: named_types.clone(),
-            input_files: manifest.input_files.clone(),
-        }),
-    );
-    for &id in &manifest.node_metas {
-        _ = renderer.render(id)?;
-    }
-    let (methods, memo) = renderer.finalize();
+    // name_mapper: Arc<NameMapper>,
+    name_memo: &impl NameMemo,
+) -> Result<HashMap<TypeKey, Option<String>>> {
+    let manifest = node_metas::PageBuilder::new(manifest.tg.clone(), &manifest.node_metas).build();
+    let mut methods = String::new();
+    manifest.render_all(&mut methods, name_memo)?;
+
     write!(
         dest,
         r#"
@@ -405,25 +461,26 @@ mod node_metas {{
 }}
 "#
     )?;
-    Ok((
-        memo,
-        Arc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
-    ))
+    Ok(manifest.take_refs())
+    // Ok((
+    //     memo,
+    //     Arc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
+    // ))
 }
 
-struct NameMapper {
-    memo: std::cell::RefCell<NameMemo>,
-}
-
-impl NameMapper {
-    pub fn name_for(&self, ty: &Type) -> Arc<str> {
-        self.memo
-            .borrow_mut()
-            .entry(ty.base().type_idx)
-            .or_insert_with(|| Arc::from(normalize_type_title(&ty.base().title)))
-            .clone()
-    }
-}
+// struct NameMapper {
+//     memo: std::cell::RefCell<NameMemo>,
+// }
+//
+// impl NameMapper {
+//     pub fn name_for(&self, ty: &Type) -> Arc<str> {
+//         self.memo
+//             .borrow_mut()
+//             .entry(ty.base().type_idx)
+//             .or_insert_with(|| Arc::from(normalize_type_title(&ty.base().title)))
+//             .clone()
+//     }
+// }
 
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let crate_name = crate_name.unwrap_or("client_rs_static");

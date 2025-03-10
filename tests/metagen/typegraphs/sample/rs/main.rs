@@ -16,17 +16,17 @@ fn main() -> Result<(), BoxErr> {
         // blocking reqwest uses tokio under the hood
         let gql_sync = api1.graphql_sync();
         let res3 = gql_sync.query((
-            api1.get_user().select_aliased(UserSelections {
+            api1.get_user().select_aliased(User0Selections {
                 posts: alias([
                     (
                         "post1",
-                        select(PostSelections {
+                        select(Post0Selections {
                             id: get(),
                             slug: get(),
                             title: get(),
                         }),
                     ),
-                    ("post2", select(PostSelections { id: get(), ..all() })),
+                    ("post2", select(Post0Selections { id: get(), ..all() })),
                 ]),
                 ..all()
             }),

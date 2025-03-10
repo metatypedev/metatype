@@ -1,41 +1,132 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{Arc, FunctionType, Type, TypeNodeExt as _, Weak, Wrap as _};
-use std::collections::{BTreeMap, HashMap};
+use crate::{Arc, FunctionType, ObjectType, Type, TypeNodeExt as _, Weak, Wrap as _};
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
 pub type Path = Vec<PathSegment>;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TypeKey(pub u32, pub u32); // Type idx and an ordinal number
 
-#[derive(Debug, Clone)]
-pub struct MapEntry {
-    /// paths relative to the nearest ascendant function
-    pub relative_paths: Vec<RelativePath>,
-    pub node: Type,
+impl std::fmt::Debug for TypeKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Ty_{}/{}", self.0, self.1)
+    }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
+pub enum ValueTypeKind {
+    Input,
+    Output,
+}
+
+#[derive(Debug)]
+pub struct MapValueItem {
+    pub kind: ValueTypeKind,
+    pub ty: Type,
+    pub relative_paths: Vec<ValueTypePath>,
+}
+
+#[derive(Debug)]
+pub enum MapItem {
+    Unset,
+    Namespace(Arc<ObjectType>, Vec<Arc<str>>),
+    Function(Arc<FunctionType>),
+    Value(Vec<MapValueItem>),
+}
+
+impl MapItem {
+    pub fn as_value(&self) -> Option<&[MapValueItem]> {
+        match self {
+            Self::Value(v) => Some(v),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct ConversionMap {
-    pub direct: BTreeMap<TypeKey, MapEntry>,
+    pub direct: Vec<MapItem>,
     pub reverse: HashMap<RelativePath, TypeKey>,
+}
+
+impl ConversionMap {
+    pub fn new(type_count: usize) -> Self {
+        let mut direct = Vec::with_capacity(type_count);
+        direct.resize_with(type_count, || MapItem::Unset);
+        Self {
+            direct,
+            reverse: Default::default(),
+        }
+    }
+
+    pub fn get(&self, key: TypeKey) -> Option<Type> {
+        match self.direct.get(key.0 as usize) {
+            Some(MapItem::Unset) => None,
+            Some(MapItem::Namespace(ty, _)) => {
+                assert_eq!(key.1, 0);
+                Some(Type::Object(Arc::clone(ty)))
+            }
+            Some(MapItem::Function(f)) => {
+                assert_eq!(key.1, 0);
+                Some(Type::Function(Arc::clone(f)))
+            }
+            Some(MapItem::Value(value_types)) => {
+                let ordinal = key.1 as usize;
+                value_types.get(ordinal).map(|item| item.ty.clone())
+            }
+            None => None, // unreachable
+        }
+    }
 }
 
 impl ConversionMap {
     pub fn register(&mut self, rpath: RelativePath, node: Type) {
         let key = node.key();
-        let old = self.direct.insert(
-            key,
-            MapEntry {
-                relative_paths: vec![rpath.clone()],
-                node,
+        let item = std::mem::replace(&mut self.direct[key.0 as usize], MapItem::Unset);
+        let item = match item {
+            MapItem::Unset => match &rpath {
+                RelativePath::Function(_) => MapItem::Function(node.as_func().unwrap().clone()),
+                RelativePath::NsObject(path) => {
+                    MapItem::Namespace(node.as_object().unwrap().clone(), path.clone())
+                }
+                RelativePath::Input(_) => MapItem::Value(vec![MapValueItem {
+                    kind: ValueTypeKind::Input,
+                    ty: node.clone(),
+                    relative_paths: vec![rpath.clone().try_into().unwrap()],
+                }]),
+                RelativePath::Output(_) => MapItem::Value(vec![MapValueItem {
+                    kind: ValueTypeKind::Output,
+                    ty: node.clone(),
+                    relative_paths: vec![rpath.clone().try_into().unwrap()],
+                }]),
             },
-        );
-        if old.is_some() {
-            panic!("duplicate type key: {:?}", key);
-        }
+            MapItem::Namespace(_, _) => {
+                unreachable!("unexpected duplicate namespace type: {:?}", key)
+            }
+            MapItem::Function(_) => {
+                unreachable!("unexpected duplicate function type: {:?}", key)
+            }
+            MapItem::Value(mut value_types) => {
+                if key.1 != value_types.len() as u32 {
+                    panic!("unexpected ordinal number: {:?}", key);
+                }
+                value_types.push(MapValueItem {
+                    kind: match rpath {
+                        RelativePath::Input(_) => ValueTypeKind::Input,
+                        RelativePath::Output(_) => ValueTypeKind::Output,
+                        _ => unreachable!(),
+                    },
+                    ty: node.clone(),
+                    relative_paths: vec![rpath.clone().try_into().unwrap()],
+                });
+                MapItem::Value(value_types)
+            }
+        };
+        self.direct[key.0 as usize] = item;
+
         let old = self.reverse.insert(rpath.clone(), key);
         if old.is_some() {
             panic!("duplicate relative path: {:?}", rpath);
@@ -43,9 +134,33 @@ impl ConversionMap {
     }
 
     pub fn append(&mut self, key: TypeKey, rpath: RelativePath) {
-        let entry = self.direct.get_mut(&key).unwrap();
-        entry.relative_paths.push(rpath.clone());
+        let entry = self.direct.get_mut(key.0 as usize).unwrap();
+        match entry {
+            MapItem::Value(value_types) => {
+                let ordinal = key.1 as usize;
+                let item = value_types.get_mut(ordinal).unwrap();
+                item.relative_paths.push(rpath.clone().try_into().unwrap());
+            }
+            _ => panic!("unexpected map item: {:?}", key),
+        }
         self.reverse.insert(rpath, key);
+    }
+
+    pub fn get_next_type_key(&self, type_idx: u32) -> TypeKey {
+        match self.direct.get(type_idx as usize) {
+            Some(MapItem::Unset) => TypeKey(type_idx, 0),
+            Some(MapItem::Namespace(_, _)) => {
+                unreachable!("unexpected duplicate namespace type: {:?}", type_idx)
+            }
+            Some(MapItem::Function(_)) => {
+                unreachable!("unexpected duplicate function type: {:?}", type_idx)
+            }
+            Some(MapItem::Value(value_types)) => {
+                let ordinal = value_types.len() as u32;
+                TypeKey(type_idx, ordinal)
+            }
+            None => unreachable!("type index out of bounds: {:?}", type_idx),
+        }
     }
 }
 
@@ -188,6 +303,17 @@ pub enum RelativePath {
     NsObject(Vec<Arc<str>>),
     Input(ValueTypePath),
     Output(ValueTypePath),
+}
+
+impl TryFrom<RelativePath> for ValueTypePath {
+    type Error = RelativePath;
+    fn try_from(value: RelativePath) -> Result<Self, Self::Error> {
+        match value {
+            RelativePath::Input(path) => Ok(path),
+            RelativePath::Output(path) => Ok(path),
+            _ => Err(value),
+        }
+    }
 }
 
 impl std::fmt::Debug for RelativePath {
