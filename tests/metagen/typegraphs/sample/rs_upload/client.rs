@@ -12,13 +12,16 @@ use metagen_client::prelude::*;
 pub mod transports {
     use super::*;
 
-    pub fn graphql(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwest {
-        GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
+    pub fn graphql(qg: &QueryGraph, addr: Url) -> metagen_client::graphql::GraphQlTransportReqwest {
+        metagen_client::graphql::GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
     }
 
     #[cfg(not(target_family = "wasm"))]
-    pub fn graphql_sync(qg: &QueryGraph, addr: Url) -> GraphQlTransportReqwestSync {
-        GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
+    pub fn graphql_sync(
+        qg: &QueryGraph,
+        addr: Url,
+    ) -> metagen_client::graphql::GraphQlTransportReqwestSync {
+        metagen_client::graphql::GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
     }
 }
 

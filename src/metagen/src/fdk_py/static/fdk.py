@@ -22,8 +22,11 @@ class Ctx:
         host: "HostcallTransport",
         # metagen-endif
     ):
-        self.gql = binding
+        self.__binding = binding
         # metagen-genif HOSTCALL
         self.qg = qg
         self.host = host
         # metagen-endif
+
+    def gql(self, query: str, variables: typing.Mapping):
+        return self.__binding(query, dict(variables))
