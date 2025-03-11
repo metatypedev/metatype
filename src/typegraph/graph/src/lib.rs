@@ -65,8 +65,9 @@ impl Typegraph {
     }
 }
 
-impl From<Arc<tg_schema::Typegraph>> for Typegraph {
-    fn from(schema: Arc<tg_schema::Typegraph>) -> Self {
+impl TryFrom<Arc<tg_schema::Typegraph>> for Typegraph {
+    type Error = color_eyre::Report;
+    fn try_from(schema: Arc<tg_schema::Typegraph>) -> Result<Self> {
         conv::Conversion::convert(schema, DefaultNamingEngine::default())
     }
 }

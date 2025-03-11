@@ -3,7 +3,7 @@
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
 use crate::conv::interlude::*;
-use crate::interlude::*;
+use crate::{interlude::*, TypeNodeExt as _};
 use crate::{Arc, Lazy};
 
 #[derive(Debug)]
@@ -36,8 +36,9 @@ impl TypeNode for Arc<UnionType> {
         Ok(self.variants().clone())
     }
 
-    fn edges(&self) -> Vec<Edge> {
-        self.variants()
+    fn edges(&self) -> Result<Vec<Edge>> {
+        Ok(self
+            .variants()
             .iter()
             .enumerate()
             .map(|(v, t)| Edge {
@@ -45,7 +46,7 @@ impl TypeNode for Arc<UnionType> {
                 to: t.clone(),
                 kind: EdgeKind::UnionVariant(v),
             })
-            .collect()
+            .collect())
     }
 }
 
@@ -84,26 +85,31 @@ impl TypeConversionResult for UnionTypeConversionResult {
         self.ty.clone()
     }
 
-    fn finalize(&mut self, conv: &mut Conversion) {
+    fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
         let mut variants = Vec::with_capacity(self.variants.len());
         let mut results = Vec::with_capacity(self.variants.len());
         let weak = self.ty.downgrade();
         for (i, &idx) in self.variants.iter().enumerate() {
             let rpath = self.rpath.push(PathSegment::UnionVariant(i as u32));
-            let res = conv.convert_type(weak.clone(), idx, rpath);
+            let res = conv.convert_type(weak.clone(), idx, rpath)?;
             variants.push(res.get_type());
             results.push(res);
         }
 
         match &self.ty {
-            Type::Union(union) => {
-                union.variants.set(variants).unwrap();
-            }
+            Type::Union(union) => union.variants.set(variants).map_err(|_| {
+                eyre!(
+                    "OnceLock: cannot set union variants more than once; key={:?}",
+                    self.ty.key()
+                )
+            })?,
             _ => unreachable!(),
         }
 
         for mut res in results {
-            res.finalize(conv);
+            res.finalize(conv)?;
         }
+
+        Ok(())
     }
 }

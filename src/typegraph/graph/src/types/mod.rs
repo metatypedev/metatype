@@ -45,9 +45,9 @@ pub struct Edge {
 
 impl PartialEq for Edge {
     fn eq(&self, other: &Self) -> bool {
-        self.from.upgrade().unwrap().key() == other.from.upgrade().unwrap().key()
-            && self.to.key() == other.to.key()
-            && self.kind == other.kind
+        let left = self.from.upgrade().expect("no strong pointer for type");
+        let right = other.from.upgrade().expect("no strong pointer for type");
+        left.key() == right.key() && self.to.key() == other.to.key() && self.kind == other.kind
     }
 }
 
@@ -55,7 +55,11 @@ impl Eq for Edge {}
 
 impl std::hash::Hash for Edge {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.from.upgrade().unwrap().key().hash(state);
+        self.from
+            .upgrade()
+            .expect("no strong pointer for type")
+            .key()
+            .hash(state);
         self.to.key().hash(state);
         self.kind.hash(state);
     }
@@ -94,14 +98,14 @@ pub trait TypeNode {
     fn children(&self) -> Result<Vec<Type>> {
         Ok(vec![])
     }
-    fn edges(&self) -> Vec<Edge> {
-        vec![]
+    fn edges(&self) -> Result<Vec<Edge>> {
+        Ok(vec![])
     }
 }
 
 pub trait TypeNodeExt: TypeNode {
     fn idx(&self) -> u32;
-    fn name(&self) -> Arc<str>;
+    fn name(&self) -> Result<Arc<str>>;
     fn parent(&self) -> Option<Type>;
     fn title(&self) -> &str;
     fn key(&self) -> TypeKey;
@@ -118,8 +122,12 @@ where
         self.base().type_idx
     }
 
-    fn name(&self) -> Arc<str> {
-        self.base().name.get().unwrap().clone()
+    fn name(&self) -> Result<Arc<str>> {
+        self.base()
+            .name
+            .get()
+            .cloned()
+            .ok_or_else(|| eyre!("name not initialized for type {:?}", self.key()))
     }
 
     fn parent(&self) -> Option<Type> {
@@ -177,18 +185,37 @@ impl Type {
         }
     }
 
-    pub fn is_composite(&self) -> bool {
+    pub fn is_composite(&self) -> Result<bool> {
         match self {
             Type::Boolean(_)
             | Type::Integer(_)
             | Type::Float(_)
             | Type::String(_)
-            | Type::File(_) => false,
-            Type::Object(_) => true,
-            Type::Optional(t) => t.item.get().unwrap().is_composite(),
-            Type::List(t) => t.item.get().unwrap().is_composite(),
-            Type::Union(t) => t.variants.get().unwrap().iter().any(|v| v.is_composite()),
-            Type::Function(_) => panic!("function type isn't composite or scalar"),
+            | Type::File(_) => Ok(false),
+            Type::Object(_) => Ok(true),
+            Type::Optional(t) => t
+                .item
+                .get()
+                .ok_or_else(|| eyre!("item type not initialized on optional"))?
+                .is_composite(),
+            Type::List(t) => t
+                .item
+                .get()
+                .ok_or_else(|| eyre!("item type not initialized on list"))?
+                .is_composite(),
+            Type::Union(t) => {
+                let variants = t
+                    .variants
+                    .get()
+                    .ok_or_else(|| eyre!("variants not initialized on union"))?;
+                for v in variants.iter() {
+                    if v.is_composite()? {
+                        return Ok(true);
+                    }
+                }
+                Ok(false)
+            }
+            Type::Function(_) => bail!("function type isn't composite or scalar"),
         }
     }
 }
@@ -237,6 +264,11 @@ impl Type {
             Type::Function(w) => Some(w),
             _ => None,
         }
+    }
+
+    pub fn assert_func(&self) -> Result<&Arc<FunctionType>> {
+        self.as_func()
+            .ok_or_else(|| eyre!("expected function type, got {}", self.tag()))
     }
 }
 

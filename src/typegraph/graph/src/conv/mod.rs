@@ -74,7 +74,7 @@ pub struct Conversion {
 
 pub trait TypeConversionResult {
     fn get_type(&self) -> Type;
-    fn finalize(&mut self, conv: &mut Conversion); // convert children
+    fn finalize(&mut self, conv: &mut Conversion) -> Result<()>; // convert children
 }
 
 // Type conversion that does not need propagation; cached or no children
@@ -89,8 +89,9 @@ impl TypeConversionResult for FinalizedTypeConversion {
         self.0.clone()
     }
 
-    fn finalize(&mut self, _conv: &mut Conversion) {
+    fn finalize(&mut self, _conv: &mut Conversion) -> Result<()> {
         // nothing to do
+        Ok(())
     }
 }
 
@@ -123,7 +124,10 @@ impl Conversion {
         }
     }
 
-    pub fn convert<NE>(schema: Arc<tg_schema::Typegraph>, naming_engine: NE) -> crate::Typegraph
+    pub fn convert<NE>(
+        schema: Arc<tg_schema::Typegraph>,
+        naming_engine: NE,
+    ) -> Result<crate::Typegraph>
     where
         NE: NamingEngine,
     {
@@ -132,9 +136,9 @@ impl Conversion {
             WeakType::Object(Default::default()),
             0,
             RelativePath::root(),
-        );
+        )?;
         let root = res.get_type();
-        res.finalize(&mut conv);
+        res.finalize(&mut conv)?;
 
         let mut ne = naming_engine;
 
@@ -145,26 +149,31 @@ impl Conversion {
             // ));
             // let range: Vec<_> = range.map(|(&k, e)| (k, e)).collect();
 
-            match conv.conversion_map.direct.get(idx).unwrap() {
+            match conv
+                .conversion_map
+                .direct
+                .get(idx)
+                .unwrap_or(&MapItem::Unset)
+            {
                 MapItem::Unset => {
-                    panic!("no type for type idx: {}", idx);
+                    bail!("no type for type idx: {}", idx);
                 }
                 MapItem::Function(ty) => {
-                    ne.name_function(ty);
+                    ne.name_function(ty)?;
                 }
                 MapItem::Namespace(ty, _) => {
-                    ne.name_ns_object(ty);
+                    ne.name_ns_object(ty)?;
                 }
                 MapItem::Value(types) => {
-                    ne.name_value_types(types);
+                    ne.name_value_types(types)?;
                 }
             }
         }
 
         let reg = std::mem::take(ne.registry());
-        crate::Typegraph {
+        Ok(crate::Typegraph {
             schema,
-            root: root.as_object().unwrap().clone(),
+            root: root.assert_object()?.clone(),
             input_types: conv.input_types,
             output_types: conv.output_types,
             functions: conv.functions,
@@ -176,7 +185,7 @@ impl Conversion {
                 .into_iter()
                 .map(Into::into)
                 .collect(),
-        }
+        })
     }
 
     fn register_type<C: FnOnce(TypeKey) -> Box<dyn TypeConversionResult>>(
@@ -184,29 +193,32 @@ impl Conversion {
         rpath: RelativePath,
         type_idx: u32,
         convert: C,
-    ) -> Box<dyn TypeConversionResult> {
+    ) -> Result<Box<dyn TypeConversionResult>> {
         let key = self.conversion_map.get_next_type_key(type_idx);
         let conv_res = convert(key);
         let typ = conv_res.get_type();
 
-        if let Some(dupl) = rpath.find_cycle(&self.schema) {
+        if let Some(dupl) = rpath.find_cycle(&self.schema)? {
             // cycle detected, reuse the existing type
             let key = self.conversion_map.reverse[&dupl].clone();
-            let ty = self.conversion_map.get(key).unwrap();
-            self.conversion_map.append(key, rpath.clone()); // note that it is a cycle??
-            return finalized_type(ty);
+            let ty = self
+                .conversion_map
+                .get(key)
+                .ok_or_else(|| eyre!("type not found for key: {:?}", key))?;
+            self.conversion_map.append(key, rpath.clone())?; // note that it is a cycle??
+            return Ok(finalized_type(ty));
         }
 
-        self.conversion_map.register(rpath.clone(), typ.clone());
+        self.conversion_map.register(rpath.clone(), typ.clone())?;
 
         use RelativePath as RP;
         match rpath {
             RP::Function(fn_idx) => {
-                let func = typ.as_func().unwrap();
+                let func = typ.assert_func()?;
                 self.functions.insert(fn_idx, func.clone());
             }
             RP::NsObject(path) => {
-                let obj = typ.assert_object().unwrap();
+                let obj = typ.assert_object()?;
                 self.namespace_objects.insert(path.clone(), obj.clone());
             }
             RP::Input(_) => {
@@ -218,7 +230,7 @@ impl Conversion {
             }
         }
 
-        conv_res
+        Ok(conv_res)
     }
 
     pub fn convert_type(
@@ -226,7 +238,7 @@ impl Conversion {
         parent: WeakType,
         type_idx: u32,
         rpath: RelativePath,
-    ) -> Box<dyn TypeConversionResult> {
+    ) -> Result<Box<dyn TypeConversionResult>> {
         let schema = self.schema.clone();
         let type_node = &schema.types[type_idx as usize];
         use tg_schema::TypeNode as N;
@@ -242,9 +254,9 @@ impl Conversion {
                 debug_assert_eq!(*fn_idx, type_idx);
                 if let Some(found) = self.conversion_map.get(TypeKey(type_idx, 0)) {
                     self.conversion_map
-                        .append(TypeKey(type_idx, 0), rpath.clone());
+                        .append(TypeKey(type_idx, 0), rpath.clone())?;
                     debug_assert!(matches!(found, Type::Function(_)));
-                    return finalized_type(found);
+                    return Ok(finalized_type(found));
                 }
             }
             // TODO consider injections -- use a comparison trait
@@ -253,8 +265,8 @@ impl Conversion {
                     // currently we only generate a single type from each scalar type node
                     if let Some(found) = self.conversion_map.get(TypeKey(type_idx, 0)) {
                         self.conversion_map
-                            .append(TypeKey(type_idx, 0), rpath.clone());
-                        return finalized_type(found);
+                            .append(TypeKey(type_idx, 0), rpath.clone())?;
+                        return Ok(finalized_type(found));
                     }
                 } else {
                     let types = match &self.conversion_map.direct[type_idx as usize] {
@@ -262,14 +274,12 @@ impl Conversion {
                         MapItem::Unset => &[],
                         _ => unreachable!(),
                     };
-                    eprintln!("types={types:?}");
-                    eprintln!("vpath={vpath:?}");
                     // WTF is this???
                     let found = types
                         .iter()
                         .find(|&item| item.relative_paths.iter().any(|rp| rp == vpath));
                     if let Some(found) = found {
-                        return finalized_type(found.ty.clone());
+                        return Ok(finalized_type(found.ty.clone()));
                     }
                 }
             }

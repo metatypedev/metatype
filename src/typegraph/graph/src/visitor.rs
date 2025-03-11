@@ -1,6 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::interlude::*;
+use color_eyre::eyre::OptionExt as _;
+
 use crate::{
     conv::{PathSegment, RelativePath},
     Edge, EdgeKind, Type, TypeNodeExt as _,
@@ -18,7 +21,7 @@ pub struct VisitNode {
     pub relative_path: RelativePath,
 }
 
-pub fn traverse_types<A, V, E>(
+pub fn traverse_types<A, V, E: From<color_eyre::eyre::Error>>(
     root: Type,
     relative_path: RelativePath,
     accumulator: A,
@@ -37,7 +40,7 @@ struct TraverseOutput<A> {
     stop: bool,
 }
 
-fn visit<A, V, E>(
+fn visit<A, V, E: From<color_eyre::eyre::Error>>(
     node: Type,
     path: &mut Vec<Edge>,
     relative_path: RelativePath,
@@ -57,7 +60,7 @@ where
     res
 }
 
-fn traverse_types_with_path<A, V, E>(
+fn traverse_types_with_path<A, V, E: From<color_eyre::eyre::Error>>(
     root: Type,
     path: &mut Vec<Edge>,
     relative_path: RelativePath,
@@ -121,7 +124,7 @@ where
         }
 
         Type::List(inner) => {
-            let item = inner.item().unwrap().clone();
+            let item = inner.item()?.clone();
             path.push(edge(&item, EdgeKind::ListItem));
             let res = traverse_types_with_path(
                 item,
@@ -220,20 +223,24 @@ where
 }
 
 pub trait PathExt {
-    fn is_cyclic(&self) -> bool;
+    fn is_cyclic(&self) -> Result<bool>;
 }
 
 impl PathExt for [Edge] {
-    fn is_cyclic(&self) -> bool {
+    fn is_cyclic(&self) -> Result<bool> {
         let mut seen = std::collections::HashSet::new();
         for edge in self {
             if !seen.insert((
-                edge.from.upgrade().unwrap().key().clone(),
+                edge.from
+                    .upgrade()
+                    .ok_or_eyre("failed to upgrade weak ptr")?
+                    .key()
+                    .clone(),
                 edge.to.key().clone(),
             )) {
-                return true;
+                return Ok(true);
             }
         }
-        false
+        Ok(false)
     }
 }

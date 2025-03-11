@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
 use crate::conv::interlude::*;
-use crate::interlude::*;
+use crate::{interlude::*, TypeNodeExt as _};
 use crate::{policies::PolicyRef, Arc, Lazy};
 use std::collections::HashMap;
 
@@ -59,15 +59,16 @@ impl TypeNode for Arc<ObjectType> {
             .collect())
     }
 
-    fn edges(&self) -> Vec<Edge> {
-        self.properties()
+    fn edges(&self) -> Result<Vec<Edge>> {
+        Ok(self
+            .properties()
             .iter()
             .map(|(name, prop)| Edge {
                 from: WeakType::Object(Arc::downgrade(self)),
                 to: prop.type_.clone(),
                 kind: EdgeKind::ObjectProperty(name.clone()),
             })
-            .collect()
+            .collect())
     }
 }
 
@@ -108,7 +109,7 @@ impl TypeConversionResult for ObjectTypeConversionResult {
         self.ty.clone()
     }
 
-    fn finalize(&mut self, conv: &mut Conversion) {
+    fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
         // eprintln!("finalize object: #{:?}", self.ty.key());
         let mut properties = HashMap::with_capacity(self.properties.len());
 
@@ -122,7 +123,7 @@ impl TypeConversionResult for ObjectTypeConversionResult {
                 weak.clone(),
                 idx,
                 self.rpath.push(PathSegment::ObjectProp(name.clone())),
-            );
+            )?;
             let required = self.required.iter().any(|r| r == name.as_ref());
             let as_id = self.id.iter().any(|r| r == name.as_ref());
             properties.insert(
@@ -141,19 +142,20 @@ impl TypeConversionResult for ObjectTypeConversionResult {
 
         match &self.ty {
             Type::Object(obj) => {
-                // eprintln!(
-                //     "set object properties: key={:?}; {:?}",
-                //     self.ty.key(),
-                //     properties.keys().collect::<Vec<_>>()
-                // );
-                obj.properties.set(properties).unwrap();
+                obj.properties.set(properties).map_err(|_| {
+                    eyre!(
+                        "OnceLock: cannot set object properties more than once; key={:?}",
+                        self.ty.key()
+                    )
+                })?;
             }
             _ => unreachable!(),
         }
 
-        // eprintln!("finalize object: #{:?}: finalize properties", self.ty.key());
         for res in results.iter_mut() {
-            res.finalize(conv);
+            res.finalize(conv)?;
         }
+
+        Ok(())
     }
 }

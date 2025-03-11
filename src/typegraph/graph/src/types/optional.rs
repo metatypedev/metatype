@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::interlude::*;
 use crate::{conv::interlude::*, Arc, Lazy};
+use crate::{interlude::*, TypeNodeExt as _};
 
 #[derive(Debug)]
 pub struct OptionalType {
@@ -31,12 +31,12 @@ impl TypeNode for Arc<OptionalType> {
         Ok(vec![self.item().clone()])
     }
 
-    fn edges(&self) -> Vec<Edge> {
-        vec![Edge {
+    fn edges(&self) -> Result<Vec<Edge>> {
+        Ok(vec![Edge {
             from: WeakType::Optional(Arc::downgrade(self)),
             to: self.item().clone(),
             kind: EdgeKind::OptionalItem,
-        }]
+        }])
     }
 }
 
@@ -74,20 +74,27 @@ impl TypeConversionResult for OptionalTypeConversionResult {
         self.ty.clone()
     }
 
-    fn finalize(&mut self, conv: &mut Conversion) {
+    fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
         let mut item = conv.convert_type(
             self.ty.downgrade(),
             self.item_idx,
             self.rpath.push(PathSegment::OptionalItem),
-        );
+        )?;
         match &self.ty {
             Type::Optional(opt) => {
                 // TODO error handling
-                opt.item.set(item.get_type()).unwrap();
+                opt.item.set(item.get_type()).map_err(|_| {
+                    eyre!(
+                        "OnceLock: cannot set optional item more than once; key={:?}",
+                        self.ty.key()
+                    )
+                })?;
             }
             _ => unreachable!(),
         }
 
-        item.finalize(conv)
+        item.finalize(conv)?;
+
+        Ok(())
     }
 }

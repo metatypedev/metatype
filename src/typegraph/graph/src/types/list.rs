@@ -20,7 +20,7 @@ impl ListType {
             None => bail!(
                 "list item uninitialized: key={:?}; parent_key={:?}",
                 self.base.key,
-                self.base.parent.upgrade().unwrap().key()
+                self.base.parent.upgrade().map(|p| p.key())
             ),
         }
     }
@@ -39,12 +39,12 @@ impl TypeNode for Arc<ListType> {
         Ok(vec![self.item()?.clone()])
     }
 
-    fn edges(&self) -> Vec<Edge> {
-        vec![Edge {
+    fn edges(&self) -> Result<Vec<Edge>> {
+        Ok(vec![Edge {
             from: WeakType::List(Arc::downgrade(self)),
-            to: self.item().unwrap().clone(),
+            to: self.item()?.clone(),
             kind: EdgeKind::ListItem,
-        }]
+        }])
     }
 }
 
@@ -84,22 +84,28 @@ impl TypeConversionResult for ListTypeConversionResult {
         self.ty.clone()
     }
 
-    fn finalize(&mut self, conv: &mut Conversion) {
+    fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
         eprintln!("finalize list: #{:?}", self.ty.key());
         let mut item = conv.convert_type(
             self.ty.downgrade(),
             self.item_idx,
             self.rpath.push(PathSegment::ListItem),
-        );
+        )?;
         match &self.ty {
             Type::List(list) => {
                 eprintln!("finalize list: #{:?}: set item", self.ty.key());
-                list.item.set(item.get_type()).unwrap();
+                list.item.set(item.get_type()).map_err(|_| {
+                    eyre!(
+                        "OnceLock: cannot set list item more than once; key={:?}",
+                        self.ty.key()
+                    )
+                })?;
             }
             _ => unreachable!(),
         }
 
         eprintln!("finalize list: #{:?}: finalize item", self.ty.key());
-        item.finalize(conv);
+        item.finalize(conv)?;
+        Ok(())
     }
 }

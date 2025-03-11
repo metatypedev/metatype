@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{Arc, FunctionType, ObjectType, Type, TypeNodeExt as _, Weak, Wrap as _};
+use crate::interlude::*;
+use crate::{Arc, FunctionType, ObjectType, Type, TypeNode, TypeNodeExt as _, Weak, Wrap as _};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
@@ -83,24 +84,30 @@ impl ConversionMap {
 }
 
 impl ConversionMap {
-    pub fn register(&mut self, rpath: RelativePath, node: Type) {
+    pub fn register(&mut self, rpath: RelativePath, node: Type) -> Result<()> {
         let key = node.key();
         let item = std::mem::replace(&mut self.direct[key.0 as usize], MapItem::Unset);
         let item = match item {
             MapItem::Unset => match &rpath {
-                RelativePath::Function(_) => MapItem::Function(node.as_func().unwrap().clone()),
+                RelativePath::Function(_) => MapItem::Function(node.assert_func()?.clone()),
                 RelativePath::NsObject(path) => {
-                    MapItem::Namespace(node.as_object().unwrap().clone(), path.clone())
+                    MapItem::Namespace(node.assert_object()?.clone(), path.clone())
                 }
                 RelativePath::Input(_) => MapItem::Value(vec![MapValueItem {
                     kind: ValueTypeKind::Input,
                     ty: node.clone(),
-                    relative_paths: vec![rpath.clone().try_into().unwrap()],
+                    relative_paths: vec![rpath
+                        .clone()
+                        .try_into()
+                        .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?],
                 }]),
                 RelativePath::Output(_) => MapItem::Value(vec![MapValueItem {
                     kind: ValueTypeKind::Output,
                     ty: node.clone(),
-                    relative_paths: vec![rpath.clone().try_into().unwrap()],
+                    relative_paths: vec![rpath
+                        .clone()
+                        .try_into()
+                        .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?],
                 }]),
             },
             MapItem::Namespace(_, _) => {
@@ -120,7 +127,10 @@ impl ConversionMap {
                         _ => unreachable!(),
                     },
                     ty: node.clone(),
-                    relative_paths: vec![rpath.clone().try_into().unwrap()],
+                    relative_paths: vec![rpath
+                        .clone()
+                        .try_into()
+                        .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?],
                 });
                 MapItem::Value(value_types)
             }
@@ -129,21 +139,36 @@ impl ConversionMap {
 
         let old = self.reverse.insert(rpath.clone(), key);
         if old.is_some() {
-            panic!("duplicate relative path: {:?}", rpath);
+            bail!("duplicate relative path: {:?}", rpath);
         }
+
+        Ok(())
     }
 
-    pub fn append(&mut self, key: TypeKey, rpath: RelativePath) {
-        let entry = self.direct.get_mut(key.0 as usize).unwrap();
+    pub fn append(&mut self, key: TypeKey, rpath: RelativePath) -> Result<()> {
+        let entry = self
+            .direct
+            .get_mut(key.0 as usize)
+            .ok_or_else(|| eyre!("type index out of bound"))?;
         match entry {
             MapItem::Value(value_types) => {
                 let ordinal = key.1 as usize;
-                let item = value_types.get_mut(ordinal).unwrap();
-                item.relative_paths.push(rpath.clone().try_into().unwrap());
+                let item = value_types.get_mut(ordinal).ok_or_else(|| {
+                    eyre!("value type not found: local index out of bound: {:?}", key)
+                })?;
+                item.relative_paths.push(
+                    rpath
+                        .clone()
+                        .try_into()
+                        .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?,
+                );
             }
-            _ => panic!("unexpected map item: {:?}", key),
+            _ => bail!("unexpected map item: {:?}", key),
         }
+
         self.reverse.insert(rpath, key);
+
+        Ok(())
     }
 
     pub fn get_next_type_key(&self, type_idx: u32) -> TypeKey {
@@ -173,26 +198,45 @@ pub enum PathSegment {
 }
 
 impl PathSegment {
-    pub fn apply(&self, ty: &Type) -> Option<Type> {
+    // Typed error?
+    pub fn apply(&self, ty: &Type) -> Result<Type> {
         match self {
             PathSegment::ObjectProp(key) => match ty {
                 Type::Object(obj) => {
-                    let prop = obj.properties().get(key)?;
-                    Some(prop.type_.clone())
+                    let prop = obj.properties().get(key).ok_or_else(|| {
+                        eyre!("cannot apply path segment: property '{}' not found", key)
+                    })?;
+                    Ok(prop.type_.clone())
                 }
-                _ => None,
+                _ => bail!(
+                    "cannot apply path segment: expected object type, got {:?}",
+                    ty.tag()
+                ),
             },
             PathSegment::ListItem => match ty {
-                Type::List(list) => Some(list.item().unwrap().clone()),
-                _ => None,
+                Type::List(list) => Ok(list.item()?.clone()),
+                _ => bail!(
+                    "cannot apply path segment: expected list type, got {:?}",
+                    ty.tag()
+                ),
             },
             PathSegment::OptionalItem => match ty {
-                Type::Optional(opt) => Some(opt.item().clone()),
-                _ => None,
+                Type::Optional(opt) => Ok(opt.item().clone()),
+                _ => bail!(
+                    "cannot apply path segment: expected optional type, got {:?}",
+                    ty.tag()
+                ),
             },
             PathSegment::UnionVariant(idx) => match ty {
-                Type::Union(union) => Some(union.variants().get(*idx as usize)?.clone()),
-                _ => None,
+                Type::Union(union) => Ok(union
+                    .variants()
+                    .get(*idx as usize)
+                    .ok_or_else(|| eyre!("variant #{} not found in union; ty={}", idx, ty.idx()))?
+                    .clone()),
+                _ => bail!(
+                    "cannot apply path segment: expected union type, got {:?}",
+                    ty.tag()
+                ),
             },
         }
     }
@@ -201,26 +245,62 @@ impl PathSegment {
         &self,
         nodes: &[tg_schema::TypeNode],
         type_idx: u32,
-    ) -> Option<u32> {
+    ) -> Result<u32> {
         use tg_schema::TypeNode as N;
         let node = &nodes[type_idx as usize];
         match self {
             PathSegment::ObjectProp(key) => match node {
-                N::Object { data, .. } => data.properties.get(key.as_ref()).copied(),
-                _ => None,
+                N::Object { data, .. } => {
+                    data.properties.get(key.as_ref()).copied().ok_or_else(|| {
+                        eyre!(
+                            "invalid path segment: {:?}; property '{}' not found",
+                            self,
+                            key
+                        )
+                    })
+                }
+                _ => bail!(
+                    "invalid path segment: {:?}; expected object type, got {:?}",
+                    self,
+                    node.base().title
+                ),
             },
             PathSegment::ListItem => match node {
-                N::List { data, .. } => Some(data.items),
-                _ => None,
+                N::List { data, .. } => Ok(data.items),
+                _ => bail!(
+                    "invalid path segment: {:?}; expected list type, got {:?}",
+                    self,
+                    node.base().title
+                ),
             },
             PathSegment::OptionalItem => match node {
-                N::Optional { data, .. } => Some(data.item),
-                _ => None,
+                N::Optional { data, .. } => Ok(data.item),
+                _ => bail!(
+                    "invalid path segment: {:?}; expected optional type, got {:?}",
+                    self,
+                    node.base().title
+                ),
             },
             PathSegment::UnionVariant(idx) => match node {
-                N::Union { data, .. } => data.any_of.get(*idx as usize).copied(),
-                N::Either { data, .. } => data.one_of.get(*idx as usize).copied(),
-                _ => None,
+                N::Union { data, .. } => data.any_of.get(*idx as usize).copied().ok_or_else(|| {
+                    eyre!(
+                        "invalid path segment: {:?}; variant #{idx} not found in union",
+                        self
+                    )
+                }),
+                N::Either { data, .. } => {
+                    data.one_of.get(*idx as usize).copied().ok_or_else(|| {
+                        eyre!(
+                            "invalid path segment: {:?}; variant #{idx} not found in either",
+                            self
+                        )
+                    })
+                }
+                _ => bail!(
+                    "invalid path segment: {:?}; expected union type, got {:?}",
+                    self,
+                    node.base().title
+                ),
             },
         }
     }
@@ -235,30 +315,25 @@ pub struct ValueTypePath {
 }
 
 impl ValueTypePath {
-    pub fn to_indices(&self, root_type: Type, schema: &tg_schema::Typegraph) -> Vec<u32> {
-        self.path
-            .iter()
-            .fold(
-                (vec![root_type.idx()], root_type.idx()),
-                |(mut acc, ty), seg| {
-                    let ty = seg.apply_on_schema_node(&schema.types, ty).unwrap();
-                    acc.push(ty);
-                    (acc, ty)
-                },
-            )
-            .0
+    pub fn to_indices(&self, root_type: Type, schema: &tg_schema::Typegraph) -> Result<Vec<u32>> {
+        let mut ty = root_type.idx();
+        let mut acc = vec![ty];
+        for seg in &self.path {
+            ty = seg.apply_on_schema_node(&schema.types, ty)?;
+            acc.push(ty);
+        }
+        Ok(acc)
     }
 
     pub fn find_cycle(
         &self,
         root_type: Type,
         schema: &tg_schema::Typegraph,
-    ) -> Option<ValueTypePath> {
+    ) -> Result<Option<ValueTypePath>> {
         // precondition: self.path.len() > 2
-        let indices = self.to_indices(root_type, schema);
-        eprintln!("find cycle: {:?}", indices);
+        let indices = self.to_indices(root_type, schema)?;
         let last = indices.last().unwrap();
-        indices[..indices.len() - 1]
+        Ok(indices[..indices.len() - 1]
             .iter()
             .position(|idx| idx == last)
             .map(|idx| {
@@ -267,7 +342,7 @@ impl ValueTypePath {
                     owner: self.owner.clone(),
                     path,
                 }
-            })
+            }))
     }
 }
 
@@ -282,8 +357,10 @@ impl From<Arc<FunctionType>> for ValueTypePath {
 
 impl PartialEq for ValueTypePath {
     fn eq(&self, other: &Self) -> bool {
-        self.owner.upgrade().unwrap().base.type_idx == other.owner.upgrade().unwrap().base.type_idx
-            && self.path == other.path
+        let left = self.owner.upgrade().expect("no strong pointer for type");
+        let right = other.owner.upgrade().expect("no strong pointer for type");
+
+        left.base.type_idx == right.base.type_idx && self.path == other.path
     }
 }
 
@@ -291,7 +368,12 @@ impl Eq for ValueTypePath {}
 
 impl Hash for ValueTypePath {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.owner.upgrade().unwrap().base.type_idx.hash(state);
+        self.owner
+            .upgrade()
+            .expect("no strong pointer for type")
+            .base
+            .type_idx
+            .hash(state);
         self.path.hash(state);
     }
 }
@@ -324,13 +406,13 @@ impl std::fmt::Debug for RelativePath {
             Self::Input(k) => write!(
                 f,
                 "Input(fn={}; {:?})",
-                k.owner.upgrade().unwrap().idx(),
+                k.owner.upgrade().expect("no strong pointer for type").idx(),
                 k.path
             ),
             Self::Output(k) => write!(
                 f,
                 "Output(fn={}; {:?})",
-                k.owner.upgrade().unwrap().idx(),
+                k.owner.upgrade().expect("no strong pointer for type").idx(),
                 k.path
             ),
         }
@@ -375,24 +457,40 @@ impl RelativePath {
         }
     }
 
-    pub fn find_cycle(&self, schema: &tg_schema::Typegraph) -> Option<RelativePath> {
+    pub fn find_cycle(&self, schema: &tg_schema::Typegraph) -> Result<Option<RelativePath>> {
         use RelativePath as RP;
         match self {
-            RP::Function(_) => None,
-            RP::NsObject(_) => None,
+            RP::Function(_) => Ok(None),
+            RP::NsObject(_) => Ok(None),
             RP::Input(p) => {
                 if p.path.len() <= 2 {
-                    return None;
+                    Ok(None)
+                } else {
+                    Ok(p.find_cycle(
+                        p.owner
+                            .upgrade()
+                            .ok_or_else(|| eyre!("no strong pointer for type"))?
+                            .input()
+                            .wrap(),
+                        schema,
+                    )?
+                    .map(|p| RP::Input(p)))
                 }
-                p.find_cycle(p.owner.upgrade().unwrap().input().wrap(), schema)
-                    .map(|p| RP::Input(p))
             }
             RP::Output(p) => {
                 if p.path.len() <= 2 {
-                    return None;
+                    Ok(None)
+                } else {
+                    Ok(p.find_cycle(
+                        p.owner
+                            .upgrade()
+                            .ok_or_else(|| eyre!("no strong pointer for type"))?
+                            .output()
+                            .clone(),
+                        schema,
+                    )?
+                    .map(|p| RP::Output(p)))
                 }
-                p.find_cycle(p.owner.upgrade().unwrap().output().clone(), schema)
-                    .map(|p| RP::Output(p))
             }
         }
     }

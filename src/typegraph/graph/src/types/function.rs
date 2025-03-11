@@ -3,7 +3,7 @@
 
 use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType};
 use crate::conv::interlude::*;
-use crate::interlude::*;
+use crate::{interlude::*, TypeNodeExt as _};
 use crate::{
     runtimes::{Materializer, MaterializerNode, Runtime},
     Arc, Lazy,
@@ -68,8 +68,8 @@ impl TypeNode for Arc<FunctionType> {
         ])
     }
 
-    fn edges(&self) -> Vec<Edge> {
-        vec![
+    fn edges(&self) -> Result<Vec<Edge>> {
+        Ok(vec![
             Edge {
                 from: WeakType::Function(Arc::downgrade(self)),
                 to: Type::Object(self.input().clone()),
@@ -80,7 +80,7 @@ impl TypeNode for Arc<FunctionType> {
                 to: self.output().clone(),
                 kind: EdgeKind::FunctionOutput,
             },
-        ]
+        ])
     }
 }
 
@@ -123,37 +123,54 @@ impl TypeConversionResult for FunctionTypeConversionResult {
         self.ty.clone()
     }
 
-    fn finalize(&mut self, conv: &mut Conversion) {
+    fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
         let weak = self.ty.downgrade();
-        let owner_fn = weak.as_func().unwrap();
+        let owner_fn = weak.as_func().ok_or_else(|| {
+            eyre!(
+                "strong pointer removed for function type; key={:?}",
+                self.ty.key()
+            )
+        })?;
 
         let mut input_res = conv.convert_type(
             weak.clone(),
             self.input_idx,
             RelativePath::input(owner_fn.clone(), vec![]),
-        );
+        )?;
 
         let mut output_res = conv.convert_type(
             weak.clone(),
             self.output_idx,
             RelativePath::output(owner_fn.clone(), vec![]),
-        );
+        )?;
 
         match &self.ty {
             Type::Function(func) => {
                 match &input_res.get_type() {
                     Type::Object(input) => {
-                        func.input.set(input.clone()).unwrap();
+                        func.input.set(input.clone()).map_err(|_| {
+                            eyre!(
+                                "OnceLock: cannot set function input type more than once; key={:?}",
+                                self.ty.key()
+                            )
+                        })?;
                     }
                     _ => unreachable!(),
                 }
-                func.output.set(output_res.get_type()).unwrap();
+                func.output.set(output_res.get_type()).map_err(|_| {
+                    eyre!(
+                        "OnceLock: cannot set function output type more than once; key={:?}",
+                        self.ty.key()
+                    )
+                })?;
                 // TODO materializer
             }
             _ => unreachable!(),
         }
 
-        input_res.finalize(conv);
-        output_res.finalize(conv)
+        input_res.finalize(conv)?;
+        output_res.finalize(conv)?;
+
+        Ok(())
     }
 }
