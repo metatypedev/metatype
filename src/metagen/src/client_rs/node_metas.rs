@@ -513,7 +513,7 @@ impl PageBuilder {
             };
 
             if let Some(key) = next {
-                if !map.contains_key(&key) {
+                if map.contains_key(&key) {
                     continue;
                 }
                 map.insert(key, self.get_spec(key));
@@ -527,6 +527,7 @@ impl PageBuilder {
 
     fn get_spec(&self, key: TypeKey) -> RsNodeMetasSpec {
         let ty = self.tg.find_type(key).unwrap();
+        debug_assert_eq!(ty.key(), key);
         match ty {
             Type::Boolean(_)
             | Type::Float(_)
@@ -547,6 +548,7 @@ impl PageBuilder {
     }
 
     fn get_func_spec(&self, key: TypeKey, ty: Arc<FunctionType>) -> RsNodeMetasSpec {
+        debug_assert_eq!(ty.key(), key);
         let out_key = ty.output().key();
         self.enqueue(out_key);
 
@@ -569,6 +571,7 @@ impl PageBuilder {
     }
 
     fn get_union_spec(&self, key: TypeKey, ty: Arc<UnionType>) -> RsNodeMetasSpec {
+        debug_assert_eq!(ty.key(), key);
         // let mut named_set = vec![];
         let variants: IndexMap<_, _> = ty
             .variants()
@@ -592,6 +595,7 @@ impl PageBuilder {
     }
 
     fn get_object_spec(&self, key: TypeKey, ty: Arc<ObjectType>) -> RsNodeMetasSpec {
+        debug_assert_eq!(ty.key(), key);
         let props = ty.properties();
         let props = props
             .iter()

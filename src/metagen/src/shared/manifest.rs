@@ -73,7 +73,6 @@ impl<R: TypeRenderer> ManifestPage<R> {
 
     pub fn render_all(&self, out: &mut impl Write, name_memo: &impl NameMemo) -> std::fmt::Result {
         for (k, spec) in &self.map {
-            eprintln!("Rendering for key={:?}", k);
             spec.render(out, self, name_memo)?;
         }
         Ok(())

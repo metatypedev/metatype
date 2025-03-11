@@ -249,10 +249,9 @@ impl QueryGraph {{
             .flatten();
 
         let select_ty = selections
-            .get(&fun.type_.key())
+            .get(&fun.type_.output().key())
             .map(|s| s.as_deref())
             .flatten();
-        // let select_ty = Some(fun.type_.output()).filter(|ty| is_composite(ty));
 
         let (marker_ty, node_ty) = match fun.type_.effect() {
             EffectType::Read => ("QueryMarker", "QueryNode"),
@@ -434,6 +433,7 @@ fn render_node_metas(
     name_memo: &impl NameMemo,
 ) -> Result<HashMap<TypeKey, Option<String>>> {
     let manifest = node_metas::PageBuilder::new(manifest.tg.clone(), &manifest.node_metas).build();
+    manifest.cache_references(name_memo);
     let mut methods = String::new();
     manifest.render_all(&mut methods, name_memo)?;
 

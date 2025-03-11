@@ -38,15 +38,15 @@ impl TypeRenderer for RustSelection {
     fn render(
         &self,
         out: &mut impl Write,
-        _page: &ManifestPage<Self>,
+        page: &ManifestPage<Self>,
         name_memo: &impl NameMemo,
     ) -> std::fmt::Result {
         match self {
             Self::Struct { name, props } => {
-                self.render_for_struct(out, name, props, name_memo)?;
+                self.render_for_struct(out, name, props, page, name_memo)?;
             }
             Self::Union { name, variants } => {
-                self.render_for_union(out, name, variants, name_memo)?;
+                self.render_for_union(out, name, variants, page, name_memo)?;
             }
         }
 
@@ -70,6 +70,7 @@ impl RustSelection {
         dest: &mut impl Write,
         name: &str,
         props: &[(String, SelectionTy)],
+        page: &ManifestPage<Self>,
         name_memo: &impl NameMemo,
     ) -> std::fmt::Result {
         // derive prop
@@ -84,7 +85,7 @@ impl RustSelection {
                     writeln!(dest, r#"    pub {name}: ScalarSelectArgs<{arg_ty}, ATy>,"#)?
                 }
                 S::Composite { select_ty } => {
-                    let select_ty = name_memo.get(*select_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
                     writeln!(
                         dest,
                         r#"    pub {name}: CompositeSelect<{select_ty}<ATy>, ATy>,"#
@@ -92,7 +93,8 @@ impl RustSelection {
                 }
                 S::CompositeArgs { arg_ty, select_ty } => {
                     let arg_ty = name_memo.get(*arg_ty).unwrap();
-                    let select_ty = name_memo.get(*select_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
+                    // let select_ty = name_memo.get(*select_ty).unwrap();
                     writeln!(
                         dest,
                         r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, ATy>,"#
@@ -118,6 +120,7 @@ impl RustSelection {
         dest: &mut impl Write,
         name: &str,
         props: &[UnionProp],
+        page: &ManifestPage<Self>,
         name_memo: &impl NameMemo,
     ) -> std::fmt::Result {
         // derive prop
@@ -137,7 +140,7 @@ impl RustSelection {
                     unreachable!()
                 }
                 Composite { select_ty } => {
-                    let select_ty = name_memo.get(*select_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
                     writeln!(
                         dest,
                         r#"    pub {name}: CompositeSelect<{select_ty}<ATy>, NoAlias>,"#
@@ -145,7 +148,7 @@ impl RustSelection {
                 }
                 CompositeArgs { arg_ty, select_ty } => {
                     let arg_ty = name_memo.get(*arg_ty).unwrap();
-                    let select_ty = name_memo.get(*select_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
                     writeln!(
                         dest,
                         r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, NoAlias>,"#
@@ -229,5 +232,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
         }
     }
 
-    map.into()
+    let res: ManifestPage<_> = map.into();
+    res.cache_references(&EmptyNameMemo);
+    res
 }

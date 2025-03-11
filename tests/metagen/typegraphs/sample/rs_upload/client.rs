@@ -55,14 +55,18 @@ mod node_metas {
             variants: None,
             input_files: None,
         }
-    }    
+    }
     pub fn RootUploadFn() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
                     ("file".into(), "FileBf9b7()".into()),
-                    ("path".into(), "RootUploadFnInputPathString25e51Optional()".into()),
-                ].into()
+                    (
+                        "path".into(),
+                        "RootUploadFnInputPathString25e51Optional()".into(),
+                    ),
+                ]
+                .into(),
             ),
             ..RootUploadFnOutput()()
         }
@@ -71,26 +75,27 @@ mod node_metas {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("prefix".into(), "RootUploadManyFnInputPrefixString25e51Optional()".into()),
-                    ("files".into(), "RootUploadManyFnInputFilesFileBf9b7List()".into()),
-                ].into()
+                    (
+                        "prefix".into(),
+                        "RootUploadManyFnInputPrefixString25e51Optional()".into(),
+                    ),
+                    (
+                        "files".into(),
+                        "RootUploadManyFnInputFilesFileBf9b7List()".into(),
+                    ),
+                ]
+                .into(),
             ),
             ..RootUploadFnOutput()()
         }
     }
-
 }
 
 impl QueryGraph {
-
     pub fn new(addr: Url) -> Self {
         Self {
             addr,
-            ty_to_gql_ty_map: std::sync::Arc::new([
-            
-        ].into()),
+            ty_to_gql_ty_map: std::sync::Arc::new([].into()),
         }
     }
-    
 }
-

@@ -60,7 +60,7 @@ impl Typegraph {
         match self.conversion_map.get(key.0 as usize)? {
             MapItem::Namespace(object, _) => Some(object.wrap()),
             MapItem::Function(function) => Some(function.wrap()),
-            MapItem::Value(value) => Some(value[0].ty.clone()),
+            MapItem::Value(value) => Some(value[key.1 as usize].ty.clone()),
         }
     }
 }
