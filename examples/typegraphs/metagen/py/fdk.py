@@ -2,29 +2,32 @@
 # to be generated again on subsequent metagen runs.
 
 import typing
-import io
-import re
-import uuid
 import dataclasses as dc
-import json
-import urllib
-import urllib.request as request
-import urllib.error
 import http.client as http_c
+import io
+import json
 import mimetypes
+import re
+import urllib
+import urllib.error
+import urllib.request as request
+import uuid
 from abc import ABC, abstractmethod
 
 
 class Ctx:
     def __init__(
-        self, binding: "HostcallBinding", qg: "QueryGraph", host: "HostcallTransport"
+        self,
+        binding: "HostcallBinding",
+        qg: "QueryGraph",
+        host: "HostcallTransport",
     ):
-        self.gql = binding
+        self.__binding = binding
         self.qg = qg
         self.host = host
-        pass
 
-    pass
+    def gql(self, query: str, variables: typing.Mapping):
+        return self.__binding(query, dict(variables))
 
 
 def selection_to_nodes(
@@ -38,7 +41,7 @@ def selection_to_nodes(
         raise Exception(
             f"selection field '_' should be of type SelectionFlags but found {type(sub_flags)}"
         )
-    select_all = True if sub_flags is not None and sub_flags.select_all else False
+    select_all = bool(sub_flags and sub_flags.select_all)
     found_nodes = set(selection.keys())
     for node_name, meta_fn in metas.items():
         found_nodes.discard(node_name)
@@ -524,10 +527,8 @@ def convert_query_node_gql(
         out += f" {{ {sub_node_list}}}"
     elif isinstance(node.sub_nodes, list):
         sub_node_list = ""
-        for node in node.sub_nodes:
-            sub_node_list += (
-                f"{convert_query_node_gql(ty_to_gql_ty_map, node, variables, files)} "
-            )
+        for sub_node in node.sub_nodes:
+            sub_node_list += f"{convert_query_node_gql(ty_to_gql_ty_map, sub_node, variables, files)} "
         out += f" {{ {sub_node_list}}}"
     return out
 
@@ -630,8 +631,10 @@ class GraphQLTransportBase(ABC):
         doc: str,
         variables: typing.Dict[str, typing.Any],
         opts: typing.Optional[GraphQLTransportOptions] = None,
-        files: typing.Dict[str, File] = {},
+        files: typing.Optional[typing.Dict[str, File]] = None,
     ):
+        if files is None:
+            files = {}
         headers = {}
         headers.update(self.opts.headers)
         if opts:
@@ -688,8 +691,8 @@ class GraphQLTransportBase(ABC):
         self,
         doc: str,
         variables: typing.Dict[str, typing.Any],
-        opts: GraphQLTransportOptions | None,
-        files: typing.Dict[str, File] = {},
+        opts: typing.Optional[GraphQLTransportOptions],
+        files: typing.Optional[typing.Dict[str, File]] = None,
     ) -> typing.Any: ...
 
     @typing.overload
@@ -753,8 +756,10 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         doc: str,
         variables: typing.Dict[str, typing.Any],
         opts: typing.Optional[GraphQLTransportOptions],
-        files: typing.Dict[str, File] = {},
+        files: typing.Optional[typing.Dict[str, File]] = None,
     ):
+        if files is None:
+            files = {}
         req = self.build_req(doc, variables, opts, files)
         try:
             with request.urlopen(
@@ -781,7 +786,7 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
                 )
             )
         except urllib.error.URLError as err:
-            raise Exception(f"URL error: {err.reason}")
+            raise Exception(f"URL error: {err.reason}") from err
 
     @typing.overload
     def prepare_query(
@@ -859,9 +864,12 @@ class HostcallTransport(GraphQLTransportBase):
         doc: str,
         variables: typing.Dict[str, typing.Any],
         opts: typing.Optional[GraphQLTransportOptions],
-        files: typing.Dict[str, File] = {},
+        files: typing.Optional[typing.Dict[str, File]] = None,
     ):
         _ = opts
+
+        if files is None:
+            files = {}
 
         if len(files) > 0:
             raise Exception("no support for file upload on HostcallTransport")
@@ -1059,6 +1067,7 @@ Idv3 = typing.TypedDict(
         "release_time": Idv3ReleaseTimeStringDatetime,
         "mp3_url": Idv3Mp3UrlStringUri,
     },
+    total=False,
 )
 
 

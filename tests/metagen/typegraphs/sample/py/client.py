@@ -678,7 +678,7 @@ class GraphQLTransportBase(ABC):
         self,
         doc: str,
         variables: typing.Dict[str, typing.Any],
-        opts: GraphQLTransportOptions | None,
+        opts: typing.Optional[GraphQLTransportOptions],
         files: typing.Optional[typing.Dict[str, File]] = None,
     ) -> typing.Any: ...
 
@@ -1124,6 +1124,7 @@ Post = typing.TypedDict(
         "slug": str,
         "title": str,
     },
+    total=False,
 )
 
 RootCompositeArgsFnInput = typing.TypedDict(
@@ -1131,6 +1132,7 @@ RootCompositeArgsFnInput = typing.TypedDict(
     {
         "id": str,
     },
+    total=False,
 )
 
 RootIdentityFnInput = typing.TypedDict(
@@ -1138,6 +1140,7 @@ RootIdentityFnInput = typing.TypedDict(
     {
         "input": int,
     },
+    total=False,
 )
 
 UserEmailStringEmail = str
@@ -1151,6 +1154,7 @@ User = typing.TypedDict(
         "email": UserEmailStringEmail,
         "posts": UserPostsPostList,
     },
+    total=False,
 )
 
 RootScalarUnionFnOutput = typing.Union[
@@ -1178,6 +1182,7 @@ RootNestedCompositeFnOutputCompositeStructNestedStruct = typing.TypedDict(
     {
         "inner": int,
     },
+    total=False,
 )
 
 RootNestedCompositeFnOutputCompositeStruct = typing.TypedDict(
@@ -1186,6 +1191,7 @@ RootNestedCompositeFnOutputCompositeStruct = typing.TypedDict(
         "value": int,
         "nested": RootNestedCompositeFnOutputCompositeStructNestedStruct,
     },
+    total=False,
 )
 
 RootNestedCompositeFnOutputListStruct = typing.TypedDict(
@@ -1193,6 +1199,7 @@ RootNestedCompositeFnOutputListStruct = typing.TypedDict(
     {
         "value": int,
     },
+    total=False,
 )
 
 RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = typing.List[
@@ -1206,6 +1213,7 @@ RootNestedCompositeFnOutput = typing.TypedDict(
         "composite": RootNestedCompositeFnOutputCompositeStruct,
         "list": RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList,
     },
+    total=False,
 )
 
 

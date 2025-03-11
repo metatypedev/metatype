@@ -691,7 +691,7 @@ class GraphQLTransportBase(ABC):
         self,
         doc: str,
         variables: typing.Dict[str, typing.Any],
-        opts: GraphQLTransportOptions | None,
+        opts: typing.Optional[GraphQLTransportOptions],
         files: typing.Optional[typing.Dict[str, File]] = None,
     ) -> typing.Any: ...
 
@@ -1358,6 +1358,7 @@ Primitives = typing.TypedDict(
         "float": PrimitivesFloatFloat,
         "boolean": PrimitivesBooleanBoolean,
     },
+    total=False,
 )
 
 PrimitivesArgs = typing.TypedDict(
@@ -1365,6 +1366,7 @@ PrimitivesArgs = typing.TypedDict(
     {
         "data": Primitives,
     },
+    total=False,
 )
 
 CompositesOptPrimitivesStrStringOptional = typing.Union[PrimitivesStrString, None]
@@ -1374,6 +1376,7 @@ Branch2 = typing.TypedDict(
     {
         "branch2": PrimitivesStrString,
     },
+    total=False,
 )
 
 CompositesEitherEither = typing.Union[
@@ -1405,11 +1408,12 @@ CompositesListPrimitivesStrStringList = typing.List[PrimitivesStrString]
 Composites = typing.TypedDict(
     "Composites",
     {
-        "opt": typing.NotRequired[CompositesOptPrimitivesStrStringOptional],
+        "opt": CompositesOptPrimitivesStrStringOptional,
         "either": CompositesEitherEither,
         "union": CompositesUnionUnion,
         "list": CompositesListPrimitivesStrStringList,
     },
+    total=False,
 )
 
 CompositesArgs = typing.TypedDict(
@@ -1417,6 +1421,7 @@ CompositesArgs = typing.TypedDict(
     {
         "data": Composites,
     },
+    total=False,
 )
 
 Branch33ATo1Cycles1Optional = typing.Union["Cycles1", None]
@@ -1424,17 +1429,19 @@ Branch33ATo1Cycles1Optional = typing.Union["Cycles1", None]
 Branch33A = typing.TypedDict(
     "Branch33A",
     {
-        "phantom3a": typing.NotRequired[CompositesOptPrimitivesStrStringOptional],
-        "to1": typing.NotRequired[Branch33ATo1Cycles1Optional],
+        "phantom3a": CompositesOptPrimitivesStrStringOptional,
+        "to1": Branch33ATo1Cycles1Optional,
     },
+    total=False,
 )
 
 Branch33B = typing.TypedDict(
     "Branch33B",
     {
-        "phantom3b": typing.NotRequired[CompositesOptPrimitivesStrStringOptional],
-        "to2": typing.NotRequired["Cycles1To2Cycles2Optional"],
+        "phantom3b": CompositesOptPrimitivesStrStringOptional,
+        "to2": "Cycles1To2Cycles2Optional",
     },
+    total=False,
 )
 
 Cycles3 = typing.Union[
@@ -1460,10 +1467,11 @@ Cycles1List3Cycles1List3Cycles3ListOptional = typing.Union[
 Cycles1 = typing.TypedDict(
     "Cycles1",
     {
-        "phantom1": typing.NotRequired[CompositesOptPrimitivesStrStringOptional],
-        "to2": typing.NotRequired["Cycles1To2Cycles2Optional"],
-        "list3": typing.NotRequired[Cycles1List3Cycles1List3Cycles3ListOptional],
+        "phantom1": CompositesOptPrimitivesStrStringOptional,
+        "to2": "Cycles1To2Cycles2Optional",
+        "list3": Cycles1List3Cycles1List3Cycles3ListOptional,
     },
+    total=False,
 )
 
 Cycles1Args = typing.TypedDict(
@@ -1471,6 +1479,7 @@ Cycles1Args = typing.TypedDict(
     {
         "data": Cycles1,
     },
+    total=False,
 )
 
 SimpleCycles3To1SimpleCycles1Optional = typing.Union["SimpleCycles1", None]
@@ -1478,9 +1487,10 @@ SimpleCycles3To1SimpleCycles1Optional = typing.Union["SimpleCycles1", None]
 SimpleCycles3 = typing.TypedDict(
     "SimpleCycles3",
     {
-        "phantom3": typing.NotRequired[CompositesOptPrimitivesStrStringOptional],
-        "to1": typing.NotRequired[SimpleCycles3To1SimpleCycles1Optional],
+        "phantom3": CompositesOptPrimitivesStrStringOptional,
+        "to1": SimpleCycles3To1SimpleCycles1Optional,
     },
+    total=False,
 )
 
 SimpleCycles2To3SimpleCycles3Optional = typing.Union[SimpleCycles3, None]
@@ -1488,9 +1498,10 @@ SimpleCycles2To3SimpleCycles3Optional = typing.Union[SimpleCycles3, None]
 SimpleCycles2 = typing.TypedDict(
     "SimpleCycles2",
     {
-        "phantom2": typing.NotRequired[CompositesOptPrimitivesStrStringOptional],
-        "to3": typing.NotRequired[SimpleCycles2To3SimpleCycles3Optional],
+        "phantom2": CompositesOptPrimitivesStrStringOptional,
+        "to3": SimpleCycles2To3SimpleCycles3Optional,
     },
+    total=False,
 )
 
 SimpleCycles1To2SimpleCycles2Optional = typing.Union[SimpleCycles2, None]
@@ -1498,9 +1509,10 @@ SimpleCycles1To2SimpleCycles2Optional = typing.Union[SimpleCycles2, None]
 SimpleCycles1 = typing.TypedDict(
     "SimpleCycles1",
     {
-        "phantom1": typing.NotRequired[CompositesOptPrimitivesStrStringOptional],
-        "to2": typing.NotRequired["SimpleCycles1To2SimpleCycles2Optional"],
+        "phantom1": CompositesOptPrimitivesStrStringOptional,
+        "to2": "SimpleCycles1To2SimpleCycles2Optional",
     },
+    total=False,
 )
 
 SimpleCycles1Args = typing.TypedDict(
@@ -1508,6 +1520,7 @@ SimpleCycles1Args = typing.TypedDict(
     {
         "data": SimpleCycles1,
     },
+    total=False,
 )
 
 

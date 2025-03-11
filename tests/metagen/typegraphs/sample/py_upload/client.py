@@ -678,7 +678,7 @@ class GraphQLTransportBase(ABC):
         self,
         doc: str,
         variables: typing.Dict[str, typing.Any],
-        opts: GraphQLTransportOptions | None,
+        opts: typing.Optional[GraphQLTransportOptions],
         files: typing.Optional[typing.Dict[str, File]] = None,
     ) -> typing.Any: ...
 
@@ -949,8 +949,9 @@ RootUploadFnInput = typing.TypedDict(
     "RootUploadFnInput",
     {
         "file": FileBf9b7,
-        "path": typing.NotRequired[RootUploadFnInputPathString25e51Optional],
+        "path": RootUploadFnInputPathString25e51Optional,
     },
+    total=False,
 )
 
 RootUploadManyFnInputPrefixString25e51Optional = typing.Union[str, None]
@@ -960,9 +961,10 @@ RootUploadManyFnInputFilesFileBf9b7List = typing.List[FileBf9b7]
 RootUploadManyFnInput = typing.TypedDict(
     "RootUploadManyFnInput",
     {
-        "prefix": typing.NotRequired[RootUploadManyFnInputPrefixString25e51Optional],
+        "prefix": RootUploadManyFnInputPrefixString25e51Optional,
         "files": RootUploadManyFnInputFilesFileBf9b7List,
     },
+    total=False,
 )
 
 RootUploadFnOutput = bool

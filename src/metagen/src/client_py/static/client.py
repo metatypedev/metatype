@@ -679,7 +679,7 @@ class GraphQLTransportBase(ABC):
         self,
         doc: str,
         variables: typing.Dict[str, typing.Any],
-        opts: GraphQLTransportOptions | None,
+        opts: typing.Optional[GraphQLTransportOptions],
         files: typing.Optional[typing.Dict[str, File]] = None,
     ) -> typing.Any: ...
 

@@ -30,14 +30,17 @@ impl PyTypeRenderer {
     ) -> std::fmt::Result {
         writeln!(dest, r#"{ty_name} = typing.TypedDict("{ty_name}", {{"#)?;
         for (name, (ty_name, optional)) in props.into_iter() {
+            // FIXME: NotRequired is only avail on python 3.11
             if optional {
-                writeln!(dest, r#"    "{name}": typing.NotRequired[{ty_name}],"#)?;
+                // writeln!(dest, r#"    "{name}": typing.NotRequired[{ty_name}],"#)?;
+                writeln!(dest, r#"    "{name}": {ty_name},"#)?;
             } else {
                 writeln!(dest, r#"    "{name}": {ty_name},"#)?;
             }
             // writeln!(dest, r#"    "{name}": {ty_name},"#)?;
         }
-        writeln!(dest, "}})")?;
+        // FIXME: all fields are optional due to py 3.9 TypedDict limitations
+        writeln!(dest, "}}, total=False)")?;
         writeln!(dest)?;
         Ok(())
     }
