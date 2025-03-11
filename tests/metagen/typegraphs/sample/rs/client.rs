@@ -17,7 +17,10 @@ pub mod transports {
     }
 
     #[cfg(not(target_family = "wasm"))]
-    pub fn graphql_sync(qg: &QueryGraph, addr: Url) -> metagen_client::graphql::GraphQlTransportReqwestSync {
+    pub fn graphql_sync(
+        qg: &QueryGraph,
+        addr: Url,
+    ) -> metagen_client::graphql::GraphQlTransportReqwestSync {
         metagen_client::graphql::GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
     }
 

@@ -22,9 +22,12 @@ class Ctx:
         qg: "QueryGraph",
         host: "HostcallTransport",
     ):
-        self.gql = binding
+        self.__binding = binding
         self.qg = qg
         self.host = host
+
+    def gql(self, query: str, variables: typing.Mapping):
+        return self.__binding(query, dict(variables))
 
 
 def selection_to_nodes(
