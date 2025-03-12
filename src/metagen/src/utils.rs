@@ -28,7 +28,30 @@ pub struct GenDestFs {
     pub files: HashMap<String, GenDestBuf>,
 } */
 
-// Supports directives
+/// Processes input text with metagen directives for conditional code generation.
+///
+/// Supported directives:
+/// - `metagen-skip` - Skip the next line
+/// - `metagen-genif <flag>` - Include following lines only if the flag is true
+/// - `metagen-genif-not <flag>` - Include following lines only if the flag is false
+/// - `metagen-endif` - End a conditional block
+///
+/// # Arguments
+/// * `dest` - The destination buffer to write to
+/// * `input` - The input text to process
+/// * `flags` - Map of feature flags that control directive behavior
+///
+/// # Returns
+/// * `Ok(())` if processing was successful
+/// * `Err` if there are unmatched or unclosed directives
+///
+/// # Examples
+/// ```
+/// let mut dest = GenDestBuf { buf: String::new() };
+/// let input = "line1\nmetagen-genif feature1\nconditional line\nmetagen-endif\nline2";
+/// let flags = [("feature1".to_string(), true)].into_iter().collect();
+/// processed_write(&mut dest, input, &flags).unwrap();
+/// ```
 pub fn processed_write(
     dest: &mut GenDestBuf,
     input: &str,
@@ -89,6 +112,9 @@ pub fn processed_write(
     Ok(())
 }
 
+/// Moves lines in the input string that match a pattern to come subsequent
+/// to the first instance of a line that matches. Order will be preserved.
+/// Useful to collect import statements to top of file.
 pub fn collect_at_first_instance(input: &str, pattern: &regex::Regex) -> String {
     use std::collections::HashSet;
 

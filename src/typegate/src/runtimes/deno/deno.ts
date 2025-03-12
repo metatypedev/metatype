@@ -169,7 +169,7 @@ export class DenoRuntime extends Runtime {
       authToken: token,
       typegate,
       typegraphUrl: new URL(
-        `internal+hostcall+subs://typegate/${typegraphName}`,
+        `internal+hostcall+deno://typegate/${typegraphName}`,
       ),
     };
 

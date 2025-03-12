@@ -68,7 +68,7 @@ export class WasmRuntimeWire extends Runtime {
     const hostcallCtx = {
       authToken: token,
       typegate,
-      typegraphUrl: new URL(`internal+witwire://typegate/${typegraphName}`),
+      typegraphUrl: new URL(`internal+hostcall+witwire://typegate/${typegraphName}`),
     };
 
     const workerManager = new WorkerManager(hostcallCtx);
