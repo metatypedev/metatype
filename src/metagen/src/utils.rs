@@ -44,14 +44,6 @@ pub struct GenDestFs {
 /// # Returns
 /// * `Ok(())` if processing was successful
 /// * `Err` if there are unmatched or unclosed directives
-///
-/// # Examples
-/// ```
-/// let mut dest = GenDestBuf { buf: String::new() };
-/// let input = "line1\nmetagen-genif feature1\nconditional line\nmetagen-endif\nline2";
-/// let flags = [("feature1".to_string(), true)].into_iter().collect();
-/// processed_write(&mut dest, input, &flags).unwrap();
-/// ```
 pub fn processed_write(
     dest: &mut GenDestBuf,
     input: &str,
