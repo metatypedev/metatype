@@ -221,7 +221,7 @@ impl Type {
 }
 
 // TODO move to (...)
-pub fn is_composite(tg: &tg_schema::Typegraph, idx: u32) -> bool {
+pub fn is_composite(tg: &tg_schema::Typegraph, idx: u32) -> Result<bool> {
     let node = &tg.types[idx as usize];
     use tg_schema::TypeNode as N;
     match node {
@@ -229,8 +229,8 @@ pub fn is_composite(tg: &tg_schema::Typegraph, idx: u32) -> bool {
         | N::Integer { .. }
         | N::Float { .. }
         | N::String { .. }
-        | N::File { .. } => false,
-        N::Object { .. } => true,
+        | N::File { .. } => Ok(false),
+        N::Object { .. } => Ok(true),
         N::Optional { data, .. } => is_composite(tg, data.item),
         N::List { data, .. } => is_composite(tg, data.items),
         N::Union {
@@ -240,8 +240,15 @@ pub fn is_composite(tg: &tg_schema::Typegraph, idx: u32) -> bool {
         | N::Either {
             data: tg_schema::EitherTypeData { one_of: variants },
             ..
-        } => variants.iter().any(|v| is_composite(tg, *v)),
-        N::Function { .. } => panic!("function type isn't composite or scalar"),
+        } => {
+            for v in variants.iter() {
+                if is_composite(tg, *v)? {
+                    return Ok(true);
+                }
+            }
+            Ok(false)
+        }
+        N::Function { .. } => bail!("function type isn't composite or scalar"),
         N::Any { .. } => unimplemented!("Any type support not implemented"),
     }
 }

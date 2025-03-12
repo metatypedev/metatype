@@ -111,20 +111,20 @@ impl ConversionMap {
                 }]),
             },
             MapItem::Namespace(_, _) => {
-                unreachable!("unexpected duplicate namespace type: {:?}", key)
+                bail!("unexpected duplicate namespace type: {:?}", key)
             }
             MapItem::Function(_) => {
-                unreachable!("unexpected duplicate function type: {:?}", key)
+                bail!("unexpected duplicate function type: {:?}", key)
             }
             MapItem::Value(mut value_types) => {
                 if key.1 != value_types.len() as u32 {
-                    panic!("unexpected ordinal number: {:?}", key);
+                    bail!("unexpected ordinal number: {:?}", key);
                 }
                 value_types.push(MapValueItem {
                     kind: match rpath {
                         RelativePath::Input(_) => ValueTypeKind::Input,
                         RelativePath::Output(_) => ValueTypeKind::Output,
-                        _ => unreachable!(),
+                        _ => bail!("unexpected value type kind: {:?}", rpath),
                     },
                     ty: node.clone(),
                     relative_paths: vec![rpath
@@ -171,20 +171,20 @@ impl ConversionMap {
         Ok(())
     }
 
-    pub fn get_next_type_key(&self, type_idx: u32) -> TypeKey {
+    pub fn get_next_type_key(&self, type_idx: u32) -> Result<TypeKey> {
         match self.direct.get(type_idx as usize) {
-            Some(MapItem::Unset) => TypeKey(type_idx, 0),
+            Some(MapItem::Unset) => Ok(TypeKey(type_idx, 0)),
             Some(MapItem::Namespace(_, _)) => {
-                unreachable!("unexpected duplicate namespace type: {:?}", type_idx)
+                bail!("unexpected duplicate namespace type: {:?}", type_idx)
             }
             Some(MapItem::Function(_)) => {
-                unreachable!("unexpected duplicate function type: {:?}", type_idx)
+                bail!("unexpected duplicate function type: {:?}", type_idx)
             }
             Some(MapItem::Value(value_types)) => {
                 let ordinal = value_types.len() as u32;
-                TypeKey(type_idx, ordinal)
+                Ok(TypeKey(type_idx, ordinal))
             }
-            None => unreachable!("type index out of bounds: {:?}", type_idx),
+            None => bail!("type index out of bounds: {:?}", type_idx),
         }
     }
 }
@@ -203,7 +203,7 @@ impl PathSegment {
         match self {
             PathSegment::ObjectProp(key) => match ty {
                 Type::Object(obj) => {
-                    let prop = obj.properties().get(key).ok_or_else(|| {
+                    let prop = obj.properties()?.get(key).ok_or_else(|| {
                         eyre!("cannot apply path segment: property '{}' not found", key)
                     })?;
                     Ok(prop.type_.clone())
@@ -221,7 +221,7 @@ impl PathSegment {
                 ),
             },
             PathSegment::OptionalItem => match ty {
-                Type::Optional(opt) => Ok(opt.item().clone()),
+                Type::Optional(opt) => Ok(opt.item()?.clone()),
                 _ => bail!(
                     "cannot apply path segment: expected optional type, got {:?}",
                     ty.tag()
@@ -229,7 +229,7 @@ impl PathSegment {
             },
             PathSegment::UnionVariant(idx) => match ty {
                 Type::Union(union) => Ok(union
-                    .variants()
+                    .variants()?
                     .get(*idx as usize)
                     .ok_or_else(|| eyre!("variant #{} not found in union; ty={}", idx, ty.idx()))?
                     .clone()),
@@ -470,7 +470,7 @@ impl RelativePath {
                         p.owner
                             .upgrade()
                             .ok_or_else(|| eyre!("no strong pointer for type"))?
-                            .input()
+                            .input()?
                             .wrap(),
                         schema,
                     )?
@@ -485,7 +485,7 @@ impl RelativePath {
                         p.owner
                             .upgrade()
                             .ok_or_else(|| eyre!("no strong pointer for type"))?
-                            .output()
+                            .output()?
                             .clone(),
                         schema,
                     )?
@@ -497,8 +497,8 @@ impl RelativePath {
 }
 
 impl RelativePath {
-    pub(crate) fn push(&self, segment: PathSegment) -> Self {
-        match self {
+    pub(crate) fn push(&self, segment: PathSegment) -> Result<Self> {
+        Ok(match self {
             Self::NsObject(path) => {
                 let mut path = path.clone();
                 match segment {
@@ -506,7 +506,7 @@ impl RelativePath {
                         path.push(key);
                         Self::NsObject(path)
                     }
-                    _ => panic!("unexpected segment pushed on namespace {:?}", segment),
+                    _ => bail!("unexpected segment pushed on namespace {:?}", segment),
                 }
             }
             Self::Input(k) => {
@@ -526,9 +526,8 @@ impl RelativePath {
                 })
             }
             Self::Function(_) => {
-                // TODO error
-                panic!("unexpected segment pushed on function {:?}", segment);
+                bail!("unexpected segment pushed on function {:?}", segment);
             }
-        }
+        })
     }
 }

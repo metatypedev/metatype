@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType};
+use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType, Wrap as _};
 use crate::conv::interlude::*;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{
@@ -23,21 +23,25 @@ pub struct FunctionType {
 }
 
 impl FunctionType {
-    pub fn input(&self) -> &Arc<ObjectType> {
-        self.input.get().expect("uninitialized")
+    pub fn input(&self) -> Result<&Arc<ObjectType>> {
+        self.input
+            .get()
+            .ok_or_else(|| eyre!("function input uninitialized; ty={:?}", self.base.key))
     }
     // TODO this should be the default
-    pub fn non_empty_input(&self) -> Option<&Arc<ObjectType>> {
-        let input = self.input();
-        if input.properties().is_empty() {
+    pub fn non_empty_input(&self) -> Result<Option<&Arc<ObjectType>>> {
+        let input = self.input()?;
+        Ok(if input.properties()?.is_empty() {
             None
         } else {
             Some(input)
-        }
+        })
     }
 
-    pub fn output(&self) -> &Type {
-        self.output.get().expect("uninitialized")
+    pub fn output(&self) -> Result<&Type> {
+        self.output
+            .get()
+            .ok_or_else(|| eyre!("function output uninitialized; ty={:?}", self.base.key))
     }
 
     pub fn effect(&self) -> tg_schema::EffectType {
@@ -63,8 +67,8 @@ impl TypeNode for Arc<FunctionType> {
 
     fn children(&self) -> Result<Vec<Type>> {
         Ok(vec![
-            Type::Object(self.input().clone()),
-            self.output().clone(),
+            Type::Object(self.input()?.clone()),
+            self.output()?.clone(),
         ])
     }
 
@@ -72,12 +76,12 @@ impl TypeNode for Arc<FunctionType> {
         Ok(vec![
             Edge {
                 from: WeakType::Function(Arc::downgrade(self)),
-                to: Type::Object(self.input().clone()),
+                to: Type::Object(self.input()?.clone()),
                 kind: EdgeKind::FunctionInput,
             },
             Edge {
                 from: WeakType::Function(Arc::downgrade(self)),
-                to: self.output().clone(),
+                to: self.output()?.clone(),
                 kind: EdgeKind::FunctionOutput,
             },
         ])
@@ -91,19 +95,17 @@ pub(crate) fn convert_function(
     data: &tg_schema::FunctionTypeData,
     materializer: Arc<MaterializerNode>,
 ) -> Box<dyn TypeConversionResult> {
-    let ty = Type::Function(
-        FunctionType {
-            base: Conversion::base(key, parent, base),
-            input: Default::default(),
-            output: Default::default(),
-            parameter_transform: data.parameter_transform.clone(),
-            runtime_config: data.runtime_config.clone(),
-            materializer,
-            rate_weight: data.rate_weight,
-            rate_calls: data.rate_calls,
-        }
-        .into(),
-    );
+    let ty = FunctionType {
+        base: Conversion::base(key, parent, base),
+        input: Default::default(),
+        output: Default::default(),
+        parameter_transform: data.parameter_transform.clone(),
+        runtime_config: data.runtime_config.clone(),
+        materializer,
+        rate_weight: data.rate_weight,
+        rate_calls: data.rate_calls,
+    }
+    .into();
 
     Box::new(FunctionTypeConversionResult {
         ty,
@@ -113,18 +115,18 @@ pub(crate) fn convert_function(
 }
 
 struct FunctionTypeConversionResult {
-    ty: Type,
+    ty: Arc<FunctionType>,
     input_idx: u32,
     output_idx: u32,
 }
 
 impl TypeConversionResult for FunctionTypeConversionResult {
     fn get_type(&self) -> Type {
-        self.ty.clone()
+        self.ty.clone().wrap()
     }
 
     fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
-        let weak = self.ty.downgrade();
+        let weak = self.ty.clone().wrap().downgrade();
         let owner_fn = weak.as_func().ok_or_else(|| {
             eyre!(
                 "strong pointer removed for function type; key={:?}",
@@ -144,29 +146,24 @@ impl TypeConversionResult for FunctionTypeConversionResult {
             RelativePath::output(owner_fn.clone(), vec![]),
         )?;
 
-        match &self.ty {
-            Type::Function(func) => {
-                match &input_res.get_type() {
-                    Type::Object(input) => {
-                        func.input.set(input.clone()).map_err(|_| {
-                            eyre!(
-                                "OnceLock: cannot set function input type more than once; key={:?}",
-                                self.ty.key()
-                            )
-                        })?;
-                    }
-                    _ => unreachable!(),
-                }
-                func.output.set(output_res.get_type()).map_err(|_| {
+        match &input_res.get_type() {
+            Type::Object(input) => {
+                self.ty.input.set(input.clone()).map_err(|_| {
                     eyre!(
-                        "OnceLock: cannot set function output type more than once; key={:?}",
+                        "OnceLock: cannot set function input type more than once; key={:?}",
                         self.ty.key()
                     )
                 })?;
-                // TODO materializer
             }
-            _ => unreachable!(),
+            _ => bail!("expected object type for function input"),
         }
+        self.ty.output.set(output_res.get_type()).map_err(|_| {
+            eyre!(
+                "OnceLock: cannot set function output type more than once; key={:?}",
+                self.ty.key()
+            )
+        })?;
+        // TODO materializer
 
         input_res.finalize(conv)?;
         output_res.finalize(conv)?;

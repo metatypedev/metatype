@@ -46,7 +46,7 @@ mod default {
         fn name_value_types(&mut self, range: &[MapValueItem]) -> Result<()> {
             match range.len() {
                 0 => {
-                    unreachable!("No registered type");
+                    unreachable!("no registered type");
                 }
                 1 => {
                     let first = range.iter().next().unwrap();

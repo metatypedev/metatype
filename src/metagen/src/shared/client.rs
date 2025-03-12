@@ -30,13 +30,14 @@ pub fn get_manifest(tg: Arc<Typegraph>) -> Result<RenderManifest> {
     let mut node_metas = IndexSet::new();
     let mut arg_types = IndexSet::new();
 
-    for (path, func) in tg.root_functions() {
+    for root_fn in tg.root_functions() {
+        let (path, func) = root_fn?;
         let _ = node_metas.insert(func.key());
-        let out = func.output();
+        let out = func.output()?;
         let out_key = out.key();
         // return_types.insert(out_name.clone());
 
-        let select_ty = if func.output().is_composite() {
+        let select_ty = if func.output()?.is_composite()? {
             let _ = node_metas.insert(out_key.clone());
             selections.insert(out_key.clone());
             Some(out_key)
@@ -51,7 +52,7 @@ pub fn get_manifest(tg: Arc<Typegraph>) -> Result<RenderManifest> {
     }
 
     for func in tg.functions.values() {
-        arg_types.insert(func.input().name());
+        arg_types.insert(func.input()?.name()?);
     }
 
     Ok(RenderManifest {
@@ -77,12 +78,12 @@ pub fn selection_for_field(ty: &Type) -> Result<SelectionTy> {
             SelectionTy::Scalar
         }
         Type::Function(t) => {
-            let arg_ty = if !t.input().properties().is_empty() {
-                Some(t.input().key())
+            let arg_ty = if !t.input()?.properties()?.is_empty() {
+                Some(t.input()?.key())
             } else {
                 None
             };
-            match (arg_ty, selection_for_field(t.output())?) {
+            match (arg_ty, selection_for_field(t.output()?)?) {
                 (None, SelectionTy::Scalar) => SelectionTy::Scalar,
                 (Some(arg_ty), SelectionTy::Scalar) => SelectionTy::ScalarArgs { arg_ty },
                 (None, SelectionTy::Composite { select_ty }) => {
@@ -97,11 +98,11 @@ pub fn selection_for_field(ty: &Type) -> Result<SelectionTy> {
             }
         }
 
-        Type::Optional(t) => selection_for_field(t.item())?,
+        Type::Optional(t) => selection_for_field(t.item()?)?,
         Type::List(t) => selection_for_field(t.item()?)?,
         Type::Object(t) => SelectionTy::Composite { select_ty: t.key() },
         Type::Union(t) => {
-            let variants = t.variants();
+            let variants = t.variants()?;
             match selection_for_field(&variants[0])? {
                 SelectionTy::Scalar => SelectionTy::Scalar,
                 SelectionTy::Composite { .. } => SelectionTy::Composite { select_ty: t.key() },

@@ -19,7 +19,7 @@ impl InputResolverSync for RawTgResolver {
         match order {
             GeneratorInputOrder::TypegraphFromTypegate { .. } => {
                 Ok(GeneratorInputResolved::TypegraphFromTypegate {
-                    raw: Arc::new(Arc::new(self.tg.clone()).into()),
+                    raw: Arc::new(Arc::new(self.tg.clone()).try_into()?),
                 })
             }
             GeneratorInputOrder::TypegraphFromPath { .. } => unimplemented!(),

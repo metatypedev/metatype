@@ -54,10 +54,12 @@ pub fn filter_stubbed_funcs(
     Ok(stubbed_funcs)
 }
 
-pub fn get_gql_type(ty: &Type, as_id: bool, optional: bool) -> String {
+pub fn get_gql_type(ty: &Type, as_id: bool, optional: bool) -> Result<String> {
     let name = match ty {
-        Type::Optional(ty) => return get_gql_type(ty.item(), false, true),
-        Type::List(ty) => format!("[{}]", get_gql_type(ty.item().unwrap(), false, true)),
+        Type::Optional(ty) => return get_gql_type(ty.item()?, false, true),
+        Type::List(ty) => {
+            get_gql_type(ty.item()?, false, true).map(|item| format!("[{}]", item))?
+        }
         Type::String(_ty) => {
             if as_id {
                 "ID".into()
@@ -70,11 +72,7 @@ pub fn get_gql_type(ty: &Type, as_id: bool, optional: bool) -> String {
         Type::Integer(_) => "Int".into(),
         ty => ty.base().title.clone(),
     };
-    if !optional {
-        format!("{name}!")
-    } else {
-        name
-    }
+    Ok(if !optional { format!("{name}!") } else { name })
 }
 /*
   getGraphQLType(typeNode: TypeNode, optional = false): string {

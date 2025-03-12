@@ -63,7 +63,7 @@ impl RenderType for TypescriptTypeRenderer {
         let name = match cursor.node.clone() {
             Type::Function { .. } => "void".into(),
             Type::Boolean(ty) if body_required => {
-                let ty_name = normalize_type_title(&ty.name());
+                let ty_name = normalize_type_title(&ty.name()?);
                 self.render_alias(renderer, &ty_name, "boolean")?;
                 ty_name
             }

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
+use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
 use crate::conv::interlude::*;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{Arc, Lazy};
@@ -14,8 +14,10 @@ pub struct UnionType {
 }
 
 impl UnionType {
-    pub fn variants(&self) -> &Vec<Type> {
-        self.variants.get().expect("uninitialized")
+    pub fn variants(&self) -> Result<&Vec<Type>> {
+        self.variants
+            .get()
+            .ok_or_else(|| eyre!("variants uninitialized on union"))
     }
 }
 
@@ -33,12 +35,12 @@ impl TypeNode for Arc<UnionType> {
     }
 
     fn children(&self) -> Result<Vec<Type>> {
-        Ok(self.variants().clone())
+        Ok(self.variants()?.clone())
     }
 
     fn edges(&self) -> Result<Vec<Edge>> {
         Ok(self
-            .variants()
+            .variants()?
             .iter()
             .enumerate()
             .map(|(v, t)| Edge {
@@ -58,14 +60,12 @@ pub(crate) fn convert_union(
     variants: &[u32],
     either: bool,
 ) -> Box<dyn TypeConversionResult> {
-    let ty = Type::Union(
-        UnionType {
-            base: Conversion::base(key, parent, base),
-            variants: Default::default(),
-            either,
-        }
-        .into(),
-    );
+    let ty = UnionType {
+        base: Conversion::base(key, parent, base),
+        variants: Default::default(),
+        either,
+    }
+    .into();
 
     Box::new(UnionTypeConversionResult {
         ty,
@@ -75,36 +75,33 @@ pub(crate) fn convert_union(
 }
 
 pub struct UnionTypeConversionResult {
-    ty: Type,
+    ty: Arc<UnionType>,
     variants: Vec<u32>, // TODO reference
     rpath: RelativePath,
 }
 
 impl TypeConversionResult for UnionTypeConversionResult {
     fn get_type(&self) -> Type {
-        self.ty.clone()
+        self.ty.clone().wrap()
     }
 
     fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
         let mut variants = Vec::with_capacity(self.variants.len());
         let mut results = Vec::with_capacity(self.variants.len());
-        let weak = self.ty.downgrade();
+        let weak = self.ty.clone().wrap().downgrade();
         for (i, &idx) in self.variants.iter().enumerate() {
-            let rpath = self.rpath.push(PathSegment::UnionVariant(i as u32));
+            let rpath = self.rpath.push(PathSegment::UnionVariant(i as u32))?;
             let res = conv.convert_type(weak.clone(), idx, rpath)?;
             variants.push(res.get_type());
             results.push(res);
         }
 
-        match &self.ty {
-            Type::Union(union) => union.variants.set(variants).map_err(|_| {
-                eyre!(
-                    "OnceLock: cannot set union variants more than once; key={:?}",
-                    self.ty.key()
-                )
-            })?,
-            _ => unreachable!(),
-        }
+        self.ty.variants.set(variants).map_err(|_| {
+            eyre!(
+                "OnceLock: cannot set union variants more than once; key={:?}",
+                self.ty.key()
+            )
+        })?;
 
         for mut res in results {
             res.finalize(conv)?;

@@ -10,9 +10,9 @@ use super::{Action, ConfigArgs};
 
 #[derive(ValueEnum, Debug, Clone)]
 enum Template {
-    // Rust,
+    Rust,
     Python,
-    Typescript,
+    // Typescript,
 }
 
 #[derive(Parser, Debug)]
@@ -38,9 +38,9 @@ impl Action for CreateFdkTemplate {
             .context("failed to create target directory")?;
 
         let template = match self.template {
-            // Template::Rust => metagen::FDK_RS_DEFAULT_TEMPLATE,
+            Template::Rust => metagen::FDK_RS_DEFAULT_TEMPLATE,
             Template::Python => metagen::FDK_PY_DEFAULT_TEMPLATE,
-            Template::Typescript => metagen::FDK_TS_DEFAULT_TEMPLATE,
+            // Template::Typescript => metagen::FDK_TS_DEFAULT_TEMPLATE,
         };
 
         for (file_name, content) in template.iter() {

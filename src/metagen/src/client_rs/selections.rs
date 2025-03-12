@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{collections::HashMap, fmt::Write};
+use std::fmt::Write;
 
 use typegraph::TypeNodeExt as _;
 
@@ -10,10 +10,6 @@ use super::{
     utils::*,
 };
 use crate::{interlude::*, shared::client::*, shared::types::*};
-
-// pub struct RsNodeSelectionsRenderer {
-//     pub arg_ty_names: Arc<NameMemo>,
-// }
 
 #[derive(Debug)]
 pub struct UnionProp {
@@ -169,11 +165,11 @@ impl RustSelection {
     }
 }
 
-pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
+pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<RustSelection>> {
     let mut map = IndexMap::new();
 
     for (key, ty) in tg.output_types.iter() {
-        if !is_composite(ty) {
+        if !ty.is_composite()? {
             continue;
         }
         match ty {
@@ -185,7 +181,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
             Type::Optional(_) | Type::List(_) | Type::Function(_) => {}
             Type::Object(ty) => {
                 let props = ty
-                    .properties()
+                    .properties()?
                     .iter()
                     .map(|(prop_name, prop)| {
                         (
@@ -199,33 +195,29 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
                     *key,
                     RustSelection::Struct {
                         props,
-                        name: format!("{}Selections", normalize_type_title(&ty.name())),
+                        name: format!("{}Selections", normalize_type_title(&ty.name()?)),
                     },
                 );
             }
             Type::Union(ty) => {
-                let variants = ty
-                    .variants()
-                    .iter()
-                    .filter_map(|variant| {
-                        if !is_composite(variant) {
-                            return None;
-                        }
-                        let struct_prop_name = normalize_struct_prop_name(&variant.title());
-                        let selection = selection_for_field(variant).unwrap();
-                        Some(eyre::Ok(UnionProp {
-                            name: struct_prop_name,
-                            variant_ty: variant.name().to_string(), // FIXME normalized??
-                            select_ty: selection,
-                        }))
-                    })
-                    .collect::<Result<Vec<_>, _>>()
-                    .unwrap();
+                let mut variants = vec![];
+                for variant in ty.variants()? {
+                    if !variant.is_composite()? {
+                        continue;
+                    }
+                    let struct_prop_name = normalize_struct_prop_name(&variant.title());
+                    let selection = selection_for_field(variant).unwrap();
+                    variants.push(UnionProp {
+                        name: struct_prop_name,
+                        variant_ty: variant.name()?.to_string(), // FIXME normalized??
+                        select_ty: selection,
+                    });
+                }
                 map.insert(
                     *key,
                     RustSelection::Union {
                         variants,
-                        name: format!("{}Selections", normalize_type_title(&ty.name())),
+                        name: format!("{}Selections", normalize_type_title(&ty.name()?)),
                     },
                 );
             }
@@ -234,5 +226,5 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
 
     let res: ManifestPage<_> = map.into();
     res.cache_references(&EmptyNameMemo);
-    res
+    Ok(res)
 }

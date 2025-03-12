@@ -27,9 +27,9 @@ pub fn gen_stub(
     //     .context("output type for function not found")?;
     // let inp_ty = normalize_type_title(&fun.input().name());
     // let out_ty = normalize_type_title(&fun.output().name());
-    let inp_ty = name_memo.get(fun.input().key()).unwrap_or("()");
-    let out_ty = name_memo.get(fun.output().key()).unwrap();
-    let title = &fun.name();
+    let inp_ty = name_memo.get(fun.input()?.key()).unwrap_or("()");
+    let out_ty = name_memo.get(fun.output()?.key()).unwrap();
+    let title = &fun.name()?;
     let trait_name: String = normalize_type_title(title);
     // FIXME: use hash or other stable id
     let id = title;

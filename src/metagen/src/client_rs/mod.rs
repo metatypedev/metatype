@@ -11,11 +11,9 @@ use fdk_rs::types::manifest_page;
 use fdk_rs::types::RustType;
 use shared::get_gql_type;
 use shared::manifest::ManifestPage;
-use shared::types::is_composite;
 use shared::types::EmptyNameMemo;
 use tg_schema::EffectType;
 use typegraph::conv::TypeKey;
-use typegraph::TypeNode as _;
 use typegraph::TypeNodeExt as _;
 
 use crate::interlude::*;
@@ -24,9 +22,7 @@ use crate::*;
 use crate::fdk_rs::utils;
 use crate::shared::client::*;
 use crate::shared::types::NameMemo;
-use crate::shared::types::TypeRenderer;
 use crate::utils::GenDestBuf;
-use utils::normalize_type_title;
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct ClienRsGenConfig {
@@ -171,35 +167,30 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: Arc<Typegraph>) -> anyhow::R
     let selections = render_selection_types(dest, &manifest, &name_memo)?;
 
     // Top level input types should be mapped to their GraphQL types
-    let mut named_types = tg
-        .functions
-        .values()
-        .map(|func| {
-            let inp_type = func.input();
+    let mut named_types: IndexMap<(TypeKey, bool), _> = Default::default();
+    for (_idx, func) in tg.functions.iter() {
+        let inp_type = func.input()?;
+        named_types.extend(
             inp_type
-                .properties()
+                .properties()?
                 .iter()
-                .map(|(ni_, prop)| ((prop.type_.key(), prop.as_id), prop.type_.clone()))
-        })
-        .flatten()
-        .collect::<IndexMap<_, _>>();
+                .map(|(_, prop)| ((prop.type_.key(), prop.as_id), prop.type_.clone())),
+        );
+    }
 
     // additional named types: non scalar union variants
-    named_types.extend(
-        tg.output_types
-            .iter()
-            .filter_map(|(key, ty)| match ty {
-                Type::Union(ty) => Some(ty.variants().iter().filter_map(|variant| {
-                    if !is_composite(variant) {
-                        return None;
+    for ty in tg.output_types.values() {
+        match ty {
+            Type::Union(ty) => {
+                for variant in ty.variants()? {
+                    if variant.is_composite()? {
+                        named_types.insert((variant.key(), false), variant.clone());
                     }
-                    Some(variant.clone())
-                })),
-                _ => None,
-            })
-            .flatten()
-            .map(|ty| ((ty.key(), false), ty.clone())),
-    );
+                }
+            }
+            _ => {}
+        }
+    }
 
     write!(
         dest,
@@ -213,7 +204,7 @@ impl QueryGraph {{
     )?;
 
     for ((key, as_id), ty) in named_types.into_iter() {
-        let gql_ty = get_gql_type(&ty, as_id, false);
+        let gql_ty = get_gql_type(&ty, as_id, false)?;
         let ty_name = name_memo.get(&key).unwrap().as_ref().unwrap();
         write!(
             dest,
@@ -237,19 +228,19 @@ impl QueryGraph {{
         let node_name = fun.path.join("_");
         let method_name = node_name.to_snek_case();
         let out_ty_name = name_memo
-            .get(&fun.type_.output().key())
+            .get(&fun.type_.output()?.key())
             .map(|s| s.as_deref())
             .flatten()
             .unwrap();
 
         let arg_ty = fun
             .type_
-            .non_empty_input()
+            .non_empty_input()?
             .map(|ty| name_memo.get(&ty.key()).unwrap().as_deref())
             .flatten();
 
         let select_ty = selections
-            .get(&fun.type_.output().key())
+            .get(&fun.type_.output()?.key())
             .map(|s| s.as_deref())
             .flatten();
 
@@ -388,7 +379,7 @@ fn render_data_types(
     writeln!(dest.buf, "pub mod types {{")?;
 
     let map = {
-        let map = manifest_page(&manifest.tg, true);
+        let map = manifest_page(&manifest.tg, true)?;
         let mut types_rs = String::new();
         map.render_all(&mut types_rs, &EmptyNameMemo)?;
         for line in types_rs.lines() {
@@ -408,7 +399,7 @@ fn render_selection_types(
     name_memo: &impl NameMemo,
     // arg_types_memo: Arc<NameMemo>,
 ) -> Result<HashMap<TypeKey, Option<String>>> {
-    let page = selections::manifest_page(&manifest.tg);
+    let page = selections::manifest_page(&manifest.tg)?;
     page.render_all(dest, name_memo)?;
     // let mut renderer = TypeRenderer::new(
     //     name_mapper.nodes.clone(),
@@ -432,7 +423,8 @@ fn render_node_metas(
     // name_mapper: Arc<NameMapper>,
     name_memo: &impl NameMemo,
 ) -> Result<HashMap<TypeKey, Option<String>>> {
-    let manifest = node_metas::PageBuilder::new(manifest.tg.clone(), &manifest.node_metas).build();
+    let manifest =
+        node_metas::PageBuilder::new(manifest.tg.clone(), &manifest.node_metas).build()?;
     manifest.cache_references(name_memo);
     let mut methods = String::new();
     manifest.render_all(&mut methods, name_memo)?;

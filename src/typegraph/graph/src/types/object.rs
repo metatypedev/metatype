@@ -3,7 +3,7 @@
 
 use indexmap::IndexMap;
 
-use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
+use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
 use crate::conv::interlude::*;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{policies::PolicyRef, Arc, Lazy};
@@ -26,19 +26,18 @@ pub struct ObjectType {
 }
 
 impl ObjectType {
-    pub fn properties(&self) -> &HashMap<Arc<str>, ObjectProperty> {
-        match self.properties.get() {
-            Some(props) => props,
-            None => unreachable!("object properties uninitialized: key={:?}", self.base.key),
-        }
+    pub fn properties(&self) -> Result<&HashMap<Arc<str>, ObjectProperty>> {
+        self.properties
+            .get()
+            .ok_or_else(|| eyre!("object properties uninitialized: ty={:?}", self.base.key))
     }
 
-    pub fn non_empty(self: Arc<Self>) -> Option<Arc<Self>> {
-        if self.as_ref().properties().is_empty() {
+    pub fn non_empty(self: Arc<Self>) -> Result<Option<Arc<Self>>> {
+        Ok(if self.as_ref().properties()?.is_empty() {
             None
         } else {
             Some(self)
-        }
+        })
     }
 }
 
@@ -53,7 +52,7 @@ impl TypeNode for Arc<ObjectType> {
 
     fn children(&self) -> Result<Vec<Type>> {
         Ok(self
-            .properties()
+            .properties()?
             .values()
             .map(|p| p.type_.clone())
             .collect())
@@ -61,7 +60,7 @@ impl TypeNode for Arc<ObjectType> {
 
     fn edges(&self) -> Result<Vec<Edge>> {
         Ok(self
-            .properties()
+            .properties()?
             .iter()
             .map(|(name, prop)| Edge {
                 from: WeakType::Object(Arc::downgrade(self)),
@@ -79,13 +78,11 @@ pub(crate) fn convert_object(
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::ObjectTypeData,
 ) -> Box<dyn TypeConversionResult> {
-    let ty = Type::Object(
-        ObjectType {
-            base: Conversion::base(key, parent, base),
-            properties: Default::default(),
-        }
-        .into(),
-    );
+    let ty = ObjectType {
+        base: Conversion::base(key, parent, base),
+        properties: Default::default(),
+    }
+    .into();
 
     Box::new(ObjectTypeConversionResult {
         ty,
@@ -97,7 +94,7 @@ pub(crate) fn convert_object(
 }
 
 pub struct ObjectTypeConversionResult {
-    ty: Type,
+    ty: Arc<ObjectType>,
     properties: IndexMap<String, u32>, // TODO reference
     required: Vec<String>,
     id: Vec<String>,
@@ -106,23 +103,22 @@ pub struct ObjectTypeConversionResult {
 
 impl TypeConversionResult for ObjectTypeConversionResult {
     fn get_type(&self) -> Type {
-        self.ty.clone()
+        self.ty.clone().wrap()
     }
 
     fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
-        // eprintln!("finalize object: #{:?}", self.ty.key());
         let mut properties = HashMap::with_capacity(self.properties.len());
 
         let mut results = Vec::new();
 
-        let weak = self.ty.downgrade();
+        let weak = self.ty.clone().wrap().downgrade();
 
         for (name, &idx) in self.properties.iter() {
             let name: Arc<str> = name.clone().into();
             let res = conv.convert_type(
                 weak.clone(),
                 idx,
-                self.rpath.push(PathSegment::ObjectProp(name.clone())),
+                self.rpath.push(PathSegment::ObjectProp(name.clone()))?,
             )?;
             let required = self.required.iter().any(|r| r == name.as_ref());
             let as_id = self.id.iter().any(|r| r == name.as_ref());
@@ -140,17 +136,12 @@ impl TypeConversionResult for ObjectTypeConversionResult {
             results.push(res);
         }
 
-        match &self.ty {
-            Type::Object(obj) => {
-                obj.properties.set(properties).map_err(|_| {
-                    eyre!(
-                        "OnceLock: cannot set object properties more than once; key={:?}",
-                        self.ty.key()
-                    )
-                })?;
-            }
-            _ => unreachable!(),
-        }
+        self.ty.properties.set(properties).map_err(|_| {
+            eyre!(
+                "OnceLock: cannot set object properties more than once; key={:?}",
+                self.ty.key()
+            )
+        })?;
 
         for res in results.iter_mut() {
             res.finalize(conv)?;

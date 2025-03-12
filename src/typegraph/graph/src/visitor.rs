@@ -110,12 +110,12 @@ where
         }
 
         Type::Optional(inner) => {
-            let item = inner.item().clone();
+            let item = inner.item()?.clone();
             path.push(edge(&item, EdgeKind::OptionalItem));
             let res = traverse_types_with_path(
                 item,
                 path,
-                relative_path.push(PathSegment::OptionalItem),
+                relative_path.push(PathSegment::OptionalItem)?,
                 accumulator,
                 visit_fn,
             );
@@ -129,7 +129,7 @@ where
             let res = traverse_types_with_path(
                 item,
                 path,
-                relative_path.push(PathSegment::ListItem),
+                relative_path.push(PathSegment::ListItem)?,
                 accumulator,
                 visit_fn,
             );
@@ -139,12 +139,12 @@ where
 
         Type::Object(inner) => {
             let mut accumulator = Some(accumulator);
-            for (key, prop) in inner.properties() {
+            for (key, prop) in inner.properties()? {
                 path.push(edge(&prop.type_, EdgeKind::ObjectProperty(key.clone())));
                 let output = traverse_types_with_path(
                     prop.type_.clone(),
                     path,
-                    relative_path.push(PathSegment::ObjectProp(key.clone())),
+                    relative_path.push(PathSegment::ObjectProp(key.clone()))?,
                     accumulator.take().unwrap(),
                     visit_fn,
                 );
@@ -166,12 +166,12 @@ where
 
         Type::Union(inner) => {
             let mut accumulator = Some(accumulator);
-            for (i, variant) in inner.variants().iter().enumerate() {
+            for (i, variant) in inner.variants()?.iter().enumerate() {
                 path.push(edge(variant, EdgeKind::UnionVariant(i)));
                 let output = traverse_types_with_path(
                     variant.clone(),
                     path,
-                    relative_path.push(PathSegment::UnionVariant(i as u32)),
+                    relative_path.push(PathSegment::UnionVariant(i as u32))?,
                     accumulator.take().unwrap(),
                     visit_fn,
                 );
@@ -192,7 +192,7 @@ where
         }
 
         Type::Function(inner) => {
-            let input = Type::Object(inner.input().clone());
+            let input = Type::Object(inner.input()?.clone());
             path.push(edge(&input, EdgeKind::FunctionInput));
             let res = traverse_types_with_path(
                 input,
@@ -208,9 +208,9 @@ where
                 return Ok(output);
             }
 
-            path.push(edge(inner.output(), EdgeKind::FunctionOutput));
+            path.push(edge(inner.output()?, EdgeKind::FunctionOutput));
             let res = traverse_types_with_path(
-                inner.output().clone(),
+                inner.output()?.clone(),
                 path,
                 RelativePath::Output(inner.clone().into()),
                 output.accumulator,

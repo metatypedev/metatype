@@ -183,8 +183,8 @@ impl Conversion {
                 .conversion_map
                 .direct
                 .into_iter()
-                .map(Into::into)
-                .collect(),
+                .map(|item| crate::MapItem::try_from(item))
+                .collect::<Result<Vec<_>>>()?,
         })
     }
 
@@ -194,7 +194,7 @@ impl Conversion {
         type_idx: u32,
         convert: C,
     ) -> Result<Box<dyn TypeConversionResult>> {
-        let key = self.conversion_map.get_next_type_key(type_idx);
+        let key = self.conversion_map.get_next_type_key(type_idx)?;
         let conv_res = convert(key);
         let typ = conv_res.get_type();
 
@@ -247,7 +247,7 @@ impl Conversion {
         match &rpath {
             RP::NsObject(_) => {
                 if self.conversion_map.get(TypeKey(type_idx, 0)).is_some() {
-                    panic!("cannot re-covert namespace object #{type_idx}: check your typegraph");
+                    bail!("cannot re-covert namespace object #{type_idx}: check your typegraph");
                 }
             }
             RP::Function(fn_idx) => {
@@ -261,7 +261,7 @@ impl Conversion {
             }
             // TODO consider injections -- use a comparison trait
             RP::Input(vpath) | RP::Output(vpath) => {
-                if !is_composite(&self.schema, type_idx) {
+                if !is_composite(&self.schema, type_idx)? {
                     // currently we only generate a single type from each scalar type node
                     if let Some(found) = self.conversion_map.get(TypeKey(type_idx, 0)) {
                         self.conversion_map
@@ -272,7 +272,7 @@ impl Conversion {
                     let types = match &self.conversion_map.direct[type_idx as usize] {
                         MapItem::Value(types) => types.as_slice(),
                         MapItem::Unset => &[],
-                        _ => unreachable!(),
+                        _ => bail!("unexpected type for value type"),
                     };
                     // WTF is this???
                     let found = types

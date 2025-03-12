@@ -32,7 +32,7 @@ pub mod shared;
 mod fdk_py;
 mod fdk_rs;
 // mod fdk_substantial;
-mod fdk_ts;
+// mod fdk_ts;
 
 // mod client_py;
 mod client_rs;
@@ -49,7 +49,7 @@ pub use shared::FdkTemplate;
 
 pub use fdk_py::DEFAULT_TEMPLATE as FDK_PY_DEFAULT_TEMPLATE;
 pub use fdk_rs::DEFAULT_TEMPLATE as FDK_RS_DEFAULT_TEMPLATE;
-pub use fdk_ts::DEFAULT_TEMPLATE as FDK_TS_DEFAULT_TEMPLATE;
+// pub use fdk_ts::DEFAULT_TEMPLATE as FDK_TS_DEFAULT_TEMPLATE;
 
 /// This implements a command object pattern API for generator
 /// implementations to access the external world. See [InputResolver].
@@ -166,16 +166,16 @@ impl GeneratorRunner {
                 //         },
                 //     },
                 // ),
-                (
-                    "fdk_ts".to_string(),
-                    GeneratorRunner {
-                        op: |workspace_path: &Path, val| {
-                            let config = fdk_ts::FdkTypescriptGenConfig::from_json(val, workspace_path)?;
-                            let generator = fdk_ts::Generator::new(config)?;
-                            Ok(Box::new(generator))
-                        },
-                    },
-                ),
+                // (
+                //     "fdk_ts".to_string(),
+                //     GeneratorRunner {
+                //         op: |workspace_path: &Path, val| {
+                //             let config = fdk_ts::FdkTypescriptGenConfig::from_json(val, workspace_path)?;
+                //             let generator = fdk_ts::Generator::new(config)?;
+                //             Ok(Box::new(generator))
+                //         },
+                //     },
+                // ),
                 // (
                 //     "client_ts".to_string(),
                 //     GeneratorRunner {

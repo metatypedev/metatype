@@ -60,7 +60,7 @@ pub trait RenderType {
     ) -> Option<bool> {
         current_cursor
             .visited_path
-            .get(&parent_cursor.node.name())
+            .get(&parent_cursor.node.name().unwrap())
             .map(|cyclic_paths| {
                 // for all cycles that lead back to current
                 cyclic_paths
@@ -69,7 +69,7 @@ pub trait RenderType {
                         path[parent_cursor.path.len()..]
                             .iter()
                             // until we arrive at parent
-                            .take_while(|&dep_name| dep_name != &parent_cursor.node.name())
+                            .take_while(|&dep_name| dep_name != &parent_cursor.node.name().unwrap())
                             // see if any are lists
                             .any(|dep_name| {
                                 matches!(
@@ -98,138 +98,138 @@ pub struct TypeRenderer {
     replacement_records: ReplacementRecords,
 }
 
-pub fn is_composite(typ: &Type) -> bool {
-    match typ {
-        Type::Function { .. } => panic!("function type isn't composite or scalar"),
-        // Type::Any { .. } => panic!("Any tye isn't composite or scalar"),
-        Type::Boolean { .. }
-        | Type::Float { .. }
-        | Type::Integer { .. }
-        | Type::String { .. }
-        | Type::File { .. } => false,
-        Type::Object { .. } => true,
-        Type::Optional(ty) => is_composite(ty.item()),
-        Type::List(ty) => is_composite(ty.item().unwrap()),
-        Type::Union(ty) => ty.variants().iter().any(|variant| is_composite(variant)),
-    }
-}
+// pub fn is_composite(typ: &Type) -> bool {
+//     match typ {
+//         Type::Function { .. } => panic!("function type isn't composite or scalar"),
+//         // Type::Any { .. } => panic!("Any tye isn't composite or scalar"),
+//         Type::Boolean { .. }
+//         | Type::Float { .. }
+//         | Type::Integer { .. }
+//         | Type::String { .. }
+//         | Type::File { .. } => false,
+//         Type::Object { .. } => true,
+//         Type::Optional(ty) => is_composite(ty.item()),
+//         Type::List(ty) => is_composite(ty.item().unwrap()),
+//         Type::Union(ty) => ty.variants().iter().any(|variant| is_composite(variant)),
+//     }
+// }
 
-impl TypeRenderer {
-    pub fn new(tg: Arc<Typegraph>, render_type: Arc<dyn RenderType>) -> Self {
-        Self {
-            tg,
-            dest: GenDestBuf {
-                buf: Default::default(),
-            },
-            // name_memo: Default::default(),
-            render_type,
-            replacement_records: Default::default(),
-        }
-    }
-    // pub fn placeholder_string(
-    //     &mut self,
-    //     target_name: Arc<str>,
-    //     replacement_maker: Box<dyn Fn(&str) -> String>,
-    // ) -> Arc<str> {
-    //     // dbg!((&id, &replacement_records));
-    //     let string: Arc<str> = format!("&&placeholder{}%%", self.replacement_records.len()).into();
-    //     self.replacement_records
-    //         .push((target_name, string.clone(), replacement_maker));
-    //     string
-    // }
+// impl TypeRenderer {
+//     pub fn new(tg: Arc<Typegraph>, render_type: Arc<dyn RenderType>) -> Self {
+//         Self {
+//             tg,
+//             dest: GenDestBuf {
+//                 buf: Default::default(),
+//             },
+//             // name_memo: Default::default(),
+//             render_type,
+//             replacement_records: Default::default(),
+//         }
+//     }
+//     // pub fn placeholder_string(
+//     //     &mut self,
+//     //     target_name: Arc<str>,
+//     //     replacement_maker: Box<dyn Fn(&str) -> String>,
+//     // ) -> Arc<str> {
+//     //     // dbg!((&id, &replacement_records));
+//     //     let string: Arc<str> = format!("&&placeholder{}%%", self.replacement_records.len()).into();
+//     //     self.replacement_records
+//     //         .push((target_name, string.clone(), replacement_maker));
+//     //     string
+//     // }
+//
+//     pub fn render(&mut self, ty: &Type) -> anyhow::Result<Arc<str>> {
+//         let (name, _) = self.render_subgraph(
+//             ty,
+//             &mut VisitCursor {
+//                 node: self.tg.root.clone().wrap(),
+//                 path: vec![],
+//                 visited_path: Default::default(),
+//             },
+//         )?;
+//         Ok(name)
+//         // match name {
+//         //     RenderedName::Name(name) => Ok(name),
+//         //     RenderedName::Placeholder(_) => unreachable!(),
+//         // }
+//     }
+//
+//     /// The flag notifies if the subgraph was cyclic to the current type and
+//     /// the implementaiton may correct accordingly.
+//     pub fn render_subgraph(
+//         &mut self,
+//         ty: &Type,
+//         parent_cursor: &mut VisitCursor,
+//     ) -> anyhow::Result<(Arc<str>, Option<bool>)> {
+//         let my_path: Vec<_> = parent_cursor
+//             .path
+//             .iter()
+//             .cloned()
+//             .chain(std::iter::once(ty.name()))
+//             .collect();
+//
+//         let mut current_cursor = VisitCursor {
+//             node: ty.clone(),
+//             visited_path: [(ty.name(), vec![my_path.clone()])].into_iter().collect(),
+//             path: my_path,
+//         };
+//
+//         let render_type_impl = self.render_type.clone();
+//
+//         let _ty_name = render_type_impl.render(self, &mut current_cursor)?;
+//
+//         let ty_name = ty.name();
+//
+//         let cyclic =
+//             self.render_type
+//                 .is_path_unfortunately_cyclic(self, parent_cursor, &current_cursor);
+//         for (id, paths) in current_cursor.visited_path {
+//             parent_cursor
+//                 .visited_path
+//                 .entry(id)
+//                 .or_default()
+//                 .extend(paths);
+//         }
+//         Ok((ty_name, cyclic))
+//     }
+//
+//     pub fn finalize(self) -> String {
+//         // let mut out = self.dest.buf;
+//         // let name_memo = self
+//         //     .name_memo
+//         //     .into_iter()
+//         //     .map(|(key, val)| {
+//         //         let RenderedName::Name(val) = val else {
+//         //             panic!("placeholder name found at finalize for Type{key:?}")
+//         //         };
+//         //         (key, val)
+//         //     })
+//         //     .collect::<NameMemo>();
+//         // for (key, from, fun) in self.replacement_records.into_iter().rev() {
+//         //     // dbg!((&_id, &records));
+//         //     let Some(name) = name_memo.get(&key) else {
+//         //         panic!("unable to find rendered name for replacement target Type{key:?}")
+//         //     };
+//         //     let to = fun(name);
+//         //     out = out.replace(&from[..], &to);
+//         // }
+//         // (out, name_memo)
+//
+//         self.dest.buf
+//     }
+// }
 
-    pub fn render(&mut self, ty: &Type) -> anyhow::Result<Arc<str>> {
-        let (name, _) = self.render_subgraph(
-            ty,
-            &mut VisitCursor {
-                node: self.tg.root.clone().wrap(),
-                path: vec![],
-                visited_path: Default::default(),
-            },
-        )?;
-        Ok(name)
-        // match name {
-        //     RenderedName::Name(name) => Ok(name),
-        //     RenderedName::Placeholder(_) => unreachable!(),
-        // }
-    }
-
-    /// The flag notifies if the subgraph was cyclic to the current type and
-    /// the implementaiton may correct accordingly.
-    pub fn render_subgraph(
-        &mut self,
-        ty: &Type,
-        parent_cursor: &mut VisitCursor,
-    ) -> anyhow::Result<(Arc<str>, Option<bool>)> {
-        let my_path: Vec<_> = parent_cursor
-            .path
-            .iter()
-            .cloned()
-            .chain(std::iter::once(ty.name()))
-            .collect();
-
-        let mut current_cursor = VisitCursor {
-            node: ty.clone(),
-            visited_path: [(ty.name(), vec![my_path.clone()])].into_iter().collect(),
-            path: my_path,
-        };
-
-        let render_type_impl = self.render_type.clone();
-
-        let _ty_name = render_type_impl.render(self, &mut current_cursor)?;
-
-        let ty_name = ty.name();
-
-        let cyclic =
-            self.render_type
-                .is_path_unfortunately_cyclic(self, parent_cursor, &current_cursor);
-        for (id, paths) in current_cursor.visited_path {
-            parent_cursor
-                .visited_path
-                .entry(id)
-                .or_default()
-                .extend(paths);
-        }
-        Ok((ty_name, cyclic))
-    }
-
-    pub fn finalize(self) -> String {
-        // let mut out = self.dest.buf;
-        // let name_memo = self
-        //     .name_memo
-        //     .into_iter()
-        //     .map(|(key, val)| {
-        //         let RenderedName::Name(val) = val else {
-        //             panic!("placeholder name found at finalize for Type{key:?}")
-        //         };
-        //         (key, val)
-        //     })
-        //     .collect::<NameMemo>();
-        // for (key, from, fun) in self.replacement_records.into_iter().rev() {
-        //     // dbg!((&_id, &records));
-        //     let Some(name) = name_memo.get(&key) else {
-        //         panic!("unable to find rendered name for replacement target Type{key:?}")
-        //     };
-        //     let to = fun(name);
-        //     out = out.replace(&from[..], &to);
-        // }
-        // (out, name_memo)
-
-        self.dest.buf
-    }
-}
-
-impl Write for TypeRenderer {
-    #[inline]
-    fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        <GenDestBuf as Write>::write_str(&mut self.dest, s)
-    }
-
-    #[inline]
-    fn write_char(&mut self, c: char) -> core::fmt::Result {
-        <GenDestBuf as Write>::write_char(&mut self.dest, c)
-    }
-}
+// impl Write for TypeRenderer {
+//     #[inline]
+//     fn write_str(&mut self, s: &str) -> core::fmt::Result {
+//         <GenDestBuf as Write>::write_str(&mut self.dest, s)
+//     }
+//
+//     #[inline]
+//     fn write_char(&mut self, c: char) -> core::fmt::Result {
+//         <GenDestBuf as Write>::write_char(&mut self.dest, c)
+//     }
+// }
 
 /// Most languages don't need to generate bodies for all types
 /// types and usually only need reference to the built-in primitives.

@@ -189,8 +189,7 @@ impl FdkRustTemplate {
         writeln!(&mut mod_rs.buf, "pub mod types {{")?;
 
         let name_memo = {
-            let manif = manifest_page(&tg, false);
-            eprintln!("RENDERING ALL");
+            let manif = manifest_page(&tg, false)?;
             let mut buffer = String::new();
             manif.render_all(&mut buffer, &EmptyNameMemo)?;
 

@@ -32,14 +32,16 @@ pub enum MapItem {
     Value(Vec<MapValueItem>),
 }
 
-impl From<conv::MapItem> for MapItem {
-    fn from(value: conv::MapItem) -> Self {
-        match value {
-            conv::MapItem::Unset => panic!(),
+impl TryFrom<conv::MapItem> for MapItem {
+    type Error = color_eyre::Report;
+
+    fn try_from(value: conv::MapItem) -> Result<Self> {
+        Ok(match value {
+            conv::MapItem::Unset => bail!("type was not converted"),
             conv::MapItem::Namespace(object, path) => MapItem::Namespace(object, path),
             conv::MapItem::Function(function) => MapItem::Function(function),
             conv::MapItem::Value(value) => MapItem::Value(value),
-        }
+        })
     }
 }
 
@@ -98,25 +100,33 @@ pub struct RootFnsIter {
 
 impl Iterator for RootFnsIter {
     // Item = Result<Arc<FunctionType>, Error>;
-    type Item = (Vec<Arc<str>>, Arc<FunctionType>);
+    type Item = Result<(Vec<Arc<str>>, Arc<FunctionType>)>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let item = self.stack.pop()?;
         match item.ty {
             Type::Object(object) => {
-                self.stack
-                    .extend(object.properties().iter().map(|(name, prop)| StackItem {
-                        ty: prop.type_.clone(),
-                        path: {
-                            let mut path = item.path.clone();
-                            path.push(name.clone());
-                            path
-                        },
-                    }));
+                self.stack.extend(
+                    object
+                        .properties()
+                        .unwrap() // TODO
+                        .iter()
+                        .map(|(name, prop)| StackItem {
+                            ty: prop.type_.clone(),
+                            path: {
+                                let mut path = item.path.clone();
+                                path.push(name.clone());
+                                path
+                            },
+                        }),
+                );
                 self.next()
             }
-            Type::Function(function) => Some((item.path, function)),
-            _ => unreachable!(), // TODO error
+            Type::Function(function) => Some(Ok((item.path, function))),
+            _ => Some(Err(eyre!(
+                "unexpected type for root function: '{}'",
+                item.ty.tag()
+            ))),
         }
     }
 }

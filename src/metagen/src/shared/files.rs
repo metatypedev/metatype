@@ -112,7 +112,7 @@ pub fn get_path_to_files(root: &Type) -> Result<HashMap<u32, Vec<TypePath>>> {
         RelativePath::root(),
         Default::default(),
         |n, acc| -> Result<VisitNext, anyhow::Error> {
-            if n.path.is_cyclic() {
+            if n.path.is_cyclic()? {
                 return Ok(VisitNext::Stop);
             }
             match &n.ty {

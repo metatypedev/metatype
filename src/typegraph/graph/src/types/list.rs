@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, TypeNodeExt as _, WeakType};
+use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, TypeNodeExt as _, WeakType, Wrap as _};
 use crate::{conv::interlude::*, interlude::*, Arc, Lazy};
 
 #[derive(Debug)]
@@ -55,16 +55,14 @@ pub(crate) fn convert_list(
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::ListTypeData,
 ) -> Box<dyn TypeConversionResult> {
-    let ty = Type::List(
-        ListType {
-            base: Conversion::base(key, parent, base),
-            item: Default::default(),
-            min_items: data.min_items,
-            max_items: data.max_items,
-            unique_items: data.unique_items.unwrap_or(false),
-        }
-        .into(),
-    );
+    let ty = ListType {
+        base: Conversion::base(key, parent, base),
+        item: Default::default(),
+        min_items: data.min_items,
+        max_items: data.max_items,
+        unique_items: data.unique_items.unwrap_or(false),
+    }
+    .into();
 
     Box::new(ListTypeConversionResult {
         ty,
@@ -74,37 +72,30 @@ pub(crate) fn convert_list(
 }
 
 pub struct ListTypeConversionResult {
-    ty: Type,
+    ty: Arc<ListType>,
     item_idx: u32,
     rpath: RelativePath,
 }
 
 impl TypeConversionResult for ListTypeConversionResult {
     fn get_type(&self) -> Type {
-        self.ty.clone()
+        self.ty.clone().wrap()
     }
 
     fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
-        eprintln!("finalize list: #{:?}", self.ty.key());
         let mut item = conv.convert_type(
-            self.ty.downgrade(),
+            self.ty.clone().wrap().downgrade(),
             self.item_idx,
-            self.rpath.push(PathSegment::ListItem),
+            self.rpath.push(PathSegment::ListItem)?,
         )?;
-        match &self.ty {
-            Type::List(list) => {
-                eprintln!("finalize list: #{:?}: set item", self.ty.key());
-                list.item.set(item.get_type()).map_err(|_| {
-                    eyre!(
-                        "OnceLock: cannot set list item more than once; key={:?}",
-                        self.ty.key()
-                    )
-                })?;
-            }
-            _ => unreachable!(),
-        }
 
-        eprintln!("finalize list: #{:?}: finalize item", self.ty.key());
+        self.ty.item.set(item.get_type()).map_err(|_| {
+            eyre!(
+                "OnceLock: cannot set list item more than once; key={:?}",
+                self.ty.key()
+            )
+        })?;
+
         item.finalize(conv)?;
         Ok(())
     }
