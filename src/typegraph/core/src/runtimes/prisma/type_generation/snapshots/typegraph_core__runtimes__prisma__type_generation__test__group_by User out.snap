@@ -2,26 +2,26 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list 'User_group' #297
-└─ item: struct #295
-   ├─ [_avg]: struct 'User_number_fields_float' #287
-   │  └─ [id]: optional #285
-   │     └─ item: float #284
-   ├─ [_count]: struct 'User_count_aggregate' #282
-   │  ├─ [_all]: optional #280
-   │  │  └─ item: integer #279
-   │  ├─ [id]: optional #280
-   │  │  └─ item: integer #279
-   │  ├─ [name]: optional #280
-   │  │  └─ item: integer #279
-   │  └─ [posts]: optional #280
-   │     └─ item: integer #279
-   ├─ [_max]: &User_number_fields #288
-   ├─ [_min]: &User_number_fields #288
-   ├─ [_sum]: struct 'User_number_fields' #294
-   │  └─ [id]: optional #292
-   │     └─ item: integer #291
-   ├─ [id]: integer #175
-   ├─ [name]: string #176
-   └─ [posts]: list #178
-      └─ item: &Post #177
+root: list 'User_group' #337
+└─ item: struct #335
+   ├─ [_avg]: struct 'User_number_fields_float' #327
+   │  └─ [id]: optional #325
+   │     └─ item: float #324
+   ├─ [_count]: struct 'User_count_aggregate' #322
+   │  ├─ [_all]: optional #320
+   │  │  └─ item: integer #319
+   │  ├─ [id]: optional #320
+   │  │  └─ item: integer #319
+   │  ├─ [name]: optional #320
+   │  │  └─ item: integer #319
+   │  └─ [posts]: optional #320
+   │     └─ item: integer #319
+   ├─ [_max]: &User_number_fields #328
+   ├─ [_min]: &User_number_fields #328
+   ├─ [_sum]: struct 'User_number_fields' #334
+   │  └─ [id]: optional #332
+   │     └─ item: integer #331
+   ├─ [id]: integer #215
+   ├─ [name]: string #216
+   └─ [posts]: list #218
+      └─ item: &Post #217
