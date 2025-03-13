@@ -12,7 +12,6 @@ class Ctx:
     def gql(self, query: str, variables: str) -> Any:
         pass
 
-
 class Struct:
     def repr(self):
         return asdict(self)
@@ -88,17 +87,17 @@ class Struct:
 
 @dataclass
 class Primitives(Struct):
-    str: str
+    uri: str
     enum: str
     uuid: str
+    datetime: str
+    date: str
+    int: int
+    float: float
+    str: str
     email: str
     ean: str
     json: str
-    uri: str
-    date: str
-    datetime: str
-    int: int
-    float: float
     boolean: bool
 
 
@@ -124,9 +123,9 @@ FORWARD_REFS["CompositesArgs"] = CompositesArgs
 @dataclass
 class Composites(Struct):
     opt: Union[str, None]
-    either: Union["Branch2", "Primitives"]
-    union: Union[List[str], int, str]
     list: List[str]
+    union: Union[List[str], int, str]
+    either: Union["Branch2", "Primitives"]
 
 
 FORWARD_REFS["Composites"] = Composites
@@ -169,8 +168,8 @@ FORWARD_REFS["Branch33A"] = Branch33A
 
 @dataclass
 class Branch33B(Struct):
-    phantom3b: Union[str, None]
     to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
+    phantom3b: Union[str, None]
 
 
 FORWARD_REFS["Branch33B"] = Branch33B
@@ -204,17 +203,19 @@ FORWARD_REFS["SimpleCycles2"] = SimpleCycles2
 
 @dataclass
 class SimpleCycles3(Struct):
-    phantom3: Union[str, None]
     to1: Union["SimpleCycles1", None]
+    phantom3: Union[str, None]
 
 
 FORWARD_REFS["SimpleCycles3"] = SimpleCycles3
+
 
 
 def __repr(value: Any):
     if isinstance(value, Struct):
         return value.repr()
     return value
+
 
 
 def typed_primitives(user_fn: Callable[[PrimitivesArgs, Ctx], Primitives]):
@@ -259,3 +260,5 @@ def typed_simple_cycles(user_fn: Callable[[SimpleCycles1Args, Ctx], SimpleCycles
         return __repr(out)
 
     return exported_wrapper
+
+

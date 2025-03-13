@@ -5,131 +5,85 @@ use std::collections::HashMap;
 
 use crate::interlude::*;
 
-use super::{
-    files::{get_path_to_files, TypePath},
-    types::*,
-};
+use super::files::{get_path_to_files, TypePath};
 use indexmap::IndexSet;
-use tg_schema::{EffectType, ListTypeData, OptionalTypeData};
+use typegraph::{conv::TypeKey, FunctionType, TypeNodeExt as _, Wrap as _};
 
 pub struct RenderManifest {
-    pub return_types: IndexSet<u32>,
-    pub arg_types: IndexSet<u32>,
-    pub node_metas: IndexSet<u32>,
-    pub selections: IndexSet<u32>,
+    pub tg: Arc<Typegraph>,
+    pub node_metas: IndexSet<TypeKey>,
+    pub selections: IndexSet<TypeKey>,
     pub root_fns: Vec<RootFn>,
-    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
+    pub input_files: Arc<HashMap<u32, Vec<TypePath>>>,
 }
 
 pub struct RootFn {
-    pub id: u32,
-    pub name: String,
-    pub in_id: Option<u32>,
-    pub out_id: u32,
-    pub effect: EffectType,
-    pub select_ty: Option<u32>,
+    pub path: Vec<Arc<str>>, // non empty
+    pub type_: Arc<FunctionType>,
+    pub select_ty: Option<TypeKey>,
 }
 
 /// Collect upfront all the items we need to render
-pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
+pub fn get_manifest(tg: Arc<Typegraph>) -> Result<RenderManifest> {
     let mut root_fns = vec![];
     let mut selections = IndexSet::new();
-    let mut return_types = IndexSet::new();
     let mut node_metas = IndexSet::new();
     let mut arg_types = IndexSet::new();
 
-    let (_root_base, root) = tg.root().map_err(anyhow_to_eyre!())?;
-    for (key, &func_id) in &root.properties {
-        let TypeNode::Function { data, .. } = &tg.types[func_id as usize] else {
-            bail!(
-                "invalid typegraph: node of type {} instead of a root function",
-                tg.types[func_id as usize].type_name()
-            );
-        };
-        let mat = &tg.materializers[data.materializer as usize];
+    for root_fn in tg.root_functions() {
+        let (path, func) = root_fn?;
+        let _ = node_metas.insert(func.key());
+        let out = func.output()?;
+        let out_key = out.key();
+        // return_types.insert(out_name.clone());
 
-        node_metas.insert(func_id);
-        return_types.insert(data.output);
+        let select_ty = if func.output()?.is_composite()? {
+            let _ = node_metas.insert(out_key.clone());
+            selections.insert(out_key.clone());
+            Some(out_key)
+        } else {
+            None
+        };
         root_fns.push(RootFn {
-            id: func_id,
-            name: key.clone(),
-            effect: mat.effect.effect.unwrap_or(EffectType::Read),
-            out_id: data.output,
-            // empty struct arguments don't need arguments
-            in_id: if matches!(
-                &tg.types[data.input as usize],
-                TypeNode::Object { data, .. } if !data.properties.is_empty()
-            ) {
-                arg_types.insert(data.input);
-                Some(data.input)
-            } else {
-                None
-            },
-            // scalar return types don't need selections
-            select_ty: if super::is_composite(&tg.types, data.output) {
-                node_metas.insert(func_id);
-                selections.insert(func_id);
-                Some(data.output)
-            } else {
-                None
-            },
-        });
+            path,
+            type_: func,
+            select_ty,
+        })
     }
 
-    for node in &tg.types {
-        if let TypeNode::Function { data, .. } = node {
-            if matches!(
-                &tg.types[data.input as usize],
-                TypeNode::Object { data, .. } if !data.properties.is_empty()
-            ) {
-                arg_types.insert(data.input);
-            }
-        }
+    for func in tg.functions.values() {
+        arg_types.insert(func.input()?.name()?);
     }
 
     Ok(RenderManifest {
         root_fns,
         selections,
-        return_types,
         node_metas,
-        arg_types,
-        input_files: get_path_to_files(tg, 0)?.into(),
+        tg: tg.clone(),
+        input_files: get_path_to_files(&tg.root.clone().wrap())?.into(),
     })
 }
 
+#[derive(Debug)]
 pub enum SelectionTy {
     Scalar,
-    ScalarArgs { arg_ty: Rc<str> },
-    Composite { select_ty: Rc<str> },
-    CompositeArgs { arg_ty: Rc<str>, select_ty: Rc<str> },
+    ScalarArgs { arg_ty: TypeKey },
+    Composite { select_ty: TypeKey },
+    CompositeArgs { arg_ty: TypeKey, select_ty: TypeKey },
 }
 
-pub fn selection_for_field(
-    ty: u32,
-    arg_ty_names: &NameMemo,
-    renderer: &mut TypeRenderer,
-    cursor: &mut VisitCursor,
-) -> Result<SelectionTy> {
-    let node = renderer.nodes[ty as usize].clone();
-    Ok(match &node.deref() {
-        TypeNode::Boolean { .. }
-        | TypeNode::Float { .. }
-        | TypeNode::Integer { .. }
-        | TypeNode::String { .. }
-        | TypeNode::File { .. } => SelectionTy::Scalar,
-        TypeNode::Function { data, .. } => {
-            let arg_ty = if !matches!(
-                renderer.nodes[data.input as usize].deref(),
-                TypeNode::Object { data, .. } if data.properties.is_empty()
-            ) {
-                Some(arg_ty_names.get(&data.input).unwrap().clone())
+pub fn selection_for_field(ty: &Type) -> Result<SelectionTy> {
+    Ok(match ty {
+        Type::Boolean(_) | Type::Float(_) | Type::Integer(_) | Type::String(_) | Type::File(_) => {
+            SelectionTy::Scalar
+        }
+        Type::Function(t) => {
+            let arg_ty = if !t.input()?.properties()?.is_empty() {
+                Some(t.input()?.key())
             } else {
                 None
             };
-            match (
-                arg_ty,
-                selection_for_field(data.output, arg_ty_names, renderer, cursor)?,
-            ) {
+            match (arg_ty, selection_for_field(t.output()?)?) {
                 (None, SelectionTy::Scalar) => SelectionTy::Scalar,
                 (Some(arg_ty), SelectionTy::Scalar) => SelectionTy::ScalarArgs { arg_ty },
                 (None, SelectionTy::Composite { select_ty }) => {
@@ -143,34 +97,19 @@ pub fn selection_for_field(
                 }
             }
         }
-        TypeNode::Optional {
-            data: OptionalTypeData { item, .. },
-            ..
-        }
-        | TypeNode::List {
-            data: ListTypeData { items: item, .. },
-            ..
-        } => selection_for_field(*item, arg_ty_names, renderer, cursor)?,
-        TypeNode::Object { .. } => SelectionTy::Composite {
-            select_ty: renderer.render_subgraph(ty, cursor)?.0.unwrap(),
-        },
-        TypeNode::Either {
-            data: tg_schema::EitherTypeData { one_of: variants },
-            ..
-        }
-        | TypeNode::Union {
-            data: tg_schema::UnionTypeData { any_of: variants },
-            ..
-        } => {
-            let select_ty = renderer.render_subgraph(ty, cursor)?.0.unwrap();
-            match selection_for_field(variants[0], arg_ty_names, renderer, cursor)? {
+
+        Type::Optional(t) => selection_for_field(t.item()?)?,
+        Type::List(t) => selection_for_field(t.item()?)?,
+        Type::Object(t) => SelectionTy::Composite { select_ty: t.key() },
+        Type::Union(t) => {
+            let variants = t.variants()?;
+            match selection_for_field(&variants[0])? {
                 SelectionTy::Scalar => SelectionTy::Scalar,
-                SelectionTy::Composite { .. } => SelectionTy::Composite { select_ty },
+                SelectionTy::Composite { .. } => SelectionTy::Composite { select_ty: t.key() },
                 SelectionTy::CompositeArgs { .. } | SelectionTy::ScalarArgs { .. } => {
                     unreachable!("function can not be a union/either member")
                 }
             }
         }
-        TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
     })
 }
