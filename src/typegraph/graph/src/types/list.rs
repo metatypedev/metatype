@@ -54,9 +54,10 @@ pub(crate) fn convert_list(
     rpath: RelativePath,
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::ListTypeData,
+    schema: &tg_schema::Typegraph,
 ) -> Box<dyn TypeConversionResult> {
     let ty = ListType {
-        base: Conversion::base(key, parent, base),
+        base: Conversion::base(key, parent, rpath.clone(), base, schema),
         item: Default::default(),
         min_items: data.min_items,
         max_items: data.max_items,

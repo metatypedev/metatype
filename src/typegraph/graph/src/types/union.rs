@@ -58,10 +58,11 @@ pub(crate) fn convert_union(
     rpath: RelativePath,
     base: &tg_schema::TypeNodeBase,
     variants: &[u32],
+    schema: &tg_schema::Typegraph,
     either: bool,
 ) -> Box<dyn TypeConversionResult> {
     let ty = UnionType {
-        base: Conversion::base(key, parent, base),
+        base: Conversion::base(key, parent, rpath.clone(), base, schema),
         variants: Default::default(),
         either,
     }

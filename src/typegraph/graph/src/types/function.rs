@@ -94,9 +94,10 @@ pub(crate) fn convert_function(
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::FunctionTypeData,
     materializer: Arc<MaterializerNode>,
+    schema: &tg_schema::Typegraph,
 ) -> Box<dyn TypeConversionResult> {
     let ty = FunctionType {
-        base: Conversion::base(key, parent, base),
+        base: Conversion::base(key, parent, RelativePath::Function(key.0), base, schema),
         input: Default::default(),
         output: Default::default(),
         parameter_transform: data.parameter_transform.clone(),

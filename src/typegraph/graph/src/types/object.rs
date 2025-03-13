@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use indexmap::IndexMap;
+use tg_schema::InjectionNode;
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
 use crate::conv::interlude::*;
@@ -13,7 +14,7 @@ use std::collections::HashMap;
 pub struct ObjectProperty {
     pub type_: Type,
     pub policies: Vec<PolicyRef>,
-    pub injection: Option<()>, // TODO
+    pub injection: Option<InjectionNode>, // TODO
     pub outjection: Option<()>,
     pub required: bool,
     pub as_id: bool,
@@ -77,9 +78,10 @@ pub(crate) fn convert_object(
     rpath: RelativePath,
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::ObjectTypeData,
+    schema: &tg_schema::Typegraph,
 ) -> Box<dyn TypeConversionResult> {
     let ty = ObjectType {
-        base: Conversion::base(key, parent, base),
+        base: Conversion::base(key, parent, rpath.clone(), base, schema),
         properties: Default::default(),
     }
     .into();
@@ -113,6 +115,8 @@ impl TypeConversionResult for ObjectTypeConversionResult {
 
         let weak = self.ty.clone().wrap().downgrade();
 
+        let injections = &self.ty.base.injection;
+
         for (name, &idx) in self.properties.iter() {
             let name: Arc<str> = name.clone().into();
             let res = conv.convert_type(
@@ -122,13 +126,22 @@ impl TypeConversionResult for ObjectTypeConversionResult {
             )?;
             let required = self.required.iter().any(|r| r == name.as_ref());
             let as_id = self.id.iter().any(|r| r == name.as_ref());
+
+            let injection = injections
+                .as_ref()
+                .map(|inj| match inj {
+                    InjectionNode::Parent { children } => children.get(name.as_ref()).cloned(),
+                    _ => None,
+                })
+                .flatten();
+
             properties.insert(
                 name,
                 ObjectProperty {
                     type_: res.get_type(),
                     policies: Default::default(), // TODO
-                    injection: None,              // TODO
-                    outjection: None,             // TODO
+                    injection,
+                    outjection: None, // TODO
                     required,
                     as_id,
                 },

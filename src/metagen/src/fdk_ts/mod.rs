@@ -6,8 +6,12 @@ pub mod utils;
 
 use core::fmt::Write;
 use std::borrow::Cow;
+use std::collections::HashMap;
 
+use shared::types::EmptyNameMemo;
+use typegraph::conv::TypeKey;
 use typegraph::TypeNodeExt as _;
+use types::manifest_page;
 
 use crate::interlude::*;
 use crate::shared::*;
@@ -88,8 +92,10 @@ impl FdkTypescriptTemplate {
         )?;
         writeln!(&mut fdk_ts)?;
         self.gen_static(&mut fdk_ts)?;
-        // let ty_name_memo = render_types(&mut fdk_ts, tg.clone())?;
-        // eprintln!("ty_name_memo: {:#?}", ty_name_memo);
+        let dest: &mut GenDestBuf = &mut fdk_ts;
+        let tg = tg.clone();
+        let manif = manifest_page(&tg)?;
+        manif.render_all(dest, &EmptyNameMemo)?;
         writeln!(&mut fdk_ts)?;
         {
             let stubbed_rts = config
@@ -106,9 +112,9 @@ impl FdkTypescriptTemplate {
                 // let out_ty = ty_name_memo
                 //     .get(&fun.output().name())
                 //     .context("output type for function not found")?;
-                let inp_ty = utils::normalize_type_title(&fun.input().name());
-                let out_ty = utils::normalize_type_title(&fun.output().name());
-                let type_name: String = utils::normalize_type_title(&fun.name());
+                let inp_ty = utils::normalize_type_title(&fun.input()?.name()?);
+                let out_ty = utils::normalize_type_title(&fun.output()?.name()?);
+                let type_name: String = utils::normalize_type_title(&fun.name()?);
                 writeln!(
                     &mut fdk_ts,
                     "export type {type_name}Handler = Handler<{inp_ty}, {out_ty}>;"
@@ -181,19 +187,6 @@ impl crate::Plugin for Generator {
 
         Ok(GeneratorOutput(out))
     }
-}
-
-fn render_types(dest: &mut GenDestBuf, tg: Arc<Typegraph>) -> anyhow::Result<()> {
-    let mut renderer = TypeRenderer::new(tg.clone(), Arc::new(types::TypescriptTypeRenderer {}));
-    // remove the root type which we don't want to generate types for
-    // TODO: gql types || function wrappers for exposed functions
-    // skip object 0, the root object where the `exposed` items are locted
-    for ty in tg.named.values() {
-        _ = renderer.render(ty)?;
-    }
-    let types_ts = renderer.finalize();
-    writeln!(dest.buf, "{}", types_ts)?;
-    Ok(())
 }
 
 #[test]

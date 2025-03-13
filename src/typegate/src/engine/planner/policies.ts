@@ -275,7 +275,9 @@ export class OperationPolicies {
           }'[${polIdx}] with effect '${effect}'...`,
         );
       if (outputCache.has(polIdx)) {
-        return outputCache.get(polIdx);
+        const res = outputCache.get(polIdx);
+        verbose && logger.info(`> authorize: ${res}`);
+        return res;
       }
 
       const resolver = this.#resolvers.get(polIdx);

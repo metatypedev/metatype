@@ -17,12 +17,12 @@ pub type TypeId = u32;
 
 type JsonValue = serde_json::Value;
 
-#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq)]
 pub struct SingleValue {
     pub value: JsonValue,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq)]
 #[serde(untagged)]
 pub enum InjectionData {
     SingleValue(SingleValue),
@@ -48,7 +48,7 @@ impl InjectionData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq)]
 #[serde(tag = "source", content = "data", rename_all = "lowercase")]
 pub enum Injection {
     Static(InjectionData),
@@ -176,7 +176,7 @@ pub struct ListTypeData<Id = TypeId> {
     pub unique_items: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(untagged)]
 pub enum InjectionNode {
     Parent {

@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::manifest::{ManifestPage, TypeRenderer};
+use super::shared::types::{EmptyNameMemo, NameMemo};
 use super::utils::*;
 use crate::interlude::*;
-use crate::shared::types::*;
+use crate::shared::types::type_body_required;
 use heck::ToPascalCase as _;
 use std::fmt::Write;
 use typegraph::conv::TypeKey;
-use typegraph::TypeNodeExt as _;
+use typegraph::{TypeNode as _, TypeNodeExt as _};
 
 // #[cfg(test)]
 // mod test {
@@ -491,7 +492,7 @@ use typegraph::TypeNodeExt as _;
 // }
 
 #[derive(Debug)]
-enum Alias {
+pub enum Alias {
     BuiltIn(&'static str),
     Container {
         name: &'static str,
@@ -501,7 +502,7 @@ enum Alias {
 }
 
 #[derive(Debug)]
-struct Derive {
+pub struct Derive {
     debug: bool,
     serde: bool,
 }
@@ -527,7 +528,7 @@ pub enum RustType {
 }
 
 #[derive(Debug)]
-struct StructProp {
+pub struct StructProp {
     name: String,
     rename: Option<String>,
     ty: TypeKey,
@@ -854,7 +855,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                 }
             }
 
-            _ => unreachable!(),
+            Type::Function(_) => unreachable!("unexpected function type"),
         })
     } else {
         Ok(RustType::builtin(
@@ -864,7 +865,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                 Type::Float(_) => "f64",
                 Type::String(_) => "String",
                 Type::File(_) => "super::FileId",
-                _ => bail!("unexpected non-composite type: {:?}", ty),
+                _ => unreachable!("unexpected non-composite type: {:?}", ty.tag()),
             },
             None,
         ))
@@ -880,12 +881,6 @@ pub fn manifest_page(tg: &Typegraph, partial_out_types: bool) -> Result<Manifest
             None => {}
             Some(_) => bail!("duplicate type key: {:?}", key),
         }
-    }
-
-    // TEMP
-    {
-        let output_types = tg.output_types.keys().cloned().collect::<Vec<_>>();
-        eprintln!("output_types: {:?}", output_types);
     }
 
     for (key, ty) in tg.output_types.iter() {

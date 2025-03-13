@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use tg_schema::InjectionNode;
+
 use crate::interlude::*;
 use crate::{Arc, FunctionType, ObjectType, Type, TypeNode, TypeNodeExt as _, Weak, Wrap as _};
 use std::collections::HashMap;
@@ -304,6 +306,23 @@ impl PathSegment {
             },
         }
     }
+
+    pub fn apply_on_injection(&self, mut node: InjectionNode) -> Option<InjectionNode> {
+        match self {
+            PathSegment::ObjectProp(key) => match &mut node {
+                InjectionNode::Parent { children } => children.get_mut(key.as_ref()).map(|node| {
+                    std::mem::replace(
+                        node,
+                        InjectionNode::Parent {
+                            children: Default::default(),
+                        },
+                    )
+                }),
+                _ => unreachable!("expected parent node"),
+            },
+            _ => Some(node),
+        }
+    }
 }
 
 /// A value type is a type that is not a namespace object, nor a function.
@@ -491,6 +510,40 @@ impl RelativePath {
                     )?
                     .map(|p| RP::Output(p)))
                 }
+            }
+        }
+    }
+
+    pub fn get_injection(&self, schema: &tg_schema::Typegraph) -> Option<InjectionNode> {
+        match self {
+            Self::Function(_) | Self::NsObject(_) | Self::Output(_) => None,
+            Self::Input(p) => {
+                let owner = p.owner.upgrade().expect("no strong pointer for type");
+                let owner_node = schema.types.get(owner.base.type_idx as usize).unwrap();
+                let data = match owner_node {
+                    tg_schema::TypeNode::Function { data, .. } => {
+                        data
+                        //
+                    }
+                    _ => unreachable!("expected a function node; got {:?}", owner_node.type_name()),
+                };
+                let mut injection = InjectionNode::Parent {
+                    children: data.injections.clone(),
+                };
+
+                for seg in &p.path {
+                    if let Some(inj) = seg.apply_on_injection(std::mem::replace(
+                        &mut injection,
+                        InjectionNode::Parent {
+                            children: Default::default(),
+                        },
+                    )) {
+                        injection = inj;
+                    } else {
+                        return None;
+                    }
+                }
+                Some(injection)
             }
         }
     }

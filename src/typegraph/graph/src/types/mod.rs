@@ -24,6 +24,7 @@ pub use list::*;
 pub use object::*;
 pub use optional::*;
 pub use string::*;
+use tg_schema::InjectionNode;
 pub use union::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -73,6 +74,7 @@ pub struct TypeBase {
     pub title: String,
     pub name: Lazy<Arc<str>>,
     pub description: Option<String>,
+    pub injection: Option<InjectionNode>,
 }
 
 #[derive(Debug, Clone)]

@@ -6,7 +6,7 @@ use crate::runtimes::{convert_materializer, Materializer};
 use crate::types::{BooleanType, TypeNodeExt, WeakType};
 use crate::{
     convert_function, convert_list, convert_object, convert_optional, convert_union, interlude::*,
-    is_composite,
+    is_composite, TypeNode as _,
 };
 use crate::{FunctionType, IntegerType, ObjectType, Type};
 use indexmap::IndexMap;
@@ -185,6 +185,8 @@ impl Conversion {
                 .into_iter()
                 .map(|item| crate::MapItem::try_from(item))
                 .collect::<Result<Vec<_>>>()?,
+            materializers: conv.materializers,
+            runtimes: conv.runtimes,
         })
     }
 
@@ -225,7 +227,6 @@ impl Conversion {
                 self.input_types.insert(typ.key(), typ.clone());
             }
             RP::Output(_) => {
-                eprintln!("REGISTER OUTPUT: {:?}", typ.key());
                 self.output_types.insert(typ.key(), typ.clone());
             }
         }
@@ -259,7 +260,6 @@ impl Conversion {
                     return Ok(finalized_type(found));
                 }
             }
-            // TODO consider injections -- use a comparison trait
             RP::Input(vpath) | RP::Output(vpath) => {
                 if !is_composite(&self.schema, type_idx)? {
                     // currently we only generate a single type from each scalar type node
@@ -269,35 +269,48 @@ impl Conversion {
                         return Ok(finalized_type(found));
                     }
                 } else {
-                    let types = match &self.conversion_map.direct[type_idx as usize] {
-                        MapItem::Value(types) => types.as_slice(),
-                        MapItem::Unset => &[],
+                    match &mut self.conversion_map.direct[type_idx as usize] {
+                        MapItem::Value(types) => {
+                            // WTF is this???
+                            let found = types
+                                .iter()
+                                .find(|&item| item.relative_paths.iter().any(|rp| rp == vpath));
+                            if let Some(found) = found {
+                                return Ok(finalized_type(found.ty.clone()));
+                            }
+
+                            // TODO is this the only comparison point?
+                            let injection = rpath.get_injection(&schema);
+                            let found = types.iter_mut().find(|item| {
+                                item.ty.base().injection.as_ref() == injection.as_ref()
+                            });
+                            if let Some(found) = found {
+                                found.relative_paths.push(vpath.clone());
+                                return Ok(finalized_type(found.ty.clone()));
+                            }
+                        }
+                        MapItem::Unset => {}
                         _ => bail!("unexpected type for value type"),
-                    };
-                    // WTF is this???
-                    let found = types
-                        .iter()
-                        .find(|&item| item.relative_paths.iter().any(|rp| rp == vpath));
-                    if let Some(found) = found {
-                        return Ok(finalized_type(found.ty.clone()));
                     }
                 }
             }
         }
 
+        let schema = self.schema.clone();
+
         match type_node {
-            N::Boolean { base } => self.register_type(rpath, type_idx, |key| {
+            N::Boolean { base } => self.register_type(rpath.clone(), type_idx, |key| {
                 finalized_type(Type::Boolean(
                     BooleanType {
-                        base: Self::base(key, parent, base),
+                        base: Self::base(key, parent, rpath, base, &schema),
                     }
                     .into(),
                 ))
             }),
-            N::Integer { base, data } => self.register_type(rpath, type_idx, |key| {
+            N::Integer { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
                 finalized_type(Type::Integer(
                     IntegerType {
-                        base: Self::base(key, parent, base),
+                        base: Self::base(key, parent, rpath, base, &schema),
                         minimum: data.minimum,
                         maximum: data.maximum,
                         exclusive_minimum: data.exclusive_minimum,
@@ -307,10 +320,10 @@ impl Conversion {
                     .into(),
                 ))
             }),
-            N::Float { base, data } => self.register_type(rpath, type_idx, |key| {
+            N::Float { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
                 finalized_type(Type::Float(
                     crate::FloatType {
-                        base: Self::base(key, parent, base),
+                        base: Self::base(key, parent, rpath, base, &schema),
                         minimum: data.minimum,
                         maximum: data.maximum,
                         exclusive_minimum: data.exclusive_minimum,
@@ -320,10 +333,10 @@ impl Conversion {
                     .into(),
                 ))
             }),
-            N::String { base, data } => self.register_type(rpath, type_idx, |key| {
+            N::String { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
                 finalized_type(Type::String(
                     crate::StringType {
-                        base: Self::base(key, parent, base),
+                        base: Self::base(key, parent, rpath, base, &schema),
                         pattern: data.pattern.clone(),
                         format: data.format.clone(),
                         min_length: data.min_length,
@@ -333,10 +346,10 @@ impl Conversion {
                     .into(),
                 ))
             }),
-            N::File { base, data } => self.register_type(rpath, type_idx, |key| {
+            N::File { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
                 finalized_type(Type::File(
                     crate::FileType {
-                        base: Self::base(key, parent, base),
+                        base: Self::base(key, parent, rpath, base, &schema),
                         min_size: data.min_size,
                         max_size: data.max_size,
                         mime_types: data.mime_types.clone(),
@@ -345,31 +358,53 @@ impl Conversion {
                 ))
             }),
             N::Optional { base, data } => self.register_type(rpath.clone(), type_idx, move |key| {
-                convert_optional(parent, key, rpath, base, data)
+                convert_optional(parent, key, rpath, base, data, &schema)
             }),
             N::List { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
-                convert_list(parent, key, rpath.clone(), base, data)
+                convert_list(parent, key, rpath.clone(), base, data, &schema)
             }),
             N::Object { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
-                convert_object(parent, key, rpath.clone(), base, data)
+                convert_object(parent, key, rpath.clone(), base, data, &schema)
             }),
             N::Either { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
-                convert_union(parent, key, rpath.clone(), base, &data.one_of, true)
+                convert_union(
+                    parent,
+                    key,
+                    rpath.clone(),
+                    base,
+                    &data.one_of,
+                    &schema,
+                    true,
+                )
             }),
             N::Union { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
-                convert_union(parent, key, rpath.clone(), base, &data.any_of, false)
+                convert_union(
+                    parent,
+                    key,
+                    rpath.clone(),
+                    base,
+                    &data.any_of,
+                    &schema,
+                    false,
+                )
             }),
             N::Function { base, data } => {
                 let mat = self.materializers[data.materializer as usize].clone();
                 self.register_type(RelativePath::Function(type_idx), type_idx, |key| {
-                    convert_function(parent, key, base, data, mat)
+                    convert_function(parent, key, base, data, mat, &schema)
                 })
             }
             N::Any { .. } => unreachable!(), // FIXME is this still used?
         }
     }
 
-    pub fn base(key: TypeKey, parent: WeakType, base: &tg_schema::TypeNodeBase) -> crate::TypeBase {
+    pub fn base(
+        key: TypeKey,
+        parent: WeakType,
+        rpath: RelativePath,
+        base: &tg_schema::TypeNodeBase,
+        schema: &tg_schema::Typegraph,
+    ) -> crate::TypeBase {
         crate::TypeBase {
             key,
             parent,
@@ -377,6 +412,7 @@ impl Conversion {
             title: base.title.clone(),
             name: Default::default(),
             description: base.description.clone(),
+            injection: rpath.get_injection(schema),
         }
     }
 }

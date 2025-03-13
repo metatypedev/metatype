@@ -48,9 +48,10 @@ pub(crate) fn convert_optional(
     rpath: RelativePath,
     base: &tg_schema::TypeNodeBase,
     data: &tg_schema::OptionalTypeData,
+    schema: &tg_schema::Typegraph,
 ) -> Box<dyn TypeConversionResult> {
     let ty = OptionalType {
-        base: Conversion::base(key, parent, base),
+        base: Conversion::base(key, parent, rpath.clone(), base, schema),
         item: Default::default(),
         default_value: data.default_value.clone(),
     }

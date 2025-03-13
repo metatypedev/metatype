@@ -22,7 +22,9 @@ use conv::{MapValueItem, TypeKey};
 use indexmap::IndexMap;
 use interlude::*;
 use naming::DefaultNamingEngine;
+use runtimes::Materializer;
 use std::collections::HashMap;
+use tg_schema::runtimes::TGRuntime;
 pub use types::*;
 
 #[derive(Debug)]
@@ -55,6 +57,8 @@ pub struct Typegraph {
     pub namespace_objects: IndexMap<Vec<Arc<str>>, Arc<ObjectType>>,
     pub named: HashMap<Arc<str>, Type>,
     pub conversion_map: Vec<MapItem>,
+    pub materializers: Vec<Materializer>,
+    pub runtimes: Vec<Arc<TGRuntime>>,
 }
 
 impl Typegraph {

@@ -32,7 +32,7 @@ pub mod shared;
 mod fdk_py;
 mod fdk_rs;
 // mod fdk_substantial;
-// mod fdk_ts;
+mod fdk_ts;
 
 // mod client_py;
 mod client_rs;
@@ -166,16 +166,16 @@ impl GeneratorRunner {
                 //         },
                 //     },
                 // ),
-                // (
-                //     "fdk_ts".to_string(),
-                //     GeneratorRunner {
-                //         op: |workspace_path: &Path, val| {
-                //             let config = fdk_ts::FdkTypescriptGenConfig::from_json(val, workspace_path)?;
-                //             let generator = fdk_ts::Generator::new(config)?;
-                //             Ok(Box::new(generator))
-                //         },
-                //     },
-                // ),
+                (
+                    "fdk_ts".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = fdk_ts::FdkTypescriptGenConfig::from_json(val, workspace_path)?;
+                            let generator = fdk_ts::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
                 // (
                 //     "client_ts".to_string(),
                 //     GeneratorRunner {
