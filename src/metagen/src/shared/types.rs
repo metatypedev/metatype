@@ -102,12 +102,19 @@ pub struct TypeRenderer {
 }
 
 impl TypeRenderer {
-    pub fn new(nodes: Vec<Rc<TypeNode>>, render_type: Rc<dyn RenderType>) -> Self {
+    pub fn new(
+        nodes: Vec<Rc<TypeNode>>,
+        render_type: Rc<dyn RenderType>,
+        prerendered_set: impl IntoIterator<Item = (u32, Rc<str>)>,
+    ) -> Self {
         Self {
             dest: GenDestBuf {
                 buf: Default::default(),
             },
-            name_memo: Default::default(),
+            name_memo: prerendered_set
+                .into_iter()
+                .map(|(ii, name)| (ii, RenderedName::Name(name)))
+                .collect(),
             nodes,
             render_type,
             replacement_records: Default::default(),

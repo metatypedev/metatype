@@ -27,7 +27,7 @@ await typegraph(
         remix: python
           .import(idv3, idv3, {
             module: "./metagen/py/remix.py",
-            deps: ["./metagen/py/remix_types.py"],
+            deps: ["./metagen/py/fdk.py"],
             name: "remix_track",
           })
           .rename("remix_track"), // explicit names help

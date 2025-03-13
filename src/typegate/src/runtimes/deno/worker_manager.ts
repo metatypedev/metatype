@@ -10,6 +10,7 @@ import {
 } from "../patterns/worker_manager/mod.ts";
 import { WorkerPool } from "../patterns/worker_manager/pooling.ts";
 import { TaskId } from "../patterns/worker_manager/types.ts";
+import { hostcall, HostCallCtx } from "../wit_wire/hostcall.ts";
 import { TaskContext } from "./shared_types.ts";
 import { DenoEvent, DenoMessage, TaskSpec } from "./types.ts";
 
@@ -37,7 +38,10 @@ export class WorkerManager
     return WorkerManager.#pool!;
   }
 
-  constructor(private config: WorkerManagerConfig) {
+  constructor(
+    private config: WorkerManagerConfig,
+    private hostcallCtx: HostCallCtx,
+  ) {
     super(WorkerManager.#getPool());
   }
 
@@ -67,14 +71,36 @@ export class WorkerManager
         reject(new Error(`${this.config.timeout_ms}ms timeout exceeded`));
       }, this.config.timeout_ms);
 
-      const handler: (event: DenoEvent) => void = (event) => {
-        clearTimeout(timeoutId);
-        this.deallocateWorker(name, taskId);
+      const handler: (event: DenoEvent) => void = async (event) => {
         switch (event.type) {
+          case "HOSTCALL": {
+            let result;
+            let error;
+            try {
+              result = await hostcall(
+                this.hostcallCtx,
+                event.opName,
+                event.json,
+              );
+            } catch (err) {
+              error = err;
+            }
+            this.sendMessage(taskId, {
+              type: "HOSTCALL_RESP",
+              id: event.id,
+              result,
+              error,
+            });
+            break;
+          }
           case "SUCCESS":
+            clearTimeout(timeoutId);
+            this.deallocateWorker(name, taskId);
             resolve(event.result);
             break;
           case "FAILURE":
+            clearTimeout(timeoutId);
+            this.deallocateWorker(name, taskId);
             reject(event.exception ?? event.error);
             break;
         }

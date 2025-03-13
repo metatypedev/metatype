@@ -142,9 +142,23 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: &Typegraph) -> anyhow::Resul
     )?;
     writeln!(&mut client_rs)?;
 
-    render_static(&mut client_rs)?;
+    render_client(&mut client_rs, tg, &GenClientRsOpts { hostcall: false })?;
 
-    let dest: &mut GenDestBuf = &mut client_rs;
+    writeln!(&mut client_rs)?;
+    Ok(client_rs.buf)
+}
+
+pub struct GenClientRsOpts {
+    pub hostcall: bool,
+}
+
+pub fn render_client(
+    dest: &mut GenDestBuf,
+    tg: &Typegraph,
+    opts: &GenClientRsOpts,
+) -> anyhow::Result<NameMemo> {
+    render_static(dest, opts.hostcall)?;
+
     let manifest = get_manifest(tg)?;
 
     let name_mapper = NameMapper {
@@ -154,7 +168,7 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: &Typegraph) -> anyhow::Resul
     let name_mapper = Rc::new(name_mapper);
 
     let (node_metas, named_types) = render_node_metas(dest, &manifest, name_mapper.clone())?;
-    let data_types = render_data_types(dest, &manifest, name_mapper.clone())?;
+    let (data_types, return_types) = render_data_types(dest, tg, &manifest, name_mapper.clone())?;
     let data_types = Rc::new(data_types);
     let selection_names =
         render_selection_types(dest, &manifest, data_types.clone(), name_mapper.clone())?;
@@ -162,20 +176,17 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: &Typegraph) -> anyhow::Resul
     write!(
         dest,
         r#"
-impl QueryGraph {{
-
-    pub fn new(addr: Url) -> Self {{
-        Self {{
-            addr,
-            ty_to_gql_ty_map: std::sync::Arc::new([
-            "#
+pub fn query_graph() -> QueryGraph {{
+    QueryGraph {{
+        ty_to_gql_ty_map: std::sync::Arc::new([
+        "#
     )?;
     for (&id, ty_name) in name_mapper.memo.borrow().deref() {
         let gql_ty = get_gql_type(&tg.types, id, false);
         write!(
             dest,
             r#"
-                ("{ty_name}".into(), "{gql_ty}".into()),"#
+            ("{ty_name}".into(), "{gql_ty}".into()),"#
         )?;
     }
     for id in named_types {
@@ -184,24 +195,30 @@ impl QueryGraph {{
         write!(
             dest,
             r#"
-                ("{ty_name}".into(), "{gql_ty}".into()),"#
+            ("{ty_name}".into(), "{gql_ty}".into()),"#
         )?;
     }
     write!(
         dest,
         r#"
         ].into()),
-        }}
     }}
-    "#
+}}
+"#
     )?;
 
+    writeln!(dest, r#"impl QueryGraph {{"#)?;
     for fun in manifest.root_fns {
         use heck::ToSnekCase;
 
         let node_name = fun.name;
         let method_name = node_name.to_snek_case();
-        let out_ty_name = data_types.get(&fun.out_id).unwrap();
+        let out_ty_name = return_types.get(&fun.out_id).unwrap();
+        let out_ty_name = if shared::is_composite(&tg.types, fun.out_id) {
+            format!("return_types::{out_ty_name}",)
+        } else {
+            out_ty_name.to_string()
+        };
 
         let arg_ty = fun.in_id.map(|id| data_types.get(&id).unwrap());
         let select_ty = fun.select_ty.map(|id| selection_names.get(&id).unwrap());
@@ -284,15 +301,17 @@ impl QueryGraph {{
         "
 }}"
     )?;
-
-    writeln!(&mut client_rs)?;
-    Ok(client_rs.buf)
+    Ok(Rc::into_inner(data_types).unwrap())
 }
 
 /// Render the common sections like the transports
-fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
+fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
     let client_rs = include_str!("static/client.rs");
-    write!(dest, "{}", client_rs)?;
+    crate::utils::processed_write(
+        dest,
+        client_rs,
+        &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
+    )?;
     Ok(())
 }
 
@@ -300,43 +319,74 @@ fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
 /// used for serialization
 fn render_data_types(
     dest: &mut GenDestBuf,
+    tg: &Typegraph,
     manifest: &RenderManifest,
     name_mapper: Rc<NameMapper>,
-) -> anyhow::Result<NameMemo> {
-    let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Rc::new(fdk_rs::types::RustTypeRenderer {
-            derive_debug: true,
-            derive_serde: true,
-            all_fields_optional: true,
-        }),
-    );
-    for &id in &manifest.arg_types {
-        _ = renderer.render(id)?;
-    }
-    /* renderer.replace_renderer(Rc::new(fdk_rs::types::RustTypeRenderer {
-        derive_debug: true,
-        derive_serde: true,
-        all_fields_optional: true,
-    })); */
-    // FIXME: it should be possible to have non
-    // partial arg types but
-    // - rendering the args and return_tys in separately
-    //   results in duplicate common types like for primitives
-    // - switching out the renderer halfway is troublsome as we
-    //   can't afford to have any non-partial return_tys but
-    //   we might get some if the args refer to one of them
-    for &id in &manifest.return_types {
-        _ = renderer.render(id)?;
-    }
-    let (types_rs, name_memo) = renderer.finalize();
-    writeln!(dest.buf, "use types::*;")?;
-    writeln!(dest.buf, "pub mod types {{")?;
-    for line in types_rs.lines() {
-        writeln!(dest.buf, "    {line}")?;
-    }
-    writeln!(dest.buf, "}}")?;
-    Ok(name_memo)
+) -> anyhow::Result<(NameMemo, NameMemo)> {
+    // we first render all types under the `types`
+    // module for general use
+    let name_memo = {
+        let mut renderer = TypeRenderer::new(
+            name_mapper.nodes.clone(),
+            Rc::new(fdk_rs::types::RustTypeRenderer {
+                derive_debug: true,
+                derive_serde: true,
+                all_fields_optional: false,
+            }),
+            [],
+        );
+        for id in 1..tg.types.len() {
+            _ = renderer.render(id as u32)?;
+        }
+        let (types_rs, name_memo) = renderer.finalize();
+        writeln!(dest.buf, "use types::*;")?;
+        writeln!(dest.buf, "#[allow(unused)]")?;
+        writeln!(dest.buf, "pub mod types {{")?;
+        for line in types_rs.lines() {
+            writeln!(dest.buf, "    {line}")?;
+        }
+        writeln!(dest.buf, "}}")?;
+        name_memo
+    };
+    // for types used for fn return types
+    // we separately render types that are
+    // fully partial
+    let name_memo_partial = {
+        let mut renderer = TypeRenderer::new(
+            name_mapper.nodes.clone(),
+            Rc::new(fdk_rs::types::RustTypeRenderer {
+                derive_debug: true,
+                derive_serde: true,
+                all_fields_optional: true,
+            }),
+            // we pre seed the renderer with names for those that
+            // aren't composites
+            name_memo.iter().filter_map(|(&ii, name)| {
+                if tg.types[ii as usize].type_name() == "function" {
+                    return None;
+                }
+                if !shared::is_composite(&tg.types, ii) {
+                    Some((ii, name.clone()))
+                } else {
+                    None
+                }
+            }),
+        );
+        for &id in &manifest.return_types {
+            _ = renderer.render(id)?;
+        }
+        let (types_rs, name_memo) = renderer.finalize();
+        // writeln!(dest.buf, "use return_types::*;")?;
+        writeln!(dest.buf, "#[allow(unused)]")?;
+        writeln!(dest.buf, "pub mod return_types {{")?;
+        writeln!(dest.buf, "    use super::types::*;")?;
+        for line in types_rs.lines() {
+            writeln!(dest.buf, "    {line}")?;
+        }
+        writeln!(dest.buf, "}}")?;
+        name_memo
+    };
+    Ok((name_memo, name_memo_partial))
 }
 
 /// Render the type used for selecting fields
@@ -351,6 +401,7 @@ fn render_selection_types(
         Rc::new(selections::RsNodeSelectionsRenderer {
             arg_ty_names: arg_types_memo,
         }),
+        [],
     );
     for &id in &manifest.selections {
         _ = renderer.render(id)?;
@@ -375,6 +426,7 @@ fn render_node_metas(
             named_types: named_types.clone(),
             input_files: manifest.input_files.clone(),
         }),
+        [],
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;
@@ -434,7 +486,7 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let is_test = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() == Some("1");
 
     #[cfg(debug_assertions)]
-    let dependency = if is_test {
+    let dependency = {
         use normpath::PathExt;
         let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../metagen-client-rs")
@@ -444,8 +496,6 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
             r#"metagen-client = {{ path = "{client_path}" }}"#,
             client_path = client_path.as_path().to_str().unwrap()
         )
-    } else {
-        "metagen-client.workspace = true".to_string()
     };
 
     #[cfg(not(debug_assertions))]

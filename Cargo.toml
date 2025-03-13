@@ -1,28 +1,30 @@
 [workspace]
 resolver = "2"
 members = [
+  "examples/typegraphs/metagen/rs",
   "src/meta-cli",
   "src/metagen",
+  "src/metagen-client-rs",
+  # "src/metagen/src/client_rs/static",
   "src/metagen/src/fdk_rs/static",
   "src/mt_deno",
+  "src/substantial",
   "src/typegate/engine",
   "src/typegate/standalone",
   "src/typegate_api",
   "src/typegraph/core",
   "src/typegraph/schema",
-  "src/xtask",
-  "src/utils/grpc",
   "src/utils/archive",
-  "src/substantial",
-  "src/metagen-client-rs",
+  "src/utils/grpc",
+  "src/xtask",
+  "tests/metagen/typegraphs/identities/rs",
   "tests/metagen/typegraphs/sample/rs",
   "tests/metagen/typegraphs/sample/rs_upload",
+  "tests/runtimes/wasm_reflected/rust",
+  "tests/runtimes/wasm_wire/rust",
 ]
 
 exclude = [
-  "tests/runtimes/wasm_reflected/rust",
-  "tests/runtimes/wasm_wire/rust",
-  "tests/metagen/typegraphs/sample/rs_upload",
   "src/pyrt_wit_wire",
 ]
 
@@ -31,14 +33,13 @@ version = "0.5.1-rc.0"
 edition = "2021"
 
 [workspace.dependencies]
-
 # internal crates
 mt_deno = { path = "src/mt_deno/" }
 tg_schema = { path = "src/typegraph/schema" }
 typegraph_core = { path = "src/typegraph/core" }
 substantial = { path = "src/substantial/" }
 metagen = { path = "src/metagen/" }
-metagen-client = { path = "src/metagen-client-rs" }
+metagen-client = { path = "src/metagen-client-rs", default-features = false }
 typegate_engine = { path = "src/typegate/engine" }
 typegate_api = { path = "src/typegate_api" }
 grpc_utils = { path = "src/utils/grpc" }
@@ -136,6 +137,7 @@ rustpython-parser = "0.4.0"
 # wasm
 wasmtime = "25.0.2"
 wasmtime-wasi = "25.0.2"
+wit-bindgen = "0.34"
 
 # deno
 # deno = { path =  "../deno/cli" }

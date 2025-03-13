@@ -1,15 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { errorToString } from "../../worker_utils.ts";
+import { errorToString, HostcallPump } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
 import { toFileUrl } from "@std/path/to-file-url";
 import { Interrupt, WorkflowEvent, WorkflowMessage } from "./types.ts";
 
 let runCtx: Context | undefined;
+const hostcallPump = new HostcallPump();
 
-self.onmessage = async function (event) {
-  const { type, data } = event.data as WorkflowMessage;
+self.onmessage = async function (event: MessageEvent<WorkflowMessage>) {
+  if (event.data.type == "HOSTCALL_RESP") {
+    hostcallPump.handleResponse(event.data);
+    return;
+  }
+  const { type, data } = event.data;
   switch (type) {
     case "START": {
       const { modulePath, functionName, run, schedule, internal } = data;
@@ -31,7 +36,19 @@ self.onmessage = async function (event) {
         return;
       }
 
-      runCtx = new Context(run, internal);
+      runCtx = new Context(
+        run,
+        hostcallPump.newHandler((id, opName, json) => {
+          postMessage(
+            {
+              type: "HOSTCALL",
+              id,
+              opName,
+              json,
+            } satisfies WorkflowEvent,
+          );
+        }).gql,
+      );
 
       workflowFn(runCtx, internal)
         .then((wfResult: unknown) => {

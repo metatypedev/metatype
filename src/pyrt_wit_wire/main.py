@@ -11,6 +11,7 @@ import inspect
 import sys
 import traceback
 import types
+
 from typing import Any, Callable, Dict, TypeVar
 
 import wit_wire.exports
@@ -32,6 +33,19 @@ from wit_wire.exports.mat_wire import (
 # from pyrt.imports.typegate_wire import hostcall
 from wit_wire.imports.typegate_wire import hostcall
 
+# ruff: noqa: F401
+# the following are required by client_py
+import io as _1
+import re as _2
+import uuid as _3
+import typing as _4
+import dataclasses as _5
+import urllib as _6
+import urllib.request as _7
+import urllib.error as _8
+import http.client as _9
+import mimetypes as _10
+
 # the `MatWire` class is instantiated for each
 # external call. We have to put any persisted
 # state here.
@@ -42,12 +56,10 @@ T = TypeVar("T")
 HandlerFn = Callable[..., T]
 
 
-class Ctx:
-    def gql(self, query: str, variables: str) -> Any:
-        data = json.loads(
-            hostcall("gql", json=json.dumps({"query": query, "variables": variables}))
-        )
-        return data["data"]
+def gql_fn(query: str, variables: Dict[str, Any]) -> Any:
+    return json.loads(
+        hostcall("gql", json=json.dumps({"query": query, "variables": variables}))
+    )
 
 
 class MatWire(wit_wire.exports.MatWire):
@@ -90,7 +102,7 @@ class ErasedHandler:
         if self.param_count == 1:
             out = self.handler_fn(in_parsed)
         else:
-            out = self.handler_fn(in_parsed, Ctx())
+            out = self.handler_fn(in_parsed, gql_fn)
         return json.dumps(out)
 
 
