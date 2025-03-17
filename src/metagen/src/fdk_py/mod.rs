@@ -211,12 +211,11 @@ fn get_module_infos(fun: &Arc<FunctionType>, tg: &Typegraph) -> anyhow::Result<(
             .unwrap()
             .clone(),
     )?;
-    todo!()
-    // let script_path =
-    //     serde_json::from_value::<String>(tg.materializers[idx].data["entryPoint"].clone())?;
-    // let script_path = PathBuf::from(script_path.clone());
-    //
-    // Ok((mod_name, script_path))
+    let script_path =
+        serde_json::from_value::<String>(tg.materializers[idx].data["entryPoint"].clone())?;
+    let script_path = PathBuf::from(script_path.clone());
+
+    Ok((mod_name, script_path))
 }
 
 #[derive(Serialize, Eq, PartialEq, Hash)]

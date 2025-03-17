@@ -4,79 +4,110 @@
 use std::fmt::Write;
 
 use tg_schema::*;
+use typegraph::TypeNodeExt as _;
 
-use super::utils::*;
-use crate::{interlude::*, shared::client::*, shared::types::*};
+use super::{
+    shared::{
+        manifest::{ManifestPage, TypeRenderer},
+        types::NameMemo,
+    },
+    utils::*,
+};
+use crate::{interlude::*, shared::client::*};
 
-pub struct TsNodeSelectionsRenderer {
-    pub arg_ty_names: Arc<NameMemo>,
+#[derive(Debug)]
+pub enum TsSelection {
+    Object(Object),
+    Union(Union),
 }
 
-impl TsNodeSelectionsRenderer {
-    /// `props` is a map of prop_name -> (SelectionType, ArgumentType)
-    fn render_for_object(
+#[derive(Debug)]
+pub struct Object {
+    name: String,
+    props: Vec<(String, SelectionTy)>,
+}
+
+impl Object {
+    fn render(
         &self,
         dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, SelectionTy>,
+        page: &ManifestPage<TsSelection>,
+        name_memo: &impl NameMemo,
     ) -> std::fmt::Result {
-        writeln!(
-            dest,
-            "export type {ty_name} = {{
-  _?: SelectionFlags;"
-        )?;
-        for (name, select_ty) in props {
+        writeln!(dest, "export type {} = {{", self.name)?;
+        for (name, select_ty) in &self.props {
             use SelectionTy::*;
             match select_ty {
                 Scalar => writeln!(dest, r#"  {name}?: ScalarSelectNoArgs;"#)?,
                 ScalarArgs { arg_ty } => {
+                    let arg_ty = page.get_ref(arg_ty, name_memo).unwrap();
                     writeln!(dest, r#"  {name}?: ScalarSelectArgs<{arg_ty}>;"#)?
                 }
                 Composite { select_ty } => {
+                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
                     writeln!(dest, r#"  {name}?: CompositeSelectNoArgs<{select_ty}>;"#)?
                 }
-                CompositeArgs { arg_ty, select_ty } => writeln!(
-                    dest,
-                    r#"  {name}?: CompositeSelectArgs<{arg_ty}, {select_ty}>;"#
-                )?,
+                CompositeArgs { arg_ty, select_ty } => {
+                    let arg_ty = page.get_ref(arg_ty, name_memo).unwrap();
+                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
+                    writeln!(
+                        dest,
+                        r#"  {name}?: CompositeSelectArgs<{arg_ty}, {select_ty}>;"#
+                    )?
+                }
             };
         }
         writeln!(dest, "}};")?;
         Ok(())
     }
+}
 
-    fn render_for_union(
+#[derive(Debug)]
+struct UnionVariant {
+    name: String,
+    ty: String,
+    select_ty: SelectionTy,
+}
+
+#[derive(Debug)]
+pub struct Union {
+    name: String,
+    variants: Vec<UnionVariant>,
+}
+
+impl Union {
+    fn render(
         &self,
-        dest: &mut TypeRenderer,
-        ty_name: &str,
-        variants: IndexMap<String, (String, SelectionTy)>,
+        dest: &mut impl Write,
+        page: &ManifestPage<TsSelection>,
+        name_memo: &impl NameMemo,
     ) -> std::fmt::Result {
-        writeln!(
-            dest,
-            "export type {ty_name} = {{
-  _?: SelectionFlags;"
-        )?;
-        for (_name, (variant_ty, select_ty)) in &variants {
+        writeln!(dest, "export type {} = {{", self.name)?;
+        for variant in &self.variants {
             use SelectionTy::*;
-            match select_ty {
+            match &variant.select_ty {
                 Scalar | ScalarArgs { .. } => {
                     // scalars always get selected if the union node
                     // gets selected
                     unreachable!()
                 }
                 Composite { select_ty } => {
-                    // use variant_ty as key instead of normalized struct name
-                    // we want it to match the varaint name from the NodeMetas
-                    // later so no normlalization is used
+                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
+                    let variant_ty = &variant.ty;
                     writeln!(
                         dest,
                         r#"  "{variant_ty}"?: CompositeSelectNoArgs<{select_ty}>;"#
                     )?
                 }
-                CompositeArgs { arg_ty, select_ty } => writeln!(
-                    dest,
-                    r#"  "{variant_ty}"?: CompositeSelectArgs<{arg_ty}, {select_ty}>;"#
-                )?,
+                CompositeArgs { arg_ty, select_ty } => {
+                    let arg_ty = page.get_ref(arg_ty, name_memo).unwrap();
+                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
+                    let variant_ty = &variant.ty;
+                    writeln!(
+                        dest,
+                        r#"  "{variant_ty}"?: CompositeSelectArgs<{arg_ty}, {select_ty}>;"#
+                    )?
+                }
             };
         }
         writeln!(dest, "}};")?;
@@ -84,92 +115,87 @@ impl TsNodeSelectionsRenderer {
     }
 }
 
-impl RenderType for TsNodeSelectionsRenderer {
+impl TypeRenderer for TsSelection {
     fn render(
         &self,
-        renderer: &mut TypeRenderer,
-        cursor: &mut VisitCursor,
-    ) -> anyhow::Result<String> {
-        use heck::ToPascalCase;
-
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Boolean { .. }
-            | TypeNode::Float { .. }
-            | TypeNode::Integer { .. }
-            | TypeNode::String { .. }
-            | TypeNode::File { .. } => unreachable!("scalars don't get to have selections"),
-            TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
-            TypeNode::Optional {
-                data: OptionalTypeData { item, .. },
-                ..
-            }
-            | TypeNode::List {
-                data: ListTypeData { items: item, .. },
-                ..
-            }
-            | TypeNode::Function {
-                data: FunctionTypeData { output: item, .. },
-                ..
-            } => renderer
-                .render_subgraph(*item, cursor)?
-                .0
-                .unwrap()
-                .to_string(),
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
-                    .iter()
-                    // generate property types first
-                    .map(|(name, &dep_id)| {
-                        eyre::Ok((
-                            normalize_struct_prop_name(name),
-                            selection_for_field(dep_id, &self.arg_ty_names, renderer, cursor)?,
-                        ))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                let node_name = &base.title;
-                let ty_name = normalize_type_title(node_name);
-                let ty_name = format!("{ty_name}Selections").to_pascal_case();
-                self.render_for_object(renderer, &ty_name, props)?;
-                ty_name
-            }
-            TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            }
-            | TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            } => {
-                let variants = variants
-                    .iter()
-                    .filter_map(|&inner| {
-                        if !renderer.is_composite(inner) {
-                            return None;
-                        }
-                        let ty_name = renderer.nodes[inner as usize].deref().base().title.clone();
-                        let struct_prop_name =
-                            normalize_struct_prop_name(&normalize_type_title(&ty_name[..]));
-
-                        let selection = match selection_for_field(
-                            inner,
-                            &self.arg_ty_names,
-                            renderer,
-                            cursor,
-                        ) {
-                            Ok(selection) => selection,
-                            Err(err) => return Some(Err(err)),
-                        };
-
-                        Some(eyre::Ok((struct_prop_name, (ty_name, selection))))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                let ty_name = normalize_type_title(&base.title);
-                let ty_name = format!("{ty_name}Selections").to_pascal_case();
-                self.render_for_union(renderer, &ty_name, variants)?;
-                ty_name
-            }
-        };
-        Ok(name)
+        dest: &mut impl Write,
+        page: &ManifestPage<Self>,
+        name_memo: &impl NameMemo,
+    ) -> std::fmt::Result {
+        match self {
+            TsSelection::Object(obj) => obj.render(dest, page, name_memo),
+            TsSelection::Union(union) => union.render(dest, page, name_memo),
+        }
     }
+
+    fn get_reference_expr(
+        &self,
+        page: &ManifestPage<Self>,
+        memo: &impl NameMemo,
+    ) -> Option<String> {
+        match self {
+            TsSelection::Object(obj) => Some(obj.name.clone()),
+            TsSelection::Union(union) => Some(union.name.clone()),
+        }
+    }
+}
+
+pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<TsSelection>> {
+    let mut map = IndexMap::new();
+
+    for (key, ty) in tg.output_types.iter() {
+        if !ty.is_composite()? {
+            continue;
+        }
+
+        match ty {
+            Type::Boolean(_)
+            | Type::Float(_)
+            | Type::Integer(_)
+            | Type::String(_)
+            | Type::File(_) => unreachable!("scalars don't get to have selections"),
+            Type::Optional(_) | Type::List(_) | Type::Function(_) => {}
+            Type::Object(ty) => {
+                let ty_props = ty.properties()?;
+                let mut props = Vec::with_capacity(ty_props.len());
+                for (prop_name, prop) in ty_props {
+                    let prop_name = normalize_struct_prop_name(prop_name);
+                    let select_ty = selection_for_field(&prop.type_)?;
+                    props.push((prop_name, select_ty));
+                }
+                map.insert(
+                    *key,
+                    TsSelection::Object(Object {
+                        props,
+                        name: format!("{}Selections", normalize_type_title(&ty.name()?)),
+                    }),
+                );
+            }
+            Type::Union(ty) => {
+                let ty_variants = ty.variants()?;
+                let mut variants = Vec::with_capacity(ty_variants.len());
+                for variant in ty_variants {
+                    if !variant.is_composite()? {
+                        continue;
+                    }
+                    let struct_prop_name = normalize_struct_prop_name(&variant.title());
+                    let selection = selection_for_field(variant)?;
+                    variants.push(UnionVariant {
+                        name: struct_prop_name,
+                        ty: variant.title().to_string(),
+                        select_ty: selection,
+                    });
+                }
+                map.insert(
+                    *key,
+                    TsSelection::Union(Union {
+                        name: format!("{}Selections", normalize_type_title(&ty.name()?)),
+                        variants,
+                    }),
+                );
+            }
+        }
+    }
+
+    Ok(map.into())
 }

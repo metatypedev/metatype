@@ -542,7 +542,6 @@ impl TypeRenderer for RustType {
         page: &ManifestPage<Self>,
         memo: &impl NameMemo, // memo is not used ;-p
     ) -> std::fmt::Result {
-        eprintln!("RustType::render: {:?}", self);
         match self {
             Self::Alias {
                 alias,
@@ -582,29 +581,23 @@ impl TypeRenderer for RustType {
                 properties,
                 partial,
             } => {
-                eprintln!("    >> derive");
                 RustType::render_derive(out, derive)?;
-                eprintln!("    >> struct");
                 let name = if *partial {
                     format!("{}Partial", name)
                 } else {
                     name.clone()
                 };
                 writeln!(out, "pub struct {} {{", name)?;
-                eprintln!("    >> props");
                 for prop in properties.iter() {
-                    eprintln!("      >> prop: {:?}", prop);
                     if let Some(rename) = &prop.rename {
                         writeln!(out, r#"    #[serde(rename = "{}")]"#, rename)?;
                     }
-                    eprintln!("      >> get ty_ref");
                     let ty_ref = page.get_ref(&prop.ty, memo).unwrap();
                     let ty_ref = if *partial && !prop.optional {
                         format!("Option<{}>", ty_ref)
                     } else {
                         ty_ref
                     };
-                    eprintln!("      >> ty_ref={}", ty_ref);
 
                     writeln!(
                         out,
@@ -612,7 +605,6 @@ impl TypeRenderer for RustType {
                         prop.name,
                         page.get_ref(&prop.ty, memo).unwrap()
                     )?;
-                    eprintln!("        >> pub {}: {}", prop.name, ty_ref);
                 }
                 writeln!(out, "}}")
             }
@@ -643,7 +635,6 @@ impl TypeRenderer for RustType {
         page: &ManifestPage<Self>,
         memo: &impl NameMemo,
     ) -> Option<String> {
-        eprintln!("RustType::get_reference_expr: {:?}", self);
         Some(match self {
             Self::Alias { name, alias } => {
                 if let Some(name) = name {

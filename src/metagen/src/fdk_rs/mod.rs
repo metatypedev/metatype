@@ -202,7 +202,7 @@ impl FdkRustTemplate {
                 }
             }
 
-            manif.take_refs()
+            manif.get_cached_refs()
         };
 
         writeln!(&mut mod_rs.buf, "}}")?;

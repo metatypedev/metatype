@@ -1,11 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{collections::HashMap, fmt::Write};
+use std::{cell::RefCell, collections::HashMap, fmt::Write};
 
-use tg_schema::*;
+use heck::ToPascalCase as _;
+use typegraph::{conv::TypeKey, FunctionType, ObjectType, TypeNodeExt as _, UnionType};
 
-use super::utils::normalize_type_title;
+use super::{
+    shared::manifest::{ManifestPage, TypeRenderer},
+    utils::normalize_type_title,
+};
 use crate::{
     interlude::*,
     shared::{
@@ -14,32 +18,73 @@ use crate::{
     },
 };
 
-pub struct TsNodeMetasRenderer {
-    pub name_mapper: Arc<super::NameMapper>,
-    pub named_types: Arc<std::sync::Mutex<IndexSet<u32>>>,
-    pub input_files: Arc<HashMap<u32, Vec<TypePath>>>,
-}
-
-impl TsNodeMetasRenderer {
-    /// `props` is a map of prop_name -> (TypeName, subNodeName)
-    fn render_for_object(
+impl TypeRenderer for TsNodeMeta {
+    fn render(
         &self,
         dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, Arc<str>>,
+        page: &ManifestPage<Self>,
+        memo: &impl NameMemo,
     ) -> std::fmt::Result {
+        match self {
+            Self::Scalar => {}
+            Self::Alias { .. } => {}
+            Self::Object(obj) => obj.render(dest, page, memo)?,
+            Self::Function(func) => func.render(dest, page, memo)?,
+            Self::Union(union) => union.render(dest, page, memo)?,
+        }
+
+        Ok(())
+    }
+
+    fn get_reference_expr(
+        &self,
+        page: &ManifestPage<Self>,
+        memo: &impl NameMemo,
+    ) -> Option<String> {
+        match self {
+            Self::Scalar => Some("scalar".to_string()),
+            Self::Alias { target } => page.get_ref(target, memo),
+            Self::Object(obj) => Some(obj.name.clone()),
+            Self::Function(func) => Some(func.name.clone()),
+            Self::Union(union) => Some(union.name.clone()),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct Alias {
+    target: TypeKey,
+}
+
+#[derive(Debug)]
+pub struct Object {
+    props: IndexMap<Arc<str>, TypeKey>,
+    name: String,
+}
+
+impl Object {
+    fn render(
+        &self,
+        dest: &mut impl Write,
+        page: &ManifestPage<TsNodeMeta>,
+        memo: &impl NameMemo,
+    ) -> std::fmt::Result {
+        let name = &self.name;
+        let props = &self.props;
         write!(
             dest,
             r#"
-  {ty_name}(): NodeMeta {{
+  {name}(): NodeMeta {{
     return {{
       subNodes: ["#
         )?;
-        for (key, node_ref) in props {
+        for (prop_name, prop_ty) in props {
+            let node_ref = page.get_ref(prop_ty, memo).unwrap();
+
             write!(
                 dest,
                 r#"
-        ["{key}", nodeMetas.{node_ref}],"#
+        ["{prop_name}", nodeMetas.{node_ref}],"#
             )?;
         }
         write!(
@@ -51,23 +96,74 @@ impl TsNodeMetasRenderer {
         )?;
         Ok(())
     }
+}
 
-    fn render_for_func(
+#[derive(Debug)]
+pub struct Union {
+    name: String,
+    variants: IndexMap<Arc<str>, TypeKey>,
+}
+
+impl Union {
+    fn render(
         &self,
         dest: &mut impl Write,
-        ty_name: &str,
-        return_node: &str,
-        argument_fields: Option<IndexMap<String, Arc<str>>>,
-        input_files: Option<String>,
+        page: &ManifestPage<TsNodeMeta>,
+        memo: &impl NameMemo,
     ) -> std::fmt::Result {
+        let name = &self.name;
+        let variants = &self.variants;
         write!(
             dest,
             r#"
-  {ty_name}(): NodeMeta {{
+  {name}(): NodeMeta {{
     return {{
-      ...nodeMetas.{return_node}(),"#
+      variants: ["#
         )?;
-        if let Some(fields) = argument_fields {
+        for (variant_name, variant_key) in variants {
+            let node_ref = page.get_ref(variant_key, memo).unwrap();
+            write!(
+                dest,
+                r#"
+        ["{variant_name}", nodeMetas.{node_ref}],"#
+            )?;
+        }
+        write!(
+            dest,
+            r#"
+      ],
+    }};
+  }},"#
+        )?;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct Function {
+    return_ty: TypeKey,
+    argument_fields: Option<IndexMap<Arc<str>, TypeKey>>,
+    input_files: Option<String>, // WTF
+    name: String,
+}
+
+impl Function {
+    fn render(
+        &self,
+        dest: &mut impl Write,
+        page: &ManifestPage<TsNodeMeta>,
+        memo: &impl NameMemo,
+    ) -> std::fmt::Result {
+        let name = &self.name;
+        let return_name = page.get_ref(&self.return_ty, memo).unwrap();
+        write!(
+            dest,
+            r#"
+  {name}(): NodeMeta {{
+    return {{
+      ...nodeMetas.{return_name}(),"#
+        )?;
+        if let Some(fields) = &self.argument_fields {
             write!(
                 dest,
                 r#"
@@ -75,6 +171,8 @@ impl TsNodeMetasRenderer {
             )?;
 
             for (key, ty) in fields {
+                // huh?
+                let ty = page.get_ref(ty, memo).unwrap();
                 write!(
                     dest,
                     r#"
@@ -88,7 +186,7 @@ impl TsNodeMetasRenderer {
       }},"#
             )?;
         }
-        if let Some(input_files) = input_files {
+        if let Some(input_files) = &self.input_files {
             write!(
                 dest,
                 r#"
@@ -103,148 +201,153 @@ impl TsNodeMetasRenderer {
         )?;
         Ok(())
     }
+}
 
-    fn render_for_union(
-        &self,
-        dest: &mut TypeRenderer,
-        ty_name: &str,
-        variants: IndexMap<String, Arc<str>>,
-    ) -> std::fmt::Result {
-        write!(
-            dest,
-            r#"
-  {ty_name}(): NodeMeta {{
-    return {{
-      variants: ["#
-        )?;
-        for (key, node_ref) in variants {
-            write!(
-                dest,
-                r#"
-        ["{key}", nodeMetas.{node_ref}],"#
-            )?;
+#[derive(Debug)]
+pub enum TsNodeMeta {
+    Scalar,
+    Alias { target: TypeKey },
+    Object(Object),
+    Union(Union),
+    Function(Function),
+}
+
+trait MetaFactory<M> {
+    fn build_meta(&self, key: TypeKey) -> Result<M>;
+}
+
+impl MetaFactory<TsNodeMeta> for MetasPageBuilder {
+    fn build_meta(&self, key: TypeKey) -> Result<TsNodeMeta> {
+        let ty = self.tg.find_type(key).unwrap();
+
+        match ty {
+            Type::Boolean(_)
+            | Type::Float(_)
+            | Type::Integer(_)
+            | Type::String(_)
+            | Type::File(_) => Ok(TsNodeMeta::Scalar),
+            Type::Optional(ty) => Ok(self.alias(ty.item()?.key())),
+            Type::List(ty) => Ok(self.alias(ty.item()?.key())),
+            Type::Union(ty) => self.build_union(ty.clone()),
+            Type::Function(ty) => self.build_func(ty.clone()),
+            Type::Object(ty) => self.build_object(ty.clone()),
         }
-        write!(
-            dest,
-            r#"
-      ],
-    }};
-  }},"#
-        )?;
-        Ok(())
     }
 }
 
-impl RenderType for TsNodeMetasRenderer {
-    fn render(
-        &self,
-        renderer: &mut TypeRenderer,
-        cursor: &mut VisitCursor,
-    ) -> anyhow::Result<String> {
-        use heck::ToPascalCase;
+impl MetasPageBuilder {
+    fn alias(&self, key: TypeKey) -> TsNodeMeta {
+        self.push(key);
+        TsNodeMeta::Alias { target: key }
+    }
 
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
-            TypeNode::Boolean { .. }
-            | TypeNode::Float { .. }
-            | TypeNode::Integer { .. }
-            | TypeNode::String { .. }
-            | TypeNode::File { .. } => "scalar".into(),
-            // list and optional node just return the meta of the wrapped type
-            TypeNode::Optional {
-                data: OptionalTypeData { item, .. },
-                ..
-            }
-            | TypeNode::List {
-                data: ListTypeData { items: item, .. },
-                ..
-            } => renderer
-                .render_subgraph(*item, cursor)?
-                .0
-                .unwrap()
-                .to_string(),
-            TypeNode::Function { data, base } => {
-                let (return_ty_name, _cyclic) = renderer.render_subgraph(data.output, cursor)?;
-                let return_ty_name = return_ty_name.unwrap();
-                let props = match renderer.nodes[data.input as usize].deref() {
-                    TypeNode::Object { data, .. } if !data.properties.is_empty() => {
-                        let props = data
-                            .properties
-                            .iter()
-                            // generate property types first
-                            .map(|(name, &dep_id)| {
-                                eyre::Ok((name.clone(), self.name_mapper.name_for(dep_id)))
-                            })
-                            .collect::<Result<IndexMap<_, _>, _>>()?;
-                        Some(props)
-                    }
-                    _ => None,
-                };
-                let node_name = &base.title;
-                let ty_name = normalize_type_title(node_name).to_pascal_case();
-                let input_files = self
-                    .input_files
-                    .get(&cursor.id)
-                    .and_then(|files| serialize_typepaths_json(files));
-                self.render_for_func(renderer, &ty_name, &return_ty_name, props, input_files)?;
-                ty_name
-            }
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
-                    .iter()
-                    // generate property types first
-                    .map(|(name, &dep_id)| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(dep_id, cursor)?;
-                        let ty_name = ty_name.unwrap();
-                        eyre::Ok((name.clone(), ty_name))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                let node_name = &base.title;
-                let ty_name = normalize_type_title(node_name).to_pascal_case();
-                self.render_for_object(renderer, &ty_name, props)?;
-                ty_name
-            }
-            TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            }
-            | TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            } => {
-                let mut named_set = vec![];
-                let variants = variants
-                    .iter()
-                    .filter_map(|&inner| {
-                        if !renderer.is_composite(inner) {
-                            return None;
-                        }
-                        named_set.push(inner);
-                        let (ty_name, _cyclic) = match renderer.render_subgraph(inner, cursor) {
-                            Ok(val) => val,
-                            Err(err) => return Some(Err(err)),
-                        };
-                        let ty_name = ty_name.unwrap();
-                        Some(eyre::Ok((
-                            renderer.nodes[inner as usize].deref().base().title.clone(),
-                            ty_name,
-                        )))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                if !variants.is_empty() {
-                    {
-                        let mut named_types = self.named_types.lock().unwrap();
-                        named_types.extend(named_set)
-                    }
-                    let ty_name = normalize_type_title(&base.title);
-                    self.render_for_union(renderer, &ty_name, variants)?;
-                    ty_name
-                } else {
-                    "scalar".into()
+    fn build_union(&self, ty: Arc<UnionType>) -> Result<TsNodeMeta> {
+        let mut variants = vec![];
+        for variant in ty.variants()?.iter() {
+            let key = variant.key();
+            // if variant.is_composite()? {
+            self.push(key);
+            // }
+            variants.push(key);
+        }
+        let variants = variants
+            .into_iter()
+            .map(|key| -> Result<_> {
+                let ty = self.tg.find_type(key).unwrap();
+                Ok((ty.name()?, key))
+            })
+            .collect::<Result<IndexMap<_, _>>>()?;
+
+        Ok(TsNodeMeta::Union(Union {
+            name: normalize_type_title(&ty.name().unwrap()),
+            variants,
+        }))
+    }
+
+    fn build_func(&self, ty: Arc<FunctionType>) -> Result<TsNodeMeta> {
+        let out_key = ty.output()?.key();
+        self.push(out_key);
+
+        let props = ty.input()?.properties()?;
+        let props = (!props.is_empty()).then(|| {
+            props
+                .iter()
+                .map(|(name, prop)| (name.clone(), prop.type_.key()))
+                .collect::<IndexMap<_, _>>()
+        });
+
+        // TODO input_files
+
+        Ok(TsNodeMeta::Function(Function {
+            return_ty: out_key,
+            argument_fields: props,
+            input_files: None,
+            name: normalize_type_title(&ty.name().unwrap()),
+        }))
+    }
+
+    fn build_object(&self, ty: Arc<ObjectType>) -> Result<TsNodeMeta> {
+        let props = ty.properties()?;
+        let props = props
+            .iter()
+            .map(|(name, prop)| {
+                let key = prop.type_.key();
+                self.push(key);
+                (name.clone(), key)
+            })
+            .collect::<IndexMap<_, _>>();
+
+        Ok(TsNodeMeta::Object(Object {
+            props,
+            name: normalize_type_title(&ty.name().unwrap()).to_pascal_case(),
+        }))
+    }
+}
+
+pub struct MetasPageBuilder {
+    tg: Arc<Typegraph>,
+    stack: RefCell<Vec<TypeKey>>,
+}
+
+impl MetasPageBuilder {
+    pub fn new(tg: Arc<Typegraph>) -> Result<Self> {
+        let mut stack = vec![];
+        for root_fn in tg.root_functions() {
+            let (_, func_ty) = root_fn?;
+            stack.push(func_ty.key());
+        }
+        let stack = RefCell::new(stack);
+        Ok(Self { tg, stack })
+    }
+
+    fn push(&self, key: TypeKey) {
+        self.stack.borrow_mut().push(key);
+    }
+}
+impl MetasPageBuilder {
+    pub fn build<M>(self) -> Result<ManifestPage<M>>
+    where
+        M: TypeRenderer,
+        Self: MetaFactory<M>,
+    {
+        let mut map = IndexMap::new();
+
+        loop {
+            let next = {
+                let mut stack = self.stack.borrow_mut();
+                stack.pop()
+            };
+
+            if let Some(key) = next {
+                if map.contains_key(&key) {
+                    continue;
                 }
+                map.insert(key, self.build_meta(key)?);
+            } else {
+                break;
             }
-        };
-        Ok(name)
+        }
+
+        Ok(map.into())
     }
 }

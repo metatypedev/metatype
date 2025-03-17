@@ -27,18 +27,24 @@ impl NameMemo for HashMap<TypeKey, String> {
     }
 }
 
+impl NameMemo for IndexMap<TypeKey, String> {
+    fn get(&self, key: TypeKey) -> Option<&str> {
+        self.get(&key).map(|s| s.as_str())
+    }
+}
+
 #[derive(Debug)]
 pub struct ManifestPage<R: TypeRenderer> {
     // pub map: HashMap<TypeKey, R>,
     pub map: IndexMap<TypeKey, R>,
-    pub reference_cache: RwLock<HashMap<TypeKey, Option<String>>>,
+    pub reference_cache: RwLock<IndexMap<TypeKey, Option<String>>>,
 }
 
 impl<S: TypeRenderer> From<IndexMap<TypeKey, S>> for ManifestPage<S> {
     fn from(map: IndexMap<TypeKey, S>) -> Self {
         Self {
             map,
-            reference_cache: RwLock::new(HashMap::new()),
+            reference_cache: RwLock::new(IndexMap::new()),
         }
     }
 }
@@ -72,14 +78,19 @@ impl<R: TypeRenderer> ManifestPage<R> {
     }
 
     pub fn render_all(&self, out: &mut impl Write, name_memo: &impl NameMemo) -> std::fmt::Result {
-        for (k, spec) in &self.map {
+        for (_k, spec) in &self.map {
             spec.render(out, self, name_memo)?;
         }
         Ok(())
     }
 
-    pub fn take_refs(self) -> HashMap<TypeKey, Option<String>> {
-        self.reference_cache.into_inner().unwrap()
+    pub fn get_cached_refs(&self) -> IndexMap<TypeKey, String> {
+        self.reference_cache
+            .read()
+            .unwrap()
+            .iter()
+            .filter_map(|(k, v)| v.clone().map(|v| (k.clone(), v)))
+            .collect()
     }
 }
 

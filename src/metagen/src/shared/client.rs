@@ -9,6 +9,36 @@ use super::files::{get_path_to_files, TypePath};
 use indexmap::IndexSet;
 use typegraph::{conv::TypeKey, FunctionType, TypeNodeExt as _, Wrap as _};
 
+// Top level input types should be mapped to their GraphQL types
+pub fn get_gql_types(tg: &Typegraph) -> Result<IndexMap<(TypeKey, bool), Type>> {
+    let mut res: IndexMap<(TypeKey, bool), _> = Default::default();
+    for (_idx, func) in tg.functions.iter() {
+        let inp_type = func.input()?;
+        res.extend(
+            inp_type
+                .properties()?
+                .iter()
+                .map(|(_, prop)| ((prop.type_.key(), prop.as_id), prop.type_.clone())),
+        );
+    }
+
+    // additional named types: non scalar union variants
+    for ty in tg.output_types.values() {
+        match ty {
+            Type::Union(ty) => {
+                for variant in ty.variants()? {
+                    if variant.is_composite()? {
+                        res.insert((variant.key(), false), variant.clone());
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    Ok(res)
+}
+
 pub struct RenderManifest {
     pub tg: Arc<Typegraph>,
     pub node_metas: IndexSet<TypeKey>,

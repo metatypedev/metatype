@@ -222,19 +222,19 @@ pub fn {ty_name}() -> NodeMeta {{
 
 pub struct PageBuilder {
     tg: Arc<Typegraph>,
-    queue: RefCell<Vec<TypeKey>>,
+    stack: RefCell<Vec<TypeKey>>,
 }
 
 impl PageBuilder {
     pub fn new(tg: Arc<Typegraph>, metas: &IndexSet<TypeKey>) -> Self {
         Self {
             tg,
-            queue: RefCell::new(metas.iter().copied().collect()),
+            stack: RefCell::new(metas.iter().copied().collect()),
         }
     }
 
-    fn enqueue(&self, key: TypeKey) {
-        self.queue.borrow_mut().push(key);
+    fn push(&self, key: TypeKey) {
+        self.stack.borrow_mut().push(key);
     }
 
     pub fn build(self) -> Result<ManifestPage<RsNodeMetasSpec>> {
@@ -242,8 +242,8 @@ impl PageBuilder {
 
         loop {
             let next = {
-                let mut queue = self.queue.borrow_mut();
-                queue.pop()
+                let mut stack = self.stack.borrow_mut();
+                stack.pop()
             };
 
             if let Some(key) = next {
@@ -270,21 +270,21 @@ impl PageBuilder {
             | Type::File(_) => Ok(RsNodeMetasSpec::Scalar),
             Type::Optional(ty) => Ok(self.alias(ty.item()?.key())),
             Type::List(ty) => Ok(self.alias(ty.item()?.key())),
-            Type::Union(ty) => self.get_union_spec(key, ty.clone()),
+            Type::Union(ty) => self.get_union_spec(ty.clone()),
             Type::Function(ty) => self.get_func_spec(key, ty.clone()),
             Type::Object(ty) => self.get_object_spec(key, ty.clone()),
         }
     }
 
     fn alias(&self, key: TypeKey) -> RsNodeMetasSpec {
-        self.enqueue(key);
+        self.push(key);
         RsNodeMetasSpec::Alias { target: key }
     }
 
     fn get_func_spec(&self, key: TypeKey, ty: Arc<FunctionType>) -> Result<RsNodeMetasSpec> {
         debug_assert_eq!(ty.key(), key);
         let out_key = ty.output()?.key();
-        self.enqueue(out_key);
+        self.push(out_key);
 
         let props = ty.input()?.properties()?;
         let props = (!props.is_empty()).then(|| {
@@ -305,13 +305,12 @@ impl PageBuilder {
     }
 
     // TODO return result
-    fn get_union_spec(&self, key: TypeKey, ty: Arc<UnionType>) -> Result<RsNodeMetasSpec> {
-        debug_assert_eq!(ty.key(), key);
+    fn get_union_spec(&self, ty: Arc<UnionType>) -> Result<RsNodeMetasSpec> {
         let mut variants = IndexMap::new();
         for variant in ty.variants()?.iter() {
             if variant.is_composite()? {
                 let key = variant.key();
-                self.enqueue(key);
+                self.push(key);
                 variants.insert(variant.name()?, key);
             }
         }
@@ -331,7 +330,7 @@ impl PageBuilder {
             .iter()
             .map(|(name, prop)| {
                 let prop_key = prop.type_.key();
-                self.enqueue(prop_key);
+                self.push(prop_key);
                 (name.clone(), prop_key)
             })
             .collect::<IndexMap<_, _>>();

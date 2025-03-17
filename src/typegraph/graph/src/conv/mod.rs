@@ -10,6 +10,7 @@ use crate::{
 };
 use crate::{FunctionType, IntegerType, ObjectType, Type};
 use indexmap::IndexMap;
+use map::ValueTypeKind;
 pub use map::{
     ConversionMap, MapItem, MapValueItem, Path, PathSegment, RelativePath, TypeKey, ValueTypePath,
 };
@@ -20,46 +21,6 @@ mod map;
 pub mod interlude {
     pub use super::{Conversion, PathSegment, RelativePath, TypeConversionResult, TypeKey};
 }
-
-// enum ValueTypeKind {
-//     Input,
-//     Output,
-// }
-
-// /// A conversion map is associated to each type in the typegraph schema.
-// /// Functions and namespace objects are converted to a single node,
-// /// while value types are converted into one or more input types and one or more output types.
-// #[deriveDebug, Default]
-// pub enum ConversionMap {
-//     #[default]
-//     Unset,
-//     ValueType {
-//         inputs: HashMap<ValueTypeKey, Type>,
-//         outputs: HashMap<ValueTypeKey, Type>,
-//     },
-//     Function(Arc<FunctionType>),
-//     NsObject(Arc<ObjectType>),
-// }
-
-// impl ConversionMap {
-//     pub fn register_input(&mut self, key: ValueTypeKey, typ: Type) {
-//         match self {
-//             ConversionMap::ValueType { inputs, .. } => {
-//                 inputs.insert(key, typ);
-//             }
-//             _ => unreachable!(), // TODO error
-//         }
-//     }
-//
-//     pub fn register_output(&mut self, key: ValueTypeKey, typ: Type) {
-//         match self {
-//             ConversionMap::ValueType { outputs, .. } => {
-//                 outputs.insert(key, typ);
-//             }
-//             _ => unreachable!(), // TODO error
-//         }
-//     }
-// }
 
 pub struct Conversion {
     schema: Arc<tg_schema::Typegraph>,
@@ -260,6 +221,7 @@ impl Conversion {
                     return Ok(finalized_type(found));
                 }
             }
+            // TODO improve -- more deduplication
             RP::Input(vpath) | RP::Output(vpath) => {
                 if !is_composite(&self.schema, type_idx)? {
                     // currently we only generate a single type from each scalar type node
@@ -272,21 +234,28 @@ impl Conversion {
                     match &mut self.conversion_map.direct[type_idx as usize] {
                         MapItem::Value(types) => {
                             // WTF is this???
-                            let found = types
-                                .iter()
-                                .find(|&item| item.relative_paths.iter().any(|rp| rp == vpath));
+                            let found = types.iter().find(|&item| {
+                                matches!(
+                                    (&item.kind, &rpath),
+                                    (ValueTypeKind::Input, RP::Input(_))
+                                        | (ValueTypeKind::Output, RP::Output(_))
+                                ) && item.relative_paths.iter().any(|rp| rp == vpath)
+                            });
                             if let Some(found) = found {
                                 return Ok(finalized_type(found.ty.clone()));
                             }
 
-                            // TODO is this the only comparison point?
-                            let injection = rpath.get_injection(&schema);
-                            let found = types.iter_mut().find(|item| {
-                                item.ty.base().injection.as_ref() == injection.as_ref()
-                            });
-                            if let Some(found) = found {
-                                found.relative_paths.push(vpath.clone());
-                                return Ok(finalized_type(found.ty.clone()));
+                            if let RP::Input(_) = &rpath {
+                                // TODO is this the only comparison point?
+                                let injection = rpath.get_injection(&schema);
+                                let found = types.iter_mut().find(|item| {
+                                    matches!(&item.kind, ValueTypeKind::Input)
+                                        && item.ty.base().injection.as_ref() == injection.as_ref()
+                                });
+                                if let Some(found) = found {
+                                    found.relative_paths.push(vpath.clone());
+                                    return Ok(finalized_type(found.ty.clone()));
+                                }
                             }
                         }
                         MapItem::Unset => {}

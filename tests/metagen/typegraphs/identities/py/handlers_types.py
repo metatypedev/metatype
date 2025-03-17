@@ -88,16 +88,16 @@ class Struct:
 @dataclass
 class Primitives(Struct):
     uri: str
-    enum: str
-    uuid: str
-    datetime: str
     date: str
     int: int
-    float: float
     str: str
-    email: str
     ean: str
     json: str
+    uuid: str
+    datetime: str
+    enum: str
+    float: float
+    email: str
     boolean: bool
 
 
@@ -122,9 +122,9 @@ FORWARD_REFS["CompositesArgs"] = CompositesArgs
 
 @dataclass
 class Composites(Struct):
-    opt: Union[str, None]
     list: List[str]
     union: Union[List[str], int, str]
+    opt: Union[str, None]
     either: Union["Branch2", "Primitives"]
 
 
@@ -149,9 +149,9 @@ FORWARD_REFS["Cycles1Args"] = Cycles1Args
 
 @dataclass
 class Cycles1(Struct):
+    list3: Union[List[Union["Branch33A", "Branch33B"]], None]
     phantom1: Union[str, None]
     to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
-    list3: Union[List[Union["Branch33A", "Branch33B"]], None]
 
 
 FORWARD_REFS["Cycles1"] = Cycles1
@@ -159,8 +159,8 @@ FORWARD_REFS["Cycles1"] = Cycles1
 
 @dataclass
 class Branch33A(Struct):
-    phantom3a: Union[str, None]
     to1: Union["Cycles1", None]
+    phantom3a: Union[str, None]
 
 
 FORWARD_REFS["Branch33A"] = Branch33A
@@ -168,8 +168,8 @@ FORWARD_REFS["Branch33A"] = Branch33A
 
 @dataclass
 class Branch33B(Struct):
-    to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
     phantom3b: Union[str, None]
+    to2: Union[Union["Cycles1", Union["Branch33A", "Branch33B"]], None]
 
 
 FORWARD_REFS["Branch33B"] = Branch33B
@@ -194,8 +194,8 @@ FORWARD_REFS["SimpleCycles1"] = SimpleCycles1
 
 @dataclass
 class SimpleCycles2(Struct):
-    phantom2: Union[str, None]
     to3: Union["SimpleCycles3", None]
+    phantom2: Union[str, None]
 
 
 FORWARD_REFS["SimpleCycles2"] = SimpleCycles2

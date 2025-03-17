@@ -26,165 +26,6 @@ impl QueryGraph {
 //
 // --- --- Typegraph types --- --- //
 //
-use types::*;
-pub mod types {
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootGetUserFnInput0 {
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootGetUserFnInput1 {
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootGetUserFnInput2 {
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post2 {
-        pub id: UserIdStringUuid,
-        pub title: String,
-        pub slug: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootGetUserFnInput3 {
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootCompositeArgsFnInput0 {
-        pub id: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootCompositeArgsFnInput1 {
-        pub id: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootCompositeArgsFnInput2 {
-        pub id: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootCompositeArgsFnInput3 {
-        pub id: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootGetUserFnInput4 {
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootIdentityFnInput0 {
-        pub input: i64,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootIdentityFnInput1 {
-        pub input: i64,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct User0Partial {
-        pub id: UserIdStringUuid,
-        pub email: UserEmailStringEmail,
-        pub posts: UserPostsPostList0,
-    }
-    pub type UserIdStringUuid = String;
-    pub type UserEmailStringEmail = String;
-    pub type UserPostsPostList0 = Vec<Box<Post0Partial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post0Partial {
-        pub id: UserIdStringUuid,
-        pub slug: String,
-        pub title: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post1Partial {
-        pub title: String,
-        pub slug: String,
-        pub id: UserIdStringUuid,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post3Partial {
-        pub slug: String,
-        pub title: String,
-        pub id: UserIdStringUuid,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post4Partial {
-        pub id: UserIdStringUuid,
-        pub slug: String,
-        pub title: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum RootScalarUnionFnOutput {
-        StringE1a43(String),
-        Integer64be4(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum RootCompositeUnionFnOutput {
-        Post5(Post5Partial),
-        User1(User1Partial),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post5Partial {
-        pub title: String,
-        pub id: UserIdStringUuid,
-        pub slug: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct User1Partial {
-        pub id: UserIdStringUuid,
-        pub email: UserEmailStringEmail,
-        pub posts: UserPostsPostList1,
-    }
-    pub type UserPostsPostList1 = Vec<Box<Post6Partial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post6Partial {
-        pub slug: String,
-        pub title: String,
-        pub id: UserIdStringUuid,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum RootMixedUnionFnOutput {
-        Post7(Post7Partial),
-        User2(User2Partial),
-        StringE1a43(String),
-        Integer64be4(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post7Partial {
-        pub slug: String,
-        pub title: String,
-        pub id: UserIdStringUuid,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct User2Partial {
-        pub posts: UserPostsPostList2,
-        pub id: UserIdStringUuid,
-        pub email: UserEmailStringEmail,
-    }
-    pub type UserPostsPostList2 = Vec<Box<Post8Partial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post8Partial {
-        pub title: String,
-        pub id: UserIdStringUuid,
-        pub slug: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputPartial {
-        pub scalar: i64,
-        pub composite: RootNestedCompositeFnOutputCompositeStructPartial,
-        pub list: RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputCompositeStructPartial {
-        pub nested: RootNestedCompositeFnOutputCompositeStructNestedStructPartial,
-        pub value: i64,
-    }
-    pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Vec<Box<RootNestedCompositeFnOutputListStructPartial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputCompositeStructNestedStructPartial {
-        pub inner: i64,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputListStructPartial {
-        pub value: i64,
-    }
-}
 
 #[allow(non_snake_case)]
 mod node_metas {
@@ -197,7 +38,7 @@ mod node_metas {
             input_files: None,
         }
     }    
-    pub fn RootIdentityFnInput1() -> NodeMeta {
+    pub fn RootIdentityFnInput2() -> NodeMeta {
         NodeMeta {
             arg_types: None,
             variants: None,
@@ -216,82 +57,7 @@ mod node_metas {
                     ("input".into(), "scalar".into()),
                 ].into()
             ),
-            ..RootIdentityFnInput1()
-        }
-    }
-    pub fn Post3() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("slug".into(), scalar as NodeMetaFn),
-                    ("title".into(), scalar as NodeMetaFn),
-                    ("id".into(), scalar as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn RootCompositeNoArgsFn() -> NodeMeta {
-        NodeMeta {
-            ..Post3()
-        }
-    }
-    pub fn RootNestedCompositeFnOutput() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("scalar".into(), scalar as NodeMetaFn),
-                    ("composite".into(), RootNestedCompositeFnOutputCompositeStruct as NodeMetaFn),
-                    ("list".into(), RootNestedCompositeFnOutputListStruct as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn RootNestedCompositeFnOutputListStruct() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("value".into(), scalar as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn RootNestedCompositeFnOutputCompositeStruct() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("nested".into(), RootNestedCompositeFnOutputCompositeStructNestedStruct as NodeMetaFn),
-                    ("value".into(), scalar as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn RootNestedCompositeFnOutputCompositeStructNestedStruct() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("inner".into(), scalar as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn RootNestedCompositeFn() -> NodeMeta {
-        NodeMeta {
-            ..RootNestedCompositeFnOutput()
+            ..RootIdentityFnInput2()
         }
     }
     pub fn User0() -> NodeMeta {
@@ -301,8 +67,8 @@ mod node_metas {
             sub_nodes: Some(
                 [
                     ("id".into(), scalar as NodeMetaFn),
-                    ("email".into(), scalar as NodeMetaFn),
                     ("posts".into(), Post0 as NodeMetaFn),
+                    ("email".into(), scalar as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
@@ -327,23 +93,64 @@ mod node_metas {
             ..User0()
         }
     }
-    pub fn Post1() -> NodeMeta {
+    pub fn Post4() -> NodeMeta {
         NodeMeta {
             arg_types: None,
             variants: None,
             sub_nodes: Some(
                 [
-                    ("title".into(), scalar as NodeMetaFn),
                     ("slug".into(), scalar as NodeMetaFn),
+                    ("title".into(), scalar as NodeMetaFn),
                     ("id".into(), scalar as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
         }
     }
-    pub fn RootGetPostsFn() -> NodeMeta {
+    pub fn RootCompositeArgsFn() -> NodeMeta {
         NodeMeta {
-            ..Post1()
+            arg_types: Some(
+                [
+                    ("id".into(), "scalar".into()),
+                ].into()
+            ),
+            ..Post4()
+        }
+    }
+    pub fn RootScalarNoArgsFn() -> NodeMeta {
+        NodeMeta {
+            ..scalar()
+        }
+    }
+    pub fn RootScalarArgsFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("slug".into(), "scalar".into()),
+                    ("id".into(), "scalar".into()),
+                    ("title".into(), "scalar".into()),
+                ].into()
+            ),
+            ..scalar()
+        }
+    }
+    pub fn Post3() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("title".into(), scalar as NodeMetaFn),
+                    ("id".into(), scalar as NodeMetaFn),
+                    ("slug".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RootCompositeNoArgsFn() -> NodeMeta {
+        NodeMeta {
+            ..Post3()
         }
     }
     pub fn RootCompositeUnionFnOutput() -> NodeMeta {
@@ -365,8 +172,8 @@ mod node_metas {
             variants: None,
             sub_nodes: Some(
                 [
-                    ("id".into(), scalar as NodeMetaFn),
                     ("email".into(), scalar as NodeMetaFn),
+                    ("id".into(), scalar as NodeMetaFn),
                     ("posts".into(), Post6 as NodeMetaFn),
                 ].into()
             ),
@@ -379,9 +186,9 @@ mod node_metas {
             variants: None,
             sub_nodes: Some(
                 [
-                    ("slug".into(), scalar as NodeMetaFn),
-                    ("title".into(), scalar as NodeMetaFn),
                     ("id".into(), scalar as NodeMetaFn),
+                    ("title".into(), scalar as NodeMetaFn),
+                    ("slug".into(), scalar as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
@@ -393,9 +200,9 @@ mod node_metas {
             variants: None,
             sub_nodes: Some(
                 [
+                    ("slug".into(), scalar as NodeMetaFn),
                     ("title".into(), scalar as NodeMetaFn),
                     ("id".into(), scalar as NodeMetaFn),
-                    ("slug".into(), scalar as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
@@ -411,45 +218,14 @@ mod node_metas {
             ..RootCompositeUnionFnOutput()
         }
     }
-    pub fn RootScalarNoArgsFn() -> NodeMeta {
-        NodeMeta {
-            ..scalar()
-        }
-    }
-    pub fn RootScalarArgsFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("id".into(), "scalar".into()),
-                    ("title".into(), "scalar".into()),
-                    ("slug".into(), "scalar".into()),
-                ].into()
-            ),
-            ..scalar()
-        }
-    }
-    pub fn Post4() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("id".into(), scalar as NodeMetaFn),
-                    ("slug".into(), scalar as NodeMetaFn),
-                    ("title".into(), scalar as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn RootCompositeArgsFn() -> NodeMeta {
+    pub fn RootScalarUnionFn() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
                     ("id".into(), "scalar".into()),
                 ].into()
             ),
-            ..Post4()
+            ..scalar()
         }
     }
     pub fn RootMixedUnionFnOutput() -> NodeMeta {
@@ -485,9 +261,9 @@ mod node_metas {
             variants: None,
             sub_nodes: Some(
                 [
-                    ("title".into(), scalar as NodeMetaFn),
                     ("id".into(), scalar as NodeMetaFn),
                     ("slug".into(), scalar as NodeMetaFn),
+                    ("title".into(), scalar as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
@@ -499,9 +275,9 @@ mod node_metas {
             variants: None,
             sub_nodes: Some(
                 [
-                    ("slug".into(), scalar as NodeMetaFn),
                     ("title".into(), scalar as NodeMetaFn),
                     ("id".into(), scalar as NodeMetaFn),
+                    ("slug".into(), scalar as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
@@ -517,7 +293,82 @@ mod node_metas {
             ..RootMixedUnionFnOutput()
         }
     }
-    pub fn RootIdentityFnInput0() -> NodeMeta {
+    pub fn RootNestedCompositeFnOutput() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("list".into(), RootNestedCompositeFnOutputListStruct as NodeMetaFn),
+                    ("scalar".into(), scalar as NodeMetaFn),
+                    ("composite".into(), RootNestedCompositeFnOutputCompositeStruct as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RootNestedCompositeFnOutputCompositeStruct() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("value".into(), scalar as NodeMetaFn),
+                    ("nested".into(), RootNestedCompositeFnOutputCompositeStructNestedStruct as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RootNestedCompositeFnOutputCompositeStructNestedStruct() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("inner".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RootNestedCompositeFnOutputListStruct() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("value".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RootNestedCompositeFn() -> NodeMeta {
+        NodeMeta {
+            ..RootNestedCompositeFnOutput()
+        }
+    }
+    pub fn Post1() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("slug".into(), scalar as NodeMetaFn),
+                    ("id".into(), scalar as NodeMetaFn),
+                    ("title".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RootGetPostsFn() -> NodeMeta {
+        NodeMeta {
+            ..Post1()
+        }
+    }
+    pub fn RootIdentityFnInput1() -> NodeMeta {
         NodeMeta {
             arg_types: None,
             variants: None,
@@ -536,28 +387,157 @@ mod node_metas {
                     ("input".into(), "scalar".into()),
                 ].into()
             ),
-            ..RootIdentityFnInput0()
-        }
-    }
-    pub fn RootScalarUnionFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("id".into(), "scalar".into()),
-                ].into()
-            ),
-            ..scalar()
+            ..RootIdentityFnInput1()
         }
     }
 
 }
+use types::*;
+pub mod types {
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootGetUserFnInput {
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post2 {
+        pub slug: String,
+        pub id: UserIdStringUuid,
+        pub title: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootCompositeArgsFnInput {
+        pub id: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootIdentityFnInput0 {
+        pub input: i64,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct User0Partial {
+        pub id: UserIdStringUuid,
+        pub posts: UserPostsPostList0,
+        pub email: UserEmailStringEmail,
+    }
+    pub type UserIdStringUuid = String;
+    pub type UserEmailStringEmail = String;
+    pub type UserPostsPostList0 = Vec<Box<Post0Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post0Partial {
+        pub id: UserIdStringUuid,
+        pub slug: String,
+        pub title: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post1Partial {
+        pub slug: String,
+        pub id: UserIdStringUuid,
+        pub title: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post3Partial {
+        pub title: String,
+        pub id: UserIdStringUuid,
+        pub slug: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post4Partial {
+        pub slug: String,
+        pub title: String,
+        pub id: UserIdStringUuid,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum RootScalarUnionFnOutput {
+        StringE1a43(String),
+        Integer64be4(i64),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum RootCompositeUnionFnOutput {
+        Post5(Post5Partial),
+        User1(User1Partial),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post5Partial {
+        pub slug: String,
+        pub title: String,
+        pub id: UserIdStringUuid,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct User1Partial {
+        pub email: UserEmailStringEmail,
+        pub id: UserIdStringUuid,
+        pub posts: UserPostsPostList1,
+    }
+    pub type UserPostsPostList1 = Vec<Box<Post6Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post6Partial {
+        pub id: UserIdStringUuid,
+        pub title: String,
+        pub slug: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum RootMixedUnionFnOutput {
+        Post7(Post7Partial),
+        User2(User2Partial),
+        StringE1a43(String),
+        Integer64be4(i64),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post7Partial {
+        pub title: String,
+        pub id: UserIdStringUuid,
+        pub slug: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct User2Partial {
+        pub posts: UserPostsPostList2,
+        pub id: UserIdStringUuid,
+        pub email: UserEmailStringEmail,
+    }
+    pub type UserPostsPostList2 = Vec<Box<Post8Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post8Partial {
+        pub id: UserIdStringUuid,
+        pub slug: String,
+        pub title: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputPartial {
+        pub list: RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList,
+        pub scalar: i64,
+        pub composite: RootNestedCompositeFnOutputCompositeStructPartial,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputCompositeStructPartial {
+        pub value: i64,
+        pub nested: RootNestedCompositeFnOutputCompositeStructNestedStructPartial,
+    }
+    pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Vec<Box<RootNestedCompositeFnOutputListStructPartial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputCompositeStructNestedStructPartial {
+        pub inner: i64,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputListStructPartial {
+        pub value: i64,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootIdentityFnInput1Partial {
+        pub input: i64,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootIdentityFnInput2Partial {
+        pub input: i64,
+    }
+}
 #[derive(Default, Debug)]
 pub struct User0Selections<ATy = NoAlias> {
     pub id: ScalarSelect<ATy>,
-    pub email: ScalarSelect<ATy>,
     pub posts: CompositeSelect<Post0Selections<ATy>, ATy>,
+    pub email: ScalarSelect<ATy>,
 }
-impl_selection_traits!(User0Selections, id, email, posts);
+impl_selection_traits!(User0Selections, id, posts, email);
 #[derive(Default, Debug)]
 pub struct Post0Selections<ATy = NoAlias> {
     pub id: ScalarSelect<ATy>,
@@ -567,25 +547,25 @@ pub struct Post0Selections<ATy = NoAlias> {
 impl_selection_traits!(Post0Selections, id, slug, title);
 #[derive(Default, Debug)]
 pub struct Post1Selections<ATy = NoAlias> {
-    pub title: ScalarSelect<ATy>,
     pub slug: ScalarSelect<ATy>,
     pub id: ScalarSelect<ATy>,
+    pub title: ScalarSelect<ATy>,
 }
-impl_selection_traits!(Post1Selections, title, slug, id);
+impl_selection_traits!(Post1Selections, slug, id, title);
 #[derive(Default, Debug)]
 pub struct Post3Selections<ATy = NoAlias> {
-    pub slug: ScalarSelect<ATy>,
     pub title: ScalarSelect<ATy>,
     pub id: ScalarSelect<ATy>,
+    pub slug: ScalarSelect<ATy>,
 }
-impl_selection_traits!(Post3Selections, slug, title, id);
+impl_selection_traits!(Post3Selections, title, id, slug);
 #[derive(Default, Debug)]
 pub struct Post4Selections<ATy = NoAlias> {
-    pub id: ScalarSelect<ATy>,
     pub slug: ScalarSelect<ATy>,
     pub title: ScalarSelect<ATy>,
+    pub id: ScalarSelect<ATy>,
 }
-impl_selection_traits!(Post4Selections, id, slug, title);
+impl_selection_traits!(Post4Selections, slug, title, id);
 #[derive(Default, Debug)]
 pub struct RootCompositeUnionFnOutputSelections<ATy = NoAlias> {
     pub post: CompositeSelect<Post5Selections<ATy>, NoAlias>,
@@ -594,25 +574,25 @@ pub struct RootCompositeUnionFnOutputSelections<ATy = NoAlias> {
 impl_union_selection_traits!(RootCompositeUnionFnOutputSelections, ("post_5", post), ("user_1", user));
 #[derive(Default, Debug)]
 pub struct Post5Selections<ATy = NoAlias> {
+    pub slug: ScalarSelect<ATy>,
     pub title: ScalarSelect<ATy>,
     pub id: ScalarSelect<ATy>,
-    pub slug: ScalarSelect<ATy>,
 }
-impl_selection_traits!(Post5Selections, title, id, slug);
+impl_selection_traits!(Post5Selections, slug, title, id);
 #[derive(Default, Debug)]
 pub struct User1Selections<ATy = NoAlias> {
-    pub id: ScalarSelect<ATy>,
     pub email: ScalarSelect<ATy>,
+    pub id: ScalarSelect<ATy>,
     pub posts: CompositeSelect<Post6Selections<ATy>, ATy>,
 }
-impl_selection_traits!(User1Selections, id, email, posts);
+impl_selection_traits!(User1Selections, email, id, posts);
 #[derive(Default, Debug)]
 pub struct Post6Selections<ATy = NoAlias> {
-    pub slug: ScalarSelect<ATy>,
-    pub title: ScalarSelect<ATy>,
     pub id: ScalarSelect<ATy>,
+    pub title: ScalarSelect<ATy>,
+    pub slug: ScalarSelect<ATy>,
 }
-impl_selection_traits!(Post6Selections, slug, title, id);
+impl_selection_traits!(Post6Selections, id, title, slug);
 #[derive(Default, Debug)]
 pub struct RootMixedUnionFnOutputSelections<ATy = NoAlias> {
     pub post: CompositeSelect<Post7Selections<ATy>, NoAlias>,
@@ -621,11 +601,11 @@ pub struct RootMixedUnionFnOutputSelections<ATy = NoAlias> {
 impl_union_selection_traits!(RootMixedUnionFnOutputSelections, ("post_7", post), ("user_2", user));
 #[derive(Default, Debug)]
 pub struct Post7Selections<ATy = NoAlias> {
-    pub slug: ScalarSelect<ATy>,
     pub title: ScalarSelect<ATy>,
     pub id: ScalarSelect<ATy>,
+    pub slug: ScalarSelect<ATy>,
 }
-impl_selection_traits!(Post7Selections, slug, title, id);
+impl_selection_traits!(Post7Selections, title, id, slug);
 #[derive(Default, Debug)]
 pub struct User2Selections<ATy = NoAlias> {
     pub posts: CompositeSelect<Post8Selections<ATy>, ATy>,
@@ -635,24 +615,24 @@ pub struct User2Selections<ATy = NoAlias> {
 impl_selection_traits!(User2Selections, posts, id, email);
 #[derive(Default, Debug)]
 pub struct Post8Selections<ATy = NoAlias> {
-    pub title: ScalarSelect<ATy>,
     pub id: ScalarSelect<ATy>,
     pub slug: ScalarSelect<ATy>,
+    pub title: ScalarSelect<ATy>,
 }
-impl_selection_traits!(Post8Selections, title, id, slug);
+impl_selection_traits!(Post8Selections, id, slug, title);
 #[derive(Default, Debug)]
 pub struct RootNestedCompositeFnOutputSelections<ATy = NoAlias> {
+    pub list: CompositeSelect<RootNestedCompositeFnOutputListStructSelections<ATy>, ATy>,
     pub scalar: ScalarSelect<ATy>,
     pub composite: CompositeSelect<RootNestedCompositeFnOutputCompositeStructSelections<ATy>, ATy>,
-    pub list: CompositeSelect<RootNestedCompositeFnOutputListStructSelections<ATy>, ATy>,
 }
-impl_selection_traits!(RootNestedCompositeFnOutputSelections, scalar, composite, list);
+impl_selection_traits!(RootNestedCompositeFnOutputSelections, list, scalar, composite);
 #[derive(Default, Debug)]
 pub struct RootNestedCompositeFnOutputCompositeStructSelections<ATy = NoAlias> {
-    pub nested: CompositeSelect<RootNestedCompositeFnOutputCompositeStructNestedStructSelections<ATy>, ATy>,
     pub value: ScalarSelect<ATy>,
+    pub nested: CompositeSelect<RootNestedCompositeFnOutputCompositeStructNestedStructSelections<ATy>, ATy>,
 }
-impl_selection_traits!(RootNestedCompositeFnOutputCompositeStructSelections, nested, value);
+impl_selection_traits!(RootNestedCompositeFnOutputCompositeStructSelections, value, nested);
 #[derive(Default, Debug)]
 pub struct RootNestedCompositeFnOutputCompositeStructNestedStructSelections<ATy = NoAlias> {
     pub inner: ScalarSelect<ATy>,
@@ -663,6 +643,16 @@ pub struct RootNestedCompositeFnOutputListStructSelections<ATy = NoAlias> {
     pub value: ScalarSelect<ATy>,
 }
 impl_selection_traits!(RootNestedCompositeFnOutputListStructSelections, value);
+#[derive(Default, Debug)]
+pub struct RootIdentityFnInput1Selections<ATy = NoAlias> {
+    pub input: ScalarSelect<ATy>,
+}
+impl_selection_traits!(RootIdentityFnInput1Selections, input);
+#[derive(Default, Debug)]
+pub struct RootIdentityFnInput2Selections<ATy = NoAlias> {
+    pub input: ScalarSelect<ATy>,
+}
+impl_selection_traits!(RootIdentityFnInput2Selections, input);
 
 impl QueryGraph {
 
@@ -670,8 +660,8 @@ impl QueryGraph {
         Self {
             addr,
             ty_to_gql_ty_map: std::sync::Arc::new([
-                ("UserIdStringUuid".into(), "ID!".into()),
                 ("String".into(), "String!".into()),
+                ("UserIdStringUuid".into(), "ID!".into()),
                 ("i64".into(), "Int!".into()),
                 ("Post5Partial".into(), "post!".into()),
                 ("User1Partial".into(), "user!".into()),
@@ -681,9 +671,55 @@ impl QueryGraph {
         }
     }
     
+        pub fn identity(
+            &self,
+            args: impl Into<NodeArgs<RootIdentityFnInput0>>
+        ) -> UnselectedNode<RootIdentityFnInput1Selections, RootIdentityFnInput1Selections<HasAlias>, QueryMarker, RootIdentityFnInput1Partial>
+        {
+            UnselectedNode {
+                root_name: "identity".into(),
+                root_meta: node_metas::RootIdentityFn,
+                args: args.into().into(),
+                _marker: PhantomData,
+            }
+        }
+        pub fn get_posts(
+            &self,
+        ) -> UnselectedNode<Post1Selections, Post1Selections<HasAlias>, QueryMarker, Post1Partial>
+        {
+            UnselectedNode {
+                root_name: "getPosts".into(),
+                root_meta: node_metas::RootGetPostsFn,
+                args: NodeArgsErased::None,
+                _marker: PhantomData,
+            }
+        }
+        pub fn nested_composite(
+            &self,
+        ) -> UnselectedNode<RootNestedCompositeFnOutputSelections, RootNestedCompositeFnOutputSelections<HasAlias>, QueryMarker, RootNestedCompositeFnOutputPartial>
+        {
+            UnselectedNode {
+                root_name: "nestedComposite".into(),
+                root_meta: node_metas::RootNestedCompositeFn,
+                args: NodeArgsErased::None,
+                _marker: PhantomData,
+            }
+        }
+        pub fn mixed_union(
+            &self,
+            args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
+        ) -> UnselectedNode<RootMixedUnionFnOutputSelections, RootMixedUnionFnOutputSelections<HasAlias>, QueryMarker, RootMixedUnionFnOutput>
+        {
+            UnselectedNode {
+                root_name: "mixedUnion".into(),
+                root_meta: node_metas::RootMixedUnionFn,
+                args: args.into().into(),
+                _marker: PhantomData,
+            }
+        }
         pub fn scalar_union(
             &self,
-            args: impl Into<NodeArgs<RootCompositeArgsFnInput1>>
+            args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
         ) -> QueryNode<RootScalarUnionFnOutput>
         {
             let nodes = selection_to_node_set(
@@ -702,48 +738,26 @@ impl QueryGraph {
             .unwrap();
             QueryNode(nodes.into_iter().next().unwrap(), PhantomData)
         }
-        pub fn identity(
+        pub fn composite_union(
             &self,
-            args: impl Into<NodeArgs<RootIdentityFnInput0>>
-        ) -> QueryNode<RootIdentityFnInput0>
-        {
-            let nodes = selection_to_node_set(
-                SelectionErasedMap(
-                    [(
-                        "identity".into(),
-                        SelectionErased::ScalarArgs(args.into().into()),
-                    )]
-                    .into(),
-                ),
-                &[
-                    ("identity".into(), node_metas::RootIdentityFn as NodeMetaFn),
-                ].into(),
-                "$q".into(),
-            )
-            .unwrap();
-            QueryNode(nodes.into_iter().next().unwrap(), PhantomData)
-        }
-        pub fn mixed_union(
-            &self,
-            args: impl Into<NodeArgs<RootCompositeArgsFnInput3>>
-        ) -> UnselectedNode<RootMixedUnionFnOutputSelections, RootMixedUnionFnOutputSelections<HasAlias>, QueryMarker, RootMixedUnionFnOutput>
+            args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
+        ) -> UnselectedNode<RootCompositeUnionFnOutputSelections, RootCompositeUnionFnOutputSelections<HasAlias>, QueryMarker, RootCompositeUnionFnOutput>
         {
             UnselectedNode {
-                root_name: "mixedUnion".into(),
-                root_meta: node_metas::RootMixedUnionFn,
+                root_name: "compositeUnion".into(),
+                root_meta: node_metas::RootCompositeUnionFn,
                 args: args.into().into(),
                 _marker: PhantomData,
             }
         }
-        pub fn composite_args(
+        pub fn composite_no_args(
             &self,
-            args: impl Into<NodeArgs<RootCompositeArgsFnInput0>>
-        ) -> UnselectedNode<Post4Selections, Post4Selections<HasAlias>, MutationMarker, Post4Partial>
+        ) -> UnselectedNode<Post3Selections, Post3Selections<HasAlias>, MutationMarker, Post3Partial>
         {
             UnselectedNode {
-                root_name: "compositeArgs".into(),
-                root_meta: node_metas::RootCompositeArgsFn,
-                args: args.into().into(),
+                root_name: "compositeNoArgs".into(),
+                root_meta: node_metas::RootCompositeNoArgsFn,
+                args: NodeArgsErased::None,
                 _marker: PhantomData,
             }
         }
@@ -788,26 +802,15 @@ impl QueryGraph {
             .unwrap();
             QueryNode(nodes.into_iter().next().unwrap(), PhantomData)
         }
-        pub fn composite_union(
+        pub fn composite_args(
             &self,
-            args: impl Into<NodeArgs<RootCompositeArgsFnInput2>>
-        ) -> UnselectedNode<RootCompositeUnionFnOutputSelections, RootCompositeUnionFnOutputSelections<HasAlias>, QueryMarker, RootCompositeUnionFnOutput>
+            args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
+        ) -> UnselectedNode<Post4Selections, Post4Selections<HasAlias>, MutationMarker, Post4Partial>
         {
             UnselectedNode {
-                root_name: "compositeUnion".into(),
-                root_meta: node_metas::RootCompositeUnionFn,
+                root_name: "compositeArgs".into(),
+                root_meta: node_metas::RootCompositeArgsFn,
                 args: args.into().into(),
-                _marker: PhantomData,
-            }
-        }
-        pub fn get_posts(
-            &self,
-        ) -> UnselectedNode<Post1Selections, Post1Selections<HasAlias>, QueryMarker, Post1Partial>
-        {
-            UnselectedNode {
-                root_name: "getPosts".into(),
-                root_meta: node_metas::RootGetPostsFn,
-                args: NodeArgsErased::None,
                 _marker: PhantomData,
             }
         }
@@ -822,48 +825,17 @@ impl QueryGraph {
                 _marker: PhantomData,
             }
         }
-        pub fn nested_composite(
-            &self,
-        ) -> UnselectedNode<RootNestedCompositeFnOutputSelections, RootNestedCompositeFnOutputSelections<HasAlias>, QueryMarker, RootNestedCompositeFnOutputPartial>
-        {
-            UnselectedNode {
-                root_name: "nestedComposite".into(),
-                root_meta: node_metas::RootNestedCompositeFn,
-                args: NodeArgsErased::None,
-                _marker: PhantomData,
-            }
-        }
-        pub fn composite_no_args(
-            &self,
-        ) -> UnselectedNode<Post3Selections, Post3Selections<HasAlias>, MutationMarker, Post3Partial>
-        {
-            UnselectedNode {
-                root_name: "compositeNoArgs".into(),
-                root_meta: node_metas::RootCompositeNoArgsFn,
-                args: NodeArgsErased::None,
-                _marker: PhantomData,
-            }
-        }
         pub fn identity_update(
             &self,
-            args: impl Into<NodeArgs<RootIdentityFnInput1>>
-        ) -> MutationNode<RootIdentityFnInput1>
+            args: impl Into<NodeArgs<RootIdentityFnInput0>>
+        ) -> UnselectedNode<RootIdentityFnInput2Selections, RootIdentityFnInput2Selections<HasAlias>, MutationMarker, RootIdentityFnInput2Partial>
         {
-            let nodes = selection_to_node_set(
-                SelectionErasedMap(
-                    [(
-                        "identityUpdate".into(),
-                        SelectionErased::ScalarArgs(args.into().into()),
-                    )]
-                    .into(),
-                ),
-                &[
-                    ("identityUpdate".into(), node_metas::RootIdentityUpdateFn as NodeMetaFn),
-                ].into(),
-                "$q".into(),
-            )
-            .unwrap();
-            MutationNode(nodes.into_iter().next().unwrap(), PhantomData)
+            UnselectedNode {
+                root_name: "identityUpdate".into(),
+                root_meta: node_metas::RootIdentityUpdateFn,
+                args: args.into().into(),
+                _marker: PhantomData,
+            }
         }
 }
 

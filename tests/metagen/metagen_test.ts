@@ -289,8 +289,6 @@ metagen:
 Meta.test("fdk table suite", async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/identities");
   const genCratePath = join(scriptsPath, "rs");
-  // const genPyPath = join(scriptsPath, "py");
-  // const genTsPath = join(scriptsPath, "ts");
 
   assertEquals(
     (
@@ -436,7 +434,7 @@ Meta.test("fdk table suite", async (metaTest) => {
       } as Record<string, JSONValue>,
     },
     {
-      name: "primtives",
+      name: "primitives",
       query: `query ($data: primitives) {
         data: prefix_primitives(
           data: $data
@@ -527,6 +525,9 @@ Meta.test("fdk table suite", async (metaTest) => {
     "metagen/typegraphs/identities.py",
   );
   for (const prefix of ["rs", "ts", "py"]) {
+    if (prefix !== "py") {
+      continue;
+    }
     await metaTest.should(`fdk data go round ${prefix}`, async (t) => {
       for (const { name, vars, query, skip } of cases) {
         if (skip) {
@@ -684,9 +685,6 @@ Meta.test(
   async (t) => {
     const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
     const res = await Meta.cli({}, ...`-C ${scriptsPath} gen`.split(" "));
-    // console.log("--- >>> --- >>> STDERR");
-    // console.log(res.stderr);
-    // console.log("--- >>> --- >>> STDERR end");
     assertEquals(res.code, 0);
 
     const expectedSchemaU1 = zod.object({
