@@ -646,7 +646,6 @@ Meta.test.only(
         expected: expectedSchema,
       },
       {
-        skip: true,
         name: "client_ts",
         // NOTE: dax replaces commands to deno with
         // commands to xtask so we go through bah

@@ -156,7 +156,7 @@ impl TsClientManifest {
         self.selections.render_all(out, &name_memo)?;
         let selections = self.selections.get_cached_refs();
 
-        let named_types = get_gql_types(&self.tg)?;
+        let gql_types = get_gql_types(&self.tg)?;
 
         write!(
             out,
@@ -165,8 +165,7 @@ impl TsClientManifest {
           constructor() {{
             super({{"#
         )?;
-        for ((key, as_id), ty) in named_types.into_iter() {
-            let gql_ty = get_gql_type(&ty, as_id, false)?;
+        for (key, gql_ty) in gql_types.into_iter() {
             let ty_name = name_memo.get(&key).unwrap();
             write!(
                 out,

@@ -50,9 +50,9 @@ fn main() -> Result<(), BoxErr> {
             (
                 "post",
                 serde_json::json!(types::Post0Partial {
-                    id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
-                    slug: "".into(),
-                    title: "".into(),
+                    id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
+                    slug: Some("".into()),
+                    title: Some("".into()),
                 }),
             ),
             (

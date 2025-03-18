@@ -599,12 +599,7 @@ impl TypeRenderer for RustType {
                         ty_ref
                     };
 
-                    writeln!(
-                        out,
-                        "    pub {}: {},",
-                        prop.name,
-                        page.get_ref(&prop.ty, memo).unwrap()
-                    )?;
+                    writeln!(out, "    pub {}: {},", prop.name, ty_ref)?;
                 }
                 writeln!(out, "}}")
             }

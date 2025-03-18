@@ -750,7 +750,6 @@ where
     }
 }
 
-// TODO: convert to proc_macro
 #[macro_export]
 macro_rules! impl_selection_traits {
     ($ty:ident,$($field:tt),+) => {

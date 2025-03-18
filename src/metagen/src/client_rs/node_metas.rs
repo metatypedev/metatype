@@ -27,7 +27,7 @@ pub enum RsNodeMetasSpec {
     },
     Function {
         return_ty: TypeKey,
-        argument_fields: Option<IndexMap<Arc<str>, TypeKey>>,
+        argument_fields: Option<BTreeMap<Arc<str>, Arc<str>>>,
         input_files: Option<String>,
         name: String,
     },
@@ -168,7 +168,7 @@ pub fn {ty_name}() -> NodeMeta {{
         dest: &mut impl Write,
         ty_name: &str,
         return_node: TypeKey,
-        argument_fields: Option<IndexMap<Arc<str>, TypeKey>>,
+        argument_fields: Option<BTreeMap<Arc<str>, Arc<str>>>,
         input_files: Option<String>,
     ) -> std::fmt::Result {
         write!(
@@ -186,7 +186,6 @@ pub fn {ty_name}() -> NodeMeta {{
             )?;
 
             for (key, ty) in fields {
-                let ty = page.get_ref(&ty, memo).unwrap();
                 write!(
                     dest,
                     r#"
@@ -287,12 +286,15 @@ impl PageBuilder {
         self.push(out_key);
 
         let props = ty.input()?.properties()?;
-        let props = (!props.is_empty()).then(|| {
-            props
-                .iter()
-                .map(|(name, prop)| (name.clone(), prop.type_.key()))
-                .collect::<IndexMap<_, _>>()
-        });
+        let props = if !props.is_empty() {
+            let mut res = BTreeMap::new();
+            for (name, prop) in props.iter() {
+                res.insert(name.clone(), prop.type_.name()?);
+            }
+            Some(res)
+        } else {
+            None
+        };
 
         // TODO input_files
 

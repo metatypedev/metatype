@@ -37,7 +37,6 @@ struct GqlRequestBuilder<'a> {
 
 impl<'a> GqlRequestBuilder<'a> {
     fn new(ty_to_gql_ty_map: &'a TyToGqlTyMap) -> Self {
-        eprintln!("ty_to_gql_ty_map: {ty_to_gql_ty_map:?}");
         Self {
             ty_to_gql_ty_map,
             variable_values: Default::default(),
@@ -170,7 +169,6 @@ impl<'a> GqlRequestBuilder<'a> {
                 instance_name: format!("node{idx}").into(),
                 ..node
             };
-            eprintln!("select node: {node:?}");
             write!(&mut self.doc, "  ").expect("error building to string");
             self.select_node_to_gql(node)
                 .expect("error building to string");
@@ -243,9 +241,6 @@ fn build_gql_req_sync(
         "application/json".try_into().unwrap(),
     );
     headers.extend(opts.headers.clone());
-
-    eprintln!("variables: {variables:?}");
-    eprintln!("doc: {doc}");
 
     let operations = serde_json::json!({
         "query": doc,
@@ -386,7 +381,7 @@ fn handle_response(
         Err(error) => {
             return Err(GraphQLRequestError::BodyError {
                 error: Box::new(error),
-            })
+            });
         }
     };
     if let Some(errors) = body.errors {

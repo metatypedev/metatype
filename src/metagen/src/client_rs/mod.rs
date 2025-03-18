@@ -161,9 +161,8 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: Arc<Typegraph>) -> anyhow::R
     let _ = types_buffer;
 
     let selections = render_selection_types(dest, &manifest, &name_memo)?;
-    eprintln!("selections: {:#?}", selections);
 
-    let named_types = get_gql_types(&tg)?;
+    let gql_types = get_gql_types(&tg)?;
 
     write!(
         dest,
@@ -176,9 +175,9 @@ impl QueryGraph {{
             ty_to_gql_ty_map: std::sync::Arc::new(["#
     )?;
 
-    for ((key, as_id), ty) in named_types.into_iter() {
-        let gql_ty = get_gql_type(&ty, as_id, false)?;
-        let ty_name = name_memo.get(&key).unwrap();
+    for (key, gql_ty) in gql_types.into_iter() {
+        // let ty_name = name_memo.get(&key).unwrap();
+        let ty_name = tg.find_type(key).unwrap().name().unwrap();
         write!(
             dest,
             r#"
@@ -201,10 +200,6 @@ impl QueryGraph {{
         let node_name = fun.path.join("_");
         let method_name = node_name.to_snek_case();
         let out_ty_name = name_memo.get(&fun.type_.output()?.key()).unwrap();
-        eprintln!(
-            "function; node_name={:?}; out_ty={:?}",
-            node_name, out_ty_name
-        );
 
         let arg_ty = fun
             .type_

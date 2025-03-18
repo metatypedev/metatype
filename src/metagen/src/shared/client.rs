@@ -3,32 +3,34 @@
 
 use std::collections::HashMap;
 
-use crate::interlude::*;
+use crate::{interlude::*, shared::get_gql_type};
 
 use super::files::{get_path_to_files, TypePath};
 use indexmap::IndexSet;
 use typegraph::{conv::TypeKey, FunctionType, TypeNodeExt as _, Wrap as _};
 
-// Top level input types should be mapped to their GraphQL types
-pub fn get_gql_types(tg: &Typegraph) -> Result<IndexMap<(TypeKey, bool), Type>> {
-    let mut res: IndexMap<(TypeKey, bool), _> = Default::default();
+/// get the types that could be referenced in the GraphQL queries
+pub fn get_gql_types(tg: &Typegraph) -> Result<IndexMap<TypeKey, String>> {
+    let mut res: IndexMap<TypeKey, _> = Default::default();
+
+    // top level input types for variables
     for (_idx, func) in tg.functions.iter() {
         let inp_type = func.input()?;
-        res.extend(
-            inp_type
-                .properties()?
-                .iter()
-                .map(|(_, prop)| ((prop.type_.key(), prop.as_id), prop.type_.clone())),
-        );
+        let props = inp_type.properties()?;
+        res.reserve(props.len());
+        for prop in props.values() {
+            let gql_ty = get_gql_type(&prop.type_, prop.as_id, false)?;
+            res.insert(prop.type_.key(), gql_ty);
+        }
     }
 
-    // additional named types: non scalar union variants
+    // non scalar union variants for type selection
     for ty in tg.output_types.values() {
         match ty {
             Type::Union(ty) => {
                 for variant in ty.variants()? {
                     if variant.is_composite()? {
-                        res.insert((variant.key(), false), variant.clone());
+                        res.insert(variant.key(), get_gql_type(&variant, false, false)?);
                     }
                 }
             }
