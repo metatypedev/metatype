@@ -13,6 +13,7 @@ use selections::TsSelection;
 use shared::manifest::ManifestPage;
 use shared::types::EmptyNameMemo;
 use tg_schema::EffectType;
+use typegraph::conv::TypeKey;
 use typegraph::TypeNodeExt as _;
 
 use crate::interlude::*;
@@ -124,6 +125,12 @@ impl crate::Plugin for Generator {
     }
 }
 
+struct Memos {
+    types: IndexMap<TypeKey, String>,
+    node_metas: IndexMap<TypeKey, String>,
+    selections: IndexMap<TypeKey, String>,
+}
+
 impl TsClientManifest {
     fn render(&self, out: &mut impl Write) -> anyhow::Result<()> {
         writeln!(
@@ -149,44 +156,70 @@ impl TsClientManifest {
         self.selections.render_all(out, &name_memo)?;
         let selections = self.selections.get_cached_refs();
 
+        let memos = Memos {
+            types: name_memo,
+            node_metas,
+            selections,
+        };
+
+        self.render_query_graph(out, &memos)?;
+
+        writeln!(out)?;
+        Ok(())
+    }
+
+    fn render_query_graph(&self, out: &mut impl Write, memos: &Memos) -> anyhow::Result<()> {
         let gql_types = get_gql_types(&self.tg)?;
 
         write!(
             out,
             r#"
-        export class QueryGraph extends _QueryGraphBase {{
-          constructor() {{
-            super({{"#
+export class QueryGraph extends _QueryGraphBase {{
+  constructor() {{
+    super({{"#
         )?;
         for (key, gql_ty) in gql_types.into_iter() {
-            let ty_name = name_memo.get(&key).unwrap();
+            // TODO
+            let ty_name = memos.types.get(&key).unwrap();
             write!(
                 out,
                 r#"
-              "{ty_name}": "{gql_ty}","#
+      "{ty_name}": "{gql_ty}","#
             )?;
         }
         write!(
             out,
             r#"
-            }});
-          }}
+    }});
+  }}
             "#
         )?;
 
+        self.render_meta_functions(out, memos)?;
+
+        writeln!(
+            out,
+            "
+}}"
+        )?;
+
+        Ok(())
+    }
+
+    fn render_meta_functions(&self, out: &mut impl Write, memos: &Memos) -> anyhow::Result<()> {
         for func in self.tg.root_functions() {
             let (_, ty) = func?;
             use heck::ToLowerCamelCase;
 
             let node_name = ty.name()?;
             let method_name = node_name.to_lower_camel_case();
-            let out_ty_name = name_memo.get(&ty.output()?.key()).unwrap();
+            let out_ty_name = memos.types.get(&ty.output()?.key()).unwrap();
 
             let arg_ty = ty
                 .non_empty_input()?
-                .map(|ty| name_memo.get(&ty.key()))
+                .map(|ty| memos.types.get(&ty.key()))
                 .flatten();
-            let select_ty = selections.get(&ty.output()?.key());
+            let select_ty = memos.selections.get(&ty.output()?.key());
 
             let args_row = match (arg_ty, select_ty) {
                 (Some(arg_ty), Some(select_ty)) => {
@@ -206,7 +239,8 @@ impl TsClientManifest {
                 (None, None) => "true",
             };
 
-            let meta_method = node_metas
+            let meta_method = memos
+                .node_metas
                 .get(&ty.key())
                 .map(|str| &str[..])
                 .unwrap_or_else(|| "scalar");
@@ -229,13 +263,6 @@ impl TsClientManifest {
           }}"#
             )?;
         }
-        writeln!(
-            out,
-            "
-        }}"
-        )?;
-
-        writeln!(out)?;
 
         Ok(())
     }
