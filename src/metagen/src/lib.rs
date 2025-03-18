@@ -3,7 +3,7 @@
 
 #[allow(unused)]
 mod interlude {
-    pub use typegraph::{Type, Typegraph};
+    pub use typegraph::{conv::TypeKey, Type, Typegraph};
 
     pub use std::collections::{BTreeMap, BTreeSet};
     pub use std::ops::Deref;

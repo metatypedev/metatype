@@ -11,6 +11,7 @@ use fdk_ts::types::TsType;
 use node_metas::TsNodeMeta;
 use selections::TsSelection;
 use shared::manifest::ManifestPage;
+use shared::node_metas::MetasPageBuilder;
 use shared::types::EmptyNameMemo;
 use tg_schema::EffectType;
 use typegraph::conv::TypeKey;
@@ -32,7 +33,7 @@ struct TsClientManifest {
 impl TsClientManifest {
     fn new(tg: Arc<Typegraph>) -> Result<TsClientManifest> {
         let types = manifest_page(&tg)?;
-        let node_metas = node_metas::MetasPageBuilder::new(tg.clone())?.build()?;
+        let node_metas = MetasPageBuilder::new(tg.clone())?.build()?;
         let selections = selections::manifest_page(&tg)?;
         Ok(Self {
             tg,

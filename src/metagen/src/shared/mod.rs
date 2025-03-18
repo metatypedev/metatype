@@ -7,6 +7,7 @@
 pub mod client;
 pub mod files;
 pub mod manifest;
+pub mod node_metas;
 pub mod types;
 
 use std::collections::HashSet;

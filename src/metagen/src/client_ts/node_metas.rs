@@ -1,13 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{cell::RefCell, fmt::Write};
+use std::fmt::Write;
 
 use heck::ToPascalCase as _;
 use typegraph::{conv::TypeKey, FunctionType, ObjectType, TypeNodeExt as _, UnionType};
 
 use super::{
-    shared::manifest::{ManifestPage, TypeRenderer},
+    shared::{
+        manifest::{ManifestPage, TypeRenderer},
+        node_metas::*,
+    },
     utils::normalize_type_title,
 };
 use crate::{interlude::*, shared::types::*};
@@ -201,10 +204,6 @@ pub enum TsNodeMeta {
     Function(Function),
 }
 
-pub trait MetaFactory<M> {
-    fn build_meta(&self, key: TypeKey) -> Result<M>;
-}
-
 impl MetaFactory<TsNodeMeta> for MetasPageBuilder {
     fn build_meta(&self, key: TypeKey) -> Result<TsNodeMeta> {
         let ty = self.tg.find_type(key).unwrap();
@@ -224,10 +223,34 @@ impl MetaFactory<TsNodeMeta> for MetasPageBuilder {
     }
 }
 
-impl MetasPageBuilder {
+trait TsMetasPageBuilderExt {
+    fn alias(&self, key: TypeKey) -> TsNodeMeta;
+    fn build_object(&self, ty: Arc<ObjectType>) -> Result<TsNodeMeta>;
+    fn build_union(&self, ty: Arc<UnionType>) -> Result<TsNodeMeta>;
+    fn build_func(&self, ty: Arc<FunctionType>) -> Result<TsNodeMeta>;
+}
+
+impl TsMetasPageBuilderExt for MetasPageBuilder {
     fn alias(&self, key: TypeKey) -> TsNodeMeta {
         self.push(key);
         TsNodeMeta::Alias { target: key }
+    }
+
+    fn build_object(&self, ty: Arc<ObjectType>) -> Result<TsNodeMeta> {
+        let props = ty.properties()?;
+        let props = props
+            .iter()
+            .map(|(name, prop)| {
+                let key = prop.type_.key();
+                self.push(key);
+                (name.clone(), key)
+            })
+            .collect::<IndexMap<_, _>>();
+
+        Ok(TsNodeMeta::Object(Object {
+            props,
+            name: normalize_type_title(&ty.name().unwrap()).to_pascal_case(),
+        }))
     }
 
     fn build_union(&self, ty: Arc<UnionType>) -> Result<TsNodeMeta> {
@@ -273,70 +296,5 @@ impl MetasPageBuilder {
             input_files: None,
             name: normalize_type_title(&ty.name().unwrap()),
         }))
-    }
-
-    fn build_object(&self, ty: Arc<ObjectType>) -> Result<TsNodeMeta> {
-        let props = ty.properties()?;
-        let props = props
-            .iter()
-            .map(|(name, prop)| {
-                let key = prop.type_.key();
-                self.push(key);
-                (name.clone(), key)
-            })
-            .collect::<IndexMap<_, _>>();
-
-        Ok(TsNodeMeta::Object(Object {
-            props,
-            name: normalize_type_title(&ty.name().unwrap()).to_pascal_case(),
-        }))
-    }
-}
-
-pub struct MetasPageBuilder {
-    tg: Arc<Typegraph>,
-    stack: RefCell<Vec<TypeKey>>,
-}
-
-impl MetasPageBuilder {
-    pub fn new(tg: Arc<Typegraph>) -> Result<Self> {
-        let mut stack = vec![];
-        for root_fn in tg.root_functions() {
-            let (_, func_ty) = root_fn?;
-            stack.push(func_ty.key());
-        }
-        let stack = RefCell::new(stack);
-        Ok(Self { tg, stack })
-    }
-
-    fn push(&self, key: TypeKey) {
-        self.stack.borrow_mut().push(key);
-    }
-}
-impl MetasPageBuilder {
-    pub fn build<M>(self) -> Result<ManifestPage<M>>
-    where
-        M: TypeRenderer,
-        Self: MetaFactory<M>,
-    {
-        let mut map = IndexMap::new();
-
-        loop {
-            let next = {
-                let mut stack = self.stack.borrow_mut();
-                stack.pop()
-            };
-
-            if let Some(key) = next {
-                if map.contains_key(&key) {
-                    continue;
-                }
-                map.insert(key, self.build_meta(key)?);
-            } else {
-                break;
-            }
-        }
-
-        Ok(map.into())
     }
 }
