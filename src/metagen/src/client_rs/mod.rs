@@ -159,12 +159,36 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: Arc<Typegraph>) -> anyhow::R
     let _ = types_buffer;
 
     let selections = render_selection_types(dest, &manifest, &name_memo)?;
-    eprintln!("selections");
 
+    render_query_graph(
+        &tg,
+        dest,
+        &Memos {
+            types: &name_memo,
+            node_metas: &node_metas,
+            selections: &selections,
+        },
+    )?;
+
+    writeln!(&mut client_rs)?;
+    Ok(client_rs.buf)
+}
+
+struct Memos<'a> {
+    types: &'a IndexMap<TypeKey, String>,
+    node_metas: &'a IndexMap<TypeKey, String>,
+    selections: &'a IndexMap<TypeKey, String>,
+}
+
+fn render_query_graph<'a>(
+    tg: &Typegraph,
+    out: &mut impl Write,
+    memos: &Memos<'a>,
+) -> anyhow::Result<()> {
     let gql_types = get_gql_types(&tg)?;
 
     write!(
-        dest,
+        out,
         r#"
 impl QueryGraph {{
 
@@ -178,14 +202,14 @@ impl QueryGraph {{
         // let ty_name = name_memo.get(&key).unwrap();
         let ty_name = tg.find_type(key).unwrap().name().unwrap();
         write!(
-            dest,
+            out,
             r#"
                 ("{ty_name}".into(), "{gql_ty}".into()),"#
         )?;
     }
 
     write!(
-        dest,
+        out,
         r#"
             ].into()),
         }}
@@ -193,29 +217,46 @@ impl QueryGraph {{
     "#
     )?;
 
-    for fun in manifest.root_fns {
+    render_meta_functions(&tg, out, &memos)?;
+
+    writeln!(
+        out,
+        "
+}}"
+    )?;
+
+    Ok(())
+}
+
+fn render_meta_functions<'a>(
+    tg: &Typegraph,
+    out: &mut impl Write,
+    memos: &Memos<'a>,
+) -> anyhow::Result<()> {
+    for func in tg.root_functions() {
+        let (path, ty) = func?;
         use heck::ToSnekCase;
 
-        let node_name = fun.path.join("_");
+        let node_name = path.join("_");
         let method_name = node_name.to_snek_case();
-        let out_ty_name = name_memo.get(&fun.type_.output()?.key()).unwrap();
+        let out_ty_name = memos.types.get(&ty.output()?.key()).unwrap();
 
-        let arg_ty = fun
-            .type_
+        let arg_ty = ty
             .non_empty_input()?
-            .map(|ty| name_memo.get(&ty.key()).unwrap());
+            .map(|ty| memos.types.get(&ty.key()).unwrap());
 
-        let select_ty = selections.get(&fun.type_.output()?.key());
+        let select_ty = memos.selections.get(&ty.output()?.key());
 
-        let (marker_ty, node_ty) = match fun.type_.effect() {
+        let (marker_ty, node_ty) = match ty.effect() {
             EffectType::Read => ("QueryMarker", "QueryNode"),
             EffectType::Update | EffectType::Delete | EffectType::Create => {
                 ("MutationMarker", "MutationNode")
             }
         };
 
-        let meta_method = node_metas
-            .get(&fun.type_.key())
+        let meta_method = memos
+            .node_metas
+            .get(&ty.key())
             .map(|s| s.as_str())
             .unwrap_or("scalar");
 
@@ -234,7 +275,7 @@ impl QueryGraph {{
                     None => "NodeArgsErased::None",
                 };
                 write!(
-                    dest,
+                    out,
                     r#"
         pub fn {method_name}(
             &self,{args_row}
@@ -255,7 +296,7 @@ impl QueryGraph {{
                     None => "SelectionErased::Scalar",
                 };
                 write!(
-                    dest,
+                    out,
                     r#"
         pub fn {method_name}(
             &self,{args_row}
@@ -281,14 +322,7 @@ impl QueryGraph {{
             }
         };
     }
-    writeln!(
-        dest,
-        "
-}}"
-    )?;
-
-    writeln!(&mut client_rs)?;
-    Ok(client_rs.buf)
+    Ok(())
 }
 
 /// Render the common sections like the transports
@@ -370,25 +404,7 @@ mod node_metas {{
 "#
     )?;
     Ok(manifest.get_cached_refs())
-    // Ok((
-    //     memo,
-    //     Arc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
-    // ))
 }
-
-// struct NameMapper {
-//     memo: std::cell::RefCell<NameMemo>,
-// }
-//
-// impl NameMapper {
-//     pub fn name_for(&self, ty: &Type) -> Arc<str> {
-//         self.memo
-//             .borrow_mut()
-//             .entry(ty.base().type_idx)
-//             .or_insert_with(|| Arc::from(normalize_type_title(&ty.base().title)))
-//             .clone()
-//     }
-// }
 
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let crate_name = crate_name.unwrap_or("client_rs_static");

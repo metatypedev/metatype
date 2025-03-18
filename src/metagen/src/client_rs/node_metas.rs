@@ -5,13 +5,9 @@ use std::fmt::Write;
 
 use typegraph::{conv::TypeKey, FunctionType, ObjectType, TypeNodeExt as _, UnionType};
 
-use super::{
-    shared::{
-        manifest::{ManifestPage, TypeRenderer},
-        node_metas::{MetaFactory, MetasPageBuilder},
-    },
-    utils::normalize_type_title,
-};
+use super::shared::manifest::{ManifestPage, TypeRenderer};
+use super::shared::node_metas::{MetaFactory, MetasPageBuilder};
+use super::utils::normalize_type_title;
 use crate::interlude::*;
 
 #[derive(Debug)]
