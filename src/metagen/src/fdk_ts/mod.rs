@@ -7,7 +7,6 @@ pub mod utils;
 use core::fmt::Write;
 use std::borrow::Cow;
 
-use shared::types::EmptyNameMemo;
 use typegraph::TypeNodeExt as _;
 use types::manifest_page;
 
@@ -91,7 +90,7 @@ impl FdkTypescriptTemplate {
         let dest: &mut GenDestBuf = &mut fdk_ts;
         let tg = tg.clone();
         let manif = manifest_page(&tg)?;
-        manif.render_all(dest, &EmptyNameMemo)?;
+        manif.render_all(dest, &())?;
         writeln!(&mut fdk_ts)?;
         {
             let stubbed_rts = config

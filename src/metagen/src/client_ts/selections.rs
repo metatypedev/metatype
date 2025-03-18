@@ -5,13 +5,8 @@ use std::fmt::Write;
 
 use typegraph::TypeNodeExt as _;
 
-use super::{
-    shared::{
-        manifest::{ManifestPage, TypeRenderer},
-        types::NameMemo,
-    },
-    utils::*,
-};
+use super::shared::manifest::{ManifestPage, TypeRenderer};
+use super::utils::*;
 use crate::{interlude::*, shared::client::*};
 
 #[derive(Debug)]
@@ -31,7 +26,7 @@ impl Object {
         &self,
         dest: &mut impl Write,
         page: &ManifestPage<TsSelection>,
-        name_memo: &impl NameMemo,
+        ctx: &Context,
     ) -> std::fmt::Result {
         writeln!(dest, "export type {} = {{", self.name)?;
         for (name, select_ty) in &self.props {
@@ -39,16 +34,16 @@ impl Object {
             match select_ty {
                 Scalar => writeln!(dest, r#"  {name}?: ScalarSelectNoArgs;"#)?,
                 ScalarArgs { arg_ty } => {
-                    let arg_ty = page.get_ref(arg_ty, name_memo).unwrap();
+                    let arg_ty = page.get_ref(arg_ty, ctx).unwrap();
                     writeln!(dest, r#"  {name}?: ScalarSelectArgs<{arg_ty}>;"#)?
                 }
                 Composite { select_ty } => {
-                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
+                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
                     writeln!(dest, r#"  {name}?: CompositeSelectNoArgs<{select_ty}>;"#)?
                 }
                 CompositeArgs { arg_ty, select_ty } => {
-                    let arg_ty = page.get_ref(arg_ty, name_memo).unwrap();
-                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
+                    let arg_ty = page.get_ref(arg_ty, ctx).unwrap();
+                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
                     writeln!(
                         dest,
                         r#"  {name}?: CompositeSelectArgs<{arg_ty}, {select_ty}>;"#
@@ -78,7 +73,7 @@ impl Union {
         &self,
         dest: &mut impl Write,
         page: &ManifestPage<TsSelection>,
-        name_memo: &impl NameMemo,
+        ctx: &Context,
     ) -> std::fmt::Result {
         writeln!(dest, "export type {} = {{", self.name)?;
         for variant in &self.variants {
@@ -90,7 +85,7 @@ impl Union {
                     unreachable!()
                 }
                 Composite { select_ty } => {
-                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
+                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
                     let variant_ty = &variant.ty;
                     writeln!(
                         dest,
@@ -98,8 +93,8 @@ impl Union {
                     )?
                 }
                 CompositeArgs { arg_ty, select_ty } => {
-                    let arg_ty = page.get_ref(arg_ty, name_memo).unwrap();
-                    let select_ty = page.get_ref(select_ty, name_memo).unwrap();
+                    let arg_ty = page.get_ref(arg_ty, ctx).unwrap();
+                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
                     let variant_ty = &variant.ty;
                     writeln!(
                         dest,
@@ -113,24 +108,24 @@ impl Union {
     }
 }
 
+type Context = ();
+
 impl TypeRenderer for TsSelection {
+    type Context = Context;
+
     fn render(
         &self,
         dest: &mut impl Write,
         page: &ManifestPage<Self>,
-        name_memo: &impl NameMemo,
+        ctx: &Context,
     ) -> std::fmt::Result {
         match self {
-            TsSelection::Object(obj) => obj.render(dest, page, name_memo),
-            TsSelection::Union(union) => union.render(dest, page, name_memo),
+            TsSelection::Object(obj) => obj.render(dest, page, ctx),
+            TsSelection::Union(union) => union.render(dest, page, ctx),
         }
     }
 
-    fn get_reference_expr(
-        &self,
-        _page: &ManifestPage<Self>,
-        _memo: &impl NameMemo,
-    ) -> Option<String> {
+    fn get_reference_expr(&self, _page: &ManifestPage<Self>, _ctx: &Context) -> Option<String> {
         match self {
             TsSelection::Object(obj) => Some(obj.name.clone()),
             TsSelection::Union(union) => Some(union.name.clone()),

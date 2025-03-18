@@ -9,7 +9,7 @@ use super::{
     shared::manifest::{ManifestPage, TypeRenderer},
     utils::normalize_type_title,
 };
-use crate::{interlude::*, shared::types::*};
+use crate::interlude::*;
 
 #[derive(Debug)]
 pub enum RsNodeMetasSpec {
@@ -33,20 +33,23 @@ pub enum RsNodeMetasSpec {
     },
 }
 
+type Context = ();
+
 impl TypeRenderer for RsNodeMetasSpec {
+    type Context = Context;
     fn render(
         &self,
         out: &mut impl Write,
         page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
+        ctx: &Self::Context,
     ) -> std::fmt::Result {
         match self {
             Self::Alias { .. } | Self::Scalar => {}
             Self::Object { props, name } => {
-                self.render_for_object(page, memo, out, name, &props)?;
+                self.render_for_object(page, ctx, out, name, &props)?;
             }
             Self::Union { variants, name } => {
-                self.render_for_union(page, memo, out, name, &variants)?;
+                self.render_for_union(page, ctx, out, name, &variants)?;
             }
             Self::Function {
                 return_ty,
@@ -56,7 +59,7 @@ impl TypeRenderer for RsNodeMetasSpec {
             } => {
                 self.render_for_func(
                     page,
-                    memo,
+                    ctx,
                     out,
                     name,
                     *return_ty,
@@ -69,13 +72,9 @@ impl TypeRenderer for RsNodeMetasSpec {
         Ok(())
     }
 
-    fn get_reference_expr(
-        &self,
-        page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
-    ) -> Option<String> {
+    fn get_reference_expr(&self, page: &ManifestPage<Self>, ctx: &Self::Context) -> Option<String> {
         match self {
-            Self::Alias { target } => page.get_ref(target, memo),
+            Self::Alias { target } => page.get_ref(target, ctx),
             Self::Scalar => Some("scalar".to_string()),
             Self::Function { name, .. } => Some(name.clone()),
             Self::Object { name, .. } => Some(name.clone()),
@@ -88,7 +87,7 @@ impl RsNodeMetasSpec {
     pub fn render_for_object(
         &self,
         page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
+        ctx: &Context,
         dest: &mut impl Write,
         ty_name: &str,
         props: &IndexMap<Arc<str>, TypeKey>,
@@ -104,7 +103,7 @@ pub fn {ty_name}() -> NodeMeta {{
             ["#
         )?;
         for (key, prop) in props {
-            let node_ref = page.get_ref(prop, memo).unwrap();
+            let node_ref = page.get_ref(prop, ctx).unwrap();
             write!(
                 dest,
                 r#"
@@ -126,7 +125,7 @@ pub fn {ty_name}() -> NodeMeta {{
     pub fn render_for_union(
         &self,
         page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
+        ctx: &Context,
         dest: &mut impl Write,
         ty_name: &str,
         props: &IndexMap<Arc<str>, TypeKey>,
@@ -142,7 +141,7 @@ pub fn {ty_name}() -> NodeMeta {{
             ["#
         )?;
         for (key, prop) in props {
-            let node_ref = page.get_ref(prop, memo).unwrap();
+            let node_ref = page.get_ref(prop, ctx).unwrap();
             write!(
                 dest,
                 r#"
@@ -164,7 +163,7 @@ pub fn {ty_name}() -> NodeMeta {{
     pub fn render_for_func(
         &self,
         page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
+        ctx: &Context,
         dest: &mut impl Write,
         ty_name: &str,
         return_node: TypeKey,
@@ -207,7 +206,7 @@ pub fn {ty_name}() -> NodeMeta {{
         input_files: Some(PathToInputFiles(&{input_files})),"#
             )?;
         }
-        let return_node = page.get_ref(&return_node, memo).unwrap();
+        let return_node = page.get_ref(&return_node, ctx).unwrap();
         write!(
             dest,
             r#"

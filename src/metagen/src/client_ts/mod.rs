@@ -12,7 +12,6 @@ use node_metas::TsNodeMeta;
 use selections::TsSelection;
 use shared::manifest::ManifestPage;
 use shared::node_metas::MetasPageBuilder;
-use shared::types::EmptyNameMemo;
 use tg_schema::EffectType;
 use typegraph::conv::TypeKey;
 use typegraph::TypeNodeExt as _;
@@ -145,16 +144,16 @@ impl TsClientManifest {
         writeln!(out, "{}", include_str!("static/mod.ts"))?;
 
         let mut types_buffer = String::new();
-        self.types.render_all(&mut types_buffer, &EmptyNameMemo)?;
+        self.types.render_all(&mut types_buffer, &())?;
         let name_memo = self.types.get_cached_refs();
 
-        self.node_metas.render_all(out, &name_memo)?;
+        self.node_metas.render_all(out, &())?;
         let node_metas = self.node_metas.get_cached_refs();
 
         out.write_str(&types_buffer)?;
         let _ = types_buffer;
 
-        self.selections.render_all(out, &name_memo)?;
+        self.selections.render_all(out, &())?;
         let selections = self.selections.get_cached_refs();
 
         let memos = Memos {

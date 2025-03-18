@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::manifest::{ManifestPage, TypeRenderer};
-use super::shared::types::{EmptyNameMemo, NameMemo};
 use super::utils::*;
 use crate::interlude::*;
 use crate::shared::types::type_body_required;
@@ -535,12 +534,15 @@ pub struct StructProp {
     optional: bool,
 }
 
+type Context = ();
+
 impl TypeRenderer for RustType {
+    type Context = Context;
     fn render(
         &self,
         out: &mut impl Write,
         page: &ManifestPage<Self>,
-        memo: &impl NameMemo, // memo is not used ;-p
+        ctx: &Context,
     ) -> std::fmt::Result {
         match self {
             Self::Alias {
@@ -557,7 +559,7 @@ impl TypeRenderer for RustType {
                             item,
                             boxed,
                         } => {
-                            let inner_name = page.get_ref(item, memo).unwrap();
+                            let inner_name = page.get_ref(item, ctx).unwrap();
                             let inner_name = if *boxed {
                                 format!("Box<{}>", inner_name)
                             } else {
@@ -592,7 +594,7 @@ impl TypeRenderer for RustType {
                     if let Some(rename) = &prop.rename {
                         writeln!(out, r#"    #[serde(rename = "{}")]"#, rename)?;
                     }
-                    let ty_ref = page.get_ref(&prop.ty, memo).unwrap();
+                    let ty_ref = page.get_ref(&prop.ty, ctx).unwrap();
                     let ty_ref = if *partial && !prop.optional {
                         format!("Option<{}>", ty_ref)
                     } else {
@@ -617,7 +619,7 @@ impl TypeRenderer for RustType {
                         out,
                         "    {}({}),",
                         var_name,
-                        page.get_ref(&ty, memo).unwrap()
+                        page.get_ref(&ty, ctx).unwrap()
                     )?;
                 }
                 writeln!(out, "}}")
@@ -625,11 +627,7 @@ impl TypeRenderer for RustType {
         }
     }
 
-    fn get_reference_expr(
-        &self,
-        page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
-    ) -> Option<String> {
+    fn get_reference_expr(&self, page: &ManifestPage<Self>, ctx: &Context) -> Option<String> {
         Some(match self {
             Self::Alias { name, alias } => {
                 if let Some(name) = name {
@@ -639,7 +637,7 @@ impl TypeRenderer for RustType {
                     match alias {
                         Alias::BuiltIn(name) => name.to_string(),
                         Alias::Container { name, item, boxed } => {
-                            self.container_def(name, item, *boxed, page, memo)
+                            self.container_def(name, item, *boxed, page, ctx)
                         }
                     }
                 }
@@ -663,9 +661,9 @@ impl RustType {
         item: &TypeKey,
         boxed: bool,
         page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
+        ctx: &Context,
     ) -> String {
-        let inner_name = page.get_ref(item, memo).unwrap();
+        let inner_name = page.get_ref(item, ctx).unwrap();
         let inner_name = if boxed {
             format!("Box<{}>", inner_name)
         } else {
@@ -875,7 +873,7 @@ pub fn manifest_page(tg: &Typegraph, partial_out_types: bool) -> Result<Manifest
     }
 
     let res: ManifestPage<RustType> = map.into();
-    res.cache_references(&EmptyNameMemo);
+    res.cache_references(&());
 
     Ok(res)
 }

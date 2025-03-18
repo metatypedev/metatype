@@ -9,7 +9,6 @@ use core::fmt::Write;
 use fdk_rs::types::manifest_page;
 use fdk_rs::types::RustType;
 use shared::manifest::ManifestPage;
-use shared::types::EmptyNameMemo;
 use tg_schema::EffectType;
 use typegraph::conv::TypeKey;
 use typegraph::TypeNodeExt as _;
@@ -19,7 +18,6 @@ use crate::*;
 
 use crate::fdk_rs::utils;
 use crate::shared::client::*;
-use crate::shared::types::NameMemo;
 use crate::utils::GenDestBuf;
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
@@ -153,12 +151,13 @@ fn render_client_rs(_config: &ClienRsGenConfig, tg: Arc<Typegraph>) -> anyhow::R
     let mut types_buffer = String::new();
     let name_memo = render_data_types(&mut types_buffer, &manifest)?.get_cached_refs();
 
-    let node_metas = render_node_metas(dest, &manifest, &name_memo)?;
+    let node_metas = render_node_metas(dest, &manifest)?;
 
     dest.write_str(&types_buffer)?;
     let _ = types_buffer;
 
     let selections = render_selection_types(dest, &manifest, &name_memo)?;
+    eprintln!("selections");
 
     let gql_types = get_gql_types(&tg)?;
 
@@ -309,7 +308,7 @@ fn render_data_types(
     let map = {
         let map = manifest_page(&manifest.tg, true)?;
         let mut types_rs = String::new();
-        map.render_all(&mut types_rs, &EmptyNameMemo)?;
+        map.render_all(&mut types_rs, &())?;
         for line in types_rs.lines() {
             writeln!(dest, "    {line}")?;
         }
@@ -324,10 +323,11 @@ fn render_data_types(
 fn render_selection_types(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    name_memo: &impl NameMemo,
+    name_memo: &IndexMap<TypeKey, String>,
     // arg_types_memo: Arc<NameMemo>,
 ) -> Result<IndexMap<TypeKey, String>> {
     let page = selections::manifest_page(&manifest.tg)?;
+    page.cache_references(&name_memo);
     page.render_all(dest, name_memo)?;
     Ok(page.get_cached_refs())
 }
@@ -337,13 +337,12 @@ fn render_selection_types(
 fn render_node_metas(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
-    name_memo: &impl NameMemo,
 ) -> Result<IndexMap<TypeKey, String>> {
     let manifest =
         node_metas::PageBuilder::new(manifest.tg.clone(), &manifest.node_metas).build()?;
-    manifest.cache_references(name_memo);
+    manifest.cache_references(&());
     let mut methods = String::new();
-    manifest.render_all(&mut methods, name_memo)?;
+    manifest.render_all(&mut methods, &())?;
 
     write!(
         dest,

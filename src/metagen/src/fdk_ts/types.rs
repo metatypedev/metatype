@@ -55,11 +55,12 @@ pub struct ObjectProp {
 }
 
 impl TypeRenderer for TsType {
+    type Context = ();
     fn render(
         &self,
         out: &mut impl Write,
         page: &ManifestPage<Self>,
-        memo: &impl super::shared::types::NameMemo,
+        ctx: &Self::Context,
     ) -> std::fmt::Result {
         match self {
             TsType::Alias { name, alias } => {
@@ -69,7 +70,7 @@ impl TypeRenderer for TsType {
                             writeln!(out, "export type {name} = {target};")?;
                         }
                         Alias::Optional(inner) => {
-                            let inner_name = page.get_ref(inner, memo).unwrap();
+                            let inner_name = page.get_ref(inner, ctx).unwrap();
                             writeln!(
                                 out,
                                 "export type {name} = ({inner_name}) | null | undefined;"
@@ -79,7 +80,7 @@ impl TypeRenderer for TsType {
                             name: container,
                             item,
                         } => {
-                            let item_name = page.get_ref(item, memo).unwrap();
+                            let item_name = page.get_ref(item, ctx).unwrap();
                             writeln!(out, "export type {name} = {container}<{item_name}>;")?;
                         }
                     }
@@ -89,7 +90,7 @@ impl TypeRenderer for TsType {
                 writeln!(out, "export type {name} = {{")?;
                 for prop in properties {
                     let prop_name = &prop.name;
-                    let prop_ty = page.get_ref(&prop.ty, memo).unwrap();
+                    let prop_ty = page.get_ref(&prop.ty, ctx).unwrap();
                     if prop.optional {
                         writeln!(out, "  {prop_name}?: {prop_ty};")?;
                     } else {
@@ -101,7 +102,7 @@ impl TypeRenderer for TsType {
             TsType::Enum { name, variants } => {
                 write!(out, "export type {name} =")?;
                 for variant in variants {
-                    let variant_name = page.get_ref(variant, memo).unwrap();
+                    let variant_name = page.get_ref(variant, ctx).unwrap();
                     write!(out, "\n  | ({variant_name})")?;
                 }
                 writeln!(out, ";")?;
@@ -118,11 +119,7 @@ impl TypeRenderer for TsType {
         Ok(())
     }
 
-    fn get_reference_expr(
-        &self,
-        page: &ManifestPage<Self>,
-        memo: &impl super::shared::types::NameMemo,
-    ) -> Option<String> {
+    fn get_reference_expr(&self, page: &ManifestPage<Self>, ctx: &()) -> Option<String> {
         match self {
             TsType::Alias { name, alias } => {
                 if let Some(name) = name {
@@ -131,14 +128,14 @@ impl TypeRenderer for TsType {
                     match alias {
                         Alias::BuiltIn(target) => Some(target.to_string()),
                         Alias::Optional(inner) => {
-                            let inner_name = page.get_ref(inner, memo).unwrap();
+                            let inner_name = page.get_ref(inner, ctx).unwrap();
                             Some(format!("({inner_name}) | null | undefined"))
                         }
                         Alias::Container {
                             name: container,
                             item,
                         } => {
-                            let item_name = page.get_ref(item, memo).unwrap();
+                            let item_name = page.get_ref(item, ctx).unwrap();
                             Some(format!("{container}<{item_name}>"))
                         }
                     }

@@ -18,7 +18,6 @@ use crate::interlude::*;
 use crate::shared::*;
 use crate::utils::*;
 use crate::*;
-use shared::types::EmptyNameMemo;
 use std::borrow::Cow;
 use std::fmt::Write;
 use types::manifest_page;
@@ -190,7 +189,7 @@ impl FdkRustTemplate {
         let name_memo = {
             let manif = manifest_page(&tg, false)?;
             let mut buffer = String::new();
-            manif.render_all(&mut buffer, &EmptyNameMemo)?;
+            manif.render_all(&mut buffer, &())?;
 
             let types_rs = buffer;
             for line in types_rs.lines() {

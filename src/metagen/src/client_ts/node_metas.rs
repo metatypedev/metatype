@@ -13,34 +13,34 @@ use super::{
     },
     utils::normalize_type_title,
 };
-use crate::{interlude::*, shared::types::*};
+use crate::interlude::*;
+
+type Context = ();
 
 impl TypeRenderer for TsNodeMeta {
+    type Context = Context;
+
     fn render(
         &self,
         dest: &mut impl Write,
         page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
+        ctx: &Context,
     ) -> std::fmt::Result {
         match self {
             Self::Scalar => {}
             Self::Alias { .. } => {}
-            Self::Object(obj) => obj.render(dest, page, memo)?,
-            Self::Function(func) => func.render(dest, page, memo)?,
-            Self::Union(union) => union.render(dest, page, memo)?,
+            Self::Object(obj) => obj.render(dest, page, ctx)?,
+            Self::Function(func) => func.render(dest, page, ctx)?,
+            Self::Union(union) => union.render(dest, page, ctx)?,
         }
 
         Ok(())
     }
 
-    fn get_reference_expr(
-        &self,
-        page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
-    ) -> Option<String> {
+    fn get_reference_expr(&self, page: &ManifestPage<Self>, ctx: &Context) -> Option<String> {
         match self {
             Self::Scalar => Some("scalar".to_string()),
-            Self::Alias { target } => page.get_ref(target, memo),
+            Self::Alias { target } => page.get_ref(target, ctx),
             Self::Object(obj) => Some(obj.name.clone()),
             Self::Function(func) => Some(func.name.clone()),
             Self::Union(union) => Some(union.name.clone()),
@@ -59,7 +59,7 @@ impl Object {
         &self,
         dest: &mut impl Write,
         page: &ManifestPage<TsNodeMeta>,
-        memo: &impl NameMemo,
+        ctx: &Context,
     ) -> std::fmt::Result {
         let name = &self.name;
         let props = &self.props;
@@ -71,7 +71,7 @@ impl Object {
       subNodes: ["#
         )?;
         for (prop_name, prop_ty) in props {
-            let node_ref = page.get_ref(prop_ty, memo).unwrap();
+            let node_ref = page.get_ref(prop_ty, ctx).unwrap();
 
             write!(
                 dest,
@@ -101,7 +101,7 @@ impl Union {
         &self,
         dest: &mut impl Write,
         page: &ManifestPage<TsNodeMeta>,
-        memo: &impl NameMemo,
+        ctx: &Context,
     ) -> std::fmt::Result {
         let name = &self.name;
         let variants = &self.variants;
@@ -113,7 +113,7 @@ impl Union {
       variants: ["#
         )?;
         for (variant_name, variant_key) in variants {
-            let node_ref = page.get_ref(variant_key, memo).unwrap();
+            let node_ref = page.get_ref(variant_key, ctx).unwrap();
             write!(
                 dest,
                 r#"
@@ -144,10 +144,10 @@ impl Function {
         &self,
         dest: &mut impl Write,
         page: &ManifestPage<TsNodeMeta>,
-        memo: &impl NameMemo,
+        ctx: &Context,
     ) -> std::fmt::Result {
         let name = &self.name;
-        let return_name = page.get_ref(&self.return_ty, memo).unwrap();
+        let return_name = page.get_ref(&self.return_ty, ctx).unwrap();
         write!(
             dest,
             r#"
@@ -164,7 +164,7 @@ impl Function {
 
             for (key, ty) in fields {
                 // huh?
-                let ty = page.get_ref(ty, memo).unwrap();
+                let ty = page.get_ref(ty, ctx).unwrap();
                 write!(
                     dest,
                     r#"

@@ -8,17 +8,18 @@ use typegraph::conv::TypeKey;
 use super::types::NameMemo;
 
 pub trait TypeRenderer: Sized + std::fmt::Debug {
+    type Context;
+
     fn render(
         &self,
         out: &mut impl Write,
         page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
+        ctx: &Self::Context,
     ) -> std::fmt::Result;
     /// get reference expression for the generated type;
     /// it is either a type name or a more complex expression if there type is not explicitly
     /// rendered
-    fn get_reference_expr(&self, page: &ManifestPage<Self>, memo: &impl NameMemo)
-        -> Option<String>;
+    fn get_reference_expr(&self, page: &ManifestPage<Self>, ctx: &Self::Context) -> Option<String>;
 }
 
 impl NameMemo for HashMap<TypeKey, String> {
@@ -54,13 +55,13 @@ impl<R: TypeRenderer> ManifestPage<R> {
         self.map.contains_key(&key)
     }
 
-    pub fn cache_references(&self, memo: &impl NameMemo) {
+    pub fn cache_references(&self, ctx: &R::Context) {
         for key in self.map.keys() {
-            let _ = self.get_ref(key, memo);
+            let _ = self.get_ref(key, ctx);
         }
     }
 
-    pub fn get_ref(&self, key: &TypeKey, memo: &impl NameMemo) -> Option<String> {
+    pub fn get_ref(&self, key: &TypeKey, ctx: &R::Context) -> Option<String> {
         {
             let cache = self.reference_cache.read().unwrap();
             if let Some(name) = cache.get(key) {
@@ -69,7 +70,7 @@ impl<R: TypeRenderer> ManifestPage<R> {
         }
 
         let renderer = self.map.get(key)?;
-        let name = renderer.get_reference_expr(self, memo);
+        let name = renderer.get_reference_expr(self, ctx);
         self.reference_cache
             .write()
             .unwrap()
@@ -77,9 +78,9 @@ impl<R: TypeRenderer> ManifestPage<R> {
         name
     }
 
-    pub fn render_all(&self, out: &mut impl Write, name_memo: &impl NameMemo) -> std::fmt::Result {
+    pub fn render_all(&self, out: &mut impl Write, ctx: &R::Context) -> std::fmt::Result {
         for (_k, spec) in &self.map {
-            spec.render(out, self, name_memo)?;
+            spec.render(out, self, ctx)?;
         }
         Ok(())
     }
