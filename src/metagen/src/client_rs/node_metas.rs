@@ -12,7 +12,7 @@ use super::{
 use crate::interlude::*;
 
 #[derive(Debug)]
-pub enum RsNodeMetasSpec {
+pub enum RsNodeMeta {
     Scalar,
     Alias { target: TypeKey },
     Object(Object),
@@ -42,7 +42,7 @@ pub struct Function {
 
 type Context = ();
 
-impl TypeRenderer for RsNodeMetasSpec {
+impl TypeRenderer for RsNodeMeta {
     type Context = Context;
     fn render(
         &self,
@@ -53,21 +53,13 @@ impl TypeRenderer for RsNodeMetasSpec {
         match self {
             Self::Alias { .. } | Self::Scalar => {}
             Self::Object(obj) => {
-                self.render_for_object(page, ctx, out, &obj.name, &obj.props)?;
+                obj.render(page, ctx, out)?;
             }
             Self::Union(union) => {
-                self.render_for_union(page, ctx, out, &union.name, &union.variants)?;
+                union.render(page, ctx, out)?;
             }
             Self::Function(func) => {
-                self.render_for_func(
-                    page,
-                    ctx,
-                    out,
-                    &func.name,
-                    func.return_ty,
-                    func.argument_fields.clone(),
-                    func.input_files.clone(),
-                )?;
+                func.render(page, ctx, out)?;
             }
         }
 
@@ -85,15 +77,14 @@ impl TypeRenderer for RsNodeMetasSpec {
     }
 }
 
-impl RsNodeMetasSpec {
-    pub fn render_for_object(
+impl Object {
+    pub fn render(
         &self,
-        page: &ManifestPage<Self>,
+        page: &ManifestPage<RsNodeMeta>,
         ctx: &Context,
         dest: &mut impl Write,
-        ty_name: &str,
-        props: &IndexMap<Arc<str>, TypeKey>,
     ) -> std::fmt::Result {
+        let ty_name = &self.name;
         write!(
             dest,
             r#"
@@ -104,8 +95,8 @@ pub fn {ty_name}() -> NodeMeta {{
         sub_nodes: Some(
             ["#
         )?;
-        for (key, prop) in props {
-            let node_ref = page.get_ref(prop, ctx).unwrap();
+        for (key, prop) in self.props.iter() {
+            let node_ref = page.get_ref(&prop, ctx).unwrap();
             write!(
                 dest,
                 r#"
@@ -123,15 +114,16 @@ pub fn {ty_name}() -> NodeMeta {{
         )?;
         Ok(())
     }
+}
 
-    pub fn render_for_union(
+impl Union {
+    pub fn render(
         &self,
-        page: &ManifestPage<Self>,
+        page: &ManifestPage<RsNodeMeta>,
         ctx: &Context,
         dest: &mut impl Write,
-        ty_name: &str,
-        props: &IndexMap<Arc<str>, TypeKey>,
     ) -> std::fmt::Result {
+        let ty_name = &self.name;
         write!(
             dest,
             r#"
@@ -142,7 +134,7 @@ pub fn {ty_name}() -> NodeMeta {{
         variants: Some(
             ["#
         )?;
-        for (key, prop) in props {
+        for (key, prop) in &self.variants {
             let node_ref = page.get_ref(prop, ctx).unwrap();
             write!(
                 dest,
@@ -161,24 +153,23 @@ pub fn {ty_name}() -> NodeMeta {{
         )?;
         Ok(())
     }
+}
 
-    pub fn render_for_func(
+impl Function {
+    pub fn render(
         &self,
-        page: &ManifestPage<Self>,
+        page: &ManifestPage<RsNodeMeta>,
         ctx: &Context,
         dest: &mut impl Write,
-        ty_name: &str,
-        return_node: TypeKey,
-        argument_fields: Option<BTreeMap<Arc<str>, Arc<str>>>,
-        input_files: Option<String>,
     ) -> std::fmt::Result {
+        let ty_name = &self.name;
         write!(
             dest,
             r#"
 pub fn {ty_name}() -> NodeMeta {{
     NodeMeta {{"#
         )?;
-        if let Some(fields) = argument_fields {
+        if let Some(fields) = &self.argument_fields {
             write!(
                 dest,
                 r#"
@@ -201,14 +192,14 @@ pub fn {ty_name}() -> NodeMeta {{
         ),"#
             )?;
         }
-        if let Some(input_files) = input_files {
+        if let Some(input_files) = &self.input_files {
             write!(
                 dest,
                 r#"
         input_files: Some(PathToInputFiles(&{input_files})),"#
             )?;
         }
-        let return_node = page.get_ref(&return_node, ctx).unwrap();
+        let return_node = page.get_ref(&self.return_ty, ctx).unwrap();
         write!(
             dest,
             r#"
@@ -237,7 +228,7 @@ impl PageBuilder {
         self.stack.borrow_mut().push(key);
     }
 
-    pub fn build(self) -> Result<ManifestPage<RsNodeMetasSpec>> {
+    pub fn build(self) -> Result<ManifestPage<RsNodeMeta>> {
         let mut map = IndexMap::new();
 
         loop {
@@ -259,7 +250,7 @@ impl PageBuilder {
         Ok(map.into())
     }
 
-    fn get_spec(&self, key: TypeKey) -> Result<RsNodeMetasSpec> {
+    fn get_spec(&self, key: TypeKey) -> Result<RsNodeMeta> {
         let ty = self.tg.find_type(key).unwrap();
         debug_assert_eq!(ty.key(), key);
         match ty {
@@ -267,7 +258,7 @@ impl PageBuilder {
             | Type::Float(_)
             | Type::Integer(_)
             | Type::String(_)
-            | Type::File(_) => Ok(RsNodeMetasSpec::Scalar),
+            | Type::File(_) => Ok(RsNodeMeta::Scalar),
             Type::Optional(ty) => Ok(self.alias(ty.item()?.key())),
             Type::List(ty) => Ok(self.alias(ty.item()?.key())),
             Type::Union(ty) => self.get_union_spec(ty.clone()),
@@ -276,12 +267,12 @@ impl PageBuilder {
         }
     }
 
-    fn alias(&self, key: TypeKey) -> RsNodeMetasSpec {
+    fn alias(&self, key: TypeKey) -> RsNodeMeta {
         self.push(key);
-        RsNodeMetasSpec::Alias { target: key }
+        RsNodeMeta::Alias { target: key }
     }
 
-    fn get_func_spec(&self, key: TypeKey, ty: Arc<FunctionType>) -> Result<RsNodeMetasSpec> {
+    fn get_func_spec(&self, key: TypeKey, ty: Arc<FunctionType>) -> Result<RsNodeMeta> {
         debug_assert_eq!(ty.key(), key);
         let out_key = ty.output()?.key();
         self.push(out_key);
@@ -299,7 +290,7 @@ impl PageBuilder {
 
         // TODO input_files
 
-        Ok(RsNodeMetasSpec::Function(Function {
+        Ok(RsNodeMeta::Function(Function {
             return_ty: out_key,
             argument_fields: props,
             input_files: None,
@@ -308,7 +299,7 @@ impl PageBuilder {
     }
 
     // TODO return result
-    fn get_union_spec(&self, ty: Arc<UnionType>) -> Result<RsNodeMetasSpec> {
+    fn get_union_spec(&self, ty: Arc<UnionType>) -> Result<RsNodeMeta> {
         let mut variants = IndexMap::new();
         for variant in ty.variants()?.iter() {
             if variant.is_composite()? {
@@ -320,13 +311,13 @@ impl PageBuilder {
         Ok(if !variants.is_empty() {
             let name = normalize_type_title(&ty.name().unwrap());
             // TODO named_types???
-            RsNodeMetasSpec::Union(Union { variants, name })
+            RsNodeMeta::Union(Union { variants, name })
         } else {
-            RsNodeMetasSpec::Scalar
+            RsNodeMeta::Scalar
         })
     }
 
-    fn get_object_spec(&self, key: TypeKey, ty: Arc<ObjectType>) -> Result<RsNodeMetasSpec> {
+    fn get_object_spec(&self, key: TypeKey, ty: Arc<ObjectType>) -> Result<RsNodeMeta> {
         debug_assert_eq!(ty.key(), key);
         let props = ty.properties()?;
         let props = props
@@ -338,7 +329,7 @@ impl PageBuilder {
             })
             .collect::<IndexMap<_, _>>();
 
-        Ok(RsNodeMetasSpec::Object(Object {
+        Ok(RsNodeMeta::Object(Object {
             props,
             name: normalize_type_title(&ty.name()?),
         }))
