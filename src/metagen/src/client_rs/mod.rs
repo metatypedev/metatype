@@ -5,11 +5,9 @@ mod node_metas;
 mod selections;
 
 use core::fmt::Write;
-use std::collections::HashMap;
 
 use fdk_rs::types::manifest_page;
 use fdk_rs::types::RustType;
-use shared::get_gql_type;
 use shared::manifest::ManifestPage;
 use shared::types::EmptyNameMemo;
 use tg_schema::EffectType;

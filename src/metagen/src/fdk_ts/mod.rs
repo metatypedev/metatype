@@ -6,10 +6,8 @@ pub mod utils;
 
 use core::fmt::Write;
 use std::borrow::Cow;
-use std::collections::HashMap;
 
 use shared::types::EmptyNameMemo;
-use typegraph::conv::TypeKey;
 use typegraph::TypeNodeExt as _;
 use types::manifest_page;
 
@@ -18,8 +16,6 @@ use crate::shared::*;
 use crate::*;
 
 use crate::utils::GenDestBuf;
-
-use self::shared::types::TypeRenderer;
 
 pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.ts", include_str!("static/fdk.ts"))];
 

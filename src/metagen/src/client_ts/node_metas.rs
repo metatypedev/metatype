@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{cell::RefCell, collections::HashMap, fmt::Write};
+use std::{cell::RefCell, fmt::Write};
 
 use heck::ToPascalCase as _;
 use typegraph::{conv::TypeKey, FunctionType, ObjectType, TypeNodeExt as _, UnionType};
@@ -10,13 +10,7 @@ use super::{
     shared::manifest::{ManifestPage, TypeRenderer},
     utils::normalize_type_title,
 };
-use crate::{
-    interlude::*,
-    shared::{
-        files::{serialize_typepaths_json, TypePath},
-        types::*,
-    },
-};
+use crate::{interlude::*, shared::types::*};
 
 impl TypeRenderer for TsNodeMeta {
     fn render(
@@ -49,11 +43,6 @@ impl TypeRenderer for TsNodeMeta {
             Self::Union(union) => Some(union.name.clone()),
         }
     }
-}
-
-#[derive(Debug)]
-struct Alias {
-    target: TypeKey,
 }
 
 #[derive(Debug)]
@@ -212,7 +201,7 @@ pub enum TsNodeMeta {
     Function(Function),
 }
 
-trait MetaFactory<M> {
+pub trait MetaFactory<M> {
     fn build_meta(&self, key: TypeKey) -> Result<M>;
 }
 

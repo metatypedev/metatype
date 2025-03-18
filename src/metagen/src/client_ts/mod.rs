@@ -5,18 +5,14 @@ mod node_metas;
 mod selections;
 
 use core::fmt::Write;
-use std::collections::HashMap;
 
 use fdk_ts::types::manifest_page;
 use fdk_ts::types::TsType;
 use node_metas::TsNodeMeta;
 use selections::TsSelection;
-use shared::get_gql_type;
 use shared::manifest::ManifestPage;
 use shared::types::EmptyNameMemo;
 use tg_schema::EffectType;
-use typegraph::conv::TypeKey;
-use typegraph::TypeNode as _;
 use typegraph::TypeNodeExt as _;
 
 use crate::interlude::*;
@@ -24,9 +20,6 @@ use crate::*;
 
 use crate::fdk_ts::utils;
 use crate::shared::client::*;
-use crate::shared::types::NameMemo;
-use crate::utils::GenDestBuf;
-use utils::normalize_type_title;
 
 struct TsClientManifest {
     tg: Arc<Typegraph>,

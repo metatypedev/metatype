@@ -3,7 +3,6 @@
 
 use std::fmt::Write;
 
-use tg_schema::*;
 use typegraph::TypeNodeExt as _;
 
 use super::{
@@ -64,7 +63,6 @@ impl Object {
 
 #[derive(Debug)]
 struct UnionVariant {
-    name: String,
     ty: String,
     select_ty: SelectionTy,
 }
@@ -130,8 +128,8 @@ impl TypeRenderer for TsSelection {
 
     fn get_reference_expr(
         &self,
-        page: &ManifestPage<Self>,
-        memo: &impl NameMemo,
+        _page: &ManifestPage<Self>,
+        _memo: &impl NameMemo,
     ) -> Option<String> {
         match self {
             TsSelection::Object(obj) => Some(obj.name.clone()),
@@ -178,10 +176,8 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<TsSelecti
                     if !variant.is_composite()? {
                         continue;
                     }
-                    let struct_prop_name = normalize_struct_prop_name(&variant.title());
                     let selection = selection_for_field(variant)?;
                     variants.push(UnionVariant {
-                        name: struct_prop_name,
                         ty: variant.title().to_string(),
                         select_ty: selection,
                     });

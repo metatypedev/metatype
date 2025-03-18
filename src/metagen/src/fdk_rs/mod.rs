@@ -21,7 +21,6 @@ use crate::*;
 use shared::types::EmptyNameMemo;
 use std::borrow::Cow;
 use std::fmt::Write;
-use typegraph::TypeNodeExt as _;
 use types::manifest_page;
 
 pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.rs", include_str!("static/fdk.rs"))];
