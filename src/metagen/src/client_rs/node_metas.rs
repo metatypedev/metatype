@@ -14,23 +14,30 @@ use crate::interlude::*;
 #[derive(Debug)]
 pub enum RsNodeMetasSpec {
     Scalar,
-    Alias {
-        target: TypeKey,
-    },
-    Object {
-        props: IndexMap<Arc<str>, TypeKey>,
-        name: String,
-    },
-    Union {
-        variants: IndexMap<Arc<str>, TypeKey>,
-        name: String,
-    },
-    Function {
-        return_ty: TypeKey,
-        argument_fields: Option<BTreeMap<Arc<str>, Arc<str>>>,
-        input_files: Option<String>,
-        name: String,
-    },
+    Alias { target: TypeKey },
+    Object(Object),
+    Union(Union),
+    Function(Function),
+}
+
+#[derive(Debug)]
+pub struct Object {
+    props: IndexMap<Arc<str>, TypeKey>,
+    name: String,
+}
+
+#[derive(Debug)]
+pub struct Union {
+    variants: IndexMap<Arc<str>, TypeKey>,
+    name: String,
+}
+
+#[derive(Debug)]
+pub struct Function {
+    name: String,
+    return_ty: TypeKey,
+    argument_fields: Option<BTreeMap<Arc<str>, Arc<str>>>,
+    input_files: Option<String>,
 }
 
 type Context = ();
@@ -45,26 +52,21 @@ impl TypeRenderer for RsNodeMetasSpec {
     ) -> std::fmt::Result {
         match self {
             Self::Alias { .. } | Self::Scalar => {}
-            Self::Object { props, name } => {
-                self.render_for_object(page, ctx, out, name, &props)?;
+            Self::Object(obj) => {
+                self.render_for_object(page, ctx, out, &obj.name, &obj.props)?;
             }
-            Self::Union { variants, name } => {
-                self.render_for_union(page, ctx, out, name, &variants)?;
+            Self::Union(union) => {
+                self.render_for_union(page, ctx, out, &union.name, &union.variants)?;
             }
-            Self::Function {
-                return_ty,
-                argument_fields,
-                input_files,
-                name,
-            } => {
+            Self::Function(func) => {
                 self.render_for_func(
                     page,
                     ctx,
                     out,
-                    name,
-                    *return_ty,
-                    argument_fields.clone(),
-                    input_files.clone(),
+                    &func.name,
+                    func.return_ty,
+                    func.argument_fields.clone(),
+                    func.input_files.clone(),
                 )?;
             }
         }
@@ -76,9 +78,9 @@ impl TypeRenderer for RsNodeMetasSpec {
         match self {
             Self::Alias { target } => page.get_ref(target, ctx),
             Self::Scalar => Some("scalar".to_string()),
-            Self::Function { name, .. } => Some(name.clone()),
-            Self::Object { name, .. } => Some(name.clone()),
-            Self::Union { name, .. } => Some(name.clone()),
+            Self::Object(obj) => Some(obj.name.clone()),
+            Self::Union(union) => Some(union.name.clone()),
+            Self::Function(func) => Some(func.name.clone()),
         }
     }
 }
@@ -297,12 +299,12 @@ impl PageBuilder {
 
         // TODO input_files
 
-        Ok(RsNodeMetasSpec::Function {
+        Ok(RsNodeMetasSpec::Function(Function {
             return_ty: out_key,
             argument_fields: props,
             input_files: None,
             name: normalize_type_title(&ty.name().unwrap()),
-        })
+        }))
     }
 
     // TODO return result
@@ -318,7 +320,7 @@ impl PageBuilder {
         Ok(if !variants.is_empty() {
             let name = normalize_type_title(&ty.name().unwrap());
             // TODO named_types???
-            RsNodeMetasSpec::Union { variants, name }
+            RsNodeMetasSpec::Union(Union { variants, name })
         } else {
             RsNodeMetasSpec::Scalar
         })
@@ -336,9 +338,9 @@ impl PageBuilder {
             })
             .collect::<IndexMap<_, _>>();
 
-        Ok(RsNodeMetasSpec::Object {
+        Ok(RsNodeMetasSpec::Object(Object {
             props,
             name: normalize_type_title(&ty.name()?),
-        })
+        }))
     }
 }
