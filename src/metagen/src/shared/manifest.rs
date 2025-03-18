@@ -85,6 +85,12 @@ impl<R: TypeRenderer> ManifestPage<R> {
         Ok(())
     }
 
+    pub fn render_all_buffered(&self, ctx: &R::Context) -> Result<String, std::fmt::Error> {
+        let mut buf = String::new();
+        self.render_all(&mut buf, ctx)?;
+        Ok(buf)
+    }
+
     pub fn get_cached_refs(&self) -> IndexMap<TypeKey, String> {
         self.reference_cache
             .read()

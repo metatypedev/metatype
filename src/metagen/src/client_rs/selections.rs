@@ -229,6 +229,5 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<RustSelec
     }
 
     let res: ManifestPage<_> = map.into();
-    // res.cache_references(&Context {});
     Ok(res)
 }
