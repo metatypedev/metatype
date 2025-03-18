@@ -8,7 +8,9 @@ use core::fmt::Write;
 
 use fdk_rs::types::manifest_page;
 use fdk_rs::types::RustType;
+use node_metas::RsNodeMeta;
 use shared::manifest::ManifestPage;
+use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
 use typegraph::conv::TypeKey;
 use typegraph::TypeNodeExt as _;
@@ -338,8 +340,7 @@ fn render_node_metas(
     dest: &mut GenDestBuf,
     manifest: &RenderManifest,
 ) -> Result<IndexMap<TypeKey, String>> {
-    let manifest =
-        node_metas::PageBuilder::new(manifest.tg.clone(), &manifest.node_metas).build()?;
+    let manifest: ManifestPage<RsNodeMeta> = MetasPageBuilder::new(manifest.tg.clone())?.build()?;
     manifest.cache_references(&());
     let mut methods = String::new();
     manifest.render_all(&mut methods, &())?;
