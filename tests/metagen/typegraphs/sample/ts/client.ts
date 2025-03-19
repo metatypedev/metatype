@@ -1068,6 +1068,7 @@ export type RootCompositeArgsFnInput = {
 export type RootIdentityFnInput = {
   input: number;
 };
+export type RootGetUserFnInput = Record<string, never>;
 export type UserEmailStringEmail = string;
 export type UserPostsPostList = Array<Post>;
 export type User = {
