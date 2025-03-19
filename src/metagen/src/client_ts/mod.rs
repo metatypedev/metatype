@@ -22,6 +22,26 @@ use crate::*;
 use crate::fdk_ts::utils;
 use crate::shared::client::*;
 
+#[derive(Serialize, Deserialize, Debug, garde::Validate)]
+pub struct ClienTsGenConfig {
+    #[serde(flatten)]
+    #[garde(dive)]
+    pub base: crate::config::FdkGeneratorConfigBase,
+}
+
+impl ClienTsGenConfig {
+    pub fn from_json(json: serde_json::Value, workspace_path: &Path) -> anyhow::Result<Self> {
+        let mut config: ClienTsGenConfig = serde_json::from_value(json)?;
+        config.base.path = workspace_path.join(config.base.path);
+        config.base.typegraph_path = config
+            .base
+            .typegraph_path
+            .as_ref()
+            .map(|path| workspace_path.join(path));
+        Ok(config)
+    }
+}
+
 struct TsClientManifest {
     tg: Arc<Typegraph>,
     types: ManifestPage<TsType>,
@@ -40,26 +60,6 @@ impl TsClientManifest {
             node_metas,
             selections,
         })
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, garde::Validate)]
-pub struct ClienTsGenConfig {
-    #[serde(flatten)]
-    #[garde(dive)]
-    pub base: crate::config::FdkGeneratorConfigBase,
-}
-
-impl ClienTsGenConfig {
-    pub fn from_json(json: serde_json::Value, workspace_path: &Path) -> anyhow::Result<Self> {
-        let mut config: ClienTsGenConfig = serde_json::from_value(json)?;
-        config.base.path = workspace_path.join(config.base.path);
-        config.base.typegraph_path = config
-            .base
-            .typegraph_path
-            .as_ref()
-            .map(|path| workspace_path.join(path));
-        Ok(config)
     }
 }
 
