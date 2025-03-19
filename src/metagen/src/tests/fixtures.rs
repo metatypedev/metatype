@@ -26,7 +26,7 @@ pub async fn test_typegraph_1() -> anyhow::Result<Arc<Typegraph>> {
         })?;
 
     let tg = Arc::new(tg.pop().unwrap());
-    Ok(Arc::new(tg.into()))
+    Ok(Arc::new(tg.try_into()?))
 }
 
 // #[allow(unused)]
@@ -131,5 +131,5 @@ pub async fn test_typegraph_3() -> anyhow::Result<Arc<Typegraph>> {
         })?;
 
     let tg = Arc::new(tg.pop().unwrap());
-    Ok(Arc::new(tg.into()))
+    Ok(Arc::new(tg.try_into()?))
 }

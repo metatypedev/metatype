@@ -258,6 +258,11 @@ pub fn manifest_page(tg: &Typegraph) -> Result<ManifestPage<TsType>> {
     let mut map = IndexMap::new();
 
     for (key, ty) in tg.input_types.iter() {
+        if let Type::Object(ty) = ty {
+            if ty.properties()?.is_empty() {
+                continue;
+            }
+        }
         let typespec = get_typespec(ty)?;
         match map.insert(key.clone(), typespec) {
             Some(_) => bail!("duplicate type key: {:?}", key),

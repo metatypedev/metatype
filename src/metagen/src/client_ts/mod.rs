@@ -42,23 +42,44 @@ impl ClienTsGenConfig {
     }
 }
 
+struct Memos {
+    types: IndexMap<TypeKey, String>,
+    node_metas: IndexMap<TypeKey, String>,
+    selections: IndexMap<TypeKey, String>,
+}
+
 struct TsClientManifest {
     tg: Arc<Typegraph>,
     types: ManifestPage<TsType>,
     node_metas: ManifestPage<TsNodeMeta>,
     selections: ManifestPage<TsSelection>,
+    memos: Memos,
 }
 
 impl TsClientManifest {
     fn new(tg: Arc<Typegraph>) -> Result<TsClientManifest> {
         let types = manifest_page(&tg)?;
+        types.cache_references(&());
+        let types_memo = types.get_cached_refs();
+
         let node_metas = MetasPageBuilder::new(tg.clone())?.build()?;
+        node_metas.cache_references(&());
+        let node_metas_memo = node_metas.get_cached_refs();
+
         let selections = selections::manifest_page(&tg)?;
+        selections.cache_references(&());
+        let selections_memo = selections.get_cached_refs();
+
         Ok(Self {
             tg,
             types,
             node_metas,
             selections,
+            memos: Memos {
+                types: types_memo,
+                node_metas: node_metas_memo,
+                selections: selections_memo,
+            },
         })
     }
 }
@@ -125,12 +146,6 @@ impl crate::Plugin for Generator {
     }
 }
 
-struct Memos {
-    types: IndexMap<TypeKey, String>,
-    node_metas: IndexMap<TypeKey, String>,
-    selections: IndexMap<TypeKey, String>,
-}
-
 impl TsClientManifest {
     fn render(&self, out: &mut impl Write) -> anyhow::Result<()> {
         writeln!(
@@ -145,30 +160,35 @@ impl TsClientManifest {
 
         let mut types_buffer = String::new();
         self.types.render_all(&mut types_buffer, &())?;
-        let name_memo = self.types.get_cached_refs();
 
-        self.node_metas.render_all(out, &())?;
-        let node_metas = self.node_metas.get_cached_refs();
+        Self::render_node_metas(out, self.node_metas.render_all_buffered(&())?)?;
 
         out.write_str(&types_buffer)?;
         let _ = types_buffer;
 
         self.selections.render_all(out, &())?;
-        let selections = self.selections.get_cached_refs();
 
-        let memos = Memos {
-            types: name_memo,
-            node_metas,
-            selections,
-        };
-
-        self.render_query_graph(out, &memos)?;
+        self.render_query_graph(out)?;
 
         writeln!(out)?;
         Ok(())
     }
 
-    fn render_query_graph(&self, out: &mut impl Write, memos: &Memos) -> anyhow::Result<()> {
+    fn render_node_metas(dest: &mut impl Write, raw: String) -> std::fmt::Result {
+        write!(
+            dest,
+            r#"
+const nodeMetas = {{
+  scalar() {{
+    return {{}};
+  }},
+  {raw}
+}};
+"#
+        )
+    }
+
+    fn render_query_graph(&self, out: &mut impl Write) -> anyhow::Result<()> {
         let gql_types = get_gql_types(&self.tg)?;
 
         write!(
@@ -180,7 +200,7 @@ export class QueryGraph extends _QueryGraphBase {{
         )?;
         for (key, gql_ty) in gql_types.into_iter() {
             // TODO
-            let ty_name = memos.types.get(&key).unwrap();
+            let ty_name = self.memos.types.get(&key).unwrap();
             write!(
                 out,
                 r#"
@@ -195,7 +215,7 @@ export class QueryGraph extends _QueryGraphBase {{
             "#
         )?;
 
-        self.render_meta_functions(out, memos)?;
+        self.render_meta_functions(out)?;
 
         writeln!(
             out,
@@ -206,20 +226,20 @@ export class QueryGraph extends _QueryGraphBase {{
         Ok(())
     }
 
-    fn render_meta_functions(&self, out: &mut impl Write, memos: &Memos) -> anyhow::Result<()> {
+    fn render_meta_functions(&self, out: &mut impl Write) -> anyhow::Result<()> {
         for func in self.tg.root_functions() {
             let (_, ty) = func?;
             use heck::ToLowerCamelCase;
 
             let node_name = ty.name()?;
             let method_name = node_name.to_lower_camel_case();
-            let out_ty_name = memos.types.get(&ty.output()?.key()).unwrap();
+            let out_ty_name = self.memos.types.get(&ty.output()?.key()).unwrap();
 
             let arg_ty = ty
                 .non_empty_input()?
-                .map(|ty| memos.types.get(&ty.key()))
+                .map(|ty| self.memos.types.get(&ty.key()))
                 .flatten();
-            let select_ty = memos.selections.get(&ty.output()?.key());
+            let select_ty = self.memos.selections.get(&ty.output()?.key());
 
             let args_row = match (arg_ty, select_ty) {
                 (Some(arg_ty), Some(select_ty)) => {
@@ -239,7 +259,8 @@ export class QueryGraph extends _QueryGraphBase {{
                 (None, None) => "true",
             };
 
-            let meta_method = memos
+            let meta_method = self
+                .memos
                 .node_metas
                 .get(&ty.key())
                 .map(|str| &str[..])
@@ -253,14 +274,14 @@ export class QueryGraph extends _QueryGraphBase {{
             write!(
                 out,
                 r#"
-          {method_name}({args_row}): {node_type}<{out_ty_name}> {{
-            const inner = _selectionToNodeSet(
-              {{ "{node_name}": {args_selection} }},
-              [["{node_name}", nodeMetas.{meta_method}]],
-              "$q",
-            )[0];
-            return new {node_type}(inner);
-          }}"#
+  {method_name}({args_row}): {node_type}<{out_ty_name}> {{
+    const inner = _selectionToNodeSet(
+      {{ "{node_name}": {args_selection} }},
+      [["{node_name}", nodeMetas.{meta_method}]],
+      "$q",
+    )[0];
+    return new {node_type}(inner);
+  }}"#
             )?;
         }
 
@@ -316,6 +337,10 @@ fn e2e() -> anyhow::Result<()> {
                             .wait()
                             .await?;
                         if !status.success() {
+                            let code = std::fs::read_to_string(args.path.join("client.ts"))?;
+                            for line in code.lines().enumerate() {
+                                eprintln!("{:04}: {}", line.0, line.1);
+                            }
                             anyhow::bail!("error checking generated crate");
                         }
                         let status = tokio::process::Command::new("deno")
