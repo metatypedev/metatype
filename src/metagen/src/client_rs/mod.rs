@@ -47,7 +47,7 @@ impl ClienRsGenConfig {
     }
 }
 
-struct Memos {
+struct Maps {
     types: IndexMap<TypeKey, String>,
     node_metas: IndexMap<TypeKey, String>,
     selections: IndexMap<TypeKey, String>,
@@ -58,7 +58,7 @@ struct RsClientManifest {
     types: ManifestPage<RustType>,
     node_metas: ManifestPage<RsNodeMeta>,
     selections: ManifestPage<RustSelection>,
-    memos: Memos,
+    maps: Maps,
 }
 
 impl RsClientManifest {
@@ -80,7 +80,7 @@ impl RsClientManifest {
             types,
             node_metas,
             selections,
-            memos: Memos {
+            maps: Maps {
                 types: types_memo,
                 node_metas: node_metas_memo,
                 selections: selections_memo,
@@ -195,7 +195,7 @@ impl RsClientManifest {
         let types = self.types.render_all_buffered(&())?;
         with_types_namespace(dest, types)?;
 
-        self.selections.render_all(dest, &self.memos.types)?;
+        self.selections.render_all(dest, &self.maps.types)?;
 
         self.render_query_graph(dest)?;
 
@@ -254,13 +254,13 @@ impl QueryGraph {{
 
             let node_name = path.join("_");
             let method_name = node_name.to_snek_case();
-            let out_ty_name = self.memos.types.get(&ty.output()?.key()).unwrap();
+            let out_ty_name = self.maps.types.get(&ty.output()?.key()).unwrap();
 
             let arg_ty = ty
                 .non_empty_input()?
-                .map(|ty| self.memos.types.get(&ty.key()).unwrap());
+                .map(|ty| self.maps.types.get(&ty.key()).unwrap());
 
-            let select_ty = self.memos.selections.get(&ty.output()?.key());
+            let select_ty = self.maps.selections.get(&ty.output()?.key());
 
             let (marker_ty, node_ty) = match ty.effect() {
                 EffectType::Read => ("QueryMarker", "QueryNode"),
@@ -270,7 +270,7 @@ impl QueryGraph {{
             };
 
             let meta_method = self
-                .memos
+                .maps
                 .node_metas
                 .get(&ty.key())
                 .map(|s| s.as_str())

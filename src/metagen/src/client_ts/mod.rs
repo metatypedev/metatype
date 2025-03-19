@@ -42,7 +42,7 @@ impl ClienTsGenConfig {
     }
 }
 
-struct Memos {
+struct Maps {
     types: IndexMap<TypeKey, String>,
     node_metas: IndexMap<TypeKey, String>,
     selections: IndexMap<TypeKey, String>,
@@ -53,7 +53,7 @@ struct TsClientManifest {
     types: ManifestPage<TsType>,
     node_metas: ManifestPage<TsNodeMeta>,
     selections: ManifestPage<TsSelection>,
-    memos: Memos,
+    maps: Maps,
 }
 
 impl TsClientManifest {
@@ -75,7 +75,7 @@ impl TsClientManifest {
             types,
             node_metas,
             selections,
-            memos: Memos {
+            maps: Maps {
                 types: types_memo,
                 node_metas: node_metas_memo,
                 selections: selections_memo,
@@ -200,7 +200,7 @@ export class QueryGraph extends _QueryGraphBase {{
         )?;
         for (key, gql_ty) in gql_types.into_iter() {
             // TODO
-            let ty_name = self.memos.types.get(&key).unwrap();
+            let ty_name = self.maps.types.get(&key).unwrap();
             write!(
                 out,
                 r#"
@@ -233,13 +233,13 @@ export class QueryGraph extends _QueryGraphBase {{
 
             let node_name = ty.name()?;
             let method_name = node_name.to_lower_camel_case();
-            let out_ty_name = self.memos.types.get(&ty.output()?.key()).unwrap();
+            let out_ty_name = self.maps.types.get(&ty.output()?.key()).unwrap();
 
             let arg_ty = ty
                 .non_empty_input()?
-                .map(|ty| self.memos.types.get(&ty.key()))
+                .map(|ty| self.maps.types.get(&ty.key()))
                 .flatten();
-            let select_ty = self.memos.selections.get(&ty.output()?.key());
+            let select_ty = self.maps.selections.get(&ty.output()?.key());
 
             let args_row = match (arg_ty, select_ty) {
                 (Some(arg_ty), Some(select_ty)) => {
@@ -260,7 +260,7 @@ export class QueryGraph extends _QueryGraphBase {{
             };
 
             let meta_method = self
-                .memos
+                .maps
                 .node_metas
                 .get(&ty.key())
                 .map(|str| &str[..])
