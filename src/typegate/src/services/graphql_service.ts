@@ -119,22 +119,21 @@ export async function handleGraphQL(
       );
     }
 
-    return jsonOk(res, headers);
+    return jsonOk({ data: { data: res }, headers });
   } catch (err: any) {
-    // throw e;
     if (err instanceof BaseError) {
       return err.toResponse(headers);
     }
     if (err instanceof ResolverError) {
       logger.error(`field err: ${err.message}`);
-      return jsonError(err.message, headers, 502);
+      return jsonError({ status: 502, message: err.message, headers });
     } else if (err instanceof BadContext) {
       logger.error(`context err: ${err.message}`);
       return jsonError(
-        err.message,
+        status: Object.keys(context).length === 0 ? 401 : 403,
+        message: err.message,
         headers,
-        Object.keys(context).length === 0 ? 401 : 403,
-      );
+      });
     } else {
       logger.error(`request err: ${Deno.inspect(err)}`);
       if (err.cause) {
@@ -142,7 +141,7 @@ export async function handleGraphQL(
           Deno.inspect(err.cause, { strAbbreviateSize: 1024, depth: 10 }),
         );
       }
-      return jsonError(err.message, headers, 400);
+      return jsonError({ status: 400, message: err.message, headers });
     }
   }
 }

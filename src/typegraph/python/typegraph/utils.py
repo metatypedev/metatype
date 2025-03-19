@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json
+from dataclasses import dataclass
 from functools import reduce
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
-from typegraph.gen.exports.core import SerializeParams
-from typegraph.gen.exports.utils import ReduceEntry
+from typegraph.gen.core import SerializeParams
+from typegraph.gen.utils import ReduceEntry
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.injection import InheritDef, serialize_static_injection
-from typegraph.wit import store, wit_utils
 
 # def serialize_record_values(obj: Union[Dict[str, any], None]):
 #     return [(k, json.dumps(v)) for k, v in obj.items()] if obj is not None else None
@@ -74,10 +74,6 @@ def build_reduce_entries(node: Any, paths: List[ReduceEntry], curr_path: List[st
     raise Exception(f"unsupported type {type(node)} at {'.'.join(curr_path)}")
 
 
-def unpack_tarb64(tar_b64: str, dest: str):
-    return wit_utils.unpack_tarb64(store, tar_b64, dest)
-
-
 frozen_memo: Dict[str, FinalizationResult] = {}
 
 
@@ -89,3 +85,30 @@ def freeze_tg_output(
     return TypegraphOutput(
         name=tg_output.name, serialize=lambda _: frozen_memo[tg_output.name]
     )
+
+
+@dataclass
+class ResolvedModule:
+    module: str
+    deps: List[str]
+    func_name: str
+
+
+class Module:
+    def __init__(self, path: str, deps: Optional[List[str]] = None):
+        self.source = path
+        self.deps = deps
+
+    def import_(self, name: str):
+        return ResolvedModule(module=self.source, deps=self.deps or [], func_name=name)
+
+
+def resolve_module_params(
+    module: Union[str, ResolvedModule],
+    name: Optional[str] = None,
+    deps: Optional[List[str]] = None,
+):
+    if isinstance(module, ResolvedModule):
+        return module
+
+    return ResolvedModule(module=module, deps=deps or [], func_name=cast(str, name))

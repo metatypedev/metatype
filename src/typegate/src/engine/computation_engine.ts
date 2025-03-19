@@ -185,12 +185,12 @@ export class ComputationEngine {
       (lens as Array<Record<string, unknown>>).forEach((l, i) => {
         // Objects are replaced by empty objects `{}`.
         // It will be populated by child compute stages using values in `cache`.
-        l[field] = withEmptyObjects(res[i]);
+        (l ?? {})[field] = withEmptyObjects(res[i]);
       });
 
       // TODO
       this.lenses[stageId] = lens.flatMap((l) =>
-        batcher([(l as Record<string, unknown>)[field]]) ?? []
+        batcher([((l ?? {}) as Record<string, unknown>)[field]]) ?? []
       );
     }
 

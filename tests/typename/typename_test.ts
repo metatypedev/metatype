@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { recreateMigrations } from "../utils/migrations.ts";
+import { dropSchema } from "test-utils/database.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
 const secrets = {
@@ -65,23 +65,13 @@ Meta.test("Typename in random runtime", async (t) => {
 });
 
 Meta.test("Typename in prisma runtime", async (t) => {
+  dropSchema("typename");
   const e = await t.engine("typename/typename.py", { secrets });
-
-  await gql`
-      mutation a {
-        dropSchema
-      }
-    `
-    .expectData({ dropSchema: 0 })
-    .on(e);
-  await recreateMigrations(e);
 
   await t.should("allow querying typename in an object", async () => {
     await gql`
       mutation {
-        createUser (data: {
-            id: 1
-          }) {
+        createUser(data: { id: 1 }) {
           __typename
           id
         }
@@ -106,7 +96,10 @@ Meta.test("Typename on union", async (t) => {
         getRgbColor {
           color {
             ... on RgbColor {
-              r g b __typename
+              r
+              g
+              b
+              __typename
             }
           }
         }

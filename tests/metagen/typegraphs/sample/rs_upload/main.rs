@@ -9,25 +9,24 @@ use metagen_client::prelude::*;
 
 fn main() -> Result<(), BoxErr> {
     let port = std::env::var("TG_PORT")?;
-    let api1 = QueryGraph::new(format!("http://localhost:{port}/sample").parse()?);
+    let addr: Url = format!("http://localhost:{port}/sample").parse()?;
+    let api1 = query_graph();
 
     // blocking
     let (res2, res3) = {
-        let gql_sync = api1.graphql_sync();
+        let gql_sync = transports::graphql_sync(&api1, addr.clone());
 
-        let res3 = gql_sync.mutation((api1.upload(types::RootUploadFnInputPartial {
-            file: Some(
-                File::from_bytes("hello".as_bytes())
-                    .mime_type("text/plain")
-                    .try_into()?,
-            ),
+        let res3 = gql_sync.mutation((api1.upload(types::RootUploadFnInput {
+            file: File::from_bytes("hello".as_bytes())
+                .mime_type("text/plain")
+                .try_into()?,
             path: Some("files/hello.txt".to_string()),
         }),))?;
 
         let prepared_m = gql_sync.prepare_mutation(|args| {
             (api1.upload_many(args.get("files", |files: Vec<FileId>| {
-                types::RootUploadManyFnInputPartial {
-                    files: Some(files),
+                types::RootUploadManyFnInput {
+                    files,
                     prefix: Some("assets/".to_string()),
                 }
             })),)
@@ -50,15 +49,15 @@ fn main() -> Result<(), BoxErr> {
         .enable_all()
         .build()?
         .block_on(async move {
-            let gql = api1.graphql();
+            let gql = client::transports::graphql(&api1, addr);
 
             let prepared_m = gql.prepare_mutation(|args| {
-                (api1.upload(
-                    args.get("file", |file: FileId| types::RootUploadFnInputPartial {
-                        file: Some(file),
+                (
+                    api1.upload(args.get("file", |file: FileId| types::RootUploadFnInput {
+                        file,
                         path: Some("files/hello.txt".to_string()),
-                    }),
-                ),)
+                    })),
+                )
             })?;
 
             let file = File::from_bytes("hello".as_bytes()).mime_type("text/plain");
@@ -83,8 +82,8 @@ fn main() -> Result<(), BoxErr> {
                     .try_into()?;
 
             let res4 = gql
-                .mutation((api1.upload_many(types::RootUploadManyFnInputPartial {
-                    files: Some(vec![hello_path, hello_stream]),
+                .mutation((api1.upload_many(types::RootUploadManyFnInput {
+                    files: vec![hello_path, hello_stream],
                     prefix: Some("assets/".to_string()),
                 }),))
                 .await?;

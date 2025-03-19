@@ -202,8 +202,10 @@ impl<A: TaskAction + 'static> Handler<UpdateDependencies> for WatcherActor<A> {
     type Result = ();
 
     fn handle(&mut self, msg: UpdateDependencies, _ctx: &mut Self::Context) -> Self::Result {
-        let TypegraphData { path, value, .. } = msg.0;
-        self.dependency_graph.update_typegraph(path, &value)
+        let TypegraphData {
+            path, artifacts, ..
+        } = msg.0;
+        self.dependency_graph.update_typegraph(path, &artifacts)
     }
 }
 

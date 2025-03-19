@@ -1,18 +1,21 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::Materializer;
 use indexmap::IndexMap;
+use tg_schema::Materializer;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
+use crate::sdk::{
+    core::RuntimeId,
+    runtimes::{self as sdk},
+};
 use crate::typegraph::TypegraphContext;
-use crate::wit::runtimes::{self as wit, RuntimeId};
 
 #[derive(Debug)]
 pub enum GraphqlMaterializer {
-    Query(wit::MaterializerGraphqlQuery),
-    Mutation(wit::MaterializerGraphqlQuery),
+    Query(sdk::MaterializerGraphqlQuery),
+    Mutation(sdk::MaterializerGraphqlQuery),
 }
 
 impl MaterializerConverter for GraphqlMaterializer {
@@ -20,7 +23,7 @@ impl MaterializerConverter for GraphqlMaterializer {
         &self,
         c: &mut TypegraphContext,
         runtime_id: RuntimeId,
-        effect: wit::Effect,
+        effect: sdk::Effect,
     ) -> Result<Materializer> {
         let runtime = c.register_runtime(runtime_id)?;
         let (name, data) = match self {

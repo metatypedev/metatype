@@ -23,14 +23,15 @@ function _selectionToNodeSet(
 
     const { argumentTypes, subNodes, variants, inputFiles } = metaFn();
 
-    const nodeInstances =
-      nodeSelection instanceof Alias
-        ? nodeSelection.aliases()
-        : { [nodeName]: nodeSelection };
+    const nodeInstances = nodeSelection instanceof Alias
+      ? nodeSelection.aliases()
+      : { [nodeName]: nodeSelection };
 
-    for (const [instanceName, instanceSelection] of Object.entries(
-      nodeInstances,
-    )) {
+    for (
+      const [instanceName, instanceSelection] of Object.entries(
+        nodeInstances,
+      )
+    ) {
       if (!instanceSelection && !selectAll) {
         continue;
       }
@@ -137,10 +138,10 @@ function _selectionToNodeSet(
             const variant_select = subSelections[variantTy];
             const nodes = variant_select
               ? _selectionToNodeSet(
-                  variant_select as Selection,
-                  variant_meta.subNodes,
-                  `${parentPath}.${instanceName}.variant(${variantTy})`,
-                )
+                variant_select as Selection,
+                variant_meta.subNodes,
+                `${parentPath}.${instanceName}.variant(${variantTy})`,
+              )
               : [];
             nodes.push({
               nodeName: "__typename",
@@ -207,15 +208,14 @@ export class MutationNode<Out> {
   }
 }
 
-type SelectNodeOut<T> = T extends QueryNode<infer O> | MutationNode<infer O>
-  ? O
+type SelectNodeOut<T> = T extends QueryNode<infer O> | MutationNode<infer O> ? O
   : never;
-type QueryDocOut<T> =
-  T extends Record<string, QueryNode<unknown> | MutationNode<unknown>>
-    ? {
-        [K in keyof T]: SelectNodeOut<T[K]>;
-      }
-    : never;
+type QueryOut<T> = T extends
+  Record<string, QueryNode<unknown> | MutationNode<unknown>> ? {
+    [K in keyof T]: SelectNodeOut<T[K]>;
+  }
+  : T extends QueryNode<unknown> | MutationNode<unknown> ? SelectNodeOut<T>
+  : never;
 
 type TypePath = ("?" | "[]" | `.${string}`)[];
 type ValuePath = ("" | `[${number}]` | `.${string}`)[];
@@ -448,10 +448,9 @@ function convertQueryNodeGql(
   variables: Map<string, NodeArgValue>,
   files: Map<string, File>,
 ) {
-  let out =
-    node.nodeName == node.instanceName
-      ? node.nodeName
-      : `${node.instanceName}: ${node.nodeName}`;
+  let out = node.nodeName == node.instanceName
+    ? node.nodeName
+    : `${node.instanceName}: ${node.nodeName}`;
 
   const args = node.args;
   if (args && Object.keys(args).length > 0) {
@@ -481,29 +480,35 @@ function convertQueryNodeGql(
   const subNodes = node.subNodes;
   if (subNodes) {
     if (Array.isArray(subNodes)) {
-      out = `${out} { ${subNodes
-        .map((node) =>
-          convertQueryNodeGql(typeToGqlTypeMap, node, variables, files),
-        )
-        .join(" ")} }`;
+      out = `${out} { ${
+        subNodes
+          .map((node) =>
+            convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+          )
+          .join(" ")
+      } }`;
     } else {
-      out = `${out} { ${Object.entries(subNodes)
-        .map(([variantTy, subNodes]) => {
-          let gqlTy = typeToGqlTypeMap[variantTy];
-          if (!gqlTy) {
-            throw new Error(
-              `unreachable: no graphql type found for variant ${variantTy}`,
-            );
-          }
-          gqlTy = gqlTy.replace(/[!]+$/, "");
+      out = `${out} { ${
+        Object.entries(subNodes)
+          .map(([variantTy, variantSubNodes]) => {
+            let gqlTy = typeToGqlTypeMap[variantTy];
+            if (!gqlTy) {
+              throw new Error(
+                `unreachable: no graphql type found for variant ${variantTy}`,
+              );
+            }
+            gqlTy = gqlTy.replace(/[!]+$/, "");
 
-          return `... on ${gqlTy} {${subNodes
-            .map((node) =>
-              convertQueryNodeGql(typeToGqlTypeMap, node, variables, files),
-            )
-            .join(" ")}}`;
-        })
-        .join(" ")} }`;
+            return `... on ${gqlTy} {${
+              variantSubNodes
+                .map((node) =>
+                  convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+                )
+                .join(" ")
+            }}`;
+          })
+          .join(" ")
+      } }`;
     }
   }
   return out;
@@ -637,7 +642,7 @@ export class GraphQLTransport {
     private typeToGqlTypeMap: Record<string, string>,
   ) {}
 
-  async #request(
+  protected async request(
     doc: string,
     variables: Record<string, unknown>,
     options: GraphQlTransportOptions,
@@ -661,8 +666,10 @@ export class GraphQLTransport {
   /**
    * Make a query request to the typegraph.
    */
-  async query<Doc extends Record<string, QueryNode<unknown>>>(
-    query: Doc,
+  async query<
+    Q extends QueryNode<unknown> | Record<string, QueryNode<unknown>>,
+  >(
+    query: Q,
     {
       options,
       name = "",
@@ -670,10 +677,11 @@ export class GraphQLTransport {
       options?: GraphQlTransportOptions;
       name?: string;
     } = {},
-  ): Promise<QueryDocOut<Doc>> {
+  ): Promise<QueryOut<Q>> {
+    const isNode = query instanceof QueryNode;
     const { variables, doc } = buildGql(
       this.typeToGqlTypeMap,
-      Object.fromEntries(
+      isNode ? { value: query.inner() } : Object.fromEntries(
         Object.entries(query).map(([key, val]) => [
           key,
           (val as QueryNode<unknown>).inner(),
@@ -682,18 +690,22 @@ export class GraphQLTransport {
       "query",
       name,
     );
-    return (await this.#request(
-      doc,
-      variables,
-      options ?? {},
-    )) as QueryDocOut<Doc>;
+    let result = await this.request(doc, variables, options ?? {});
+
+    if (isNode) {
+      result = (result as { value: SelectNodeOut<Q> }).value;
+    }
+
+    return result as QueryOut<Q>;
   }
 
   /**
    * Make a mutation request to the typegraph.
    */
-  async mutation<Doc extends Record<string, MutationNode<unknown>>>(
-    query: Doc,
+  async mutation<
+    Q extends MutationNode<unknown> | Record<string, MutationNode<unknown>>,
+  >(
+    query: Q,
     {
       options,
       name = "",
@@ -701,10 +713,11 @@ export class GraphQLTransport {
       options?: GraphQlTransportOptions;
       name?: string;
     } = {},
-  ): Promise<QueryDocOut<Doc>> {
+  ): Promise<QueryOut<Q>> {
+    const isNode = query instanceof MutationNode;
     const { variables, doc, files } = buildGql(
       this.typeToGqlTypeMap,
-      Object.fromEntries(
+      isNode ? { value: query.inner() } : Object.fromEntries(
         Object.entries(query).map(([key, val]) => [
           key,
           (val as MutationNode<unknown>).inner(),
@@ -713,12 +726,13 @@ export class GraphQLTransport {
       "mutation",
       name,
     );
-    return (await this.#request(
-      doc,
-      variables,
-      options ?? {},
-      files,
-    )) as QueryDocOut<Doc>;
+    let result = await this.request(doc, variables, options ?? {}, files);
+
+    if (isNode) {
+      result = (result as { value: SelectNodeOut<Q> }).value;
+    }
+
+    return result as QueryOut<Q>;
   }
 
   /**
@@ -726,14 +740,13 @@ export class GraphQLTransport {
    */
   prepareQuery<
     T extends JsonObject,
-    Doc extends Record<string, QueryNode<unknown>>,
+    Q extends QueryNode<unknown> | Record<string, QueryNode<unknown>>,
   >(
-    fun: (args: PreparedArgs<T>) => Doc,
+    fun: (args: PreparedArgs<T>) => Q,
     { name = "" }: { name?: string } = {},
-  ): PreparedRequest<T, Doc> {
+  ): PreparedRequest<T, Q> {
     return new PreparedRequest(
-      this.address,
-      this.options,
+      (doc, vars, opts) => this.request(doc, vars, opts),
       this.typeToGqlTypeMap,
       fun,
       "query",
@@ -746,14 +759,13 @@ export class GraphQLTransport {
    */
   prepareMutation<
     T extends JsonObject,
-    Q extends Record<string, MutationNode<unknown>>,
+    Q extends MutationNode<unknown> | Record<string, MutationNode<unknown>>,
   >(
     fun: (args: PreparedArgs<T>) => Q,
     { name = "" }: { name?: string } = {},
   ): PreparedRequest<T, Q> {
     return new PreparedRequest(
-      this.address,
-      this.options,
+      (doc, vars, opts) => this.request(doc, vars, opts),
       this.typeToGqlTypeMap,
       fun,
       "mutation",
@@ -769,24 +781,36 @@ export class GraphQLTransport {
  */
 export class PreparedRequest<
   T extends JsonObject,
-  Doc extends Record<string, QueryNode<unknown> | MutationNode<unknown>>,
+  Q extends
+    | QueryNode<unknown>
+    | MutationNode<unknown>
+    | Record<string, QueryNode<unknown> | MutationNode<unknown>>,
 > {
   public doc: string;
   #mappings: Record<string, unknown>;
+  private singleNode: boolean;
 
   constructor(
-    private address: URL,
-    private options: GraphQlTransportOptions,
+    // private address: URL,
+    // private options: GraphQlTransportOptions,
+    private gqlFn: (
+      doc: string,
+      variables: Record<string, unknown>,
+      opts: GraphQlTransportOptions,
+    ) => Promise<unknown>,
     typeToGqlTypeMap: Record<string, string>,
-    fun: (args: PreparedArgs<T>) => Doc,
+    fun: (args: PreparedArgs<T>) => Q,
     ty: "query" | "mutation",
     name: string = "",
   ) {
     const args = new PreparedArgs<T>();
     const dryRunNode = fun(args);
+    const isSingleNode = dryRunNode instanceof QueryNode ||
+      dryRunNode instanceof MutationNode;
+    // FIXME: file support for prepared requets
     const { doc, variables } = buildGql(
       typeToGqlTypeMap,
-      Object.fromEntries(
+      isSingleNode ? { value: dryRunNode.inner() } : Object.fromEntries(
         Object.entries(dryRunNode).map(([key, val]) => [
           key,
           (val as MutationNode<unknown>).inner(),
@@ -797,6 +821,7 @@ export class PreparedRequest<
     );
     this.doc = doc;
     this.#mappings = variables;
+    this.singleNode = isSingleNode;
   }
 
   resolveVariables(args: T, mappings: Record<string, unknown>) {
@@ -816,27 +841,19 @@ export class PreparedRequest<
   /**
    * Execute the prepared request.
    */
-  async perform(
-    args: T,
-    opts?: GraphQlTransportOptions,
-  ): Promise<{
-    [K in keyof Doc]: SelectNodeOut<Doc[K]>;
-  }> {
+  async perform(args: T, opts?: GraphQlTransportOptions): Promise<QueryOut<Q>> {
     const resolvedVariables = this.resolveVariables(args, this.#mappings);
     // console.log(this.doc, {
     //   resolvedVariables,
     //   mapping: this.#mappings,
     // });
-    const res = await fetchGql(this.address, this.doc, resolvedVariables, {
-      ...this.options,
+    let result = await this.gqlFn(this.doc, resolvedVariables, {
       ...opts,
     });
-    if ("errors" in res) {
-      throw new (Error as ErrorPolyfill)("graphql errors on response", {
-        cause: res.errors,
-      });
+    if (this.singleNode) {
+      result = (result as { value: SelectNodeOut<Q> }).value;
     }
-    return res.data as QueryDocOut<Doc>;
+    return result as QueryOut<Q>;
   }
 }
 
@@ -855,23 +872,28 @@ type ErrorPolyfill = new (msg: string, payload: unknown) => Error;
 
 /* QueryGraph section */
 
-class _QueryGraphBase {
-  constructor(private typeNameMapGql: Record<string, string>) {}
-
+export class Transports {
   /**
    * Get the {@link GraphQLTransport} for the typegraph.
    */
-  graphql(addr: URL | string, options?: GraphQlTransportOptions) {
+  static graphql(
+    qg: _QueryGraphBase,
+    addr: URL | string,
+    options?: GraphQlTransportOptions,
+  ) {
     return new GraphQLTransport(
       new URL(addr),
       options ?? {},
-      this.typeNameMapGql,
+      qg.typeNameMapGql,
     );
   }
 }
 
-// -------------------------------------------------- //
+class _QueryGraphBase {
+  constructor(public typeNameMapGql: Record<string, string>) {}
+}
 
+// -------------------------------------------------- //
 
 const nodeMetas = {
   scalar() {
@@ -911,6 +933,7 @@ export type RootUploadManyFnInput = {
   prefix?: RootUploadManyFnInputPrefixString25e51Optional;
   files: RootUploadManyFnInputFilesFileBf9b7List;
 };
+export type RootUploadFnOutput = boolean;
 
 
 export class QueryGraph extends _QueryGraphBase {
@@ -923,20 +946,20 @@ export class QueryGraph extends _QueryGraphBase {
     });
   }
     
-  upload(args: RootUploadFnInput | PlaceholderArgs<RootUploadFnInput>) {
+  upload(args: RootUploadFnInput | PlaceholderArgs<RootUploadFnInput>): MutationNode<RootUploadFnOutput> {
     const inner = _selectionToNodeSet(
       { "upload": args },
       [["upload", nodeMetas.RootUploadFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<boolean>;
+    return new MutationNode(inner);
   }
-  uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>) {
+  uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>): MutationNode<RootUploadFnOutput> {
     const inner = _selectionToNodeSet(
       { "uploadMany": args },
       [["uploadMany", nodeMetas.RootUploadManyFn]],
       "$q",
     )[0];
-    return new MutationNode(inner) as MutationNode<boolean>;
+    return new MutationNode(inner);
   }
 }

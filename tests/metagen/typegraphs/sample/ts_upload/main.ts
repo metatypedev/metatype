@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { QueryGraph } from "./client.ts";
+import { QueryGraph, Transports } from "./client.ts";
 
 const port = Deno.env.get("TG_PORT");
 
 const qg = new QueryGraph();
-const gql = qg.graphql(`http://localhost:${port}/sample`);
+const gql = Transports.graphql(qg, `http://localhost:${port}/sample`);
 
 const res1 = await gql.mutation({
   upload: qg.upload({

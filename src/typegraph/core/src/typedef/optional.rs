@@ -3,8 +3,8 @@
 
 use std::hash::Hash as _;
 
-use common::typegraph::{OptionalTypeData, TypeNode};
 use errors::Result;
+use tg_schema::{OptionalTypeData, TypeNode};
 
 use crate::{
     conversion::{
@@ -12,9 +12,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeOptional,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, Optional, TypeDefData, TypeId},
-    wit::core::TypeOptional,
 };
 
 impl TypeConversion for Optional {

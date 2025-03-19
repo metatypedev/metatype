@@ -67,6 +67,7 @@ export type ObjectNode = {
   properties: {
     [k: string]: number;
   };
+  additionalProps?: boolean;
   required?: string[];
   id?: string[];
 };

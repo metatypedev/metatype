@@ -9,7 +9,7 @@ export default {
     inherit: "ci",
     desc: "Shorthand for `tools/test.ts`",
     fn: async ($) => {
-      if (await testE2eCli($.argv) != 0) {
+      if ((await testE2eCli($.argv)) != 0) {
         throw new Error("tests failed");
       }
     },
@@ -34,8 +34,20 @@ export default {
                 --exclude typegate
                 --exclude typegate_engine
                 --exclude typegraph_core
-                --exclude metagen_fdk_rust_static
-                --exclude client_rs_static`;
+                --exclude identities_fdk
+                --exclude sample_client
+                --exclude sample_client_upload
+                --exclude wasm_wire_rust
+                --exclude wasm_reflected_rust
+                --exclude metagen_rs_fdk
+                --exclude metagen_fdk_rs_static`;
+    },
+  },
+  "test-codegen": {
+    inherit: "ci",
+    workingDir: "./src/typegraph/specs/codegen",
+    async fn($) {
+      await $`bash -c "deno test --allow-env --allow-read --allow-ffi --allow-run"`;
     },
   },
 } satisfies Record<string, DenoTaskDefArgs>;

@@ -23,7 +23,7 @@ Meta.test("Policies", async (t) => {
   const crypto = t.typegate.cryptoKeys;
   const e = await t.engine("policies/policies.py", {
     secrets: await genSecretKey(config),
-    // typegraph: "policies",
+    typegraph: "policies",
   });
 
   await t.should("have public access", async () => {
@@ -46,6 +46,19 @@ Meta.test("Policies", async (t) => {
     await gql`
       query {
         pol_deny(a: 1) {
+          a
+        }
+      }
+    `
+      .expectErrorContains("Authorization failed")
+      .expectStatus(401)
+      .on(e);
+  });
+
+  await t.should("have no access to internal", async () => {
+    await gql`
+      query {
+        pol_internal(a: 1) {
           a
         }
       }

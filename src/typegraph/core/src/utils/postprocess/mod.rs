@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::core::SerializeParams;
-use common::typegraph::Typegraph;
+use crate::sdk::core::SerializeParams;
 use std::path::PathBuf;
 use substantial_rt::SubstantialProcessor;
+use tg_schema::Typegraph;
 
 pub mod deno_rt;
 pub mod naming;

@@ -675,7 +675,7 @@ class ArgumentCollector {
     }
 
     const unexpectedProps = Object.keys(fieldByKeys);
-    if (unexpectedProps.length > 0) {
+    if (!typ.additionalProps && unexpectedProps.length > 0) {
       throw new UnexpectedPropertiesError(
         unexpectedProps,
         this.currentNodeDetails,

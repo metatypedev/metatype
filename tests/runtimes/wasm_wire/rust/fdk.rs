@@ -9,6 +9,7 @@ pub mod wit {
     wit_bindgen::generate!({
         pub_export_macro: true,
         
+
         inline: "package metatype:wit-wire;
 
 interface typegate-wire {
@@ -84,6 +85,12 @@ pub struct MatBuilder {
     handlers: HashMap<String, ErasedHandler>,
 }
 
+impl Default for MatBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MatBuilder {
     pub fn new() -> Self {
         Self {
@@ -109,7 +116,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.0";
+        static MT_VERSION: &str = "0.5.1-rc.0";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -127,7 +134,11 @@ impl Router {
         let Some(handler) = self.handlers.get(mat_trait) else {
             return Err(HandleErr::NoHandler);
         };
-        let cx = Ctx {};
+        let qg = query_graph();
+        let cx = Ctx {
+            host: transports::hostcall(&qg),
+            qg,
+        };
         (handler.handler_fn)(&req.in_json, cx)
     }
 }
@@ -138,7 +149,11 @@ thread_local! {
     pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
-pub struct Ctx {}
+
+pub struct Ctx {
+    pub qg: QueryGraph,
+    pub host: metagen_client::hostcall::HostcallTransport,
+}
 
 impl Ctx {
     pub fn gql<O>(
@@ -217,7 +232,141 @@ macro_rules! init_mat {
     };
 }
 // gen-static-end
+use core::marker::PhantomData;
+use metagen_client::prelude::*;
+
+pub mod transports {
+    use super::*;
+
+
+
+    pub fn hostcall(qg: &QueryGraph) -> metagen_client::hostcall::HostcallTransport {
+        metagen_client::hostcall::HostcallTransport::new(
+            std::sync::Arc::new(super::hostcall),
+            qg.ty_to_gql_ty_map.clone(),
+        )
+    }
+}
+
+//
+// --- --- QueryGraph types --- --- //
+//
+
+#[derive(Clone)]
+pub struct QueryGraph {
+    ty_to_gql_ty_map: TyToGqlTyMap,
+}
+
+//
+// --- --- Typegraph types --- --- //
+//
+
+#[allow(non_snake_case)]
+mod node_metas {
+    use super::*;
+    pub fn scalar() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: None,
+            input_files: None,
+        }
+    }    
+    pub fn Add() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("a".into(), "AddArgsAFloat".into()),
+                    ("b".into(), "AddArgsAFloat".into()),
+                ].into()
+            ),
+            ..scalar()
+        }
+    }
+    pub fn Range() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("a".into(), "RangeArgsAAddOutputOptional".into()),
+                    ("b".into(), "AddOutput".into()),
+                ].into()
+            ),
+            ..scalar()
+        }
+    }
+    pub fn ProfileCategoryStruct() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("tag".into(), scalar as NodeMetaFn),
+                    ("value".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Profile() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("level".into(), scalar as NodeMetaFn),
+                    ("attributes".into(), scalar as NodeMetaFn),
+                    ("category".into(), ProfileCategoryStruct as NodeMetaFn),
+                    ("metadatas".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Entity() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("name".into(), scalar as NodeMetaFn),
+                    ("age".into(), scalar as NodeMetaFn),
+                    ("profile".into(), Profile as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RecordCreation() -> NodeMeta {
+        NodeMeta {
+            ..Entity()
+        }
+    }
+    pub fn Identity() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("name".into(), "EntityNameString".into()),
+                    ("age".into(), "RangeArgsAAddOutputOptional".into()),
+                    ("profile".into(), "Profile".into()),
+                ].into()
+            ),
+            ..Entity()
+        }
+    }
+    pub fn RootRandomFn() -> NodeMeta {
+        NodeMeta {
+            ..Entity()
+        }
+    }
+    pub fn HundredRandom() -> NodeMeta {
+        NodeMeta {
+            ..Entity()
+        }
+    }
+
+}
 use types::*;
+#[allow(unused)]
 pub mod types {
     pub type AddArgsAFloat = f64;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
@@ -269,6 +418,158 @@ pub mod types {
         pub profile: Profile,
     }
     pub type RecordCreationOutput = Vec<Entity>;
+}
+#[allow(unused)]
+pub mod return_types {
+    use super::types::*;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct ProfileCategoryStructPartial {
+        pub tag: Option<ProfileCategoryStructTagStringEnum>,
+        pub value: ProfileCategoryStructValueEntityNameStringOptional,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct ProfilePartial {
+        pub level: Option<ProfileLevelStringEnum>,
+        pub attributes: Option<ProfileAttributesProfileAttributesStringEnumList>,
+        pub category: Option<ProfileCategoryStructPartial>,
+        pub metadatas: Option<ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct EntityPartial {
+        pub name: Option<EntityNameString>,
+        pub age: RangeArgsAAddOutputOptional,
+        pub profile: Option<ProfilePartial>,
+    }
+    pub type RecordCreationOutput = Vec<EntityPartial>;
+}
+#[derive(Default, Debug)]
+pub struct ProfileCategoryStructSelections<ATy = NoAlias> {
+    pub tag: ScalarSelect<ATy>,
+    pub value: ScalarSelect<ATy>,
+}
+impl_selection_traits!(ProfileCategoryStructSelections, tag, value);
+#[derive(Default, Debug)]
+pub struct ProfileMetadatasEitherSelections<ATy = NoAlias> {
+    pub phantom: std::marker::PhantomData<ATy>,
+}
+impl_union_selection_traits!(ProfileMetadatasEitherSelections);
+#[derive(Default, Debug)]
+pub struct ProfileSelections<ATy = NoAlias> {
+    pub level: ScalarSelect<ATy>,
+    pub attributes: ScalarSelect<ATy>,
+    pub category: CompositeSelect<ProfileCategoryStructSelections<ATy>, ATy>,
+    pub metadatas: ScalarSelect<ATy>,
+}
+impl_selection_traits!(ProfileSelections, level, attributes, category, metadatas);
+#[derive(Default, Debug)]
+pub struct EntitySelections<ATy = NoAlias> {
+    pub name: ScalarSelect<ATy>,
+    pub age: ScalarSelect<ATy>,
+    pub profile: CompositeSelect<ProfileSelections<ATy>, ATy>,
+}
+impl_selection_traits!(EntitySelections, name, age, profile);
+
+pub fn query_graph() -> QueryGraph {
+    QueryGraph {
+        ty_to_gql_ty_map: std::sync::Arc::new([
+        
+            ("AddArgsAFloat".into(), "Float!".into()),
+            ("AddOutput".into(), "Int!".into()),
+            ("RangeArgsAAddOutputOptional".into(), "Int".into()),
+            ("EntityNameString".into(), "String!".into()),
+            ("Profile".into(), "profile!".into()),
+        ].into()),
+    }
+}
+impl QueryGraph {
+
+    pub fn add(
+        &self,
+        args: impl Into<NodeArgs<AddArgs>>
+    ) -> QueryNode<AddOutput>
+    {
+        let nodes = selection_to_node_set(
+            SelectionErasedMap(
+                [(
+                    "add".into(),
+                    SelectionErased::ScalarArgs(args.into().into()),
+                )]
+                .into(),
+            ),
+            &[
+                ("add".into(), node_metas::Add as NodeMetaFn),
+            ].into(),
+            "$q".into(),
+        )
+        .unwrap();
+        QueryNode(nodes.into_iter().next().unwrap(), PhantomData)
+    }
+    pub fn range(
+        &self,
+        args: impl Into<NodeArgs<RangeArgs>>
+    ) -> QueryNode<RangeOutput>
+    {
+        let nodes = selection_to_node_set(
+            SelectionErasedMap(
+                [(
+                    "range".into(),
+                    SelectionErased::ScalarArgs(args.into().into()),
+                )]
+                .into(),
+            ),
+            &[
+                ("range".into(), node_metas::Range as NodeMetaFn),
+            ].into(),
+            "$q".into(),
+        )
+        .unwrap();
+        QueryNode(nodes.into_iter().next().unwrap(), PhantomData)
+    }
+    pub fn record(
+        &self,
+    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, return_types::RecordCreationOutput>
+    {
+        UnselectedNode {
+            root_name: "record".into(),
+            root_meta: node_metas::RecordCreation,
+            args: NodeArgsErased::None,
+            _marker: PhantomData,
+        }
+    }
+    pub fn identity(
+        &self,
+        args: impl Into<NodeArgs<Entity>>
+    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, return_types::EntityPartial>
+    {
+        UnselectedNode {
+            root_name: "identity".into(),
+            root_meta: node_metas::Identity,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn random(
+        &self,
+    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, return_types::EntityPartial>
+    {
+        UnselectedNode {
+            root_name: "random".into(),
+            root_meta: node_metas::RootRandomFn,
+            args: NodeArgsErased::None,
+            _marker: PhantomData,
+        }
+    }
+    pub fn hundred(
+        &self,
+    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, return_types::RecordCreationOutput>
+    {
+        UnselectedNode {
+            root_name: "hundred".into(),
+            root_meta: node_metas::HundredRandom,
+            args: NodeArgsErased::None,
+            _marker: PhantomData,
+        }
+    }
 }
 pub mod stubs {
     use super::*;

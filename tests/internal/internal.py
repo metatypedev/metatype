@@ -32,6 +32,6 @@ def internal(g: Graph):
             out,
             module="py/logic.py",
             name="remote_sum",
-            deps=["./py/logic_types.py"],
+            deps=["./py/fdk.py"],
         ).with_policy(public),
     )

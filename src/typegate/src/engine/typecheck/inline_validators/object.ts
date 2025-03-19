@@ -9,7 +9,7 @@ import {
 import { check } from "./common.ts";
 
 export function generateObjectValidator(
-  _typeNode: ObjectNode,
+  typeNode: ObjectNode,
   varName: string,
   path: string,
   keys: {
@@ -30,6 +30,7 @@ export function generateObjectValidator(
     `for (const key of ${varKeys}) {`,
     `  if (${varRequired}.has(key)) { ${varRequired}.delete(key); continue; }`,
     `  if (${varOptional}.has(key)) { ${varOptional}.delete(key); continue; }`,
+    `  if (${typeNode.additionalProps}) { continue; }`,
     `  throw new Error(\`At "${path}": unexpected key: \${key}\`);`,
     `}`,
     check(

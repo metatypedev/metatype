@@ -3,8 +3,8 @@
 
 use std::hash::Hash as _;
 
-use common::typegraph::{IntegerTypeData, TypeNode};
 use errors::Result;
+use tg_schema::{IntegerTypeData, TypeNode};
 
 use crate::{
     conversion::{
@@ -12,9 +12,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeInteger,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, Integer, TypeDefData},
-    wit::core::TypeInteger,
 };
 
 impl TypeConversion for Integer {

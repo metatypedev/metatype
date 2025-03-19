@@ -40,11 +40,9 @@ export default {
         for (const arg of $.argv) {
           if (!files[arg]) {
             console.log(
-              `Unknown env "${arg}", available: ${
-                Object.keys(files).join(
-                  ", ",
-                )
-              } or "all".`,
+              `Unknown env "${arg}", available: ${Object.keys(files).join(
+                ", ",
+              )} or "all".`,
             );
             Deno.exit(1);
           }
@@ -53,18 +51,14 @@ export default {
       }
 
       if (on.size > 0) {
-        await $.raw`${DOCKER_CMD} compose ${
-          [...on].flatMap((file) => [
-            "-f",
-            file,
-          ])
-        } up -d --remove-orphans`;
+        await $.raw`${DOCKER_CMD} compose ${[...on].flatMap((file) => [
+          "-f",
+          file,
+        ])} up -d --remove-orphans`;
       } else {
-        await $.raw`${DOCKER_CMD} compose ${
-          Object.values(files).flatMap(
-            (file) => ["-f", file],
-          )
-        } down --remove-orphans --volumes`;
+        await $.raw`${DOCKER_CMD} compose ${Object.values(files).flatMap(
+          (file) => ["-f", file],
+        )} down --remove-orphans --volumes`;
       }
     },
   },
@@ -111,7 +105,11 @@ export default {
   "dev-gate3": {
     desc: "Launch the typegate from meta-cli cmd.",
     inherit: "dev-gate1",
-    fn: ($) => $`cargo run -p meta-cli -F typegate -- typegate`,
+    fn: ($) => $`cargo run -p meta-cli -F typegate -- typegate --main-url file://${
+        $.workingDir.join('./src/typegate/src/main.ts').resolve()
+      } --import-map-url file://${
+        $.workingDir.join('./import_map.json').resolve()
+      }`,
   },
 
   "dev-gate4": {

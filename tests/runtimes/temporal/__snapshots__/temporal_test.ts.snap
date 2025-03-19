@@ -94,7 +94,7 @@ snapshot[`Typegraph using temporal 1`] = `
       },
       {
         "type": "object",
-        "title": "struct_ee884",
+        "title": "root_query_fn_input",
         "properties": {
           "workflow_id": 3,
           "run_id": 3,

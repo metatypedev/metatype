@@ -5,8 +5,8 @@ use std::borrow::Cow;
 
 use super::fs::FsContext;
 use color_eyre::Result;
-use common::typegraph::Typegraph;
 use metagen::{GeneratorInputOrder, GeneratorInputResolved, InputResolverSync};
+use tg_schema::Typegraph;
 
 #[derive(Clone)]
 pub struct RawTgResolver {

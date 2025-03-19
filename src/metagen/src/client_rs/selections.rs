@@ -3,7 +3,7 @@
 
 use std::fmt::Write;
 
-use common::typegraph::*;
+use tg_schema::*;
 
 use super::utils::*;
 use crate::{interlude::*, shared::client::*, shared::types::*};
@@ -77,6 +77,9 @@ impl RsNodeSelectionsRenderer {
                     r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, NoAlias>,"#
                 )?,
             };
+        }
+        if props.is_empty() {
+            writeln!(dest, r#"    pub phantom: std::marker::PhantomData<ATy>,"#)?
         }
         writeln!(dest, "}}")?;
         write!(dest, "impl_union_selection_traits!({ty_name}")?;

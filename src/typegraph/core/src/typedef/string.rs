@@ -3,8 +3,8 @@
 
 use std::hash::Hash;
 
-use common::typegraph::{StringFormat, StringTypeData, TypeNode};
 use errors::Result;
+use tg_schema::{StringFormat, StringTypeData, TypeNode};
 
 use crate::{
     conversion::{
@@ -12,9 +12,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeString,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, StringT, TypeDefData},
-    wit::core::TypeString,
 };
 
 impl TypeConversion for StringT {

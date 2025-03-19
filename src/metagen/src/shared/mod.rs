@@ -8,7 +8,7 @@ pub mod client;
 pub mod files;
 pub mod types;
 
-use common::typegraph::{runtimes::TGRuntime, Materializer};
+use tg_schema::{runtimes::TGRuntime, Materializer};
 
 use crate::interlude::*;
 

@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::runtimes::deno::ModuleMatData;
-use common::typegraph::utils::map_from_object;
-use common::typegraph::{utils::object_from_map, Typegraph};
 use std::path::PathBuf;
+use tg_schema::runtimes::deno::ModuleMatData;
+use tg_schema::utils::map_from_object;
+use tg_schema::{utils::object_from_map, Typegraph};
 
 use crate::utils::{artifacts::ArtifactsExt, fs::FsContext, postprocess::PostProcessor};
 
@@ -28,17 +28,9 @@ impl PostProcessor for DenoProcessor {
                 let mut mat_data: ModuleMatData =
                     object_from_map(mat_data).map_err(|e| e.to_string())?;
 
-                fs_ctx.register_artifact(mat_data.entry_point.clone(), tg)?;
-
+                let entry_point = mat_data.entry_point.clone();
                 let deps = std::mem::take(&mut mat_data.deps);
-                for artifact in deps.into_iter() {
-                    let artifacts = fs_ctx.list_files(&[artifact.to_string_lossy().to_string()]);
-                    for artifact in artifacts.iter() {
-                        fs_ctx.register_artifact(artifact.clone(), tg)?;
-                    }
-                    mat_data.deps.extend(artifacts);
-                }
-
+                mat_data.deps = fs_ctx.register_artifacts(tg, entry_point, deps)?;
                 mat.data = map_from_object(mat_data).map_err(|e| e.to_string())?;
             }
         }

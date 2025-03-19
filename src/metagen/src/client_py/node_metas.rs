@@ -3,7 +3,7 @@
 
 use std::{collections::HashMap, fmt::Write};
 
-use common::typegraph::*;
+use tg_schema::*;
 
 use super::utils::normalize_type_title;
 use crate::{

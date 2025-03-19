@@ -4,8 +4,7 @@
 from base64 import b64encode
 from dataclasses import dataclass
 from typing import Callable, List
-from typegraph.gen.exports.core import Artifact
-from typegraph.wit import SerializeParams
+from typegraph.gen.core import Artifact, SerializeParams
 
 
 @dataclass

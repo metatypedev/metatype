@@ -10,9 +10,7 @@ version.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
-# this library is used by typegraph_core
-# so keep the codesize lite
-common.workspace = true
+tg_schema.workspace = true
 
 # logging
 log.workspace = true
@@ -23,6 +21,7 @@ serde_json.workspace = true
 heck.workspace = true
 
 # ds
+dashmap.workspace = true
 indexmap.workspace = true
 regex.workspace = true
 tera = { workspace = true, default-features = false }
@@ -43,3 +42,4 @@ futures-lite.workspace = true
 [dev-dependencies]
 tokio = { workspace = true, features = ["full"] }
 tempfile.workspace = true
+typegate_api.workspace = true

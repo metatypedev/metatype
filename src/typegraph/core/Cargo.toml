@@ -1,14 +1,14 @@
 [package]
 name = "typegraph_core"
-version = "0.5.0"
+version = "0.5.1-rc.0"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
-
 [dependencies]
-common.workspace = true
+# common.workspace = true
+tg_schema.workspace = true
 metagen.workspace = true
+grpc_utils.workspace = true
+archive_utils.workspace = true
 
 enum_dispatch.workspace = true
 color-eyre.workspace = true
@@ -19,8 +19,6 @@ serde.workspace = true
 serde_json.workspace = true
 indoc.workspace = true
 unindent.workspace = true
-
-wit-bindgen.workspace = true
 
 once_cell.workspace = true
 regex.workspace = true

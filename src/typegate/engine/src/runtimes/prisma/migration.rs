@@ -441,12 +441,12 @@ struct MigrationsFolder {
 impl MigrationsFolder {
     pub fn from(tmp_dir_path: &Path, serialized: Option<impl AsRef<[u8]>>) -> Result<Self> {
         let tempdir = tempdir_in(tmp_dir_path)?;
-        common::archive::unpack(&tempdir, serialized)?;
+        archive_utils::unpack(&tempdir, serialized)?;
         Ok(Self { dir: tempdir })
     }
 
     fn serialize(&self) -> Result<Option<String>> {
-        common::archive::archive(self)
+        archive_utils::archive(self)
     }
 }
 

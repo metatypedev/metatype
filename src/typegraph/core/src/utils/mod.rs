@@ -4,10 +4,10 @@
 use std::path::PathBuf;
 
 use crate::utils::metagen_utils::RawTgResolver;
-use common::typegraph::{Auth, AuthProtocol};
 use fs::FsContext;
 use indexmap::IndexMap;
 use serde_json::json;
+use tg_schema::{Auth, AuthProtocol};
 
 use self::oauth2::std::{named_provider, Oauth2Builder};
 use crate::errors::Result;
@@ -15,9 +15,9 @@ use crate::global_store::{get_sdk_version, Store};
 use crate::types::type_ref::InjectionTree;
 use crate::types::type_ref::OverrideInjections;
 
+use crate::sdk::core::TypeId as CoreTypeId;
+use crate::sdk::utils::{Auth as SdkAuth, FdkConfig, FdkOutput, QueryDeployParams, ReduceEntry};
 use crate::types::TypeId;
-use crate::wit::core::TypeId as CoreTypeId;
-use crate::wit::utils::{Auth as WitAuth, FdkConfig, FdkOutput, QueryDeployParams, ReduceEntry};
 use std::path::Path;
 
 mod archive;
@@ -38,7 +38,7 @@ struct Oauth2Params<'a> {
 }
 
 impl TryFrom<Oauth2Params<'_>> for String {
-    type Error = crate::wit::core::Error;
+    type Error = crate::sdk::core::Error;
     fn try_from(value: Oauth2Params) -> Result<Self> {
         let auth_data = json!({
             "authorize_url": serde_json::to_value(value.authorize_url).unwrap(),
@@ -62,7 +62,7 @@ impl TryFrom<Oauth2Params<'_>> for String {
     }
 }
 
-impl crate::wit::utils::Guest for crate::Lib {
+impl crate::sdk::utils::Handler for crate::Lib {
     fn reduceb(fn_type_id: CoreTypeId, entries: Vec<ReduceEntry>) -> Result<CoreTypeId> {
         let injection_tree = InjectionTree::try_from(entries)?;
         Ok(TypeId(fn_type_id)
@@ -75,7 +75,7 @@ impl crate::wit::utils::Guest for crate::Lib {
         Store::add_graphql_endpoint(graphql)
     }
 
-    fn add_auth(data: WitAuth) -> Result<u32> {
+    fn add_auth(data: SdkAuth) -> Result<u32> {
         Store::add_auth(data)
     }
 
@@ -114,7 +114,7 @@ impl crate::wit::utils::Guest for crate::Lib {
             .build(named_provider(&service_name)?)
     }
 
-    fn gql_deploy_query(params: QueryDeployParams) -> String {
+    fn gql_deploy_query(params: QueryDeployParams) -> Result<String> {
         let query = "
             mutation InsertTypegraph($tg: String!, $secrets: String!, $targetVersion: String!) {
                 addTypegraph(fromString: $tg, secrets: $secrets, targetVersion: $targetVersion) {
@@ -143,10 +143,10 @@ impl crate::wit::utils::Guest for crate::Lib {
             }),
         });
 
-        req_body.to_string()
+        Ok(req_body.to_string())
     }
 
-    fn gql_remove_query(names: Vec<String>) -> String {
+    fn gql_remove_query(names: Vec<String>) -> Result<String> {
         let query = "
             mutation($names: [String!]!) {
                 removeTypegraphs(names: $names)
@@ -159,17 +159,17 @@ impl crate::wit::utils::Guest for crate::Lib {
             }),
         });
 
-        req_body.to_string()
+        Ok(req_body.to_string())
     }
 
-    fn gql_ping_query() -> String {
+    fn gql_ping_query() -> Result<String> {
         let query = "query { ping }";
         let req_body = json!({
             "query": query,
             "variables": json!({}),
         });
 
-        req_body.to_string()
+        Ok(req_body.to_string())
     }
 
     fn metagen_exec(config: FdkConfig) -> Result<Vec<FdkOutput>> {

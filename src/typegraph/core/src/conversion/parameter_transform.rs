@@ -9,7 +9,7 @@ use crate::t;
 use crate::t::TypeBuilder;
 use crate::types::TypeId;
 use crate::{params::apply::*, typegraph::TypegraphContext};
-use common::typegraph::parameter_transform as cm;
+use tg_schema::parameter_transform as cm;
 
 pub fn convert_tree(
     ctx: &mut TypegraphContext,

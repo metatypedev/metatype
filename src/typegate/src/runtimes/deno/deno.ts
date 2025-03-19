@@ -19,7 +19,6 @@ import type {
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import type { Task } from "./shared_types.ts";
-import { path } from "compress/deps.ts";
 import { globalConfig as config } from "../../config.ts";
 import { createArtifactMeta } from "../utils/deno.ts";
 import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
@@ -40,8 +39,8 @@ const predefinedFuncs: Record<
   allow: () => () => "ALLOW" as PolicyResolverOutput,
   deny: () => () => "DENY" as PolicyResolverOutput,
   pass: () => () => "PASS" as PolicyResolverOutput,
-  internal_policy: () => ({ _: { context } }) =>
-    context.provider === "internal" ? "ALLOW" : "PASS" as PolicyResolverOutput,
+  internal_policy: () => ({ _: { context } }): PolicyResolverOutput =>
+    context.provider === "internal" ? "PASS" : "DENY",
   context_check: ({ key, value }) => {
     let check: (value: any) => boolean;
     switch (value.type) {
@@ -63,7 +62,7 @@ const predefinedFuncs: Record<
       for (const segment of path) {
         value = value?.[segment];
       }
-      return check(value) ? "PASS" : "DENY" as PolicyResolverOutput;
+      return check(value) ? "PASS" : ("DENY" as PolicyResolverOutput);
     };
   },
 };
@@ -119,7 +118,6 @@ export class DenoRuntime extends Runtime {
     const ops = new Map<number, Task>();
 
     const uuid = crypto.randomUUID();
-    const _basePath = path.join(typegate.config.base.tmp_dir, "artifacts");
 
     let registryCount = 0;
     for (const mat of materializers) {
@@ -165,9 +163,19 @@ export class DenoRuntime extends Runtime {
       }
     }
 
+    const token = await InternalAuth.emit(typegate.cryptoKeys);
+
+    const hostcallCtx = {
+      authToken: token,
+      typegate,
+      typegraphUrl: new URL(
+        `internal+hostcall+deno://typegate/${typegraphName}`,
+      ),
+    };
+
     const workerManager = new WorkerManager({
       timeout_ms: typegate.config.base.timer_max_timeout_ms,
-    });
+    }, hostcallCtx);
 
     const rt = new DenoRuntime(
       typegraphName,
@@ -181,8 +189,9 @@ export class DenoRuntime extends Runtime {
     return rt;
   }
 
-  async deinit(): Promise<void> {
-    // await this.workerManager.deinit();
+  deinit() {
+    this.workerManager.deinit();
+    return Promise.resolve();
   }
 
   materialize(

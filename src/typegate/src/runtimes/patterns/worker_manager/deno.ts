@@ -3,7 +3,7 @@
 
 import { envSharedWithWorkers } from "../../../config/shared.ts";
 import { BaseWorker } from "./mod.ts";
-import { BaseMessage, EventHandler, TaskId } from "./types.ts";
+import { BaseMessage, EventHandler } from "./types.ts";
 
 export interface DenoWorkerError extends BaseMessage {
   type: "WORKER_ERROR";
@@ -12,14 +12,16 @@ export interface DenoWorkerError extends BaseMessage {
 
 export type BaseDenoWorkerMessage = BaseMessage | DenoWorkerError;
 
-export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
-  extends BaseWorker<M, E> {
+export class DenoWorker<
+  M extends BaseMessage,
+  E extends BaseDenoWorkerMessage,
+> extends BaseWorker<M, E> {
   #worker: Worker;
-  #taskId: TaskId;
-  constructor(taskId: TaskId, workerPath: string) {
+  #workerId: string;
+  constructor(workerId: string, workerPath: string) {
     super();
     this.#worker = new Worker(workerPath, {
-      name: taskId,
+      name: workerId,
       type: "module",
       deno: {
         permissions: {
@@ -36,7 +38,7 @@ export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
         },
       },
     });
-    this.#taskId = taskId;
+    this.#workerId = workerId;
   }
 
   listen(handlerFn: EventHandler<E>) {
@@ -44,13 +46,12 @@ export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
       await handlerFn(message.data as E);
     };
 
-    this.#worker.onerror = /*async*/ (event) =>
-      handlerFn(
-        {
-          type: "WORKER_ERROR",
-          event,
-        } as E,
-      );
+    this.#worker.onerror = async (event) => {
+      await handlerFn({
+        type: "WORKER_ERROR",
+        event,
+      } as E);
+    };
   }
 
   send(msg: M) {
@@ -62,6 +63,6 @@ export class DenoWorker<M extends BaseMessage, E extends BaseDenoWorkerMessage>
   }
 
   get id() {
-    return this.#taskId;
+    return this.#workerId;
   }
 }

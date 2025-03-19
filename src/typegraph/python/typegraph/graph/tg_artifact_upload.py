@@ -3,14 +3,12 @@
 
 import json
 import os
-import sys
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 from urllib import request, parse as Url
 from urllib.error import HTTPError
 
-from typegraph.gen.exports.core import Artifact
-from typegraph.gen.types import Err, Ok, Result
+from typegraph.gen.core import Artifact
 from typegraph.graph.shared_types import BasicAuth
 from typegraph.io import Log
 
@@ -79,7 +77,7 @@ class ArtifactUploader:
         self,
         token: str,
         meta: UploadArtifactMeta,
-    ) -> Result[Any, Err]:
+    ) -> Any:
         upload_headers = {"Content-Type": "application/octet-stream"}
 
         if self.auth is not None:
@@ -88,7 +86,7 @@ class ArtifactUploader:
 
         if token is None:
             Log.info("skipping artifact upload:", meta.relativePath)
-            return Ok(None)
+            return
 
         if self.tg_path is None:
             raise Exception("Typegraph path not set in Deploy Params")
@@ -139,28 +137,29 @@ class ArtifactUploader:
             for artifact in artifacts
         ]
 
-    def __handle_errors(
-        self,
-        results: List[Result[Any, Err[Any]]],
-        artifact_metas: List[UploadArtifactMeta],
-    ):
-        errors = 0
-        for result, meta in zip(results, artifact_metas):
-            if isinstance(result, Err):
-                print(
-                    f"failed to upload artifact {meta.relativePath}: {result.value}",
-                    file=sys.stderr,
-                )
-                errors += 1
-            # else:
-            #     print(f"Successfuly uploaded artifact {meta.relativePath}", file=sys.stderr)
-
-        if errors > 0:
-            raise Exception(f"failed to upload {errors} artifacts")
+    # FIXME: Exceptions are directly thrown so why is it even here?
+    # def __handle_errors(
+    #     self,
+    #     results: List[Result[Any, Err[Any]]],
+    #     artifact_metas: List[UploadArtifactMeta],
+    # ):
+    #     errors = 0
+    #     for result, meta in zip(results, artifact_metas):
+    #         if isinstance(result, Err):
+    #             print(
+    #                 f"failed to upload artifact {meta.relativePath}: {result.value}",
+    #                 file=sys.stderr,
+    #             )
+    #             errors += 1
+    #         # else:
+    #         #     print(f"Successfuly uploaded artifact {meta.relativePath}", file=sys.stderr)
+    #
+    #     if errors > 0:
+    #         raise Exception(f"failed to upload {errors} artifacts")
 
     def upload_artifacts(
         self,
-    ) -> Result[None, Err]:
+    ):
         artifact_metas = self.get_metas(self.artifacts)
 
         upload_urls = self.__get_upload_tokens(artifact_metas)
@@ -172,9 +171,8 @@ class ArtifactUploader:
             result = self.__upload(url, meta)
             results.append(result)
 
-        self.__handle_errors(results, artifact_metas)
-
-        return Ok(None)
+        # FIXME: Why??
+        # self.__handle_errors(results, artifact_metas)
 
 
 def handle_response(res: Any):

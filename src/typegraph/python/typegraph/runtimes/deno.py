@@ -4,49 +4,49 @@
 import json
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union, overload
 
-from typegraph.gen.exports.runtimes import (
+from typegraph.gen.runtimes import (
     Effect,
-    EffectRead,
     MaterializerDenoFunc,
     MaterializerDenoImport,
     MaterializerDenoPredefined,
     MaterializerDenoStatic,
 )
-from typegraph.gen.types import Err
 from typegraph.policy import Policy
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import runtimes, store
+from typegraph.sdk import runtimes
+from typegraph.utils import ResolvedModule, resolve_module_params
+from typegraph.utils import Module
 
-# from typegraph.wit import wit_utils
+# from typegraph.sdk import sdk_utils
 
 
 if TYPE_CHECKING:
     from typegraph import t
 
 
+DenoModule = Module
+
+
 class DenoRuntime(Runtime):
     def __init__(self):
-        super().__init__(runtimes.get_deno_runtime(store))
+        super().__init__(runtimes.get_deno_runtime())
 
     def static(self, out: "t.typedef", value: Any):
         from typegraph import t
 
         mat_id = runtimes.register_deno_static(
-            store, MaterializerDenoStatic(json.dumps(value)), out._id
+            MaterializerDenoStatic(json.dumps(value)), out._id
         )
-
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
 
         return t.func(
             t.struct(),
             out,
             StaticMat(
-                mat_id.value,
+                mat_id,
                 value=value,
-                effect=EffectRead(),
+                effect="read",
             ),
         )
 
@@ -60,22 +60,19 @@ class DenoRuntime(Runtime):
         effect: Optional[Effect] = None,
     ):
         secrets = secrets or []
-        effect = effect or EffectRead()
+        effect = effect or "read"
         mat_id = runtimes.register_deno_func(
-            store,
             MaterializerDenoFunc(code=code, secrets=secrets),
             effect,
         )
 
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
-
         from typegraph import t
 
         return t.func(
-            inp, out, FunMat(mat_id.value, code=code, secrets=secrets, effect=effect)
+            inp, out, FunMat(mat_id, code=code, secrets=secrets, effect=effect)
         )
 
+    @overload
     def import_(
         self,
         inp: "t.struct",
@@ -83,22 +80,43 @@ class DenoRuntime(Runtime):
         *,
         module: str,
         name: str,
-        deps: List[str] = [],
+        deps: List[str],
+        effect: Optional[Effect],
+        secrets: Optional[List[str]],
+    ): ...
+
+    @overload
+    def import_(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        module: ResolvedModule,
+    ): ...
+
+    def import_(
+        self,
+        inp: "t.struct",
+        out: "t.typedef",
+        *,
+        module: Union[str, ResolvedModule],
+        name: Optional[str] = None,
+        deps: Optional[List[str]] = None,
         effect: Optional[Effect] = None,
         secrets: Optional[List[str]] = None,
     ):
-        effect = effect or EffectRead()
+        effect = effect or "read"
         secrets = secrets or []
+        resolved = resolve_module_params(module, name, deps)
         mat_id = runtimes.import_deno_function(
-            store,
             MaterializerDenoImport(
-                func_name=name, module=module, secrets=secrets, deps=deps
+                func_name=resolved.func_name,
+                module=resolved.module,
+                secrets=secrets,
+                deps=resolved.deps,
             ),
             effect,
         )
-
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
 
         from typegraph import t
 
@@ -106,9 +124,9 @@ class DenoRuntime(Runtime):
             inp,
             out,
             ImportMat(
-                id=mat_id.value,
-                name=name,
-                module=module,
+                id=mat_id,
+                name=resolved.func_name,
+                module=resolved.module,
                 secrets=secrets,
                 effect=effect,
             ),
@@ -118,15 +136,13 @@ class DenoRuntime(Runtime):
         from typegraph import t
 
         res = runtimes.get_predefined_deno_func(
-            store, MaterializerDenoPredefined(name="identity", param=None)
+            MaterializerDenoPredefined(name="identity", param=None)
         )
-        if isinstance(res, Err):
-            raise Exception(res.value)
 
         return t.func(
             inp,
             inp,
-            PredefinedFunMat(id=res.value, name="identity", effect=EffectRead()),
+            PredefinedFunMat(id=res, name="identity", effect="read"),
         )
 
     def fetch_context(self, output_shape: Union["t.struct", None] = None):
@@ -149,39 +165,60 @@ class DenoRuntime(Runtime):
     ) -> Policy:
         secrets = secrets or []
         mat_id = runtimes.register_deno_func(
-            store,
             MaterializerDenoFunc(code=code, secrets=secrets),
-            EffectRead(),
+            "read",
         )
-
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
 
         return Policy.create(
             name,
-            mat_id.value,
+            mat_id,
         )
+
+    @overload
+    def import_policy(
+        self,
+        *,
+        name: str,
+        module: ResolvedModule,
+        secrets: Optional[List[str]],
+    ) -> Policy: ...
+
+    @overload
+    def import_policy(
+        self,
+        *,
+        name: Optional[str],
+        func_name: str,
+        module: str,
+        deps: List[str],
+        secrets: Optional[List[str]],
+    ) -> Policy: ...
 
     def import_policy(
         self,
-        func_name: str,
-        module: str,
-        secrets: Optional[List[str]] = None,
+        *,
         name: Optional[str] = None,
+        module: Union[str, ResolvedModule],
+        func_name: Optional[str] = None,
+        deps: Optional[List[str]] = None,
+        secrets: Optional[List[str]] = None,
     ) -> Policy:
-        name = name or re.sub("[^a-zA-Z0-9_]", "_", f"__imp_{module}_{name}")
+        resolved = resolve_module_params(module, func_name, deps)
+        name = name or re.sub(
+            "[^a-zA-Z0-9_]", "_", f"__imp_{resolved.module}_{resolved.func_name}"
+        )
 
         res = runtimes.import_deno_function(
-            store,
             MaterializerDenoImport(
-                func_name=func_name, module=module, secrets=secrets or [], deps=[]
+                func_name=resolved.func_name,
+                module=resolved.module,
+                deps=resolved.deps,
+                secrets=secrets or [],
             ),
-            EffectRead(),
+            "read",
         )
-        if isinstance(res, Err):
-            raise Exception(res.value)
 
-        return Policy.create(name, res.value)
+        return Policy.create(name, res)
 
 
 @dataclass

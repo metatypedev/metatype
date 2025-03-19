@@ -1,0 +1,13 @@
+#!/bin/bash
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+
+DENO_PERMISSIONS=(
+  --allow-env
+  --allow-write
+  --allow-read
+  --allow-ffi
+  --allow-run
+)
+
+deno run ${DENO_PERMISSIONS[*]} "$SCRIPT_DIR/src/cmd/main.ts" "$1" "$2"

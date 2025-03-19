@@ -32,10 +32,7 @@ Even though there are minor differences across language implementations, the gen
 
 ### `QueryGraph`
 
-The root type generated for the client, it includes:
-
-- Query builders for all the root functions
-- Transport constructors for all the transports exposed by the typegraph
+The root type generated for the client, it constists of query builders for all the root functions.
 
 <!-- TODO: rust support for TGExample -->
 
@@ -46,13 +43,13 @@ from client import QueryGraph
 
 qg = new QueryGraph();`  }}
   typescript={{
-    content:`import { QueryGraph } from "./client.ts" ;
+    content:`import { QueryGraph } from "./client.ts";
 
 const qg = new QueryGraph();`  }}
   rust={{
     content:`use client::\*;
 
-let api1 = QueryGraph::new(format!("http://localhost:7890/sample").parse()?);`
+let api1 = query_graph();`
 }}
 disablePlayground
 />
@@ -60,7 +57,7 @@ disablePlayground
 ### Transports
 
 Different transport implementations are used to send the requests to the typegate for different use cases.
-The `QueryGraph` will sport methods to construct transports supported by the typegraph (see examples below).
+The `Transports` namespace contains functions to construct transports supported by the typegraph (see examples below).
 Not all transports have the same feature sets.
 
 #### `GraphQLTransport`
@@ -90,8 +87,9 @@ Requests consist of two parts:
 
 <TGExample
   python={{
-    content: `qg = QueryGraph()
-gql_client = qg.graphql_sync("http://localhost:7890/sample")
+    content: `from client import QueryGraph, Transports
+qg = QueryGraph()
+gql_client = Transports.graphql_sync(qg, "http://localhost:7890/sample")
 
 # describe the query
 
@@ -116,8 +114,9 @@ email=True,
 user = out["user"];
 posts = out["posts"]`  }}
   typescript={{
-    content:`const api1 = new QueryGraph();
-const gqlClient = api1.graphql("http://localhost:7890/sample");
+    content:`import { QueryGraph, Transports } from "./client.ts";
+const api1 = new QueryGraph();
+const gqlClient = Transports.graphql(api1, "http://localhost:7890/sample");
 
 // describe the query
 // there's a different method available for mutations
@@ -140,8 +139,8 @@ posts: api1.getPosts(
 const user = out.user;
 const posts = out.posts;`  }}
   rust={{
-    content:`let api1 = QueryGraph::new("http://localhost:7890/sample".parse()?);
-let gql_sync = api1.graphql_sync();
+    content:`let api1 = query_graph();
+let gql_sync = transports::graphql_sync("http://localhost:7890/sample".parse()?, &api1);
 
 // describe the query
 // there's a different method available for mutations

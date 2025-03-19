@@ -13,6 +13,7 @@ import { getLoggerByAddress, Logger } from "../../log.ts";
 import { TaskContext } from "../deno/shared_types.ts";
 import { getTaskNameFromId } from "../patterns/worker_manager/mod.ts";
 import { EventHandler } from "../patterns/worker_manager/types.ts";
+import { hostcall, HostCallCtx } from "../wit_wire/hostcall.ts";
 import {
   appendIfOngoing,
   InterruptEvent,
@@ -45,6 +46,7 @@ export class Agent {
   logger: Logger;
 
   constructor(
+    public hostcallCtx: HostCallCtx,
     private backend: Backend,
     private queue: string,
     private config: AgentConfig,
@@ -115,8 +117,8 @@ export class Agent {
     }, 1000 * this.config.pollIntervalSec);
   }
 
-  stop() {
-    this.workerManager.destroyAllWorkers();
+  async stop() {
+    await this.workerManager.deinit();
     if (this.pollIntervalHandle !== undefined) {
       clearInterval(this.pollIntervalHandle);
     }
@@ -141,7 +143,10 @@ export class Agent {
     }
 
     for (const workflow of this.workflows) {
-      const requests = this.#selectReplayRequestsFor(workflow.name, replayRequests);
+      const requests = this.#selectReplayRequestsFor(
+        workflow.name,
+        replayRequests,
+      );
 
       while (requests.length > 0) {
         // this.logger.warn(`Run workflow ${JSON.stringify(next)}`);
@@ -172,7 +177,7 @@ export class Agent {
         if (getTaskNameFromId(run.run_id) == workflowName) {
           runsToDo.push(run);
         }
-      } catch(err) {
+      } catch (err) {
         this.logger.warn(`Bad runId ${run.run_id}`);
         this.logger.error(err);
 
@@ -276,19 +281,21 @@ export class Agent {
 
     const { taskContext } = first.event.kwargs as unknown as StdKwargs;
     try {
-      this.workerManager.triggerStart(
-        workflow.name,
-        next.run_id,
-        workflow.path,
-        run,
-        next.schedule_date,
-        taskContext,
-      );
-
-      this.workerManager.listen(
-        next.run_id,
-        this.#eventResultHandlerFor(workflow.name, next.run_id),
-      );
+      this.workerManager
+        .triggerStart(
+          workflow.name,
+          next.run_id,
+          workflow.path,
+          run,
+          next.schedule_date,
+          taskContext,
+        )
+        .then(() => {
+          this.workerManager.listen(
+            next.run_id,
+            this.#eventResultHandlerFor(workflow.name, next.run_id),
+          );
+        });
     } catch (err) {
       throw err;
     } finally {
@@ -308,27 +315,47 @@ export class Agent {
     workflowName: string,
     runId: string,
   ): EventHandler<WorkflowEvent> {
-    return async (e) => {
+    return async (event) => {
       const startedAt = this.workerManager.getInitialTimeStartedAt(runId);
 
-      switch (e.type) {
+      switch (event.type) {
+        case "HOSTCALL": {
+          let result;
+          let error;
+          try {
+            result = await hostcall(
+              this.hostcallCtx,
+              event.opName,
+              event.json,
+            );
+          } catch (err) {
+            error = err;
+          }
+          this.workerManager.sendMessage(runId, {
+            type: "HOSTCALL_RESP",
+            id: event.id,
+            result,
+            error,
+          });
+          break;
+        }
         case "SUCCESS":
         case "FAIL":
           await this.#workflowHandleGracefullCompletion(
             startedAt,
             workflowName,
             runId,
-            e,
+            event,
           );
           break;
         case "ERROR":
           this.logger.error(
-            `Result error for "${runId}": ${JSON.stringify(e.error)}`,
+            `Result error for "${runId}": ${JSON.stringify(event.error)}`,
           );
           return;
         case "INTERRUPT":
           // TODO unknown interrupt
-          await this.#workflowHandleInterrupts(workflowName, runId, e);
+          await this.#workflowHandleInterrupts(workflowName, runId, event);
           break;
       }
 
@@ -343,7 +370,7 @@ export class Agent {
     runId: string,
     { interrupt, schedule, run }: InterruptEvent,
   ) {
-    this.workerManager.destroyWorker(workflowName, runId); // !
+    this.workerManager.deallocateWorker(workflowName, runId); // !
 
     this.logger.debug(`Interrupt "${workflowName}": ${interrupt}"`);
 
@@ -392,14 +419,15 @@ export class Agent {
     runId: string,
     event: WorkflowCompletionEvent,
   ) {
-    this.workerManager.destroyWorker(workflowName, runId);
-    console.log({ event });
+    this.workerManager.deallocateWorker(workflowName, runId);
 
     const result = event.type == "SUCCESS" ? event.result : event.error;
 
     this.logger.info(
       `gracefull completion of "${runId}" (${event.type}): ${
-        JSON.stringify(result)
+        JSON.stringify(
+          result,
+        )
       } started at "${startedAt}"`,
     );
 
@@ -426,8 +454,6 @@ export class Agent {
       backend: this.backend,
       run: event.run,
     });
-
-    // console.log("Persisted", run);
 
     await Meta.substantial.storeCloseSchedule({
       backend: this.backend,

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { core, wit_utils } from "./wit.ts";
+import { core, sdkUtils } from "./sdk.ts";
 import type {
   ParameterTransform,
   PolicySpec as WitPolicySpec,
@@ -13,8 +13,8 @@ import type {
   TypeOptional,
   TypeString,
   TypeUnion,
-} from "./gen/typegraph_core.d.ts";
-import type { FuncParams } from "./gen/typegraph_core.d.ts";
+} from "./gen/core.ts";
+import type { FuncParams } from "./gen/core.ts";
 import type { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps/mod.ts";
 import Policy, { PolicyPerEffectObject } from "./policy.ts";
@@ -44,20 +44,18 @@ export type PolicySpec =
   | Policy
   | PolicyPerEffectObject
   | {
-    none: Policy;
-    create: Policy;
-    update: Policy;
-    delete: Policy;
-  };
+      none: Policy;
+      create: Policy;
+      update: Policy;
+      delete: Policy;
+    };
 
 export type Simplified<T> = Omit<T, "of">;
 
-export type SimplifiedNumericData<T> =
-  & { enumeration?: number[] }
-  & Omit<
-    T,
-    "enumeration"
-  >;
+export type SimplifiedNumericData<T> = { enumeration?: number[] } & Omit<
+  T,
+  "enumeration"
+>;
 
 export function getPolicyChain(
   policy: PolicySpec[] | PolicySpec,
@@ -65,12 +63,11 @@ export function getPolicyChain(
   const chain = Array.isArray(policy) ? policy : [policy];
   return chain.map((p) => {
     if (p instanceof Policy) {
-      return { tag: "simple", val: p._id } as const;
+      return { simple: p._id } as const;
     }
 
     return {
-      tag: "per-effect",
-      val: mapValues(
+      perEffect: mapValues(
         p instanceof PolicyPerEffectObject ? p.value : p,
         (v) => v?._id,
       ),
@@ -188,9 +185,7 @@ class Boolean extends Typedef {
 }
 
 /** boolean type */
-export function boolean(
-  base: Base = {},
-): Boolean {
+export function boolean(base: Base = {}): Boolean {
   return new Boolean(withBase(core.booleanb(), base));
 }
 
@@ -200,7 +195,7 @@ export class Integer extends Typedef implements Readonly<TypeInteger> {
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
-  readonly enumeration?: Int32Array;
+  readonly enumeration?: number[];
 
   constructor(_id: number, data: TypeInteger) {
     super(_id);
@@ -225,9 +220,7 @@ export function integer(
 ): Integer {
   const completeData = {
     ...data,
-    enumeration: data.enumeration
-      ? new Int32Array(data.enumeration)
-      : undefined,
+    enumeration: data.enumeration,
   };
   return new Integer(withBase(core.integerb(completeData), base), completeData);
 }
@@ -238,7 +231,7 @@ class Float extends Typedef implements Readonly<TypeFloat> {
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
-  readonly enumeration?: Float64Array;
+  readonly enumeration?: number[];
 
   constructor(_id: number, data: TypeFloat) {
     super(_id);
@@ -258,14 +251,9 @@ export function float(
 ): Float {
   const completeData = {
     ...data,
-    enumeration: data.enumeration
-      ? new Float64Array(data.enumeration)
-      : undefined,
+    enumeration: data.enumeration,
   };
-  return new Float(
-    withBase(core.floatb(completeData), base),
-    completeData,
-  );
+  return new Float(withBase(core.floatb(completeData), base), completeData);
 }
 
 export class String extends Typedef implements Readonly<TypeString> {
@@ -291,10 +279,7 @@ export class String extends Typedef implements Readonly<TypeString> {
 }
 
 /** string type */
-export function string(
-  data: TypeString = {},
-  base: BaseEx = {},
-): String {
+export function string(data: TypeString = {}, base: BaseEx = {}): String {
   return new String(withBase(core.stringb(data), base), data);
 }
 
@@ -345,10 +330,7 @@ export function phone(): String {
 
 // Note: enum is a reserved word
 /** string enum type */
-export function enum_(
-  variants: string[],
-  base: Base = {},
-): String {
+export function enum_(variants: string[], base: Base = {}): String {
   return string(
     {
       enumeration: variants.map((variant) => JSON.stringify(variant)),
@@ -371,14 +353,8 @@ class File extends Typedef {
 }
 
 /** file type */
-export function file(
-  data: Simplified<TypeFile> = {},
-  base: Base = {},
-): File {
-  return new File(
-    withBase(core.fileb(data), base),
-    data,
-  );
+export function file(data: Simplified<TypeFile> = {}, base: Base = {}): File {
+  return new File(withBase(core.fileb(data), base), data);
 }
 
 export class List extends Typedef {
@@ -406,10 +382,7 @@ export function list(
     of: variant._id,
     ...data,
   } as TypeList;
-  return new List(
-    withBase(core.listb(completeData), base),
-    completeData,
-  );
+  return new List(withBase(core.listb(completeData), base), completeData);
 }
 
 export class Optional extends Typedef {
@@ -450,12 +423,9 @@ class Union extends Typedef {
 }
 
 /** union type */
-export function union(
-  variants: Array<Typedef>,
-  base: Base = {},
-): Union {
+export function union(variants: Array<Typedef>, base: Base = {}): Union {
   const data = {
-    variants: new Uint32Array(variants.map((variant) => variant._id)),
+    variants: variants.map((variant) => variant._id),
   };
   return new Union(withBase(core.unionb(data), base), data);
 }
@@ -470,12 +440,9 @@ class Either extends Typedef {
 }
 
 /** either type */
-export function either(
-  variants: Array<Typedef>,
-  base: Base = {},
-): Either {
+export function either(variants: Array<Typedef>, base: Base = {}): Either {
   const data = {
-    variants: new Uint32Array(variants.map((variant) => variant._id)),
+    variants: variants.map((variant) => variant._id),
   };
   return new Either(withBase(core.eitherb(data), base), data);
 }
@@ -491,7 +458,10 @@ export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
 /** struct type */
 export function struct<P extends { [key: string]: Typedef }>(
   props: P,
-  { additionalProps, ...base }: Base & {
+  {
+    additionalProps,
+    ...base
+  }: Base & {
     additionalProps?: boolean;
   } = {},
 ): Struct<P> {
@@ -598,10 +568,7 @@ export class Func<
    * see [parameter transformations](https://metatype.dev/docs/reference/types/parameter-transformations)
    */
   reduce(value: Record<string, unknown | InheritDef>): Func {
-    const reducedId = wit_utils.reduceb(
-      this._id,
-      buildReduceEntries(value),
-    );
+    const reducedId = sdkUtils.reduceb(this._id, buildReduceEntries(value));
 
     return new Func(
       reducedId,

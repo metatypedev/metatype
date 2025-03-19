@@ -1,40 +1,49 @@
 [workspace]
 resolver = "2"
 members = [
-  "src/common",
+  "examples/typegraphs/metagen/rs",
   "src/meta-cli",
   "src/metagen",
-  "src/metagen/src/fdk_rust/static",
+  "src/metagen-client-rs",
+  # "src/metagen/src/client_rs/static",
+  "src/metagen/src/fdk_rs/static",
   "src/mt_deno",
+  "src/substantial",
   "src/typegate/engine",
   "src/typegate/standalone",
+  "src/typegate_api",
   "src/typegraph/core",
+  "src/typegraph/schema",
+  "src/utils/archive",
+  "src/utils/grpc",
   "src/xtask",
-  "src/substantial",
-  "src/metagen-client-rs",
+  "tests/metagen/typegraphs/identities/rs",
+  "tests/metagen/typegraphs/sample/rs",
+  "tests/metagen/typegraphs/sample/rs_upload",
+  "tests/runtimes/wasm_reflected/rust",
+  "tests/runtimes/wasm_wire/rust",
 ]
 
 exclude = [
-  "tests/runtimes/wasm_reflected/rust",
-  "tests/runtimes/wasm_wire/rust",
-  "tests/metagen/typegraphs/sample/rs",
-  "tests/metagen/typegraphs/sample/rs_upload",
   "src/pyrt_wit_wire",
 ]
 
 [workspace.package]
-version = "0.5.0"
+version = "0.5.1-rc.0"
 edition = "2021"
 
 [workspace.dependencies]
-
 # internal crates
 mt_deno = { path = "src/mt_deno/" }
-common = { path = "src/common/" }
+tg_schema = { path = "src/typegraph/schema" }
+typegraph_core = { path = "src/typegraph/core" }
 substantial = { path = "src/substantial/" }
 metagen = { path = "src/metagen/" }
-metagen-client = { path = "src/metagen-client-rs" }
+metagen-client = { path = "src/metagen-client-rs", default-features = false }
 typegate_engine = { path = "src/typegate/engine" }
+typegate_api = { path = "src/typegate_api" }
+grpc_utils = { path = "src/utils/grpc" }
+archive_utils = { path = "src/utils/archive" }
 
 # cli
 clap = "=4.5.16"
@@ -49,7 +58,6 @@ git2 = { version = "0.19.0", default-features = false }
 
 # http
 reqwest = "0.12"
-# pinned due to deno
 url = "2.5"
 
 # build
@@ -128,7 +136,7 @@ rustpython-parser = "0.4.0"
 # wasm
 wasmtime = "25.0.2"
 wasmtime-wasi = "25.0.2"
-wit-bindgen = "0.34.0"
+wit-bindgen = "0.34"
 
 # deno
 deno = { path =  "../deno/cli" }
@@ -150,8 +158,6 @@ tracing-subscriber = { version = "0.3.18", features = [
 tracing-error = "0.2"
 # `unwrap` that also logs
 tracing-unwrap = { version = "1.0.1", features = ["log-location"] }
-# collect traces to file
-tracing-appender = "0.2.3"
 
 # async
 futures = "=0.3.30"                                   # pinned due to bug with .31 with zeromq (deno)

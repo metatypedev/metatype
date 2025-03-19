@@ -2,18 +2,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { gql, Meta } from "test-utils/mod.ts";
-import { dropSchemas, recreateMigrations } from "test-utils/migrations.ts";
-import { randomPGConnStr } from "test-utils/database.ts";
+import { dropSchema, randomPGConnStr } from "test-utils/database.ts";
 
 Meta.test("Random", async (t) => {
-  const { connStr } = randomPGConnStr();
+  const { connStr, schema } = randomPGConnStr();
+  await dropSchema(schema);
   const e = await t.engine("typecheck/type_alias.py", {
     secrets: {
       POSTGRES: connStr,
     },
   });
-  await dropSchemas(e);
-  await recreateMigrations(e);
 
   await t.should("validate and work with a basic alias", async () => {
     await gql`

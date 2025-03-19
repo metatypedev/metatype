@@ -7,11 +7,11 @@ use crate::types::{
     AsTypeDefEx as _, ExtendedTypeDef, FindAttribute as _, IdKind, PolicySpec, Struct, TypeDef,
     TypeDefData, TypeId,
 };
-use crate::{errors, typegraph::TypegraphContext, wit::core::TypeStruct};
-use common::typegraph::{ObjectTypeData, PolicyIndices, TypeNode};
+use crate::{errors, sdk::core::TypeStruct, typegraph::TypegraphContext};
 use errors::Result;
 use indexmap::IndexMap;
 use std::hash::Hash as _;
+use tg_schema::{ObjectTypeData, PolicyIndices, TypeNode};
 
 impl TypeStruct {
     pub fn get_prop(&self, key: &str) -> Option<TypeId> {
@@ -81,6 +81,7 @@ impl TypeConversion for Struct {
                 id: self.data.find_id_fields()?,
                 required: Vec::new(),
                 policies: self.data.collect_policies(ctx)?,
+                additional_props: self.data.additional_props,
             },
         })
     }

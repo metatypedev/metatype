@@ -78,7 +78,7 @@ pub fn selection_to_node_set(
     Ok(out)
 }
 
-pub fn selection_to_select_node(
+pub(crate) fn selection_to_select_node(
     instance_name: CowStr,
     node_name: CowStr,
     args: NodeArgsErased,
@@ -622,6 +622,9 @@ pub trait UnionMember {
 
 /// Internal marker trait use to make sure we can't have union members
 /// selection being another union selection.
+// FIXME: I don't remember why I added this abstraction
+// I think it was breaking the generated graphql but
+// seems to be gone now
 pub trait NotUnionSelection {}
 
 // NOTE: UnionMembers are all NoAlias
@@ -638,8 +641,8 @@ impl<ArgT> UnionMember for ScalarSelectArgs<ArgT, NoAlias> {
 }
 
 impl<SelT> UnionMember for CompositeSelect<SelT, NoAlias>
-where
-    SelT: NotUnionSelection,
+// where
+//     SelT: NotUnionSelection,
 {
     fn composite(self) -> Option<SelectionErasedMap> {
         use CompositeSelect::*;
@@ -655,8 +658,8 @@ where
 }
 
 impl<ArgT, SelT, NoAlias> UnionMember for CompositeSelectArgs<ArgT, SelT, NoAlias>
-where
-    SelT: NotUnionSelection,
+// where
+//     SelT: NotUnionSelection,
 {
     fn composite(self) -> Option<SelectionErasedMap> {
         use CompositeSelectArgs::*;
@@ -750,7 +753,8 @@ where
     }
 }
 
-// TODO: convert to proc_macro
+// TODO(Natoandro): convert to proc_macro
+// REPLY(Yohe): compile time hits might be a good reason to keep this macro
 #[macro_export]
 macro_rules! impl_selection_traits {
     ($ty:ident,$($field:tt),+) => {
@@ -778,6 +782,13 @@ macro_rules! impl_selection_traits {
 }
 #[macro_export]
 macro_rules! impl_union_selection_traits {
+    ($ty:ident) => {
+        impl<ATy> From<$ty<ATy>> for CompositeSelection {
+            fn from(value: $ty<ATy>) -> CompositeSelection {
+                CompositeSelection::Union(Default::default())
+            }
+        }
+    };
     ($ty:ident,$(($variant_ty:tt, $field:tt)),+) => {
         impl<ATy> From<$ty<ATy>> for CompositeSelection {
             fn from(value: $ty<ATy>) -> CompositeSelection {
@@ -793,6 +804,14 @@ macro_rules! impl_union_selection_traits {
                     .filter_map(|val| val)
                     .collect(),
                 )
+            }
+        }
+
+        impl<ATy> Selection for $ty<ATy> {
+            fn all() -> Self {
+                Self {
+                    $($field: all(),)+
+                }
             }
         }
     };

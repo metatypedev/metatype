@@ -3,37 +3,34 @@ export const snapshot = {};
 snapshot[`typegraph validation 1`] = `
 \`[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m [31m✗[39m failed to serialize typegraph [36mvalidator[39m from [33mvalidator.py[39m
 [31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/test/[in]/a: Expected number got '"1"'
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/test/[in]/b: Expected a string, got '["h","e","l","l","o"]'
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/test/[in]/c: Expected a minimum value of 2, got 0
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/test/[in]/d: Expected a maximun length of 4, got "hello" (len=5)
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/test/[in]/e: Required field "a" not found in object '{}'
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/test/[in]/f: Required field "a" not found in object '{"b":1}'
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/test/[in]/g: Unexpected fields "b" in object "{\\\\"a\\\\":2,\\\\"b\\\\":1}"
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEnums/[in]/a: Expected a minimum length of 4, got "hi" (len=2)
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEnums/[in]/a: Expected a string, got '12'
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEnums/[in]/b: Expected float got '"13"'
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEnums/[out]/a: Expected a minimum length of 4, got "hi" (len=2)
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEnums/[out]/a: Expected a string, got '12'
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEnums/[out]/b: Expected float got '"13"'
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/a: from_parent injection: Type mismatch: integer to string
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: 'minimum_length' is required on the subtype if it is defined on the supertype
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: 'maximum_length' cannot be higher on the subtype: 20 > 16
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testFromParent/[out]/nested/[in]/c: from_parent injection: property b is not allowed: it is not defined in the supertype
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/a: Invalid either type: variant #0 ('integer') is a subtype of variant #1 ('float')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/b: Invalid either type: variant #0 ('string') is a subtype of variant #1 ('string')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/d: Invalid either type: variant #0 ('list') is a subtype of variant #1 ('list')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/f: Invalid either type: variant #0 ('string') is a subtype of variant #1 ('string')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/g: Invalid either type: variant #1 ('object') is a subtype of variant #0 ('object')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testEither/[out]/h: Invalid either type: variant #0 ('list') is a subtype of variant #1 ('list')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[in]/a: Value '25' did not match any of the variants of the union
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[in]/c: Value '{"x":1,"y":"test","z":"not a boolean"}' did not match any of the variants of the union
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[in]/d: Value '[1,"2",3]' did not match any of the variants of the union
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - at validator:/testUnion/[out]/b: Invalid union type: variant #0 ('string') is the same type as variant #1 ('string')
-[31mERROR[0m [2mmeta::deploy::actors::console[0m[2m:[0m - Typegraph validator failed validation
+- at validator:/test/[in]/b: Expected a string, got '["h","e","l","l","o"]'
+- at validator:/test/[in]/c: Expected a minimum value of 2, got 0
+- at validator:/test/[in]/d: Expected a maximun length of 4, got "hello" (len=5)
+- at validator:/test/[in]/e: Required field "a" not found in object '{}'
+- at validator:/test/[in]/f: Required field "a" not found in object '{"b":1}'
+- at validator:/test/[in]/g: Unexpected fields "b" in object "{\\\\"a\\\\":2,\\\\"b\\\\":1}"
+- at validator:/testEnums/[in]/a: Expected a minimum length of 4, got "hi" (len=2)
+- at validator:/testEnums/[in]/a: Expected a string, got '12'
+- at validator:/testEnums/[in]/b: Expected float got '"13"'
+- at validator:/testEnums/[out]/a: Expected a minimum length of 4, got "hi" (len=2)
+- at validator:/testEnums/[out]/a: Expected a string, got '12'
+- at validator:/testEnums/[out]/b: Expected float got '"13"'
+- at validator:/testFromParent/[out]/nested/[in]/a: from_parent injection: Type mismatch: integer to string
+- at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: 'minimum_length' is required on the subtype if it is defined on the supertype
+- at validator:/testFromParent/[out]/nested/[in]/b: from_parent injection: 'maximum_length' cannot be higher on the subtype: 20 > 16
+- at validator:/testFromParent/[out]/nested/[in]/c: from_parent injection: property b is not allowed: it is not defined in the supertype
+- at validator:/testEither/[out]/a: Invalid either type: variant #0 ('integer') is a subtype of variant #1 ('float')
+- at validator:/testEither/[out]/b: Invalid either type: variant #0 ('string') is a subtype of variant #1 ('string')
+- at validator:/testEither/[out]/d: Invalid either type: variant #0 ('list') is a subtype of variant #1 ('list')
+- at validator:/testEither/[out]/f: Invalid either type: variant #0 ('string') is a subtype of variant #1 ('string')
+- at validator:/testEither/[out]/g: Invalid either type: variant #1 ('object') is a subtype of variant #0 ('object')
+- at validator:/testEither/[out]/h: Invalid either type: variant #0 ('list') is a subtype of variant #1 ('list')
+- at validator:/testUnion/[in]/a: Value '25' did not match any of the variants of the union
+- at validator:/testUnion/[in]/c: Value '{"x":1,"y":"test","z":"not a boolean"}' did not match any of the variants of the union
+- at validator:/testUnion/[in]/d: Value '[1,"2",3]' did not match any of the variants of the union
+- at validator:/testUnion/[out]/b: Invalid union type: variant #0 ('string') is the same type as variant #1 ('string')
+- Typegraph validator failed validation
 Error: 
    0: [91mfailed[0m
-
-Backtrace omitted. Run with RUST_BACKTRACE=1 environment variable to display it.
-Run with RUST_BACKTRACE=full to include source snippets.
 \`
 `;

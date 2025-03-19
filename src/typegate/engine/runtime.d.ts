@@ -42,7 +42,6 @@ export type MetaNS = {
       args: WitWireInitArgs,
       cb: (op_name: string, json: string) => Promise<string>,
     ) => Promise<WitWireInitResponse>;
-    destroy: (instanceId: string) => Promise<void>;
     handle: (
       instanceId: string,
       args: WitWireReq,

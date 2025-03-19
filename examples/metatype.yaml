@@ -163,6 +163,7 @@ typegraphs:
     exclude:
       - "typegraphs/temporal.ts"
       - "typegraphs/kv.ts"
+      - "typegraphs/scripts/"
     include:
       - "typegraphs/*.ts"
   javascript:
@@ -172,14 +173,14 @@ typegraphs:
 metagen:
   targets:
     metagen_deno:
-      - generator: fdk_typescript
+      - generator: fdk_ts
         path: ./typegraphs/metagen/ts/
         typegraph_path: ./typegraphs/metagen-deno.ts
     metagen_py:
-      - generator: fdk_python
+      - generator: fdk_py
         path: ./typegraphs/metagen/py/
         typegraph_path: ./typegraphs/metagen-py.ts
     metagen_rs:
-      - generator: fdk_rust
+      - generator: fdk_rs
         path: ./typegraphs/metagen/rs/
         typegraph_path: ./typegraphs/metagen-rs.ts

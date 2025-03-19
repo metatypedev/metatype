@@ -65,15 +65,16 @@ export function validateVersions() {
   const latestRelease = semver.parse(consts.LATEST_RELEASE_VERSION);
   const prerelease = currentVersion.prerelease ?? [];
   const isPreRelease = prerelease.length > 0;
-  const latestPreRelease = isPreRelease
-    ? semver.parse(consts.LATEST_PRE_RELEASE_VERSION)
-    : null;
+  const latestPreRelease =
+    isPreRelease && consts.LATEST_PRE_RELEASE_VERSION != null
+      ? semver.parse(consts.LATEST_PRE_RELEASE_VERSION)
+      : null;
 
   if (!isPreRelease || (isPreRelease && prerelease[1] == 0)) {
     assert(latestPreRelease == null, "expected no latest pre-release version");
   }
 
-  if (isPreRelease) {
+  if (latestPreRelease) {
     assert(
       semver.greaterThan(currentVersion, latestPreRelease!),
       "expected current version to be greater than latest pre-release version",

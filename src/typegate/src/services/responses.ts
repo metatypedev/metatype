@@ -4,19 +4,37 @@
 import type { JSONValue } from "../utils.ts";
 import { BaseError, ErrorKind } from "../errors.ts";
 
-export const jsonOk = (data: JSONValue, headers: Headers) => {
+export type JsonOkConfig = {
+  data: JSONValue;
+  headers?: Headers | HeadersInit;
+  status?: number;
+};
+
+export const jsonOk = (
+  { status = 200, data, headers: headersInit }: JsonOkConfig,
+) => {
+  const headers = headersInit != null
+    ? new Headers(headersInit)
+    : new Headers();
   headers.set("content-type", "application/json");
-  return new Response(JSON.stringify({ data }), {
-    status: 200,
+  return new Response(JSON.stringify(data), {
+    status,
     headers,
   });
 };
 
+export type JsonErrorConfig = {
+  status: number;
+  message: string;
+  headers?: Headers | HeadersInit;
+};
+
 export const jsonError = (
-  message: string,
-  headers: Headers,
-  status: number,
+  { status, message, headers: headersInit }: JsonErrorConfig,
 ) => {
+  const headers = headersInit != null
+    ? new Headers(headersInit)
+    : new Headers();
   headers.set("content-type", "application/json");
   return new Response(
     JSON.stringify({

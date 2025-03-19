@@ -9,9 +9,9 @@ use crate::deploy::actors::task::TaskFinishStatus;
 use crate::deploy::actors::task_manager::{Report, StopReason, TaskManagerInit, TaskSource};
 use crate::interlude::*;
 use clap::Parser;
-use common::typegraph::Typegraph;
 use core::fmt::Debug;
 use std::io::{self, Write};
+use tg_schema::Typegraph;
 use tokio::io::AsyncWriteExt;
 
 #[derive(Parser, Debug)]
@@ -43,7 +43,9 @@ pub struct Serialize {
     #[clap(short, long)]
     prefix: Option<String>,
 
-    #[clap(long)]
+    // FIXME: restructure the typegraph core to handle multiple threads
+    #[allow(unused)]
+    #[clap(skip = None)]
     max_parallel_loads: Option<usize>,
 }
 
@@ -79,15 +81,13 @@ impl Action for Serialize {
         }
 
         // TODO fail_fast
-        let mut init = TaskManagerInit::<SerializeAction>::new(
+        let init = TaskManagerInit::<SerializeAction>::new(
             config.clone(),
             action_generator,
             console,
             TaskSource::Static(self.files.clone()),
-        );
-        if let Some(max_parallel_tasks) = self.max_parallel_loads {
-            init = init.max_parallel_tasks(max_parallel_tasks);
-        }
+        )
+        .max_parallel_tasks(1); // FIXME: make the server work with multiple threads
 
         let report = init.run().await;
 
@@ -130,11 +130,11 @@ impl Action for Serialize {
 
 pub trait SerializeReportExt {
     #[allow(clippy::vec_box)]
-    fn into_typegraphs(self) -> Result<Vec<Box<Typegraph>>>;
+    fn into_typegraphs(self) -> Result<Vec<Arc<Typegraph>>>;
 }
 
 impl SerializeReportExt for Report<SerializeAction> {
-    fn into_typegraphs(self) -> Result<Vec<Box<Typegraph>>> {
+    fn into_typegraphs(self) -> Result<Vec<Arc<Typegraph>>> {
         let mut res = vec![];
         for entry in self.entries.into_iter() {
             match entry.status {

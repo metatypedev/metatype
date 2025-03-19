@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::Materializer;
 use indexmap::IndexMap;
+use tg_schema::Materializer;
 
 use crate::{
-    conversion::runtimes::MaterializerConverter, errors::Result, typegraph::TypegraphContext,
-    wit::runtimes::Effect,
+    conversion::runtimes::MaterializerConverter, errors::Result, sdk::runtimes::Effect,
+    typegraph::TypegraphContext,
 };
 
 #[derive(Clone, Debug)]

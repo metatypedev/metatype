@@ -1,32 +1,35 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+mod artifacts;
 mod migrations;
 
 use super::action::{
-    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, SharedActionConfig,
-    TaskAction, TaskActionGenerator, TaskFilter,
+    ActionFinalizeContext, ActionResult, FollowupOption, OutputData, RpcResponse,
+    SharedActionConfig, TaskAction, TaskActionGenerator, TaskFilter,
 };
 use super::command::build_task_command;
 use crate::deploy::actors::console::Console;
 use crate::deploy::actors::task_manager::{self, TaskRef};
 use crate::interlude::*;
 use crate::secrets::Secrets;
+use crate::typegraph::rpc::{RpcCall as TypegraphRpcCall, RpcDispatch};
+use artifacts::ArtifactUploader;
+use base64::prelude::*;
 use color_eyre::owo_colors::OwoColorize;
-use common::node::Node;
-use common::typegraph::Typegraph;
-use serde::{Deserialize, Deserializer};
+use reqwest::header::{self, HeaderMap, HeaderValue};
+use reqwest::Client;
+use serde::Deserialize;
 use std::{path::Path, sync::Arc};
 use tokio::process::Command;
+use typegate_api::Node;
+use typegraph_core::sdk::core::{Artifact, Handler as _, PrismaMigrationConfig, SerializeParams};
+use typegraph_core::sdk::utils::{Handler as _, QueryDeployParams};
+use typegraph_core::Lib;
+
+pub use typegraph_core::sdk::core::MigrationAction;
 
 pub type DeployAction = Arc<DeployActionInner>;
-
-#[derive(Clone, Debug, Default, Serialize)]
-pub struct MigrationAction {
-    pub apply: bool,  // apply existing migrations
-    pub create: bool, // create new migrations
-    pub reset: bool,  // reset database if necessary
-}
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PrismaRuntimeId {
@@ -57,8 +60,7 @@ impl DeployActionGenerator {
         config_dir: Arc<Path>,
         working_dir: Arc<Path>,
         migrations_dir: Arc<Path>,
-        create_migrations: bool,
-        destructive_migrations: bool, // TODO enum { Fail, Reset, Ask }
+        default_migration_action: MigrationAction,
     ) -> Self {
         Self {
             secrets,
@@ -68,11 +70,7 @@ impl DeployActionGenerator {
                 config_dir,
                 working_dir,
                 migrations_dir,
-                default_migration_action: MigrationAction {
-                    apply: true,
-                    create: create_migrations,
-                    reset: destructive_migrations,
-                },
+                default_migration_action,
                 artifact_resolution: true,
             }
             .into(),
@@ -119,18 +117,7 @@ pub struct Migration {
 pub struct TypegraphData {
     pub name: String,
     pub path: PathBuf,
-    #[serde(deserialize_with = "deserialize_typegraph")]
-    pub value: Arc<Typegraph>,
-}
-
-fn deserialize_typegraph<'de, D>(deserializer: D) -> Result<Arc<Typegraph>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let serialized = String::deserialize(deserializer)?;
-    let typegraph =
-        serde_json::from_str(&serialized).map_err(|e| serde::de::Error::custom(e.to_string()))?;
-    Ok(Arc::new(typegraph))
+    pub artifacts: Vec<Artifact>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -177,11 +164,56 @@ pub enum MigrationActionOverride {
     ResetDatabase,
 }
 
+impl MigrationActionOverride {
+    pub fn apply(&self, migration_action: MigrationAction) -> MigrationAction {
+        match self {
+            Self::ResetDatabase => MigrationAction {
+                reset: true,
+                ..migration_action
+            },
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
-#[serde(tag = "method", content = "params")]
-pub enum RpcCall {
-    GetDeployTarget,
-    GetDeployData { typegraph: String },
+pub struct DeployData {
+    pub secrets: HashMap<String, String>,
+    pub default_migration_action: MigrationAction,
+    pub migration_actions: Vec<(String, MigrationAction)>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct DeployParams {
+    pub typegraph_name: String,
+    pub typegraph_path: String,
+    pub prefix: Option<String>,
+    pub migration_dir: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum DeployResponse {
+    Success { data: DeploySuccessData },
+    Error { errors: Vec<DeployErrorData> },
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct DeploySuccessData {
+    add_typegraph: DeployTypegraphData,
+}
+
+#[derive(Deserialize, Debug)]
+struct DeployTypegraphData {
+    name: String,
+    messages: Vec<MessageEntry>,
+    migrations: Vec<Migration>,
+    failure: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+struct DeployErrorData {
+    message: String,
 }
 
 struct ResetDatabase(PrismaRuntimeId);
@@ -195,12 +227,20 @@ impl FollowupOption<DeployAction> for ResetDatabase {
     }
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(tag = "method", content = "params")]
+pub enum RpcRequest {
+    Deploy(DeployParams),
+    #[serde(untagged)]
+    Typegraph(TypegraphRpcCall),
+}
+
 impl TaskAction for DeployAction {
     type SuccessData = DeploySuccess;
     type FailureData = DeployError;
     type Options = DeployOptions;
     type Generator = DeployActionGenerator;
-    type RpcCall = RpcCall;
+    type RpcRequest = RpcRequest;
 
     async fn get_command(&self) -> Result<Command> {
         build_task_command(
@@ -309,9 +349,15 @@ impl TaskAction for DeployAction {
                     name = data.get_typegraph_name().cyan(),
                     path = self.task_ref.path.display().yellow(),
                 ));
-                for error in &data.errors {
-                    ctx.console.error(format!("- {error}", error = error));
-                }
+
+                let messages = &data
+                    .errors
+                    .iter()
+                    .map(|err| format!("- {err}"))
+                    .collect::<Vec<_>>();
+
+                ctx.console.error(messages.join("\n"));
+
                 Ok(None)
             }
         }
@@ -321,31 +367,148 @@ impl TaskAction for DeployAction {
         &self.task_ref
     }
 
-    async fn get_rpc_response(&self, call: &RpcCall) -> Result<serde_json::Value> {
+    async fn handle_rpc_request(
+        &self,
+        call: Self::RpcRequest,
+    ) -> Result<RpcResponse<Self::SuccessData, Self::FailureData>> {
         match call {
-            RpcCall::GetDeployTarget => {
-                let deploy_target: &Node = &self.deploy_target;
-                Ok(serde_json::to_value(deploy_target)?)
-            }
-
-            RpcCall::GetDeployData { typegraph } => Ok(self.get_deploy_data(typegraph).await?),
-        }
-    }
-}
-
-impl MigrationAction {
-    fn apply_override(self, action_override: &MigrationActionOverride) -> Self {
-        match action_override {
-            MigrationActionOverride::ResetDatabase => MigrationAction {
-                reset: true,
-                ..self
-            },
+            RpcRequest::Deploy(params) => Ok(RpcResponse::TaskResult(self.deploy(params).await)),
+            RpcRequest::Typegraph(method) => Ok(RpcResponse::Value(method.dispatch()?)),
         }
     }
 }
 
 impl DeployActionInner {
-    async fn get_deploy_data(&self, typegraph: &str) -> Result<serde_json::Value> {
+    async fn deploy(&self, params: DeployParams) -> Result<DeploySuccess, DeployError> {
+        let deploy_data = self
+            .get_deploy_data(&params.typegraph_name)
+            .map_err(|err| DeployError {
+                typegraph: params.typegraph_name.clone(),
+                errors: vec![err.to_string()],
+            })
+            .await?;
+
+        let (typgraph, artifacts) = Lib::serialize_typegraph(SerializeParams {
+            typegraph_name: params.typegraph_name.clone(),
+            typegraph_path: params.typegraph_path.clone(),
+            prefix: params.prefix.clone(),
+            artifact_resolution: true,
+            codegen: false,
+            prisma_migration: PrismaMigrationConfig {
+                migrations_dir: params.migration_dir.clone(),
+                migration_actions: deploy_data.migration_actions,
+                default_migration_action: deploy_data.default_migration_action,
+            },
+            pretty: false,
+        })
+        .map_err(|error| DeployError {
+            typegraph: params.typegraph_path.clone(),
+            errors: error.stack,
+        })?;
+
+        self.request_typegate(params, typgraph, artifacts, deploy_data.secrets)
+            .await
+    }
+
+    async fn request_typegate(
+        &self,
+        params: DeployParams,
+        typegraph: String,
+        artifacts: Vec<Artifact>,
+        secrets: HashMap<String, String>,
+    ) -> Result<DeploySuccess, DeployError> {
+        let client = Client::new();
+
+        let basic_auth = self.deploy_target.auth.as_ref().map(|auth| {
+            let credentials = format!("{}:{}", auth.username, auth.password);
+            let encoded = BASE64_STANDARD.encode(credentials);
+            format!("Basic {}", encoded)
+        });
+        let url = self.deploy_target.base_url.join("/typegate").unwrap();
+        let body = Lib::gql_deploy_query(QueryDeployParams {
+            tg: typegraph,
+            secrets: Some(secrets.into_iter().collect()),
+        })
+        .map_err(|error| DeployError {
+            typegraph: params.typegraph_name.clone(),
+            errors: error.stack,
+        })?;
+
+        let mut base_headers = HeaderMap::new();
+
+        base_headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        );
+
+        if let Some(auth) = basic_auth.as_ref() {
+            base_headers.insert(
+                header::AUTHORIZATION,
+                HeaderValue::from_str(auth).map_err(|error| DeployError {
+                    typegraph: params.typegraph_name.clone(),
+                    errors: vec![error.to_string()],
+                })?,
+            );
+        }
+
+        if !artifacts.is_empty() {
+            let artifact_uploader = ArtifactUploader {
+                client: &client,
+                base_url: self.deploy_target.base_url.clone(),
+                base_header: base_headers.clone(),
+                typegraph_name: params.typegraph_name.clone(),
+                typegraph_path: params.typegraph_path.clone(),
+            };
+
+            artifact_uploader
+                .upload_artifacts(&artifacts)
+                .map_err(|error| DeployError {
+                    typegraph: params.typegraph_name.clone(),
+                    errors: vec![error.to_string()],
+                })
+                .await?;
+        } else {
+            log::debug!("no artifacts to upload");
+        }
+
+        let response = client
+            .post(url)
+            .headers(base_headers)
+            .body(body)
+            .send()
+            .map_err(|error| DeployError {
+                typegraph: params.typegraph_name.clone(),
+                errors: vec![error.to_string()],
+            })
+            .await?;
+
+        let response: DeployResponse = response
+            .json()
+            .map_err(|error| DeployError {
+                typegraph: params.typegraph_name.clone(),
+                errors: vec![error.to_string()],
+            })
+            .await?;
+
+        match response {
+            DeployResponse::Success { data } => Ok(DeploySuccess {
+                typegraph: TypegraphData {
+                    name: data.add_typegraph.name,
+                    path: params.typegraph_path.into(),
+                    artifacts,
+                },
+                messages: data.add_typegraph.messages,
+                migrations: data.add_typegraph.migrations,
+                failure: data.add_typegraph.failure,
+            }),
+            DeployResponse::Error { errors } => Err(DeployError {
+                typegraph: params.typegraph_name,
+                errors: errors.into_iter().map(|v| v.message).collect(),
+            }),
+        }
+    }
+
+    async fn get_deploy_data(&self, typegraph: &str) -> Result<DeployData> {
         let default_action = &self.shared_config.default_migration_action;
         let actions = self
             .task_options
@@ -355,18 +518,18 @@ impl DeployActionInner {
                 if rt.typegraph == typegraph {
                     Some((
                         rt.name.clone(),
-                        default_action.clone().apply_override(action_override),
+                        action_override.apply(default_action.clone()),
                     ))
                 } else {
                     None
                 }
             })
-            .collect::<HashMap<_, _>>();
+            .collect();
 
-        Ok(serde_json::json!({
-            "secrets": self.secrets.get(typegraph).await?,
-            "defaultMigrationAction": default_action,
-            "migrationActions": actions
-        }))
+        Ok(DeployData {
+            secrets: self.secrets.get(typegraph).await?,
+            default_migration_action: default_action.clone(),
+            migration_actions: actions,
+        })
     }
 }

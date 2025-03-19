@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::interlude::*;
-use common::typegraph::{runtimes::prisma::PrismaRuntimeData, Typegraph};
+use tg_schema::{runtimes::prisma::PrismaRuntimeData, Typegraph};
 #[rustfmt::skip]
 use deno_core as deno_core; // necessary for re-exported macros to work
 

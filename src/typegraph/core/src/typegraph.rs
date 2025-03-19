@@ -16,11 +16,6 @@ use crate::{
     errors::{self, Result},
     global_store::Store,
 };
-use common::typegraph::runtimes::TGRuntime;
-use common::typegraph::{
-    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
-    TypeNode, TypeNodeBase, Typegraph,
-};
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
@@ -28,9 +23,14 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hasher as _;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use tg_schema::runtimes::TGRuntime;
+use tg_schema::{
+    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
+    TypeNode, TypeNodeBase, Typegraph,
+};
 
-use crate::wit::core::{
-    Artifact as WitArtifact, Error as TgError, MaterializerId, PolicyId, RuntimeId,
+use crate::sdk::core::{
+    Artifact as SdkArtifact, Error as TgError, MaterializerId, PolicyId, RuntimeId,
     SerializeParams, TypegraphInitParams,
 };
 
@@ -137,6 +137,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             policies: Default::default(),
             id: vec![],
             required: vec![],
+            additional_props: false,
         },
     }));
 
@@ -147,11 +148,11 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     Ok(())
 }
 
-pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegraph::Auth>> {
+pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<tg_schema::Auth>> {
     Store::get_auths()
         .iter()
         .map(|auth| match auth.protocol {
-            common::typegraph::AuthProtocol::OAuth2 => {
+            tg_schema::AuthProtocol::OAuth2 => {
                 let profiler_key = "profiler";
                 match auth.auth_data.get(profiler_key) {
                     Some(value) => match value {
@@ -184,7 +185,7 @@ pub fn finalize_auths(ctx: &mut TypegraphContext) -> Result<Vec<common::typegrap
         .collect::<Result<Vec<_>>>()
 }
 
-pub fn serialize(params: SerializeParams) -> Result<(String, Vec<WitArtifact>)> {
+pub fn serialize(params: SerializeParams) -> Result<(String, Vec<SdkArtifact>)> {
     #[cfg(test)]
     eprintln!("Serializing typegraph...");
 
@@ -283,7 +284,7 @@ fn ensure_valid_export(export_key: String, type_id: TypeId) -> Result<()> {
 
 pub fn expose(
     fields: Vec<(String, TypeId)>,
-    default_policy: Option<Vec<crate::wit::core::PolicySpec>>,
+    default_policy: Option<Vec<crate::sdk::core::PolicySpec>>,
 ) -> Result<()> {
     let fields = fields
         .into_iter()
@@ -524,4 +525,11 @@ pub fn current_typegraph_dir() -> Result<PathBuf> {
     let tg_path = current_typegraph_path()?;
     // TODO error handling
     Ok(tg_path.parent().unwrap().to_owned())
+}
+
+pub fn reset() {
+    TG.with_borrow_mut(|tg| {
+        tg.take();
+        Store::reset();
+    });
 }

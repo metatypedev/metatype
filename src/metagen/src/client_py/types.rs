@@ -3,7 +3,7 @@
 
 use std::fmt::Write;
 
-use common::typegraph::*;
+use tg_schema::*;
 
 use super::utils::{normalize_struct_prop_name, normalize_type_title};
 use crate::{interlude::*, shared::types::*};
@@ -29,17 +29,17 @@ impl PyTypeRenderer {
         props: IndexMap<String, (Rc<str>, bool)>,
     ) -> std::fmt::Result {
         writeln!(dest, r#"{ty_name} = typing.TypedDict("{ty_name}", {{"#)?;
-        for (name, (ty_name, _optional)) in props.into_iter() {
-            // FIXME: use NotRequired when bumping to python version
-            // that supports it
-            // also, remove the total param below
-            // if optional {
-            //     writeln!(dest, r#"    "{name}": typing.NotRequired[{ty_name}],"#)?;
-            // } else {
-            //     writeln!(dest, r#"    "{name}": {ty_name},"#)?;
-            // }
-            writeln!(dest, r#"    "{name}": {ty_name},"#)?;
+        for (name, (ty_name, optional)) in props.into_iter() {
+            // FIXME: NotRequired is only avail on python 3.11
+            if optional {
+                // writeln!(dest, r#"    "{name}": typing.NotRequired[{ty_name}],"#)?;
+                writeln!(dest, r#"    "{name}": {ty_name},"#)?;
+            } else {
+                writeln!(dest, r#"    "{name}": {ty_name},"#)?;
+            }
+            // writeln!(dest, r#"    "{name}": {ty_name},"#)?;
         }
+        // FIXME: all fields are optional due to py 3.9 TypedDict limitations
         writeln!(dest, "}}, total=False)")?;
         writeln!(dest)?;
         Ok(())

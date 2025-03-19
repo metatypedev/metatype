@@ -13,10 +13,10 @@ use crate::types::{
 };
 use crate::validation::types::validate_value;
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
-pub use common::typegraph::runtimes::prisma::{ScalarType, StringType};
-use common::typegraph::{EffectType, InjectionData};
 use indexmap::IndexMap;
 use std::rc::Rc;
+pub use tg_schema::runtimes::prisma::{ScalarType, StringType};
+use tg_schema::{EffectType, InjectionData};
 
 #[derive(Debug, Clone)]
 pub struct ModelType {
@@ -132,7 +132,7 @@ pub struct Model {
 }
 
 impl TryFrom<TypeId> for Model {
-    type Error = crate::wit::core::Error;
+    type Error = crate::sdk::core::Error;
 
     fn try_from(type_id: TypeId) -> Result<Self> {
         let model_type = ModelType::try_from(type_id)?;
@@ -403,12 +403,12 @@ impl Injection {
     }
 }
 
-impl TryFrom<&common::typegraph::Injection> for Injection {
+impl TryFrom<&tg_schema::Injection> for Injection {
     // unmanaged property
     type Error = ();
 
-    fn try_from(injection: &common::typegraph::Injection) -> Result<Self, Self::Error> {
-        use common::typegraph::Injection as I;
+    fn try_from(injection: &tg_schema::Injection) -> Result<Self, Self::Error> {
+        use tg_schema::Injection as I;
 
         match injection {
             I::Static(inj) | I::Secret(inj) | I::Context(inj) | I::Random(inj) => {

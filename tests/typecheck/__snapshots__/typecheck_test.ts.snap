@@ -1,7 +1,7 @@
 export const snapshot = {};
 
 snapshot[`typecheck 1`] = `
-"function validate_54_1(value, path, errors, context) {
+"function validate_57_1(value, path, errors, context) {
 if (typeof value !== \\"object\\") {
 errors.push([path, \`expected an object, got \${typeof value}\`]);
 }
@@ -122,7 +122,7 @@ errors.push([path, \\"string does not match to the pattern /^[a-z]+\$/\\"]);
 }
 }
 }
-return validate_54_1"
+return validate_57_1"
 `;
 
 snapshot[`typecheck 2`] = `

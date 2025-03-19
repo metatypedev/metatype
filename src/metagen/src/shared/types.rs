@@ -3,7 +3,7 @@
 
 use std::fmt::Write;
 
-use common::typegraph::*;
+use tg_schema::*;
 
 use crate::{interlude::*, utils::GenDestBuf};
 
@@ -102,12 +102,19 @@ pub struct TypeRenderer {
 }
 
 impl TypeRenderer {
-    pub fn new(nodes: Vec<Rc<TypeNode>>, render_type: Rc<dyn RenderType>) -> Self {
+    pub fn new(
+        nodes: Vec<Rc<TypeNode>>,
+        render_type: Rc<dyn RenderType>,
+        prerendered_set: impl IntoIterator<Item = (u32, Rc<str>)>,
+    ) -> Self {
         Self {
             dest: GenDestBuf {
                 buf: Default::default(),
             },
-            name_memo: Default::default(),
+            name_memo: prerendered_set
+                .into_iter()
+                .map(|(ii, name)| (ii, RenderedName::Name(name)))
+                .collect(),
             nodes,
             render_type,
             replacement_records: Default::default(),
@@ -273,7 +280,7 @@ pub fn type_body_required(node: Rc<TypeNode>) -> bool {
         TypeNode::Integer {
             base,
             data:
-                common::typegraph::IntegerTypeData {
+                tg_schema::IntegerTypeData {
                     minimum: None,
                     maximum: None,
                     multiple_of: None,

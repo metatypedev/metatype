@@ -5,20 +5,20 @@ use crate::errors::{self, Result, TgError};
 use crate::runtimes::{
     DenoMaterializer, Materializer, MaterializerData, MaterializerDenoModule, Runtime,
 };
+use crate::sdk::core::{MaterializerId, Policy as CorePolicy, PolicyId, RuntimeId};
+use crate::sdk::utils::Auth as SdkAuth;
 use crate::types::type_ref::TypeRef;
 use crate::types::{
     AsTypeDefEx as _, NamedTypeRef, Type, TypeDef, TypeDefExt, TypeId, TypeRefBuilder,
 };
-use crate::wit::core::{Policy as CorePolicy, PolicyId, RuntimeId};
-use crate::wit::utils::Auth as WitAuth;
 
 #[allow(unused)]
-use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
-use common::typegraph::runtimes::deno::PredefinedFunctionMatData;
+use crate::sdk::runtimes::{Effect, MaterializerDenoPredefined};
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
+use tg_schema::runtimes::deno::PredefinedFunctionMatData;
 
 const PLACEHOLDER_TYPE_SUFFIX: &str = "_____PLACEHOLDER_____";
 
@@ -65,7 +65,7 @@ pub struct Store {
     typegate_runtime: RuntimeId,
     typegraph_runtime: RuntimeId,
     graphql_endpoints: Vec<String>,
-    auths: Vec<common::typegraph::Auth>,
+    auths: Vec<tg_schema::Auth>,
 
     random_seed: Option<u32>,
 }
@@ -105,7 +105,7 @@ impl Store {
 
 thread_local! {
     pub static STORE: RefCell<Store> = RefCell::new(Store::new());
-    pub static SDK_VERSION: String = "0.5.0".to_owned();
+    pub static SDK_VERSION: String = "0.5.1-rc.0".to_owned();
 }
 
 fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
@@ -118,14 +118,6 @@ fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
 
 pub fn get_sdk_version() -> String {
     SDK_VERSION.with(|v| v.clone())
-}
-
-#[cfg(test)]
-impl Store {
-    pub fn reset() {
-        let _ = crate::typegraph::serialize(Default::default());
-        with_store_mut(|s| *s = Store::new());
-    }
 }
 
 impl Store {
@@ -149,6 +141,10 @@ impl Store {
             s.policies.truncate(saved_state.policies);
             s.deno_modules.truncate(saved_state.deno_modules);
         })
+    }
+
+    pub fn reset() {
+        with_store_mut(|s| *s = Store::new());
     }
 
     pub fn get_type_by_name(name: &str) -> Option<NamedTypeRef> {
@@ -410,7 +406,7 @@ impl Store {
         with_store(|s| s.graphql_endpoints.clone())
     }
 
-    pub fn add_auth(auth: WitAuth) -> Result<u32> {
+    pub fn add_auth(auth: SdkAuth) -> Result<u32> {
         with_store_mut(|s| {
             let auth = auth.convert()?;
             s.auths.push(auth);
@@ -418,14 +414,14 @@ impl Store {
         })
     }
 
-    pub fn add_raw_auth(auth: common::typegraph::Auth) -> Result<u32> {
+    pub fn add_raw_auth(auth: tg_schema::Auth) -> Result<u32> {
         with_store_mut(|s| {
             s.auths.push(auth);
             Ok(s.auths.len() as u32)
         })
     }
 
-    pub fn get_auths() -> Vec<common::typegraph::Auth> {
+    pub fn get_auths() -> Vec<tg_schema::Auth> {
         with_store(|s| s.auths.clone())
     }
 }

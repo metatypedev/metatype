@@ -3,9 +3,9 @@
 
 use std::hash::Hash as _;
 
-use common::typegraph::types::{FloatTypeData, TypeNode};
 use errors::Result;
 use ordered_float::OrderedFloat;
+use tg_schema::types::{FloatTypeData, TypeNode};
 
 use crate::{
     conversion::{
@@ -13,9 +13,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors,
+    sdk::core::TypeFloat,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, Float, TypeDefData},
-    wit::core::TypeFloat,
 };
 
 impl TypeConversion for Float {

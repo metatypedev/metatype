@@ -26,6 +26,7 @@ import {
   generateWeakValidator,
 } from "../../../engine/typecheck/input.ts";
 import type { TokenMiddlewareOutput } from "./protocol.ts";
+import { jsonError } from "../../responses.ts";
 
 const logger = getLogger(import.meta);
 
@@ -205,9 +206,10 @@ export class OAuth2Auth extends Protocol {
           new Headers(),
         );
         // https://github.com/cmd-johnson/deno-oauth2-client/issues/25
-        return new Response(`invalid oauth2, check your credentials: ${e}`, {
-          status: 400,
+        return jsonError({
+          message: `invalid oauth2, check your credentials: ${e}`,
           headers,
+          status: 400,
         });
       }
     }
@@ -237,7 +239,8 @@ export class OAuth2Auth extends Protocol {
       });
     }
 
-    return new Response("missing origin or redirect_uri query parameter", {
+    return jsonError({
+      message: "missing origin or redirect_uri query parameter",
       status: 400,
     });
   }
@@ -278,6 +281,10 @@ export class OAuth2Auth extends Protocol {
       try {
         newClaims = await client.refreshToken.refresh(refreshToken);
       } catch (e) {
+        logger.error("XXX error refreshing oauth token {}", {
+          err: e,
+          clientData: this.clientData,
+        });
         return {
           claims: {},
           nextToken: "", // clear

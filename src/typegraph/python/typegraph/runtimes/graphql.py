@@ -5,16 +5,14 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from typegraph import t
-from typegraph.gen.exports.runtimes import (
+from typegraph.gen.runtimes import (
     BaseMaterializer,
     Effect,
-    EffectRead,
     GraphqlRuntimeData,
     MaterializerGraphqlQuery,
 )
-from typegraph.gen.types import Err
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.wit import runtimes, store
+from typegraph.sdk import runtimes
 
 
 @dataclass
@@ -32,27 +30,21 @@ class GraphQLRuntime(Runtime):
 
     def __init__(self, endpoint: str):
         runtime_id = runtimes.register_graphql_runtime(
-            store, GraphqlRuntimeData(endpoint=endpoint)
+            GraphqlRuntimeData(endpoint=endpoint)
         )
-        if isinstance(runtime_id, Err):
-            raise Exception(runtime_id.value)
 
-        super().__init__(runtime_id.value)
+        super().__init__(runtime_id)
         self.endpoint = endpoint
 
     def query(
         self, inp: "t.struct", out: "t.typedef", *, path: Optional[List[str]] = None
     ):
         mat_id = runtimes.graphql_query(
-            store,
-            BaseMaterializer(runtime=self.id, effect=EffectRead()),
+            BaseMaterializer(runtime=self.id, effect="read"),
             MaterializerGraphqlQuery(path=path),
         )
 
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
-
-        return t.func(inp, out, QueryMat(mat_id.value, effect=EffectRead(), path=path))
+        return t.func(inp, out, QueryMat(mat_id, effect="read", path=path))
 
     def mutation(
         self,
@@ -63,12 +55,8 @@ class GraphQLRuntime(Runtime):
         path: Optional[List[str]] = None,
     ):
         mat_id = runtimes.graphql_mutation(
-            store,
             BaseMaterializer(runtime=self.id, effect=effect),
             MaterializerGraphqlQuery(path=path),
         )
 
-        if isinstance(mat_id, Err):
-            raise Exception(mat_id.value)
-
-        return t.func(inp, out, MutationMat(mat_id.value, effect=effect, path=path))
+        return t.func(inp, out, MutationMat(mat_id, effect=effect, path=path))

@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: MPL-2.0
 use std::path::PathBuf;
 
-use common::typegraph::runtimes::prisma::MigrationOptions;
-use common::typegraph::runtimes::{KnownRuntime::Prisma, TGRuntime};
-use common::typegraph::Typegraph;
+use tg_schema::runtimes::prisma::MigrationOptions;
+use tg_schema::runtimes::{KnownRuntime::Prisma, TGRuntime};
+use tg_schema::Typegraph;
 
 use crate::errors::Result;
+use crate::sdk::core::MigrationAction;
+use crate::sdk::core::PrismaMigrationConfig;
 use crate::utils::archive::ArchiveExt;
 use crate::utils::fs::FsContext;
 use crate::utils::postprocess::PostProcessor;
-use crate::wit::core::MigrationAction;
-use crate::wit::core::PrismaMigrationConfig;
 
 pub struct PrismaProcessor {
     config: PrismaMigrationConfig,
@@ -66,8 +66,14 @@ impl PrismaProcessor {
         self.config
             .migration_actions
             .iter()
-            .filter_map(|(rt, action)| if rt == name { Some(*action) } else { None })
+            .filter_map(|(rt, action)| {
+                if rt == name {
+                    Some(action.clone())
+                } else {
+                    None
+                }
+            })
             .last()
-            .unwrap_or(self.config.default_migration_action)
+            .unwrap_or(self.config.default_migration_action.clone())
     }
 }

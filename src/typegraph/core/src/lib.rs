@@ -1,10 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+pub mod errors;
+use tg_schema::runtimes::deno::{ContextCheckX, PredefinedFunctionMatData};
+use tg_schema::Injection;
+pub use types::sdk;
+
 mod conversion;
-mod errors;
 mod global_store;
-mod logger;
 mod params;
 mod runtimes;
 mod t;
@@ -19,36 +22,23 @@ mod test_utils;
 
 use std::collections::HashSet;
 
-use common::typegraph::runtimes::deno::{ContextCheckX, PredefinedFunctionMatData};
-use common::typegraph::Injection;
 use errors::{Result, TgError};
 use global_store::Store;
 use params::apply;
 use regex::Regex;
 use runtimes::{DenoMaterializer, Materializer};
+use sdk::core::{
+    Artifact, ContextCheck, Policy, PolicyId, PolicySpec, SerializeParams, TransformData,
+    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
+    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
+};
+use sdk::runtimes::{Handler, MaterializerDenoPredefined};
 use types::type_ref::AsId;
 use types::{
     AsTypeDefEx as _, Boolean, Either, File, Float, Func, Integer, List, Named, Optional, StringT,
     Struct, TypeBoolean, TypeDef, TypeId, TypeRef, Union, WithInjection as _, WithPolicy as _,
     WithRuntimeConfig as _,
 };
-
-use wit::core::{
-    Artifact, ContextCheck, Policy, PolicyId, PolicySpec, SerializeParams, TransformData,
-    TypeEither, TypeFile, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeList,
-    TypeOptional, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
-};
-use wit::runtimes::{Guest as _, MaterializerDenoPredefined};
-
-pub mod wit {
-    wit_bindgen::generate!({
-
-        world: "typegraph"
-    });
-    use crate::Lib;
-    pub use exports::metatype::typegraph::{aws, core, runtimes, utils};
-    export!(Lib);
-}
 
 pub struct Lib {}
 
@@ -63,7 +53,7 @@ impl From<ContextCheck> for ContextCheckX {
     }
 }
 
-impl wit::core::Guest for Lib {
+impl sdk::core::Handler for Lib {
     fn init_typegraph(params: TypegraphInitParams) -> Result<()> {
         typegraph::init(params)
     }
@@ -197,7 +187,7 @@ impl wit::core::Guest for Lib {
 
     fn get_internal_policy() -> Result<(PolicyId, String)> {
         let deno_mat = DenoMaterializer::Predefined(PredefinedFunctionMatData::InternalPolicy);
-        let mat = Materializer::deno(deno_mat, crate::wit::runtimes::Effect::Read);
+        let mat = Materializer::deno(deno_mat, crate::sdk::runtimes::Effect::Read);
         let policy_id = Store::register_policy(
             Policy {
                 materializer: Store::register_materializer(mat),
@@ -243,7 +233,7 @@ impl wit::core::Guest for Lib {
         .map(|id| (id, name))
     }
 
-    fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, wit::core::Error> {
+    fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, sdk::core::Error> {
         TypeId(type_id).named(new_name).map(|t| t.id().0)
     }
 
@@ -263,6 +253,12 @@ impl wit::core::Guest for Lib {
 
     fn set_seed(seed: Option<u32>) -> Result<()> {
         typegraph::set_seed(seed)
+    }
+}
+
+impl Lib {
+    pub fn reset() {
+        typegraph::reset();
     }
 }
 
@@ -390,10 +386,12 @@ macro_rules! log {
 mod tests {
     use crate::errors::{self, Result};
     use crate::global_store::Store;
+    use crate::sdk::core::{
+        Cors, Handler, MigrationAction, PrismaMigrationConfig, SerializeParams,
+    };
+    use crate::sdk::runtimes::{Effect, Handler as GuestRuntimes, MaterializerDenoFunc};
     use crate::t::{self, TypeBuilder};
     use crate::test_utils::setup;
-    use crate::wit::core::{Cors, Guest, MigrationAction, PrismaMigrationConfig, SerializeParams};
-    use crate::wit::runtimes::{Effect, Guest as GuestRuntimes, MaterializerDenoFunc};
     use crate::Lib;
     use crate::TypegraphInitParams;
 
@@ -420,6 +418,7 @@ mod tests {
     impl Default for SerializeParams {
         fn default() -> Self {
             Self {
+                typegraph_name: "dummy".to_owned(),
                 typegraph_path: "some/dummy/path".to_string(),
                 prefix: None,
                 artifact_resolution: false,

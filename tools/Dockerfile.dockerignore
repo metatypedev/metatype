@@ -9,6 +9,7 @@
 !src/metagen/Cargo.toml
 !src/metagen/src/fdk_rust/static/Cargo.toml
 !src/metagen-client-rs/Cargo.toml
+!src/metagen/src/client_rs/static/Cargo.toml
 !src/mt_deno
 !src/pyrt_wit_wire
 !src/substantial/
@@ -20,6 +21,7 @@
 !examples/deno.jsonc
 !src/typegraph/deno/deno.json
 !tests/deno.jsonc
+!src/typegraph/specs/codegen/deno.jsonc
 
 !deno.jsonc
 !deno.lock

@@ -6,13 +6,13 @@ use crate::interlude::*;
 use crate::cli::NodeArgs;
 use crate::fs::find_in_parents;
 use crate::utils::BasicAuth;
-use common::node::Node;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use reqwest::Url;
 use std::fs::{self, File};
 use std::io;
 use std::slice;
 use std::str::FromStr;
+use typegate_api::Node;
 
 pub const METATYPE_FILES: &[&str] = &["metatype.yml", "metatype.yaml"];
 pub const VENV_FOLDERS: &[&str] = &[".venv"];

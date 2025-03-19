@@ -258,11 +258,11 @@ pub struct UnpackInp {
 
 #[deno_core::op2]
 pub fn op_unpack(#[serde] input: UnpackInp) -> Result<(), OpErr> {
-    common::archive::unpack(&input.dest, Some(input.migrations)).map_err(OpErr::map())
+    archive_utils::unpack(&input.dest, Some(input.migrations)).map_err(OpErr::map())
 }
 
 #[deno_core::op2]
 #[string]
 pub fn op_archive(#[string] path: &str) -> Result<Option<String>, OpErr> {
-    common::archive::archive(path).map_err(OpErr::map())
+    archive_utils::archive(path).map_err(OpErr::map())
 }

@@ -14,7 +14,7 @@ import { unsafeExtractJWT } from "../../crypto.ts";
 import type { QueryEngine } from "../../engine/query_engine.ts";
 import * as routes from "./routes/mod.ts";
 import { getLogger } from "../../log.ts";
-import { methodNotAllowed } from "../../services/responses.ts";
+import { jsonOk, methodNotAllowed } from "../../services/responses.ts";
 import type { Runtime } from "../../runtimes/Runtime.ts";
 
 const logger = getLogger(import.meta);
@@ -74,7 +74,7 @@ export async function ensureJWT(
 
   let auth: Protocol | undefined;
   if (kind.toLowerCase() === "basic") {
-    auth = engine.tg.auths.get("basic");
+    auth = engine.tg.auths.get("basic") ?? undefined;
   } else {
     try {
       const { provider } = await unsafeExtractJWT(token);
@@ -93,7 +93,13 @@ export async function ensureJWT(
     return [{}, headers];
   }
 
-  const { claims, nextToken } = await auth.tokenMiddleware(token, request);
+  const { claims, nextToken, error } = await auth.tokenMiddleware(
+    token,
+    request,
+  );
+  if (error) {
+    logger.info("error on jwt {}", { error });
+  }
   if (nextToken !== null) {
     // "" is valid as it signal to remove the token
     headers.set(nextAuthorizationHeader, nextToken);
@@ -132,9 +138,7 @@ export async function handleAuth(
         uri:
           `${url.protocol}//${url.host}/${engine.name}/auth/${name}?redirect_uri=${origin}`,
       }));
-    return new Response(JSON.stringify({ providers }), {
-      headers: { "content-type": "application/json" },
-    });
+    return jsonOk({ data: providers });
   }
 
   return await provider.authMiddleware(request);

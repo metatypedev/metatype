@@ -1,16 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::Materializer;
 use indexmap::IndexMap;
+use tg_schema::Materializer;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
+use crate::sdk::core::RuntimeId;
+use crate::sdk::runtimes::{Effect, PrismaMigrationOperation};
 use crate::t::{self, StructBuilder, TypeBuilder};
 use crate::typegraph::TypegraphContext;
 use crate::types::TypeId;
-use crate::wit::core::RuntimeId;
-use crate::wit::runtimes::{Effect, PrismaMigrationOperation};
 
 impl MaterializerConverter for PrismaMigrationOperation {
     fn convert(

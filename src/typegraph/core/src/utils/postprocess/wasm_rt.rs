@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use crate::utils::{artifacts::ArtifactsExt, fs::FsContext};
-use common::typegraph::{
+use tg_schema::{
     runtimes::{KnownRuntime, TGRuntime},
     Typegraph,
 };
@@ -34,7 +34,7 @@ impl PostProcessor for WasmProcessor {
                 }
             };
 
-            fs_ctx.register_artifact(data.wasm_artifact.clone(), tg)?;
+            fs_ctx.register_artifacts(tg, data.wasm_artifact.clone(), vec![])?;
         }
 
         tg.runtimes = runtimes;

@@ -6,13 +6,13 @@ mod selections;
 
 use core::fmt::Write;
 
-use common::typegraph::EffectType;
 use shared::get_gql_type;
+use tg_schema::EffectType;
 
 use crate::interlude::*;
 use crate::*;
 
-use crate::fdk_typescript::utils;
+use crate::fdk_ts::utils;
 use crate::shared::client::*;
 use crate::shared::types::NameMemo;
 use crate::shared::types::TypeRenderer;
@@ -113,9 +113,23 @@ fn render_client_ts(_config: &ClienTsGenConfig, tg: &Typegraph) -> anyhow::Resul
     )?;
     writeln!(&mut client_ts)?;
 
-    render_static(&mut client_ts)?;
+    render_client(&mut client_ts, tg, GenClientTsOpts { hostcall: false })?;
 
-    let dest: &mut GenDestBuf = &mut client_ts;
+    writeln!(&mut client_ts)?;
+    Ok(client_ts.buf)
+}
+
+pub struct GenClientTsOpts {
+    pub hostcall: bool,
+}
+
+pub fn render_client(
+    dest: &mut GenDestBuf,
+    tg: &Typegraph,
+    opts: GenClientTsOpts,
+) -> anyhow::Result<NameMemo> {
+    render_static(dest, opts.hostcall)?;
+
     let manifest = get_manifest(tg)?;
 
     let name_mapper = NameMapper {
@@ -203,13 +217,13 @@ export class QueryGraph extends _QueryGraphBase {{
         write!(
             dest,
             r#"
-  {method_name}({args_row}) {{
+  {method_name}({args_row}): {node_type}<{out_ty_name}> {{
     const inner = _selectionToNodeSet(
       {{ "{node_name}": {args_selection} }},
       [["{node_name}", nodeMetas.{meta_method}]],
       "$q",
     )[0];
-    return new {node_type}(inner) as {node_type}<{out_ty_name}>;
+    return new {node_type}(inner);
   }}"#
         )?;
     }
@@ -219,14 +233,17 @@ export class QueryGraph extends _QueryGraphBase {{
 }}"
     )?;
 
-    writeln!(&mut client_ts)?;
-    Ok(client_ts.buf)
+    Ok(Rc::into_inner(data_types).unwrap())
 }
 
 /// Render the common sections like the transports
-fn render_static(dest: &mut GenDestBuf) -> core::fmt::Result {
+fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
     let client_ts = include_str!("static/mod.ts");
-    writeln!(dest, "{}", client_ts)?;
+    crate::utils::processed_write(
+        dest,
+        client_ts,
+        &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
+    )?;
     Ok(())
 }
 
@@ -239,7 +256,8 @@ fn render_data_types(
 ) -> anyhow::Result<NameMemo> {
     let mut renderer = TypeRenderer::new(
         name_mapper.nodes.clone(),
-        Rc::new(fdk_typescript::types::TypescriptTypeRenderer {}),
+        Rc::new(fdk_ts::types::TypescriptTypeRenderer {}),
+        [],
     );
     for &id in &manifest.arg_types {
         _ = renderer.render(id)?;
@@ -264,6 +282,7 @@ fn render_selection_types(
         Rc::new(selections::TsNodeSelectionsRenderer {
             arg_ty_names: arg_types_memo,
         }),
+        [],
     );
     for &id in &manifest.selections {
         _ = renderer.render(id)?;
@@ -288,6 +307,7 @@ fn render_node_metas(
             named_types: named_types.clone(),
             input_files: manifest.input_files.clone(),
         }),
+        [],
     );
     for &id in &manifest.node_metas {
         _ = renderer.render(id)?;

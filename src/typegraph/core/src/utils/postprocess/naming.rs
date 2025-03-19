@@ -6,12 +6,12 @@ use std::{
     rc::Rc,
 };
 
-use common::typegraph::{
+use indexmap::IndexSet;
+use sha2::{Digest, Sha256};
+use tg_schema::{
     visitor::{Edge, PathSegment},
     StringFormat, TypeNode, Typegraph,
 };
-use indexmap::IndexSet;
-use sha2::{Digest, Sha256};
 
 use crate::errors::TgError;
 
@@ -19,10 +19,7 @@ pub struct NamingProcessor {
     pub user_named: HashSet<u32>,
 }
 impl super::PostProcessor for NamingProcessor {
-    fn postprocess(
-        self,
-        tg: &mut common::typegraph::Typegraph,
-    ) -> Result<(), crate::errors::TgError> {
+    fn postprocess(self, tg: &mut tg_schema::Typegraph) -> Result<(), crate::errors::TgError> {
         let cx = VisitContext {
             tg,
             user_named: self.user_named,
@@ -354,8 +351,8 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
                 // we don't include optional and list nodes in
                 // generated names (useless but also, they might be placeholders)
                 Edge::OptionalItem | Edge::ArrayItem => continue,
-                Edge::FunctionInput => join_if_ok!(last_name.to_string(), "input"),
-                Edge::FunctionOutput => join_if_ok!(last_name.to_string(), "output"),
+                Edge::FunctionInput => format!("{}_input", last_name),
+                Edge::FunctionOutput => format!("{}_output", last_name),
                 Edge::ObjectProp(key) => {
                     join_if_ok!(format!("{last_name}_{key}"), ty_name)
                 }

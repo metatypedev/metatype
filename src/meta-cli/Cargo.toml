@@ -31,9 +31,12 @@ typegate = ["dep:typegate_engine"]
 [dependencies]
 
 # internal
+typegraph_core.workspace = true
+tg_schema.workspace = true
 typegate_engine = { workspace = true, optional = true }
-common.workspace = true
+typegate_api.workspace = true
 metagen.workspace = true
+archive_utils.workspace = true
 
 # data structures
 chrono = { workspace = true, features = ["serde"] }
@@ -78,7 +81,7 @@ git2 = { workspace = true, features = [
 ], default-features = false }
 
 # codecs
-serde.workspace = true
+serde = { workspace = true, features = ["rc"] }
 serde_json = { workspace = true, features = ["preserve_order"] }
 flate2.workspace = true
 tar.workspace = true

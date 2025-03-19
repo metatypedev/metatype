@@ -3,7 +3,7 @@
 
 use std::hash::Hash as _;
 
-use common::typegraph::{ListTypeData, TypeNode};
+use tg_schema::{ListTypeData, TypeNode};
 
 use crate::{
     conversion::{
@@ -11,9 +11,9 @@ use crate::{
         types::{BaseBuilderInit, TypeConversion},
     },
     errors::Result,
+    sdk::core::TypeList,
     typegraph::TypegraphContext,
     types::{ExtendedTypeDef, List, TypeDefData, TypeId},
-    wit::core::TypeList,
 };
 
 impl TypeConversion for List {

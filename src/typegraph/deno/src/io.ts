@@ -3,6 +3,7 @@
 import { inspect } from "node:util";
 // import { createInterface, Interface } from "node:readline";
 import process from "node:process";
+import { rpcRequest } from "./gen/client.ts";
 /**
  * see: module level documentation `meta-cli/src/deploy/actors/task.rs`
  */
@@ -23,6 +24,7 @@ function writeRpcMessage(message: string) {
 }
 
 type RpcNotificationMethod =
+  | "Serialize"
   | "Debug"
   | "Info"
   | "Warning"
@@ -30,8 +32,11 @@ type RpcNotificationMethod =
   | "Success"
   | "Failure";
 
-// deno-lint-ignore no-explicit-any
-const rpcNotify = (method: RpcNotificationMethod, params: any = null) => {
+export const rpcNotify = (
+  method: RpcNotificationMethod,
+  // deno-lint-ignore no-explicit-any
+  params: any = null,
+) => {
   const message = JSON.stringify({
     jsonrpc: JSONRPC_VERSION,
     method,
@@ -93,66 +98,6 @@ export const log: {
   },
 };
 
-class RpcResponseReader {
-  private buffer = "";
-
-  constructor() {
-    process.stdin.setEncoding("utf-8");
-  }
-
-  read(id: number) {
-    return new Promise((resolve, reject) => {
-      const handler = () => {
-        while (true) {
-          const chunk = process.stdin.read();
-          if (chunk == null) {
-            break;
-          }
-          this.buffer += chunk;
-          const lines = this.buffer.split(/\r\n|\n/);
-          if (lines.length > 2) {
-            reject(new Error("not sequential"));
-          } else if (lines.length <= 1) {
-            continue;
-          }
-          this.buffer = lines.pop()!;
-
-          try {
-            const message = JSON.parse(lines[0]);
-            if (message.id === id) {
-              resolve(message.result);
-              break;
-            }
-          } catch {
-            reject("invalid message");
-          }
-        }
-        process.stdin.off("readable", handler);
-      };
-      process.stdin.on("readable", handler);
-    });
-  }
-}
-
-const rpcCall = (() => {
-  const responseReader = new RpcResponseReader();
-  let latestRpcId = 0;
-
-  // deno-lint-ignore no-explicit-any
-  return (method: string, params: any = null) => {
-    const rpcId = latestRpcId++;
-    const rpcMessage = JSON.stringify({
-      jsonrpc: JSONRPC_VERSION,
-      id: rpcId,
-      method,
-      params,
-    });
-
-    writeRpcMessage(rpcMessage);
-    return responseReader.read(rpcId);
-  };
-})();
-
 export interface DeployTarget {
   baseUrl: string;
   auth: {
@@ -174,7 +119,11 @@ export interface DeployData {
 }
 
 export const rpc = {
-  getDeployTarget: () => rpcCall("GetDeployTarget") as Promise<DeployTarget>,
+  getDeployTarget: () => rpcRequest("GetDeployTarget") as DeployTarget,
   getDeployData: (typegraph: string) =>
-    rpcCall("GetDeployData", { typegraph }) as Promise<DeployData>,
+    rpcRequest<DeployData, { typegraph: string }>(
+      "GetDeployData",
+      { typegraph },
+      false, // Don't transform object keys
+    ),
 };

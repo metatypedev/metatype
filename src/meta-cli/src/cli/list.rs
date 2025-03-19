@@ -11,10 +11,9 @@ use crate::interlude::*;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
-use common::graphql::Query;
-use common::node::Node;
 use serde::Deserialize;
 use tabled::{settings::Style, Table, Tabled};
+use typegate_api::{graphql::Query, Node};
 
 #[derive(Parser, Debug)]
 pub struct List {
@@ -23,6 +22,9 @@ pub struct List {
     /// Target typegate (cf config)
     #[clap(short, long)]
     pub target: String,
+
+    #[clap(long)]
+    pub port: Option<u16>,
 
     #[clap(long)]
     max_parallel_loads: Option<usize>,
@@ -37,12 +39,14 @@ impl Action for List {
         let config = Arc::new(Config::load_or_find(config_path.as_deref(), &dir)?);
 
         let mut node_config = config.node(&self.node, &self.target);
-        if self.target == "dev" {
+
+        if self.port.is_some() {
             node_config
                 .url
-                .set_port(Some(7891))
+                .set_port(self.port)
                 .map_err(|_| anyhow::anyhow!("cannot base"))?;
         }
+
         let node = node_config.build(dir.clone()).await?;
 
         let task_source = TaskSource::Discovery(dir.clone().into());
@@ -105,7 +109,7 @@ impl List {
         "#;
         let response = node
             .post("/typegate")
-            .unwrap()
+            .map_err(|err| anyhow::anyhow!(err))?
             .gql(query.into(), None)
             .await?;
         response

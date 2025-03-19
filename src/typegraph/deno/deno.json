@@ -1,18 +1,12 @@
 {
   "name": "@typegraph/sdk",
-  "version": "0.5.0",
+  "version": "0.5.1-rc.0",
   "publish": {
-    "exclude": [
-      "!src/gen",
-      "!LICENSE.md",
-      "!README.md"
-    ]
+    "exclude": ["!src/gen", "!LICENSE.md", "!README.md"]
   },
   "lint": {
     "rules": {
-      "exclude": [
-        "no-external-import"
-      ]
+      "exclude": ["no-external-import"]
     }
   },
   "exports": {
@@ -21,10 +15,10 @@
     "./deps/mod.ts": "./src/deps/mod.ts",
     "./effects": "./src/effects.ts",
     "./envs/cli": "./src/envs/cli.ts",
-    "./gen/typegraph_core.d.ts": "./src/gen/typegraph_core.d.ts",
-    "./gen/typegraph_core": "./src/gen/typegraph_core.d.ts",
-    "./host/host.d.ts": "./src/host/host.d.ts",
-    "./host/host": "./src/host/host.d.ts",
+    "./gen/core.ts": "./src/gen/core.ts",
+    "./gen/runtimes.ts": "./src/gen/runtimes.ts",
+    "./gen/aws.ts": "./src/gen/aws.ts",
+    "./gen/utils.ts": "./src/gen/utils.ts",
     "./io": "./src/io.ts",
     "./metagen": "./src/metagen.ts",
     "./params": "./src/params.ts",
@@ -47,6 +41,9 @@
     "./tg_manage": "./src/tg_manage.ts",
     "./typegraph": "./src/typegraph.ts",
     "./types": "./src/types.ts",
-    "./wit": "./src/wit.ts"
+    "./utils/func_utils": "./src/utils/func_utils.ts",
+    "./utils/injection_utils": "./src/utils/injection_utils.ts",
+    "./utils/type_utils": "./src/utils/type_utils.ts",
+    "./sdk": "./src/sdk.ts"
   }
 }

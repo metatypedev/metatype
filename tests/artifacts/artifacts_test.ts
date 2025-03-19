@@ -4,7 +4,12 @@
 import { Meta } from "test-utils/mod.ts";
 import { join } from "@std/path/join";
 import { exists } from "@std/fs/exists";
-import { assert, assertFalse } from "@std/assert";
+import {
+  assert,
+  assertFalse,
+  assertRejects,
+  assertStringIncludes,
+} from "@std/assert";
 import { connect } from "redis";
 import { S3Client } from "aws-sdk/client-s3";
 import { createBucket, hasObject, tryDeleteBucket } from "test-utils/s3.ts";
@@ -199,3 +204,19 @@ for (const { mode, ...options } of variants) {
     },
   );
 }
+
+Meta.test(`Missing artifact`, async (t) => {
+  await t.should("fail on missing artifact", async () => {
+    await assertRejects(
+      async () => {
+        await t.engine("runtimes/deno/inexisting_dep.py");
+      },
+    );
+    try {
+      await t.engine("runtimes/deno/inexisting_dep.py");
+      assert(false, "should have thrown");
+    } catch (e) {
+      assertStringIncludes(e.message, "no artifacts found for dependency");
+    }
+  });
+});

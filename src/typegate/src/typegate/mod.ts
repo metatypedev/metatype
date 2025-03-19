@@ -22,6 +22,8 @@ import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
 import * as DenoHooks from "../runtimes/deno/hooks/mod.ts";
 import * as PythonHooks from "../runtimes/python/hooks/mod.ts";
 import {
+  prepareRuntimeReferences,
+  RuntimeRefData,
   type RuntimeResolver,
   SecretManager,
   TypeGraph,
@@ -49,6 +51,7 @@ import { createSharedArtifactStore } from "./artifacts/shared.ts";
 import { AsyncDisposableStack } from "dispose";
 import { globalConfig, type TypegateConfig } from "../config.ts";
 import { TypegateCryptoKeys } from "../crypto.ts";
+import { DenoRuntime } from "../runtimes/deno/deno.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -291,7 +294,7 @@ export class Typegate implements AsyncDisposable {
         new Headers(cors),
       ).catch((e) => e);
       if (jwtCheck instanceof Error) {
-        return jsonError(jwtCheck.message, new Headers(), 401);
+        return jsonError({ message: jwtCheck.message, status: 401 });
       }
 
       const [context, headers] = jwtCheck;
@@ -424,7 +427,7 @@ export class Typegate implements AsyncDisposable {
   ) {
     logger.warn(`Dropping "${name}": started`);
     const typegraphId = typegraphIdSchema.parse(JSON.parse(payload));
-    const [tg] = await typegraphStore.download(
+    const [tg] = await typegraphStore.downloadTypegraph(
       typegraphId,
     );
     const artifacts = new Set(
@@ -446,24 +449,37 @@ export class Typegate implements AsyncDisposable {
     const introspectionDef = parseGraphQLTypeGraph(
       await TypeGraph.parseJson(INTROSPECTION_JSON_STR),
     );
+    const rtRefResolver = prepareRuntimeReferences(this, secretManager);
 
-    const introspection = enableIntrospection
-      ? await TypeGraph.init(
+    let introspection: TypeGraph | null = null;
+    if (enableIntrospection) {
+      const typegraphRuntime = TypeGraphRuntime.init(tgDS, [], {});
+      const introspectionRuntimeRefData = await rtRefResolver(
+        introspectionDef,
+        {
+          typegraph: typegraphRuntime,
+        },
+      );
+      (typegraphRuntime as TypeGraphRuntime).initTypeGenerator(
+        this.config.base,
+        introspectionRuntimeRefData.denoRuntime as DenoRuntime,
+      );
+
+      introspection = await TypeGraph.init(
         this,
         introspectionDef,
         new SecretManager(introspectionDef, {}),
-        {
-          typegraph: TypeGraphRuntime.init(tgDS, [], {}),
-        },
+        introspectionRuntimeRefData,
         null,
-      )
-      : null;
+      );
+    }
 
+    const tgRuntimeRefData = await rtRefResolver(tgDS, customRuntime);
     const tg = await TypeGraph.init(
       this,
       tgDS,
       secretManager,
-      customRuntime,
+      tgRuntimeRefData,
       introspection,
     );
 

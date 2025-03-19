@@ -6,21 +6,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union, Any
 
-from typegraph.gen.exports.core import (
+from typegraph.gen.core import (
     SerializeParams,
     Rate,
     TypegraphInitParams,
 )
-from typegraph.gen.exports.core import (
-    Cors as CoreCors,
-)
-from typegraph.gen.exports.utils import Auth
-from typegraph.gen.types import Err
+from typegraph.gen.core import Cors as CoreCors, Rate as CoreRate
+from typegraph.gen.utils import Auth
 from typegraph.graph.params import Cors, RawAuth
 from typegraph.graph.shared_types import FinalizationResult, TypegraphOutput
 from typegraph.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph.envs.cli import CLI_ENV
-from typegraph.wit import ErrorStack, core, store, wit_utils
+from typegraph.sdk import core, sdk_utils
 from typegraph.io import Log
 
 if TYPE_CHECKING:
@@ -36,7 +33,7 @@ class Typegraph:
     dynamic: Optional[bool]
     path: str
     _context: List["Typegraph"] = []
-    rate: Optional[Rate]
+    rate: Optional[CoreRate]
     cors: Optional[CoreCors]
     prefix: Optional[str]
 
@@ -53,23 +50,16 @@ class Typegraph:
         self.dynamic = dynamic
         self.path = str(Path(inspect.stack()[2].filename).resolve())
 
-        self.rate = rate
+        self.rate = Rate(**rate.__dict__) if rate else None
 
         cors = cors or Cors()
-        self.cors = CoreCors(
-            allow_origin=cors.allow_origin,
-            allow_headers=cors.allow_headers,
-            expose_headers=cors.expose_headers,
-            allow_methods=cors.allow_methods,
-            allow_credentials=cors.allow_credentials,
-            max_age_sec=cors.max_age_sec,
-        )
+        self.cors = CoreCors(**cors.__dict__)
         self.prefix = prefix
 
     @classmethod
     def get_active(cls) -> Optional["Typegraph"]:
         if len(cls._context) == 0:
-            raise ErrorStack("No active typegraph")
+            raise Exception("No active typegraph")
         return cls._context[-1]
 
     def __call__(self, **kwargs: ExposeItem):
@@ -80,14 +70,10 @@ class Typegraph:
         default_policy: Optional[PolicySpec] = None,
         **kwargs: ExposeItem,
     ):
-        res = core.expose(
-            store,
+        core.expose(
             [(k, v._id) for k, v in kwargs.items()],
             default_policy=get_policy_chain(default_policy) if default_policy else None,
         )
-
-        if isinstance(res, Err):
-            raise ErrorStack(res.value)
 
 
 @dataclass
@@ -132,28 +118,19 @@ class Graph:
         return InheritDef()
 
     def rest(self, graphql: str) -> int:
-        res = wit_utils.add_graphql_endpoint(store, graphql)
-        if isinstance(res, Err):
-            raise ErrorStack(res.value)
-        return res.value
+        return sdk_utils.add_graphql_endpoint(graphql)
 
     def auth(self, value: Union[Auth, RawAuth]):
-        res = (
-            wit_utils.add_raw_auth(store, value.json_str)
-            if isinstance(value, RawAuth)
-            else wit_utils.add_auth(store, value)
-        )
-        if isinstance(res, Err):
-            raise ErrorStack(res.value)
-        return res.value
+        if isinstance(value, RawAuth):
+            return sdk_utils.add_raw_auth(value.json_str)
+        else:
+            return sdk_utils.add_auth(value)
 
     def ref(self, name: str) -> "t.typedef":
         return gen_ref(name)
 
     def configure_random_injection(self, seed: int):
-        res = core.set_seed(store, seed)
-        if isinstance(res, Err):
-            raise ErrorStack(res.value)
+        core.set_seed(seed)
 
     def as_arg(self, name: Optional[str] = None):
         return ApplyFromArg(name)
@@ -218,7 +195,6 @@ def typegraph(
         )
 
         core.init_typegraph(
-            store,
             TypegraphInitParams(
                 name=tg.name,
                 dynamic=tg.dynamic,
@@ -231,17 +207,12 @@ def typegraph(
 
         try:
             builder(Graph(tg))
-        except ErrorStack as e:
+        except Exception as e:
             import sys
 
             sys.stderr.write(f"Error in typegraph '{actual_name}':\n")
-            for line in e.stack:
-                sys.stderr.write("- ")
-                sys.stderr.write(line)
-                sys.stderr.write("\n")
+            sys.stderr.write(str(e))
             sys.exit(1)
-        except Exception:
-            raise
 
         popped = Typegraph._context.pop()
         assert tg == popped
@@ -250,11 +221,8 @@ def typegraph(
         def serialize_with_artifacts(
             config: SerializeParams,
         ):
-            finalization_result = core.serialize_typegraph(store, config)
-            if isinstance(finalization_result, Err):
-                raise ErrorStack(finalization_result.value)
-
-            tg_json, ref_artifacts = finalization_result.value
+            finalization_result = core.serialize_typegraph(config)
+            tg_json, ref_artifacts = finalization_result
             return FinalizationResult(tg_json, ref_artifacts)
 
         tg_output = TypegraphOutput(name=tg.name, serialize=serialize_with_artifacts)
@@ -272,9 +240,8 @@ def typegraph(
 
 
 def gen_ref(name: str) -> "t.typedef":
-    res = core.refb(store, name, None)
-    if isinstance(res, Err):
-        raise ErrorStack(res.value)
+    res = core.refb(name, None)
+
     from typegraph.t import typedef
 
-    return typedef(res.value)
+    return typedef(res)

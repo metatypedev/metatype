@@ -11,16 +11,18 @@ export type {
   Run,
 } from "../../../engine/runtime.js";
 
-export type WorkflowMessage = {
-  type: "START";
-  data: {
-    modulePath: string;
-    functionName: string;
-    run: Run;
-    schedule: string;
-    internal: TaskContext;
-  };
-};
+export type WorkflowMessage =
+  | {
+    type: "START";
+    data: {
+      modulePath: string;
+      functionName: string;
+      run: Run;
+      schedule: string;
+      internal: TaskContext;
+    };
+  }
+  | { type: "HOSTCALL_RESP"; id: string; result: any; error: any };
 
 export type WorkflowCompletionEvent =
   | {
@@ -51,7 +53,8 @@ export type WorkflowEvent =
     type: "ERROR";
     error: string;
   }
-  | DenoWorkerError;
+  | DenoWorkerError
+  | { type: "HOSTCALL"; id: string; opName: string; json: string };
 
 export type Result<T> = {
   error: boolean;
@@ -66,12 +69,15 @@ export type ExecutionResultKind = "SUCCESS" | "FAIL";
 // Note: Avoid refactoring with inheritance (e.g. `SleepInterrupt extends Interrupt`)
 // inheritance information is erased when sending exceptions accross workers
 
-export type InterruptType =
-  | "SLEEP"
-  | "SAVE_RETRY"
-  | "WAIT_RECEIVE_EVENT"
-  | "WAIT_HANDLE_EVENT"
-  | "WAIT_ENSURE_VALUE";
+const validInterrupts = [
+  "SLEEP",
+  "SAVE_RETRY",
+  "WAIT_RECEIVE_EVENT",
+  "WAIT_HANDLE_EVENT",
+  "WAIT_ENSURE_VALUE",
+] as const;
+
+type InterruptType = (typeof validInterrupts)[number];
 
 export class Interrupt extends Error {
   private static readonly PREFIX = "SUBSTANTIAL_INTERRUPT_";
@@ -83,7 +89,11 @@ export class Interrupt extends Error {
 
   static getTypeOf(err: unknown): InterruptType | null {
     if (err instanceof Error && err.message.startsWith(this.PREFIX)) {
-      return err.message.substring(this.PREFIX.length) as InterruptType;
+      const interrupt = err.message.substring(this.PREFIX.length);
+      if (validInterrupts.includes(interrupt as any)) {
+        return interrupt as InterruptType;
+      }
+      throw new Error(`Unknown interrupt "${interrupt}"`);
     }
     return null;
   }
