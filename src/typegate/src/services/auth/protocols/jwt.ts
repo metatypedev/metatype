@@ -57,14 +57,14 @@ export class JWTAuth extends Protocol {
         nextToken: null,
         error: null,
       };
-    } catch (e) {
-      if (e.message.includes("jwt is expired")) {
+    } catch (err: any) {
+      if (err.message.includes("jwt is expired")) {
         throw new Error("jwt expired");
       }
-      if (e.message.includes("jwt is used too early")) {
+      if (err.message.includes("jwt is used too early")) {
         throw new Error("jwt used too early");
       }
-      logger.warn(`jwt auth failed: ${e}`);
+      logger.warn(`jwt auth failed: ${err}`);
       throw new Error("jwt is invalid");
     }
   }

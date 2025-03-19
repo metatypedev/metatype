@@ -240,7 +240,9 @@ pub(crate) fn handle_response(
     nodes_len: usize,
 ) -> Result<Vec<serde_json::Value>, GraphQLRequestError> {
     if !(200..300).contains(&response.status_code) {
-        return Err(GraphQLRequestError::RequestFailed { response });
+        return Err(GraphQLRequestError::RequestFailed {
+            response: Box::new(response),
+        });
     }
     #[derive(Debug, Deserialize)]
     struct Response {
@@ -287,7 +289,7 @@ pub enum GraphQLRequestError {
     },
     /// Http error codes recieived
     RequestFailed {
-        response: GraphQLResponse,
+        response: Box<GraphQLResponse>,
     },
     /// Unable to deserialize body
     BodyError {

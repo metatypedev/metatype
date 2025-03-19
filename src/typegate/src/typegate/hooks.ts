@@ -4,6 +4,7 @@
 import type { MessageEntry, Migrations } from "../typegate/register.ts";
 import type { SecretManager, TypeGraphDS } from "../typegraph/mod.ts";
 import { ArtifactStore } from "./artifacts/mod.ts";
+import type { Typegate } from "./mod.ts";
 
 const Message = {
   INFO: "info",
@@ -87,5 +88,6 @@ export interface PushHandler {
     secretManager: SecretManager,
     response: PushResponse,
     artifactStore: ArtifactStore,
+    typegate: Typegate,
   ): Promise<TypeGraphDS>;
 }

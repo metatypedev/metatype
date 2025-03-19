@@ -93,7 +93,7 @@ export class S3Runtime extends Runtime {
             this.logger.debug(`s3 list response: ${JSON.stringify(res)}`);
 
             return {
-              keys: (res.Contents ?? []).map((c) => ({
+              keys: (res.Contents ?? []).map((c: any) => ({
                 key: c.Key,
                 size: c.Size,
               })),
