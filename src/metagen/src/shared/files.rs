@@ -3,11 +3,7 @@
 
 use crate::interlude::*;
 use std::collections::HashMap;
-use typegraph::{
-    conv::{PathSegment, RelativePath},
-    visitor::{PathExt as _, VisitNext},
-    TypeNodeExt as _,
-};
+use typegraph::visitor::{PathExt as _, VisitNext};
 
 #[derive(Debug)]
 pub enum ObjectPathSegment {

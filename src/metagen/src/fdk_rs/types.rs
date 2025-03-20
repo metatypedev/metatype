@@ -7,8 +7,6 @@ use crate::interlude::*;
 use crate::shared::types::type_body_required;
 use heck::ToPascalCase as _;
 use std::fmt::Write;
-use typegraph::conv::TypeKey;
-use typegraph::{TypeNode as _, TypeNodeExt as _};
 
 // #[cfg(test)]
 // mod test {

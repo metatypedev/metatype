@@ -570,3 +570,4 @@ impl QueryGraph {
         }
     }
 }
+

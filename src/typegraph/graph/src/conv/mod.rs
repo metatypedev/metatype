@@ -14,18 +14,20 @@ use crate::{
 use crate::{FunctionType, IntegerType, ObjectType, Type};
 use dedup::{Deduplication, DuplicationKey};
 use indexmap::IndexMap;
-pub use map::{
-    ConversionMap, MapItem, MapValueItem, Path, PathSegment, RelativePath, TypeKey, ValueType,
-    ValueTypePath,
-};
+use key::TypeKeyEx;
+pub use map::{ConversionMap, MapItem, MapValueItem, ValueType};
 use tg_schema::runtimes::TGRuntime;
 
-mod dedup;
-mod map;
+pub mod dedup;
+pub mod key;
+pub mod map;
 
 pub mod interlude {
-    pub use super::{Conversion, PathSegment, RelativePath, TypeConversionResult, TypeKey};
+    pub use super::key::TypeKey;
+    pub use super::{Conversion, TypeConversionResult};
+    pub use crate::path::{PathSegment, RelativePath};
 }
+use interlude::*;
 
 pub struct Conversion {
     schema: Arc<tg_schema::Typegraph>,
@@ -155,10 +157,14 @@ impl Conversion {
             // value type
 
             let added = self.conversion_map.append(ty.key(), rpath.clone())?;
-            // TODO cycle detection
             if added {
                 for edge in ty.edges() {
                     let child_ty = edge.to;
+                    let xkey = TypeKeyEx::from(&child_ty);
+                    // cyclic
+                    if rpath.contains(&self.schema.types, &xkey) {
+                        continue;
+                    }
                     if let Ok(seg) = edge.kind.try_into() {
                         self.register_converted_type(rpath.push(seg)?, child_ty, true)?;
                     }

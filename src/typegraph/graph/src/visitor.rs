@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::interlude::*;
+use crate::{
+    interlude::*,
+    path::{PathSegment, RelativePath},
+};
 use color_eyre::eyre::OptionExt as _;
 
-use crate::{
-    conv::{PathSegment, RelativePath},
-    Edge, EdgeKind, Type, TypeNodeExt as _,
-};
+use crate::{Edge, EdgeKind, Type, TypeNodeExt as _};
 
 pub enum VisitNext {
     Children,

@@ -3,6 +3,7 @@
 
 pub mod conv;
 pub mod naming;
+mod path;
 mod policies;
 mod runtimes;
 mod types;
@@ -18,7 +19,14 @@ mod interlude {
     };
 }
 
-use conv::{TypeKey, ValueType};
+pub mod prelude {
+    pub use crate::conv::key::TypeKey;
+    pub use crate::path::{PathSegment, RelativePath};
+    pub use crate::types::*;
+    pub use crate::Typegraph;
+}
+
+use conv::{key::TypeKey, ValueType};
 use indexmap::IndexMap;
 use interlude::*;
 use naming::DefaultNamingEngine;

@@ -4,7 +4,7 @@
 use std::fmt::Write;
 
 use heck::ToPascalCase as _;
-use typegraph::{conv::TypeKey, FunctionType, ObjectType, TypeNodeExt as _, UnionType};
+use typegraph::{FunctionType, ObjectType, TypeNodeExt as _, UnionType};
 
 use super::{
     shared::{

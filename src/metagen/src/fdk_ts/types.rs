@@ -3,8 +3,6 @@
 
 use std::fmt::Write;
 
-use typegraph::{conv::TypeKey, TypeNode as _, TypeNodeExt as _};
-
 use super::manifest::{ManifestPage, TypeRenderer};
 use super::shared::types::type_body_required;
 use super::utils::{normalize_struct_prop_name, normalize_type_title};

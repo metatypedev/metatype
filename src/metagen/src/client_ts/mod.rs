@@ -13,7 +13,6 @@ use selections::TsSelection;
 use shared::manifest::ManifestPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
-use typegraph::conv::TypeKey;
 use typegraph::TypeNodeExt as _;
 
 use crate::interlude::*;

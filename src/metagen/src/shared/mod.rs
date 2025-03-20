@@ -13,7 +13,7 @@ pub mod types;
 use std::collections::HashSet;
 
 use crate::interlude::*;
-use typegraph::{FunctionType, TypeNode as _};
+use typegraph::FunctionType;
 
 #[derive(Debug, Clone)]
 pub struct FdkTemplate {

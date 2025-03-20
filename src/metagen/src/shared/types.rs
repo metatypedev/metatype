@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::interlude::*;
-use typegraph::conv::TypeKey;
 
 pub type VisitedTypePaths = IndexMap<Arc<str>, Vec<Vec<Arc<str>>>>;
 

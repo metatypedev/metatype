@@ -3,7 +3,7 @@
 
 use std::fmt::Write;
 
-use typegraph::{conv::TypeKey, FunctionType, ObjectType, TypeNodeExt as _, UnionType};
+use typegraph::{FunctionType, ObjectType};
 
 use super::shared::manifest::{ManifestPage, TypeRenderer};
 use super::shared::node_metas::{MetaFactory, MetasPageBuilder};

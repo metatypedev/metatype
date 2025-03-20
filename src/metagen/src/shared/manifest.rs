@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::interlude::*;
 use indexmap::IndexMap;
 use std::{collections::HashMap, fmt::Write, sync::RwLock};
-use typegraph::conv::TypeKey;
 
 use super::types::NameMemo;
 

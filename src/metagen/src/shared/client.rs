@@ -7,7 +7,7 @@ use crate::{interlude::*, shared::get_gql_type};
 
 use super::files::{get_path_to_files, TypePath};
 use indexmap::IndexSet;
-use typegraph::{conv::TypeKey, FunctionType, TypeNodeExt as _, Wrap as _};
+use typegraph::FunctionType;
 
 /// get the types that could be referenced in the GraphQL queries
 pub fn get_gql_types(tg: &Typegraph) -> IndexMap<TypeKey, String> {
