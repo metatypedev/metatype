@@ -1143,6 +1143,8 @@ RootIdentityFnInput = typing.TypedDict(
     total=False,
 )
 
+RootGetUserFnInput = typing.TypedDict("RootGetUserFnInput", {}, total=False)
+
 UserEmailStringEmail = str
 
 UserPostsPostList = typing.List[Post]
